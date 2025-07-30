@@ -13,7 +13,7 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlParameterInfo;
+import org.hibernate.sql.ast.JdbcParameterMetadata;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
@@ -44,7 +44,7 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 		super( sessionFactory, statement );
 	}
 
-	public DerbySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+	public DerbySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable JdbcParameterMetadata parameterInfo) {
 		super( sessionFactory, statement, parameterInfo );
 	}
 

@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.sql.ast.SqlParameterInfo;
+import org.hibernate.sql.ast.JdbcParameterMetadata;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.Statement;
@@ -32,5 +32,5 @@ public interface SqmTranslation<T extends Statement> {
 	 *
 	 * @since 7.1
 	 */
-	SqlParameterInfo getParameterInfo();
+	JdbcParameterMetadata getParameterInfo();
 }

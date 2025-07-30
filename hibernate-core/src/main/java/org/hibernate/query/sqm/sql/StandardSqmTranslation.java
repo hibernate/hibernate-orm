@@ -11,8 +11,8 @@ import java.util.Map;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.sql.ast.SqlParameterInfo;
-import org.hibernate.sql.ast.internal.SqlParameterInfoImpl;
+import org.hibernate.sql.ast.JdbcParameterMetadata;
+import org.hibernate.sql.ast.internal.JdbcParameterMetadataImpl;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.Statement;
@@ -28,7 +28,7 @@ public class StandardSqmTranslation<T extends Statement> implements SqmTranslati
 	private final Map<SqmParameter<?>, MappingModelExpressible<?>> parameterMappingModelTypeMap;
 	private final SqlExpressionResolver sqlExpressionResolver;
 	private final FromClauseAccess fromClauseAccess;
-	private final SqlParameterInfo parameterInfo;
+	private final JdbcParameterMetadata parameterInfo;
 
 	public StandardSqmTranslation(
 			T sqlAst,
@@ -53,7 +53,7 @@ public class StandardSqmTranslation<T extends Statement> implements SqmTranslati
 			}
 			parameterId += parameterUses.get( 0 ).size();
 		}
-		this.parameterInfo = new SqlParameterInfoImpl( Collections.unmodifiableMap( parameterIdMap ), parameterId );
+		this.parameterInfo = new JdbcParameterMetadataImpl( Collections.unmodifiableMap( parameterIdMap ), parameterId );
 	}
 
 	@Override
@@ -82,7 +82,7 @@ public class StandardSqmTranslation<T extends Statement> implements SqmTranslati
 	}
 
 	@Override
-	public SqlParameterInfo getParameterInfo() {
+	public JdbcParameterMetadata getParameterInfo() {
 		return parameterInfo;
 	}
 }

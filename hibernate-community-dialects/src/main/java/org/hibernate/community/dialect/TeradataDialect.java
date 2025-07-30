@@ -44,7 +44,7 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.SqlParameterInfo;
+import org.hibernate.sql.ast.JdbcParameterMetadata;
 import org.hibernate.sql.ast.internal.NonLockingClauseStrategy;
 import org.hibernate.sql.ast.internal.PessimisticLockKind;
 import org.hibernate.sql.ast.spi.LockingClauseStrategy;
@@ -192,7 +192,7 @@ public class TeradataDialect extends Dialect {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+					SessionFactoryImplementor sessionFactory, Statement statement, @Nullable JdbcParameterMetadata parameterInfo) {
 				return new TeradataSqlAstTranslator<>( sessionFactory, statement, parameterInfo );
 			}
 		};

@@ -50,7 +50,7 @@ import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.SqlParameterInfo;
+import org.hibernate.sql.ast.JdbcParameterMetadata;
 import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -337,7 +337,7 @@ public class IngresDialect extends Dialect {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+					SessionFactoryImplementor sessionFactory, Statement statement, @Nullable JdbcParameterMetadata parameterInfo) {
 				return new IngresSqlAstTranslator<>( sessionFactory, statement, parameterInfo );
 			}
 		};

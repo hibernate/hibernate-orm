@@ -27,7 +27,7 @@ import org.hibernate.query.common.FrameKind;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlParameterInfo;
+import org.hibernate.sql.ast.JdbcParameterMetadata;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -81,7 +81,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		super( sessionFactory, statement );
 	}
 
-	public OracleLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+	public OracleLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable JdbcParameterMetadata parameterInfo) {
 		super( sessionFactory, statement, parameterInfo );
 	}
 

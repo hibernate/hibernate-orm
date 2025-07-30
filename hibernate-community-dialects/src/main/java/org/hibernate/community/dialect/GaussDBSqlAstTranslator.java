@@ -10,7 +10,7 @@ import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlParameterInfo;
+import org.hibernate.sql.ast.JdbcParameterMetadata;
 import org.hibernate.sql.ast.spi.SqlAstTranslatorWithMerge;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
@@ -51,7 +51,7 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 		super( sessionFactory, statement );
 	}
 
-	public GaussDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+	public GaussDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable JdbcParameterMetadata parameterInfo) {
 		super( sessionFactory, statement, parameterInfo );
 	}
 

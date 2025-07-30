@@ -8,7 +8,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.SqlParameterInfo;
+import org.hibernate.sql.ast.JdbcParameterMetadata;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -30,7 +30,7 @@ public class StandardSqlAstTranslatorFactory implements SqlAstTranslatorFactory 
 	}
 
 	@Override
-	public SqlAstTranslator<JdbcOperationQuerySelect> buildSelectTranslator(SessionFactoryImplementor sessionFactory, SelectStatement statement, SqlParameterInfo parameterInfo) {
+	public SqlAstTranslator<JdbcOperationQuerySelect> buildSelectTranslator(SessionFactoryImplementor sessionFactory, SelectStatement statement, JdbcParameterMetadata parameterInfo) {
 		return buildTranslator( sessionFactory, statement, parameterInfo );
 	}
 
@@ -40,7 +40,7 @@ public class StandardSqlAstTranslatorFactory implements SqlAstTranslatorFactory 
 	}
 
 	@Override
-	public SqlAstTranslator<? extends JdbcOperationQueryMutation> buildMutationTranslator(SessionFactoryImplementor sessionFactory, MutationStatement statement, SqlParameterInfo parameterInfo) {
+	public SqlAstTranslator<? extends JdbcOperationQueryMutation> buildMutationTranslator(SessionFactoryImplementor sessionFactory, MutationStatement statement, JdbcParameterMetadata parameterInfo) {
 		return buildTranslator( sessionFactory, statement, parameterInfo );
 	}
 
@@ -60,7 +60,7 @@ public class StandardSqlAstTranslatorFactory implements SqlAstTranslatorFactory 
 	/**
 	 * Consolidated building of a translator for all Query cases
 	 */
-	protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+	protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable JdbcParameterMetadata parameterInfo) {
 		return buildTranslator( sessionFactory, statement );
 	}
 

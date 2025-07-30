@@ -10,7 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Locking;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.sql.ast.SqlParameterInfo;
+import org.hibernate.sql.ast.JdbcParameterMetadata;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -37,7 +37,7 @@ public class TeradataSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		this( sessionFactory, statement, null );
 	}
 
-	public TeradataSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+	public TeradataSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable JdbcParameterMetadata parameterInfo) {
 		super( sessionFactory, statement, parameterInfo );
 		supportsLocking = getDialect().getVersion().isSameOrAfter( 14 );
 	}

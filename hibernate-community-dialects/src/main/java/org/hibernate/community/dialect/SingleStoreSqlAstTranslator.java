@@ -17,7 +17,7 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlParameterInfo;
+import org.hibernate.sql.ast.JdbcParameterMetadata;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.MutationStatement;
@@ -62,7 +62,7 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 		this.dialect = dialect;
 	}
 
-	public SingleStoreSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo, SingleStoreDialect dialect) {
+	public SingleStoreSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable JdbcParameterMetadata parameterInfo, SingleStoreDialect dialect) {
 		super( sessionFactory, statement, parameterInfo );
 		this.dialect = dialect;
 	}

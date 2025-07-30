@@ -4,7 +4,7 @@
  */
 package org.hibernate.sql.ast.internal;
 
-import org.hibernate.sql.ast.SqlParameterInfo;
+import org.hibernate.sql.ast.JdbcParameterMetadata;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 
 import java.util.Map;
@@ -12,12 +12,12 @@ import java.util.Map;
 /**
  * @since 7.0
  */
-public class SqlParameterInfoImpl implements SqlParameterInfo {
+public class JdbcParameterMetadataImpl implements JdbcParameterMetadata {
 
 	private final Map<JdbcParameter, Integer> parameterIdMap;
 	private final int parameterIdCount;
 
-	public SqlParameterInfoImpl(Map<JdbcParameter, Integer> parameterIdMap, int parameterIdCount) {
+	public JdbcParameterMetadataImpl(Map<JdbcParameter, Integer> parameterIdMap, int parameterIdCount) {
 		this.parameterIdMap = parameterIdMap;
 		this.parameterIdCount = parameterIdCount;
 	}

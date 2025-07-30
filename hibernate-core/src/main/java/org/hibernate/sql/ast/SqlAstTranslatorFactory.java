@@ -28,7 +28,7 @@ public interface SqlAstTranslatorFactory {
 	 *
 	 * @since 7.1
 	 */
-	SqlAstTranslator<JdbcOperationQuerySelect> buildSelectTranslator(SessionFactoryImplementor sessionFactory, SelectStatement statement, SqlParameterInfo parameterInfo);
+	SqlAstTranslator<JdbcOperationQuerySelect> buildSelectTranslator(SessionFactoryImplementor sessionFactory, SelectStatement statement, JdbcParameterMetadata parameterInfo);
 
 	/**
 	 * Builds a single-use mutation translator
@@ -38,7 +38,7 @@ public interface SqlAstTranslatorFactory {
 	/**
 	 * Builds a single-use mutation translator
 	 */
-	SqlAstTranslator<? extends JdbcOperationQueryMutation> buildMutationTranslator(SessionFactoryImplementor sessionFactory, MutationStatement statement, SqlParameterInfo parameterInfo);
+	SqlAstTranslator<? extends JdbcOperationQueryMutation> buildMutationTranslator(SessionFactoryImplementor sessionFactory, MutationStatement statement, JdbcParameterMetadata parameterInfo);
 
 	/**
 	 * Builds a single-use translator for dealing with model mutations

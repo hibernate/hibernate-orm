@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlParameterInfo;
+import org.hibernate.sql.ast.JdbcParameterMetadata;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
@@ -57,7 +57,7 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 		this.dialect = dialect;
 	}
 
-	public MySQLLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo, MySQLLegacyDialect dialect) {
+	public MySQLLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable JdbcParameterMetadata parameterInfo, MySQLLegacyDialect dialect) {
 		super( sessionFactory, statement, parameterInfo );
 		this.dialect = dialect;
 	}

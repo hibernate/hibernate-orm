@@ -11,7 +11,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlParameterInfo;
+import org.hibernate.sql.ast.JdbcParameterMetadata;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
@@ -58,7 +58,7 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		this.dialect = dialect;
 	}
 
-	public TiDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo, TiDBDialect dialect) {
+	public TiDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable JdbcParameterMetadata parameterInfo, TiDBDialect dialect) {
 		super( sessionFactory, statement, parameterInfo );
 		this.dialect = dialect;
 	}

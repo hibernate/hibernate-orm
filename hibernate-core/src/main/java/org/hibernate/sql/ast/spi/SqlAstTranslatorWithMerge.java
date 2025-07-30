@@ -9,7 +9,7 @@ import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.sql.ast.SqlParameterInfo;
+import org.hibernate.sql.ast.JdbcParameterMetadata;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
@@ -33,7 +33,7 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 		super( sessionFactory, statement );
 	}
 
-	public SqlAstTranslatorWithMerge(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+	public SqlAstTranslatorWithMerge(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable JdbcParameterMetadata parameterInfo) {
 		super( sessionFactory, statement, parameterInfo );
 	}
 

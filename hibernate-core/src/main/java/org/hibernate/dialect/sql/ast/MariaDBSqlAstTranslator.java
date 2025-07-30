@@ -15,7 +15,7 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlParameterInfo;
+import org.hibernate.sql.ast.JdbcParameterMetadata;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
@@ -56,7 +56,7 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 		this.dialect = dialect;
 	}
 
-	public MariaDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo, MariaDBDialect dialect) {
+	public MariaDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable JdbcParameterMetadata parameterInfo, MariaDBDialect dialect) {
 		super( sessionFactory, statement, parameterInfo );
 		this.dialect = dialect;
 	}

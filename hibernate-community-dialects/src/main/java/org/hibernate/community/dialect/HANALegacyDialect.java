@@ -73,7 +73,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.SqlParameterInfo;
+import org.hibernate.sql.ast.JdbcParameterMetadata;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -546,7 +546,7 @@ public class HANALegacyDialect extends Dialect {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, org.hibernate.sql.ast.tree.Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+					SessionFactoryImplementor sessionFactory, org.hibernate.sql.ast.tree.Statement statement, @Nullable JdbcParameterMetadata parameterInfo) {
 				return new HANALegacySqlAstTranslator<>( sessionFactory, statement, parameterInfo );
 			}
 		};

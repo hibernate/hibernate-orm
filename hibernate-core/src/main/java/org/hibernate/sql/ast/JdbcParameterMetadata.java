@@ -11,7 +11,7 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
  *
  * @since 7.1
  */
-public interface SqlParameterInfo {
+public interface JdbcParameterMetadata {
 	/**
 	 * Returns the parameter id for the given {@link JdbcParameter}.
 	 */

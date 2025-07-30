@@ -8,7 +8,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.sql.ast.SqlParameterInfo;
+import org.hibernate.sql.ast.JdbcParameterMetadata;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
@@ -34,7 +34,7 @@ public class DB2zLegacySqlAstTranslator<T extends JdbcOperation> extends DB2Lega
 		this.version = version;
 	}
 
-	public DB2zLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo, DatabaseVersion version) {
+	public DB2zLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable JdbcParameterMetadata parameterInfo, DatabaseVersion version) {
 		super( sessionFactory, statement, parameterInfo );
 		this.version = version;
 	}

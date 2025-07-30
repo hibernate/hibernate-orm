@@ -58,7 +58,7 @@ import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeReso
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.SqlParameterInfo;
+import org.hibernate.sql.ast.JdbcParameterMetadata;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
@@ -668,7 +668,7 @@ public class CockroachDialect extends Dialect {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+					SessionFactoryImplementor sessionFactory, Statement statement, @Nullable JdbcParameterMetadata parameterInfo) {
 				return new CockroachSqlAstTranslator<>( sessionFactory, statement, parameterInfo );
 			}
 		};

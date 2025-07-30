@@ -70,7 +70,7 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlParameterInfo;
+import org.hibernate.sql.ast.JdbcParameterMetadata;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.internal.TableGroupHelper;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
@@ -262,7 +262,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private final List<JdbcParameterBinder> parameterBinders = new ArrayList<>();
 	private final @Nullable int[] parameterIdToBinderIndex;
-	private final @Nullable SqlParameterInfo parameterInfo;
+	private final @Nullable JdbcParameterMetadata parameterInfo;
 	private JdbcParameterBindings jdbcParameterBindings;
 	private Map<JdbcParameter, JdbcParameterBinding> appliedParameterBindings = Collections.emptyMap();
 	private SqlAstNodeRenderingMode parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
@@ -314,7 +314,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		this( sessionFactory, statement, null );
 	}
 
-	protected AbstractSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+	protected AbstractSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable JdbcParameterMetadata parameterInfo) {
 		this.sessionFactory = sessionFactory;
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 		this.dialect = jdbcServices.getDialect();

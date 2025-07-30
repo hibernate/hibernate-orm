@@ -7,6 +7,7 @@ package org.hibernate.orm.test.function.array;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaRoot;
@@ -18,6 +19,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -72,6 +74,7 @@ public class ArrayToStringWithArrayAggregateTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 21, reason = "Oracle bug in version 21")
 	public void testWithCte(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();

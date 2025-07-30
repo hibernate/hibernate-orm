@@ -73,7 +73,7 @@ public class OracleArrayAggEmulation extends AbstractSqmSelfRenderingFunctionDes
 					"Oracle array_agg emulation requires a basic plural return type, but resolved return type was: " + returnType
 			);
 		}
-		final boolean returnJson = pluralType.getJdbcType().getDefaultSqlTypeCode() == SqlTypes.JSON;
+		final boolean returnJson = pluralType.getJdbcType().getDefaultSqlTypeCode() == SqlTypes.JSON_ARRAY;
 		if ( returnJson ) {
 			sqlAppender.append( "json_arrayagg(" );
 		}

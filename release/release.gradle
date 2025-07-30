@@ -507,7 +507,7 @@ class ChangeLogFile {
         def String nextPageToken = null
         def issuetype = null
         do {
-            def apiString = "https://hibernate.atlassian.net/rest/api/3/search/jql/?jql=project=HHH%20AND%20fixVersion=${restReleaseVersion}%20AND%20statusCategory%20%3D%20Done%20order%20by%20issuetype%20ASC&fields=issuetype,summary&maxResults=200${nextPageToken == null ? '' : '&nextPageToken=' + nextPageToken}"
+            def apiString = "https://hibernate.atlassian.net/rest/api/3/search/jql/?jql=project=HHH%20AND%20fixVersion=${restReleaseVersion}%20AND%20statusCategory%20%3D%20Done%20order%20by%20issuetype%20ASC&fields=issuetype,summary,fixVersions&maxResults=200${nextPageToken == null ? '' : '&nextPageToken=' + nextPageToken}"
             def apiUrl = new URI(apiString).toURL()
             def jsonReleaseNotes = new JsonSlurper().parse(apiUrl)
             if (releaseNotes == null) {

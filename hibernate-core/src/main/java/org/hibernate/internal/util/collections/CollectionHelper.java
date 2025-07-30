@@ -343,6 +343,9 @@ public final class CollectionHelper {
 	 * The goal is to save memory.
 	 */
 	public static <K, V> Map<K, V> toSmallMap(final Map<K, V> map) {
+		if ( map == null ) {
+			return emptyMap();
+		}
 		return switch ( map.size() ) {
 			case 0 -> emptyMap();
 			case 1 -> {
@@ -363,6 +366,9 @@ public final class CollectionHelper {
 	 * The goal is to save memory.
 	 */
 	public static <V> List<V> toSmallList(ArrayList<V> arrayList) {
+		if ( arrayList == null ) {
+			return emptyList();
+		}
 		return switch ( arrayList.size() ) {
 			case 0 -> emptyList();
 			case 1 -> singletonList( arrayList.get( 0 ) );

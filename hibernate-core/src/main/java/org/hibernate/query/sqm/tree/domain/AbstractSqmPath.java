@@ -33,7 +33,6 @@ import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 
-import static java.util.Collections.emptyList;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
@@ -49,7 +48,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	 * E.g., given {@code p.mate.mate} the {@code SqmRoot} identified by {@code p} would
 	 * have a reusable path for the {@code p.mate} path.
 	 */
-	private Map<String, SqmPath<?>> reusablePaths;
+	private final Map<String, SqmPath<?>> reusablePaths = new ConcurrentHashMap<>( 0 );
 
 	protected AbstractSqmPath(
 			NavigablePath navigablePath,
@@ -103,24 +102,19 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 
 	@Override
 	public List<SqmPath<?>> getReusablePaths() {
-		return reusablePaths == null ? emptyList() : new ArrayList<>( reusablePaths.values() );
+		return new ArrayList<>( reusablePaths.values() );
 	}
 
 	@Override
 	public void visitReusablePaths(Consumer<SqmPath<?>> consumer) {
-		if ( reusablePaths != null ) {
-			reusablePaths.values().forEach( consumer );
-		}
+		reusablePaths.values().forEach( consumer );
 	}
 
 	@Override
 	public void registerReusablePath(SqmPath<?> path) {
 		assert path.getLhs() == this;
-		if ( reusablePaths == null ) {
-			reusablePaths = new ConcurrentHashMap<>();
-		}
 		final String relativeName = path.getNavigablePath().getLocalName();
-		final SqmPath<?> previous = reusablePaths.put( relativeName, path );
+		final SqmPath<?> previous = reusablePaths.putIfAbsent( relativeName, path );
 		if ( previous != null && previous != path ) {
 			throw new IllegalStateException( "Implicit-join path registration unexpectedly overrode previous registration - " + relativeName );
 		}
@@ -128,7 +122,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 
 	@Override
 	public SqmPath<?> getReusablePath(String name) {
-		return reusablePaths == null ? null : reusablePaths.get( name );
+		return reusablePaths.get( name );
 	}
 
 	@Override
@@ -206,18 +200,10 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	protected <X> SqmPath<X> resolvePath(String attributeName, SqmPathSource<X> pathSource) {
 		final SqmPathSource<?> intermediatePathSource =
 				getResolvedModel().getIntermediatePathSource( pathSource );
-		if ( reusablePaths == null ) {
-			reusablePaths = new ConcurrentHashMap<>();
-			final SqmPath<X> path = pathSource.createSqmPath( this, intermediatePathSource );
-			reusablePaths.put( attributeName, path );
-			return path;
-		}
-		else {
-			//noinspection unchecked
-			return (SqmPath<X>)
-					reusablePaths.computeIfAbsent( attributeName,
-							name -> pathSource.createSqmPath( this, intermediatePathSource ) );
-		}
+		//noinspection unchecked
+		return (SqmPath<X>)
+				reusablePaths.computeIfAbsent( attributeName,
+						name -> pathSource.createSqmPath( this, intermediatePathSource ) );
 	}
 
 	protected <S extends T> SqmTreatedPath<T, S> getTreatedPath(ManagedDomainType<S> treatTarget) {

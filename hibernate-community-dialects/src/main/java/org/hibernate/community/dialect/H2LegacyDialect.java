@@ -720,7 +720,7 @@ public class H2LegacyDialect extends Dialect {
 
 	@Override
 	public LockingSupport getLockingSupport() {
-		return H2LockingSupport.H2_LOCKING_SUPPORT;
+		return getVersion().isSameOrAfter( 2, 2, 220 ) ? H2LockingSupport.INSTANCE : H2LockingSupport.LEGACY_INSTANCE;
 	}
 
 	@Override

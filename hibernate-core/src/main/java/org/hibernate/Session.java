@@ -1101,7 +1101,12 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return an instance of {@link IdentifierLoadAccess} for executing the lookup
 	 *
 	 * @throws HibernateException If the given class does not resolve as a mapped entity
+	 *
+	 * @deprecated This method will be removed.
+	 *             Use {@link #find(Class, Object, FindOption...)} instead.
+	 *             See {@link FindOption}.
 	 */
+	@Deprecated(since = "7.1", forRemoval = true)
 	<T> IdentifierLoadAccess<T> byId(Class<T> entityClass);
 
 	/**
@@ -1113,7 +1118,12 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return an instance of {@link IdentifierLoadAccess} for executing the lookup
 	 *
 	 * @throws HibernateException If the given name does not resolve to a mapped entity
+	 *
+	 * @deprecated This method will be removed.
+	 *             Use {@link #find(Class, Object, FindOption...)} instead.
+	 *             See {@link FindOption}.
 	 */
+	@Deprecated(since = "7.1", forRemoval = true)
 	<T> IdentifierLoadAccess<T> byId(String entityName);
 
 	/**

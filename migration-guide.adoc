@@ -92,6 +92,21 @@ Applications should instead use proper object-oriented encapsulation, exposing m
 
 Additionally, attempting to re-enhance a class with different options is no longer allowed and will result in a `FeatureMismatchException`.
 
+The Gradle plugin configuration has changed slightly. When using the default setup:
+
+```
+hibernate { enhancement }
+```
+
+it should be updated to:
+
+```
+hibernate {
+    enhancement {}
+}
+```
+
+in order to properly enable Bytecode Enhancement.
 
 [[session-getLobHelper]]
 === Session#getLobHelper

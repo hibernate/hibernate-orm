@@ -2133,7 +2133,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			handleIdentifierValueBinding(
 					entityBinding.getIdentifier(),
 					dialect,
-					(RootClass) entityBinding
+					(RootClass) entityBinding,
+					entityBinding.getIdentifierProperty()
 			);
 
 		}
@@ -2146,15 +2147,14 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			handleIdentifierValueBinding(
 					( (IdentifierCollection) collection ).getIdentifier(),
 					dialect,
+					null,
 					null
 			);
 		}
 	}
 
 	private void handleIdentifierValueBinding(
-			KeyValue identifierValueBinding,
-			Dialect dialect,
-			RootClass entityBinding) {
+			KeyValue identifierValueBinding, Dialect dialect, RootClass entityBinding, Property identifierProperty) {
 		// todo : store this result (back into the entity or into the KeyValue, maybe?)
 		// 		This process of instantiating the id-generator is called multiple times.
 		//		It was done this way in the old code too, so no "regression" here; but
@@ -2163,7 +2163,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			final Generator generator = identifierValueBinding.createGenerator(
 					bootstrapContext.getIdentifierGeneratorFactory(),
 					dialect,
-					entityBinding
+					entityBinding,
+					identifierProperty
 			);
 
 			if ( generator instanceof ExportableProducer ) {

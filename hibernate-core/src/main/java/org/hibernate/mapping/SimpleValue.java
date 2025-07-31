@@ -392,10 +392,19 @@ public abstract class SimpleValue implements KeyValue {
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
 			RootClass rootClass) throws MappingException {
+		return createGenerator( identifierGeneratorFactory, dialect, rootClass, rootClass == null ? null : rootClass.getIdentifierProperty() );
+	}
+
+	@Override
+	public Generator createGenerator(
+			IdentifierGeneratorFactory identifierGeneratorFactory,
+			Dialect dialect,
+			RootClass rootClass,
+			Property property) throws MappingException {
 		if ( generator == null ) {
 			if ( customIdGeneratorCreator != null ) {
 				generator = customIdGeneratorCreator.createGenerator(
-						new IdGeneratorCreationContext( identifierGeneratorFactory, null, null, rootClass )
+						new IdGeneratorCreationContext( identifierGeneratorFactory, null, null, rootClass, property)
 				);
 			}
 			else {
@@ -1080,12 +1089,19 @@ public abstract class SimpleValue implements KeyValue {
 		private final String defaultCatalog;
 		private final String defaultSchema;
 		private final RootClass rootClass;
+		private final Property property;
 
-		public IdGeneratorCreationContext(IdentifierGeneratorFactory identifierGeneratorFactory, String defaultCatalog, String defaultSchema, RootClass rootClass) {
+		public IdGeneratorCreationContext(
+				IdentifierGeneratorFactory identifierGeneratorFactory,
+				String defaultCatalog,
+				String defaultSchema,
+				RootClass rootClass,
+				Property property) {
 			this.identifierGeneratorFactory = identifierGeneratorFactory;
 			this.defaultCatalog = defaultCatalog;
 			this.defaultSchema = defaultSchema;
 			this.rootClass = rootClass;
+			this.property = property;
 		}
 
 		@Override
@@ -1125,7 +1141,7 @@ public abstract class SimpleValue implements KeyValue {
 
 		@Override
 		public Property getProperty() {
-			return rootClass.getIdentifierProperty();
+			return property;
 		}
 
 		// we could add these if it helps integrate old infrastructure

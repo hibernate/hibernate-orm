@@ -2599,6 +2599,19 @@ public class SessionImpl
 	}
 
 	@Override
+	public Object find(String entityName, Object primaryKey) {
+		final IdentifierLoadAccessImpl<Object> loadAccess = byId( entityName );
+		return loadAccess.load( primaryKey );
+	}
+
+	@Override
+	public Object find(String entityName, Object primaryKey, FindOption... options) {
+		final IdentifierLoadAccessImpl<Object> loadAccess = byId( entityName );
+		setLoadAccessOptions( options, loadAccess );
+		return loadAccess.load( primaryKey );
+	}
+
+	@Override
 	public <T> T getReference(Class<T> entityClass, Object id) {
 		checkOpen();
 

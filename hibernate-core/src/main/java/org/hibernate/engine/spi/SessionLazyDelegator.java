@@ -805,6 +805,16 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public Object find(String entityName, Object primaryKey) {
+		return this.lazySession.get().find( entityName, primaryKey );
+	}
+
+	@Override
+	public Object find(String entityName, Object primaryKey, FindOption... options) {
+		return this.lazySession.get().find( entityName, primaryKey, options );
+	}
+
+	@Override
 	public void lock(Object entity, LockModeType lockMode) {
 		this.lazySession.get().lock( entity, lockMode );
 	}

@@ -876,6 +876,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public Object find(String entityName, Object primaryKey) {
+		return delegate.find( entityName, primaryKey );
+	}
+
+	@Override
+	public Object find(String entityName, Object primaryKey, FindOption... options) {
+		return delegate.find( entityName, primaryKey, options );
+	}
+
+	@Override
 	public <T> T getReference(Class<T> entityClass, Object id) {
 		return delegate.getReference( entityClass, id );
 	}

@@ -528,6 +528,28 @@ public interface Session extends SharedSessionContract, EntityManager {
 	<T> T find(Class<T> entityType, Object id);
 
 	/**
+	 * Return the persistent instance of the named entity type with the given identifier,
+	 * or null if there is no such persistent instance.
+	 * <p/>
+	 * Differs from {@linkplain #find(Class, Object)} in that this form accepts
+	 * the entity name of a {@linkplain org.hibernate.metamodel.RepresentationMode#MAP dynamic entity}.
+	 *
+	 * @see #find(Class, Object)
+	 */
+	Object find(String entityName, Object primaryKey);
+
+	/**
+	 * Return the persistent instance of the named entity type with the given identifier
+	 * using the specified options, or null if there is no such persistent instance.
+	 * <p/>
+	 * Differs from {@linkplain #find(Class, Object, FindOption...)} in that this form accepts
+	 * the entity name of a {@linkplain org.hibernate.metamodel.RepresentationMode#MAP dynamic entity}.
+	 *
+	 * @see #find(Class, Object, FindOption...)
+	 */
+	Object find(String entityName, Object primaryKey, FindOption... options);
+
+	/**
 	 * Return the persistent instances of the given entity class with the given identifiers
 	 * as a list. The position of an instance in the returned list matches the position of its
 	 * identifier in the given list of identifiers, and the returned list contains a null value

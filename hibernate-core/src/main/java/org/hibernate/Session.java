@@ -1142,7 +1142,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @throws HibernateException If the given name does not resolve to a mapped entity
 	 *
 	 * @deprecated This method will be removed.
-	 *             Use {@link #find(Class, Object, FindOption...)} instead.
+	 *             Use {@link #find(String, Object, FindOption...)} instead.
 	 *             See {@link FindOption}.
 	 */
 	@Deprecated(since = "7.1", forRemoval = true)

@@ -17,6 +17,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.jpa.event.spi.CallbackType;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.models.spi.AnnotationDescriptor;
@@ -282,7 +283,9 @@ public final class CallbackDefinitionResolver {
 		//       code was added by HHH-12326
 		collector.addSecondPass( persistentClasses -> {
 			for ( Property property : persistentClass.getDeclaredProperties() ) {
-				if ( property.isComposite() ) {
+			if ( property.getValue() instanceof Component component
+					// embedded components don't have their own class, so no need to check callbacks (see HHH-19671)
+					&& !component.isEmbedded() ) {
 					try {
 						final Class<?> mappedClass = persistentClass.getMappedClass();
 						for ( CallbackType type : CallbackType.values() ) {

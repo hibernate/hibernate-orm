@@ -8,12 +8,17 @@ import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.MutableObject;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.mutation.spi.MultiTableHandler;
+import org.hibernate.query.sqm.mutation.spi.MultiTableHandlerBuildResult;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+
 
 /**
  * Strategy based on ANSI SQL's definition of a "local temporary table" (local to each db session).
@@ -54,11 +59,9 @@ public class LocalTemporaryTableInsertStrategy extends LocalTemporaryTableStrate
 	}
 
 	@Override
-	public int executeInsert(
-			SqmInsertStatement<?> sqmInsertStatement,
-			DomainParameterXref domainParameterXref,
-			DomainQueryExecutionContext context) {
-		return new TableBasedInsertHandler(
+	public MultiTableHandlerBuildResult buildHandler(SqmInsertStatement<?> sqmInsertStatement, DomainParameterXref domainParameterXref, DomainQueryExecutionContext context) {
+		final MutableObject<JdbcParameterBindings> firstJdbcParameterBindings = new MutableObject<>();
+		final MultiTableHandler multiTableHandler = new TableBasedInsertHandler(
 				sqmInsertStatement,
 				domainParameterXref,
 				getTemporaryTable(),
@@ -67,7 +70,9 @@ public class LocalTemporaryTableInsertStrategy extends LocalTemporaryTableStrate
 				session -> {
 					throw new UnsupportedOperationException( "Unexpected call to access Session uid" );
 				},
-				getSessionFactory()
-		).execute( context );
+				context,
+				firstJdbcParameterBindings
+		);
+		return new MultiTableHandlerBuildResult( multiTableHandler, firstJdbcParameterBindings.get() );
 	}
 }

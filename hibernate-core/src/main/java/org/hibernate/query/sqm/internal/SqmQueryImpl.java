@@ -615,7 +615,7 @@ public class SqmQueryImpl<R>
 						.getEntityDescriptor( sqmUpdate.getTarget().getModel().getHibernateEntityName() );
 		final SqmMultiTableMutationStrategy multiTableStrategy = persister.getSqmMultiTableMutationStrategy();
 		return multiTableStrategy == null
-				? new SimpleUpdateQueryPlan( sqmUpdate, domainParameterXref )
+				? new SimpleNonSelectQueryPlan( sqmUpdate, domainParameterXref )
 				: new MultiTableUpdateQueryPlan( sqmUpdate, domainParameterXref, multiTableStrategy );
 	}
 
@@ -653,13 +653,13 @@ public class SqmQueryImpl<R>
 				final SqmInsertValuesStatement<?> subInsert =
 						insertValues.copyWithoutValues( SqmCopyContext.simpleContext() );
 				subInsert.values( valuesList.get( i ) );
-				planParts[i] = new SimpleInsertQueryPlan( subInsert, domainParameterXref );
+				planParts[i] = new SimpleNonSelectQueryPlan( subInsert, domainParameterXref );
 			}
 
 			return new AggregatedNonSelectQueryPlanImpl( planParts );
 		}
 
-		return new SimpleInsertQueryPlan( sqmInsert, domainParameterXref );
+		return new SimpleNonSelectQueryPlan( sqmInsert, domainParameterXref );
 	}
 
 	protected boolean hasIdentifierAssigned(SqmInsertStatement<?> sqmInsert, EntityPersister entityDescriptor) {

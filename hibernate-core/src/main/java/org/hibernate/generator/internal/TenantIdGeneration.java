@@ -18,6 +18,7 @@ import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
 import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
@@ -32,6 +33,10 @@ public class TenantIdGeneration implements BeforeExecutionGenerator {
 
 	private final String entityName;
 	private final String propertyName;
+
+	public TenantIdGeneration(TenantId annotation, Member member, CustomIdGeneratorCreationContext context) {
+		this(annotation, member, (GeneratorCreationContext) context);
+	}
 
 	public TenantIdGeneration(TenantId annotation, Member member, GeneratorCreationContext context) {
 		entityName = context.getPersistentClass() == null

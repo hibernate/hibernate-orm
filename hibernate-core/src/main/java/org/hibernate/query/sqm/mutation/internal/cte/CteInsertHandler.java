@@ -702,7 +702,7 @@ public class CteInsertHandler implements InsertHandler {
 
 		final Generator identifierGenerator = entityDescriptor.getEntityPersister().getGenerator();
 		final List<Map.Entry<List<CteColumn>, Assignment>> tableAssignments = assignmentsByTable.get( rootTableReference );
-		if ( ( tableAssignments == null || tableAssignments.isEmpty() )
+		if ( !assignsId && ( tableAssignments == null || tableAssignments.isEmpty() )
 				&& !identifierGenerator.generatedOnExecution() ) {
 			throw new IllegalStateException( "There must be at least a single root table assignment" );
 		}

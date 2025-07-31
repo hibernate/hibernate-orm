@@ -217,7 +217,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			);
 
 			if ( rows != 0 ) {
-				final EntityPersister persister = entityDescriptor.getEntityPersister();
+				final EntityPersister 	persister = entityDescriptor.getEntityPersister();
 				final int tableSpan = persister.getTableSpan();
 				final int insertedRows = insertRootTable(
 						persister.getTableName( 0 ),
@@ -316,10 +316,11 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
 		final Generator generator = entityPersister.getGenerator();
 		final List<Assignment> assignments = assignmentsByTable.get( tableExpression );
-		if ( ( assignments == null || assignments.isEmpty() )
-				&& !generator.generatedOnExecution()
-				&& ( !( generator instanceof BulkInsertionCapableIdentifierGenerator )
-					|| ( (BulkInsertionCapableIdentifierGenerator) generator ).supportsBulkInsertionIdentifierGeneration() ) ) {
+		if ( !assignsId
+			&& (assignments == null || assignments.isEmpty())
+			&& !generator.generatedOnExecution()
+			&& (!(generator instanceof BulkInsertionCapableIdentifierGenerator)
+				|| ((BulkInsertionCapableIdentifierGenerator) generator).supportsBulkInsertionIdentifierGeneration()) ) {
 			throw new IllegalStateException( "There must be at least a single root table assignment" );
 		}
 

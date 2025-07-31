@@ -7,6 +7,11 @@ plugins {
 	id "local.java-module"
 }
 
+def skipJacoco = project.hasProperty('skipJacoco') ? project.getProperty('skipJacoco').toBoolean() : false
+if (!skipJacoco) {
+	plugins.apply('jacoco')
+}
+
 description = 'Integration tests for running Hibernate ORM in the Java module path'
 
 // See https://docs.gradle.org/6.7.1/userguide/java_testing.html#blackbox_integration_testing

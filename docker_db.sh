@@ -16,102 +16,79 @@ else
 fi
 
 mysql() {
-  mysql_9_2
+    mysql_9_4
 }
 
 mysql_8_0() {
-    $CONTAINER_CLI rm -f mysql || true
-    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MYSQL_8_0:-docker.io/mysql:8.0.31} --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --skip-character-set-client-handshake --log-bin-trust-function-creators=1 --lower_case_table_names=2
-    # Give the container some time to start
-    OUTPUT=
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
-        { OUTPUT="$( { $CONTAINER_CLI logs mysql; } 2>&1 1>&3 3>&- )"; } 3>&1;
-        if [[ $OUTPUT == *"ready for connections"* ]]; then
-          break;
-        fi
-        n=$((n+1))
-        echo "Waiting for MySQL to start..."
-        sleep 5
-    done
-    if [ "$n" -ge 5 ]; then
-      echo "MySQL failed to start and configure after 15 seconds"
-    else
-      echo "MySQL successfully started"
-    fi
+    local skip="--skip-character-set-client-handshake"
+    mysql_setup "8.0" "$skip"
 }
 
 mysql_8_1() {
-    $CONTAINER_CLI rm -f mysql || true
-    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MYSQL_8_1:-docker.io/mysql:8.1.0} --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --skip-character-set-client-handshake --log-bin-trust-function-creators=1 --lower_case_table_names=2
-    # Give the container some time to start
-    OUTPUT=
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
-        { OUTPUT="$( { $CONTAINER_CLI logs mysql; } 2>&1 1>&3 3>&- )"; } 3>&1;
-        if [[ $OUTPUT == *"ready for connections"* ]]; then
-          break;
-        fi
-        n=$((n+1))
-        echo "Waiting for MySQL to start..."
-        sleep 5
-    done
-    if [ "$n" -ge 5 ]; then
-      echo "MySQL failed to start and configure after 15 seconds"
-    else
-      echo "MySQL successfully started"
-    fi
+    local skip="--skip-character-set-client-handshake"
+    mysql_setup "8.1" "$skip"
 }
 
 mysql_8_2() {
+    local skip="--skip-character-set-client-handshake"
+    mysql_setup "8.2" "$skip"
+}
+
+mysql_9_2() {
+    local init_connect="--init-connect=SET character_set_client='utf8mb4';SET character_set_results='utf8mb4';SET character_set_connection='utf8mb4';SET collation_connection='utf8mb4_0900_as_cs';"
+    mysql_setup "9.2" "$init_connect"
+}
+
+mysql_9_4() {
+    local init_connect="--init-connect=SET character_set_client='utf8mb4';SET character_set_results='utf8mb4';SET character_set_connection='utf8mb4';SET collation_connection='utf8mb4_0900_as_cs';"
+    mysql_setup "9.4" "$init_connect"
+}
+
+# Generic MySQL function that handles all versions
+mysql_setup() {
+    local version=$1
+    local extra_args=$2
+
+    echo "${extra_args}"
+
+    # Derive image_var and default_image from version
+    local version_underscore=$(echo "$version" | tr '.' '_')
+    local image_var="DB_IMAGE_MYSQL_${version_underscore}"
+    local default_image="docker.io/mysql:${version}"
+    local image_value
+    eval "image_value=\${${image_var}:-${default_image}}"
+
     $CONTAINER_CLI rm -f mysql || true
-    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MYSQL_8_2:-docker.io/mysql:8.2.0} --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --skip-character-set-client-handshake --log-bin-trust-function-creators=1 --lower_case_table_names=2
-    # Give the container some time to start
+
+    $CONTAINER_CLI run --name mysql \
+        -e MYSQL_USER=hibernate_orm_test \
+        -e MYSQL_PASSWORD=hibernate_orm_test \
+        -e MYSQL_ROOT_PASSWORD=hibernate_orm_test \
+        -e MYSQL_DATABASE=hibernate_orm_test \
+        -p3306:3306 -d "${image_value}" \
+        --character-set-server=utf8mb4 \
+        --collation-server=utf8mb4_0900_as_cs \
+        --log-bin-trust-function-creators=1 \
+        --lower_case_table_names=2 \
+        "${extra_args}"
+
+    # Wait for MySQL to start
     OUTPUT=
     n=0
-    until [ "$n" -ge 5 ]
-    do
-        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
+    until [ "$n" -gt 5 ]; do
         { OUTPUT="$( { $CONTAINER_CLI logs mysql; } 2>&1 1>&3 3>&- )"; } 3>&1;
         if [[ $OUTPUT == *"ready for connections"* ]]; then
-          break;
+            break;
         fi
         n=$((n+1))
         echo "Waiting for MySQL to start..."
         sleep 5
     done
-    if [ "$n" -ge 5 ]; then
-      echo "MySQL failed to start and configure after 15 seconds"
-    else
-      echo "MySQL successfully started"
-    fi
-}
 
-mysql_9_2() {
-    $CONTAINER_CLI rm -f mysql || true
-    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MYSQL_9_2:-docker.io/mysql:9.2.0} --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --init-connect="SET character_set_client= 'utf8mb4';SET character_set_results = 'utf8mb4'; SET character_set_connection= 'utf8mb4'; SET collation_connection = 'utf8mb4_0900_as_cs';" --log-bin-trust-function-creators=1 --lower_case_table_names=2
-    # Give the container some time to start
-    OUTPUT=
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
-        { OUTPUT="$( { $CONTAINER_CLI logs mysql; } 2>&1 1>&3 3>&- )"; } 3>&1;
-        if [[ $OUTPUT == *"ready for connections"* ]]; then
-          break;
-        fi
-        n=$((n+1))
-        echo "Waiting for MySQL to start..."
-        sleep 3
-    done
-    if [ "$n" -ge 5 ]; then
-      echo "MySQL failed to start and configure after 15 seconds"
+    if [ "$n" -gt 5 ]; then
+        echo "MySQL failed to start and configure after 30 seconds"
     else
-      echo "MySQL successfully started"
+        echo "MySQL successfully started"
     fi
 }
 
@@ -1132,6 +1109,7 @@ if [ -z ${1} ]; then
     echo -e "\tmssql_2022"
     echo -e "\tmssql_2017"
     echo -e "\tmysql"
+    echo -e "\tmysql_9_4"
     echo -e "\tmysql_9_2"
     echo -e "\tmysql_8_2"
     echo -e "\tmysql_8_1"

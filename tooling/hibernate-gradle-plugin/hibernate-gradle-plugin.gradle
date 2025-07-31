@@ -6,7 +6,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
 	id 'java-gradle-plugin'
-	id "local.module"
+	id "local.java-module"
 	id "local.javadoc"
 	id "local.code-quality"
 

@@ -1,16 +1,10 @@
 package org.hibernate.tool.ant.hbm2java;
 
-import org.apache.tools.ant.DefaultLogger;
-import org.apache.tools.ant.Project;
-import org.apache.tools.ant.ProjectHelper;
 import org.hibernate.tool.it.ant.TestTemplate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.PrintStream;
 import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -21,13 +15,11 @@ import static org.junit.jupiter.api.Assertions.*;
 public class UseGenericsTestIT extends TestTemplate {
 	
 	private File buildXmlFile;
-	private ByteArrayOutputStream output;
 	private File databaseFile;
 	private File personFile;
 	
 	@BeforeEach
 	public void beforeEach() {
-		output = new ByteArrayOutputStream();
 		databaseFile = new File(getProjectDir(), "database/test.mv.db");
 		assertFalse(databaseFile.exists());
 		personFile = new File(getProjectDir(), "generated/Person.java");
@@ -82,14 +74,6 @@ public class UseGenericsTestIT extends TestTemplate {
 		assertTrue(hibernatePropertiesFile.exists());
 	}
 	
-    private void runAntBuild() {
-    	Project project = new Project();
-    	project.setBaseDir(getProjectDir());
-    	project.addBuildListener(getConsoleLogger());
-        ProjectHelper.getProjectHelper().parse(project, buildXmlFile);
-   	    project.executeTarget(project.getDefaultTarget());
-    }
-    
 	private void verifyResult() throws Exception {
 		File generatedOutputFolder = new File(getProjectDir(), "generated");
 		assertTrue(generatedOutputFolder.exists());
@@ -110,14 +94,6 @@ public class UseGenericsTestIT extends TestTemplate {
 		assertTrue(generatedItemJavaFileContents.contains("public class Item "));
 	}
 	
-    private DefaultLogger getConsoleLogger() {
-        DefaultLogger consoleLogger = new DefaultLogger();
-        consoleLogger.setErrorPrintStream(System.err);
-        consoleLogger.setOutputPrintStream(new PrintStream(output, true));
-        consoleLogger.setMessageOutputLevel(Project.MSG_INFO);
-        return consoleLogger;
-    }
-    
 	private String constructJdbcConnectionString() {
 		return "jdbc:h2:" + getProjectDir().getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
 	}

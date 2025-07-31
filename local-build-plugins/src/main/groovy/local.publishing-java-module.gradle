@@ -9,6 +9,13 @@ plugins {
     id "local.code-quality"
 }
 
+// Ideally this should be in `local.java-module.gradle`,
+// but we need to skip this in hibernate-gradle-plugin.
+def skipJacoco = project.hasProperty('skipJacoco') ? project.getProperty('skipJacoco').toBoolean() : false
+if (!skipJacoco) {
+    plugins.apply('jacoco')
+}
+
 configurations {
     javadocSources {
         description = "All Java sources for the project's Javadoc"

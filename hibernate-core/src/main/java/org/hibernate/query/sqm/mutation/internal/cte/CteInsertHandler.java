@@ -12,10 +12,10 @@ import org.hibernate.generator.Generator;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
+import org.hibernate.internal.util.MutableObject;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.persister.entity.EntityPersister;
@@ -23,6 +23,8 @@ import org.hibernate.query.SemanticException;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.results.internal.TableGroupImpl;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -91,6 +93,7 @@ import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
@@ -117,60 +120,25 @@ public class CteInsertHandler implements InsertHandler {
 	public static final String CTE_TABLE_IDENTIFIER = "id";
 	public static final String ROW_NUMBERS_WITH_SEQUENCE_VALUE = "rows_with_next_val";
 
-	private final SqmInsertStatement<?> sqmStatement;
-
-	private final SessionFactoryImplementor sessionFactory;
-	private final EntityMappingType entityDescriptor;
-	private final CteTable cteTable;
 	private final DomainParameterXref domainParameterXref;
+	private final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref;
+	private final Map<SqmParameter<?>, MappingModelExpressible<?>> resolvedParameterMappingModelTypes;
+
+	private final JdbcOperationQuerySelect select;
 
 	public CteInsertHandler(
 			CteTable cteTable,
 			SqmInsertStatement<?> sqmStatement,
 			DomainParameterXref domainParameterXref,
-			SessionFactoryImplementor sessionFactory) {
-		this.sqmStatement = sqmStatement;
-		this.sessionFactory = sessionFactory;
-
-		final String entityName = this.sqmStatement.getTarget()
+			DomainQueryExecutionContext context,
+			MutableObject<JdbcParameterBindings> firstJdbcParameterBindingsConsumer) {
+		final String entityName = sqmStatement.getTarget()
 				.getModel()
 				.getHibernateEntityName();
 
-		this.entityDescriptor = sessionFactory.getMappingMetamodel().getEntityDescriptor( entityName );
-		this.cteTable = cteTable;
-		this.domainParameterXref = domainParameterXref;
-	}
-
-	public static CteTable createCteTable(CteTable sqmCteTable, List<CteColumn> sqmCteColumns) {
-		return new CteTable( sqmCteTable.getTableExpression(), sqmCteColumns );
-	}
-
-	public SqmInsertStatement<?> getSqmStatement() {
-		return sqmStatement;
-	}
-
-	public EntityMappingType getEntityDescriptor() {
-		return entityDescriptor;
-	}
-
-	public CteTable getCteTable() {
-		return cteTable;
-	}
-
-	public DomainParameterXref getDomainParameterXref() {
-		return domainParameterXref;
-	}
-
-	private NodeBuilder getCriteriaBuilder() {
-		return sessionFactory.getQueryEngine().getCriteriaBuilder();
-	}
-
-	@Override
-	public int execute(DomainQueryExecutionContext executionContext) {
-		final SqmInsertStatement<?> sqmInsertStatement = getSqmStatement();
-		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
-		final EntityPersister entityDescriptor = getEntityDescriptor().getEntityPersister();
-		final SqmRoot<?> target = sqmInsertStatement.getTarget();
+		final SessionFactoryImplementor factory = context.getSession().getFactory();
+		final EntityPersister entityDescriptor = factory.getMappingMetamodel().getEntityDescriptor( entityName );
+		final SqmRoot<?> target = sqmStatement.getTarget();
 		final String explicitDmlTargetAlias =
 				target.getExplicitAlias() == null
 						? "dml_target"
@@ -178,13 +146,13 @@ public class CteInsertHandler implements InsertHandler {
 
 		final MultiTableSqmMutationConverter sqmConverter = new MultiTableSqmMutationConverter(
 				entityDescriptor,
-				sqmInsertStatement,
+				sqmStatement,
 				target,
 				explicitDmlTargetAlias,
 				domainParameterXref,
-				executionContext.getQueryOptions(),
-				executionContext.getSession().getLoadQueryInfluencers(),
-				executionContext.getQueryParameterBindings(),
+				context.getQueryOptions(),
+				context.getSession().getLoadQueryInfluencers(),
+				context.getQueryParameterBindings(),
 				factory.getSqlTranslationEngine()
 		);
 		final TableGroup insertingTableGroup = sqmConverter.getMutatingTableGroup();
@@ -212,7 +180,7 @@ public class CteInsertHandler implements InsertHandler {
 							)
 					);
 				},
-				sqmInsertStatement,
+				sqmStatement,
 				entityDescriptor,
 				insertingTableGroup
 		);
@@ -225,13 +193,13 @@ public class CteInsertHandler implements InsertHandler {
 		final Stack<SqlAstProcessingState> processingStateStack = sqmConverter.getProcessingStateStack();
 		final SqlAstProcessingState oldState = processingStateStack.pop();
 		final Statement queryStatement;
-		if ( sqmInsertStatement instanceof SqmInsertSelectStatement ) {
-			final QueryPart queryPart = sqmConverter.visitQueryPart( ( (SqmInsertSelectStatement<?>) sqmInsertStatement ).getSelectQueryPart() );
+		if ( sqmStatement instanceof SqmInsertSelectStatement ) {
+			final QueryPart queryPart = sqmConverter.visitQueryPart( ( (SqmInsertSelectStatement<?>) sqmStatement ).getSelectQueryPart() );
 			queryPart.visitQuerySpecs(
 					querySpec -> {
 						// This returns true if the insertion target uses a sequence with an optimizer
 						// in which case we will fill the row_number column instead of the id column
-						if ( additionalInsertValues.applySelections( querySpec, sessionFactory ) ) {
+						if ( additionalInsertValues.applySelections( querySpec, factory ) ) {
 							final CteColumn rowNumberColumn = cteTable.getCteColumns()
 									.get( cteTable.getCteColumns().size() - 1 );
 							targetPathCteColumns.set(
@@ -245,7 +213,7 @@ public class CteInsertHandler implements InsertHandler {
 											0,
 											SqmInsertStrategyHelper.createRowNumberingExpression(
 													querySpec,
-													sessionFactory
+													factory
 											)
 									)
 							);
@@ -255,7 +223,7 @@ public class CteInsertHandler implements InsertHandler {
 			queryStatement = new SelectStatement( queryPart );
 		}
 		else {
-			final List<SqmValues> sqmValuesList = ( (SqmInsertValuesStatement<?>) sqmInsertStatement ).getValuesList();
+			final List<SqmValues> sqmValuesList = ( (SqmInsertValuesStatement<?>) sqmStatement ).getValuesList();
 			final List<Values> valuesList = new ArrayList<>( sqmValuesList.size() );
 			for ( SqmValues sqmValues : sqmValuesList ) {
 				final Values values = sqmConverter.visitValues( sqmValues );
@@ -280,7 +248,7 @@ public class CteInsertHandler implements InsertHandler {
 													false,
 													null,
 													columnReference.getJdbcMapping()
-									)
+											)
 							)
 					);
 				}
@@ -291,7 +259,7 @@ public class CteInsertHandler implements InsertHandler {
 								0,
 								SqmInsertStrategyHelper.createRowNumberingExpression(
 										querySpec,
-										sessionFactory
+										factory
 								)
 						)
 				);
@@ -318,7 +286,7 @@ public class CteInsertHandler implements InsertHandler {
 			targetPathCteColumns.add( rowNumberColumn );
 		}
 
-		final CteTable entityCteTable = createCteTable( getCteTable(), targetPathCteColumns );
+		final CteTable entityCteTable = createCteTable( cteTable, targetPathCteColumns );
 
 		// Create the main query spec that will return the count of rows
 		final QuerySpec querySpec = new QuerySpec( true, 1 );
@@ -327,7 +295,7 @@ public class CteInsertHandler implements InsertHandler {
 
 		final CteStatement entityCte;
 		if ( additionalInsertValues.requiresRowNumberIntermediate() ) {
-			final CteTable fullEntityCteTable = getCteTable();
+			final CteTable fullEntityCteTable = cteTable;
 			final String baseTableName = "base_" + entityCteTable.getTableExpression();
 			final CteStatement baseEntityCte = new CteStatement(
 					entityCteTable.withName( baseTableName ),
@@ -385,12 +353,12 @@ public class CteInsertHandler implements InsertHandler {
 						(BulkInsertionCapableIdentifierGenerator) entityDescriptor.getGenerator();
 				final String fragment =
 						generator.determineBulkInsertionIdentifierGenerationSelectFragment(
-								sessionFactory.getSqlStringGenerationContext()
+								factory.getSqlStringGenerationContext()
 						);
 
 				final Expression lowValueExpression = optimizer.createLowValueExpression(
 						new SelfRenderingSqlFragmentExpression( fragment ),
-						sessionFactory
+						factory
 				);
 				rowsWithSequenceQuery.getSelectClause()
 						.addSqlSelection( new SqlSelectionImpl( 1, lowValueExpression ) );
@@ -488,12 +456,12 @@ public class CteInsertHandler implements InsertHandler {
 						)
 				);
 				final CteTable finalEntityCteTable;
-				if ( targetPathCteColumns.contains( getCteTable().getCteColumns().get( 0 ) ) ) {
+				if ( targetPathCteColumns.contains( cteTable.getCteColumns().get( 0 ) ) ) {
 					finalEntityCteTable = entityCteTable;
 				}
 				else {
-					targetPathCteColumns.add( 0, getCteTable().getCteColumns().get( 0 ) );
-					finalEntityCteTable = createCteTable( getCteTable(), targetPathCteColumns );
+					targetPathCteColumns.add( 0, cteTable.getCteColumns().get( 0 ) );
+					finalEntityCteTable = createCteTable( cteTable, targetPathCteColumns );
 				}
 				final List<CteColumn> cteColumns = finalEntityCteTable.getCteColumns();
 				for ( int i = 1; i < cteColumns.size(); i++ ) {
@@ -532,7 +500,7 @@ public class CteInsertHandler implements InsertHandler {
 			);
 			statement.addCteStatement( baseEntityCte );
 			targetPathCteColumns.add( 0, cteTable.getCteColumns().get( 0 ) );
-			final CteTable finalEntityCteTable = createCteTable( getCteTable(), targetPathCteColumns );
+			final CteTable finalEntityCteTable = createCteTable( cteTable, targetPathCteColumns );
 			final QuerySpec finalQuerySpec = new QuerySpec( true );
 			final SelectStatement finalQueryStatement = new SelectStatement( finalQuerySpec );
 			entityCte = new CteStatement(
@@ -556,6 +524,7 @@ public class CteInsertHandler implements InsertHandler {
 		final String baseInsertCte = addDmlCtes(
 				statement,
 				entityCte,
+				entityDescriptor,
 				targetPathColumns,
 				assignsId,
 				sqmConverter,
@@ -586,25 +555,64 @@ public class CteInsertHandler implements InsertHandler {
 		final SqlAstTranslator<JdbcOperationQuerySelect> translator = jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
 				.buildSelectTranslator( factory, statement );
+
+		this.domainParameterXref = domainParameterXref;
+		this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref( domainParameterXref, sqmConverter );
+		this.resolvedParameterMappingModelTypes = sqmConverter.getSqmParameterMappingModelExpressibleResolutions();
+
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
-				executionContext.getQueryParameterBindings(),
+				context.getQueryParameterBindings(),
 				domainParameterXref,
-				SqmUtil.generateJdbcParamsXref( domainParameterXref, sqmConverter ),
+				jdbcParamsXref,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-						return (MappingModelExpressible<T>) sqmConverter.getSqmParameterMappingModelExpressibleResolutions().get( parameter );
+						return (MappingModelExpressible<T>) resolvedParameterMappingModelTypes.get( parameter );
 					}
 				},
-				executionContext.getSession()
+				context.getSession()
 		);
-		final JdbcOperationQuerySelect select = translator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
+		this.select = translator.translate( jdbcParameterBindings, context.getQueryOptions() );
+		firstJdbcParameterBindingsConsumer.set( jdbcParameterBindings );
+	}
 
-		executionContext.getSession().autoFlushIfRequired( select.getAffectedTableNames() );
-		List<Object> list = jdbcServices.getJdbcSelectExecutor().list(
+	public static CteTable createCteTable(CteTable sqmCteTable, List<CteColumn> sqmCteColumns) {
+		return new CteTable( sqmCteTable.getTableExpression(), sqmCteColumns );
+	}
+
+	@Override
+	public JdbcParameterBindings createJdbcParameterBindings(DomainQueryExecutionContext context) {
+		return SqmUtil.createJdbcParameterBindings(
+				context.getQueryParameterBindings(),
+				domainParameterXref,
+				jdbcParamsXref,
+				new SqmParameterMappingModelResolutionAccess() {
+					@Override @SuppressWarnings("unchecked")
+					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
+						return (MappingModelExpressible<T>) resolvedParameterMappingModelTypes.get( parameter );
+					}
+				},
+				context.getSession()
+		);
+	}
+
+	@Override
+	public boolean dependsOnParameterBindings() {
+		return select.dependsOnParameterBindings();
+	}
+
+	@Override
+	public boolean isCompatibleWith(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions) {
+		return select.isCompatibleWith( jdbcParameterBindings, queryOptions );
+	}
+
+	@Override
+	public int execute(JdbcParameterBindings jdbcParameterBindings, DomainQueryExecutionContext context) {
+		context.getSession().autoFlushIfRequired( select.getAffectedTableNames() );
+		List<Object> list = context.getSession().getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 				select,
 				jdbcParameterBindings,
-				SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext ),
+				SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( context ),
 				RowTransformerSingularReturnImpl.instance(),
 				null,
 				ListResultsConsumer.UniqueSemantic.NONE,
@@ -613,10 +621,15 @@ public class CteInsertHandler implements InsertHandler {
 		return ( (Number) list.get( 0 ) ).intValue();
 	}
 
+	// For Hibernate Reactive
+	protected JdbcOperationQuerySelect getSelect() {
+		return select;
+	}
+
 	protected Expression createCountStar(
 			SessionFactoryImplementor factory,
 			MultiTableSqmMutationConverter sqmConverter) {
-		final SqmExpression<?> arg = new SqmStar( getCriteriaBuilder() );
+		final SqmExpression<?> arg = new SqmStar( factory.getQueryEngine().getCriteriaBuilder() );
 		return factory.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "count" )
 				.generateSqmExpression( arg, null, factory.getQueryEngine() )
 				.convertToSqlAst( sqmConverter );
@@ -625,14 +638,13 @@ public class CteInsertHandler implements InsertHandler {
 	protected String addDmlCtes(
 			CteContainer statement,
 			CteStatement queryCte,
+			EntityPersister entityPersister,
 			List<Map.Entry<List<CteColumn>, Assignment>> assignments,
 			boolean assignsId,
 			MultiTableSqmMutationConverter sqmConverter,
 			SessionFactoryImplementor factory) {
+		final SqmInsertStatement<?> sqmStatement = (SqmInsertStatement<?>) sqmConverter.getStatement();
 		final TableGroup updatingTableGroup = sqmConverter.getMutatingTableGroup();
-		final EntityMappingType entityDescriptor = getEntityDescriptor();
-
-		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
 		final String rootEntityName = entityPersister.getRootEntityName();
 		final EntityPersister rootEntityDescriptor =
 				factory.getMappingMetamodel()
@@ -692,15 +704,14 @@ public class CteInsertHandler implements InsertHandler {
 		// Add the root insert as cte
 
 
-		final EntityPersister persister = entityDescriptor.getEntityPersister();
-		final String rootTableName = persister.getTableName( 0 );
+		final String rootTableName = entityPersister.getTableName( 0 );
 		final TableReference rootTableReference = updatingTableGroup.getTableReference(
 				updatingTableGroup.getNavigablePath(),
 				rootTableName,
 				true
 		);
 
-		final Generator identifierGenerator = entityDescriptor.getEntityPersister().getGenerator();
+		final Generator identifierGenerator = entityPersister.getGenerator();
 		final List<Map.Entry<List<CteColumn>, Assignment>> tableAssignments = assignmentsByTable.get( rootTableReference );
 		if ( !assignsId && ( tableAssignments == null || tableAssignments.isEmpty() )
 				&& !identifierGenerator.generatedOnExecution() ) {
@@ -709,10 +720,10 @@ public class CteInsertHandler implements InsertHandler {
 
 		final ConflictClause conflictClause = sqmConverter.visitConflictClause( sqmStatement.getConflictClause() );
 
-		final int tableSpan = persister.getTableSpan();
-		final List<CteColumn> keyCteColumns = queryCte.getCteTable().findCteColumns( persister.getIdentifierMapping() );
+		final int tableSpan = entityPersister.getTableSpan();
+		final List<CteColumn> keyCteColumns = queryCte.getCteTable().findCteColumns( entityPersister.getIdentifierMapping() );
 		for ( int tableIndex = 0; tableIndex < tableSpan; tableIndex++ ) {
-			final String tableExpression = persister.getTableName( tableIndex );
+			final String tableExpression = entityPersister.getTableName( tableIndex );
 			final TableReference updatingTableReference = updatingTableGroup.getTableReference(
 					updatingTableGroup.getNavigablePath(),
 					tableExpression,
@@ -723,7 +734,7 @@ public class CteInsertHandler implements InsertHandler {
 					updatingTableReference,
 					tableExpression
 			);
-			final String[] keyColumns = persister.getKeyColumns( tableIndex );
+			final String[] keyColumns = entityPersister.getKeyColumns( tableIndex );
 			final List<ColumnReference> returningColumnReferences = new ArrayList<>(
 					keyColumns.length + ( assignmentList == null ? 0 : assignmentList.size() )
 			);
@@ -733,7 +744,7 @@ public class CteInsertHandler implements InsertHandler {
 			final CteTable dmlResultCte;
 			if ( tableIndex == 0 && !assignsId && identifierGenerator.generatedOnExecution() ) {
 				// Special handling for identity generation
-				final String cteTableName = getCteTableName( tableExpression, "base_" );
+				final String cteTableName = getCteTableName( tableExpression, "base_", factory );
 				if ( statement.getCteStatement( cteTableName ) != null ) {
 					// Since secondary tables could appear multiple times, we have to skip duplicates
 					continue;
@@ -789,7 +800,7 @@ public class CteInsertHandler implements InsertHandler {
 				);
 				final TableGroup rootInsertCteTableGroup = new CteTableGroup(
 						new NamedTableReference(
-								getCteTableName( tableExpression ),
+								getCteTableName( tableExpression, factory ),
 								"t"
 						)
 				);
@@ -847,7 +858,7 @@ public class CteInsertHandler implements InsertHandler {
 				finalReturningColumns.addAll( keyCteColumns );
 				finalReturningColumns.add( rowNumberColumn );
 				final CteTable finalResultCte = new CteTable(
-						getCteTableName( tableExpression ),
+						getCteTableName( tableExpression, factory ),
 						finalReturningColumns
 				);
 				final QuerySpec finalResultQuery = new QuerySpec( true );
@@ -876,7 +887,7 @@ public class CteInsertHandler implements InsertHandler {
 						new SqlSelectionImpl(
 								SqmInsertStrategyHelper.createRowNumberingExpression(
 										querySpec,
-										sessionFactory
+										factory
 								)
 						)
 				);
@@ -890,7 +901,7 @@ public class CteInsertHandler implements InsertHandler {
 				finalCteStatement = new CteStatement( finalResultCte, finalResultStatement );
 			}
 			else {
-				final String cteTableName = getCteTableName( tableExpression );
+				final String cteTableName = getCteTableName( tableExpression, factory );
 				if ( statement.getCteStatement( cteTableName ) != null ) {
 					// Since secondary tables could appear multiple times, we have to skip duplicates
 					continue;
@@ -967,7 +978,15 @@ public class CteInsertHandler implements InsertHandler {
 			if ( conflictClause != null ) {
 				if ( conflictClause.isDoNothing() && conflictClause.getConstraintColumnNames().isEmpty() ) {
 					// Conflict clauses that use a constraint name and do nothing can just use the conflict clause as it is
-					handleConflictClause( dmlResultCte, dmlStatement, queryCte, tableIndex, conflictClause, statement );
+					handleConflictClause(
+							dmlResultCte,
+							dmlStatement,
+							queryCte,
+							entityPersister,
+							tableIndex,
+							conflictClause,
+							statement
+					);
 				}
 				else {
 					final List<Assignment> compatibleAssignments = getCompatibleAssignments( dmlStatement, conflictClause );
@@ -977,6 +996,7 @@ public class CteInsertHandler implements InsertHandler {
 								dmlResultCte,
 								dmlStatement,
 								queryCte,
+								entityPersister,
 								tableIndex,
 								new ConflictClause(
 										conflictClause.getConstraintName(),
@@ -993,6 +1013,7 @@ public class CteInsertHandler implements InsertHandler {
 								dmlResultCte,
 								dmlStatement,
 								queryCte,
+								entityPersister,
 								tableIndex,
 								new ConflictClause(
 										conflictClause.getConstraintName(),
@@ -1019,22 +1040,24 @@ public class CteInsertHandler implements InsertHandler {
 				statement.addCteStatement( queryCte );
 			}
 		}
-		return getCteTableName( rootTableName );
+		return getCteTableName( rootTableName, factory );
 	}
 
 	private void handleConflictClause(
 			CteTable dmlResultCte,
 			InsertSelectStatement insertStatement,
 			CteStatement queryCte,
+			EntityPersister entityDescriptor,
 			int tableIndex,
 			ConflictClause conflictClause,
 			CteContainer statement) {
+		final SessionFactoryImplementor sessionFactory = entityDescriptor.getFactory();
 		if ( sessionFactory.getJdbcServices().getDialect().supportsConflictClauseForInsertCTE() ) {
 			insertStatement.setConflictClause( conflictClause );
 			statement.addCteStatement( new CteStatement( dmlResultCte, insertStatement ) );
 		}
 		else {
-			final NodeBuilder nodeBuilder = getCriteriaBuilder();
+			final NodeBuilder nodeBuilder = sessionFactory.getQueryEngine().getCriteriaBuilder();
 			// Build an exists subquery clause to only insert if no row with a matching constraint column value exists i.e.
 			// insert into target (c1, c2)
 			// select e.c1, e.c2 from HTE_target e
@@ -1070,7 +1093,8 @@ public class CteInsertHandler implements InsertHandler {
 						columnsToMatch = Arrays.asList( ((EntityPersister) entityDescriptor).getKeyColumns( tableIndex ) ),
 						insertStatement,
 						false,
-						true
+						true,
+						booleanType
 				);
 				if ( predicate == null ) {
 					throw new IllegalArgumentException( "Couldn't infer conflict constraint columns" );
@@ -1079,7 +1103,8 @@ public class CteInsertHandler implements InsertHandler {
 			}
 			else {
 				columnsToMatch = constraintColumnNames;
-				subquery.applyPredicate( buildColumnMatchPredicate( constraintColumnNames, insertStatement, true, true ) );
+				subquery.applyPredicate(
+						buildColumnMatchPredicate( constraintColumnNames, insertStatement, true, true, booleanType ) );
 			}
 
 			insertQuerySpec.applyPredicate( new ExistsPredicate( subquery, true, booleanType ) );
@@ -1134,7 +1159,8 @@ public class CteInsertHandler implements InsertHandler {
 											columnsToMatch,
 											insertStatement,
 											true,
-											false
+											false,
+											booleanType
 									)
 							)
 					);
@@ -1154,13 +1180,14 @@ public class CteInsertHandler implements InsertHandler {
 							columnsToMatch,
 							insertStatement,
 							true,
-							false
+							false,
+							booleanType
 					) );
 					final QuerySpec matchCteSubquery = new QuerySpec( false, 1 );
 					matchCteSubquery.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl( new QueryLiteral<>(
 									1,
-									getCriteriaBuilder().getIntegerType()
+									nodeBuilder.getIntegerType()
 							) )
 					);
 					matchCteSubquery.getFromClause().addRoot( updateSubquery.getFromClause().getRoots().get( 0 ) );
@@ -1233,8 +1260,8 @@ public class CteInsertHandler implements InsertHandler {
 			List<String> constraintColumnNames,
 			InsertSelectStatement dmlStatement,
 			boolean errorIfMissing,
-			boolean compareAgainstSelectItems) {
-		final BasicType<Boolean> booleanType = getCriteriaBuilder().getBooleanType();
+			boolean compareAgainstSelectItems,
+			BasicType<Boolean> booleanType) {
 		final QuerySpec insertQuerySpec = (QuerySpec) dmlStatement.getSourceSelectStatement();
 		Predicate predicate = null;
 		OUTER: for ( String constraintColumnName : constraintColumnNames ) {
@@ -1373,11 +1400,11 @@ public class CteInsertHandler implements InsertHandler {
 		throw new SemanticException( "Assignment referred to column of a joined association: " + columnReference );
 	}
 
-	protected String getCteTableName(String tableExpression) {
-		return getCteTableName( tableExpression, "" );
+	protected String getCteTableName(String tableExpression, SessionFactoryImplementor sessionFactory) {
+		return getCteTableName( tableExpression, "", sessionFactory );
 	}
 
-	protected String getCteTableName(String tableExpression, String subPrefix) {
+	protected String getCteTableName(String tableExpression, String subPrefix, SessionFactoryImplementor sessionFactory) {
 		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
 		if ( Identifier.isQuoted( tableExpression ) ) {
 			tableExpression = tableExpression.substring( 1, tableExpression.length() - 1 );

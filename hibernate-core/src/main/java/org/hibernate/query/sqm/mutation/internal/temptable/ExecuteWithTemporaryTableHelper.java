@@ -18,10 +18,10 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.internal.CacheableSqmInterpretation;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
@@ -29,7 +29,7 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -40,12 +40,14 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -59,11 +61,11 @@ public final class ExecuteWithTemporaryTableHelper {
 	private ExecuteWithTemporaryTableHelper() {
 	}
 
-	public static int saveMatchingIdsIntoIdTable(
+	public static CacheableSqmInterpretation<InsertSelectStatement, JdbcOperationQueryMutation> createMatchingIdsIntoIdTableInsert(
 			MultiTableSqmMutationConverter sqmConverter,
 			Predicate suppliedPredicate,
 			TemporaryTable idTable,
-			Function<SharedSessionContractImplementor, String> sessionUidAccess,
+			JdbcParameter sessionUidParameter,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) {
 		final TableGroup mutatingTableGroup = sqmConverter.getMutatingTableGroup();
@@ -111,21 +113,90 @@ public final class ExecuteWithTemporaryTableHelper {
 				}
 		);
 
+		final SharedSessionContractImplementor session = executionContext.getSession();
 		if ( idTable.getSessionUidColumn() != null ) {
 			final int jdbcPosition = matchingIdSelection.getSelectClause().getSqlSelections().size();
 			matchingIdSelection.getSelectClause().addSqlSelection(
-					new SqlSelectionImpl(
-							jdbcPosition,
-							new QueryLiteral<>(
-									UUID.fromString( sessionUidAccess.apply( executionContext.getSession() ) ),
-									(BasicValuedMapping) idTable.getSessionUidColumn().getJdbcMapping()
-							)
-					)
+					new SqlSelectionImpl( jdbcPosition, sessionUidParameter )
 			);
 		}
 
 		matchingIdSelection.applyPredicate( suppliedPredicate );
-		return saveIntoTemporaryTable( idTableInsert, jdbcParameterBindings, executionContext );
+
+		final var factory = session.getFactory();
+		final JdbcEnvironment jdbcEnvironment = factory.getJdbcServices().getJdbcEnvironment();
+		final LockOptions lockOptions = executionContext.getQueryOptions().getLockOptions();
+		final LockMode lockMode = lockOptions.getLockMode();
+		// Acquire a WRITE lock for the rows that are about to be modified
+		lockOptions.setLockMode( LockMode.WRITE );
+		// Visit the table joins and reset the lock mode if we encounter OUTER joins that are not supported
+		final QueryPart sourceSelectStatement = idTableInsert.getSourceSelectStatement();
+		if ( sourceSelectStatement != null
+			&& !jdbcEnvironment.getDialect().supportsOuterJoinForUpdate() ) {
+			sourceSelectStatement.visitQuerySpecs(
+					querySpec -> {
+						querySpec.getFromClause().visitTableJoins(
+								tableJoin -> {
+									if ( tableJoin.isInitialized()
+										&& tableJoin.getJoinType() != SqlAstJoinType.INNER ) {
+										lockOptions.setLockMode( lockMode );
+									}
+								}
+						);
+					}
+			);
+		}
+		final var jdbcInsert = jdbcEnvironment.getSqlAstTranslatorFactory()
+				.buildMutationTranslator( factory, idTableInsert )
+				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
+		lockOptions.setLockMode( lockMode );
+
+		return new CacheableSqmInterpretation<>(
+				idTableInsert,
+				jdbcInsert,
+				Map.of(),
+				Map.of()
+		);
+	}
+
+	public static CacheableSqmInterpretation<InsertSelectStatement, JdbcOperationQueryMutation> createTemporaryTableInsert(
+			InsertSelectStatement temporaryTableInsert,
+			JdbcParameterBindings jdbcParameterBindings,
+			ExecutionContext executionContext) {
+		final var factory = executionContext.getSession().getFactory();
+		final JdbcServices jdbcServices = factory.getJdbcServices();
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
+		final LockOptions lockOptions = executionContext.getQueryOptions().getLockOptions();
+		final LockMode lockMode = lockOptions.getLockMode();
+		// Acquire a WRITE lock for the rows that are about to be modified
+		lockOptions.setLockMode( LockMode.WRITE );
+		// Visit the table joins and reset the lock mode if we encounter OUTER joins that are not supported
+		final QueryPart sourceSelectStatement = temporaryTableInsert.getSourceSelectStatement();
+		if ( sourceSelectStatement != null
+			&& !jdbcEnvironment.getDialect().supportsOuterJoinForUpdate() ) {
+			sourceSelectStatement.visitQuerySpecs(
+					querySpec -> {
+						querySpec.getFromClause().visitTableJoins(
+								tableJoin -> {
+									if ( tableJoin.isInitialized()
+										&& tableJoin.getJoinType() != SqlAstJoinType.INNER ) {
+										lockOptions.setLockMode( lockMode );
+									}
+								}
+						);
+					}
+			);
+		}
+		final var jdbcInsert = jdbcEnvironment.getSqlAstTranslatorFactory()
+				.buildMutationTranslator( factory, temporaryTableInsert )
+				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
+		lockOptions.setLockMode( lockMode );
+		return new CacheableSqmInterpretation<>(
+				temporaryTableInsert,
+				jdbcInsert,
+				Map.of(),
+				Map.of()
+		);
 	}
 
 	public static int saveIntoTemporaryTable(
@@ -142,13 +213,13 @@ public final class ExecuteWithTemporaryTableHelper {
 		// Visit the table joins and reset the lock mode if we encounter OUTER joins that are not supported
 		final QueryPart sourceSelectStatement = temporaryTableInsert.getSourceSelectStatement();
 		if ( sourceSelectStatement != null
-				&& !jdbcEnvironment.getDialect().supportsOuterJoinForUpdate() ) {
+			&& !jdbcEnvironment.getDialect().supportsOuterJoinForUpdate() ) {
 			sourceSelectStatement.visitQuerySpecs(
 					querySpec -> {
 						querySpec.getFromClause().visitTableJoins(
 								tableJoin -> {
 									if ( tableJoin.isInitialized()
-											&& tableJoin.getJoinType() != SqlAstJoinType.INNER ) {
+										&& tableJoin.getJoinType() != SqlAstJoinType.INNER ) {
 										lockOptions.setLockMode( lockMode );
 									}
 								}
@@ -156,13 +227,18 @@ public final class ExecuteWithTemporaryTableHelper {
 					}
 			);
 		}
-		final var jdbcInsert =
-				jdbcEnvironment.getSqlAstTranslatorFactory()
+		final var jdbcInsert = jdbcEnvironment.getSqlAstTranslatorFactory()
 						.buildMutationTranslator( factory, temporaryTableInsert )
 						.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 		lockOptions.setLockMode( lockMode );
+		return saveIntoTemporaryTable( jdbcInsert, jdbcParameterBindings, executionContext );
+	}
 
-		return jdbcServices.getJdbcMutationExecutor().execute(
+	public static int saveIntoTemporaryTable(
+			JdbcOperationQueryMutation jdbcInsert,
+			JdbcParameterBindings jdbcParameterBindings,
+			ExecutionContext executionContext) {
+		return executionContext.getSession().getFactory().getJdbcServices().getJdbcMutationExecutor().execute(
 				jdbcInsert,
 				jdbcParameterBindings,
 				sql -> executionContext.getSession().getJdbcCoordinator()
@@ -174,16 +250,16 @@ public final class ExecuteWithTemporaryTableHelper {
 
 	public static QuerySpec createIdTableSelectQuerySpec(
 			TemporaryTable idTable,
-			Function<SharedSessionContractImplementor, String> sessionUidAccess,
+			JdbcParameter sessionUidParameter,
 			EntityMappingType entityDescriptor,
 			ExecutionContext executionContext) {
-		return createIdTableSelectQuerySpec( idTable, null, sessionUidAccess, entityDescriptor, executionContext );
+		return createIdTableSelectQuerySpec( idTable, null, sessionUidParameter, entityDescriptor, executionContext );
 	}
 
 	public static QuerySpec createIdTableSelectQuerySpec(
 			TemporaryTable idTable,
 			ModelPart fkModelPart,
-			Function<SharedSessionContractImplementor, String> sessionUidAccess,
+			JdbcParameter sessionUidParameter,
 			EntityMappingType entityDescriptor,
 			ExecutionContext executionContext) {
 		final QuerySpec querySpec = new QuerySpec( false );
@@ -206,7 +282,7 @@ public final class ExecuteWithTemporaryTableHelper {
 		querySpec.getFromClause().addRoot( idTableGroup );
 
 		applyIdTableSelections( querySpec, idTableReference, idTable, fkModelPart, entityDescriptor );
-		applyIdTableRestrictions( querySpec, idTableReference, idTable, sessionUidAccess, executionContext );
+		applyIdTableRestrictions( querySpec, idTableReference, idTable, sessionUidParameter, executionContext );
 
 		return querySpec;
 	}
@@ -261,7 +337,7 @@ public final class ExecuteWithTemporaryTableHelper {
 			QuerySpec querySpec,
 			TableReference idTableReference,
 			TemporaryTable idTable,
-			Function<SharedSessionContractImplementor, String> sessionUidAccess,
+			JdbcParameter sessionUidParameter,
 			ExecutionContext executionContext) {
 		if ( idTable.getSessionUidColumn() != null ) {
 			querySpec.applyPredicate(
@@ -274,10 +350,7 @@ public final class ExecuteWithTemporaryTableHelper {
 									idTable.getSessionUidColumn().getJdbcMapping()
 							),
 							ComparisonOperator.EQUAL,
-							new QueryLiteral<>(
-									UUID.fromString( sessionUidAccess.apply( executionContext.getSession() ) ),
-									(BasicValuedMapping) idTable.getSessionUidColumn().getJdbcMapping()
-							)
+							sessionUidParameter
 					)
 			);
 		}
@@ -336,21 +409,19 @@ public final class ExecuteWithTemporaryTableHelper {
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			int rows,
 			ExecutionContext executionContext) {
+		final String sqlSelect =
+				createInsertedRowNumbersSelectSql( temporaryTable, sessionUidAccess, executionContext );
+		return loadInsertedRowNumbers( sqlSelect, temporaryTable, sessionUidAccess, rows, executionContext );
+	}
+
+	public static int[] loadInsertedRowNumbers(
+			String sqlSelect,
+			TemporaryTable temporaryTable,
+			Function<SharedSessionContractImplementor, String> sessionUidAccess,
+			int rows,
+			ExecutionContext executionContext) {
 		final TemporaryTableSessionUidColumn sessionUidColumn = temporaryTable.getSessionUidColumn();
-
-		final TemporaryTableColumn rowNumberColumn = temporaryTable.getColumns()
-				.get( temporaryTable.getColumns().size() - (sessionUidColumn == null ? 1 : 2 ) );
-		assert rowNumberColumn != null;
-
 		final SharedSessionContractImplementor session = executionContext.getSession();
-		final SimpleSelect simpleSelect = new SimpleSelect( session.getFactory() )
-				.setTableName( temporaryTable.getQualifiedTableName() )
-				.addColumn( rowNumberColumn.getColumnName() );
-		if ( sessionUidColumn != null ) {
-			simpleSelect.addRestriction( sessionUidColumn.getColumnName() );
-		}
-		final String sqlSelect = simpleSelect.toStatementString();
-
 		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 		PreparedStatement preparedStatement = null;
 		try {
@@ -391,6 +462,26 @@ public final class ExecuteWithTemporaryTableHelper {
 				jdbcCoordinator.afterStatementExecution();
 			}
 		}
+	}
+
+	public static String createInsertedRowNumbersSelectSql(
+			TemporaryTable temporaryTable,
+			Function<SharedSessionContractImplementor, String> sessionUidAccess,
+			ExecutionContext executionContext) {
+		final TemporaryTableSessionUidColumn sessionUidColumn = temporaryTable.getSessionUidColumn();
+
+		final TemporaryTableColumn rowNumberColumn = temporaryTable.getColumns()
+				.get( temporaryTable.getColumns().size() - (sessionUidColumn == null ? 1 : 2 ) );
+		assert rowNumberColumn != null;
+
+		final SharedSessionContractImplementor session = executionContext.getSession();
+		final SimpleSelect simpleSelect = new SimpleSelect( session.getFactory() )
+				.setTableName( temporaryTable.getQualifiedTableName() )
+				.addColumn( rowNumberColumn.getColumnName() );
+		if ( sessionUidColumn != null ) {
+			simpleSelect.addRestriction( sessionUidColumn.getColumnName() );
+		}
+		return simpleSelect.toStatementString();
 	}
 
 	public static void performAfterTemporaryTableUseActions(

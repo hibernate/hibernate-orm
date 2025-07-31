@@ -2,29 +2,28 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.query.sqm.mutation.spi;
+package org.hibernate.query.sqm.mutation.internal;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.query.sqm.mutation.internal.Handler;
-import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.sqm.tree.SqmDmlStatement;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractMutationHandler implements Handler {
-	private final SqmDeleteOrUpdateStatement<?> sqmDeleteOrUpdateStatement;
+	private final SqmDmlStatement<?> sqmDmlStatement;
 
 	private final SessionFactoryImplementor sessionFactory;
-	private final EntityMappingType entityDescriptor;
+	private final EntityPersister entityDescriptor;
 
 	public AbstractMutationHandler(
-			SqmDeleteOrUpdateStatement<?> sqmDeleteOrUpdateStatement,
+			SqmDmlStatement<?> sqmDmlStatement,
 			SessionFactoryImplementor sessionFactory) {
-		this.sqmDeleteOrUpdateStatement = sqmDeleteOrUpdateStatement;
+		this.sqmDmlStatement = sqmDmlStatement;
 		this.sessionFactory = sessionFactory;
 
-		final String entityName = sqmDeleteOrUpdateStatement.getTarget()
+		final String entityName = sqmDmlStatement.getTarget()
 				.getModel()
 				.getHibernateEntityName();
 
@@ -32,11 +31,11 @@ public abstract class AbstractMutationHandler implements Handler {
 
 	}
 
-	public SqmDeleteOrUpdateStatement<?> getSqmDeleteOrUpdateStatement() {
-		return sqmDeleteOrUpdateStatement;
+	public SqmDmlStatement<?> getSqmStatement() {
+		return sqmDmlStatement;
 	}
 
-	public EntityMappingType getEntityDescriptor() {
+	public EntityPersister getEntityDescriptor() {
 		return entityDescriptor;
 	}
 

@@ -4,28 +4,20 @@
  */
 package org.hibernate.query.sqm.internal;
 
-import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MutableObject;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
-import org.hibernate.query.spi.NonSelectQueryPlan;
-import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
-import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.SqmTranslation;
-import org.hibernate.query.sqm.sql.SqmTranslator;
+import org.hibernate.query.sqm.sql.StandardSqmTranslation;
+import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -37,86 +29,46 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Steve Ebersole
  */
-public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
-	private final EntityMappingType entityDescriptor;
-	private final SqmDeleteStatement<?> sqmDelete;
-	private final DomainParameterXref domainParameterXref;
+public class SimpleDeleteQueryPlan extends SimpleNonSelectQueryPlan {
 
-	private JdbcOperationQueryMutation jdbcOperation;
+	private final EntityPersister entityDescriptor;
 
-	private SqmTranslation<? extends AbstractUpdateOrDeleteStatement> sqmInterpretation;
-	private Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref;
+	private volatile List<JdbcOperationQueryMutation> collectionTableDeletes;
 
 	public SimpleDeleteQueryPlan(
-			EntityMappingType entityDescriptor,
+			EntityPersister entityDescriptor,
 			SqmDeleteStatement<?> sqmDelete,
 			DomainParameterXref domainParameterXref) {
-		assert entityDescriptor.getEntityName().equals( sqmDelete.getTarget().getEntityName() );
-
+		super( sqmDelete, domainParameterXref );
 		this.entityDescriptor = entityDescriptor;
-		this.sqmDelete = sqmDelete;
-		this.domainParameterXref = domainParameterXref;
-	}
-
-	public EntityMappingType getEntityDescriptor() {
-		return entityDescriptor;
 	}
 
 	@Override
-	public int executeUpdate(DomainQueryExecutionContext executionContext) {
-		BulkOperationCleanupAction.schedule( executionContext.getSession(), sqmDelete );
+	protected Interpretation buildInterpretation(
+			SqmDmlStatement<?> sqm,
+			DomainParameterXref domainParameterXref,
+			DomainQueryExecutionContext context) {
+		final Interpretation sqmInterpretation =
+				super.buildInterpretation( sqm, domainParameterXref, context );
 
-		final SharedSessionContractImplementor session = executionContext.getSession();
-		final SessionFactoryImplementor factory = session.getFactory();
-		final JdbcServices jdbcServices = factory.getJdbcServices();
-		SqlAstTranslator<? extends JdbcOperationQueryMutation> sqlAstTranslator = null;
-		if ( jdbcOperation == null ) {
-			sqlAstTranslator = createTranslator( executionContext );
-		}
-
-		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
-				executionContext.getQueryParameterBindings(),
-				domainParameterXref,
-				jdbcParamsXref,
-				new SqmParameterMappingModelResolutionAccess() {
-					@Override @SuppressWarnings("unchecked")
-					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-						return (MappingModelExpressible<T>) sqmInterpretation.getSqmParameterMappingModelTypeResolutions().get(parameter);
-					}
-				},
-				session
-		);
-
-		if ( jdbcOperation != null
-				&& ! jdbcOperation.isCompatibleWith( jdbcParameterBindings, executionContext.getQueryOptions() ) ) {
-			sqlAstTranslator = createTranslator( executionContext );
-		}
-
-		if ( sqlAstTranslator != null ) {
-			jdbcOperation = sqlAstTranslator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
-		}
-
-		final boolean missingRestriction = sqmInterpretation.getSqlAst().getRestriction() == null;
-		if ( missingRestriction ) {
-			assert domainParameterXref.getSqmParameterCount() == 0;
-			assert jdbcParamsXref.isEmpty();
-		}
-
-		final SqmJdbcExecutionContextAdapter executionContextAdapter = SqmJdbcExecutionContextAdapter.usingLockingAndPaging( executionContext );
-
-		SqmMutationStrategyHelper.cleanUpCollectionTables(
+		final SessionFactoryImplementor factory = context.getSession().getFactory();
+		final AbstractUpdateOrDeleteStatement statement =
+				(AbstractUpdateOrDeleteStatement) sqmInterpretation.interpretation().statement();
+		final ArrayList<JdbcOperationQueryMutation> collectionTableDeletes = new ArrayList<>();
+		SqmMutationStrategyHelper.visitCollectionTableDeletes(
 				entityDescriptor,
 				(tableReference, attributeMapping) -> {
 					final TableGroup collectionTableGroup = new MutatingTableReferenceGroupWrapper(
@@ -130,13 +82,13 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 							p -> additionalPredicate.set( Predicate.combinePredicates( additionalPredicate.get(), p ) ),
 							collectionTableGroup,
 							factory.getJdbcServices().getDialect().getDmlTargetColumnQualifierSupport() == DmlTargetColumnQualifierSupport.TABLE_ALIAS,
-							executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters(),
+							context.getSession().getLoadQueryInfluencers().getEnabledFilters(),
 							false,
 							null,
 							null
 					);
 
-					if ( missingRestriction ) {
+					if ( statement.getRestriction() == null ) {
 						return additionalPredicate.get();
 					}
 
@@ -153,86 +105,85 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 					final MutatingTableReferenceGroupWrapper tableGroup = new MutatingTableReferenceGroupWrapper(
 							new NavigablePath( attributeMapping.getRootPathName() ),
 							attributeMapping,
-							sqmInterpretation.getSqlAst().getTargetTable()
+							statement.getTargetTable()
 					);
 					final Expression fkTargetColumnExpression = MappingModelCreationHelper.buildColumnReferenceExpression(
 							tableGroup,
 							fkDescriptor.getTargetPart(),
-							sqmInterpretation.getSqlExpressionResolver(),
+							null,
 							factory
 					);
 					matchingIdSubQuery.getSelectClause().addSqlSelection( new SqlSelectionImpl( 0, fkTargetColumnExpression ) );
-
-					matchingIdSubQuery.getFromClause().addRoot(
-							tableGroup
-					);
-
-					matchingIdSubQuery.applyPredicate( sqmInterpretation.getSqlAst().getRestriction() );
+					matchingIdSubQuery.getFromClause().addRoot( tableGroup );
+					matchingIdSubQuery.applyPredicate( statement.getRestriction() );
 
 					return Predicate.combinePredicates(
 							additionalPredicate.get(),
 							new InSubQueryPredicate( fkColumnExpression, matchingIdSubQuery, false )
 					);
 				},
-				( missingRestriction ? JdbcParameterBindings.NO_BINDINGS : jdbcParameterBindings ),
-				executionContextAdapter
+				sqmInterpretation.jdbcParameterBindings(),
+				context.getQueryOptions(),
+				collectionTableDeletes::add
 		);
-
-		return jdbcServices.getJdbcMutationExecutor().execute(
-				jdbcOperation,
-				jdbcParameterBindings,
-				sql -> session
-						.getJdbcCoordinator()
-						.getStatementPreparer()
-						.prepareStatement( sql ),
-				(integer, preparedStatement) -> {},
-				executionContextAdapter
-		);
+		this.collectionTableDeletes = collectionTableDeletes;
+		return sqmInterpretation;
 	}
 
-	protected SqlAstTranslator<? extends JdbcOperationQueryMutation> createTranslator(DomainQueryExecutionContext executionContext) {
+	// For Hibernate Reactive
+	protected List<JdbcOperationQueryMutation> getCollectionTableDeletes() {
+		return collectionTableDeletes;
+	}
+
+	@Override
+	protected int execute(CacheableSqmInterpretation<MutationStatement, JdbcOperationQueryMutation> sqmInterpretation, JdbcParameterBindings jdbcParameterBindings, ExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
-		final SqmTranslator<? extends MutationStatement> translator =
-				factory.getQueryEngine().getSqmTranslatorFactory().createMutationTranslator(
-						sqmDelete,
-						executionContext.getQueryOptions(),
-						domainParameterXref,
-						executionContext.getQueryParameterBindings(),
-						executionContext.getSession().getLoadQueryInfluencers(),
-						factory.getSqlTranslationEngine()
-				);
-		//noinspection unchecked
-		sqmInterpretation = (SqmTranslation<? extends AbstractUpdateOrDeleteStatement>) translator.translate();
-
-		this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
-				domainParameterXref,
-				sqmInterpretation::getJdbcParamsBySqmParam
-		);
-		final MutationStatement ast = createDeleteAst();
-		return factory.getJdbcServices()
-				.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
-				.buildMutationTranslator( factory, ast );
-	}
-
-	private MutationStatement createDeleteAst() {
-		final MutationStatement ast;
-		if ( entityDescriptor.getSoftDeleteMapping() == null ) {
-			ast = sqmInterpretation.getSqlAst();
-		}
-		else {
-			final AbstractUpdateOrDeleteStatement sqlDeleteAst = sqmInterpretation.getSqlAst();
-			final NamedTableReference targetTable = sqlDeleteAst.getTargetTable();
-			final SoftDeleteMapping columnMapping = getEntityDescriptor().getSoftDeleteMapping();
-			final Assignment assignment = columnMapping.createSoftDeleteAssignment( targetTable );
-
-			ast = new UpdateStatement(
-					targetTable,
-					Collections.singletonList( assignment ),
-					sqlDeleteAst.getRestriction()
+		final JdbcMutationExecutor jdbcMutationExecutor = factory.getJdbcServices().getJdbcMutationExecutor();
+		for ( JdbcOperationQueryMutation delete : collectionTableDeletes ) {
+			jdbcMutationExecutor.execute(
+					delete,
+					jdbcParameterBindings,
+					sql -> executionContext.getSession()
+							.getJdbcCoordinator()
+							.getStatementPreparer()
+							.prepareStatement( sql ),
+					(integer, preparedStatement) -> {},
+					executionContext
 			);
 		}
-		return ast;
+		return super.execute( sqmInterpretation, jdbcParameterBindings, executionContext );
+	}
+
+	@Override
+	protected SqmTranslation<? extends MutationStatement> buildTranslation(SqmDmlStatement<?> sqm, DomainParameterXref domainParameterXref, DomainQueryExecutionContext executionContext) {
+		final SqmTranslation<? extends MutationStatement> sqmTranslation =
+				super.buildTranslation( sqm, domainParameterXref, executionContext );
+
+		final SoftDeleteMapping columnMapping = entityDescriptor.getSoftDeleteMapping();
+		if ( columnMapping == null ) {
+			return sqmTranslation;
+		}
+		else {
+			final AbstractUpdateOrDeleteStatement sqlDeleteAst =
+					(AbstractUpdateOrDeleteStatement) sqmTranslation.getSqlAst();
+			final NamedTableReference targetTable = sqlDeleteAst.getTargetTable();
+			final Assignment assignment = columnMapping.createSoftDeleteAssignment( targetTable );
+
+			return new StandardSqmTranslation<>(
+					new UpdateStatement(
+							sqlDeleteAst,
+							targetTable,
+							sqlDeleteAst.getFromClause(),
+							Collections.singletonList( assignment ),
+							sqlDeleteAst.getRestriction(),
+							sqlDeleteAst.getReturningColumns()
+					),
+					sqmTranslation.getJdbcParamsBySqmParam(),
+					sqmTranslation.getSqmParameterMappingModelTypeResolutions(),
+					sqmTranslation.getSqlExpressionResolver(),
+					sqmTranslation.getFromClauseAccess()
+			);
+		}
 	}
 
 }

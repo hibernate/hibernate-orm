@@ -44,11 +44,15 @@ public class TutorialTestIT extends TestTemplate {
     	runAntBuild();
     	verifyResult();
     }
-    
-    private void createBuildXmlFile() throws Exception {
+
+	protected String hibernateToolTaskXml() {
+		return  hibernateToolTaskXml;
+	}
+
+	private void createBuildXmlFile() throws Exception {
     	buildXmlFile = new File(getProjectDir(), "build.xml");
     	assertFalse(buildXmlFile.exists());
-    	Files.writeString(buildXmlFile.toPath(), buildXmlFileContents);
+    	Files.writeString(buildXmlFile.toPath(), constructBuildXmlFileContents());
     }
     
 	private void createDatabase() throws Exception {
@@ -106,18 +110,9 @@ public class TutorialTestIT extends TestTemplate {
 		return "jdbc:h2:" + getProjectDir().getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
 	}
 	    
-    private static final String buildXmlFileContents = 
-    		
-    		"<project name='tutorial' default='reveng'>                           \n" +
-    		"    <taskdef                                                         \n" + 
-    		"            name='hibernatetool'                                     \n" +
-    	    "            classname='org.hibernate.tool.ant.HibernateToolTask'/>   \n" +    		
-    		"    <target name='reveng'>                                           \n" +
-    		"        <hibernatetool destdir='generated'>                          \n" +
-    		"            <jdbcconfiguration propertyfile='hibernate.properties'/> \n" +
-    		"            <hbm2java/>                                              \n" +
-    		"        </hibernatetool>                                             \n" +
-    		"    </target>                                                        \n" +		
-    		"</project>                                                           \n" ;
-
+	private static final String hibernateToolTaskXml =
+			"        <hibernatetool destdir='generated'>                          \n" +
+			"            <jdbcconfiguration propertyfile='hibernate.properties'/> \n" +
+			"            <hbm2java/>                                              \n" +
+			"        </hibernatetool>                                             \n" ;
 }

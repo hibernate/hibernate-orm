@@ -1558,9 +1558,9 @@ public class MappingModelCreationHelper {
 	}
 
 	public static Expression buildColumnReferenceExpression(
-			TableGroup tableGroup,
+			@Nullable TableGroup tableGroup,
 			ModelPart modelPart,
-			SqlExpressionResolver sqlExpressionResolver,
+			@Nullable SqlExpressionResolver sqlExpressionResolver,
 			SessionFactoryImplementor sessionFactory) {
 		final int jdbcTypeCount = modelPart.getJdbcTypeCount();
 		if ( modelPart instanceof EmbeddableValuedModelPart ) {

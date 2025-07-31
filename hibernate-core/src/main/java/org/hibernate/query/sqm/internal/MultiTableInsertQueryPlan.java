@@ -4,32 +4,29 @@
  */
 package org.hibernate.query.sqm.internal;
 
-import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
-import org.hibernate.query.spi.NonSelectQueryPlan;
+import org.hibernate.query.sqm.mutation.spi.MultiTableHandlerBuildResult;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 
 /**
  * @author Christian Beikov
  */
-public class MultiTableInsertQueryPlan implements NonSelectQueryPlan {
-	private final SqmInsertStatement<?> sqmInsert;
-	private final DomainParameterXref domainParameterXref;
-	private final SqmMultiTableInsertStrategy mutationStrategy;
+public class MultiTableInsertQueryPlan extends AbstractMultiTableMutationQueryPlan<SqmInsertStatement<?>, SqmMultiTableInsertStrategy> {
 
 	public MultiTableInsertQueryPlan(
 			SqmInsertStatement<?> sqmInsert,
 			DomainParameterXref domainParameterXref,
 			SqmMultiTableInsertStrategy mutationStrategy) {
-		this.sqmInsert = sqmInsert;
-		this.domainParameterXref = domainParameterXref;
-		this.mutationStrategy = mutationStrategy;
+		super( sqmInsert, domainParameterXref, mutationStrategy );
 	}
 
 	@Override
-	public int executeUpdate(DomainQueryExecutionContext executionContext) {
-		BulkOperationCleanupAction.schedule( executionContext.getSession(), sqmInsert );
-		return mutationStrategy.executeInsert( sqmInsert, domainParameterXref, executionContext );
+	protected MultiTableHandlerBuildResult buildHandler(
+			SqmInsertStatement<?> statement,
+			DomainParameterXref domainParameterXref,
+			SqmMultiTableInsertStrategy strategy,
+			DomainQueryExecutionContext context) {
+		return strategy.buildHandler( statement, domainParameterXref, context );
 	}
 }

@@ -42,11 +42,12 @@ import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 /**
@@ -98,64 +99,64 @@ public class SqmMutationStrategyHelper {
 		);
 	}
 
-	public static void cleanUpCollectionTables(
+	public static void visitCollectionTableDeletes(
 			EntityMappingType entityDescriptor,
 			BiFunction<TableReference, PluralAttributeMapping, Predicate> restrictionProducer,
 			JdbcParameterBindings jdbcParameterBindings,
-			ExecutionContext executionContext) {
+			QueryOptions queryOptions,
+			Consumer<JdbcOperationQueryMutation> jdbcMutationConsumer) {
 		if ( ! entityDescriptor.getEntityPersister().hasCollections() ) {
 			// none to clean-up
 			return;
 		}
-
 		entityDescriptor.visitSubTypeAttributeMappings(
 				attributeMapping -> {
 					if ( attributeMapping instanceof PluralAttributeMapping ) {
-						cleanUpCollectionTable(
+						visitCollectionTableDeletes(
 								(PluralAttributeMapping) attributeMapping,
-								entityDescriptor,
 								restrictionProducer,
 								jdbcParameterBindings,
-								executionContext
+								queryOptions,
+								jdbcMutationConsumer
 						);
 					}
 					else if ( attributeMapping instanceof EmbeddedAttributeMapping ) {
-						cleanUpCollectionTables(
+						visitCollectionTableDeletes(
 								(EmbeddedAttributeMapping) attributeMapping,
-								entityDescriptor,
 								restrictionProducer,
 								jdbcParameterBindings,
-								executionContext
+								queryOptions,
+								jdbcMutationConsumer
 						);
 					}
 				}
 		);
 	}
 
-	private static void cleanUpCollectionTables(
+	private static void visitCollectionTableDeletes(
 			EmbeddedAttributeMapping attributeMapping,
-			EntityMappingType entityDescriptor,
 			BiFunction<TableReference, PluralAttributeMapping, Predicate> restrictionProducer,
 			JdbcParameterBindings jdbcParameterBindings,
-			ExecutionContext executionContext) {
+			QueryOptions queryOptions,
+			Consumer<JdbcOperationQueryMutation> jdbcMutationConsumer) {
 		attributeMapping.visitSubParts(
 				modelPart -> {
 					if ( modelPart instanceof PluralAttributeMapping ) {
-						cleanUpCollectionTable(
+						visitCollectionTableDeletes(
 								(PluralAttributeMapping) modelPart,
-								entityDescriptor,
 								restrictionProducer,
 								jdbcParameterBindings,
-								executionContext
+								queryOptions,
+								jdbcMutationConsumer
 						);
 					}
 					else if ( modelPart instanceof EmbeddedAttributeMapping ) {
-						cleanUpCollectionTables(
+						visitCollectionTableDeletes(
 								(EmbeddedAttributeMapping) modelPart,
-								entityDescriptor,
 								restrictionProducer,
 								jdbcParameterBindings,
-								executionContext
+								queryOptions,
+								jdbcMutationConsumer
 						);
 					}
 				},
@@ -163,15 +164,14 @@ public class SqmMutationStrategyHelper {
 		);
 	}
 
-	private static void cleanUpCollectionTable(
+	private static void visitCollectionTableDeletes(
 			PluralAttributeMapping attributeMapping,
-			EntityMappingType entityDescriptor,
 			BiFunction<TableReference, PluralAttributeMapping, Predicate> restrictionProducer,
 			JdbcParameterBindings jdbcParameterBindings,
-			ExecutionContext executionContext) {
+			QueryOptions queryOptions,
+			Consumer<JdbcOperationQueryMutation> jdbcOperationConsumer) {
 		final String separateCollectionTable = attributeMapping.getSeparateCollectionTable();
-
-		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
+		final SessionFactoryImplementor sessionFactory = attributeMapping.getCollectionDescriptor().getFactory();
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 
 		if ( separateCollectionTable == null ) {
@@ -192,18 +192,11 @@ public class SqmMutationStrategyHelper {
 					restrictionProducer.apply( tableReference, attributeMapping )
 			);
 
-			jdbcServices.getJdbcMutationExecutor().execute(
+			jdbcOperationConsumer.accept(
 					jdbcServices.getJdbcEnvironment()
 							.getSqlAstTranslatorFactory()
 							.buildMutationTranslator( sessionFactory, sqlAstDelete )
-							.translate( jdbcParameterBindings, executionContext.getQueryOptions() ),
-					jdbcParameterBindings,
-					sql -> executionContext.getSession()
-							.getJdbcCoordinator()
-							.getStatementPreparer()
-							.prepareStatement( sql ),
-					(integer, preparedStatement) -> {},
-					executionContext
+							.translate( jdbcParameterBindings, queryOptions )
 			);
 		}
 	}

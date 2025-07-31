@@ -18,12 +18,12 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.EmptyScrollableResults;
+import org.hibernate.internal.util.MutableObject;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
@@ -79,7 +79,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private final SqmInterpreter<List<R>, Void> listInterpreter;
 	private final SqmInterpreter<ScrollableResultsImplementor<R>, ScrollMode> scrollInterpreter;
 
-	private volatile CacheableSqmInterpretation cacheableSqmInterpretation;
+	private volatile CacheableSqmInterpretation<SelectStatement, JdbcOperationQuerySelect> cacheableSqmInterpretation;
 
 	public ConcreteSqmSelectQueryPlan(
 			SqmSelectStatement<?> sqm,
@@ -97,16 +97,16 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						: ListResultsConsumer.UniqueSemantic.ALLOW;
 		this.executeQueryInterpreter = (resultsConsumer, executionContext, sqmInterpretation, jdbcParameterBindings) -> {
 			final SharedSessionContractImplementor session = executionContext.getSession();
-			final JdbcOperationQuerySelect jdbcSelect = sqmInterpretation.getJdbcSelect();
+			final JdbcOperationQuerySelect jdbcSelect = sqmInterpretation.jdbcOperation();
 			try {
 				final SubselectFetch.RegistrationHandler subSelectFetchKeyHandler = SubselectFetch.createRegistrationHandler(
 						session.getPersistenceContext().getBatchFetchQueue(),
-						sqmInterpretation.selectStatement,
+						sqmInterpretation.statement(),
 						JdbcParametersList.empty(),
 						jdbcParameterBindings
 				);
 				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames(), true );
-				final Expression fetchExpression = sqmInterpretation.selectStatement.getQueryPart()
+				final Expression fetchExpression = sqmInterpretation.statement().getQueryPart()
 						.getFetchClauseExpression();
 				final int resultCountEstimate = fetchExpression != null
 						? interpretIntExpression( fetchExpression, jdbcParameterBindings )
@@ -127,17 +127,17 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		};
 		this.listInterpreter = (unused, executionContext, sqmInterpretation, jdbcParameterBindings) -> {
 			final SharedSessionContractImplementor session = executionContext.getSession();
-			final JdbcOperationQuerySelect jdbcSelect = sqmInterpretation.getJdbcSelect();
+			final JdbcOperationQuerySelect jdbcSelect = sqmInterpretation.jdbcOperation();
 			try {
 				final SubselectFetch.RegistrationHandler subSelectFetchKeyHandler = SubselectFetch.createRegistrationHandler(
 						session.getPersistenceContext().getBatchFetchQueue(),
-						sqmInterpretation.selectStatement,
+						sqmInterpretation.statement(),
 						JdbcParametersList.empty(),
 						jdbcParameterBindings
 				);
 				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames(), true );
 				final Expression fetchExpression =
-						sqmInterpretation.selectStatement.getQueryPart()
+						sqmInterpretation.statement().getQueryPart()
 								.getFetchClauseExpression();
 				final int resultCountEstimate = fetchExpression != null
 						? interpretIntExpression( fetchExpression, jdbcParameterBindings )
@@ -160,7 +160,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 		this.scrollInterpreter = (scrollMode, executionContext, sqmInterpretation, jdbcParameterBindings) -> {
 			final SharedSessionContractImplementor session = executionContext.getSession();
-			final JdbcOperationQuerySelect jdbcSelect = sqmInterpretation.getJdbcSelect();
+			final JdbcOperationQuerySelect jdbcSelect = sqmInterpretation.jdbcOperation();
 			try {
 //				final SubselectFetch.RegistrationHandler subSelectFetchKeyHandler = SubselectFetch.createRegistrationHandler(
 //						executionContext.getSession().getPersistenceContext().getBatchFetchQueue(),
@@ -173,7 +173,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						session.getFactory().getJdbcServices().getJdbcSelectExecutor();
 				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames(), true );
 				final Expression fetchExpression =
-						sqmInterpretation.selectStatement.getQueryPart()
+						sqmInterpretation.statement().getQueryPart()
 								.getFetchClauseExpression();
 				final int resultCountEstimate = fetchExpression != null
 						? interpretIntExpression( fetchExpression, jdbcParameterBindings )
@@ -401,7 +401,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		//		to protect access.  However, synchronized is much simpler here.  We will verify
 		// 		during throughput testing whether this is an issue and consider changes then
 
-		CacheableSqmInterpretation localCopy = cacheableSqmInterpretation;
+		CacheableSqmInterpretation<SelectStatement, JdbcOperationQuerySelect> localCopy = cacheableSqmInterpretation;
 		JdbcParameterBindings jdbcParameterBindings = null;
 
 		executionContext.getSession().autoPreFlush();
@@ -410,23 +410,23 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			synchronized ( this ) {
 				localCopy = cacheableSqmInterpretation;
 				if ( localCopy == null ) {
-					localCopy = buildCacheableSqmInterpretation( sqm, domainParameterXref, executionContext );
-					jdbcParameterBindings = localCopy.firstParameterBindings;
-					localCopy.firstParameterBindings = null;
+					final MutableObject<JdbcParameterBindings> mutableValue = new MutableObject<>();
+					localCopy = buildInterpretation( sqm, domainParameterXref, executionContext, mutableValue );
+					jdbcParameterBindings = mutableValue.get();
 					cacheableSqmInterpretation = localCopy;
 				}
 				else {
 					// If the translation depends on parameter bindings or it isn't compatible with the current query options,
 					// we have to rebuild the JdbcSelect, which is still better than having to translate from SQM to SQL AST again
-					if ( localCopy.jdbcSelect.dependsOnParameterBindings() ) {
+					if ( localCopy.jdbcOperation().dependsOnParameterBindings() ) {
 						jdbcParameterBindings = createJdbcParameterBindings( localCopy, executionContext );
 					}
 					// If the translation depends on the limit or lock options, we have to rebuild the JdbcSelect
 					// We could avoid this by putting the lock options into the cache key
-					if ( !localCopy.jdbcSelect.isCompatibleWith( jdbcParameterBindings, executionContext.getQueryOptions() ) ) {
-						localCopy = buildCacheableSqmInterpretation( sqm, domainParameterXref, executionContext );
-						jdbcParameterBindings = localCopy.firstParameterBindings;
-						localCopy.firstParameterBindings = null;
+					if ( !localCopy.jdbcOperation().isCompatibleWith( jdbcParameterBindings, executionContext.getQueryOptions() ) ) {
+						final MutableObject<JdbcParameterBindings> mutableValue = new MutableObject<>();
+						localCopy = buildInterpretation( sqm, domainParameterXref, executionContext, mutableValue );
+						jdbcParameterBindings = mutableValue.get();
 						cacheableSqmInterpretation = localCopy;
 					}
 				}
@@ -435,15 +435,15 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		else {
 			// If the translation depends on parameter bindings or it isn't compatible with the current query options,
 			// we have to rebuild the JdbcSelect, which is still better than having to translate from SQM to SQL AST again
-			if ( localCopy.jdbcSelect.dependsOnParameterBindings() ) {
+			if ( localCopy.jdbcOperation().dependsOnParameterBindings() ) {
 				jdbcParameterBindings = createJdbcParameterBindings( localCopy, executionContext );
 			}
 			// If the translation depends on the limit or lock options, we have to rebuild the JdbcSelect
 			// We could avoid this by putting the lock options into the cache key
-			if ( !localCopy.jdbcSelect.isCompatibleWith( jdbcParameterBindings, executionContext.getQueryOptions() ) ) {
-				localCopy = buildCacheableSqmInterpretation( sqm, domainParameterXref, executionContext );
-				jdbcParameterBindings = localCopy.firstParameterBindings;
-				localCopy.firstParameterBindings = null;
+			if ( !localCopy.jdbcOperation().isCompatibleWith( jdbcParameterBindings, executionContext.getQueryOptions() ) ) {
+				final MutableObject<JdbcParameterBindings> mutableValue = new MutableObject<>();
+				localCopy = buildInterpretation( sqm, domainParameterXref, executionContext, mutableValue );
+				jdbcParameterBindings = mutableValue.get();
 				cacheableSqmInterpretation = localCopy;
 			}
 		}
@@ -455,26 +455,29 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		return interpreter.interpret( context, executionContext, localCopy, jdbcParameterBindings );
 	}
 
-	private JdbcParameterBindings createJdbcParameterBindings(CacheableSqmInterpretation sqmInterpretation, DomainQueryExecutionContext executionContext) {
+	// For Hibernate Reactive
+	protected JdbcParameterBindings createJdbcParameterBindings(CacheableSqmInterpretation<SelectStatement, JdbcOperationQuerySelect> sqmInterpretation, DomainQueryExecutionContext executionContext) {
 		return SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
-				sqmInterpretation.getJdbcParamsXref(),
+				sqmInterpretation.jdbcParamsXref(),
 				new SqmParameterMappingModelResolutionAccess() {
 					//this is pretty ugly!
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-						return (MappingModelExpressible<T>) sqmInterpretation.getSqmParameterMappingModelTypes().get(parameter);
+						return (MappingModelExpressible<T>) sqmInterpretation.sqmParameterMappingModelTypes().get(parameter);
 					}
 				},
 				executionContext.getSession()
 		);
 	}
 
-	private static CacheableSqmInterpretation buildCacheableSqmInterpretation(
+	// For Hibernate Reactive
+	protected static CacheableSqmInterpretation<SelectStatement, JdbcOperationQuerySelect> buildInterpretation(
 			SqmSelectStatement<?> sqm,
 			DomainParameterXref domainParameterXref,
-			DomainQueryExecutionContext executionContext) {
+			DomainQueryExecutionContext executionContext,
+			MutableObject<JdbcParameterBindings> firstJdbcParameterBindingsConsumer) {
 		final SharedSessionContractImplementor session = executionContext.getSession();
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
 
@@ -511,13 +514,12 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				},
 				session
 		);
-
-		return new CacheableSqmInterpretation(
+		firstJdbcParameterBindingsConsumer.set( jdbcParameterBindings );
+		return new CacheableSqmInterpretation<>(
 				sqmInterpretation.getSqlAst(),
 				selectTranslator.translate( jdbcParameterBindings, executionContext.getQueryOptions() ),
 				jdbcParamsXref,
-				sqmInterpretation.getSqmParameterMappingModelTypeResolutions(),
-				jdbcParameterBindings
+				sqmInterpretation.getSqmParameterMappingModelTypeResolutions()
 		);
 	}
 
@@ -525,41 +527,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		T interpret(
 				X context,
 				DomainQueryExecutionContext executionContext,
-				CacheableSqmInterpretation sqmInterpretation,
+				CacheableSqmInterpretation<SelectStatement, JdbcOperationQuerySelect> sqmInterpretation,
 				JdbcParameterBindings jdbcParameterBindings);
-	}
-
-	private static class CacheableSqmInterpretation {
-		private final SelectStatement selectStatement;
-		private final JdbcOperationQuerySelect jdbcSelect;
-		private final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref;
-		private final Map<SqmParameter<?>, MappingModelExpressible<?>> sqmParameterMappingModelTypes;
-		private transient JdbcParameterBindings firstParameterBindings;
-
-		CacheableSqmInterpretation(
-				SelectStatement selectStatement,
-				JdbcOperationQuerySelect jdbcSelect,
-				Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref,
-				Map<SqmParameter<?>, MappingModelExpressible<?>> sqmParameterMappingModelTypes,
-				JdbcParameterBindings firstParameterBindings) {
-			this.selectStatement = selectStatement;
-			this.jdbcSelect = jdbcSelect;
-			this.jdbcParamsXref = jdbcParamsXref;
-			this.sqmParameterMappingModelTypes = sqmParameterMappingModelTypes;
-			this.firstParameterBindings = firstParameterBindings;
-		}
-
-		JdbcOperationQuerySelect getJdbcSelect() {
-			return jdbcSelect;
-		}
-
-		Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> getJdbcParamsXref() {
-			return jdbcParamsXref;
-		}
-
-		public Map<SqmParameter<?>, MappingModelExpressible<?>> getSqmParameterMappingModelTypes() {
-			return sqmParameterMappingModelTypes;
-		}
 	}
 
 	private static class MySqmJdbcExecutionContextAdapter extends SqmJdbcExecutionContextAdapter {

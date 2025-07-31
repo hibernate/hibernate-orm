@@ -6,7 +6,13 @@ import org.apache.tools.ant.ProjectHelper;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
-import java.io.PrintStream;
+import java.nio.file.Files;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class TestTemplate {
 
@@ -19,6 +25,8 @@ public abstract class TestTemplate {
 
     protected abstract String hibernateToolTaskXml();
 
+    protected abstract String[] createDatabaseScript();
+
     protected String constructBuildXmlFileContents() {
         return buildXmlFileContents.replace("@hibernateToolTaskXml@", hibernateToolTaskXml());
     }
@@ -30,6 +38,32 @@ public abstract class TestTemplate {
         project.addBuildListener(getConsoleLogger());
         ProjectHelper.getProjectHelper().parse(project, buildXmlFile);
         project.executeTarget(project.getDefaultTarget());
+    }
+
+    protected void createBuildXmlFile() throws Exception {
+        File buildXmlFile = new File(getProjectDir(), "build.xml");
+        assertFalse(buildXmlFile.exists());
+        Files.writeString(buildXmlFile.toPath(), constructBuildXmlFileContents());
+        assertTrue(buildXmlFile.exists());
+    }
+
+    protected String constructJdbcConnectionString() {
+        return "jdbc:h2:" + getProjectDir().getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
+    }
+
+    protected void createDatabase() throws Exception {
+        File databaseFile = new File(getProjectDir(), "database/test.mv.db");
+        assertFalse(databaseFile.exists());
+        assertFalse(databaseFile.isFile());
+        Connection connection = DriverManager.getConnection(constructJdbcConnectionString());
+        Statement statement = connection.createStatement();
+        for (String sql : createDatabaseScript()) {
+            statement.execute(sql);
+        }
+        statement.close();
+        connection.close();
+        assertTrue(databaseFile.exists());
+        assertTrue(databaseFile.isFile());
     }
 
     private DefaultLogger getConsoleLogger() {

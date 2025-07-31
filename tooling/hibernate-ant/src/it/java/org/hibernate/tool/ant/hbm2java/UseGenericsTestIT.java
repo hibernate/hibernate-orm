@@ -1,30 +1,15 @@
 package org.hibernate.tool.ant.hbm2java;
 
-import org.hibernate.tool.it.ant.TestTemplate;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.Statement;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.hibernate.tool.it.ant.TestTemplate;
+import org.junit.jupiter.api.Test;
 
 public class UseGenericsTestIT extends TestTemplate {
-	
-	private File buildXmlFile;
-	private File databaseFile;
-	private File personFile;
-	
-	@BeforeEach
-	public void beforeEach() {
-		databaseFile = new File(getProjectDir(), "database/test.mv.db");
-		assertFalse(databaseFile.exists());
-		personFile = new File(getProjectDir(), "generated/Person.java");
-		assertFalse(personFile.exists());
-	}
 	
     @Test
     public void testUseGenerics() throws Exception {
@@ -39,27 +24,15 @@ public class UseGenericsTestIT extends TestTemplate {
 		return  hibernateToolTaskXml;
 	}
 
-	private void createBuildXmlFile() throws Exception {
-    	buildXmlFile = new File(getProjectDir(), "build.xml");
-    	assertFalse(buildXmlFile.exists());
-    	Files.writeString(buildXmlFile.toPath(), constructBuildXmlFileContents());
-    }
-    
-	private void createDatabase() throws Exception {
-		String CREATE_PERSON_TABLE = "create table PERSON (ID int not null, NAME varchar(20), primary key (ID))";
-		String CREATE_ITEM_TABLE =
+	protected String[] createDatabaseScript() {
+		return new String[] {
+				"create table PERSON (ID int not null, NAME varchar(20), " +
+						"primary key (ID))",
 				"create table ITEM (ID int not null,  NAME varchar(20), OWNER_ID int not null, " +
-						"   primary key (ID), foreign key (OWNER_ID) references PERSON(ID))";
-		Connection connection = DriverManager.getConnection(constructJdbcConnectionString());
-		Statement statement = connection.createStatement();
-		statement.execute(CREATE_PERSON_TABLE);
-		statement.execute(CREATE_ITEM_TABLE);
-		statement.close();
-		connection.close();	
-		assertTrue(databaseFile.exists());
-		assertTrue(databaseFile.isFile());
+						"primary key (ID), foreign key (OWNER_ID) references PERSON(ID))"
+		};
 	}
-	
+
 	private void createHibernatePropertiesFile() throws Exception {
 		File hibernatePropertiesFile = new File(getProjectDir(), "hibernate.properties");
 		StringBuffer hibernatePropertiesFileContents = new StringBuffer();	
@@ -94,10 +67,6 @@ public class UseGenericsTestIT extends TestTemplate {
 		assertTrue(generatedItemJavaFileContents.contains("public class Item "));
 	}
 	
-	private String constructJdbcConnectionString() {
-		return "jdbc:h2:" + getProjectDir().getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
-	}
-	    
 	private static final String hibernateToolTaskXml =
 			"        <hibernatetool destdir='generated'>                          \n" +
 			"            <jdbcconfiguration propertyfile='hibernate.properties'/> \n" +

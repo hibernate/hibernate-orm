@@ -994,8 +994,17 @@ plugins {
     id "org.hibernate.orm" version "{fullVersion}"
 }
 
-hibernate { enhancement }
+hibernate {
+  enhancement {}
+}
 ----
+
+[CAUTION]
+====
+Some online documentation (including previous versions of the present one) suggest to use `hibernate { enhancement }`, which will _not_ work as it is interpreted by Gradle as a (pointless) getter call instead of actual configuration.
+That form will result in bytecode enhancement NOT happening (unfortunately silently).
+To enable bytecode enhancement, make sure to always use the block form (with `{}`).
+====
 
 // [discrete]
 // ==== Attribute-level lazy fetching

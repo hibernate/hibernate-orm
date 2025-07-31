@@ -14,6 +14,17 @@ public class NoAnnotationsTestIT extends TestTemplate {
 	
     @Test
     public void testNoAnnotations() throws Exception {
+		setHibernateToolTaskXml(
+		"""
+						<hibernatetool destdir='generated'>                         \s
+							<jdbcconfiguration propertyfile='hibernate.properties'/>\s
+							<hbm2java ejb3='false'/>                                \s
+						</hibernatetool>                                            \s
+				"""
+		);
+		setDatabaseCreationScript(new String[] {
+				"create table PERSON (ID int not null, NAME varchar(20), primary key (ID))"
+		});
     	createBuildXmlFile();
     	createDatabase();
     	createHibernatePropertiesFile();
@@ -21,30 +32,6 @@ public class NoAnnotationsTestIT extends TestTemplate {
     	verifyResult();
     }
 
-	protected String hibernateToolTaskXml() {
-		return  hibernateToolTaskXml;
-	}
-
-	protected String[] createDatabaseScript() {
-		return new String[] {
-				"create table PERSON (ID int not null, NAME varchar(20), primary key (ID))"
-		};
-	}
-
-	private void createHibernatePropertiesFile() throws Exception {
-		File hibernatePropertiesFile = new File(getProjectDir(), "hibernate.properties");
-		StringBuffer hibernatePropertiesFileContents = new StringBuffer();	
-		hibernatePropertiesFileContents
-			.append("hibernate.connection.driver_class=org.h2.Driver\n")
-			.append("hibernate.connection.url=" + constructJdbcConnectionString() + "\n")
-			.append("hibernate.connection.username=\n")
-			.append("hibernate.connection.password=\n")
-			.append("hibernate.default_catalog=TEST\n")
-			.append("hibernate.default_schema=PUBLIC\n");
-		Files.writeString(hibernatePropertiesFile.toPath(), hibernatePropertiesFileContents.toString());
-		assertTrue(hibernatePropertiesFile.exists());
-	}
-	
 	private void verifyResult() throws Exception {
 		File generatedOutputFolder = new File(getProjectDir(), "generated");
 		assertTrue(generatedOutputFolder.exists());
@@ -59,9 +46,4 @@ public class NoAnnotationsTestIT extends TestTemplate {
 		assertTrue(generatedPersonJavaFileContents.contains("public class Person "));
 	}
 	
-	private static final String hibernateToolTaskXml =
-			"        <hibernatetool destdir='generated'>                          \n" +
-			"            <jdbcconfiguration propertyfile='hibernate.properties'/> \n" +
-			"            <hbm2java ejb3='false'/>                                 \n" +
-			"        </hibernatetool>                                             \n" ;
 }

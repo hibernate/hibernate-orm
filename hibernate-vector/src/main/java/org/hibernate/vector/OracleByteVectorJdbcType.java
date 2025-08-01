@@ -7,8 +7,10 @@ package org.hibernate.vector;
 import java.util.Arrays;
 import java.util.BitSet;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleTypes;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -33,7 +35,12 @@ public class OracleByteVectorJdbcType extends AbstractOracleVectorJdbcType {
 	public void appendWriteExpression(String writeExpression, SqlAppender appender, Dialect dialect) {
 		appender.append( "to_vector(" );
 		appender.append( writeExpression );
-		appender.append( ", *, INT8)" );
+		appender.append( ",*,int8)" );
+	}
+
+	@Override
+	public @Nullable String castFromPattern(JdbcMapping sourceMapping) {
+		return sourceMapping.getJdbcType().isStringLike() ? "to_vector(?1,*,int8)" : null;
 	}
 
 	@Override

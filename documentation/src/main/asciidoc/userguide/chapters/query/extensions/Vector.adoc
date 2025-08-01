@@ -12,10 +12,21 @@ The Hibernate ORM Vector module contains support for mathematical vector types a
 This is useful for AI/ML topics like vector similarity search and Retrieval-Augmented Generation (RAG).
 The module comes with support for a special `vector` data type that essentially represents an array of bytes, floats, or doubles.
 
-So far, both the PostgreSQL extension `pgvector` and the Oracle database 23ai+ `AI Vector Search` feature are supported, but in theory,
-the vector specific functions could be implemented to work with every database that supports arrays.
+Currently, the following databases are supported:
 
-For further details, refer to the https://github.com/pgvector/pgvector#querying[pgvector documentation] or the https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/overview-node.html[AI Vector Search documentation].
+* PostgreSQL 13+ through the https://github.com/pgvector/pgvector#querying[`pgvector` extension]
+* https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/overview-node.html[Oracle database 23ai+]
+* https://mariadb.com/docs/server/reference/sql-structure/vectors/vector-overview[MariaDB 11.7+]
+* https://dev.mysql.com/doc/refman/9.4/en/vector-functions.html[MySQL 9.0+]
+
+In theory, the vector-specific functions could be implemented to work with every database that supports arrays.
+
+[WARNING]
+====
+Per the https://dev.mysql.com/doc/refman/9.4/en/vector-functions.html#function_distance[MySQL documentation],
+the various vector distance functions for MySQL only work on MySQL cloud offerings like
+https://dev.mysql.com/doc/heatwave/en/mys-hw-about-heatwave.html[HeatWave MySQL on OCI].
+====
 
 [[vector-module-setup]]
 === Setup
@@ -57,7 +68,7 @@ As Oracle AI Vector Search supports different types of elements (to ensure bette
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-vector}/PGVectorTest.java[tags=usage-example]
+include::{example-dir-vector}/FloatVectorTest.java[tags=usage-example]
 ----
 ====
 
@@ -113,7 +124,7 @@ which is `1 - inner_product( v1, v2 ) / ( vector_norm( v1 ) * vector_norm( v2 ) 
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-vector}/PGVectorTest.java[tags=cosine-distance-example]
+include::{example-dir-vector}/FloatVectorTest.java[tags=cosine-distance-example]
 ----
 ====
 
@@ -128,7 +139,7 @@ The `l2_distance()` function is an alias.
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-vector}/PGVectorTest.java[tags=euclidean-distance-example]
+include::{example-dir-vector}/FloatVectorTest.java[tags=euclidean-distance-example]
 ----
 ====
 
@@ -143,7 +154,7 @@ The `l1_distance()` function is an alias.
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-vector}/PGVectorTest.java[tags=taxicab-distance-example]
+include::{example-dir-vector}/FloatVectorTest.java[tags=taxicab-distance-example]
 ----
 ====
 
@@ -158,7 +169,7 @@ and the `inner_product()` function as well, but multiplies the result time `-1`.
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-vector}/PGVectorTest.java[tags=inner-product-example]
+include::{example-dir-vector}/FloatVectorTest.java[tags=inner-product-example]
 ----
 ====
 
@@ -171,7 +182,7 @@ Determines the dimensions of a vector.
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-vector}/PGVectorTest.java[tags=vector-dims-example]
+include::{example-dir-vector}/FloatVectorTest.java[tags=vector-dims-example]
 ----
 ====
 
@@ -185,7 +196,7 @@ which is `sqrt( sum( v_i^2 ) )`.
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-vector}/PGVectorTest.java[tags=vector-norm-example]
+include::{example-dir-vector}/FloatVectorTest.java[tags=vector-norm-example]
 ----
 ====
 

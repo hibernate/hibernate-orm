@@ -13,7 +13,7 @@ public class MariaDBFunctionContributor implements FunctionContributor {
 	@Override
 	public void contributeFunctions(FunctionContributions functionContributions) {
 		final Dialect dialect = functionContributions.getDialect();
-		if ( dialect instanceof MariaDBDialect ) {
+		if ( dialect instanceof MariaDBDialect && dialect.getVersion().isSameOrAfter( 11, 7 ) ) {
 			final VectorFunctionFactory vectorFunctionFactory = new VectorFunctionFactory( functionContributions );
 
 			vectorFunctionFactory.cosineDistance( "vec_distance_cosine(?1,?2)" );

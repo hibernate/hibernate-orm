@@ -8,7 +8,6 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.service.ServiceRegistry;
@@ -19,7 +18,6 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 public class OracleVectorTypeContributor implements TypeContributor {
@@ -94,48 +92,16 @@ public class OracleVectorTypeContributor implements TypeContributor {
 			);
 
 			typeConfiguration.getDdlTypeRegistry().addDescriptor(
-					new DdlTypeImpl( SqlTypes.VECTOR, "vector($l, *)", "vector", dialect ) {
-						@Override
-						public String getTypeName(Size size) {
-							return OracleVectorTypeContributor.replace(
-									"vector($l, *)",
-									size.getArrayLength() == null ? null : size.getArrayLength().longValue()
-							);
-						}
-					}
+					new VectorDdlType( SqlTypes.VECTOR, "vector($l, *)", "vector", dialect )
 			);
 			typeConfiguration.getDdlTypeRegistry().addDescriptor(
-					new DdlTypeImpl( SqlTypes.VECTOR_INT8, "vector($l, INT8)", "vector", dialect ) {
-						@Override
-						public String getTypeName(Size size) {
-							return OracleVectorTypeContributor.replace(
-									"vector($l, INT8)",
-									size.getArrayLength() == null ? null : size.getArrayLength().longValue()
-							);
-						}
-					}
+					new VectorDdlType( SqlTypes.VECTOR_INT8, "vector($l, INT8)", "vector", dialect )
 			);
 			typeConfiguration.getDdlTypeRegistry().addDescriptor(
-					new DdlTypeImpl( SqlTypes.VECTOR_FLOAT32, "vector($l, FLOAT32)", "vector", dialect ) {
-						@Override
-						public String getTypeName(Size size) {
-							return OracleVectorTypeContributor.replace(
-									"vector($l, FLOAT32)",
-									size.getArrayLength() == null ? null : size.getArrayLength().longValue()
-							);
-						}
-					}
+					new VectorDdlType( SqlTypes.VECTOR_FLOAT32, "vector($l, FLOAT32)", "vector", dialect )
 			);
 			typeConfiguration.getDdlTypeRegistry().addDescriptor(
-					new DdlTypeImpl( SqlTypes.VECTOR_FLOAT64, "vector($l, FLOAT64)", "vector", dialect ) {
-						@Override
-						public String getTypeName(Size size) {
-							return OracleVectorTypeContributor.replace(
-									"vector($l, FLOAT64)",
-									size.getArrayLength() == null ? null : size.getArrayLength().longValue()
-							);
-						}
-					}
+					new VectorDdlType( SqlTypes.VECTOR_FLOAT64, "vector($l, FLOAT64)", "vector", dialect )
 			);
 		}
 	}

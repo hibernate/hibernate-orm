@@ -14,7 +14,7 @@ public class OracleVectorFunctionContributor implements FunctionContributor {
 	@Override
 	public void contributeFunctions(FunctionContributions functionContributions) {
 		final Dialect dialect = functionContributions.getDialect();
-		if ( dialect instanceof OracleDialect ) {
+		if ( dialect instanceof OracleDialect && dialect.getVersion().isSameOrAfter( 23, 4 ) ) {
 			final VectorFunctionFactory vectorFunctionFactory = new VectorFunctionFactory( functionContributions );
 
 			vectorFunctionFactory.cosineDistance( "vector_distance(?1,?2,COSINE)" );

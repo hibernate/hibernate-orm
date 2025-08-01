@@ -9,10 +9,12 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
@@ -365,6 +367,30 @@ public interface JdbcType extends Serializable {
 	@Incubating
 	default String getExtraCreateTableInfo(JavaType<?> javaType, String columnName, String tableName, Database database) {
 		return "";
+	}
+
+	/**
+	 * Returns the cast pattern from the given source type to this type, or {@code null} if not possible.
+	 *
+	 * @param sourceMapping The source type
+	 * @return The cast pattern or null
+	 * @since 7.1
+	 */
+	@Incubating
+	default @Nullable String castFromPattern(JdbcMapping sourceMapping) {
+		return null;
+	}
+
+	/**
+	 * Returns the cast pattern from this type to the given target type, or {@code null} if not possible.
+	 *
+	 * @param targetJdbcMapping The target type
+	 * @return The cast pattern or null
+	 * @since 7.1
+	 */
+	@Incubating
+	default @Nullable String castToPattern(JdbcMapping targetJdbcMapping) {
+		return null;
 	}
 
 	@Incubating

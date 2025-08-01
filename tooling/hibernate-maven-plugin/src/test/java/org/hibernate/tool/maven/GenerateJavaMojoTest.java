@@ -16,12 +16,12 @@ import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 public class GenerateJavaMojoTest {
 
-	private static final String JDBC_CONNECTION = "jdbc:h2:mem:test";
 	private static final String CREATE_PERSON_TABLE =
 			"create table PERSON (ID int not null, NAME varchar(20), primary key (ID))";
 	private static final String CREATE_ITEM_TABLE =
@@ -122,17 +122,21 @@ public class GenerateJavaMojoTest {
 	}
 
 	private void createDatabase() throws Exception {
-		Connection connection = DriverManager.getConnection(JDBC_CONNECTION);
+		Connection connection = DriverManager.getConnection(constructJdbcConnectionString());
 		Statement statement = connection.createStatement();
 		statement.execute(CREATE_PERSON_TABLE);
 		statement.execute(CREATE_ITEM_TABLE);
+		statement.close();
+		connection.close();
 	}
 
 	private void dropDatabase() throws Exception {
-		Connection connection = DriverManager.getConnection(JDBC_CONNECTION);
+		Connection connection = DriverManager.getConnection(constructJdbcConnectionString());
 		Statement statement = connection.createStatement();
 		statement.execute(DROP_ITEM_TABLE);
 		statement.execute(DROP_PERSON_TABLE);
+		statement.close();
+		connection.close();
 	}
 
 	private void createGenerateJavaMojo() throws Exception {
@@ -161,10 +165,14 @@ public class GenerateJavaMojoTest {
 
 	private Properties createProperties() {
 		Properties result = new Properties();
-		result.put("hibernate.connection.url", JDBC_CONNECTION);
+		result.put("hibernate.connection.url", constructJdbcConnectionString());
 		result.put("hibernate.default_catalog", "TEST");
 		result.put("hibernate.default_schema", "PUBLIC");
 		return result;
 	}
+
+    private String constructJdbcConnectionString() {
+        return "jdbc:h2:" + tempDir.getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
+    }
 
 }

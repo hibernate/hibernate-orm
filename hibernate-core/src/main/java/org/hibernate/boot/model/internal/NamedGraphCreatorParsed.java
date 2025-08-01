@@ -68,7 +68,7 @@ class NamedGraphCreatorParsed implements NamedGraphCreator {
 			//noinspection unchecked
 			final EntityDomainType<T> entityDomainType = (EntityDomainType<T>) entityDomainNameResolver.apply( jpaEntityName );
 			final String name = this.name == null ? jpaEntityName : this.name;
-			return GraphParsing.parse( name, entityDomainType, graphContext.attributeList(), entityNameResolver );
+			return GraphParsing.parse( name, entityDomainType, graphContext.graphElementList(), entityNameResolver );
 		}
 		else {
 			if ( graphContext.typeIndicator() != null ) {
@@ -77,7 +77,7 @@ class NamedGraphCreatorParsed implements NamedGraphCreator {
 			//noinspection unchecked
 			final EntityDomainType<T> entityDomainType = (EntityDomainType<T>) entityDomainClassResolver.apply( (Class<T>) entityType );
 			final String name = this.name == null ? entityDomainType.getName() : this.name;
-			return GraphParsing.parse( name, entityDomainType, graphContext.attributeList(), entityNameResolver );
+			return GraphParsing.parse( name, entityDomainType, graphContext.graphElementList(), entityNameResolver );
 		}
 	}
 }

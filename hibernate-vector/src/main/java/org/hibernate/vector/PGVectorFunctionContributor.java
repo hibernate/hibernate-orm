@@ -21,6 +21,8 @@ public class PGVectorFunctionContributor implements FunctionContributor {
 			vectorFunctionFactory.cosineDistance( "?1<=>?2" );
 			vectorFunctionFactory.euclideanDistance( "?1<->?2" );
 			vectorFunctionFactory.l1Distance( "l1_distance(?1,?2)" );
+			vectorFunctionFactory.hammingDistance( "?1<~>?2" );
+			vectorFunctionFactory.registerVectorDistanceFunction( "jaccard_distance", "?1<%>?2" );
 
 			vectorFunctionFactory.innerProduct( "(?1<#>?2)*-1" );
 			vectorFunctionFactory.negativeInnerProduct( "?1<#>?2" );

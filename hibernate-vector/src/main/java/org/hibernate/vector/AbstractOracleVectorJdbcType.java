@@ -9,7 +9,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -43,12 +45,12 @@ public abstract class AbstractOracleVectorJdbcType extends ArrayJdbcType {
 		this.isVectorSupported = isVectorSupported;
 	}
 
-	public abstract void appendWriteExpression(String writeExpression, SqlAppender appender, Dialect dialect);
-
 	@Override
-	public int getDefaultSqlTypeCode() {
-		return SqlTypes.VECTOR;
+	public @Nullable String castToPattern(JdbcMapping targetJdbcMapping) {
+		return targetJdbcMapping.getJdbcType().isStringLike() ? "from_vector(?1 returning ?2)" : null;
 	}
+
+	public abstract void appendWriteExpression(String writeExpression, SqlAppender appender, Dialect dialect);
 
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {

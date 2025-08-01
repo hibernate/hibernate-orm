@@ -1,3 +1,4 @@
 org.hibernate.vector.PGVectorFunctionContributor
 org.hibernate.vector.OracleVectorFunctionContributor
 org.hibernate.vector.MariaDBFunctionContributor
+org.hibernate.vector.MySQLFunctionContributor

@@ -5,10 +5,11 @@
 package org.hibernate.vector;
 
 import java.util.Arrays;
-import java.util.BitSet;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleTypes;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -23,9 +24,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 public class OracleFloatVectorJdbcType extends AbstractOracleVectorJdbcType {
 
-
-	private static final float[] EMPTY = new float[0];
-
 	public OracleFloatVectorJdbcType(JdbcType elementJdbcType, boolean isVectorSupported) {
 		super( elementJdbcType, isVectorSupported );
 	}
@@ -34,7 +32,12 @@ public class OracleFloatVectorJdbcType extends AbstractOracleVectorJdbcType {
 	public void appendWriteExpression(String writeExpression, SqlAppender appender, Dialect dialect) {
 		appender.append( "to_vector(" );
 		appender.append( writeExpression );
-		appender.append( ", *, FLOAT32)" );
+		appender.append( ",*,float32)" );
+	}
+
+	@Override
+	public @Nullable String castFromPattern(JdbcMapping sourceMapping) {
+		return sourceMapping.getJdbcType().isStringLike() ? "to_vector(?1,*,float32)" : null;
 	}
 
 	@Override
@@ -49,31 +52,7 @@ public class OracleFloatVectorJdbcType extends AbstractOracleVectorJdbcType {
 
 	@Override
 	protected float[] getVectorArray(String string) {
-		if ( string == null ) {
-			return null;
-		}
-		if ( string.length() == 2 ) {
-			return EMPTY;
-		}
-		final BitSet commaPositions = new BitSet();
-		int size = 1;
-		for ( int i = 1; i < string.length(); i++ ) {
-			final char c = string.charAt( i );
-			if ( c == ',' ) {
-				commaPositions.set( i );
-				size++;
-			}
-		}
-		final float[] result = new float[size];
-		int doubleStartIndex = 1;
-		int commaIndex;
-		int index = 0;
-		while ( ( commaIndex = commaPositions.nextSetBit( doubleStartIndex ) ) != -1 ) {
-			result[index++] = Float.parseFloat( string.substring( doubleStartIndex, commaIndex ) );
-			doubleStartIndex = commaIndex + 1;
-		}
-		result[index] = Float.parseFloat( string.substring( doubleStartIndex, string.length() - 1 ) );
-		return result;
+		return VectorHelper.parseFloatVector( string );
 	}
 
 	@Override

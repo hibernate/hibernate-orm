@@ -4,13 +4,10 @@
  */
 package org.hibernate.vector;
 
-import java.lang.reflect.Type;
-
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
-import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicArrayType;
@@ -23,7 +20,9 @@ import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-public class PGVectorTypeContributor implements TypeContributor {
+import java.lang.reflect.Type;
+
+public class MySQLTypeContributor implements TypeContributor {
 
 	private static final Type[] VECTOR_JAVA_TYPES = {
 			Float[].class,
@@ -33,19 +32,18 @@ public class PGVectorTypeContributor implements TypeContributor {
 	@Override
 	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final Dialect dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
-		if ( dialect instanceof PostgreSQLDialect ||
-			dialect instanceof CockroachDialect ) {
+		if ( dialect instanceof MySQLDialect mySQLDialect && mySQLDialect.getMySQLVersion().isSameOrAfter( 9, 0 ) ) {
 			final TypeConfiguration typeConfiguration = typeContributions.getTypeConfiguration();
 			final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 			final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
 			final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 			final BasicType<Float> floatBasicType = basicTypeRegistry.resolve( StandardBasicTypes.FLOAT );
-			final ArrayJdbcType genericVectorJdbcType = new PGVectorJdbcType(
+			final ArrayJdbcType genericVectorJdbcType = new MySQLVectorJdbcType(
 					jdbcTypeRegistry.getDescriptor( SqlTypes.FLOAT ),
 					SqlTypes.VECTOR
 			);
 			jdbcTypeRegistry.addDescriptor( SqlTypes.VECTOR, genericVectorJdbcType );
-			final ArrayJdbcType floatVectorJdbcType = new PGVectorJdbcType(
+			final ArrayJdbcType floatVectorJdbcType = new MySQLVectorJdbcType(
 					jdbcTypeRegistry.getDescriptor( SqlTypes.FLOAT ),
 					SqlTypes.VECTOR_FLOAT32
 			);

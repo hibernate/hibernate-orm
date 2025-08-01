@@ -13,9 +13,11 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
@@ -97,6 +99,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
@@ -105,6 +108,7 @@ import org.hibernate.usertype.UserType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -1081,6 +1085,66 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsVectorType implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesDdlType( dialect, SqlTypes.VECTOR );
+		}
+	}
+
+	public static class SupportsDoubleVectorType implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesDdlType( dialect, SqlTypes.VECTOR_FLOAT64 );
+		}
+	}
+
+	public static class SupportsByteVectorType implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesDdlType( dialect, SqlTypes.VECTOR_INT8 );
+		}
+	}
+
+	public static class SupportsCosineDistance implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "cosine_distance" );
+		}
+	}
+
+	public static class SupportsEuclideanDistance implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "euclidean_distance" );
+		}
+	}
+
+	public static class SupportsTaxicabDistance implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "taxicab_distance" );
+		}
+	}
+
+	public static class SupportsHammingDistance implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "hamming_distance" );
+		}
+	}
+
+	public static class SupportsInnerProduct implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "inner_product" );
+		}
+	}
+
+	public static class SupportsVectorDims implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "vector_dims" );
+		}
+	}
+
+	public static class SupportsVectorNorm implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "vector_norm" );
+		}
+	}
+
 	public static class IsJtds implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect instanceof SybaseDialect && ( (SybaseDialect) dialect ).getDriverKind() == SybaseDriverKind.JTDS;
@@ -1146,7 +1210,7 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
-	private static final HashMap<Dialect, SqmFunctionRegistry> FUNCTION_REGISTRIES = new HashMap<>();
+	private static final HashMap<Dialect, FakeFunctionContributions> FUNCTION_CONTRIBUTIONS = new HashMap<>();
 
 	public static boolean definesFunction(Dialect dialect, String functionName) {
 		return getSqmFunctionRegistry( dialect ).findFunctionDescriptor( functionName ) != null;
@@ -1154,6 +1218,11 @@ abstract public class DialectFeatureChecks {
 
 	public static boolean definesSetReturningFunction(Dialect dialect, String functionName) {
 		return getSqmFunctionRegistry( dialect ).findSetReturningFunctionDescriptor( functionName ) != null;
+	}
+
+	public static boolean definesDdlType(Dialect dialect, int typeCode) {
+		final DdlTypeRegistry ddlTypeRegistry = getFunctionContributions( dialect ).typeConfiguration.getDdlTypeRegistry();
+		return ddlTypeRegistry.getDescriptor( typeCode ) != null;
 	}
 
 	public static class SupportsSubqueryInSelect implements DialectFeatureCheck {
@@ -1177,24 +1246,33 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
-
 	private static SqmFunctionRegistry getSqmFunctionRegistry(Dialect dialect) {
-		SqmFunctionRegistry sqmFunctionRegistry = FUNCTION_REGISTRIES.get( dialect );
-		if ( sqmFunctionRegistry == null ) {
+		return getFunctionContributions( dialect ).functionRegistry;
+	}
+
+	private static FakeFunctionContributions getFunctionContributions(Dialect dialect) {
+		FakeFunctionContributions functionContributions = FUNCTION_CONTRIBUTIONS.get( dialect );
+		if ( functionContributions == null ) {
 			final TypeConfiguration typeConfiguration = new TypeConfiguration();
 			final SqmFunctionRegistry functionRegistry = new SqmFunctionRegistry();
 			typeConfiguration.scope( new FakeMetadataBuildingContext( typeConfiguration, functionRegistry ) );
 			final FakeTypeContributions typeContributions = new FakeTypeContributions( typeConfiguration );
-			final FakeFunctionContributions functionContributions = new FakeFunctionContributions(
+			functionContributions = new FakeFunctionContributions(
 					dialect,
 					typeConfiguration,
 					functionRegistry
 			);
 			dialect.contribute( typeContributions, typeConfiguration.getServiceRegistry() );
 			dialect.initializeFunctionRegistry( functionContributions );
-			FUNCTION_REGISTRIES.put( dialect, sqmFunctionRegistry = functionContributions.functionRegistry );
+			for ( TypeContributor typeContributor : ServiceLoader.load( TypeContributor.class ) ) {
+				typeContributor.contribute( typeContributions, typeConfiguration.getServiceRegistry() );
+			}
+			for ( FunctionContributor functionContributor : ServiceLoader.load( FunctionContributor.class ) ) {
+				functionContributor.contributeFunctions( functionContributions );
+			}
+			FUNCTION_CONTRIBUTIONS.put( dialect, functionContributions );
 		}
-		return sqmFunctionRegistry;
+		return functionContributions;
 	}
 
 	public static class FakeTypeContributions implements TypeContributions {

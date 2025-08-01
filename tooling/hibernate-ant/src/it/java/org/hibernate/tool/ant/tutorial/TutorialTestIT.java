@@ -24,10 +24,7 @@ public class TutorialTestIT extends TestTemplate {
 		setDatabaseCreationScript(new String[] {
 				"create table PERSON (ID int not null, NAME varchar(20), primary key (ID))"
 		});
-    	createBuildXmlFile();
-    	createDatabase();
-    	createHibernatePropertiesFile();
-    	runAntBuild();
+		createProjectAndBuild();
     	verifyResult();
     }
 

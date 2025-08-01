@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -38,7 +39,33 @@ public abstract class TestTemplate {
         return buildXmlFileContents.replace("@hibernateToolTaskXml@", hibernateToolTaskXml);
     }
 
-    protected void runAntBuild() {
+    protected String getFileContents(String path) throws Exception {
+        return new String(
+                Files.readAllBytes(
+                        new File(getProjectDir(), path).toPath()));
+    }
+
+    protected void createProjectAndBuild() throws Exception {
+        createBuildXmlFile();
+        createDatabase();
+        createHibernatePropertiesFile();
+        runAntBuild();
+    }
+
+    protected void assertFolderExists(String path, int amountOfChildren) {
+        File generatedOutputFolder = new File(getProjectDir(), path);
+        assertTrue(generatedOutputFolder.exists());
+        assertTrue(generatedOutputFolder.isDirectory());
+        assertEquals(amountOfChildren, Objects.requireNonNull(generatedOutputFolder.list()).length);
+    }
+
+    protected void assertFileExists(String path) {
+        File generatedPersonJavaFile = new File(getProjectDir(), path);
+        assertTrue(generatedPersonJavaFile.exists());
+        assertTrue(generatedPersonJavaFile.isFile());
+    }
+
+    private void runAntBuild() {
         File buildXmlFile = new File(getProjectDir(), "build.xml");
         Project project = new Project();
         project.setBaseDir(getProjectDir());
@@ -47,18 +74,18 @@ public abstract class TestTemplate {
         project.executeTarget(project.getDefaultTarget());
     }
 
-    protected void createBuildXmlFile() throws Exception {
+    private void createBuildXmlFile() throws Exception {
         File buildXmlFile = new File(getProjectDir(), "build.xml");
         assertFalse(buildXmlFile.exists());
         Files.writeString(buildXmlFile.toPath(), constructBuildXmlFileContents());
         assertTrue(buildXmlFile.exists());
     }
 
-    protected String constructJdbcConnectionString() {
+    private String constructJdbcConnectionString() {
         return "jdbc:h2:" + getProjectDir().getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
     }
 
-    protected void createDatabase() throws Exception {
+    private void createDatabase() throws Exception {
         File databaseFile = new File(getProjectDir(), "database/test.mv.db");
         assertFalse(databaseFile.exists());
         assertFalse(databaseFile.isFile());
@@ -73,7 +100,7 @@ public abstract class TestTemplate {
         assertTrue(databaseFile.isFile());
     }
 
-    protected void createHibernatePropertiesFile() throws Exception {
+    private void createHibernatePropertiesFile() throws Exception {
         File hibernatePropertiesFile = new File(getProjectDir(), "hibernate.properties");
         String hibernatePropertiesFileContents =
                 "hibernate.connection.driver_class=org.h2.Driver\n" +

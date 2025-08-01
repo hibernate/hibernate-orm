@@ -24,25 +24,12 @@ public class JpaDefaultTestIT extends TestTemplate {
 		setDatabaseCreationScript(new String[] {
 				"create table PERSON (ID int not null, NAME varchar(20), primary key (ID))"
 		});
-    	createBuildXmlFile();
-    	createDatabase();
-    	createHibernatePropertiesFile();
-    	runAntBuild();
-    	verifyResult();
-    }
-
-	private void verifyResult() throws Exception {
-		File generatedOutputFolder = new File(getProjectDir(), "generated");
-		assertTrue(generatedOutputFolder.exists());
-		assertTrue(generatedOutputFolder.isDirectory());
-		assertEquals(1, generatedOutputFolder.list().length);
-		File generatedPersonJavaFile = new File(generatedOutputFolder, "Person.java");
-		assertTrue(generatedPersonJavaFile.exists());
-		assertTrue(generatedPersonJavaFile.isFile());
-		String generatedPersonJavaFileContents = new String(
-				Files.readAllBytes(generatedPersonJavaFile.toPath()));
+		createProjectAndBuild();
+		assertFolderExists("generated", 1);
+		assertFileExists("generated/Person.java");
+		String generatedPersonJavaFileContents = getFileContents("generated/Person.java");
 		assertTrue(generatedPersonJavaFileContents.contains("import jakarta.persistence.Entity;"));
 		assertTrue(generatedPersonJavaFileContents.contains("public class Person "));
-	}
-	
+   }
+
 }

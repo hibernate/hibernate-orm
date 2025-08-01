@@ -27,10 +27,7 @@ public class UseGenericsTestIT extends TestTemplate {
 				"create table ITEM (ID int not null,  NAME varchar(20), OWNER_ID int not null, " +
 						"primary key (ID), foreign key (OWNER_ID) references PERSON(ID))"
 		});
-    	createBuildXmlFile();
-    	createDatabase();
-    	createHibernatePropertiesFile();
-    	runAntBuild();
+		createProjectAndBuild();
     	verifyResult();
     }
 

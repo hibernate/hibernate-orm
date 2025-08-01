@@ -4,33 +4,36 @@
  */
 package org.hibernate.vector;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.type.SqlTypes;
-import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
-import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.CallableStatement;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class BinaryVectorJdbcType extends ArrayJdbcType {
+import static org.hibernate.vector.VectorHelper.parseFloatVector;
 
-	public BinaryVectorJdbcType(JdbcType elementJdbcType) {
+public class PGVectorJdbcType extends ArrayJdbcType {
+
+	private final int sqlType;
+
+	public PGVectorJdbcType(JdbcType elementJdbcType, int sqlType) {
 		super( elementJdbcType );
+		this.sqlType = sqlType;
 	}
 
 	@Override
 	public int getDefaultSqlTypeCode() {
-		return SqlTypes.VECTOR;
+		return sqlType;
 	}
 
 	@Override
@@ -43,7 +46,14 @@ public class BinaryVectorJdbcType extends ArrayJdbcType {
 
 	@Override
 	public void appendWriteExpression(String writeExpression, SqlAppender appender, Dialect dialect) {
+		appender.append( "cast(" );
 		appender.append( writeExpression );
+		appender.append( " as vector)" );
+	}
+
+	@Override
+	public @Nullable String castFromPattern(JdbcMapping sourceMapping) {
+		return sourceMapping.getJdbcType().isStringLike() ? "cast(?1 as vector)" : null;
 	}
 
 	@Override
@@ -51,40 +61,17 @@ public class BinaryVectorJdbcType extends ArrayJdbcType {
 		return new BasicExtractor<>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getObject( paramIndex, float[].class ), options );
+				return javaTypeDescriptor.wrap( parseFloatVector( rs.getString( paramIndex ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getObject( index, float[].class ), options );
+				return javaTypeDescriptor.wrap( parseFloatVector( statement.getString( index ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getObject( name, float[].class ), options );
-			}
-
-		};
-	}
-
-	@Override
-	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<>( javaTypeDescriptor, this ) {
-
-			@Override
-			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				st.setObject( index, value );
-			}
-
-			@Override
-			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
-					throws SQLException {
-				st.setObject( name, value, java.sql.Types.ARRAY );
-			}
-
-			@Override
-			public Object getBindValue(X value, WrapperOptions options) {
-				return value;
+				return javaTypeDescriptor.wrap( parseFloatVector( statement.getString( name ) ), options );
 			}
 		};
 	}

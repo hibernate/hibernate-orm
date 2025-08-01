@@ -331,7 +331,7 @@ public class ServiceRegistryExtension
 		throw throwable;
 	}
 
-	private static class ServiceRegistryScopeImpl implements ServiceRegistryScope, ExtensionContext.Store.CloseableResource {
+	private static class ServiceRegistryScopeImpl implements ServiceRegistryScope, AutoCloseable {
 		private BootstrapServiceRegistryProducer bsrProducer;
 		private ServiceRegistryProducer ssrProducer;
 

@@ -300,7 +300,7 @@ public class DomainModelExtension
 		return false;
 	}
 
-	public static class DomainModelScopeImpl implements DomainModelScope, ExtensionContext.Store.CloseableResource {
+	public static class DomainModelScopeImpl implements DomainModelScope, AutoCloseable {
 		private final ServiceRegistryScope serviceRegistryScope;
 		private final DomainModelProducer producer;
 

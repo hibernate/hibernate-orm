@@ -232,7 +232,7 @@ public class SessionFactoryExtension
 		throw throwable;
 	}
 
-	private static class SessionFactoryScopeImpl implements SessionFactoryScope, ExtensionContext.Store.CloseableResource {
+	private static class SessionFactoryScopeImpl implements SessionFactoryScope, AutoCloseable {
 		private final DomainModelScope modelScope;
 		private final SessionFactoryProducer producer;
 

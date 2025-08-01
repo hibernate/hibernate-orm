@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.jdbc.spi;
 import java.io.Serializable;
 import java.sql.Types;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -271,7 +272,17 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 	public boolean hasRegisteredDescriptor(int jdbcTypeCode) {
 		return descriptorMap.containsKey( jdbcTypeCode )
 			|| JdbcTypeNameMapper.isStandardTypeCode( jdbcTypeCode )
-			|| JdbcTypeFamilyInformation.INSTANCE.locateJdbcTypeFamilyByTypeCode( jdbcTypeCode ) != null;
+			|| JdbcTypeFamilyInformation.INSTANCE.locateJdbcTypeFamilyByTypeCode( jdbcTypeCode ) != null
+			|| locateConstructedJdbcType( jdbcTypeCode );
+	}
+
+	private boolean locateConstructedJdbcType(int jdbcTypeCode) {
+		for ( TypeConstructedJdbcTypeKey key : typeConstructorDescriptorMap.keySet() ) {
+			if ( key.typeCode == jdbcTypeCode ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public JdbcTypeConstructor getConstructor(int jdbcTypeCode) {

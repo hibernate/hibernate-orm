@@ -4,40 +4,48 @@
  */
 package org.hibernate.vector;
 
-import java.util.List;
-
-import org.hibernate.annotations.Array;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.dialect.OracleDialect;
-import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.type.SqlTypes;
-
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
+import org.hibernate.annotations.Array;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.type.SqlTypes;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
+import static org.hibernate.vector.VectorTestHelper.cosineDistance;
+import static org.hibernate.vector.VectorTestHelper.euclideanDistance;
+import static org.hibernate.vector.VectorTestHelper.euclideanNorm;
+import static org.hibernate.vector.VectorTestHelper.hammingDistance;
+import static org.hibernate.vector.VectorTestHelper.innerProduct;
+import static org.hibernate.vector.VectorTestHelper.taxicabDistance;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/**
- * @author Hassan AL Meftah
- */
-@DomainModel(annotatedClasses = OracleDoubleVectorTest.VectorEntity.class)
-@SessionFactory
-@RequiresDialect(value = OracleDialect.class, matchSubTypes = false, majorVersion = 23, minorVersion = 4)
-public class OracleDoubleVectorTest {
 
-	private static final double[] V1 = new double[]{ 1, 2, 3 };
-	private static final double[] V2 = new double[]{ 4, 5, 6 };
+@DomainModel(annotatedClasses = FloatVectorTest.VectorEntity.class)
+@SessionFactory
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsVectorType.class)
+@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "Test database does not have the extension enabled")
+public class FloatVectorTest {
+
+	protected static final float[] V1 = new float[] { 1, 2, 3 };
+	protected static final float[] V2 = new float[] { 4, 5, 6 };
 
 	@BeforeEach
 	public void prepareData(SessionFactoryScope scope) {
@@ -59,19 +67,36 @@ public class OracleDoubleVectorTest {
 		scope.inTransaction( em -> {
 			VectorEntity tableRecord;
 			tableRecord = em.find( VectorEntity.class, 1L );
-			assertArrayEquals( new double[]{ 1, 2, 3 }, tableRecord.getTheVector(), 0 );
+			assertArrayEquals( new float[] { 1, 2, 3 }, tableRecord.getTheVector() );
 
 			tableRecord = em.find( VectorEntity.class, 2L );
-			assertArrayEquals( new double[]{ 4, 5, 6 }, tableRecord.getTheVector(), 0 );
+			assertArrayEquals( new float[] { 4, 5, 6 }, tableRecord.getTheVector() );
 		} );
 	}
 
 	@Test
+	public void testCast(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			//tag::vector-cast-example[]
+			final Tuple vector = em.createSelectionQuery( "select cast(e.theVector as string), cast('[1, 1, 1]' as vector) from VectorEntity e where e.id = 1", Tuple.class )
+					.getSingleResult();
+			//end::vector-cast-example[]
+			assertArrayEquals( new float[]{ 1, 2, 3 }, VectorHelper.parseFloatVector( vector.get( 0, String.class ) ) );
+			assertArrayEquals( new float[]{ 1, 1, 1 }, vector.get( 1, float[].class ) );
+		} );
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCosineDistance.class)
+	@SkipForDialect(dialectClass = MySQLDialect.class, reason = "Only MySQL HeatWave supports this function")
 	public void testCosineDistance(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			//tag::cosine-distance-example[]
-			final double[] vector = new double[]{ 1, 1, 1 };
-			final List<Tuple> results = em.createSelectionQuery( "select e.id, cosine_distance(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
+			final float[] vector = new float[] { 1, 1, 1 };
+			final List<Tuple> results = em.createSelectionQuery(
+							"select e.id, cosine_distance(e.theVector, :vec) from VectorEntity e order by e.id",
+							Tuple.class
+					)
 					.setParameter( "vec", vector )
 					.getResultList();
 			//end::cosine-distance-example[]
@@ -84,28 +109,37 @@ public class OracleDoubleVectorTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsEuclideanDistance.class)
+	@SkipForDialect(dialectClass = MySQLDialect.class, reason = "Only MySQL HeatWave supports this function")
 	public void testEuclideanDistance(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			//tag::euclidean-distance-example[]
-			final double[] vector = new double[]{ 1, 1, 1 };
-			final List<Tuple> results = em.createSelectionQuery( "select e.id, euclidean_distance(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
+			final float[] vector = new float[] { 1, 1, 1 };
+			final List<Tuple> results = em.createSelectionQuery(
+							"select e.id, euclidean_distance(e.theVector, :vec) from VectorEntity e order by e.id",
+							Tuple.class
+					)
 					.setParameter( "vec", vector )
 					.getResultList();
 			//end::euclidean-distance-example[]
 			assertEquals( 2, results.size() );
 			assertEquals( 1L, results.get( 0 ).get( 0 ) );
-			assertEquals( euclideanDistance( V1, vector ), results.get( 0 ).get( 1, double.class ), 0.00002D );
+			assertEquals( euclideanDistance( V1, vector ), results.get( 0 ).get( 1, double.class ), 0.000001D );
 			assertEquals( 2L, results.get( 1 ).get( 0 ) );
-			assertEquals( euclideanDistance( V2, vector ), results.get( 1 ).get( 1, double.class ), 0.00002D);
+			assertEquals( euclideanDistance( V2, vector ), results.get( 1 ).get( 1, double.class ), 0.000001D );
 		} );
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTaxicabDistance.class)
 	public void testTaxicabDistance(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			//tag::taxicab-distance-example[]
-			final double[] vector = new double[]{ 1, 1, 1 };
-			final List<Tuple> results = em.createSelectionQuery( "select e.id, taxicab_distance(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
+			final float[] vector = new float[] { 1, 1, 1 };
+			final List<Tuple> results = em.createSelectionQuery(
+							"select e.id, taxicab_distance(e.theVector, :vec) from VectorEntity e order by e.id",
+							Tuple.class
+					)
 					.setParameter( "vec", vector )
 					.getResultList();
 			//end::taxicab-distance-example[]
@@ -118,11 +152,16 @@ public class OracleDoubleVectorTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsInnerProduct.class)
+	@SkipForDialect(dialectClass = MySQLDialect.class, reason = "Only MySQL HeatWave supports this function")
 	public void testInnerProduct(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			//tag::inner-product-example[]
-			final double[] vector = new double[]{ 1, 1, 1 };
-			final List<Tuple> results = em.createSelectionQuery( "select e.id, inner_product(e.theVector, :vec), negative_inner_product(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
+			final float[] vector = new float[] { 1, 1, 1 };
+			final List<Tuple> results = em.createSelectionQuery(
+							"select e.id, inner_product(e.theVector, :vec), negative_inner_product(e.theVector, :vec) from VectorEntity e order by e.id",
+							Tuple.class
+					)
 					.setParameter( "vec", vector )
 					.getResultList();
 			//end::inner-product-example[]
@@ -137,26 +176,36 @@ public class OracleDoubleVectorTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsHammingDistance.class)
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "Only supported with bit vectors")
 	public void testHammingDistance(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
-			//tag::inner-product-example[]
-			final double[] vector = new double[]{ 1, 1, 1 };
-			final List<Tuple> results = em.createSelectionQuery( "select e.id, hamming_distance(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
+			//tag::hamming-distance-example[]
+			final float[] vector = new float[] { 1, 1, 1 };
+			final List<Tuple> results = em.createSelectionQuery(
+							"select e.id, hamming_distance(e.theVector, :vec) from VectorEntity e order by e.id",
+							Tuple.class
+					)
 					.setParameter( "vec", vector )
 					.getResultList();
-			//end::inner-product-example[]
+			//end::hamming-distance-example[]
 			assertEquals( 2, results.size() );
 			assertEquals( 1L, results.get( 0 ).get( 0 ) );
 			assertEquals( hammingDistance( V1, vector ), results.get( 0 ).get( 1, double.class ), 0D );
+			assertEquals( 2L, results.get( 1 ).get( 0 ) );
 			assertEquals( hammingDistance( V2, vector ), results.get( 1 ).get( 1, double.class ), 0D );
 		} );
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsVectorDims.class)
 	public void testVectorDims(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			//tag::vector-dims-example[]
-			final List<Tuple> results = em.createSelectionQuery( "select e.id, vector_dims(e.theVector) from VectorEntity e order by e.id", Tuple.class )
+			final List<Tuple> results = em.createSelectionQuery(
+							"select e.id, vector_dims(e.theVector) from VectorEntity e order by e.id",
+							Tuple.class
+					)
 					.getResultList();
 			//end::vector-dims-example[]
 			assertEquals( 2, results.size() );
@@ -168,11 +217,15 @@ public class OracleDoubleVectorTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsVectorNorm.class)
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle 23.9 bug")
 	public void testVectorNorm(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			//tag::vector-norm-example[]
-			final List<Tuple> results = em.createSelectionQuery( "select e.id, vector_norm(e.theVector) from VectorEntity e order by e.id", Tuple.class )
+			final List<Tuple> results = em.createSelectionQuery(
+							"select e.id, vector_norm(e.theVector) from VectorEntity e order by e.id",
+							Tuple.class
+					)
 					.getResultList();
 			//end::vector-norm-example[]
 			assertEquals( 2, results.size() );
@@ -183,77 +236,24 @@ public class OracleDoubleVectorTest {
 		} );
 	}
 
-
-	private static double cosineDistance(double[] f1, double[] f2) {
-		return 1D - innerProduct( f1, f2 ) / ( euclideanNorm( f1 ) * euclideanNorm( f2 ) );
-	}
-
-	private static double euclideanDistance(double[] f1, double[] f2) {
-		assert f1.length == f2.length;
-		double result = 0;
-		for ( int i = 0; i < f1.length; i++ ) {
-			result += Math.pow( (double) f1[i] - f2[i], 2 );
-		}
-		return Math.sqrt( result );
-	}
-
-	private static double taxicabDistance(double[] f1, double[] f2) {
-		return norm( f1 ) - norm( f2 );
-	}
-
-	public static double hammingDistance(double[] f1, double[] f2) {
-		assert f1.length == f2.length;
-		int distance = 0;
-		for (int i = 0; i < f1.length; i++) {
-			if (!(f1[i] == f2[i])) {
-				distance++;
-			}
-		}
-		return distance;
-	}
-
-	private static double innerProduct(double[] f1, double[] f2) {
-		assert f1.length == f2.length;
-		double result = 0;
-		for ( int i = 0; i < f1.length; i++ ) {
-			result += ( (double) f1[i] ) * ( (double) f2[i] );
-		}
-		return result;
-	}
-
-	private static double euclideanNorm(double[] f) {
-		double result = 0;
-		for ( double v : f ) {
-			result += Math.pow( v, 2 );
-		}
-		return Math.sqrt( result );
-	}
-
-	private static double norm(double[] f) {
-		double result = 0;
-		for ( double v : f ) {
-			result += Math.abs( v );
-		}
-		return result;
-	}
-
-	@Entity( name = "VectorEntity" )
+	@Entity(name = "VectorEntity")
 	public static class VectorEntity {
 
 		@Id
 		private Long id;
 
 		//tag::usage-example[]
-		@Column( name = "the_vector" )
-		@JdbcTypeCode(SqlTypes.VECTOR_FLOAT64)
+		@Column(name = "the_vector")
+		@JdbcTypeCode(SqlTypes.VECTOR)
 		@Array(length = 3)
-		private double[] theVector;
+		private float[] theVector;
 		//end::usage-example[]
+
 
 		public VectorEntity() {
 		}
 
-		public VectorEntity(Long id, double[] theVector) {
+		public VectorEntity(Long id, float[] theVector) {
 			this.id = id;
 			this.theVector = theVector;
 		}
@@ -266,11 +266,11 @@ public class OracleDoubleVectorTest {
 			this.id = id;
 		}
 
-		public double[] getTheVector() {
+		public float[] getTheVector() {
 			return theVector;
 		}
 
-		public void setTheVector(double[] theVector) {
+		public void setTheVector(float[] theVector) {
 			this.theVector = theVector;
 		}
 	}

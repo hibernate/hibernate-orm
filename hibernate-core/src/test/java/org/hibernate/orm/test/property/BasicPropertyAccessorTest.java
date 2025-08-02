@@ -68,7 +68,7 @@ public class BasicPropertyAccessorTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBridgeMethodDisregarded() {
-		PropertyAccessStrategyBasicImpl accessStrategy = PropertyAccessStrategyBasicImpl.INSTANCE;
+		var accessStrategy = PropertyAccessStrategyBasicImpl.INSTANCE;
 
 		{
 			final PropertyAccess access = accessStrategy.buildPropertyAccess( Duper.class, "it", true );

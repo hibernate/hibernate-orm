@@ -14,7 +14,6 @@ import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.property.access.spi.SetterMethodImpl;
 
-import org.jboss.logging.Logger;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -26,7 +25,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @see PropertyAccessStrategyBasicImpl
  */
 public class PropertyAccessBasicImpl implements PropertyAccess {
-	private static final Logger log = Logger.getLogger( PropertyAccessBasicImpl.class );
 
 	private final PropertyAccessStrategyBasicImpl strategy;
 	private final GetterMethodImpl getter;
@@ -40,16 +38,12 @@ public class PropertyAccessBasicImpl implements PropertyAccess {
 		this.strategy = strategy;
 
 		final Method getterMethod = ReflectHelper.findGetterMethod( containerJavaType, propertyName );
-		this.getter = new GetterMethodImpl( containerJavaType, propertyName, getterMethod );
+		getter = new GetterMethodImpl( containerJavaType, propertyName, getterMethod );
 
-		final Method setterMethod;
-		if ( setterRequired ) {
-			setterMethod = ReflectHelper.findSetterMethod( containerJavaType, propertyName, getterMethod.getReturnType() );
-		}
-		else {
-			setterMethod = ReflectHelper.setterMethodOrNull( containerJavaType, propertyName, getterMethod.getReturnType() );
-		}
-		this.setter = setterMethod != null
+		final Method setterMethod = setterRequired
+				? ReflectHelper.findSetterMethod( containerJavaType, propertyName, getterMethod.getReturnType() )
+				: ReflectHelper.setterMethodOrNull( containerJavaType, propertyName, getterMethod.getReturnType() );
+		setter = setterMethod != null
 				? new SetterMethodImpl( containerJavaType, propertyName, setterMethod )
 				: null;
 	}

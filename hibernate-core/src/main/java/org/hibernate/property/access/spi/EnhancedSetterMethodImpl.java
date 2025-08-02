@@ -4,16 +4,17 @@
  */
 package org.hibernate.property.access.spi;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
 import org.hibernate.Internal;
 import org.hibernate.property.access.internal.AbstractSetterMethodSerialForm;
-import org.hibernate.property.access.internal.AccessStrategyHelper;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.property.access.internal.AccessStrategyHelper.determineEnhancementState;
+import static org.hibernate.property.access.internal.AccessStrategyHelper.handleEnhancedInjection;
 
 /**
  * A specialized Setter implementation for handling setting values into a bytecode-enhanced Class
@@ -38,13 +39,14 @@ public class EnhancedSetterMethodImpl extends SetterMethodImpl {
 	public void set(Object target, @Nullable Object value) {
 		super.set( target, value );
 
-		AccessStrategyHelper.handleEnhancedInjection( target, value, enhancementState, propertyName );
+		handleEnhancedInjection( target, value, enhancementState, propertyName );
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// serialization
 
+	@Serial
 	private Object writeReplace() {
 		return new SerialForm( getContainerClass(), propertyName, getMethod() );
 	}
@@ -54,6 +56,7 @@ public class EnhancedSetterMethodImpl extends SetterMethodImpl {
 			super( containerClass, propertyName, method );
 		}
 
+		@Serial
 		private Object readResolve() {
 			return new EnhancedSetterMethodImpl( getContainerClass(), getPropertyName(), resolveMethod() );
 		}

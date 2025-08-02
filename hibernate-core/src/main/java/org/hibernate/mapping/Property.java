@@ -43,6 +43,8 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static org.hibernate.boot.model.internal.BinderHelper.renderCascadeTypeList;
 import static org.hibernate.internal.util.StringHelper.isBlank;
+import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.BASIC;
+import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.MAP;
 
 /**
  * A mapping model object representing a property or field of an {@linkplain PersistentClass entity}
@@ -280,7 +282,8 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public boolean isBasicPropertyAccessor() {
-		return propertyAccessorName==null || "property".equals( propertyAccessorName );
+		return propertyAccessorName == null
+			|| BASIC.getExternalName().equals( propertyAccessorName );
 	}
 
 	public Map<String, MetaAttribute> getMetaAttributes() {
@@ -411,10 +414,10 @@ public class Property implements Serializable, MetaAttributable {
 		String accessName = getPropertyAccessorName();
 		if ( accessName == null ) {
 			if ( clazz == null || java.util.Map.class.equals( clazz ) ) {
-				accessName = "map";
+				accessName = MAP.getExternalName();
 			}
 			else {
-				accessName = "property";
+				accessName = BASIC.getExternalName();
 			}
 		}
 

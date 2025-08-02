@@ -176,7 +176,7 @@ public final class CallbackDefinitionResolver {
 			final List<MethodDetails> methodsDetailsList = currentClass.getMethods();
 			for ( MethodDetails methodDetails : methodsDetailsList ) {
 				if ( methodDetails.hasDirectAnnotationUsage( callbackType.getCallbackAnnotation() ) ) {
-					final Method method = (Method) methodDetails.toJavaMember();
+					final Method method = methodDetails.toJavaMember();
 					final String methodName = method.getName();
 					final String callbackName = callbackType.getCallbackAnnotation().getName();
 					final String currentClassName = currentClass.getName();

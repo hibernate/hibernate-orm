@@ -5,6 +5,7 @@
 package org.hibernate.property.access.spi;
 
 import java.io.ObjectStreamException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
@@ -81,9 +82,8 @@ public class GetterMethodImpl implements Getter {
 		}
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public @Nullable Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
+	public @Nullable Object getForInsert(Object owner, Map<Object, Object> mergeMap, SharedSessionContractImplementor session) {
 		return get( owner );
 	}
 
@@ -112,6 +112,7 @@ public class GetterMethodImpl implements Getter {
 		return getterMethod;
 	}
 
+	@Serial
 	private Object writeReplace() throws ObjectStreamException {
 		return new SerialForm( containerClass, propertyName, getterMethod );
 	}
@@ -130,6 +131,7 @@ public class GetterMethodImpl implements Getter {
 			this.methodName = method.getName();
 		}
 
+		@Serial
 		private Object readResolve() {
 			return new GetterMethodImpl( containerClass, propertyName, resolveMethod() );
 		}
@@ -142,7 +144,7 @@ public class GetterMethodImpl implements Getter {
 			}
 			catch (NoSuchMethodException e) {
 				throw new PropertyAccessSerializationException(
-						"Unable to resolve getter method on deserialization : " + declaringClass.getName() + "#" + methodName
+						"Unable to resolve getter method on deserialization: " + declaringClass.getName() + "#" + methodName
 				);
 			}
 		}

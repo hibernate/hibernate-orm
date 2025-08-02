@@ -16,7 +16,7 @@ public class PropertyAccessStrategyMixedImpl implements PropertyAccessStrategy {
 	/**
 	 * Singleton access
 	 */
-	public static final PropertyAccessStrategyMixedImpl INSTANCE = new PropertyAccessStrategyMixedImpl();
+	public static final PropertyAccessStrategy INSTANCE = new PropertyAccessStrategyMixedImpl();
 
 	@Override
 	public PropertyAccess buildPropertyAccess(Class<?> containerJavaType, String propertyName, boolean setterRequired) {

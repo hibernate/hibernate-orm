@@ -18,22 +18,20 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Gavin King
  */
 public class PropertyAccessStrategyEnhancedImpl implements PropertyAccessStrategy {
-	public static PropertyAccessStrategyEnhancedImpl with(AccessType getterAccessType) {
-		if ( getterAccessType == null ) {
-			return STANDARD;
-		}
-
-		return switch ( getterAccessType ) {
-			case FIELD -> FIELD;
-			case PROPERTY -> PROPERTY;
-		};
+	public static PropertyAccessStrategy with(AccessType getterAccessType) {
+		return getterAccessType == null
+				? STANDARD
+				: switch ( getterAccessType ) {
+					case FIELD -> FIELD;
+					case PROPERTY -> PROPERTY;
+				};
 	}
 
 	private final @Nullable AccessType classAccessType;
 
-	public static PropertyAccessStrategyEnhancedImpl STANDARD = new PropertyAccessStrategyEnhancedImpl( null );
-	public static PropertyAccessStrategyEnhancedImpl FIELD = new PropertyAccessStrategyEnhancedImpl( AccessType.FIELD );
-	public static PropertyAccessStrategyEnhancedImpl PROPERTY = new PropertyAccessStrategyEnhancedImpl( AccessType.PROPERTY );
+	public static PropertyAccessStrategy STANDARD = new PropertyAccessStrategyEnhancedImpl( null );
+	public static PropertyAccessStrategy FIELD = new PropertyAccessStrategyEnhancedImpl( AccessType.FIELD );
+	public static PropertyAccessStrategy PROPERTY = new PropertyAccessStrategyEnhancedImpl( AccessType.PROPERTY );
 
 	public PropertyAccessStrategyEnhancedImpl(@Nullable AccessType classAccessType) {
 		this.classAccessType = classAccessType;

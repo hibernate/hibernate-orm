@@ -55,9 +55,8 @@ public class PropertyAccessCompositeUserTypeImpl implements PropertyAccess, Gett
 		return strategy.compositeUserType.getPropertyValue( owner, propertyIndex );
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public @Nullable Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
+	public @Nullable Object getForInsert(Object owner, Map<Object, Object> mergeMap, SharedSessionContractImplementor session) {
 		return get( owner );
 	}
 

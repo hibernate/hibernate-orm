@@ -13,7 +13,6 @@ import org.hibernate.PropertyNotFoundException;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.internal.util.NullnessUtil;
 
 import jakarta.persistence.Access;
@@ -116,8 +115,8 @@ public class AccessStrategyHelper {
 
 		// This marks the attribute as initialized, so it doesn't get lazily loaded afterward
 		if ( ( enhancementState & PERSISTENT_ATTRIBUTE_INTERCEPTABLE_MASK ) != 0 ) {
-			PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( target ).$$_hibernate_getInterceptor();
-			if ( interceptor instanceof BytecodeLazyAttributeInterceptor lazyAttributeInterceptor ) {
+			if ( asPersistentAttributeInterceptable( target ).$$_hibernate_getInterceptor()
+					instanceof BytecodeLazyAttributeInterceptor lazyAttributeInterceptor ) {
 				lazyAttributeInterceptor.attributeInitialized( propertyName );
 			}
 		}

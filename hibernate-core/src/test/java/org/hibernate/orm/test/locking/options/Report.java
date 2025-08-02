@@ -52,4 +52,44 @@ public class Report {
 		this.reporter = reporter;
 		this.labels = Helper.toSet( labels );
 	}
+
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	public Integer getRevision() {
+		return revision;
+	}
+
+	public void setRevision(Integer revision) {
+		this.revision = revision;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public Person getReporter() {
+		return reporter;
+	}
+
+	public void setReporter(Person reporter) {
+		this.reporter = reporter;
+	}
+
+	public Set<String> getLabels() {
+		return labels;
+	}
+
+	public void setLabels(Set<String> labels) {
+		this.labels = labels;
+	}
 }

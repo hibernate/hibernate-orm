@@ -48,11 +48,11 @@ public class ScopeAndSecondaryTableTests {
 
 			session.clear();
 			sqlCollector.clear();
-			session.find( Detail.class, 1, LockModeType.PESSIMISTIC_WRITE );
+			final Detail detail = session.find( Detail.class, 1, LockModeType.PESSIMISTIC_WRITE );
 			assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 			Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), session.getDialect(), Tables.DETAILS, Tables.SUPPLEMENTALS );
-			TransactionUtil.updateTable( factoryScope, Tables.DETAILS.getTableName(), "name", true );
-			TransactionUtil.updateTable( factoryScope, Tables.SUPPLEMENTALS.getTableName(), "txt", true );
+			TransactionUtil.assertRowLock( factoryScope, Tables.DETAILS.getTableName(), "name", "id", detail.getId(), true );
+			TransactionUtil.assertRowLock( factoryScope, Tables.SUPPLEMENTALS.getTableName(), "txt", "detail_fk", detail.getId(), true );
 		} );
 	}
 

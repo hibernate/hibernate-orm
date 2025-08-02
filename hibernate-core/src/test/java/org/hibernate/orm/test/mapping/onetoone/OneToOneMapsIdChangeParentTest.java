@@ -24,8 +24,8 @@ import org.jboss.logging.Logger;
 
 import java.lang.invoke.MethodHandles;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Vlad Mihalcea
@@ -48,7 +48,7 @@ public class OneToOneMapsIdChangeParentTest {
 			)
 	);
 
-	private Triggerable triggerable = logInspection.watchForLogMessages( "HHH000502:" );
+	private final Triggerable triggerable = logInspection.watchForLogMessages( "HHH000502:" );
 
 
 	@Test

@@ -5479,7 +5479,7 @@ public abstract class AbstractEntityPersister
 					mutabilityPlan,
 					bootProperty.isOptional(),
 					bootProperty.isInsertable(),
-					bootProperty.isUpdateable(),
+					bootProperty.isUpdatable(),
 					bootProperty.isOptimisticLocked(),
 					bootProperty.isSelectable()
 			);

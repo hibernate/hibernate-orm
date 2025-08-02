@@ -561,7 +561,7 @@ public class EntityBinder {
 		);
 		final Property mapperProperty = new SyntheticProperty();
 		mapperProperty.setName( NavigablePath.IDENTIFIER_MAPPER_PROPERTY );
-		mapperProperty.setUpdateable( false );
+		mapperProperty.setUpdatable( false );
 		mapperProperty.setInsertable( false );
 		mapperProperty.setPropertyAccessorName( EMBEDDED.getExternalName() );
 		mapperProperty.setValue( mapper );

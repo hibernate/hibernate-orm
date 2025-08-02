@@ -304,7 +304,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 				// since only one subtype can exist at one time
 				final Map<String, Set<String>> distinctColumnsByClass = new HashMap<>();
 				for ( Property prop : properties ) {
-					if ( prop.isUpdateable() || prop.isInsertable() ) {
+					if ( prop.isUpdatable() || prop.isInsertable() ) {
 						final String declaringClass = propertyDeclaringClasses.get( prop );
 						final Set<String> set = distinctColumnsByClass.computeIfAbsent(
 								declaringClass,
@@ -507,7 +507,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		boolean[] result = new boolean[getColumnSpan()];
 		int i = 0;
 		for ( Property prop : getProperties() ) {
-			i += copyFlags( prop.getValue().getColumnUpdateability(), result, i, prop.isUpdateable() );
+			i += copyFlags( prop.getValue().getColumnUpdateability(), result, i, prop.isUpdatable() );
 		}
 		if ( isPolymorphic() ) {
 			i += copyFlags( getDiscriminator().getColumnUpdateability(), result, i, true );

@@ -46,7 +46,7 @@ public class ImmutabilityMapAsBasicTests {
 	void verifyMetamodel(DomainModelScope domainModelScope, SessionFactoryScope sessionFactoryScope) {
 		domainModelScope.withHierarchy( TestEntity.class, (entity) -> {
 			final Property property = entity.getProperty( "data" );
-			assertThat( property.isUpdateable() ).isTrue();
+			assertThat( property.isUpdatable() ).isTrue();
 
 			final BasicValue value = (BasicValue) property.getValue();
 			final BasicValue.Resolution<?> resolution = value.resolve();

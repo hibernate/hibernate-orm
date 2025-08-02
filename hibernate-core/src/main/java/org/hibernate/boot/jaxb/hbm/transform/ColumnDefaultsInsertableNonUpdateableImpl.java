@@ -44,7 +44,7 @@ class ColumnDefaultsInsertableNonUpdateableImpl implements ColumnDefaults {
 	}
 
 	@Override
-	public Boolean isUpdateable() {
+	public Boolean isUpdatable() {
 		return false;
 	}
 }

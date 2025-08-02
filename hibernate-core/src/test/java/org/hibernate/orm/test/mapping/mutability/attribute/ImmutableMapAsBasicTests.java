@@ -64,7 +64,7 @@ public class ImmutableMapAsBasicTests {
 				.getEntityDescriptor( TestEntity.class );
 
 		final Property property = persistentClass.getProperty( "data" );
-		assertThat( property.isUpdateable() ).isFalse();
+		assertThat( property.isUpdatable() ).isFalse();
 
 		final BasicValue value = (BasicValue) property.getValue();
 		final BasicValue.Resolution<?> resolution = value.resolve();

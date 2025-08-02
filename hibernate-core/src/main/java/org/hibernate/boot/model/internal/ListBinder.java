@@ -93,7 +93,7 @@ public class ListBinder extends CollectionBinder {
 			final IndexBackref backref = new IndexBackref();
 			backref.setName( '_' + propertyName + "IndexBackref" );
 			backref.setOptional( true );
-			backref.setUpdateable( false );
+			backref.setUpdatable( false );
 			backref.setSelectable( false );
 			backref.setCollectionRole( collection.getRole() );
 			backref.setEntityName( collection.getOwner().getEntityName() );

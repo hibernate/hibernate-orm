@@ -1554,7 +1554,7 @@ public class HbmXmlTransformer {
 					}
 
 					@Override
-					public Boolean isUpdateable() {
+					public Boolean isUpdatable() {
 						return hbmProp.isUpdate();
 					}
 				},
@@ -2797,7 +2797,7 @@ public class HbmXmlTransformer {
 					}
 
 					@Override
-					public Boolean isUpdateable() {
+					public Boolean isUpdatable() {
 						return true;
 					}
 				},
@@ -3027,7 +3027,7 @@ public class HbmXmlTransformer {
 					}
 
 					@Override
-					public Boolean isUpdateable() {
+					public Boolean isUpdatable() {
 						return true;
 					}
 				},

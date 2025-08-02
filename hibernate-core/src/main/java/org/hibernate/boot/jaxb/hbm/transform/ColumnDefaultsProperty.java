@@ -27,8 +27,8 @@ public class ColumnDefaultsProperty implements ColumnDefaults {
 	}
 
 	@Override
-	public Boolean isUpdateable() {
-		return property.isUpdateable();
+	public Boolean isUpdatable() {
+		return property.isUpdatable();
 	}
 
 	@Override

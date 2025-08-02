@@ -219,7 +219,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			}
 			else {
 				insertable = componentProperty.isInsertable();
-				updatable = componentProperty.isUpdateable();
+				updatable = componentProperty.isUpdatable();
 			}
 			this.aggregateMapping = SelectableMappingImpl.from(
 					bootDescriptor.getOwner().getTable().getQualifiedName( creationContext.getSqlStringGenerationContext() ),

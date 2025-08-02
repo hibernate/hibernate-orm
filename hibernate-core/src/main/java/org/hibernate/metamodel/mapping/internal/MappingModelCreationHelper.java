@@ -399,7 +399,7 @@ public class MappingModelCreationHelper {
 				getMutabilityPlan( bootProperty, attrType, creationProcess ),
 				bootProperty.getValue().isNullable(),
 				bootProperty.isInsertable(),
-				bootProperty.isUpdateable(),
+				bootProperty.isUpdatable(),
 				bootProperty.isOptimisticLocked(),
 				bootProperty.isSelectable(),
 				cascadeStyle
@@ -410,7 +410,7 @@ public class MappingModelCreationHelper {
 			Property bootProperty,
 			Type attrType,
 			MappingModelCreationProcess creationProcess) {
-		if ( bootProperty.isUpdateable() ) {
+		if ( bootProperty.isUpdatable() ) {
 			return new MutabilityPlan<>() {
 				final SessionFactoryImplementor sessionFactory =
 						creationProcess.getCreationContext().getSessionFactory();
@@ -653,7 +653,7 @@ public class MappingModelCreationHelper {
 				ImmutableMutabilityPlan.instance(),
 				bootProperty.isOptional(),
 				bootProperty.isInsertable(),
-				bootProperty.isUpdateable(),
+				bootProperty.isUpdatable(),
 				bootProperty.isOptimisticLocked(),
 				bootProperty.isSelectable(),
 				cascadeStyle

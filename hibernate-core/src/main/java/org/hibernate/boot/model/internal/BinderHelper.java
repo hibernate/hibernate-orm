@@ -302,7 +302,7 @@ public class BinderHelper {
 			return "'" + associatedEntity.getEntityName() + "." + joinColumns.getPropertyName() + "'";
 		}
 		else {
-			final PropertyHolder propertyHolder = joinColumns.getPropertyHolder();
+			final var propertyHolder = joinColumns.getPropertyHolder();
 			return propertyHolder != null
 					? "'" + propertyHolder.getEntityName() + "." + joinColumns.getPropertyName() + "'"
 					: "";
@@ -321,6 +321,31 @@ public class BinderHelper {
 			MetadataBuildingContext context,
 			String syntheticPropertyName,
 			List<Property> properties) {
+		final Component embeddedComponent =
+				embeddedComponent( ownerEntity, persistentClassOrJoin, context, properties );
+		final Property result = new SyntheticProperty();
+		result.setName( syntheticPropertyName );
+		result.setPersistentClass( ownerEntity );
+		result.setUpdatable( false );
+		result.setInsertable( false );
+		result.setValue( embeddedComponent );
+		result.setPropertyAccessorName( EMBEDDED.getExternalName() );
+		if ( persistentClassOrJoin instanceof Join ) {
+			// the referenced column is in the joined table, add the synthetic property there
+			persistentClassOrJoin.addProperty( result );
+		}
+		else {
+			ownerEntity.addProperty( result );
+		}
+		embeddedComponent.createUniqueKey( context ); //make it unique
+		return result;
+	}
+
+	private static Component embeddedComponent(
+			PersistentClass ownerEntity,
+			AttributeContainer persistentClassOrJoin,
+			MetadataBuildingContext context,
+			List<Property> properties) {
 		final Component embeddedComponent;
 		if ( persistentClassOrJoin instanceof PersistentClass persistentClass ) {
 			embeddedComponent = new Component( context, persistentClass );
@@ -337,22 +362,7 @@ public class BinderHelper {
 			embeddedComponent.addProperty( cloneProperty( ownerEntity, context, property ) );
 		}
 		embeddedComponent.sortProperties();
-		final Property result = new SyntheticProperty();
-		result.setName( syntheticPropertyName );
-		result.setPersistentClass( ownerEntity );
-		result.setUpdateable( false );
-		result.setInsertable( false );
-		result.setValue( embeddedComponent );
-		result.setPropertyAccessorName( EMBEDDED.getExternalName() );
-		if ( persistentClassOrJoin instanceof Join ) {
-			// the referenced column is in the joined table, add the synthetic property there
-			persistentClassOrJoin.addProperty( result );
-		}
-		else {
-			ownerEntity.addProperty( result );
-		}
-		embeddedComponent.createUniqueKey( context ); //make it unique
-		return result;
+		return embeddedComponent;
 	}
 
 	/**
@@ -373,7 +383,7 @@ public class BinderHelper {
 			final Property result = new SyntheticProperty();
 			result.setName( property.getName() );
 			result.setPersistentClass( ownerEntity );
-			result.setUpdateable( false );
+			result.setUpdatable( false );
 			result.setInsertable( false );
 			result.setValue(copy);
 			result.setPropertyAccessorName( property.getPropertyAccessorName() );
@@ -382,7 +392,7 @@ public class BinderHelper {
 		else {
 			final Property clone = shallowCopy( property );
 			clone.setInsertable( false );
-			clone.setUpdateable( false );
+			clone.setUpdatable( false );
 			clone.setNaturalIdentifier( false );
 			clone.setValueGeneratorCreator( property.getValueGeneratorCreator() );
 			return clone;
@@ -405,7 +415,7 @@ public class BinderHelper {
 		clone.setPersistentClass( property.getPersistentClass() );
 		clone.setPropertyAccessorName( property.getPropertyAccessorName() );
 		clone.setSelectable( property.isSelectable() );
-		clone.setUpdateable( property.isUpdateable() );
+		clone.setUpdatable( property.isUpdatable() );
 		clone.setValue( property.getValue() );
 		return clone;
 	}
@@ -946,8 +956,8 @@ public class BinderHelper {
 	}
 
 	public static String renderCascadeTypeList(EnumSet<CascadeType> cascadeTypes) {
-		final StringBuilder cascade = new StringBuilder();
-		for ( CascadeType cascadeType : cascadeTypes ) {
+		final var cascade = new StringBuilder();
+		for ( var cascadeType : cascadeTypes ) {
 			cascade.append( "," );
 			cascade.append( switch ( cascadeType ) {
 				case ALL -> "all";

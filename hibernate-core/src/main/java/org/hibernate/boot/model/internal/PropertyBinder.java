@@ -471,7 +471,7 @@ public class PropertyBinder {
 			updatable = false;
 		}
 		property.setInsertable( insertable );
-		property.setUpdateable( updatable );
+		property.setUpdatable( updatable );
 	}
 
 	private void handleOptional(Property property) {

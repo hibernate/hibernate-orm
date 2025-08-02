@@ -467,7 +467,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 					final Generator generator = id.createGenerator(
 							bootstrapContext.getIdentifierGeneratorFactory(),
 							jdbcServices.getJdbcEnvironment().getDialect(),
-							(RootClass) model
+							(RootClass) model,
+							model == null ? null : model.getIdentifierProperty()
 					);
 					if ( generator instanceof Configurable ) {
 						final Configurable identifierGenerator = (Configurable) generator;

@@ -34,6 +34,14 @@ public interface KeyValue extends Value {
 			Dialect dialect,
 			RootClass rootClass);
 
+	default Generator createGenerator(
+			IdentifierGeneratorFactory identifierGeneratorFactory,
+			Dialect dialect,
+			RootClass rootClass,
+			Property property) {
+		return createGenerator( identifierGeneratorFactory, dialect, rootClass );
+	}
+
 	/**
 	 * @deprecated Use {@link #createGenerator(IdentifierGeneratorFactory, Dialect, RootClass)} instead.
 	 *             No longer used except in legacy tests.

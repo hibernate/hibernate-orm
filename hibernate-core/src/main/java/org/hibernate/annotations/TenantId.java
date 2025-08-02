@@ -26,6 +26,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author Gavin King
  */
 @ValueGenerationType(generatedBy = TenantIdGeneration.class)
+@IdGeneratorType(TenantIdGeneration.class)
 @AttributeBinderType(binder = TenantIdBinder.class)
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)

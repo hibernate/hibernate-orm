@@ -9,6 +9,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
@@ -57,22 +58,39 @@ public interface SqmMultiTableMutationStrategy {
 	}
 
 	/**
-	 * Execute the multi-table update indicated by the passed SqmUpdateStatement
+	 * Builds a cacheable handler for the passed SqmDeleteOrUpdateStatement.
 	 *
 	 * @return The number of rows affected
 	 */
-	int executeUpdate(
-			SqmUpdateStatement<?> sqmUpdateStatement,
-			DomainParameterXref domainParameterXref,
-			DomainQueryExecutionContext context);
+	MultiTableHandlerBuildResult buildHandler(SqmDeleteOrUpdateStatement<?> sqmStatement, DomainParameterXref domainParameterXref, DomainQueryExecutionContext context);
 
 	/**
 	 * Execute the multi-table update indicated by the passed SqmUpdateStatement
 	 *
 	 * @return The number of rows affected
+	 * @deprecated Use {@link #buildHandler(SqmDeleteOrUpdateStatement, DomainParameterXref, DomainQueryExecutionContext)} instead
 	 */
-	int executeDelete(
+	@Deprecated(forRemoval = true, since = "7.1")
+	default int executeUpdate(
+			SqmUpdateStatement<?> sqmUpdateStatement,
+			DomainParameterXref domainParameterXref,
+			DomainQueryExecutionContext context) {
+		final MultiTableHandlerBuildResult buildResult = buildHandler( sqmUpdateStatement, domainParameterXref, context );
+		return buildResult.multiTableHandler().execute( buildResult.firstJdbcParameterBindings(), context );
+	}
+
+	/**
+	 * Execute the multi-table update indicated by the passed SqmUpdateStatement
+	 *
+	 * @return The number of rows affected
+	 * @deprecated Use {@link #buildHandler(SqmDeleteOrUpdateStatement, DomainParameterXref, DomainQueryExecutionContext)} instead
+	 */
+	@Deprecated(forRemoval = true, since = "7.1")
+	default int executeDelete(
 			SqmDeleteStatement<?> sqmDeleteStatement,
 			DomainParameterXref domainParameterXref,
-			DomainQueryExecutionContext context);
+			DomainQueryExecutionContext context) {
+		final MultiTableHandlerBuildResult buildResult = buildHandler( sqmDeleteStatement, domainParameterXref, context );
+		return buildResult.multiTableHandler().execute( buildResult.firstJdbcParameterBindings(), context );
+	}
 }

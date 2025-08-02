@@ -13,6 +13,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Steve Ebersole
  */
+@Deprecated(forRemoval = true, since = "7.1")
 public class StatementCreatorHelper {
 	public static PreparedStatement prepareQueryStatement(
 			String sql,

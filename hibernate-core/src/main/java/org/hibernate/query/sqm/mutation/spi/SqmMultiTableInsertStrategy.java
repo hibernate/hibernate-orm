@@ -53,13 +53,28 @@ public interface SqmMultiTableInsertStrategy {
 	}
 
 	/**
-	 * Execute the multi-table insert indicated by the passed SqmInsertStatement
+	 * Builds a cacheable handler for the passed SqmInsertStatement.
 	 *
 	 * @return The number of rows affected
 	 */
-	int executeInsert(
+	MultiTableHandlerBuildResult buildHandler(
 			SqmInsertStatement<?> sqmInsertStatement,
 			DomainParameterXref domainParameterXref,
 			DomainQueryExecutionContext context);
+
+	/**
+	 * Execute the multi-table insert indicated by the passed SqmInsertStatement
+	 *
+	 * @return The number of rows affected
+	 * @deprecated Uses {@link #buildHandler(SqmInsertStatement, DomainParameterXref, DomainQueryExecutionContext)} instead
+	 */
+	@Deprecated(forRemoval = true, since = "7.1")
+	default int executeInsert(
+			SqmInsertStatement<?> sqmInsertStatement,
+			DomainParameterXref domainParameterXref,
+			DomainQueryExecutionContext context) {
+		final MultiTableHandlerBuildResult buildResult = buildHandler( sqmInsertStatement, domainParameterXref, context );
+		return buildResult.multiTableHandler().execute( buildResult.firstJdbcParameterBindings(), context );
+	}
 
 }

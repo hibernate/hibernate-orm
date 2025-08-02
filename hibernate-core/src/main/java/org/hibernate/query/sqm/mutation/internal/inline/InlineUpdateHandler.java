@@ -4,6 +4,62 @@
  */
 package org.hibernate.query.sqm.mutation.internal.inline;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.MutableObject;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.SemanticException;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
+import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
+import org.hibernate.query.sqm.internal.SqmUtil;
+import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
+import org.hibernate.query.sqm.mutation.internal.UpdateHandler;
+import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
+import org.hibernate.query.sqm.sql.SqmTranslation;
+import org.hibernate.query.sqm.sql.SqmTranslator;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.SqlAliasBaseImpl;
+import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.MutationStatement;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableGroupProducer;
+import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.from.UnionTableReference;
+import org.hibernate.sql.ast.tree.from.ValuesTableGroup;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.tree.insert.Values;
+import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -14,106 +70,42 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.SemanticException;
-import org.hibernate.query.spi.DomainQueryExecutionContext;
-import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
-import org.hibernate.query.sqm.internal.SqmUtil;
-import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
-import org.hibernate.query.sqm.mutation.internal.UpdateHandler;
-import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
-import org.hibernate.query.sqm.sql.SqmTranslation;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.SqlAliasBaseImpl;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.from.UnionTableReference;
-import org.hibernate.sql.ast.tree.from.ValuesTableGroup;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.insert.Values;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.InListPredicate;
-import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectClause;
-import org.hibernate.sql.ast.tree.update.Assignment;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
-import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
-import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * @author Steve Ebersole
  */
-public class InlineUpdateHandler implements UpdateHandler {
-	private final SqmUpdateStatement<?> sqmUpdate;
-	private final DomainParameterXref domainParameterXref;
-	private final MatchingIdRestrictionProducer matchingIdsPredicateProducer;
-	private final SessionFactoryImplementor sessionFactory;
+public class InlineUpdateHandler extends AbstractInlineHandler implements UpdateHandler {
+
+	private final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref;
+	private final Map<SqmParameter<?>, MappingModelExpressible<?>> resolvedParameterMappingModelTypes;
+
+	private final List<TableUpdater> tableUpdaters;
 
 	public InlineUpdateHandler(
 			MatchingIdRestrictionProducer matchingIdsPredicateProducer,
-			SqmUpdateStatement<?> sqmUpdate,
+			SqmUpdateStatement<?> sqmStatement,
 			DomainParameterXref domainParameterXref,
-			DomainQueryExecutionContext context) {
-		this.matchingIdsPredicateProducer = matchingIdsPredicateProducer;
-		this.domainParameterXref = domainParameterXref;
-		this.sqmUpdate = sqmUpdate;
-		this.sessionFactory = context.getSession().getFactory();
-	}
+			DomainQueryExecutionContext context,
+			MutableObject<JdbcParameterBindings> firstJdbcParameterBindings) {
+		super( matchingIdsPredicateProducer, sqmStatement, domainParameterXref, context, firstJdbcParameterBindings );
 
-	@Override
-	public int execute(DomainQueryExecutionContext executionContext) {
-		final List<Object> ids = MatchingIdSelectionHelper.selectMatchingIds(
-				sqmUpdate,
-				domainParameterXref,
-				executionContext
-		);
-
-		if ( ids == null || ids.isEmpty() ) {
-			return 0;
-		}
-
+		// Clear expansions created by matching id select statement
 		domainParameterXref.clearExpansions();
-		final MappingMetamodel domainModel = sessionFactory.getMappingMetamodel();
 
-		final String mutatingEntityName = sqmUpdate.getTarget().getModel().getHibernateEntityName();
-		final EntityPersister entityDescriptor = domainModel.getEntityDescriptor( mutatingEntityName );
-		final List<Expression> inListExpressions = matchingIdsPredicateProducer.produceIdExpressionList( ids, entityDescriptor );
-
+		final SessionFactoryImplementor sessionFactory = context.getSession().getFactory();
+		final SqmTranslator<? extends MutationStatement> translator = sessionFactory.getQueryEngine()
+				.getSqmTranslatorFactory()
+				.createMutationTranslator(
+						sqmStatement,
+						context.getQueryOptions(),
+						domainParameterXref,
+						context.getQueryParameterBindings(),
+						context.getSession().getLoadQueryInfluencers(),
+						sessionFactory.getSqlTranslationEngine()
+				);
 		//noinspection unchecked
-		final SqmTranslation<UpdateStatement> translation = (SqmTranslation<UpdateStatement>)
-				sessionFactory.getQueryEngine().getSqmTranslatorFactory()
-						.createMutationTranslator(
-								sqmUpdate,
-								executionContext.getQueryOptions(),
-								domainParameterXref,
-								executionContext.getQueryParameterBindings(),
-								executionContext.getSession().getLoadQueryInfluencers(),
-								sessionFactory.getSqlTranslationEngine()
-						)
-						.translate();
+		final SqmTranslation<UpdateStatement> translation = (SqmTranslation<UpdateStatement>) translator.translate();
 		final TableGroup updatingTableGroup = translation.getSqlAst().getFromClause().getRoots().get( 0 );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -125,21 +117,6 @@ public class InlineUpdateHandler implements UpdateHandler {
 		for ( int i = 0; i < updatingTableGroup.getTableReferenceJoins().size(); i++ ) {
 			collectTableReference( updatingTableGroup.getTableReferenceJoins().get( i ), tableReferenceByAlias::put );
 		}
-
-		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
-				executionContext.getQueryParameterBindings(),
-				domainParameterXref,
-				SqmUtil.generateJdbcParamsXref( domainParameterXref, translation::getJdbcParamsBySqmParam ),
-				new SqmParameterMappingModelResolutionAccess() {
-					@Override
-					@SuppressWarnings("unchecked")
-					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-						return (MappingModelExpressible<T>) translation.getSqmParameterMappingModelTypeResolutions().get( parameter );
-					}
-				},
-				executionContext.getSession()
-		);
-
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// segment the assignments by table-reference
@@ -172,36 +149,110 @@ public class InlineUpdateHandler implements UpdateHandler {
 			}
 			assignmentsForTable.add( assignment );
 		}
+		final List<TableUpdater> tableUpdaters = new ArrayList<>();
+		final ExecutionContext executionContext = SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( context );
+		getEntityDescriptor().visitConstraintOrderedTables(
+				(tableExpression, tableKeyColumnVisitationSupplier) -> {
+					final TableUpdater tableUpdater = createTableUpdater(
+							tableExpression,
+							tableKeyColumnVisitationSupplier,
+							getEntityDescriptor(),
+							updatingTableGroup,
+							assignmentsByTable,
+							executionContext
+					);
+					if ( tableUpdater != null ) {
+						tableUpdaters.add( tableUpdater );
+					}
+				}
+		);
+		this.tableUpdaters = tableUpdaters;
 
+		this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref( domainParameterXref, translator );
+		this.resolvedParameterMappingModelTypes = translation.getSqmParameterMappingModelTypeResolutions();
+
+		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
+				context.getQueryParameterBindings(),
+				domainParameterXref,
+				jdbcParamsXref,
+				new SqmParameterMappingModelResolutionAccess() {
+					@Override @SuppressWarnings("unchecked")
+					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
+						return (MappingModelExpressible<T>) resolvedParameterMappingModelTypes.get( parameter );
+					}
+				},
+				context.getSession()
+		);
+		firstJdbcParameterBindings.get().visitBindings( jdbcParameterBindings::addBinding );
+		firstJdbcParameterBindings.set( jdbcParameterBindings );
+	}
+
+	@Override
+	public JdbcParameterBindings createJdbcParameterBindings(DomainQueryExecutionContext context) {
+		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
+				context.getQueryParameterBindings(),
+				getDomainParameterXref(),
+				jdbcParamsXref,
+				new SqmParameterMappingModelResolutionAccess() {
+					@Override
+					@SuppressWarnings("unchecked")
+					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
+						return (MappingModelExpressible<T>) resolvedParameterMappingModelTypes.get( parameter );
+					}
+				},
+				context.getSession()
+		);
+		// super.createJdbcParameterBindings() is for the matching id select statement only,
+		// so combine the bindings for the update statement with the ones for the select statement
+		super.createJdbcParameterBindings( context ).visitBindings( jdbcParameterBindings::addBinding );
+		return jdbcParameterBindings;
+	}
+
+	@Override
+	public int execute(JdbcParameterBindings jdbcParameterBindings, DomainQueryExecutionContext executionContext) {
+		final List<Object> ids = MatchingIdSelectionHelper.selectMatchingIds(
+				getMatchingIdsInterpretation(),
+				jdbcParameterBindings,
+				executionContext
+		);
+
+		if ( ids == null || ids.isEmpty() ) {
+			return 0;
+		}
+
+		final List<Expression> inListExpressions = getMatchingIdsPredicateProducer().produceIdExpressionList( ids, getEntityDescriptor() );
 		final int rows = ids.size();
 
 		final SqmJdbcExecutionContextAdapter executionContextAdapter = SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext );
-		entityDescriptor.visitConstraintOrderedTables(
-				(tableExpression, tableKeyColumnVisitationSupplier) -> updateTable(
-						tableExpression,
-						tableKeyColumnVisitationSupplier,
-						entityDescriptor,
-						updatingTableGroup,
-						assignmentsByTable,
-						inListExpressions,
-						rows,
-						jdbcParameterBindings,
-						executionContextAdapter
-				)
-		);
-
+		for ( TableUpdater tableUpdater : tableUpdaters ) {
+			updateTable(
+					tableUpdater,
+					inListExpressions,
+					rows,
+					jdbcParameterBindings,
+					executionContextAdapter
+			);
+		}
 		return rows;
 	}
 
-	private void updateTable(
+	protected record TableUpdater(
+			UpdateStatement updateStatement,
+			@Nullable InsertSelectStatement nullableInsert,
+			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier
+	) {}
+
+	// For Hibernate Reactive
+	protected List<TableUpdater> getTableUpdaters() {
+		return tableUpdaters;
+	}
+
+	private TableUpdater createTableUpdater(
 			String tableExpression,
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier,
 			EntityPersister entityDescriptor,
 			TableGroup updatingTableGroup,
 			Map<TableReference, List<Assignment>> assignmentsByTable,
-			List<Expression> inListExpressions,
-			int expectedUpdateCount,
-			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) {
 		final TableReference updatingTableReference = updatingTableGroup.getTableReference(
 				updatingTableGroup.getNavigablePath(),
@@ -212,7 +263,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 		final List<Assignment> assignments = assignmentsByTable.get( updatingTableReference );
 		if ( assignments == null || assignments.isEmpty() ) {
 			// no assignments for this table - skip it
-			return;
+			return null;
 		}
 
 
@@ -220,45 +271,39 @@ public class InlineUpdateHandler implements UpdateHandler {
 		// create the in-subquery predicate to restrict the updates to just
 		// matching ids
 
-		final InListPredicate idListPredicate = (InListPredicate) matchingIdsPredicateProducer.produceRestriction(
-				inListExpressions,
-				entityDescriptor,
-				0,
-				null,
-				updatingTableReference,
-				tableKeyColumnVisitationSupplier,
-				executionContext
-		);
-		final Expression keyExpression = idListPredicate.getTestExpression();
+		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+		final int idColumnCount = identifierMapping.getJdbcTypeCount();
+		assert idColumnCount > 0;
+		final Expression keyExpression;
+		if ( idColumnCount == 1 ) {
+			final BasicValuedModelPart basicIdMapping = castNonNull( identifierMapping.asBasicValuedModelPart() );
+			final String idColumn = basicIdMapping.getSelectionExpression();
+			keyExpression = new ColumnReference(
+					updatingTableReference,
+					idColumn,
+					// id columns cannot be formulas and cannot have custom read and write expressions
+					false,
+					null,
+					basicIdMapping.getJdbcMapping()
+			);
+		}
+		else {
+			final List<ColumnReference> columnReferences = new ArrayList<>( idColumnCount );
+			tableKeyColumnVisitationSupplier.get().accept( (columnIndex, selection) -> columnReferences.add(
+					new ColumnReference( updatingTableReference, selection )
+			) );
+			keyExpression = new SqlTuple( columnReferences, identifierMapping );
+		}
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Create the SQL AST and convert it into a JdbcOperation
 		final NamedTableReference dmlTableReference = resolveUnionTableReference( updatingTableReference, tableExpression );
-		final UpdateStatement sqlAst = new UpdateStatement( dmlTableReference, assignments, idListPredicate );
+		final UpdateStatement sqlAst = new UpdateStatement( dmlTableReference, assignments, null );
 
+		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcOperationQueryMutation jdbcUpdate = jdbcServices.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
-				.buildMutationTranslator( sessionFactory, sqlAst )
-				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 
-		final int updateCount = jdbcServices.getJdbcMutationExecutor().execute(
-				jdbcUpdate,
-				jdbcParameterBindings,
-				sql -> executionContext.getSession()
-						.getJdbcCoordinator()
-						.getStatementPreparer()
-						.prepareStatement( sql ),
-				(integer, preparedStatement) -> {
-				},
-				executionContext
-		);
-
-		if ( updateCount == expectedUpdateCount ) {
-			// We are done when the update count matches
-			return;
-		}
 		// Otherwise we have to check if the table is nullable, and if so, insert into that table
 		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
 		boolean isNullable = false;
@@ -268,20 +313,11 @@ public class InlineUpdateHandler implements UpdateHandler {
 				break;
 			}
 		}
+		final InsertSelectStatement insertSqlAst;
 		if ( isNullable ) {
 			// Copy the subquery contents into a root query
 			final QuerySpec querySpec = new QuerySpec( true );
 			final NavigablePath valuesPath = new NavigablePath( "id" );
-			final List<Values> valuesList = new ArrayList<>( inListExpressions.size() );
-			for ( Expression inListExpression : inListExpressions ) {
-				if ( inListExpression instanceof SqlTuple ) {
-					//noinspection unchecked
-					valuesList.add( new Values( (List<Expression>) ( (SqlTuple) inListExpression ).getExpressions() ) );
-				}
-				else {
-					valuesList.add( new Values( Collections.singletonList( inListExpression ) ) );
-				}
-			}
 			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 					true,
 					updatingTableGroup.getNavigablePath(),
@@ -358,7 +394,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 			final ValuesTableGroup valuesTableGroup = new ValuesTableGroup(
 					valuesPath,
 					null,
-					valuesList,
+					new ArrayList<>(),
 					valuesPath.getLocalName(),
 					columnNames,
 					true,
@@ -403,19 +439,155 @@ public class InlineUpdateHandler implements UpdateHandler {
 				);
 			}
 
-			final InsertSelectStatement insertSqlAst = new InsertSelectStatement(
-					dmlTableReference
-			);
+			insertSqlAst = new InsertSelectStatement( dmlTableReference );
 			insertSqlAst.addTargetColumnReferences( targetColumnReferences.toArray( new ColumnReference[0] ) );
 			insertSqlAst.setSourceSelectStatement( querySpec );
+		}
+		else {
+			insertSqlAst = null;
+		}
+		return new TableUpdater( sqlAst, insertSqlAst, tableKeyColumnVisitationSupplier );
+	}
 
-			final JdbcOperationQueryMutation jdbcInsert = jdbcServices.getJdbcEnvironment()
-					.getSqlAstTranslatorFactory()
-					.buildMutationTranslator( sessionFactory, insertSqlAst )
-					.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
+	// For Hibernate Reactive
+	protected JdbcOperationQueryMutation createTableUpdate(
+			TableUpdater tableUpdater,
+			List<Expression> inListExpressions,
+			JdbcParameterBindings jdbcParameterBindings,
+			ExecutionContext executionContext) {
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// create the in-subquery predicate to restrict the updates to just
+		// matching ids
 
+		final UpdateStatement updateStatement = new UpdateStatement(
+				tableUpdater.updateStatement,
+				tableUpdater.updateStatement.getTargetTable(),
+				tableUpdater.updateStatement.getFromClause(),
+				tableUpdater.updateStatement.getAssignments(),
+				Predicate.combinePredicates(
+						tableUpdater.updateStatement.getRestriction(),
+						getMatchingIdsPredicateProducer().produceRestriction(
+								inListExpressions,
+								getEntityDescriptor(),
+								0,
+								null,
+								tableUpdater.updateStatement.getTargetTable(),
+								tableUpdater.tableKeyColumnVisitationSupplier,
+								executionContext
+						)
+				),
+				tableUpdater.updateStatement.getReturningColumns()
+		);
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Create the SQL AST and convert it into a JdbcOperation
+
+		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
+		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+		return jdbcServices.getJdbcEnvironment()
+				.getSqlAstTranslatorFactory()
+				.buildMutationTranslator( sessionFactory, updateStatement )
+				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
+	}
+
+	// For Hibernate Reactive
+	protected JdbcOperationQueryMutation createTableInsert(
+			TableUpdater tableUpdater,
+			List<Expression> inListExpressions,
+			JdbcParameterBindings jdbcParameterBindings,
+			ExecutionContext executionContext) {
+		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
+		final InsertSelectStatement insertStatement = new InsertSelectStatement(
+				tableUpdater.nullableInsert,
+				tableUpdater.nullableInsert.getTargetTable(),
+				tableUpdater.nullableInsert.getReturningColumns()
+		);
+		final QuerySpec originalQuerySpec = (QuerySpec) tableUpdater.nullableInsert.getSourceSelectStatement();
+		assert originalQuerySpec.getFromClause().getRoots().size() == 1;
+
+		final QuerySpec querySpec = new QuerySpec( true, 1 );
+
+		// Copy over everything except the FromClause
+		querySpec.getSelectClause().makeDistinct( originalQuerySpec.getSelectClause().isDistinct() );
+		for ( SqlSelection sqlSelection : originalQuerySpec.getSelectClause().getSqlSelections() ) {
+			querySpec.getSelectClause().addSqlSelection( sqlSelection );
+		}
+		querySpec.applyPredicate( originalQuerySpec.getWhereClauseRestrictions() );
+		querySpec.setGroupByClauseExpressions( originalQuerySpec.getGroupByClauseExpressions() );
+		querySpec.setHavingClauseRestrictions( originalQuerySpec.getHavingClauseRestrictions() );
+		for ( SortSpecification sortSpecification : originalQuerySpec.getSortSpecifications() ) {
+			querySpec.addSortSpecification( sortSpecification );
+		}
+		querySpec.setOffsetClauseExpression( originalQuerySpec.getOffsetClauseExpression() );
+		querySpec.setFetchClauseExpression( originalQuerySpec.getFetchClauseExpression(),
+				originalQuerySpec.getFetchClauseType() );
+
+		// Rebuild the from clause values list based on the inListExpressions
+		final List<Values> valuesList = new ArrayList<>( inListExpressions.size() );
+		for ( Expression inListExpression : inListExpressions ) {
+			if ( inListExpression instanceof SqlTuple ) {
+				//noinspection unchecked
+				valuesList.add( new Values( (List<Expression>) ((SqlTuple) inListExpression).getExpressions() ) );
+			}
+			else {
+				valuesList.add( new Values( Collections.singletonList( inListExpression ) ) );
+			}
+		}
+
+		final ValuesTableGroup originalValuesTableGroup =
+				(ValuesTableGroup) originalQuerySpec.getFromClause().getRoots().get( 0 );
+		final ValuesTableGroup valuesTableGroup = new ValuesTableGroup(
+				originalValuesTableGroup.getNavigablePath(),
+				(TableGroupProducer) originalValuesTableGroup.getModelPart(),
+				valuesList,
+				originalValuesTableGroup.getNavigablePath().getLocalName(),
+				originalValuesTableGroup.getPrimaryTableReference().getColumnNames(),
+				originalValuesTableGroup.canUseInnerJoins(),
+				sessionFactory
+		);
+		valuesTableGroup.addNestedTableGroupJoin( originalValuesTableGroup.getNestedTableGroupJoins().get( 0 ) );
+		querySpec.getFromClause().addRoot( valuesTableGroup );
+
+		insertStatement.addTargetColumnReferences( tableUpdater.nullableInsert.getTargetColumns() );
+		insertStatement.setSourceSelectStatement( querySpec );
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Create the SQL AST and convert it into a JdbcOperation
+
+		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+		return jdbcServices.getJdbcEnvironment()
+				.getSqlAstTranslatorFactory()
+				.buildMutationTranslator( sessionFactory, insertStatement )
+				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
+	}
+
+	private void updateTable(
+			TableUpdater tableUpdater,
+			List<Expression> inListExpressions,
+			int expectedUpdateCount,
+			JdbcParameterBindings jdbcParameterBindings,
+			ExecutionContext executionContext) {
+		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
+		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+		final int updateCount = jdbcServices.getJdbcMutationExecutor().execute(
+				createTableUpdate( tableUpdater, inListExpressions, jdbcParameterBindings, executionContext ),
+				jdbcParameterBindings,
+				sql -> executionContext.getSession()
+						.getJdbcCoordinator()
+						.getStatementPreparer()
+						.prepareStatement( sql ),
+				(integer, preparedStatement) -> {
+				},
+				executionContext
+		);
+
+		if ( updateCount == expectedUpdateCount ) {
+			// We are done when the update count matches
+			return;
+		}
+		if ( tableUpdater.nullableInsert != null ) {
 			final int insertCount = jdbcServices.getJdbcMutationExecutor().execute(
-					jdbcInsert,
+					createTableInsert(  tableUpdater, inListExpressions, jdbcParameterBindings, executionContext ),
 					jdbcParameterBindings,
 					sql -> executionContext.getSession()
 							.getJdbcCoordinator()
@@ -427,18 +599,6 @@ public class InlineUpdateHandler implements UpdateHandler {
 			);
 			assert insertCount + updateCount == expectedUpdateCount;
 		}
-	}
-
-	private Expression asExpression(SelectClause selectClause) {
-		final List<SqlSelection> sqlSelections = selectClause.getSqlSelections();
-		if ( sqlSelections.size() == 1 ) {
-			return sqlSelections.get( 0 ).getExpression();
-		}
-		final List<Expression> expressions = new ArrayList<>( sqlSelections.size() );
-		for ( SqlSelection sqlSelection : sqlSelections ) {
-			expressions.add( sqlSelection.getExpression() );
-		}
-		return new SqlTuple( expressions, null );
 	}
 
 	private void collectTableReference(

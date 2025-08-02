@@ -116,6 +116,11 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 	}
 
 	@Override // promote protected to public
+	public SqmStatement<?> getStatement() {
+		return super.getStatement();
+	}
+
+	@Override // promote protected to public
 	public Stack<SqlAstProcessingState> getProcessingStateStack() {
 		return super.getProcessingStateStack();
 	}

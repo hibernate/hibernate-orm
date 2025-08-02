@@ -13,11 +13,13 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.MutableObject;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.results.internal.TableGroupImpl;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
@@ -46,6 +48,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
 /**
@@ -62,8 +65,10 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 			SqmUpdateStatement<?> sqmStatement,
 			DomainParameterXref domainParameterXref,
 			CteMutationStrategy strategy,
-			SessionFactoryImplementor sessionFactory) {
-		super( cteTable, sqmStatement, domainParameterXref, strategy, sessionFactory );
+			SessionFactoryImplementor sessionFactory,
+			DomainQueryExecutionContext context,
+			MutableObject<JdbcParameterBindings> firstJdbcParameterBindingsConsumer) {
+		super( cteTable, sqmStatement, domainParameterXref, strategy, sessionFactory, context, firstJdbcParameterBindingsConsumer );
 	}
 
 	@Override
@@ -74,7 +79,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 			Map<SqmParameter<?>, List<JdbcParameter>> parameterResolutions,
 			SessionFactoryImplementor factory) {
 		final TableGroup updatingTableGroup = sqmConverter.getMutatingTableGroup();
-		final SqmUpdateStatement<?> updateStatement = (SqmUpdateStatement<?>) getSqmDeleteOrUpdateStatement();
+		final SqmUpdateStatement<?> updateStatement = (SqmUpdateStatement<?>) getSqmStatement();
 		final EntityMappingType entityDescriptor = getEntityDescriptor();
 
 		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();

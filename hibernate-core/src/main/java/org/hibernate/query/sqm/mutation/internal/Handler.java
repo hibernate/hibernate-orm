@@ -5,6 +5,9 @@
 package org.hibernate.query.sqm.mutation.internal;
 
 import org.hibernate.query.spi.DomainQueryExecutionContext;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.sqm.mutation.spi.MultiTableHandler;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 /**
  * Simply as a matter of code structuring it is often worthwhile to  put all of the execution code into a separate
@@ -14,8 +17,10 @@ import org.hibernate.query.spi.DomainQueryExecutionContext;
  * queries
  *
  * @author Steve Ebersole
+ * @deprecated Moved to {@link MultiTableHandler}
  */
-public interface Handler {
+@Deprecated(forRemoval = true, since = "7.1")
+public interface Handler extends MultiTableHandler {
 	/**
 	 * Execute the multi-table update or delete indicated by the SQM AST
 	 * passed in when this Handler was created.
@@ -24,5 +29,17 @@ public interface Handler {
 	 *
 	 * @return The "number of rows affected" count
 	 */
-	int execute(DomainQueryExecutionContext executionContext);
+	default int execute(DomainQueryExecutionContext executionContext) {
+		return execute( createJdbcParameterBindings( executionContext ), executionContext );
+	}
+
+	@Override
+	default boolean dependsOnParameterBindings() {
+		return true;
+	}
+
+	@Override
+	default boolean isCompatibleWith(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions) {
+		return false;
+	}
 }

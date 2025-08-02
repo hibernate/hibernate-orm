@@ -8,13 +8,20 @@ import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.MutableObject;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.mutation.spi.MultiTableHandler;
+import org.hibernate.query.sqm.mutation.spi.MultiTableHandlerBuildResult;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+
 
 
 /**
@@ -58,10 +65,19 @@ public class PersistentTableMutationStrategy extends PersistentTableStrategy imp
 	}
 
 	@Override
-	public int executeUpdate(
+	public MultiTableHandlerBuildResult buildHandler(SqmDeleteOrUpdateStatement<?> sqmStatement, DomainParameterXref domainParameterXref, DomainQueryExecutionContext context) {
+		final MutableObject<JdbcParameterBindings> firstJdbcParameterBindings = new MutableObject<>();
+		final MultiTableHandler multiTableHandler = sqmStatement instanceof SqmDeleteStatement<?> sqmDelete
+				? buildHandler( sqmDelete, domainParameterXref, context, firstJdbcParameterBindings )
+				: buildHandler( (SqmUpdateStatement<?>) sqmStatement, domainParameterXref, context, firstJdbcParameterBindings );
+		return new MultiTableHandlerBuildResult( multiTableHandler, firstJdbcParameterBindings.get() );
+	}
+
+	public MultiTableHandler buildHandler(
 			SqmUpdateStatement<?> sqmUpdate,
 			DomainParameterXref domainParameterXref,
-			DomainQueryExecutionContext context) {
+			DomainQueryExecutionContext context,
+			MutableObject<JdbcParameterBindings> firstJdbcParameterBindingsConsumer) {
 		return new TableBasedUpdateHandler(
 				sqmUpdate,
 				domainParameterXref,
@@ -69,23 +85,41 @@ public class PersistentTableMutationStrategy extends PersistentTableStrategy imp
 				getTemporaryTableStrategy(),
 				false,
 				session -> session.getSessionIdentifier().toString(),
-				getSessionFactory()
-		).execute( context );
+				context,
+				firstJdbcParameterBindingsConsumer
+		);
 	}
 
-	@Override
-	public int executeDelete(
+	public MultiTableHandler buildHandler(
 			SqmDeleteStatement<?> sqmDelete,
 			DomainParameterXref domainParameterXref,
-			DomainQueryExecutionContext context) {
-		return new TableBasedDeleteHandler(
-				sqmDelete,
-				domainParameterXref,
-				getTemporaryTable(),
-				getTemporaryTableStrategy(),
-				false,
-				session -> session.getSessionIdentifier().toString(),
-				getSessionFactory()
-		).execute( context );
+			DomainQueryExecutionContext context,
+			MutableObject<JdbcParameterBindings> firstJdbcParameterBindingsConsumer) {
+		final EntityPersister rootDescriptor = context.getSession().getFactory().getMappingMetamodel()
+				.getEntityDescriptor( sqmDelete.getRoot().getEntityName() );
+		if ( rootDescriptor.getSoftDeleteMapping() != null ) {
+			return new TableBasedSoftDeleteHandler(
+					sqmDelete,
+					domainParameterXref,
+					getTemporaryTable(),
+					getTemporaryTableStrategy(),
+					false,
+					session -> session.getSessionIdentifier().toString(),
+					context,
+					firstJdbcParameterBindingsConsumer
+			);
+		}
+		else {
+			return new TableBasedDeleteHandler(
+					sqmDelete,
+					domainParameterXref,
+					getTemporaryTable(),
+					getTemporaryTableStrategy(),
+					false,
+					session -> session.getSessionIdentifier().toString(),
+					context,
+					firstJdbcParameterBindingsConsumer
+			);
+		}
 	}
 }

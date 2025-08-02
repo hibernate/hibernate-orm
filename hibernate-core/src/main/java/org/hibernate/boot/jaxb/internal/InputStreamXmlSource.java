@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.hibernate.boot.InvalidMappingException;
+import org.hibernate.boot.archive.internal.RepeatableInputStreamAccess;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.spi.Binder;
 import org.hibernate.boot.jaxb.spi.Binding;
@@ -38,7 +39,7 @@ public class InputStreamXmlSource extends XmlSource {
 
 	public static <T> Binding<T> doBind(Binder<T> binder, InputStream inputStream, Origin origin, boolean autoClose) {
 		try {
-			return binder.bind( inputStream, origin );
+			return binder.bind( new RepeatableInputStreamAccess( origin.getName(), inputStream), origin );
 		}
 		catch ( Exception e ) {
 			throw new InvalidMappingException( origin, e );

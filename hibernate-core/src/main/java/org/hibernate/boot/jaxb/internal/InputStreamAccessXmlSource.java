@@ -27,8 +27,6 @@ public class InputStreamAccessXmlSource extends XmlSource {
 	}
 
 	public static Binding doBind(Binder binder, InputStreamAccess inputStreamAccess, Origin origin) {
-		return inputStreamAccess.fromStream(
-				inputStream -> binder.bind( inputStream, origin )
-		);
+		return binder.bind( inputStreamAccess, origin ) ;
 	}
 }

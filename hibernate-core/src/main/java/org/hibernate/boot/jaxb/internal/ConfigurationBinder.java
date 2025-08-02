@@ -8,6 +8,7 @@ import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.events.StartElement;
 
+import jakarta.xml.bind.Unmarshaller;
 import org.hibernate.Internal;
 import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.boot.jaxb.Origin;
@@ -15,10 +16,13 @@ import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl;
 import org.hibernate.boot.jaxb.internal.stax.ConfigurationEventReader;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.xsd.ConfigXsdSupport;
+import org.hibernate.boot.xsd.XmlValidationMode;
 import org.hibernate.internal.util.config.ConfigurationException;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
+
+import java.util.function.Consumer;
 
 /**
  * @author Steve Ebersole
@@ -32,8 +36,8 @@ public class ConfigurationBinder extends AbstractBinder<JaxbPersistenceImpl> {
 	}
 
 	@Override
-	public boolean isValidationEnabled() {
-		return false;
+	public XmlValidationMode getXmlValidationMode() {
+		return XmlValidationMode.DISABLED;
 	}
 
 	@Override
@@ -42,11 +46,22 @@ public class ConfigurationBinder extends AbstractBinder<JaxbPersistenceImpl> {
 			StartElement rootElementStartEvent,
 			Origin origin) {
 		final XMLEventReader reader = new ConfigurationEventReader( staxEventReader, xmlEventFactory );
+
+		final Consumer<Unmarshaller> validationAction;
+		// evaluate extended (the former validate_xml 'true') in case anyone should override getXmlValidationMode() to switch it on
+		if ( getXmlValidationMode() == XmlValidationMode.EXTENDED ) {
+			validationAction = unmarshaller -> unmarshaller.setSchema(
+					ConfigXsdSupport.configurationXsd().getSchema() );
+		}
+		else {
+			validationAction = unmarshaller -> unmarshaller.setSchema( null );
+		}
+
 		final JaxbPersistenceImpl bindingRoot = jaxb(
 				reader,
-				ConfigXsdSupport.configurationXsd().getSchema(),
 				jaxbContext(),
-				origin
+				origin,
+				validationAction
 		);
 		//noinspection unchecked
 		return new Binding<>( (X) bindingRoot, origin );

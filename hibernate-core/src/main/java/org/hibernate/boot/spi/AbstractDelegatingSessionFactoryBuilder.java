@@ -14,6 +14,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
+import org.hibernate.boot.xsd.XmlValidationMode;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.context.spi.TenantSchemaMapper;
@@ -406,6 +407,12 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	@Override
 	public T applyXmlFormatMapper(FormatMapper xmlFormatMapper) {
 		delegate.applyXmlFormatMapper( xmlFormatMapper );
+		return getThis();
+	}
+
+	@Override
+	public T applyXmlValidationMode(XmlValidationMode xmlValidationMode) {
+		delegate.applyXmlValidationMode( xmlValidationMode );
 		return getThis();
 	}
 

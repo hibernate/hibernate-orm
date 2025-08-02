@@ -476,16 +476,6 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Configures whether Hibernate should validate (via schema descriptor) XML files.
-	 *
-	 * @see MappingSettings#VALIDATE_XML
-	 */
-	public HibernatePersistenceConfiguration xmlValidation(boolean enabled) {
-		property( MappingSettings.VALIDATE_XML, enabled );
-		return this;
-	}
-
-	/**
 	 * Configures whether Hibernate should collect {@linkplain org.hibernate.stat.Statistics}.
 	 *
 	 * @see StatisticsSettings#GENERATE_STATISTICS

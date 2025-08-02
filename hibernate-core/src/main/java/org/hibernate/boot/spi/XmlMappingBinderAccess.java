@@ -8,7 +8,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.function.Function;
+import java.util.Map;
+import java.util.function.Supplier;
 
 import org.hibernate.boot.MappingNotFoundException;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
@@ -43,7 +44,7 @@ public class XmlMappingBinderAccess {
 		this.mappingBinder = new MappingBinder( serviceRegistry );
 	}
 
-	public XmlMappingBinderAccess(ServiceRegistry serviceRegistry, Function<String, Object> configAccess) {
+	public XmlMappingBinderAccess(ServiceRegistry serviceRegistry, Supplier<Map<String, Object>> configAccess) {
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		this.mappingBinder = new MappingBinder( classLoaderService, configAccess );
 	}

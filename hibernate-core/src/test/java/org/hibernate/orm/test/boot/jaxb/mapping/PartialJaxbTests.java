@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.boot.jaxb.mapping;
 
+import org.hibernate.boot.archive.internal.RepeatableInputStreamAccess;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
@@ -27,10 +28,11 @@ public class PartialJaxbTests {
 	public void cachingTest(ServiceRegistryScope scope) {
 		final MappingBinder mappingBinder = new MappingBinder( scope.getRegistry() );
 		scope.withService( ClassLoaderService.class, (cls) -> {
+			final String resourceLocation = "xml/jaxb/mapping/partial/caching.xml";
 			//noinspection unchecked
 			final Binding<JaxbEntityMappingsImpl> binding = mappingBinder.bind(
-					cls.locateResourceStream( "xml/jaxb/mapping/partial/caching.xml" ),
-					new Origin( SourceType.RESOURCE, "xml/jaxb/mapping/partial/caching.xml" )
+					new RepeatableInputStreamAccess( resourceLocation, cls.locateResourceStream( resourceLocation )),
+					new Origin( SourceType.RESOURCE, resourceLocation )
 			);
 
 			final JaxbEntityMappingsImpl entityMappings = binding.getRoot();

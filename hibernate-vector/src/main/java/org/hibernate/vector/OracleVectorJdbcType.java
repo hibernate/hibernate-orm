@@ -4,8 +4,10 @@
  */
 package org.hibernate.vector;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleTypes;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -35,6 +37,11 @@ public class OracleVectorJdbcType extends OracleFloatVectorJdbcType {
 		appender.append( "to_vector(" );
 		appender.append( writeExpression );
 		appender.append( ", *, *)" );
+	}
+
+	@Override
+	public @Nullable String castFromPattern(JdbcMapping sourceMapping) {
+		return sourceMapping.getJdbcType().isStringLike() ? "to_vector(?1,*,*)" : null;
 	}
 
 	@Override

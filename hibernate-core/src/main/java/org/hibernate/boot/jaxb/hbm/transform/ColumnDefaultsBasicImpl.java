@@ -44,7 +44,7 @@ public class ColumnDefaultsBasicImpl implements ColumnDefaults {
 	}
 
 	@Override
-	public Boolean isUpdateable() {
+	public Boolean isUpdatable() {
 		return Boolean.TRUE;
 	}
 }

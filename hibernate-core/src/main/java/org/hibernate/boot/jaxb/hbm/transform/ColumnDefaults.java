@@ -20,5 +20,5 @@ interface ColumnDefaults {
 
 	Boolean isInsertable();
 
-	Boolean isUpdateable();
+	Boolean isUpdatable();
 }

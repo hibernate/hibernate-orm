@@ -545,7 +545,7 @@ public class MapBinder extends CollectionBinder {
 			newProperty.setCascade( property.getCascade() );
 			newProperty.setValueGeneratorCreator( property.getValueGeneratorCreator() );
 			newProperty.setInsertable( false );
-			newProperty.setUpdateable( false );
+			newProperty.setUpdatable( false );
 			newProperty.setMetaAttributes( property.getMetaAttributes() );
 			newProperty.setName( property.getName() );
 			newProperty.setNaturalIdentifier( false );

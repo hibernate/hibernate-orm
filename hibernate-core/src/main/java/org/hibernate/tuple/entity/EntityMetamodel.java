@@ -287,7 +287,7 @@ public class EntityMetamodel implements Serializable {
 			if ( property.isNaturalIdentifier() ) {
 				verifyNaturalIdProperty( property );
 				naturalIdNumbers.add( i );
-				if ( property.isUpdateable() ) {
+				if ( property.isUpdatable() ) {
 					foundUpdateableNaturalIdProperty = true;
 				}
 			}

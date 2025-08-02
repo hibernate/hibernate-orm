@@ -1630,7 +1630,7 @@ public abstract class CollectionBinder {
 				+ "Backref";
 		backref.setName( backrefName );
 		backref.setOptional( true );
-		backref.setUpdateable( false);
+		backref.setUpdatable( false);
 		backref.setSelectable( false );
 		backref.setCollectionRole( getRole() );
 		backref.setEntityName( collection.getOwner().getEntityName() );

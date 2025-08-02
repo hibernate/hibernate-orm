@@ -41,7 +41,7 @@ public class ImmutabilityConverterTests {
 		scope.withHierarchy( TestEntity.class, (entity) -> {
 			final Property theDateProperty = entity.getProperty( "theDate" );
 			assertThat( theDateProperty ).isNotNull();
-			assertThat( theDateProperty.isUpdateable() ).isTrue();
+			assertThat( theDateProperty.isUpdatable() ).isTrue();
 
 			final BasicValue basicValue = (BasicValue) theDateProperty.getValue();
 			final BasicValue.Resolution<?> resolution = basicValue.resolve();

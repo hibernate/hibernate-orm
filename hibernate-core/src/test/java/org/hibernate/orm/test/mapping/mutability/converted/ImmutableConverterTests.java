@@ -44,7 +44,7 @@ public class ImmutableConverterTests {
 			{
 				final Property property = entity.getProperty( "mutableDate" );
 				assertThat( property ).isNotNull();
-				assertThat( property.isUpdateable() ).isTrue();
+				assertThat( property.isUpdatable() ).isTrue();
 
 				final BasicValue basicValue = (BasicValue) property.getValue();
 				final BasicValue.Resolution<?> resolution = basicValue.resolve();
@@ -54,7 +54,7 @@ public class ImmutableConverterTests {
 			{
 				final Property property = entity.getProperty( "immutableDate" );
 				assertThat( property ).isNotNull();
-				assertThat( property.isUpdateable() ).isTrue();
+				assertThat( property.isUpdatable() ).isTrue();
 
 				final BasicValue basicValue = (BasicValue) property.getValue();
 				final BasicValue.Resolution<?> resolution = basicValue.resolve();

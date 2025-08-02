@@ -33,7 +33,7 @@ public class NaturalIdDataCachingConfigImpl
 
 	private boolean hasAnyMutableNaturalIdProps() {
 		for ( Property property : rootEntityDescriptor.getDeclaredProperties() ) {
-			if ( property.isNaturalIdentifier() && property.isUpdateable() ) {
+			if ( property.isNaturalIdentifier() && property.isUpdatable() ) {
 				return true;
 			}
 		}

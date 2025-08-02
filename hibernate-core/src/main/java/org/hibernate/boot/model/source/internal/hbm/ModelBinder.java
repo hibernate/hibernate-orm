@@ -724,7 +724,7 @@ public class ModelBinder {
 			rootEntityDescriptor.setDeclaredIdentifierMapper( mapper );
 			final Property property = new Property();
 			property.setName( NavigablePath.IDENTIFIER_MAPPER_PROPERTY );
-			property.setUpdateable( false );
+			property.setUpdatable( false );
 			property.setInsertable( false );
 			property.setValue( mapper );
 			property.setPropertyAccessorName( EMBEDDED.getExternalName() );
@@ -1048,7 +1048,7 @@ public class ModelBinder {
 			attributeBinding.setNaturalIdentifier( true );
 
 			if ( naturalIdMutability == NaturalIdMutability.IMMUTABLE ) {
-				attributeBinding.setUpdateable( false );
+				attributeBinding.setUpdatable( false );
 			}
 
 			final var metadataCollector = mappingDocument.getMetadataCollector();
@@ -2203,7 +2203,7 @@ public class ModelBinder {
 		if ( propertySource.isSingular() ) {
 			final SingularAttributeSource singularAttributeSource = (SingularAttributeSource) propertySource;
 			property.setInsertable( singularAttributeSource.isInsertable() );
-			property.setUpdateable( singularAttributeSource.isUpdatable() );
+			property.setUpdatable( singularAttributeSource.isUpdatable() );
 			// NOTE: Property#is refers to whether a property is lazy via bytecode enhancement (not proxies)
 			property.setLazy( singularAttributeSource.isBytecodeLazy() );
 			handleGenerationTiming( mappingDocument, propertySource, property, singularAttributeSource.getGenerationTiming() );
@@ -2266,13 +2266,13 @@ public class ModelBinder {
 				}
 
 				// properties generated on update can never be updatable...
-				if ( property.isUpdateable() && timing.includesUpdate() ) {
+				if ( property.isUpdatable() && timing.includesUpdate() ) {
 					log.tracef(
 							"Property [%s] specified ALWAYS generation, setting updateable to false: %s",
 							propertySource.getName(),
 							mappingDocument.getOrigin()
 					);
-					property.setUpdateable( false );
+					property.setUpdatable( false );
 				}
 			}
 		}
@@ -2997,7 +2997,7 @@ public class ModelBinder {
 				final Backref backref = new Backref();
 				backref.setName( '_' + collectionBinding.getOwnerEntityName() + "." + pluralAttributeSource.getName() + "Backref" );
 				backref.setOptional( true );
-				backref.setUpdateable( false );
+				backref.setUpdatable( false );
 				backref.setSelectable( false );
 				backref.setCollectionRole( collectionBinding.getRole() );
 				backref.setEntityName( collectionBinding.getOwner().getEntityName() );
@@ -3411,7 +3411,7 @@ public class ModelBinder {
 				final IndexBackref backref = new IndexBackref();
 				backref.setName( '_' + collectionBinding.getOwnerEntityName() + "." + getPluralAttributeSource().getName() + "IndexBackref" );
 				backref.setOptional( true );
-				backref.setUpdateable( false );
+				backref.setUpdatable( false );
 				backref.setSelectable( false );
 				backref.setCollectionRole( collectionBinding.getRole() );
 				backref.setEntityName( collectionBinding.getOwner().getEntityName() );
@@ -3490,7 +3490,7 @@ public class ModelBinder {
 			final IndexBackref backref = new IndexBackref();
 			backref.setName( '_' + collectionBinding.getOwnerEntityName() + "." + pluralAttributeSource.getName() + "IndexBackref" );
 			backref.setOptional( true );
-			backref.setUpdateable( false );
+			backref.setUpdatable( false );
 			backref.setSelectable( false );
 			backref.setCollectionRole( collectionBinding.getRole() );
 			backref.setEntityName( collectionBinding.getOwner().getEntityName() );

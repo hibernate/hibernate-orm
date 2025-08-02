@@ -137,8 +137,31 @@ COMMA		: ',';
 DOT			: '.';
 
 PLUS 		: '+';
-MINUS 		:	'-';
+MINUS 		: '-';
 MULTIPLY 	: '*';
 DIVIDE 		: '/';
 MODULO		: '%';
 
+// Not used, but necessary for error reporting
+
+EQUAL : '=';
+NOT_EQUAL : '!=' | '^=' | '<>';
+GREATER : '>';
+GREATER_EQUAL : '>=';
+LESS : '<';
+LESS_EQUAL : '<=';
+
+LEFT_BRACKET : '[';
+RIGHT_BRACKET : ']';
+LEFT_BRACE : '{';
+RIGHT_BRACE : '}';
+AMPERSAND : '&';
+SEMICOLON :	';';
+COLON : ':';
+PIPE : '|';
+DOUBLE_PIPE : '||';
+QUESTION_MARK :	'?';
+ARROW :	'->';
+BANG: '!';
+AT: '@';
+HASH: '#';

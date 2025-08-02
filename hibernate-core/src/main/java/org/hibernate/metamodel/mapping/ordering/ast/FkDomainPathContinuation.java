@@ -41,7 +41,7 @@ public class FkDomainPathContinuation extends DomainPathContinuation {
 			boolean isTerminal,
 			TranslationContext translationContext) {
 		if ( !possiblePaths.contains( name ) ) {
-			throw new PathResolutionException( "Domain path of type `" + referencedModelPart.getPartMappingType() + "` -> `" + name + "`" );
+			throw new PathResolutionException( name );
 		}
 
 		final HashSet<String> furtherPaths = new HashSet<>();

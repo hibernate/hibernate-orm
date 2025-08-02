@@ -23,7 +23,7 @@ package org.hibernate.grammars.ordering;
 // todo (6.0) : add hooks for keyword-as-identifier logging like we do for HQL?
 
 orderByFragment
-	: sortSpecification (COMMA sortSpecification)*
+	: sortSpecification (COMMA sortSpecification)* EOF
 	;
 
 sortSpecification

@@ -57,14 +57,12 @@ public class CollectionPartPath extends AbstractDomainPath {
 			String identifier,
 			boolean isTerminal,
 			TranslationContext translationContext) {
-		if ( referencedPart instanceof ModelPartContainer ) {
-			final ModelPart subPart = ( (ModelPartContainer) referencedPart ).findSubPart( name, null );
-
+		if ( referencedPart instanceof ModelPartContainer modelPartContainer ) {
+			final ModelPart subPart = modelPartContainer.findSubPart( name, null );
 			return new DomainPathContinuation( navigablePath.append( name ), this, subPart );
 		}
-
-		throw new PathResolutionException(
-				"Could not resolve order-by path : " + navigablePath + " -> " + name
-		);
+		else {
+			throw new PathResolutionException( name );
+		}
 	}
 }

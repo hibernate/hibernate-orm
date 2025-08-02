@@ -5,7 +5,6 @@
 package org.hibernate.metamodel.mapping.ordering.ast;
 
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.AbstractDomainPath;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
@@ -49,13 +48,11 @@ public class DomainPathContinuation extends AbstractDomainPath {
 			String identifier,
 			boolean isTerminal,
 			TranslationContext translationContext) {
-		if ( referencedModelPart instanceof EmbeddableValuedModelPart ) {
-			final EmbeddableMappingType embeddableMappingType = (EmbeddableMappingType) referencedModelPart.getPartMappingType();
+		if ( referencedModelPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
+			final var embeddableMappingType = embeddableValuedModelPart.getEmbeddableTypeDescriptor();
 			final ModelPart subPart = embeddableMappingType.findSubPart( name, null );
 			if ( subPart == null ) {
-				throw new PathResolutionException(
-						"Could not resolve path token : " + referencedModelPart + " -> " + name
-				);
+				throw new PathResolutionException( name );
 			}
 
 			return new DomainPathContinuation(
@@ -65,9 +62,6 @@ public class DomainPathContinuation extends AbstractDomainPath {
 			);
 		}
 
-		throw new PathResolutionException(
-				"Domain path of type `" + referencedModelPart.getPartMappingType() +
-						"` -> `" + name + "`"
-		);
+		throw new PathResolutionException( name );
 	}
 }

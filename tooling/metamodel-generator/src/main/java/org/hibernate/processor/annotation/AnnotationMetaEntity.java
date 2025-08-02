@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.Token;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.grammars.hql.HqlLexer;
+import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.ImportContextImpl;
@@ -20,6 +21,7 @@ import org.hibernate.processor.util.Constants;
 import org.hibernate.processor.util.TypeUtils;
 import org.hibernate.processor.validation.ProcessorSessionFactory;
 import org.hibernate.processor.validation.Validation;
+import org.hibernate.query.SyntaxException;
 import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
@@ -1231,6 +1233,30 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		for ( Element memberOfClass : membersOfClass ) {
 			if ( hasAnnotation(memberOfClass, MANY_TO_ONE, ONE_TO_ONE, ONE_TO_MANY, MANY_TO_MANY) ) {
 				validateAssociation(memberOfClass);
+			}
+			if ( hasAnnotation(memberOfClass, ORDER_BY) ) {
+				validateOrderBy( memberOfClass );
+			}
+		}
+	}
+
+	private void validateOrderBy(Element memberOfClass) {
+		final AnnotationMirror annotation =
+				castNonNull(getAnnotationMirror( memberOfClass, ORDER_BY));
+		final AnnotationValue annotationValue = getAnnotationValue(annotation);
+		if ( annotationValue != null ) {
+			final String fragment = annotationValue.getValue().toString();
+			if ( !fragment.isBlank() ) {
+				try {
+					OrderByFragmentTranslator.check( fragment );
+				}
+				catch (SyntaxException e) {
+					final String message = "Error in ordering: " + e.getMessage();
+					context.message( memberOfClass, annotation, annotationValue, message, Diagnostic.Kind.ERROR );
+				}
+				catch (Exception ignored) {
+					// do nothing with it
+				}
 			}
 		}
 	}

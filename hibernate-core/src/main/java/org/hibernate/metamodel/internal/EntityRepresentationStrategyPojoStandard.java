@@ -33,7 +33,6 @@ import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptableType;
@@ -67,15 +66,15 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			PersistentClass bootDescriptor,
 			EntityPersister runtimeDescriptor,
 			RuntimeModelCreationContext creationContext) {
-		final JavaTypeRegistry jtdRegistry = creationContext.getTypeConfiguration().getJavaTypeRegistry();
+		final var registry = creationContext.getTypeConfiguration().getJavaTypeRegistry();
 
 		final Class<?> mappedJavaType = bootDescriptor.getMappedClass();
-		this.mappedJtd = jtdRegistry.resolveEntityTypeDescriptor( mappedJavaType );
+		mappedJtd = registry.resolveEntityTypeDescriptor( mappedJavaType );
 
 		final Class<?> proxyJavaType = bootDescriptor.getProxyInterface();
-		this.proxyJtd = proxyJavaType != null ? jtdRegistry.getDescriptor( proxyJavaType ) : null;
+		proxyJtd = proxyJavaType != null ? registry.getDescriptor( proxyJavaType ) : null;
 
-		this.isBytecodeEnhanced = isPersistentAttributeInterceptableType( mappedJavaType );
+		isBytecodeEnhanced = isPersistentAttributeInterceptableType( mappedJavaType );
 
 		final Property identifierProperty = bootDescriptor.getIdentifierProperty();
 		if ( identifierProperty == null ) {
@@ -106,13 +105,13 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			identifierPropertyAccess = makePropertyAccess( identifierProperty );
 		}
 
-		this.strategySelector = creationContext.getServiceRegistry().getService( StrategySelector.class );
+		strategySelector = creationContext.getServiceRegistry().getService( StrategySelector.class );
 
-		final BytecodeProvider bytecodeProvider =
+		final var bytecodeProvider =
 				creationContext.getBootstrapContext().getServiceRegistry()
 						.requireService( BytecodeProvider.class );
 
-		this.proxyFactory = resolveProxyFactory(
+		proxyFactory = resolveProxyFactory(
 				bootDescriptor,
 				runtimeDescriptor,
 				proxyJtd,
@@ -120,10 +119,10 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 				creationContext
 		);
 
-		this.propertyAccessMap = buildPropertyAccessMap( bootDescriptor );
-		this.reflectionOptimizer = resolveReflectionOptimizer( bytecodeProvider );
+		propertyAccessMap = buildPropertyAccessMap( bootDescriptor );
+		reflectionOptimizer = resolveReflectionOptimizer( bytecodeProvider );
 
-		this.instantiator = determineInstantiator( bootDescriptor, runtimeDescriptor.getEntityMetamodel() );
+		instantiator = determineInstantiator( bootDescriptor, runtimeDescriptor.getEntityMetamodel() );
 	}
 
 	private ProxyFactory resolveProxyFactory(
@@ -142,10 +141,9 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			return null;
 		}
 		else {
-			final EntityMetamodel entityMetamodel = entityPersister.getEntityMetamodel();
+			final var entityMetamodel = entityPersister.getEntityMetamodel();
 			if ( proxyJavaType != null && entityMetamodel.isLazy() ) {
-				final ProxyFactory proxyFactory =
-						createProxyFactory( bootDescriptor, bytecodeProvider, creationContext );
+				final var proxyFactory = createProxyFactory( bootDescriptor, bytecodeProvider, creationContext );
 				if ( proxyFactory == null ) {
 					entityMetamodel.setLazy( false );
 				}
@@ -184,42 +182,10 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			BytecodeProvider bytecodeProvider,
 			RuntimeModelCreationContext creationContext) {
 
-		// HHH-17578 - We need to preserve the order of the interfaces to ensure
-		// that the most general @Proxy declared interface at the top of a class
-		// hierarchy will be used first when a HibernateProxy decides what it
-		// should implement.
-		final Set<Class<?>> proxyInterfaces = new LinkedHashSet<>();
-
 		final Class<?> mappedClass = mappedJtd.getJavaTypeClass();
-		final Class<?> proxyInterface = proxyJtd != null ? proxyJtd.getJavaTypeClass() : null;
+		final Class<?> proxyInterface = proxyJtd == null ? null : proxyJtd.getJavaTypeClass();
 
-		if ( proxyInterface != null && ! mappedClass.equals( proxyInterface ) ) {
-			if ( ! proxyInterface.isInterface() ) {
-				throw new MappingException(
-						"proxy must be either an interface, or the class itself: " + bootDescriptor.getEntityName()
-				);
-			}
-			proxyInterfaces.add( proxyInterface );
-		}
-
-		if ( mappedClass.isInterface() ) {
-			proxyInterfaces.add( mappedClass );
-		}
-
-		for ( Subclass subclass : bootDescriptor.getSubclasses() ) {
-			final Class<?> subclassProxy = subclass.getProxyInterface();
-			final Class<?> subclassClass = subclass.getMappedClass();
-			if ( subclassProxy != null && !subclassClass.equals( subclassProxy ) ) {
-				if ( !subclassProxy.isInterface() ) {
-					throw new MappingException(
-							"proxy must be either an interface, or the class itself: " + subclass.getEntityName()
-					);
-				}
-				proxyInterfaces.add( subclassProxy );
-			}
-		}
-
-		proxyInterfaces.add( HibernateProxy.class );
+		final Set<Class<?>> proxyInterfaces = proxyInterfaces( bootDescriptor, proxyInterface, mappedClass );
 
 		final Class<?> clazz = bootDescriptor.getMappedClass();
 		final Method idGetterMethod;
@@ -254,12 +220,72 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 				idSetterMethod == null || proxyInterface == null ? null
 						: getMethod( proxyInterface, idSetterMethod );
 
-		final ProxyFactory proxyFactory =
+		return instantiateProxyFactory(
+				bootDescriptor,
+				bytecodeProvider,
+				creationContext,
+				proxyGetIdentifierMethod,
+				proxySetIdentifierMethod,
+				mappedClass,
+				proxyInterfaces
+		);
+	}
+
+	private static Set<Class<?>> proxyInterfaces(
+			PersistentClass bootDescriptor,
+			Class<?> proxyInterface,
+			Class<?> mappedClass) {
+		// HHH-17578 - We need to preserve the order of the interfaces to ensure
+		// that the most general @Proxy declared interface at the top of a class
+		// hierarchy will be used first when a HibernateProxy decides what it
+		// should implement.
+
+		final Set<Class<?>> proxyInterfaces = new LinkedHashSet<>();
+
+		if ( proxyInterface != null && ! mappedClass.equals( proxyInterface ) ) {
+			if ( ! proxyInterface.isInterface() ) {
+				throw new MappingException( "proxy must be either an interface, or the class itself: "
+											+ bootDescriptor.getEntityName() );
+			}
+			proxyInterfaces.add( proxyInterface );
+		}
+
+		if ( mappedClass.isInterface() ) {
+			proxyInterfaces.add( mappedClass );
+		}
+
+		for ( Subclass subclass : bootDescriptor.getSubclasses() ) {
+			final Class<?> subclassProxy = subclass.getProxyInterface();
+			final Class<?> subclassClass = subclass.getMappedClass();
+			if ( subclassProxy != null && !subclassClass.equals( subclassProxy ) ) {
+				if ( !subclassProxy.isInterface() ) {
+					throw new MappingException( "proxy must be either an interface, or the class itself: "
+												+ subclass.getEntityName() );
+				}
+				proxyInterfaces.add( subclassProxy );
+			}
+		}
+
+		proxyInterfaces.add( HibernateProxy.class );
+
+		return proxyInterfaces;
+	}
+
+	private static ProxyFactory instantiateProxyFactory(
+			PersistentClass bootDescriptor,
+			BytecodeProvider bytecodeProvider,
+			RuntimeModelCreationContext creationContext,
+			Method proxyGetIdentifierMethod,
+			Method proxySetIdentifierMethod,
+			Class<?> mappedClass,
+			Set<Class<?>> proxyInterfaces) {
+		final var proxyFactory =
 				bytecodeProvider.getProxyFactoryFactory()
 						.buildProxyFactory( creationContext.getSessionFactory() );
+		final String entityName = bootDescriptor.getEntityName();
 		try {
 			proxyFactory.postInstantiate(
-					bootDescriptor.getEntityName(),
+					entityName,
 					mappedClass,
 					proxyInterfaces,
 					proxyGetIdentifierMethod,
@@ -268,24 +294,21 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 							? (CompositeType) bootDescriptor.getIdentifier().getType()
 							: null
 			);
-
-			return proxyFactory;
 		}
 		catch (HibernateException he) {
-			LOG.unableToCreateProxyFactory( bootDescriptor.getEntityName(), he );
+			LOG.unableToCreateProxyFactory( entityName, he );
 			return null;
 		}
+		return proxyFactory;
 	}
 
 	private ReflectionOptimizer resolveReflectionOptimizer(BytecodeProvider bytecodeProvider) {
-		return bytecodeProvider.getReflectionOptimizer(
-				mappedJtd.getJavaTypeClass(),
-				propertyAccessMap
-		);
+		return bytecodeProvider.getReflectionOptimizer( mappedJtd.getJavaTypeClass(), propertyAccessMap );
 	}
 
 	private PropertyAccess makePropertyAccess(Property bootAttributeDescriptor) {
 		final Class<?> mappedClass = mappedJtd.getJavaTypeClass();
+		final String descriptorName = bootAttributeDescriptor.getName();
 		final var strategy = propertyAccessStrategy( bootAttributeDescriptor, mappedClass, strategySelector );
 		if ( strategy == null ) {
 			throw new HibernateException(
@@ -293,11 +316,11 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 							Locale.ROOT,
 							"Could not resolve PropertyAccess for attribute `%s#%s`",
 							mappedJtd.getTypeName(),
-							bootAttributeDescriptor.getName()
+							descriptorName
 					)
 			);
 		}
-		return strategy.buildPropertyAccess( mappedClass, bootAttributeDescriptor.getName(), true );
+		return strategy.buildPropertyAccess( mappedClass, descriptorName, true );
 	}
 
 	@Override
@@ -341,7 +364,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			return identifierPropertyAccess;
 		}
 		else {
-			final PropertyAccess propertyAccess = propertyAccessMap.get( bootAttributeDescriptor.getName() );
+			final var propertyAccess = propertyAccessMap.get( bootAttributeDescriptor.getName() );
 			if ( propertyAccess != null ) {
 				return propertyAccess;
 			}

@@ -6,8 +6,6 @@ package org.hibernate.property.access.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
-import org.hibernate.boot.spi.AccessType;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
@@ -15,6 +13,11 @@ import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.service.ServiceRegistry;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedType;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.BASIC;
+import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.FIELD;
+import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.MAP;
+import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.MIXED;
 
 /**
  * Standard implementation of PropertyAccessStrategyResolver
@@ -34,42 +37,35 @@ public class PropertyAccessStrategyResolverStandardImpl implements PropertyAcces
 			String explicitAccessStrategyName,
 			RepresentationMode representationMode) {
 
-		if ( BuiltInPropertyAccessStrategies.BASIC.getExternalName().equals( explicitAccessStrategyName )
-				|| BuiltInPropertyAccessStrategies.FIELD.getExternalName().equals( explicitAccessStrategyName )
-				|| BuiltInPropertyAccessStrategies.MIXED.getExternalName().equals( explicitAccessStrategyName ) ) {
-			//type-cache-pollution agent: it's crucial to use the ManagedTypeHelper rather than attempting a direct cast
-			if ( isManagedType( containerClass ) ) {
-				if ( AccessType.FIELD.getType().equals( explicitAccessStrategyName ) ) {
-					return PropertyAccessStrategyEnhancedImpl.FIELD;
-				}
-				else if ( AccessType.PROPERTY.getType().equals( explicitAccessStrategyName ) ) {
-					return PropertyAccessStrategyEnhancedImpl.PROPERTY;
-				}
+		if ( isManagedType( containerClass ) ) {
+			if ( BASIC.getExternalName().equals( explicitAccessStrategyName ) ) {
+				return PropertyAccessStrategyEnhancedImpl.PROPERTY;
+			}
+			else if ( FIELD.getExternalName().equals( explicitAccessStrategyName ) ) {
+				return PropertyAccessStrategyEnhancedImpl.FIELD;
+			}
+			else if ( MIXED.getExternalName().equals( explicitAccessStrategyName ) ) {
 				return PropertyAccessStrategyEnhancedImpl.STANDARD;
 			}
 		}
 
-		if ( StringHelper.isNotEmpty( explicitAccessStrategyName ) ) {
+		if ( isNotEmpty( explicitAccessStrategyName ) ) {
 			return resolveExplicitlyNamedPropertyAccessStrategy( explicitAccessStrategyName );
 		}
-
-		if ( representationMode == RepresentationMode.MAP ) {
-			return BuiltInPropertyAccessStrategies.MAP.getStrategy();
+		else if ( representationMode == RepresentationMode.MAP ) {
+			return MAP.getStrategy();
 		}
 		else {
-			return BuiltInPropertyAccessStrategies.BASIC.getStrategy();
+			return BASIC.getStrategy();
 		}
 	}
 
 	protected PropertyAccessStrategy resolveExplicitlyNamedPropertyAccessStrategy(String explicitAccessStrategyName) {
-		final BuiltInPropertyAccessStrategies builtInStrategyEnum = BuiltInPropertyAccessStrategies.interpret(
-				explicitAccessStrategyName
-		);
-		if ( builtInStrategyEnum != null ) {
-			return builtInStrategyEnum.getStrategy();
-		}
+		final var builtInStrategyEnum = BuiltInPropertyAccessStrategies.interpret( explicitAccessStrategyName );
+		return builtInStrategyEnum != null
+				? builtInStrategyEnum.getStrategy()
+				: strategySelectorService().resolveStrategy( PropertyAccessStrategy.class, explicitAccessStrategyName );
 
-		return strategySelectorService().resolveStrategy( PropertyAccessStrategy.class, explicitAccessStrategyName );
 	}
 
 	private StrategySelector strategySelectorService;

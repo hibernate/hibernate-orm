@@ -19,7 +19,7 @@ public class PropertyAccessStrategyMapImpl implements PropertyAccessStrategy {
 	/**
 	 * Singleton access
 	 */
-	public static final PropertyAccessStrategyMapImpl INSTANCE = new PropertyAccessStrategyMapImpl();
+	public static final PropertyAccessStrategy INSTANCE = new PropertyAccessStrategyMapImpl();
 
 	@Override
 	public PropertyAccess buildPropertyAccess(@Nullable Class<?> containerJavaType, String propertyName, boolean setterRequired) {

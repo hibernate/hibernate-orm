@@ -4,16 +4,17 @@
  */
 package org.hibernate.property.access.spi;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 
 import org.hibernate.Internal;
 import org.hibernate.property.access.internal.AbstractFieldSerialForm;
-import org.hibernate.property.access.internal.AccessStrategyHelper;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.property.access.internal.AccessStrategyHelper.determineEnhancementState;
+import static org.hibernate.property.access.internal.AccessStrategyHelper.handleEnhancedInjection;
 
 /**
  * A specialized Setter implementation for handling setting values into
@@ -38,13 +39,14 @@ public class EnhancedSetterImpl extends SetterFieldImpl {
 	@Override
 	public void set(Object target, @Nullable Object value) {
 		super.set( target, value );
-		AccessStrategyHelper.handleEnhancedInjection( target, value, enhancementState, propertyName );
+		handleEnhancedInjection( target, value, enhancementState, propertyName );
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// serialization
 
+	@Serial
 	private Object writeReplace() {
 		return new SerialForm( getContainerClass(), propertyName, getField() );
 	}
@@ -60,6 +62,7 @@ public class EnhancedSetterImpl extends SetterFieldImpl {
 			this.propertyName = propertyName;
 		}
 
+		@Serial
 		private Object readResolve() {
 			return new EnhancedSetterImpl( containerClass, propertyName, resolveField() );
 		}

@@ -30,8 +30,8 @@ public class PropertyAccessFieldImpl implements PropertyAccess {
 		this.strategy = strategy;
 
 		final Field field = ReflectHelper.findField( containerJavaType, propertyName );
-		this.getter = new GetterFieldImpl( containerJavaType, propertyName, field );
-		this.setter = new SetterFieldImpl( containerJavaType, propertyName, field );
+		getter = new GetterFieldImpl( containerJavaType, propertyName, field );
+		setter = new SetterFieldImpl( containerJavaType, propertyName, field );
 	}
 
 	@Override

@@ -5,6 +5,7 @@
 package org.hibernate.property.access.spi;
 
 import java.io.ObjectStreamException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -15,10 +16,11 @@ import java.util.Map;
 
 import org.hibernate.Internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.internal.AbstractFieldSerialForm;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.util.ReflectHelper.findGetterMethodForFieldAccess;
 
 /**
  * Field-based implementation of Getter
@@ -33,7 +35,7 @@ public class GetterFieldImpl implements Getter {
 	private final @Nullable Method getterMethod;
 
 	public GetterFieldImpl(Class<?> containerClass, String propertyName, Field field) {
-		this ( containerClass, propertyName, field, ReflectHelper.findGetterMethodForFieldAccess( field, propertyName ) );
+		this ( containerClass, propertyName, field, findGetterMethodForFieldAccess( field, propertyName ) );
 	}
 
 	GetterFieldImpl(Class<?> containerClass, String propertyName, Field field, Method getterMethod) {
@@ -63,9 +65,8 @@ public class GetterFieldImpl implements Getter {
 		}
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public @Nullable Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
+	public @Nullable Object getForInsert(Object owner, Map<Object, Object> mergeMap, SharedSessionContractImplementor session) {
 		return get( owner );
 	}
 
@@ -98,6 +99,7 @@ public class GetterFieldImpl implements Getter {
 		return getterMethod;
 	}
 
+	@Serial
 	private Object writeReplace() throws ObjectStreamException {
 		return new SerialForm( containerClass, propertyName, field );
 	}
@@ -112,6 +114,7 @@ public class GetterFieldImpl implements Getter {
 			this.propertyName = propertyName;
 		}
 
+		@Serial
 		private Object readResolve() {
 			return new GetterFieldImpl( containerClass, propertyName, resolveField() );
 		}

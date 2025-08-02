@@ -99,6 +99,7 @@ import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnsFrom
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinColumnsWithDefaultColumnSuffix;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinTableJoinColumns;
+import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.COLLECTION_ELEMENT;
 import static org.hibernate.boot.model.internal.BinderHelper.aggregateCascadeTypes;
 import static org.hibernate.boot.model.internal.BinderHelper.buildAnyValue;
 import static org.hibernate.boot.model.internal.BinderHelper.checkMappedByType;
@@ -123,6 +124,7 @@ import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 import static org.hibernate.mapping.MappingHelper.createUserTypeBean;
+import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.BASIC;
 
 /**
  * Base class for stateful binders responsible for producing mapping model objects of type {@link Collection}.
@@ -2115,9 +2117,7 @@ public abstract class CollectionBinder {
 		// 'property' is the collection XProperty
 
 		final boolean isPrimitive = isPrimitive( elementType.getName() );
-		final ClassDetails elementClass = isPrimitive
-				? null
-				: elementType.determineRawClass();
+		final ClassDetails elementClass = isPrimitive ? null : elementType.determineRawClass();
 		final AnnotatedClassType classType = annotatedElementType( isEmbedded, isPrimitive, property, elementClass );
 		if ( !isPrimitive ) {
 			propertyHolder.startingProperty( property );
@@ -2126,8 +2126,7 @@ public abstract class CollectionBinder {
 		final CollectionPropertyHolder holder =
 				buildPropertyHolder( collection, getRole(), elementClass, property, propertyHolder, buildingContext );
 
-		final Class<? extends CompositeUserType<?>> compositeUserType =
-				resolveCompositeUserType( property, elementClass, buildingContext );
+		final var compositeUserType = resolveCompositeUserType( property, elementClass, buildingContext );
 		final boolean isComposite = classType == EMBEDDABLE || compositeUserType != null;
 		holder.prepare( property, isComposite );
 
@@ -2144,8 +2143,7 @@ public abstract class CollectionBinder {
 			String hqlOrderBy,
 			ClassDetails elementClass,
 			CollectionPropertyHolder holder) {
-		final BasicValueBinder elementBinder =
-				new BasicValueBinder( BasicValueBinder.Kind.COLLECTION_ELEMENT, buildingContext );
+		final var elementBinder = new BasicValueBinder( COLLECTION_ELEMENT, buildingContext );
 		elementBinder.setReturnedClassName( elementType.getName() );
 		final AnnotatedColumns actualColumns = createElementColumnsIfNecessary(
 				collection,
@@ -2177,10 +2175,10 @@ public abstract class CollectionBinder {
 			Class<? extends CompositeUserType<?>> compositeUserType) {
 		//TODO be smart with isNullable
 		final AccessType accessType = accessType( property, collection.getOwner() );
-		// We create a new entity binder here because it is needed for processing the embeddable
+		// We create a new entity binder here because it's needed for processing the embeddable
 		// Since this is an element collection, there is no real entity binder though,
 		// so we just create an "empty shell" for the purpose of avoiding null checks in the fillEmbeddable() method etc.
-		final EntityBinder entityBinder = new EntityBinder( buildingContext );
+		final var entityBinder = new EntityBinder( buildingContext );
 		// Copy over the access type that we resolve for the element collection,
 		// so that nested components use the same access type. This fixes HHH-15966
 		entityBinder.setPropertyAccessType( accessType );
@@ -2216,20 +2214,27 @@ public abstract class CollectionBinder {
 					? AccessType.PROPERTY
 					: AccessType.FIELD;
 		}
-		else if ( owner.getIdentifierProperty() != null ) {
-			// use the access for the owning entity's id attribute, if one
-			return owner.getIdentifierProperty().getPropertyAccessorName().equals( "property" )
-					? AccessType.PROPERTY
-					: AccessType.FIELD;
-		}
-		else if ( owner.getIdentifierMapper() != null && owner.getIdentifierMapper().getPropertySpan() > 0 ) {
-			// use the access for the owning entity's "id mapper", if one
-			return owner.getIdentifierMapper().getProperties().get(0).getPropertyAccessorName().equals( "property" )
-					? AccessType.PROPERTY
-					: AccessType.FIELD;
-		}
 		else {
-			throw new AssertionFailure( "Unable to guess collection property accessor name" );
+			final Property identifierProperty = owner.getIdentifierProperty();
+			if ( identifierProperty != null ) {
+				// use the access for the owning entity's id attribute, if one
+				return identifierProperty.getPropertyAccessorName().equals( BASIC.getExternalName() )
+						? AccessType.PROPERTY
+						: AccessType.FIELD;
+			}
+			else {
+				final Component identifierMapper = owner.getIdentifierMapper();
+				if ( identifierMapper != null && identifierMapper.getPropertySpan() > 0 ) {
+					// use the access for the owning entity's "id mapper"
+					final Property first = identifierMapper.getProperties().get( 0 );
+					return first.getPropertyAccessorName().equals( BASIC.getExternalName() )
+							? AccessType.PROPERTY
+							: AccessType.FIELD;
+				}
+				else {
+					throw new AssertionFailure( "Unable to guess collection property accessor name" );
+				}
+			}
 		}
 	}
 

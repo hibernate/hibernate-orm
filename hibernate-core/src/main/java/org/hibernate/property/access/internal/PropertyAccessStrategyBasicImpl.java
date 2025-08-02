@@ -18,7 +18,7 @@ public class PropertyAccessStrategyBasicImpl implements PropertyAccessStrategy {
 	/**
 	 * Singleton access
 	 */
-	public static final PropertyAccessStrategyBasicImpl INSTANCE = new PropertyAccessStrategyBasicImpl();
+	public static final PropertyAccessStrategy INSTANCE = new PropertyAccessStrategyBasicImpl();
 
 	@Override
 	public PropertyAccess buildPropertyAccess(Class<?> containerJavaType, final String propertyName, boolean setterRequired) {

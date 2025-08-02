@@ -112,6 +112,7 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
+import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
 
 /**
  * Responsible for coordinating the binding of all information inside entity tags ({@code <class/>}, etc).
@@ -726,7 +727,7 @@ public class ModelBinder {
 			property.setUpdateable( false );
 			property.setInsertable( false );
 			property.setValue( mapper );
-			property.setPropertyAccessorName( "embedded" );
+			property.setPropertyAccessorName( EMBEDDED.getExternalName() );
 			rootEntityDescriptor.addProperty( property );
 		}
 
@@ -757,7 +758,7 @@ public class ModelBinder {
 				cid.setDynamic( !rootEntityDescriptor.hasPojoRepresentation() );
 				/*
 				 * Property prop = new Property(); prop.setName("id");
-				 * prop.setPropertyAccessorName("embedded"); prop.setValue(id);
+				 * prop.setPropertyAccessorName(EMBEDDED.getExternalName()); prop.setValue(id);
 				 * entity.setIdentifierProperty(prop);
 				 */
 			}
@@ -1530,7 +1531,7 @@ public class ModelBinder {
 		attribute.setValue( componentBinding );
 		bindProperty( sourceDocument, embeddedSource, attribute );
 		if ( embeddedSource.isVirtualAttribute() ) {
-			attribute.setPropertyAccessorName( "embedded" );
+			attribute.setPropertyAccessorName( EMBEDDED.getExternalName() );
 		}
 		return attribute;
 	}

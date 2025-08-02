@@ -38,13 +38,11 @@ import org.hibernate.boot.model.naming.NamingStrategyHelper;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.boot.models.annotations.internal.CacheAnnotation;
 import org.hibernate.boot.models.annotations.spi.CustomSqlDetails;
 import org.hibernate.boot.models.annotations.spi.DialectOverrider;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
@@ -60,7 +58,6 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.JoinedSubclass;
-import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
@@ -75,7 +72,6 @@ import org.hibernate.mapping.Value;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
@@ -83,16 +79,15 @@ import org.hibernate.spi.NavigablePath;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
+import static java.util.Collections.addAll;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.MAPPED_SUPERCLASS;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
@@ -121,10 +116,12 @@ import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
+import static org.hibernate.internal.util.StringHelper.root;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 import static org.hibernate.jpa.event.internal.CallbackDefinitionResolver.resolveLifecycleCallbacks;
+import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
 
 
 /**
@@ -183,17 +180,17 @@ public class EntityBinder {
 			LOG.trace( "Binding entity with annotated class: " + clazzToProcess.getName() );
 		}
 
-		final InFlightMetadataCollector collector = context.getMetadataCollector();
-		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
+		final var collector = context.getMetadataCollector();
+		final var modelsContext = context.getBootstrapContext().getModelsContext();
 
 		//TODO: be more strict with secondary table allowance (not for ids, not for secondary table join columns etc)
 
-		final InheritanceState inheritanceState = inheritanceStates.get( clazzToProcess );
-		final PersistentClass superEntity = getSuperEntity( clazzToProcess, inheritanceStates, context, inheritanceState );
-		final PersistentClass persistentClass = makePersistentClass( inheritanceState, superEntity, context );
+		final var inheritanceState = inheritanceStates.get( clazzToProcess );
+		final var superEntity = getSuperEntity( clazzToProcess, inheritanceStates, context, inheritanceState );
+		final var persistentClass = makePersistentClass( inheritanceState, superEntity, context );
 		checkOverrides( clazzToProcess, superEntity, modelsContext );
 
-		final EntityBinder entityBinder = new EntityBinder( clazzToProcess, persistentClass, context );
+		final var entityBinder = new EntityBinder( clazzToProcess, persistentClass, context );
 		entityBinder.bindEntity();
 		entityBinder.bindSubselect(); // has to happen before table binding
 		entityBinder.bindTables( inheritanceState, superEntity );
@@ -201,7 +198,7 @@ public class EntityBinder {
 		entityBinder.bindSynchronize();
 		entityBinder.bindFilters();
 		entityBinder.handleCheckConstraints();
-		final PropertyHolder holder = buildPropertyHolder(
+		final var holder = buildPropertyHolder(
 				clazzToProcess,
 				persistentClass,
 				entityBinder,
@@ -263,7 +260,7 @@ public class EntityBinder {
 	 */
 	private static void checkOverride(
 			PersistentClass superEntity, String name, ClassDetails clazzToProcess, Class<?> overrideClass) {
-		if ( superEntity.hasProperty( StringHelper.root(name) ) ) {
+		if ( superEntity.hasProperty( root(name) ) ) {
 			throw new AnnotationException("Property '" + name
 					+ "' is inherited from entity '" + superEntity.getEntityName()
 					+ "' and may not be overridden using '@" + overrideClass.getSimpleName()
@@ -290,7 +287,7 @@ public class EntityBinder {
 	}
 
 	private static SoftDelete extractSoftDelete(ClassDetails classDetails, MetadataBuildingContext context) {
-		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
+		final var modelsContext = context.getBootstrapContext().getModelsContext();
 		final SoftDelete fromClass = classDetails.getAnnotationUsage( SoftDelete.class, modelsContext );
 		if ( fromClass != null ) {
 			return fromClass;
@@ -303,7 +300,6 @@ public class EntityBinder {
 					&& classToCheck.hasAnnotationUsage( jakarta.persistence.MappedSuperclass.class, modelsContext ) ) {
 				return fromSuper;
 			}
-
 			classToCheck = classToCheck.getSuperClass();
 		}
 
@@ -339,15 +335,14 @@ public class EntityBinder {
 	}
 
 	private void callTypeBinders(PersistentClass persistentClass) {
-		final List<? extends Annotation> metaAnnotatedList =
-				annotatedClass.getMetaAnnotated( TypeBinderType.class, modelsContext() );
+		final var metaAnnotatedList = annotatedClass.getMetaAnnotated( TypeBinderType.class, modelsContext() );
 		for ( Annotation metaAnnotated : metaAnnotatedList ) {
 			applyTypeBinder( metaAnnotated, persistentClass );
 		}
 	}
 
 	private void applyTypeBinder(Annotation containingAnnotation, PersistentClass persistentClass) {
-		final Class<? extends TypeBinder<?>> binderClass =
+		final var binderClass =
 				containingAnnotation.annotationType()
 						.getAnnotation( TypeBinderType.class )
 						.binder();
@@ -367,7 +362,7 @@ public class EntityBinder {
 			PropertyHolder propertyHolder,
 			Map<ClassDetails, InheritanceState> inheritanceStates,
 			InheritanceState inheritanceState) {
-		final ElementsToProcess elementsToProcess = inheritanceState.postProcess( persistentClass, this );
+		final var elementsToProcess = inheritanceState.postProcess( persistentClass, this );
 		final Set<String> idPropertiesIfIdClass = handleIdClass(
 				persistentClass,
 				inheritanceState,
@@ -388,8 +383,8 @@ public class EntityBinder {
 	}
 
 	private void processComplementaryTableDefinitions() {
-		final jakarta.persistence.Table jpaTableUsage =
-				annotatedClass.getAnnotationUsage( jakarta.persistence.Table.class, modelsContext() );
+		final var models = modelsContext();
+		final var jpaTableUsage = annotatedClass.getAnnotationUsage( jakarta.persistence.Table.class, models );
 		if ( jpaTableUsage != null ) {
 			final Table table = persistentClass.getTable();
 			TableBinder.addJpaIndexes( table, jpaTableUsage.indexes(), context );
@@ -398,14 +393,11 @@ public class EntityBinder {
 			TableBinder.addTableOptions( table, jpaTableUsage.options() );
 		}
 
-		final InFlightMetadataCollector.EntityTableXref entityTableXref =
-				getMetadataCollector().getEntityTableXref( persistentClass.getEntityName() );
-
-		annotatedClass.forEachAnnotationUsage( jakarta.persistence.SecondaryTable.class, modelsContext(), (usage) -> {
+		final var entityTableXref = getMetadataCollector().getEntityTableXref( persistentClass.getEntityName() );
+		annotatedClass.forEachAnnotationUsage( jakarta.persistence.SecondaryTable.class, models, (usage) -> {
 			final Identifier secondaryTableLogicalName = toIdentifier( usage.name() );
 			final Table table = entityTableXref.resolveTable( secondaryTableLogicalName );
 			assert table != null;
-
 			TableBinder.addJpaIndexes( table, usage.indexes(), context );
 		} );
 	}
@@ -444,9 +436,9 @@ public class EntityBinder {
 		// We are looking for @IdClass
 		// In general we map the id class as identifier using the mapping metadata of the main entity's
 		// properties and create an identifier mapper containing the id properties of the main entity
-		final ClassDetails classWithIdClass = inheritanceState.getClassWithIdClass( false );
+		final var classWithIdClass = inheritanceState.getClassWithIdClass( false );
 		if ( classWithIdClass != null ) {
-			final ClassDetails compositeClass = idClassDetails( inheritanceState, classWithIdClass );
+			final var compositeClass = idClassDetails( inheritanceState, classWithIdClass );
 			return compositeClass != null
 				&& mapAsIdClass( inheritanceStates, persistentClass, propertyHolder, elementsToProcess,
 					idPropertiesIfIdClass, context, compositeClass, classWithIdClass );
@@ -523,7 +515,7 @@ public class EntityBinder {
 
 	private ClassDetails idClassDetails(InheritanceState inheritanceState, ClassDetails classWithIdClass) {
 		final IdClass idClassAnn = classWithIdClass.getDirectAnnotationUsage( IdClass.class );
-		final ClassDetailsRegistry classDetailsRegistry = modelsContext().getClassDetailsRegistry();
+		final var classDetailsRegistry = modelsContext().getClassDetailsRegistry();
 		if ( idClassAnn == null ) {
 			try {
 				// look for an Id class generated by Hibernate Processor as an inner class of static metamodel
@@ -571,7 +563,7 @@ public class EntityBinder {
 		mapperProperty.setName( NavigablePath.IDENTIFIER_MAPPER_PROPERTY );
 		mapperProperty.setUpdateable( false );
 		mapperProperty.setInsertable( false );
-		mapperProperty.setPropertyAccessorName( "embedded" );
+		mapperProperty.setPropertyAccessorName( EMBEDDED.getExternalName() );
 		mapperProperty.setValue( mapper );
 		persistentClass.addProperty( mapperProperty);
 		return mapper;
@@ -612,7 +604,7 @@ public class EntityBinder {
 		persistentClass.setIdentifierMapper( mapper );
 
 		// If id definition is on a mapped superclass, update the mapping
-		final MappedSuperclass superclass = getMappedSuperclassOrNull( classWithIdClass, inheritanceStates, context );
+		final var superclass = getMappedSuperclassOrNull( classWithIdClass, inheritanceStates, context );
 		if ( superclass != null ) {
 			superclass.setDeclaredIdentifierMapper( mapper );
 		}
@@ -629,7 +621,7 @@ public class EntityBinder {
 			AccessType propertyAccessor,
 			MetadataBuildingContext context) {
 		final List<PropertyData> baseClassElements = new ArrayList<>();
-		final PropertyContainer propContainer =
+		final var propContainer =
 				new PropertyContainer( baseInferredData.getClassOrElementType().determineRawClass(),
 						inferredData.getPropertyType(), propertyAccessor );
 		final int idPropertyCount = addElementsOfClass( baseClassElements, propContainer, context, 0 );
@@ -662,8 +654,7 @@ public class EntityBinder {
 
 			}
 			else {
-				final IdClass idClass =
-						associatedClassWithIdClass.getAnnotationUsage( IdClass.class, modelsContext() );
+				final IdClass idClass = associatedClassWithIdClass.getAnnotationUsage( IdClass.class, modelsContext() );
 				return compositeClass.getName().equals( idClass.value().getName() );
 			}
 		}
@@ -682,7 +673,7 @@ public class EntityBinder {
 		propertyHolder.setInIdClass( true );
 
 		// Fill simple value and property since and Id is a property
-		final PersistentClass persistentClass = propertyHolder.getPersistentClass();
+		final var persistentClass = propertyHolder.getPersistentClass();
 		if ( !( persistentClass instanceof RootClass rootClass ) ) {
 			throw new AnnotationException( "Entity '" + persistentClass.getEntityName()
 					+ "' is a subclass in an entity inheritance hierarchy and may not redefine the identifier of the root entity" );
@@ -732,7 +723,7 @@ public class EntityBinder {
 		final String table;
 		final String catalog;
 		final UniqueConstraint[] uniqueConstraints;
-		final jakarta.persistence.Table tableAnnotation =
+		final var tableAnnotation =
 				annotatedClass.getAnnotationUsage( jakarta.persistence.Table.class, modelsContext() );
 		if ( tableAnnotation != null ) {
 			table = tableAnnotation.name();
@@ -770,8 +761,9 @@ public class EntityBinder {
 			String table,
 			String catalog,
 			UniqueConstraint[] uniqueConstraints) {
-		final RowId rowId = annotatedClass.getAnnotationUsage( RowId.class, modelsContext() );
-		final View view = annotatedClass.getAnnotationUsage( View.class, modelsContext() );
+		final var models = modelsContext();
+		final RowId rowId = annotatedClass.getAnnotationUsage( RowId.class, models );
+		final View view = annotatedClass.getAnnotationUsage( View.class, models );
 		bindTable(
 				schema,
 				catalog,
@@ -819,7 +811,7 @@ public class EntityBinder {
 				processSingleTableDiscriminatorProperties( inheritanceState );
 		// todo : sucks that this is separate from RootClass distinction
 		if ( !inheritanceState.hasParents() ) {
-			final RootClass rootClass = (RootClass) persistentClass;
+			final var rootClass = (RootClass) persistentClass;
 			if ( inheritanceState.hasSiblings()
 					|| discriminatorColumn != null && !discriminatorColumn.isImplicit() ) {
 				bindDiscriminatorColumnToRootPersistentClass( rootClass, discriminatorColumn, holder );
@@ -832,10 +824,9 @@ public class EntityBinder {
 
 	private void joinedInheritance(InheritanceState state, PersistentClass superEntity, PropertyHolder holder) {
 		if ( state.hasParents() ) {
-			final AnnotatedJoinColumns joinColumns = subclassJoinColumns( annotatedClass, superEntity, context );
-			final JoinedSubclass joinedSubclass = (JoinedSubclass) persistentClass;
-			final DependantValue key =
-					new DependantValue( context, joinedSubclass.getTable(), joinedSubclass.getIdentifier() );
+			final var joinColumns = subclassJoinColumns( annotatedClass, superEntity, context );
+			final var joinedSubclass = (JoinedSubclass) persistentClass;
+			final var key = new DependantValue( context, joinedSubclass.getTable(), joinedSubclass.getIdentifier() );
 			joinedSubclass.setKey( key );
 			handleForeignKeys( annotatedClass, context, key );
 			final OnDelete onDelete = annotatedClass.getAnnotationUsage( OnDelete.class, modelsContext() );
@@ -846,9 +837,9 @@ public class EntityBinder {
 			metadataCollector.addSecondPass( new CreateKeySecondPass( joinedSubclass ) );
 		}
 
-		final AnnotatedDiscriminatorColumn discriminatorColumn = processJoinedDiscriminatorProperties( state );
+		final var discriminatorColumn = processJoinedDiscriminatorProperties( state );
 		if ( !state.hasParents() ) {  // todo : sucks that this is separate from RootClass distinction
-			final RootClass rootClass = (RootClass) persistentClass;
+			final var rootClass = (RootClass) persistentClass;
 			// the class we're processing is the root of the hierarchy, so
 			// let's see if we had a discriminator column (it's perfectly
 			// valid for joined inheritance to not have a discriminator)
@@ -923,7 +914,7 @@ public class EntityBinder {
 			if ( discriminatorColumn == null ) {
 				throw new AssertionFailure( "discriminator column should have been built" );
 			}
-			final AnnotatedColumns columns = new AnnotatedColumns();
+			final var columns = new AnnotatedColumns();
 			columns.setPropertyHolder( holder );
 			columns.setBuildingContext( context );
 			columns.setJoins( secondaryTables );
@@ -931,7 +922,7 @@ public class EntityBinder {
 //			discriminatorColumn.setPropertyHolder( holder );
 			discriminatorColumn.setParent( columns );
 
-			final BasicValue discriminatorColumnBinding = new BasicValue( context, rootClass.getTable() );
+			final var discriminatorColumnBinding = new BasicValue( context, rootClass.getTable() );
 			rootClass.setDiscriminator( discriminatorColumnBinding );
 			discriminatorColumn.linkWithValue( discriminatorColumnBinding );
 			discriminatorColumnBinding.setTypeName( discriminatorColumn.getDiscriminatorTypeName() );
@@ -1009,7 +1000,7 @@ public class EntityBinder {
 	 * </ol>
 	 */
 	private boolean useDiscriminatorColumnForJoined(DiscriminatorColumn discriminatorColumn) {
-		final MetadataBuildingOptions buildingOptions = context.getBuildingOptions();
+		final var buildingOptions = context.getBuildingOptions();
 		if ( discriminatorColumn != null ) {
 			final boolean ignore = buildingOptions.ignoreExplicitDiscriminatorsForJoinedInheritance();
 			if ( ignore ) {
@@ -1091,7 +1082,7 @@ public class EntityBinder {
 	}
 
 	private static String getMissingPropertiesString(Set<String> propertyNames) {
-		final StringBuilder missingProperties = new StringBuilder();
+		final var missingProperties = new StringBuilder();
 		for ( String propertyName : propertyNames ) {
 			if ( !missingProperties.isEmpty() ) {
 				missingProperties.append( ", " );
@@ -1123,7 +1114,7 @@ public class EntityBinder {
 			PersistentClass superEntity,
 			MetadataBuildingContext context) {
 		//@Inheritance(JOINED) subclass need to link back to the super entity
-		final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
+		final var joinColumns = new AnnotatedJoinColumns();
 		joinColumns.setBuildingContext( context );
 
 		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
@@ -1320,7 +1311,7 @@ public class EntityBinder {
 
 	private void registerImportName() {
 		try {
-			final InFlightMetadataCollector metadataCollector = getMetadataCollector();
+			final var metadataCollector = getMetadataCollector();
 			metadataCollector.addImport( name, persistentClass.getEntityName() );
 			final String entityName = persistentClass.getEntityName();
 			if ( !entityName.equals( name ) ) {
@@ -1333,7 +1324,7 @@ public class EntityBinder {
 	}
 
 	private void bindRootEntity() {
-		final RootClass rootClass = (RootClass) persistentClass;
+		final var rootClass = (RootClass) persistentClass;
 		rootClass.setMutable( isMutable() );
 		if ( isNotBlank( where ) ) {
 			rootClass.setWhere( where );
@@ -1491,7 +1482,7 @@ public class EntityBinder {
 	private void bindSynchronize() {
 		final Synchronize synchronize = annotatedClass.getAnnotationUsage( Synchronize.class, modelsContext() );
 		if ( synchronize != null ) {
-			final JdbcEnvironment jdbcEnvironment = getMetadataCollector().getDatabase().getJdbcEnvironment();
+			final var jdbcEnvironment = getMetadataCollector().getDatabase().getJdbcEnvironment();
 			final boolean logical = synchronize.logical();
 			for ( String tableName : synchronize.value() ) {
 				final String physicalName = logical ? toPhysicalName( jdbcEnvironment, tableName ) : tableName;
@@ -1501,8 +1492,7 @@ public class EntityBinder {
 	}
 
 	private String toPhysicalName(JdbcEnvironment jdbcEnvironment, String logicalName) {
-		final Identifier identifier =
-				jdbcEnvironment.getIdentifierHelper().toIdentifier( logicalName );
+		final var identifier = jdbcEnvironment.getIdentifierHelper().toIdentifier( logicalName );
 		return context.getBuildingOptions().getPhysicalNamingStrategy()
 				.toPhysicalTableName( identifier, jdbcEnvironment )
 				.render( jdbcEnvironment.getDialect() );
@@ -1606,7 +1596,7 @@ public class EntityBinder {
 	}
 
 	private SQLRestriction extractSQLRestriction(ClassDetails classDetails) {
-		final ModelsContext modelsContext = modelsContext();
+		final var modelsContext = modelsContext();
 		final SQLRestriction fromClass = getOverridableAnnotation( classDetails, SQLRestriction.class, context );
 		if ( fromClass != null ) {
 			return fromClass;
@@ -1680,7 +1670,7 @@ public class EntityBinder {
 	}
 
 	private void bindRootClassCache() {
-		final ModelsContext sourceModelContext = modelsContext();
+		final var sourceModelContext = modelsContext();
 
 		final Cache cache = annotatedClass.getAnnotationUsage( Cache.class, sourceModelContext );
 		final Cacheable cacheable = annotatedClass.getAnnotationUsage( Cacheable.class, sourceModelContext );
@@ -1717,8 +1707,7 @@ public class EntityBinder {
 	}
 
 	private Cache buildCacheMock(ClassDetails classDetails) {
-		final CacheAnnotation cacheUsage =
-				HibernateAnnotations.CACHE.createUsage( modelsContext() );
+		final var cacheUsage = HibernateAnnotations.CACHE.createUsage( modelsContext() );
 		cacheUsage.region( classDetails.getName() );
 		cacheUsage.usage( determineCacheConcurrencyStrategy() );
 		return cacheUsage;
@@ -1798,9 +1787,8 @@ public class EntityBinder {
 			);
 		}
 
-		final InFlightMetadataCollector collector = getMetadataCollector();
-		final InFlightMetadataCollector.EntityTableXref superTableXref =
-				collector.getEntityTableXref( entityName );
+		final var collector = getMetadataCollector();
+		final var superTableXref = collector.getEntityTableXref( entityName );
 		final Table primaryTable = superTableXref.getPrimaryTable();
 		collector.addEntityTableXref(
 				persistentClass.getEntityName(),
@@ -1821,7 +1809,7 @@ public class EntityBinder {
 
 		final String entityName = persistentClass.getEntityName();
 
-		final EntityTableNamingStrategyHelper namingStrategyHelper =
+		final var namingStrategyHelper =
 				new EntityTableNamingStrategyHelper( persistentClass.getClassName(), entityName, name );
 		final Identifier logicalName =
 				isNotBlank( tableName )
@@ -1860,8 +1848,8 @@ public class EntityBinder {
 	public void finalSecondaryTableBinding(PropertyHolder propertyHolder) {
 		// This operation has to be done after the id definition of the persistence class.
 		// ie after the properties parsing
-		final Iterator<Object> joinColumns = secondaryTableJoins.values().iterator();
-		for ( Map.Entry<String, Join> entrySet : secondaryTables.entrySet() ) {
+		final var joinColumns = secondaryTableJoins.values().iterator();
+		for ( var entrySet : secondaryTables.entrySet() ) {
 			if ( !secondaryTablesFromAnnotation.containsKey( entrySet.getKey() ) ) {
 				createPrimaryColumnsToSecondaryTable( joinColumns.next(), propertyHolder, entrySet.getValue() );
 			}
@@ -1871,8 +1859,8 @@ public class EntityBinder {
 	public void finalSecondaryTableFromAnnotationBinding(PropertyHolder propertyHolder) {
 		// This operation has to be done before the end of the FK second pass processing in order
 		// to find the join columns belonging to secondary tables
-		Iterator<Object> joinColumns = secondaryTableFromAnnotationJoins.values().iterator();
-		for ( Map.Entry<String, Join> entrySet : secondaryTables.entrySet() ) {
+		final var joinColumns = secondaryTableFromAnnotationJoins.values().iterator();
+		for ( var entrySet : secondaryTables.entrySet() ) {
 			if ( secondaryTablesFromAnnotation.containsKey( entrySet.getKey() ) ) {
 				createPrimaryColumnsToSecondaryTable( joinColumns.next(), propertyHolder, entrySet.getValue() );
 			}
@@ -1922,7 +1910,7 @@ public class EntityBinder {
 	}
 
 	private AnnotatedJoinColumns createDefaultJoinColumn(PropertyHolder propertyHolder) {
-		final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
+		final var joinColumns = new AnnotatedJoinColumns();
 		joinColumns.setBuildingContext( context );
 		joinColumns.setJoins( secondaryTables );
 		joinColumns.setPropertyHolder( propertyHolder );
@@ -1945,7 +1933,7 @@ public class EntityBinder {
 			return createDefaultJoinColumn( propertyHolder );
 		}
 		else {
-			final AnnotatedJoinColumns columns = new AnnotatedJoinColumns();
+			final var columns = new AnnotatedJoinColumns();
 			columns.setBuildingContext( context );
 			columns.setJoins( secondaryTables );
 			columns.setPropertyHolder( propertyHolder );
@@ -1969,7 +1957,7 @@ public class EntityBinder {
 	}
 
 	private void bindJoinToPersistentClass(Join join, AnnotatedJoinColumns joinColumns, MetadataBuildingContext context) {
-		DependantValue key = new DependantValue( context, join.getTable(), persistentClass.getIdentifier() );
+		final var key = new DependantValue( context, join.getTable(), persistentClass.getIdentifier() );
 		join.setKey( key );
 		setForeignKeyNameIfDefined( join );
 		key.setOnDeleteAction( null );
@@ -1981,7 +1969,7 @@ public class EntityBinder {
 	}
 
 	private void setForeignKeyNameIfDefined(Join join) {
-		final SimpleValue key = (SimpleValue) join.getKey();
+		final var key = (SimpleValue) join.getKey();
 		final SecondaryTable jpaSecondaryTable = findMatchingSecondaryTable( join );
 		if ( jpaSecondaryTable != null ) {
 			final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
@@ -2036,8 +2024,9 @@ public class EntityBinder {
 
 	private boolean equalsTableName(String physicalTableName, SecondaryRow secondaryRow) {
 		final Identifier logicalName = context.getMetadataCollector().getDatabase().toIdentifier( secondaryRow.table() );
-		final Identifier secondaryRowPhysicalTableName = context.getBuildingOptions().getPhysicalNamingStrategy()
-				.toPhysicalTableName( logicalName, EntityTableNamingStrategyHelper.jdbcEnvironment( context ) );
+		final Identifier secondaryRowPhysicalTableName =
+				context.getBuildingOptions().getPhysicalNamingStrategy()
+						.toPhysicalTableName( logicalName, EntityTableNamingStrategyHelper.jdbcEnvironment( context ) );
 		return physicalTableName.equals( secondaryRowPhysicalTableName.render() );
 	}
 
@@ -2126,8 +2115,7 @@ public class EntityBinder {
 		persistentClass.addJoin( join );
 
 		final String entityName = persistentClass.getEntityName();
-		final InFlightMetadataCollector.EntityTableXref tableXref
-				= getMetadataCollector().getEntityTableXref( entityName );
+		final var tableXref = getMetadataCollector().getEntityTableXref( entityName );
 		assert tableXref != null : "Could not locate EntityTableXref for entity [" + entityName + "]";
 		tableXref.addSecondaryTable( logicalName, join );
 
@@ -2182,7 +2170,7 @@ public class EntityBinder {
 					sqlInsert.callable(),
 					fromResultCheckStyle( sqlInsert.check() )
 			);
-			final Class<? extends Expectation> expectationClass = sqlInsert.verify();
+			final var expectationClass = sqlInsert.verify();
 			if ( expectationClass != Expectation.class ) {
 				join.setInsertExpectation( getDefaultSupplier( expectationClass ) );
 			}
@@ -2195,7 +2183,7 @@ public class EntityBinder {
 					sqlUpdate.callable(),
 					fromResultCheckStyle( sqlUpdate.check() )
 			);
-			final Class<? extends Expectation> expectationClass = sqlUpdate.verify();
+			final var expectationClass = sqlUpdate.verify();
 			if ( expectationClass != Expectation.class ) {
 				join.setUpdateExpectation( getDefaultSupplier( expectationClass ) );
 			}
@@ -2208,7 +2196,7 @@ public class EntityBinder {
 					sqlDelete.callable(),
 					fromResultCheckStyle( sqlDelete.check() )
 			);
-			final Class<? extends Expectation> expectationClass = sqlDelete.verify();
+			final var expectationClass = sqlDelete.verify();
 			if ( expectationClass != Expectation.class ) {
 				join.setDeleteExpectation( getDefaultSupplier( expectationClass ) );
 			}
@@ -2220,7 +2208,7 @@ public class EntityBinder {
 	}
 
 	public static String getCacheConcurrencyStrategy(CacheConcurrencyStrategy strategy) {
-		final org.hibernate.cache.spi.access.AccessType accessType = strategy.toAccessType();
+		final var accessType = strategy.toAccessType();
 		return accessType == null ? null : accessType.getExternalName();
 	}
 
@@ -2279,7 +2267,7 @@ public class EntityBinder {
 	private void bindFilters(AnnotationTarget element) {
 		final Filters filters = getOverridableAnnotation( element, Filters.class, context );
 		if ( filters != null ) {
-			Collections.addAll( this.filters, filters.value() );
+			addAll( this.filters, filters.value() );
 		}
 		final Filter filter = element.getDirectAnnotationUsage( Filter.class );
 		if ( filter != null ) {

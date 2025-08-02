@@ -45,9 +45,10 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 			@Nullable AccessType classAccessType) {
 		this.strategy = strategy;
 
-		final AccessType propertyAccessType = classAccessType == null ?
-				AccessStrategyHelper.getAccessType( containerJavaType, propertyName ) :
-				classAccessType;
+		final AccessType propertyAccessType =
+				classAccessType == null
+						? AccessStrategyHelper.getAccessType( containerJavaType, propertyName )
+						: classAccessType;
 
 		switch ( propertyAccessType ) {
 			case FIELD: {
@@ -57,8 +58,8 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 							"Could not locate field for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
 					);
 				}
-				this.getter = new GetterFieldImpl( containerJavaType, propertyName, field );
-				this.setter = new EnhancedSetterImpl( containerJavaType, propertyName, field );
+				getter = new GetterFieldImpl( containerJavaType, propertyName, field );
+				setter = new EnhancedSetterImpl( containerJavaType, propertyName, field );
 				break;
 			}
 			case PROPERTY: {
@@ -68,8 +69,8 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 							"Could not locate getter for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
 					);
 				}
-				this.getter = propertyGetter( classAccessType, containerJavaType, propertyName, getterMethod );
-				this.setter = propertySetter( classAccessType, containerJavaType, propertyName, getterMethod.getReturnType() );
+				getter = propertyGetter( classAccessType, containerJavaType, propertyName, getterMethod );
+				setter = propertySetter( classAccessType, containerJavaType, propertyName, getterMethod.getReturnType() );
 				break;
 			}
 			default: {

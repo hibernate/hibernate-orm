@@ -29,7 +29,7 @@ public class RootSequencePart implements SequencePart {
 			TranslationContext translationContext) {
 		// could be a column-reference (isTerminal would have to be true) or a domain-path
 
-		final DomainPath subDomainPath = pluralAttributePath.resolvePathPart(
+		final SequencePart subDomainPath = pluralAttributePath.resolvePathPart(
 				name,
 				identifier,
 				isTerminal,
@@ -50,9 +50,6 @@ public class RootSequencePart implements SequencePart {
 			);
 		}
 
-		throw new PathResolutionException(
-				"Could not resolve order-by path : " +
-						pluralAttributePath.getReferenceModelPart().getCollectionDescriptor().getRole() + " -> " + name
-		);
+		throw new PathResolutionException( name );
 	}
 }

@@ -123,16 +123,16 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 		// to allow deferring the initialization of the target table group, omitting it if possible.
 		// This is not possible for one-to-many associations because we need to create the target table group eagerly,
 		// to preserve the cardinality. Also, the OneToManyTableGroup has no reference to the parent table group
-		if ( getTargetKeyPropertyNames().contains( name ) ) {
+		if ( foreignKey != null && getTargetKeyPropertyNames().contains( name ) ) {
 			final ModelPart keyPart = foreignKey.getKeyPart();
-			if ( keyPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart
-					&& keyPart instanceof VirtualModelPart ) {
-				return embeddableValuedModelPart.findSubPart( name, targetType );
-			}
-			return keyPart;
+			return keyPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart
+				&& keyPart instanceof VirtualModelPart
+					? embeddableValuedModelPart.findSubPart( name, targetType )
+					: keyPart;
 		}
-
-		return super.findSubPart( name, targetType );
+		else {
+			return super.findSubPart( name, targetType );
+		}
 	}
 
 	@Override

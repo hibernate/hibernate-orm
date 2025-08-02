@@ -37,6 +37,7 @@ public final class Constants {
 	public static final String ACCESS = "jakarta.persistence.Access";
 	public static final String CONVERT = "jakarta.persistence.Convert";
 	public static final String GENERATED_VALUE = "jakarta.persistence.GeneratedValue";
+	public static final String ORDER_BY = "jakarta.persistence.OrderBy";
 
 	public static final String NAMED_QUERY = "jakarta.persistence.NamedQuery";
 	public static final String NAMED_QUERIES = "jakarta.persistence.NamedQueries";

@@ -96,7 +96,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 		// Build the parse tree
 		final HqlParser hqlParser = HqlParseTreeBuilder.INSTANCE.buildHqlParser( hql, hqlLexer );
 
-		// try to use SLL(k)-based parsing first - its faster
+		// try to use SLL(k)-based parsing first - it's faster
 		hqlParser.getInterpreter().setPredictionMode( PredictionMode.SLL );
 		hqlParser.removeErrorListeners();
 		hqlParser.setErrorHandler( new BailErrorStrategy() );
@@ -125,7 +125,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 		}
 		catch ( ParsingException ex ) {
 			// Note that this is supposed to represent a bug in the parser
-			// Ee wrap and rethrow in order to attach the HQL query to the error
+			// We wrap and rethrow in order to attach the HQL query to the error
 			throw new QueryException( "Failed to interpret HQL syntax [" + ex.getMessage() + "]", hql, ex );
 		}
 	}

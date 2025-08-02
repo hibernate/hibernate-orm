@@ -65,7 +65,6 @@ import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResul
 import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.SelectEagerCollectionFetch;
-import org.jboss.logging.Logger;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -80,7 +79,6 @@ import static org.hibernate.internal.util.StringHelper.subStringNullIfEmpty;
 public class PluralAttributeMappingImpl
 		extends AbstractAttributeMapping
 		implements PluralAttributeMapping, FetchProfileAffectee, FetchOptions {
-	private static final Logger log = Logger.getLogger( PluralAttributeMappingImpl.class );
 
 	/**
 	 * Allows callback after creation of the attribute mapping.
@@ -96,8 +94,7 @@ public class PluralAttributeMappingImpl
 		void injectAttributeMapping(PluralAttributeMapping attributeMapping);
 	}
 
-	@SuppressWarnings("rawtypes")
-	private final CollectionMappingType collectionMappingType;
+	private final CollectionMappingType<?> collectionMappingType;
 	private final String referencedPropertyName;
 	private final String mapKeyPropertyName;
 
@@ -237,10 +234,11 @@ public class PluralAttributeMappingImpl
 		return fetchablePath.getLocalName().endsWith( bidirectionalAttributeName );
 	}
 
-	@SuppressWarnings("unused")
 	public void finishInitialization(
+			@SuppressWarnings("unused")
 			Property bootProperty,
 			Collection bootDescriptor,
+			@SuppressWarnings("unused")
 			MappingModelCreationProcess creationProcess) {
 		final boolean hasOrder = bootDescriptor.getOrderBy() != null;
 		final boolean hasManyToManyOrder = bootDescriptor.getManyToManyOrdering() != null;
@@ -249,13 +247,6 @@ public class PluralAttributeMappingImpl
 			final TranslationContext context = collectionDescriptor::getFactory;
 
 			if ( hasOrder ) {
-				if ( log.isTraceEnabled() ) {
-					log.tracef(
-							"Translating order-by fragment [%s] for collection role: %s",
-							bootDescriptor.getOrderBy(),
-							collectionDescriptor.getRole()
-					);
-				}
 				orderByFragment = OrderByFragmentTranslator.translate(
 						bootDescriptor.getOrderBy(),
 						this,
@@ -264,13 +255,6 @@ public class PluralAttributeMappingImpl
 			}
 
 			if ( hasManyToManyOrder ) {
-				if ( log.isTraceEnabled() ) {
-					log.tracef(
-							"Translating many-to-many order-by fragment [%s] for collection role: %s",
-							bootDescriptor.getOrderBy(),
-							collectionDescriptor.getRole()
-					);
-				}
 				manyToManyOrderByFragment = OrderByFragmentTranslator.translate(
 						bootDescriptor.getManyToManyOrdering(),
 						this,
@@ -286,8 +270,7 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	@SuppressWarnings("rawtypes")
-	public CollectionMappingType getMappedType() {
+	public CollectionMappingType<?> getMappedType() {
 		return collectionMappingType;
 	}
 
@@ -384,31 +367,33 @@ public class PluralAttributeMappingImpl
 
 	@Override
 	public void applySoftDeleteRestrictions(TableGroup tableGroup, PredicateConsumer predicateConsumer) {
-		if ( !hasSoftDelete() ) {
-			// short-circuit
-			return;
-		}
+		if ( hasSoftDelete() ) {
+			final var descriptor = getCollectionDescriptor();
+			if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
+				// see if the associated entity has soft-delete defined
+				final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
+				final var associatedEntityDescriptor = elementDescriptor.getAssociatedEntityMappingType();
+				final var softDeleteMapping = associatedEntityDescriptor.getSoftDeleteMapping();
+				if ( softDeleteMapping != null ) {
+					final String primaryTableName =
+							associatedEntityDescriptor.getSoftDeleteTableDetails().getTableName();
+					final TableReference primaryTableReference =
+							tableGroup.resolveTableReference( primaryTableName );
+					final Predicate softDeleteRestriction =
+							softDeleteMapping.createNonDeletedRestriction( primaryTableReference );
+					predicateConsumer.applyPredicate( softDeleteRestriction );
+				}
+			}
 
-		if ( getCollectionDescriptor().isOneToMany()
-				|| getCollectionDescriptor().isManyToMany() ) {
-			// see if the associated entity has soft-delete defined
-			final EntityCollectionPart elementDescriptor = (EntityCollectionPart) getElementDescriptor();
-			final EntityMappingType associatedEntityDescriptor = elementDescriptor.getAssociatedEntityMappingType();
-			final SoftDeleteMapping softDeleteMapping = associatedEntityDescriptor.getSoftDeleteMapping();
+			// apply the collection's soft-delete mapping, if one
+			final var softDeleteMapping = getSoftDeleteMapping();
 			if ( softDeleteMapping != null ) {
-				final String primaryTableName = associatedEntityDescriptor.getSoftDeleteTableDetails().getTableName();
-				final TableReference primaryTableReference = tableGroup.resolveTableReference( primaryTableName );
-				final Predicate softDeleteRestriction = softDeleteMapping.createNonDeletedRestriction( primaryTableReference );
+				final TableReference primaryTableReference =
+						tableGroup.resolveTableReference( getSoftDeleteTableDetails().getTableName() );
+				final Predicate softDeleteRestriction =
+						softDeleteMapping.createNonDeletedRestriction( primaryTableReference );
 				predicateConsumer.applyPredicate( softDeleteRestriction );
 			}
-		}
-
-		// apply the collection's soft-delete mapping, if one
-		final SoftDeleteMapping softDeleteMapping = getSoftDeleteMapping();
-		if ( softDeleteMapping != null ) {
-			final TableReference primaryTableReference = tableGroup.resolveTableReference( getSoftDeleteTableDetails().getTableName() );
-			final Predicate softDeleteRestriction = softDeleteMapping.createNonDeletedRestriction( primaryTableReference );
-			predicateConsumer.applyPredicate( softDeleteRestriction );
 		}
 	}
 
@@ -418,9 +403,9 @@ public class PluralAttributeMappingImpl
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final TableGroup collectionTableGroup = creationState.getSqlAstCreationState()
-				.getFromClauseAccess()
-				.getTableGroup( navigablePath );
+		final TableGroup collectionTableGroup =
+				creationState.getSqlAstCreationState().getFromClauseAccess()
+						.getTableGroup( navigablePath );
 
 		assert collectionTableGroup != null;
 
@@ -440,7 +425,7 @@ public class PluralAttributeMappingImpl
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
 
 		final boolean added = creationState.registerVisitedAssociationKey( fkDescriptor.getAssociationKey() );
 

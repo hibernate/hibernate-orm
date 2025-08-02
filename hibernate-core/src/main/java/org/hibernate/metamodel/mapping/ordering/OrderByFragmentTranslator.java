@@ -9,7 +9,6 @@ import org.hibernate.grammars.ordering.OrderingParser;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.ast.ParseTreeVisitor;
 
-import org.jboss.logging.Logger;
 
 import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.BufferedTokenStream;
@@ -28,7 +27,6 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
  * @see jakarta.persistence.OrderBy
  */
 public class OrderByFragmentTranslator {
-	private static final Logger LOG = Logger.getLogger( OrderByFragmentTranslator.class.getName() );
 
 	/**
 	 * Perform the translation of the user-supplied fragment, returning the translation.
@@ -43,28 +41,18 @@ public class OrderByFragmentTranslator {
 			String fragment,
 			PluralAttributeMapping pluralAttributeMapping,
 			TranslationContext context) {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef(
-					"Beginning parsing of order-by fragment [%s] : %s",
-					pluralAttributeMapping.getCollectionDescriptor().getRole(),
-					fragment
-			);
-		}
-
-		final OrderingParser.OrderByFragmentContext parseTree = buildParseTree( context, fragment );
-
-		final ParseTreeVisitor visitor = new ParseTreeVisitor( pluralAttributeMapping, context );
-
+		final var parseTree = buildParseTree( fragment );
+		final var visitor = new ParseTreeVisitor( pluralAttributeMapping, context );
 		return new OrderByFragmentImpl( visitor.visitOrderByFragment( parseTree ) );
 	}
 
 
-	private static OrderingParser.OrderByFragmentContext buildParseTree(TranslationContext context, String fragment) {
-		final OrderingLexer lexer = new OrderingLexer( CharStreams.fromString( fragment ) );
+	private static OrderingParser.OrderByFragmentContext buildParseTree(String fragment) {
+		final var lexer = new OrderingLexer( CharStreams.fromString( fragment ) );
 
-		final OrderingParser parser = new OrderingParser( new BufferedTokenStream( lexer ) );
+		final var parser = new OrderingParser( new BufferedTokenStream( lexer ) );
 
-		// try to use SLL(k)-based parsing first - its faster
+		// try to use SLL(k)-based parsing first - it's faster
 		parser.getInterpreter().setPredictionMode( PredictionMode.SLL );
 		parser.removeErrorListeners();
 		parser.setErrorHandler( new BailErrorStrategy() );

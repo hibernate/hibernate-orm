@@ -121,6 +121,7 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 				null,
 				null,
 				null,
+				dialect.getClass(),
 				dialect.getVersion(),
 				null,
 				null,

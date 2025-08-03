@@ -29,8 +29,6 @@ import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
 
 import io.agroal.api.AgroalDataSource;
-import io.agroal.api.configuration.AgroalConnectionFactoryConfiguration;
-import io.agroal.api.configuration.AgroalConnectionPoolConfiguration;
 import io.agroal.api.configuration.supplier.AgroalConnectionFactoryConfigurationSupplier;
 import io.agroal.api.configuration.supplier.AgroalPropertiesReader;
 import io.agroal.api.security.NamePrincipal;
@@ -179,6 +177,7 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 				connectionConfig.connectionProviderClass() != null
 						? connectionConfig.connectionProviderClass().toString()
 						: extractDriverNameFromMetadata(),
+				dialect.getClass(),
 				dialect.getVersion(),
 				getSchema( agroalDataSource ),
 				getCatalog( agroalDataSource ),

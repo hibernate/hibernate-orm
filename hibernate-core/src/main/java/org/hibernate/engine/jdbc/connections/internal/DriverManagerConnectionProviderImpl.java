@@ -20,7 +20,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Database;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SimpleDatabaseVersion;
@@ -35,8 +34,11 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.internal.log.ConnectionInfoLogger;
 
+import static org.hibernate.cfg.JdbcSettings.AUTOCOMMIT;
+import static org.hibernate.cfg.JdbcSettings.DRIVER;
 import static org.hibernate.cfg.JdbcSettings.JAKARTA_JDBC_URL;
 import static org.hibernate.cfg.JdbcSettings.POOL_SIZE;
+import static org.hibernate.cfg.JdbcSettings.URL;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.extractIsolation;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.getConnectionProperties;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
@@ -93,7 +95,7 @@ public class DriverManagerConnectionProviderImpl
 	}
 
 	private PooledConnections buildPool(Map<String,Object> configurationValues, ServiceRegistryImplementor serviceRegistry) {
-		final boolean autoCommit = getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues ); // default to false
+		final boolean autoCommit = getBoolean( AUTOCOMMIT, configurationValues ); // default to false
 		final int minSize = getInt( MIN_SIZE, configurationValues, 1 );
 		final int maxSize = getInt( POOL_SIZE, configurationValues, 20 );
 		final int initialSize = getInt( INITIAL_SIZE, configurationValues, minSize );
@@ -111,7 +113,7 @@ public class DriverManagerConnectionProviderImpl
 			Map<String,Object> configurationValues, ServiceRegistryImplementor serviceRegistry) {
 		final String url = jdbcUrl( configurationValues );
 
-		String driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );
+		String driverClassName = (String) configurationValues.get( DRIVER );
 		boolean success = false;
 		Driver driver = null;
 		if ( driverClassName != null ) {
@@ -142,7 +144,7 @@ public class DriverManagerConnectionProviderImpl
 
 		final Properties connectionProps = getConnectionProperties( configurationValues );
 
-		final boolean autoCommit = getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues );
+		final boolean autoCommit = getBoolean( AUTOCOMMIT, configurationValues );
 		final Integer isolation = extractIsolation( configurationValues );
 		final String initSql = (String) configurationValues.get( INIT_SQL );
 
@@ -159,12 +161,11 @@ public class DriverManagerConnectionProviderImpl
 								configurationValues
 						);
 
-		;
-
 		dbInfo = new DatabaseConnectionInfoImpl(
 				DriverManagerConnectionProviderImpl.class,
 				url,
 				driverList,
+				null,
 				SimpleDatabaseVersion.ZERO_VERSION,
 				getSchema( connectionCreator ),
 				getCatalog( connectionCreator ),
@@ -195,7 +196,7 @@ public class DriverManagerConnectionProviderImpl
 	}
 
 	private static String jdbcUrl(Map<String, Object> configurationValues) {
-		final String url = (String) configurationValues.get( AvailableSettings.URL );
+		final String url = (String) configurationValues.get( URL );
 		if ( url == null ) {
 			throw new ConnectionProviderConfigurationException( "No JDBC URL specified by property '" + JAKARTA_JDBC_URL + "'" );
 		}
@@ -303,6 +304,7 @@ public class DriverManagerConnectionProviderImpl
 				DriverManagerConnectionProviderImpl.class,
 				dbInfo.getJdbcUrl(),
 				dbInfo.getJdbcDriver(),
+				dialect.getClass(),
 				dialect.getVersion(),
 				dbInfo.getSchema(),
 				dbInfo.getCatalog(),
@@ -400,7 +402,7 @@ public class DriverManagerConnectionProviderImpl
 			final int size = size();
 
 			if ( !primed && size >= minSize ) {
-				// IMPL NOTE : the purpose of primed is to allow the pool to lazily reach its
+				// IMPL NOTE: the purpose of primed is to allow the pool to lazily reach its
 				// defined min-size.
 				ConnectionInfoLogger.INSTANCE.debug( "Connection pool now considered primed; min-size will be maintained" );
 				primed = true;

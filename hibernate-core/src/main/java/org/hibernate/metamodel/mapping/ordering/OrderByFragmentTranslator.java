@@ -56,7 +56,7 @@ public class OrderByFragmentTranslator {
 
 	public static void check(String fragment) {
 		final var parseTree = buildParseTree( fragment );
-		// TODO: check against the model
+		// TODO: check against the model (requires the PluralAttributeMapping)
 	}
 
 	private static OrderingParser.OrderByFragmentContext buildParseTree(String fragment) {

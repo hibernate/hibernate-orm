@@ -7,6 +7,7 @@ package org.hibernate.graph.internal.parse;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.grammars.graph.GraphLanguageLexer;
 import org.hibernate.grammars.graph.GraphLanguageParser;
@@ -41,7 +42,7 @@ public class GraphParsing {
 		}
 
 		final EntityDomainType<T> entityType = sessionFactory.getJpaMetamodel().entity( entityClass );
-		return parse( entityType, graphContext.attributeList(), sessionFactory );
+		return parse( entityType, graphContext.graphElementList(), sessionFactory );
 	}
 
 	public static <T> RootGraphImplementor<T> parse(
@@ -62,7 +63,7 @@ public class GraphParsing {
 			throw new InvalidGraphException( "Expecting graph text to not include an entity name : " + graphText );
 		}
 
-		return parse( entityDomainType, graphContext.attributeList(), sessionFactory );
+		return parse( entityDomainType, graphContext.graphElementList(), sessionFactory );
 	}
 
 	public static <T> RootGraphImplementor<T> parse(
@@ -84,10 +85,12 @@ public class GraphParsing {
 		}
 
 		//noinspection unchecked
-		final EntityDomainType<T> entityType = (EntityDomainType<T>) sessionFactory.getJpaMetamodel().entity( entityName );
-		return parse( entityType, graphContext.attributeList(), sessionFactory );
+		final EntityDomainType<T> entityType = (EntityDomainType<T>) sessionFactory.getJpaMetamodel()
+				.entity( entityName );
+		return parse( entityType, graphContext.graphElementList(), sessionFactory );
 	}
 
+	@Deprecated(forRemoval = true)
 	public static <T> RootGraphImplementor<T> parse(
 			String graphText,
 			SessionFactoryImplementor sessionFactory) {
@@ -106,35 +109,36 @@ public class GraphParsing {
 		final String entityName = graphContext.typeIndicator().TYPE_NAME().getText();
 
 		//noinspection unchecked
-		final EntityDomainType<T> entityType = (EntityDomainType<T>) sessionFactory.getJpaMetamodel().entity( entityName );
-		return parse( entityType, graphContext.attributeList(), sessionFactory );
+		final EntityDomainType<T> entityType = (EntityDomainType<T>) sessionFactory.getJpaMetamodel()
+				.entity( entityName );
+		return parse( entityType, graphContext.graphElementList(), sessionFactory );
 	}
 
 	public static <T> RootGraphImplementor<T> parse(
 			EntityDomainType<T> rootType,
-			GraphLanguageParser.AttributeListContext attributeListContext,
+			GraphLanguageParser.GraphElementListContext graphElementListContext,
 			SessionFactoryImplementor sessionFactory) {
-		return parse( rootType, attributeListContext, new EntityNameResolverSessionFactory( sessionFactory ) );
+		return parse( rootType, graphElementListContext, new EntityNameResolverSessionFactory( sessionFactory ) );
 	}
 
 	public static <T> RootGraphImplementor<T> parse(
 			EntityDomainType<T> rootType,
-			GraphLanguageParser.AttributeListContext attributeListContext,
+			GraphLanguageParser.GraphElementListContext graphElementListContext,
 			EntityNameResolver entityNameResolver) {
-		return parse( null, rootType, attributeListContext, entityNameResolver );
+		return parse( null, rootType, graphElementListContext, entityNameResolver );
 	}
 
 	public static <T> RootGraphImplementor<T> parse(
 			@Nullable String name,
 			EntityDomainType<T> rootType,
-			GraphLanguageParser.AttributeListContext attributeListContext,
+			GraphLanguageParser.GraphElementListContext graphElementListContext,
 			EntityNameResolver entityNameResolver) {
 		final RootGraphImpl<T> targetGraph = new RootGraphImpl<>( name, rootType );
 
 		final GraphParser visitor = new GraphParser( entityNameResolver );
 		visitor.getGraphStack().push( targetGraph );
 		try {
-			visitor.visitAttributeList( attributeListContext );
+			visitor.visitGraphElementList( graphElementListContext );
 		}
 		finally {
 			visitor.getGraphStack().pop();
@@ -167,7 +171,7 @@ public class GraphParsing {
 
 		visitor.getGraphStack().push( targetGraph );
 		try {
-			visitor.visitAttributeList( graphContext.attributeList() );
+			visitor.visitGraphElementList( graphContext.graphElementList() );
 		}
 		finally {
 			visitor.getGraphStack().pop();

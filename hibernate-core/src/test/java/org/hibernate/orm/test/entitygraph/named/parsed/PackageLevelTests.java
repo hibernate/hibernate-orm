@@ -8,7 +8,7 @@ import org.hibernate.DuplicateMappingException;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.graph.InvalidGraphException;
+import org.hibernate.graph.InvalidNamedEntityGraphParameterException;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.orm.test.entitygraph.named.parsed.pkg.Book;
 import org.hibernate.orm.test.entitygraph.named.parsed.pkg.Duplicator;
@@ -43,6 +43,8 @@ public class PackageLevelTests {
 		assertBasicGraph( sessionFactory, "book-title-isbn", "title", "isbn" );
 		assertBasicGraph( sessionFactory, "book-title-isbn-author", "title", "isbn", "author" );
 		assertBasicGraph( sessionFactory, "book-title-isbn-editor", "title", "isbn", "editor" );
+		assertBasicGraph( sessionFactory, "book-title-with-root-attribute", "title" );
+		assertBasicGraph( sessionFactory, "book-title-with-root-attribute-and-type-indicator", "title" );
 	}
 
 	private static void assertBasicGraph(SessionFactoryImplementor sessionFactory, String name, String... names) {
@@ -75,7 +77,7 @@ public class PackageLevelTests {
 		try (org.hibernate.SessionFactory sessionFactory = modelScope.getDomainModel().buildSessionFactory()) {
 			fail( "Expected an exception" );
 		}
-		catch (InvalidGraphException expected) {
+		catch (InvalidNamedEntityGraphParameterException expected) {
 		}
 	}
 }

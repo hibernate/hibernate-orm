@@ -13,9 +13,11 @@ import org.hibernate.boot.model.NamedGraphCreator;
 import org.hibernate.grammars.graph.GraphLanguageLexer;
 import org.hibernate.grammars.graph.GraphLanguageParser;
 import org.hibernate.graph.InvalidGraphException;
+import org.hibernate.graph.InvalidNamedEntityGraphParameterException;
 import org.hibernate.graph.internal.parse.EntityNameResolver;
 import org.hibernate.graph.internal.parse.GraphParsing;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 
 import java.util.function.Function;
@@ -60,24 +62,67 @@ class NamedGraphCreatorParsed implements NamedGraphCreator {
 			}
 		};
 
+		final EntityDomainType<T> entityDomainType = resolveEntityDomainType(
+				graphContext,
+				entityDomainClassResolver,
+				entityDomainNameResolver
+		);
+
+		final String name = this.name == null ? entityDomainType.getName() : this.name;
+
+		return GraphParsing.parse( name, entityDomainType, graphContext.graphElementList(), entityNameResolver );
+
+	}
+
+	private <T> EntityDomainType<T> resolveEntityDomainType(
+			GraphLanguageParser.GraphContext graphContext,
+			Function<Class<T>, EntityDomainType<?>> entityDomainClassResolver,
+			Function<String, EntityDomainType<?>> entityDomainNameResolver) {
+		var typeIndicator = graphContext.typeIndicator();
+		final Class<?> annotationRootAttribute = annotation.root();
+
 		if ( entityType == null ) {
-			if ( graphContext.typeIndicator() == null ) {
-				throw new InvalidGraphException( "Expecting graph text to include an entity name : " + annotation.graph() );
+
+			if ( typeIndicator == null && void.class.equals( annotationRootAttribute ) ) {
+				throw new InvalidNamedEntityGraphParameterException(
+						"The 'root' parameter of the @NamedEntityGraph should be passed. Graph : " + annotation.name()
+				);
 			}
-			final String jpaEntityName = graphContext.typeIndicator().TYPE_NAME().toString();
-			//noinspection unchecked
-			final EntityDomainType<T> entityDomainType = (EntityDomainType<T>) entityDomainNameResolver.apply( jpaEntityName );
-			final String name = this.name == null ? jpaEntityName : this.name;
-			return GraphParsing.parse( name, entityDomainType, graphContext.attributeList(), entityNameResolver );
-		}
-		else {
-			if ( graphContext.typeIndicator() != null ) {
-				throw new InvalidGraphException( "Expecting graph text to not include an entity name : " + annotation.graph() );
+
+			if ( typeIndicator != null ) {
+				DeprecationLogger.DEPRECATION_LOGGER.deprecatedNamedEntityGraphTextThatContainTypeIndicator();
+
+				//noinspection unchecked
+				return (EntityDomainType<T>) entityDomainNameResolver.apply(
+						typeIndicator.TYPE_NAME().toString() );
+
 			}
+
 			//noinspection unchecked
-			final EntityDomainType<T> entityDomainType = (EntityDomainType<T>) entityDomainClassResolver.apply( (Class<T>) entityType );
-			final String name = this.name == null ? entityDomainType.getName() : this.name;
-			return GraphParsing.parse( name, entityDomainType, graphContext.attributeList(), entityNameResolver );
+			return (EntityDomainType<T>) entityDomainClassResolver.apply( (Class<T>) annotationRootAttribute );
 		}
+
+
+		if ( typeIndicator != null ) {
+			throw new InvalidGraphException( "Expecting graph text to not include an entity name : " + annotation.graph() );
+		}
+
+		if ( !void.class.equals( annotationRootAttribute ) ) {
+
+			if ( !annotationRootAttribute.equals( entityType ) ) {
+				throw new InvalidNamedEntityGraphParameterException(
+						"The 'root' parameter of the @NamedEntityGraph annotation must reference the entity '"
+								+ entityType.getName()
+								+ "', but '" + annotationRootAttribute.getName() + "' was provided."
+								+ " Graph :" + annotation.name()
+				);
+			}
+
+			//noinspection unchecked
+			return (EntityDomainType<T>) entityDomainClassResolver.apply( (Class<T>) annotationRootAttribute );
+		}
+
+		//noinspection unchecked
+		return (EntityDomainType<T>) entityDomainClassResolver.apply( (Class<T>) entityType );
 	}
 }

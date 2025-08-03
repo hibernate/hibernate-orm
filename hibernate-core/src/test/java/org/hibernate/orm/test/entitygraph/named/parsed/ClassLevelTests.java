@@ -9,6 +9,8 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.InvalidGraphException;
+import org.hibernate.graph.InvalidNamedEntityGraphParameterException;
+import org.hibernate.orm.test.entitygraph.named.parsed.entity.BadRootClassEntity;
 import org.hibernate.orm.test.entitygraph.named.parsed.entity.Book;
 import org.hibernate.orm.test.entitygraph.named.parsed.entity.DomesticPublishingHouse;
 import org.hibernate.orm.test.entitygraph.named.parsed.entity.Duplicator;
@@ -18,6 +20,7 @@ import org.hibernate.orm.test.entitygraph.named.parsed.entity.Isbn;
 import org.hibernate.orm.test.entitygraph.named.parsed.entity.Person;
 import org.hibernate.orm.test.entitygraph.named.parsed.entity.Publisher;
 import org.hibernate.orm.test.entitygraph.named.parsed.entity.PublishingHouse;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -53,10 +56,25 @@ public class ClassLevelTests {
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 
 		assertBasicAttributes( sessionFactory.findEntityGraphByName( "book-title-isbn" ), "title", "isbn" );
-		assertBasicAttributes( sessionFactory.findEntityGraphByName( "book-title-isbn-author" ), "title", "isbn", "author" );
-		assertBasicAttributes( sessionFactory.findEntityGraphByName( "book-title-isbn-editor" ), "title", "isbn", "editor" );
+		assertBasicAttributes(
+				sessionFactory.findEntityGraphByName( "book-title-isbn-author" ),
+				"title",
+				"isbn",
+				"author"
+		);
+		assertBasicAttributes(
+				sessionFactory.findEntityGraphByName( "book-title-isbn-editor" ),
+				"title",
+				"isbn",
+				"editor"
+		);
 
-		assertBasicAttributes( sessionFactory.findEntityGraphByName( "publishing-house-bio" ), "name",  "ceo", "boardMembers" );
+		assertBasicAttributes(
+				sessionFactory.findEntityGraphByName( "publishing-house-bio" ),
+				"name",
+				"ceo",
+				"boardMembers"
+		);
 	}
 
 	@Test
@@ -71,6 +89,18 @@ public class ClassLevelTests {
 			}
 		}
 		catch (InvalidGraphException expected) {
+		}
+	}
+
+	@Test
+	@DomainModel(annotatedClasses = BadRootClassEntity.class)
+	void testRootEntityDifferentFromEntityMarkedWithAnnotation(DomainModelScope modelScope) {
+		final MetadataImplementor domainModel = modelScope.getDomainModel();
+
+		try (org.hibernate.SessionFactory sessionFactory = domainModel.buildSessionFactory()) {
+			fail( "Expecting an exception" );
+		}
+		catch (InvalidNamedEntityGraphParameterException expected) {
 		}
 	}
 

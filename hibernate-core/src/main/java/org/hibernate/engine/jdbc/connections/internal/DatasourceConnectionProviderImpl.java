@@ -162,6 +162,8 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 				metaData == null ? null : metaData.getUrl(),
 				metaData == null ? null : metaData.getDriver(),
 				dialect.getVersion(),
+				metaData == null ? null : metaData.getConnectionSchemaName(),
+				metaData == null ? null : metaData.getConnectionCatalogName(),
 				null,
 				metaData == null ? null : isolationString( metaData ),
 				null,
@@ -184,6 +186,6 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 
 	private String isolationString(ExtractedDatabaseMetaData metaData) {
 		return toIsolationNiceName( metaData.getTransactionIsolation() )
-			   + " [default " + toIsolationNiceName( metaData.getDefaultTransactionIsolation() ) + "]";
+			+ " [default " + toIsolationNiceName( metaData.getDefaultTransactionIsolation() ) + "]";
 	}
 }

@@ -36,11 +36,14 @@ import org.hibernate.service.spi.Stoppable;
 import org.hibernate.internal.log.ConnectionInfoLogger;
 
 import static org.hibernate.cfg.JdbcSettings.JAKARTA_JDBC_URL;
+import static org.hibernate.cfg.JdbcSettings.POOL_SIZE;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.extractIsolation;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.getConnectionProperties;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getCatalog;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getFetchSize;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getIsolation;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getSchema;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getLong;
@@ -92,7 +95,7 @@ public class DriverManagerConnectionProviderImpl
 	private PooledConnections buildPool(Map<String,Object> configurationValues, ServiceRegistryImplementor serviceRegistry) {
 		final boolean autoCommit = getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues ); // default to false
 		final int minSize = getInt( MIN_SIZE, configurationValues, 1 );
-		final int maxSize = getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 );
+		final int maxSize = getInt( POOL_SIZE, configurationValues, 20 );
 		final int initialSize = getInt( INITIAL_SIZE, configurationValues, minSize );
 
 		final ConnectionCreator creator = buildCreator( configurationValues, serviceRegistry );
@@ -163,12 +166,14 @@ public class DriverManagerConnectionProviderImpl
 				url,
 				driverList,
 				SimpleDatabaseVersion.ZERO_VERSION,
+				getSchema( connectionCreator ),
+				getCatalog( connectionCreator ),
 				Boolean.toString( autoCommit ),
 				isolation != null
 						? toIsolationNiceName( isolation )
 						: toIsolationNiceName( getIsolation( connectionCreator ) ),
 				getInt( MIN_SIZE, configurationValues, 1 ),
-				getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 ),
+				getInt( POOL_SIZE, configurationValues, 20 ),
 				getFetchSize( connectionCreator )
 		);
 
@@ -299,6 +304,8 @@ public class DriverManagerConnectionProviderImpl
 				dbInfo.getJdbcUrl(),
 				dbInfo.getJdbcDriver(),
 				dialect.getVersion(),
+				dbInfo.getSchema(),
+				dbInfo.getCatalog(),
 				dbInfo.getAutoCommitMode(),
 				dbInfo.getIsolationLevel(),
 				dbInfo.getPoolMinSize(),

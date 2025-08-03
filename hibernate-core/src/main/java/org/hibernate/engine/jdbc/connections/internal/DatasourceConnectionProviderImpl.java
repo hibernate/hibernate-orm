@@ -161,6 +161,7 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 				DatasourceConnectionProviderImpl.class,
 				metaData == null ? null : metaData.getUrl(),
 				metaData == null ? null : metaData.getDriver(),
+				dialect.getClass(),
 				dialect.getVersion(),
 				metaData == null ? null : metaData.getConnectionSchemaName(),
 				metaData == null ? null : metaData.getConnectionCatalogName(),

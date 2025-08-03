@@ -106,6 +106,7 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 				isBlank( hikariConfig.getDriverClassName() )
 						? extractDriverNameFromMetadata()
 						: hikariConfig.getDriverClassName(),
+				dialect.getClass(),
 				dialect.getVersion(),
 				hikariConfig.getSchema(),
 				hikariConfig.getCatalog(),

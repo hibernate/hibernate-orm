@@ -171,6 +171,7 @@ public class C3P0ConnectionProvider
 				C3P0ConnectionProvider.class,
 				jdbcUrl,
 				jdbcDriverClass,
+				dialect.getClass(),
 				dialect.getVersion(),
 				schema,
 				catalog,

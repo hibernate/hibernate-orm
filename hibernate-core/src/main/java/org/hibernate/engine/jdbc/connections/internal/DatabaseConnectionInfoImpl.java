@@ -36,6 +36,7 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 	private final Class<?> connectionProviderClass;
 	protected final String jdbcUrl;
 	protected final String jdbcDriver;
+	private final Class<? extends Dialect> dialectClass;
 	protected final DatabaseVersion dialectVersion;
 	protected final String schema;
 	protected final String catalog;
@@ -49,7 +50,7 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 			Class<? extends ConnectionProvider> connectionProviderClass,
 			String jdbcUrl,
 			String jdbcDriver,
-			DatabaseVersion dialectVersion,
+			Class<? extends Dialect> dialectClass, DatabaseVersion dialectVersion,
 			String schema,
 			String catalog,
 			String autoCommitMode,
@@ -68,6 +69,7 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 		this.poolMinSize = poolMinSize;
 		this.poolMaxSize = poolMaxSize;
 		this.fetchSize = fetchSize;
+		this.dialectClass = dialectClass;
 	}
 
 	public DatabaseConnectionInfoImpl(Map<String, Object> settings, Dialect dialect) {
@@ -75,6 +77,7 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 				null,
 				determineUrl( settings ),
 				determineDriver( settings ),
+				dialect.getClass(),
 				dialect.getVersion(),
 				null,
 				null,
@@ -88,7 +91,7 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 	}
 
 	public DatabaseConnectionInfoImpl(Dialect dialect) {
-		this( null, null, null, dialect.getVersion(), null, null, null, null, null, null, null );
+		this( null, null, null, dialect.getClass(), dialect.getVersion(), null, null, null, null, null, null, null );
 	}
 
 	public static String getSchema(DataSource dataSource) {
@@ -222,6 +225,7 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 		return """
 				\tDatabase JDBC URL [%s]
 				\tDatabase driver: %s
+				\tDatabase dialect: %s
 				\tDatabase version: %s
 				\tDefault catalog/schema: %s/%s
 				\tAutocommit mode: %s
@@ -233,12 +237,13 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 				.formatted(
 						handleEmpty( jdbcUrl ),
 						handleEmpty( jdbcDriver ),
+						handleEmpty( dialectClass ),
 						handleEmpty( dialectVersion ),
 						handleEmpty( catalog ),
 						handleEmpty( schema ),
 						handleEmpty( autoCommitMode ),
 						handleEmpty( isolationLevel ),
-						handleEmpty( fetchSize ),
+						handleFetchSize( fetchSize ),
 						handleEmpty( connectionProviderClass ),
 						handleEmpty( poolMinSize ),
 						handleEmpty( poolMaxSize )
@@ -254,11 +259,11 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 	}
 
 	private static String handleEmpty(Integer value) {
-		return value != null ? ( value == 0 ? "none" : value.toString() ) : DEFAULT;
+		return value != null ? value.toString() : DEFAULT;
 	}
 
 	private static String handleFetchSize(Integer value) {
-		return value != null ? value.toString() : DEFAULT;
+		return value != null ? ( value == 0 ? "none" : value.toString() ) : DEFAULT;
 	}
 
 	private static String handleEmpty(Class<?> value) {

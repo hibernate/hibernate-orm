@@ -3,6 +3,24 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.24.Final (August 03, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/34495
+
+** Bug
+    * [HHH-19675] - JdbcTypeRegistry#hasRegisteredDescriptor should account for constructed types
+    * [HHH-19657] - OffsetDateTime in an array is handled incorrectly with setting hibernate.type.java_time_use_direct_jdbc=true
+    * [HHH-19655] - Connection leak with PhysicalConnectionHandlingMode.IMMEDIATE_ACQUISITION_AND_HOLD
+    * [HHH-19651] - DB2 for i detection not working reliably
+    * [HHH-19585] - Object relationship mapping issues | java.lang.NullPointerException: Cannot invoke "java.lang.Comparable.compareTo(Object)" because "one" is null
+    * [HHH-19579] - Criteria update join - Column 'code' in SET is ambiguous
+    * [HHH-19031] - Loading an Entity a second time when it contains an embedded object causes IllegalArgumentException
+    * [HHH-18981] - IndexOutOfBoundsException when using arrayToString with arrayAgg
+    * [HHH-18956] - Native query brace replacement breaks dollar quoted literals in 6.6+
+    * [HHH-18780] - Performance regression on Postgres with polymorphic query due to incorrect casts of null columns
+
+
 Changes in 6.6.23.Final (July 27, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

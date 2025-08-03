@@ -4,20 +4,19 @@
  */
 package org.hibernate.test.c3p0;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.Test;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.dialect.H2Dialect;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.jdbc.SQLStatementInterceptor;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
 
 import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER;
 import static org.hibernate.cfg.JdbcSettings.ISOLATION;
@@ -32,7 +31,7 @@ import static org.mockito.Mockito.verify;
  */
 @JiraKey(value = "HHH-12749")
 @RequiresDialect(H2Dialect.class)
-public class C3P0DefaultIsolationLevelTest extends
+public class C3P0EmptyIsolationLevelTest extends
 		BaseNonConfigCoreFunctionalTestCase {
 
 	private C3P0ProxyConnectionProvider connectionProvider;
@@ -54,7 +53,7 @@ public class C3P0DefaultIsolationLevelTest extends
 	protected void addSettings(Map<String,Object> settings) {
 		connectionProvider = new C3P0ProxyConnectionProvider();
 		settings.put( CONNECTION_PROVIDER, connectionProvider );
-		settings.put( ISOLATION, "READ_COMMITTED" );
+		settings.put( ISOLATION, "" );
 	}
 
 	@Test

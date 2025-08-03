@@ -166,25 +166,25 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
-		final AgroalConnectionPoolConfiguration acpc =
-				agroalDataSource.getConfiguration().connectionPoolConfiguration();
-		final AgroalConnectionFactoryConfiguration acfc = acpc.connectionFactoryConfiguration();
+		final var poolConfig = agroalDataSource.getConfiguration().connectionPoolConfiguration();
+		final var connectionConfig = poolConfig.connectionFactoryConfiguration();
 		return new DatabaseConnectionInfoImpl(
 				AgroalConnectionProvider.class,
-				acfc.jdbcUrl(),
+				connectionConfig.jdbcUrl(),
 				// Attempt to resolve the driver name from the dialect,
 				// in case it wasn't explicitly set and access to the
 				// database metadata is allowed
-				acfc.connectionProviderClass() != null
-						? acfc.connectionProviderClass().toString()
+				connectionConfig.connectionProviderClass() != null
+						? connectionConfig.connectionProviderClass().toString()
 						: extractDriverNameFromMetadata(),
 				dialect.getVersion(),
-				Boolean.toString( acfc.autoCommit() ),
-				acfc.jdbcTransactionIsolation() != null && acfc.jdbcTransactionIsolation().isDefined()
-						? toIsolationNiceName( acfc.jdbcTransactionIsolation().level() )
+				Boolean.toString( connectionConfig.autoCommit() ),
+				connectionConfig.jdbcTransactionIsolation() != null
+					&& connectionConfig.jdbcTransactionIsolation().isDefined()
+						? toIsolationNiceName( connectionConfig.jdbcTransactionIsolation().level() )
 						: toIsolationNiceName( getIsolation( agroalDataSource ) ),
-				acpc.minSize(),
-				acpc.maxSize(),
+				poolConfig.minSize(),
+				poolConfig.maxSize(),
 				getFetchSize( agroalDataSource )
 		);
 	}

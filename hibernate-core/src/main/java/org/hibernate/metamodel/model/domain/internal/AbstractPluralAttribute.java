@@ -8,7 +8,6 @@ import java.io.Serializable;
 import java.util.Collection;
 
 import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmPluralPersistentAttribute;
@@ -37,9 +36,7 @@ public abstract class AbstractPluralAttribute<D, C, E>
 	private final CollectionClassification classification;
 	private final SqmPathSource<E> elementPathSource;
 
-	protected AbstractPluralAttribute(
-			PluralAttributeBuilder<D,C,E,?> builder,
-			MetadataContext metadataContext) {
+	protected AbstractPluralAttribute(PluralAttributeBuilder<D,C,E,?> builder) {
 		super(
 				builder.getDeclaringType(),
 				builder.getProperty().getName(),

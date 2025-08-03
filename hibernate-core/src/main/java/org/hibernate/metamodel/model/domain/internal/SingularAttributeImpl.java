@@ -8,7 +8,6 @@ import java.io.Serializable;
 import java.lang.reflect.Member;
 
 import org.hibernate.metamodel.AttributeClassification;
-import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
@@ -63,8 +62,7 @@ public class SingularAttributeImpl<D,J>
 			boolean isIdentifier,
 			boolean isVersion,
 			boolean isOptional,
-			boolean isGeneric,
-			MetadataContext metadataContext) {
+			boolean isGeneric) {
 		super(
 				declaringType,
 				name,
@@ -210,8 +208,7 @@ public class SingularAttributeImpl<D,J>
 				SqmDomainType<J> attributeType,
 				Member member,
 				AttributeClassification attributeClassification,
-				boolean isGeneric,
-				MetadataContext metadataContext) {
+				boolean isGeneric) {
 			super(
 					declaringType,
 					name,
@@ -222,8 +219,7 @@ public class SingularAttributeImpl<D,J>
 					true,
 					false,
 					false,
-					isGeneric,
-					metadataContext
+					isGeneric
 			);
 		}
 
@@ -260,8 +256,7 @@ public class SingularAttributeImpl<D,J>
 				String name,
 				AttributeClassification attributeClassification,
 				SqmDomainType<Y> attributeType,
-				Member member,
-				MetadataContext metadataContext) {
+				Member member) {
 			super(
 					declaringType,
 					name,
@@ -272,8 +267,7 @@ public class SingularAttributeImpl<D,J>
 					false,
 					true,
 					false,
-					false,
-					metadataContext
+					false
 			);
 		}
 	}

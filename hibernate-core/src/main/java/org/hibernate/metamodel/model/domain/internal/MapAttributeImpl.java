@@ -6,7 +6,6 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Map;
 
-import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -26,8 +25,8 @@ public class MapAttributeImpl<X, K, V>
 		implements SqmMapPersistentAttribute<X, K, V> {
 	private final SqmPathSource<K> keyPathSource;
 
-	public MapAttributeImpl(PluralAttributeBuilder<X, Map<K, V>, V, K> xceBuilder, MetadataContext metadataContext) {
-		super( xceBuilder, metadataContext );
+	public MapAttributeImpl(PluralAttributeBuilder<X, Map<K, V>, V, K> xceBuilder) {
+		super( xceBuilder );
 		keyPathSource = SqmMappingModelHelper.resolveSqmKeyPathSource(
 				xceBuilder.getListIndexOrMapKeyType(),
 				BindableType.PLURAL_ATTRIBUTE,

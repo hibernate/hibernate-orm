@@ -12,7 +12,6 @@ import java.util.HashMap;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.PropertyNotFoundException;
-import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -145,8 +144,7 @@ public class AttributeFactory {
 				false,
 				false,
 				property.isOptional(),
-				property.isGeneric(),
-				metadataContext
+				property.isGeneric()
 		);
 	}
 
@@ -188,8 +186,7 @@ public class AttributeFactory {
 				(SqmDomainType<Y>) domainType,
 				attributeMetadata.getMember(),
 				attributeMetadata.getAttributeClassification(),
-				property.isGeneric(),
-				context
+				property.isGeneric()
 		);
 	}
 
@@ -218,8 +215,7 @@ public class AttributeFactory {
 				property.getName(),
 				attributeMetadata.getAttributeClassification(),
 				(SqmDomainType<Y>) domainType,
-				attributeMetadata.getMember(),
-				context
+				attributeMetadata.getMember()
 		);
 	}
 
@@ -382,8 +378,9 @@ public class AttributeFactory {
 			DomainType<?> metaModelType,
 			MetadataContext context) {
 		if ( typeContext.getValueClassification() == ValueClassification.BASIC ) {
-			final ConverterDescriptor descriptor =
-					( (SimpleValue) typeContext.getHibernateValue() ).getJpaAttributeConverterDescriptor();
+			final var descriptor =
+					( (SimpleValue) typeContext.getHibernateValue() )
+							.getJpaAttributeConverterDescriptor();
 			if ( descriptor != null ) {
 				return context.getJavaTypeRegistry().resolveDescriptor(
 						descriptor.getRelationalValueResolvedType().getErasedType()

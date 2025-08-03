@@ -157,36 +157,16 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect, ExtractedDatabaseMetaData metaData) {
-		final String url;
-		final String driver;
-		final String isolationLevel;
-		final Integer fetchSize;
-		if ( metaData != null ) {
-			url = metaData.getUrl();
-			driver = metaData.getDriver();
-			isolationLevel =
-					toIsolationNiceName( metaData.getTransactionIsolation() )
-							+ " [default " + toIsolationNiceName( metaData.getDefaultTransactionIsolation() ) + "]";
-			final int defaultFetchSize = metaData.getDefaultFetchSize();
-			fetchSize = defaultFetchSize == -1 ? null : defaultFetchSize;
-		}
-		else {
-			url = null;
-			driver = null;
-			isolationLevel = null;
-			fetchSize = null;
-		}
-
 		return new DatabaseConnectionInfoImpl(
 				DatasourceConnectionProviderImpl.class,
-				url,
-				driver,
+				metaData == null ? null : metaData.getUrl(),
+				metaData == null ? null : metaData.getDriver(),
 				dialect.getVersion(),
 				null,
-				isolationLevel,
+				metaData == null ? null : isolationString( metaData ),
 				null,
 				null,
-				fetchSize
+				metaData != null ? fetchSize( metaData ) : null
 		) {
 			@Override
 			public String toInfoString() {
@@ -195,5 +175,15 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 						: super.toInfoString();
 			}
 		};
+	}
+
+	private static Integer fetchSize(ExtractedDatabaseMetaData metaData) {
+		final int defaultFetchSize = metaData.getDefaultFetchSize();
+		return defaultFetchSize == -1 ? null : defaultFetchSize;
+	}
+
+	private String isolationString(ExtractedDatabaseMetaData metaData) {
+		return toIsolationNiceName( metaData.getTransactionIsolation() )
+			   + " [default " + toIsolationNiceName( metaData.getDefaultTransactionIsolation() ) + "]";
 	}
 }

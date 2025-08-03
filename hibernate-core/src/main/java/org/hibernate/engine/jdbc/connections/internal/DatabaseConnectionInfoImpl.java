@@ -37,6 +37,8 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 	protected final String jdbcUrl;
 	protected final String jdbcDriver;
 	protected final DatabaseVersion dialectVersion;
+	protected final String schema;
+	protected final String catalog;
 	protected final String autoCommitMode;
 	protected final String isolationLevel;
 	protected final Integer poolMinSize;
@@ -48,6 +50,8 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 			String jdbcUrl,
 			String jdbcDriver,
 			DatabaseVersion dialectVersion,
+			String schema,
+			String catalog,
 			String autoCommitMode,
 			String isolationLevel,
 			Integer poolMinSize,
@@ -57,6 +61,8 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 		this.jdbcUrl = nullIfEmpty( jdbcUrl );
 		this.jdbcDriver = nullIfEmpty( jdbcDriver );
 		this.dialectVersion = dialectVersion;
+		this.schema = schema;
+		this.catalog = catalog;
 		this.autoCommitMode = nullIfEmpty( autoCommitMode );
 		this.isolationLevel = nullIfEmpty( isolationLevel );
 		this.poolMinSize = poolMinSize;
@@ -70,6 +76,8 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 				determineUrl( settings ),
 				determineDriver( settings ),
 				dialect.getVersion(),
+				null,
+				null,
 				determineAutoCommitMode( settings ),
 				determineIsolationLevel( settings ),
 				// No setting for min. pool size
@@ -80,7 +88,43 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 	}
 
 	public DatabaseConnectionInfoImpl(Dialect dialect) {
-		this( null, null, null, dialect.getVersion(), null, null, null, null, null );
+		this( null, null, null, dialect.getVersion(), null, null, null, null, null, null, null );
+	}
+
+	public static String getSchema(DataSource dataSource) {
+		try ( var conn = dataSource.getConnection() ) {
+			return conn.getSchema();
+		}
+		catch ( SQLException ignored ) {
+			return null;
+		}
+	}
+
+	public static String getCatalog(DataSource dataSource) {
+		try ( var conn = dataSource.getConnection() ) {
+			return conn.getCatalog();
+		}
+		catch ( SQLException ignored ) {
+			return null;
+		}
+	}
+
+	static String getSchema(ConnectionCreator creator) {
+		try ( var conn = creator.createConnection() ) {
+			return conn.getSchema();
+		}
+		catch ( SQLException ignored ) {
+			return null;
+		}
+	}
+
+	static String getCatalog(ConnectionCreator creator) {
+		try ( var conn = creator.createConnection() ) {
+			return conn.getCatalog();
+		}
+		catch ( SQLException ignored ) {
+			return null;
+		}
 	}
 
 	public static Integer getFetchSize(DataSource dataSource) {
@@ -164,11 +208,22 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 	}
 
 	@Override
+	public @Nullable String getSchema() {
+		return schema;
+	}
+
+	@Override
+	public @Nullable String getCatalog() {
+		return catalog;
+	}
+
+	@Override
 	public String toInfoString() {
 		return """
 				\tDatabase JDBC URL [%s]
 				\tDatabase driver: %s
 				\tDatabase version: %s
+				\tDefault catalog/schema: %s/%s
 				\tAutocommit mode: %s
 				\tIsolation level: %s
 				\tJDBC fetch size: %s
@@ -179,6 +234,8 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 						handleEmpty( jdbcUrl ),
 						handleEmpty( jdbcDriver ),
 						handleEmpty( dialectVersion ),
+						handleEmpty( catalog ),
+						handleEmpty( schema ),
 						handleEmpty( autoCommitMode ),
 						handleEmpty( isolationLevel ),
 						handleEmpty( fetchSize ),

@@ -126,6 +126,8 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 				null,
 				null,
 				null,
+				null,
+				null,
 				null
 		) {
 			@Override

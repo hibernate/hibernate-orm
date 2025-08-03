@@ -107,6 +107,8 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 						? extractDriverNameFromMetadata()
 						: hikariConfig.getDriverClassName(),
 				dialect.getVersion(),
+				hikariConfig.getSchema(),
+				hikariConfig.getCatalog(),
 				Boolean.toString( hikariConfig.isAutoCommit() ),
 				hikariConfig.getTransactionIsolation() != null
 						? hikariConfig.getTransactionIsolation()

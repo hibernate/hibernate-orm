@@ -43,8 +43,10 @@ import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderI
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.extractSetting;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.getConnectionProperties;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getCatalog;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getFetchSize;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getIsolation;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getSchema;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 
@@ -160,6 +162,8 @@ public class C3P0ConnectionProvider
 		dataSource = createDataSource( jdbcUrl, connectionProps, poolSettings );
 
 		final Integer fetchSize = getFetchSize( dataSource );
+		final String schema = getSchema( dataSource );
+		final String catalog = getCatalog( dataSource );
 		if ( isolation == null ) {
 			isolation = getIsolation( dataSource );
 		}
@@ -168,6 +172,8 @@ public class C3P0ConnectionProvider
 				jdbcUrl,
 				jdbcDriverClass,
 				dialect.getVersion(),
+				schema,
+				catalog,
 				Boolean.toString( autocommit ),
 				isolation == null ? null : toIsolationNiceName( isolation ),
 				requireNonNullElse( getInteger( C3P0_STYLE_MIN_POOL_SIZE.substring( 5 ), poolSettings ),

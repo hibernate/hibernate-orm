@@ -38,6 +38,18 @@ public interface DatabaseConnectionInfo {
 	DatabaseVersion getDialectVersion();
 
 	/**
+	 * The default schema
+	 */
+	@Nullable
+	String getSchema();
+
+	/**
+	 * The default catalog
+	 */
+	@Nullable
+	String getCatalog();
+
+	/**
 	 * The transaction auto-commit mode in effect.
 	 */
 	@Nullable

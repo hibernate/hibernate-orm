@@ -40,8 +40,10 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.hibernate.cfg.AgroalSettings.AGROAL_CONFIG_PREFIX;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getCatalog;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getFetchSize;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getIsolation;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getSchema;
 import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.allowJdbcMetadataAccess;
 
 /**
@@ -178,6 +180,8 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 						? connectionConfig.connectionProviderClass().toString()
 						: extractDriverNameFromMetadata(),
 				dialect.getVersion(),
+				getSchema( agroalDataSource ),
+				getCatalog( agroalDataSource ),
 				Boolean.toString( connectionConfig.autoCommit() ),
 				connectionConfig.jdbcTransactionIsolation() != null
 					&& connectionConfig.jdbcTransactionIsolation().isDefined()

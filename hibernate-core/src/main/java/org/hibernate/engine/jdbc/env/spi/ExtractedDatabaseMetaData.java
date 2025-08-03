@@ -25,6 +25,10 @@ public interface ExtractedDatabaseMetaData {
 	 */
 	JdbcEnvironment getJdbcEnvironment();
 
+	String getDatabaseProductName();
+
+	String getDatabaseProductVersion();
+
 	/**
 	 * Retrieve the name of the catalog in effect when we connected to the database.
 	 *

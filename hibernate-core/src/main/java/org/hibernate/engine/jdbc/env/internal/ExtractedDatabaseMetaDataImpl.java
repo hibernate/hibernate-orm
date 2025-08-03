@@ -37,6 +37,9 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	private final String connectionCatalogName;
 	private final String connectionSchemaName;
 
+	private final String databaseProductName;
+	private final String databaseProductVersion;
+
 	private final boolean supportsRefCursors;
 	private final boolean supportsNamedParameters;
 	private final boolean supportsScrollableResults;
@@ -62,6 +65,8 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			JdbcConnectionAccess connectionAccess,
 			String connectionCatalogName,
 			String connectionSchemaName,
+			String databaseProductName,
+			String databaseProductVersion,
 			boolean supportsRefCursors,
 			boolean supportsNamedParameters,
 			boolean supportsScrollableResults,
@@ -80,6 +85,8 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		this.connectionAccess = connectionAccess;
 		this.connectionCatalogName = connectionCatalogName;
 		this.connectionSchemaName = connectionSchemaName;
+		this.databaseProductName = databaseProductName;
+		this.databaseProductVersion = databaseProductVersion;
 		this.supportsRefCursors = supportsRefCursors;
 		this.supportsNamedParameters = supportsNamedParameters;
 		this.supportsScrollableResults = supportsScrollableResults;
@@ -152,6 +159,16 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	}
 
 	@Override
+	public String getDatabaseProductName() {
+		return databaseProductName;
+	}
+
+	@Override
+	public String getDatabaseProductVersion() {
+		return databaseProductVersion;
+	}
+
+	@Override
 	public String getUrl() {
 		return url;
 	}
@@ -206,6 +223,9 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		private String connectionSchemaName;
 		private String connectionCatalogName;
 
+		private String databaseProductName;
+		private String databaseProductVersion;
+
 		private boolean supportsRefCursors;
 		private boolean supportsNamedParameters;
 		private boolean supportsScrollableResults;
@@ -229,7 +249,9 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 
 		public Builder apply(DatabaseMetaData databaseMetaData) throws SQLException {
 			connectionCatalogName = databaseMetaData.getConnection().getCatalog();
-			// NOTE : databaseMetaData.getConnection().getSchema() would require java 1.7 as baseline
+			connectionSchemaName = databaseMetaData.getConnection().getSchema();
+			databaseProductName = databaseMetaData.getDatabaseProductName();
+			databaseProductVersion = databaseMetaData.getDatabaseProductVersion();
 			supportsRefCursors = StandardRefCursorSupport.supportsRefCursors( databaseMetaData );
 			supportsNamedParameters = databaseMetaData.supportsNamedParameters();
 			supportsScrollableResults = databaseMetaData.supportsResultSetType( ResultSet.TYPE_SCROLL_INSENSITIVE );
@@ -307,6 +329,8 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 					connectionAccess,
 					connectionCatalogName,
 					connectionSchemaName,
+					databaseProductName,
+					databaseProductVersion,
 					supportsRefCursors,
 					supportsNamedParameters,
 					supportsScrollableResults,

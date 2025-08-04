@@ -1074,7 +1074,10 @@ public class MySQLDialect extends Dialect {
 	 * MySQL does support the {@code create schema} command, but
 	 * it's a synonym for {@code create database}. Hibernate has
 	 * always treated a MySQL database as a
-	 * {@linkplain #canCreateCatalog catalog}.
+	 * {@linkplain #canCreateCatalog catalog}, which is consistent
+	 * with how the JDBC driver itself views the situation, since
+	 * {@link DatabaseMetaData#supportsSchemasInDataManipulation()}
+	 * returns {@code false} on MySQL.
 	 *
 	 * @return {@code false}
 	 */

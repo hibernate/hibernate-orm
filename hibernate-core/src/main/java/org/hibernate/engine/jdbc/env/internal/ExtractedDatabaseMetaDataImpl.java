@@ -35,6 +35,8 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	private final JdbcEnvironment jdbcEnvironment;
 	private final JdbcConnectionAccess connectionAccess;
 
+	private final boolean supportsSchemas;
+	private final boolean supportsCatalogs;
 	private final String connectionCatalogName;
 	private final String connectionSchemaName;
 
@@ -67,6 +69,8 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		jdbcMetadataAccessible = false;
 		connectionSchemaName = null;
 		connectionCatalogName = null;
+		supportsSchemas = true;
+		supportsCatalogs = true;
 		databaseProductName = null;
 		databaseProductVersion = null;
 		supportsRefCursors = false;
@@ -94,6 +98,8 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		jdbcMetadataAccessible = true;
 		final Dialect dialect = environment.getDialect();
 		final Connection connection = metaData.getConnection();
+		supportsSchemas = metaData.supportsSchemasInDataManipulation();
+		supportsCatalogs = metaData.supportsCatalogsInDataManipulation();
 		connectionSchemaName = dialect.getSchemaNameResolver().resolveSchemaName( connection, dialect );
 		connectionCatalogName = connection.getCatalog();
 		databaseProductName = metaData.getDatabaseProductName();
@@ -121,6 +127,16 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	@Override
 	public JdbcEnvironment getJdbcEnvironment() {
 		return jdbcEnvironment;
+	}
+
+	@Override
+	public boolean supportsSchemas() {
+		return supportsSchemas;
+	}
+
+	@Override
+	public boolean supportsCatalogs() {
+		return supportsCatalogs;
 	}
 
 	@Override

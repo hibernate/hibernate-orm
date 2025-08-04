@@ -47,6 +47,8 @@ import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionI
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getFetchSize;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getIsolation;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getSchema;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasCatalog;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasSchema;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 
@@ -162,6 +164,8 @@ public class C3P0ConnectionProvider
 		dataSource = createDataSource( jdbcUrl, connectionProps, poolSettings );
 
 		final Integer fetchSize = getFetchSize( dataSource );
+		final boolean hasSchema = hasSchema( dataSource );
+		final boolean hasCatalog = hasCatalog( dataSource );
 		final String schema = getSchema( dataSource );
 		final String catalog = getCatalog( dataSource );
 		if ( isolation == null ) {
@@ -173,6 +177,8 @@ public class C3P0ConnectionProvider
 				jdbcDriverClass,
 				dialect.getClass(),
 				dialect.getVersion(),
+				hasSchema,
+				hasCatalog,
 				schema,
 				catalog,
 				Boolean.toString( autocommit ),

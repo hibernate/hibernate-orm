@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.jdbc.connections.spi;
 
+import org.hibernate.Internal;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 
@@ -78,6 +79,12 @@ public interface DatabaseConnectionInfo {
 	 */
 	@Nullable
 	Integer getJdbcFetchSize();
+
+	@Internal
+	boolean hasSchema();
+
+	@Internal
+	boolean hasCatalog();
 
 	/**
 	 * Collects the information available here as a single String with the intent of using it in logging.

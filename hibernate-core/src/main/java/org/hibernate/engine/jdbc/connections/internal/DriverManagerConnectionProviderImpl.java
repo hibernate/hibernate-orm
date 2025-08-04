@@ -46,6 +46,8 @@ import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionI
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getFetchSize;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getIsolation;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getSchema;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasCatalog;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasSchema;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getLong;
@@ -167,6 +169,8 @@ public class DriverManagerConnectionProviderImpl
 				driverList,
 				null,
 				SimpleDatabaseVersion.ZERO_VERSION,
+				hasSchema( connectionCreator ),
+				hasCatalog( connectionCreator ),
 				getSchema( connectionCreator ),
 				getCatalog( connectionCreator ),
 				Boolean.toString( autoCommit ),
@@ -306,6 +310,8 @@ public class DriverManagerConnectionProviderImpl
 				dbInfo.getJdbcDriver(),
 				dialect.getClass(),
 				dialect.getVersion(),
+				dbInfo.hasSchema(),
+				dbInfo.hasCatalog(),
 				dbInfo.getSchema(),
 				dbInfo.getCatalog(),
 				dbInfo.getAutoCommitMode(),

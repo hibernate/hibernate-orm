@@ -172,6 +172,9 @@ public class DriverManagerConnectionProviderImpl
 					getInt( POOL_SIZE, configurationValues, 20 ),
 					getFetchSize( connection )
 			);
+			if ( !connection.getAutoCommit() ) {
+				connection.rollback();
+			}
 		}
 		catch (SQLException e) {
 			throw new JDBCConnectionException( "Could not create connection", e );

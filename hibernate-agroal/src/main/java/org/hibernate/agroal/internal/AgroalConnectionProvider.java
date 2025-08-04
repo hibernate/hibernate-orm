@@ -172,7 +172,7 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 		final var poolConfig = agroalDataSource.getConfiguration().connectionPoolConfiguration();
 		final var connectionConfig = poolConfig.connectionFactoryConfiguration();
 		try ( var connection = agroalDataSource.getConnection() ) {
-			return new DatabaseConnectionInfoImpl(
+			final var info = new DatabaseConnectionInfoImpl(
 					AgroalConnectionProvider.class,
 					connectionConfig.jdbcUrl(),
 					// Attempt to resolve the driver name from the dialect,
@@ -196,6 +196,10 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 					poolConfig.maxSize(),
 					getFetchSize( connection )
 			);
+			if ( !connection.getAutoCommit() ) {
+				connection.rollback();
+			}
+			return info;
 		}
 		catch (SQLException e) {
 			throw new JDBCConnectionException( "Could not create connection", e );

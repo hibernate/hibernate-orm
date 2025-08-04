@@ -191,6 +191,9 @@ public class C3P0ConnectionProvider
 							DEFAULT_MAX_POOL_SIZE ),
 					fetchSize
 			);
+			if ( !connection.getAutoCommit() ) {
+				connection.rollback();
+			}
 		}
 		catch (SQLException e) {
 			throw new JDBCConnectionException( "Could not create connection", e );

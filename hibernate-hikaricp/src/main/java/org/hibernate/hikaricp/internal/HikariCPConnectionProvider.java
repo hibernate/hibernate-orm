@@ -101,7 +101,7 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
 		try ( var connection = hikariDataSource.getConnection() ) {
-			return new DatabaseConnectionInfoImpl(
+			final var info = new DatabaseConnectionInfoImpl(
 					HikariCPConnectionProvider.class,
 					hikariConfig.getJdbcUrl(),
 					// Attempt to resolve the driver name from the dialect,
@@ -124,6 +124,10 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 					hikariConfig.getMaximumPoolSize(),
 					getFetchSize( connection )
 			);
+			if ( !connection.getAutoCommit() ) {
+				connection.rollback();
+			}
+			return info;
 		}
 		catch (SQLException e) {
 			throw new JDBCConnectionException( "Could not create connection", e );

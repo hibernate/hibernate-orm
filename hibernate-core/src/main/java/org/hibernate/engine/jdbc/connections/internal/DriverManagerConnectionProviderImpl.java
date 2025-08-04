@@ -19,6 +19,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.exception.JDBCConnectionException;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceException;
@@ -44,6 +45,7 @@ import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionI
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getLong;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 
 /**
  * A connection provider that uses the {@link DriverManager} directly to open connections and provides
@@ -70,7 +72,7 @@ public class DriverManagerConnectionProviderImpl
 
 	// create the pool ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private volatile ServiceRegistryImplementor serviceRegistry;
+	private volatile ServiceRegistry serviceRegistry;
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
@@ -80,67 +82,33 @@ public class DriverManagerConnectionProviderImpl
 	@Override
 	public void configure(Map<String, Object> configurationValues) {
 		ConnectionInfoLogger.INSTANCE.usingHibernateBuiltInConnectionPool();
-		PooledConnections pool = buildPool( configurationValues, serviceRegistry );
+		final PooledConnections pool = buildPool( configurationValues, serviceRegistry );
 		final long validationInterval = getLong( VALIDATION_INTERVAL, configurationValues, 30 );
 		state = new PoolState( pool, validationInterval );
 	}
 
-	private PooledConnections buildPool(Map<String,Object> configuration, ServiceRegistryImplementor serviceRegistry) {
-		final var creator = buildCreator( configuration, serviceRegistry );
+	private PooledConnections buildPool(Map<String,Object> configuration, ServiceRegistry serviceRegistry) {
+		// connection settings
+		final String url = jdbcUrl( configuration );
+		final String driverClassName = getString( DRIVER, configuration );
+		final Properties connectionProps = getConnectionProperties( configuration );
 		final boolean autoCommit = getBoolean( AUTOCOMMIT, configuration );  // default autocommit to false
+		final Integer isolation = extractIsolation( configuration );
+		final String initSql = getString( INIT_SQL, configuration );
+
+		// pool settings
 		final int minSize = getInt( MIN_SIZE, configuration, 1 );
 		final int maxSize = getInt( POOL_SIZE, configuration, 20 );
 		final int initialSize = getInt( INITIAL_SIZE, configuration, minSize );
-		return new PooledConnections.Builder( creator )
-				.autoCommit( autoCommit )
-				.initialSize( initialSize )
-				.minSize( minSize )
-				.maxSize( maxSize )
-				.validator( this )
-				.build();
-	}
 
-	private static ConnectionCreator buildCreator(
-			Map<String,Object> configurationValues, ServiceRegistryImplementor serviceRegistry) {
-		final String url = jdbcUrl( configurationValues );
-
-		String driverClassName = (String) configurationValues.get( DRIVER );
-		boolean success = false;
-		Driver driver = null;
-		if ( driverClassName != null ) {
-			driver = loadDriverIfPossible( driverClassName, serviceRegistry );
-			success = true;
+		final Driver driver = loadDriver( driverClassName, serviceRegistry, url );
+		if ( driver == null ) {
+			//we're hoping that the driver is already loaded
+			logAvailableDrivers();
 		}
-		else {
-			//try to guess the driver class from the JDBC URL
-			for ( var database: Database.values() ) {
-				if ( database.matchesUrl( url ) ) {
-					driverClassName = database.getDriverClassName( url );
-					if ( driverClassName != null ) {
-						try {
-							loadDriverIfPossible( driverClassName, serviceRegistry );
-							success = true;
-						}
-						catch (Exception e) {
-							//swallow it, since this was not
-							//an explicit setting by the user
-						}
-						break;
-					}
-				}
-			}
-		}
-
-		final String driverList = success ? driverClassName : driverList();
-
-		final Properties connectionProps = getConnectionProperties( configurationValues );
-
-		final boolean autoCommit = getBoolean( AUTOCOMMIT, configurationValues );
-		final Integer isolation = extractIsolation( configurationValues );
-		final String initSql = (String) configurationValues.get( INIT_SQL );
 
 		final var connectionCreator =
-				getConnectionCreatorFactory( configurationValues, serviceRegistry )
+				getConnectionCreatorFactory( configuration, serviceRegistry )
 						.create(
 								driver,
 								serviceRegistry,
@@ -149,15 +117,14 @@ public class DriverManagerConnectionProviderImpl
 								autoCommit,
 								isolation,
 								initSql,
-								configurationValues
+								configuration
 						);
-
 
 		try ( var connection = connectionCreator.createConnection() ) {
 			dbInfo = new DatabaseConnectionInfoImpl(
 					DriverManagerConnectionProviderImpl.class,
 					url,
-					driverList,
+					driver == null ? null : driver.getClass().getName(),
 					null,
 					SimpleDatabaseVersion.ZERO_VERSION,
 					hasSchema( connection ),
@@ -168,8 +135,8 @@ public class DriverManagerConnectionProviderImpl
 					isolation != null
 							? toIsolationNiceName( isolation )
 							: toIsolationNiceName( getIsolation( connection ) ),
-					getInt( MIN_SIZE, configurationValues, 1 ),
-					getInt( POOL_SIZE, configurationValues, 20 ),
+					minSize,
+					maxSize,
 					getFetchSize( connection )
 			);
 			if ( !connection.getAutoCommit() ) {
@@ -180,11 +147,39 @@ public class DriverManagerConnectionProviderImpl
 			throw new JDBCConnectionException( "Could not create connection", e );
 		}
 
-		return connectionCreator;
+		return new PooledConnections.Builder( connectionCreator )
+				.autoCommit( autoCommit )
+				.initialSize( initialSize )
+				.minSize( minSize )
+				.maxSize( maxSize )
+				.validator( this )
+				.build();
 	}
 
-	private static String driverList() {
-		//we're hoping that the driver is already loaded
+	private static Driver loadDriver(String driverClassName, ServiceRegistry serviceRegistry, String url) {
+		if ( driverClassName != null ) {
+			return loadDriverIfPossible( driverClassName, serviceRegistry );
+		}
+		else {
+			// try to guess the driver class from the JDBC URL
+			for ( var database: Database.values() ) {
+				if ( database.matchesUrl( url ) ) {
+					final String databaseDriverClassName = database.getDriverClassName( url );
+					if ( databaseDriverClassName != null ) {
+						try {
+							return loadDriverIfPossible( databaseDriverClassName, serviceRegistry );
+						}
+						catch (Exception e) {
+							// swallow it, since this was not an explicit setting by the user
+						}
+					}
+				}
+			}
+			return null;
+		}
+	}
+
+	private static void logAvailableDrivers() {
 		ConnectionInfoLogger.INSTANCE.jdbcDriverNotSpecified();
 		final var list = new StringBuilder();
 		DriverManager.drivers()
@@ -194,11 +189,11 @@ public class DriverManagerConnectionProviderImpl
 					}
 					list.append( driver.getClass().getName() );
 				} );
-		return list.toString();
+		ConnectionInfoLogger.INSTANCE.availableJdbcDrivers( list.toString() );
 	}
 
-	private static String jdbcUrl(Map<String, Object> configurationValues) {
-		final String url = (String) configurationValues.get( URL );
+	private static String jdbcUrl(Map<String, Object> configuration) {
+		final String url = (String) configuration.get( URL );
 		if ( url == null ) {
 			throw new ConnectionProviderConfigurationException( "No JDBC URL specified by property '" + JAKARTA_JDBC_URL + "'" );
 		}
@@ -206,8 +201,8 @@ public class DriverManagerConnectionProviderImpl
 	}
 
 	private static ConnectionCreatorFactory getConnectionCreatorFactory(
-			Map<String, Object> configurationValues, ServiceRegistryImplementor serviceRegistry) {
-		final Object connectionCreatorFactory = configurationValues.get( CONNECTION_CREATOR_FACTORY );
+			Map<String, Object> configuration, ServiceRegistry serviceRegistry) {
+		final Object connectionCreatorFactory = configuration.get( CONNECTION_CREATOR_FACTORY );
 		final ConnectionCreatorFactory factory;
 		if ( connectionCreatorFactory instanceof ConnectionCreatorFactory instance ) {
 			factory = instance;
@@ -221,7 +216,7 @@ public class DriverManagerConnectionProviderImpl
 		return factory == null ? ConnectionCreatorFactoryImpl.INSTANCE : factory;
 	}
 
-	private static Driver loadDriverIfPossible(String driverClassName, ServiceRegistryImplementor serviceRegistry) {
+	private static Driver loadDriverIfPossible(String driverClassName, ServiceRegistry serviceRegistry) {
 		if ( driverClassName == null ) {
 			ConnectionInfoLogger.INSTANCE.debug( "No driver class specified" );
 			return null;
@@ -248,7 +243,7 @@ public class DriverManagerConnectionProviderImpl
 	}
 
 	private static ConnectionCreatorFactory loadConnectionCreatorFactory(
-			String connectionCreatorFactoryClassName, ServiceRegistryImplementor serviceRegistry) {
+			String connectionCreatorFactoryClassName, ServiceRegistry serviceRegistry) {
 		if ( connectionCreatorFactoryClassName == null ) {
 			ConnectionInfoLogger.INSTANCE.debug( "No connection creator factory class specified" );
 			return null;
@@ -261,7 +256,8 @@ public class DriverManagerConnectionProviderImpl
 				return factoryClass.newInstance();
 			}
 			catch ( Exception e ) {
-				throw new ServiceException( "Specified ConnectionCreatorFactory " + connectionCreatorFactoryClassName + " could not be loaded", e );
+				throw new ServiceException( "Specified ConnectionCreatorFactory " + connectionCreatorFactoryClassName
+											+ " could not be loaded", e );
 			}
 		}
 		else {
@@ -269,9 +265,8 @@ public class DriverManagerConnectionProviderImpl
 				return (ConnectionCreatorFactory) Class.forName( connectionCreatorFactoryClassName ).newInstance();
 			}
 			catch (Exception e1) {
-				throw new ServiceException(
-						"Specified ConnectionCreatorFactory " + connectionCreatorFactoryClassName + " could not be loaded",
-						e1 );
+				throw new ServiceException( "Specified ConnectionCreatorFactory " + connectionCreatorFactoryClassName
+											+ " could not be loaded", e1 );
 			}
 		}
 	}

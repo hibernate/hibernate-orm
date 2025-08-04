@@ -23,6 +23,7 @@ import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
+import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
@@ -110,7 +111,7 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 
 		ConnectionInfoLogger.INSTANCE.configureConnectionPool( "Agroal" );
 		try {
-			final Map<String, String> config = toStringValuedProperties( properties );
+			final var config = toStringValuedProperties( properties );
 			if ( !properties.containsKey( AgroalSettings.AGROAL_MAX_SIZE ) ) {
 				final String maxSize =
 						properties.containsKey( JdbcSettings.POOL_SIZE )
@@ -170,30 +171,35 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
 		final var poolConfig = agroalDataSource.getConfiguration().connectionPoolConfiguration();
 		final var connectionConfig = poolConfig.connectionFactoryConfiguration();
-		return new DatabaseConnectionInfoImpl(
-				AgroalConnectionProvider.class,
-				connectionConfig.jdbcUrl(),
-				// Attempt to resolve the driver name from the dialect,
-				// in case it wasn't explicitly set and access to the
-				// database metadata is allowed
-				connectionConfig.connectionProviderClass() != null
-						? connectionConfig.connectionProviderClass().toString()
-						: extractDriverNameFromMetadata(),
-				dialect.getClass(),
-				dialect.getVersion(),
-				hasSchema( agroalDataSource),
-				hasCatalog( agroalDataSource),
-				getSchema( agroalDataSource ),
-				getCatalog( agroalDataSource ),
-				Boolean.toString( connectionConfig.autoCommit() ),
-				connectionConfig.jdbcTransactionIsolation() != null
-					&& connectionConfig.jdbcTransactionIsolation().isDefined()
-						? toIsolationNiceName( connectionConfig.jdbcTransactionIsolation().level() )
-						: toIsolationNiceName( getIsolation( agroalDataSource ) ),
-				poolConfig.minSize(),
-				poolConfig.maxSize(),
-				getFetchSize( agroalDataSource )
-		);
+		try ( var connection = agroalDataSource.getConnection() ) {
+			return new DatabaseConnectionInfoImpl(
+					AgroalConnectionProvider.class,
+					connectionConfig.jdbcUrl(),
+					// Attempt to resolve the driver name from the dialect,
+					// in case it wasn't explicitly set and access to the
+					// database metadata is allowed
+					connectionConfig.connectionProviderClass() != null
+							? connectionConfig.connectionProviderClass().toString()
+							: extractDriverNameFromMetadata(),
+					dialect.getClass(),
+					dialect.getVersion(),
+					hasSchema( connection ),
+					hasCatalog( connection ),
+					getSchema( connection ),
+					getCatalog( connection ),
+					Boolean.toString( connectionConfig.autoCommit() ),
+					connectionConfig.jdbcTransactionIsolation() != null
+						&& connectionConfig.jdbcTransactionIsolation().isDefined()
+							? toIsolationNiceName( connectionConfig.jdbcTransactionIsolation().level() )
+							: toIsolationNiceName( getIsolation( connection ) ),
+					poolConfig.minSize(),
+					poolConfig.maxSize(),
+					getFetchSize( connection )
+			);
+		}
+		catch (SQLException e) {
+			throw new JDBCConnectionException( "Could not create connection", e );
+		}
 	}
 
 	private String extractDriverNameFromMetadata() {

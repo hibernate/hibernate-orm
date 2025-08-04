@@ -16,6 +16,7 @@ import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
+import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
@@ -99,29 +100,34 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
-		return new DatabaseConnectionInfoImpl(
-				HikariCPConnectionProvider.class,
-				hikariConfig.getJdbcUrl(),
-				// Attempt to resolve the driver name from the dialect,
-				// in case it wasn't explicitly set and access to the
-				// database metadata is allowed
-				isBlank( hikariConfig.getDriverClassName() )
-						? extractDriverNameFromMetadata()
-						: hikariConfig.getDriverClassName(),
-				dialect.getClass(),
-				dialect.getVersion(),
-				hasSchema( hikariDataSource ),
-				hasCatalog( hikariDataSource ),
-				hikariConfig.getSchema(),
-				hikariConfig.getCatalog(),
-				Boolean.toString( hikariConfig.isAutoCommit() ),
-				hikariConfig.getTransactionIsolation() != null
-						? hikariConfig.getTransactionIsolation()
-						: toIsolationNiceName( getIsolation( hikariDataSource ) ),
-				hikariConfig.getMinimumIdle(),
-				hikariConfig.getMaximumPoolSize(),
-				getFetchSize( hikariDataSource )
-		);
+		try ( var connection = hikariDataSource.getConnection() ) {
+			return new DatabaseConnectionInfoImpl(
+					HikariCPConnectionProvider.class,
+					hikariConfig.getJdbcUrl(),
+					// Attempt to resolve the driver name from the dialect,
+					// in case it wasn't explicitly set and access to the
+					// database metadata is allowed
+					isBlank( hikariConfig.getDriverClassName() )
+							? extractDriverNameFromMetadata()
+							: hikariConfig.getDriverClassName(),
+					dialect.getClass(),
+					dialect.getVersion(),
+					hasSchema( connection ),
+					hasCatalog( connection ),
+					hikariConfig.getSchema(),
+					hikariConfig.getCatalog(),
+					Boolean.toString( hikariConfig.isAutoCommit() ),
+					hikariConfig.getTransactionIsolation() != null
+							? hikariConfig.getTransactionIsolation()
+							: toIsolationNiceName( getIsolation( connection ) ),
+					hikariConfig.getMinimumIdle(),
+					hikariConfig.getMaximumPoolSize(),
+					getFetchSize( connection )
+			);
+		}
+		catch (SQLException e) {
+			throw new JDBCConnectionException( "Could not create connection", e );
+		}
 	}
 
 	private String extractDriverNameFromMetadata() {

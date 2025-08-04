@@ -15,7 +15,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  *
  * @author Christian Beikov
  */
-interface ConnectionCreatorFactory {
+public interface ConnectionCreatorFactory {
 
 	ConnectionCreator create(
 			Driver driver,

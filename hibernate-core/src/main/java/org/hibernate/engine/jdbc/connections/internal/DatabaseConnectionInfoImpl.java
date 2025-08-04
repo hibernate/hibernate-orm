@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.jdbc.connections.internal;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
 
@@ -16,7 +17,6 @@ import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
-import javax.sql.DataSource;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.interpretIsolation;
@@ -117,114 +117,55 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 		);
 	}
 
-	public static boolean hasSchema(DataSource dataSource) {
-		try ( var conn = dataSource.getConnection() ) {
-			return conn.getMetaData().supportsSchemasInDataManipulation();
+	public static boolean hasSchema(Connection connection) {
+		try {
+			return connection.getMetaData().supportsSchemasInTableDefinitions();
 		}
 		catch ( SQLException ignored ) {
 			return true;
 		}
 	}
 
-	public static boolean hasCatalog(DataSource dataSource) {
-		try ( var conn = dataSource.getConnection() ) {
-			return conn.getMetaData().supportsCatalogsInDataManipulation();
+	public static boolean hasCatalog(Connection connection) {
+		try {
+			return connection.getMetaData().supportsCatalogsInDataManipulation();
 		}
 		catch ( SQLException ignored ) {
 			return true;
 		}
 	}
 
-	public static String getSchema(DataSource dataSource) {
-		try ( var conn = dataSource.getConnection() ) {
+	public static String getSchema(Connection connection) {
+		try {
 			// method introduced in 1.7
-			return conn.getSchema();
+			return connection.getSchema();
 		}
 		catch ( SQLException|AbstractMethodError ignored ) {
 			return null;
 		}
 	}
 
-	public static String getCatalog(DataSource dataSource) {
-		try ( var conn = dataSource.getConnection() ) {
-			return conn.getCatalog();
+	public static String getCatalog(Connection connection) {
+		try {
+			return connection.getCatalog();
 		}
 		catch ( SQLException ignored ) {
 			return null;
 		}
 	}
 
-	static boolean hasSchema(ConnectionCreator creator) {
-		try ( var conn = creator.createConnection() ) {
-			return conn.getMetaData().supportsSchemasInTableDefinitions();
-		}
-		catch ( SQLException ignored ) {
-			return true;
-		}
-	}
-
-	static boolean hasCatalog(ConnectionCreator creator) {
-		try ( var conn = creator.createConnection() ) {
-			return conn.getMetaData().supportsCatalogsInDataManipulation();
-		}
-		catch ( SQLException ignored ) {
-			return true;
-		}
-	}
-
-	static String getSchema(ConnectionCreator creator) {
-		try ( var conn = creator.createConnection() ) {
-			// method introduced in 1.7
-			return conn.getSchema();
-		}
-		catch ( SQLException|AbstractMethodError ignored ) {
-			return null;
-		}
-	}
-
-	static String getCatalog(ConnectionCreator creator) {
-		try ( var conn = creator.createConnection() ) {
-			return conn.getCatalog();
+	public static Integer getFetchSize(Connection connection) {
+		try ( var statement = connection.createStatement() ) {
+			return statement.getFetchSize();
 		}
 		catch ( SQLException ignored ) {
 			return null;
 		}
 	}
 
-	public static Integer getFetchSize(DataSource dataSource) {
-		try ( var conn = dataSource.getConnection() ) {
-			try ( var statement = conn.createStatement() ) {
-				return statement.getFetchSize();
-			}
-		}
-		catch ( SQLException ignored ) {
-			return null;
-		}
-	}
-
-	public static Integer getIsolation(DataSource dataSource) {
-		try ( var conn = dataSource.getConnection() ) {
-			return conn.getTransactionIsolation();
-		}
-		catch ( SQLException ignored ) {
-			return null;
-		}
-	}
-
-	static Integer getFetchSize(ConnectionCreator creator) {
-		try ( var conn = creator.createConnection() ) {
-			try ( var statement = conn.createStatement() ) {
-				return statement.getFetchSize();
-			}
-		}
-		catch ( SQLException ignored ) {
-			return null;
-		}
-	}
-
-	static Integer getIsolation(ConnectionCreator creator) {
-		try ( var conn = creator.createConnection() ) {
-			return conn.getTransactionIsolation();
+	public static Integer getIsolation(Connection connection) {
+		try {
+			return connection.getTransactionIsolation();
 		}
 		catch ( SQLException ignored ) {
 			return null;

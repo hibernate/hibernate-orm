@@ -13,6 +13,7 @@ import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
+import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
@@ -163,32 +164,37 @@ public class C3P0ConnectionProvider
 		final var poolSettings = poolSettings( properties );
 		dataSource = createDataSource( jdbcUrl, connectionProps, poolSettings );
 
-		final Integer fetchSize = getFetchSize( dataSource );
-		final boolean hasSchema = hasSchema( dataSource );
-		final boolean hasCatalog = hasCatalog( dataSource );
-		final String schema = getSchema( dataSource );
-		final String catalog = getCatalog( dataSource );
-		if ( isolation == null ) {
-			isolation = getIsolation( dataSource );
+		try ( var connection = dataSource.getConnection() ) {
+			final Integer fetchSize = getFetchSize( connection );
+			final boolean hasSchema = hasSchema( connection );
+			final boolean hasCatalog = hasCatalog( connection );
+			final String schema = getSchema( connection );
+			final String catalog = getCatalog( connection );
+			if ( isolation == null ) {
+				isolation = getIsolation( connection );
+			}
+			dbInfoProducer = dialect -> new DatabaseConnectionInfoImpl(
+					C3P0ConnectionProvider.class,
+					jdbcUrl,
+					jdbcDriverClass,
+					dialect.getClass(),
+					dialect.getVersion(),
+					hasSchema,
+					hasCatalog,
+					schema,
+					catalog,
+					Boolean.toString( autocommit ),
+					isolation == null ? null : toIsolationNiceName( isolation ),
+					requireNonNullElse( getInteger( C3P0_STYLE_MIN_POOL_SIZE.substring( 5 ), poolSettings ),
+							DEFAULT_MIN_POOL_SIZE ),
+					requireNonNullElse( getInteger( C3P0_STYLE_MAX_POOL_SIZE.substring( 5 ), poolSettings ),
+							DEFAULT_MAX_POOL_SIZE ),
+					fetchSize
+			);
 		}
-		dbInfoProducer = dialect -> new DatabaseConnectionInfoImpl(
-				C3P0ConnectionProvider.class,
-				jdbcUrl,
-				jdbcDriverClass,
-				dialect.getClass(),
-				dialect.getVersion(),
-				hasSchema,
-				hasCatalog,
-				schema,
-				catalog,
-				Boolean.toString( autocommit ),
-				isolation == null ? null : toIsolationNiceName( isolation ),
-				requireNonNullElse( getInteger( C3P0_STYLE_MIN_POOL_SIZE.substring( 5 ), poolSettings ),
-						DEFAULT_MIN_POOL_SIZE ),
-				requireNonNullElse( getInteger( C3P0_STYLE_MAX_POOL_SIZE.substring( 5 ), poolSettings ),
-						DEFAULT_MAX_POOL_SIZE ),
-				fetchSize
-		);
+		catch (SQLException e) {
+			throw new JDBCConnectionException( "Could not create connection", e );
+		}
 	}
 
 	private DataSource createDataSource(String jdbcUrl, Properties connectionProps, Map<String, Object> poolProperties) {

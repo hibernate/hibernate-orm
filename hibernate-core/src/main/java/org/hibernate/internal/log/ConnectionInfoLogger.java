@@ -55,6 +55,10 @@ public interface ConnectionInfoLogger extends BasicLogger {
 					+ JdbcSettings.DRIVER + "'")
 	void jdbcDriverNotSpecified();
 
+	@LogMessage(level = INFO)
+	@Message(id = 10001007, value = "Available JDBC drivers: [%s]")
+	void availableJdbcDrivers(String availableDrivers);
+
 	@LogMessage(level = DEBUG)
 	@Message(value = "Cleaning up connection pool [%s]", id = 10001008)
 	void cleaningUpConnectionPool(String info);

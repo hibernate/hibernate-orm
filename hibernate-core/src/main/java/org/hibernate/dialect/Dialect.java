@@ -3694,7 +3694,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *     <li>Call {@link IdentifierHelperBuilder#applyIdentifierCasing(DatabaseMetaData)}
 	 *     <li>Call {@link IdentifierHelperBuilder#applyReservedWords(DatabaseMetaData)}
 	 *     <li>Applies {@link AnsiSqlKeywords#sql2003()} as reserved words</li>
-	 *     <li>Applies the {#link #sqlKeywords} collected here as reserved words</li>
+	 *     <li>Applies the {@link #sqlKeywords} collected here as reserved words</li>
 	 *     <li>Applies the Dialect's {@link NameQualifierSupport}, if it defines one</li>
 	 * </ul>
 	 *
@@ -4083,7 +4083,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * {@link Connection#getSchema()} is always available directly.
 	 * Never used internally.
 	 */
-	@Deprecated
+	@Deprecated(since = "7.0")
 	public String getCurrentSchemaCommand() {
 		return null;
 	}
@@ -4891,7 +4891,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *                      an exception. Just rethrow and Hibernate will
 	 *                      handle it.
 	 */
-	public boolean supportsNamedParameters(@Nullable DatabaseMetaData databaseMetaData) throws SQLException {
+	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
 		return databaseMetaData != null && databaseMetaData.supportsNamedParameters();
 	}
 

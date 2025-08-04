@@ -556,8 +556,7 @@ public class SequenceStyleGenerator
 	 * @return sequence increment value
 	 */
 	private Number getSequenceIncrementValue(JdbcEnvironment jdbcEnvironment, String sequenceName) {
-		for ( SequenceInformation information :
-				jdbcEnvironment.getExtractedDatabaseMetaData().getSequenceInformationList() ) {
+		for ( var information : jdbcEnvironment.getExtractedDatabaseMetaData().getSequenceInformationList() ) {
 			final QualifiedSequenceName name = information.getSequenceName();
 			if ( sequenceName.equalsIgnoreCase( name.getSequenceName().getText() )
 					&& isDefaultSchema( jdbcEnvironment, name.getCatalogName(), name.getSchemaName() ) ) {

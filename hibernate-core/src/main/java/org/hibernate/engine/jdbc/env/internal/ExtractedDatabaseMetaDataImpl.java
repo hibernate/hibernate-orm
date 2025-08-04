@@ -6,12 +6,11 @@ package org.hibernate.engine.jdbc.env.internal;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.List;
 
 import org.hibernate.HibernateException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.cursor.internal.StandardRefCursorSupport;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
@@ -20,9 +19,11 @@ import org.hibernate.engine.jdbc.env.spi.SQLStateType;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
+import static java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE;
 import static java.util.Collections.emptyList;
 import static java.util.stream.StreamSupport.stream;
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+import static org.hibernate.engine.jdbc.env.spi.SQLStateType.interpretReportedSQLStateType;
 
 /**
  * Standard implementation of {@link ExtractedDatabaseMetaData}
@@ -57,50 +58,59 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 
 	//Lazily initialized: loading all sequence information upfront has been
 	//shown to be too slow in some cases. In this way we only load it
-	//when there is actual need for these details.
+	//when there is an actual need for these details.
 	private List<SequenceInformation> sequenceInformationList;
 
-	private ExtractedDatabaseMetaDataImpl(
-			JdbcEnvironment jdbcEnvironment,
-			JdbcConnectionAccess connectionAccess,
-			String connectionCatalogName,
-			String connectionSchemaName,
-			String databaseProductName,
-			String databaseProductVersion,
-			boolean supportsRefCursors,
-			boolean supportsNamedParameters,
-			boolean supportsScrollableResults,
-			boolean supportsGetGeneratedKeys,
-			boolean supportsBatchUpdates,
-			boolean supportsDataDefinitionInTransaction,
-			boolean doesDataDefinitionCauseTransactionCommit,
-			SQLStateType sqlStateType,
-			int transactionIsolation,
-			int defaultTransactionIsolation,
-			int defaultFetchSize,
-			String url,
-			String driver,
-			boolean jdbcMetadataIsAccessible) {
-		this.jdbcEnvironment = jdbcEnvironment;
-		this.connectionAccess = connectionAccess;
-		this.connectionCatalogName = connectionCatalogName;
-		this.connectionSchemaName = connectionSchemaName;
-		this.databaseProductName = databaseProductName;
-		this.databaseProductVersion = databaseProductVersion;
-		this.supportsRefCursors = supportsRefCursors;
-		this.supportsNamedParameters = supportsNamedParameters;
-		this.supportsScrollableResults = supportsScrollableResults;
-		this.supportsGetGeneratedKeys = supportsGetGeneratedKeys;
-		this.supportsBatchUpdates = supportsBatchUpdates;
-		this.supportsDataDefinitionInTransaction = supportsDataDefinitionInTransaction;
-		this.doesDataDefinitionCauseTransactionCommit = doesDataDefinitionCauseTransactionCommit;
-		this.sqlStateType = sqlStateType;
-		this.transactionIsolation = transactionIsolation;
-		this.defaultTransactionIsolation = defaultTransactionIsolation;
-		this.defaultFetchSize = defaultFetchSize;
-		this.url = url;
-		this.driver = driver;
-		this.jdbcMetadataAccessible = jdbcMetadataIsAccessible;
+	ExtractedDatabaseMetaDataImpl(JdbcEnvironment environment) {
+		jdbcEnvironment = environment;
+		connectionAccess = null;
+		jdbcMetadataAccessible = false;
+		connectionSchemaName = null;
+		connectionCatalogName = null;
+		databaseProductName = null;
+		databaseProductVersion = null;
+		supportsRefCursors = false;
+		supportsNamedParameters = false;
+		supportsScrollableResults = false;
+		supportsGetGeneratedKeys = false;
+		supportsBatchUpdates = true;
+		supportsDataDefinitionInTransaction = false;
+		doesDataDefinitionCauseTransactionCommit = false;
+		sqlStateType = null;
+		url = null;
+		driver = null;
+		defaultTransactionIsolation = 0;
+		transactionIsolation = 0;
+		defaultFetchSize = -1;
+	}
+
+	ExtractedDatabaseMetaDataImpl(
+			JdbcEnvironment environment,
+			JdbcConnectionAccess connections,
+			DatabaseMetaData metaData)
+			throws SQLException {
+		jdbcEnvironment = environment;
+		connectionAccess = connections;
+		jdbcMetadataAccessible = true;
+		final Dialect dialect = environment.getDialect();
+		final Connection connection = metaData.getConnection();
+		connectionSchemaName = dialect.getSchemaNameResolver().resolveSchemaName( connection, dialect );
+		connectionCatalogName = connection.getCatalog();
+		databaseProductName = metaData.getDatabaseProductName();
+		databaseProductVersion = metaData.getDatabaseProductVersion();
+		supportsRefCursors = StandardRefCursorSupport.supportsRefCursors( metaData );
+		supportsNamedParameters = dialect.supportsNamedParameters( metaData );
+		supportsScrollableResults = metaData.supportsResultSetType( TYPE_SCROLL_INSENSITIVE );
+		supportsGetGeneratedKeys = metaData.supportsGetGeneratedKeys();
+		supportsBatchUpdates = metaData.supportsBatchUpdates();
+		supportsDataDefinitionInTransaction = !metaData.dataDefinitionIgnoredInTransactions();
+		doesDataDefinitionCauseTransactionCommit = metaData.dataDefinitionCausesTransactionCommit();
+		sqlStateType = interpretReportedSQLStateType( metaData.getSQLStateType() );
+		url = metaData.getURL();
+		driver = metaData.getDriverName();
+		defaultTransactionIsolation = metaData.getDefaultTransactionIsolation();
+		transactionIsolation = connection.getTransactionIsolation();
+		defaultFetchSize = defaultFetchSize( connection );
 	}
 
 	@Override
@@ -215,137 +225,12 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		return jdbcMetadataAccessible;
 	}
 
-	public static class Builder {
-		private final JdbcEnvironment jdbcEnvironment;
-		private final boolean jdbcMetadataIsAccessible;
-		private final JdbcConnectionAccess connectionAccess;
-
-		private String connectionSchemaName;
-		private String connectionCatalogName;
-
-		private String databaseProductName;
-		private String databaseProductVersion;
-
-		private boolean supportsRefCursors;
-		private boolean supportsNamedParameters;
-		private boolean supportsScrollableResults;
-		private boolean supportsGetGeneratedKeys;
-		// In absence of DatabaseMetaData batching updates is assumed to be supported
-		private boolean supportsBatchUpdates = true;
-		private boolean supportsDataDefinitionInTransaction;
-		private boolean doesDataDefinitionCauseTransactionCommit;
-		private SQLStateType sqlStateType;
-		private String url;
-		private String driver;
-		private int defaultTransactionIsolation;
-		private int transactionIsolation;
-		private int defaultFetchSize;
-
-		public Builder(JdbcEnvironment jdbcEnvironment, boolean jdbcMetadataIsAccessible, JdbcConnectionAccess connectionAccess) {
-			this.jdbcEnvironment = jdbcEnvironment;
-			this.jdbcMetadataIsAccessible = jdbcMetadataIsAccessible;
-			this.connectionAccess = connectionAccess;
+	private static int defaultFetchSize(Connection connection) {
+		try ( var statement = connection.createStatement() ) {
+			return statement.getFetchSize();
 		}
-
-		public Builder apply(DatabaseMetaData databaseMetaData) throws SQLException {
-			connectionCatalogName = databaseMetaData.getConnection().getCatalog();
-			connectionSchemaName = databaseMetaData.getConnection().getSchema();
-			databaseProductName = databaseMetaData.getDatabaseProductName();
-			databaseProductVersion = databaseMetaData.getDatabaseProductVersion();
-			supportsRefCursors = StandardRefCursorSupport.supportsRefCursors( databaseMetaData );
-			supportsNamedParameters = databaseMetaData.supportsNamedParameters();
-			supportsScrollableResults = databaseMetaData.supportsResultSetType( ResultSet.TYPE_SCROLL_INSENSITIVE );
-			supportsGetGeneratedKeys = databaseMetaData.supportsGetGeneratedKeys();
-			supportsBatchUpdates = databaseMetaData.supportsBatchUpdates();
-			supportsDataDefinitionInTransaction = !databaseMetaData.dataDefinitionIgnoredInTransactions();
-			doesDataDefinitionCauseTransactionCommit = databaseMetaData.dataDefinitionCausesTransactionCommit();
-			sqlStateType = SQLStateType.interpretReportedSQLStateType( databaseMetaData.getSQLStateType() );
-			url = databaseMetaData.getURL();
-			driver = databaseMetaData.getDriverName();
-			defaultTransactionIsolation = databaseMetaData.getDefaultTransactionIsolation();
-			transactionIsolation = databaseMetaData.getConnection().getTransactionIsolation();
-			try ( Statement statement = databaseMetaData.getConnection().createStatement() ) {
-				defaultFetchSize = statement.getFetchSize();
-			}
-			catch (SQLException sqle) {
-				defaultFetchSize = -1;
-			}
-			return this;
-		}
-
-		public Builder setConnectionSchemaName(String connectionSchemaName) {
-			this.connectionSchemaName = connectionSchemaName;
-			return this;
-		}
-
-		public Builder setConnectionCatalogName(String connectionCatalogName) {
-			this.connectionCatalogName = connectionCatalogName;
-			return this;
-		}
-
-		public Builder setSupportsRefCursors(boolean supportsRefCursors) {
-			this.supportsRefCursors = supportsRefCursors;
-			return this;
-		}
-
-		public Builder setSupportsNamedParameters(boolean supportsNamedParameters) {
-			this.supportsNamedParameters = supportsNamedParameters;
-			return this;
-		}
-
-		public Builder setSupportsScrollableResults(boolean supportsScrollableResults) {
-			this.supportsScrollableResults = supportsScrollableResults;
-			return this;
-		}
-
-		public Builder setSupportsGetGeneratedKeys(boolean supportsGetGeneratedKeys) {
-			this.supportsGetGeneratedKeys = supportsGetGeneratedKeys;
-			return this;
-		}
-
-		public Builder setSupportsBatchUpdates(boolean supportsBatchUpdates) {
-			this.supportsBatchUpdates = supportsBatchUpdates;
-			return this;
-		}
-
-		public Builder setSupportsDataDefinitionInTransaction(boolean supportsDataDefinitionInTransaction) {
-			this.supportsDataDefinitionInTransaction = supportsDataDefinitionInTransaction;
-			return this;
-		}
-
-		public Builder setDoesDataDefinitionCauseTransactionCommit(boolean doesDataDefinitionCauseTransactionCommit) {
-			this.doesDataDefinitionCauseTransactionCommit = doesDataDefinitionCauseTransactionCommit;
-			return this;
-		}
-
-		public Builder setSqlStateType(SQLStateType sqlStateType) {
-			this.sqlStateType = sqlStateType;
-			return this;
-		}
-
-		public ExtractedDatabaseMetaDataImpl build() {
-			return new ExtractedDatabaseMetaDataImpl(
-					jdbcEnvironment,
-					connectionAccess,
-					connectionCatalogName,
-					connectionSchemaName,
-					databaseProductName,
-					databaseProductVersion,
-					supportsRefCursors,
-					supportsNamedParameters,
-					supportsScrollableResults,
-					supportsGetGeneratedKeys,
-					supportsBatchUpdates,
-					supportsDataDefinitionInTransaction,
-					doesDataDefinitionCauseTransactionCommit,
-					sqlStateType,
-					transactionIsolation,
-					defaultTransactionIsolation,
-					defaultFetchSize,
-					url,
-					driver,
-					jdbcMetadataIsAccessible
-			);
+		catch (SQLException ignore) {
+			return  -1;
 		}
 	}
 

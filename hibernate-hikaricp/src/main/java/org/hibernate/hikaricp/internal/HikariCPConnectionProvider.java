@@ -27,6 +27,8 @@ import com.zaxxer.hikari.HikariDataSource;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getFetchSize;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getIsolation;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasCatalog;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasSchema;
 import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.allowJdbcMetadataAccess;
 import static org.hibernate.hikaricp.internal.HikariConfigurationUtil.loadConfiguration;
 import static org.hibernate.internal.util.StringHelper.isBlank;
@@ -108,6 +110,8 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 						: hikariConfig.getDriverClassName(),
 				dialect.getClass(),
 				dialect.getVersion(),
+				hasSchema( hikariDataSource ),
+				hasCatalog( hikariDataSource ),
 				hikariConfig.getSchema(),
 				hikariConfig.getCatalog(),
 				Boolean.toString( hikariConfig.isAutoCommit() ),

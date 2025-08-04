@@ -26,9 +26,33 @@ public interface ExtractedDatabaseMetaData {
 	 */
 	JdbcEnvironment getJdbcEnvironment();
 
+	/**
+	 * The name of the database, according to the JDBC driver.
+	 */
 	String getDatabaseProductName();
 
+	/**
+	 * The version of the database, according to the JDBC driver.
+	 */
 	String getDatabaseProductVersion();
+
+	/**
+	 * Does this driver support named schemas in DML?
+	 *
+	 * @return {@code false} indicates the driver reported false;
+	 * {@code true} indicates the driver reported true or that
+	 * the driver could not be asked.
+	 */
+	boolean supportsSchemas();
+
+	/**
+	 * Does this driver support named catalogs in DML?
+	 *
+	 * @return {@code false} indicates the driver reported false;
+	 * {@code true} indicates the driver reported true or that
+	 * the driver could not be asked.
+	 */
+	boolean supportsCatalogs();
 
 	/**
 	 * Retrieve the name of the catalog in effect when we connected to the database.
@@ -59,8 +83,9 @@ public interface ExtractedDatabaseMetaData {
 	/**
 	 * Does the driver report supporting {@link java.sql.Types#REF_CURSOR}?
 	 *
-	 * @return {@code true} indicates the driver reported true; {@code false} indicates the driver reported false
-	 * or that the driver could not be asked.
+	 * @return {@code true} indicates the driver reported true;
+	 * {@code false} indicates the driver reported false or that
+	 * the driver could not be asked.
 	 *
 	 * @see java.sql.DatabaseMetaData#supportsRefCursors()
 	 * @see org.hibernate.dialect.Dialect#supportsRefCursors

@@ -38,6 +38,8 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 	protected final String jdbcDriver;
 	private final Class<? extends Dialect> dialectClass;
 	protected final DatabaseVersion dialectVersion;
+	private final boolean hasSchema;
+	private final boolean hasCatalog;
 	protected final String schema;
 	protected final String catalog;
 	protected final String autoCommitMode;
@@ -51,6 +53,8 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 			String jdbcUrl,
 			String jdbcDriver,
 			Class<? extends Dialect> dialectClass, DatabaseVersion dialectVersion,
+			boolean hasSchema,
+			boolean hasCatalog,
 			String schema,
 			String catalog,
 			String autoCommitMode,
@@ -62,6 +66,8 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 		this.jdbcUrl = nullIfEmpty( jdbcUrl );
 		this.jdbcDriver = nullIfEmpty( jdbcDriver );
 		this.dialectVersion = dialectVersion;
+		this.hasSchema = hasSchema;
+		this.hasCatalog = hasCatalog;
 		this.schema = schema;
 		this.catalog = catalog;
 		this.autoCommitMode = nullIfEmpty( autoCommitMode );
@@ -79,6 +85,8 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 				determineDriver( settings ),
 				dialect.getClass(),
 				dialect.getVersion(),
+				true,
+				true,
 				null,
 				null,
 				determineAutoCommitMode( settings ),
@@ -91,14 +99,48 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 	}
 
 	public DatabaseConnectionInfoImpl(Dialect dialect) {
-		this( null, null, null, dialect.getClass(), dialect.getVersion(), null, null, null, null, null, null, null );
+		this(
+				null,
+				null,
+				null,
+				dialect.getClass(),
+				dialect.getVersion(),
+				true,
+				true,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null
+		);
+	}
+
+	public static boolean hasSchema(DataSource dataSource) {
+		try ( var conn = dataSource.getConnection() ) {
+			return conn.getMetaData().supportsSchemasInDataManipulation();
+		}
+		catch ( SQLException ignored ) {
+			return true;
+		}
+	}
+
+	public static boolean hasCatalog(DataSource dataSource) {
+		try ( var conn = dataSource.getConnection() ) {
+			return conn.getMetaData().supportsCatalogsInDataManipulation();
+		}
+		catch ( SQLException ignored ) {
+			return true;
+		}
 	}
 
 	public static String getSchema(DataSource dataSource) {
 		try ( var conn = dataSource.getConnection() ) {
+			// method introduced in 1.7
 			return conn.getSchema();
 		}
-		catch ( SQLException ignored ) {
+		catch ( SQLException|AbstractMethodError ignored ) {
 			return null;
 		}
 	}
@@ -112,11 +154,30 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 		}
 	}
 
-	static String getSchema(ConnectionCreator creator) {
+	static boolean hasSchema(ConnectionCreator creator) {
 		try ( var conn = creator.createConnection() ) {
-			return conn.getSchema();
+			return conn.getMetaData().supportsSchemasInTableDefinitions();
 		}
 		catch ( SQLException ignored ) {
+			return true;
+		}
+	}
+
+	static boolean hasCatalog(ConnectionCreator creator) {
+		try ( var conn = creator.createConnection() ) {
+			return conn.getMetaData().supportsCatalogsInDataManipulation();
+		}
+		catch ( SQLException ignored ) {
+			return true;
+		}
+	}
+
+	static String getSchema(ConnectionCreator creator) {
+		try ( var conn = creator.createConnection() ) {
+			// method introduced in 1.7
+			return conn.getSchema();
+		}
+		catch ( SQLException|AbstractMethodError ignored ) {
 			return null;
 		}
 	}
@@ -221,6 +282,16 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 	}
 
 	@Override
+	public boolean hasSchema() {
+		return hasSchema;
+	}
+
+	@Override
+	public boolean hasCatalog() {
+		return hasCatalog;
+	}
+
+	@Override
 	public String toInfoString() {
 		return """
 				\tDatabase JDBC URL [%s]
@@ -239,8 +310,8 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 						handleEmpty( jdbcDriver ),
 						handleEmpty( dialectClass ),
 						handleEmpty( dialectVersion ),
-						handleEmpty( catalog ),
-						handleEmpty( schema ),
+						handleEmpty( catalog, hasCatalog ),
+						handleEmpty( schema, hasSchema ),
 						handleEmpty( autoCommitMode ),
 						handleEmpty( isolationLevel ),
 						handleFetchSize( fetchSize ),
@@ -252,6 +323,10 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 
 	private static String handleEmpty(String value) {
 		return isNotEmpty( value ) ? value : DEFAULT;
+	}
+
+	private static String handleEmpty(String value, boolean defined) {
+		return isNotEmpty( value ) ? value : (defined ? "unknown" : "undefined");
 	}
 
 	private static String handleEmpty(DatabaseVersion dialectVersion) {

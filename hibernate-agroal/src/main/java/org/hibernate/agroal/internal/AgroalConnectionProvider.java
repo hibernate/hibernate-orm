@@ -42,6 +42,8 @@ import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionI
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getFetchSize;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getIsolation;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getSchema;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasCatalog;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasSchema;
 import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.allowJdbcMetadataAccess;
 
 /**
@@ -179,6 +181,8 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 						: extractDriverNameFromMetadata(),
 				dialect.getClass(),
 				dialect.getVersion(),
+				hasSchema( agroalDataSource),
+				hasCatalog( agroalDataSource),
 				getSchema( agroalDataSource ),
 				getCatalog( agroalDataSource ),
 				Boolean.toString( connectionConfig.autoCommit() ),

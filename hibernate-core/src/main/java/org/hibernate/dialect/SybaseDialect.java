@@ -65,7 +65,6 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
@@ -605,8 +604,8 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 				);
 			}
 
-			try (final java.sql.Statement statement = connection.createStatement()) {
-				try (ResultSet resultSet = statement.executeQuery( command )) {
+			try ( var statement = connection.createStatement() ) {
+				try ( var resultSet = statement.executeQuery( command ) ) {
 					return resultSet.next() ? resultSet.getString( 1 ) : null;
 				}
 			}

@@ -4,11 +4,12 @@
  */
 package org.hibernate.engine.jdbc.env.spi;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Information extracted from {@link java.sql.DatabaseMetaData} regarding what the JDBC driver reports as
@@ -165,6 +166,6 @@ public interface ExtractedDatabaseMetaData {
 	 * @return {@code SequenceInformation} objects.
 	 */
 	default List<SequenceInformation> getSequenceInformationList() {
-		return Collections.emptyList();
+		return emptyList();
 	}
 }

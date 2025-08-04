@@ -18,7 +18,7 @@
 <#if pojo.getMetaAttribAsBool(property, "gen-property", true)>
  <#if pojo.hasFieldJavaDoc(property)>    
     /**       
-     * ${pojo.getFieldJavaDoc(property, 4)}
+     ${pojo.getFieldJavaDoc(property, 4)}
      */
 </#if>
     <#include "GetPropertyAnnotation.ftl"/>

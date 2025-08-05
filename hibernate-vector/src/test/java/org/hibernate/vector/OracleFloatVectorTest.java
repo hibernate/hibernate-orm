@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.annotations.Array;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -188,6 +189,7 @@ public class OracleFloatVectorTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle 23.9 bug")
 	public void testVectorNorm(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			//tag::vector-norm-example[]

@@ -191,7 +191,6 @@ dependencies {
 
     // Agroal connection pool
     runtimeOnly 'org.hibernate.orm:hibernate-agroal:{fullVersion}'
-    runtimeOnly 'io.agroal:agroal-pool:2.7.1'
 
     // logging via Log4j
     runtimeOnly 'org.apache.logging.log4j:log4j-core:2.24.3'

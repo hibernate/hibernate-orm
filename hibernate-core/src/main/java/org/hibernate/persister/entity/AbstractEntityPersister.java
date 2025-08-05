@@ -1576,9 +1576,14 @@ public abstract class AbstractEntityPersister
 			final EntityEntry entry,
 			final String fieldName,
 			final SharedSessionContractImplementor session) {
-		return nonLazyPropertyNames.contains( fieldName )
+		return isNonLazyPropertyName( fieldName )
 				? initLazyProperty( entity, id, entry, fieldName, session )
 				: initLazyProperties( entity, id, entry, fieldName, session );
+	}
+
+	// Hibernate Reactive uses this
+	protected boolean isNonLazyPropertyName(String fieldName) {
+		return nonLazyPropertyNames.contains( fieldName );
 	}
 
 	private Object initLazyProperties(

@@ -1232,7 +1232,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 			case SqlTypes.ENUM:
 			case SqlTypes.NAMED_ENUM:
 				appender.quoteStart();
-				appender.append( (String) subValue );
+				appender.append( subValue.toString() );
 				appender.quoteEnd();
 				break;
 			case SqlTypes.DATE:

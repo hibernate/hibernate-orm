@@ -173,6 +173,15 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 		}
 	}
 
+	public static String getDriverName(Connection connection) {
+		try {
+			return connection.getMetaData().getDriverName();
+		}
+		catch (SQLException e) {
+			return null;
+		}
+	}
+
 	@Override
 	public String getJdbcUrl() {
 		return jdbcUrl;

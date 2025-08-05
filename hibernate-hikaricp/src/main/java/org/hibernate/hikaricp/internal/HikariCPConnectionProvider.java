@@ -26,11 +26,11 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getDriverName;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getFetchSize;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getIsolation;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasCatalog;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasSchema;
-import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.allowJdbcMetadataAccess;
 import static org.hibernate.hikaricp.internal.HikariConfigurationUtil.loadConfiguration;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 
@@ -48,7 +48,6 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 
 	@Serial
 	private static final long serialVersionUID = -9131625057941275711L;
-	private boolean isMetadataAccessAllowed = true;
 
 	/**
 	 * HikariCP configuration.
@@ -65,11 +64,10 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	// *************************************************************************
 
 	@Override
-	public void configure(Map<String, Object> configurationValues) throws HibernateException {
+	public void configure(Map<String, Object> configuration) throws HibernateException {
 		try {
-			isMetadataAccessAllowed = allowJdbcMetadataAccess( configurationValues );
 			ConnectionInfoLogger.INSTANCE.configureConnectionPool( "HikariCP" );
-			hikariConfig = loadConfiguration( configurationValues );
+			hikariConfig = loadConfiguration( configuration );
 			hikariDataSource = new HikariDataSource( hikariConfig );
 		}
 		catch (Exception e) {
@@ -108,7 +106,7 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 					// in case it wasn't explicitly set and access to the
 					// database metadata is allowed
 					isBlank( hikariConfig.getDriverClassName() )
-							? extractDriverNameFromMetadata()
+							? getDriverName( connection )
 							: hikariConfig.getDriverClassName(),
 					dialect.getClass(),
 					dialect.getVersion(),
@@ -132,18 +130,6 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 		catch (SQLException e) {
 			throw new JDBCConnectionException( "Could not create connection", e );
 		}
-	}
-
-	private String extractDriverNameFromMetadata() {
-		if ( isMetadataAccessAllowed ) {
-			try ( Connection conn = getConnection() ) {
-				return conn.getMetaData().getDriverName();
-			}
-			catch (SQLException e) {
-				// Do nothing
-			}
-		}
-		return null;
 	}
 
 	@Override

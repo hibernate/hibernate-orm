@@ -37,6 +37,7 @@ import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderI
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.getConnectionProperties;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getCatalog;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getDriverName;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getFetchSize;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getIsolation;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getSchema;
@@ -124,7 +125,7 @@ public class DriverManagerConnectionProviderImpl
 			dbInfo = new DatabaseConnectionInfoImpl(
 					DriverManagerConnectionProviderImpl.class,
 					url,
-					driver == null ? null : driver.getClass().getName(),
+					getDriverName( connection ),
 					null,
 					SimpleDatabaseVersion.ZERO_VERSION,
 					hasSchema( connection ),

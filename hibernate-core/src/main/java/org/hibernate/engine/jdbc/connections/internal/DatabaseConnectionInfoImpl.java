@@ -120,7 +120,7 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 
 	public static boolean hasSchema(Connection connection) {
 		try {
-			return connection.getMetaData().supportsSchemasInTableDefinitions();
+			return connection.getMetaData().supportsSchemasInDataManipulation();
 		}
 		catch ( SQLException ignored ) {
 			return true;

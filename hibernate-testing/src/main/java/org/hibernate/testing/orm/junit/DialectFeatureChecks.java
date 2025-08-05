@@ -1091,6 +1091,18 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsFloat16VectorType implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesDdlType( dialect, SqlTypes.VECTOR_FLOAT16 );
+		}
+	}
+
+	public static class SupportsFloatVectorType implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesDdlType( dialect, SqlTypes.VECTOR_FLOAT32 );
+		}
+	}
+
 	public static class SupportsDoubleVectorType implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesDdlType( dialect, SqlTypes.VECTOR_FLOAT64 );
@@ -1100,6 +1112,30 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsByteVectorType implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesDdlType( dialect, SqlTypes.VECTOR_INT8 );
+		}
+	}
+
+	public static class SupportsBinaryVectorType implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesDdlType( dialect, SqlTypes.VECTOR_BINARY );
+		}
+	}
+
+	public static class SupportsSparseFloatVectorType implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesDdlType( dialect, SqlTypes.SPARSE_VECTOR_FLOAT32 );
+		}
+	}
+
+	public static class SupportsSparseDoubleVectorType implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesDdlType( dialect, SqlTypes.SPARSE_VECTOR_FLOAT64 );
+		}
+	}
+
+	public static class SupportsSparseByteVectorType implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesDdlType( dialect, SqlTypes.SPARSE_VECTOR_INT8 );
 		}
 	}
 
@@ -1127,6 +1163,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsJaccardDistance implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "jaccard_distance" );
+		}
+	}
+
 	public static class SupportsInnerProduct implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "inner_product" );
@@ -1142,6 +1184,30 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsVectorNorm implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "vector_norm" );
+		}
+	}
+
+	public static class SupportsL2Norm implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "l2_norm" );
+		}
+	}
+
+	public static class SupportsL2Normalize implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "l2_normalize" );
+		}
+	}
+
+	public static class SupportsSubvector implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "subvector" );
+		}
+	}
+
+	public static class SupportsBinaryQuantize implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "binary_quantize" );
 		}
 	}
 

@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
+import java.util.Objects;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.Database;
@@ -287,5 +288,17 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 	@Override
 	public String toString() {
 		return "OracleArrayTypeDescriptor(" + typeName + ")";
+	}
+
+	@Override
+	public boolean equals(Object that) {
+		return super.equals( that )
+			&& that instanceof OracleArrayJdbcType jdbcType
+			&& Objects.equals( typeName, jdbcType.typeName );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode( typeName ) + 31 * super.hashCode();
 	}
 }

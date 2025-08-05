@@ -15,11 +15,13 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.DelegatingJdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
@@ -170,8 +172,48 @@ public class BasicTypeRegistry implements Serializable {
 				typeConfiguration,
 				indicators.getDialect(),
 				elementType,
-				null,
-				indicators
+				new ColumnTypeInformation() {
+					@Override
+					public Boolean getNullable() {
+						return null;
+					}
+
+					@Override
+					public int getTypeCode() {
+						return arrayType.getDefaultSqlTypeCode();
+					}
+
+					@Override
+					public String getTypeName() {
+						return null;
+					}
+
+					@Override
+					public int getColumnSize() {
+						return 0;
+					}
+
+					@Override
+					public int getDecimalDigits() {
+						return 0;
+					}
+				},
+				new DelegatingJdbcTypeIndicators( indicators ) {
+					@Override
+					public Integer getExplicitJdbcTypeCode() {
+						return arrayType.getDefaultSqlTypeCode();
+					}
+
+					@Override
+					public int getPreferredSqlTypeCodeForArray() {
+						return arrayType.getDefaultSqlTypeCode();
+					}
+
+					@Override
+					public int getPreferredSqlTypeCodeForArray(int elementSqlTypeCode) {
+						return arrayType.getDefaultSqlTypeCode();
+					}
+				}
 		);
 		if ( resolvedType instanceof BasicPluralType<?,?> ) {
 			register( resolvedType );

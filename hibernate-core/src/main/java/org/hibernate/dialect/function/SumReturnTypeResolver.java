@@ -90,9 +90,14 @@ public class SumReturnTypeResolver implements FunctionReturnTypeResolver {
 			case NUMERIC:
 				return BigInteger.class.isAssignableFrom( basicType.getJavaType() ) ? bigIntegerType : bigDecimalType;
 			case VECTOR:
+			case VECTOR_BINARY:
+			case VECTOR_INT8:
+			case VECTOR_FLOAT16:
 			case VECTOR_FLOAT32:
 			case VECTOR_FLOAT64:
-			case VECTOR_INT8:
+			case SPARSE_VECTOR_INT8:
+			case SPARSE_VECTOR_FLOAT32:
+			case SPARSE_VECTOR_FLOAT64:
 				return basicType;
 		}
 		return bigDecimalType;
@@ -126,9 +131,14 @@ public class SumReturnTypeResolver implements FunctionReturnTypeResolver {
 				final Class<?> argTypeClass = jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass();
 				return BigInteger.class.isAssignableFrom( argTypeClass ) ? bigIntegerType : bigDecimalType;
 			case VECTOR:
+			case VECTOR_BINARY:
+			case VECTOR_INT8:
+			case VECTOR_FLOAT16:
 			case VECTOR_FLOAT32:
 			case VECTOR_FLOAT64:
-			case VECTOR_INT8:
+			case SPARSE_VECTOR_INT8:
+			case SPARSE_VECTOR_FLOAT32:
+			case SPARSE_VECTOR_FLOAT64:
 				return (BasicValuedMapping) jdbcMapping;
 		}
 		return bigDecimalType;

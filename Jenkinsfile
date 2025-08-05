@@ -46,7 +46,6 @@ stage('Configure') {
 		// We want to enable preview features when testing newer builds of OpenJDK:
 		// even if we don't use these features, just enabling them can cause side effects
 		// and it's useful to test that.
-		new BuildEnvironment( testJdkVersion: '23', testJdkLauncherArgs: '--enable-preview', additionalOptions: '-PskipJacoco=true' ),
 		new BuildEnvironment( testJdkVersion: '24', testJdkLauncherArgs: '--enable-preview', additionalOptions: '-PskipJacoco=true' ),
 		new BuildEnvironment( testJdkVersion: '25', testJdkLauncherArgs: '--enable-preview', additionalOptions: '-PskipJacoco=true' ),
 		// The following JDKs aren't supported by Hibernate ORM out-of-the box yet:

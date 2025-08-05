@@ -187,3 +187,13 @@ Such changes typically do not impact programs using a relational schema managed 
 Previously, the non-nullability of the column mapped by an attribute declared `optional=false` by a subclass in a single table inheritance hierarchy was not enforced by the database.
 Hibernate now automatically generates DDL `check` constraints to enforce the non-nullability of such columns.
 
+
+[[dependency-changes]]
+== Changes in Dependencies
+
+This section describes changes to dependencies used by Hibernate ORM.
+
+[[dependency-agroal]]
+=== Inclusion of Agroal Pool
+
+`agroal-pool` is now a transitive implementation (runtime) dependency of the `hibernate-agroal` module.  Applications using `hibernate-agroal` no longer need to manually depend on it.

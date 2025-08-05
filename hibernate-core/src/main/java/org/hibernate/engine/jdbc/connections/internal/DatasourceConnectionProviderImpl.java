@@ -10,7 +10,6 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -89,9 +88,9 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	}
 
 	@Override
-	public void configure(Map<String, Object> configValues) {
+	public void configure(Map<String, Object> configuration) {
 		if ( dataSource == null ) {
-			final Object dataSourceSetting = configValues.get( DATASOURCE );
+			final Object dataSourceSetting = configuration.get( DATASOURCE );
 			if ( dataSourceSetting instanceof DataSource instance ) {
 				dataSource = instance;
 			}
@@ -111,17 +110,17 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 			throw new ConnectionProviderConfigurationException( "Unable to determine appropriate DataSource to use" );
 		}
 
-		if ( configValues.containsKey( AvailableSettings.AUTOCOMMIT ) ) {
-			ConnectionInfoLogger.INSTANCE.ignoredSetting( AvailableSettings.AUTOCOMMIT,
+		if ( configuration.containsKey( JdbcSettings.AUTOCOMMIT ) ) {
+			ConnectionInfoLogger.INSTANCE.ignoredSetting( JdbcSettings.AUTOCOMMIT,
 					DatasourceConnectionProviderImpl.class );
 		}
-		if ( configValues.containsKey( AvailableSettings.ISOLATION ) ) {
-			ConnectionInfoLogger.INSTANCE.ignoredSetting( AvailableSettings.ISOLATION,
+		if ( configuration.containsKey( JdbcSettings.ISOLATION ) ) {
+			ConnectionInfoLogger.INSTANCE.ignoredSetting( JdbcSettings.ISOLATION,
 					DatasourceConnectionProviderImpl.class );
 		}
 
-		user = (String) configValues.get( AvailableSettings.USER );
-		pass = (String) configValues.get( AvailableSettings.PASS );
+		user = (String) configuration.get( JdbcSettings.USER );
+		pass = (String) configuration.get( JdbcSettings.PASS );
 		useCredentials = user != null || pass != null;
 		available = true;
 	}

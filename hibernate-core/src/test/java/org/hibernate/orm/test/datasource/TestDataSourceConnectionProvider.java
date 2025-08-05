@@ -25,8 +25,8 @@ public class TestDataSourceConnectionProvider
 	final DriverManagerConnectionProviderImpl delegate = new DriverManagerConnectionProviderImpl();
 
 	@Override
-	public void configure(Map<String, Object> configValues) {
-		delegate.configure(configValues);
+	public void configure(Map<String, Object> configuration) {
+		delegate.configure( configuration );
 		setDataSource( new DataSource() {
 			PrintWriter logWriter = new PrintWriter( System.out );
 			@Override
@@ -74,7 +74,7 @@ public class TestDataSourceConnectionProvider
 				throw new SQLFeatureNotSupportedException();
 			}
 		} );
-		super.configure( configValues );
+		super.configure( configuration );
 	}
 
 	@Override

@@ -40,12 +40,12 @@ import static java.util.stream.Collectors.toMap;
 import static org.hibernate.cfg.AgroalSettings.AGROAL_CONFIG_PREFIX;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getCatalog;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getDriverName;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getFetchSize;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getIsolation;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getSchema;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasCatalog;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasSchema;
-import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.allowJdbcMetadataAccess;
 
 /**
  * {@link ConnectionProvider} based on Agroal connection pool.
@@ -79,7 +79,6 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	@Serial
 	private static final long serialVersionUID = 1L;
 	private AgroalDataSource agroalDataSource = null;
-	private boolean isMetadataAccessAllowed = true;
 
 	// --- Configurable
 
@@ -107,8 +106,6 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 
 	@Override
 	public void configure(Map<String, Object> properties) throws HibernateException {
-		isMetadataAccessAllowed = allowJdbcMetadataAccess( properties );
-
 		ConnectionInfoLogger.INSTANCE.configureConnectionPool( "Agroal" );
 		try {
 			final var config = toStringValuedProperties( properties );
@@ -180,7 +177,7 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 					// database metadata is allowed
 					connectionConfig.connectionProviderClass() != null
 							? connectionConfig.connectionProviderClass().toString()
-							: extractDriverNameFromMetadata(),
+							: getDriverName( connection ),
 					dialect.getClass(),
 					dialect.getVersion(),
 					hasSchema( connection ),
@@ -204,18 +201,6 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 		catch (SQLException e) {
 			throw new JDBCConnectionException( "Could not create connection", e );
 		}
-	}
-
-	private String extractDriverNameFromMetadata() {
-		if (isMetadataAccessAllowed) {
-			try ( Connection conn = getConnection() ) {
-				return conn.getMetaData().getDriverName();
-			}
-			catch (SQLException e) {
-				// Do nothing
-			}
-		}
-		return null;
 	}
 
 	@Override

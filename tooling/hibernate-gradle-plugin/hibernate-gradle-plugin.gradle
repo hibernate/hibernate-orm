@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 import org.apache.tools.ant.filters.ReplaceTokens
+import org.gradle.api.internal.provider.DefaultProvider
 
 plugins {
 	id 'java-gradle-plugin'
@@ -119,6 +120,37 @@ if ( !jdkVersions.explicit ) {
 else {
 	logger.warn( "[WARN] Toolchains are not yet supported for Groovy compilation." +
 						 " Using the JDK that runs Gradle for Groovy compilation." )
+	if ( jdkVersions.test.explicit && jdkVersions.test.launcher.asInt() > jdkVersions.min.asInt() ) {
+		// Configure the gradle plugin to also compile test to at most the orm.jdk.min version,
+		// because the test will have to be able to run with a JVM of version orm.jdk.min
+		tasks.named( "compileTestJava", JavaCompile ).configure {
+			options.release = Math.min( jdkVersions.test.compiler.asInt(), jdkVersions.min.asInt() )
+		}
+		// Must configure the test launcher to a version <= orm.jdk.max, because the tests invoke gradle,
+		// which inherently can only run with a JDK up to orm.jdk.max.
+		// Since we only support running Gradle with JDKs in the range of orm.jdk.min up to orm.jdk.max,
+		// we use a test java launcher for the latest available/configured JDK version
+		tasks.named( "test", Test ).configure {
+			def launcher = javaToolchains.launcherFor {
+				languageVersion = jdkVersions.min
+			}
+			for ( int version = jdkVersions.min.asInt() + 1; version <= jdkVersions.max.asInt(); version++ ) {
+				launcher = new DefaultProvider(() -> {
+					try {
+						return javaToolchains.launcherFor {
+							languageVersion = JavaLanguageVersion.of( version )
+						}.get()
+					}
+					catch (GradleException ex) {
+						// JavaToolchainQueryService unfortunately throws an exception if a version is not found,
+						// so we have to catch the exception and return null here to allow a fallback
+						return null
+					}
+				}).orElse( launcher )
+			}
+			javaLauncher = launcher
+		}
+	}
 }
 
 tasks.publish.enabled !ormBuildDetails.hibernateVersion.isSnapshot

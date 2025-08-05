@@ -22,6 +22,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.vector.internal.VectorHelper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,7 @@ import java.util.List;
 import static org.hibernate.vector.VectorTestHelper.cosineDistance;
 import static org.hibernate.vector.VectorTestHelper.euclideanDistance;
 import static org.hibernate.vector.VectorTestHelper.euclideanNorm;
+import static org.hibernate.vector.VectorTestHelper.euclideanNormalize;
 import static org.hibernate.vector.VectorTestHelper.hammingDistance;
 import static org.hibernate.vector.VectorTestHelper.innerProduct;
 import static org.hibernate.vector.VectorTestHelper.taxicabDistance;
@@ -233,6 +235,85 @@ public class FloatVectorTest {
 			assertEquals( euclideanNorm( V1 ), results.get( 0 ).get( 1, double.class ), 0D );
 			assertEquals( 2L, results.get( 1 ).get( 0 ) );
 			assertEquals( euclideanNorm( V2 ), results.get( 1 ).get( 1, double.class ), 0D );
+		} );
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsL2Norm.class)
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle 23.9 bug")
+	public void testL2Norm(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			//tag::l2-norm-example[]
+			final List<Tuple> results = em.createSelectionQuery(
+							"select e.id, l2_norm(e.theVector) from VectorEntity e order by e.id",
+							Tuple.class
+					)
+					.getResultList();
+			//end::l2-norm-example[]
+			assertEquals( 2, results.size() );
+			assertEquals( 1L, results.get( 0 ).get( 0 ) );
+			assertEquals( euclideanNorm( V1 ), results.get( 0 ).get( 1, double.class ), 0D );
+			assertEquals( 2L, results.get( 1 ).get( 0 ) );
+			assertEquals( euclideanNorm( V2 ), results.get( 1 ).get( 1, double.class ), 0D );
+		} );
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsL2Normalize.class)
+	public void testL2Normalize(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			//tag::l2-normalize-example[]
+			final List<Tuple> results = em.createSelectionQuery(
+							"select e.id, l2_normalize(e.theVector) from VectorEntity e order by e.id",
+							Tuple.class
+					)
+					.getResultList();
+			//end::l2-normalize-example[]
+			assertEquals( 2, results.size() );
+			assertEquals( 1L, results.get( 0 ).get( 0 ) );
+			assertArrayEquals( euclideanNormalize( V1 ), results.get( 0 ).get( 1, float[].class ), 0f );
+			assertEquals( 2L, results.get( 1 ).get( 0 ) );
+			assertArrayEquals( euclideanNormalize( V2 ), results.get( 1 ).get( 1, float[].class ), 0f );
+		} );
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubvector.class)
+	public void testSubvector(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			//tag::subvector-example[]
+			final List<Tuple> results = em.createSelectionQuery(
+							"select e.id, subvector(e.theVector, 1, 1) from VectorEntity e order by e.id",
+							Tuple.class
+					)
+					.getResultList();
+			//end::subvector-example[]
+			assertEquals( 2, results.size() );
+			assertEquals( 1L, results.get( 0 ).get( 0 ) );
+			assertEquals( 1, results.get( 0 ).get( 1, float[].class ).length );
+			assertEquals( V1[0], results.get( 0 ).get( 1, float[].class )[0], 0D );
+			assertEquals( 2L, results.get( 1 ).get( 0 ) );
+			assertEquals( 1, results.get( 1 ).get( 1, float[].class ).length );
+			assertEquals( V2[0], results.get( 1 ).get( 1, float[].class )[0], 0D );
+		} );
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsBinaryQuantize.class)
+	public void testBinaryQuantize(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			//tag::binary-quantize-example[]
+			final List<Tuple> results = em.createSelectionQuery(
+							"select e.id, binary_quantize(e.theVector) from VectorEntity e order by e.id",
+							Tuple.class
+					)
+					.getResultList();
+			//end::binary-quantize-example[]
+			assertEquals( 2, results.size() );
+			assertEquals( 1L, results.get( 0 ).get( 0 ) );
+			assertArrayEquals( new byte[]{(byte) 0b11100000}, results.get( 0 ).get( 1, byte[].class ) );
+			assertEquals( 2L, results.get( 1 ).get( 0 ) );
+			assertArrayEquals( new byte[]{(byte) 0b11100000}, results.get( 1 ).get( 1, byte[].class ) );
 		} );
 	}
 

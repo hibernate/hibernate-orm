@@ -4,47 +4,46 @@
  */
 package org.hibernate.vector;
 
-import java.util.List;
-
-import org.hibernate.annotations.Array;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.dialect.OracleDialect;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.type.SqlTypes;
-
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
+import org.hibernate.annotations.Array;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.type.SqlTypes;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.vector.VectorTestHelper.cosineDistance;
-import static org.hibernate.vector.VectorTestHelper.euclideanDistance;
-import static org.hibernate.vector.VectorTestHelper.euclideanNorm;
-import static org.hibernate.vector.VectorTestHelper.hammingDistance;
-import static org.hibernate.vector.VectorTestHelper.innerProduct;
-import static org.hibernate.vector.VectorTestHelper.taxicabDistance;
+import java.util.List;
+
+import static org.hibernate.vector.VectorTestHelper.cosineDistanceBinary;
+import static org.hibernate.vector.VectorTestHelper.euclideanDistanceBinary;
+import static org.hibernate.vector.VectorTestHelper.euclideanNormBinary;
+import static org.hibernate.vector.VectorTestHelper.hammingDistanceBinary;
+import static org.hibernate.vector.VectorTestHelper.innerProductBinary;
+import static org.hibernate.vector.VectorTestHelper.jaccardDistanceBinary;
+import static org.hibernate.vector.VectorTestHelper.taxicabDistanceBinary;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/**
- * @author Hassan AL Meftah
- */
-@DomainModel(annotatedClasses = DoubleVectorTest.VectorEntity.class)
+@DomainModel(annotatedClasses = BinaryVectorTest.VectorEntity.class)
 @SessionFactory
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsDoubleVectorType.class)
-public class DoubleVectorTest {
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsBinaryVectorType.class)
+@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "Test database does not have the extension enabled")
+public class BinaryVectorTest {
 
-	private static final double[] V1 = new double[]{ 1, 2, 3 };
-	private static final double[] V2 = new double[]{ 4, 5, 6 };
+	private static final byte[] V1 = new byte[]{ 1, 2, 3 };
+	private static final byte[] V2 = new byte[]{ 4, 5, 6 };
 
 	@BeforeEach
 	public void prepareData(SessionFactoryScope scope) {
@@ -66,76 +65,80 @@ public class DoubleVectorTest {
 		scope.inTransaction( em -> {
 			VectorEntity tableRecord;
 			tableRecord = em.find( VectorEntity.class, 1L );
-			assertArrayEquals( new double[]{ 1, 2, 3 }, tableRecord.getTheVector(), 0 );
+			assertArrayEquals( new byte[]{ 1, 2, 3 }, tableRecord.getTheVector() );
 
 			tableRecord = em.find( VectorEntity.class, 2L );
-			assertArrayEquals( new double[]{ 4, 5, 6 }, tableRecord.getTheVector(), 0 );
+			assertArrayEquals( new byte[]{ 4, 5, 6 }, tableRecord.getTheVector() );
 		} );
 	}
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCosineDistance.class)
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "Not supported with bit vectors")
 	public void testCosineDistance(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
-			final double[] vector = new double[]{ 1, 1, 1 };
+			final byte[] vector = new byte[]{ 1, 1, 1 };
 			final List<Tuple> results = em.createSelectionQuery( "select e.id, cosine_distance(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
 					.setParameter( "vec", vector )
 					.getResultList();
 			assertEquals( 2, results.size() );
 			assertEquals( 1L, results.get( 0 ).get( 0 ) );
-			assertEquals( cosineDistance( V1, vector ), results.get( 0 ).get( 1, double.class ), 0.0000001D );
+			assertEquals( cosineDistanceBinary( V1, vector ), results.get( 0 ).get( 1, double.class ), 0.0000001D );
 			assertEquals( 2L, results.get( 1 ).get( 0 ) );
-			assertEquals( cosineDistance( V2, vector ), results.get( 1 ).get( 1, double.class ), 0.0000001D );
+			assertEquals( cosineDistanceBinary( V2, vector ), results.get( 1 ).get( 1, double.class ), 0.0000001D );
 		} );
 	}
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsEuclideanDistance.class)
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "Not supported with bit vectors")
 	public void testEuclideanDistance(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
-			final double[] vector = new double[]{ 1, 1, 1 };
+			final byte[] vector = new byte[]{ 1, 1, 1 };
 			final List<Tuple> results = em.createSelectionQuery( "select e.id, euclidean_distance(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
 					.setParameter( "vec", vector )
 					.getResultList();
 			assertEquals( 2, results.size() );
 			assertEquals( 1L, results.get( 0 ).get( 0 ) );
-			assertEquals( euclideanDistance( V1, vector ), results.get( 0 ).get( 1, double.class ), 0.00002D );
+			assertEquals( euclideanDistanceBinary( V1, vector ), results.get( 0 ).get( 1, double.class ), 0.000001D );
 			assertEquals( 2L, results.get( 1 ).get( 0 ) );
-			assertEquals( euclideanDistance( V2, vector ), results.get( 1 ).get( 1, double.class ), 0.00002D);
+			assertEquals( euclideanDistanceBinary( V2, vector ), results.get( 1 ).get( 1, double.class ), 0.000001D );
 		} );
 	}
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTaxicabDistance.class)
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "Not supported with bit vectors")
 	public void testTaxicabDistance(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
-			final double[] vector = new double[]{ 1, 1, 1 };
+			final byte[] vector = new byte[]{ 1, 1, 1 };
 			final List<Tuple> results = em.createSelectionQuery( "select e.id, taxicab_distance(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
 					.setParameter( "vec", vector )
 					.getResultList();
 			assertEquals( 2, results.size() );
 			assertEquals( 1L, results.get( 0 ).get( 0 ) );
-			assertEquals( taxicabDistance( V1, vector ), results.get( 0 ).get( 1, double.class ), 0D );
+			assertEquals( taxicabDistanceBinary( V1, vector ), results.get( 0 ).get( 1, double.class ), 0D );
 			assertEquals( 2L, results.get( 1 ).get( 0 ) );
-			assertEquals( taxicabDistance( V2, vector ), results.get( 1 ).get( 1, double.class ), 0D );
+			assertEquals( taxicabDistanceBinary( V2, vector ), results.get( 1 ).get( 1, double.class ), 0D );
 		} );
 	}
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsInnerProduct.class)
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "Not supported with bit vectors")
 	public void testInnerProduct(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
-			final double[] vector = new double[]{ 1, 1, 1 };
+			final byte[] vector = new byte[]{ 1, 1, 1 };
 			final List<Tuple> results = em.createSelectionQuery( "select e.id, inner_product(e.theVector, :vec), negative_inner_product(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
 					.setParameter( "vec", vector )
 					.getResultList();
 			assertEquals( 2, results.size() );
 			assertEquals( 1L, results.get( 0 ).get( 0 ) );
-			assertEquals( innerProduct( V1, vector ), results.get( 0 ).get( 1, double.class ), 0D );
-			assertEquals( innerProduct( V1, vector ) * -1, results.get( 0 ).get( 2, double.class ), 0D );
+			assertEquals( innerProductBinary( V1, vector ), results.get( 0 ).get( 1, double.class ), 0D );
+			assertEquals( innerProductBinary( V1, vector ) * -1, results.get( 0 ).get( 2, double.class ), 0D );
 			assertEquals( 2L, results.get( 1 ).get( 0 ) );
-			assertEquals( innerProduct( V2, vector ), results.get( 1 ).get( 1, double.class ), 0D );
-			assertEquals( innerProduct( V2, vector ) * -1, results.get( 1 ).get( 2, double.class ), 0D );
+			assertEquals( innerProductBinary( V2, vector ), results.get( 1 ).get( 1, double.class ), 0D );
+			assertEquals( innerProductBinary( V2, vector ) * -1, results.get( 1 ).get( 2, double.class ), 0D );
 		} );
 	}
 
@@ -143,14 +146,31 @@ public class DoubleVectorTest {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsHammingDistance.class)
 	public void testHammingDistance(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
-			final double[] vector = new double[]{ 1, 1, 1 };
+			final byte[] vector = new byte[]{ 1, 1, 1 };
 			final List<Tuple> results = em.createSelectionQuery( "select e.id, hamming_distance(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
 					.setParameter( "vec", vector )
 					.getResultList();
 			assertEquals( 2, results.size() );
 			assertEquals( 1L, results.get( 0 ).get( 0 ) );
-			assertEquals( hammingDistance( V1, vector ), results.get( 0 ).get( 1, double.class ), 0D );
-			assertEquals( hammingDistance( V2, vector ), results.get( 1 ).get( 1, double.class ), 0D );
+			assertEquals( hammingDistanceBinary( V1, vector ), results.get( 0 ).get( 1, double.class ), 0D );
+			assertEquals( 2L, results.get( 1 ).get( 0 ) );
+			assertEquals( hammingDistanceBinary( V2, vector ), results.get( 1 ).get( 1, double.class ), 0D );
+		} );
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJaccardDistance.class)
+	public void testJaccardDistance(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			final byte[] vector = new byte[]{ 1, 1, 1 };
+			final List<Tuple> results = em.createSelectionQuery( "select e.id, jaccard_distance(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
+					.setParameter( "vec", vector )
+					.getResultList();
+			assertEquals( 2, results.size() );
+			assertEquals( 1L, results.get( 0 ).get( 0 ) );
+			assertEquals( jaccardDistanceBinary( V1, vector ), results.get( 0 ).get( 1, double.class ), 0D );
+			assertEquals( 2L, results.get( 1 ).get( 0 ) );
+			assertEquals( jaccardDistanceBinary( V2, vector ), results.get( 1 ).get( 1, double.class ), 0D );
 		} );
 	}
 
@@ -162,14 +182,15 @@ public class DoubleVectorTest {
 					.getResultList();
 			assertEquals( 2, results.size() );
 			assertEquals( 1L, results.get( 0 ).get( 0 ) );
-			assertEquals( V1.length, results.get( 0 ).get( 1 ) );
+			assertEquals( V1.length * 8, results.get( 0 ).get( 1 ) );
 			assertEquals( 2L, results.get( 1 ).get( 0 ) );
-			assertEquals( V2.length, results.get( 1 ).get( 1 ) );
+			assertEquals( V2.length * 8, results.get( 1 ).get( 1 ) );
 		} );
 	}
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsVectorNorm.class)
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "Not supported with bit vectors")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle 23.9 bug")
 	public void testVectorNorm(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
@@ -177,9 +198,9 @@ public class DoubleVectorTest {
 					.getResultList();
 			assertEquals( 2, results.size() );
 			assertEquals( 1L, results.get( 0 ).get( 0 ) );
-			assertEquals( euclideanNorm( V1 ), results.get( 0 ).get( 1, double.class ), 0D );
+			assertEquals( euclideanNormBinary( V1 ), results.get( 0 ).get( 1, double.class ), 0D );
 			assertEquals( 2L, results.get( 1 ).get( 0 ) );
-			assertEquals( euclideanNorm( V2 ), results.get( 1 ).get( 1, double.class ), 0D );
+			assertEquals( euclideanNormBinary( V2 ), results.get( 1 ).get( 1, double.class ), 0D );
 		} );
 	}
 
@@ -190,14 +211,14 @@ public class DoubleVectorTest {
 		private Long id;
 
 		@Column( name = "the_vector" )
-		@JdbcTypeCode(SqlTypes.VECTOR_FLOAT64)
-		@Array(length = 3)
-		private double[] theVector;
+		@JdbcTypeCode(SqlTypes.VECTOR_BINARY)
+		@Array(length = 24)
+		private byte[] theVector;
 
 		public VectorEntity() {
 		}
 
-		public VectorEntity(Long id, double[] theVector) {
+		public VectorEntity(Long id, byte[] theVector) {
 			this.id = id;
 			this.theVector = theVector;
 		}
@@ -210,11 +231,11 @@ public class DoubleVectorTest {
 			this.id = id;
 		}
 
-		public double[] getTheVector() {
+		public byte[] getTheVector() {
 			return theVector;
 		}
 
-		public void setTheVector(double[] theVector) {
+		public void setTheVector(byte[] theVector) {
 			this.theVector = theVector;
 		}
 	}

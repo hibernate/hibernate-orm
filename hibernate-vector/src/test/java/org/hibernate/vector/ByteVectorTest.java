@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.hibernate.annotations.Array;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -78,7 +79,7 @@ public class ByteVectorTest {
 		scope.inTransaction( em -> {
 			final byte[] vector = new byte[]{ 1, 1, 1 };
 			final List<Tuple> results = em.createSelectionQuery( "select e.id, cosine_distance(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
-					.setParameter( "vec", vector, byte[].class )
+					.setParameter( "vec", vector )
 					.getResultList();
 			assertEquals( 2, results.size() );
 			assertEquals( 1L, results.get( 0 ).get( 0 ) );

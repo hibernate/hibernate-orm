@@ -200,13 +200,14 @@ public class CriteriaOrderedSetAggregateTest {
 	}
 
 	/*
-	 * 	Skipped for MySQL 9.2: The test fails due to a regression in MySQL 9.2, which no longer supports NULLS FIRST/LAST in ORDER BY within LISTAGG as expected.
+	 * 	Skipped for MySQL 8.0: The test fails due to a regression in MySQL 8.0.x, which no longer supports NULLS FIRST/LAST in ORDER BY within LISTAGG as expected.
 	 *	See https://bugs.mysql.com/bug.php?id=117765 for more details.
 	 *	This is a MySQL issue, not a problem in the dialect implementation.
 	 */
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStringAggregation.class)
-	@SkipForDialect(dialectClass = MySQLDialect.class, majorVersion = 9, minorVersion = 2, reason = "https://bugs.mysql.com/bug.php?id=117765")
+	@SkipForDialect(dialectClass = MySQLDialect.class, majorVersion = 8, reason = "https://bugs.mysql.com/bug.php?id=117765")
+	@SkipForDialect(dialectClass = MySQLDialect.class, majorVersion = 9, reason = "https://bugs.mysql.com/bug.php?id=117765")
 	public void testListaggWithNullsClause(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();

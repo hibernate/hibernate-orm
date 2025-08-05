@@ -6,6 +6,7 @@ package org.hibernate.orm.test.locking.options;
 
 import jakarta.persistence.Timeout;
 import org.hibernate.Timeouts;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
 import org.hibernate.dialect.lock.spi.LockingSupport;
@@ -34,6 +35,9 @@ public class ConnectionLockTimeoutTests {
 			final int expectedInitialValue;
 			if ( session.getDialect() instanceof MySQLDialect ) {
 				expectedInitialValue = 50;
+			}
+			else if ( session.getDialect() instanceof GaussDBDialect ) {
+				expectedInitialValue = 20 * 60 * 1000;
 			}
 			else {
 				expectedInitialValue = Timeouts.WAIT_FOREVER_MILLI;

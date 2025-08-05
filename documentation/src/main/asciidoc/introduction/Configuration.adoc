@@ -102,9 +102,7 @@ Optionally, you might also add any of the following additional features:
 | An {slf4j}[SLF4J] logging implementation |
 `org.apache.logging.log4j:log4j-core` +
 or `org.slf4j:slf4j-jdk14`
-| A JDBC connection pool, for example, {agroal}[Agroal] |
-`org.hibernate.orm:hibernate-agroal` +
-and `io.agroal:agroal-pool`
+| A JDBC connection pool, for example, {agroal}[Agroal] | `org.hibernate.orm:hibernate-agroal`
 | The {generator}[Hibernate Processor], especially if you're using Jakarta Data or the JPA criteria query API | `org.hibernate.orm:hibernate-processor`
 | The {query-validator}[Query Validator], for compile-time checking of HQL | `org.hibernate:query-validator`
 | {validator}[Hibernate Validator], an implementation of {bean-validation}[Bean Validation] |

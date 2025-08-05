@@ -45,6 +45,7 @@ import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderI
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.getConnectionProperties;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getCatalog;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getDriverName;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getFetchSize;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getIsolation;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getSchema;
@@ -170,13 +171,14 @@ public class C3P0ConnectionProvider
 			final boolean hasCatalog = hasCatalog( connection );
 			final String schema = getSchema( connection );
 			final String catalog = getCatalog( connection );
+			final String driverName = getDriverName( connection );
 			if ( isolation == null ) {
 				isolation = getIsolation( connection );
 			}
 			dbInfoProducer = dialect -> new DatabaseConnectionInfoImpl(
 					C3P0ConnectionProvider.class,
 					jdbcUrl,
-					jdbcDriverClass,
+					driverName,
 					dialect.getClass(),
 					dialect.getVersion(),
 					hasSchema,

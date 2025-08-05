@@ -26,9 +26,11 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getCatalog;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getDriverName;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getFetchSize;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getIsolation;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getSchema;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasCatalog;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasSchema;
 import static org.hibernate.hikaricp.internal.HikariConfigurationUtil.loadConfiguration;
@@ -112,8 +114,12 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 					dialect.getVersion(),
 					hasSchema( connection ),
 					hasCatalog( connection ),
-					hikariConfig.getSchema(),
-					hikariConfig.getCatalog(),
+					hikariConfig.getSchema() != null
+							? hikariConfig.getSchema()
+							: getSchema( connection ),
+					hikariConfig.getCatalog() != null
+							? hikariConfig.getCatalog()
+							: getCatalog( connection ),
 					Boolean.toString( hikariConfig.isAutoCommit() ),
 					hikariConfig.getTransactionIsolation() != null
 							? hikariConfig.getTransactionIsolation()

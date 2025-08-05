@@ -18,6 +18,10 @@ public class VectorTestHelper {
 		return 1D - innerProduct( f1, f2 ) / ( euclideanNorm( f1 ) * euclideanNorm( f2 ) );
 	}
 
+	public static double cosineDistanceBinary(byte[] f1, byte[] f2) {
+		return 1D - innerProductBinary( f1, f2 ) / ( euclideanNormBinary( f1 ) * euclideanNormBinary( f2 ) );
+	}
+
 	public static double euclideanDistance(float[] f1, float[] f2) {
 		assert f1.length == f2.length;
 		double result = 0;
@@ -45,16 +49,41 @@ public class VectorTestHelper {
 		return Math.sqrt( result );
 	}
 
+	public static double euclideanDistanceBinary(byte[] f1, byte[] f2) {
+		// On bit level, the two distance functions are equivalent
+		return Math.sqrt( hammingDistanceBinary( f1, f2 ) );
+	}
+
 	public static double taxicabDistance(float[] f1, float[] f2) {
-		return norm( f1 ) - norm( f2 );
+		assert f1.length == f2.length;
+		double result = 0;
+		for ( int i = 0; i < f1.length; i++ ) {
+			result += Math.abs( f1[i] - f2[i] );
+		}
+		return result;
 	}
 
 	public static double taxicabDistance(double[] f1, double[] f2) {
-		return norm( f1 ) - norm( f2 );
+		assert f1.length == f2.length;
+		double result = 0;
+		for ( int i = 0; i < f1.length; i++ ) {
+			result += Math.abs( f1[i] - f2[i] );
+		}
+		return result;
 	}
 
 	public static double taxicabDistance(byte[] f1, byte[] f2) {
-		return norm( f1 ) - norm( f2 );
+		assert f1.length == f2.length;
+		double result = 0;
+		for ( int i = 0; i < f1.length; i++ ) {
+			result += Math.abs( f1[i] - f2[i] );
+		}
+		return result;
+	}
+
+	public static double taxicabDistanceBinary(byte[] f1, byte[] f2) {
+		// On bit level, the two distance functions are equivalent
+		return hammingDistanceBinary( f1, f2 );
 	}
 
 	public static double innerProduct(float[] f1, float[] f2) {
@@ -80,6 +109,15 @@ public class VectorTestHelper {
 		double result = 0;
 		for ( int i = 0; i < f1.length; i++ ) {
 			result += ( (double) f1[i] ) * ( (double) f2[i] );
+		}
+		return result;
+	}
+
+	public static double innerProductBinary(byte[] f1, byte[] f2) {
+		assert f1.length == f2.length;
+		double result = 0;
+		for ( int i = 0; i < f1.length; i++ ) {
+			result += Integer.bitCount( f1[i] & f2[i] );
 		}
 		return result;
 	}
@@ -117,9 +155,18 @@ public class VectorTestHelper {
 		return distance;
 	}
 
+	public static double hammingDistanceBinary(byte[] f1, byte[] f2) {
+		assert f1.length == f2.length;
+		int distance = 0;
+		for (int i = 0; i < f1.length; i++) {
+			distance += Integer.bitCount( f1[i] ^ f2[i] );
+		}
+		return distance;
+	}
+
 	public static double euclideanNorm(float[] f) {
 		double result = 0;
-		for ( double v : f ) {
+		for ( float v : f ) {
 			result += Math.pow( v, 2 );
 		}
 		return Math.sqrt( result );
@@ -135,33 +182,55 @@ public class VectorTestHelper {
 
 	public static double euclideanNorm(byte[] f) {
 		double result = 0;
-		for ( double v : f ) {
+		for ( byte v : f ) {
 			result += Math.pow( v, 2 );
 		}
 		return Math.sqrt( result );
 	}
 
-	public static double norm(float[] f) {
-		double result = 0;
-		for ( double v : f ) {
-			result += Math.abs( v );
+	public static float[] euclideanNormalize(float[] f) {
+		final double norm = euclideanNorm( f );
+		final float[] result = new float[f.length];
+		for ( int i = 0; i < f.length; i++ ) {
+			result[i] = (float) (f[i] / norm);
 		}
 		return result;
 	}
 
-	public static double norm(double[] f) {
-		double result = 0;
-		for ( double v : f ) {
-			result += Math.abs( v );
+	public static float[] euclideanNormalize(double[] f) {
+		final double norm = euclideanNorm( f );
+		final float[] result = new float[f.length];
+		for ( int i = 0; i < f.length; i++ ) {
+			result[i] = (float) (f[i] / norm);
 		}
 		return result;
 	}
 
-	public static double norm(byte[] f) {
-		double result = 0;
-		for ( double v : f ) {
-			result += Math.abs( v );
+	public static float[] euclideanNormalize(byte[] f) {
+		final double norm = euclideanNorm( f );
+		final float[] result = new float[f.length];
+		for ( int i = 0; i < f.length; i++ ) {
+			result[i] = (float) (f[i] / norm);
 		}
 		return result;
+	}
+
+	public static double euclideanNormBinary(byte[] f) {
+		double result = 0;
+		for ( byte v : f ) {
+			result += Integer.bitCount( v );
+		}
+		return Math.sqrt( result );
+	}
+
+	public static double jaccardDistanceBinary(byte[] f1, byte[] f2) {
+		assert f1.length == f2.length;
+		int intersectionSum = 0;
+		int unionSum = 0;
+		for (int i = 0; i < f1.length; i++) {
+			intersectionSum += Integer.bitCount( f1[i] & f2[i] );
+			unionSum += Integer.bitCount( f1[i] | f2[i] );
+		}
+		return 1d - (double) intersectionSum / unionSum;
 	}
 }

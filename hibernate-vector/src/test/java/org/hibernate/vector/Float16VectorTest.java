@@ -7,6 +7,7 @@ package org.hibernate.vector;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Tuple;
 import org.hibernate.annotations.Array;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -18,12 +19,16 @@ import org.hibernate.type.SqlTypes;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import java.util.List;
 
-@DomainModel(annotatedClasses = Float32VectorTest.VectorEntity.class)
+import static org.hibernate.vector.VectorTestHelper.euclideanNormalize;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+@DomainModel(annotatedClasses = Float16VectorTest.VectorEntity.class)
 @SessionFactory
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFloatVectorType.class)
-public class Float32VectorTest extends FloatVectorTest {
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFloat16VectorType.class)
+public class Float16VectorTest extends FloatVectorTest {
 
 	@BeforeEach
 	@Override
@@ -47,6 +52,26 @@ public class Float32VectorTest extends FloatVectorTest {
 		} );
 	}
 
+	// Due to lower precision (float16/half-precision floating-point) type usage,
+	// we have to give a higher allowed delta since we can't easily calculate with the same precision in Java yet
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsL2Normalize.class)
+	@Override
+	public void testL2Normalize(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			final List<Tuple> results = em.createSelectionQuery(
+							"select e.id, l2_normalize(e.theVector) from VectorEntity e order by e.id",
+							Tuple.class
+					)
+					.getResultList();
+			assertEquals( 2, results.size() );
+			assertEquals( 1L, results.get( 0 ).get( 0 ) );
+			assertArrayEquals( euclideanNormalize( V1 ), results.get( 0 ).get( 1, float[].class ), 0.0002f );
+			assertEquals( 2L, results.get( 1 ).get( 0 ) );
+			assertArrayEquals( euclideanNormalize( V2 ), results.get( 1 ).get( 1, float[].class ), 0.0002f );
+		} );
+	}
+
 	@Entity(name = "VectorEntity")
 	public static class VectorEntity {
 
@@ -54,7 +79,7 @@ public class Float32VectorTest extends FloatVectorTest {
 		private Long id;
 
 		@Column(name = "the_vector")
-		@JdbcTypeCode(SqlTypes.VECTOR_FLOAT32)
+		@JdbcTypeCode(SqlTypes.VECTOR_FLOAT16)
 		@Array(length = 3)
 		private float[] theVector;
 

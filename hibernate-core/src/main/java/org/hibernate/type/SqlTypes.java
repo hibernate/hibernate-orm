@@ -681,10 +681,10 @@ public class SqlTypes {
 
 
 	/**
-	 * A type code representing an {@code embedding vector} type for databases
+	 * A type code representing a {@code vector} type for databases
 	 * like {@link org.hibernate.dialect.PostgreSQLDialect PostgreSQL},
 	 * {@link org.hibernate.dialect.OracleDialect Oracle 23ai} and {@link org.hibernate.dialect.MariaDBDialect MariaDB}.
-	 * An embedding vector essentially is a {@code float[]} with a fixed size.
+	 * A vector essentially is a {@code float[]} with a fixed length.
 	 *
 	 * @since 6.4
 	 */
@@ -701,9 +701,38 @@ public class SqlTypes {
 	public static final int VECTOR_FLOAT32 = 10_002;
 
 	/**
-	 * A type code representing a double-precision floating-point type for Oracle 23ai database.
+	 * A type code representing a double-precision floating-point vector type for Oracle 23ai database.
 	 */
 	public static final int VECTOR_FLOAT64 = 10_003;
+
+	/**
+	 * A type code representing a bit precision vector type for databases
+	 * like {@link org.hibernate.dialect.PostgreSQLDialect PostgreSQL} and
+	 * {@link org.hibernate.dialect.OracleDialect Oracle 23ai}.
+	 */
+	public static final int VECTOR_BINARY = 10_004;
+
+	/**
+	 * A type code representing a half-precision floating-point vector type for databases
+	 * like {@link org.hibernate.dialect.PostgreSQLDialect PostgreSQL}.
+	 */
+	public static final int VECTOR_FLOAT16 = 10_005;
+
+	/**
+	 * A type code representing a sparse single-byte integer vector type for Oracle 23ai database.
+	 */
+	public static final int SPARSE_VECTOR_INT8 = 10_006;
+
+	/**
+	 * A type code representing a sparse single-precision floating-point vector type for Oracle 23ai database.
+	 */
+	public static final int SPARSE_VECTOR_FLOAT32 = 10_007;
+
+	/**
+	 * A type code representing a sparse double-precision floating-point vector type for Oracle 23ai database.
+	 */
+	public static final int SPARSE_VECTOR_FLOAT64 = 10_008;
+
 
 	private SqlTypes() {
 	}

@@ -1,4 +1,4 @@
-org.hibernate.vector.PGVectorTypeContributor
-org.hibernate.vector.OracleVectorTypeContributor
-org.hibernate.vector.MariaDBTypeContributor
-org.hibernate.vector.MySQLTypeContributor
+org.hibernate.vector.internal.PGVectorTypeContributor
+org.hibernate.vector.internal.OracleVectorTypeContributor
+org.hibernate.vector.internal.MariaDBTypeContributor
+org.hibernate.vector.internal.MySQLTypeContributor

@@ -15,4 +15,5 @@ public class OracleTypes {
 	public static final int VECTOR_INT8 = -106;
 	public static final int VECTOR_FLOAT32 = -107;
 	public static final int VECTOR_FLOAT64 = -108;
+	public static final int VECTOR_BINARY = -109;
 }

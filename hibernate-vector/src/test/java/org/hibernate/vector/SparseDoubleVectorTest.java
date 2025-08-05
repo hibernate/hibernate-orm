@@ -4,27 +4,23 @@
  */
 package org.hibernate.vector;
 
-import java.util.List;
-
-import org.hibernate.annotations.Array;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.dialect.OracleDialect;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.type.SqlTypes;
-
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
+import org.hibernate.annotations.Array;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.type.SqlTypes;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.hibernate.vector.VectorTestHelper.cosineDistance;
 import static org.hibernate.vector.VectorTestHelper.euclideanDistance;
@@ -35,22 +31,19 @@ import static org.hibernate.vector.VectorTestHelper.taxicabDistance;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/**
- * @author Hassan AL Meftah
- */
-@DomainModel(annotatedClasses = DoubleVectorTest.VectorEntity.class)
+@DomainModel(annotatedClasses = SparseDoubleVectorTest.VectorEntity.class)
 @SessionFactory
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsDoubleVectorType.class)
-public class DoubleVectorTest {
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSparseDoubleVectorType.class)
+public class SparseDoubleVectorTest {
 
-	private static final double[] V1 = new double[]{ 1, 2, 3 };
-	private static final double[] V2 = new double[]{ 4, 5, 6 };
+	private static final double[] V1 = new double[]{ 0, 2, 3 };
+	private static final double[] V2 = new double[]{ 0, 5, 6 };
 
 	@BeforeEach
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
-			em.persist( new VectorEntity( 1L, V1 ) );
-			em.persist( new VectorEntity( 2L, V2 ) );
+			em.persist( new VectorEntity( 1L, new SparseDoubleVector( V1 ) ) );
+			em.persist( new VectorEntity( 2L, new SparseDoubleVector( V2 ) ) );
 		} );
 	}
 
@@ -66,10 +59,10 @@ public class DoubleVectorTest {
 		scope.inTransaction( em -> {
 			VectorEntity tableRecord;
 			tableRecord = em.find( VectorEntity.class, 1L );
-			assertArrayEquals( new double[]{ 1, 2, 3 }, tableRecord.getTheVector(), 0 );
+			assertArrayEquals( new double[]{ 0, 2, 3 }, tableRecord.getTheVector().toDenseVector() );
 
 			tableRecord = em.find( VectorEntity.class, 2L );
-			assertArrayEquals( new double[]{ 4, 5, 6 }, tableRecord.getTheVector(), 0 );
+			assertArrayEquals( new double[]{ 0, 5, 6 }, tableRecord.getTheVector().toDenseVector()  );
 		} );
 	}
 
@@ -79,7 +72,7 @@ public class DoubleVectorTest {
 		scope.inTransaction( em -> {
 			final double[] vector = new double[]{ 1, 1, 1 };
 			final List<Tuple> results = em.createSelectionQuery( "select e.id, cosine_distance(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
-					.setParameter( "vec", vector )
+					.setParameter( "vec", new SparseDoubleVector( vector ) )
 					.getResultList();
 			assertEquals( 2, results.size() );
 			assertEquals( 1L, results.get( 0 ).get( 0 ) );
@@ -95,13 +88,13 @@ public class DoubleVectorTest {
 		scope.inTransaction( em -> {
 			final double[] vector = new double[]{ 1, 1, 1 };
 			final List<Tuple> results = em.createSelectionQuery( "select e.id, euclidean_distance(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
-					.setParameter( "vec", vector )
+					.setParameter( "vec", new SparseDoubleVector( vector ) )
 					.getResultList();
 			assertEquals( 2, results.size() );
 			assertEquals( 1L, results.get( 0 ).get( 0 ) );
-			assertEquals( euclideanDistance( V1, vector ), results.get( 0 ).get( 1, double.class ), 0.00002D );
+			assertEquals( euclideanDistance( V1, vector ), results.get( 0 ).get( 1, double.class ), 0.000001D );
 			assertEquals( 2L, results.get( 1 ).get( 0 ) );
-			assertEquals( euclideanDistance( V2, vector ), results.get( 1 ).get( 1, double.class ), 0.00002D);
+			assertEquals( euclideanDistance( V2, vector ), results.get( 1 ).get( 1, double.class ), 0.000001D );
 		} );
 	}
 
@@ -111,7 +104,7 @@ public class DoubleVectorTest {
 		scope.inTransaction( em -> {
 			final double[] vector = new double[]{ 1, 1, 1 };
 			final List<Tuple> results = em.createSelectionQuery( "select e.id, taxicab_distance(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
-					.setParameter( "vec", vector )
+					.setParameter( "vec", new SparseDoubleVector( vector ) )
 					.getResultList();
 			assertEquals( 2, results.size() );
 			assertEquals( 1L, results.get( 0 ).get( 0 ) );
@@ -127,7 +120,7 @@ public class DoubleVectorTest {
 		scope.inTransaction( em -> {
 			final double[] vector = new double[]{ 1, 1, 1 };
 			final List<Tuple> results = em.createSelectionQuery( "select e.id, inner_product(e.theVector, :vec), negative_inner_product(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
-					.setParameter( "vec", vector )
+					.setParameter( "vec", new SparseDoubleVector( vector ) )
 					.getResultList();
 			assertEquals( 2, results.size() );
 			assertEquals( 1L, results.get( 0 ).get( 0 ) );
@@ -145,11 +138,12 @@ public class DoubleVectorTest {
 		scope.inTransaction( em -> {
 			final double[] vector = new double[]{ 1, 1, 1 };
 			final List<Tuple> results = em.createSelectionQuery( "select e.id, hamming_distance(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
-					.setParameter( "vec", vector )
+					.setParameter( "vec", new SparseDoubleVector( vector ) )
 					.getResultList();
 			assertEquals( 2, results.size() );
 			assertEquals( 1L, results.get( 0 ).get( 0 ) );
 			assertEquals( hammingDistance( V1, vector ), results.get( 0 ).get( 1, double.class ), 0D );
+			assertEquals( 2L, results.get( 1 ).get( 0 ) );
 			assertEquals( hammingDistance( V2, vector ), results.get( 1 ).get( 1, double.class ), 0D );
 		} );
 	}
@@ -170,7 +164,6 @@ public class DoubleVectorTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsVectorNorm.class)
-	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle 23.9 bug")
 	public void testVectorNorm(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			final List<Tuple> results = em.createSelectionQuery( "select e.id, vector_norm(e.theVector) from VectorEntity e order by e.id", Tuple.class )
@@ -190,14 +183,14 @@ public class DoubleVectorTest {
 		private Long id;
 
 		@Column( name = "the_vector" )
-		@JdbcTypeCode(SqlTypes.VECTOR_FLOAT64)
+		@JdbcTypeCode(SqlTypes.SPARSE_VECTOR_FLOAT64)
 		@Array(length = 3)
-		private double[] theVector;
+		private SparseDoubleVector theVector;
 
 		public VectorEntity() {
 		}
 
-		public VectorEntity(Long id, double[] theVector) {
+		public VectorEntity(Long id, SparseDoubleVector theVector) {
 			this.id = id;
 			this.theVector = theVector;
 		}
@@ -210,11 +203,11 @@ public class DoubleVectorTest {
 			this.id = id;
 		}
 
-		public double[] getTheVector() {
+		public SparseDoubleVector getTheVector() {
 			return theVector;
 		}
 
-		public void setTheVector(double[] theVector) {
+		public void setTheVector(SparseDoubleVector theVector) {
 			this.theVector = theVector;
 		}
 	}

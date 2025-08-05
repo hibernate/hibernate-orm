@@ -12,8 +12,10 @@ description = 'Integration for Agroal as a ConnectionProvider for Hibernate ORM'
 
 dependencies {
     implementation project( ':hibernate-core' )
+
+    // NOTE: technically `agroal-pool` pulls in `agroal-api`, but for documentation sake...
     implementation libs.agroal
+    implementation libs.agroalPool
 
     testImplementation project( ':hibernate-testing' )
-    testRuntimeOnly libs.agroalPool
 }

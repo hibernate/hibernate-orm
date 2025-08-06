@@ -15,6 +15,7 @@ import javax.xml.validation.Schema;
 
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.ResourceStreamLocator;
+import org.hibernate.boot.archive.internal.RepeatableInputStreamAccess;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.internal.stax.BufferedXMLEventReader;
@@ -41,6 +42,11 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 
 	protected AbstractBinder(ResourceStreamLocator resourceStreamLocator) {
 		this.xmlResourceResolver = new LocalXmlResourceResolver( resourceStreamLocator );
+	}
+
+	@Override
+	public <X extends T> Binding<X> bind(InputStream stream, Origin origin) {
+		return bind( new RepeatableInputStreamAccess(origin.getName(), stream), origin );
 	}
 
 	@Override

@@ -94,19 +94,30 @@ public class GaussDBLockingSupport implements LockingSupport, LockingSupport.Met
 						return Timeouts.WAIT_FOREVER;
 					}
 					if ( value.endsWith( "min" ) ) {
-						final int min = Integer.parseInt( value.substring( 0, value.length() - 3 ) );
-						return Timeout.milliseconds( min * 60 * 1000 );
+						final int minute = getTimeout( value, 3 );
+						return Timeout.milliseconds( minute * 60 * 1000);
 					}
 					else if ( value.endsWith( "s" ) ) {
-						final int second = Integer.parseInt( value.substring( 0, value.length() - 1 ) );
-						return Timeout.seconds(second);
+						final int seconds  = getTimeout( value, 1 );
+						return Timeout.seconds(seconds);
 					}
-					final int milliseconds = Integer.parseInt( value.substring( 0, value.length() - 2 ) );
+					final int milliseconds  = getTimeout( value, 2 );
 					return Timeout.milliseconds(milliseconds);
 				},
 				connection,
 				factory
 		);
+	}
+
+	private static int getTimeout(String value, int unitLength) {
+		final int number;
+		try {
+			number = Integer.parseInt( value.substring( 0, value.length() - unitLength ) );
+		}
+		catch (NumberFormatException e) {
+			throw new RuntimeException( e );
+		}
+		return number;
 	}
 
 	@Override

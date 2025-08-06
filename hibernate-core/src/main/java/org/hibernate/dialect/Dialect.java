@@ -337,7 +337,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	private static final Pattern ESCAPE_CLOSING_COMMENT_PATTERN = Pattern.compile( "\\*/" );
 	private static final Pattern ESCAPE_OPENING_COMMENT_PATTERN = Pattern.compile( "/\\*" );
 	private static final Pattern QUERY_PATTERN = Pattern.compile(
-		"^\\s*(select\\b.+?\\bfrom\\b.+?)(\\b(?:natural )?(?:left |right |full )?(?:inner |outer |cross )?join.+?\\b)?(\\bwhere\\b.+?)$");
+		"^\\s*(select\\b.+?\\bfrom\\b.+?)(\\b(?:natural )?(?:left |right |full )?(?:inner |outer |cross )?join.+?\\b)?(\\bwhere\\b.+?)$",
+			Pattern.CASE_INSENSITIVE);
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, Dialect.class.getName() );
 

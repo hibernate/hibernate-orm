@@ -128,6 +128,12 @@ The Oracle JDBC driver defaults to a JDBC fetch size of 10.
 You should _always_ set `hibernate.jdbc.fetch_size` explicitly if you're using Oracle, or, even better, specify the parameter `defaultRowPrefetch` in the JDBC connection URL.
 ====
 
+[TIP]
+====
+The MySQL JDBC driver ignores the fetch size by default.
+The JDBC connection property `useCursorFetch=true` enables the use of server-side cursors, and with this setting the driver respects the fetch size.
+====
+
 [[statement-batching]]
 === Enabling statement batching
 

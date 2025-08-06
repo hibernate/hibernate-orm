@@ -114,18 +114,6 @@ Trigger the CI release job to automatically publish artifacts and documentation.
 
 After the job succeeds:
 
-* Release the artifacts on the [OSSRH repository manager](https://oss.sonatype.org/#stagingRepositories).
-  * Log into Nexus. The credentials can be found on Bitwarden; ask a teammate if you don't have access.
-  * Click "staging repositories" to the left.
-  * Examine your staging repository: check that all expected artifacts are there.
-  * If necessary (that's very rare), test the release in the staging repository.
-    You can drop the staging repo if there is a problem,
-    but you'll need to revert the commits pushed during the release.
-  * If everything is ok, select the staging repository and click the "Release" button.
-    * For branches with automated releases (e.g. 6.6) the "release repository" will happen automatically.
-      to enable/disable the automatic release of the staging repository update the [jreleaser.yml](jreleaser.yml) file,
-      in particular change the `deploy.maven.nexus2.maven-central.releaseRepository` to `true`/`false`.
-
 * Update [hibernate.org](https://github.com/hibernate/hibernate.org) as necessary:
   * If it is a new major or minor release (new "series"):
     * Add a `_data/projects/orm/releases/<series>/series.yml` file,

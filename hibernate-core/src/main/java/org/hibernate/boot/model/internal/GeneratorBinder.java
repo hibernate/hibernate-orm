@@ -835,7 +835,7 @@ public class GeneratorBinder {
 					Locale.ROOT,
 					"Identifier attribute '%s' is annotated '%s' which is not an '@IdGeneratorType'",
 					getPath( propertyHolder, inferredData ),
-					generatorAnnotations.get(0).annotationType()
+					generatorAnnotations.get(0).annotationType().getName()
 			) );
 		}
 		else if ( idAttributeMember.hasDirectAnnotationUsage( GeneratedValue.class ) ) {

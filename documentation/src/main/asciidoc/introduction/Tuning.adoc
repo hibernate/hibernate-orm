@@ -92,7 +92,10 @@ The following settings are common to all connection pools supported by Hibernate
 | link:{doc-javadoc-url}/org/hibernate/cfg/JdbcSettings.html#ISOLATION[`hibernate.connection.isolation`] | The default transaction isolation level
 |===
 
-A popular alternative to Agroal is HikariCP.
+:hikaricp: https://github.com/brettwooldridge/HikariCP
+
+A popular alternative to Agroal is {hikaricp}[HikariCP].
+Integration with HikariCP is provided by the module `org.hibernate.orm:hibernate-hikaricp`.
 Its settings are enumerated by link:{doc-javadoc-url}/org/hibernate/cfg/HikariCPSettings.html[`HikariCPSettings`].
 
 .Container-managed datasources

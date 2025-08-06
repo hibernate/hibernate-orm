@@ -3,6 +3,25 @@ Hibernate 7 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.1.0.CR2 (August 06, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/34594
+
+** Bug
+    * [HHH-19673] - hibernate-gradle-plugin 7.0.0.CR1 wrongly requires Java 21+
+    * [HHH-19669] - hql insert fails for entity with join inheritance on Oracle
+
+** Improvement
+    * [HHH-19686] - Add implementation dependency to agroal-pool from hibernate-agroal
+    * [HHH-19685] - Rework multi-table handling code to allow caching and help Hibernate Reactive
+    * [HHH-19672] - Add overloads of #find accepting entity-name
+
+** Task
+    * [HHH-19683] - Add method in AbstractEntityPersister to check if field name is not lazy
+    * [HHH-19670] - Upgrade MySQL testing to 9.4
+
+
 Changes in 7.1.0.CR1 (July 30, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

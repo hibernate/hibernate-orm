@@ -17,6 +17,7 @@ import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.criteria.JpaJoinedFrom;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
@@ -24,12 +25,10 @@ import org.hibernate.query.sqm.AliasCollisionException;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmTreeCreationLogger;
+import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
-import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmJoin;
-import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.from.*;
 import org.hibernate.query.sqm.tree.select.SqmAliasedNode;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.spi.NavigablePath;
@@ -243,6 +242,12 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 				}
 				else if ( parentRegistered instanceof SqmEntityJoin<?> ) {
 					correlated = selectQuery.correlate( (SqmEntityJoin<?>) parentRegistered );
+				}
+				else if ( parentRegistered instanceof AbstractSqmFrom<?, ?>) {
+					final SqmCorrelation<?, ?> correlation =
+							((AbstractSqmFrom<?, ?>) parentRegistered).createCorrelation();
+					selectQuery.getQuerySpec().addRoot( correlation.getCorrelatedRoot() );
+					correlated = correlation;
 				}
 				else {
 					throw new UnsupportedOperationException( "Can't correlate from node: " + parentRegistered );

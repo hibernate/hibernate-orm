@@ -195,6 +195,14 @@ public class DB2Dialect extends Dialect {
 		return MINIMUM_VERSION;
 	}
 
+	@Override
+	protected void registerDefaultKeywords() {
+		super.registerDefaultKeywords();
+		// Register DB2-specific keywords not covered by ANSI SQL
+		registerKeyword( "first" );
+		registerKeyword( "next" );
+	}
+
 	/**
 	 * DB2 LUW Version
 	 */

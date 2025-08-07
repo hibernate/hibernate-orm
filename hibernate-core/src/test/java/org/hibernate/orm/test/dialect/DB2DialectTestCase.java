@@ -89,4 +89,15 @@ public class DB2DialectTestCase extends BaseUnitTestCase {
 				sql.contains("fetch next ? rows only")
 		);
 	}
+
+	@Test
+	public void testDB2KeywordsAreRegistered() {
+		// Test that DB2-specific keywords are properly registered
+		assertTrue("'first' keyword should be registered", dialect.getKeywords().contains("first"));
+		assertTrue("'next' keyword should be registered", dialect.getKeywords().contains("next"));
+		// Note: ANSI SQL keywords already cover 'fetch', 'rows', and 'only'
+		assertTrue("'fetch' keyword should be available (from ANSI SQL)", dialect.getKeywords().contains("fetch"));
+		assertTrue("'rows' keyword should be available (from ANSI SQL)", dialect.getKeywords().contains("rows"));
+		assertTrue("'only' keyword should be available (from ANSI SQL)", dialect.getKeywords().contains("only"));
+	}
 }

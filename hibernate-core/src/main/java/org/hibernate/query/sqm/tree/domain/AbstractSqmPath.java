@@ -148,6 +148,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	@Override
 	public SqmPathSource<T> getResolvedModel() {
 		final SqmPathSource<T> pathSource = getReferencedPathSource();
+
 		if ( pathSource.isGeneric()
 				&& getLhs().getResolvedModel().getPathType() instanceof SqmManagedDomainType<?> lhsType ) {
 			final var concreteAttribute = lhsType.findConcreteGenericAttribute( pathSource.getPathName() );

@@ -99,6 +99,10 @@ public class HibernateTraversableResolver implements TraversableResolver {
 			Class<?> rootBeanType,
 			Path pathToTraversableObject,
 			ElementType elementType) {
-		return !associationsPerEntityClass.getOrDefault( rootBeanType, Set.of() ).contains( getStringBasedPath( traversableProperty, pathToTraversableObject ) );
+		Set<String> associations = associationsPerEntityClass.get( rootBeanType);
+		if ( associations == null ) {
+			return false;
+		}
+		return !associations.contains( getStringBasedPath( traversableProperty, pathToTraversableObject ) );
 	}
 }

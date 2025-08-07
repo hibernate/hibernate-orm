@@ -24,6 +24,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -200,22 +201,7 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 		}
 
 		if (value instanceof Timestamp timestamp) {
-			/*
-			 * This works around two bugs:
-			 * - HHH-13266 (JDK-8061577): around and before 1900,
-			 * the number of milliseconds since the epoch does not mean the same thing
-			 * for java.util and java.time, so conversion must be done using the year, month, day, hour, etc.
-			 * - HHH-13379 (JDK-4312621): after 1908 (approximately),
-			 * Daylight Saving Time introduces ambiguity in the year/month/day/hour/etc representation once a year
-			 * (on DST end), so conversion must be done using the number of milliseconds since the epoch.
-			 * - around 1905, both methods are equally valid, so we don't really care which one is used.
-			 */
-			if ( timestamp.getYear() < 5 ) { // Timestamp year 0 is 1900
-				return timestamp.toLocalDateTime().atZone( ZoneId.systemDefault() ).toOffsetDateTime();
-			}
-			else {
-				return OffsetDateTime.ofInstant( timestamp.toInstant(), ZoneId.systemDefault() );
-			}
+			return DateTimeUtils.toInstant( timestamp ).atZone( ZoneId.systemDefault() ).toOffsetDateTime();
 		}
 
 		if (value instanceof Date date) {

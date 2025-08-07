@@ -5,9 +5,8 @@
 package org.hibernate.type.descriptor.java;
 
 import java.sql.Types;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
@@ -18,6 +17,7 @@ import java.util.GregorianCalendar;
 
 import org.hibernate.HibernateException;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -207,17 +207,21 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 			return java.sql.Date.valueOf( localDate );
 		}
 
+		if ( value instanceof Instant instant ) {
+			return DateTimeUtils.toSqlDate( instant );
+		}
+
 		throw unknownWrap( value.getClass() );
 	}
 
 	@Override
 	public String toString(Date value) {
-		if ( value instanceof java.sql.Date ) {
-			return LITERAL_FORMATTER.format( ( (java.sql.Date) value ).toLocalDate() );
-		}
-		else {
-			return LITERAL_FORMATTER.format( LocalDate.ofInstant( value.toInstant(), ZoneOffset.systemDefault() ) );
-		}
+		return DateTimeUtils.dateToString( value );
+	}
+
+	@Override
+	public String extractLoggableRepresentation(Date value) {
+		return value == null ? "null" : toString( value );
 	}
 
 	@Override
@@ -244,12 +248,7 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 
 	@Override
 	public void appendEncodedString(SqlAppender sb, Date value) {
-		if ( value instanceof java.sql.Date ) {
-			LITERAL_FORMATTER.formatTo( ( (java.sql.Date) value ).toLocalDate(), sb );
-		}
-		else {
-			LITERAL_FORMATTER.formatTo( LocalTime.ofInstant( value.toInstant(), ZoneOffset.systemDefault() ), sb );
-		}
+		DateTimeUtils.appendAsDate( sb, value );
 	}
 
 	@Override

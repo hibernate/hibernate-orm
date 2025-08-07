@@ -43,13 +43,13 @@ import org.hibernate.type.descriptor.jdbc.StructHelper;
 import org.hibernate.type.descriptor.jdbc.StructuredJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDateWithEraSuffix;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicrosAndEraSuffix;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillisAndEraSuffix;
 import static org.hibernate.type.descriptor.jdbc.StructHelper.getSubPart;
 import static org.hibernate.type.descriptor.jdbc.StructHelper.instantiate;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
  * Implementation for serializing/deserializing an embeddable aggregate to/from the PostgreSQL component format.
@@ -1396,16 +1396,16 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 		switch ( jdbcMapping.getJdbcType().getJdbcTypeCode() ) {
 			case SqlTypes.DATE:
 				if ( value instanceof java.util.Date date ) {
-					appendAsDate( appender, date );
+					appendAsDateWithEraSuffix( appender, date );
 				}
 				else if ( value instanceof java.util.Calendar calendar ) {
-					appendAsDate( appender, calendar );
+					appendAsDateWithEraSuffix( appender, calendar );
 				}
 				else if ( value instanceof TemporalAccessor temporalAccessor ) {
-					appendAsDate( appender, temporalAccessor );
+					appendAsDateWithEraSuffix( appender, temporalAccessor );
 				}
 				else {
-					appendAsDate(
+					appendAsDateWithEraSuffix(
 							appender,
 							javaType.unwrap( value, java.util.Date.class, options )
 					);
@@ -1440,16 +1440,16 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
 			case SqlTypes.TIMESTAMP_UTC:
 				if ( value instanceof java.util.Date date ) {
-					appendAsTimestampWithMicros( appender, date, jdbcTimeZone );
+					appendAsTimestampWithMicrosAndEraSuffix( appender, date, jdbcTimeZone );
 				}
 				else if ( value instanceof java.util.Calendar calendar ) {
-					appendAsTimestampWithMillis( appender, calendar, jdbcTimeZone );
+					appendAsTimestampWithMillisAndEraSuffix( appender, calendar, jdbcTimeZone );
 				}
 				else if ( value instanceof TemporalAccessor temporalAccessor ) {
-					appendAsTimestampWithMicros( appender, temporalAccessor, temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ), jdbcTimeZone );
+					appendAsTimestampWithMicrosAndEraSuffix( appender, temporalAccessor, temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ), jdbcTimeZone );
 				}
 				else {
-					appendAsTimestampWithMicros(
+					appendAsTimestampWithMicrosAndEraSuffix(
 							appender,
 							javaType.unwrap( value, java.util.Date.class, options ),
 							jdbcTimeZone

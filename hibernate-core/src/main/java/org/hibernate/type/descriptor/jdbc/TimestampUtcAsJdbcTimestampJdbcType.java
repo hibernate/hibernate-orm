@@ -15,6 +15,7 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -81,14 +82,14 @@ public class TimestampUtcAsJdbcTimestampJdbcType implements JdbcType {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				final Instant instant = javaType.unwrap( value, Instant.class, options );
-				st.setTimestamp( index, Timestamp.from( instant ), UTC_CALENDAR );
+				st.setTimestamp( index, DateTimeUtils.toTimestamp( instant ), UTC_CALENDAR );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
 				final Instant instant = javaType.unwrap( value, Instant.class, options );
-				st.setTimestamp( name, Timestamp.from( instant ), UTC_CALENDAR );
+				st.setTimestamp( name, DateTimeUtils.toTimestamp( instant ), UTC_CALENDAR );
 			}
 		};
 	}
@@ -99,19 +100,19 @@ public class TimestampUtcAsJdbcTimestampJdbcType implements JdbcType {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				final Timestamp timestamp = rs.getTimestamp( paramIndex, UTC_CALENDAR );
-				return javaType.wrap( timestamp == null ? null : timestamp.toInstant(), options );
+				return javaType.wrap( timestamp == null ? null : DateTimeUtils.toInstant( timestamp ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 				final Timestamp timestamp = statement.getTimestamp( index, UTC_CALENDAR );
-				return javaType.wrap( timestamp == null ? null : timestamp.toInstant(), options );
+				return javaType.wrap( timestamp == null ? null : DateTimeUtils.toInstant( timestamp ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
 				final Timestamp timestamp = statement.getTimestamp( name, UTC_CALENDAR );
-				return javaType.wrap( timestamp == null ? null : timestamp.toInstant(), options );
+				return javaType.wrap( timestamp == null ? null : DateTimeUtils.toInstant( timestamp ), options );
 			}
 		};
 	}

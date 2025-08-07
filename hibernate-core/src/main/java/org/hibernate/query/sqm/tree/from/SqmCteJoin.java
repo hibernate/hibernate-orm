@@ -14,7 +14,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmJoin;
-import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedCteJoin;
+import org.hibernate.query.sqm.tree.domain.SqmSingularValuedJoin;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedJoin;
 import org.hibernate.spi.NavigablePath;
 
@@ -26,7 +27,7 @@ import java.util.Objects;
  * @author Christian Beikov
  */
 @Incubating
-public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> {
+public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> implements SqmSingularValuedJoin<T, T> {
 	private final SqmCteStatement<T> cte;
 
 	public SqmCteJoin(
@@ -118,8 +119,8 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> {
 	// JPA
 
 	@Override
-	public SqmCorrelatedEntityJoin<T,T> createCorrelation() {
-		throw new UnsupportedOperationException();
+	public SqmCorrelatedCteJoin<T> createCorrelation() {
+		return new SqmCorrelatedCteJoin<>( this );
 	}
 
 	@Override

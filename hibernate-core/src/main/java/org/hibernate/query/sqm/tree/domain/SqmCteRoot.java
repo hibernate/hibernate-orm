@@ -102,7 +102,7 @@ public class SqmCteRoot<T> extends SqmRoot<T> implements JpaRoot<T> {
 
 	@Override
 	public SqmCorrelatedRoot<T> createCorrelation() {
-		throw new UnsupportedOperationException();
+		return new SqmCorrelatedDerivedRoot<>( this );
 	}
 
 	@Override

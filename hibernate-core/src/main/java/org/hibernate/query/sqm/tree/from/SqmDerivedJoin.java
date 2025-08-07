@@ -12,6 +12,7 @@ import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaDerivedJoin;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedDerivedJoin;
 import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -19,7 +20,6 @@ import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmQualifiedJoin;
-import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.spi.NavigablePath;
@@ -166,8 +166,8 @@ public class SqmDerivedJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements
 	// JPA
 
 	@Override
-	public SqmCorrelatedEntityJoin<T> createCorrelation() {
-		throw new UnsupportedOperationException();
+	public SqmCorrelatedDerivedJoin<T> createCorrelation() {
+		return new SqmCorrelatedDerivedJoin<>( this );
 	}
 
 	@Override

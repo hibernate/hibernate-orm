@@ -9,6 +9,8 @@ ext {
     db = project.getProperty('db')
     dbHost = System.getProperty( 'dbHost', 'localhost' )
     dbService = System.getProperty( 'dbService', '' )
+    dbPassword = System.getProperty( 'dbPassword', '' ).replace('"', '')
+    dbConnectionStringSuffix = System.getProperty( 'dbConnectionStringSuffix', '' ).replace('"', '')
     runID = System.getProperty( 'runID', '' )
 
     dbBundle = [
@@ -286,6 +288,15 @@ ext {
                     'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521/' + dbService,
                     'jdbc.datasource' : 'oracle.jdbc.OracleDriver',
 //                        'jdbc.datasource' : 'oracle.jdbc.datasource.impl.OracleDataSource',
+                    'connection.init_sql' : ''
+            ],
+            oracle_test_pilot_database: [
+                    'db.dialect' : 'org.hibernate.dialect.OracleDialect',
+                    'jdbc.driver': 'oracle.jdbc.OracleDriver',
+                    'jdbc.user'  : 'hibernate_orm_test_' + runID,
+                    'jdbc.pass'  : dbPassword,
+                    'jdbc.url'   : 'jdbc:oracle:thin:@' + dbConnectionStringSuffix + '?oracle.jdbc.enableQueryResultCache=false',
+                    'jdbc.datasource' : 'oracle.jdbc.OracleDriver',
                     'connection.init_sql' : ''
             ],
             mssql : [

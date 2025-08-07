@@ -23,6 +23,8 @@ import org.hibernate.query.sqm.AliasCollisionException;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmTreeCreationLogger;
+import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
@@ -166,6 +168,12 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 				}
 				else if ( parentRegistered instanceof SqmEntityJoin<?> ) {
 					correlated = selectQuery.correlate( (SqmEntityJoin<?>) parentRegistered );
+				}
+				else if ( parentRegistered instanceof AbstractSqmFrom<?, ?>) {
+					final SqmCorrelation<?, ?> correlation =
+							((AbstractSqmFrom<?, ?>) parentRegistered).createCorrelation();
+					selectQuery.getQuerySpec().addRoot( correlation.getCorrelatedRoot() );
+					correlated = correlation;
 				}
 				else {
 					throw new UnsupportedOperationException( "Can't correlate from node: " + parentRegistered );

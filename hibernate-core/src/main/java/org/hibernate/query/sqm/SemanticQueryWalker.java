@@ -19,6 +19,8 @@ import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedCrossJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedCteJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedDerivedJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedMapJoin;
@@ -161,6 +163,14 @@ public interface SemanticQueryWalker<T> {
 	T visitQualifiedEntityJoin(SqmEntityJoin<?> joinedFromElement);
 
 	T visitQualifiedAttributeJoin(SqmAttributeJoin<?, ?> joinedFromElement);
+
+	default T visitCorrelatedCteJoin(SqmCorrelatedCteJoin<?> join){
+		return visitQualifiedCteJoin( join );
+	}
+
+	default T visitCorrelatedDerivedJoin(SqmCorrelatedDerivedJoin<?> join){
+		return visitQualifiedDerivedJoin( join );
+	}
 
 	default T visitCorrelatedCrossJoin(SqmCorrelatedCrossJoin<?> join) {
 		return visitCrossJoin( join );

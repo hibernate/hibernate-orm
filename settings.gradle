@@ -232,7 +232,7 @@ dependencyResolutionManagement {
             def mariadbVersion = version "mariadb", "3.5.3"
             def mssqlVersion = version "mssql", "12.10.1.jre11"
             def mysqlVersion = version "mysql", "9.4.0"
-            def oracleVersion = version "oracle", "23.8.0.25.04"
+            def oracleVersion = version "oracle", "23.9.0.25.07"
             def oracleJacksonOsonExtension = version "oracleJacksonOsonExtension", "1.0.4"
             def pgsqlVersion = version "pgsql", "42.7.7"
             def edbVersion = version "edb", "42.7.3.3"

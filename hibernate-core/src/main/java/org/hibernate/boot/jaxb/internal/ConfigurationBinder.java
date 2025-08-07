@@ -11,7 +11,6 @@ import javax.xml.validation.Schema;
 
 import org.hibernate.Internal;
 import org.hibernate.boot.ResourceStreamLocator;
-import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl;
 import org.hibernate.boot.jaxb.internal.stax.ConfigurationEventReader;
 import org.hibernate.boot.jaxb.spi.Binding;
@@ -40,10 +39,9 @@ public class ConfigurationBinder extends AbstractBinder<JaxbPersistenceImpl> {
 
 	@Override
 	protected <X extends JaxbPersistenceImpl> Binding<X> doBind(
-			XMLEventReader staxEventReader,
-			StartElement rootElementStartEvent,
-			Origin origin) {
-		final XMLEventReader reader = new ConfigurationEventReader( staxEventReader, xmlEventFactory );
+			JaxbBindingSource jaxbBindingSource,
+			StartElement rootElementStartEvent) {
+		final XMLEventReader reader = new ConfigurationEventReader( jaxbBindingSource.getEventReader(), xmlEventFactory );
 
 		final Schema xsd;
 		// evaluate extended (the former validate_xml 'true') in case anyone should override getXmlValidationMode() to switch it on
@@ -58,10 +56,10 @@ public class ConfigurationBinder extends AbstractBinder<JaxbPersistenceImpl> {
 				reader,
 				xsd,
 				jaxbContext(),
-				origin
+				jaxbBindingSource.getOrigin()
 		);
 		//noinspection unchecked
-		return new Binding<>( (X) bindingRoot, origin );
+		return new Binding<>( (X) bindingRoot, jaxbBindingSource.getOrigin() );
 	}
 
 	@Internal

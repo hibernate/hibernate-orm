@@ -141,10 +141,11 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 
 	@Override
 	protected <X extends JaxbBindableMappingDescriptor> Binding<X> doBind(
-			XMLEventReader staxEventReader,
-			StartElement rootElementStartEvent,
-			Origin origin) {
+			JaxbBindingSource jaxbBindingSource,
+			StartElement rootElementStartEvent) {
 		final String rootElementLocalName = rootElementStartEvent.getName().getLocalPart();
+		final XMLEventReader staxEventReader = jaxbBindingSource.getEventReader();
+		final Origin origin = jaxbBindingSource.getOrigin();
 		if ( "hibernate-mapping".equals( rootElementLocalName ) ) {
 			if ( log.isTraceEnabled() ) {
 				log.tracef( "Performing JAXB binding of hbm.xml document: %s", origin.toString() );
@@ -181,7 +182,7 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 				final XmlValidationMode validationMode = getXmlValidationMode();
 				if ( validationMode == XmlValidationMode.STRICT ) {
 					// deals with StrictValidationErrorHandler, etc
-					doStrictValidation( origin );
+					doStrictValidation( jaxbBindingSource );
 					xsd = null;
 				}
 				else if ( validationMode == XmlValidationMode.EXTENDED ) {
@@ -208,21 +209,20 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 		}
 	}
 
-	private void doStrictValidation(Origin origin) {
+	private void doStrictValidation(JaxbBindingSource jaxbBindingSource) {
 		StrictValidationErrorHandler errorHandler = new StrictValidationErrorHandler();
 		try {
 			Validator validator = MappingXsdSupport.latestJpaDescriptor().getSchema()
 					.newValidator();
 			validator.setErrorHandler( errorHandler );
 			// We need 'clean' access to the InputStream at this point, using the staxEventReader leads to errors
-			validator.validate( new StAXSource(
-					createReader( streamAccess.accessInputStream(), origin ) ) );
+			validator.validate( new StAXSource(jaxbBindingSource.getEventReader()) );
 		}
 		catch (Exception e) {
 			throw new MappingException(
 					"Strict validation failure: " + errorHandler.getMessage(),
 					e,
-					origin );
+					jaxbBindingSource.getOrigin() );
 		}
 	}
 

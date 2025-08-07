@@ -12,7 +12,6 @@ import java.util.Enumeration;
 import java.util.function.Consumer;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import javax.xml.transform.dom.DOMSource;
 
 import org.hibernate.boot.MappingNotFoundException;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
@@ -21,7 +20,6 @@ import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.spi.XmlSource;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
-import org.w3c.dom.Document;
 
 import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
 
@@ -107,12 +105,6 @@ public class XmlSources {
 
 		final Origin origin = new Origin( SourceType.INPUT_STREAM, null );
 		return new InputStreamXmlSource( origin, inputStream, false );
-	}
-
-	public static XmlSource fromDocument(Document document) {
-		JAXB_LOGGER.trace( "reading mappings from DOM" );
-		final Origin origin = new Origin( SourceType.DOM, Origin.UNKNOWN_FILE_PATH );
-		return new JaxpSourceXmlSource( origin, new DOMSource( document ) );
 	}
 
 	/**

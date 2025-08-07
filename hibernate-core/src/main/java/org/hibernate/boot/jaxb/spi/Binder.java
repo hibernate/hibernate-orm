@@ -23,7 +23,9 @@ public interface Binder<T> {
 	 * @param source The XML source.
 	 * @param origin The descriptor of the source origin
 	 * @return The bound JAXB model
+	 * @deprecated Use {@link #bind(InputStreamAccess, Origin)} instead
 	 */
+	@Deprecated(since = "7.2")
 	<X extends T> Binding<X> bind(Source source, Origin origin);
 
 	/**

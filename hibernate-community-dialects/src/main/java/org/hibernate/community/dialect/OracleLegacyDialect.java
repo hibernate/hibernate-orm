@@ -9,8 +9,9 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -158,7 +159,11 @@ import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDateWithoutYear0;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillisWithoutYear0;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanosWithoutYear0;
 
 /**
  * A {@linkplain Dialect SQL dialect} for Oracle 8i and above.
@@ -1469,27 +1474,80 @@ public class OracleLegacyDialect extends Dialect {
 
 	@Override
 	public boolean supportsTemporalLiteralOffset() {
-		// Oracle *does* support offsets, but only
-		// in the ANSI syntax, not in the JDBC
-		// escape-based syntax, which we use in
-		// almost all circumstances (see below)
-		return false;
+		return true;
 	}
 
 	@Override
-	public void appendDateTimeLiteral(SqlAppender appender, TemporalAccessor temporalAccessor, TemporalType precision, TimeZone jdbcTimeZone) {
-		// we usually use the JDBC escape-based syntax
-		// because we want to let the JDBC driver handle
-		// TIME (a concept which does not exist in Oracle)
-		// but for the special case of timestamps with an
-		// offset we need to use the ANSI syntax
-		if ( precision == TemporalType.TIMESTAMP && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
-			appender.appendSql( "timestamp '" );
-			appendAsTimestampWithNanos( appender, temporalAccessor, true, jdbcTimeZone, false );
-			appender.appendSql( '\'' );
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "date '" );
+				appendAsDateWithoutYear0( appender, temporalAccessor );
+				appender.appendSql( '\'' );
+				break;
+			case TIME:
+				appender.appendSql( "time '" );
+				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( '\'' );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "timestamp '" );
+				appendAsTimestampWithNanosWithoutYear0( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone, false );
+				appender.appendSql( '\'' );
+				break;
+			default:
+				throw new IllegalArgumentException();
 		}
-		else {
-			super.appendDateTimeLiteral( appender, temporalAccessor, precision, jdbcTimeZone );
+	}
+
+	@Override
+	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "date '" );
+				appendAsDateWithoutYear0( appender, date );
+				appender.appendSql( '\'' );
+				break;
+			case TIME:
+				appender.appendSql( "time '" );
+				appendAsLocalTime( appender, date );
+				appender.appendSql( '\'' );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "timestamp '" );
+				appendAsTimestampWithNanosWithoutYear0( appender, date, jdbcTimeZone );
+				appender.appendSql( '\'' );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(SqlAppender appender, Calendar calendar, TemporalType precision, TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "date '" );
+				appendAsDateWithoutYear0( appender, calendar );
+				appender.appendSql( '\'' );
+				break;
+			case TIME:
+				appender.appendSql( "time '" );
+				appendAsLocalTime( appender, calendar );
+				appender.appendSql( '\'' );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "timestamp '" );
+				appendAsTimestampWithMillisWithoutYear0( appender, calendar, jdbcTimeZone );
+				appender.appendSql( '\'' );
+				break;
+			default:
+				throw new IllegalArgumentException();
 		}
 	}
 

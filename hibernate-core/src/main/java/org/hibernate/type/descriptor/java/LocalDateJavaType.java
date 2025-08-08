@@ -19,6 +19,7 @@ import java.util.GregorianCalendar;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -157,7 +158,7 @@ public class LocalDateJavaType extends AbstractTemporalJavaType<LocalDate> {
 
 		if (value instanceof Date date) {
 			if (value instanceof java.sql.Date sqlDate) {
-				return sqlDate.toLocalDate();
+				return DateTimeUtils.toLocalDate( sqlDate );
 			}
 			else {
 				return Instant.ofEpochMilli( date.getTime() ).atZone( ZoneId.systemDefault() ).toLocalDate();

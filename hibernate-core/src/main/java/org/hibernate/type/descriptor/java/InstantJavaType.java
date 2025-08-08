@@ -7,7 +7,6 @@ package org.hibernate.type.descriptor.java;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -19,6 +18,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -107,27 +107,11 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 		}
 
 		if ( Timestamp.class.isAssignableFrom( type ) ) {
-			/*
-			 * This works around two bugs:
-			 * - HHH-13266 (JDK-8061577): around and before 1900,
-			 * the number of milliseconds since the epoch does not mean the same thing
-			 * for java.util and java.time, so conversion must be done using the year, month, day, hour, etc.
-			 * - HHH-13379 (JDK-4312621): after 1908 (approximately),
-			 * Daylight Saving Time introduces ambiguity in the year/month/day/hour/etc representation once a year
-			 * (on DST end), so conversion must be done using the number of milliseconds since the epoch.
-			 * - around 1905, both methods are equally valid, so we don't really care which one is used.
-			 */
-			ZonedDateTime zonedDateTime = instant.atZone( ZoneId.systemDefault() );
-			if ( zonedDateTime.getYear() < 1905 ) {
-				return (X) Timestamp.valueOf( zonedDateTime.toLocalDateTime() );
-			}
-			else {
-				return (X) Timestamp.from( instant );
-			}
+			return (X) DateTimeUtils.toTimestamp( instant );
 		}
 
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			return (X) new java.sql.Date( instant.toEpochMilli() );
+			return (X) DateTimeUtils.toSqlDate( instant );
 		}
 
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
@@ -160,22 +144,7 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 		}
 
 		if ( value instanceof Timestamp timestamp ) {
-			/*
-			 * This works around two bugs:
-			 * - HHH-13266 (JDK-8061577): around and before 1900,
-			 * the number of milliseconds since the epoch does not mean the same thing
-			 * for java.util and java.time, so conversion must be done using the year, month, day, hour, etc.
-			 * - HHH-13379 (JDK-4312621): after 1908 (approximately),
-			 * Daylight Saving Time introduces ambiguity in the year/month/day/hour/etc representation once a year
-			 * (on DST end), so conversion must be done using the number of milliseconds since the epoch.
-			 * - around 1905, both methods are equally valid, so we don't really care which one is used.
-			 */
-			if ( timestamp.getYear() < 5 ) { // Timestamp year 0 is 1900
-				return timestamp.toLocalDateTime().atZone( ZoneId.systemDefault() ).toInstant();
-			}
-			else {
-				return timestamp.toInstant();
-			}
+			return DateTimeUtils.toInstant( timestamp );
 		}
 
 		if ( value instanceof Long longValue ) {
@@ -186,8 +155,8 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 			return ZonedDateTime.ofInstant( calendar.toInstant(), calendar.getTimeZone().toZoneId() ).toInstant();
 		}
 
-		if ( value instanceof Date ) {
-			return ( (Date) value ).toInstant();
+		if ( value instanceof Date date ) {
+			return date.toInstant();
 		}
 
 		throw unknownWrap( value.getClass() );

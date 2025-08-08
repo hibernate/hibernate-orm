@@ -119,7 +119,7 @@ public class DB2iDialect extends DB2Dialect {
 	@Override
 	public String getQuerySequencesString() {
 		if ( getVersion().isSameOrAfter(7,3) ) {
-			return "select distinct sequence_name from qsys2.syssequences " +
+			return "select distinct sequence_schema as seqschema, sequence_name as seqname, START, minimum_value as minvalue, maximum_value as maxvalue, increment from qsys2.syssequences " +
 					"where current_schema='*LIBL' and sequence_schema in (select schema_name from qsys2.library_list_info) " +
 					"or sequence_schema=current_schema";
 		}

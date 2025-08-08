@@ -81,7 +81,6 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
 import org.hibernate.mapping.CheckConstraint;
@@ -228,6 +227,7 @@ import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
 import static org.hibernate.internal.util.MathHelper.ceilingPowerOfTwo;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
@@ -5222,9 +5222,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		if ( matcher.matches() && matcher.groupCount() > 1 ) {
 			final String startToken = matcher.group(1);
 			// Null if there is no join in the query
-			final String joinToken = Objects.toString( matcher.group(2), "" );
+			final String joinToken = matcher.group(2);
 			final String endToken = matcher.group(3);
-			return startToken + " use index (" + hints + ") " + joinToken + endToken;
+			return startToken
+					+ " use index (" + hints + ") "
+					+ ( joinToken == null ? "" : joinToken )
+					+ endToken;
 		}
 		else {
 			return query;
@@ -5242,7 +5245,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * Perform necessary character escaping on the text of the comment.
 	 */
 	public static String escapeComment(String comment) {
-		if ( StringHelper.isNotEmpty( comment ) ) {
+		if ( isNotEmpty( comment ) ) {
 			final String escaped = ESCAPE_CLOSING_COMMENT_PATTERN.matcher( comment ).replaceAll( "*\\\\/" );
 			return ESCAPE_OPENING_COMMENT_PATTERN.matcher( escaped ).replaceAll( "/\\\\*" );
 		}

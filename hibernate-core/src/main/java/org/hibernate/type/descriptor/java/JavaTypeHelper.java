@@ -34,6 +34,6 @@ public class JavaTypeHelper {
 	}
 
 	public static boolean isUnknown(JavaType<?> javaType) {
-		return javaType.getClass() == UnknownBasicJavaType.class;
+		return javaType == null || javaType.getClass() == UnknownBasicJavaType.class;
 	}
 }

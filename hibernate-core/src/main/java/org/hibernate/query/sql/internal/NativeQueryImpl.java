@@ -1174,7 +1174,14 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQueryImplementor<R> addScalar(String columnAlias, @SuppressWarnings("rawtypes") Class javaType) {
-		return registerBuilder( Builders.scalar( columnAlias, javaType, getSessionFactory() ) );
+		@SuppressWarnings("unchecked")
+		final BasicType<?> basicType = getBasicTypeRegistry().getRegisteredType( javaType );
+		if ( basicType != null ) {
+			return registerBuilder( Builders.scalar( columnAlias, basicType ) );
+		}
+		else {
+			return registerBuilder( Builders.scalar( columnAlias, javaType, getSessionFactory() ) );
+		}
 	}
 
 	@Override

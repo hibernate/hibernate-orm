@@ -13,8 +13,11 @@ import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.Source;
 import javax.xml.validation.Schema;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.ResourceStreamLocator;
+import org.hibernate.boot.archive.internal.RepeatableInputStreamAccess;
+import org.hibernate.boot.archive.spi.InputStreamAccess;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.internal.stax.BufferedXMLEventReader;
 import org.hibernate.boot.jaxb.internal.stax.LocalXmlResourceResolver;
@@ -40,17 +43,20 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 		this.xmlResourceResolver = new LocalXmlResourceResolver( resourceStreamLocator );
 	}
 
-	public abstract boolean isValidationEnabled();
-
 	@Override
 	public <X extends T> Binding<X> bind(InputStream stream, Origin origin) {
-		final XMLEventReader eventReader = createReader( stream, origin );
+		return bind( new RepeatableInputStreamAccess(origin.getName(), stream), origin );
+	}
+
+	@Override
+	public <X extends T> Binding<X> bind(InputStreamAccess streamAccess, Origin origin) {
+		final JaxbBindingSource jaxbBindingSource = createReader( streamAccess, origin );
 		try {
-			return doBind( eventReader, origin );
+			return doBind( jaxbBindingSource );
 		}
 		finally {
 			try {
-				eventReader.close();
+				jaxbBindingSource.getEventReader().close();
 			}
 			catch (XMLStreamException e) {
 				log.debug( "Unable to close StAX reader", e );
@@ -58,44 +64,46 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 		}
 	}
 
-	protected XMLEventReader createReader(InputStream stream, Origin origin) {
-		try {
-			// create a standard StAX reader
-			final XMLEventReader staxReader = staxFactory().createXMLEventReader( stream );
-			// and wrap it in a buffered reader (keeping 100 element sized buffer)
-			return new BufferedXMLEventReader( staxReader, 100 );
-		}
-		catch ( XMLStreamException e ) {
-			throw new MappingException( "Unable to create StAX reader", e, origin );
-		}
+	protected JaxbBindingSource createReader(InputStreamAccess streamAccess, Origin origin) {
+			return new JaxbBindingSource() {
+				@Override
+				public Origin getOrigin() {
+					return origin;
+				}
+
+				@Override
+				public InputStreamAccess getInputStreamAccess() {
+					return streamAccess;
+				}
+
+				@Override
+				public XMLEventReader getEventReader() {
+					try {
+					// create a standard StAX reader
+					final XMLEventReader staxReader = staxFactory().createXMLEventReader( streamAccess.accessInputStream() );
+					// and wrap it in a buffered reader (keeping 100 element sized buffer)
+					return new BufferedXMLEventReader( staxReader, 100 );
+					}
+					catch ( XMLStreamException e ) {
+						throw new MappingException( "Unable to create StAX reader", e, origin );
+					}
+				}
+			};
 	}
 
 	@Override
 	public <X extends T> Binding<X> bind(Source source, Origin origin) {
-		final XMLEventReader eventReader = createReader( source, origin );
-		return doBind( eventReader, origin );
+		throw new HibernateException( "The Binder.bind(Source, Origin) method is no longer supported" );
 	}
 
-	protected XMLEventReader createReader(Source source, Origin origin) {
+	private <X extends T> Binding<X> doBind(JaxbBindingSource jaxbBindingSource) {
 		try {
-			// create a standard StAX reader
-			final XMLEventReader staxReader = staxFactory().createXMLEventReader( source );
-			// and wrap it in a buffered reader (keeping 100 element sized buffer)
-			return new BufferedXMLEventReader( staxReader, 100 );
-		}
-		catch ( XMLStreamException e ) {
-			throw new MappingException( "Unable to create StAX reader", e, origin );
-		}
-	}
-
-	private <X extends T> Binding<X> doBind(XMLEventReader eventReader, Origin origin) {
-		try {
-			final StartElement rootElementStartEvent = seekRootElementStartEvent( eventReader, origin );
-			return doBind( eventReader, rootElementStartEvent, origin );
+			final StartElement rootElementStartEvent = seekRootElementStartEvent( jaxbBindingSource.getEventReader(), jaxbBindingSource.getOrigin() );
+			return doBind( jaxbBindingSource, rootElementStartEvent );
 		}
 		finally {
 			try {
-				eventReader.close();
+				jaxbBindingSource.getEventReader().close();
 			}
 			catch (Exception e) {
 				log.debug( "Unable to close StAX reader", e );
@@ -138,7 +146,7 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 		return rootElementStartEvent.asStartElement();
 	}
 
-	protected abstract <X extends T> Binding<X> doBind(XMLEventReader staxEventReader, StartElement rootElementStartEvent, Origin origin);
+	protected abstract <X extends T> Binding<X> doBind(JaxbBindingSource jaxbBindingSource, StartElement rootElementStartEvent);
 
 	@SuppressWarnings("unused")
 	protected static boolean hasNamespace(StartElement startElement) {
@@ -150,12 +158,7 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 
 		try {
 			final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-			if ( isValidationEnabled() ) {
-				unmarshaller.setSchema( xsd );
-			}
-			else {
-				unmarshaller.setSchema( null );
-			}
+			unmarshaller.setSchema( xsd );
 			unmarshaller.setEventHandler( handler );
 
 			//noinspection unchecked
@@ -171,6 +174,5 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 			);
 		}
 	}
-
 
 }

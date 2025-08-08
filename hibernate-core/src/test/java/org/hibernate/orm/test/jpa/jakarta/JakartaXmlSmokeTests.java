@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.stream.Stream;
-import javax.xml.transform.stream.StreamSource;
 
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
@@ -37,11 +36,11 @@ public class JakartaXmlSmokeTests {
 	@Test
 	public void testLoadingOrmXml(ServiceRegistryScope scope) {
 		final ClassLoaderService cls = scope.getRegistry().getService( ClassLoaderService.class );
-		final MappingBinder mappingBinder = new MappingBinder( cls, MappingBinder.VALIDATING );
-		final InputStream inputStream = cls.locateResourceStream( "xml/jakarta/simple/orm.xml" );
+		final MappingBinder mappingBinder = new MappingBinder( cls, MappingBinder.DEFAULT_VALIDATING );
+		final String resourceName = "xml/jakarta/simple/orm.xml";
+		final InputStream inputStream = cls.locateResourceStream( resourceName );
 		try {
-			final Binding<JaxbEntityMappingsImpl> binding = mappingBinder.bind( new StreamSource( inputStream ), new Origin( SourceType.RESOURCE, "xml/jakarta/simple/orm.xml" ) );
-
+			final Binding<JaxbEntityMappingsImpl> binding = mappingBinder.bind( inputStream, new Origin( SourceType.RESOURCE, resourceName ) );
 			assertThat( binding.getRoot()
 					.getEntities()
 					.stream()

@@ -14,9 +14,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import javax.xml.transform.stream.StreamSource;
 
 import org.hibernate.boot.archive.internal.ArchiveHelper;
+import org.hibernate.boot.archive.internal.ByteArrayInputStreamAccess;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl;
@@ -342,10 +342,9 @@ public final class PersistenceXmlParser {
 			conn.setUseCaches( false );
 
 			try ( InputStream inputStream = conn.getInputStream() ) {
-				final StreamSource inputSource = new StreamSource( inputStream );
 				final ConfigurationBinder configurationBinder = new ConfigurationBinder( classLoaderService );
 				final Binding<JaxbPersistenceImpl> binding =
-						configurationBinder.bind( inputSource, new Origin( SourceType.URL, resourceName ) );
+						configurationBinder.bind( new ByteArrayInputStreamAccess( resourceName, inputStream.readAllBytes() ), new Origin( SourceType.URL, resourceName ) );
 				return binding.getRoot();
 			}
 			catch (IOException e) {

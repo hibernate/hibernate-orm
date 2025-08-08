@@ -7,6 +7,7 @@ package org.hibernate.orm.test.internal.util.xml;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.hibernate.boot.archive.internal.RepeatableInputStreamAccess;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
@@ -23,7 +24,7 @@ public final class XMLMappingHelper {
 	private final MappingBinder binder;
 
 	public XMLMappingHelper() {
-		binder = new MappingBinder( ClassLoaderServiceTestingImpl.INSTANCE, MappingBinder.VALIDATING );
+		binder = new MappingBinder( ClassLoaderServiceTestingImpl.INSTANCE, MappingBinder.DEFAULT_VALIDATING );
 	}
 
 	public JaxbEntityMappingsImpl readOrmXmlMappings(String name) throws IOException {
@@ -35,7 +36,7 @@ public final class XMLMappingHelper {
 	public JaxbEntityMappingsImpl readOrmXmlMappings(InputStream is, String name) {
 		try {
 			Assert.assertNotNull( "Resource not found: " + name, is );
-			Binding<?> binding = binder.bind( is, new Origin( SourceType.JAR, name ) );
+			Binding<?> binding = binder.bind( new RepeatableInputStreamAccess( name, is), new Origin( SourceType.JAR, name ) );
 			return (JaxbEntityMappingsImpl) binding.getRoot();
 		}
 		catch (RuntimeException e) {

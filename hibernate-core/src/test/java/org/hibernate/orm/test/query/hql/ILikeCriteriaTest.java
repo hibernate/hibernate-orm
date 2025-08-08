@@ -9,6 +9,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
@@ -73,16 +74,20 @@ public class ILikeCriteriaTest {
 				HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 				CriteriaQuery cq = cb.createQuery( BasicEntity.class);
 				Root<BasicEntity> from = cq.from( BasicEntity.class );
+				int expected = 5;
+				if (scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseASEDialect) {
+					expected = 9; // Sybase is case-insensitive
+				}
 
 				cq.where( cb.like( from.get( "data" ), "Prod%" ) );
 				Query q = session.createQuery( cq );
 				List l = q.getResultList();
-				assertEquals( 5, l.size() );
+				assertEquals( expected , l.size() );
 
 				cq.where( cb.like( from.get( "data" ), cb.literal( "Prod%" ) ) );
 				q = session.createQuery( cq );
 				l = q.getResultList();
-				assertEquals( 5, l.size() );
+				assertEquals( expected, l.size() );
 			}
 		);
 	}
@@ -94,26 +99,30 @@ public class ILikeCriteriaTest {
 					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 					CriteriaQuery cq = cb.createQuery( BasicEntity.class);
 					Root<BasicEntity> from = cq.from( BasicEntity.class );
+					int expected = 5;
+					if (scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseASEDialect) {
+						expected = 9; // Sybase is case-insensitive
+					}
 
 					cq.where( cb.like( from.get( "data" ), cb.literal( "Prod%" ), cb.literal( '$' ) ) );
 					Query q = session.createQuery( cq );
 					List l = q.getResultList();
-					assertEquals( 5, l.size() );
+					assertEquals( expected, l.size() );
 
 					cq.where( cb.like( from.get( "data" ), cb.literal( "Prod%" ), '$' ) );
 					q = session.createQuery( cq );
 					l = q.getResultList();
-					assertEquals( 5, l.size() );
+					assertEquals( expected, l.size() );
 
 					cq.where( cb.like( from.get( "data" ), "Prod%", cb.literal( '$' ) ) );
 					q = session.createQuery( cq );
 					l = q.getResultList();
-					assertEquals( 5, l.size() );
+					assertEquals( expected, l.size() );
 
 					cq.where( cb.like( from.get( "data" ), "Prod%", '$' ) );
 					q = session.createQuery( cq );
 					l = q.getResultList();
-					assertEquals( 5, l.size() );
+					assertEquals( expected, l.size() );
 				}
 		);
 	}
@@ -125,16 +134,20 @@ public class ILikeCriteriaTest {
 					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 					CriteriaQuery cq = cb.createQuery( BasicEntity.class);
 					Root<BasicEntity> from = cq.from( BasicEntity.class );
+					int expected = 4;
+					if (scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseASEDialect) {
+						expected = 0; // Sybase is case-insensitive
+					}
 
 					cq.where( cb.notLike( from.get( "data" ), "Prod%" ) );
 					Query q = session.createQuery( cq );
 					List l = q.getResultList();
-					assertEquals( 4, l.size() );
+					assertEquals( expected, l.size() );
 
 					cq.where( cb.notLike( from.get( "data" ), cb.literal( "Prod%" ) ) );
 					q = session.createQuery( cq );
 					l = q.getResultList();
-					assertEquals( 4, l.size() );
+					assertEquals( expected, l.size() );
 				}
 		);
 	}
@@ -146,26 +159,30 @@ public class ILikeCriteriaTest {
 					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 					CriteriaQuery cq = cb.createQuery( BasicEntity.class);
 					Root<BasicEntity> from = cq.from( BasicEntity.class );
+					int expected = 7;
+					if (scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseASEDialect) {
+						expected = 6; // Sybase is case-insensitive
+					}
 
 					cq.where( cb.notLike( from.get( "data" ), cb.literal( "Pr%$_%" ), cb.literal( '$' ) ) );
 					Query q = session.createQuery( cq );
 					List l = q.getResultList();
-					assertEquals( 7, l.size() );
+					assertEquals( expected, l.size() );
 
 					cq.where( cb.notLike( from.get( "data" ), cb.literal( "Pr%$_%" ), '$' ) );
 					q = session.createQuery( cq );
 					l = q.getResultList();
-					assertEquals( 7, l.size() );
+					assertEquals( expected, l.size() );
 
 					cq.where( cb.notLike( from.get( "data" ), "Pr%$_%", cb.literal( '$' ) ) );
 					q = session.createQuery( cq );
 					l = q.getResultList();
-					assertEquals( 7, l.size() );
+					assertEquals( expected, l.size() );
 
 					cq.where( cb.notLike( from.get( "data" ), "Pr%$_%", '$' ) );
 					q = session.createQuery( cq );
 					l = q.getResultList();
-					assertEquals( 7, l.size() );
+					assertEquals( expected, l.size() );
 				}
 		);
 	}

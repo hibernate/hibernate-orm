@@ -126,10 +126,6 @@ public class InsertConflictTests {
 						// Also see https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
 						assertEquals( 1, updated );
 					}
-					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseASEDialect ) {
-						// Sybase seems to report all matched rows as affected and ignores additional predicates
-						assertEquals( 1, updated );
-					}
 					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof GaussDBDialect ) {
 						// GaussDB seems to report all matched rows as affected and ignores additional predicates
 						assertEquals( 1, updated );
@@ -165,10 +161,6 @@ public class InsertConflictTests {
 					if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof MySQLDialect ) {
 						// Since JDBC set the MySQL CLIENT_FOUND_ROWS flag, the updated count is 1 even if values didn't change
 						// Also see https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
-						assertEquals( 1, updated );
-					}
-					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseASEDialect ) {
-						// Sybase seems to report all matched rows as affected and ignores additional predicates
 						assertEquals( 1, updated );
 					}
 					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof GaussDBDialect ) {

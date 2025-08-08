@@ -15,8 +15,10 @@ import org.hibernate.community.dialect.pagination.TimesTenLimitHandler;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorTimesTenDatabaseImpl;
 import org.hibernate.community.dialect.sequence.TimesTenSequenceSupport;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.BooleanDecoder;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.OptimisticLockingStrategy;
@@ -34,6 +36,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
@@ -42,6 +45,7 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -188,34 +192,17 @@ public class TimesTenDialect extends Dialect {
 		final BasicType<Integer>intType           = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );
 
 		// String Functions
-		functionContributions.getFunctionRegistry().register( 
-				"rtrim", new StandardSQLFunction("rtrim", StandardBasicTypes.STRING) 
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"ltrim", new StandardSQLFunction("ltrim", StandardBasicTypes.STRING) 
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"length", new StandardSQLFunction("length", StandardBasicTypes.LONG)
-		);
+		functionFactory.trim2();
+		functionFactory.characterLength_length( SqlAstNodeRenderingMode.DEFAULT );
 		functionFactory.concat_pipeOperator();
-		functionContributions.getFunctionRegistry().register( 
-				"to_char", new StandardSQLFunction("to_char", StandardBasicTypes.STRING)
-		);
+		functionFactory.toCharNumberDateTimestamp();
 		functionFactory.char_chr();
 		functionFactory.instr();
 		functionFactory.substr();
-		functionContributions.getFunctionRegistry().register( 
-				"str", new StandardSQLFunction("to_char", StandardBasicTypes.STRING)
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"substring", new StandardSQLFunction( "substr", StandardBasicTypes.STRING )
-		);
+		functionFactory.substring_substr();
 		functionFactory.soundex();
 
 		// Date/Time Functions
-		functionContributions.getFunctionRegistry().register( 
-				"to_date", new StandardSQLFunction("to_date", StandardBasicTypes.TIMESTAMP)
-		);
 		functionContributions.getFunctionRegistry().register( 
 				"sysdate", new CurrentFunction("sysdate", "sysdate", timestampType)
 		);
@@ -223,26 +210,9 @@ public class TimesTenDialect extends Dialect {
 				"getdate", new StandardSQLFunction("getdate", StandardBasicTypes.TIMESTAMP)
 		);
 
-		functionContributions.getFunctionRegistry().register( 
-				"current_date",      new CurrentFunction("sysdate", "sysdate", dateType) 
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"current_time",      new CurrentFunction("sysdate", "sysdate", timeType) 
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"current_timestamp", new CurrentFunction("sysdate", "sysdate", timestampType) 
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"to_timestamp", new StandardSQLFunction("to_timestamp", StandardBasicTypes.TIMESTAMP)
-		);
-
 		// Multi-param date dialect functions
-		functionContributions.getFunctionRegistry().register( 
-				"add_months",     new StandardSQLFunction("add_months", StandardBasicTypes.DATE)
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"months_between", new StandardSQLFunction("months_between", StandardBasicTypes.FLOAT)
-		);
+		functionFactory.addMonths();
+		functionFactory.monthsBetween();
 
 		// Math functions
 		functionFactory.ceiling_ceil();
@@ -253,15 +223,12 @@ public class TimesTenDialect extends Dialect {
 		functionContributions.getFunctionRegistry().register( 
 				"trunc", new StandardSQLFunction("trunc")
 		);
+		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 		functionContributions.getFunctionRegistry().register( 
 				"round", new StandardSQLFunction("round")
 		);
 
 		// Bitwise functions
-		functionContributions.getFunctionRegistry().register( 
-				"bitnot", new StandardSQLFunction("bitnot", StandardBasicTypes.INTEGER)
-		);
-
 		functionContributions.getFunctionRegistry()
 				.patternDescriptorBuilder( "bitor", "(?1+?2-bitand(?1,?2))")
 				.setExactArgumentCount( 2 )
@@ -277,9 +244,12 @@ public class TimesTenDialect extends Dialect {
 				.register();
 
 		// Misc. functions
-		functionContributions.getFunctionRegistry().register( 
-				"nvl", new StandardSQLFunction("nvl")
-		);
+		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "nvl" )
+				.setMinArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.useFirstNonNull() )
+				.register();
+
 		functionContributions.getFunctionRegistry().register( 
 				"user",  new CurrentFunction("user", "user", stringType)
 		);
@@ -575,6 +545,11 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
+	public String currentTimestamp() {
+		return "sysdate";
+	}
+
+	@Override
 	public int getMaxVarcharLength() {
 		// 1 to 4,194,304 bytes according to TimesTen Doc
 		return 4194304;
@@ -605,5 +580,53 @@ public class TimesTenDialect extends Dialect {
 	public String getFromDualForSelectOnly() {
 		return " from dual";
 	}
+
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		String result;
+		switch ( to ) {
+			case INTEGER:
+			case LONG:
+				result = BooleanDecoder.toInteger( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
+			case STRING:
+				switch ( from ) {
+					case BOOLEAN:
+					case INTEGER_BOOLEAN:
+					case TF_BOOLEAN:
+					case YN_BOOLEAN:
+						return BooleanDecoder.toString( from );
+					case DATE:
+						return "to_char(?1,'YYYY-MM-DD')";
+					case TIME:
+						return "to_char(?1,'HH24:MI:SS')";
+					case TIMESTAMP:
+						return "to_char(?1,'YYYY-MM-DD HH24:MI:SS.FF9')";
+				}
+				break;
+			case CLOB:
+				return "to_clob(?1)";
+			case DATE:
+				if ( from == CastType.STRING ) {
+					return "to_date(?1,'YYYY-MM-DD')";
+				}
+				break;
+			case TIME:
+				if ( from == CastType.STRING ) {
+					return "to_date(?1,'HH24:MI:SS')";
+				}
+				break;
+			case TIMESTAMP:
+				if ( from == CastType.STRING ) {
+					return "to_timestamp(?1,'YYYY-MM-DD HH24:MI:SS.FF9')";
+				}
+				break;
+		}
+		return super.castPattern(from, to);
+	}
+
 
 }

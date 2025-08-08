@@ -315,7 +315,7 @@ public class BooleanMappingTests {
 	private int countByCriteria(String attributeName, boolean matchValue, SessionImplementor session) {
 		final HibernateCriteriaBuilder builder = session.getCriteriaBuilder();
 		final JpaCriteriaQuery<Long> criteria = builder.createQuery( Long.class );
-		criteria.select( builder.count( builder.literal( 1 ) ) );
+		criteria.select( builder.count() );
 		final JpaRoot<EntityOfBooleans> root = criteria.from( EntityOfBooleans.class );
 		final JpaPath<Boolean> convertedYesNo = root.get( attributeName );
 		if ( matchValue ) {

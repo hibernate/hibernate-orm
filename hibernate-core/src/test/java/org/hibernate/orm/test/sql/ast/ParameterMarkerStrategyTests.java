@@ -132,7 +132,7 @@ public class ParameterMarkerStrategyTests {
 
 		statementInspector.clear();
 		scope.inTransaction( (session) -> {
-			session.createNativeQuery( "select count(1) from filtered_entity e where e.region = :region" )
+			session.createNativeQuery( "select count(*) from filtered_entity e where e.region = :region" )
 					.setParameter( "region", "ABC" )
 					.uniqueResult();
 
@@ -143,7 +143,7 @@ public class ParameterMarkerStrategyTests {
 
 		statementInspector.clear();
 		scope.inTransaction( (session) -> {
-			session.createNativeQuery( "select count(1) from filtered_entity e where e.region in (:region)" )
+			session.createNativeQuery( "select count(*) from filtered_entity e where e.region in (:region)" )
 					.setParameterList( "region", List.of( "ABC", "DEF" ) )
 					.uniqueResult();
 

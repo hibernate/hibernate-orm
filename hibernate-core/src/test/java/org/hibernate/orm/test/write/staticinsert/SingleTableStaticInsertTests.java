@@ -74,7 +74,7 @@ public class SingleTableStaticInsertTests {
 
 		scope.inTransaction( (session) -> {
 			final Long count = session
-					.createSelectionQuery( "select count(1) from SimpleEntity", Long.class )
+					.createSelectionQuery( "select count(*) from SimpleEntity", Long.class )
 					.getSingleResult();
 			assertThat( count ).isEqualTo( 3L );
 		} );

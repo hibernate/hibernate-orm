@@ -81,7 +81,7 @@ public class SingleTableWithSecondaryTableStaticInsertTests {
 
 		scope.inTransaction( (session) -> {
 			final Long count = session
-					.createSelectionQuery( "select count(1) from Vendor", Long.class )
+					.createSelectionQuery( "select count(*) from Vendor", Long.class )
 					.getSingleResult();
 
 			assertThat( count ).isEqualTo( 2 );

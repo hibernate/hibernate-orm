@@ -1487,6 +1487,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = InformixDialect.class, majorVersion = 11, minorVersion = 50, reason = "Informix does not support case expressions within count function")
 	public void test_hql_aggregate_functions_simple_filter_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-aggregate-functions-simple-filter-example[]
@@ -1502,6 +1503,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = InformixDialect.class, majorVersion = 11, minorVersion = 50, reason = "Informix does not support case expressions within count function")
 	public void test_hql_aggregate_functions_filter_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-aggregate-functions-filter-example[]
@@ -1647,6 +1649,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = InformixDialect.class, majorVersion = 11, minorVersion = 70, reason = "Informix does not support locate function")
 	public void test_hql_locate_function_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-locate-function-example[]
@@ -1661,6 +1664,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = InformixDialect.class, majorVersion = 11, minorVersion = 70, reason = "Informix does not support position function")
 	public void test_hql_position_function_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-position-function-example[]

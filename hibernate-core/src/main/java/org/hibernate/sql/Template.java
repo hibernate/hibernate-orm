@@ -166,6 +166,7 @@ public final class Template {
 		boolean inExtractOrTrim = false;
 		boolean inCast = false;
 		boolean afterCastAs = false;
+		boolean inFetchClause = false; // Track if we're in FETCH FIRST/NEXT clause
 
 		boolean hasMore = tokens.hasMoreTokens();
 		String nextToken = hasMore ? tokens.nextToken() : null;
@@ -218,6 +219,16 @@ public final class Template {
 			final boolean quotedOrWhitespace =
 					quoted || quotedIdentifier || isQuoteCharacter
 							|| token.isBlank();
+
+			// Check for FETCH FIRST/NEXT clause
+			if ( !quotedOrWhitespace && !inFetchClause && isFetchClauseStart(sql, symbols, tokens, lcToken)) {
+				inFetchClause = true;
+			}
+			// Reset FETCH clause state when we encounter certain tokens
+			else if ( !quotedOrWhitespace && inFetchClause && isFetchClauseEnd(token, lcToken)) {
+				inFetchClause = false;
+			}
+
 			if ( quotedOrWhitespace ) {
 				result.append( token );
 			}
@@ -249,8 +260,9 @@ public final class Template {
 			}
 			else if ( !inFromClause // don't want to append alias to tokens inside the FROM clause
 					&& isIdentifier( token )
-					&& !isFunctionOrKeyword( lcToken, nextToken, dialect, typeConfiguration )
-					&& !isLiteral( lcToken, nextToken, sql, symbols, tokens ) ) {
+					&& !isFunctionOrKeyword( lcToken, nextToken, dialect, typeConfiguration, inFetchClause )
+					&& !isLiteral( lcToken, nextToken, sql, symbols, tokens )
+					&& !inFetchClause ) { // Don't prefix tokens that are part of FETCH clause
 				result.append(alias)
 						.append('.')
 						.append( dialect.quote(token) );
@@ -284,6 +296,20 @@ public final class Template {
 		}
 
 		return result.toString();
+	}
+
+	private static boolean isFetchClauseStart(String sql, String symbols, StringTokenizer tokens, String lcToken) {
+		return "fetch".equals( lcToken ) && lookPastBlankTokens( sql, symbols, tokens, 1,
+			nextNonBlank -> {
+				if ( nextNonBlank == null ) return false;
+				final String n = nextNonBlank.toLowerCase( Locale.ROOT );
+				return "first".equals( n ) || "next".equals( n );
+			}
+		);
+	}
+
+	private static boolean isFetchClauseEnd(String token, String lcToken) {
+		return "only".equals( lcToken ) || ( !isNumeric( token ) && !Set.of("rows", "row", "first", "next").contains(lcToken) );
 	}
 
 	private static boolean endsWithDot(String token) {
@@ -389,7 +415,8 @@ public final class Template {
 			String lcToken,
 			String nextToken,
 			Dialect dialect,
-			TypeConfiguration typeConfiguration) {
+			TypeConfiguration typeConfiguration,
+			boolean inFetchGrammar) {
 		if ( "(".equals( nextToken ) ) {
 			return true;
 		}
@@ -397,6 +424,10 @@ public final class Template {
 			// these can be column names on some databases
 			// TODO: treat 'current date' as a function
 			return false;
+		}
+		// Treat 'first' and 'next' as keywords ONLY within FETCH clause
+		else if ( "first".equals( lcToken ) || "next".equals( lcToken ) ) {
+			return inFetchGrammar;
 		}
 		else {
 			return KEYWORDS.contains( lcToken )
@@ -422,5 +453,9 @@ public final class Template {
 			case "true", "false" -> true;
 			default -> false;
 		};
+	}
+
+	private static boolean isNumeric(String token) {
+		return token.matches( "\\d+" );
 	}
 }

@@ -3,6 +3,18 @@ Hibernate 7 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.1.0.Final (August 08, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/34726
+
+** Improvement
+    * [HHH-19693] - Upgrade Oracle JDBC driver to version 23.9.0.25.07
+
+** New Feature
+    * [HHH-19682] - Add Support for GaussDB Lock Timeout (lockwait_timeout)
+
+
 Changes in 7.1.0.CR2 (August 06, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -80,6 +80,61 @@ public class TemplateTest {
 				"CAST({@}.foo AS signed)", factory );
 	}
 
+	@Test
+	@JiraKey("HHH-19695")
+	public void testFetchGrammarVsColumnNames(SessionFactoryScope scope) {
+		SessionFactoryImplementor factory = scope.getSessionFactory();
+
+		// Test that "first" and "next" are treated as keywords when part of FETCH grammar
+		assertWhereStringTemplate( "fetch first 10 rows only", "fetch first 10 rows only", factory );
+		assertWhereStringTemplate( "fetch next 5 rows only", "fetch next 5 rows only", factory );
+		assertWhereStringTemplate( "select * from table fetch first 1 row only",
+				"select * from table fetch first 1 row only", factory );
+
+		// Mixed scenarios: ensure identifiers around FETCH grammar are still qualified
+		assertWhereStringTemplate( "select first_name from users fetch first 10 rows only",
+				"select {@}.first_name from users fetch first 10 rows only", factory );
+		assertWhereStringTemplate( "where fetch_count > 5 and fetch next 1 row only",
+				"where {@}.fetch_count > 5 and fetch next 1 row only", factory );
+		assertWhereStringTemplate( "select first from users fetch first 10 rows only",
+				"select {@}.first from users fetch first 10 rows only", factory );
+		assertWhereStringTemplate( "select next from users fetch next 10 rows only",
+				"select {@}.next from users fetch next 10 rows only", factory );
+	}
+
+	@Test
+	@JiraKey("HHH-19695")
+	public void testFetchGrammarVariants(SessionFactoryScope scope) {
+		SessionFactoryImplementor factory = scope.getSessionFactory();
+		Dialect dialect = factory.getJdbcServices().getDialect();
+
+		// Variants of FETCH FIRST/NEXT
+		assertWhereStringTemplate( "fetch first 1 row only", "fetch first 1 row only", factory );
+		assertWhereStringTemplate( "fetch next 10 rows only", "fetch next 10 rows only", factory );
+
+		// Parameterized row count
+		assertWhereStringTemplate( "fetch next ? rows only", "fetch next ? rows only", factory );
+
+		// Casing variants
+		assertWhereStringTemplate( "FETCH First 10 ROWS ONLY", "FETCH First 10 ROWS ONLY", factory );
+
+		// Extra whitespace and newlines
+		assertWhereStringTemplate( "fetch    first   10   rows   only", "fetch    first   10   rows   only", factory );
+		assertWhereStringTemplate( "fetch\nfirst 3 rows only", "fetch\nfirst 3 rows only", factory );
+
+		// State reset after ONLY: trailing 'next' should be qualified
+		assertWhereStringTemplate( "fetch next 1 rows only and next > 5",
+				"fetch next 1 rows only and {@}.next > 5", factory );
+
+		// Qualified identifier should remain as-is
+		assertWhereStringTemplate( "select u.first from users u fetch first 1 row only",
+				"select u.first from users u fetch first 1 row only", factory );
+
+		// Quoted identifier should be qualified, while FETCH clause remains unqualified
+		assertWhereStringTemplate( "select `first` from users fetch first 1 row only",
+				"select {@}." + dialect.quote("`first`") + " from users fetch first 1 row only", factory );
+	}
+
 	private static void assertWhereStringTemplate(String sql, SessionFactoryImplementor sf) {
 		assertEquals( sql,
 				Template.renderWhereStringTemplate(

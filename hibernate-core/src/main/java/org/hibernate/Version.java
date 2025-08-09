@@ -8,6 +8,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.build.AllowSysOut;
 
 import java.lang.invoke.MethodHandles;
+import java.lang.module.ModuleDescriptor;
 
 import static org.jboss.logging.Logger.getMessageLogger;
 
@@ -21,8 +22,8 @@ public final class Version {
 	private static final String VERSION = initVersion();
 
 	private static String initVersion() {
-		final String version = Version.class.getPackage().getImplementationVersion();
-		return version != null ? version : "[WORKING]";
+		ModuleDescriptor moduleDescriptor = Version.class.getModule().getDescriptor() ;
+		return moduleDescriptor != null ? (moduleDescriptor.version().isPresent() ? moduleDescriptor.version().toString() : "[WORKING]") : "[WORKING]";
 	}
 
 	private Version() {

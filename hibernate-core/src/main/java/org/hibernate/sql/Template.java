@@ -89,6 +89,8 @@ public final class Template {
 			= Set.of("date", "time");
 	private static final Set<String> LITERAL_PREFIXES
 			= Set.of("n", "x", "varbyte", "bx", "bytea", "date", "time", "timestamp", "zone");
+	private static final Set<String> FETCH_BIGRAMS
+			= Set.of("first", "next");
 
 	private static final String PUNCTUATION = "=><!+-*/()',|&`";
 
@@ -166,6 +168,7 @@ public final class Template {
 		boolean inExtractOrTrim = false;
 		boolean inCast = false;
 		boolean afterCastAs = false;
+		boolean afterFetch = false;
 
 		boolean hasMore = tokens.hasMoreTokens();
 		String nextToken = hasMore ? tokens.nextToken() : null;
@@ -215,10 +218,14 @@ public final class Template {
 				}
 			}
 
-			final boolean quotedOrWhitespace =
-					quoted || quotedIdentifier || isQuoteCharacter
-							|| token.isBlank();
-			if ( quotedOrWhitespace ) {
+			final boolean isWhitespace = token.isBlank();
+
+			final boolean wasAfterFetch = afterFetch;
+			afterFetch = afterFetch && isWhitespace;
+
+			final boolean isQuoted =
+					quoted || quotedIdentifier || isQuoteCharacter;
+			if ( isQuoted || isWhitespace ) {
 				result.append( token );
 			}
 			else if ( beforeTable ) {
@@ -247,6 +254,13 @@ public final class Template {
 				result.append( token );
 				afterCastAs = true;
 			}
+			else if ( isFetch( dialect, lcToken ) ) {
+				result.append( token );
+				afterFetch = true;
+			}
+			else if ( wasAfterFetch && FETCH_BIGRAMS.contains( lcToken ) ) {
+				result.append( token );
+			}
 			else if ( !inFromClause // don't want to append alias to tokens inside the FROM clause
 					&& isIdentifier( token )
 					&& !isFunctionOrKeyword( lcToken, nextToken, dialect, typeConfiguration )
@@ -256,7 +270,7 @@ public final class Template {
 						.append( dialect.quote(token) );
 			}
 			else {
-				if ( ")".equals( lcToken) ) {
+				if ( ")".equals(lcToken) ) {
 					inExtractOrTrim = false;
 					inCast = false;
 					afterCastAs = false;
@@ -284,6 +298,11 @@ public final class Template {
 		}
 
 		return result.toString();
+	}
+
+	private static boolean isFetch(Dialect dialect, String lcToken) {
+		return "fetch".equals( lcToken )
+			&& dialect.getKeywords().contains( "fetch" );
 	}
 
 	private static boolean endsWithDot(String token) {

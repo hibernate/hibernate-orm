@@ -9,6 +9,7 @@ import org.hibernate.processor.Context;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
@@ -18,9 +19,7 @@ import javax.lang.model.util.SimpleTypeVisitor8;
 import java.io.Serializable;
 
 import static org.hibernate.processor.util.Constants.BASIC_ARRAY_TYPES;
-import static org.hibernate.processor.util.Constants.BASIC_TYPES;
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
-import static org.hibernate.processor.util.TypeUtils.isClassOrRecordType;
 
 /**
  * Checks whether the visited type is a basic attribute according to the JPA 2 spec
@@ -50,17 +49,27 @@ class BasicAttributeVisitor extends SimpleTypeVisitor8<Boolean, Element> {
 	@Override
 	public Boolean visitDeclared(DeclaredType declaredType, Element element) {
 		final ElementKind kind = element.getKind();
-		if ( kind == ElementKind.ENUM ) {
-			return true;
-		}
-		else if ( isClassOrRecordType(element) || kind == ElementKind.INTERFACE ) {
-			final TypeElement typeElement = (TypeElement) element;
-			return BASIC_TYPES.contains( typeElement.getQualifiedName().toString() )
-				|| hasAnnotation( element, Constants.EMBEDDABLE )
-				|| isSerializable( typeElement );
-		}
-		else {
-			return false;
+		switch ( kind ) {
+			case ENUM -> {
+				return true;
+			}
+			case INTERFACE -> {
+				// TODO: this isn't really correct
+				final TypeElement typeElement = (TypeElement) element;
+				final Name qualifiedName = typeElement.getQualifiedName();
+				return qualifiedName.contentEquals( "java.sql.Blob" )
+					|| qualifiedName.contentEquals( "java.sql.Clob" )
+					|| qualifiedName.contentEquals( "java.sql.NClob" );
+			}
+			case CLASS, RECORD -> {
+				// TODO: this is simply wrong
+				final TypeElement typeElement = (TypeElement) element;
+				return hasAnnotation( element, Constants.EMBEDDABLE )
+					|| isSerializable( typeElement );
+			}
+			default -> {
+				return false;
+			}
 		}
 	}
 

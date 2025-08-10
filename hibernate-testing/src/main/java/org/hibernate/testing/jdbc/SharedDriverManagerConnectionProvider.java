@@ -16,7 +16,7 @@ import java.util.Set;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**
@@ -25,9 +25,9 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
  * @author Christian Beikov
  * @author Loïc Lefèvre
  */
-public class SharedDriverManagerConnectionProviderImpl extends DriverManagerConnectionProviderImpl {
+public class SharedDriverManagerConnectionProvider extends DriverManagerConnectionProvider {
 
-	private static final SharedDriverManagerConnectionProviderImpl INSTANCE = new SharedDriverManagerConnectionProviderImpl();
+	private static final SharedDriverManagerConnectionProvider INSTANCE = new SharedDriverManagerConnectionProvider();
 
 	private static final Set<String> PGJDBC_STANDARD_TYPE_NAMES = buildTypeNames( Set.of(
 			"int2",
@@ -70,7 +70,7 @@ public class SharedDriverManagerConnectionProviderImpl extends DriverManagerConn
 		return typeNames;
 	}
 
-	public static SharedDriverManagerConnectionProviderImpl getInstance() {
+	public static SharedDriverManagerConnectionProvider getInstance() {
 		return INSTANCE;
 	}
 

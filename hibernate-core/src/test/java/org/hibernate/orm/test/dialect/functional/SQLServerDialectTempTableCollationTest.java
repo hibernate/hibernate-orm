@@ -21,7 +21,7 @@ import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProvider;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Assert;
@@ -83,7 +83,7 @@ public class SQLServerDialectTempTableCollationTest extends BaseCoreFunctionalTe
 			}
 		}
 		// The alter database calls could lead to issues with existing connections, so we reset the shared pool here
-		SharedDriverManagerConnectionProviderImpl.getInstance().reset();
+		SharedDriverManagerConnectionProvider.getInstance().reset();
 	}
 
 	@Override

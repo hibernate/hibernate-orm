@@ -15,7 +15,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
@@ -66,11 +66,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 @RequiresDialect( value = MySQLDialect.class, matchSubTypes = false )
 public class MySQLColumnValidationTest {
 
-	private DriverManagerConnectionProviderImpl connectionProvider;
+	private DriverManagerConnectionProvider connectionProvider;
 
 	@BeforeAll
 	public void init() {
-		connectionProvider = new DriverManagerConnectionProviderImpl();
+		connectionProvider = new DriverManagerConnectionProvider();
 		connectionProvider.configure( PropertiesHelper.map( Environment.getProperties() ) );
 
 		try( Connection connection = connectionProvider.getConnection();

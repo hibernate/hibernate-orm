@@ -16,8 +16,8 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.SimpleDatabaseVersion;
-import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
@@ -106,8 +106,8 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 			final ConnectionProvider connectionProvider = emf.unwrap( SessionFactoryImplementor.class )
 					.getServiceRegistry()
 					.getService( ConnectionProvider.class );
-			assertThat( connectionProvider, instanceOf( DatasourceConnectionProviderImpl.class ) );
-			final DatasourceConnectionProviderImpl dsCp = (DatasourceConnectionProviderImpl) connectionProvider;
+			assertThat( connectionProvider, instanceOf( DataSourceConnectionProvider.class ) );
+			final DataSourceConnectionProvider dsCp = (DataSourceConnectionProvider) connectionProvider;
 			assertThat( dsCp.getDataSource(), is( integrationDataSource ) );
 
 			// now let's check that it is exposed via the EMF properties
@@ -190,7 +190,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 			final ConnectionProvider connectionProvider = emf.unwrap( SessionFactoryImplementor.class )
 					.getServiceRegistry()
 					.getService( ConnectionProvider.class );
-			assertThat( connectionProvider, instanceOf( DriverManagerConnectionProviderImpl.class ) );
+			assertThat( connectionProvider, instanceOf( DriverManagerConnectionProvider.class ) );
 		}
 		finally {
 			emf.close();
@@ -243,7 +243,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 			final ConnectionProvider connectionProvider = emf.unwrap( SessionFactoryImplementor.class )
 					.getServiceRegistry()
 					.getService( ConnectionProvider.class );
-			assertThat( connectionProvider, instanceOf( DriverManagerConnectionProviderImpl.class ) );
+			assertThat( connectionProvider, instanceOf( DriverManagerConnectionProvider.class ) );
 		}
 		finally {
 			emf.close();
@@ -298,9 +298,9 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 			final ConnectionProvider connectionProvider = emf.unwrap( SessionFactoryImplementor.class )
 					.getServiceRegistry()
 					.getService( ConnectionProvider.class );
-			assertThat( connectionProvider, instanceOf( DatasourceConnectionProviderImpl.class ) );
+			assertThat( connectionProvider, instanceOf( DataSourceConnectionProvider.class ) );
 
-			final DatasourceConnectionProviderImpl datasourceConnectionProvider = (DatasourceConnectionProviderImpl) connectionProvider;
+			final DataSourceConnectionProvider datasourceConnectionProvider = (DataSourceConnectionProvider) connectionProvider;
 			assertThat( datasourceConnectionProvider.getDataSource(), is( integrationDataSource ) );
 		}
 		finally {
@@ -345,9 +345,9 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 
 			final SessionFactoryImplementor sessionFactory = emf.unwrap( SessionFactoryImplementor.class );
 			final ConnectionProvider connectionProvider = sessionFactory.getServiceRegistry().getService( ConnectionProvider.class );
-			assertThat( connectionProvider, instanceOf( DatasourceConnectionProviderImpl.class ) );
+			assertThat( connectionProvider, instanceOf( DataSourceConnectionProvider.class ) );
 
-			final DatasourceConnectionProviderImpl dsProvider = (DatasourceConnectionProviderImpl) connectionProvider;
+			final DataSourceConnectionProvider dsProvider = (DataSourceConnectionProvider) connectionProvider;
 			assertThat( dsProvider.getDataSource(), is( override ) );
 		}
 		finally {
@@ -374,7 +374,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		integrationSettings.put( AvailableSettings.JPA_JDBC_URL, ConnectionProviderBuilder.URL );
 		integrationSettings.put( AvailableSettings.JPA_JDBC_USER, ConnectionProviderBuilder.USER );
 		integrationSettings.put( AvailableSettings.JPA_JDBC_PASSWORD, ConnectionProviderBuilder.PASS );
-		integrationSettings.put( DriverManagerConnectionProviderImpl.INIT_SQL, "" );
+		integrationSettings.put( DriverManagerConnectionProvider.INIT_SQL, "" );
 
 		final PersistenceProvider provider = new HibernatePersistenceProvider();
 
@@ -387,7 +387,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 			final SessionFactoryImplementor sessionFactory = emf.unwrap( SessionFactoryImplementor.class );
 			final ConnectionProvider connectionProvider = sessionFactory.getServiceRegistry().getService(
 					ConnectionProvider.class );
-			assertThat( connectionProvider, instanceOf( DriverManagerConnectionProviderImpl.class ) );
+			assertThat( connectionProvider, instanceOf( DriverManagerConnectionProvider.class ) );
 		}
 		finally {
 			emf.close();
@@ -413,7 +413,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		integrationSettings.put( AvailableSettings.JAKARTA_JDBC_URL, ConnectionProviderBuilder.URL );
 		integrationSettings.put( AvailableSettings.JAKARTA_JDBC_USER, ConnectionProviderBuilder.USER );
 		integrationSettings.put( AvailableSettings.JAKARTA_JDBC_PASSWORD, ConnectionProviderBuilder.PASS );
-		integrationSettings.put( DriverManagerConnectionProviderImpl.INIT_SQL, "" );
+		integrationSettings.put( DriverManagerConnectionProvider.INIT_SQL, "" );
 
 		final PersistenceProvider provider = new HibernatePersistenceProvider();
 
@@ -426,7 +426,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 			final SessionFactoryImplementor sessionFactory = emf.unwrap( SessionFactoryImplementor.class );
 			final ConnectionProvider connectionProvider = sessionFactory.getServiceRegistry().getService(
 					ConnectionProvider.class );
-			assertThat( connectionProvider, instanceOf( DriverManagerConnectionProviderImpl.class ) );
+			assertThat( connectionProvider, instanceOf( DriverManagerConnectionProvider.class ) );
 		}
 		finally {
 			emf.close();

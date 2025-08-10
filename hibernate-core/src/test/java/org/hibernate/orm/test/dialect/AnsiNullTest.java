@@ -7,7 +7,7 @@ package org.hibernate.orm.test.dialect;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.orm.test.length.WithLongStrings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -65,7 +65,7 @@ public class AnsiNullTest {
 	@RequiresDialect(value = SybaseASEDialect.class)
 	@DomainModel(annotatedClasses = { AnsiNullTest.Book.class, WithLongStrings.class })
 	@SessionFactory
-	@ServiceRegistry( settings = {@Setting(name = DriverManagerConnectionProviderImpl.INIT_SQL, value = "set ansinull on")} )
+	@ServiceRegistry( settings = {@Setting(name = DriverManagerConnectionProvider.INIT_SQL, value = "set ansinull on")} )
 	public void testWithAnsiNullOn(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -109,7 +109,7 @@ public class AnsiNullTest {
 	@RequiresDialect(value = SybaseASEDialect.class)
 	@DomainModel(annotatedClasses = { AnsiNullTest.Book.class, WithLongStrings.class })
 	@SessionFactory
-	@ServiceRegistry( settings = {@Setting(name = DriverManagerConnectionProviderImpl.INIT_SQL, value = "set ansinull on")} )
+	@ServiceRegistry( settings = {@Setting(name = DriverManagerConnectionProvider.INIT_SQL, value = "set ansinull on")} )
 	public void testLOBWithAnsiNullOn(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -152,7 +152,7 @@ public class AnsiNullTest {
 	@RequiresDialect(value = SybaseASEDialect.class)
 	@DomainModel(annotatedClasses = { AnsiNullTest.Book.class, WithLongStrings.class })
 	@SessionFactory
-	@ServiceRegistry( settings = {@Setting(name = DriverManagerConnectionProviderImpl.INIT_SQL, value = "set ansinull off")} )
+	@ServiceRegistry( settings = {@Setting(name = DriverManagerConnectionProvider.INIT_SQL, value = "set ansinull off")} )
 	public void testWithAnsiNullOff(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -195,7 +195,7 @@ public class AnsiNullTest {
 	@RequiresDialect(value = SybaseASEDialect.class)
 	@DomainModel(annotatedClasses = { AnsiNullTest.Book.class, WithLongStrings.class })
 	@SessionFactory
-	@ServiceRegistry( settings = {@Setting(name = DriverManagerConnectionProviderImpl.INIT_SQL, value = "set ansinull off")} )
+	@ServiceRegistry( settings = {@Setting(name = DriverManagerConnectionProvider.INIT_SQL, value = "set ansinull off")} )
 	public void testLOBWithAnsiNullOff(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.connection;
 
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.common.connections.BaseTransactionIsolationConfigTest;
@@ -21,6 +21,6 @@ import org.junit.Ignore;
 public class DriverManagerConnectionProviderTransactionIsolationConfigTest extends BaseTransactionIsolationConfigTest {
 	@Override
 	protected ConnectionProvider getConnectionProviderUnderTest() {
-		return new DriverManagerConnectionProviderImpl();
+		return new DriverManagerConnectionProvider();
 	}
 }

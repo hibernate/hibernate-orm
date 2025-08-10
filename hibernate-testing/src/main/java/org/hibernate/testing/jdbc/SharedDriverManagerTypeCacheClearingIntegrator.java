@@ -15,6 +15,6 @@ public class SharedDriverManagerTypeCacheClearingIntegrator implements Integrato
 			Metadata metadata,
 			BootstrapContext bootstrapContext,
 			SessionFactoryImplementor sessionFactory) {
-		SharedDriverManagerConnectionProviderImpl.getInstance().clearTypeCache();
+		SharedDriverManagerConnectionProvider.getInstance().clearTypeCache();
 	}
 }

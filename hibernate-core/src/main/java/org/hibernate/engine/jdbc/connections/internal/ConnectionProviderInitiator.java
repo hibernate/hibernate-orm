@@ -140,7 +140,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	private ConnectionProvider instantiateConnectionProvider(
 			Map<String, Object> configurationValues, StrategySelector strategySelector, BeanContainer beanContainer) {
 		if ( configurationValues.containsKey( DATASOURCE ) ) {
-			return new DatasourceConnectionProviderImpl();
+			return new DataSourceConnectionProvider();
 		}
 
 		final Class<? extends ConnectionProvider> singleRegisteredProvider =
@@ -163,7 +163,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return instantiateProvider( strategySelector, AGROAL_STRATEGY );
 		}
 		else if ( configurationValues.containsKey( URL ) ) {
-			return new DriverManagerConnectionProviderImpl();
+			return new DriverManagerConnectionProvider();
 		}
 		else {
 			if ( beanContainer != null ) {

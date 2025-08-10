@@ -29,7 +29,7 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -104,8 +104,8 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
 			tenantUrl( properties.getProperty(Environment.URL), tenantIdentifier )
 	);
 
-		DriverManagerConnectionProviderImpl connectionProvider =
-				new DriverManagerConnectionProviderImpl();
+		DriverManagerConnectionProvider connectionProvider =
+				new DriverManagerConnectionProvider();
 		connectionProvider.configure( PropertiesHelper.map(properties) );
 
 		connectionProviderMap.put(tenantIdentifier, connectionProvider);

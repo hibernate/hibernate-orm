@@ -40,7 +40,7 @@ import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderI
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class DatasourceConnectionProviderImpl
+public class DataSourceConnectionProvider
 		implements ConnectionProvider, Configurable, Stoppable {
 
 	private DataSource dataSource;
@@ -68,14 +68,14 @@ public class DatasourceConnectionProviderImpl
 
 	@Override
 	public boolean isUnwrappableAs(Class<?> unwrapType) {
-		return unwrapType.isAssignableFrom( DatasourceConnectionProviderImpl.class )
+		return unwrapType.isAssignableFrom( DataSourceConnectionProvider.class )
 			|| unwrapType.isAssignableFrom( DataSource.class);
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( unwrapType.isAssignableFrom( DatasourceConnectionProviderImpl.class ) ) {
+		if ( unwrapType.isAssignableFrom( DataSourceConnectionProvider.class ) ) {
 			return (T) this;
 		}
 		else if ( unwrapType.isAssignableFrom( DataSource.class) ) {
@@ -111,11 +111,11 @@ public class DatasourceConnectionProviderImpl
 
 		if ( configuration.containsKey( JdbcSettings.AUTOCOMMIT ) ) {
 			ConnectionInfoLogger.INSTANCE.ignoredSetting( JdbcSettings.AUTOCOMMIT,
-					DatasourceConnectionProviderImpl.class );
+					DataSourceConnectionProvider.class );
 		}
 		if ( configuration.containsKey( JdbcSettings.ISOLATION ) ) {
 			ConnectionInfoLogger.INSTANCE.ignoredSetting( JdbcSettings.ISOLATION,
-					DatasourceConnectionProviderImpl.class );
+					DataSourceConnectionProvider.class );
 		}
 
 		user = (String) configuration.get( JdbcSettings.USER );
@@ -156,7 +156,7 @@ public class DatasourceConnectionProviderImpl
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect, ExtractedDatabaseMetaData metaData) {
 		return new DatabaseConnectionInfoImpl(
-				DatasourceConnectionProviderImpl.class,
+				DataSourceConnectionProvider.class,
 				metaData == null ? null : metaData.getUrl(),
 				metaData == null ? null : metaData.getDriver(),
 				dialect.getClass(),

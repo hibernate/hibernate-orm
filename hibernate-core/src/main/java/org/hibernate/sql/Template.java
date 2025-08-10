@@ -91,6 +91,8 @@ public final class Template {
 			= Set.of("n", "x", "varbyte", "bx", "bytea", "date", "time", "timestamp", "zone");
 	private static final Set<String> FETCH_BIGRAMS
 			= Set.of("first", "next");
+	private static final Set<String> CURRENT_BIGRAMS
+			= Set.of("date", "time", "timestamp");
 
 	private static final String PUNCTUATION = "=><!+-*/()',|&`";
 
@@ -157,8 +159,8 @@ public final class Template {
 		//      lookahead is truly necessary, use the lookahead() function provided below.
 
 		final String symbols = PUNCTUATION + WHITESPACE + dialect.openQuote() + dialect.closeQuote();
-		final StringTokenizer tokens = new StringTokenizer( sql, symbols, true );
-		final StringBuilder result = new StringBuilder();
+		final var tokens = new StringTokenizer( sql, symbols, true );
+		final var result = new StringBuilder();
 
 		boolean quoted = false;
 		boolean quotedIdentifier = false;
@@ -169,6 +171,7 @@ public final class Template {
 		boolean inCast = false;
 		boolean afterCastAs = false;
 		boolean afterFetch = false;
+		boolean afterCurrent = false;
 
 		boolean hasMore = tokens.hasMoreTokens();
 		String nextToken = hasMore ? tokens.nextToken() : null;
@@ -220,8 +223,11 @@ public final class Template {
 
 			final boolean isWhitespace = token.isBlank();
 
+			// handle bigrams here
 			final boolean wasAfterFetch = afterFetch;
 			afterFetch = afterFetch && isWhitespace;
+			final boolean wasAfterCurrent = afterCurrent;
+			afterCurrent = afterCurrent && isWhitespace;
 
 			final boolean isQuoted =
 					quoted || quotedIdentifier || isQuoteCharacter;
@@ -234,25 +240,46 @@ public final class Template {
 				afterFromTable = true;
 			}
 			else if ( afterFromTable ) {
-				if ( !"as".equals(lcToken) ) {
-					afterFromTable = false;
+				afterFromTable = "as".equals(lcToken);
+				result.append(token);
+			}
+			else if ( "(".equals(lcToken) ) {
+				result.append(token);
+			}
+			else if ( ")".equals(lcToken) ) {
+				inExtractOrTrim = false;
+				inCast = false;
+				afterCastAs = false;
+				result.append(token);
+			}
+			else if ( ",".equals(lcToken) ) {
+				if ( inFromClause ) {
+					beforeTable = true;
 				}
 				result.append(token);
+			}
+			else if ( lcToken.length()==1 && symbols.contains(lcToken) ) {
+				result.append(token);
+			}
+			else if ( BEFORE_TABLE_KEYWORDS.contains(lcToken) ) {
+				if ( !inExtractOrTrim ) {
+					beforeTable = true;
+					inFromClause = true;
+				}
+				result.append(token);
+			}
+			else if ( inFromClause || afterCastAs ) {
+				// Don't want to append alias to:
+				// 1. tokens inside the FROM clause
+				// 2. type names after 'CAST(expression AS'
+				result.append( token );
 			}
 			else if ( isNamedParameter(token) ) {
 				result.append(token);
 			}
-			else if ( FUNCTION_WITH_FROM_KEYWORDS.contains(lcToken) && "(".equals( nextToken ) ) {
-				result.append(token);
-				inExtractOrTrim = true;
-			}
-			else if ( "cast".equals( lcToken ) ) {
+			else if ( "as".equals( lcToken ) ) {
 				result.append( token );
-				inCast = true;
-			}
-			else if ( inCast && ("as".equals( lcToken ) || afterCastAs) ) {
-				result.append( token );
-				afterCastAs = true;
+				afterCastAs = inCast;
 			}
 			else if ( isFetch( dialect, lcToken ) ) {
 				result.append( token );
@@ -261,31 +288,28 @@ public final class Template {
 			else if ( wasAfterFetch && FETCH_BIGRAMS.contains( lcToken ) ) {
 				result.append( token );
 			}
-			else if ( !inFromClause // don't want to append alias to tokens inside the FROM clause
-					&& isIdentifier( token )
-					&& !isFunctionOrKeyword( lcToken, nextToken, dialect, typeConfiguration )
-					&& !isLiteral( lcToken, nextToken, sql, symbols, tokens ) ) {
-				result.append(alias)
-						.append('.')
-						.append( dialect.quote(token) );
+			else if ( isCurrent( lcToken, nextToken, sql, symbols, tokens ) ) {
+				result.append(token);
+				afterCurrent = true;
+			}
+			else if ( isBoolean( lcToken ) ) {
+				result.append( dialect.toBooleanValueString( parseBoolean( token ) ) );
+			}
+			else if ( isFunctionCall( nextToken, sql, symbols, tokens ) ) {
+				result.append(token);
+				if ( FUNCTION_WITH_FROM_KEYWORDS.contains( lcToken ) ) {
+					inExtractOrTrim = true;
+				}
+				if ( "cast".equals( lcToken ) ) {
+					inCast = true;
+				}
+			}
+			else if ( isAliasableIdentifier( token, lcToken, nextToken,
+							sql, symbols, tokens, wasAfterCurrent,
+							dialect, typeConfiguration ) ) {
+				result.append(alias).append('.').append( dialect.quote(token) );
 			}
 			else {
-				if ( ")".equals(lcToken) ) {
-					inExtractOrTrim = false;
-					inCast = false;
-					afterCastAs = false;
-				}
-				else if ( !inExtractOrTrim
-						&& BEFORE_TABLE_KEYWORDS.contains(lcToken) ) {
-					beforeTable = true;
-					inFromClause = true;
-				}
-				else if ( inFromClause && ",".equals(lcToken) ) {
-					beforeTable = true;
-				}
-				if ( isBoolean( token ) ) {
-					token = dialect.toBooleanValueString( parseBoolean( token ) );
-				}
 				result.append(token);
 			}
 
@@ -298,6 +322,37 @@ public final class Template {
 		}
 
 		return result.toString();
+	}
+
+	private static boolean isAliasableIdentifier(
+			String token, String lcToken, String nextToken,
+			String sql, String symbols, StringTokenizer tokens,
+			boolean wasAfterCurrent,
+			Dialect dialect, TypeConfiguration typeConfiguration) {
+		return isUnqualifiedIdentifier( token )
+			&& !isKeyword( lcToken, wasAfterCurrent, dialect, typeConfiguration )
+			&& !isLiteral( lcToken, nextToken, sql, symbols, tokens );
+	}
+
+	private static boolean isFunctionCall(
+			String nextToken,
+			String sql, String symbols, StringTokenizer tokens) {
+		if ( nextToken == null ) {
+			return false;
+		}
+		else {
+			return nextToken.isBlank()
+					? lookPastBlankTokens( sql, symbols, tokens, 1, "("::equals )
+					: "(".equals( nextToken );
+		}
+	}
+
+	private static boolean isCurrent(
+			String lcToken, String nextToken,
+			String sql, String symbols, StringTokenizer tokens) {
+		return "current".equals( lcToken )
+			&& nextToken.isBlank()
+			&& lookPastBlankTokens( sql, symbols, tokens, 1, CURRENT_BIGRAMS::contains );
 	}
 
 	private static boolean isFetch(Dialect dialect, String lcToken) {
@@ -320,7 +375,7 @@ public final class Template {
 				// we need to look ahead in the token stream
 				// to find the first non-blank token
 				return lookPastBlankTokens( sqlWhereString, symbols, tokens, 1,
-						(nextToken) -> "'".equals(nextToken)
+						nextToken -> "'".equals(nextToken)
 								|| lcToken.equals("time") && "with".equals(nextToken)
 								|| lcToken.equals("timestamp") && "with".equals(nextToken)
 								|| lcToken.equals("time") && "zone".equals(nextToken) );
@@ -338,7 +393,7 @@ public final class Template {
 			String sqlWhereString, String symbols, StringTokenizer tokens,
 			@SuppressWarnings("SameParameterValue") int skip,
 			Function<String, Boolean> check) {
-		final StringTokenizer lookahead = lookahead( sqlWhereString, symbols, tokens, skip );
+		final var lookahead = lookahead( sqlWhereString, symbols, tokens, skip );
 		if ( lookahead.hasMoreTokens() ) {
 			String nextToken;
 			do {
@@ -363,8 +418,7 @@ public final class Template {
 	 * @return a cloned token stream
 	 */
 	private static StringTokenizer lookahead(String sql, String symbols, StringTokenizer tokens, int skip) {
-		final StringTokenizer lookahead =
-				new StringTokenizer( sql, symbols, true );
+		final var lookahead = new StringTokenizer( sql, symbols, true );
 		while ( lookahead.countTokens() > tokens.countTokens() + skip ) {
 			lookahead.nextToken();
 		}
@@ -401,21 +455,18 @@ public final class Template {
 	}
 
 	private static boolean isNamedParameter(String token) {
-		return token.startsWith( ":" );
+		return token.charAt(0) == ':';
 	}
 
-	private static boolean isFunctionOrKeyword(
+	private static boolean isKeyword(
 			String lcToken,
-			String nextToken,
+			boolean afterCurrent,
 			Dialect dialect,
 			TypeConfiguration typeConfiguration) {
-		if ( "(".equals( nextToken ) ) {
-			return true;
-		}
-		else if ( SOFT_KEYWORDS.contains( lcToken ) ) {
+		if ( SOFT_KEYWORDS.contains( lcToken ) ) {
 			// these can be column names on some databases
-			// TODO: treat 'current date' as a function
-			return false;
+			// but treat 'current date', 'current time' bigrams as keywords
+			return afterCurrent;
 		}
 		else {
 			return KEYWORDS.contains( lcToken )
@@ -429,15 +480,15 @@ public final class Template {
 		return typeConfiguration.getDdlTypeRegistry().isTypeNameRegistered( lcToken );
 	}
 
-	private static boolean isIdentifier(String token) {
-		return token.charAt( 0 ) == '`' // allow any identifier quoted with backtick
-			|| isLetter( token.charAt( 0 ) )  // only recognizes identifiers beginning with a letter
-				&& token.indexOf( '.' ) < 0
-				&& !isBoolean( token );
+	private static boolean isUnqualifiedIdentifier(String token) {
+		final char initialChar = token.charAt( 0 );
+		return initialChar == '`'             // allow any identifier quoted with backtick
+			|| isLetter( initialChar )        // only recognizes identifiers beginning with a letter
+				&& token.indexOf( '.' ) < 0;  // don't qualify already-qualified identifiers
 	}
 
-	private static boolean isBoolean(String token) {
-		return switch ( token.toLowerCase( Locale.ROOT ) ) {
+	private static boolean isBoolean(String lcToken) {
+		return switch ( lcToken ) {
 			case "true", "false" -> true;
 			default -> false;
 		};

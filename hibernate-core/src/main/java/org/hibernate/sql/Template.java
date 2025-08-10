@@ -229,93 +229,96 @@ public final class Template {
 			final boolean wasAfterCurrent = afterCurrent;
 			afterCurrent = afterCurrent && isWhitespace;
 
+			final String processedToken;
 			final boolean isQuoted =
 					quoted || quotedIdentifier || isQuoteCharacter;
 			if ( isQuoted || isWhitespace ) {
-				result.append( token );
+				processedToken = token;
 			}
 			else if ( beforeTable ) {
-				result.append( token );
+				processedToken = token;
 				beforeTable = false;
 				afterFromTable = true;
 			}
 			else if ( afterFromTable ) {
 				afterFromTable = "as".equals(lcToken);
-				result.append(token);
+				processedToken = token;
 			}
 			else if ( "(".equals(lcToken) ) {
-				result.append(token);
+				processedToken = token;
 			}
 			else if ( ")".equals(lcToken) ) {
 				inExtractOrTrim = false;
 				inCast = false;
 				afterCastAs = false;
-				result.append(token);
+				processedToken = token;
 			}
 			else if ( ",".equals(lcToken) ) {
 				if ( inFromClause ) {
 					beforeTable = true;
 				}
-				result.append(token);
+				processedToken = token;
 			}
 			else if ( lcToken.length()==1 && symbols.contains(lcToken) ) {
-				result.append(token);
+				processedToken = token;
 			}
 			else if ( BEFORE_TABLE_KEYWORDS.contains(lcToken) ) {
 				if ( !inExtractOrTrim ) {
 					beforeTable = true;
 					inFromClause = true;
 				}
-				result.append(token);
+				processedToken = token;
 			}
 			else if ( inFromClause || afterCastAs ) {
 				// Don't want to append alias to:
 				// 1. tokens inside the FROM clause
 				// 2. type names after 'CAST(expression AS'
-				result.append( token );
+				processedToken = token;
 			}
 			else if ( isNamedParameter(token) ) {
-				result.append(token);
+				processedToken = token;
 			}
 			else if ( "as".equals( lcToken ) ) {
-				result.append( token );
+				processedToken = token;
 				afterCastAs = inCast;
 			}
 			else if ( isFetch( dialect, lcToken ) ) {
-				result.append( token );
+				processedToken = token;
 				afterFetch = true;
 			}
 			else if ( wasAfterFetch && FETCH_BIGRAMS.contains( lcToken ) ) {
-				result.append( token );
+				processedToken = token;
 			}
 			else if ( isCurrent( lcToken, nextToken, sql, symbols, tokens ) ) {
-				result.append(token);
+				processedToken = token;
 				afterCurrent = true;
 			}
 			else if ( isBoolean( lcToken ) ) {
-				result.append( dialect.toBooleanValueString( parseBoolean( token ) ) );
+				processedToken = dialect.toBooleanValueString( parseBoolean( token ) );
 			}
 			else if ( isFunctionCall( nextToken, sql, symbols, tokens ) ) {
-				result.append(token);
 				if ( FUNCTION_WITH_FROM_KEYWORDS.contains( lcToken ) ) {
 					inExtractOrTrim = true;
 				}
 				if ( "cast".equals( lcToken ) ) {
 					inCast = true;
 				}
+				processedToken = token;
 			}
 			else if ( isAliasableIdentifier( token, lcToken, nextToken,
 							sql, symbols, tokens, wasAfterCurrent,
 							dialect, typeConfiguration ) ) {
-				result.append(alias).append('.').append( dialect.quote(token) );
+				processedToken = alias + '.' +  dialect.quote(token);
 			}
 			else {
-				result.append(token);
+				processedToken = token;
 			}
+
+			result.append( processedToken );
 
 			//Yuck:
 			if ( inFromClause
-					&& KEYWORDS.contains( lcToken ) //"as" is not in KEYWORDS
+					&& KEYWORDS.contains( lcToken ) // "as" is not in KEYWORDS
 					&& !BEFORE_TABLE_KEYWORDS.contains( lcToken ) ) {
 				inFromClause = false;
 			}

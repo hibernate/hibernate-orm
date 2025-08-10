@@ -4,8 +4,8 @@
  */
 package org.hibernate.orm.test.datasource;
 
-import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -19,10 +19,10 @@ import java.util.logging.Logger;
 
 @SuppressWarnings( "unused" ) // used by DatasourceTest in this package
 public class TestDataSourceConnectionProvider
-		extends DatasourceConnectionProviderImpl
+		extends DataSourceConnectionProvider
 		implements ServiceRegistryAwareService {
 
-	final DriverManagerConnectionProviderImpl delegate = new DriverManagerConnectionProviderImpl();
+	final DriverManagerConnectionProvider delegate = new DriverManagerConnectionProvider();
 
 	@Override
 	public void configure(Map<String, Object> configuration) {

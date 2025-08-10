@@ -18,7 +18,7 @@ import jakarta.persistence.Table;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.MariaDBDialect;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -48,11 +48,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 )
 public class SequenceInformationMariaDBTest {
 
-	private DriverManagerConnectionProviderImpl connectionProvider;
+	private DriverManagerConnectionProvider connectionProvider;
 
 	@BeforeAll
 	public void init() {
-		connectionProvider = new DriverManagerConnectionProviderImpl();
+		connectionProvider = new DriverManagerConnectionProvider();
 		connectionProvider.configure( PropertiesHelper.map( Environment.getProperties() ) );
 
 		try(Connection connection = connectionProvider.getConnection();

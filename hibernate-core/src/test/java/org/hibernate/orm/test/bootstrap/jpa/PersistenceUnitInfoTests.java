@@ -12,7 +12,7 @@ import javax.sql.DataSource;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
@@ -58,8 +58,8 @@ public class PersistenceUnitInfoTests extends BaseUnitTestCase {
 		final ConnectionProvider connectionProvider = emf.unwrap( SessionFactoryImplementor.class )
 				.getServiceRegistry()
 				.getService( ConnectionProvider.class );
-		assertThat( connectionProvider, instanceOf( DatasourceConnectionProviderImpl.class ) );
-		final DatasourceConnectionProviderImpl dsCp = (DatasourceConnectionProviderImpl) connectionProvider;
+		assertThat( connectionProvider, instanceOf( DataSourceConnectionProvider.class ) );
+		final DataSourceConnectionProvider dsCp = (DataSourceConnectionProvider) connectionProvider;
 		assertThat( dsCp.getDataSource(), is( puDataSource ) );
 
 		// now let's check that it is exposed via the EMF properties
@@ -92,8 +92,8 @@ public class PersistenceUnitInfoTests extends BaseUnitTestCase {
 		final ConnectionProvider connectionProvider = emf.unwrap( SessionFactoryImplementor.class )
 				.getServiceRegistry()
 				.getService( ConnectionProvider.class );
-		assertThat( connectionProvider, instanceOf( DatasourceConnectionProviderImpl.class ) );
-		final DatasourceConnectionProviderImpl dsCp = (DatasourceConnectionProviderImpl) connectionProvider;
+		assertThat( connectionProvider, instanceOf( DataSourceConnectionProvider.class ) );
+		final DataSourceConnectionProvider dsCp = (DataSourceConnectionProvider) connectionProvider;
 		assertThat( dsCp.getDataSource(), is( puDataSource ) );
 
 		// now let's check that it is exposed via the EMF properties

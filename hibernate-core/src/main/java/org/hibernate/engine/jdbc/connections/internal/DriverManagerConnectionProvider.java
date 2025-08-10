@@ -57,7 +57,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class DriverManagerConnectionProviderImpl
+public class DriverManagerConnectionProvider
 		implements ConnectionProvider, Configurable, Stoppable, ServiceRegistryAwareService, ConnectionValidator {
 
 	public static final String MIN_SIZE = "hibernate.connection.min_pool_size";
@@ -123,7 +123,7 @@ public class DriverManagerConnectionProviderImpl
 
 		try ( var connection = connectionCreator.createConnection() ) {
 			dbInfo = new DatabaseConnectionInfoImpl(
-					DriverManagerConnectionProviderImpl.class,
+					DriverManagerConnectionProvider.class,
 					url,
 					getDriverName( connection ),
 					null,
@@ -299,7 +299,7 @@ public class DriverManagerConnectionProviderImpl
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
 		return new DatabaseConnectionInfoImpl(
-				DriverManagerConnectionProviderImpl.class,
+				DriverManagerConnectionProvider.class,
 				dbInfo.getJdbcUrl(),
 				dbInfo.getJdbcDriver(),
 				dialect.getClass(),
@@ -318,13 +318,13 @@ public class DriverManagerConnectionProviderImpl
 
 	@Override
 	public boolean isUnwrappableAs(Class<?> unwrapType) {
-		return unwrapType.isAssignableFrom( DriverManagerConnectionProviderImpl.class );
+		return unwrapType.isAssignableFrom( DriverManagerConnectionProvider.class );
 	}
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( unwrapType.isAssignableFrom( DriverManagerConnectionProviderImpl.class ) ) {
+		if ( unwrapType.isAssignableFrom( DriverManagerConnectionProvider.class ) ) {
 			return (T) this;
 		}
 		else {

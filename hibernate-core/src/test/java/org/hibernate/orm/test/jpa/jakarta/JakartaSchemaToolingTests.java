@@ -11,7 +11,7 @@ import java.util.Properties;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
@@ -147,10 +147,10 @@ public class JakartaSchemaToolingTests {
 		final Properties settings = new Properties();
 		settings.setProperty( AvailableSettings.AUTOCOMMIT, "false" );
 		settings.setProperty( AvailableSettings.POOL_SIZE, "5" );
-		settings.setProperty( DriverManagerConnectionProviderImpl.INITIAL_SIZE, "0" );
+		settings.setProperty( DriverManagerConnectionProvider.INITIAL_SIZE, "0" );
 		settings.setProperty(
-				DriverManagerConnectionProviderImpl.INIT_SQL,
-				Environment.getProperties().getProperty( DriverManagerConnectionProviderImpl.INIT_SQL )
+				DriverManagerConnectionProvider.INIT_SQL,
+				Environment.getProperties().getProperty( DriverManagerConnectionProvider.INIT_SQL )
 		);
 		applyToProperties( settings, settingPairs );
 		ServiceRegistryUtil.applySettings( settings );

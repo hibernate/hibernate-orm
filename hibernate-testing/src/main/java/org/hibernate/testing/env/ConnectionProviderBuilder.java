@@ -17,8 +17,8 @@ import javax.sql.DataSource;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.ReflectHelper;
@@ -59,7 +59,7 @@ public class ConnectionProviderBuilder implements DialectCheck {
 		props.put( Environment.URL, String.format( URL_FORMAT, dbName ) );
 		props.put( Environment.USER, USER );
 		props.put( Environment.PASS, PASS );
-		props.put( DriverManagerConnectionProviderImpl.INIT_SQL, "" );
+		props.put( DriverManagerConnectionProvider.INIT_SQL, "" );
 		props.put( Environment.AUTOCOMMIT, "false" );
 		if ( SHARED_DATABASE_NAME.equals( dbName ) ) {
 			ServiceRegistryUtil.applySettings( props );
@@ -76,7 +76,7 @@ public class ConnectionProviderBuilder implements DialectCheck {
 		props.put( Environment.JPA_JDBC_URL, String.format( URL_FORMAT, dbName ) );
 		props.put( Environment.JPA_JDBC_USER, USER );
 		props.put( Environment.JPA_JDBC_PASSWORD, PASS );
-		props.put( DriverManagerConnectionProviderImpl.INIT_SQL, "" );
+		props.put( DriverManagerConnectionProvider.INIT_SQL, "" );
 		props.put( Environment.AUTOCOMMIT, "false" );
 		if ( SHARED_DATABASE_NAME.equals( dbName ) ) {
 			ServiceRegistryUtil.applySettings( props );
@@ -121,10 +121,9 @@ public class ConnectionProviderBuilder implements DialectCheck {
 			ReflectHelper.findSetterMethod( dataSourceClass, "password", String.class )
 					.invoke( actualDataSource, globalProperties.getProperty( Environment.PASS ) );
 
-			final DataSourceInvocationHandler dataSourceInvocationHandler = new DataSourceInvocationHandler(
-					actualDataSource );
+			final var dataSourceInvocationHandler = new DataSourceInvocationHandler( actualDataSource );
 
-			DatasourceConnectionProviderImpl connectionProvider = new DatasourceConnectionProviderImpl() {
+			var connectionProvider = new DataSourceConnectionProvider() {
 				@Override
 				public void stop() {
 					dataSourceInvocationHandler.stop();
@@ -216,7 +215,7 @@ public class ConnectionProviderBuilder implements DialectCheck {
 			connectionProvider.setConnectionProvider( (ConnectionProvider) props.get( AvailableSettings.CONNECTION_PROVIDER ) );
 		}
 		else {
-			connectionProvider.setConnectionProvider( new DriverManagerConnectionProviderImpl() );
+			connectionProvider.setConnectionProvider( new DriverManagerConnectionProvider() );
 		}
 		connectionProvider.configure( PropertiesHelper.map( props ) );
 		return connectionProvider;

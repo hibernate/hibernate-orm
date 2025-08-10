@@ -115,19 +115,17 @@ public class C3P0ConnectionProvider
 
 	@Override
 	public boolean isUnwrappableAs(Class<?> unwrapType) {
-		return ConnectionProvider.class.equals( unwrapType )
-			|| C3P0ConnectionProvider.class.isAssignableFrom( unwrapType )
-			|| DataSource.class.isAssignableFrom( unwrapType );
+		return unwrapType.isAssignableFrom( C3P0ConnectionProvider.class )
+			|| unwrapType.isAssignableFrom( DataSource.class );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( ConnectionProvider.class.equals( unwrapType )
-				|| C3P0ConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+		if ( unwrapType.isAssignableFrom( C3P0ConnectionProvider.class ) ) {
 			return (T) this;
 		}
-		else if ( DataSource.class.isAssignableFrom( unwrapType ) ) {
+		else if ( unwrapType.isAssignableFrom( DataSource.class ) ) {
 			return (T) dataSource;
 		}
 		else {

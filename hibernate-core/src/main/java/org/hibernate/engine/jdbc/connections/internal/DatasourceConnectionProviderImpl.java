@@ -40,7 +40,8 @@ import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderI
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class DatasourceConnectionProviderImpl implements ConnectionProvider, Configurable, Stoppable {
+public class DatasourceConnectionProviderImpl
+		implements ConnectionProvider, Configurable, Stoppable {
 
 	private DataSource dataSource;
 	private String user;
@@ -67,19 +68,17 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 
 	@Override
 	public boolean isUnwrappableAs(Class<?> unwrapType) {
-		return ConnectionProvider.class.equals( unwrapType )
-			|| DatasourceConnectionProviderImpl.class.isAssignableFrom( unwrapType )
-			|| DataSource.class.isAssignableFrom( unwrapType );
+		return unwrapType.isAssignableFrom( DatasourceConnectionProviderImpl.class )
+			|| unwrapType.isAssignableFrom( DataSource.class);
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( ConnectionProvider.class.equals( unwrapType )
-				|| DatasourceConnectionProviderImpl.class.isAssignableFrom( unwrapType ) ) {
+		if ( unwrapType.isAssignableFrom( DatasourceConnectionProviderImpl.class ) ) {
 			return (T) this;
 		}
-		else if ( DataSource.class.isAssignableFrom( unwrapType ) ) {
+		else if ( unwrapType.isAssignableFrom( DataSource.class) ) {
 			return (T) getDataSource();
 		}
 		else {

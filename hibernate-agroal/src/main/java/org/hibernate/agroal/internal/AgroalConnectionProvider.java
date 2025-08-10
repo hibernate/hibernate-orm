@@ -7,7 +7,6 @@ package org.hibernate.agroal.internal;
 import java.io.Serial;
 import java.sql.Connection;
 import java.sql.SQLException;
-import javax.sql.DataSource;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -84,9 +83,9 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 
 	private static String extractIsolationAsString(Map<String, Object> properties) {
 		final Integer isolation = ConnectionProviderInitiator.extractIsolation( properties );
-		return isolation != null ?
+		return isolation != null
 				// Agroal resolves transaction isolation from the 'nice' name
-				toIsolationNiceName( isolation )
+				? toIsolationNiceName( isolation )
 				: null;
 	}
 
@@ -116,9 +115,7 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 								: String.valueOf( 10 );
 				config.put( AgroalSettings.AGROAL_MAX_SIZE, maxSize );
 			}
-			final AgroalPropertiesReader agroalProperties =
-					new AgroalPropertiesReader( CONFIG_PREFIX )
-							.readProperties( config );
+			final var agroalProperties = new AgroalPropertiesReader( CONFIG_PREFIX ).readProperties( config );
 			agroalProperties.modify()
 					.connectionPoolConfiguration( cp -> cp.connectionFactoryConfiguration( cf -> {
 				copyProperty( properties, JdbcSettings.DRIVER, cf::connectionProviderClassName, identity() );
@@ -205,22 +202,22 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 
 	@Override
 	public boolean isUnwrappableAs(Class<?> unwrapType) {
-		return ConnectionProvider.class.equals( unwrapType )
-			|| AgroalConnectionProvider.class.isAssignableFrom( unwrapType )
-			|| DataSource.class.isAssignableFrom( unwrapType );
+		return unwrapType.isAssignableFrom( AgroalConnectionProvider.class )
+			|| unwrapType.isAssignableFrom( AgroalDataSource.class );
 	}
 
 	@Override
 	@SuppressWarnings( "unchecked" )
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( ConnectionProvider.class.equals( unwrapType )
-				|| AgroalConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+		if ( unwrapType.isAssignableFrom( AgroalConnectionProvider.class ) ) {
 			return (T) this;
 		}
-		if ( DataSource.class.isAssignableFrom( unwrapType ) ) {
+		else if ( unwrapType.isAssignableFrom( AgroalDataSource.class ) ) {
 			return (T) agroalDataSource;
 		}
-		throw new UnknownUnwrapTypeException( unwrapType );
+		else {
+			throw new UnknownUnwrapTypeException( unwrapType );
+		}
 	}
 
 	// --- Stoppable

@@ -3,6 +3,19 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.42.Final (August 10, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/34396
+
+** Bug
+    * [HHH-19698] - In list predicate fails to parse with null literal
+    * [HHH-19453] - sequence support not working on db2 As400 7.3
+    * [HHH-19261] - OracleDialect getQueryHintString incorrectly joins supplied hints
+    * [HHH-17897] - Joining Multiple CTEs in a HQL
+    * [HHH-17522] - Support correlation of CTEs
+
+
 Changes in 6.2.41.Final (July 20, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

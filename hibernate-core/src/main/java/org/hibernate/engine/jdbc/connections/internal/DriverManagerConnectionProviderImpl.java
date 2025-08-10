@@ -318,15 +318,13 @@ public class DriverManagerConnectionProviderImpl
 
 	@Override
 	public boolean isUnwrappableAs(Class<?> unwrapType) {
-		return ConnectionProvider.class.equals( unwrapType ) ||
-				DriverManagerConnectionProviderImpl.class.isAssignableFrom( unwrapType );
+		return unwrapType.isAssignableFrom( DriverManagerConnectionProviderImpl.class );
 	}
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( ConnectionProvider.class.equals( unwrapType ) ||
-				DriverManagerConnectionProviderImpl.class.isAssignableFrom( unwrapType ) ) {
+		if ( unwrapType.isAssignableFrom( DriverManagerConnectionProviderImpl.class ) ) {
 			return (T) this;
 		}
 		else {

@@ -7,7 +7,6 @@ package org.hibernate.hikaricp.internal;
 import java.io.Serial;
 import java.sql.Connection;
 import java.sql.SQLException;
-import javax.sql.DataSource;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -140,20 +139,22 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 
 	@Override
 	public boolean isUnwrappableAs(Class<?> unwrapType) {
-		return ConnectionProvider.class.equals( unwrapType )
-			|| HikariCPConnectionProvider.class.isAssignableFrom( unwrapType )
-			|| DataSource.class.isAssignableFrom( unwrapType );
+		return unwrapType.isAssignableFrom( HikariCPConnectionProvider.class )
+			|| unwrapType.isAssignableFrom( HikariDataSource.class )
+			|| unwrapType.isAssignableFrom( HikariConfig.class );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( ConnectionProvider.class.equals( unwrapType )
-				|| HikariCPConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+		if ( unwrapType.isAssignableFrom( HikariCPConnectionProvider.class ) ) {
 			return (T) this;
 		}
-		else if ( DataSource.class.isAssignableFrom( unwrapType ) ) {
+		else if ( unwrapType.isAssignableFrom( HikariDataSource.class ) ) {
 			return (T) hikariDataSource;
+		}
+		else if ( unwrapType.isAssignableFrom( HikariConfig.class ) ) {
+			return (T) hikariConfig;
 		}
 		else {
 			throw new UnknownUnwrapTypeException( unwrapType );

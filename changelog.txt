@@ -3,6 +3,16 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.25.Final (August 10, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/34660
+
+** Bug
+    * [HHH-19453] - sequence support not working on db2 As400 7.3
+    * [HHH-17522] - Support correlation of CTEs
+
+
 Changes in 6.6.24.Final (August 03, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

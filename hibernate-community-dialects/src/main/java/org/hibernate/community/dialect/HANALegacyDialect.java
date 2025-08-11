@@ -214,7 +214,6 @@ public class HANALegacyDialect extends Dialect {
 		return new HANALockingSupport( supportsSkipLocked );
 	}
 
-
 	@Override
 	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
 		return HANALegacyServerConfiguration.staticDetermineDatabaseVersion( info );
@@ -652,7 +651,7 @@ public class HANALegacyDialect extends Dialect {
 
 	@Override
 	public LockingSupport getLockingSupport() {
-		return HANALockingSupport.HANA_LOCKING_SUPPORT;
+		return lockingSupport;
 	}
 
 	@Override
@@ -883,16 +882,6 @@ public class HANALegacyDialect extends Dialect {
 	@Override
 	public SequenceSupport getSequenceSupport() {
 		return HANASequenceSupport.INSTANCE;
-	}
-
-	@Override
-	public boolean supportsTableCheck() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsTupleDistinctCounts() {
-		return true;
 	}
 
 	@Override

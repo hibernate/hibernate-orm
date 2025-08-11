@@ -32,7 +32,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.internal.util.StringHelper.*;
+import static org.hibernate.internal.util.StringHelper.count;
 
 /**
  * @implNote Restricted to H2 as there is nothing intrinsically Dialect specific here,

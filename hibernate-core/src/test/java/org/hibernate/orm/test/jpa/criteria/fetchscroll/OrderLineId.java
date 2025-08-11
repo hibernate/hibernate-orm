@@ -4,7 +4,8 @@
  */
 package org.hibernate.orm.test.jpa.criteria.fetchscroll;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class OrderLineId extends OrderId {

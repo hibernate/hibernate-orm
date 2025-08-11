@@ -19,7 +19,6 @@ import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;

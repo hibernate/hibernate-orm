@@ -52,14 +52,6 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Properties;
-import java.util.function.BiConsumer;
-
 import static org.hibernate.boot.model.internal.GeneratorBinder.applyIfNotEmpty;
 import static org.hibernate.id.enhanced.TableGeneratorLogger.TABLE_GENERATOR_MESSAGE_LOGGER;
 import static org.hibernate.id.IdentifierGeneratorHelper.getNamingStrategy;

@@ -5,7 +5,9 @@
 package org.hibernate.orm.test.jpa.criteria.fetchscroll;
 
 import java.io.Serializable;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.MappedSuperclass;
 
 @Embeddable
 @MappedSuperclass

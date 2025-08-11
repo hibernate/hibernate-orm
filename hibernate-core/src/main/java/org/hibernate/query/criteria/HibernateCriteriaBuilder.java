@@ -26,7 +26,6 @@ import org.hibernate.query.common.FrameKind;
 import org.hibernate.query.common.TemporalUnit;
 
 import jakarta.persistence.Tuple;
-import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;

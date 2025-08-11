@@ -44,7 +44,6 @@ import org.hibernate.stat.Statistics;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jira;
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 import junit.framework.Assert;
 

@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.jpa.criteria.fetchscroll;
 
-import java.util.*;
+import java.util.Set;
 import jakarta.persistence.*;
 
 @Entity

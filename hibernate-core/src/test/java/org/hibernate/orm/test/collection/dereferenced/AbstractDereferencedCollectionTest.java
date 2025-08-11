@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.collection.dereferenced;
 
-import org.hibernate.*;
+import org.hibernate.Session;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;

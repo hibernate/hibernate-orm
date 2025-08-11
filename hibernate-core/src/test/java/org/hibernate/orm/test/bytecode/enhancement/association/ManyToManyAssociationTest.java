@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.association;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.junit.jupiter.api.Test;

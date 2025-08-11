@@ -4,15 +4,11 @@
  */
 package org.hibernate.id;
 
-import java.util.Properties;
-
-import org.hibernate.generator.GeneratorCreationContext;
-
 /**
  * An {@link IdentifierGenerator} that requires creation of database objects.
  * <p>
  * All instances have access to a special mapping parameter in their
- * {@link #configure(GeneratorCreationContext, Properties)} method: schema
+ * {@link #configure( GeneratorCreationContext, Properties )} method: schema
  *
  * @author Gavin King
  * @author Steve Ebersole

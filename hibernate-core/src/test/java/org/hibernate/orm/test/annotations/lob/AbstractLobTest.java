@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.annotations.lob;
 
-import org.hibernate.dialect.*;
+import org.hibernate.dialect.SybaseDialect;
 import org.junit.Test;
 
 import org.hibernate.testing.SkipForDialect;

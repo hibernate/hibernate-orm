@@ -8,7 +8,6 @@ import org.hibernate.query.spi.SqmQuery;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
 

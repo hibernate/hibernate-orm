@@ -4,7 +4,8 @@
  */
 package org.hibernate.orm.test.columndiscriminator;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Author {
 	private Long id;

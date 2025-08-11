@@ -18,7 +18,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.hibernate.orm.test.mapping.manytoone.ManyToOneBidirectionalCircularityTest.*;
+import static org.hibernate.orm.test.mapping.manytoone.ManyToOneBidirectionalCircularityTest.EntityTest2;
+import static org.hibernate.orm.test.mapping.manytoone.ManyToOneBidirectionalCircularityTest.EntityTest;
 
 /**
  * @author Andrea Boriero

@@ -17,7 +17,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.hibernate.orm.test.mapping.manytoone.ManyToOneBidirectionalTest.*;
+import static org.hibernate.orm.test.mapping.manytoone.ManyToOneBidirectionalTest.EntityTest2;
+import static org.hibernate.orm.test.mapping.manytoone.ManyToOneBidirectionalTest.EntityTest;
 
 /**
  * @author Andrea Boriero

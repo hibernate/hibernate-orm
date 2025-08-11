@@ -10,8 +10,6 @@ import org.hibernate.engine.spi.ManagedEntity;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
-import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;

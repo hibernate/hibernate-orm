@@ -16,7 +16,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import static jakarta.persistence.AccessType.*;
+import static jakarta.persistence.AccessType.PROPERTY;
 
 @Entity
 @Table(name = "persons")

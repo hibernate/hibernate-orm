@@ -24,7 +24,8 @@ import org.junit.Test;
 
 import org.hamcrest.CoreMatchers;
 
-import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.CascadeType.PERSIST;
+import static jakarta.persistence.CascadeType.REMOVE;
 import static jakarta.persistence.CascadeType.PERSIST;
 import static org.hamcrest.MatcherAssert.assertThat;
 

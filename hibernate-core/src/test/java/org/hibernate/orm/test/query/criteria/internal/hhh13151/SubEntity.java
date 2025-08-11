@@ -4,10 +4,13 @@
  */
 package org.hibernate.orm.test.query.criteria.internal.hhh13151;
 
-import org.hibernate.annotations.*;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.CascadeType;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Entity;
 
 @Entity

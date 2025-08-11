@@ -4,7 +4,9 @@
  */
 package org.hibernate.orm.test.subquery;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 @Entity
 public class EntityA {

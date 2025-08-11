@@ -58,7 +58,6 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.dialect.NullOrdering;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;

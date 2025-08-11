@@ -47,6 +47,4 @@
 @Incubating
 package org.hibernate.query.criteria;
 
-import jakarta.persistence.criteria.Subquery;
 import org.hibernate.Incubating;
-import jakarta.persistence.criteria.AbstractQuery;

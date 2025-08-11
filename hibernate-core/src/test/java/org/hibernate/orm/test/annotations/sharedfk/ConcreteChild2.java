@@ -4,7 +4,10 @@
  */
 package org.hibernate.orm.test.annotations.sharedfk;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 
 @Entity
 @DiscriminatorValue("2")

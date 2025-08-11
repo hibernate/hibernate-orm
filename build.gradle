@@ -33,8 +33,10 @@ plugins {
 	id 'org.jetbrains.gradle.plugin.idea-ext' version '1.1.10'
 	id 'eclipse'
 	id "com.dorongold.task-tree" version "4.0.1"
+    id 'org.openrewrite.rewrite' version '7.12.1' apply false
 }
 
+apply from: rootProject.file('gradle/rewrite.gradle')
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Releasing

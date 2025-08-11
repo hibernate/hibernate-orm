@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.annotations.ColumnTransformer;
 
@@ -34,14 +35,14 @@ public interface SelectableMapping extends SqlTypedMapping {
 	 * The selection's read expression accounting for formula treatment as well
 	 * as {@link ColumnTransformer#read()}
 	 */
-	String getCustomReadExpression();
+	@Nullable String getCustomReadExpression();
 
 	/**
 	 * The selection's write expression accounting {@link ColumnTransformer#write()}
 	 *
 	 * @apiNote Always null for formula mappings
 	 */
-	String getCustomWriteExpression();
+	@Nullable String getCustomWriteExpression();
 
 	default String getWriteExpression() {
 		final String customWriteExpression = getCustomWriteExpression();

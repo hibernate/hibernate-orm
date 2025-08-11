@@ -6,6 +6,7 @@ package org.hibernate.vector.internal;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.SqlTypes;
@@ -16,6 +17,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.vector.SparseFloatVector;
@@ -45,14 +47,28 @@ public class PGSparseFloatVectorJdbcType extends ArrayJdbcType {
 	}
 
 	@Override
-	public void appendWriteExpression(String writeExpression, SqlAppender appender, Dialect dialect) {
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
+		return new PGVectorJdbcLiteralFormatterSparseVector<>( javaTypeDescriptor );
+	}
+
+	@Override
+	public void appendWriteExpression(
+			String writeExpression,
+			@Nullable Size size,
+			SqlAppender appender,
+			Dialect dialect) {
 		appender.append( "cast(" );
 		appender.append( writeExpression );
 		appender.append( " as sparsevec)" );
 	}
 
 	@Override
-	public @Nullable String castFromPattern(JdbcMapping sourceMapping) {
+	public boolean isWriteExpressionTyped(Dialect dialect) {
+		return true;
+	}
+
+	@Override
+	public @Nullable String castFromPattern(JdbcMapping sourceMapping, @Nullable Size size) {
 		return sourceMapping.getJdbcType().isStringLike() ? "cast(?1 as sparsevec)" : null;
 	}
 

@@ -6,6 +6,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.BiConsumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -111,37 +112,42 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
-	public String getCustomReadExpression() {
+	public @Nullable String getCustomReadExpression() {
 		return selectableMapping.getCustomReadExpression();
 	}
 
 	@Override
-	public String getCustomWriteExpression() {
+	public @Nullable String getCustomWriteExpression() {
 		return selectableMapping.getCustomWriteExpression();
 	}
 
 	@Override
-	public String getColumnDefinition() {
+	public @Nullable String getColumnDefinition() {
 		return selectableMapping.getColumnDefinition();
 	}
 
 	@Override
-	public Long getLength() {
+	public @Nullable Long getLength() {
 		return selectableMapping.getLength();
 	}
 
 	@Override
-	public Integer getPrecision() {
+	public @Nullable Integer getArrayLength() {
+		return selectableMapping.getArrayLength();
+	}
+
+	@Override
+	public @Nullable Integer getPrecision() {
 		return selectableMapping.getPrecision();
 	}
 
 	@Override
-	public Integer getTemporalPrecision() {
+	public @Nullable Integer getTemporalPrecision() {
 		return selectableMapping.getTemporalPrecision();
 	}
 
 	@Override
-	public Integer getScale() {
+	public @Nullable Integer getScale() {
 		return selectableMapping.getScale();
 	}
 

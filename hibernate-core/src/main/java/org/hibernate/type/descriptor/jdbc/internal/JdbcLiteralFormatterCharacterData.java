@@ -31,7 +31,7 @@ public class JdbcLiteralFormatterCharacterData<T> extends BasicJdbcLiteralFormat
 	}
 
 	@Override
-	public void appendJdbcLiteral(SqlAppender appender, Object value, Dialect dialect, WrapperOptions wrapperOptions) {
+	public void appendJdbcLiteral(SqlAppender appender, T value, Dialect dialect, WrapperOptions wrapperOptions) {
 		final String literalValue = unwrap( value, String.class, wrapperOptions );
 		if ( isNationalized ) {
 			appender.appendSql( NATIONALIZED_PREFIX );

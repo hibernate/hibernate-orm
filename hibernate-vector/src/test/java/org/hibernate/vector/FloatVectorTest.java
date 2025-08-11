@@ -33,6 +33,7 @@ import static org.hibernate.vector.VectorTestHelper.cosineDistance;
 import static org.hibernate.vector.VectorTestHelper.euclideanDistance;
 import static org.hibernate.vector.VectorTestHelper.euclideanNorm;
 import static org.hibernate.vector.VectorTestHelper.euclideanNormalize;
+import static org.hibernate.vector.VectorTestHelper.euclideanSquaredDistance;
 import static org.hibernate.vector.VectorTestHelper.hammingDistance;
 import static org.hibernate.vector.VectorTestHelper.innerProduct;
 import static org.hibernate.vector.VectorTestHelper.taxicabDistance;
@@ -80,7 +81,7 @@ public class FloatVectorTest {
 	public void testCast(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			//tag::vector-cast-example[]
-			final Tuple vector = em.createSelectionQuery( "select cast(e.theVector as string), cast('[1, 1, 1]' as vector) from VectorEntity e where e.id = 1", Tuple.class )
+			final Tuple vector = em.createSelectionQuery( "select cast(e.theVector as string), cast('[1, 1, 1]' as vector(3)) from VectorEntity e where e.id = 1", Tuple.class )
 					.getSingleResult();
 			//end::vector-cast-example[]
 			assertArrayEquals( new float[]{ 1, 2, 3 }, VectorHelper.parseFloatVector( vector.get( 0, String.class ) ) );
@@ -129,6 +130,27 @@ public class FloatVectorTest {
 			assertEquals( euclideanDistance( V1, vector ), results.get( 0 ).get( 1, double.class ), 0.000001D );
 			assertEquals( 2L, results.get( 1 ).get( 0 ) );
 			assertEquals( euclideanDistance( V2, vector ), results.get( 1 ).get( 1, double.class ), 0.000001D );
+		} );
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsEuclideanSquaredDistance.class)
+	public void testEuclideanSquaredDistance(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			//tag::euclidean-squared-distance-example[]
+			final float[] vector = new float[] { 1, 1, 1 };
+			final List<Tuple> results = em.createSelectionQuery(
+							"select e.id, euclidean_squared_distance(e.theVector, :vec) from VectorEntity e order by e.id",
+							Tuple.class
+					)
+					.setParameter( "vec", vector )
+					.getResultList();
+			//end::euclidean-squared-distance-example[]
+			assertEquals( 2, results.size() );
+			assertEquals( 1L, results.get( 0 ).get( 0 ) );
+			assertEquals( euclideanSquaredDistance( V1, vector ), results.get( 0 ).get( 1, double.class ), 0.000001D );
+			assertEquals( 2L, results.get( 1 ).get( 0 ) );
+			assertEquals( euclideanSquaredDistance( V2, vector ), results.get( 1 ).get( 1, double.class ), 0.000001D );
 		} );
 	}
 

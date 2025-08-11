@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
@@ -141,37 +142,42 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 	}
 
 	@Override
-	public String getCustomReadExpression() {
+	public @Nullable String getCustomReadExpression() {
 		return null;
 	}
 
 	@Override
-	public String getCustomWriteExpression() {
+	public @Nullable String getCustomWriteExpression() {
 		return null;
 	}
 
 	@Override
-	public String getColumnDefinition() {
+	public @Nullable String getColumnDefinition() {
 		return null;
 	}
 
 	@Override
-	public Long getLength() {
+	public @Nullable Long getLength() {
 		return null;
 	}
 
 	@Override
-	public Integer getPrecision() {
+	public @Nullable Integer getArrayLength() {
 		return null;
 	}
 
 	@Override
-	public Integer getTemporalPrecision() {
+	public @Nullable Integer getPrecision() {
 		return null;
 	}
 
 	@Override
-	public Integer getScale() {
+	public @Nullable Integer getTemporalPrecision() {
+		return null;
+	}
+
+	@Override
+	public @Nullable Integer getScale() {
 		return null;
 	}
 

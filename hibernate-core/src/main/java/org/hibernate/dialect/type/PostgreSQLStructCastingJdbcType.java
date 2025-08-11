@@ -8,8 +8,10 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -55,6 +57,7 @@ public class PostgreSQLStructCastingJdbcType extends AbstractPostgreSQLStructJdb
 	@Override
 	public void appendWriteExpression(
 			String writeExpression,
+			@Nullable Size size,
 			SqlAppender appender,
 			Dialect dialect) {
 		appender.append( "cast(" );
@@ -62,6 +65,11 @@ public class PostgreSQLStructCastingJdbcType extends AbstractPostgreSQLStructJdb
 		appender.append( " as " );
 		appender.append( getStructTypeName() );
 		appender.append( ')' );
+	}
+
+	@Override
+	public boolean isWriteExpressionTyped(Dialect dialect) {
+		return true;
 	}
 
 	@Override

@@ -160,6 +160,7 @@ public class SparseDoubleVector extends AbstractSparseVector<Double> {
 		return result;
 	}
 
+	@Override
 	public int[] indices() {
 		return indices;
 	}
@@ -175,10 +176,10 @@ public class SparseDoubleVector extends AbstractSparseVector<Double> {
 
 	@Override
 	public String toString() {
-		return '[' + size +
-			',' + Arrays.toString( indices ) +
-			',' + Arrays.toString( data ) +
-			']';
+		return "[" + size +
+			"," + Arrays.toString( indices ) +
+			"," + Arrays.toString( data ) +
+			"]";
 	}
 
 }

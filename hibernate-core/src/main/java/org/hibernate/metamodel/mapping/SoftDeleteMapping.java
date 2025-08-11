@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -99,12 +100,12 @@ public interface SoftDeleteMapping extends SelectableMapping, VirtualModelPart, 
 	}
 
 	@Override
-	default String getCustomReadExpression() {
+	default @Nullable String getCustomReadExpression() {
 		return null;
 	}
 
 	@Override
-	default String getCustomWriteExpression() {
+	default @Nullable String getCustomWriteExpression() {
 		return null;
 	}
 
@@ -134,27 +135,32 @@ public interface SoftDeleteMapping extends SelectableMapping, VirtualModelPart, 
 	}
 
 	@Override
-	default String getColumnDefinition() {
+	default @Nullable String getColumnDefinition() {
 		return null;
 	}
 
 	@Override
-	default Long getLength() {
+	default @Nullable Long getLength() {
 		return null;
 	}
 
 	@Override
-	default Integer getPrecision() {
+	default @Nullable Integer getArrayLength() {
 		return null;
 	}
 
 	@Override
-	default Integer getScale() {
+	default @Nullable Integer getPrecision() {
 		return null;
 	}
 
 	@Override
-	default Integer getTemporalPrecision() {
+	default @Nullable Integer getScale() {
+		return null;
+	}
+
+	@Override
+	default @Nullable Integer getTemporalPrecision() {
 		return null;
 	}
 }

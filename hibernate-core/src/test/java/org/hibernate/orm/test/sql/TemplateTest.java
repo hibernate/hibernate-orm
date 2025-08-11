@@ -135,6 +135,74 @@ public class TemplateTest {
 				"select {@}." + dialect.quote("`first`") + " from users fetch first 1 row only", factory );
 	}
 
+	@Test
+	@JiraKey("HHH-19704")
+	public void testOrderedSetAggregationVariants(SessionFactoryScope scope) {
+		SessionFactoryImplementor factory = scope.getSessionFactory();
+
+		assertWhereStringTemplate(
+				"SELECT LISTAGG(employee_name, ', ') WITHIN GROUP (ORDER BY hire_date) FROM employees",
+				"SELECT LISTAGG({@}.employee_name, ', ') WITHIN GROUP (ORDER BY {@}.hire_date) FROM employees",
+				factory );
+
+		assertWhereStringTemplate(
+				"SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) FROM employees",
+				"SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY {@}.salary) FROM employees",
+				factory );
+
+		assertWhereStringTemplate(
+				"SELECT PERCENTILE_DISC(0.5) WITHIN GROUP (ORDER BY salary) FROM employees",
+				"SELECT PERCENTILE_DISC(0.5) WITHIN GROUP (ORDER BY {@}.salary) FROM employees",
+				factory );
+
+		assertWhereStringTemplate(
+				"SELECT MODE() WITHIN GROUP (ORDER BY job_title) FROM employees",
+				"SELECT MODE() WITHIN GROUP (ORDER BY {@}.job_title) FROM employees",
+				factory );
+	}
+
+	@Test
+	@JiraKey("HHH-19704")
+	public void testOrderedSetAggregationExtendedVariants(SessionFactoryScope scope) {
+		SessionFactoryImplementor factory = scope.getSessionFactory();
+
+		assertWhereStringTemplate(
+				"""
+						SELECT LISTAGG(employee_name, ', ') ON OVERFLOW ERROR WITHIN GROUP (ORDER BY hire_date)
+						FROM employees""",
+				"""
+						SELECT LISTAGG({@}.employee_name, ', ') ON OVERFLOW ERROR WITHIN GROUP (ORDER BY {@}.hire_date)
+						FROM employees""",
+				factory );
+
+		assertWhereStringTemplate(
+				"""
+						SELECT LISTAGG(employee_name, ', ') ON OVERFLOW TRUNCATE WITH COUNT WITHIN GROUP (ORDER BY hire_date)
+						FROM employees""",
+				"""
+						SELECT LISTAGG({@}.employee_name, ', ') ON OVERFLOW TRUNCATE WITH COUNT WITHIN GROUP (ORDER BY {@}.hire_date)
+						FROM employees""",
+				factory );
+
+		assertWhereStringTemplate(
+				"""
+						SELECT LISTAGG(employee_name, ', ') ON OVERFLOW TRUNCATE '...' WITH COUNT WITHIN GROUP (ORDER BY hire_date)
+						FROM employees""",
+				"""
+						SELECT LISTAGG({@}.employee_name, ', ') ON OVERFLOW TRUNCATE '...' WITH COUNT WITHIN GROUP (ORDER BY {@}.hire_date)
+						FROM employees""",
+				factory );
+
+		assertWhereStringTemplate(
+				"""
+						SELECT LISTAGG(employee_name, ', ') ON OVERFLOW TRUNCATE WITHOUT COUNT WITHIN GROUP (ORDER BY hire_date)
+						FROM employees""",
+				"""
+						SELECT LISTAGG({@}.employee_name, ', ') ON OVERFLOW TRUNCATE WITHOUT COUNT WITHIN GROUP (ORDER BY {@}.hire_date)
+						FROM employees""",
+				factory );
+	}
+
 	private static void assertWhereStringTemplate(String sql, SessionFactoryImplementor sf) {
 		assertEquals( sql,
 				Template.renderWhereStringTemplate(

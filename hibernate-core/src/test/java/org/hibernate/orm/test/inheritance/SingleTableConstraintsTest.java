@@ -12,8 +12,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 				SingleTableConstraintsTest.Journal.class,
 				SingleTableConstraintsTest.Paper.class,
 				SingleTableConstraintsTest.Monograph.class})
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTableCheck.class)
 class SingleTableConstraintsTest {
 	@Test void test(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {

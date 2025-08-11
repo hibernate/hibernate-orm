@@ -29,7 +29,7 @@ public class JdbcLiteralFormatterTemporal<T> extends BasicJdbcLiteralFormatter<T
 	}
 
 	@Override
-	public void appendJdbcLiteral(SqlAppender appender, Object value, Dialect dialect, WrapperOptions options) {
+	public void appendJdbcLiteral(SqlAppender appender, T value, Dialect dialect, WrapperOptions options) {
 		final TimeZone jdbcTimeZone = getJdbcTimeZone( options );
 		// for performance reasons, avoid conversions if we can
 		if ( value instanceof java.util.Date date ) {

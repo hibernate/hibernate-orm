@@ -4,8 +4,10 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 
@@ -27,6 +29,9 @@ public class LiteralAsParameter<T> implements SelfRenderingExpression {
 
 	@Override
 	public void renderToSql(SqlAppender sqlAppender, SqlAstTranslator<?> walker, SessionFactoryImplementor sessionFactory) {
+		final Size size = literal.getExpressionType() instanceof SqlTypedMapping sqlTypedMapping
+				? sqlTypedMapping.toSize()
+				: null;
 		literal.getJdbcMapping().getJdbcType().appendWriteExpression(
 				parameterMarker,
 				sqlAppender,

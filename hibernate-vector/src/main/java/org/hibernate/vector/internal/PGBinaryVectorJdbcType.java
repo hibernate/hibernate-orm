@@ -5,6 +5,7 @@
 package org.hibernate.vector.internal;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -40,7 +41,7 @@ public class PGBinaryVectorJdbcType extends ArrayJdbcType {
 
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
-		return null;
+		return new PGVectorJdbcLiteralFormatterBinaryVector<>(  javaTypeDescriptor );
 	}
 
 	@Override
@@ -57,9 +58,14 @@ public class PGBinaryVectorJdbcType extends ArrayJdbcType {
 //		appender.append( writeExpression );
 //		appender.append( " as varbit)" );
 //	}
+//
+//	@Override
+//	public boolean isWriteExpressionTyped(Dialect dialect) {
+//		return true;
+//	}
 
 	@Override
-	public @Nullable String castFromPattern(JdbcMapping sourceMapping) {
+	public @Nullable String castFromPattern(JdbcMapping sourceMapping, @Nullable Size size) {
 		return sourceMapping.getJdbcType().isStringLike() ? "cast(?1 as varbit)" : null;
 	}
 

@@ -9,7 +9,6 @@ import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicArrayType;
 import org.hibernate.type.BasicCollectionType;
@@ -172,14 +171,6 @@ public class OracleVectorTypeContributor implements TypeContributor {
 					new VectorDdlType( SqlTypes.SPARSE_VECTOR_FLOAT64, "vector($l,float64,sparse)", "vector", dialect )
 			);
 		}
-	}
-
-
-	/**
-	 * Replace vector dimension with the length or * for undefined length
-	 */
-	private static String replace(String type, Long size) {
-		return StringHelper.replaceOnce( type, "$l", size != null ? size.toString() : "*" );
 	}
 
 	private boolean isVectorSupportedByDriver(OracleDialect dialect) {

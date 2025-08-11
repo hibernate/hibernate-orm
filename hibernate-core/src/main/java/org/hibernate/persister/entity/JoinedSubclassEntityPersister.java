@@ -1023,11 +1023,13 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		final String columnDefinition;
 		final Long length;
+		final Integer arrayLength;
 		final Integer precision;
 		final Integer scale;
 		if ( bootEntityDescriptor.getIdentifier() == null ) {
 			columnDefinition = null;
 			length = null;
+			arrayLength = null;
 			precision = null;
 			scale = null;
 		}
@@ -1035,6 +1037,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final Column column = bootEntityDescriptor.getIdentifier().getColumns().get( 0 );
 			columnDefinition = column.getSqlType();
 			length = column.getLength();
+			arrayLength = column.getArrayLength();
 			precision = column.getPrecision();
 			scale = column.getScale();
 		}
@@ -1047,6 +1050,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				tableKeyColumns[0][0],
 				columnDefinition,
 				length,
+				arrayLength,
 				precision,
 				scale,
 				value.isColumnInsertable( 0 ),

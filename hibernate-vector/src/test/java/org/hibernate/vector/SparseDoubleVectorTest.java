@@ -25,9 +25,12 @@ import java.util.List;
 import static org.hibernate.vector.VectorTestHelper.cosineDistance;
 import static org.hibernate.vector.VectorTestHelper.euclideanDistance;
 import static org.hibernate.vector.VectorTestHelper.euclideanNorm;
+import static org.hibernate.vector.VectorTestHelper.euclideanSquaredDistance;
 import static org.hibernate.vector.VectorTestHelper.hammingDistance;
 import static org.hibernate.vector.VectorTestHelper.innerProduct;
+import static org.hibernate.vector.VectorTestHelper.normalizeVectorString;
 import static org.hibernate.vector.VectorTestHelper.taxicabDistance;
+import static org.hibernate.vector.VectorTestHelper.vectorSparseStringLiteral;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -67,6 +70,17 @@ public class SparseDoubleVectorTest {
 	}
 
 	@Test
+	public void testCast(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			final String literal = vectorSparseStringLiteral( new double[] {1, 1, 1}, em );
+			final Tuple vector = em.createSelectionQuery( "select cast(e.theVector as string), cast('" + literal + "' as sparse_double_vector(3)) from VectorEntity e where e.id = 1", Tuple.class )
+					.getSingleResult();
+			assertEquals( vectorSparseStringLiteral( V1, em ), normalizeVectorString( vector.get( 0, String.class ) ) );
+			assertEquals( new SparseDoubleVector( new double[]{ 1, 1, 1 } ), vector.get( 1, SparseDoubleVector.class ) );
+		} );
+	}
+
+	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCosineDistance.class)
 	public void testCosineDistance(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
@@ -95,6 +109,22 @@ public class SparseDoubleVectorTest {
 			assertEquals( euclideanDistance( V1, vector ), results.get( 0 ).get( 1, double.class ), 0.000001D );
 			assertEquals( 2L, results.get( 1 ).get( 0 ) );
 			assertEquals( euclideanDistance( V2, vector ), results.get( 1 ).get( 1, double.class ), 0.000001D );
+		} );
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsEuclideanSquaredDistance.class)
+	public void testEuclideanSquaredDistance(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			final double[] vector = new double[]{ 1, 1, 1 };
+			final List<Tuple> results = em.createSelectionQuery( "select e.id, euclidean_squared_distance(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
+					.setParameter( "vec", new SparseDoubleVector( vector ) )
+					.getResultList();
+			assertEquals( 2, results.size() );
+			assertEquals( 1L, results.get( 0 ).get( 0 ) );
+			assertEquals( euclideanSquaredDistance( V1, vector ), results.get( 0 ).get( 1, double.class ), 0.000001D );
+			assertEquals( 2L, results.get( 1 ).get( 0 ) );
+			assertEquals( euclideanSquaredDistance( V2, vector ), results.get( 1 ).get( 1, double.class ), 0.000001D );
 		} );
 	}
 

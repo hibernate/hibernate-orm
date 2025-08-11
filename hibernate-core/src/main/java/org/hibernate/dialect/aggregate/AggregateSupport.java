@@ -61,6 +61,7 @@ public interface AggregateSupport {
 				new SqlTypedMappingImpl(
 						column.getTypeName(),
 						column.getLength(),
+						column.getArrayLength(),
 						column.getPrecision(),
 						column.getScale(),
 						column.getTemporalPrecision(),

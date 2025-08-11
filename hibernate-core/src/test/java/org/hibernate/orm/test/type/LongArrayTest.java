@@ -149,7 +149,7 @@ public class LongArrayTest {
 		scope.inSession( em -> {
 			final Dialect dialect = em.getDialect();
 			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
-			final String param = arrayType.getJdbcType().wrapWriteExpression( ":data", dialect );
+			final String param = arrayType.getJdbcType().wrapWriteExpression( ":data", null, dialect );
 			TypedQuery<TableWithLongArrays> tq = em.createNativeQuery(
 					"SELECT * FROM table_with_bigint_arrays t WHERE the_array " + op + " " + param,
 					TableWithLongArrays.class

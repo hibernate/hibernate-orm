@@ -476,6 +476,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				final SelectablePath selectablePath;
 				final String columnDefinition;
 				final Long length;
+				final Integer arrayLength;
 				final Integer precision;
 				final Integer scale;
 				final Integer temporalPrecision;
@@ -484,6 +485,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				if ( selectable instanceof Column column ) {
 					columnDefinition = column.getSqlType();
 					length = column.getLength();
+					arrayLength = column.getArrayLength();
 					precision = column.getPrecision();
 					scale = column.getScale();
 					temporalPrecision = column.getTemporalPrecision();
@@ -495,6 +497,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				else {
 					columnDefinition = null;
 					length = null;
+					arrayLength = null;
 					precision = null;
 					scale = null;
 					temporalPrecision = null;
@@ -515,9 +518,14 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						selectablePath,
 						selectable.isFormula(),
 						selectable.getCustomReadExpression(),
-						selectable.getWriteExpr( basicValue.getResolution().getJdbcMapping(), dialect ),
+						selectable.getWriteExpr(
+								basicValue.getResolution().getJdbcMapping(),
+								dialect,
+								creationProcess.getCreationContext().getBootModel()
+						),
 						columnDefinition,
 						length,
+						arrayLength,
 						precision,
 						scale,
 						temporalPrecision,
@@ -715,6 +723,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		final String columnDefinition;
 		final String name;
 		final Long length;
+		final Integer arrayLength;
 		final Integer precision;
 		final Integer scale;
 		final boolean isFormula = discriminator.hasFormula();
@@ -726,6 +735,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			);
 			columnDefinition = null;
 			length = null;
+			arrayLength = null;
 			precision = null;
 			scale = null;
 		}
@@ -736,6 +746,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			columnDefinition = column.getSqlType();
 			name = column.getName();
 			length = column.getLength();
+			arrayLength = column.getArrayLength();
 			precision = column.getPrecision();
 			scale = column.getScale();
 		}
@@ -751,6 +762,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				columnDefinition,
 				selectable.getCustomReadExpression(),
 				length,
+				arrayLength,
 				precision,
 				scale,
 				bootDescriptor.getDiscriminatorType()

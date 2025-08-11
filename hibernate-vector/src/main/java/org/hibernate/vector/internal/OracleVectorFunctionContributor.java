@@ -19,6 +19,7 @@ public class OracleVectorFunctionContributor implements FunctionContributor {
 
 			vectorFunctionFactory.cosineDistance( "vector_distance(?1,?2,COSINE)" );
 			vectorFunctionFactory.euclideanDistance( "vector_distance(?1,?2,EUCLIDEAN)" );
+			vectorFunctionFactory.euclideanSquaredDistance( "vector_distance(?1,?2,EUCLIDEAN_SQUARED)" );
 			vectorFunctionFactory.l1Distance( "vector_distance(?1,?2,MANHATTAN)" );
 			vectorFunctionFactory.hammingDistance( "vector_distance(?1,?2,HAMMING)" );
 			vectorFunctionFactory.jaccardDistance( "vector_distance(?1,?2,JACCARD)" );

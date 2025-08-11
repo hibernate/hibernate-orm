@@ -24,8 +24,8 @@ public class OracleJdbcLiteralFormatterVector<T> extends BasicJdbcLiteralFormatt
 	}
 
 	@Override
-	public void appendJdbcLiteral(SqlAppender appender, Object value, Dialect dialect, WrapperOptions wrapperOptions) {
-		final Object[] objects = unwrapArray( value, wrapperOptions );
+	public void appendJdbcLiteral(SqlAppender appender, T value, Dialect dialect, WrapperOptions wrapperOptions) {
+		final Object[] objects = unwrap( value, Object[].class, wrapperOptions );
 		appender.append( "to_vector('" );
 		char separator = '[';
 		for ( Object o : objects ) {
@@ -36,9 +36,5 @@ public class OracleJdbcLiteralFormatterVector<T> extends BasicJdbcLiteralFormatt
 		appender.append( "]'," );
 		appender.append( vectorParameters );
 		appender.append( ')' );
-	}
-
-	private Object[] unwrapArray(Object value, WrapperOptions wrapperOptions) {
-		return unwrap( value, Object[].class, wrapperOptions );
 	}
 }

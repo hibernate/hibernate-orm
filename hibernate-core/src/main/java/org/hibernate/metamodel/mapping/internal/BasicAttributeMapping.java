@@ -6,6 +6,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.BiConsumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -49,12 +50,13 @@ public class BasicAttributeMapping
 	private final Integer temporalPrecision;
 	private final SelectablePath selectablePath;
 	private final boolean isFormula;
-	private final String customReadExpression;
-	private final String customWriteExpression;
-	private final String columnDefinition;
-	private final Long length;
-	private final Integer precision;
-	private final Integer scale;
+	private final @Nullable String customReadExpression;
+	private final @Nullable String customWriteExpression;
+	private final @Nullable String columnDefinition;
+	private final @Nullable Long length;
+	private final @Nullable Integer arrayLength;
+	private final @Nullable Integer precision;
+	private final @Nullable Integer scale;
 
 	private final JdbcMapping jdbcMapping;
 	private final boolean isLob;
@@ -65,6 +67,64 @@ public class BasicAttributeMapping
 	private final boolean isLazy;
 
 	private final JavaType domainTypeDescriptor;
+
+	@Deprecated(forRemoval = true, since = "7.2")
+	public BasicAttributeMapping(
+			String attributeName,
+			NavigableRole navigableRole,
+			int stateArrayPosition,
+			int fetchableIndex,
+			AttributeMetadata attributeMetadata,
+			FetchTiming mappedFetchTiming,
+			FetchStyle mappedFetchStyle,
+			String tableExpression,
+			String mappedColumnExpression,
+			SelectablePath selectablePath,
+			boolean isFormula,
+			@Nullable String customReadExpression,
+			@Nullable String customWriteExpression,
+			@Nullable String columnDefinition,
+			@Nullable Long length,
+			@Nullable Integer precision,
+			@Nullable Integer scale,
+			@Nullable Integer temporalPrecision,
+			boolean isLob,
+			boolean nullable,
+			boolean insertable,
+			boolean updateable,
+			boolean partitioned,
+			JdbcMapping jdbcMapping,
+			ManagedMappingType declaringType,
+			PropertyAccess propertyAccess) {
+		this(
+				attributeName,
+				navigableRole,
+				stateArrayPosition,
+				fetchableIndex,
+				attributeMetadata,
+				mappedFetchTiming,
+				mappedFetchStyle,
+				tableExpression,
+				mappedColumnExpression,
+				selectablePath,
+				isFormula,
+				customReadExpression,
+				customWriteExpression,
+				columnDefinition,
+				length,
+				null,
+				precision,
+				scale,
+				temporalPrecision,
+				isLob,
+				nullable,
+				insertable,
+				updateable,
+				partitioned,
+				jdbcMapping,
+				declaringType,
+				propertyAccess );
+	}
 
 	public BasicAttributeMapping(
 			String attributeName,
@@ -78,13 +138,14 @@ public class BasicAttributeMapping
 			String mappedColumnExpression,
 			SelectablePath selectablePath,
 			boolean isFormula,
-			String customReadExpression,
-			String customWriteExpression,
-			String columnDefinition,
-			Long length,
-			Integer precision,
-			Integer scale,
-			Integer temporalPrecision,
+			@Nullable String customReadExpression,
+			@Nullable String customWriteExpression,
+			@Nullable String columnDefinition,
+			@Nullable Long length,
+			@Nullable Integer arrayLength,
+			@Nullable Integer precision,
+			@Nullable Integer scale,
+			@Nullable Integer temporalPrecision,
 			boolean isLob,
 			boolean nullable,
 			boolean insertable,
@@ -113,6 +174,7 @@ public class BasicAttributeMapping
 		this.isFormula = isFormula;
 		this.columnDefinition = columnDefinition;
 		this.length = length;
+		this.arrayLength = arrayLength;
 		this.precision = precision;
 		this.scale = scale;
 		this.isLob = isLob;
@@ -184,6 +246,7 @@ public class BasicAttributeMapping
 				selectableMapping.getCustomWriteExpression(),
 				selectableMapping.getColumnDefinition(),
 				selectableMapping.getLength(),
+				selectableMapping.getArrayLength(),
 				selectableMapping.getPrecision(),
 				selectableMapping.getScale(),
 				selectableMapping.getTemporalPrecision(),
@@ -263,12 +326,12 @@ public class BasicAttributeMapping
 	}
 
 	@Override
-	public String getCustomReadExpression() {
+	public @Nullable String getCustomReadExpression() {
 		return customReadExpression;
 	}
 
 	@Override
-	public String getCustomWriteExpression() {
+	public @Nullable String getCustomWriteExpression() {
 		return customWriteExpression;
 	}
 
@@ -278,27 +341,32 @@ public class BasicAttributeMapping
 	}
 
 	@Override
-	public String getColumnDefinition() {
+	public @Nullable String getColumnDefinition() {
 		return columnDefinition;
 	}
 
 	@Override
-	public Long getLength() {
+	public @Nullable Long getLength() {
 		return length;
 	}
 
 	@Override
-	public Integer getPrecision() {
+	public @Nullable Integer getArrayLength() {
+		return arrayLength;
+	}
+
+	@Override
+	public @Nullable Integer getPrecision() {
 		return precision;
 	}
 
 	@Override
-	public Integer getScale() {
+	public @Nullable Integer getScale() {
 		return scale;
 	}
 
 	@Override
-	public Integer getTemporalPrecision() {
+	public @Nullable Integer getTemporalPrecision() {
 		return temporalPrecision;
 	}
 

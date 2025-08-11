@@ -6,6 +6,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.BiConsumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -46,12 +47,13 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	private final String column;
 	private final SelectablePath selectablePath;
 	private final DiscriminatedAssociationModelPart anyPart;
-	private final String customReadExpression;
-	private final String customWriteExpression;
-	private final String columnDefinition;
-	private final Long length;
-	private final Integer precision;
-	private final Integer scale;
+	private final @Nullable String customReadExpression;
+	private final @Nullable String customWriteExpression;
+	private final @Nullable String columnDefinition;
+	private final @Nullable Long length;
+	private final @Nullable Integer arrayLength;
+	private final @Nullable Integer precision;
+	private final @Nullable Integer scale;
 	private final boolean nullable;
 	private final boolean insertable;
 	private final boolean updateable;
@@ -75,6 +77,45 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			boolean updateable,
 			boolean partitioned,
 			JdbcMapping jdbcMapping) {
+		this(
+				navigableRole,
+				anyPart,
+				table,
+				column,
+				selectablePath,
+				customReadExpression,
+				customWriteExpression,
+				columnDefinition,
+				length,
+				null,
+				precision,
+				scale,
+				nullable,
+				insertable,
+				updateable,
+				partitioned,
+				jdbcMapping
+		);
+	}
+
+	public AnyKeyPart(
+			NavigableRole navigableRole,
+			DiscriminatedAssociationModelPart anyPart,
+			String table,
+			String column,
+			SelectablePath selectablePath,
+			@Nullable String customReadExpression,
+			@Nullable String customWriteExpression,
+			@Nullable String columnDefinition,
+			@Nullable Long length,
+			@Nullable Integer arrayLength,
+			@Nullable Integer precision,
+			@Nullable Integer scale,
+			boolean nullable,
+			boolean insertable,
+			boolean updateable,
+			boolean partitioned,
+			JdbcMapping jdbcMapping) {
 		this.navigableRole = navigableRole;
 		this.table = table;
 		this.column = column;
@@ -84,6 +125,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 		this.customWriteExpression = customWriteExpression;
 		this.columnDefinition = columnDefinition;
 		this.length = length;
+		this.arrayLength = arrayLength;
 		this.precision = precision;
 		this.scale = scale;
 		this.nullable = nullable;
@@ -139,37 +181,42 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	}
 
 	@Override
-	public String getCustomReadExpression() {
+	public @Nullable String getCustomReadExpression() {
 		return customReadExpression;
 	}
 
 	@Override
-	public String getCustomWriteExpression() {
+	public @Nullable String getCustomWriteExpression() {
 		return customWriteExpression;
 	}
 
 	@Override
-	public String getColumnDefinition() {
+	public @Nullable String getColumnDefinition() {
 		return columnDefinition;
 	}
 
 	@Override
-	public Long getLength() {
+	public @Nullable Long getLength() {
 		return length;
 	}
 
 	@Override
-	public Integer getPrecision() {
+	public @Nullable Integer getArrayLength() {
+		return arrayLength;
+	}
+
+	@Override
+	public @Nullable Integer getPrecision() {
 		return precision;
 	}
 
 	@Override
-	public Integer getScale() {
+	public @Nullable Integer getScale() {
 		return scale;
 	}
 
 	@Override
-	public Integer getTemporalPrecision() {
+	public @Nullable Integer getTemporalPrecision() {
 		return null;
 	}
 
@@ -372,7 +419,8 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 				this,
 				getContainingTableExpression()
 		);
-		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
+		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState()
+				.getSqlExpressionResolver();
 		return expressionResolver.resolveSqlSelection(
 				expressionResolver.resolveSqlExpression(
 						tableReference,

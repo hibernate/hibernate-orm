@@ -160,6 +160,7 @@ public class SparseFloatVector extends AbstractSparseVector<Float> {
 		return result;
 	}
 
+	@Override
 	public int[] indices() {
 		return indices;
 	}
@@ -175,10 +176,10 @@ public class SparseFloatVector extends AbstractSparseVector<Float> {
 
 	@Override
 	public String toString() {
-		return '[' + size +
-			',' + Arrays.toString( indices ) +
-			',' + Arrays.toString( data ) +
-			']';
+		return "[" + size +
+			"," + Arrays.toString( indices ) +
+			"," + Arrays.toString( data ) +
+			"]";
 	}
 
 }

@@ -41,6 +41,11 @@ public class VectorFunctionFactory {
 		functionRegistry.registerAlternateKey( "l2_distance", "euclidean_distance" );
 	}
 
+	public void euclideanSquaredDistance(String pattern) {
+		registerVectorDistanceFunction( "euclidean_squared_distance", pattern );
+		functionRegistry.registerAlternateKey( "l2_squared_distance", "euclidean_squared_distance" );
+	}
+
 	public void l1Distance(String pattern) {
 		registerVectorDistanceFunction( "l1_distance", pattern );
 		functionRegistry.registerAlternateKey( "taxicab_distance", "l1_distance" );
@@ -83,6 +88,17 @@ public class VectorFunctionFactory {
 
 	public void registerNamedVectorFunction(String functionName, BasicType<?> returnType, int argumentCount) {
 		functionRegistry.namedDescriptorBuilder( functionName )
+				.setArgumentsValidator( StandardArgumentsValidators.composite(
+						StandardArgumentsValidators.exactly( argumentCount ),
+						VectorArgumentValidator.INSTANCE
+				) )
+				.setArgumentTypeResolver( VectorArgumentTypeResolver.INSTANCE )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( returnType ) )
+				.register();
+	}
+
+	public void registerPatternVectorFunction(String functionName, String pattern, BasicType<?> returnType, int argumentCount) {
+		functionRegistry.patternDescriptorBuilder( functionName, pattern )
 				.setArgumentsValidator( StandardArgumentsValidators.composite(
 						StandardArgumentsValidators.exactly( argumentCount ),
 						VectorArgumentValidator.INSTANCE

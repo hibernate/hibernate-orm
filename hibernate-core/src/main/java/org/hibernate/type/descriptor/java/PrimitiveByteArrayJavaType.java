@@ -116,6 +116,13 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 		if ( Blob.class.isAssignableFrom( type ) ) {
 			return (X) options.getLobCreator().createBlob( value );
 		}
+		if ( type.isAssignableFrom( Byte[].class ) ) {
+			final Byte[] array = new Byte[value.length];
+			for ( int i = 0; i < value.length; i++ ) {
+				array[i] = value[i];
+			}
+			return (X) array;
+		}
 
 		throw unknownUnwrap( type );
 	}
@@ -141,6 +148,13 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 		else if ( value instanceof Byte byteValue ) {
 			// Support binding a single element as parameter value
 			return new byte[]{ byteValue };
+		}
+		else if ( value instanceof Byte[] array ) {
+			final byte[] bytes = new byte[array.length];
+			for ( int i = 0; i < array.length; i++ ) {
+				bytes[i] = array[i];
+			}
+			return bytes;
 		}
 
 		throw unknownWrap( value.getClass() );

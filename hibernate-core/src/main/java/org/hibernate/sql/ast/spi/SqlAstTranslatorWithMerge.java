@@ -11,6 +11,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.jdbc.MergeOperation;
 
@@ -155,7 +156,13 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 	}
 
 	protected void renderMergeUsingQuerySelection(ColumnValueBinding selectionBinding) {
-		renderCasted( selectionBinding.getValueExpression() );
+		final ColumnWriteFragment valueExpression = selectionBinding.getValueExpression();
+		if ( valueExpression.getExpressionType().getJdbcType().isWriteExpressionTyped( getDialect() ) ) {
+			valueExpression.accept( this );
+		}
+		else {
+			renderCasted( valueExpression );
+		}
 		appendSql( " " );
 		appendSql( selectionBinding.getColumnReference().getColumnExpression() );
 	}

@@ -17,6 +17,7 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.vector.internal.VectorHelper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,7 @@ import jakarta.persistence.Tuple;
 import static org.hibernate.vector.VectorTestHelper.cosineDistance;
 import static org.hibernate.vector.VectorTestHelper.euclideanDistance;
 import static org.hibernate.vector.VectorTestHelper.euclideanNorm;
+import static org.hibernate.vector.VectorTestHelper.euclideanSquaredDistance;
 import static org.hibernate.vector.VectorTestHelper.hammingDistance;
 import static org.hibernate.vector.VectorTestHelper.innerProduct;
 import static org.hibernate.vector.VectorTestHelper.taxicabDistance;
@@ -74,6 +76,16 @@ public class ByteVectorTest {
 	}
 
 	@Test
+	public void testCast(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			final Tuple vector = em.createSelectionQuery( "select cast(e.theVector as string), cast('[1, 1, 1]' as byte_vector(3)) from VectorEntity e where e.id = 1", Tuple.class )
+					.getSingleResult();
+			assertArrayEquals( new byte[]{ 1, 2, 3 }, VectorHelper.parseByteVector( vector.get( 0, String.class ) ) );
+			assertArrayEquals( new byte[]{ 1, 1, 1 }, vector.get( 1, byte[].class ) );
+		} );
+	}
+
+	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCosineDistance.class)
 	public void testCosineDistance(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
@@ -90,7 +102,7 @@ public class ByteVectorTest {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsEuclideanDistance.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsEuclideanSquaredDistance.class)
 	public void testEuclideanDistance(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			final byte[] vector = new byte[]{ 1, 1, 1 };
@@ -102,6 +114,22 @@ public class ByteVectorTest {
 			assertEquals( euclideanDistance( V1, vector ), results.get( 0 ).get( 1, double.class ), 0.000001D );
 			assertEquals( 2L, results.get( 1 ).get( 0 ) );
 			assertEquals( euclideanDistance( V2, vector ), results.get( 1 ).get( 1, double.class ), 0.000001D );
+		} );
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsEuclideanDistance.class)
+	public void testEuclideanSquaredDistance(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			final byte[] vector = new byte[]{ 1, 1, 1 };
+			final List<Tuple> results = em.createSelectionQuery( "select e.id, euclidean_squared_distance(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
+					.setParameter( "vec", vector )
+					.getResultList();
+			assertEquals( 2, results.size() );
+			assertEquals( 1L, results.get( 0 ).get( 0 ) );
+			assertEquals( euclideanSquaredDistance( V1, vector ), results.get( 0 ).get( 1, double.class ), 0.000001D );
+			assertEquals( 2L, results.get( 1 ).get( 0 ) );
+			assertEquals( euclideanSquaredDistance( V2, vector ), results.get( 1 ).get( 1, double.class ), 0.000001D );
 		} );
 	}
 

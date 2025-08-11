@@ -181,6 +181,7 @@ public class SparseByteVector extends AbstractSparseVector<Byte> {
 		return result;
 	}
 
+	@Override
 	public int[] indices() {
 		return indices;
 	}
@@ -196,9 +197,9 @@ public class SparseByteVector extends AbstractSparseVector<Byte> {
 
 	@Override
 	public String toString() {
-		return '[' + size +
-			',' + Arrays.toString( indices ) +
-			',' + Arrays.toString( data ) +
-			']';
+		return "[" + size +
+			"," + Arrays.toString( indices ) +
+			"," + Arrays.toString( data ) +
+			"]";
 	}
 }

@@ -20,6 +20,8 @@ public abstract class AbstractSparseVector<E> extends AbstractList<E> {
 
 	protected static final int[] EMPTY_INT_ARRAY = new int[0];
 
+	public abstract int[] indices();
+
 	protected interface ElementParser<V> {
 		V parse(String string, int start, int end);
 	}

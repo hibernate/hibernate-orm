@@ -6,6 +6,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.BiConsumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -108,37 +109,42 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	}
 
 	@Override
-	public String getCustomReadExpression() {
+	public @Nullable String getCustomReadExpression() {
 		return null;
 	}
 
 	@Override
-	public String getCustomWriteExpression() {
+	public @Nullable String getCustomWriteExpression() {
 		return null;
 	}
 
 	@Override
-	public String getColumnDefinition() {
+	public @Nullable String getColumnDefinition() {
 		return null;
 	}
 
 	@Override
-	public Long getLength() {
+	public @Nullable Long getLength() {
 		return null;
 	}
 
 	@Override
-	public Integer getPrecision() {
+	public @Nullable Integer getArrayLength() {
 		return null;
 	}
 
 	@Override
-	public Integer getScale() {
+	public @Nullable Integer getPrecision() {
 		return null;
 	}
 
 	@Override
-	public Integer getTemporalPrecision() {
+	public @Nullable Integer getScale() {
+		return null;
+	}
+
+	@Override
+	public @Nullable Integer getTemporalPrecision() {
 		return null;
 	}
 

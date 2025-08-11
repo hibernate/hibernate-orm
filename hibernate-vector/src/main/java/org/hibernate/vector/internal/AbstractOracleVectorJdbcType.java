@@ -11,6 +11,7 @@ import java.sql.SQLException;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.SqlTypes;
@@ -45,18 +46,22 @@ public abstract class AbstractOracleVectorJdbcType extends ArrayJdbcType {
 	}
 
 	@Override
-	public @Nullable String castToPattern(JdbcMapping targetJdbcMapping) {
+	public @Nullable String castToPattern(JdbcMapping targetJdbcMapping, @Nullable Size size) {
 		return targetJdbcMapping.getJdbcType().isStringLike() ? "from_vector(?1 returning ?2)" : null;
 	}
 
 	@Override
-	public @Nullable String castFromPattern(JdbcMapping sourceMapping) {
+	public @Nullable String castFromPattern(JdbcMapping sourceMapping, @Nullable Size size) {
 		return sourceMapping.getJdbcType().isStringLike() ? "to_vector(?1," + getVectorParameters() + ")" : null;
 	}
 
 	@Override
-	public void appendWriteExpression(String writeExpression, SqlAppender appender, Dialect dialect) {
-		if ( isVectorSupported) {
+	public void appendWriteExpression(
+			String writeExpression,
+			@Nullable Size size,
+			SqlAppender appender,
+			Dialect dialect) {
+		if ( isVectorSupported ) {
 			appender.append( writeExpression );
 		}
 		else {
@@ -66,6 +71,11 @@ public abstract class AbstractOracleVectorJdbcType extends ArrayJdbcType {
 			appender.append( getVectorParameters() );
 			appender.append( ')' );
 		}
+	}
+
+	@Override
+	public boolean isWriteExpressionTyped(Dialect dialect) {
+		return !isVectorSupported;
 	}
 
 	public abstract String getVectorParameters();

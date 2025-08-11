@@ -147,7 +147,7 @@ public class EnumSetTest {
 		scope.inSession( em -> {
 			final Dialect dialect = em.getDialect();
 			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
-			final String param = enumSetType.getJdbcType().wrapWriteExpression( ":data", dialect );
+			final String param = enumSetType.getJdbcType().wrapWriteExpression( ":data", null, dialect );
 			Query<TableWithEnumSet> tq = em.createNativeQuery(
 					"SELECT * FROM table_with_enum_set t WHERE the_set " + op + " " + param,
 					TableWithEnumSet.class

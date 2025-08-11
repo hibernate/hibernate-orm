@@ -8,8 +8,10 @@ import java.sql.Types;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
@@ -77,9 +79,22 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			renderCastArrayToString( sqlAppender, arguments.get( 0 ), dialect, walker );
 		}
 		else {
-			String castPattern = targetJdbcMapping.getJdbcType().castFromPattern( sourceMapping );
+			final Size targetSize;
+			if ( castTarget.getLength() != null || castTarget.getArrayLength() != null
+				|| castTarget.getPrecision() != null || castTarget.getScale() != null ) {
+				targetSize = castTarget.toSize();
+			}
+			else {
+				targetSize = targetJdbcMapping instanceof SqlTypedMapping sqlTypedMapping
+						? sqlTypedMapping.toSize()
+						: null;
+			}
+			String castPattern = targetJdbcMapping.getJdbcType().castFromPattern( sourceMapping, targetSize );
 			if ( castPattern == null ) {
-				castPattern = sourceMapping.getJdbcType().castToPattern( targetJdbcMapping );
+				final Size sourceSize = sourceMapping instanceof SqlTypedMapping sqlTypedMapping
+						? sqlTypedMapping.toSize()
+						: null;
+				castPattern = sourceMapping.getJdbcType().castToPattern( targetJdbcMapping, sourceSize );
 				if ( castPattern == null ) {
 					castPattern = dialect.castPattern( sourceType, targetType );
 				}

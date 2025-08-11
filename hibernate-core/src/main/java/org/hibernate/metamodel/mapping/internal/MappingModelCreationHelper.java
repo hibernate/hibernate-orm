@@ -197,6 +197,63 @@ public class MappingModelCreationHelper {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Non-identifier attributes
 
+	@Deprecated(forRemoval = true, since = "7.2")
+	public static BasicAttributeMapping buildBasicAttributeMapping(
+			String attrName,
+			NavigableRole navigableRole,
+			int stateArrayPosition,
+			int fetchableIndex,
+			Property bootProperty,
+			ManagedMappingType declaringType,
+			BasicType attrType,
+			String tableExpression,
+			String attrColumnName,
+			SelectablePath selectablePath,
+			boolean isAttrFormula,
+			String readExpr,
+			String writeExpr,
+			String columnDefinition,
+			Long length,
+			Integer precision,
+			Integer scale,
+			Integer temporalPrecision,
+			boolean isLob,
+			boolean nullable,
+			boolean insertable,
+			boolean updateable,
+			PropertyAccess propertyAccess,
+			CascadeStyle cascadeStyle,
+			MappingModelCreationProcess creationProcess) {
+		return buildBasicAttributeMapping(
+				attrName,
+				navigableRole,
+				stateArrayPosition,
+				fetchableIndex,
+				bootProperty,
+				declaringType,
+				attrType,
+				tableExpression,
+				attrColumnName,
+				selectablePath,
+				isAttrFormula,
+				readExpr,
+				writeExpr,
+				columnDefinition,
+				length,
+				null,
+				precision,
+				scale,
+				temporalPrecision,
+				isLob,
+				nullable,
+				insertable,
+				updateable,
+				propertyAccess,
+				cascadeStyle,
+				creationProcess
+		);
+	}
+
 	@SuppressWarnings("rawtypes")
 	public static BasicAttributeMapping buildBasicAttributeMapping(
 			String attrName,
@@ -214,6 +271,7 @@ public class MappingModelCreationHelper {
 			String writeExpr,
 			String columnDefinition,
 			Long length,
+			Integer arrayLength,
 			Integer precision,
 			Integer scale,
 			Integer temporalPrecision,
@@ -267,6 +325,7 @@ public class MappingModelCreationHelper {
 				writeExpr,
 				columnDefinition,
 				length,
+				arrayLength,
 				precision,
 				scale,
 				temporalPrecision,

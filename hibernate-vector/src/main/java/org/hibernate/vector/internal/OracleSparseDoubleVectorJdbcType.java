@@ -28,7 +28,7 @@ public class OracleSparseDoubleVectorJdbcType extends AbstractOracleSparseVector
 
 	@Override
 	public String getVectorParameters() {
-		return "*,double64,sparse";
+		return "*,float64,sparse";
 	}
 
 	@Override

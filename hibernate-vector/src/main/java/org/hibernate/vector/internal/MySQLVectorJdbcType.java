@@ -6,6 +6,7 @@ package org.hibernate.vector.internal;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -49,19 +50,28 @@ public class MySQLVectorJdbcType extends ArrayJdbcType {
 	}
 
 	@Override
-	public void appendWriteExpression(String writeExpression, SqlAppender appender, Dialect dialect) {
+	public void appendWriteExpression(
+			String writeExpression,
+			@Nullable Size size,
+			SqlAppender appender,
+			Dialect dialect) {
 		appender.append( "string_to_vector(" );
 		appender.append( writeExpression );
 		appender.append( ')' );
 	}
 
 	@Override
-	public @Nullable String castFromPattern(JdbcMapping sourceMapping) {
+	public boolean isWriteExpressionTyped(Dialect dialect) {
+		return true;
+	}
+
+	@Override
+	public @Nullable String castFromPattern(JdbcMapping sourceMapping, @Nullable Size size) {
 		return sourceMapping.getJdbcType().isStringLike() ? "string_to_vector(?1)" : null;
 	}
 
 	@Override
-	public @Nullable String castToPattern(JdbcMapping targetJdbcMapping) {
+	public @Nullable String castToPattern(JdbcMapping targetJdbcMapping, @Nullable Size size) {
 		return targetJdbcMapping.getJdbcType().isStringLike() ? "vector_to_string(?1)" : null;
 	}
 

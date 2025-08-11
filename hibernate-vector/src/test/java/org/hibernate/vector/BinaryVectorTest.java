@@ -29,6 +29,7 @@ import java.util.List;
 import static org.hibernate.vector.VectorTestHelper.cosineDistanceBinary;
 import static org.hibernate.vector.VectorTestHelper.euclideanDistanceBinary;
 import static org.hibernate.vector.VectorTestHelper.euclideanNormBinary;
+import static org.hibernate.vector.VectorTestHelper.euclideanSquaredDistanceBinary;
 import static org.hibernate.vector.VectorTestHelper.hammingDistanceBinary;
 import static org.hibernate.vector.VectorTestHelper.innerProductBinary;
 import static org.hibernate.vector.VectorTestHelper.jaccardDistanceBinary;
@@ -73,6 +74,17 @@ public class BinaryVectorTest {
 	}
 
 	@Test
+	public void testCast(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			final String literal = VectorTestHelper.vectorBinaryStringLiteral( new byte[] {1, 1, 1}, em );
+			final Tuple vector = em.createSelectionQuery( "select cast(e.theVector as string), cast('" + literal + "' as binary_vector(3)) from VectorEntity e where e.id = 1", Tuple.class )
+					.getSingleResult();
+			assertEquals( VectorTestHelper.vectorBinaryStringLiteral( V1, em ), vector.get( 0, String.class ) );
+			assertArrayEquals( new byte[]{ 1, 1, 1 }, vector.get( 1, byte[].class ) );
+		} );
+	}
+
+	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCosineDistance.class)
 	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "Not supported with bit vectors")
 	public void testCosineDistance(SessionFactoryScope scope) {
@@ -90,7 +102,7 @@ public class BinaryVectorTest {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsEuclideanDistance.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsEuclideanSquaredDistance.class)
 	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "Not supported with bit vectors")
 	public void testEuclideanDistance(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
@@ -103,6 +115,23 @@ public class BinaryVectorTest {
 			assertEquals( euclideanDistanceBinary( V1, vector ), results.get( 0 ).get( 1, double.class ), 0.000001D );
 			assertEquals( 2L, results.get( 1 ).get( 0 ) );
 			assertEquals( euclideanDistanceBinary( V2, vector ), results.get( 1 ).get( 1, double.class ), 0.000001D );
+		} );
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsEuclideanDistance.class)
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "Not supported with bit vectors")
+	public void testEuclideanSquaredDistance(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			final byte[] vector = new byte[]{ 1, 1, 1 };
+			final List<Tuple> results = em.createSelectionQuery( "select e.id, euclidean_squared_distance(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
+					.setParameter( "vec", vector )
+					.getResultList();
+			assertEquals( 2, results.size() );
+			assertEquals( 1L, results.get( 0 ).get( 0 ) );
+			assertEquals( euclideanSquaredDistanceBinary( V1, vector ), results.get( 0 ).get( 1, double.class ), 0.000001D );
+			assertEquals( 2L, results.get( 1 ).get( 0 ) );
+			assertEquals( euclideanSquaredDistanceBinary( V2, vector ), results.get( 1 ).get( 1, double.class ), 0.000001D );
 		} );
 	}
 
@@ -146,10 +175,12 @@ public class BinaryVectorTest {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsHammingDistance.class)
 	public void testHammingDistance(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
+			//tag::hamming-distance-example[]
 			final byte[] vector = new byte[]{ 1, 1, 1 };
 			final List<Tuple> results = em.createSelectionQuery( "select e.id, hamming_distance(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
 					.setParameter( "vec", vector )
 					.getResultList();
+			//end::hamming-distance-example[]
 			assertEquals( 2, results.size() );
 			assertEquals( 1L, results.get( 0 ).get( 0 ) );
 			assertEquals( hammingDistanceBinary( V1, vector ), results.get( 0 ).get( 1, double.class ), 0D );
@@ -162,10 +193,12 @@ public class BinaryVectorTest {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJaccardDistance.class)
 	public void testJaccardDistance(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
+			//tag::jaccard-distance-example[]
 			final byte[] vector = new byte[]{ 1, 1, 1 };
 			final List<Tuple> results = em.createSelectionQuery( "select e.id, jaccard_distance(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
 					.setParameter( "vec", vector )
 					.getResultList();
+			//end::jaccard-distance-example[]
 			assertEquals( 2, results.size() );
 			assertEquals( 1L, results.get( 0 ).get( 0 ) );
 			assertEquals( jaccardDistanceBinary( V1, vector ), results.get( 0 ).get( 1, double.class ), 0D );

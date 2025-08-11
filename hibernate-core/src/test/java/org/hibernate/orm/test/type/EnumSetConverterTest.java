@@ -154,7 +154,7 @@ public class EnumSetConverterTest {
 		scope.inSession( em -> {
 			final Dialect dialect = em.getDialect();
 			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
-			final String param = enumSetType.getJdbcType().wrapWriteExpression( ":data", dialect );
+			final String param = enumSetType.getJdbcType().wrapWriteExpression( ":data", null, dialect );
 			Query<TableWithEnumSetConverter> tq = em.createNativeQuery(
 					"SELECT * FROM table_with_enum_set_convert t WHERE the_set " + op + " " + param,
 					TableWithEnumSetConverter.class

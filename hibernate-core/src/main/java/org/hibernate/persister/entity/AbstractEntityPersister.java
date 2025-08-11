@@ -5061,6 +5061,7 @@ public abstract class AbstractEntityPersister
 			final String discriminatorColumnExpression;
 			final String columnDefinition;
 			final Long length;
+			final Integer arrayLength;
 			final Integer precision;
 			final Integer scale;
 			if ( getDiscriminatorFormulaTemplate() == null ) {
@@ -5071,12 +5072,14 @@ public abstract class AbstractEntityPersister
 				if ( column == null ) {
 					columnDefinition = null;
 					length = null;
+					arrayLength = null;
 					precision = null;
 					scale = null;
 				}
 				else {
 					columnDefinition = column.getSqlType();
 					length = column.getLength();
+					arrayLength = column.getArrayLength();
 					precision = column.getPrecision();
 					scale = column.getScale();
 				}
@@ -5085,6 +5088,7 @@ public abstract class AbstractEntityPersister
 				discriminatorColumnExpression = getDiscriminatorFormulaTemplate();
 				columnDefinition = null;
 				length = null;
+				arrayLength = null;
 				precision = null;
 				scale = null;
 			}
@@ -5099,6 +5103,7 @@ public abstract class AbstractEntityPersister
 					columnDefinition,
 					null,
 					length,
+					arrayLength,
 					precision,
 					scale,
 					getDiscriminatorDomainType()
@@ -5246,11 +5251,13 @@ public abstract class AbstractEntityPersister
 		}
 		final String columnDefinition;
 		final Long length;
+		final Integer arrayLength;
 		final Integer precision;
 		final Integer scale;
 		if ( bootEntityDescriptor.getIdentifier() == null ) {
 			columnDefinition = null;
 			length = null;
+			arrayLength = null;
 			precision = null;
 			scale = null;
 		}
@@ -5258,6 +5265,7 @@ public abstract class AbstractEntityPersister
 			Column column = bootEntityDescriptor.getIdentifier().getColumns().get( 0 );
 			columnDefinition = column.getSqlType();
 			length = column.getLength();
+			arrayLength = column.getArrayLength();
 			precision = column.getPrecision();
 			scale = column.getScale();
 		}
@@ -5271,6 +5279,7 @@ public abstract class AbstractEntityPersister
 				rootTableKeyColumnNames[0],
 				columnDefinition,
 				length,
+				arrayLength,
 				precision,
 				scale,
 				value.isColumnInsertable( 0 ),
@@ -5317,6 +5326,7 @@ public abstract class AbstractEntityPersister
 				column.getText( dialect ),
 				column.getSqlType(),
 				column.getLength(),
+				column.getArrayLength(),
 				column.getPrecision(),
 				column.getScale(),
 				column.getTemporalPrecision(),
@@ -5362,6 +5372,7 @@ public abstract class AbstractEntityPersister
 					"?",
 					column.getSqlType(),
 					column.getLength(),
+					column.getArrayLength(),
 					column.getPrecision(),
 					column.getScale(),
 					column.getTemporalPrecision(),
@@ -5383,6 +5394,7 @@ public abstract class AbstractEntityPersister
 			final String customWriteExpr;
 			final String columnDefinition;
 			final Long length;
+			final Integer arrayLength;
 			final Integer precision;
 			final Integer scale;
 			final Integer temporalPrecision;
@@ -5397,6 +5409,7 @@ public abstract class AbstractEntityPersister
 				Column column = value.getColumns().get( 0 );
 				columnDefinition = column.getSqlType();
 				length = column.getLength();
+				arrayLength = column.getArrayLength();
 				precision = column.getPrecision();
 				temporalPrecision = column.getTemporalPrecision();
 				scale = column.getScale();
@@ -5420,10 +5433,15 @@ public abstract class AbstractEntityPersister
 							creationContext.getDialect(),
 							creationContext.getTypeConfiguration()
 					);
-					customWriteExpr = selectable.getWriteExpr( (JdbcMapping) attrType, creationContext.getDialect() );
+					customWriteExpr = selectable.getWriteExpr(
+							(JdbcMapping) attrType,
+							creationContext.getDialect(),
+							creationContext.getBootModel()
+					);
 					Column column = value.getColumns().get( 0 );
 					columnDefinition = column.getSqlType();
 					length = column.getLength();
+					arrayLength = column.getArrayLength();
 					precision = column.getPrecision();
 					temporalPrecision = column.getTemporalPrecision();
 					scale = column.getScale();
@@ -5439,6 +5457,7 @@ public abstract class AbstractEntityPersister
 					customWriteExpr = null;
 					columnDefinition = null;
 					length = null;
+					arrayLength = null;
 					precision = null;
 					temporalPrecision = null;
 					scale = null;
@@ -5463,6 +5482,7 @@ public abstract class AbstractEntityPersister
 					customWriteExpr,
 					columnDefinition,
 					length,
+					arrayLength,
 					precision,
 					scale,
 					temporalPrecision,

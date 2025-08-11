@@ -6,7 +6,9 @@ package org.hibernate.mapping;
 
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.type.MappingContext;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -70,8 +72,14 @@ public sealed interface Selectable permits Column, Formula {
 				: customWriteExpression;
 	}
 
-	@Incubating
+	@Deprecated(forRemoval = true, since = "7.2")
 	default String getWriteExpr(JdbcMapping jdbcMapping, Dialect dialect) {
-		return jdbcMapping.getJdbcType().wrapWriteExpression( getWriteExpr(), dialect );
+		return jdbcMapping.getJdbcType().wrapWriteExpression( getWriteExpr(), null, dialect );
+	}
+
+	@Incubating
+	default String getWriteExpr(JdbcMapping jdbcMapping, Dialect dialect, MappingContext mappingContext) {
+		final Size size = this instanceof Column column ? column.getColumnSize( dialect, mappingContext ) : null;
+		return jdbcMapping.getJdbcType().wrapWriteExpression( getWriteExpr(), size, dialect );
 	}
 }

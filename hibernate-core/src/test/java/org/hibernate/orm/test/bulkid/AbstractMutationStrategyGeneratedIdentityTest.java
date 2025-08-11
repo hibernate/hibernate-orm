@@ -12,6 +12,7 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
@@ -71,6 +72,7 @@ public abstract class AbstractMutationStrategyGeneratedIdentityTest extends Base
 	@Test
 	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "MySQL ignores a provided value for an auto_increment column if it's lower than the current sequence value")
 	@SkipForDialect(dialectClass = AbstractTransactSQLDialect.class, matchSubTypes = true, reason = "T-SQL complains IDENTITY_INSERT is off when a value for an identity column is provided")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix counts from 1 like a normal person")
 	public void testInsertStatic() {
 		doInHibernate( this::sessionFactory, session -> {
 			session.createQuery( "insert into Engineer(id, name, employed, fellow) values (0, :name, :employed, false)" )

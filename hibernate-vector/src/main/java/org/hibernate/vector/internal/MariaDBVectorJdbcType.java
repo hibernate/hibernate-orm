@@ -6,6 +6,7 @@ package org.hibernate.vector.internal;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -46,17 +47,21 @@ public class MariaDBVectorJdbcType extends ArrayJdbcType {
 	}
 
 	@Override
-	public void appendWriteExpression(String writeExpression, SqlAppender appender, Dialect dialect) {
+	public void appendWriteExpression(
+			String writeExpression,
+			@Nullable Size size,
+			SqlAppender appender,
+			Dialect dialect) {
 		appender.append( writeExpression );
 	}
 
 	@Override
-	public @Nullable String castFromPattern(JdbcMapping sourceMapping) {
+	public @Nullable String castFromPattern(JdbcMapping sourceMapping, @Nullable Size size) {
 		return sourceMapping.getJdbcType().isStringLike() ? "vec_fromtext(?1)" : null;
 	}
 
 	@Override
-	public @Nullable String castToPattern(JdbcMapping targetJdbcMapping) {
+	public @Nullable String castToPattern(JdbcMapping targetJdbcMapping, @Nullable Size size) {
 		return targetJdbcMapping.getJdbcType().isStringLike() ? "vec_totext(?1)" : null;
 	}
 

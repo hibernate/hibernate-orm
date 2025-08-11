@@ -689,6 +689,7 @@ abstract public class DialectFeatureChecks {
 								null,
 								null,
 								null,
+								null,
 								new BasicTypeImpl<>( StringJavaType.INSTANCE, VarcharJdbcType.INSTANCE )
 						),
 						new TypeConfiguration()
@@ -716,6 +717,7 @@ abstract public class DialectFeatureChecks {
 								null,
 								null,
 								null,
+								null,
 								new BasicTypeImpl<>( StringJavaType.INSTANCE, VarcharJdbcType.INSTANCE )
 						),
 						new TypeConfiguration()
@@ -739,6 +741,7 @@ abstract public class DialectFeatureChecks {
 						SqlTypes.SQLXML,
 						new SqlTypedMappingImpl(
 								"varchar",
+								null,
 								null,
 								null,
 								null,
@@ -1148,6 +1151,12 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsEuclideanDistance implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "euclidean_distance" );
+		}
+	}
+
+	public static class SupportsEuclideanSquaredDistance implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "euclidean_squared_distance" );
 		}
 	}
 

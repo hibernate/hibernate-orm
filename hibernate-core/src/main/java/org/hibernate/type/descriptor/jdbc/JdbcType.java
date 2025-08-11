@@ -181,8 +181,9 @@ public interface JdbcType extends Serializable {
 	/**
 	 * Wraps the write expression to be able to write values with this JdbcType's ValueBinder.
 	 * @since 6.2
+	 * @deprecated Use {@link #wrapWriteExpression(String, Size, Dialect)}
 	 */
-	@Incubating
+	@Deprecated(forRemoval = true, since = "7.2")
 	default String wrapWriteExpression(String writeExpression, Dialect dialect) {
 		final StringBuilder sb = new StringBuilder( writeExpression.length() );
 		appendWriteExpression( writeExpression, new StringBuilderSqlAppender( sb ), dialect );
@@ -192,10 +193,41 @@ public interface JdbcType extends Serializable {
 	/**
 	 * Append the write expression wrapped in a way to be able to write values with this JdbcType's ValueBinder.
 	 * @since 6.2
+	 * @deprecated Use {@link #appendWriteExpression(String, Size, SqlAppender, Dialect)} instead
 	 */
-	@Incubating
+	@Deprecated(forRemoval = true, since = "7.2")
 	default void appendWriteExpression(String writeExpression, SqlAppender appender, Dialect dialect) {
 		appender.append( writeExpression );
+	}
+
+	/**
+	 * Wraps the write expression to be able to write values with this JdbcType's ValueBinder.
+	 * @since 7.2
+	 */
+	@Incubating
+	default String wrapWriteExpression(String writeExpression, @Nullable Size size, Dialect dialect) {
+		final StringBuilder sb = new StringBuilder( writeExpression.length() );
+		appendWriteExpression( writeExpression, size, new StringBuilderSqlAppender( sb ), dialect );
+		return sb.toString();
+	}
+
+	/**
+	 * Append the write expression wrapped in a way to be able to write values with this JdbcType's ValueBinder.
+	 * @since 7.2
+	 */
+	@Incubating
+	default void appendWriteExpression(String writeExpression, @Nullable Size size, SqlAppender appender, Dialect dialect) {
+		appendWriteExpression( writeExpression, appender, dialect );
+	}
+
+	/**
+	 * Whether the write expression is typed.
+	 * This is used to determine if a parameter expression needs a cast in e.g. a select item context.
+	 * @since 7.2
+	 */
+	@Incubating
+	default boolean isWriteExpressionTyped(Dialect dialect) {
+		return false;
 	}
 
 	default boolean isInteger() {
@@ -373,11 +405,12 @@ public interface JdbcType extends Serializable {
 	 * Returns the cast pattern from the given source type to this type, or {@code null} if not possible.
 	 *
 	 * @param sourceMapping The source type
+	 * @param size The size of this target type
 	 * @return The cast pattern or null
-	 * @since 7.1
+	 * @since 7.2
 	 */
 	@Incubating
-	default @Nullable String castFromPattern(JdbcMapping sourceMapping) {
+	default @Nullable String castFromPattern(JdbcMapping sourceMapping, @Nullable Size size) {
 		return null;
 	}
 
@@ -385,11 +418,12 @@ public interface JdbcType extends Serializable {
 	 * Returns the cast pattern from this type to the given target type, or {@code null} if not possible.
 	 *
 	 * @param targetJdbcMapping The target type
+	 * @param size The size of this source type
 	 * @return The cast pattern or null
-	 * @since 7.1
+	 * @since 7.2
 	 */
 	@Incubating
-	default @Nullable String castToPattern(JdbcMapping targetJdbcMapping) {
+	default @Nullable String castToPattern(JdbcMapping targetJdbcMapping, @Nullable Size size) {
 		return null;
 	}
 

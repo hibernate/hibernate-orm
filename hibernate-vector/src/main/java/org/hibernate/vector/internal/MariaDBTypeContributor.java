@@ -20,14 +20,7 @@ import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import java.lang.reflect.Type;
-
 public class MariaDBTypeContributor implements TypeContributor {
-
-	private static final Type[] VECTOR_JAVA_TYPES = {
-			Float[].class,
-			float[].class
-	};
 
 	@Override
 	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
@@ -48,24 +41,22 @@ public class MariaDBTypeContributor implements TypeContributor {
 					SqlTypes.VECTOR_FLOAT32
 			);
 			jdbcTypeRegistry.addDescriptor( SqlTypes.VECTOR_FLOAT32, floatVectorJdbcType );
-			for ( Type vectorJavaType : VECTOR_JAVA_TYPES ) {
-				basicTypeRegistry.register(
-						new BasicArrayType<>(
-								floatBasicType,
-								genericVectorJdbcType,
-								javaTypeRegistry.getDescriptor( vectorJavaType )
-						),
-						StandardBasicTypes.VECTOR.getName()
-				);
-				basicTypeRegistry.register(
-						new BasicArrayType<>(
-								basicTypeRegistry.resolve( StandardBasicTypes.FLOAT ),
-								floatVectorJdbcType,
-								javaTypeRegistry.getDescriptor( vectorJavaType )
-						),
-						StandardBasicTypes.VECTOR_FLOAT32.getName()
-				);
-			}
+			basicTypeRegistry.register(
+					new BasicArrayType<>(
+							floatBasicType,
+							genericVectorJdbcType,
+							javaTypeRegistry.getDescriptor( float[].class )
+					),
+					StandardBasicTypes.VECTOR.getName()
+			);
+			basicTypeRegistry.register(
+					new BasicArrayType<>(
+							basicTypeRegistry.resolve( StandardBasicTypes.FLOAT ),
+							floatVectorJdbcType,
+							javaTypeRegistry.getDescriptor( float[].class )
+					),
+					StandardBasicTypes.VECTOR_FLOAT32.getName()
+			);
 			typeConfiguration.getDdlTypeRegistry().addDescriptor(
 					new VectorDdlType( SqlTypes.VECTOR, "vector($l)", "vector", dialect )
 			);

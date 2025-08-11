@@ -4,11 +4,8 @@
  */
 package org.hibernate.vector.internal;
 
-import java.lang.reflect.Type;
-
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
-import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -27,16 +24,10 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 public class PGVectorTypeContributor implements TypeContributor {
 
-	private static final Type[] VECTOR_JAVA_TYPES = {
-			Float[].class,
-			float[].class
-	};
-
 	@Override
 	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final Dialect dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
-		if ( dialect instanceof PostgreSQLDialect ||
-			dialect instanceof CockroachDialect ) {
+		if ( dialect instanceof PostgreSQLDialect ) {
 			final TypeConfiguration typeConfiguration = typeContributions.getTypeConfiguration();
 			final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 			final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
@@ -71,32 +62,30 @@ public class PGVectorTypeContributor implements TypeContributor {
 
 			javaTypeRegistry.addDescriptor( SparseFloatVectorJavaType.INSTANCE );
 
-			for ( Type vectorJavaType : VECTOR_JAVA_TYPES ) {
-				basicTypeRegistry.register(
-						new BasicArrayType<>(
-								floatBasicType,
-								genericVectorJdbcType,
-								javaTypeRegistry.getDescriptor( vectorJavaType )
-						),
-						StandardBasicTypes.VECTOR.getName()
-				);
-				basicTypeRegistry.register(
-						new BasicArrayType<>(
-								basicTypeRegistry.resolve( StandardBasicTypes.FLOAT ),
-								floatVectorJdbcType,
-								javaTypeRegistry.getDescriptor( vectorJavaType )
-						),
-						StandardBasicTypes.VECTOR_FLOAT32.getName()
-				);
-				basicTypeRegistry.register(
-						new BasicArrayType<>(
-								basicTypeRegistry.resolve( StandardBasicTypes.FLOAT ),
-								float16VectorJdbcType,
-								javaTypeRegistry.getDescriptor( vectorJavaType )
-						),
-						StandardBasicTypes.VECTOR_FLOAT16.getName()
-				);
-			}
+			basicTypeRegistry.register(
+					new BasicArrayType<>(
+							floatBasicType,
+							genericVectorJdbcType,
+							javaTypeRegistry.getDescriptor( float[].class )
+					),
+					StandardBasicTypes.VECTOR.getName()
+			);
+			basicTypeRegistry.register(
+					new BasicArrayType<>(
+							basicTypeRegistry.resolve( StandardBasicTypes.FLOAT ),
+							floatVectorJdbcType,
+							javaTypeRegistry.getDescriptor( float[].class )
+					),
+					StandardBasicTypes.VECTOR_FLOAT32.getName()
+			);
+			basicTypeRegistry.register(
+					new BasicArrayType<>(
+							basicTypeRegistry.resolve( StandardBasicTypes.FLOAT ),
+							float16VectorJdbcType,
+							javaTypeRegistry.getDescriptor( float[].class )
+					),
+					StandardBasicTypes.VECTOR_FLOAT16.getName()
+			);
 			basicTypeRegistry.register(
 					new BasicArrayType<>(
 							basicTypeRegistry.resolve( StandardBasicTypes.BYTE ),

@@ -181,6 +181,7 @@ public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 						null,
 						null,
 						null,
+						null,
 						typeConfiguration.getBasicTypeForJavaType( String.class )
 				),
 				typeConfiguration

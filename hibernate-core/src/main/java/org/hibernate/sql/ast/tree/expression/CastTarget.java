@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
@@ -15,33 +16,43 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  */
 public class CastTarget implements Expression, SqlAstNode, SqlTypedMapping {
 	private final JdbcMapping type;
-	private final String sqlType;
-	private final Long length;
-	private final Integer precision;
-	private final Integer scale;
+	private final @Nullable String sqlType;
+	private final @Nullable Long length;
+	private final @Nullable Integer arrayLength;
+	private final @Nullable Integer precision;
+	private final @Nullable Integer scale;
 
 	public CastTarget(JdbcMapping type) {
-		this( type, null, null, null );
+		this( type, null, null, null, null, null );
 	}
 
-	public CastTarget(JdbcMapping type, Long length, Integer precision, Integer scale) {
+	public CastTarget(JdbcMapping type, @Nullable Long length, @Nullable Integer precision, @Nullable Integer scale) {
 		this( type, null, length, precision, scale );
 	}
 
-	public CastTarget(JdbcMapping type, String sqlType, Long length, Integer precision, Integer scale) {
+	public CastTarget(JdbcMapping type, @Nullable Long length, @Nullable Integer arrayLength, @Nullable Integer precision, @Nullable Integer scale) {
+		this( type, null, length, arrayLength, precision, scale );
+	}
+
+	public CastTarget(JdbcMapping type, @Nullable String sqlType, @Nullable Long length, @Nullable Integer precision, @Nullable Integer scale) {
+		this( type, sqlType, length, null, precision, scale );
+	}
+
+	public CastTarget(JdbcMapping type, @Nullable String sqlType, @Nullable Long length, @Nullable Integer arrayLength, @Nullable Integer precision, @Nullable Integer scale) {
 		this.type = type;
 		this.sqlType = sqlType;
 		this.length = length;
+		this.arrayLength = arrayLength;
 		this.precision = precision;
 		this.scale = scale;
 	}
 
-	public String getSqlType() {
+	public @Nullable String getSqlType() {
 		return sqlType;
 	}
 
 	@Override
-	public String getColumnDefinition() {
+	public @Nullable String getColumnDefinition() {
 		return sqlType;
 	}
 
@@ -50,20 +61,28 @@ public class CastTarget implements Expression, SqlAstNode, SqlTypedMapping {
 		return type;
 	}
 
-	public Long getLength() {
+	@Override
+	public @Nullable Long getLength() {
 		return length;
 	}
 
-	public Integer getPrecision() {
+	@Override
+	public @Nullable Integer getArrayLength() {
+		return arrayLength;
+	}
+
+	@Override
+	public @Nullable Integer getPrecision() {
 		return precision;
 	}
 
 	@Override
-	public Integer getTemporalPrecision() {
+	public @Nullable Integer getTemporalPrecision() {
 		return null;
 	}
 
-	public Integer getScale() {
+	@Override
+	public @Nullable Integer getScale() {
 		return scale;
 	}
 

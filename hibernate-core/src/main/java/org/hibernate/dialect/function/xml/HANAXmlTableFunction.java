@@ -454,6 +454,7 @@ public class HANAXmlTableFunction extends XmlTableFunction {
 						null,
 						null,
 						null,
+						null,
 						false,
 						false,
 						false,

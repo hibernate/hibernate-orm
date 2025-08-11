@@ -146,7 +146,7 @@ public class BasicSortedSetTest {
 		scope.inSession( em -> {
 			final Dialect dialect = em.getDialect();
 			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
-			final String param = integerSortedSetType.getJdbcType().wrapWriteExpression( ":data", dialect );
+			final String param = integerSortedSetType.getJdbcType().wrapWriteExpression( ":data", null, dialect );
 			Query<TableWithIntegerSortedSet> tq = em.createNativeQuery(
 					"SELECT * FROM table_with_integer_sorted_set t WHERE the_sorted_set " + op + " " + param,
 					TableWithIntegerSortedSet.class

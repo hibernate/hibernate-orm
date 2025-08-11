@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -56,12 +57,13 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 	private final String table;
 	private final String column;
 	private final SelectablePath selectablePath;
-	private final String customReadExpression;
-	private final String customWriteExpression;
-	private final String columnDefinition;
-	private final Long length;
-	private final Integer precision;
-	private final Integer scale;
+	private final @Nullable String customReadExpression;
+	private final @Nullable String customWriteExpression;
+	private final @Nullable String columnDefinition;
+	private final @Nullable Long length;
+	private final @Nullable Integer arrayLength;
+	private final @Nullable Integer precision;
+	private final @Nullable Integer scale;
 
 	private final boolean insertable;
 	private final boolean updateable;
@@ -70,6 +72,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 	private final BasicType<?> underlyingJdbcMapping;
 	private final DiscriminatorConverter<?,?> valueConverter;
 
+	@Deprecated(forRemoval = true, since = "7.2")
 	public AnyDiscriminatorPart(
 			NavigableRole partRole,
 			DiscriminatedAssociationModelPart declaringType,
@@ -86,6 +89,49 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			boolean updateable,
 			boolean partitioned,
 			BasicType<?> underlyingJdbcMapping,
+			Map<Object, String> valueToEntityNameMap,
+			ImplicitDiscriminatorStrategy implicitValueStrategy,
+			MappingMetamodelImplementor mappingMetamodel) {
+		this(
+				partRole,
+				declaringType,
+				table,
+				column,
+				selectablePath,
+				customReadExpression,
+				customWriteExpression,
+				columnDefinition,
+				length,
+				null,
+				precision,
+				scale,
+				insertable,
+				updateable,
+				partitioned,
+				underlyingJdbcMapping,
+				valueToEntityNameMap,
+				implicitValueStrategy,
+				mappingMetamodel
+		);
+	}
+
+	public AnyDiscriminatorPart(
+			NavigableRole partRole,
+			DiscriminatedAssociationModelPart declaringType,
+			String table,
+			String column,
+			SelectablePath selectablePath,
+			@Nullable String customReadExpression,
+			@Nullable String customWriteExpression,
+			@Nullable String columnDefinition,
+			@Nullable Long length,
+			@Nullable Integer arrayLength,
+			@Nullable Integer precision,
+			@Nullable Integer scale,
+			boolean insertable,
+			boolean updateable,
+			boolean partitioned,
+			BasicType<?> underlyingJdbcMapping,
 			Map<Object,String> valueToEntityNameMap,
 			ImplicitDiscriminatorStrategy implicitValueStrategy,
 			MappingMetamodelImplementor mappingMetamodel) {
@@ -98,6 +144,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 		this.customWriteExpression = customWriteExpression;
 		this.columnDefinition = columnDefinition;
 		this.length = length;
+		this.arrayLength = arrayLength;
 		this.precision = precision;
 		this.scale = scale;
 		this.insertable = insertable;
@@ -184,37 +231,42 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 	}
 
 	@Override
-	public String getCustomReadExpression() {
+	public @Nullable String getCustomReadExpression() {
 		return customReadExpression;
 	}
 
 	@Override
-	public String getCustomWriteExpression() {
+	public @Nullable String getCustomWriteExpression() {
 		return customWriteExpression;
 	}
 
 	@Override
-	public String getColumnDefinition() {
+	public @Nullable String getColumnDefinition() {
 		return columnDefinition;
 	}
 
 	@Override
-	public Long getLength() {
+	public @Nullable Long getLength() {
 		return length;
 	}
 
 	@Override
-	public Integer getPrecision() {
+	public @Nullable Integer getArrayLength() {
+		return arrayLength;
+	}
+
+	@Override
+	public @Nullable Integer getPrecision() {
 		return precision;
 	}
 
 	@Override
-	public Integer getTemporalPrecision() {
+	public @Nullable Integer getTemporalPrecision() {
 		return null;
 	}
 
 	@Override
-	public Integer getScale() {
+	public @Nullable Integer getScale() {
 		return scale;
 	}
 

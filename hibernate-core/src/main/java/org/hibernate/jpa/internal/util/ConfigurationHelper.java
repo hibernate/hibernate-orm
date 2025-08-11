@@ -10,7 +10,6 @@ import java.util.Properties;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.PersistenceException;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 
@@ -20,9 +19,11 @@ import org.hibernate.FlushMode;
 public abstract class ConfigurationHelper {
 
 	public static void overrideProperties(Properties properties, Map<?,?> overrides) {
-		for ( Map.Entry<?,?> entry : overrides.entrySet() ) {
-			if ( entry.getKey() != null && entry.getValue() != null ) {
-				properties.put( entry.getKey(), entry.getValue() );
+		for ( var entry : overrides.entrySet() ) {
+			final Object key = entry.getKey();
+			final Object value = entry.getValue();
+			if ( key != null && value != null ) {
+				properties.put( key, value );
 			}
 		}
 	}
@@ -54,14 +55,10 @@ public abstract class ConfigurationHelper {
 	}
 
 	private static FlushMode getFlushMode(FlushModeType flushMode)  {
-		switch ( flushMode ) {
-			case AUTO:
-				return FlushMode.AUTO;
-			case COMMIT:
-				return FlushMode.COMMIT;
-			default:
-				throw new AssertionFailure( "Unknown FlushModeType: " + flushMode );
-		}
+		return switch ( flushMode ) {
+			case AUTO -> FlushMode.AUTO;
+			case COMMIT -> FlushMode.COMMIT;
+		};
 	}
 
 	public static Integer getInteger(Object value) {

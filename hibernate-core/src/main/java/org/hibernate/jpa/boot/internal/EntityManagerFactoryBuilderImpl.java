@@ -7,10 +7,8 @@ package org.hibernate.jpa.boot.internal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.function.Consumer;
 import javax.sql.DataSource;
@@ -24,11 +22,6 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
 import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
-import org.hibernate.boot.cfgxml.spi.LoadedConfig;
-import org.hibernate.boot.cfgxml.spi.MappingReference;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
-import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -40,7 +33,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataBuilderContributor;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;
@@ -55,10 +47,8 @@ import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
 import org.hibernate.jpa.boot.spi.JpaSettings;
@@ -80,6 +70,7 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.PersistenceUnitTransactionType;
 
+import static jakarta.persistence.PersistenceUnitTransactionType.JTA;
 import static java.lang.Boolean.parseBoolean;
 import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.cfg.AvailableSettings.CFG_XML_FILE;
@@ -119,10 +110,13 @@ import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_DIRTY_TRACKING;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION;
 import static org.hibernate.cfg.TransactionSettings.FLUSH_BEFORE_COMPLETION;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
+import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.split;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
+import static org.hibernate.jpa.internal.util.ConfigurationHelper.getBoolean;
 import static org.hibernate.jpa.internal.util.LogHelper.logPersistenceUnitInformation;
 import static org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper.interpretTransactionType;
 
@@ -213,13 +207,12 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		this.persistenceUnit = persistenceUnit;
 
 		// Build the bootstrap service registry, which mainly handles classloader interactions
-		final BootstrapServiceRegistry bootstrapServiceRegistry =
+		final var bootstrapServiceRegistry =
 				buildBootstrapServiceRegistry( mergedIntegrationSettings( persistenceUnit, integrationSettings ),
 						providedClassLoader, providedClassLoaderService );
 		try {
 			// merge configuration sources and build the "standard" service registry
-			final StandardServiceRegistryBuilder registryBuilder =
-					getStandardServiceRegistryBuilder( bootstrapServiceRegistry );
+			final var registryBuilder = getStandardServiceRegistryBuilder( bootstrapServiceRegistry );
 			final MergedSettings mergedSettings =
 					mergeSettings( persistenceUnit, integrationSettings, registryBuilder, mergedSettingsBaseline );
 			ignoreFlushBeforeCompletion( mergedSettings );
@@ -228,7 +221,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			// Build the "standard" service registry
 			registryBuilder.applySettings( configurationValues );
 			standardServiceRegistry = registryBuilder.build();
-			final MetadataSources metadataSources = new MetadataSources( standardServiceRegistry );
+			final var metadataSources = new MetadataSources( standardServiceRegistry );
 			metamodelBuilder =
 					(MetadataBuilderImplementor)
 							metadataSources.getMetadataBuilder( standardServiceRegistry );
@@ -252,7 +245,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	private static Map<String, Object> mergedIntegrationSettings(
 			PersistenceUnitDescriptor persistenceUnit, Map<String, Object> integrationSettings) {
-		final Properties properties = persistenceUnit.getProperties();
+		final var properties = persistenceUnit.getProperties();
 		if ( properties != null ) {
 			// original integration setting entries take precedence
 			final Map<String,Object> mergedIntegrationSettings =
@@ -272,22 +265,23 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	private static void ignoreFlushBeforeCompletion(MergedSettings mergedSettings) {
 		// flush before completion validation
-		if ( "true".equals( mergedSettings.getConfigurationValues().get( FLUSH_BEFORE_COMPLETION ) ) ) {
+		final var config = mergedSettings.getConfigurationValues();
+		if ( getBoolean( FLUSH_BEFORE_COMPLETION, config, false ) ) {
 			log.definingFlushBeforeCompletionIgnoredInHem( FLUSH_BEFORE_COMPLETION );
-			mergedSettings.getConfigurationValues().put( FLUSH_BEFORE_COMPLETION, "false" );
+			config.put( FLUSH_BEFORE_COMPLETION, String.valueOf(false) );
 		}
 	}
 
 	private void setupMappingReferences(MetadataSources metadataSources) {
 		// todo : would be nice to have MetadataBuilder still do the handling of CfgXmlAccessService here
 		//		another option is to immediately handle them here (probably in mergeSettings?) as we encounter them...
-		final LoadedConfig aggregatedConfig =
+		final var aggregatedConfig =
 				standardServiceRegistry.requireService( CfgXmlAccessService.class )
 						.getAggregatedConfig();
 		if ( aggregatedConfig != null ) {
-			final List<MappingReference> mappingReferences = aggregatedConfig.getMappingReferences();
+			final var mappingReferences = aggregatedConfig.getMappingReferences();
 			if ( mappingReferences != null ) {
-				for ( MappingReference mappingReference : mappingReferences ) {
+				for ( var mappingReference : mappingReferences ) {
 					mappingReference.apply( metadataSources );
 				}
 			}
@@ -324,16 +318,16 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		if ( dirtyTrackingEnabled || lazyInitializationEnabled || associationManagementEnabled ) {
-			final EnhancementContext enhancementContext =
+			final var enhancementContext =
 					getEnhancementContext( dirtyTrackingEnabled,
 							lazyInitializationEnabled,
 							associationManagementEnabled );
 			// push back class transformation to the environment; for the time being this only has any effect in EE
 			// container situations, calling back into PersistenceUnitInfo#addClassTransformer
 			persistenceUnit.pushClassTransformer( enhancementContext );
-			final ClassTransformer classTransformer = persistenceUnit.getClassTransformer();
+			final var classTransformer = persistenceUnit.getClassTransformer();
 			if ( classTransformer != null ) {
-				final ClassLoader classLoader = persistenceUnit.getTempClassLoader();
+				final var classLoader = persistenceUnit.getTempClassLoader();
 				if ( classLoader == null ) {
 					throw new PersistenceException( "Enhancement requires a temp class loader, but none was given"
 							+ exceptionHeader() );
@@ -345,10 +339,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	private static void discoverTypesToTransform(
 			MetadataSources metadataSources, ClassTransformer classTransformer, ClassLoader classLoader) {
-		for ( Binding<JaxbHbmHibernateMapping> binding : metadataSources.getHbmXmlBindings() ) {
-			final JaxbHbmHibernateMapping hibernateMapping = binding.getRoot();
+		for ( var binding : metadataSources.getHbmXmlBindings() ) {
+			final var hibernateMapping = binding.getRoot();
 			final String packageName = hibernateMapping.getPackage();
-			for ( JaxbHbmRootEntityType clazz : hibernateMapping.getClazz() ) {
+			for ( var clazz : hibernateMapping.getClazz() ) {
 				final String className =
 						packageName == null || packageName.isEmpty()
 								? clazz.getName()
@@ -384,7 +378,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private void applyMetadataBuilderContributor() {
 		final Object metadataBuilderContributorSetting = configurationValues.get( METADATA_BUILDER_CONTRIBUTOR );
 		if ( metadataBuilderContributorSetting != null ) {
-			final MetadataBuilderContributor metadataBuilderContributor = loadSettingInstance(
+			final var metadataBuilderContributor = loadSettingInstance(
 					METADATA_BUILDER_CONTRIBUTOR,
 					metadataBuilderContributorSetting,
 					MetadataBuilderContributor.class
@@ -426,9 +420,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			final boolean associationManagementEnabled ) {
 		final Object propValue = configurationValues.get( BYTECODE_PROVIDER_INSTANCE );
 		if ( propValue != null && ( ! ( propValue instanceof BytecodeProvider ) ) ) {
-			throw new PersistenceException( "Property " + BYTECODE_PROVIDER_INSTANCE + " was set to '" + propValue + "', which is not compatible with the expected type " + BytecodeProvider.class );
+			throw new PersistenceException( "Property " + BYTECODE_PROVIDER_INSTANCE + " was set to '" + propValue
+							+ "', which is not compatible with the expected type " + BytecodeProvider.class );
 		}
-		final BytecodeProvider overriddenBytecodeProvider = (BytecodeProvider) propValue;
+		final var overriddenBytecodeProvider = (BytecodeProvider) propValue;
 		return new DefaultEnhancementContext() {
 
 			@Override
@@ -488,12 +483,13 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			Map<?,?> integrationSettings,
 			ClassLoader providedClassLoader,
 			ClassLoaderService providedClassLoaderService) {
-		final BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
+		final var builder = new BootstrapServiceRegistryBuilder();
 		applyIntegrationProvider( integrationSettings, builder );
-		final StrategyRegistrationProviderList strategyRegistrationProviderList
-				= (StrategyRegistrationProviderList) integrationSettings.get( STRATEGY_REGISTRATION_PROVIDERS );
+		final var strategyRegistrationProviderList =
+				(StrategyRegistrationProviderList)
+						integrationSettings.get( STRATEGY_REGISTRATION_PROVIDERS );
 		if ( strategyRegistrationProviderList != null ) {
-			for ( StrategyRegistrationProvider strategyRegistrationProvider :
+			for ( var strategyRegistrationProvider :
 					strategyRegistrationProviderList.getStrategyRegistrationProviders() ) {
 				builder.applyStrategySelectors( strategyRegistrationProvider );
 			}
@@ -525,9 +521,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 			applyConfiguredClassLoaders( integrationSettings, registryBuilder );
 			//configurationValues not assigned yet, using directly the properties of the PU
-			final Properties puProperties = persistenceUnit.getProperties();
-			if ( puProperties != null ) {
-				final TcclLookupPrecedence tcclLookupPrecedence = TcclLookupPrecedence.from( puProperties );
+			final var unitProperties = persistenceUnit.getProperties();
+			if ( unitProperties != null ) {
+				final TcclLookupPrecedence tcclLookupPrecedence = TcclLookupPrecedence.from( unitProperties );
 				if ( tcclLookupPrecedence != null ) {
 					registryBuilder.applyTcclLookupPrecedence( tcclLookupPrecedence );
 				}
@@ -541,8 +537,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		if ( classLoadersSetting != null ) {
 			if ( classLoadersSetting instanceof Collection ) {
 				@SuppressWarnings("unchecked")
-				final Collection<ClassLoader> classLoaders =
-						(Collection<ClassLoader>) classLoadersSetting;
+				final var classLoaders = (Collection<ClassLoader>) classLoadersSetting;
 				for ( ClassLoader classLoader : classLoaders ) {
 					registryBuilder.applyClassLoader( classLoader );
 				}
@@ -562,10 +557,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			Map<?,?> integrationSettings, BootstrapServiceRegistryBuilder registryBuilder) {
 		final Object integrationSetting = integrationSettings.get( INTEGRATOR_PROVIDER );
 		if ( integrationSetting != null ) {
-			final IntegratorProvider integratorProvider =
+			final var integratorProvider =
 					loadSettingInstance( INTEGRATOR_PROVIDER, integrationSetting, IntegratorProvider.class );
 			if ( integratorProvider != null ) {
-				for ( Integrator integrator : integratorProvider.getIntegrators() ) {
+				for ( var integrator : integratorProvider.getIntegrators() ) {
 					registryBuilder.applyIntegrator( integrator );
 				}
 			}
@@ -577,7 +572,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			Map<String,Object> integrationSettings,
 			StandardServiceRegistryBuilder registryBuilder,
 			Consumer<MergedSettings> mergedSettingsBaseline) {
-		final MergedSettings mergedSettings = new MergedSettings();
+		final var mergedSettings = new MergedSettings();
 		if ( mergedSettingsBaseline != null ) {
 			mergedSettingsBaseline.accept( mergedSettings );
 		}
@@ -596,16 +591,16 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		//		2) additional cache region declarations
 		//
 		// we will also clean up any references with null entries
-		final Iterator<Map.Entry<String,Object>> iterator =
-				mergedSettings.getConfigurationValues().entrySet().iterator();
+		final var iterator = mergedSettings.getConfigurationValues().entrySet().iterator();
 		while ( iterator.hasNext() ) {
-			final Map.Entry<String,Object> entry = iterator.next();
-			if ( entry.getValue() == null ) {
+			final var entry = iterator.next();
+			final Object value = entry.getValue();
+			if ( value == null ) {
 				// remove entries with null values
 				iterator.remove();
 				break; //TODO: this looks wrong!
 			}
-			else if ( entry.getValue() instanceof String valueString ) {
+			else if ( value instanceof String valueString ) {
 				handleCacheRegionDefinition( valueString, entry.getKey(), mergedSettings );
 			}
 		}
@@ -724,7 +719,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private void normalizeConnectionAccessUserAndPass(
 			Map<?, ?> integrationSettingsCopy,
 			MergedSettings mergedSettings) {
-		final Object effectiveUser = NullnessHelper.coalesceSuppliedValues(
+		final Object effectiveUser = coalesceSuppliedValues(
 				() -> integrationSettingsCopy.remove( USER ),
 				() -> integrationSettingsCopy.remove( JAKARTA_JDBC_USER ),
 				() -> {
@@ -745,7 +740,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				}
 		);
 
-		final Object effectivePass = NullnessHelper.coalesceSuppliedValues(
+		final Object effectivePass = coalesceSuppliedValues(
 				() -> integrationSettingsCopy.remove( PASS ),
 				() -> integrationSettingsCopy.remove( JAKARTA_JDBC_PASSWORD ),
 				() -> {
@@ -774,13 +769,13 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	private <T> T extractPuProperty(PersistenceUnitDescriptor persistenceUnit, String propertyName) {
-		final Properties properties = persistenceUnit.getProperties();
+		final var properties = persistenceUnit.getProperties();
 		//noinspection unchecked
 		return properties == null ? null : (T) properties.get( propertyName );
 	}
 
 	private void applyUserAndPass(Object effectiveUser, Object effectivePass, MergedSettings mergedSettings) {
-		final Map<String, Object> configuration = mergedSettings.getConfigurationValues();
+		final var configuration = mergedSettings.getConfigurationValues();
 		if ( effectiveUser != null ) {
 			configuration.put( USER, effectiveUser );
 			configuration.put( JAKARTA_JDBC_USER, effectiveUser );
@@ -799,8 +794,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			PersistenceUnitDescriptor persistenceUnit,
 			Map<?, ?> integrationSettingsCopy,
 			MergedSettings mergedSettings) {
-		final PersistenceUnitTransactionType txnType =
-				determineTransactionType( persistenceUnit, integrationSettingsCopy, mergedSettings );
+		final var txnType = determineTransactionType( persistenceUnit, integrationSettingsCopy, mergedSettings );
 		final boolean definiteJtaCoordinator =
 				mergedSettings.getConfigurationValues().containsKey( TRANSACTION_COORDINATOR_STRATEGY )
 						? handeTransactionCoordinatorStrategy( mergedSettings )
@@ -809,37 +803,37 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	private static boolean handeTransactionCoordinatorStrategy(MergedSettings mergedSettings) {
-		final boolean definiteJtaCoordinator;
 		log.overridingTransactionStrategyDangerous( TRANSACTION_COORDINATOR_STRATEGY );
 		// see if we can tell whether it is a JTA coordinator
-		final Object strategy =
-				mergedSettings.getConfigurationValues().get( TRANSACTION_COORDINATOR_STRATEGY );
-		definiteJtaCoordinator =
-				strategy instanceof TransactionCoordinatorBuilder transactionCoordinatorBuilder
-						&& transactionCoordinatorBuilder.isJta();
-		return definiteJtaCoordinator;
+		final Object strategy = mergedSettings.getConfigurationValues().get( TRANSACTION_COORDINATOR_STRATEGY );
+		return strategy instanceof TransactionCoordinatorBuilder transactionCoordinatorBuilder
+			&& transactionCoordinatorBuilder.isJta();
 	}
 
 	private static boolean handleTransactionType(MergedSettings mergedSettings, PersistenceUnitTransactionType txnType) {
-		switch (txnType) {
-			case JTA:
-				mergedSettings.getConfigurationValues()
-						.put( TRANSACTION_COORDINATOR_STRATEGY,
-								JtaTransactionCoordinatorBuilderImpl.class );
-				return true;
-			case RESOURCE_LOCAL:
-				mergedSettings.getConfigurationValues()
-						.put( TRANSACTION_COORDINATOR_STRATEGY,
-								JdbcResourceLocalTransactionCoordinatorBuilderImpl.class );
-				return false;
-			default:
-				throw new IllegalStateException( "Could not determine TransactionCoordinator strategy to use" );
-		}
+		final boolean isJtaTransactionType = txnType == JTA;
+		mergedSettings.getConfigurationValues()
+				.put( TRANSACTION_COORDINATOR_STRATEGY, isJtaTransactionType
+						? JtaTransactionCoordinatorBuilderImpl.class
+						: JdbcResourceLocalTransactionCoordinatorBuilderImpl.class );
+		return isJtaTransactionType;
 	}
 
 	private static PersistenceUnitTransactionType determineTransactionType(
 			PersistenceUnitDescriptor persistenceUnit, Map<?, ?> integrationSettingsCopy, MergedSettings mergedSettings) {
+		final var txnType = configuredTransactionType( persistenceUnit, integrationSettingsCopy, mergedSettings );
+		if ( txnType == null ) {
+			// is it more appropriate to have this be based on bootstrap entry point (EE vs SE)?
+			log.debug( "PersistenceUnitTransactionType not specified - falling back to RESOURCE_LOCAL" );
+			return PersistenceUnitTransactionType.RESOURCE_LOCAL;
+		}
+		else {
+			return txnType;
+		}
+	}
 
+	private static PersistenceUnitTransactionType configuredTransactionType(
+			PersistenceUnitDescriptor persistenceUnit, Map<?, ?> integrationSettingsCopy, MergedSettings mergedSettings) {
 		Object intgTxnType = integrationSettingsCopy.remove( JAKARTA_TRANSACTION_TYPE );
 		if ( intgTxnType == null ) {
 			intgTxnType = integrationSettingsCopy.remove( JPA_TRANSACTION_TYPE );
@@ -848,31 +842,25 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 		}
 
-		PersistenceUnitTransactionType txnType = null;
 		if ( intgTxnType != null ) {
-			txnType = interpretTransactionType( intgTxnType );
-		}
-		else if ( persistenceUnit.getPersistenceUnitTransactionType() != null ) {
-			txnType = persistenceUnit.getPersistenceUnitTransactionType();
+			return interpretTransactionType( intgTxnType );
 		}
 		else {
-			Object puPropTxnType = mergedSettings.getConfigurationValues().get( JAKARTA_TRANSACTION_TYPE );
-			if ( puPropTxnType == null ) {
-				puPropTxnType = mergedSettings.getConfigurationValues().get( JPA_TRANSACTION_TYPE );
-				if ( puPropTxnType != null ) {
-					DEPRECATION_LOGGER.deprecatedSetting( JPA_TRANSACTION_TYPE, JAKARTA_TRANSACTION_TYPE );
+			final var persistenceUnitTransactionType = persistenceUnit.getPersistenceUnitTransactionType();
+			if ( persistenceUnitTransactionType != null ) {
+				return persistenceUnitTransactionType;
+			}
+			else {
+				Object puPropTxnType = mergedSettings.getConfigurationValues().get( JAKARTA_TRANSACTION_TYPE );
+				if ( puPropTxnType == null ) {
+					puPropTxnType = mergedSettings.getConfigurationValues().get( JPA_TRANSACTION_TYPE );
+					if ( puPropTxnType != null ) {
+						DEPRECATION_LOGGER.deprecatedSetting( JPA_TRANSACTION_TYPE, JAKARTA_TRANSACTION_TYPE );
+					}
 				}
-			}
-			if ( puPropTxnType != null ) {
-				txnType = interpretTransactionType( puPropTxnType );
+				return puPropTxnType == null ? null : interpretTransactionType( puPropTxnType );
 			}
 		}
-		if ( txnType == null ) {
-			// is it more appropriate to have this be based on bootstrap entry point (EE vs SE)?
-			log.debug( "PersistenceUnitTransactionType not specified - falling back to RESOURCE_LOCAL" );
-			txnType = PersistenceUnitTransactionType.RESOURCE_LOCAL;
-		}
-		return txnType;
 	}
 
 	private void normalizeDataAccess(
@@ -929,28 +917,28 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			return;
 		}
 
+		final var configuration = mergedSettings.getConfigurationValues();
+
 		if ( integrationSettingsCopy.containsKey( URL ) ) {
 			// hibernate-specific settings have precedence over the JPA ones
 			final Object integrationJdbcUrl = integrationSettingsCopy.get( URL );
 			if ( integrationJdbcUrl != null ) {
 				applyJdbcSettings(
 						integrationJdbcUrl,
-						NullnessHelper.coalesceSuppliedValues(
+						coalesceSuppliedValues(
 								() -> getString( DRIVER, integrationSettingsCopy ),
 								() -> getString( JAKARTA_JDBC_DRIVER, integrationSettingsCopy ),
 								() -> {
-									final String driver =
-											getString( JPA_JDBC_DRIVER, integrationSettingsCopy );
+									final String driver = getString( JPA_JDBC_DRIVER, integrationSettingsCopy );
 									if ( driver != null ) {
 										DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_DRIVER, JAKARTA_JDBC_DRIVER );
 									}
 									return driver;
 								},
-								() -> getString( DRIVER, mergedSettings.getConfigurationValues()),
-								() -> getString( JAKARTA_JDBC_DRIVER, mergedSettings.getConfigurationValues()),
+								() -> getString( DRIVER, configuration ),
+								() -> getString( JAKARTA_JDBC_DRIVER, configuration ),
 								() -> {
-									final String driver =
-											getString( JPA_JDBC_DRIVER, mergedSettings.getConfigurationValues());
+									final String driver = getString( JPA_JDBC_DRIVER, configuration );
 									if ( driver != null ) {
 										DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_DRIVER, JAKARTA_JDBC_DRIVER );
 									}
@@ -970,9 +958,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			if ( integrationJdbcUrl != null ) {
 				applyJdbcSettings(
 						integrationJdbcUrl,
-						NullnessHelper.coalesceSuppliedValues(
+						coalesceSuppliedValues(
 								() -> getString( JAKARTA_JDBC_DRIVER, integrationSettingsCopy ),
-								() -> getString( JAKARTA_JDBC_DRIVER, mergedSettings.getConfigurationValues())
+								() -> getString( JAKARTA_JDBC_DRIVER, configuration )
 						),
 						integrationSettingsCopy,
 						mergedSettings
@@ -988,18 +976,16 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			if ( integrationJdbcUrl != null ) {
 				applyJdbcSettings(
 						integrationJdbcUrl,
-						NullnessHelper.coalesceSuppliedValues(
+						coalesceSuppliedValues(
 								() -> {
-									final String driver =
-											getString( JPA_JDBC_DRIVER, integrationSettingsCopy );
+									final String driver = getString( JPA_JDBC_DRIVER, integrationSettingsCopy );
 									if ( driver != null ) {
 										DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_DRIVER, JAKARTA_JDBC_DRIVER );
 									}
 									return driver;
 								},
 								() -> {
-									final String driver =
-											getString( JPA_JDBC_DRIVER, mergedSettings.getConfigurationValues());
+									final String driver = getString( JPA_JDBC_DRIVER, configuration );
 									if ( driver != null ) {
 										DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_DRIVER, JAKARTA_JDBC_DRIVER );
 									}
@@ -1014,26 +1000,26 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 		}
 
-		if ( persistenceUnit.getJtaDataSource() != null ) {
-			applyDataSource( persistenceUnit.getJtaDataSource(),
-					true, integrationSettingsCopy, mergedSettings );
+		final Object jtaDataSource = persistenceUnit.getJtaDataSource();
+		if ( jtaDataSource != null ) {
+			applyDataSource( jtaDataSource, true, integrationSettingsCopy, mergedSettings );
 			// EARLY EXIT!!
 			return;
 		}
 
-		if ( persistenceUnit.getNonJtaDataSource() != null ) {
-			applyDataSource( persistenceUnit.getNonJtaDataSource(),
-					false, integrationSettingsCopy, mergedSettings );
+		final Object nonJtaDataSource = persistenceUnit.getNonJtaDataSource();
+		if ( nonJtaDataSource != null ) {
+			applyDataSource( nonJtaDataSource, false, integrationSettingsCopy, mergedSettings );
 			// EARLY EXIT!!
 			return;
 		}
 
-		if ( mergedSettings.getConfigurationValues().containsKey( URL ) ) {
-			final Object url = mergedSettings.getConfigurationValues().get( URL );
-			if ( url != null && ( ! ( url instanceof String stringUrl ) || isNotEmpty( stringUrl ) ) ) {
+		if ( configuration.containsKey( URL ) ) {
+			final Object url = configuration.get( URL );
+			if ( url != null && !( url instanceof String stringUrl && isEmpty( stringUrl ) ) ) {
 				applyJdbcSettings(
 						url,
-						getString( DRIVER, mergedSettings.getConfigurationValues()),
+						getString( DRIVER, configuration ),
 						integrationSettingsCopy,
 						mergedSettings
 				);
@@ -1042,12 +1028,12 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 		}
 
-		if ( mergedSettings.getConfigurationValues().containsKey( JAKARTA_JDBC_URL ) ) {
-			final Object url = mergedSettings.getConfigurationValues().get( JAKARTA_JDBC_URL );
-			if ( url != null && ( ! ( url instanceof String stringUrl ) || isNotEmpty( stringUrl ) ) ) {
+		if ( configuration.containsKey( JAKARTA_JDBC_URL ) ) {
+			final Object url = configuration.get( JAKARTA_JDBC_URL );
+			if ( url != null && !( url instanceof String stringUrl && isEmpty( stringUrl ) ) ) {
 				applyJdbcSettings(
 						url,
-						getString( JAKARTA_JDBC_DRIVER, mergedSettings.getConfigurationValues()),
+						getString( JAKARTA_JDBC_DRIVER, configuration ),
 						integrationSettingsCopy,
 						mergedSettings
 				);
@@ -1056,23 +1042,17 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 		}
 
-		if ( mergedSettings.getConfigurationValues().containsKey( JPA_JDBC_URL ) ) {
+		if ( configuration.containsKey( JPA_JDBC_URL ) ) {
 			DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_URL, JAKARTA_JDBC_URL );
-			final Object url = mergedSettings.getConfigurationValues().get( JPA_JDBC_URL );
-			if ( url != null && ( !( url instanceof String stringUrl ) || isNotEmpty( stringUrl ) ) ) {
-				final String driver =
-						getString( JPA_JDBC_DRIVER, mergedSettings.getConfigurationValues());
+			final Object url = configuration.get( JPA_JDBC_URL );
+			if ( url != null && !( url instanceof String stringUrl && isEmpty( stringUrl ) ) ) {
+				final String driver = getString( JPA_JDBC_DRIVER, configuration );
 				if ( driver != null ) {
 					DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_DRIVER, JAKARTA_JDBC_DRIVER );
 				}
 				applyJdbcSettings( url, driver, integrationSettingsCopy, mergedSettings );
-				// EARLY EXIT!!
-				//noinspection UnnecessaryReturnStatement
-				return;
 			}
 		}
-
-		// any other conditions to account for?
 	}
 
 	private void applyDataSource(
@@ -1211,15 +1191,16 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			StandardServiceRegistryBuilder serviceRegistryBuilder,
 			MergedSettings mergedSettings,
 			String cfgXmlResourceName) {
-		final LoadedConfig loadedConfig =
-				serviceRegistryBuilder.getConfigLoader().loadConfigXmlResource( cfgXmlResourceName );
+		final var loadedConfig =
+				serviceRegistryBuilder.getConfigLoader()
+						.loadConfigXmlResource( cfgXmlResourceName );
 		mergedSettings.processHibernateConfigXmlResources( loadedConfig );
 		serviceRegistryBuilder.getAggregatedCfgXml().merge( loadedConfig );
 	}
 
 	private CacheRegionDefinition parseCacheRegionDefinitionEntry(
 			String role, String value, CacheRegionType cacheType) {
-		final StringTokenizer params = new StringTokenizer( value, ";, " );
+		final var params = new StringTokenizer( value, ";, " );
 		if ( !params.hasMoreTokens() ) {
 			throw illegalCacheRegionDefinitionException( role, value, cacheType );
 		}
@@ -1346,14 +1327,15 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			List<ConverterDescriptor<?,?>> converterDescriptors) {
 		metamodelBuilder.getBootstrapContext().markAsJpaBootstrap();
 
-		if ( persistenceUnit.getTempClassLoader() != null ) {
-			metamodelBuilder.applyTempClassLoader( persistenceUnit.getTempClassLoader() );
+		final var tempClassLoader = persistenceUnit.getTempClassLoader();
+		if ( tempClassLoader != null ) {
+			metamodelBuilder.applyTempClassLoader( tempClassLoader );
 		}
 
 		metamodelBuilder.applyScanEnvironment( new StandardJpaScanEnvironmentImpl( persistenceUnit ) );
 		metamodelBuilder.applyScanOptions( getScanOptions() );
 
-		final List<CacheRegionDefinition> cacheRegionDefinitions = mergedSettings.getCacheRegionDefinitions();
+		final var cacheRegionDefinitions = mergedSettings.getCacheRegionDefinitions();
 		if ( cacheRegionDefinitions != null ) {
 			cacheRegionDefinitions.forEach( metamodelBuilder::applyCacheRegionDefinition );
 		}
@@ -1373,8 +1355,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	private void applyTypeContributors() {
-		final TypeContributorList typeContributorList =
-				(TypeContributorList) configurationValues.remove( TYPE_CONTRIBUTORS );
+		final var typeContributorList =
+				(TypeContributorList)
+						configurationValues.remove( TYPE_CONTRIBUTORS );
 		if ( typeContributorList != null ) {
 			typeContributorList.getTypeContributors().forEach( metamodelBuilder::applyTypes );
 		}
@@ -1438,11 +1421,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	private void cleanup() {
-		// Stop and de-register the ConnectionProvider to prevent connections lying around
+		// Stop and deregister the ConnectionProvider to prevent connections lying around
 		if ( standardServiceRegistry instanceof ServiceRegistryImplementor serviceRegistry
 				&& standardServiceRegistry instanceof ServiceBinding.ServiceLifecycleOwner lifecycleOwner ) {
-			final ServiceBinding<ConnectionProvider> binding =
-					serviceRegistry.locateServiceBinding( ConnectionProvider.class );
+			final var binding = serviceRegistry.locateServiceBinding( ConnectionProvider.class );
 			if ( binding != null && binding.getService() instanceof Stoppable ) {
 				lifecycleOwner.stopService( binding );
 				binding.setService( null );
@@ -1472,9 +1454,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	public EntityManagerFactory build() {
 		boolean success = false;
 		try {
-			final SessionFactoryBuilder sessionFactoryBuilder = populateSessionFactoryBuilder();
+			final var sessionFactoryBuilder = populateSessionFactoryBuilder();
 			try {
-				final EntityManagerFactory entityManagerFactory = sessionFactoryBuilder.build();
+				final var entityManagerFactory = sessionFactoryBuilder.build();
 				success = true;
 				return entityManagerFactory;
 			}
@@ -1490,7 +1472,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	protected SessionFactoryBuilder populateSessionFactoryBuilder() {
-		final SessionFactoryBuilder builder = metadata().getSessionFactoryBuilder();
+		final var builder = metadata().getSessionFactoryBuilder();
 //		// Locate and apply the requested SessionFactory-level interceptor (if one)
 //		final Object sessionFactoryInterceptorSetting = configurationValues.remove( AvailableSettings.INTERCEPTOR );
 //		if ( sessionFactoryInterceptorSetting != null ) {

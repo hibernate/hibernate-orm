@@ -572,7 +572,16 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public LockingSupport getLockingSupport() {
+		// TODO: need a custom impl, because:
+		//       1. Informix does not support 'skip locked'
+		//       2. Informix does not allow 'for update' with joins
 		return LockingSupportSimple.STANDARD_SUPPORT;
+	}
+
+	// TODO: remove once we have a custom LockingSupport impl
+	@Override @Deprecated(forRemoval = true)
+	public boolean supportsSkipLocked() {
+		return false;
 	}
 
 	@Override

@@ -7,6 +7,7 @@ package org.hibernate.orm.test.locking.options;
 import org.hibernate.EnabledFetchProfile;
 import org.hibernate.Hibernate;
 import org.hibernate.Locking;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -60,6 +61,7 @@ public class ScopeTests {
 	// todo : generally, we do not lock collection tables - HHH-19513 plus maybe general problem with many-to-many tables
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "update does not block")
 	void testFind(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
@@ -75,6 +77,7 @@ public class ScopeTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "update does not block")
 	void testFindWithExtended(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
@@ -111,6 +114,7 @@ public class ScopeTests {
 	@Test
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "See https://sourceforge.net/p/hsqldb/bugs/1734/")
 	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 seems to not extend locks across joins")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Cursor must be on simple SELECT for FOR UPDATE")
 	void testFindWithExtendedAndFetch(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
@@ -148,6 +152,7 @@ public class ScopeTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "update does not block")
 	void testLock(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
@@ -167,6 +172,7 @@ public class ScopeTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "update does not block")
 	void testLockWithExtended(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
@@ -185,6 +191,7 @@ public class ScopeTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "update does not block")
 	void testRefresh(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
@@ -202,6 +209,7 @@ public class ScopeTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "update does not block")
 	void testRefreshWithExtended(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
@@ -221,6 +229,7 @@ public class ScopeTests {
 
 	@Test
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "See https://sourceforge.net/p/hsqldb/bugs/1734/")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Cursor must be on simple SELECT for FOR UPDATE")
 	void testEagerFind(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
@@ -253,6 +262,7 @@ public class ScopeTests {
 	@Test
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "See https://sourceforge.net/p/hsqldb/bugs/1734/")
 	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 seems to not extend locks across joins")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Cursor must be on simple SELECT for FOR UPDATE")
 	void testEagerFindWithExtended(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
@@ -288,6 +298,7 @@ public class ScopeTests {
 	@Test
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "See https://sourceforge.net/p/hsqldb/bugs/1734/")
 	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 seems to not extend locks across joins")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Cursor must be on simple SELECT for FOR UPDATE")
 	void testEagerFindWithFetchScope(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 

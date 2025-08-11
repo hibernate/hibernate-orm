@@ -7,6 +7,7 @@ package org.hibernate.orm.test.locking.options;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Timeout;
 import org.hibernate.PessimisticLockException;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.lock.PessimisticEntityLockException;
 import org.hibernate.jpa.SpecHints;
@@ -66,6 +67,7 @@ public class LockedRowsTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportNoWait.class)
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "no failure")
 	void testFindNoWait(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			assert session.getDialect().supportsNoWait();
@@ -84,6 +86,7 @@ public class LockedRowsTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportNoWait.class)
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "no failure")
 	void testLockNoWait(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			session.find(Book.class,1, PESSIMISTIC_WRITE);
@@ -128,6 +131,7 @@ public class LockedRowsTests {
 			dialectClass = MariaDBDialect.class,
 			reason = "Cannot figure this out - it passes when run by itself, but fails when run as part of the complete suite."
 	)
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "no failure")
 	void testFindSkipLocked(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			session.find(Book.class,1, PESSIMISTIC_WRITE);

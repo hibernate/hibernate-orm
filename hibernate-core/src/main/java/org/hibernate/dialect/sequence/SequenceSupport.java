@@ -226,7 +226,7 @@ public interface SequenceSupport {
 	 * @throws MappingException If sequences are not supported.
 	 */
 	default String getDropSequenceString(String sequenceName) throws MappingException {
-		return "drop sequence if exists " + sequenceName;
+		return "drop sequence " + sequenceName;
 	}
 
 	/**

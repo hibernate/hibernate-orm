@@ -36,6 +36,11 @@ public final class MariaDBSequenceSupport extends ANSISequenceSupport {
 	}
 
 	@Override
+	public String getDropSequenceString(String sequenceName) throws MappingException {
+		return "drop sequence if exists " + sequenceName;
+	}
+
+	@Override
 	public boolean sometimesNeedsStartingValue() {
 		return true;
 	}

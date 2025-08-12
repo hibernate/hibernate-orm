@@ -678,8 +678,9 @@ public class SqlTypes {
 
 
 	/**
-	 * A type code representing an {@code embedding vector} type for databases like
-	 * {@link org.hibernate.dialect.PostgreSQLDialect PostgreSQL} and {@link org.hibernate.dialect.OracleDialect Oracle 23ai}.
+	 * A type code representing an {@code embedding vector} type for databases
+	 * like {@link org.hibernate.dialect.PostgreSQLDialect PostgreSQL},
+	 * {@link org.hibernate.dialect.OracleDialect Oracle 23ai} and {@link org.hibernate.dialect.MariaDBDialect MariaDB}.
 	 * An embedding vector essentially is a {@code float[]} with a fixed size.
 	 *
 	 * @since 6.4

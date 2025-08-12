@@ -15,6 +15,7 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -25,6 +26,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.testing.orm.junit.DialectContext.getDialect;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -191,8 +193,9 @@ public class OptimisticLockTest {
 					"40001" ) ) {
 				// CockroachDB always runs in SERIALIZABLE isolation, and uses SQL state 40001 to indicate
 				// serialization failure.
-			}
-			else {
+			} else if (dialect instanceof MariaDBDialect && getDialect().getVersion().isAfter( 11, 6, 2 )) {
+				// Mariadb snapshot_isolation throws error
+			} else {
 				throw e;
 			}
 		}

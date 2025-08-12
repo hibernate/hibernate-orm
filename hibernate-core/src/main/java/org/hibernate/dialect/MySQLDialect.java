@@ -654,11 +654,6 @@ public class MySQLDialect extends Dialect {
 
 		SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
 
-		functionRegistry.noArgsBuilder( "localtime" )
-				.setInvariantType(basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP ))
-				.setUseParenthesesWhenNoArgs( false )
-				.register();
-
 		// pi() produces a value with 7 digits unless we're explicit
 		functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as double)" )
 				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ) )

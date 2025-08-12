@@ -604,10 +604,7 @@ public class MySQLLegacyDialect extends Dialect {
 		BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 
 		SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
-		functionRegistry.noArgsBuilder( "localtime" )
-				.setInvariantType(basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP ))
-				.setUseParenthesesWhenNoArgs( false )
-				.register();
+
 		// pi() produces a value with 7 digits unless we're explicit
 		if ( getMySQLVersion().isSameOrAfter( 8 ) ) {
 			functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as double)" )

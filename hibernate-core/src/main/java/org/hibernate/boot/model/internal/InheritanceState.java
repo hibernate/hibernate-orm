@@ -11,7 +11,6 @@ import java.util.stream.Stream;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.spi.AccessType;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.Component;
@@ -112,7 +111,7 @@ public class InheritanceState {
 		ClassDetails superclass = classDetails;
 		do {
 			superclass = superclass.getSuperClass();
-			InheritanceState currentState = states.get( superclass );
+			final var currentState = states.get( superclass );
 			if ( currentState != null ) {
 				return currentState;
 			}
@@ -225,7 +224,7 @@ public class InheritanceState {
 	 */
 	private ElementsToProcess getElementsToProcess() {
 		if ( elementsToProcess == null ) {
-			final InheritanceState inheritanceState = inheritanceStatePerClass.get( classDetails );
+			final var inheritanceState = inheritanceStatePerClass.get( classDetails );
 			assert !inheritanceState.isEmbeddableSuperclass();
 
 			getMappedSuperclassesTillNextEntityOrdered();
@@ -304,14 +303,14 @@ public class InheritanceState {
 	}
 
 	private void addMappedSuperClassInMetadata(Component component) {
-		org.hibernate.mapping.MappedSuperclass mappedSuperclass = processMappedSuperclass( component.getTable() );
+		final var mappedSuperclass = processMappedSuperclass( component.getTable() );
 		if ( mappedSuperclass != null ) {
 			component.setMappedSuperclass( mappedSuperclass );
 		}
 	}
 
 	private void addMappedSuperClassInMetadata(PersistentClass persistentClass) {
-		org.hibernate.mapping.MappedSuperclass mappedSuperclass = processMappedSuperclass( persistentClass.getImplicitTable() );
+		final var mappedSuperclass = processMappedSuperclass( persistentClass.getImplicitTable() );
 		if ( mappedSuperclass != null ) {
 			persistentClass.setSuperMappedSuperclass( mappedSuperclass );
 		}
@@ -320,8 +319,8 @@ public class InheritanceState {
 	private org.hibernate.mapping.MappedSuperclass processMappedSuperclass(Table implicitTable) {
 		//add @MappedSuperclass in the metadata
 		// classes from 0 to n-1 are @MappedSuperclass and should be linked
-		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
-		final InheritanceState superEntityState = getInheritanceStateOfSuperEntity( classDetails, inheritanceStatePerClass );
+		final var metadataCollector = buildingContext.getMetadataCollector();
+		final var superEntityState = getInheritanceStateOfSuperEntity( classDetails, inheritanceStatePerClass );
 		final PersistentClass superEntity =
 				superEntityState != null
 						? metadataCollector.getEntityBinding( superEntityState.getClassDetails().getName() )
@@ -329,10 +328,10 @@ public class InheritanceState {
 		final int lastMappedSuperclass = classesToProcessForMappedSuperclass.size() - 1;
 		org.hibernate.mapping.MappedSuperclass mappedSuperclass = null;
 		for ( int index = 0; index < lastMappedSuperclass; index++ ) {
-			org.hibernate.mapping.MappedSuperclass parentSuperclass = mappedSuperclass;
+			final var parentSuperclass = mappedSuperclass;
 			// todo (jpa32) : causes the mapped-superclass Class reference to be loaded...
 			//		- but this is how it's always worked, so...
-			final ClassDetails mappedSuperclassDetails = classesToProcessForMappedSuperclass.get( index );
+			final var mappedSuperclassDetails = classesToProcessForMappedSuperclass.get( index );
 			final Class<?> mappedSuperclassJavaType = mappedSuperclassDetails.toJavaClass();
 			//add MappedSuperclass if not already there
 			mappedSuperclass = metadataCollector.getMappedSuperclass( mappedSuperclassJavaType );

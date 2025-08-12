@@ -966,7 +966,9 @@ public class EmbeddableBinder {
 			embeddable.setComponentClassName( embeddable.getOwner().getClassName() );
 		}
 		else {
-			embeddable.setComponentClassName( inferredData.getClassOrElementType().getName() );
+			final var type = inferredData.getClassOrElementType();
+			embeddable.setComponentClassName( type.getName() );
+			checkEmbeddableRecursiveHierarchy( type, inferredData, propertyHolder );
 		}
 		embeddable.setCustomInstantiator( customInstantiatorImpl );
 		final var constructor = resolveInstantiator( inferredData.getClassOrElementType() );
@@ -979,6 +981,30 @@ public class EmbeddableBinder {
 		}
 		applyColumnNamingPattern( embeddable, inferredData );
 		return embeddable;
+	}
+
+	private static void checkEmbeddableRecursiveHierarchy(
+			TypeDetails type,
+			PropertyData propertyData,
+			PropertyHolder propertyHolder) {
+		final var embeddableClass = type.determineRawClass();
+		while ( propertyHolder.isComponent() ) {
+			final ComponentPropertyHolder componentHolder = (ComponentPropertyHolder) propertyHolder;
+			// we need to check that the embeddable is not used in a recursive hierarchy
+			var classDetails = embeddableClass;
+			while ( classDetails != null ) {
+				if ( propertyHolder.getClassName().equals( classDetails.getClassName() ) ) {
+					throw new MappingException( String.format(
+							Locale.ROOT,
+							"Recursive embeddable mapping detected for property '%s' for type [%s]",
+							getPath( propertyHolder, propertyData ),
+							propertyHolder.getClassName()
+					) );
+				}
+				classDetails = classDetails.getSuperClass();
+			}
+			propertyHolder = componentHolder.parent;
+		}
 	}
 
 	private static void applyColumnNamingPattern(Component embeddable, PropertyData inferredData) {

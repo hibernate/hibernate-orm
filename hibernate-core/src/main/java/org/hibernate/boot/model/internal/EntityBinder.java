@@ -648,8 +648,8 @@ public class EntityBinder {
 			// entity referenced via a @ManyToOne or @OneToOne association
 			final PropertyData idPropertyOnBaseClass =
 					getUniqueIdPropertyFromBaseClass( inferredData, baseInferredData, propertyAccessor, context );
-			final InheritanceState state =
-					inheritanceStates.get( idPropertyOnBaseClass.getClassOrElementType().determineRawClass() );
+			final TypeDetails idPropertyType = idPropertyOnBaseClass.getClassOrElementType();
+			final InheritanceState state = inheritanceStates.get( idPropertyType.determineRawClass() );
 			if ( state == null ) {
 				// Likely a user error, but treat it as something that might happen
 				return false;
@@ -657,14 +657,10 @@ public class EntityBinder {
 			else {
 				final ClassDetails associatedClassWithIdClass = state.getClassWithIdClass( true );
 				if ( associatedClassWithIdClass == null ) {
-					// We cannot know for sure here without looking at the identifier
-					// type of the associated entity. Instead of doing that, we look to
-					// see if our @Id field has a @ManyToOne or @OneToOne annotation,
-					// making the possibly wrong assumption that an @Id @ManyToOne or
-					// @Id @OneToOne always has the type of the associated entity, and
-					// is never a different @IdClass with a single field just holding
-					// the PK of the associated entity.
-					return hasToOneAnnotation( idPropertyOnBaseClass.getAttributeMember() );
+					// If annotated @OneToOne or @ManyToOne, it's an association to another entity
+					return hasToOneAnnotation( idPropertyOnBaseClass.getAttributeMember() )
+						// determine if the @Id or @EmbeddedId tpe is the same
+						&& isIdClassOfAssociatedEntity( compositeClass, propertyAccessor, context, idPropertyType );
 				}
 				else {
 					// The associated entity has an @IdClass, so check if it's the same
@@ -677,6 +673,29 @@ public class EntityBinder {
 		else {
 			// There are multiple @Id fields, so we know for sure that the id class of
 			// this entity can't be the identifier type of the associated entity
+			return false;
+		}
+	}
+
+	private static boolean isIdClassOfAssociatedEntity(
+			ClassDetails compositeClass,
+			AccessType propertyAccessor,
+			MetadataBuildingContext context,
+			TypeDetails idPropertyType) {
+		// Determine the @Id type or @EmbeddedId class of the associated entity
+		final var propertyContainer =
+				new PropertyContainer( idPropertyType.determineRawClass(), idPropertyType, propertyAccessor );
+		final List<PropertyData> idProperties = new ArrayList<>();
+		final int idPropertyCount = addElementsOfClass( idProperties, propertyContainer, context, 0 );
+		if ( idPropertyCount == 1 ) {
+			// Exactly one @Id or @EmbeddedId attribute
+			final PropertyData idPropertyOfAssociatedEntity = idProperties.get( 0 );
+			return compositeClass.getName()
+					.equals( idPropertyOfAssociatedEntity.getPropertyType().getName() );
+		}
+		else {
+			// No id property found in the associated class,
+			// or multiple id properties but no @IdClass
 			return false;
 		}
 	}

@@ -630,6 +630,11 @@ public class EntityBinder {
 		return baseClassElements.get( 0 );
 	}
 
+	/**
+	 * Given the id class of the current entity, as specified by an
+	 * {@link IdClass} annotation, determine if it's actually the
+	 * identifier type or {@link IdClass} of some associated entity.
+	 */
 	private boolean isIdClassPrimaryKeyOfAssociatedEntity(
 			ElementsToProcess elementsToProcess,
 			ClassDetails compositeClass,
@@ -639,26 +644,39 @@ public class EntityBinder {
 			Map<ClassDetails, InheritanceState> inheritanceStates,
 			MetadataBuildingContext context) {
 		if ( elementsToProcess.getIdPropertyCount() == 1 ) {
+			// There's only one @Id field, so it might be the @EmbeddedId of an associated
+			// entity referenced via a @ManyToOne or @OneToOne association
 			final PropertyData idPropertyOnBaseClass =
 					getUniqueIdPropertyFromBaseClass( inferredData, baseInferredData, propertyAccessor, context );
 			final InheritanceState state =
 					inheritanceStates.get( idPropertyOnBaseClass.getClassOrElementType().determineRawClass() );
 			if ( state == null ) {
-				return false; //while it is likely a user error, let's consider it is something that might happen
-			}
-			final ClassDetails associatedClassWithIdClass = state.getClassWithIdClass( true );
-			if ( associatedClassWithIdClass == null ) {
-				//we cannot know for sure here unless we try and find the @EmbeddedId
-				//Let's not do this thorough checking but do some extra validation
-				return hasToOneAnnotation( idPropertyOnBaseClass.getAttributeMember() );
-
+				// Likely a user error, but treat it as something that might happen
+				return false;
 			}
 			else {
-				final IdClass idClass = associatedClassWithIdClass.getAnnotationUsage( IdClass.class, modelsContext() );
-				return compositeClass.getName().equals( idClass.value().getName() );
+				final ClassDetails associatedClassWithIdClass = state.getClassWithIdClass( true );
+				if ( associatedClassWithIdClass == null ) {
+					// We cannot know for sure here without looking at the identifier
+					// type of the associated entity. Instead of doing that, we look to
+					// see if our @Id field has a @ManyToOne or @OneToOne annotation,
+					// making the possibly wrong assumption that an @Id @ManyToOne or
+					// @Id @OneToOne always has the type of the associated entity, and
+					// is never a different @IdClass with a single field just holding
+					// the PK of the associated entity.
+					return hasToOneAnnotation( idPropertyOnBaseClass.getAttributeMember() );
+				}
+				else {
+					// The associated entity has an @IdClass, so check if it's the same
+					final IdClass idClass =
+							associatedClassWithIdClass.getAnnotationUsage( IdClass.class, modelsContext() );
+					return compositeClass.getName().equals( idClass.value().getName() );
+				}
 			}
 		}
 		else {
+			// There are multiple @Id fields, so we know for sure that the id class of
+			// this entity can't be the identifier type of the associated entity
 			return false;
 		}
 	}

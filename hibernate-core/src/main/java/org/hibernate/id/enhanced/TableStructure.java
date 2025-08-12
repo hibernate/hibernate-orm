@@ -330,8 +330,10 @@ public class TableStructure implements DatabaseStructure {
 
 			table.setOptions( options );
 
-			table.addInitCommand( context -> new InitCommand( "insert into "
-					+ context.format( physicalTableName ) + " values ( " + initialValue + " )" ) );
+			table.addInitCommand( context -> new InitCommand(
+					"insert into " + context.format( physicalTableName )
+					+ " ( " + valueColumnNameText + " ) values ( " + initialValue + " )"
+			) );
 		}
 	}
 

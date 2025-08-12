@@ -17,6 +17,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.OracleDialect;
 
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -72,7 +73,7 @@ public class BatchOptimisticLockingTest extends
 		} );
 
 		try {
-			inTransaction( (session) -> {
+			inTransaction( session -> {
 				List<Person> persons = session
 						.createSelectionQuery( "select p from Person p", Person.class )
 						.getResultList();
@@ -109,10 +110,18 @@ public class BatchOptimisticLockingTest extends
 				);
 			}
 			else {
-				assertEquals(
-						"Batch update returned unexpected row count from update [1]; actual row count: 0; expected: 1; statement executed: update Person set name=?,version=? where id=? and version=?",
-						expected.getMessage()
-				);
+				if ( getDialect() instanceof MariaDBDialect && getDialect().getVersion().isAfter( 11, 6, 2 )) {
+					assertTrue(
+							expected.getMessage()
+									.contains( "Record has changed since last read in table 'Person'" )
+					);
+				} else {
+					assertTrue(
+							expected.getMessage()
+									.startsWith(
+											"Batch update returned unexpected row count from update [1]; actual row count: 0; expected: 1; statement executed: update Person set name=?,version=? where id=? and version=?" )
+					);
+				}
 			}
 		}
 	}

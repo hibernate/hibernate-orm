@@ -152,6 +152,40 @@ public abstract class TransactionUtil {
 		}
 	}
 
+	public static void deleteRow(SessionFactoryScope factoryScope, String tableName, boolean expectingToBlock) {
+		try {
+			AsyncExecutor.executeAsync( 2, TimeUnit.SECONDS, () -> {
+				factoryScope.inTransaction( (session) -> {
+					final String sql = String.format( "delete from %s", tableName );
+					//noinspection deprecation
+					session.createNativeQuery( sql ).executeUpdate();
+					if ( expectingToBlock ) {
+						fail( "Expecting `delete from " + tableName + "` to block due to locks" );
+					}
+				} );
+			} );
+		}
+		catch (AsyncExecutor.TimeoutException expected) {
+			if ( !expectingToBlock ) {
+				fail( "Expecting update to " + tableName + " to succeed, but failed due to async timeout (presumably due to locks)", expected );
+			}
+		}
+		catch (RuntimeException re) {
+			if ( re.getCause() instanceof jakarta.persistence.LockTimeoutException
+				|| re.getCause() instanceof org.hibernate.exception.LockTimeoutException ) {
+				if ( !expectingToBlock ) {
+					fail( "Expecting update to " + tableName + " to succeed, but failed due to async timeout (presumably due to locks)", re.getCause() );
+				}
+			}
+			else if ( re.getCause() instanceof ConstraintViolationException cve ) {
+				throw cve;
+			}
+			else {
+				throw re;
+			}
+		}
+	}
+
 	public static void assertRowLock(SessionFactoryScope factoryScope, String tableName, String columnName, String idColumn, Number id, boolean expectingToBlock) {
 		final Dialect dialect = factoryScope.getSessionFactory().getJdbcServices().getDialect();
 		final boolean skipLocked = dialect.getLockingSupport().getMetadata().supportsSkipLocked();
@@ -177,8 +211,8 @@ public abstract class TransactionUtil {
 			try {
 				AsyncExecutor.executeAsync( 2, TimeUnit.SECONDS, () -> {
 					factoryScope.inTransaction( (session) -> {
-						//noinspection deprecation
 						final String sql = String.format( "update %s set %s = null", tableName, columnName );
+						//noinspection deprecation
 						session.createNativeQuery( sql ).executeUpdate();
 						if ( expectingToBlock ) {
 							fail( "Expecting update to " + tableName + " to block dues to locks" );

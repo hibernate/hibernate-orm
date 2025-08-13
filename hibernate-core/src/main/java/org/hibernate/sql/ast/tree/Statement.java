@@ -16,4 +16,11 @@ public interface Statement {
 	 * Visitation
 	 */
 	void accept(SqlAstWalker walker);
+
+	/**
+	 * Whether this statement is a selection and will return results.
+	 */
+	default boolean isSelection() {
+		return false;
+	}
 }

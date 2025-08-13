@@ -2,25 +2,37 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.sql.exec.spi;
+package org.hibernate.sql.exec.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.query.spi.Limit;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcLockStrategy;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBinding;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.StatementAccess;
+import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.exec.spi.LoadedValuesCollector;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
+import org.hibernate.type.descriptor.java.JavaType;
+
+import java.sql.Connection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.query.spi.Limit;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
-import org.hibernate.type.descriptor.java.JavaType;
-
 /**
- * Executable JDBC command
+ * Executable JDBC command produced from some form of Query.
  *
  * @author Steve Ebersole
  */
-public class JdbcOperationQuerySelect extends AbstractJdbcOperationQuery {
+public class JdbcOperationQuerySelect
+		extends AbstractJdbcOperationQuery
+		implements JdbcSelect {
 	private final JdbcValuesMappingProducer jdbcValuesMappingProducer;
 	private final int rowsToSkip;
 	private final int maxRows;
@@ -67,30 +79,49 @@ public class JdbcOperationQuerySelect extends AbstractJdbcOperationQuery {
 		this.limitParameter = limitParameter;
 	}
 
+	@Override
 	public JdbcValuesMappingProducer getJdbcValuesMappingProducer() {
 		return jdbcValuesMappingProducer;
 	}
 
+	@Override
 	public int getRowsToSkip() {
 		return rowsToSkip;
 	}
 
+	@Override
 	public int getMaxRows() {
 		return maxRows;
 	}
 
+	@Override
+	public @Nullable LoadedValuesCollector getLoadedValuesCollector() {
+		return null;
+	}
+
+	@Override
+	public void performPreActions(StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext) {
+	}
+
+	@Override
+	public void performPostAction(boolean succeeded, StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext) {
+	}
+
+	@Override
 	public boolean usesLimitParameters() {
 		return offsetParameter != null || limitParameter != null;
+	}
+
+	@Override
+	public JdbcParameter getLimitParameter() {
+		return limitParameter;
 	}
 
 	public JdbcParameter getOffsetParameter() {
 		return offsetParameter;
 	}
 
-	public JdbcParameter getLimitParameter() {
-		return limitParameter;
-	}
-
+	@Override
 	public JdbcLockStrategy getLockStrategy() {
 		return jdbcLockStrategy;
 	}

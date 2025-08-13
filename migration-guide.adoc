@@ -1,7 +1,7 @@
 = 7.1 Migration Guide
 :toc:
 :toclevels: 4
-:version: 7.1
+:version: 7.2
 :docsBase: https://docs.jboss.org/hibernate/orm
 :versionDocBase: {docsBase}/{version}
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
@@ -19,7 +19,7 @@ earlier versions, see any other pertinent migration guides as well.
 [[requirements]]
 == Requirements
 
-See the link:{releaseSeriesBase}[website] for the list of requirements for the 7.1 series.
+See the link:{releaseSeriesBase}[website] for the list of requirements for the {version} series.
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // New Features
@@ -28,7 +28,7 @@ See the link:{releaseSeriesBase}[website] for the list of requirements for the 7
 [[new-features]]
 == New Features
 
-See the link:{releaseSeriesBase}#whats-new[website] for the list of new features in the 7.1 series.
+See the link:{releaseSeriesBase}#whats-new[website] for the list of new features in the {version} series.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,84 +40,6 @@ See the link:{releaseSeriesBase}#whats-new[website] for the list of new features
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#api[API].
 
-[[lock-options]]
-=== LockOptions
-
-7.0 begins the process of reducing the visibility of `org.hibernate.LockOptions`.
-This class was originally exposed as an API, even though it is more properly an SPI.
-From an API perspective, `FindOption`, `LockOption` and `RefreshOption` are much better ways to specify this information.
-The class itself, as well as API methods which expose it, have been deprecated.
-
-However, 2 aspects of `LockOptions` have been completely removed.
-First, `LockOptions` previously defined a number of constants which have been removed.
-Secondly, the ability to define different LockModes for individual aliases has been removed.
-
-[NOTE]
-----
-ALias-specific LockModes was a very misleading feature, as Hibernate would only ever use the "greatest" LockMode.
-We plan to add the ability to specify a list of aliases to be locked in a later release.
-See https://hibernate.atlassian.net/browse/HHH-19664 for details.
-----
-
-Application code using `org.hibernate.LockOptions` should migrate to using `FindOption`,
-`LockOption` and `RefreshOption` to control the various aspects of locking.  E.g.
-
-[source,java]
-----
-LockOptions lockOptions = new LockOptions();
-lockOptions.setLockMode(PESSIMISTIC_WRITE);
-lockOptions.setTimeout(1000);
-session.refresh(book, lockOptions);
-----
-
-can instead be written as
-
-[source,java]
-----
-session.refresh(book,
-    PESSIMISTIC_WRITE,
-    Timeout.milliseconds(1000));
-----
-
-[[enhancement-options]]
-=== Bytecode Enhancement Options
-
-We plan to remove two options of bytecode enhancement and have currently marked them as deprecated.
-
-First is bidirectional association management.
-Applications should instead manage both sides of such associations directly as we have always recommended.
-
-Second is a little-known feature called "extended" enhancement.
-Applications should instead use proper object-oriented encapsulation, exposing managed state via getters and setters.
-
-Additionally, attempting to re-enhance a class with different options is no longer allowed and will result in a `FeatureMismatchException`.
-
-The Gradle plugin configuration has changed slightly. When using the default setup:
-
-```
-hibernate { enhancement }
-```
-
-it should be updated to:
-
-```
-hibernate {
-    enhancement {}
-}
-```
-
-in order to properly enable Bytecode Enhancement.
-
-[[session-getLobHelper]]
-=== Session#getLobHelper
-
-The `Session#getLobHelper` method has been marked as deprecated in favor of the static `Hibernate#getLobHelper` and will be removed in a future *major* version.
-
-[[H2-lock-timeout]]
-=== WAIT, NO WAIT and SKIP LOCKED for H2
-
-The for-update clause enhancements of H2 2.2.220 are now reflected in the Hibernate ORM dialect, allowing applications to use `wait`, `no wait` and `skip locked` options.
-
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // SPI changes
@@ -126,49 +48,7 @@ The for-update clause enhancements of H2 2.2.220 are now reflected in the Hibern
 [[spi-changes]]
 == Changes to SPI
 
-[[force-increment]]
-=== Force-increment Locking for Version with Custom Generator
-
-A new event type (`FORCE_INCREMENT`) has been added to
-`org.hibernate.generator.EventType` to support
-`OPTIMISTIC_FORCE_INCREMENT` and `PESSIMISTIC_FORCE_INCREMENT`
-when used with `@Version` mappings with custom generators.
-
-
-[[pessimistic-locking]]
-=== Pessimistic Locking
-
-A number of changes have been made to pessimistic locking support.
-
-* Introduction of `org.hibernate.dialect.lock.spi.LockingSupport` which represents a Dialect's support for pessimistic locking.
-* Introduction of `org.hibernate.sql.ast.spi.LockingClauseStrategy` to integrate into SQL AST translation.
-* Changed standard implementation of `org.hibernate.dialect.lock.LockingStrategy` for pessimistic locking to one using SQL AST.
-* Changes to `LockOptions` as <<lock-options,already discussed>>.
-
-[NOTE]
-More changes related to pessimistic locking are coming in later 7.x releases.
-We've opted to tackle these in stages since they all relate and build on top of each other.
-See https://hibernate.atlassian.net/browse/HHH-19551 for details.
-
-[[format-mapper]]
-=== JSON FormatMapper Enhancements
-
-JSON mappings on Oracle 21+ will now try to leverage driver built-in OSON decoding to improve JSON parsing performance. In case of trouble, this can be disabled with the `hibernate.dialect.oracle.oson_format_disabled` configuration option.
-
-
-[[enhancement-option-granularity]]
-=== Enhancement Option Granularity
-
-The actual enhancements written into bytecode were previously allowed to vary by class and sometimes even by attribute.
-However, all Hibernate tooling only supported setting those "globally" per enhancement.
-To this end, all `org.hibernate.bytecode.enhance.spi.EnhancementContext` methods which determine whether certain aspects of enhancement are applied have changed to no longer accept class/attribute.
-Specifically:
-
-* `doDirtyCheckingInline(UnloadedClass classDescriptor)` -> `doDirtyCheckingInline()`
-* `doExtendedEnhancement(UnloadedClass classDescriptor)` -> `doExtendedEnhancement()`
-* `doBiDirectionalAssociationManagement(UnloadedField field)` -> `doBiDirectionalAssociationManagement()`
-
-See also <<enhancement-options>>.
+This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#spi[SPI].
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -181,19 +61,9 @@ See also <<enhancement-options>>.
 This section describes changes to DDL generated by the schema export tooling.
 Such changes typically do not impact programs using a relational schema managed externally to Hibernate.
 
-[[single-table-check]]
-=== Automatic check constraints with single table inheritance mappings
-
-Previously, the non-nullability of the column mapped by an attribute declared `optional=false` by a subclass in a single table inheritance hierarchy was not enforced by the database.
-Hibernate now automatically generates DDL `check` constraints to enforce the non-nullability of such columns.
-
 
 [[dependency-changes]]
 == Changes in Dependencies
 
 This section describes changes to dependencies used by Hibernate ORM.
 
-[[dependency-agroal]]
-=== Inclusion of Agroal Pool
-
-`agroal-pool` is now a transitive implementation (runtime) dependency of the `hibernate-agroal` module.  Applications using `hibernate-agroal` no longer need to manually depend on it.

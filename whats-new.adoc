@@ -1,42 +1,13 @@
-= What's New in 7.1
+= What's New in 7.2
 :toc:
 :toclevels: 4
+:version: 7.2
 :docsBase: https://docs.jboss.org/hibernate/orm
-:versionDocBase: {docsBase}/7.1
+:versionDocBase: {docsBase}/{version}
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
 :migrationGuide: {versionDocBase}/migration-guide/migration-guide.html
 
-Describes the new features and capabilities added to Hibernate ORM in 7.1.
+Describes the new features and capabilities added to Hibernate ORM in {version}.
 
-If migrating from earlier versions, be sure to also check out the link:{migrationGuide}[Migration Guide] for discussion of impactful changes.
+IMPORTANT: If migrating from earlier versions, be sure to also check out the link:{migrationGuide}[Migration Guide] for discussion of impactful changes.
 
-
-[[resource-discovery]]
-== Resource Discovery in SE Environments
-
-The Jakarta Persistence specification defines the ability for a provider to discover "managed resources" in EE environments, alleviating the application from manually listing all classes and XML files.
-However, it defines no such support in SE environments.
-
-Starting with 7.1, Hibernate now supports this discovery in SE environments, by allowing applications to specify the root URL and zero-or-more "jar" URLs to search.
-These URLs correspond to
-
-* `jakarta.persistence.spi.PersistenceUnitInfo#getPersistenceUnitRootUrl`
-* `jakarta.persistence.spi.PersistenceUnitInfo#getJarFileUrls`
-
-These URLs are searched for managed resources according to the process defined in https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2#a12305[the specification].
-
-[[locking]]
-== Locking
-
-`org.hibernate.Locking` has been introduced to support various aspects of pessimistic locking:
-
-* `Locking.Scope` is an extension of `jakarta.persistence.PessimisticLockScope` including some Hibernate-specific options.
-* `Locking.FollowOn` allows controlling Hibernate's follow-on locking behavior.
-
-Additionally, we've added `org.hibernate.Timeouts` to help deal with some standard `jakarta.persistence.Timeout` values.
-
-
-[[interceptor-merge]]
-== Interceptor and merge
-
-Support for intercepting `Session#merge` events has been added to Hibernate's `Interceptor`.

@@ -21,13 +21,30 @@ package org.hibernate.grammars.graph;
  */
 }
 
-
 graph
-    : typeIndicator? attributeList
- 	;
+    : typeIndicator? graphElementList
+    ;
+
+graphElementList
+    : graphElement (COMMA graphElement)*
+    ;
+
+
+graphElement
+    : treatedSubGraph
+    | attributeNode
+    ;
+
+treatedSubGraph
+    : subTypeIndicator LPAREN attributeList RPAREN
+    ;
 
 typeIndicator
     : TYPE_NAME COLON
+    ;
+
+subTypeIndicator
+    : COLON TYPE_NAME
     ;
 
 attributeList
@@ -47,6 +64,10 @@ attributeQualifier
 	;
 
 subGraph
-	: LPAREN typeIndicator? attributeList RPAREN
-	;
+    : subGraphWithTypeIndicator
+    | treatedSubGraph
+    ;
 
+subGraphWithTypeIndicator
+    : LPAREN typeIndicator? attributeList RPAREN
+    ;

@@ -326,16 +326,36 @@ type is the `LegalEntity` base type we might have:
 ====
 [source, java, indent=0]
 ----
-responsibleParty(Corporation: ceo)
+responsibleParty:Corporation(ceo)
 ----
 ====
+[WARNING]
+====
+Another syntax you may have seen is the one below.
+[source, java, indent=0]
+----
+responsibleParty(Corporation: ceo)
+----
+This syntax is deprecated and will no longer be supported in the next major release.
+
+====
+Additionally, it is possible to define subgraphs that apply to a specific **root subtype** using the syntax:
+
+====
+[source, java, indent=0]
+----
+:Corporation(name, ceo), :NonProfit(sector)
+----
+
+====
+This allows expressing that the graph should apply when the root entity itself is a Corporation.
 
 We can even duplicate the attribute names to apply different subtype subgraphs:
 
 ====
 [source, java, indent=0]
 ----
-responsibleParty(taxIdNumber), responsibleParty(Corporation: ceo), responsibleParty(NonProfit: sector)
+responsibleParty(taxIdNumber), responsibleParty:Corporation(ceo), responsibleParty:NonProfit(sector)
 ----
 ====
 
@@ -380,7 +400,7 @@ to the `@jakarta.persistence.NamedEntityGraph`, supporting the text representati
 may be placed on an entity or on a package.
 
 
-.@NamedEntityGraph example
+.@NamedEntityGraph example of annotation placed on an entity
 ====
 [source, java, indent=0]
 ----
@@ -390,6 +410,37 @@ class Book {
 	// ...
 }
 ----
+
+====
+.@NamedEntityGraph example of annotation placed on a package
+====
+[source, java, indent=0]
+----
+// package-info.java
+@NamedEntityGraph(root = Book.class, name = "book-title", graph = "title")
+package org.somepackage;
+
+import org.hibernate.annotations.NamedEntityGraph;
+----
+
+====
+[WARNING]
+====
+You may have already seen the syntax below, which specifies the type of graph via the graph attribute.
+[source, java, indent=0]
+----
+@NamedEntityGraph(
+	name = "book-title",
+	graph = "Book: title" // Here
+)
+package org.somepackage;
+
+import org.hibernate.annotations.NamedEntityGraph;
+----
+
+This syntax is deprecated and will no longer be supported in the next major release.
+
+
 ====
 
 

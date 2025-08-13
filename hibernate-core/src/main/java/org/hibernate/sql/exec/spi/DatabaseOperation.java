@@ -4,17 +4,18 @@
  */
 package org.hibernate.sql.exec.spi;
 
+import org.hibernate.Incubating;
+
 import java.util.Set;
 
 /**
- * One-or-more {@link JdbcOperation operations} performed against the database using JDBC.
- *
- * @apiNote By design, we expect one of the underlying {@link JdbcOperation operations} to be a
- * {@linkplain #getPrimaryOperation "primary operation"} along with zero-or-more support operations
- * to be performed before and/or after the primary operation.
+ * An operation against the database, comprised of a single
+ * {@linkplain #getPrimaryOperation primary operation} and zero-or-more
+ * before/after {@linkplain SecondaryAction secondary actions}.
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface DatabaseOperation {
 	/**
 	 * The primary operation for the group.

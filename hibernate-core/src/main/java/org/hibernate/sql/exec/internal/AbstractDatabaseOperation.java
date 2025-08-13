@@ -12,7 +12,6 @@ import org.hibernate.sql.exec.spi.PreAction;
 import org.hibernate.sql.exec.spi.SecondaryAction;
 import org.hibernate.sql.exec.spi.StatementAccess;
 
-import java.lang.reflect.Array;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -57,11 +56,18 @@ public abstract class AbstractDatabaseOperation implements DatabaseOperation {
 		}
 	}
 
-	protected static <T extends SecondaryAction> T[] toArray(Class<T> type, List<T> actions) {
+	protected static PreAction[] toPreActionArray(List<PreAction> actions) {
 		if ( CollectionHelper.isEmpty( actions ) ) {
 			return null;
 		}
-		return actions.toArray( (T[]) Array.newInstance( type, 0 ) );
+		return actions.toArray( new PreAction[0] );
+	}
+
+	protected static PostAction[] toPostActionArray(List<PostAction> actions) {
+		if ( CollectionHelper.isEmpty( actions ) ) {
+			return null;
+		}
+		return actions.toArray( new PostAction[0] );
 	}
 
 	protected abstract static class Builder<T extends Builder<T>> {

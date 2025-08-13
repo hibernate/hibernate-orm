@@ -10,7 +10,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.UnsupportedLockAttemptException;
@@ -21,7 +20,6 @@ import org.hibernate.engine.spi.EntityEntryExtraState;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -41,10 +39,8 @@ import static org.hibernate.engine.internal.EntityEntryImpl.EnumState.LOCK_MODE;
 import static org.hibernate.engine.internal.EntityEntryImpl.EnumState.PREVIOUS_STATUS;
 import static org.hibernate.engine.internal.EntityEntryImpl.EnumState.STATUS;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
-import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptableOrNull;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTracker;
-import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
-import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTracker;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
@@ -56,7 +52,6 @@ import static org.hibernate.engine.spi.Status.READ_ONLY;
 import static org.hibernate.engine.spi.Status.SAVING;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.pretty.MessageHelper.infoString;
-import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * A base implementation of {@link EntityEntry}.
@@ -390,46 +385,31 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	private boolean isNonDirtyViaCustomStrategy(Object entity) {
-		if ( isPersistentAttributeInterceptable( entity ) ) {
-			final PersistentAttributeInterceptor interceptor =
-					asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+		final var interceptable = asPersistentAttributeInterceptableOrNull( entity );
+		if ( interceptable != null ) {
+			if ( interceptable.$$_hibernate_getInterceptor() instanceof EnhancementAsProxyLazinessInterceptor interceptor
+				&& !interceptor.isInitialized() ) {
 				// we never have to check an uninitialized proxy
 				return true;
 			}
 		}
-
-		final SessionImplementor session = (SessionImplementor) getPersistenceContext().getSession();
-		final CustomEntityDirtinessStrategy customEntityDirtinessStrategy =
-				session.getFactory().getCustomEntityDirtinessStrategy();
+		final var session = (SessionImplementor) getPersistenceContext().getSession();
+		final var customEntityDirtinessStrategy = session.getFactory().getCustomEntityDirtinessStrategy();
 		return customEntityDirtinessStrategy.canDirtyCheck( entity, persister, session )
 			&& !customEntityDirtinessStrategy.isDirty( entity, persister, session );
 	}
 
 	private boolean isNonDirtyViaTracker(Object entity) {
-		final boolean uninitializedProxy;
-		if ( isPersistentAttributeInterceptable( entity ) ) {
-			final PersistentAttributeInterceptor interceptor =
-					asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor ) {
-				return !lazinessInterceptor.hasWrittenFieldNames();
-			}
-			else {
-				uninitializedProxy = false;
+		final var interceptable = asPersistentAttributeInterceptableOrNull( entity );
+		if ( interceptable != null ) {
+			if ( interceptable.$$_hibernate_getInterceptor() instanceof EnhancementAsProxyLazinessInterceptor interceptor ) {
+				return !interceptor.hasWrittenFieldNames();
 			}
 		}
-		else if ( isHibernateProxy( entity ) ) {
-			uninitializedProxy = extractLazyInitializer( entity ).isUninitialized();
-		}
-		else {
-			uninitializedProxy = false;
-		}
-		// we never have to check an uninitialized proxy
-		return uninitializedProxy
-			|| !persister.hasCollections()
-				&& !persister.hasMutableProperties()
-				&& !asSelfDirtinessTracker( entity ).$$_hibernate_hasDirtyAttributes()
-				&& asManagedEntity( entity ).$$_hibernate_useTracker();
+		return !persister.hasCollections()
+			&& !persister.hasMutableProperties()
+			&& asManagedEntity( entity ).$$_hibernate_useTracker()
+			&& !asSelfDirtinessTracker( entity ).$$_hibernate_hasDirtyAttributes();
 	}
 
 	@Override

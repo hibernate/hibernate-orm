@@ -6,6 +6,7 @@ package org.hibernate.sql.exec.internal;
 
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.DatabaseOperation;
+import org.hibernate.sql.exec.spi.StatementAccess;
 
 import java.sql.Connection;
 

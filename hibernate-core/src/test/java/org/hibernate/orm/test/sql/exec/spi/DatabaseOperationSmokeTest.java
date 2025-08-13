@@ -31,8 +31,9 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.internal.DatabaseOperationSelectImpl;
-import org.hibernate.sql.exec.internal.JdbcAction;
-import org.hibernate.sql.exec.internal.StatementAccess;
+import org.hibernate.sql.exec.spi.PostAction;
+import org.hibernate.sql.exec.spi.PreAction;
+import org.hibernate.sql.exec.spi.StatementAccess;
 import org.hibernate.sql.results.spi.SingleResultConsumer;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -111,12 +112,10 @@ public class DatabaseOperationSmokeTest {
 		final JdbcParameterBindings jdbcParameterBindings = personQuery.jdbcParameterBindings();
 
 
-		final LockTimeoutSetter lockTimeoutSetter = new LockTimeoutSetter( Timeout.seconds( 2 ), lockTimeoutStrategy );
-		final LockTimeoutResetter lockTimeoutResetter = new LockTimeoutResetter( lockTimeoutStrategy, lockTimeoutSetter );
+		final LockTimeoutHandler lockTimeoutHandler = new LockTimeoutHandler( Timeout.seconds( 2 ), lockTimeoutStrategy );
 
 		final DatabaseOperationSelectImpl databaseOperation = DatabaseOperationSelectImpl.builder( jdbcOperation )
-				.addPreAction( lockTimeoutSetter )
-				.addPostAction( lockTimeoutResetter )
+				.addSecondaryActionPair( lockTimeoutHandler )
 				.build();
 
 		factoryScope.inTransaction( (session) -> {
@@ -139,12 +138,12 @@ public class DatabaseOperationSmokeTest {
 		} );
 	}
 
-	private static class LockTimeoutSetter implements JdbcAction {
+	private static class LockTimeoutHandler implements PreAction, PostAction {
 		private final ConnectionLockTimeoutStrategy lockTimeoutStrategy;
 		private final Timeout timeout;
 		private Timeout baseline;
 
-		public LockTimeoutSetter(Timeout timeout, ConnectionLockTimeoutStrategy lockTimeoutStrategy) {
+		public LockTimeoutHandler(Timeout timeout, ConnectionLockTimeoutStrategy lockTimeoutStrategy) {
 			this.timeout = timeout;
 			this.lockTimeoutStrategy = lockTimeoutStrategy;
 		}
@@ -154,32 +153,22 @@ public class DatabaseOperationSmokeTest {
 		}
 
 		@Override
-		public void perform(StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext) {
+		public void performPreAction(StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext) {
 			final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 
-			// first, get the baseline
+			// first, get the baseline (for post-action)
 			baseline = lockTimeoutStrategy.getLockTimeout( jdbcConnection, factory );
 
 			// now set the timeout
 			lockTimeoutStrategy.setLockTimeout( timeout, jdbcConnection, factory );
 		}
-	}
-
-	private static class LockTimeoutResetter implements JdbcAction {
-		private final ConnectionLockTimeoutStrategy lockTimeoutStrategy;
-		private final LockTimeoutSetter setter;
-
-		public LockTimeoutResetter(ConnectionLockTimeoutStrategy lockTimeoutStrategy, LockTimeoutSetter setter) {
-			this.lockTimeoutStrategy = lockTimeoutStrategy;
-			this.setter = setter;
-		}
 
 		@Override
-		public void perform(StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext) {
+		public void performPostAction(StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext) {
 			final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 
 			// reset the timeout
-			lockTimeoutStrategy.setLockTimeout( setter.getBaseline(), jdbcConnection, factory );
+			lockTimeoutStrategy.setLockTimeout( baseline, jdbcConnection, factory );
 		}
 	}
 

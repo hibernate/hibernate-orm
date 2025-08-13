@@ -6,28 +6,32 @@ package org.hibernate.sql.exec.internal;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.resource.jdbc.LogicalConnection;
+import org.hibernate.sql.exec.spi.StatementAccess;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
 /**
+ * Lazy access to a JDBC {@linkplain Statement}.
+ * Manages various tasks around creation and ensuring it gets cleaned up.
+ *
  * @author Steve Ebersole
  */
-public class StatementAccess implements AutoCloseable {
+public class StatementAccessImpl implements StatementAccess {
 	private final Connection jdbcConnection;
 	private final LogicalConnection logicalConnection;
 	private final SessionFactoryImplementor factory;
 
 	private Statement jdbcStatement;
 
-	public StatementAccess(Connection jdbcConnection, LogicalConnection logicalConnection, SessionFactoryImplementor factory) {
+	public StatementAccessImpl(Connection jdbcConnection, LogicalConnection logicalConnection, SessionFactoryImplementor factory) {
 		this.jdbcConnection = jdbcConnection;
 		this.logicalConnection = logicalConnection;
 		this.factory = factory;
 	}
 
-	public Statement getJdbcStatement() {
+	@Override public Statement getJdbcStatement() {
 		if ( jdbcStatement == null ) {
 			try {
 				jdbcStatement = jdbcConnection.createStatement();
@@ -54,10 +58,5 @@ public class StatementAccess implements AutoCloseable {
 						.convert( e, "Unable to release JDBC Statement" );
 			}
 		}
-	}
-
-	@Override
-	public void close() {
-		release();
 	}
 }

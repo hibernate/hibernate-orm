@@ -8,18 +8,17 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
+import org.hibernate.sql.exec.spi.DatabaseOperationSelect;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
-import org.hibernate.sql.exec.spi.DatabaseOperationSelect;
+import org.hibernate.sql.exec.spi.PostAction;
+import org.hibernate.sql.exec.spi.PreAction;
 import org.hibernate.sql.results.spi.ResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
 
 import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -37,8 +36,8 @@ public class DatabaseOperationSelectImpl
 	}
 
 	public DatabaseOperationSelectImpl(
-			JdbcAction[] preActions,
-			JdbcAction[] postActions,
+			PreAction[] preActions,
+			PostAction[] postActions,
 			JdbcOperationQuerySelect primaryOperation) {
 		super( preActions, postActions );
 		this.primaryOperation = primaryOperation;
@@ -79,7 +78,7 @@ public class DatabaseOperationSelectImpl
 		final SessionFactoryImplementor sessionFactory = session.getSessionFactory();
 
 		final Connection connection = logicalConnection.getPhysicalConnection();
-		final StatementAccess statementAccess = new StatementAccess(
+		final StatementAccessImpl statementAccess = new StatementAccessImpl(
 				connection,
 				logicalConnection,
 				sessionFactory
@@ -131,29 +130,15 @@ public class DatabaseOperationSelectImpl
 		return new Builder( primaryAction );
 	}
 
-	public static class Builder {
+	public static class Builder extends AbstractDatabaseOperation.Builder<Builder> {
 		private final JdbcOperationQuerySelect primaryAction;
-
-		private List<JdbcAction> preActions;
-		private List<JdbcAction> postActions;
 
 		private Builder(JdbcOperationQuerySelect primaryAction) {
 			this.primaryAction = primaryAction;
 		}
 
-		public Builder addPreAction(JdbcAction... actions) {
-			if ( preActions == null ) {
-				preActions = new ArrayList<>();
-			}
-			Collections.addAll( preActions, actions );
-			return this;
-		}
-
-		public Builder addPostAction(JdbcAction... actions) {
-			if ( postActions == null ) {
-				postActions = new ArrayList<>();
-			}
-			Collections.addAll( postActions, actions );
+		@Override
+		protected Builder getThis() {
 			return this;
 		}
 
@@ -161,8 +146,8 @@ public class DatabaseOperationSelectImpl
 			if ( preActions == null && postActions == null ) {
 				return new DatabaseOperationSelectImpl( primaryAction );
 			}
-			final JdbcAction[] preActions = toArray( this.preActions );
-			final JdbcAction[] postActions = toArray( this.postActions );
+			final PreAction[] preActions = toArray( PreAction.class, this.preActions );
+			final PostAction[] postActions = toArray( PostAction.class, this.postActions );
 			return new DatabaseOperationSelectImpl( preActions, postActions, primaryAction );
 		}
 	}

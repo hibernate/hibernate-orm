@@ -419,6 +419,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * Change the default for entities and proxies loaded into this session
 	 * from modifiable to read-only mode, or from modifiable to read-only mode.
 	 * <p>
+	 * In some ways, Hibernate treats read-only entities the same as
+	 * entities that are not read-only; for example, it cascades
+	 * operations to associations as defined in the entity mapping.
+	 * <p>
 	 * Read-only entities are not dirty-checked and snapshots of persistent
 	 * state are not maintained. Read-only entities can be modified, but
 	 * changes are not persisted.

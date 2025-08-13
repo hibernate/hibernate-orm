@@ -387,6 +387,10 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * and proxies that are loaded into the session, use
 	 * {@link Session#setDefaultReadOnly(boolean)}.
 	 * <p>
+	 * In some ways, Hibernate treats read-only entities the same as
+	 * entities that are not read-only; for example, it cascades
+	 * operations to associations as defined in the entity mapping.
+	 * <p>
 	 * Read-only entities are not dirty-checked and snapshots of persistent
 	 * state are not maintained. Read-only entities can be modified, but
 	 * changes are not persisted.

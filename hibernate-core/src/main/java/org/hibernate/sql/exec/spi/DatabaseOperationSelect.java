@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.exec.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor.StatementCreator;
 import org.hibernate.sql.results.spi.ResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
@@ -15,6 +16,7 @@ import java.sql.PreparedStatement;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface DatabaseOperationSelect extends DatabaseOperation {
 	@Override
 	JdbcOperationQuerySelect getPrimaryOperation();

@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.exec.spi;
 
+import org.hibernate.Incubating;
+
 import java.sql.PreparedStatement;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -13,6 +15,7 @@ import java.util.function.Function;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface DatabaseOperationMutation extends DatabaseOperation {
 	/**
 	 * Perform the execution.

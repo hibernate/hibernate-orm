@@ -146,8 +146,8 @@ public class DatabaseOperationSelectImpl
 			if ( preActions == null && postActions == null ) {
 				return new DatabaseOperationSelectImpl( primaryAction );
 			}
-			final PreAction[] preActions = toArray( PreAction.class, this.preActions );
-			final PostAction[] postActions = toArray( PostAction.class, this.postActions );
+			final PreAction[] preActions = toPreActionArray( this.preActions );
+			final PostAction[] postActions = toPostActionArray( this.postActions );
 			return new DatabaseOperationSelectImpl( preActions, postActions, primaryAction );
 		}
 	}

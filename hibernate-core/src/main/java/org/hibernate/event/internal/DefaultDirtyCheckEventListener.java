@@ -9,14 +9,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityHolder;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.DirtyCheckEvent;
 import org.hibernate.event.spi.DirtyCheckEventListener;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.EntityPersister;
-
 
 /**
  * Determines if the current session holds modified state which
@@ -38,12 +35,12 @@ public class DefaultDirtyCheckEventListener implements DirtyCheckEventListener {
 
 	@Override
 	public void onDirtyCheck(DirtyCheckEvent event) throws HibernateException {
-		final EventSource session = event.getSession();
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final var session = event.getSession();
+		final var persistenceContext = session.getPersistenceContextInternal();
 		final var holdersByKey = persistenceContext.getEntityHoldersByKey();
 		if ( holdersByKey != null ) {
-			for ( var entry : holdersByKey.entrySet() ) {
-				if ( isEntityDirty( entry.getValue(), session ) ) {
+			for ( var holder : holdersByKey.values() ) {
+				if ( isEntityDirty( holder, session ) ) {
 					event.setDirty( true );
 					return;
 				}
@@ -61,25 +58,29 @@ public class DefaultDirtyCheckEventListener implements DirtyCheckEventListener {
 	}
 
 	private static boolean isEntityDirty(EntityHolder holder, EventSource session) {
-		final EntityEntry entityEntry = holder.getEntityEntry();
+		final var entityEntry = holder.getEntityEntry();
+		if ( entityEntry == null ) {
+			// holders with no entity entry yet cannot contain dirty entities
+			return false;
+		}
 		final Status status = entityEntry.getStatus();
 		return switch ( status ) {
 			case GONE, READ_ONLY -> false;
 			case DELETED -> true;
-			case MANAGED -> isManagedEntityDirty( holder.getManagedObject(), holder.getDescriptor(), entityEntry, session );
+			case MANAGED -> isManagedEntityDirty( holder.getEntity(), entityEntry, session );
 			case SAVING, LOADING -> throw new AssertionFailure( "Unexpected status: " + status );
 		};
 	}
 
-	private static boolean isManagedEntityDirty(
-			Object entity, EntityPersister descriptor, EntityEntry entityEntry, EventSource session) {
+	private static boolean isManagedEntityDirty(Object entity, EntityEntry entityEntry, EventSource session) {
 		if ( entityEntry.requiresDirtyCheck( entity ) ) { // takes into account CustomEntityDirtinessStrategy
-			final Object[] propertyValues =
+			final var persister = entityEntry.getPersister();
+			final var propertyValues =
 					entityEntry.getStatus() == Status.DELETED
 							? entityEntry.getDeletedState()
-							: descriptor.getValues( entity );
-			final int[] dirty =
-					descriptor.findDirty( propertyValues, entityEntry.getLoadedState(), entity, session );
+							: persister.getValues( entity );
+			final var dirty =
+					persister.findDirty( propertyValues, entityEntry.getLoadedState(), entity, session );
 			return dirty != null;
 		}
 		else {

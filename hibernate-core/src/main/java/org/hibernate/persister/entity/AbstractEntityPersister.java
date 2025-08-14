@@ -1999,61 +1999,62 @@ public abstract class AbstractEntityPersister
 		// Wrap expressions with aliases
 		final SelectClause selectClause = rootQuerySpec.getSelectClause();
 		final List<SqlSelection> sqlSelections = selectClause.getSqlSelections();
+		final Set<String> processedExpressions = new HashSet<>( sqlSelections.size() );
 		int i = 0;
-		int columnIndex = 0;
-		final String[] columnAliases = getSubclassColumnAliasClosure();
-		final int columnAliasesSize = columnAliases.length;
-		for ( String identifierAlias : identifierAliases ) {
-			sqlSelections.set(
-					i,
-					new SqlSelectionImpl(
-							i,
-							new AliasedExpression( sqlSelections.get( i ).getExpression(), identifierAlias + suffix )
-					)
-			);
-			if ( i < columnAliasesSize && columnAliases[i].equals( identifierAlias ) ) {
-				columnIndex++;
+		final int identifierSelectionSize = identifierMapping.getJdbcTypeCount();
+		for ( int j = 0; j < identifierSelectionSize; j++ ) {
+			final SelectableMapping selectableMapping = identifierMapping.getSelectable( j );
+			if ( processedExpressions.add( selectableMapping.getSelectionExpression() ) ) {
+				aliasSelection( sqlSelections, i, identifierAliases[j] + suffix );
+				i++;
 			}
-			i++;
 		}
 
-		if ( entityMetamodel.hasSubclasses() ) {
-			sqlSelections.set(
-					i,
-					new SqlSelectionImpl(
-							i,
-							new AliasedExpression( sqlSelections.get( i ).getExpression(), getDiscriminatorAlias() + suffix )
-					)
-			);
-			i++;
+		if ( hasSubclasses() ) {
+			assert discriminatorMapping.getJdbcTypeCount() == 1;
+			final SelectableMapping selectableMapping = discriminatorMapping.getSelectable( 0 );
+			if ( processedExpressions.add( selectableMapping.getSelectionExpression() ) ) {
+				aliasSelection( sqlSelections, i, getDiscriminatorAlias() + suffix );
+				i++;
+			}
 		}
 
 		if ( hasRowId() ) {
-			sqlSelections.set(
-					i,
-					new SqlSelectionImpl(
-							i,
-							new AliasedExpression( sqlSelections.get( i ).getExpression(), ROWID_ALIAS + suffix )
-					)
-			);
-			i++;
+			final SelectableMapping selectableMapping = rowIdMapping;
+			if ( processedExpressions.add( selectableMapping.getSelectionExpression() ) ) {
+				aliasSelection( sqlSelections, i, ROWID_ALIAS + suffix );
+				i++;
+			}
 		}
 
+		final String[] columnAliases = getSubclassColumnAliasClosure();
 		final String[] formulaAliases = getSubclassFormulaAliasClosure();
+		int columnIndex = 0;
 		int formulaIndex = 0;
-		for ( ; i < sqlSelections.size(); i++ ) {
-			final SqlSelection sqlSelection = sqlSelections.get( i );
-			final ColumnReference columnReference = (ColumnReference) sqlSelection.getExpression();
-			final String selectAlias = !columnReference.isColumnExpressionFormula()
-					? columnAliases[columnIndex++] + suffix
-					: formulaAliases[formulaIndex++] + suffix;
-			sqlSelections.set(
-					i,
-					new SqlSelectionImpl(
-							sqlSelection.getValuesArrayPosition(),
-							new AliasedExpression( sqlSelection.getExpression(), selectAlias )
-					)
-			);
+		final int size = getNumberOfFetchables();
+		// getSubclassColumnAliasClosure contains the _identifierMapper columns when it has an id class,
+		// which need to be skipped
+		if ( identifierMapping instanceof NonAggregatedIdentifierMapping
+				&& ( (NonAggregatedIdentifierMapping) identifierMapping ).getIdClassEmbeddable() != null ) {
+			columnIndex = identifierSelectionSize;
+		}
+		for ( int j = 0; j < size; j++ ) {
+			final AttributeMapping fetchable = getFetchable( j );
+			if ( !(fetchable instanceof PluralAttributeMapping)
+					&& !skipFetchable( fetchable, fetchable.getMappedFetchOptions().getTiming() )
+					&& fetchable.isSelectable() ) {
+				final int jdbcTypeCount = fetchable.getJdbcTypeCount();
+				for ( int k = 0; k < jdbcTypeCount; k++ ) {
+					final SelectableMapping selectableMapping = fetchable.getSelectable( k );
+					if ( processedExpressions.add( selectableMapping.getSelectionExpression() ) ) {
+						final String baseAlias = selectableMapping.isFormula()
+								? formulaAliases[formulaIndex++]
+								: columnAliases[columnIndex++];
+						aliasSelection( sqlSelections, i, baseAlias + suffix );
+						i++;
+					}
+				}
+			}
 		}
 
 		final String sql = getFactory().getJdbcServices()
@@ -2073,6 +2074,17 @@ public abstract class AbstractEntityPersister
 		return expression;
 	}
 
+	private static void aliasSelection(
+			List<SqlSelection> sqlSelections,
+			int selectionIndex,
+			String alias) {
+		final Expression expression = sqlSelections.get( selectionIndex ).getExpression();
+		sqlSelections.set(
+				selectionIndex,
+				new SqlSelectionImpl( selectionIndex, new AliasedExpression( expression, alias ) )
+		);
+	}
+
 	private ImmutableFetchList fetchProcessor(FetchParent fetchParent, LoaderSqlAstCreationState creationState) {
 		final FetchableContainer fetchableContainer = fetchParent.getReferencedMappingContainer();
 		final int size = fetchableContainer.getNumberOfFetchables();
@@ -2083,43 +2095,43 @@ public abstract class AbstractEntityPersister
 			// Ignore plural attributes
 			if ( !( fetchable instanceof PluralAttributeMapping ) ) {
 				final FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
-				if ( fetchable.asBasicValuedModelPart() != null ) {
-					// Ignore lazy basic columns
-					if ( fetchTiming == FetchTiming.DELAYED ) {
-						continue;
+				if ( !skipFetchable( fetchable, fetchTiming ) ) {
+					if ( fetchTiming == null ) {
+						throw new AssertionFailure( "fetchTiming was null" );
 					}
-				}
-				else if ( fetchable instanceof Association ) {
-					final Association association = (Association) fetchable;
-					// Ignore the fetchable if the FK is on the other side
-					if ( association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
-						continue;
+					if ( fetchable.isSelectable() ) {
+						final Fetch fetch = fetchParent.generateFetchableFetch(
+								fetchable,
+								fetchParent.resolveNavigablePath( fetchable ),
+								fetchTiming,
+								false,
+								null,
+								creationState
+						);
+						fetches.add( fetch );
 					}
-					// Ensure the FK comes from the root table
-					if ( !getRootTableName().equals( association.getForeignKeyDescriptor().getKeyTable() ) ) {
-						continue;
-					}
-				}
-
-				if ( fetchTiming == null ) {
-					throw new AssertionFailure("fetchTiming was null");
-				}
-
-				if ( fetchable.isSelectable() ) {
-					final Fetch fetch = fetchParent.generateFetchableFetch(
-							fetchable,
-							fetchParent.resolveNavigablePath( fetchable ),
-							fetchTiming,
-							false,
-							null,
-							creationState
-					);
-					fetches.add( fetch );
 				}
 			}
 		}
 
 		return fetches.build();
+	}
+
+	private boolean skipFetchable(Fetchable fetchable, FetchTiming fetchTiming) {
+		if ( fetchable.asBasicValuedModelPart() != null ) {
+			// Ignore lazy basic columns
+			return fetchTiming == FetchTiming.DELAYED;
+		}
+		else if ( fetchable instanceof Association ) {
+			final Association association = (Association) fetchable;
+			// Ignore the fetchable if the FK is on the other side
+			return association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET
+					// Ensure the FK comes from the root table
+					|| !getRootTableName().equals( association.getForeignKeyDescriptor().getKeyTable() );
+		}
+		else {
+			return false;
+		}
 	}
 
 	/**
@@ -6354,7 +6366,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public Fetchable getFetchable(int position) {
+	public AttributeMapping getFetchable(int position) {
 		return getStaticFetchableList().get( position );
 	}
 

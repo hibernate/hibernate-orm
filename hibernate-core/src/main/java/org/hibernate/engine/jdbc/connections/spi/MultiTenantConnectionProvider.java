@@ -141,6 +141,28 @@ public interface MultiTenantConnectionProvider<T> extends Service, Wrapped {
 	 */
 	boolean supportsAggressiveRelease();
 
+	/**
+	 * Does this connection provider correctly set the
+	 * {@linkplain java.sql.Connection#setSchema schema}
+	 * of the returned JDBC connections?
+	 * @return {@code true} if the connection provider handles this;
+	 *         {@code false} if the client should set the schema
+	 */
+	default boolean handlesConnectionSchema() {
+		return false;
+	}
+
+	/**
+	 * Does this connection provider correctly set the
+	 * {@linkplain java.sql.Connection#setReadOnly read-only mode}
+	 * of the returned JDBC connections?
+	 * @return {@code true} if the connection provider handles this;
+	 *         {@code false} if the client should set the read-only mode
+	 */
+	default boolean handlesConnectionReadOnly() {
+		return false;
+	}
+
 	default DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
 		return new DatabaseConnectionInfoImpl( dialect );
 	}

@@ -57,9 +57,27 @@ public interface MultiTenantConnectionProvider<T> extends Service, Wrapped {
 	 * @return The obtained JDBC connection
 	 *
 	 * @throws SQLException Indicates a problem opening a connection
-	 * @throws org.hibernate.HibernateException Indicates a problem otherwise obtaining a connection.
+	 * @throws org.hibernate.HibernateException Indicates a problem obtaining a connection
 	 */
 	Connection getConnection(T tenantIdentifier) throws SQLException;
+
+	/**
+	 * Obtains a connection to a read-only replica for use according to the underlying
+	 * strategy of this provider.
+	 *
+	 * @param tenantIdentifier The identifier of the tenant for which to get a connection
+	 *
+	 * @return The obtained JDBC connection
+	 *
+	 * @throws SQLException Indicates a problem opening a connection
+	 * @throws org.hibernate.HibernateException Indicates a problem obtaining a connection
+	 *
+	 * @since 7.2
+	 */
+	default Connection getReadOnlyConnection(T tenantIdentifier)
+			throws SQLException {
+		throw new UnsupportedOperationException( "No read-only replica is available" );
+	}
 
 	/**
 	 * Release a connection from Hibernate use.
@@ -68,9 +86,25 @@ public interface MultiTenantConnectionProvider<T> extends Service, Wrapped {
 	 * @param tenantIdentifier The identifier of the tenant.
 	 *
 	 * @throws SQLException Indicates a problem closing the connection
-	 * @throws org.hibernate.HibernateException Indicates a problem otherwise releasing a connection.
+	 * @throws org.hibernate.HibernateException Indicates a problem releasing a connection
 	 */
 	void releaseConnection(T tenantIdentifier, Connection connection) throws SQLException;
+
+	/**
+	 * Release a connection to a read-only replica from Hibernate use.
+	 *
+	 * @param connection The JDBC connection to release
+	 * @param tenantIdentifier The identifier of the tenant.
+	 *
+	 * @throws SQLException Indicates a problem closing the connection
+	 * @throws org.hibernate.HibernateException Indicates a problem releasing a connection
+	 *
+	 * @since 7.2
+	 */
+	default void releaseReadOnlyConnection(T tenantIdentifier, Connection connection)
+			throws SQLException {
+		throw new UnsupportedOperationException( "No read-only replica is available" );
+	}
 
 	/**
 	 * Does this connection provider support aggressive release of JDBC connections and later

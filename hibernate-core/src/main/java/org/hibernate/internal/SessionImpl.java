@@ -200,7 +200,7 @@ public class SessionImpl
 
 		final DiagnosticEvent sessionOpenEvent = getEventMonitor().beginSessionOpenEvent();
 		try {
-			persistenceContext = createPersistenceContext();
+			persistenceContext = createPersistenceContext( options );
 			actionQueue = createActionQueue();
 			eventListenerGroups = factory.getEventListenerGroups();
 
@@ -260,8 +260,10 @@ public class SessionImpl
 				: ConfigurationHelper.getFlushMode( getSessionProperty( HINT_FLUSH_MODE ), FlushMode.AUTO );
 	}
 
-	protected PersistenceContext createPersistenceContext() {
-		return PersistenceContexts.createPersistenceContext( this );
+	protected PersistenceContext createPersistenceContext(SessionCreationOptions options) {
+		final var persistenceContext = PersistenceContexts.createPersistenceContext( this );
+		persistenceContext.setDefaultReadOnly( options.isReadOnly() );
+		return persistenceContext;
 	}
 
 	protected ActionQueue createActionQueue() {
@@ -1934,6 +1936,9 @@ public class SessionImpl
 
 	@Override
 	public void setDefaultReadOnly(boolean defaultReadOnly) {
+		if ( !defaultReadOnly && isReadOnly() ) {
+			throw new SessionException( "Session was created in read-only mode" );
+		}
 		persistenceContext.setDefaultReadOnly( defaultReadOnly );
 	}
 
@@ -2062,6 +2067,7 @@ public class SessionImpl
 		private final SessionImpl session;
 		private boolean shareTransactionContext;
 		private boolean tenantIdChanged;
+		private boolean readOnlyChanged;
 
 		private SharedSessionBuilderImpl(SessionImpl session) {
 			super( (SessionFactoryImpl) session.getFactory() );
@@ -2073,8 +2079,15 @@ public class SessionImpl
 		@Override
 		public SessionImpl openSession() {
 			if ( session.getSessionFactoryOptions().isMultiTenancyEnabled() ) {
-				if ( tenantIdChanged && shareTransactionContext ) {
-					throw new SessionException( "Cannot redefine the tenant identifier on a child session if the connection is reused" );
+				if ( shareTransactionContext ) {
+					if ( tenantIdChanged ) {
+						throw new SessionException(
+								"Cannot redefine the tenant identifier on a child session if the connection is reused" );
+					}
+					if ( readOnlyChanged ) {
+						throw new SessionException(
+								"Cannot redefine the read-only mode on a child session if the connection is reused" );
+					}
 				}
 			}
 			return super.openSession();
@@ -2095,6 +2108,13 @@ public class SessionImpl
 		public SharedSessionBuilderImpl tenantIdentifier(Object tenantIdentifier) {
 			super.tenantIdentifier( tenantIdentifier );
 			tenantIdChanged = true;
+			return this;
+		}
+
+		@Override
+		public SessionFactoryImpl.SessionBuilderImpl readOnly(boolean readOnly) {
+			super.readOnly( readOnly );
+			readOnlyChanged = true;
 			return this;
 		}
 
@@ -2215,7 +2235,7 @@ public class SessionImpl
 		}
 
 		@Override
-		public SessionBuilder statementInspector(UnaryOperator<String> operator) {
+		public SharedSessionBuilderImpl statementInspector(UnaryOperator<String> operator) {
 			super.statementInspector(operator);
 			return this;
 		}

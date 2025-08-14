@@ -13,8 +13,6 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.monitor.spi.EventMonitor;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
 
 /**
  * @author Steve Ebersole
@@ -37,8 +35,8 @@ public class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, 
 
 	@Override
 	public Connection obtainConnection() throws SQLException {
-		final EventMonitor eventMonitor = session.getEventMonitor();
-		final DiagnosticEvent connectionAcquisitionEvent = eventMonitor.beginJdbcConnectionAcquisitionEvent();
+		final var eventMonitor = session.getEventMonitor();
+		final var connectionAcquisitionEvent = eventMonitor.beginJdbcConnectionAcquisitionEvent();
 		try {
 			listener.jdbcConnectionAcquisitionStart();
 			return connectionProvider.getConnection();
@@ -51,8 +49,8 @@ public class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, 
 
 	@Override
 	public void releaseConnection(Connection connection) throws SQLException {
-		final EventMonitor eventMonitor = session.getEventMonitor();
-		final DiagnosticEvent connectionReleaseEvent = eventMonitor.beginJdbcConnectionReleaseEvent();
+		final var eventMonitor = session.getEventMonitor();
+		final var connectionReleaseEvent = eventMonitor.beginJdbcConnectionReleaseEvent();
 		try {
 			listener.jdbcConnectionReleaseStart();
 			connectionProvider.closeConnection( connection );

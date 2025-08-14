@@ -161,6 +161,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private final Interceptor interceptor;
 
 	private final Object tenantIdentifier;
+	private final boolean readOnly;
 	private final TimeZone jdbcTimeZone;
 
 	// mutable state
@@ -190,6 +191,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		cacheTransactionSynchronization = factory.getCache().getRegionFactory().createTransactionContext( this );
 		tenantIdentifier = getTenantId( factoryOptions, options );
+		readOnly = options.isReadOnly();
 		interceptor = interpret( options.getInterceptor() );
 		jdbcTimeZone = options.getJdbcTimeZone();
 		sessionEventsManager = createSessionEventsManager( factoryOptions, options );
@@ -296,9 +298,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return tenantIdentifier;
 	}
 
+	boolean isReadOnly() {
+		return readOnly;
+	}
+
 	private static SessionEventListenerManager createSessionEventsManager(
 			SessionFactoryOptions factoryOptions, SessionCreationOptions options) {
-		final List<SessionEventListener> customListeners = options.getCustomSessionEventListener();
+		final var customListeners = options.getCustomSessionEventListener();
 		return customListeners == null
 				? new SessionEventListenerManagerImpl( factoryOptions.buildSessionEventListeners() )
 				: new SessionEventListenerManagerImpl( customListeners );
@@ -694,6 +700,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				// we're using datasource-based multitenancy
 				jdbcConnectionAccess = new ContextualJdbcConnectionAccess(
 						tenantIdentifier,
+						readOnly,
 						sessionEventsManager,
 						factory.multiTenantConnectionProvider,
 						this

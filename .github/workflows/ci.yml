@@ -4,12 +4,12 @@ on:
   push:
     branches:
       # Pattern order matters: the last matching inclusion/exclusion wins
-      - 'main'
+      - '7.1'
       # We don't want to run CI on branches for dependabot, just on the PR.
       - '!dependabot/**'
   pull_request:
     branches:
-      - 'main'
+      - '7.1'
       # Ignore dependabot PRs that are not just about build dependencies or workflows;
       # we'll reject such PRs and send one ourselves.
       - '!dependabot/**'

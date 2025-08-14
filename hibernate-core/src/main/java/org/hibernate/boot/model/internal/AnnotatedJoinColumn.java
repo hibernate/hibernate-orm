@@ -22,7 +22,8 @@ import org.hibernate.mapping.Value;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 
-import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
+import java.util.Locale;
+
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.isQuoted;
@@ -109,9 +110,13 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			String defaultColumnSuffix) {
 		if ( joinColumn != null ) {
 			if ( mappedBy != null ) {
-				throw new AnnotationException( "Association '"
-						+ getRelativePath( propertyHolder, inferredData.getPropertyName() )
-						+ "' is 'mappedBy' a different entity and may not explicitly specify the '@JoinColumn'" );
+				throw new AnnotationException(
+						String.format(
+								Locale.ROOT,
+								"Association '%s' of entity '%s' is 'mappedBy' a different entity and may not explicitly specify the '@JoinColumn'",
+								inferredData.getPropertyName(),
+								propertyHolder.getEntityName() )
+				);
 			}
 			return explicitJoinColumn( joinColumn, parent, inferredData, defaultColumnSuffix );
 		}

@@ -166,6 +166,29 @@ public interface SessionBuilder {
 	SessionBuilder tenantIdentifier(Object tenantIdentifier);
 
 	/**
+	 * Specify a {@linkplain Session#isDefaultReadOnly read-only mode}
+	 * for the session.
+	 * <p>
+	 * If read/write replication is in use, then:
+	 * <ul>
+	 * <li>a read-only session will connect to a read-only replica, but
+	 * <li>a non-read-only session will connect to a writable replica.
+	 * </ul>
+	 * <p>
+	 * If a session is created in read-only mode, then it cannot be
+	 * changed to read-write mode, and any call to
+	 * {@link Session#setDefaultReadOnly(boolean)} with fail. On the
+	 * other hand, if a session is created in read-write mode, then it
+	 * may later be switched to read-only mode, but all database access
+	 * is directed to the writable replica.
+	 *
+	 * @return {@code this}, for method chaining
+	 * @since 7.2
+	 */
+	@Incubating
+	SessionBuilder readOnly(boolean readOnly);
+
+	/**
 	 * Add one or more {@link SessionEventListener} instances to the list of
 	 * listeners for the new session to be built.
 	 *

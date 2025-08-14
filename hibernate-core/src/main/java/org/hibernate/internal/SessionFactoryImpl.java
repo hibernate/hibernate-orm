@@ -34,7 +34,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
-import org.hibernate.SessionBuilder;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
@@ -1118,6 +1117,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		private boolean autoClose;
 		private boolean autoClear;
 		private Object tenantIdentifier;
+		private boolean readOnly;
 		private boolean identifierRollback;
 		private TimeZone jdbcTimeZone;
 		private boolean explicitNoInterceptor;
@@ -1226,6 +1226,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
+		public boolean isReadOnly() {
+			return readOnly;
+		}
+
+		@Override
 		public boolean isIdentifierRollbackEnabled() {
 			return identifierRollback;
 		}
@@ -1270,7 +1275,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
-		public SessionBuilder statementInspector(UnaryOperator<String> operator) {
+		public SessionBuilderImpl statementInspector(UnaryOperator<String> operator) {
 			this.statementInspector = operator::apply;
 			return this;
 		}
@@ -1288,7 +1293,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
-		public SessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode) {
+		public SessionBuilderImpl connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode) {
 			this.connectionHandlingMode = PhysicalConnectionHandlingMode.interpret( acquisitionMode, releaseMode);
 			return this;
 		}
@@ -1330,7 +1335,13 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
-		public SessionBuilder identifierRollback(boolean identifierRollback) {
+		public SessionBuilderImpl readOnly(boolean readOnly) {
+			this.readOnly = readOnly;
+			return this;
+		}
+
+		@Override
+		public SessionBuilderImpl identifierRollback(boolean identifierRollback) {
 			this.identifierRollback = identifierRollback;
 			return this;
 		}
@@ -1371,6 +1382,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		private StatementInspector statementInspector;
 		private Connection connection;
 		private Object tenantIdentifier;
+		private boolean readOnly;
 
 		public StatelessSessionBuilderImpl(SessionFactoryImpl sessionFactory) {
 			this.sessionFactory = sessionFactory;
@@ -1402,6 +1414,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		public StatelessSessionBuilder tenantIdentifier(Object tenantIdentifier) {
 			this.tenantIdentifier = tenantIdentifier;
+			return this;
+		}
+
+		@Override
+		public StatelessSessionBuilder readOnly(boolean readOnly) {
+			this.readOnly = readOnly;
 			return this;
 		}
 
@@ -1478,6 +1496,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		public String getTenantIdentifier() {
 			return tenantIdentifier == null ? null
 					: sessionFactory.getTenantIdentifierJavaType().toString( tenantIdentifier );
+		}
+
+		@Override
+		public boolean isReadOnly() {
+			return readOnly;
 		}
 
 		@Override

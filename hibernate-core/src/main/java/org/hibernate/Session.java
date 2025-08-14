@@ -444,6 +444,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @param readOnly {@code true}, the default for loaded entities/proxies is read-only;
 	 *				 {@code false}, the default for loaded entities/proxies is modifiable
+	 * @throws SessionException if the session was originally
+	 *         {@linkplain SessionBuilder#readOnly created in read-only mode}
 	 */
 	void setDefaultReadOnly(boolean readOnly);
 

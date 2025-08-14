@@ -13,7 +13,7 @@ import org.hibernate.ReplicationMode;
  *
  * @see org.hibernate.Session#replicate
  */
-public class ReplicateEvent extends AbstractEvent {
+public class ReplicateEvent extends AbstractSessionEvent {
 	private Object object;
 	private ReplicationMode replicationMode;
 	private String entityName;

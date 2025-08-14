@@ -4,7 +4,7 @@
  */
 package org.hibernate.event.internal;
 
-import org.hibernate.event.spi.EventSource;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.PostUpsertEvent;
 import org.hibernate.event.spi.PostUpsertEventListener;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
@@ -29,7 +29,7 @@ public class PostUpsertEventListenerStandardImpl implements PostUpsertEventListe
 		handlePostUpsert( event.getEntity(), event.getSession() );
 	}
 
-	private void handlePostUpsert(Object entity, EventSource source) {
+	private void handlePostUpsert(Object entity, SharedSessionContractImplementor source) {
 //		// mimic the preUpdate filter
 //		if ( source == null // it must be a StatelessSession
 //				|| source.getPersistenceContextInternal().getEntry(entity).getStatus() != Status.DELETED ) {

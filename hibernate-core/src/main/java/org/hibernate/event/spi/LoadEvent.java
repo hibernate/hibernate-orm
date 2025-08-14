@@ -13,7 +13,7 @@ import org.hibernate.Locking;
  *
  * @author Steve Ebersole
  */
-public class LoadEvent extends AbstractEvent {
+public class LoadEvent extends AbstractSessionEvent {
 
 	private Object entityId;
 	private String entityClassName;

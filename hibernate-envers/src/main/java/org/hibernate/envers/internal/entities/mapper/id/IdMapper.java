@@ -4,12 +4,12 @@
  */
 package org.hibernate.envers.internal.entities.mapper.id;
 
-import java.util.List;
-import java.util.Map;
-
-import org.hibernate.Session;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.service.ServiceRegistry;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Base contract for all identifier mappers.
@@ -22,7 +22,7 @@ public interface IdMapper {
 
 	void mapToMapFromId(Map<String, Object> data, Object obj);
 
-	default void mapToMapFromId(Session session, Map<String, Object> data, Object obj) {
+	default void mapToMapFromId(SharedSessionContractImplementor session, Map<String, Object> data, Object obj) {
 		// Delegate to the old behavior, allowing implementations to override.
 		mapToMapFromId( data, obj );
 	}

@@ -13,6 +13,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.internal.synchronization.work.AuditWorkUnit;
@@ -28,7 +29,7 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 	private static final Logger log = Logger.getLogger( AuditProcess.class );
 
 	private final RevisionInfoGenerator revisionInfoGenerator;
-	private final SessionImplementor session;
+	private final SharedSessionContractImplementor session;
 
 	private final LinkedList<AuditWorkUnit> workUnits;
 	private final Queue<AuditWorkUnit> undoQueue;
@@ -37,7 +38,7 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 	private final EntityChangeNotifier entityChangeNotifier;
 	private Object revisionData;
 
-	public AuditProcess(RevisionInfoGenerator revisionInfoGenerator, SessionImplementor session) {
+	public AuditProcess(RevisionInfoGenerator revisionInfoGenerator, SharedSessionContractImplementor session) {
 		this.revisionInfoGenerator = revisionInfoGenerator;
 		this.session = session;
 

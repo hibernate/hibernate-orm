@@ -4,8 +4,6 @@
  */
 package org.hibernate.cache.internal;
 
-import java.util.Set;
-
 import org.hibernate.HibernateException;
 import org.hibernate.action.internal.CollectionAction;
 import org.hibernate.boot.Metadata;
@@ -29,8 +27,9 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-
 import org.jboss.logging.Logger;
+
+import java.util.Set;
 
 import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -65,7 +64,9 @@ public class CollectionCacheInvalidator
 
 	@Override
 	public void onPostInsert(PostInsertEvent event) {
-		evictCache( event.getEntity(), event.getPersister(), event.getSession(), null );
+		if ( event.getSession() instanceof EventSource eventSource ) {
+			evictCache( event.getEntity(), event.getPersister(), eventSource, null );
+		}
 	}
 
 	@Override
@@ -75,12 +76,16 @@ public class CollectionCacheInvalidator
 
 	@Override
 	public void onPostDelete(PostDeleteEvent event) {
-		evictCache( event.getEntity(), event.getPersister(), event.getSession(), null );
+		if ( event.getSession() instanceof EventSource eventSource ) {
+			evictCache( event.getEntity(), event.getPersister(), eventSource, null );
+		}
 	}
 
 	@Override
 	public void onPostUpdate(PostUpdateEvent event) {
-		evictCache( event.getEntity(), event.getPersister(), event.getSession(), event.getOldState() );
+		if ( event.getSession() instanceof EventSource eventSource ) {
+			evictCache( event.getEntity(), event.getPersister(), eventSource, event.getOldState() );
+		}
 	}
 
 	private void integrate(SessionFactoryImplementor sessionFactory) {

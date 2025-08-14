@@ -6,7 +6,7 @@ package org.hibernate.envers.internal.entities.mapper.id;
 
 import java.util.Map;
 
-import org.hibernate.Session;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntitiesConfigurations;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
@@ -44,7 +44,7 @@ public class VirtualEntitySingleIdMapper extends SingleIdMapper {
 	}
 
 	@Override
-	public void mapToMapFromId(Session session, Map<String, Object> data, Object obj) {
+	public void mapToMapFromId(SharedSessionContractImplementor session, Map<String, Object> data, Object obj) {
 		final Object value = getValueFromObject( propertyData, obj );
 
 		// Either loads the entity from the session's 1LC if it already exists or potentially creates a

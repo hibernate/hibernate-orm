@@ -4,14 +4,14 @@
  */
 package org.hibernate.envers.internal.synchronization.work;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)

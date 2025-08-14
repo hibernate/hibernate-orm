@@ -4,14 +4,14 @@
  */
 package org.hibernate.envers.internal.synchronization.work;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.tools.ArraysTools;
 import org.hibernate.persister.entity.EntityPersister;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -24,7 +24,7 @@ public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 	private final String[] propertyNames;
 
 	public DelWorkUnit(
-			SessionImplementor sessionImplementor,
+			SharedSessionContractImplementor sessionImplementor,
 			String entityName,
 			EnversService enversService,
 			Object id,

@@ -4,6 +4,7 @@
  */
 package org.hibernate.event.spi;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -24,7 +25,7 @@ public class PostUpdateEvent extends AbstractPostDatabaseOperationEvent {
 			Object[] oldState,
 			int[] dirtyProperties,
 			EntityPersister persister,
-			EventSource source) {
+			SharedSessionContractImplementor source) {
 		super( source, entity, id, persister );
 		this.state = state;
 		this.oldState = oldState;

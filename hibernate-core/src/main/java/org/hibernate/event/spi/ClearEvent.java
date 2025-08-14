@@ -11,7 +11,7 @@ package org.hibernate.event.spi;
  *
  * @see org.hibernate.Session#clear
  */
-public class ClearEvent extends AbstractEvent {
+public class ClearEvent extends AbstractSessionEvent {
 	public ClearEvent(EventSource source) {
 		super( source );
 	}

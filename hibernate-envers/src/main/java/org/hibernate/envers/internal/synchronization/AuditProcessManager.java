@@ -13,7 +13,6 @@ import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoGenerator;
-import org.hibernate.event.spi.EventSource;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -28,7 +27,7 @@ public class AuditProcessManager {
 		this.revisionInfoGenerator = revisionInfoGenerator;
 	}
 
-	public AuditProcess get(EventSource session) {
+	public AuditProcess get(SharedSessionContractImplementor session) {
 		final Transaction transaction = session.accessTransaction();
 
 		AuditProcess auditProcess = auditProcesses.get( transaction );

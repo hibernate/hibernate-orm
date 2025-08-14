@@ -4,12 +4,8 @@
  */
 package org.hibernate.envers.internal.entities.mapper;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
@@ -19,6 +15,10 @@ import org.hibernate.envers.internal.tools.Tools;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.Getter;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -74,7 +74,7 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 
 	@Override
 	public boolean map(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			String[] propertyNames,
 			Object[] newState,
@@ -97,7 +97,7 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 
 	@Override
 	public boolean mapToMapFromEntity(
-			final SessionImplementor session,
+			final SharedSessionContractImplementor session,
 			final Map<String, Object> data,
 			final Object newObj,
 			final Object oldObj) {
@@ -141,7 +141,7 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 
 	@Override
 	public void mapModifiedFlagsToMapFromEntity(
-			final SessionImplementor session,
+			final SharedSessionContractImplementor session,
 			final Map<String, Object> data,
 			final Object newObj,
 			final Object oldObj) {
@@ -240,7 +240,7 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 
 	@Override
 	public List<PersistentCollectionChangeData> mapCollectionChanges(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			String referencingPropertyName,
 			PersistentCollection newColl,
 			Serializable oldColl, Object id) {

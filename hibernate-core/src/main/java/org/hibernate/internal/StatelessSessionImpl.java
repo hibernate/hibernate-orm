@@ -565,7 +565,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		else {
 			boolean veto = false;
-			final PreInsertEvent event = new PreInsertEvent( entity, id, state, persister, null );
+			final PreInsertEvent event = new PreInsertEvent( entity, id, state, persister, this );
 			for ( PreInsertEventListener listener : eventListenerGroups.eventListenerGroup_PRE_INSERT.listeners() ) {
 				veto |= listener.onPreInsert( event );
 			}
@@ -580,7 +580,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		else {
 			boolean veto = false;
-			final PreUpdateEvent event = new PreUpdateEvent( entity, id, state, null, persister, null );
+			final PreUpdateEvent event = new PreUpdateEvent( entity, id, state, null, persister, this );
 			for ( PreUpdateEventListener listener : eventListenerGroups.eventListenerGroup_PRE_UPDATE.listeners() ) {
 				veto |= listener.onPreUpdate( event );
 			}
@@ -595,7 +595,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		else {
 			boolean veto = false;
-			final PreUpsertEvent event = new PreUpsertEvent( entity, id, state, persister, null );
+			final PreUpsertEvent event = new PreUpsertEvent( entity, id, state, persister, this );
 			for ( PreUpsertEventListener listener : eventListenerGroups.eventListenerGroup_PRE_UPSERT.listeners() ) {
 				veto |= listener.onPreUpsert( event );
 			}
@@ -610,7 +610,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		else {
 			boolean veto = false;
-			final PreDeleteEvent event = new PreDeleteEvent( entity, id, null, persister, null );
+			final PreDeleteEvent event = new PreDeleteEvent( entity, id, null, persister, this );
 			for ( PreDeleteEventListener listener : eventListenerGroups.eventListenerGroup_PRE_DELETE.listeners() ) {
 				veto |= listener.onPreDelete( event );
 			}
@@ -621,28 +621,28 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	// Hibernate Reactive may need to call this
 	protected void firePostInsert(Object entity, Object id, Object[] state, EntityPersister persister) {
 		eventListenerGroups.eventListenerGroup_POST_INSERT.fireLazyEventOnEachListener(
-				() -> new PostInsertEvent( entity, id, state, persister, null ),
+				() -> new PostInsertEvent( entity, id, state, persister, this ),
 				PostInsertEventListener::onPostInsert );
 	}
 
 	// Hibernate Reactive may need to call this
 	protected void firePostUpdate(Object entity, Object id, Object[] state, EntityPersister persister) {
 		eventListenerGroups.eventListenerGroup_POST_UPDATE.fireLazyEventOnEachListener(
-				() -> new PostUpdateEvent( entity, id, state, null, null, persister, null ),
+				() -> new PostUpdateEvent( entity, id, state, null, null, persister, this ),
 				PostUpdateEventListener::onPostUpdate );
 	}
 
 	// Hibernate Reactive may need to call this
 	protected void firePostUpsert(Object entity, Object id, Object[] state, EntityPersister persister) {
 		eventListenerGroups.eventListenerGroup_POST_UPSERT.fireLazyEventOnEachListener(
-				() -> new PostUpsertEvent( entity, id, state, null, persister, null ),
+				() -> new PostUpsertEvent( entity, id, state, null, persister, this ),
 				PostUpsertEventListener::onPostUpsert );
 	}
 
 	// Hibernate Reactive may need to call this
 	protected void firePostDelete(Object entity, Object id, EntityPersister persister) {
 		eventListenerGroups.eventListenerGroup_POST_DELETE.fireLazyEventOnEachListener(
-				() -> new PostDeleteEvent( entity, id, null, persister, null ),
+				() -> new PostDeleteEvent( entity, id, null, persister, this ),
 				PostDeleteEventListener::onPostDelete );
 	}
 

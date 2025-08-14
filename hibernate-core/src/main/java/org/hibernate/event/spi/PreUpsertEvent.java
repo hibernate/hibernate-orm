@@ -4,6 +4,7 @@
  */
 package org.hibernate.event.spi;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -28,7 +29,7 @@ public class PreUpsertEvent extends AbstractPreDatabaseOperationEvent {
 			Object id,
 			Object[] state,
 			EntityPersister persister,
-			EventSource source) {
+			SharedSessionContractImplementor source) {
 		super( source, entity, id, persister );
 		this.state = state;
 	}

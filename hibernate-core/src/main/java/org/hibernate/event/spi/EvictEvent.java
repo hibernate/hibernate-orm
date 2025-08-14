@@ -13,7 +13,7 @@ package org.hibernate.event.spi;
  * @see org.hibernate.Session#evict
  * @see org.hibernate.Session#detach
  */
-public class EvictEvent extends AbstractEvent {
+public class EvictEvent extends AbstractSessionEvent {
 
 	private Object object;
 

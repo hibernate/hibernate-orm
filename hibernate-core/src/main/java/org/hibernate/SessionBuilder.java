@@ -186,6 +186,9 @@ public interface SessionBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 * @since 7.2
+	 *
+	 * @see org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider#getReadOnlyConnection(Object)
+	 * @see org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider#releaseReadOnlyConnection(Object, Connection)
 	 */
 	@Incubating
 	SessionBuilder readOnly(boolean readOnly);

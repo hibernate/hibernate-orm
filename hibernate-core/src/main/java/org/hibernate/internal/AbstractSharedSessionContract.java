@@ -180,23 +180,25 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	public AbstractSharedSessionContract(SessionFactoryImpl factory, SessionCreationOptions options) {
 		this.factory = factory;
-		this.factoryOptions = factory.getSessionFactoryOptions();
-		this.jdbcServices = factory.getJdbcServices();
 
+		factoryOptions = factory.getSessionFactoryOptions();
+		jdbcServices = factory.getJdbcServices();
 		cacheTransactionSynchronization = factory.getCache().getRegionFactory().createTransactionContext( this );
+
 		tenantIdentifier = getTenantId( factoryOptions, options );
 		readOnly = options.isReadOnly();
+		cacheMode = options.getInitialCacheMode();
 		interceptor = interpret( options.getInterceptor() );
 		jdbcTimeZone = options.getJdbcTimeZone();
+
 		sessionEventsManager = createSessionEventsManager( factoryOptions, options );
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
 
-		setCriteriaCopyTreeEnabled( factoryOptions.isCriteriaCopyTreeEnabled() );
-		setCriteriaPlanCacheEnabled( factoryOptions.isCriteriaPlanCacheEnabled() );
-		setNativeJdbcParametersIgnored( factoryOptions.getNativeJdbcParametersIgnored() );
-		setCacheMode( factoryOptions.getInitialSessionCacheMode() );
+		criteriaCopyTreeEnabled = factoryOptions.isCriteriaCopyTreeEnabled();
+		criteriaPlanCacheEnabled = factoryOptions.isCriteriaPlanCacheEnabled();
+		nativeJdbcParametersIgnored = factoryOptions.getNativeJdbcParametersIgnored();
 
-		final StatementInspector statementInspector = interpret( options.getStatementInspector() );
+		final var statementInspector = interpret( options.getStatementInspector() );
 
 		isTransactionCoordinatorShared = isTransactionCoordinatorShared( options );
 		if ( isTransactionCoordinatorShared ) {

@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
+import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.FlushMode;
@@ -138,8 +139,14 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 	}
 
 	@Override
-	public SessionBuilder readOnly(boolean readOnly) {
+	public SharedSessionBuilder readOnly(boolean readOnly) {
 		delegate.readOnly( readOnly );
+		return this;
+	}
+
+	@Override
+	public SharedSessionBuilder initialCacheMode(CacheMode cacheMode) {
+		delegate.initialCacheMode( cacheMode );
 		return this;
 	}
 

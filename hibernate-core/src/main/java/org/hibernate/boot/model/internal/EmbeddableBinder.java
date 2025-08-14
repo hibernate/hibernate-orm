@@ -13,9 +13,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.MappingException;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.Instantiator;
 import org.hibernate.annotations.TypeBinderType;
@@ -850,6 +852,7 @@ public class EmbeddableBinder {
 		else {
 			embeddableClass = inferredData.getClassOrPluralElement();
 			component.setComponentClassName( embeddableClass.getName() );
+			checkEmbeddableRecursiveHierarchy( embeddableClass, inferredData, propertyHolder );
 		}
 		component.setCustomInstantiator( customInstantiatorImpl );
 		final Constructor<?> constructor = resolveInstantiator( embeddableClass, context );
@@ -861,6 +864,29 @@ public class EmbeddableBinder {
 			component.setParentAggregateColumn( componentPropertyHolder.getAggregateColumn() );
 		}
 		return component;
+	}
+
+	private static void checkEmbeddableRecursiveHierarchy(
+			XClass embeddableClass,
+			PropertyData propertyData,
+			PropertyHolder propertyHolder) {
+		while ( propertyHolder.isComponent() ) {
+			final ComponentPropertyHolder componentHolder = (ComponentPropertyHolder) propertyHolder;
+			// we need to check that the embeddable is not used in a recursive hierarchy
+			XClass classDetails = embeddableClass;
+			while ( classDetails != null ) {
+				if ( propertyHolder.getClassName().equals( classDetails.getName() ) ) {
+					throw new MappingException( String.format(
+							Locale.ROOT,
+							"Recursive embeddable mapping detected for property '%s' for type [%s]",
+							getPath( propertyHolder, propertyData ),
+							propertyHolder.getClassName()
+					) );
+				}
+				classDetails = classDetails.getSuperclass();
+			}
+			propertyHolder = componentHolder.parent;
+		}
 	}
 
 	private static Constructor<?> resolveInstantiator(XClass embeddableClass, MetadataBuildingContext buildingContext) {

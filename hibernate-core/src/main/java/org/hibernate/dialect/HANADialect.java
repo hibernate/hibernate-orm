@@ -217,7 +217,7 @@ public class HANADialect extends Dialect {
 
 	@Override
 	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
-		return HANAServerConfiguration.staticDetermineDatabaseVersion( info );
+		return HANAServerConfiguration.determineDatabaseVersion( info );
 	}
 
 	// Use column or row tables by default

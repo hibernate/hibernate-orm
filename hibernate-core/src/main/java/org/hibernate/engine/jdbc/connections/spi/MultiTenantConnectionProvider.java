@@ -22,6 +22,9 @@ import org.hibernate.service.spi.Wrapped;
  * <p>
  * An application usually implements its own custom {@code MultiTenantConnectionProvider}
  * by subclassing {@link AbstractMultiTenantConnectionProvider}.
+ * <p>
+ * Support for read-only replicas may be implemented by overriding the operations
+ * {@link #getReadOnlyConnection} and {@link #releaseReadOnlyConnection}.
  *
  * @param <T> The tenant identifier type
  *
@@ -73,12 +76,17 @@ public interface MultiTenantConnectionProvider<T> extends Service, Wrapped {
 	 * @throws SQLException Indicates a problem opening a connection
 	 * @throws org.hibernate.HibernateException Indicates a problem obtaining a connection
 	 *
+	 * @implNote This default implementation simply calls {@link #getConnection(Object)},
+	 * which returns a connection a writable replica. If this operation is overridden to
+	 * return a connection to a distinct read-only replica, the matching operation
+	 * {@link #releaseReadOnlyConnection(Object, Connection)} must also be overridden.
+	 *
 	 * @since 7.2
 	 */
 	@Incubating
 	default Connection getReadOnlyConnection(T tenantIdentifier)
 			throws SQLException {
-		throw new UnsupportedOperationException( "No read-only replica is available" );
+		return getConnection( tenantIdentifier );
 	}
 
 	/**
@@ -101,12 +109,18 @@ public interface MultiTenantConnectionProvider<T> extends Service, Wrapped {
 	 * @throws SQLException Indicates a problem closing the connection
 	 * @throws org.hibernate.HibernateException Indicates a problem releasing a connection
 	 *
+	 * @implNote This default implementation simply calls
+	 *           {@link #releaseConnection(Object, Connection)}. If
+	 *           {@link #getReadOnlyConnection(Object)} is overridden to return a
+	 *           connection to a distinct read-only replica, this operation must also
+	 *           be overridden.
+	 *
 	 * @since 7.2
 	 */
 	@Incubating
 	default void releaseReadOnlyConnection(T tenantIdentifier, Connection connection)
 			throws SQLException {
-		throw new UnsupportedOperationException( "No read-only replica is available" );
+		releaseConnection( tenantIdentifier, connection );
 	}
 
 	/**

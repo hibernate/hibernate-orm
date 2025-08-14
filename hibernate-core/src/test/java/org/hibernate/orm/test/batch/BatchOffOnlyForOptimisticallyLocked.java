@@ -28,6 +28,7 @@ import jakarta.persistence.Version;
 		}
 )
 @JiraKey( "HHH-18621" )
+@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 11, minorVersion = 6, microVersion = 2, reason = "MariaDB will throw an error DB_RECORD_CHANGED when acquiring a lock on a record that have changed")
 public class BatchOffOnlyForOptimisticallyLocked {
 	@Test
 	public void testMultiUpdateOfConcurrentlyModified(EntityManagerFactoryScope scope) {

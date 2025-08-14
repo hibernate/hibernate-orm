@@ -6129,7 +6129,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				appender.appendSql( '(' );
 			}
 			boolean first = true;
-			for ( java.time.temporal.TemporalUnit unit : literal.getUnits() ) {
+			for ( var unit : literal.getUnits() ) {
 				final long value = literal.get( unit );
 				if ( value != 0 ) {
 					if ( first ) {

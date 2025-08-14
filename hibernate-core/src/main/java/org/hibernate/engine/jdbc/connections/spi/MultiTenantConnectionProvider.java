@@ -7,6 +7,7 @@ package org.hibernate.engine.jdbc.connections.spi;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.service.Service;
@@ -74,6 +75,7 @@ public interface MultiTenantConnectionProvider<T> extends Service, Wrapped {
 	 *
 	 * @since 7.2
 	 */
+	@Incubating
 	default Connection getReadOnlyConnection(T tenantIdentifier)
 			throws SQLException {
 		throw new UnsupportedOperationException( "No read-only replica is available" );
@@ -101,6 +103,7 @@ public interface MultiTenantConnectionProvider<T> extends Service, Wrapped {
 	 *
 	 * @since 7.2
 	 */
+	@Incubating
 	default void releaseReadOnlyConnection(T tenantIdentifier, Connection connection)
 			throws SQLException {
 		throw new UnsupportedOperationException( "No read-only replica is available" );

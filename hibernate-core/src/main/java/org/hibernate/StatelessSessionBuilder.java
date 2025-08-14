@@ -64,6 +64,22 @@ public interface StatelessSessionBuilder {
 	 * <li>a read-only session will connect to a read-only replica, but
 	 * <li>a non-read-only session will connect to a writable replica.
 	 * </ul>
+	 * <p>
+	 * When read/write replication is in use, it's strongly recommended
+	 * that the session be created with the {@linkplain #initialCacheMode
+	 * initial cache mode} set to {@link CacheMode#GET}, to avoid writing
+	 * stale data read from a read-only replica to the second-level cache.
+	 * Hibernate cannot possibly guarantee that data read from a read-only
+	 * replica is up to date. It's also possible for a read-only session to
+	 * <p>
+	 * When read/write replication is in use, it's possible that an item
+	 * read from the second-level cache might refer to data which does not
+	 * yet exist in the read-only replica. In this situation, an exception
+	 * occurs when the association is fetched. To completely avoid this
+	 * possibility, the {@linkplain #initialCacheMode initial cache mode}
+	 * must be set to {@link CacheMode#IGNORE}. However, it's also usually
+	 * possible to structure data access code in a way which eliminates
+	 * this possibility.
 	 *
 	 * @return {@code this}, for method chaining
 	 * @since 7.2
@@ -73,6 +89,16 @@ public interface StatelessSessionBuilder {
 	 */
 	@Incubating
 	StatelessSessionBuilder readOnly(boolean readOnly);
+
+	/**
+	 * Specify the initial {@link CacheMode} for the session.
+	 *
+	 * @return {@code this}, for method chaining
+	 * @since 7.2
+	 *
+	 * @see SharedSessionContract#getCacheMode()
+	 */
+	StatelessSessionBuilder initialCacheMode(CacheMode cacheMode);
 
 	/**
 	 * Applies the given statement inspection function to the session.

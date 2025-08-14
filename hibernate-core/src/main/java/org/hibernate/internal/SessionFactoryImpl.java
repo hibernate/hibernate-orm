@@ -26,6 +26,7 @@ import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
 import jakarta.persistence.TypedQuery;
+import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
@@ -34,6 +35,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
+import org.hibernate.SessionBuilder;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
@@ -1130,6 +1132,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		private boolean autoClear;
 		private Object tenantIdentifier;
 		private boolean readOnly;
+		private CacheMode cacheMode;
 		private boolean identifierRollback;
 		private TimeZone jdbcTimeZone;
 		private boolean explicitNoInterceptor;
@@ -1148,20 +1151,21 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.sessionFactory = sessionFactory;
 
 			// set up default builder values...
-			final SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
-			statementInspector = sessionFactoryOptions.getStatementInspector();
-			connectionHandlingMode = sessionFactoryOptions.getPhysicalConnectionHandlingMode();
-			autoClose = sessionFactoryOptions.isAutoCloseSessionEnabled();
-			defaultBatchFetchSize = sessionFactoryOptions.getDefaultBatchFetchSize();
-			subselectFetchEnabled = sessionFactoryOptions.isSubselectFetchEnabled();
-			identifierRollback = sessionFactoryOptions.isIdentifierRollbackEnabled();
+			final var options = sessionFactory.getSessionFactoryOptions();
+			statementInspector = options.getStatementInspector();
+			connectionHandlingMode = options.getPhysicalConnectionHandlingMode();
+			autoClose = options.isAutoCloseSessionEnabled();
+			defaultBatchFetchSize = options.getDefaultBatchFetchSize();
+			subselectFetchEnabled = options.isSubselectFetchEnabled();
+			identifierRollback = options.isIdentifierRollbackEnabled();
+			cacheMode = options.getInitialSessionCacheMode();
 
 			final var currentTenantIdentifierResolver =
 					sessionFactory.getCurrentTenantIdentifierResolver();
 			if ( currentTenantIdentifierResolver != null ) {
 				tenantIdentifier = currentTenantIdentifierResolver.resolveCurrentTenantIdentifier();
 			}
-			jdbcTimeZone = sessionFactoryOptions.getJdbcTimeZone();
+			jdbcTimeZone = options.getJdbcTimeZone();
 		}
 
 
@@ -1241,6 +1245,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		public boolean isReadOnly() {
 			return readOnly;
+		}
+
+		@Override
+		public CacheMode getInitialCacheMode() {
+			return cacheMode;
 		}
 
 		@Override
@@ -1354,6 +1363,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
+		public SessionBuilder initialCacheMode(CacheMode cacheMode) {
+			this.cacheMode = cacheMode;
+			return this;
+		}
+
+		@Override
 		public SessionBuilderImpl identifierRollback(boolean identifierRollback) {
 			this.identifierRollback = identifierRollback;
 			return this;
@@ -1396,10 +1411,13 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		private Connection connection;
 		private Object tenantIdentifier;
 		private boolean readOnly;
+		private CacheMode cacheMode;
 
 		public StatelessSessionBuilderImpl(SessionFactoryImpl sessionFactory) {
 			this.sessionFactory = sessionFactory;
-			this.statementInspector = sessionFactory.getSessionFactoryOptions().getStatementInspector();
+			final var options = sessionFactory.getSessionFactoryOptions();
+			statementInspector = options.getStatementInspector();
+			cacheMode = options.getInitialSessionCacheMode();
 
 			final var tenantIdentifierResolver = sessionFactory.getCurrentTenantIdentifierResolver();
 			if ( tenantIdentifierResolver != null ) {
@@ -1433,6 +1451,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		public StatelessSessionBuilder readOnly(boolean readOnly) {
 			this.readOnly = readOnly;
+			return this;
+		}
+
+		@Override
+		public StatelessSessionBuilder initialCacheMode(CacheMode cacheMode) {
+			this.cacheMode = cacheMode;
 			return this;
 		}
 
@@ -1514,6 +1538,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		public boolean isReadOnly() {
 			return readOnly;
+		}
+
+		@Override
+		public CacheMode getInitialCacheMode() {
+			return cacheMode;
 		}
 
 		@Override

@@ -2079,9 +2079,15 @@ public class SessionImpl
 		}
 
 		@Override
-		public SessionFactoryImpl.SessionBuilderImpl readOnly(boolean readOnly) {
+		public SharedSessionBuilderImpl readOnly(boolean readOnly) {
 			super.readOnly( readOnly );
 			readOnlyChanged = true;
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl initialCacheMode(CacheMode cacheMode) {
+			super.initialCacheMode( cacheMode );
 			return this;
 		}
 

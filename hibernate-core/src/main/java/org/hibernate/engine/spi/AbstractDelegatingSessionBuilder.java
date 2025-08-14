@@ -101,6 +101,12 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 	}
 
 	@Override
+	public SessionBuilder readOnly(boolean readOnly) {
+		delegate.readOnly( readOnly );
+		return this;
+	}
+
+	@Override
 	public SessionBuilder eventListeners(SessionEventListener... listeners) {
 		delegate.eventListeners( listeners );
 		return this;

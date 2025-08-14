@@ -41,7 +41,7 @@ public interface StatelessSessionBuilder {
 	 * @return {@code this}, for method chaining
 	 * @deprecated Use {@link #tenantIdentifier(Object)} instead
 	 */
-	@Deprecated(forRemoval = true)
+	@Deprecated(since = "6.4", forRemoval = true)
 	StatelessSessionBuilder tenantIdentifier(String tenantIdentifier);
 
 	/**
@@ -55,12 +55,27 @@ public interface StatelessSessionBuilder {
 	StatelessSessionBuilder tenantIdentifier(Object tenantIdentifier);
 
 	/**
+	 * Specify a read-only mode for the stateless session.
+	 * <p>
+	 * If read/write replication is in use, then:
+	 * <ul>
+	 * <li>a read-only session will connect to a read-only replica, but
+	 * <li>a non-read-only session will connect to a writable replica.
+	 * </ul>
+	 *
+	 * @return {@code this}, for method chaining
+	 * @since 7.2
+	 */
+	@Incubating
+	StatelessSessionBuilder readOnly(boolean readOnly);
+
+	/**
 	 * Applies the given statement inspection function to the session.
 	 *
 	 * @param operator An operator which accepts a SQL string, returning
 	 *                 a processed SQL string to be used by Hibernate
-	 *                 instead of the given original SQL. Alternatively.
-	 *                 the operator may work by side effect, and simply
+	 *                 instead of the given original SQL. Alternatively,
+	 *                 the operator may work by side effect and simply
 	 *                 return the original SQL.
 	 *
 	 * @return {@code this}, for method chaining

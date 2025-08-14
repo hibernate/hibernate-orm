@@ -706,6 +706,16 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return jdbcConnectionAccess;
 	}
 
+	private boolean manageReadOnly() {
+		return factory.multiTenantConnectionProvider == null
+			|| !factory.multiTenantConnectionProvider.handlesConnectionReadOnly();
+	}
+
+	private boolean manageSchema() {
+		return factory.multiTenantConnectionProvider == null
+			|| !factory.multiTenantConnectionProvider.handlesConnectionSchema();
+	}
+
 	private boolean useSchemaBasedMultiTenancy() {
 		return tenantIdentifier != null
 			&& getSessionFactoryOptions().getTenantSchemaMapper() != null;
@@ -725,21 +735,21 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public void afterObtainConnection(Connection connection) throws SQLException {
-		if ( useSchemaBasedMultiTenancy() ) {
+		if ( useSchemaBasedMultiTenancy() && manageSchema() ) {
 			initialSchema = connection.getSchema();
 			connection.setSchema( tenantSchema() );
 		}
-		if ( readOnly ) {
+		if ( readOnly && manageReadOnly() ) {
 			connection.setReadOnly( true );
 		}
 	}
 
 	@Override
 	public void beforeReleaseConnection(Connection connection) throws SQLException {
-		if ( useSchemaBasedMultiTenancy() ) {
+		if ( useSchemaBasedMultiTenancy() && manageSchema() ) {
 			connection.setSchema( initialSchema );
 		}
-		if ( readOnly ) {
+		if ( readOnly && manageReadOnly() ) {
 			connection.setReadOnly( false );
 		}
 	}

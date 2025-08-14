@@ -216,7 +216,7 @@ public class HANALegacyDialect extends Dialect {
 
 	@Override
 	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
-		return HANALegacyServerConfiguration.staticDetermineDatabaseVersion( info );
+		return HANALegacyServerConfiguration.determineDatabaseVersion( info );
 	}
 
 	// Use column or row tables by default

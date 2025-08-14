@@ -81,7 +81,7 @@ public class ArrayJdbcType implements JdbcType {
 		}
 	}
 
-	private static JavaType<?> elementJavaType(JavaType<?> javaTypeDescriptor) {
+	protected static JavaType<?> elementJavaType(JavaType<?> javaTypeDescriptor) {
 		if ( javaTypeDescriptor instanceof ByteArrayJavaType ) {
 			// Special handling needed for Byte[], because that would conflict with the VARBINARY mapping
 			return ByteJavaType.INSTANCE;

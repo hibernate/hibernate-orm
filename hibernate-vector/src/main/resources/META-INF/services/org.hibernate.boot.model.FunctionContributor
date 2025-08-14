@@ -4,3 +4,4 @@ org.hibernate.vector.internal.MariaDBFunctionContributor
 org.hibernate.vector.internal.MySQLFunctionContributor
 org.hibernate.vector.internal.DB2VectorFunctionContributor
 org.hibernate.vector.internal.CockroachFunctionContributor
+org.hibernate.vector.internal.HANAVectorFunctionContributor

@@ -466,7 +466,7 @@ public class InformixDialect extends Dialect {
 	@Override
 	public String extractPattern(TemporalUnit unit) {
 		return switch ( unit ) {
-			case SECOND -> "to_number(to_char(?2,'%S.%F3'))";
+			case SECOND -> getVersion().isBefore( 11, 70 ) ?	"to_number(to_char(?2,'%S%F3'))" : "to_number(to_char(?2,'%S.%F3'))";
 			case MINUTE -> "to_number(to_char(?2,'%M'))";
 			case HOUR -> "to_number(to_char(?2,'%H'))";
 			case DAY_OF_WEEK -> "(weekday(?2)+1)";
@@ -536,8 +536,8 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String getTruncateTableStatement(String tableName) {
-		return super.getTruncateTableStatement( tableName )
-			+ " reuse storage keep statistics";
+		return super.getTruncateTableStatement( tableName ) + " reuse storage"
+				+ ( getVersion().isSameOrAfter( 12, 10 ) ? " keep statistics" : "" );
 	}
 
 	@Override
@@ -760,7 +760,7 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String getCurrentTimestampSelectString() {
-		return "select sysdate";
+		return "select sysdate" + (getVersion().isBefore( 12, 10 ) ? " from informix.systables where tabid=1" : "");
 	}
 
 	@Override @SuppressWarnings("deprecation")
@@ -1121,8 +1121,23 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public String getFromDualForSelectOnly() {
+		return getVersion().isBefore( 12,10 ) ?	" from " + getDual() + " dual" : "";
+	}
+
+	@Override
 	public boolean supportsCrossJoin() {
 		return false;
+	}
+
+	@Override
+	public boolean supportsIntersect(){
+		return getVersion().isSameOrAfter( 12,10 );
+	}
+
+	public boolean supportsSubqueryOnMutatingTable() {
+		//tested on version 11.50, 14.10
+		return getVersion().isAfter( 11, 50);
 	}
 
 	@Override
@@ -1141,6 +1156,11 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsWithClause() {
+		return getVersion().isSameOrAfter( 14,10 );
+	}
+
+	@Override
 	public boolean requiresColumnListInCreateView() {
 		return true;
 	}
@@ -1156,6 +1176,6 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
-		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+		return getVersion().isSameOrAfter( 12,10 ) ? DmlTargetColumnQualifierSupport.TABLE_ALIAS : DmlTargetColumnQualifierSupport.NONE;
 	}
 }

@@ -1963,11 +1963,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					final Expression assignedValue = assignment.getAssignedValue();
 					final Expression expression;
 					if ( assignable.getColumnReferences().size() == 1 ) {
-						expression = new CaseSearchedExpression(
-								(MappingModelExpressible) assignedValue.getExpressionType(),
-								List.of( new CaseSearchedExpression.WhenFragment( predicate, assignedValue ) ),
-								assignable.getColumnReferences().get( 0 )
+						CaseSearchedExpression caseSearchedExpression = CaseSearchedExpression.ofType(
+								assignedValue.getExpressionType(),
+								this::getSql
 						);
+						caseSearchedExpression.when( predicate, assignedValue );
+						caseSearchedExpression.otherwise( assignable.getColumnReferences().get( 0 ) );
+						expression = caseSearchedExpression;
 					}
 					else {
 						assert assignedValue instanceof SqlTupleContainer;
@@ -1975,16 +1977,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								( (SqlTupleContainer) assignedValue ).getSqlTuple().getExpressions();
 						final List<Expression> tupleExpressions = new ArrayList<>( expressions.size() );
 						for ( int i = 0; i < expressions.size(); i++ ) {
-							tupleExpressions.add(
-									new CaseSearchedExpression(
-											(MappingModelExpressible<?>) expressions.get( i ).getExpressionType(),
-											List.of( new CaseSearchedExpression.WhenFragment(
-													predicate,
-													expressions.get( i )
-											) ),
-											assignable.getColumnReferences().get( i )
-									)
+							CaseSearchedExpression caseSearchedExpression = CaseSearchedExpression.ofType(
+									expressions.get( i ).getExpressionType(),
+									this::getSql
 							);
+							caseSearchedExpression.when( predicate, expressions.get( i ) );
+							caseSearchedExpression.otherwise( assignable.getColumnReferences().get( i ) );
+							tupleExpressions.add(caseSearchedExpression);
 						}
 						expression = new SqlTuple(
 								tupleExpressions,

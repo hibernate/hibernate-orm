@@ -13,7 +13,7 @@ import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.event.spi.AbstractEvent;
+import org.hibernate.event.spi.AbstractSessionEvent;
 import org.hibernate.event.spi.LockEvent;
 import org.hibernate.event.spi.LockEventListener;
 import org.hibernate.internal.CoreLogging;
@@ -108,7 +108,7 @@ public class DefaultLockEventListener implements LockEventListener {
 	 *
 	 * @return An EntityEntry representing the entity within this session.
 	 */
-	protected final EntityEntry reassociate(AbstractEvent event, Object object, Object id, EntityPersister persister) {
+	protected final EntityEntry reassociate(AbstractSessionEvent event, Object object, Object id, EntityPersister persister) {
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Reassociating transient instance: " + infoString( persister, id, event.getFactory() ) );

@@ -11,7 +11,7 @@ import org.hibernate.persister.entity.EntityPersister;
  *
  * @author Kabir Khan, Gavin King
  */
-public class PostLoadEvent extends AbstractEvent {
+public class PostLoadEvent extends AbstractSessionEvent {
 	private Object entity;
 	private Object id;
 	private EntityPersister persister;

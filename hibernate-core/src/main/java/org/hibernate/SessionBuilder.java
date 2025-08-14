@@ -18,7 +18,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  *
  * @see SessionFactory#withOptions()
  */
-public interface SessionBuilder {
+public interface SessionBuilder extends CommonSessionBuilderOptions {
 	/**
 	 * Opens a session with the specified options.
 	 *
@@ -26,41 +26,13 @@ public interface SessionBuilder {
 	 */
 	Session openSession();
 
-	/**
-	 * Adds a specific interceptor to the session options.
-	 *
-	 * @param interceptor The interceptor to use.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
+	@Override
 	SessionBuilder interceptor(Interceptor interceptor);
 
-	/**
-	 * Signifies that no {@link Interceptor} should be used.
-	 * <p>
-	 * By default, if no {@code Interceptor} is explicitly specified, the
-	 * {@code Interceptor} associated with the {@link SessionFactory} is
-	 * inherited by the new {@link Session}.
-	 * <p>
-	 * Calling {@link #interceptor(Interceptor)} with null has the same effect.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
+	@Override
 	SessionBuilder noInterceptor();
 
-	/**
-	 * Applies the given statement inspection function to the session.
-	 *
-	 * @param operator An operator which accepts a SQL string, returning
-	 *                 a processed SQL string to be used by Hibernate
-	 *                 instead of the given original SQL. Alternatively.
-	 *                 the operator may work by side effect, and simply
-	 *                 return the original SQL.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @since 7.0
-	 */
+	@Override
 	SessionBuilder statementInspector(UnaryOperator<String> operator);
 
 	/**

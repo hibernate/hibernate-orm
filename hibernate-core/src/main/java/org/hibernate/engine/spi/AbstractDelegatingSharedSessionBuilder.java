@@ -8,13 +8,13 @@ import java.sql.Connection;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
+import org.hibernate.CommonSharedSessionBuilderOptions;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
-import org.hibernate.SessionBuilder;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -28,7 +28,6 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  * @author Guillaume Smet
  */
 public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSessionBuilder {
-
 	private final SharedSessionBuilder delegate;
 
 	public AbstractDelegatingSharedSessionBuilder(SharedSessionBuilder delegate) {
@@ -103,8 +102,20 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 	}
 
 	@Override
-	public SessionBuilder statementInspector(UnaryOperator<String> operator) {
+	public SharedSessionBuilder statementInspector(UnaryOperator<String> operator) {
 		delegate.statementInspector( operator );
+		return this;
+	}
+
+	@Override
+	public CommonSharedSessionBuilderOptions statementInspector() {
+		delegate.statementInspector();
+		return this;
+	}
+
+	@Override
+	public CommonSharedSessionBuilderOptions noStatementInspector() {
+		delegate.noStatementInspector();
 		return this;
 	}
 

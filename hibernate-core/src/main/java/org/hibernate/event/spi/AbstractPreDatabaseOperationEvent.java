@@ -4,6 +4,7 @@
  */
 package org.hibernate.event.spi;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -22,7 +23,7 @@ public abstract class AbstractPreDatabaseOperationEvent extends AbstractDatabase
 	 * @param persister The entity's persister.
 	 */
 	public AbstractPreDatabaseOperationEvent(
-			EventSource source,
+			SharedSessionContractImplementor source,
 			Object entity,
 			Object id,
 			EntityPersister persister) {

@@ -18,20 +18,12 @@ import java.util.function.UnaryOperator;
  *
  * @see Session#sessionWithOptions()
  */
-public interface SharedSessionBuilder extends SessionBuilder {
+public interface SharedSessionBuilder extends SessionBuilder, CommonSharedSessionBuilderOptions {
 
-	/**
-	 * Signifies that the connection from the original session should be used to create the new session.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
+	@Override
 	SharedSessionBuilder connection();
 
-	/**
-	 * Signifies the interceptor from the original session should be used to create the new session.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
+	@Override
 	SharedSessionBuilder interceptor();
 
 	/**
@@ -76,7 +68,7 @@ public interface SharedSessionBuilder extends SessionBuilder {
 	SharedSessionBuilder statementInspector(StatementInspector statementInspector);
 
 	@Override
-	SessionBuilder statementInspector(UnaryOperator<String> operator);
+	SharedSessionBuilder statementInspector(UnaryOperator<String> operator);
 
 	@Override @Deprecated
 	SharedSessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode);

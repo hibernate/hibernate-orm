@@ -16,7 +16,7 @@ import org.hibernate.Timeouts;
  *
  * @see org.hibernate.Session#refresh
  */
-public class RefreshEvent extends AbstractEvent {
+public class RefreshEvent extends AbstractSessionEvent {
 
 	private final Object object;
 	private String entityName;

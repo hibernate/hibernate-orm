@@ -321,7 +321,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			);
 		}
 
-		session.asEventSource().getActionQueue().registerProcess(
+		session.asEventSource().getActionQueue().registerCallback(
 				(success, sess) -> {
 					cacheAccess.unlockItem( sess, previousCacheKey, removalLock );
 					if (success) {
@@ -388,7 +388,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			);
 		}
 
-		session.asEventSource().getActionQueue().registerProcess(
+		session.asEventSource().getActionQueue().registerCallback(
 				(success, sess) -> {
 					if ( success ) {
 						final boolean changed = cacheAccess.afterInsert( sess, cacheKey, id );
@@ -473,7 +473,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		final var persister = locatePersisterForKey( entityDescriptor.getEntityPersister() );
 		final Object naturalIdCacheKey = cacheAccess.generateCacheKey( naturalId, persister, session );
 		if ( delayToAfterTransactionCompletion ) {
-			session.asEventSource().getActionQueue().registerProcess(
+			session.asEventSource().getActionQueue().registerCallback(
 				(success, sess) -> {
 					if ( success ) {
 						cacheAccess.evict( naturalIdCacheKey );

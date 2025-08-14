@@ -20,6 +20,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
+import org.hibernate.SharedStatelessSessionBuilder;
 import org.hibernate.Transaction;
 import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.binder.internal.TenantIdBinder;
@@ -230,6 +231,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	final SessionFactoryOptions getSessionFactoryOptions() {
 		return factoryOptions;
+	}
+
+	@Override
+	public SharedStatelessSessionBuilder statelessWithOptions() {
+		return new SharedStatelessSessionBuilderImpl( this );
 	}
 
 	private static boolean isTransactionCoordinatorShared(SessionCreationOptions options) {

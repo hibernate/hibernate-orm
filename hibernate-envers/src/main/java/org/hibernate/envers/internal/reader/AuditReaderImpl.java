@@ -339,7 +339,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 		final AuditProcess auditProcess = enversService.getAuditProcessManager().get( (EventSource) session );
 
 		// And getting the current revision data
-		return (T) auditProcess.getCurrentRevisionData( session, persist );
+		return (T) auditProcess.getCurrentRevisionData( (SessionImplementor) session, persist );
 	}
 
 	@Override

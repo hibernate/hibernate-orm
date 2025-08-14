@@ -16,7 +16,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -39,8 +38,8 @@ import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cache.CacheException;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
+import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -51,7 +50,6 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
@@ -66,8 +64,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Gail Badner
  * @author Anton Marsden
  */
-public class ActionQueue {
-
+public class ActionQueue implements TransactionCompletionCallbacks {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ActionQueue.class );
 
 	private final SessionImplementor session;
@@ -99,8 +96,7 @@ public class ActionQueue {
 
 
 	private transient boolean isTransactionCoordinatorShared;
-	private AfterTransactionCompletionProcessQueue afterTransactionProcesses;
-	private BeforeTransactionCompletionProcessQueue beforeTransactionProcesses;
+	private TransactionCompletionCallbacksImpl transactionCompletionCallbacks;;
 
 	// Extract this as a constant to perform efficient iterations:
 	// method values() otherwise allocates a new array on each invocation.
@@ -232,6 +228,7 @@ public class ActionQueue {
 	public ActionQueue(SessionImplementor session) {
 		this.session = session;
 		isTransactionCoordinatorShared = false;
+		transactionCompletionCallbacks = new TransactionCompletionCallbacksImpl( session );
 	}
 
 	public void clear() {
@@ -414,22 +411,16 @@ public class ActionQueue {
 	}
 
 	private void registerCleanupActions(Executable executable) {
-		final var beforeTransactionCompletion = executable.getBeforeTransactionCompletionProcess();
-		if ( beforeTransactionCompletion != null ) {
-			if ( beforeTransactionProcesses == null ) {
-				beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
-			}
-			beforeTransactionProcesses.register( beforeTransactionCompletion );
+		final var beforeCompletionCallback = executable.getBeforeTransactionCompletionProcess();
+		if ( beforeCompletionCallback != null ) {
+			transactionCompletionCallbacks.registerCallback( beforeCompletionCallback );
 		}
 		if ( getSessionFactoryOptions().isQueryCacheEnabled() ) {
 			invalidateSpaces( executable.getPropertySpaces() );
 		}
-		final var afterTransactionCompletion = executable.getAfterTransactionCompletionProcess();
-		if ( afterTransactionCompletion != null ) {
-			if ( afterTransactionProcesses == null ) {
-				afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
-			}
-			afterTransactionProcesses.register( afterTransactionCompletion );
+		final var afterCompletionCallback = executable.getAfterTransactionCompletionProcess();
+		if ( afterCompletionCallback != null ) {
+			transactionCompletionCallbacks.registerCallback( afterCompletionCallback );
 		}
 	}
 
@@ -459,18 +450,14 @@ public class ActionQueue {
 		}
 	}
 
-	public void registerProcess(AfterTransactionCompletionProcess process) {
-		if ( afterTransactionProcesses == null ) {
-			afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
-		}
-		afterTransactionProcesses.register( process );
+	@Override
+	public void registerCallback(BeforeCompletionCallback process) {
+		transactionCompletionCallbacks.registerCallback( process );
 	}
 
-	public void registerProcess(BeforeTransactionCompletionProcess process) {
-		if ( beforeTransactionProcesses == null ) {
-			beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
-		}
-		beforeTransactionProcesses.register( process );
+	@Override
+	public void registerCallback(AfterCompletionCallback process) {
+		transactionCompletionCallbacks.registerCallback( process );
 	}
 
 	/**
@@ -541,9 +528,7 @@ public class ActionQueue {
 	public void afterTransactionCompletion(boolean success) {
 		if ( !isTransactionCoordinatorShared ) {
 			// Execute completion actions only in transaction owner (aka parent session).
-			if ( afterTransactionProcesses != null ) {
-				afterTransactionProcesses.afterTransactionCompletion( success );
-			}
+			transactionCompletionCallbacks.afterTransactionCompletion( success );
 		}
 	}
 
@@ -553,9 +538,7 @@ public class ActionQueue {
 	public void beforeTransactionCompletion() {
 		if ( !isTransactionCoordinatorShared ) {
 			// Execute completion actions only in transaction owner (aka parent session).
-			if ( beforeTransactionProcesses != null ) {
-				beforeTransactionProcesses.beforeTransactionCompletion();
-			}
+			transactionCompletionCallbacks.beforeTransactionCompletion();
 			// Make sure to always execute pending batches before the transaction completes.
 			// One such pending batch could be the pessimistic version increment for an entity
 			session.getJdbcCoordinator().executeBatch();
@@ -642,19 +625,13 @@ public class ActionQueue {
 						executable.execute();
 					}
 					finally {
-						final var beforeTransactionCompletion = executable.getBeforeTransactionCompletionProcess();
-						if ( beforeTransactionCompletion != null ) {
-							if ( beforeTransactionProcesses == null ) {
-								beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
-							}
-							beforeTransactionProcesses.register( beforeTransactionCompletion );
+						final var beforeCompletionProcess = executable.getBeforeTransactionCompletionProcess();
+						if ( beforeCompletionProcess != null ) {
+							transactionCompletionCallbacks.registerCallback( beforeCompletionProcess );
 						}
-						final var afterTransactionCompletion = executable.getAfterTransactionCompletionProcess();
-						if ( afterTransactionCompletion != null ) {
-							if ( afterTransactionProcesses == null ) {
-								afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
-							}
-							afterTransactionProcesses.register( afterTransactionCompletion );
+						final var afterCompletionProcess = executable.getAfterTransactionCompletionProcess();
+						if ( afterCompletionProcess != null ) {
+							transactionCompletionCallbacks.registerCallback( afterCompletionProcess );
 						}
 					}
 				}
@@ -693,10 +670,7 @@ public class ActionQueue {
 	private void invalidateSpaces(String @Nullable [] spaces) {
 		if ( spaces != null && spaces.length > 0 ) {
 			for ( var space : spaces ) {
-				if ( afterTransactionProcesses == null ) {
-					afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
-				}
-				afterTransactionProcesses.addSpaceToInvalidate( space );
+				transactionCompletionCallbacks.addSpaceToInvalidate( space );
 			}
 			// Performance win: If we are processing an ExecutableList, this will only be called once
 			session.getFactory().getCache().getTimestampsCache().preInvalidate( spaces, session );
@@ -752,14 +726,8 @@ public class ActionQueue {
 		return insertions == null ? 0 : insertions.size();
 	}
 
-	public TransactionCompletionProcesses getTransactionCompletionProcesses() {
-		if ( beforeTransactionProcesses == null ) {
-			beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
-		}
-		if ( afterTransactionProcesses == null ) {
-			afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
-		}
-		return new TransactionCompletionProcesses( beforeTransactionProcesses, afterTransactionProcesses );
+	public TransactionCompletionCallbacksImpl getTransactionCompletionCallbacks() {
+		return transactionCompletionCallbacks.forSharing();
 	}
 
 	/**
@@ -767,15 +735,14 @@ public class ActionQueue {
 	 * Transaction completion processes are always executed by transaction owner (primary session),
 	 * but can be registered using secondary session too.
 	 *
-	 * @param processes Transaction completion processes.
+	 * @param callbacks Transaction completion callbacks.
 	 * @param isTransactionCoordinatorShared Flag indicating shared transaction context.
 	 */
-	public void setTransactionCompletionProcesses(
-			TransactionCompletionProcesses processes,
+	public void setTransactionCompletionCallbacks(
+			TransactionCompletionCallbacksImpl callbacks,
 			boolean isTransactionCoordinatorShared) {
 		this.isTransactionCoordinatorShared = isTransactionCoordinatorShared;
-		this.beforeTransactionProcesses = processes.beforeTransactionCompletionProcesses;
-		this.afterTransactionProcesses = processes.afterTransactionCompletionProcesses;
+		this.transactionCompletionCallbacks = callbacks;
 	}
 
 	public void sortCollectionActions() {
@@ -840,14 +807,12 @@ public class ActionQueue {
 
 	public boolean hasAfterTransactionActions() {
 		return !isTransactionCoordinatorShared
-			&& afterTransactionProcesses != null
-			&& afterTransactionProcesses.hasActions();
+			&& transactionCompletionCallbacks.hasAfterCompletionCallbacks();
 	}
 
 	public boolean hasBeforeTransactionActions() {
 		return !isTransactionCoordinatorShared
-			&& beforeTransactionProcesses != null
-			&& beforeTransactionProcesses.hasActions();
+			&& transactionCompletionCallbacks.hasBeforeCompletionCallbacks();
 	}
 
 	public boolean hasAnyQueuedActions() {
@@ -969,107 +934,6 @@ public class ActionQueue {
 			}
 		}
 		return actionQueue;
-	}
-
-	private abstract static class AbstractTransactionCompletionProcessQueue<T> {
-		protected SessionImplementor session;
-		// Concurrency handling required when transaction completion process
-		// is dynamically registered inside the event listener (HHH-7478).
-		protected ConcurrentLinkedQueue<@NonNull T> processes = new ConcurrentLinkedQueue<>();
-
-		private AbstractTransactionCompletionProcessQueue(SessionImplementor session) {
-			this.session = session;
-		}
-
-		public void register(@Nullable T process) {
-			if ( process != null ) {
-				processes.add( process );
-			}
-		}
-
-		public boolean hasActions() {
-			return !processes.isEmpty();
-		}
-	}
-
-	/**
-	 * Encapsulates behavior needed for before transaction processing
-	 */
-	private static class BeforeTransactionCompletionProcessQueue
-			extends AbstractTransactionCompletionProcessQueue<BeforeTransactionCompletionProcess> {
-
-		private BeforeTransactionCompletionProcessQueue(SessionImplementor session) {
-			super( session );
-		}
-
-		public void beforeTransactionCompletion() {
-			BeforeTransactionCompletionProcess process;
-			while ( ( process = processes.poll() ) != null ) {
-				try {
-					process.doBeforeTransactionCompletion( session );
-				}
-				catch (HibernateException he) {
-					throw he;
-				}
-				catch (Exception e) {
-					throw new HibernateException( "Unable to perform beforeTransactionCompletion callback: " + e.getMessage(), e );
-				}
-			}
-		}
-	}
-
-	/**
-	 * Encapsulates behavior needed for after transaction processing
-	 */
-	private static class AfterTransactionCompletionProcessQueue
-			extends AbstractTransactionCompletionProcessQueue<AfterTransactionCompletionProcess> {
-		private final Set<String> querySpacesToInvalidate = new HashSet<>();
-
-		private AfterTransactionCompletionProcessQueue(SessionImplementor session) {
-			super( session );
-		}
-
-		public void addSpaceToInvalidate(String space) {
-			querySpacesToInvalidate.add( space );
-		}
-
-		public void afterTransactionCompletion(boolean success) {
-			AfterTransactionCompletionProcess process;
-			while ( ( process = processes.poll() ) != null ) {
-				try {
-					process.doAfterTransactionCompletion( success, session );
-				}
-				catch (CacheException ce) {
-					LOG.unableToReleaseCacheLock( ce );
-					// continue loop
-				}
-				catch (Exception e) {
-					throw new HibernateException( "Unable to perform afterTransactionCompletion callback: " + e.getMessage(), e );
-				}
-			}
-
-			final var factory = session.getFactory();
-			if ( factory.getSessionFactoryOptions().isQueryCacheEnabled() ) {
-				factory.getCache().getTimestampsCache()
-						.invalidate( querySpacesToInvalidate.toArray(new String[0]), session );
-			}
-			querySpacesToInvalidate.clear();
-		}
-	}
-
-	/**
-	 * Wrapper class allowing to bind the same transaction completion process queues in different sessions.
-	 */
-	public static class TransactionCompletionProcesses {
-		private final BeforeTransactionCompletionProcessQueue beforeTransactionCompletionProcesses;
-		private final AfterTransactionCompletionProcessQueue afterTransactionCompletionProcesses;
-
-		private TransactionCompletionProcesses(
-				BeforeTransactionCompletionProcessQueue beforeTransactionCompletionProcessQueue,
-				AfterTransactionCompletionProcessQueue afterTransactionCompletionProcessQueue) {
-			this.beforeTransactionCompletionProcesses = beforeTransactionCompletionProcessQueue;
-			this.afterTransactionCompletionProcesses = afterTransactionCompletionProcessQueue;
-		}
 	}
 
 	/**

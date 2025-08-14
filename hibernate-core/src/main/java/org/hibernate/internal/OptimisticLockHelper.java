@@ -53,7 +53,7 @@ public final class OptimisticLockHelper {
 					persister,
 					session
 			);
-			session.registerProcess( new CacheCleanupProcess(
+			session.getTransactionCompletionCallbacks().registerCallback( new CacheCleanupProcess(
 					cacheKey,
 					persister,
 					previousVersion,

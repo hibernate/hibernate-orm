@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.Configuration;
@@ -88,7 +88,7 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
 
 	@Override
 	protected void mapToMapFromObject(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> idData,
 			Map<String, Object> data,
 			Object changed) {
@@ -137,7 +137,7 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
 
 	@Override
 	public List<PersistentCollectionChangeData> mapCollectionChanges(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			PersistentCollection newColl,
 			Serializable oldColl,
 			Object id) {

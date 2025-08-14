@@ -55,9 +55,11 @@ public interface StatelessSessionBuilder {
 	StatelessSessionBuilder tenantIdentifier(Object tenantIdentifier);
 
 	/**
-	 * Specify a read-only mode for the stateless session.
+	 * Specify a read-only mode for the stateless session. If a session
+	 * is created in read-only mode, then {@link Connection#setReadOnly}
+	 * is called when a JDBC connection is obtained.
 	 * <p>
-	 * If read/write replication is in use, then:
+	 * Furthermore, if read/write replication is in use, then:
 	 * <ul>
 	 * <li>a read-only session will connect to a read-only replica, but
 	 * <li>a non-read-only session will connect to a writable replica.

@@ -733,12 +733,18 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			initialSchema = connection.getSchema();
 			connection.setSchema( tenantSchema() );
 		}
+		if ( readOnly ) {
+			connection.setReadOnly( true );
+		}
 	}
 
 	@Override
 	public void beforeReleaseConnection(Connection connection) throws SQLException {
 		if ( useSchemaBasedMultiTenancy() ) {
 			connection.setSchema( initialSchema );
+		}
+		if ( readOnly ) {
+			connection.setReadOnly( false );
 		}
 	}
 

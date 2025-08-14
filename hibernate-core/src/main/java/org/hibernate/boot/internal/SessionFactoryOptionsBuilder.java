@@ -601,6 +601,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return dialectAnswer != null ? !dialectAnswer : !meta.supportsBatchUpdates();
 	}
 
+	private static boolean hasStrategyConstructorSignature(Class<?>[] parameterTypes) {
+		return parameterTypes.length == 2
+			&& parameterTypes[0] == EntityMappingType.class
+			&& parameterTypes[1] == RuntimeModelCreationContext.class;
+	}
+
 	@SuppressWarnings("unchecked")
 	private SqmMultiTableMutationStrategy resolveSqmMutationStrategy(
 			String strategyName,
@@ -631,9 +637,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 						else if ( parameterTypes.length == 0 ) {
 							emptyConstructor = constructor;
 						}
-						else if ( parameterTypes.length == 2
-									&& parameterTypes[0] == EntityMappingType.class
-									&& parameterTypes[1] == RuntimeModelCreationContext.class ) {
+						else if ( hasStrategyConstructorSignature( parameterTypes ) ) {
 							entityBasedConstructor = (Constructor<SqmMultiTableMutationStrategy>) declaredConstructor;
 						}
 					}
@@ -651,13 +655,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 						}
 						catch (Exception e) {
 							throw new StrategySelectionException(
-									"Could not instantiate named strategy class [" +
-											strategyClass.getName() + "]",
+									"Could not instantiate named strategy class [" + strategyClass.getName() + "]",
 									e
 							);
 						}
-						throw new IllegalArgumentException(
-								"Cannot instantiate the class [" + strategyClass.getName() + "] because it does not have a constructor that accepts a dialect or an empty constructor" );
+						throw new IllegalArgumentException( "Cannot instantiate the class [" + strategyClass.getName()
+								+ "] because it does not have a constructor that accepts a dialect or an empty constructor" );
 					}
 					else {
 						return null;
@@ -675,9 +678,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 					strategySelector.selectStrategyImplementor( SqmMultiTableMutationStrategy.class, strategyName );
 			for ( var declaredConstructor : strategyClass.getDeclaredConstructors() ) {
 				final var parameterTypes = declaredConstructor.getParameterTypes();
-				if ( parameterTypes.length == 2
-						&& parameterTypes[0] == EntityMappingType.class
-						&& parameterTypes[1] == RuntimeModelCreationContext.class ) {
+				if ( hasStrategyConstructorSignature( parameterTypes ) ) {
 					return (Constructor<SqmMultiTableMutationStrategy>) declaredConstructor;
 				}
 			}
@@ -715,9 +716,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 						else if ( parameterTypes.length == 0 ) {
 							emptyConstructor = constructor;
 						}
-						else if ( parameterTypes.length == 2
-									&& parameterTypes[0] == EntityMappingType.class
-									&& parameterTypes[1] == RuntimeModelCreationContext.class ) {
+						else if ( hasStrategyConstructorSignature( parameterTypes ) ) {
 							entityBasedConstructor = (Constructor<SqmMultiTableInsertStrategy>) declaredConstructor;
 						}
 					}
@@ -759,9 +758,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 					strategySelector.selectStrategyImplementor( SqmMultiTableInsertStrategy.class, strategyName );
 			for ( var declaredConstructor : strategyClass.getDeclaredConstructors() ) {
 				final var parameterTypes = declaredConstructor.getParameterTypes();
-				if ( parameterTypes.length == 2
-						&& parameterTypes[0] == EntityMappingType.class
-						&& parameterTypes[1] == RuntimeModelCreationContext.class ) {
+				if ( hasStrategyConstructorSignature( parameterTypes ) ) {
 					return (Constructor<SqmMultiTableInsertStrategy>) declaredConstructor;
 				}
 			}
@@ -997,7 +994,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			}
 			catch (Exception e) {
 				throw new StrategySelectionException(
-						String.format( "Could not instantiate named strategy class [%s]", sqmMultiTableMutationStrategyConstructor.getDeclaringClass().getName() ),
+						String.format( "Could not instantiate named strategy class [%s]",
+								sqmMultiTableMutationStrategyConstructor.getDeclaringClass().getName() ),
 						e
 				);
 			}
@@ -1013,7 +1011,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			}
 			catch (Exception e) {
 				throw new StrategySelectionException(
-						String.format( "Could not instantiate named strategy class [%s]", sqmMultiTableInsertStrategyConstructor.getDeclaringClass().getName() ),
+						String.format( "Could not instantiate named strategy class [%s]",
+								sqmMultiTableInsertStrategyConstructor.getDeclaringClass().getName() ),
 						e
 				);
 			}

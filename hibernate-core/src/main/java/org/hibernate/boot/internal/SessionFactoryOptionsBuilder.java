@@ -266,12 +266,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		// we cannot use context.getConfigurationService() here because it might be missing some settings
 		// (the StandardServiceRegistry passed in here does not need to be the bootstrap service registry)
-		final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
+		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
 
-		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
-		final JdbcServices jdbcServices = serviceRegistry.requireService( JdbcServices.class );
+		final var strategySelector = serviceRegistry.requireService( StrategySelector.class );
+		final var jdbcServices = serviceRegistry.requireService( JdbcServices.class );
 
-		final Dialect dialect = jdbcServices.getJdbcEnvironment().getDialect();
+		final var dialect = jdbcServices.getJdbcEnvironment().getDialect();
 
 		final Map<String,Object> settings = new HashMap<>();
 		settings.putAll( map( dialect.getDefaultProperties() ) );
@@ -631,7 +631,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 						else if ( parameterTypes.length == 0 ) {
 							emptyConstructor = constructor;
 						}
-						else if ( parameterTypes.length == 2 && parameterTypes[0] == EntityMappingType.class && parameterTypes[1] == RuntimeModelCreationContext.class ) {
+						else if ( parameterTypes.length == 2
+									&& parameterTypes[0] == EntityMappingType.class
+									&& parameterTypes[1] == RuntimeModelCreationContext.class ) {
 							entityBasedConstructor = (Constructor<SqmMultiTableMutationStrategy>) declaredConstructor;
 						}
 					}
@@ -668,19 +670,18 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private Constructor<SqmMultiTableMutationStrategy> resolveSqmMutationStrategyConstructor(
 			String strategyName,
 			StrategySelector strategySelector) {
-		if ( strategyName == null ) {
-			return null;
-		}
-
-		Class<? extends SqmMultiTableMutationStrategy> strategyClass =
-				strategySelector.selectStrategyImplementor( SqmMultiTableMutationStrategy.class, strategyName );
-		for ( Constructor<?> declaredConstructor : strategyClass.getDeclaredConstructors() ) {
-			final Class<?>[] parameterTypes = declaredConstructor.getParameterTypes();
-			if ( parameterTypes.length == 2 && parameterTypes[0] == EntityMappingType.class && parameterTypes[1] == RuntimeModelCreationContext.class ) {
-				return (Constructor<SqmMultiTableMutationStrategy>) declaredConstructor;
+		if ( strategyName != null ) {
+			final var strategyClass =
+					strategySelector.selectStrategyImplementor( SqmMultiTableMutationStrategy.class, strategyName );
+			for ( var declaredConstructor : strategyClass.getDeclaredConstructors() ) {
+				final var parameterTypes = declaredConstructor.getParameterTypes();
+				if ( parameterTypes.length == 2
+						&& parameterTypes[0] == EntityMappingType.class
+						&& parameterTypes[1] == RuntimeModelCreationContext.class ) {
+					return (Constructor<SqmMultiTableMutationStrategy>) declaredConstructor;
+				}
 			}
 		}
-
 		return null;
 	}
 
@@ -714,7 +715,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 						else if ( parameterTypes.length == 0 ) {
 							emptyConstructor = constructor;
 						}
-						else if ( parameterTypes.length == 2 && parameterTypes[0] == EntityMappingType.class && parameterTypes[1] == RuntimeModelCreationContext.class ) {
+						else if ( parameterTypes.length == 2
+									&& parameterTypes[0] == EntityMappingType.class
+									&& parameterTypes[1] == RuntimeModelCreationContext.class ) {
 							entityBasedConstructor = (Constructor<SqmMultiTableInsertStrategy>) declaredConstructor;
 						}
 					}
@@ -751,19 +754,18 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private Constructor<SqmMultiTableInsertStrategy> resolveSqmInsertStrategyConstructor(
 			String strategyName,
 			StrategySelector strategySelector) {
-		if ( strategyName == null ) {
-			return null;
-		}
-
-		Class<? extends SqmMultiTableInsertStrategy> strategyClass =
-				strategySelector.selectStrategyImplementor( SqmMultiTableInsertStrategy.class, strategyName );
-		for ( Constructor<?> declaredConstructor : strategyClass.getDeclaredConstructors() ) {
-			final Class<?>[] parameterTypes = declaredConstructor.getParameterTypes();
-			if ( parameterTypes.length == 2 && parameterTypes[0] == EntityMappingType.class && parameterTypes[1] == RuntimeModelCreationContext.class ) {
-				return (Constructor<SqmMultiTableInsertStrategy>) declaredConstructor;
+		if ( strategyName != null ) {
+			final var strategyClass =
+					strategySelector.selectStrategyImplementor( SqmMultiTableInsertStrategy.class, strategyName );
+			for ( var declaredConstructor : strategyClass.getDeclaredConstructors() ) {
+				final var parameterTypes = declaredConstructor.getParameterTypes();
+				if ( parameterTypes.length == 2
+						&& parameterTypes[0] == EntityMappingType.class
+						&& parameterTypes[1] == RuntimeModelCreationContext.class ) {
+					return (Constructor<SqmMultiTableInsertStrategy>) declaredConstructor;
+				}
 			}
 		}
-
 		return null;
 	}
 
@@ -844,7 +846,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private PhysicalConnectionHandlingMode interpretConnectionHandlingMode(
 			Map<String,Object> configurationSettings,
 			StandardServiceRegistry serviceRegistry) {
-		final PhysicalConnectionHandlingMode specifiedHandlingMode =
+		final var specifiedHandlingMode =
 				PhysicalConnectionHandlingMode.interpret( configurationSettings.get( CONNECTION_HANDLING ) );
 		return specifiedHandlingMode != null
 				? specifiedHandlingMode

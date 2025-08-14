@@ -138,6 +138,12 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 	}
 
 	@Override
+	public SessionBuilder readOnly(boolean readOnly) {
+		delegate.readOnly( readOnly );
+		return this;
+	}
+
+	@Override
 	public SharedSessionBuilder eventListeners(SessionEventListener... listeners) {
 		delegate.eventListeners( listeners );
 		return this;

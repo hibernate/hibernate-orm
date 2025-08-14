@@ -67,6 +67,9 @@ public interface StatelessSessionBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 * @since 7.2
+	 *
+	 * @see org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider#getReadOnlyConnection(Object)
+	 * @see org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider#releaseReadOnlyConnection(Object, Connection)
 	 */
 	@Incubating
 	StatelessSessionBuilder readOnly(boolean readOnly);

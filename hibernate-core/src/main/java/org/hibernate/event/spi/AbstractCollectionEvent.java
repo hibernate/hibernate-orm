@@ -12,7 +12,7 @@ import org.hibernate.persister.collection.CollectionPersister;
  *
  * @author Gail Badner
  */
-public abstract class AbstractCollectionEvent extends AbstractEvent {
+public abstract class AbstractCollectionEvent extends AbstractSessionEvent {
 
 	private final PersistentCollection<?> collection;
 	private final Object affectedOwner;

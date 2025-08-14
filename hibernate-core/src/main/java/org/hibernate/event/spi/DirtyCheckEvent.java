@@ -12,7 +12,7 @@ package org.hibernate.event.spi;
  *
  * @see org.hibernate.Session#isDirty
  */
-public class DirtyCheckEvent extends AbstractEvent {
+public class DirtyCheckEvent extends AbstractSessionEvent {
 	private boolean dirty;
 
 	public DirtyCheckEvent(EventSource source) {

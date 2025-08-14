@@ -4,12 +4,12 @@
  */
 package org.hibernate.envers.internal.entities.mapper;
 
-import java.util.Map;
-
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+
+import java.util.Map;
 
 /**
  * Multi mapper for dynamic components (it knows that component is a map, not a class)
@@ -43,7 +43,7 @@ public class MultiDynamicComponentMapper extends MultiPropertyMapper {
 
 	@Override
 	public boolean mapToMapFromEntity(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
@@ -69,7 +69,7 @@ public class MultiDynamicComponentMapper extends MultiPropertyMapper {
 
 	@Override
 	public boolean map(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			String[] propertyNames,
 			Object[] newState,
@@ -92,7 +92,7 @@ public class MultiDynamicComponentMapper extends MultiPropertyMapper {
 
 	@Override
 	public void mapModifiedFlagsToMapFromEntity(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {

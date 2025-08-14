@@ -23,13 +23,12 @@ import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.Metamodel;
 import org.hibernate.*;
-import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.PersistenceContexts;
+import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.ActionQueue;
-import org.hibernate.engine.spi.ActionQueue.TransactionCompletionProcesses;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityHolder;
@@ -239,9 +238,9 @@ public class SessionImpl
 	private void setUpTransactionCompletionProcesses(SessionCreationOptions options) {
 		if ( options instanceof SharedSessionCreationOptions sharedOptions
 				&& sharedOptions.isTransactionCoordinatorShared() ) {
-			final TransactionCompletionProcesses processes = sharedOptions.getTransactionCompletionProcesses();
-			if ( processes != null ) {
-				actionQueue.setTransactionCompletionProcesses( processes, true );
+			final TransactionCompletionCallbacksImpl callbacks = sharedOptions.getTransactionCompletionCallbacks();
+			if ( callbacks != null ) {
+				actionQueue.setTransactionCompletionCallbacks( callbacks, true );
 			}
 		}
 	}
@@ -1868,11 +1867,6 @@ public class SessionImpl
 	}
 
 	@Override
-	public void registerProcess(AfterTransactionCompletionProcess process) {
-		getActionQueue().registerProcess( process );
-	}
-
-	@Override
 	public PersistenceContext getPersistenceContext() {
 		checkOpenOrWaitingForAutoClose();
 //		checkTransactionSynchStatus();
@@ -2103,6 +2097,17 @@ public class SessionImpl
 		}
 
 		@Override
+		public CommonSharedSessionBuilderOptions statementInspector() {
+			return statementInspector( session.getJdbcSessionContext().getStatementInspector() );
+		}
+
+		@Override
+		public CommonSharedSessionBuilderOptions noStatementInspector() {
+			statementInspector( StatementInspector.NONE );
+			return this;
+		}
+
+		@Override
 		public SharedSessionBuilderImpl interceptor(Interceptor interceptor) {
 			super.interceptor( interceptor );
 			return this;
@@ -2260,9 +2265,9 @@ public class SessionImpl
 		}
 
 		@Override
-		public TransactionCompletionProcesses getTransactionCompletionProcesses() {
+		public TransactionCompletionCallbacksImpl getTransactionCompletionCallbacks() {
 			return shareTransactionContext
-					? session.getActionQueue().getTransactionCompletionProcesses()
+					? session.getActionQueue().getTransactionCompletionCallbacks()
 					: null;
 		}
 	}

@@ -51,10 +51,10 @@ public class DefaultPostLoadEventListener implements PostLoadEventListener, Call
 						OptimisticLockHelper.forceVersionIncrement( entity, entry, session );
 						break;
 					case OPTIMISTIC_FORCE_INCREMENT:
-						session.getActionQueue().registerProcess( new EntityIncrementVersionProcess( entity ) );
+						session.getActionQueue().registerCallback( new EntityIncrementVersionProcess( entity ) );
 						break;
 					case OPTIMISTIC:
-						session.getActionQueue().registerProcess( new EntityVerifyVersionProcess( entity ) );
+						session.getActionQueue().registerCallback( new EntityVerifyVersionProcess( entity ) );
 						break;
 				}
 			}

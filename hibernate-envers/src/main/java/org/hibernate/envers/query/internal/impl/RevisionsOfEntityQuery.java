@@ -164,7 +164,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 		}
 
 		if ( !selectEntitiesOnly ) {
-			qb.addFrom( configuration.getRevisionInfo().getRevisionInfoEntityName(), "r", true );
+			qb.addFrom( configuration.getRevisionInfo().getRevisionInfoQueryName(), "r", true );
 			qb.getRootParameters().addWhere(
 					configuration.getRevisionNumberPath(),
 					true,

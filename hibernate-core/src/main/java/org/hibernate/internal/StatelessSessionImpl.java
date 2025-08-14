@@ -4,31 +4,32 @@
  */
 package org.hibernate.internal;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.function.BiConsumer;
-
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.PersistenceException;
+import jakarta.transaction.SystemException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.StatelessSession;
 import org.hibernate.TransientObjectException;
 import org.hibernate.UnresolvableObjectException;
-import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
-import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.StatelessSessionImplementor;
+import org.hibernate.engine.spi.TransactionCompletionCallbacks;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.monitor.spi.DiagnosticEvent;
@@ -67,10 +68,16 @@ import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.internal.CacheLoadHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-
-import jakarta.persistence.EntityGraph;
-import jakarta.transaction.SystemException;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
 import org.hibernate.stat.spi.StatisticsImplementor;
+
+import java.sql.Connection;
+import java.util.List;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.function.BiConsumer;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
@@ -110,7 +117,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class StatelessSessionImpl extends AbstractSharedSessionContract implements StatelessSession {
+public class StatelessSessionImpl extends AbstractSharedSessionContract implements StatelessSessionImplementor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( StatelessSessionImpl.class );
 
 	public static final MultiIdLoadOptions MULTI_ID_LOAD_OPTIONS = new MultiLoadOptions();
@@ -118,13 +125,14 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	private final LoadQueryInfluencers influencers;
 	private final PersistenceContext temporaryPersistenceContext;
 	private final boolean connectionProvided;
-	private final List<AfterTransactionCompletionProcess> afterCompletions = new ArrayList<>();
+	private final TransactionCompletionCallbacksImpl transactionCompletionCallbacks;
 
 	private final EventListenerGroups eventListenerGroups;
 
 	public StatelessSessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 		connectionProvided = options.getConnection() != null;
+		transactionCompletionCallbacks = new TransactionCompletionCallbacksImpl( this );
 		temporaryPersistenceContext = createPersistenceContext( this );
 		influencers = new LoadQueryInfluencers( getFactory() );
 		eventListenerGroups = factory.getEventListenerGroups();
@@ -132,6 +140,26 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		// a nonzero batch size forces use of write-behind
 		// therefore ignore the value of hibernate.jdbc.batch_size
 		setJdbcBatchSize( 0 );
+	}
+
+	/**
+	 * Form used when creating a "shared" stateless session.
+	 */
+	public StatelessSessionImpl(SessionFactoryImplementor factory, CommonSharedSessionCreationOptions options) {
+		super( (SessionFactoryImpl) factory, wrapOptions( (SessionFactoryImpl) factory, options ) );
+		connectionProvided = false;
+		transactionCompletionCallbacks = new TransactionCompletionCallbacksImpl( this );
+		temporaryPersistenceContext = createPersistenceContext( this );
+		influencers = new LoadQueryInfluencers( getFactory() );
+		eventListenerGroups = factory.getEventListenerGroups();
+		setUpMultitenancy( factory, influencers );
+		// a nonzero batch size forces use of write-behind
+		// therefore ignore the value of hibernate.jdbc.batch_size
+		setJdbcBatchSize( 0 );
+	}
+
+	private static SessionCreationOptions wrapOptions(SessionFactoryImpl factory, CommonSharedSessionCreationOptions options) {
+		return new CommonSharedSessionCreationOptionsWrapper( factory, options );
 	}
 
 	@Override
@@ -551,12 +579,14 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	// Hibernate Reactive may need to call this
 	protected boolean firePreInsert(Object entity, Object id, Object[] state, EntityPersister persister) {
+		getFactory().getEventEngine().getCallbackRegistry().preCreate( entity );
+
 		if ( eventListenerGroups.eventListenerGroup_PRE_INSERT.isEmpty() ) {
 			return false;
 		}
 		else {
 			boolean veto = false;
-			final var event = new PreInsertEvent( entity, id, state, persister, null );
+			final var event = new PreInsertEvent( entity, id, state, persister, this );
 			for ( var listener : eventListenerGroups.eventListenerGroup_PRE_INSERT.listeners() ) {
 				veto |= listener.onPreInsert( event );
 			}
@@ -566,12 +596,14 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	// Hibernate Reactive may need to call this
 	protected boolean firePreUpdate(Object entity, Object id, Object[] state, EntityPersister persister) {
+		getFactory().getEventEngine().getCallbackRegistry().preUpdate( entity );
+
 		if ( eventListenerGroups.eventListenerGroup_PRE_UPDATE.isEmpty() ) {
 			return false;
 		}
 		else {
 			boolean veto = false;
-			final var event = new PreUpdateEvent( entity, id, state, null, persister, null );
+			final var event = new PreUpdateEvent( entity, id, state, null, persister, this );
 			for ( var listener : eventListenerGroups.eventListenerGroup_PRE_UPDATE.listeners() ) {
 				veto |= listener.onPreUpdate( event );
 			}
@@ -586,7 +618,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		else {
 			boolean veto = false;
-			final var event = new PreUpsertEvent( entity, id, state, persister, null );
+			final var event = new PreUpsertEvent( entity, id, state, persister, this );
 			for ( var listener : eventListenerGroups.eventListenerGroup_PRE_UPSERT.listeners() ) {
 				veto |= listener.onPreUpsert( event );
 			}
@@ -596,12 +628,14 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	// Hibernate Reactive may need to call this
 	protected boolean firePreDelete(Object entity, Object id, EntityPersister persister) {
+		getFactory().getEventEngine().getCallbackRegistry().preRemove( entity );
+
 		if ( eventListenerGroups.eventListenerGroup_PRE_DELETE.isEmpty() ) {
 			return false;
 		}
 		else {
 			boolean veto = false;
-			final var event = new PreDeleteEvent( entity, id, null, persister, null );
+			final var event = new PreDeleteEvent( entity, id, null, persister, this );
 			for ( var listener : eventListenerGroups.eventListenerGroup_PRE_DELETE.listeners() ) {
 				veto |= listener.onPreDelete( event );
 			}
@@ -612,28 +646,28 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	// Hibernate Reactive may need to call this
 	protected void firePostInsert(Object entity, Object id, Object[] state, EntityPersister persister) {
 		eventListenerGroups.eventListenerGroup_POST_INSERT.fireLazyEventOnEachListener(
-				() -> new PostInsertEvent( entity, id, state, persister, null ),
+				() -> new PostInsertEvent( entity, id, state, persister, this ),
 				PostInsertEventListener::onPostInsert );
 	}
 
 	// Hibernate Reactive may need to call this
 	protected void firePostUpdate(Object entity, Object id, Object[] state, EntityPersister persister) {
 		eventListenerGroups.eventListenerGroup_POST_UPDATE.fireLazyEventOnEachListener(
-				() -> new PostUpdateEvent( entity, id, state, null, null, persister, null ),
+				() -> new PostUpdateEvent( entity, id, state, null, null, persister, this ),
 				PostUpdateEventListener::onPostUpdate );
 	}
 
 	// Hibernate Reactive may need to call this
 	protected void firePostUpsert(Object entity, Object id, Object[] state, EntityPersister persister) {
 		eventListenerGroups.eventListenerGroup_POST_UPSERT.fireLazyEventOnEachListener(
-				() -> new PostUpsertEvent( entity, id, state, null, persister, null ),
+				() -> new PostUpsertEvent( entity, id, state, null, persister, this ),
 				PostUpsertEventListener::onPostUpsert );
 	}
 
 	// Hibernate Reactive may need to call this
 	protected void firePostDelete(Object entity, Object id, EntityPersister persister) {
 		eventListenerGroups.eventListenerGroup_POST_DELETE.fireLazyEventOnEachListener(
-				() -> new PostDeleteEvent( entity, id, null, persister, null ),
+				() -> new PostDeleteEvent( entity, id, null, persister, this ),
 				PostDeleteEventListener::onPostDelete );
 	}
 
@@ -1301,38 +1335,28 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public void beforeTransactionCompletion() {
+		transactionCompletionCallbacks.beforeTransactionCompletion();
 		flushBeforeTransactionCompletion();
 		beforeTransactionCompletionEvents();
 	}
 
 	@Override
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
-		processAfterCompletions( successful );
+		transactionCompletionCallbacks.afterTransactionCompletion( successful );
 		afterTransactionCompletionEvents( successful );
 		if ( shouldAutoClose() && !isClosed() ) {
 			managedClose();
 		}
 	}
 
-	private void processAfterCompletions(boolean successful) {
-		for ( AfterTransactionCompletionProcess completion: afterCompletions ) {
-			try {
-				completion.doAfterTransactionCompletion( successful, this );
-			}
-			catch (CacheException ce) {
-				LOG.unableToReleaseCacheLock( ce );
-				// continue loop
-			}
-			catch (Exception e) {
-				throw new HibernateException( "Unable to perform afterTransactionCompletion callback: " + e.getMessage(), e );
-			}
-		}
-		afterCompletions.clear();
-	}
-
 	@Override
 	public boolean isTransactionInProgress() {
 		return connectionProvided || super.isTransactionInProgress();
+	}
+
+	@Override
+	public TransactionCompletionCallbacks getTransactionCompletionCallbacks() {
+		return transactionCompletionCallbacks;
 	}
 
 	@Override
@@ -1369,7 +1393,9 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					getTenantIdentifier()
 			);
 			final SoftLock lock = cache.lockItem( this, ck, previousVersion );
-			afterCompletions.add( (success, session) -> cache.unlockItem( session, ck, lock ) );
+			transactionCompletionCallbacks.registerCallback( (success, session) -> {
+				cache.unlockItem( session, ck, lock );
+			} );
 			return ck;
 		}
 		else {
@@ -1393,7 +1419,9 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					getTenantIdentifier()
 			);
 			final SoftLock lock = cache.lockItem( this, ck, null );
-			afterCompletions.add( (success, session) -> cache.unlockItem( this, ck, lock ) );
+			transactionCompletionCallbacks.registerCallback( (success, session) -> {
+				cache.unlockItem( this, ck, lock );
+			} );
 			return ck;
 		}
 		else {
@@ -1405,11 +1433,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		if ( persister.hasCache() ) {
 			persister.getCacheAccessStrategy().remove( this, ck );
 		}
-	}
-
-	@Override
-	public void registerProcess(AfterTransactionCompletionProcess process) {
-		afterCompletions.add( process );
 	}
 
 	@Override
@@ -1483,6 +1506,100 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 		@Override
 		public Integer getBatchSize() {
+			return null;
+		}
+	}
+
+	private static class CommonSharedSessionCreationOptionsWrapper implements SessionCreationOptions {
+		private final SessionFactoryImplementor factory;
+		private final CommonSharedSessionCreationOptions options;
+
+		public CommonSharedSessionCreationOptionsWrapper(SessionFactoryImplementor factory, CommonSharedSessionCreationOptions options) {
+			this.factory = factory;
+			this.options = options;
+		}
+
+		@Override
+		public Interceptor getInterceptor() {
+			return options.getInterceptor();
+		}
+
+		@Override
+		public StatementInspector getStatementInspector() {
+			return options.getStatementInspector();
+		}
+
+		@Override
+		public Object getTenantIdentifierValue() {
+			return options.getTenantIdentifierValue();
+		}
+
+		@Override
+		public boolean shouldAutoJoinTransactions() {
+			return true;
+		}
+
+		@Override
+		public FlushMode getInitialSessionFlushMode() {
+			return FlushMode.ALWAYS;
+		}
+
+		@Override
+		public boolean isSubselectFetchEnabled() {
+			return false;
+		}
+
+		@Override
+		public int getDefaultBatchFetchSize() {
+			return -1;
+		}
+
+		@Override
+		public boolean shouldAutoClose() {
+			return false;
+		}
+
+		@Override
+		public boolean shouldAutoClear() {
+			return false;
+		}
+
+		@Override
+		public Connection getConnection() {
+			return null;
+		}
+
+		@Override
+		public boolean isIdentifierRollbackEnabled() {
+			// identifier rollback not yet implemented for StatelessSessions
+			return false;
+		}
+
+		@Override
+		public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
+			return factory.getSessionFactoryOptions().getPhysicalConnectionHandlingMode();
+		}
+
+		@Override
+		public String getTenantIdentifier() {
+			final Object tenantIdentifier = getTenantIdentifierValue();
+			return tenantIdentifier == null
+					? null
+					: factory.getTenantIdentifierJavaType().toString( tenantIdentifier );
+		}
+
+		@Override
+		public TimeZone getJdbcTimeZone() {
+			return factory.getSessionFactoryOptions().getJdbcTimeZone();
+		}
+
+		@Override
+		public List<SessionEventListener> getCustomSessionEventListener() {
+			return null;
+		}
+
+		@Override
+		public ExceptionMapper getExceptionMapper() {
 			return null;
 		}
 	}

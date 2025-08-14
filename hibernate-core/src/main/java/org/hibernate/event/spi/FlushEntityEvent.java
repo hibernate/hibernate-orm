@@ -9,7 +9,7 @@ import org.hibernate.engine.spi.EntityEntry;
 /**
  * @author Gavin King
  */
-public class FlushEntityEvent extends AbstractEvent {
+public class FlushEntityEvent extends AbstractSessionEvent {
 
 	private Object entity;
 	private Object[] propertyValues;

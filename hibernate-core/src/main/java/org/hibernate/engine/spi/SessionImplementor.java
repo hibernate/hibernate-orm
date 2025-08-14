@@ -74,6 +74,11 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	ActionQueue getActionQueue();
 
 	@Override
+	default TransactionCompletionCallbacks getTransactionCompletionCallbacks() {
+		return getActionQueue();
+	}
+
+	@Override
 	Object instantiate(EntityPersister persister, Object id) throws HibernateException;
 
 	/**

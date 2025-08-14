@@ -4,17 +4,17 @@
  */
 package org.hibernate.envers.internal.entities.mapper.id;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.hibernate.Session;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.mapping.Component;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.service.ServiceRegistry;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * An implementation of an identifier mapper for {@link jakarta.persistence.IdClass} or multiple
@@ -43,7 +43,7 @@ public class MultipleIdMapper extends AbstractCompositeIdMapper implements Simpl
 	}
 
 	@Override
-	public void mapToMapFromId(Session session, Map<String, Object> data, Object obj) {
+	public void mapToMapFromId(SharedSessionContractImplementor session, Map<String, Object> data, Object obj) {
 		if ( compositeIdClass.isInstance( obj ) ) {
 			if ( embedded ) {
 				final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( obj );

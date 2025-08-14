@@ -16,7 +16,7 @@ import org.hibernate.Timeouts;
  *
  * @see org.hibernate.Session#lock
  */
-public class LockEvent extends AbstractEvent {
+public class LockEvent extends AbstractSessionEvent {
 	public static final String ILLEGAL_SKIP_LOCKED = "Skip-locked is not valid option for #lock";
 
 	private Object object;

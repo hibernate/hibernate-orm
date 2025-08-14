@@ -5,6 +5,7 @@
 package org.hibernate.envers.strategy;
 
 import org.hibernate.Session;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
@@ -29,7 +30,7 @@ public interface AuditStrategy extends org.hibernate.envers.strategy.spi.AuditSt
 	 * @param id Id of the entity.
 	 * @param data Audit data to persist
 	 * @param revision Current revision data
-	 * @deprecated use {@link org.hibernate.envers.strategy.spi.AuditStrategy#perform(Session, String, Configuration, Object, Object, Object)}
+	 * @deprecated use {@link org.hibernate.envers.strategy.spi.AuditStrategy#perform(org.hibernate.engine.spi.SharedSessionContractImplementor, String, Configuration, Object, Object, Object)}
 	 */
 	@Deprecated(since = "5.2.1")
 	default void perform(
@@ -40,7 +41,7 @@ public interface AuditStrategy extends org.hibernate.envers.strategy.spi.AuditSt
 			Object data,
 			Object revision) {
 		perform(
-				session,
+				(SharedSessionContractImplementor) session,
 				entityName,
 				enversService.getConfig(),
 				id,
@@ -59,7 +60,7 @@ public interface AuditStrategy extends org.hibernate.envers.strategy.spi.AuditSt
 	 * @param enversService The EnversService
 	 * @param persistentCollectionChangeData Collection change data to be persisted.
 	 * @param revision Current revision data
-	 * @deprecated use {@link #performCollectionChange(Session, String, String, Configuration, PersistentCollectionChangeData, Object)}
+	 * @deprecated use {@link #performCollectionChange(SharedSessionContractImplementor, String, String, Configuration, PersistentCollectionChangeData, Object)}
 	 */
 	@Deprecated(since = "5.2.1")
 	default void performCollectionChange(
@@ -70,7 +71,7 @@ public interface AuditStrategy extends org.hibernate.envers.strategy.spi.AuditSt
 			PersistentCollectionChangeData persistentCollectionChangeData,
 			Object revision) {
 		performCollectionChange(
-				session,
+				(SharedSessionContractImplementor) session,
 				entityName,
 				propertyName,
 				enversService.getConfig(),

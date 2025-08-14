@@ -11,7 +11,7 @@ package org.hibernate.event.spi;
  *
  * @see org.hibernate.Session#flush
  */
-public class FlushEvent extends AbstractEvent {
+public class FlushEvent extends AbstractSessionEvent {
 	private int numberOfEntitiesProcessed;
 	private int numberOfCollectionsProcessed;
 

@@ -76,10 +76,15 @@ public class OverrideOneToOneJoinColumnTest {
 									.buildMetadata()
 			);
 
+			String errorMessage = ex.getMessage();
 			assertTrue(
-					ex.getMessage().contains( "is 'mappedBy' a different entity and may not explicitly specify the '@JoinColumn'" ),
+					errorMessage.contains( "is 'mappedBy=employee' a different entity and may not explicitly specify the '@JoinColumn'" ),
 					"Should disallow exactly because of @JoinColumn override on side with mappedBy"
 			);
+			assertTrue( errorMessage.contains( PartTimeEmployee.class.getName() ),
+					"The error message doesn't contain the name of the entity" );
+			assertTrue( errorMessage.contains( "desk" ),
+					"The error message doesn't contain the name of the association" );
 		}
 	}
 

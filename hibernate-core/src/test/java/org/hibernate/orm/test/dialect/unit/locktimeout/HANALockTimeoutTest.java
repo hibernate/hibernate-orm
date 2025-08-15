@@ -55,11 +55,11 @@ public class HANALockTimeoutTest extends BaseUnitTestCase {
 	@Test
 	public void testLockTimeoutNoAliasSkipLocked() {
 		assertEquals(
-				" for update",
+				" for update ignore locked",
 				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_READ ).setTimeout( SKIP_LOCKED ) )
 		);
 		assertEquals(
-				" for update",
+				" for update ignore locked",
 				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_WRITE ).setTimeout( SKIP_LOCKED ) )
 		);
 	}
@@ -100,7 +100,7 @@ public class HANALockTimeoutTest extends BaseUnitTestCase {
 	public void testLockTimeoutAliasSkipLocked() {
 		String alias = "a";
 		assertEquals(
-				" for update of a",
+				" for update of a ignore locked",
 				dialect.getForUpdateString(
 						alias,
 						new LockOptions( LockMode.PESSIMISTIC_READ )
@@ -108,7 +108,7 @@ public class HANALockTimeoutTest extends BaseUnitTestCase {
 				)
 		);
 		assertEquals(
-				" for update of a",
+				" for update of a ignore locked",
 				dialect.getForUpdateString(
 						alias,
 						new LockOptions( LockMode.PESSIMISTIC_WRITE )

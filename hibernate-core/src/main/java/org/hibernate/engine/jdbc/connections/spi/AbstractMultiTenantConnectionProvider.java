@@ -49,18 +49,17 @@ public abstract class AbstractMultiTenantConnectionProvider<T> implements MultiT
 
 	@Override
 	public boolean isUnwrappableAs(Class<?> unwrapType) {
-		return
-			ConnectionProvider.class.isAssignableFrom( unwrapType ) ||
-			MultiTenantConnectionProvider.class.isAssignableFrom( unwrapType );
+		return unwrapType.isInstance( this )
+			|| unwrapType.isAssignableFrom( ConnectionProvider.class );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( MultiTenantConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+		if ( unwrapType.isInstance( this ) ) {
 			return (T) this;
 		}
-		else if ( ConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+		else if ( unwrapType.isAssignableFrom( ConnectionProvider.class ) ) {
 			return (T) getAnyConnectionProvider();
 		}
 		else {

@@ -190,11 +190,10 @@ public class MetadataContext {
 	public void registerEmbeddableType(
 			EmbeddableDomainType<?> embeddableType,
 			Component bootDescriptor) {
-		assert embeddableType.getJavaType() != null;
-		assert ! Map.class.isAssignableFrom( embeddableType.getJavaType() );
-
-		embeddablesToProcess
-				.computeIfAbsent( embeddableType.getJavaType(), k -> new ArrayList<>( 1 ) )
+		final var  javaType = embeddableType.getJavaType();
+		assert javaType != null;
+		assert !Map.class.isAssignableFrom( javaType );
+		embeddablesToProcess.computeIfAbsent( javaType, k -> new ArrayList<>( 1 ) )
 				.add( embeddableType );
 		registerComponentByEmbeddable( embeddableType, bootDescriptor );
 	}
@@ -254,9 +253,8 @@ public class MetadataContext {
 	 *
 	 * @return The corresponding JPA {@link org.hibernate.type.EntityType}, or null.
 	 */
-	@SuppressWarnings("unchecked")
-	public <E> IdentifiableDomainType<E> locateIdentifiableType(String entityName) {
-		return (IdentifiableDomainType<E>) identifiableTypesByName.get( entityName );
+	public IdentifiableDomainType<?> locateIdentifiableType(String entityName) {
+		return identifiableTypesByName.get( entityName );
 	}
 
 	public Map<String, IdentifiableDomainType<?>> getIdentifiableTypesByName() {
@@ -298,31 +296,30 @@ public class MetadataContext {
 		}
 
 		final boolean staticMetamodelScanEnabled =
-				this.jpaStaticMetaModelPopulationSetting != JpaStaticMetamodelPopulationSetting.DISABLED;
+				jpaStaticMetaModelPopulationSetting != JpaStaticMetamodelPopulationSetting.DISABLED;
 		final Set<String> processedMetamodelClasses = new HashSet<>();
 
 		//we need to process types from superclasses to subclasses
 		for ( Object mapping : orderedMappings ) {
-			if ( PersistentClass.class.isAssignableFrom( mapping.getClass() ) ) {
-				final PersistentClass safeMapping = (PersistentClass) mapping;
+			if ( mapping instanceof PersistentClass persistentClass ) {
 				if ( log.isTraceEnabled() ) {
-					log.trace( "Starting entity [" + safeMapping.getEntityName() + ']' );
+					log.trace( "Starting entity [" + persistentClass.getEntityName() + ']' );
 				}
 				try {
-					final EntityDomainType<?> jpaMapping = entityTypesByPersistentClass.get( safeMapping );
+					final var jpaMapping = entityTypesByPersistentClass.get( persistentClass );
 
-					applyIdMetadata( safeMapping, jpaMapping );
-					applyVersionAttribute( safeMapping, jpaMapping );
-					applyGenericProperties( safeMapping, jpaMapping );
+					applyIdMetadata( persistentClass, jpaMapping );
+					applyVersionAttribute( persistentClass, jpaMapping );
+					applyGenericProperties( persistentClass, jpaMapping );
 
-					for ( Property property : safeMapping.getDeclaredProperties() ) {
-						if ( property.getValue() == safeMapping.getIdentifierMapper() ) {
+					for ( Property property : persistentClass.getDeclaredProperties() ) {
+						if ( property.getValue() == persistentClass.getIdentifierMapper() ) {
 							// property represents special handling for id-class mappings but we have already
 							// accounted for the embedded property mappings in #applyIdMetadata &&
 							// #buildIdClassAttributes
 							continue;
 						}
-						if ( safeMapping.isVersioned() && property == safeMapping.getVersion() ) {
+						if ( persistentClass.isVersioned() && property == persistentClass.getVersion() ) {
 							// skip the version property, it was already handled previously.
 							continue;
 						}
@@ -337,30 +334,29 @@ public class MetadataContext {
 				}
 				finally {
 					if ( log.isTraceEnabled() ) {
-						log.trace( "Completed entity [" + safeMapping.getEntityName() + ']' );
+						log.trace( "Completed entity [" + persistentClass.getEntityName() + ']' );
 					}
 				}
 			}
-			else if ( MappedSuperclass.class.isAssignableFrom( mapping.getClass() ) ) {
-				final MappedSuperclass safeMapping = (MappedSuperclass) mapping;
+			else if ( mapping instanceof MappedSuperclass mappedSuperclass ) {
 				if ( log.isTraceEnabled() ) {
-					log.trace( "Starting mapped superclass [" + safeMapping.getMappedClass().getName() + ']' );
+					log.trace( "Starting mapped superclass [" + mappedSuperclass.getMappedClass().getName() + ']' );
 				}
 				try {
-					final var jpaType = mappedSuperclassByMappedSuperclassMapping.get( safeMapping );
+					final var jpaType = mappedSuperclassByMappedSuperclassMapping.get( mappedSuperclass );
 
-					applyIdMetadata( safeMapping, jpaType );
-					applyVersionAttribute( safeMapping, jpaType );
+					applyIdMetadata( mappedSuperclass, jpaType );
+					applyVersionAttribute( mappedSuperclass, jpaType );
 //					applyNaturalIdAttribute( safeMapping, jpaType );
 
-					for ( Property property : safeMapping.getDeclaredProperties() ) {
-						if ( isIdentifierProperty( property, safeMapping ) ) {
+					for ( Property property : mappedSuperclass.getDeclaredProperties() ) {
+						if ( isIdentifierProperty( property, mappedSuperclass ) ) {
 							// property represents special handling for id-class mappings but we have already
 							// accounted for the embedded property mappings in #applyIdMetadata &&
 							// #buildIdClassAttributes
 							continue;
 						}
-						else if ( safeMapping.isVersioned() && property == safeMapping.getVersion() ) {
+						else if ( mappedSuperclass.isVersioned() && property == mappedSuperclass.getVersion() ) {
 							// skip the version property, it was already handled previously.
 							continue;
 						}
@@ -375,7 +371,7 @@ public class MetadataContext {
 				}
 				finally {
 					if ( log.isTraceEnabled() ) {
-						log.trace( "Completed mapped superclass [" + safeMapping.getMappedClass().getName() + ']' );
+						log.trace( "Completed mapped superclass [" + mappedSuperclass.getMappedClass().getName() + ']' );
 					}
 				}
 			}

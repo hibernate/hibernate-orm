@@ -303,8 +303,7 @@ public class AttributeFactory {
 	private static DomainType<?> entityDomainType(ValueContext typeContext, MetadataContext context) {
 		final var type = typeContext.getHibernateValue().getType();
 		if ( type instanceof EntityType entityType ) {
-			final var domainType =
-					context.locateIdentifiableType( entityType.getAssociatedEntityName() );
+			final var domainType = context.locateIdentifiableType( entityType.getAssociatedEntityName() );
 			if ( domainType == null ) {
 				// Due to the use of generics, it can happen that a mapped super class uses a type
 				// for an attribute that is not a managed type. Since this case is not specifically mentioned

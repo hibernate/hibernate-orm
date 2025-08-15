@@ -10,13 +10,12 @@ import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
 import org.hibernate.engine.jdbc.connections.spi.DataSourceBasedMultiTenantConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-
-import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_CONNECTION_PROVIDER;
 
@@ -26,7 +25,6 @@ import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_CONNECTION_PRO
  * @author Steve Ebersole
  */
 public class MultiTenantConnectionProviderInitiator implements StandardServiceInitiator<MultiTenantConnectionProvider<?>> {
-	private static final Logger log = Logger.getLogger( MultiTenantConnectionProviderInitiator.class );
 
 	/**
 	 * Singleton access
@@ -64,23 +62,26 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 			return multiTenantConnectionProvider;
 		}
 		else {
-			final var implClass = multiTenantConnectionProviderClass( registry, configValue );
+			final var providerClass = providerClass( registry, configValue );
 			try {
-				return implClass.newInstance();
+				return providerClass.newInstance();
 			}
 			catch (Exception e) {
-				log.warn( "Unable to instantiate specified class [" + implClass.getName() + "]", e );
-				throw new ServiceException( "Unable to instantiate specified multi-tenant connection provider [" + implClass.getName() + "]" );
+				throw new ServiceException( "Unable to instantiate specified multi-tenant connection provider [" + providerClass.getName() + "]", e );
 			}
 		}
 	}
 
-	private static Class<MultiTenantConnectionProvider<?>> multiTenantConnectionProviderClass(
+	private static Class<? extends MultiTenantConnectionProvider<?>> providerClass(
 			ServiceRegistryImplementor registry, Object configValue) {
-		if ( configValue instanceof Class ) {
-			@SuppressWarnings("unchecked")
-			final var clazz = (Class<MultiTenantConnectionProvider<?>>) configValue;
-			return clazz;
+		if ( configValue instanceof Class<?> configType ) {
+			if ( !MultiTenantConnectionProvider.class.isAssignableFrom( configType ) ) {
+				throw new ConnectionProviderConfigurationException( "Class '" + configType.getName()
+								+ "' does not implement 'MultiTenantConnectionProvider'" );
+			}
+			@SuppressWarnings("unchecked") // Safe, we just checked
+			final var providerClass = (Class<? extends MultiTenantConnectionProvider<?>>) configType;
+			return providerClass;
 		}
 		else {
 			final String className = configValue.toString();
@@ -89,8 +90,7 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 				return classLoaderService.classForName( className );
 			}
 			catch (ClassLoadingException cle) {
-				log.warn( "Unable to locate specified class [" + className + "]", cle );
-				throw new ServiceException( "Unable to locate specified multi-tenant connection provider [" + className + "]" );
+				throw new ServiceException( "Unable to locate specified multi-tenant connection provider [" + className + "]", cle );
 			}
 		}
 	}

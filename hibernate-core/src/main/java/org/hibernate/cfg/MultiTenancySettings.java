@@ -13,8 +13,14 @@ import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 public interface MultiTenancySettings {
 
 	/**
-	 * Specifies a {@link MultiTenantConnectionProvider}
-	 * to use. Since {@code MultiTenantConnectionProvider} is also a service, it may be configured
+	 * Specifies a {@link MultiTenantConnectionProvider} to use, either:
+	 * <ul>
+	 *     <li>an instance of {@code MultiTenantConnectionProvider},
+	 *     <li>a {@link Class} representing a class that implements {@code MultiTenantConnectionProvider}, or
+	 *     <li>the name of a class that implements {@code MultiTenantConnectionProvider}.
+	 * </ul>
+	 *
+	 * Since {@code MultiTenantConnectionProvider} is also a service, it may be configured
 	 * directly via the {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder}.
 	 *
 	 * @since 4.1

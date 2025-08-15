@@ -15,7 +15,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import java.sql.Connection;
 
-import static org.hibernate.Timeouts.NO_WAIT;
 import static org.hibernate.Timeouts.NO_WAIT_MILLI;
 import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
 import static org.hibernate.Timeouts.WAIT_FOREVER;
@@ -82,11 +81,9 @@ public class CockroachLockingSupport implements LockingSupport, LockingSupport.M
 		return Helper.getLockTimeout(
 				"show lock_timeout",
 				(resultSet) -> {
-					// see https://dev.mysql.com/doc/refman/8.4/en/innodb-parameters.html#sysvar_innodb_lock_wait_timeout
 					final int millis = resultSet.getInt( 1 );
 					return switch ( millis ) {
-						case 0 -> NO_WAIT;
-						case 100000000 -> WAIT_FOREVER;
+						case 0 -> WAIT_FOREVER;
 						default -> Timeout.milliseconds( millis );
 					};
 				},
@@ -103,15 +100,14 @@ public class CockroachLockingSupport implements LockingSupport, LockingSupport.M
 		Helper.setLockTimeout(
 				timeout,
 				(t) -> {
-					// see https://dev.mysql.com/doc/refman/8.4/en/innodb-parameters.html#sysvar_innodb_lock_wait_timeout
 					final int milliseconds = timeout.milliseconds();
 					if ( milliseconds == SKIP_LOCKED_MILLI ) {
 						throw new HibernateException( "Connection lock-timeout does not accept skip-locked" );
 					}
-					if ( milliseconds == WAIT_FOREVER_MILLI ) {
-						return 100000000;
+					if ( milliseconds == NO_WAIT_MILLI ) {
+						throw new HibernateException( "Connection lock-timeout does not accept no-wait" );
 					}
-					return milliseconds;
+					return milliseconds == WAIT_FOREVER_MILLI ? 0 : milliseconds;
 				},
 				"set lock_timeout = %s",
 				connection,

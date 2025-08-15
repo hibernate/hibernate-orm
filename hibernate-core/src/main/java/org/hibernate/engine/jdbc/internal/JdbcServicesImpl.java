@@ -59,7 +59,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 
 	@Override
 	public JdbcConnectionAccess getBootstrapJdbcConnectionAccess() {
-		return JdbcEnvironmentInitiator.buildBootstrapJdbcConnectionAccess( serviceRegistry );
+		return JdbcEnvironmentInitiator.buildJdbcConnectionAccess( serviceRegistry );
 	}
 
 	@Override

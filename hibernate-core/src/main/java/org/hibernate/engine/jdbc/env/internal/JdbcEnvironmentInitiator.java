@@ -67,7 +67,7 @@ import static org.hibernate.cfg.JdbcSettings.DIALECT;
 import static org.hibernate.cfg.JdbcSettings.DIALECT_DB_VERSION;
 import static org.hibernate.cfg.JdbcSettings.JAKARTA_HBM2DDL_DB_VERSION;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
-import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl.isMultiTenancyEnabled;
+import static org.hibernate.context.spi.MultiTenancy.isMultiTenancyEnabled;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -185,14 +185,12 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 	}
 
 	private DatabaseConnectionInfo buildInfo(ServiceRegistryImplementor registry, JdbcEnvironment environment) {
-		if ( isMultiTenancyEnabled( registry ) ) {
-			return registry.requireService( MultiTenantConnectionProvider.class )
-					.getDatabaseConnectionInfo( environment.getDialect() );
-		}
-		else {
-			return registry.requireService( ConnectionProvider.class )
-					.getDatabaseConnectionInfo( environment.getDialect(), environment.getExtractedDatabaseMetaData() );
-		}
+		return isMultiTenancyEnabled( registry )
+				? registry.requireService( MultiTenantConnectionProvider.class )
+						.getDatabaseConnectionInfo( environment.getDialect() )
+				: registry.requireService( ConnectionProvider.class )
+						.getDatabaseConnectionInfo( environment.getDialect(),
+								environment.getExtractedDatabaseMetaData() );
 	}
 
 	private DatabaseConnectionInfo buildInfo(Map<String, Object> configurationValues, JdbcEnvironment environment) {
@@ -453,32 +451,21 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 	private static boolean explicitDialectConfiguration(String explicitDatabaseName,
 			Map<String, Object> configurationValues) {
-		return isNotEmpty( explicitDatabaseName ) || isNotNullAndNotEmpty( configurationValues.get( DIALECT ) );
+		return isNotEmpty( explicitDatabaseName )
+			|| isNotNullAndNotEmpty( configurationValues.get( DIALECT ) );
 	}
 
 	private static boolean isNotNullAndNotEmpty(Object object) {
 		return object != null
-			&& ( !(object instanceof String string) || !string.isEmpty() );
+			&& !( object instanceof String string && string.isEmpty() );
 	}
 
-	private JdbcConnectionAccess buildJdbcConnectionAccess(ServiceRegistryImplementor registry) {
+	public static JdbcConnectionAccess buildJdbcConnectionAccess(ServiceRegistryImplementor registry) {
 		if ( !isMultiTenancyEnabled( registry ) ) {
 			return new ConnectionProviderJdbcConnectionAccess( registry.requireService( ConnectionProvider.class ) );
 		}
 		else {
-			final MultiTenantConnectionProvider<?> multiTenantConnectionProvider =
-					registry.getService( MultiTenantConnectionProvider.class );
-			return new MultiTenantConnectionProviderJdbcConnectionAccess( multiTenantConnectionProvider );
-		}
-	}
-
-	public static JdbcConnectionAccess buildBootstrapJdbcConnectionAccess(ServiceRegistryImplementor registry) {
-		if ( !isMultiTenancyEnabled( registry ) ) {
-			return new ConnectionProviderJdbcConnectionAccess( registry.requireService( ConnectionProvider.class ) );
-		}
-		else {
-			final MultiTenantConnectionProvider<?> multiTenantConnectionProvider =
-					registry.getService( MultiTenantConnectionProvider.class );
+			final var multiTenantConnectionProvider = registry.getService( MultiTenantConnectionProvider.class );
 			return new MultiTenantConnectionProviderJdbcConnectionAccess( multiTenantConnectionProvider );
 		}
 	}

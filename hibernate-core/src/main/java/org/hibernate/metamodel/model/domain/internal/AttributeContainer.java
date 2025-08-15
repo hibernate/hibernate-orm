@@ -8,13 +8,14 @@ import java.util.Set;
 
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 
 /**
  * @author Steve Ebersole
  */
-public interface AttributeContainer<J> {
+public interface AttributeContainer<J> extends ManagedDomainType<J> {
 	InFlightAccess<J> getInFlightAccess();
 
 	/**

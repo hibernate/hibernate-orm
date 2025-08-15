@@ -69,7 +69,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import static net.bytebuddy.matcher.ElementMatchers.isDefaultFinalizer;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 import static net.bytebuddy.matcher.ElementMatchers.isSetter;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
@@ -85,7 +84,7 @@ public class EnhancerImpl implements Enhancer {
 	private final ByteBuddyState byteBuddyState;
 	private final EnhancerClassLocator typePool;
 	private final EnhancerImplConstants constants;
-	private final List<? extends Annotation> infoAnnotationList;
+	private final AnnotationList.ForLoadedAnnotations infoAnnotationList;
 
 	/**
 	 * Constructs the Enhancer, using the given context.
@@ -111,7 +110,7 @@ public class EnhancerImpl implements Enhancer {
 		this.typePool = Objects.requireNonNull( classLocator );
 		this.constants = byteBuddyState.getEnhancerConstants();
 
-		this.infoAnnotationList = List.of( createInfoAnnotation( enhancementContext ) );
+		this.infoAnnotationList = new AnnotationList.ForLoadedAnnotations( List.of( createInfoAnnotation( enhancementContext ) ) );
 	}
 
 
@@ -135,7 +134,7 @@ public class EnhancerImpl implements Enhancer {
 			final TypeDescription typeDescription = typePool.describe( safeClassName ).resolve();
 
 			return byteBuddyState.rewrite( typePool, safeClassName, byteBuddy -> doEnhance(
-					() -> byteBuddy.ignore( isDefaultFinalizer() )
+					() -> byteBuddy.ignore( constants.defaultFinalizer() )
 							.redefine( typeDescription, typePool.asClassFileLocator() )
 							.annotateType( infoAnnotationList ),
 					typeDescription

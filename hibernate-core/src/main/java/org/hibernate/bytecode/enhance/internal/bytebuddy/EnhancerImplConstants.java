@@ -7,6 +7,7 @@ package org.hibernate.bytecode.enhance.internal.bytebuddy;
 import jakarta.persistence.Transient;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.annotation.AnnotationDescription;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.modifier.FieldPersistence;
 import net.bytebuddy.description.modifier.ModifierContributor;
 import net.bytebuddy.description.modifier.Visibility;
@@ -19,10 +20,13 @@ import net.bytebuddy.implementation.StubMethod;
 import java.util.Collection;
 import java.util.List;
 
+import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
+
+import static net.bytebuddy.matcher.ElementMatchers.isDefaultFinalizer;
 
 /**
  * Extracts constants used by EnhancerImpl.
@@ -69,6 +73,9 @@ public final class EnhancerImplConstants {
 	final TypeDefinition Type_Array_String = TypeDescription.ForLoadedType.of( String[].class );
 	final TypeDefinition TypeCollectionTracker = TypeDescription.ForLoadedType.of( CollectionTracker.class );
 
+	//Frequently used ElementMatchers:
+	final ElementMatcher.Junction<MethodDescription> DEFAULT_FINALIZER = isDefaultFinalizer();
+
 	public EnhancerImplConstants() {
 		this.adviceLocator = ClassFileLocator.ForClassLoader.of( CodeTemplates.class.getClassLoader() );
 		this.implementationTrackChange = Advice.to( CodeTemplates.TrackChange.class, adviceLocator )
@@ -108,6 +115,10 @@ public final class EnhancerImplConstants {
 				.wrap( StubMethod.INSTANCE );
 		this.implementationSetPersistenceInfo = Advice.to( CodeTemplates.SetPersistenceInfo.class, adviceLocator )
 				.wrap( StubMethod.INSTANCE );
+	}
+
+	public ElementMatcher<? super MethodDescription> defaultFinalizer() {
+		return DEFAULT_FINALIZER;
 	}
 
 }

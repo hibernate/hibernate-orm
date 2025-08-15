@@ -6,14 +6,15 @@ package org.hibernate.bytecode.internal.bytebuddy;
 
 import java.lang.reflect.Constructor;
 
+import net.bytebuddy.description.modifier.Visibility;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImplConstants;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.proxy.ProxyConfiguration;
 
-import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
 
 public class BasicProxyFactoryImpl implements BasicProxyFactory {
@@ -36,6 +37,7 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 
 		final Class<?> superClassOrMainInterface = superClass != null ? superClass : interfaceClass;
 		final ByteBuddyState.ProxyDefinitionHelpers helpers = byteBuddyState.getProxyDefinitionHelpers();
+		final EnhancerImplConstants constants = byteBuddyState.getEnhancerConstants();
 		final String proxyClassName = superClassOrMainInterface.getName() + "$" + PROXY_NAMING_SUFFIX;
 
 		this.proxyClass = byteBuddyState.loadBasicProxy( superClassOrMainInterface, proxyClassName, (byteBuddy, namingStrategy) ->
@@ -46,7 +48,7 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 					.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
 					.method( byteBuddyState.getProxyDefinitionHelpers().getVirtualNotFinalizerFilter() )
 							.intercept( byteBuddyState.getProxyDefinitionHelpers().getDelegateToInterceptorDispatcherMethodDelegation() )
-					.implement( ProxyConfiguration.class )
+					.implement( constants.INTERFACES_for_ProxyConfiguration )
 							.intercept( byteBuddyState.getProxyDefinitionHelpers().getInterceptorFieldAccessor() )
 				)
 		);

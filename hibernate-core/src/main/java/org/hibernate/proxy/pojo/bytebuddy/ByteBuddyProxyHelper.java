@@ -15,6 +15,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImplConstants;
 import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
 import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
 import org.hibernate.internal.util.ReflectHelper;
@@ -23,7 +24,6 @@ import org.hibernate.proxy.ProxyConfiguration;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.NamingStrategy;
-import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.description.type.TypeList;
@@ -38,9 +38,11 @@ public class ByteBuddyProxyHelper implements Serializable {
 	private static final TypeDescription OBJECT = TypeDescription.ForLoadedType.of(Object.class);
 
 	private final ByteBuddyState byteBuddyState;
+	private final EnhancerImplConstants constants;
 
 	public ByteBuddyProxyHelper(ByteBuddyState byteBuddyState) {
 		this.byteBuddyState = byteBuddyState;
+		this.constants = byteBuddyState.getEnhancerConstants();
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -96,8 +98,8 @@ public class ByteBuddyProxyHelper implements Serializable {
 						.intercept( helpers.getDelegateToInterceptorDispatcherMethodDelegation() )
 				.method( helpers.getProxyNonInterceptedMethodFilter() )
 						.intercept( SuperMethodCall.INSTANCE )
-				.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
-				.implement( ProxyConfiguration.class )
+				.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, constants.modifierPRIVATE )
+				.implement( constants.INTERFACES_for_ProxyConfiguration )
 						.intercept( helpers.getInterceptorFieldAccessor() )
 		);
 	}

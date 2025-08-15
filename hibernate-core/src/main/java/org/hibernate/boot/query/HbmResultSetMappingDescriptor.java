@@ -563,10 +563,8 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 							value = component.getProperty( element ).getValue();
 						}
 						else if ( value instanceof ToOne toOne ) {
-							value = collector
-									.getEntityBinding( toOne.getReferencedEntityName() )
-									.getProperty( element )
-									.getValue();
+							final var entity = collector.getEntityBinding( toOne.getReferencedEntityName() );
+							value = entity.getProperty( element ).getValue();
 						}
 						else if ( value instanceof OneToMany oneToMany ) {
 							value = oneToMany.getAssociatedClass().getProperty( element ).getValue();

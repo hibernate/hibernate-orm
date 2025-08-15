@@ -469,6 +469,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@Override
+	public void appendSql(double value) {
+		sqlBuffer.append( value );
+	}
+
+	@Override
+	public void appendSql(float value) {
+		sqlBuffer.append( value );
+	}
+
+	@Override
 	public void appendSql(boolean value) {
 		sqlBuffer.append( value );
 	}
@@ -5638,6 +5648,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					parameter.getJdbcMapping(),
 					sqlTypedMapping.getColumnDefinition(),
 					sqlTypedMapping.getLength(),
+					sqlTypedMapping.getArrayLength(),
 					sqlTypedMapping.getTemporalPrecision() != null
 							? sqlTypedMapping.getTemporalPrecision()
 							: sqlTypedMapping.getPrecision(),
@@ -5665,7 +5676,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				renderCasted( new LiteralAsParameter<>( literal, marker ) );
 			}
 			else {
-				jdbcType.appendWriteExpression( marker, this, dialect );
+				final Size size = literal.getJdbcMapping() instanceof SqlTypedMapping sqlTypedMapping
+						? sqlTypedMapping.toSize()
+						: null;
+				jdbcType.appendWriteExpression( marker, size, this, dialect );
 			}
 		}
 		else {
@@ -7014,7 +7028,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final JdbcType jdbcType = jdbcParameter.getExpressionType().getJdbcMapping( 0 ).getJdbcType();
 		assert jdbcType != null;
 		final String parameterMarker = parameterMarkerStrategy.createMarker( position, jdbcType );
-		jdbcType.appendWriteExpression( parameterMarker, this, dialect );
+		final Size size = jdbcParameter.getExpressionType() instanceof SqlTypedMapping sqlTypedMapping
+				? sqlTypedMapping.toSize()
+				: jdbcParameter instanceof SqlTypedMappingJdbcParameter parameter
+						? parameter.getSqlTypedMapping().toSize()
+						: null;
+		jdbcType.appendWriteExpression( parameterMarker, size, this, dialect );
 	}
 
 	protected final int addParameterBinder(JdbcParameter parameter) {

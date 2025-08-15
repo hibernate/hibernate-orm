@@ -381,7 +381,11 @@ public abstract class AbstractCollectionPersister
 			else {
 				final Column col = (Column) selectable;
 				elementColumnNames[j] = col.getQuotedName( dialect );
-				elementColumnWriters[j] = col.getWriteExpr( elementBootDescriptor.getSelectableType( factory.getRuntimeMetamodels(), j ), dialect );
+				elementColumnWriters[j] = col.getWriteExpr(
+						elementBootDescriptor.getSelectableType( factory.getRuntimeMetamodels(), j ),
+						dialect,
+						creationContext.getBootModel()
+				);
 				elementColumnReaders[j] = col.getReadExpr( dialect );
 				elementColumnReaderTemplates[j] = col.getTemplate( dialect, typeConfiguration );
 				elementColumnIsGettable[j] = true;

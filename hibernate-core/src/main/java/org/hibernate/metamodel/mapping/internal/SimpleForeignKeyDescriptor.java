@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Hibernate;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -642,37 +643,41 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public String getCustomReadExpression() {
+	public @Nullable String getCustomReadExpression() {
 		return keySide.getModelPart().getCustomReadExpression();
 	}
 
 	@Override
-	public String getCustomWriteExpression() {
+	public @Nullable String getCustomWriteExpression() {
 		return keySide.getModelPart().getCustomWriteExpression();
 	}
 
 	@Override
-	public String getColumnDefinition() {
+	public @Nullable String getColumnDefinition() {
 		return keySide.getModelPart().getColumnDefinition();
 	}
 
 	@Override
-	public Long getLength() {
+	public @Nullable Long getLength() {
 		return keySide.getModelPart().getLength();
+	}
+	@Override
+	public @Nullable Integer getArrayLength() {
+		return keySide.getModelPart().getArrayLength();
 	}
 
 	@Override
-	public Integer getPrecision() {
+	public @Nullable Integer getPrecision() {
 		return keySide.getModelPart().getPrecision();
 	}
 
 	@Override
-	public Integer getScale() {
+	public @Nullable Integer getScale() {
 		return keySide.getModelPart().getScale();
 	}
 
 	@Override
-	public Integer getTemporalPrecision() {
+	public @Nullable Integer getTemporalPrecision() {
 		return keySide.getModelPart().getTemporalPrecision();
 	}
 

@@ -35,6 +35,16 @@ public class BasicCollectionType<C extends Collection<E>, E>
 		this.name = determineName( collectionTypeDescriptor, baseDescriptor );
 	}
 
+	public BasicCollectionType(
+			BasicType<E> baseDescriptor,
+			JdbcType arrayJdbcType,
+			JavaType<C> collectionTypeDescriptor,
+			String typeName) {
+		super( arrayJdbcType, collectionTypeDescriptor );
+		this.baseDescriptor = baseDescriptor;
+		this.name = typeName;
+	}
+
 	private static String determineName(BasicCollectionJavaType<?, ?> collectionTypeDescriptor, BasicType<?> baseDescriptor) {
 		final String elementTypeName = determineElementTypeName( baseDescriptor );
 		switch ( collectionTypeDescriptor.getSemantics().getCollectionClassification() ) {

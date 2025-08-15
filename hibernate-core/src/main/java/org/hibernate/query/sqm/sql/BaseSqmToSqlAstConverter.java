@@ -391,6 +391,7 @@ import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiati
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
+import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BindableType;
 import org.hibernate.type.BottomType;
@@ -6263,6 +6264,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return new SqlTypedMappingImpl(
 					null,
 					null,
+					null,
 					precision,
 					0,
 					null,
@@ -6271,6 +6273,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else if ( bindValue instanceof BigDecimal bigDecimal ) {
 			return new SqlTypedMappingImpl(
+					null,
 					null,
 					null,
 					bigDecimal.precision(),
@@ -6484,12 +6487,29 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( targetType instanceof BasicType basicType ) {
 			targetType = resolveSqlTypeIndicators( this, basicType, target.getNodeJavaType() );
 		}
-		return new CastTarget(
-				targetType.getJdbcMapping(),
-				target.getLength(),
-				target.getPrecision(),
-				target.getScale()
-		);
+		if ( targetType instanceof BasicPluralType<?, ?>
+			&& target.getLength() != null
+			&& target.getScale() == null ) {
+			// Assume that the given length is the array length
+			return new CastTarget(
+					targetType.getJdbcMapping(),
+					null,
+					null,
+					target.getLength().intValue(),
+					null,
+					null
+			);
+		}
+		else {
+			return new CastTarget(
+					targetType.getJdbcMapping(),
+					null,
+					target.getLength(),
+					null,
+					target.getPrecision(),
+					target.getScale()
+			);
+		}
 	}
 
 	@Override

@@ -467,6 +467,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				new SqlTypedMappingImpl(
 						col.getTypeName(),
 						col.getLength(),
+						col.getArrayLength(),
 						col.getPrecision(),
 						col.getScale(),
 						col.getTemporalPrecision(),

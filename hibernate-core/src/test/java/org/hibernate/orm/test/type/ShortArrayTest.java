@@ -144,7 +144,7 @@ public class ShortArrayTest {
 		scope.inSession( em -> {
 			final Dialect dialect = em.getDialect();
 			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
-			final String param = arrayType.getJdbcType().wrapWriteExpression( ":data", dialect );
+			final String param = arrayType.getJdbcType().wrapWriteExpression( ":data", null, dialect );
 			TypedQuery<TableWithShortArrays> tq = em.createNativeQuery(
 					"SELECT * FROM table_with_short_arrays t WHERE the_array " + op + " " + param,
 					TableWithShortArrays.class

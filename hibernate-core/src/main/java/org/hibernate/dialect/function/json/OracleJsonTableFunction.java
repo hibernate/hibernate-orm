@@ -134,6 +134,7 @@ public class OracleJsonTableFunction extends JsonTableFunction {
 						null,
 						null,
 						null,
+						null,
 						false,
 						false,
 						false,

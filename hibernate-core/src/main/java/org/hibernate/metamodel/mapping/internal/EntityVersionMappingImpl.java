@@ -7,6 +7,7 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -46,16 +47,18 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 
 	private final String columnTableExpression;
 	private final String columnExpression;
-	private final String columnDefinition;
-	private final Long length;
-	private final Integer precision;
-	private final Integer scale;
-	private final Integer temporalPrecision;
+	private final @Nullable String columnDefinition;
+	private final @Nullable Long length;
+	private final @Nullable Integer arrayLength;
+	private final @Nullable Integer precision;
+	private final @Nullable Integer scale;
+	private final @Nullable Integer temporalPrecision;
 
 	private final BasicType<?> versionBasicType;
 
 	private final VersionValue unsavedValueStrategy;
 
+	@Deprecated(forRemoval = true, since = "7.2")
 	public EntityVersionMappingImpl(
 			RootClass bootEntityDescriptor,
 			Supplier<?> templateInstanceAccess,
@@ -69,9 +72,41 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			Integer temporalPrecision,
 			BasicType<?> versionBasicType,
 			EntityMappingType declaringType) {
+		this(
+				bootEntityDescriptor,
+				templateInstanceAccess,
+				attributeName,
+				columnTableExpression,
+				columnExpression,
+				columnDefinition,
+				length,
+				null,
+				precision,
+				scale,
+				temporalPrecision,
+				versionBasicType,
+				declaringType
+		);
+	}
+
+	public EntityVersionMappingImpl(
+			RootClass bootEntityDescriptor,
+			Supplier<?> templateInstanceAccess,
+			String attributeName,
+			String columnTableExpression,
+			String columnExpression,
+			@Nullable String columnDefinition,
+			@Nullable Long length,
+			@Nullable Integer arrayLength,
+			@Nullable Integer precision,
+			@Nullable Integer scale,
+			@Nullable Integer temporalPrecision,
+			BasicType<?> versionBasicType,
+			EntityMappingType declaringType) {
 		this.attributeName = attributeName;
 		this.columnDefinition = columnDefinition;
 		this.length = length;
+		this.arrayLength = arrayLength;
 		this.precision = precision;
 		this.scale = scale;
 		this.temporalPrecision = temporalPrecision;
@@ -143,37 +178,42 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	}
 
 	@Override
-	public String getCustomReadExpression() {
+	public @Nullable String getCustomReadExpression() {
 		return null;
 	}
 
 	@Override
-	public String getCustomWriteExpression() {
+	public @Nullable String getCustomWriteExpression() {
 		return null;
 	}
 
 	@Override
-	public String getColumnDefinition() {
+	public @Nullable String getColumnDefinition() {
 		return columnDefinition;
 	}
 
 	@Override
-	public Long getLength() {
+	public @Nullable Long getLength() {
 		return length;
 	}
 
 	@Override
-	public Integer getPrecision() {
+	public @Nullable Integer getArrayLength() {
+		return arrayLength;
+	}
+
+	@Override
+	public @Nullable Integer getPrecision() {
 		return precision;
 	}
 
 	@Override
-	public Integer getScale() {
+	public @Nullable Integer getScale() {
 		return scale;
 	}
 
 	@Override
-	public Integer getTemporalPrecision() {
+	public @Nullable Integer getTemporalPrecision() {
 		return temporalPrecision;
 	}
 

@@ -423,6 +423,16 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 		}
 
 		@Override
+		public void appendSql(double value) {
+			sb.append( value );
+		}
+
+		@Override
+		public void appendSql(float value) {
+			sb.append( value );
+		}
+
+		@Override
 		public String toString() {
 			return sb.toString();
 		}

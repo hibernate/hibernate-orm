@@ -99,6 +99,7 @@ public class DB2XmlTableFunction extends XmlTableFunction {
 						null,
 						null,
 						null,
+						null,
 						false,
 						false,
 						false,

@@ -144,7 +144,7 @@ public class IntegerArrayTest {
 		scope.inSession( em -> {
 			final Dialect dialect = em.getDialect();
 			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
-			final String param = arrayType.getJdbcType().wrapWriteExpression( ":data", dialect );
+			final String param = arrayType.getJdbcType().wrapWriteExpression( ":data", null, dialect );
 			TypedQuery<TableWithIntegerArrays> tq = em.createNativeQuery(
 					"SELECT * FROM table_with_integer_arrays t WHERE the_array " + op + " " + param,
 					TableWithIntegerArrays.class

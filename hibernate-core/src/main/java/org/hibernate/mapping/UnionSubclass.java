@@ -22,6 +22,7 @@ public final class UnionSubclass extends Subclass implements TableOwner {
 		super( superclass, buildingContext );
 	}
 
+	@Override
 	public Table getTable() {
 		return table;
 	}

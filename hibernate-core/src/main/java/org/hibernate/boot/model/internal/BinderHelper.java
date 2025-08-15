@@ -586,57 +586,14 @@ public class BinderHelper {
 		final Property idProperty = associatedClass.getIdentifierProperty();
 		final String idName = idProperty == null ? null : idProperty.getName();
 		try {
-			if ( isEmpty( propertyName ) || propertyName.equals( idName ) ) {
-				//default to id
-				return idProperty;
-			}
-			else {
-				Property property = null;
-				if ( propertyName.indexOf( idName + "." ) == 0 ) {
-					property = idProperty;
-					propertyName = propertyName.substring( idName.length() + 1 );
-				}
-				final var tokens = new StringTokenizer( propertyName, ".", false );
-				while ( tokens.hasMoreTokens() ) {
-					final String element = tokens.nextToken();
-					if ( property == null ) {
-						property = associatedClass.getProperty( element );
-					}
-					else if ( property.isComposite() ) {
-						final var value = (Component) property.getValue();
-						property = value.getProperty( element );
-					}
-					else {
-						return null;
-					}
-				}
-				return property;
-			}
+			return isEmpty( propertyName ) || propertyName.equals( idName )
+					? idProperty // Default to id
+					: findProperty( associatedClass, propertyName, idProperty, idName );
 		}
 		catch ( MappingException e ) {
 			try {
 				// if we do not find it, try to check the identifier mapper
-				if ( associatedClass.getIdentifierMapper() == null ) {
-					return null;
-				}
-				else {
-					Property property = null;
-					final var tokens = new StringTokenizer( propertyName, ".", false );
-					while ( tokens.hasMoreTokens() ) {
-						final String element = tokens.nextToken();
-						if ( property == null ) {
-							property = associatedClass.getIdentifierMapper().getProperty( element );
-						}
-						else if ( property.isComposite() ) {
-							final var value = (Component) property.getValue();
-							property = value.getProperty( element );
-						}
-						else {
-							return null;
-						}
-					}
-					return property;
-				}
+				return findPropertyUsingIdMapper( associatedClass, propertyName );
 			}
 			catch ( MappingException ee ) {
 				return null;
@@ -649,58 +606,59 @@ public class BinderHelper {
 	 */
 	public static Property findPropertyByName(Component component, String propertyName) {
 		try {
-			if ( isEmpty( propertyName ) ) {
-				// Do not expect to use a primary key for this case
-				return null;
-			}
-			else {
-				Property property = null;
-				final var tokens = new StringTokenizer( propertyName, ".", false );
-				while ( tokens.hasMoreTokens() ) {
-					final String element = tokens.nextToken();
-					if ( property == null ) {
-						property = component.getProperty( element );
-					}
-					else if ( property.isComposite() ) {
-						final var value = (Component) property.getValue();
-						property = value.getProperty( element );
-					}
-					else {
-						return null;
-					}
-				}
-				return property;
-			}
+			return isEmpty( propertyName )
+					? null // Do not expect to use a primary key for this case
+					: findProperty( component, propertyName, null );
 		}
 		catch (MappingException e) {
 			try {
 				// if we do not find it, try to check the identifier mapper
-				if ( component.getOwner().getIdentifierMapper() == null ) {
-					return null;
-				}
-				else {
-					Property property = null;
-					final var tokens = new StringTokenizer( propertyName, ".", false );
-					while ( tokens.hasMoreTokens() ) {
-						final String element = tokens.nextToken();
-						if ( property == null ) {
-							property = component.getOwner().getIdentifierMapper().getProperty( element );
-						}
-						else if ( property.isComposite() ) {
-							final var value = (Component) property.getValue();
-							property = value.getProperty( element );
-						}
-						else {
-							return null;
-						}
-					}
-					return property;
-				}
+				return findPropertyUsingIdMapper( component.getOwner(), propertyName );
 			}
 			catch (MappingException ee) {
 				return null;
 			}
 		}
+	}
+
+	private static Property findProperty(
+			PersistentClass associatedClass, String propertyName,
+			Property idProperty, String idName) {
+		Property property;
+		// Handle id property
+		final String name;
+		if ( propertyName.indexOf( idName + "." ) == 0 ) {
+			property = idProperty;
+			name = propertyName.substring( idName.length() + 1 );
+		}
+		else {
+			property = null;
+			name = propertyName;
+		}
+		return findProperty( associatedClass, name, property );
+	}
+
+	private static Property findProperty(AttributeContainer root, String name, Property property) {
+		final var tokens = new StringTokenizer( name, ".", false );
+		while ( tokens.hasMoreTokens() ) {
+			final String element = tokens.nextToken();
+			if ( property == null ) {
+				property = root.getProperty( element );
+			}
+			else if ( property.isComposite() ) {
+				final var value = (Component) property.getValue();
+				property = value.getProperty( element );
+			}
+			else {
+				return null;
+			}
+		}
+		return property;
+	}
+
+	private static Property findPropertyUsingIdMapper(PersistentClass associatedClass, String propertyName) {
+		final var identifierMapper = associatedClass.getIdentifierMapper();
+		return identifierMapper == null ? null : findProperty( identifierMapper, propertyName, null );
 	}
 
 	public static String getRelativePath(PropertyHolder propertyHolder, String propertyName) {

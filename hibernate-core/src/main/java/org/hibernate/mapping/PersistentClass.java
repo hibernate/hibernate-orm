@@ -541,7 +541,8 @@ public abstract sealed class PersistentClass
 				}
 				else {
 					//flat recursive algorithm
-					property = ( (Component) property.getValue() ).getProperty( element );
+					final var value = (Component) property.getValue();
+					property = value.getProperty( element );
 				}
 			}
 		}
@@ -564,6 +565,7 @@ public abstract sealed class PersistentClass
 		throw new MappingException( "property [" + propertyName + "] not found on entity [" + getEntityName() + "]" );
 	}
 
+	@Override
 	public Property getProperty(String propertyName) throws MappingException {
 		final Property identifierProperty = getIdentifierProperty();
 		if ( identifierProperty != null

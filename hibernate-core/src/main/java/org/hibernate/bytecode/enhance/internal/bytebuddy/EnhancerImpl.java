@@ -35,7 +35,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.Version;
 import org.hibernate.bytecode.enhance.VersionMismatchException;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
-import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.EnhancementInfo;
@@ -261,7 +260,7 @@ public class EnhancerImpl implements Enhancer {
 
 				if ( collectionFields.isEmpty() ) {
 					builder = builder.implement( SelfDirtinessTracker.class )
-							.defineField( EnhancerConstants.TRACKER_FIELD_NAME, DirtyTracker.class, constants.fieldModifierPRIVATE_TRANSIENT )
+							.defineField( EnhancerConstants.TRACKER_FIELD_NAME, constants.DirtyTrackerTypeDescription, constants.fieldModifierPRIVATE_TRANSIENT )
 									.annotateField( constants.TRANSIENT_ANNOTATION )
 							.defineMethod( EnhancerConstants.TRACKER_CHANGER_NAME, constants.TypeVoid, constants.methodModifierPUBLIC )
 									.withParameters( String.class )
@@ -281,7 +280,7 @@ public class EnhancerImpl implements Enhancer {
 				else {
 					//TODO es.enableInterfaceExtendedSelfDirtinessTracker ? Careful with consequences..
 					builder = builder.implement( ExtendedSelfDirtinessTracker.class )
-							.defineField( EnhancerConstants.TRACKER_FIELD_NAME, DirtyTracker.class, constants.fieldModifierPRIVATE_TRANSIENT )
+							.defineField( EnhancerConstants.TRACKER_FIELD_NAME, constants.DirtyTrackerTypeDescription, constants.fieldModifierPRIVATE_TRANSIENT )
 									.annotateField( constants.TRANSIENT_ANNOTATION )
 							.defineField( EnhancerConstants.TRACKER_COLLECTION_NAME, constants.TypeCollectionTracker, constants.fieldModifierPRIVATE_TRANSIENT )
 									.annotateField( constants.TRANSIENT_ANNOTATION )
@@ -362,7 +361,7 @@ public class EnhancerImpl implements Enhancer {
 					builder = builder.defineMethod( EnhancerConstants.TRACKER_COLLECTION_CHANGED_NAME, constants.TypeBooleanPrimitive, constants.methodModifierPUBLIC )
 							.intercept( isDirty )
 							.defineMethod( EnhancerConstants.TRACKER_COLLECTION_CHANGED_FIELD_NAME, constants.TypeVoid, constants.methodModifierPUBLIC )
-									.withParameters( DirtyTracker.class )
+									.withParameters( constants.DirtyTrackerTypeDescription )
 									.intercept( getDirtyNames )
 							.defineMethod( EnhancerConstants.TRACKER_COLLECTION_CLEAR_NAME, constants.TypeVoid, constants.methodModifierPUBLIC )
 									.intercept( Advice.withCustomMapping()

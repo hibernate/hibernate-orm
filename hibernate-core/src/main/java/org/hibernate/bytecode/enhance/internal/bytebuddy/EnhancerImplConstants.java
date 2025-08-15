@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.List;
 
 import net.bytebuddy.matcher.ElementMatcher;
+import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
@@ -75,6 +76,9 @@ public final class EnhancerImplConstants {
 
 	//Frequently used ElementMatchers:
 	final ElementMatcher.Junction<MethodDescription> DEFAULT_FINALIZER = isDefaultFinalizer();
+
+	//Frequently used types for field definitions:
+	final TypeDescription.Generic DirtyTrackerTypeDescription = TypeDefinition.Sort.describe( DirtyTracker.class );
 
 	public EnhancerImplConstants() {
 		this.adviceLocator = ClassFileLocator.ForClassLoader.of( CodeTemplates.class.getClassLoader() );

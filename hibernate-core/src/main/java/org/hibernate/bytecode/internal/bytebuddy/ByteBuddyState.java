@@ -66,8 +66,6 @@ public final class ByteBuddyState {
 
 	private final ProxyDefinitionHelpers proxyDefinitionHelpers = new ProxyDefinitionHelpers();
 
-	private final ClassRewriter classRewriter;
-
 	private final EnhancerImplConstants enhancerConstants = new EnhancerImplConstants();
 
 	/**
@@ -87,7 +85,6 @@ public final class ByteBuddyState {
 		this.byteBuddy = new ByteBuddy( classFileVersion ).with( TypeValidation.DISABLED );
 		this.proxyCache = new TypeCache( TypeCache.Sort.WEAK );
 		this.basicProxyCache = new TypeCache( TypeCache.Sort.WEAK );
-		this.classRewriter = new StandardClassRewriter();
 	}
 
 	/**
@@ -352,25 +349,6 @@ public final class ByteBuddyState {
 				builder = builder.ignoreAlso( m );
 			}
 			return builder;
-		}
-	}
-
-	private interface ClassRewriter {
-		DynamicType.Builder<?> installReflectionMethodVisitors(DynamicType.Builder<?> builder);
-
-		void registerAuthorizedClass(Unloaded<?> unloadedClass);
-	}
-
-	private static class StandardClassRewriter implements ClassRewriter {
-		@Override
-		public DynamicType.Builder<?> installReflectionMethodVisitors(DynamicType.Builder<?> builder) {
-			// do nothing
-			return builder;
-		}
-
-		@Override
-		public void registerAuthorizedClass(Unloaded<?> unloadedClass) {
-			// do nothing
 		}
 	}
 

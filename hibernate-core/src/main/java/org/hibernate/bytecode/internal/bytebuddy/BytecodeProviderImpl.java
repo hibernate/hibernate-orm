@@ -103,6 +103,19 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			return false;
 		}
 	};
+	public static final String LazyPropertyInitializer_INTERNAL_NAME = Type.getInternalName(
+			LazyPropertyInitializer.class );
+	public static final String Serializable_TYPE_DESCRIPTOR = Type.getDescriptor( Serializable.class );
+	public static final String OBJECT_TYPE_INTERNAL_NAME = Type.getInternalName( Object.class );
+	public static final TypeDescription OBJECT_TYPE_DESCRIPTION = TypeDescription.ForLoadedType.of( Object.class );
+	public static final TypeDescription OBJECT_ARRAY_TYPE_DESCRIPTION = TypeDescription.ForLoadedType.of( Object[].class );
+	public static final TypeDescription PRIMITIVE_INT_TYPE_DESCRIPTION = TypeDescription.ForLoadedType.of( int.class );
+	public static final String BytecodeLazyAttributeInterceptor_INTERNAL_NAME = Type.getInternalName(
+			BytecodeLazyAttributeInterceptor.class );
+	public static final String String_TYPE_INTERNAL_NAME = Type.getInternalName( String.class );
+	public static final List<TypeDescription> ARRAY_OF_PersistentAttributeInterceptor_TYPE_DESCRIPTION = List.of(
+			TypeDescription.ForLoadedType.of( PersistentAttributeInterceptor.class )
+	);
 
 	private final ByteBuddyState byteBuddyState;
 
@@ -636,16 +649,23 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 	private static class GetPropertyValues implements ByteCodeAppender {
 
-		private final Class<?> clazz;
+		public static final String getInterceptor_METHOD_DESCRIPTOR = Type.getMethodDescriptor(
+				Type.getType( PersistentAttributeInterceptor.class ) );
+		public static final String LazyAttributeLoadingInterceptor_INTERNAL_NAME = Type.getInternalName(
+				LazyAttributeLoadingInterceptor.class );
+		private static final TypeDescription LazyAttributeLoadingInterceptor_TYPE_DESCRIPTION = TypeDescription.ForLoadedType.of( LazyAttributeLoadingInterceptor.class );
+		public static final String isAttributeLoaded_METHOD_DESCRIPTOR = Type.getMethodDescriptor(
+				Type.getType( boolean.class ), Type.getType( String.class ) );
 		private final String[] propertyNames;
 		private final Member[] getters;
 		private final boolean persistentAttributeInterceptable;
+		private final String internalClazzName;
 
 		public GetPropertyValues(Class<?> clazz, String[] propertyNames, Member[] getters) {
-			this.clazz = clazz;
 			this.propertyNames = propertyNames;
 			this.getters = getters;
 			this.persistentAttributeInterceptable = PersistentAttributeInterceptable.class.isAssignableFrom( clazz );
+			this.internalClazzName = Type.getInternalName( clazz );
 		}
 
 		@Override
@@ -655,21 +675,21 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				MethodDescription instrumentedMethod) {
 			if ( persistentAttributeInterceptable ) {
 				methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
-				methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, Type.getInternalName( clazz ) );
+				methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, internalClazzName );
 
 				// Extract the interceptor
 				methodVisitor.visitMethodInsn(
 						Opcodes.INVOKEVIRTUAL,
-						Type.getInternalName( clazz ),
+						internalClazzName,
 						"$$_hibernate_getInterceptor",
-						Type.getMethodDescriptor( Type.getType( PersistentAttributeInterceptor.class ) ),
+						getInterceptor_METHOD_DESCRIPTOR,
 						false
 				);
 				// Duplicate the interceptor on the stack and check if it implements LazyAttributeLoadingInterceptor
 				methodVisitor.visitInsn( Opcodes.DUP );
 				methodVisitor.visitTypeInsn(
 						Opcodes.INSTANCEOF,
-						Type.getInternalName( LazyAttributeLoadingInterceptor.class )
+						LazyAttributeLoadingInterceptor_INTERNAL_NAME
 				);
 
 				// Jump to the false label if the instanceof check fails
@@ -679,7 +699,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				// Cast to the subtype, so we can mark the property as initialized
 				methodVisitor.visitTypeInsn(
 						Opcodes.CHECKCAST,
-						Type.getInternalName( LazyAttributeLoadingInterceptor.class )
+						LazyAttributeLoadingInterceptor_INTERNAL_NAME
 				);
 				// Store the LazyAttributeLoadingInterceptor at index 2
 				methodVisitor.visitVarInsn( Opcodes.ASTORE, 2 );
@@ -693,12 +713,10 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				// We still have the duplicated interceptor on the stack
 				implementationContext.getFrameGeneration().full(
 						methodVisitor,
-						Arrays.asList(
-								TypeDescription.ForLoadedType.of( PersistentAttributeInterceptor.class )
-						),
+						ARRAY_OF_PersistentAttributeInterceptor_TYPE_DESCRIPTION,
 						Arrays.asList(
 								implementationContext.getInstrumentedType(),
-								TypeDescription.ForLoadedType.of( Object.class )
+								OBJECT_TYPE_DESCRIPTION
 						)
 				);
 				// Pop that duplicated interceptor from the stack
@@ -712,13 +730,13 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						Collections.emptyList(),
 						Arrays.asList(
 								implementationContext.getInstrumentedType(),
-								TypeDescription.ForLoadedType.of( Object.class ),
-								TypeDescription.ForLoadedType.of( LazyAttributeLoadingInterceptor.class )
+								OBJECT_TYPE_DESCRIPTION,
+								LazyAttributeLoadingInterceptor_TYPE_DESCRIPTION
 						)
 				);
 			}
 			methodVisitor.visitLdcInsn( getters.length );
-			methodVisitor.visitTypeInsn( Opcodes.ANEWARRAY, Type.getInternalName( Object.class ) );
+			methodVisitor.visitTypeInsn( Opcodes.ANEWARRAY, OBJECT_TYPE_INTERNAL_NAME );
 			for ( int index = 0; index < getters.length; index++ ) {
 				final Member getterMember = getters[index];
 				methodVisitor.visitInsn( Opcodes.DUP );
@@ -744,9 +762,9 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						// Invoke isAttributeLoaded on the interceptor
 						methodVisitor.visitMethodInsn(
 								Opcodes.INVOKEVIRTUAL,
-								Type.getInternalName( LazyAttributeLoadingInterceptor.class ),
+								LazyAttributeLoadingInterceptor_INTERNAL_NAME,
 								"isAttributeLoaded",
-								Type.getMethodDescriptor( Type.getType( boolean.class ), Type.getType( String.class ) ),
+								isAttributeLoaded_METHOD_DESCRIPTOR,
 								false
 						);
 						// If the attribute is loaded, jump to extraction
@@ -755,9 +773,9 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						// Push LazyPropertyInitializer.UNFETCHED_PROPERTY on the stack
 						methodVisitor.visitFieldInsn(
 								Opcodes.GETSTATIC,
-								Type.getInternalName( LazyPropertyInitializer.class ),
+								LazyPropertyInitializer_INTERNAL_NAME,
 								"UNFETCHED_PROPERTY",
-								Type.getDescriptor( Serializable.class )
+								Serializable_TYPE_DESCRIPTOR
 						);
 						// Jump to the label where we handle storing the unfetched property
 						methodVisitor.visitJumpInsn( Opcodes.GOTO, arrayStoreLabel );
@@ -767,21 +785,21 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						implementationContext.getFrameGeneration().full(
 								methodVisitor,
 								Arrays.asList(
-										TypeDescription.ForLoadedType.of( Object[].class ),
-										TypeDescription.ForLoadedType.of( Object[].class ),
-										TypeDescription.ForLoadedType.of( int.class )
+										OBJECT_ARRAY_TYPE_DESCRIPTION,
+										OBJECT_ARRAY_TYPE_DESCRIPTION,
+										PRIMITIVE_INT_TYPE_DESCRIPTION
 								),
 								Arrays.asList(
 										implementationContext.getInstrumentedType(),
-										TypeDescription.ForLoadedType.of( Object.class ),
-										TypeDescription.ForLoadedType.of( LazyAttributeLoadingInterceptor.class )
+										OBJECT_TYPE_DESCRIPTION,
+										LazyAttributeLoadingInterceptor_TYPE_DESCRIPTION
 								)
 						);
 					}
 
 					// Load the entity to extract the property
 					methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
-					methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, Type.getInternalName( clazz ) );
+					methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, internalClazzName );
 
 					final Class<?> type;
 					if ( getterMember instanceof Method getter ) {
@@ -842,15 +860,15 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 					implementationContext.getFrameGeneration().full(
 							methodVisitor,
 							Arrays.asList(
-									TypeDescription.ForLoadedType.of( Object[].class ),
-									TypeDescription.ForLoadedType.of( Object[].class ),
-									TypeDescription.ForLoadedType.of( int.class ),
-									TypeDescription.ForLoadedType.of( Object.class )
+									OBJECT_ARRAY_TYPE_DESCRIPTION,
+									OBJECT_ARRAY_TYPE_DESCRIPTION,
+									PRIMITIVE_INT_TYPE_DESCRIPTION,
+									OBJECT_TYPE_DESCRIPTION
 							),
-							Arrays.asList(
+							List.of(
 									implementationContext.getInstrumentedType(),
-									TypeDescription.ForLoadedType.of( Object.class ),
-									TypeDescription.ForLoadedType.of( LazyAttributeLoadingInterceptor.class )
+									OBJECT_TYPE_DESCRIPTION,
+									LazyAttributeLoadingInterceptor_TYPE_DESCRIPTION
 							)
 					);
 				}
@@ -863,16 +881,28 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 	private static class SetPropertyValues implements ByteCodeAppender {
 
+		public static final String CompositeTracker_TYPE_INTERNALNAME = Type.getInternalName( CompositeTracker.class );
+		public static final String setOwner_METHOD_DESCRIPTOR = Type.getMethodDescriptor(
+				Type.getType( void.class ),
+				Type.getType( String.class ),
+				Type.getType( CompositeOwner.class )
+		);
+		public static final String getInterceptor_METHOD_DESCRIPTOR = Type.getMethodDescriptor(
+				Type.getType( PersistentAttributeInterceptor.class ) );
+		public static final String attributeInitialized_METHOD_DESCRIPTOR = Type.getMethodDescriptor( Type.getType( void.class ),
+				Type.getType( String.class ) );
 		private final Class<?> clazz;
 		private final String[] propertyNames;
 		private final Member[] setters;
 		private final boolean enhanced;
+		private final String internalClazzName;
 
 		public SetPropertyValues(Class<?> clazz, String[] propertyNames, Member[] setters) {
 			this.clazz = clazz;
 			this.propertyNames = propertyNames;
 			this.setters = setters;
 			this.enhanced = Managed.class.isAssignableFrom( clazz );
+			this.internalClazzName = Type.getInternalName( clazz );
 		}
 
 		@Override
@@ -899,7 +929,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				}
 				// Push entity on stack
 				methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
-				methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, Type.getInternalName( clazz ) );
+				methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, internalClazzName );
 				// Push values array on stack
 				methodVisitor.visitVarInsn( Opcodes.ALOAD, 2 );
 				methodVisitor.visitLdcInsn( index );
@@ -911,9 +941,9 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 					// Push LazyPropertyInitializer.UNFETCHED_PROPERTY on the stack
 					methodVisitor.visitFieldInsn(
 							Opcodes.GETSTATIC,
-							Type.getInternalName( LazyPropertyInitializer.class ),
+							LazyPropertyInitializer_INTERNAL_NAME,
 							"UNFETCHED_PROPERTY",
-							Type.getDescriptor( Serializable.class )
+							Serializable_TYPE_DESCRIPTOR
 					);
 					Label setterLabel = new Label();
 					// Compare property value against LazyPropertyInitializer.UNFETCHED_PROPERTY
@@ -932,14 +962,14 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 					methodVisitor.visitLabel( setterLabel );
 					implementationContext.getFrameGeneration().full(
 							methodVisitor,
-							Arrays.asList(
+							List.of(
 									TypeDescription.ForLoadedType.of( clazz ),
-									TypeDescription.ForLoadedType.of( Object.class )
+									OBJECT_TYPE_DESCRIPTION
 							),
-							Arrays.asList(
+							List.of(
 									implementationContext.getInstrumentedType(),
-									TypeDescription.ForLoadedType.of( Object.class ),
-									TypeDescription.ForLoadedType.of( Object[].class )
+									OBJECT_TYPE_DESCRIPTION,
+									OBJECT_ARRAY_TYPE_DESCRIPTION
 							)
 					);
 				}
@@ -962,7 +992,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 					}
 				}
 				if ( type.isPrimitive() ) {
-					PrimitiveUnboxingDelegate.forReferenceType( TypeDescription.Generic.OBJECT )
+					PrimitiveUnboxingDelegate.forReferenceType( OBJECT_TYPE_DESCRIPTION )
 							.assignUnboxedTo(
 									new TypeDescription.Generic.OfNonGenericType.ForLoadedType( type ),
 									ReferenceTypeAwareAssigner.INSTANCE,
@@ -1053,7 +1083,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 							// If we don't know for sure, we do an instanceof check
 							methodVisitor.visitTypeInsn(
 									Opcodes.INSTANCEOF,
-									compositeTrackerType = Type.getInternalName( CompositeTracker.class )
+									compositeTrackerType = CompositeTracker_TYPE_INTERNALNAME
 							);
 							isInterface = true;
 							methodVisitor.visitJumpInsn( Opcodes.IFEQ, compositeTrackerFalseLabel );
@@ -1067,17 +1097,13 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						methodVisitor.visitLdcInsn( propertyNames[index] );
 						// Load the owner and cast it to the owner class, as we know it implements CompositeOwner
 						methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
-						methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, Type.getInternalName( clazz ) );
+						methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, internalClazzName );
 						// Invoke the method to set the owner
 						methodVisitor.visitMethodInsn(
 								isInterface ? Opcodes.INVOKEINTERFACE : Opcodes.INVOKEVIRTUAL,
 								compositeTrackerType,
 								"$$_hibernate_setOwner",
-								Type.getMethodDescriptor(
-										Type.getType( void.class ),
-										Type.getType( String.class ),
-										Type.getType( CompositeOwner.class )
-								),
+								setOwner_METHOD_DESCRIPTOR,
 								isInterface
 						);
 
@@ -1090,13 +1116,13 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						// We still have the duplicated value on the stack
 						implementationContext.getFrameGeneration().full(
 								methodVisitor,
-								Arrays.asList(
-										TypeDescription.ForLoadedType.of( Object.class )
+								List.of(
+										OBJECT_TYPE_DESCRIPTION
 								),
-								Arrays.asList(
+								List.of(
 										implementationContext.getInstrumentedType(),
-										TypeDescription.ForLoadedType.of( Object.class ),
-										TypeDescription.ForLoadedType.of( Object[].class )
+										OBJECT_TYPE_DESCRIPTION,
+										OBJECT_ARRAY_TYPE_DESCRIPTION
 								)
 						);
 						// Pop that duplicated property value from the stack
@@ -1110,20 +1136,20 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 					if ( persistentAttributeInterceptable ) {
 						// Load the owner
 						methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
-						methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, Type.getInternalName( clazz ) );
+						methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, internalClazzName );
 						// Extract the interceptor
 						methodVisitor.visitMethodInsn(
 								Opcodes.INVOKEVIRTUAL,
-								Type.getInternalName( clazz ),
+								internalClazzName,
 								"$$_hibernate_getInterceptor",
-								Type.getMethodDescriptor( Type.getType( PersistentAttributeInterceptor.class ) ),
+								getInterceptor_METHOD_DESCRIPTOR,
 								false
 						);
 						// Duplicate the interceptor on the stack and check if it implements BytecodeLazyAttributeInterceptor
 						methodVisitor.visitInsn( Opcodes.DUP );
 						methodVisitor.visitTypeInsn(
 								Opcodes.INSTANCEOF,
-								Type.getInternalName( BytecodeLazyAttributeInterceptor.class )
+								BytecodeLazyAttributeInterceptor_INTERNAL_NAME
 						);
 
 						// Jump to the false label if the instanceof check fails
@@ -1133,16 +1159,16 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						// Cast to the subtype, so we can mark the property as initialized
 						methodVisitor.visitTypeInsn(
 								Opcodes.CHECKCAST,
-								Type.getInternalName( BytecodeLazyAttributeInterceptor.class )
+								BytecodeLazyAttributeInterceptor_INTERNAL_NAME
 						);
 						// Load the property name
 						methodVisitor.visitLdcInsn( propertyNames[index] );
 						// Invoke the method to mark the property as initialized
 						methodVisitor.visitMethodInsn(
 								Opcodes.INVOKEINTERFACE,
-								Type.getInternalName( BytecodeLazyAttributeInterceptor.class ),
+								BytecodeLazyAttributeInterceptor_INTERNAL_NAME,
 								"attributeInitialized",
-								Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( String.class ) ),
+								attributeInitialized_METHOD_DESCRIPTOR,
 								true
 						);
 
@@ -1155,13 +1181,11 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						// We still have the duplicated interceptor on the stack
 						implementationContext.getFrameGeneration().full(
 								methodVisitor,
-								Arrays.asList(
-										TypeDescription.ForLoadedType.of( PersistentAttributeInterceptor.class )
-								),
-								Arrays.asList(
+								ARRAY_OF_PersistentAttributeInterceptor_TYPE_DESCRIPTION,
+								List.of(
 										implementationContext.getInstrumentedType(),
-										TypeDescription.ForLoadedType.of( Object.class ),
-										TypeDescription.ForLoadedType.of( Object[].class )
+										OBJECT_TYPE_DESCRIPTION,
+										OBJECT_ARRAY_TYPE_DESCRIPTION
 								)
 						);
 						// Pop that duplicated interceptor from the stack
@@ -1209,7 +1233,6 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		}
 
 		final Class<?>[] getParam = new Class[0];
-		final Class<?>[] setParam = new Class[1];
 		for ( int i = 0; i < length; i++ ) {
 			if ( getterNames[i] != null ) {
 				final Method getter = findAccessor( clazz, getterNames[i], getParam );
@@ -1367,7 +1390,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				Implementation.Context implementationContext,
 				MethodDescription instrumentedMethod) {
 			methodVisitor.visitLdcInsn( propertyNames.length );
-			methodVisitor.visitTypeInsn( Opcodes.ANEWARRAY, Type.getInternalName( String.class ) );
+			methodVisitor.visitTypeInsn( Opcodes.ANEWARRAY, String_TYPE_INTERNAL_NAME );
 			for ( int i = 0; i < propertyNames.length; i++ ) {
 				methodVisitor.visitInsn( Opcodes.DUP );
 				methodVisitor.visitLdcInsn( i );

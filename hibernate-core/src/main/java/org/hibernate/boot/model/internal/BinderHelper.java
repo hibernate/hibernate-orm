@@ -583,15 +583,15 @@ public class BinderHelper {
 	 * If propertyName is null or empty, the IdentifierProperty is returned
 	 */
 	public static Property findPropertyByName(PersistentClass associatedClass, String propertyName) {
-		Property property = null;
 		final Property idProperty = associatedClass.getIdentifierProperty();
 		final String idName = idProperty == null ? null : idProperty.getName();
 		try {
 			if ( isEmpty( propertyName ) || propertyName.equals( idName ) ) {
 				//default to id
-				property = idProperty;
+				return idProperty;
 			}
 			else {
+				Property property = null;
 				if ( propertyName.indexOf( idName + "." ) == 0 ) {
 					property = idProperty;
 					propertyName = propertyName.substring( idName.length() + 1 );
@@ -602,13 +602,15 @@ public class BinderHelper {
 					if ( property == null ) {
 						property = associatedClass.getProperty( element );
 					}
+					else if ( property.isComposite() ) {
+						final var value = (Component) property.getValue();
+						property = value.getProperty( element );
+					}
 					else {
-						if ( !property.isComposite() ) {
-							return null;
-						}
-						property = ( (Component) property.getValue() ).getProperty( element );
+						return null;
 					}
 				}
+				return property;
 			}
 		}
 		catch ( MappingException e ) {
@@ -617,51 +619,57 @@ public class BinderHelper {
 				if ( associatedClass.getIdentifierMapper() == null ) {
 					return null;
 				}
-				final var tokens = new StringTokenizer( propertyName, ".", false );
-				while ( tokens.hasMoreTokens() ) {
-					final String element = tokens.nextToken();
-					if ( property == null ) {
-						property = associatedClass.getIdentifierMapper().getProperty( element );
-					}
-					else {
-						if ( !property.isComposite() ) {
+				else {
+					Property property = null;
+					final var tokens = new StringTokenizer( propertyName, ".", false );
+					while ( tokens.hasMoreTokens() ) {
+						final String element = tokens.nextToken();
+						if ( property == null ) {
+							property = associatedClass.getIdentifierMapper().getProperty( element );
+						}
+						else if ( property.isComposite() ) {
+							final var value = (Component) property.getValue();
+							property = value.getProperty( element );
+						}
+						else {
 							return null;
 						}
-						property = ( (Component) property.getValue() ).getProperty( element );
 					}
+					return property;
 				}
 			}
 			catch ( MappingException ee ) {
 				return null;
 			}
 		}
-		return property;
 	}
 
 	/**
 	 * Retrieve the property by path in a recursive way
 	 */
 	public static Property findPropertyByName(Component component, String propertyName) {
-		Property property = null;
 		try {
 			if ( isEmpty( propertyName ) ) {
 				// Do not expect to use a primary key for this case
 				return null;
 			}
 			else {
+				Property property = null;
 				final var tokens = new StringTokenizer( propertyName, ".", false );
 				while ( tokens.hasMoreTokens() ) {
 					final String element = tokens.nextToken();
 					if ( property == null ) {
 						property = component.getProperty( element );
 					}
+					else if ( property.isComposite() ) {
+						final var value = (Component) property.getValue();
+						property = value.getProperty( element );
+					}
 					else {
-						if ( !property.isComposite() ) {
-							return null;
-						}
-						property = ( (Component) property.getValue() ).getProperty( element );
+						return null;
 					}
 				}
+				return property;
 			}
 		}
 		catch (MappingException e) {
@@ -670,25 +678,29 @@ public class BinderHelper {
 				if ( component.getOwner().getIdentifierMapper() == null ) {
 					return null;
 				}
-				final var tokens = new StringTokenizer( propertyName, ".", false );
-				while ( tokens.hasMoreTokens() ) {
-					final String element = tokens.nextToken();
-					if ( property == null ) {
-						property = component.getOwner().getIdentifierMapper().getProperty( element );
-					}
-					else {
-						if ( !property.isComposite() ) {
+				else {
+					Property property = null;
+					final var tokens = new StringTokenizer( propertyName, ".", false );
+					while ( tokens.hasMoreTokens() ) {
+						final String element = tokens.nextToken();
+						if ( property == null ) {
+							property = component.getOwner().getIdentifierMapper().getProperty( element );
+						}
+						else if ( property.isComposite() ) {
+							final var value = (Component) property.getValue();
+							property = value.getProperty( element );
+						}
+						else {
 							return null;
 						}
-						property = ( (Component) property.getValue() ).getProperty( element );
 					}
+					return property;
 				}
 			}
 			catch (MappingException ee) {
 				return null;
 			}
 		}
-		return property;
 	}
 
 	public static String getRelativePath(PropertyHolder propertyHolder, String propertyName) {

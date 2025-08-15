@@ -19,6 +19,7 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -100,15 +101,13 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 			return (X) Timestamp.valueOf( value );
 		}
 
-		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			Instant instant = value.atZone( ZoneId.systemDefault() ).toInstant();
-			return (X) java.sql.Date.from( instant );
-		}
-
-		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			Instant instant = value.atZone( ZoneId.systemDefault() ).toInstant();
-			return (X) java.sql.Time.from( instant );
-		}
+//		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
+//			return (X) java.sql.Date.valueOf( value.toLocalDate() );
+//		}
+//
+//		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
+//			return (X) java.sql.Time.valueOf( value.toLocalTime() );
+//		}
 
 		if ( Date.class.isAssignableFrom( type ) ) {
 			Instant instant = value.atZone( ZoneId.systemDefault() ).toInstant();
@@ -145,7 +144,7 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 			 * ts.toInstant() assumes the number of milliseconds since the epoch
 			 * means the same thing in Timestamp and Instant, but it doesn't, in particular before 1900.
 			 */
-			return timestamp.toLocalDateTime();
+			return DateTimeUtils.toLocalDateTime( timestamp );
 		}
 
 		if (value instanceof Long longValue) {

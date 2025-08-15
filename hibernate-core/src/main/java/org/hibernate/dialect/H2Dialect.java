@@ -67,6 +67,8 @@ import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.descriptor.jdbc.EnumJdbcType;
+import org.hibernate.type.descriptor.jdbc.GregorianEpochBasedDateJdbcType;
+import org.hibernate.type.descriptor.jdbc.GregorianEpochBasedTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.OrdinalEnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimeUtcAsOffsetTimeJdbcType;
@@ -253,6 +255,8 @@ public class H2Dialect extends Dialect {
 						.getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( TimeUtcAsOffsetTimeJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( TimestampUtcAsInstantJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( GregorianEpochBasedDateJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( GregorianEpochBasedTimestampJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( H2DurationIntervalSecondJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( H2JsonJdbcType.INSTANCE );

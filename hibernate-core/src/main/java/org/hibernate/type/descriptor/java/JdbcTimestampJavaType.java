@@ -24,6 +24,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -42,7 +43,7 @@ import static org.hibernate.internal.util.CharSequenceHelper.subSequence;
 public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implements VersionJavaType<Date> {
 	public static final JdbcTimestampJavaType INSTANCE = new JdbcTimestampJavaType();
 
-	public static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSSSSSSSS";
+	public static final String TIMESTAMP_FORMAT = "uuuu-MM-dd HH:mm:ss.SSSSSSSSS";
 
 	/**
 	 * Intended for use in reading HQL literals and writing SQL literals
@@ -186,6 +187,10 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 			return new Timestamp( calendar.getTimeInMillis() );
 		}
 
+		if ( value instanceof Instant instant ) {
+			return DateTimeUtils.toTimestamp( instant );
+		}
+
 		throw unknownWrap( value.getClass() );
 	}
 
@@ -199,7 +204,12 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 
 	@Override
 	public String toString(Date value) {
-		return LITERAL_FORMATTER.format( value.toInstant() );
+		return DateTimeUtils.timestampToString( value );
+	}
+
+	@Override
+	public String extractLoggableRepresentation(Date value) {
+		return value == null ? "null" : toString( value );
 	}
 
 	@Override

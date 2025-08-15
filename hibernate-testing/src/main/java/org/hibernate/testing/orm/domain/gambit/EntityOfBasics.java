@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.UUID;
 
@@ -62,6 +63,9 @@ public class EntityOfBasics {
 	private Date theDate;
 	private Date theTime;
 	private Date theTimestamp;
+	private Calendar theDateCalendar;
+	private Calendar theTimeCalendar;
+	private Calendar theTimestampCalendar;
 	private Instant theInstant;
 	private Gender gender;
 	private Gender singleCharGender;
@@ -226,6 +230,36 @@ public class EntityOfBasics {
 
 	public void setTheTimestamp(Date theTimestamp) {
 		this.theTimestamp = theTimestamp;
+	}
+
+	@Column(name = "the_date_calendar")
+	@Temporal( TemporalType.DATE )
+	public Calendar getTheDateCalendar() {
+		return theDateCalendar;
+	}
+
+	public void setTheDateCalendar(Calendar theDateCalendar) {
+		this.theDateCalendar = theDateCalendar;
+	}
+
+	@Column(name = "the_time_calendar")
+	@Temporal( TemporalType.TIME )
+	public Calendar getTheTimeCalendar() {
+		return theTimeCalendar;
+	}
+
+	public void setTheTimeCalendar(Calendar theTimeCalendar) {
+		this.theTimeCalendar = theTimeCalendar;
+	}
+
+	@Column(name = "the_timestamp_calendar")
+	@Temporal( TemporalType.TIMESTAMP )
+	public Calendar getTheTimestampCalendar() {
+		return theTimestampCalendar;
+	}
+
+	public void setTheTimestampCalendar(Calendar theTimestampCalendar) {
+		this.theTimestampCalendar = theTimestampCalendar;
 	}
 
 	@Column(name = "the_instant")

@@ -69,7 +69,7 @@ import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIM
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class Component extends SimpleValue implements MetaAttributable, SortableValue {
+public class Component extends SimpleValue implements AttributeContainer, MetaAttributable, SortableValue {
 
 	private String componentClassName;
 	private boolean embedded;
@@ -173,6 +173,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		}
 	}
 
+	@Override
 	public void addProperty(Property p) {
 		addProperty( p, null );
 	}
@@ -394,6 +395,11 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	@Override
+	public boolean contains(Property property) {
+		return properties.contains( property );
+	}
+
+	@Override
 	public CompositeType getType() throws MappingException {
 		// Resolve the type of the value once and for all as this operation generates a proxy class
 		// for each invocation.
@@ -546,6 +552,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		return properties.get( index );
 	}
 
+	@Override
 	public Property getProperty(String propertyName) throws MappingException {
 		for ( Property prop : properties ) {
 			if ( prop.getName().equals(propertyName) ) {

@@ -25,6 +25,7 @@ public final class JoinedSubclass extends Subclass implements TableOwner {
 		super( superclass, metadataBuildingContext );
 	}
 
+	@Override
 	public Table getTable() {
 		return table;
 	}

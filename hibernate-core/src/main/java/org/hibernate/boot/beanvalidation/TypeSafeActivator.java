@@ -14,7 +14,6 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import jakarta.validation.NoProviderFoundException;
 import jakarta.validation.constraints.Digits;
@@ -25,7 +24,6 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.hibernate.AssertionFailure;
-import org.hibernate.MappingException;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -60,10 +58,10 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.disjoint;
 import static org.hibernate.boot.beanvalidation.BeanValidationIntegrator.APPLY_CONSTRAINTS;
 import static org.hibernate.boot.beanvalidation.GroupsPerOperation.buildGroupsForOperation;
+import static org.hibernate.boot.model.internal.BinderHelper.findPropertyByName;
 import static org.hibernate.cfg.ValidationSettings.CHECK_NULLABILITY;
 import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_FACTORY;
 import static org.hibernate.cfg.ValidationSettings.JPA_VALIDATION_FACTORY;
-import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
@@ -494,72 +492,6 @@ class TypeSafeActivator {
 	private static boolean isValidatorLengthAnnotation(ConstraintDescriptor<?> descriptor) {
 		return "org.hibernate.validator.constraints.Length"
 				.equals( descriptor.getAnnotation().annotationType().getName() );
-	}
-
-	/**
-	 * Locate the property by path in a recursive way, including IdentifierProperty in the loop if propertyName is
-	 * {@code null}.  If propertyName is {@code null} or empty, the IdentifierProperty is returned
-	 */
-	private static Property findPropertyByName(PersistentClass associatedClass, String propertyName) {
-		Property property = null;
-		final Property idProperty = associatedClass.getIdentifierProperty();
-		final String idName = idProperty != null ? idProperty.getName() : null;
-		try {
-			if ( isEmpty( propertyName ) || propertyName.equals( idName ) ) {
-				//default to id
-				property = idProperty;
-			}
-			else {
-				if ( propertyName.indexOf( idName + "." ) == 0 ) {
-					property = idProperty;
-					propertyName = propertyName.substring( idName.length() + 1 );
-				}
-				final StringTokenizer tokens = new StringTokenizer( propertyName, ".", false );
-				while ( tokens.hasMoreTokens() ) {
-					final String element = tokens.nextToken();
-					if ( property == null ) {
-						property = associatedClass.getProperty( element );
-					}
-					else {
-						if ( property.isComposite() ) {
-							property = ( (Component) property.getValue() ).getProperty( element );
-						}
-						else {
-							return null;
-						}
-					}
-				}
-			}
-		}
-		catch ( MappingException e ) {
-			try {
-				//if we do not find it, try to check the identifier mapper
-				if ( associatedClass.getIdentifierMapper() == null ) {
-					return null;
-				}
-				else {
-					final StringTokenizer tokens = new StringTokenizer( propertyName, ".", false );
-					while ( tokens.hasMoreTokens() ) {
-						final String element = tokens.nextToken();
-						if ( property == null ) {
-							property = associatedClass.getIdentifierMapper().getProperty( element );
-						}
-						else {
-							if ( property.isComposite() ) {
-								property = ( (Component) property.getValue() ).getProperty( element );
-							}
-							else {
-								return null;
-							}
-						}
-					}
-				}
-			}
-			catch ( MappingException ee ) {
-				return null;
-			}
-		}
-		return property;
 	}
 
 	private static ValidatorFactory getValidatorFactory(ActivationContext context) {

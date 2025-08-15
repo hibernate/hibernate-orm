@@ -679,11 +679,9 @@ public class MetadataContext {
 		if ( property != null ) {
 			return property;
 		}
-		else if ( mappedSuperclass.getSuperPersistentClass() != null ) {
-			return mappedSuperclass.getSuperPersistentClass().getProperty( propertyName );
-		}
 		else {
-			return null;
+			final var superclass = mappedSuperclass.getSuperPersistentClass();
+			return superclass != null ? superclass.getProperty( propertyName ) : null;
 		}
 	}
 

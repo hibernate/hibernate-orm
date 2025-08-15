@@ -233,14 +233,9 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		final PersistentClass persistentClass = getPropertyHolder().getPersistentClass();
 		final KeyValue identifier = persistentClass.getIdentifier();
 		try {
-			if ( identifier instanceof Component embeddedIdType ) {
-				// an @EmbeddedId
-				return embeddedIdType.getProperty( getMapsId() );
-			}
-			else {
-				// a simple id or an @IdClass
-				return persistentClass.getProperty( getMapsId() );
-			}
+			return identifier instanceof Component embeddedIdType
+					? embeddedIdType.getProperty( getMapsId() )   // an @EmbeddedId
+					: persistentClass.getProperty( getMapsId() );  // a simple id or an @IdClass
 		}
 		catch (MappingException me) {
 			throw new AnnotationException( "Identifier field '" + getMapsId()
@@ -255,10 +250,10 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 
 	@Override
 	public void addColumn(AnnotatedColumn child) {
-		if ( !( child instanceof AnnotatedJoinColumn ) ) {
+		if ( !( child instanceof AnnotatedJoinColumn joinColumn ) ) {
 			throw new AssertionFailure( "wrong sort of column" );
 		}
-		addColumn( (AnnotatedJoinColumn) child );
+		addColumn( joinColumn );
 	}
 
 	public void addColumn(AnnotatedJoinColumn child) {

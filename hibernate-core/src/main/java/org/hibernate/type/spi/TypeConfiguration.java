@@ -45,7 +45,6 @@ import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -81,6 +80,7 @@ import org.hibernate.type.internal.ParameterizedTypeImpl;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.id.uuid.LocalObjectUuidHelper.generateLocalObjectUuid;
 import static org.hibernate.query.sqm.internal.TypecheckUtil.isNumberArray;
 
 /**
@@ -115,7 +115,7 @@ import static org.hibernate.query.sqm.internal.TypecheckUtil.isNumberArray;
 public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 //	private static final CoreMessageLogger log = messageLogger( Scope.class );
 
-	private final String uuid = LocalObjectUuidHelper.generateLocalObjectUuid();
+	private final String uuid = generateLocalObjectUuid();
 
 	private final Scope scope;
 
@@ -285,8 +285,8 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	public void addBasicTypeRegistrationContributions(List<BasicTypeRegistration> contributions) {
-		for ( BasicTypeRegistration basicTypeRegistration : contributions ) {
-			final BasicType<?> basicType = basicTypeRegistration.getBasicType();
+		for ( var basicTypeRegistration : contributions ) {
+			final var basicType = basicTypeRegistration.getBasicType();
 
 			basicTypeRegistry.register(
 					basicType,
@@ -594,10 +594,11 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		private static String getFactoryName(SessionFactoryImplementor factory) {
 			final String factoryName = factory.getSessionFactoryOptions().getSessionFactoryName();
 			if ( factoryName == null ) {
-				final CfgXmlAccessService cfgXmlAccessService =
-						factory.getServiceRegistry().requireService( CfgXmlAccessService.class );
-				return cfgXmlAccessService.getAggregatedConfig() == null ? null
-						: cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName();
+				final var cfgXmlAccessService =
+						factory.getServiceRegistry()
+								.requireService( CfgXmlAccessService.class );
+				final var aggregatedConfig = cfgXmlAccessService.getAggregatedConfig();
+				return aggregatedConfig == null ? null : aggregatedConfig.getSessionFactoryName();
 			}
 			else {
 				return factoryName;
@@ -643,10 +644,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	private final ConcurrentMap<ArrayCacheKey, ArrayTupleType> arrayTuples = new ConcurrentHashMap<>();
 
 	public SqmBindableType<?> resolveTupleType(List<? extends SqmTypedNode<?>> typedNodes) {
-		final SqmBindableType<?>[] components = new SqmBindableType<?>[typedNodes.size()];
+		final var components = new SqmBindableType<?>[typedNodes.size()];
 		for ( int i = 0; i < typedNodes.size(); i++ ) {
-			final SqmTypedNode<?> tupleElement = typedNodes.get(i);
-			final SqmBindableType<?> sqmExpressible = tupleElement.getNodeType();
+			final var tupleElement = typedNodes.get(i);
+			final var sqmExpressible = tupleElement.getNodeType();
 			// keep null value for Named Parameters
 			if ( tupleElement instanceof SqmParameter<?> && sqmExpressible == null ) {
 				components[i] = QueryParameterJavaObjectType.INSTANCE;
@@ -763,7 +764,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	public <J> BasicType<J> getBasicTypeForJavaType(Type javaType) {
-		final BasicType<?> existing = basicTypeByJavaType.get( javaType );
+		final var existing = basicTypeByJavaType.get( javaType );
 		if ( existing != null ) {
 			//noinspection unchecked
 			return (BasicType<J>) existing;
@@ -865,7 +866,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 		else if ( type instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
 			// Handle the special embeddables for emulated offset/timezone handling
-			final Class<?> javaTypeClass = embeddableValuedModelPart.getJavaType().getJavaTypeClass();
+			final var javaTypeClass = embeddableValuedModelPart.getJavaType().getJavaTypeClass();
 			if ( javaTypeClass == OffsetDateTime.class
 					|| javaTypeClass == ZonedDateTime.class ) {
 				return TemporalType.TIMESTAMP;

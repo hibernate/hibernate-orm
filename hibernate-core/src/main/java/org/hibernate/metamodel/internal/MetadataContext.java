@@ -874,9 +874,8 @@ public class MetadataContext {
 				: new BasicTypeImpl<>( javaTypeDescriptor, jdbcType );
 	}
 
-	@SuppressWarnings("unchecked")
-	public <J> EmbeddableDomainType<J> locateEmbeddable(Class<J> embeddableClass, Component component) {
-		final var domainType = (EmbeddableDomainType<J>) embeddables.get( embeddableClass );
+	public EmbeddableDomainType<?> locateEmbeddable(Class<?> embeddableClass, Component component) {
+		final var domainType = embeddables.get( embeddableClass );
 		if ( domainType != null ) {
 			return domainType;
 		}
@@ -886,7 +885,7 @@ public class MetadataContext {
 				for ( var embeddableDomainType : embeddableDomainTypes ) {
 					final Component cachedComponent = componentByEmbeddable.get( embeddableDomainType );
 					if ( cachedComponent.isSame( component ) ) {
-						return (EmbeddableDomainType<J>) embeddableDomainType;
+						return embeddableDomainType;
 					}
 					else if ( cachedComponent.getComponentClass().equals( component.getComponentClass() ) ) {
 						final int cachedComponentPropertySpan = cachedComponent.getPropertySpan();
@@ -905,7 +904,7 @@ public class MetadataContext {
 								}
 							}
 						}
-						return (EmbeddableDomainType<J>) embeddableDomainType;
+						return embeddableDomainType;
 					}
 					else {
 						throw new MappingException( "Encountered multiple component mappings for the same java class "

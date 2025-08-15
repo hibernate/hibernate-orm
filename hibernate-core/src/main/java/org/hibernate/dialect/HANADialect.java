@@ -1003,34 +1003,18 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
+	public String getForUpdateString(Timeout timeout) {
+		return withTimeout( getForUpdateString(), timeout.milliseconds() );
+	}
+
+	@Override
 	public String getReadLockString(String aliases, Timeout timeout) {
 		return getWriteLockString( aliases, timeout );
 	}
 
 	@Override
-	public String getWriteLockString(Timeout timeout) {
-		if ( Timeouts.isRealTimeout( timeout ) ) {
-			return getForUpdateString() + " wait " + Timeouts.getTimeoutInSeconds( timeout.milliseconds() );
-		}
-		else if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI ) {
-			return getForUpdateNowaitString();
-		}
-		else {
-			return getForUpdateString();
-		}
-	}
-
-	@Override
 	public String getWriteLockString(String aliases, Timeout timeout) {
-		if ( Timeouts.isRealTimeout( timeout ) ) {
-			return getForUpdateString( aliases ) + " wait " + getTimeoutInSeconds( timeout.milliseconds() );
-		}
-		else if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI ) {
-			return getForUpdateNowaitString( aliases );
-		}
-		else {
-			return getForUpdateString( aliases );
-		}
+		return withTimeout( getForUpdateString( aliases ), timeout.milliseconds() );
 	}
 
 	@Override
@@ -1044,29 +1028,17 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
-	public String getWriteLockString(int timeout) {
-		if ( timeout > 0 ) {
-			return getForUpdateString() + " wait " + getTimeoutInSeconds( timeout );
-		}
-		else if ( timeout == Timeouts.NO_WAIT_MILLI ) {
-			return getForUpdateNowaitString();
-		}
-		else {
-			return getForUpdateString();
-		}
+	public String getWriteLockString(String aliases, int timeout) {
+		return withTimeout( getForUpdateString( aliases ), timeout );
 	}
 
-	@Override
-	public String getWriteLockString(String aliases, int timeout) {
-		if ( timeout > 0 ) {
-			return getForUpdateString( aliases ) + " wait " + getTimeoutInSeconds( timeout );
-		}
-		else if ( timeout == 0 ) {
-			return getForUpdateNowaitString( aliases );
-		}
-		else {
-			return getForUpdateString( aliases );
-		}
+	private String withTimeout(String lockString, int timeout) {
+		return switch (timeout) {
+			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case Timeouts.SKIP_LOCKED_MILLI -> supportsSkipLocked() ? lockString + SQL_IGNORE_LOCKED : lockString;
+			case Timeouts.WAIT_FOREVER_MILLI -> lockString;
+			default -> supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
+		};
 	}
 
 	@Override

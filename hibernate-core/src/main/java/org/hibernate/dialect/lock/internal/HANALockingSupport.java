@@ -4,9 +4,11 @@
  */
 package org.hibernate.dialect.lock.internal;
 
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 
 /**
@@ -15,14 +17,24 @@ import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
  * @author Steve Ebersole
  */
 public class HANALockingSupport extends LockingSupportParameterized {
-	public static final HANALockingSupport HANA_LOCKING_SUPPORT = new HANALockingSupport( true	);
+	public static final HANALockingSupport HANA_LOCKING_SUPPORT = new HANALockingSupport( true, true	);
+
+	public static LockingSupport forDialectVersion(DatabaseVersion version) {
+		final boolean supportsWait = version.isSameOrAfter( 2, 0, 10 );
+		final boolean supportsSkipLocked = version.isSameOrAfter(2, 0, 30);
+		return new HANALockingSupport( supportsWait, supportsSkipLocked );
+	}
 
 	public HANALockingSupport(boolean supportsSkipLocked) {
+		this( false, supportsSkipLocked );
+	}
+
+	private HANALockingSupport(boolean supportsWait, boolean supportsSkipLocked) {
 		super(
 				PessimisticLockStyle.CLAUSE,
 				RowLockStrategy.COLUMN,
-				false,
-				false,
+				supportsWait,
+				supportsWait,
 				supportsSkipLocked,
 				OuterJoinLockingType.IDENTIFIED
 		);

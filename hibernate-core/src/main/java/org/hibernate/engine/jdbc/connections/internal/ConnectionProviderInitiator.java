@@ -6,7 +6,6 @@ package org.hibernate.engine.jdbc.connections.internal;
 
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
@@ -24,6 +23,7 @@ import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
+import static java.lang.Integer.parseInt;
 import static java.sql.Connection.TRANSACTION_NONE;
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.sql.Connection.TRANSACTION_READ_UNCOMMITTED;
@@ -90,8 +90,8 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return null;
 		}
 
-		final BeanContainer beanContainer = Helper.getBeanContainer( registry );
-		final StrategySelector strategySelector = registry.requireService( StrategySelector.class );
+		final var beanContainer = Helper.getBeanContainer( registry );
+		final var strategySelector = registry.requireService( StrategySelector.class );
 		final Object explicitSetting = configurationValues.get( CONNECTION_PROVIDER );
 		if ( explicitSetting != null ) {
 			// if we are explicitly supplied a ConnectionProvider to use (in some form) -> use it..
@@ -119,16 +119,14 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 																+ "' does not implement 'ConnectionProvider'" );
 		}
 		@SuppressWarnings("unchecked")
-		final Class<? extends ConnectionProvider> connectionProviderClass =
-				(Class<? extends ConnectionProvider>) providerClass;
+		final var connectionProviderClass = (Class<? extends ConnectionProvider>) providerClass;
 		return connectionProviderClass;
 	}
 
 	private ConnectionProvider instantiateNamedConnectionProvider(
 			String providerName, StrategySelector strategySelector, BeanContainer beanContainer) {
 		LOG.instantiatingExplicitConnectionProvider( providerName );
-		final Class<? extends ConnectionProvider> providerClass =
-				strategySelector.selectStrategyImplementor( ConnectionProvider.class, providerName );
+		final var providerClass = strategySelector.selectStrategyImplementor( ConnectionProvider.class, providerName );
 		try {
 			return instantiateExplicitConnectionProvider( providerClass, beanContainer );
 		}
@@ -143,8 +141,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return new DataSourceConnectionProvider();
 		}
 
-		final Class<? extends ConnectionProvider> singleRegisteredProvider =
-				getSingleRegisteredProvider( strategySelector );
+		final var singleRegisteredProvider = getSingleRegisteredProvider( strategySelector );
 		if ( singleRegisteredProvider != null ) {
 			try {
 				return singleRegisteredProvider.getConstructor().newInstance();
@@ -188,8 +185,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	}
 
 	private Class<? extends ConnectionProvider> getSingleRegisteredProvider(StrategySelector strategySelector) {
-		final Collection<Class<? extends ConnectionProvider>> implementors =
-				strategySelector.getRegisteredStrategyImplementors( ConnectionProvider.class );
+		final var implementors = strategySelector.getRegisteredStrategyImplementors( ConnectionProvider.class );
 		return implementors != null && implementors.size() == 1
 				? implementors.iterator().next()
 				: null;
@@ -245,7 +241,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	 * @return The connection properties.
 	 */
 	public static Properties getConnectionProperties(Map<String, Object> properties) {
-		final Properties result = new Properties();
+		final var result = new Properties();
 		for ( var entry : properties.entrySet() ) {
 			if ( entry.getValue() instanceof String value ) {
 				final String key = entry.getKey();
@@ -343,7 +339,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			else {
 				// it could be a String representation of the isolation numeric value
 				try {
-					final int isolationLevel = Integer.parseInt( string );
+					final int isolationLevel = parseInt( string );
 					checkIsolationLevel( isolationLevel );
 					return isolationLevel;
 				}
@@ -397,8 +393,8 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 
 	public static String extractSetting(Map<String, Object> settings, String... names) {
 		for ( String name : names ) {
-			if ( settings.containsKey(name) ) {
-				return (String) settings.get(name);
+			if ( settings.containsKey( name ) ) {
+				return (String) settings.get( name );
 			}
 		}
 		return null;

@@ -97,6 +97,12 @@ public interface SharedSessionBuilder extends SessionBuilder {
 	SharedSessionBuilder tenantIdentifier(Object tenantIdentifier);
 
 	@Override
+	SharedSessionBuilder readOnly(boolean readOnly);
+
+	@Override
+	SharedSessionBuilder initialCacheMode(CacheMode cacheMode);
+
+	@Override
 	SharedSessionBuilder eventListeners(SessionEventListener... listeners);
 
 	@Override

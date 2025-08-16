@@ -161,6 +161,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private final Interceptor interceptor;
 
 	private final Object tenantIdentifier;
+	private final boolean readOnly;
 	private final TimeZone jdbcTimeZone;
 
 	// mutable state
@@ -185,26 +186,29 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	public AbstractSharedSessionContract(SessionFactoryImpl factory, SessionCreationOptions options) {
 		this.factory = factory;
-		this.factoryOptions = factory.getSessionFactoryOptions();
-		this.jdbcServices = factory.getJdbcServices();
 
+		factoryOptions = factory.getSessionFactoryOptions();
+		jdbcServices = factory.getJdbcServices();
 		cacheTransactionSynchronization = factory.getCache().getRegionFactory().createTransactionContext( this );
+
 		tenantIdentifier = getTenantId( factoryOptions, options );
+		readOnly = options.isReadOnly();
+		cacheMode = options.getInitialCacheMode();
 		interceptor = interpret( options.getInterceptor() );
 		jdbcTimeZone = options.getJdbcTimeZone();
+
 		sessionEventsManager = createSessionEventsManager( factoryOptions, options );
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
 
-		setCriteriaCopyTreeEnabled( factoryOptions.isCriteriaCopyTreeEnabled() );
-		setCriteriaPlanCacheEnabled( factoryOptions.isCriteriaPlanCacheEnabled() );
-		setNativeJdbcParametersIgnored( factoryOptions.getNativeJdbcParametersIgnored() );
-		setCacheMode( factoryOptions.getInitialSessionCacheMode() );
+		criteriaCopyTreeEnabled = factoryOptions.isCriteriaCopyTreeEnabled();
+		criteriaPlanCacheEnabled = factoryOptions.isCriteriaPlanCacheEnabled();
+		nativeJdbcParametersIgnored = factoryOptions.getNativeJdbcParametersIgnored();
 
-		final StatementInspector statementInspector = interpret( options.getStatementInspector() );
+		final var statementInspector = interpret( options.getStatementInspector() );
 
 		isTransactionCoordinatorShared = isTransactionCoordinatorShared( options );
 		if ( isTransactionCoordinatorShared ) {
-			final SharedSessionCreationOptions sharedOptions = (SharedSessionCreationOptions) options;
+			final var sharedOptions = (SharedSessionCreationOptions) options;
 			if ( options.getConnection() != null ) {
 				throw new SessionException( "Cannot simultaneously share transaction context and specify connection" );
 			}
@@ -296,9 +300,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return tenantIdentifier;
 	}
 
+	boolean isReadOnly() {
+		return readOnly;
+	}
+
 	private static SessionEventListenerManager createSessionEventsManager(
 			SessionFactoryOptions factoryOptions, SessionCreationOptions options) {
-		final List<SessionEventListener> customListeners = options.getCustomSessionEventListener();
+		final var customListeners = options.getCustomSessionEventListener();
 		return customListeners == null
 				? new SessionEventListenerManagerImpl( factoryOptions.buildSessionEventListeners() )
 				: new SessionEventListenerManagerImpl( customListeners );
@@ -685,6 +693,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			if ( !factoryOptions.isMultiTenancyEnabled() ) {
 				// we might still be using schema-based multitenancy
 				jdbcConnectionAccess = new NonContextualJdbcConnectionAccess(
+						readOnly,
 						sessionEventsManager,
 						factory.connectionProvider,
 						this
@@ -694,6 +703,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				// we're using datasource-based multitenancy
 				jdbcConnectionAccess = new ContextualJdbcConnectionAccess(
 						tenantIdentifier,
+						readOnly,
 						sessionEventsManager,
 						factory.multiTenantConnectionProvider,
 						this
@@ -701,6 +711,14 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			}
 		}
 		return jdbcConnectionAccess;
+	}
+
+	private boolean manageReadOnly() {
+		return !factory.connectionProviderHandlesConnectionReadOnly();
+	}
+
+	private boolean manageSchema() {
+		return !factory.connectionProviderHandlesConnectionSchema();
 	}
 
 	private boolean useSchemaBasedMultiTenancy() {
@@ -722,16 +740,22 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public void afterObtainConnection(Connection connection) throws SQLException {
-		if ( useSchemaBasedMultiTenancy() ) {
+		if ( useSchemaBasedMultiTenancy() && manageSchema() ) {
 			initialSchema = connection.getSchema();
 			connection.setSchema( tenantSchema() );
+		}
+		if ( readOnly && manageReadOnly() ) {
+			connection.setReadOnly( true );
 		}
 	}
 
 	@Override
 	public void beforeReleaseConnection(Connection connection) throws SQLException {
-		if ( useSchemaBasedMultiTenancy() ) {
+		if ( useSchemaBasedMultiTenancy() && manageSchema() ) {
 			connection.setSchema( initialSchema );
+		}
+		if ( readOnly && manageReadOnly() ) {
+			connection.setReadOnly( false );
 		}
 	}
 

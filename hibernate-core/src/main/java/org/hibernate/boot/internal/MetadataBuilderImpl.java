@@ -10,6 +10,7 @@ import java.util.Locale;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
+import org.hibernate.context.spi.MultiTenancy;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.TimeZoneStorageType;
@@ -65,7 +66,6 @@ import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -651,7 +651,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 			defaultTimezoneStorage = resolveTimeZoneStorageStrategy( configService );
 			wrapperArrayHandling = resolveWrapperArrayHandling( configService );
-			multiTenancyEnabled = JdbcEnvironmentImpl.isMultiTenancyEnabled( serviceRegistry );
+			multiTenancyEnabled = MultiTenancy.isMultiTenancyEnabled( serviceRegistry );
 
 			xmlMappingEnabled = configService.getSetting(
 					AvailableSettings.XML_MAPPING_ENABLED,

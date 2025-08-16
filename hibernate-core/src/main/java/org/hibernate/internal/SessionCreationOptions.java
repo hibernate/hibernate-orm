@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.util.List;
 import java.util.TimeZone;
 
+import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionEventListener;
@@ -45,6 +46,10 @@ public interface SessionCreationOptions {
 	String getTenantIdentifier();
 
 	Object getTenantIdentifierValue();
+
+	boolean isReadOnly();
+
+	CacheMode getInitialCacheMode();
 
 	boolean isIdentifierRollbackEnabled();
 

@@ -18,16 +18,19 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Steve Ebersole
  */
 public class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {
+	private final boolean readOnly;
 	private final SessionEventListener listener;
 	private final ConnectionProvider connectionProvider;
 	private final SharedSessionContractImplementor session;
 
 	public NonContextualJdbcConnectionAccess(
+			boolean readOnly,
 			SessionEventListener listener,
 			ConnectionProvider connectionProvider,
 			SharedSessionContractImplementor session) {
 		Objects.requireNonNull( listener );
 		Objects.requireNonNull( connectionProvider );
+		this.readOnly = readOnly;
 		this.listener = listener;
 		this.connectionProvider = connectionProvider;
 		this.session = session;
@@ -39,7 +42,9 @@ public class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, 
 		final var connectionAcquisitionEvent = eventMonitor.beginJdbcConnectionAcquisitionEvent();
 		try {
 			listener.jdbcConnectionAcquisitionStart();
-			return connectionProvider.getConnection();
+			return readOnly
+					? connectionProvider.getReadOnlyConnection()
+					: connectionProvider.getConnection();
 		}
 		finally {
 			eventMonitor.completeJdbcConnectionAcquisitionEvent( connectionAcquisitionEvent, session, null );
@@ -53,7 +58,12 @@ public class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, 
 		final var connectionReleaseEvent = eventMonitor.beginJdbcConnectionReleaseEvent();
 		try {
 			listener.jdbcConnectionReleaseStart();
-			connectionProvider.closeConnection( connection );
+			if ( readOnly ) {
+				connectionProvider.closeReadOnlyConnection( connection );
+			}
+			else {
+				connectionProvider.closeConnection( connection );
+			}
 		}
 		finally {
 			eventMonitor.completeJdbcConnectionReleaseEvent( connectionReleaseEvent, session, null );

@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -274,6 +275,9 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			ClassDetails declaringClass,
 			MetadataBuildingContext context) {
 		final MappedSuperclass superclass = context.getMetadataCollector().getMappedSuperclass( declaringClass.toJavaClass() );
+		if ( superclass == null ) {
+			throw new HibernateException( "Mapped superclass is null for declaring type " + declaringClass );
+		}
 		prepareActualProperty( prop, memberDetails, true, context, superclass::addDeclaredProperty );
 	}
 

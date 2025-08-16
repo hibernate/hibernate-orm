@@ -78,7 +78,8 @@ public final class Template {
 			"minus",
 			"except",
 			"intersect",
-			"partition");
+			"partition",
+			"within");
 	private static final Set<String> BEFORE_TABLE_KEYWORDS
 			= Set.of("from", "join");
 	private static final Set<String> FUNCTION_KEYWORDS
@@ -93,6 +94,13 @@ public final class Template {
 			= Set.of("first", "next");
 	private static final Set<String> CURRENT_BIGRAMS
 			= Set.of("date", "time", "timestamp");
+	// Ordered-set aggregate function names we want to recognize
+	private static final Set<String> ORDERED_SET_AGGREGATES
+			= Set.of("listagg", "percentile_cont", "percentile_disc", "mode");
+	// Soft keywords that are only treated as keywords in the LISTAGG extension immediately
+	// following the argument list and up to and including GROUP
+	private static final Set<String> LISTAGG_EXTENSION_KEYWORDS
+			= Set.of("on", "overflow", "error", "truncate", "without", "count", "within", "with", "group");
 
 	private static final String PUNCTUATION = "=><!+-*/()',|&`";
 
@@ -172,6 +180,12 @@ public final class Template {
 		boolean afterCastAs = false;
 		boolean afterFetch = false;
 		boolean afterCurrent = false;
+		// State for ordered-set aggregates / LISTAGG extension handling
+		boolean inOrderedSetFunction = false;
+		int orderedSetParenDepth = 0;
+		boolean afterOrderedSetArgs = false;
+		boolean inListaggExtension = false;
+		boolean lastWasListagg = false;
 
 		boolean hasMore = tokens.hasMoreTokens();
 		String nextToken = hasMore ? tokens.nextToken() : null;
@@ -232,6 +246,7 @@ public final class Template {
 			final String processedToken;
 			final boolean isQuoted =
 					quoted || quotedIdentifier || isQuoteCharacter;
+
 			if ( isQuoted || isWhitespace ) {
 				processedToken = token;
 			}
@@ -245,12 +260,23 @@ public final class Template {
 				processedToken = token;
 			}
 			else if ( "(".equals(lcToken) ) {
+				if ( inOrderedSetFunction ) {
+					orderedSetParenDepth++;
+				}
 				processedToken = token;
 			}
 			else if ( ")".equals(lcToken) ) {
 				inExtractOrTrim = false;
 				inCast = false;
 				afterCastAs = false;
+				if ( inOrderedSetFunction ) {
+					orderedSetParenDepth--;
+					if ( orderedSetParenDepth == 0 ) {
+						inOrderedSetFunction = false;
+						afterOrderedSetArgs = true;
+						inListaggExtension = lastWasListagg;
+					}
+				}
 				processedToken = token;
 			}
 			else if ( ",".equals(lcToken) ) {
@@ -303,11 +329,31 @@ public final class Template {
 				if ( "cast".equals( lcToken ) ) {
 					inCast = true;
 				}
+				if ( ORDERED_SET_AGGREGATES.contains( lcToken ) ) {
+					inOrderedSetFunction = true;
+					orderedSetParenDepth = 0;
+					lastWasListagg = "listagg".equals( lcToken );
+				}
+				processedToken = token;
+			}
+			else if ( afterOrderedSetArgs && (inListaggExtension
+					? ( LISTAGG_EXTENSION_KEYWORDS.contains( lcToken ) )
+					: "within".equals( lcToken )) ) {
+				if ( "group".equals( lcToken ) ) {
+					// end special handling after GROUP (inclusive)
+					afterOrderedSetArgs = false;
+					inListaggExtension = false;
+				}
 				processedToken = token;
 			}
 			else if ( isAliasableIdentifier( token, lcToken, nextToken,
 							sql, symbols, tokens, wasAfterCurrent,
 							dialect, typeConfiguration ) ) {
+				// Any aliasable identifier here cannot be one of the soft keywords allowed in the
+				// ordered-set/LISTAGG post-args region. We've left that region so must end special handling.
+				// (It's irrelevant at this point whether the dialect supports ordered-set/LISTAGG.)
+				afterOrderedSetArgs = false;
+				inListaggExtension = false;
 				processedToken = alias + '.' +  dialect.quote(token);
 			}
 			else {

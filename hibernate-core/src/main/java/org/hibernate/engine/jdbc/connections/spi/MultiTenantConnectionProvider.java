@@ -77,8 +77,8 @@ public interface MultiTenantConnectionProvider<T> extends Service, Wrapped {
 	 * @throws org.hibernate.HibernateException Indicates a problem obtaining a connection
 	 *
 	 * @implNote This default implementation simply calls {@link #getConnection(Object)},
-	 * which returns a connection a writable replica. If this operation is overridden to
-	 * return a connection to a distinct read-only replica, the matching operation
+	 * which returns a connection to a writable replica. If this operation is overridden
+	 * to return a connection to a distinct read-only replica, the matching operation
 	 * {@link #releaseReadOnlyConnection(Object, Connection)} must also be overridden.
 	 *
 	 * @since 7.2
@@ -147,7 +147,12 @@ public interface MultiTenantConnectionProvider<T> extends Service, Wrapped {
 	 * of the returned JDBC connections?
 	 * @return {@code true} if the connection provider handles this;
 	 *         {@code false} if the client should set the schema
+	 *
+	 * @implNote If necessary, a {@code ConnectionProvider} may
+	 * call {@link org.hibernate.context.spi.MultiTenancy#getTenantSchemaMapper}
+	 * to obtain the {@link org.hibernate.context.spi.TenantSchemaMapper}.
 	 */
+	@Incubating
 	default boolean handlesConnectionSchema() {
 		return false;
 	}
@@ -159,6 +164,7 @@ public interface MultiTenantConnectionProvider<T> extends Service, Wrapped {
 	 * @return {@code true} if the connection provider handles this;
 	 *         {@code false} if the client should set the read-only mode
 	 */
+	@Incubating
 	default boolean handlesConnectionReadOnly() {
 		return false;
 	}

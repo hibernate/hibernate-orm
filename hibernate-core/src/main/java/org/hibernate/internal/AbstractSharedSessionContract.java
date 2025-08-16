@@ -693,6 +693,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			if ( !factoryOptions.isMultiTenancyEnabled() ) {
 				// we might still be using schema-based multitenancy
 				jdbcConnectionAccess = new NonContextualJdbcConnectionAccess(
+						readOnly,
 						sessionEventsManager,
 						factory.connectionProvider,
 						this
@@ -713,13 +714,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	private boolean manageReadOnly() {
-		return factory.multiTenantConnectionProvider == null
-			|| !factory.multiTenantConnectionProvider.handlesConnectionReadOnly();
+		return !factory.connectionProviderHandlesConnectionReadOnly();
 	}
 
 	private boolean manageSchema() {
-		return factory.multiTenantConnectionProvider == null
-			|| !factory.multiTenantConnectionProvider.handlesConnectionSchema();
+		return !factory.connectionProviderHandlesConnectionSchema();
 	}
 
 	private boolean useSchemaBasedMultiTenancy() {

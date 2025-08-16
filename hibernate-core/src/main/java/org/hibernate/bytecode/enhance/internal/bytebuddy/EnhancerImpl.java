@@ -35,7 +35,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.Version;
 import org.hibernate.bytecode.enhance.VersionMismatchException;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
-import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.EnhancementInfo;
@@ -69,7 +68,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import static net.bytebuddy.matcher.ElementMatchers.isDefaultFinalizer;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 import static net.bytebuddy.matcher.ElementMatchers.isSetter;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
@@ -85,7 +83,7 @@ public class EnhancerImpl implements Enhancer {
 	private final ByteBuddyState byteBuddyState;
 	private final EnhancerClassLocator typePool;
 	private final EnhancerImplConstants constants;
-	private final List<? extends Annotation> infoAnnotationList;
+	private final AnnotationList.ForLoadedAnnotations infoAnnotationList;
 
 	/**
 	 * Constructs the Enhancer, using the given context.
@@ -111,7 +109,7 @@ public class EnhancerImpl implements Enhancer {
 		this.typePool = Objects.requireNonNull( classLocator );
 		this.constants = byteBuddyState.getEnhancerConstants();
 
-		this.infoAnnotationList = List.of( createInfoAnnotation( enhancementContext ) );
+		this.infoAnnotationList = new AnnotationList.ForLoadedAnnotations( List.of( createInfoAnnotation( enhancementContext ) ) );
 	}
 
 
@@ -135,7 +133,7 @@ public class EnhancerImpl implements Enhancer {
 			final TypeDescription typeDescription = typePool.describe( safeClassName ).resolve();
 
 			return byteBuddyState.rewrite( typePool, safeClassName, byteBuddy -> doEnhance(
-					() -> byteBuddy.ignore( isDefaultFinalizer() )
+					() -> byteBuddy.ignore( constants.defaultFinalizer() )
 							.redefine( typeDescription, typePool.asClassFileLocator() )
 							.annotateType( infoAnnotationList ),
 					typeDescription
@@ -262,7 +260,7 @@ public class EnhancerImpl implements Enhancer {
 
 				if ( collectionFields.isEmpty() ) {
 					builder = builder.implement( SelfDirtinessTracker.class )
-							.defineField( EnhancerConstants.TRACKER_FIELD_NAME, DirtyTracker.class, constants.fieldModifierPRIVATE_TRANSIENT )
+							.defineField( EnhancerConstants.TRACKER_FIELD_NAME, constants.DirtyTrackerTypeDescription, constants.fieldModifierPRIVATE_TRANSIENT )
 									.annotateField( constants.TRANSIENT_ANNOTATION )
 							.defineMethod( EnhancerConstants.TRACKER_CHANGER_NAME, constants.TypeVoid, constants.methodModifierPUBLIC )
 									.withParameters( String.class )
@@ -282,7 +280,7 @@ public class EnhancerImpl implements Enhancer {
 				else {
 					//TODO es.enableInterfaceExtendedSelfDirtinessTracker ? Careful with consequences..
 					builder = builder.implement( ExtendedSelfDirtinessTracker.class )
-							.defineField( EnhancerConstants.TRACKER_FIELD_NAME, DirtyTracker.class, constants.fieldModifierPRIVATE_TRANSIENT )
+							.defineField( EnhancerConstants.TRACKER_FIELD_NAME, constants.DirtyTrackerTypeDescription, constants.fieldModifierPRIVATE_TRANSIENT )
 									.annotateField( constants.TRANSIENT_ANNOTATION )
 							.defineField( EnhancerConstants.TRACKER_COLLECTION_NAME, constants.TypeCollectionTracker, constants.fieldModifierPRIVATE_TRANSIENT )
 									.annotateField( constants.TRANSIENT_ANNOTATION )
@@ -363,7 +361,7 @@ public class EnhancerImpl implements Enhancer {
 					builder = builder.defineMethod( EnhancerConstants.TRACKER_COLLECTION_CHANGED_NAME, constants.TypeBooleanPrimitive, constants.methodModifierPUBLIC )
 							.intercept( isDirty )
 							.defineMethod( EnhancerConstants.TRACKER_COLLECTION_CHANGED_FIELD_NAME, constants.TypeVoid, constants.methodModifierPUBLIC )
-									.withParameters( DirtyTracker.class )
+									.withParameters( constants.DirtyTrackerTypeDescription )
 									.intercept( getDirtyNames )
 							.defineMethod( EnhancerConstants.TRACKER_COLLECTION_CLEAR_NAME, constants.TypeVoid, constants.methodModifierPUBLIC )
 									.intercept( Advice.withCustomMapping()

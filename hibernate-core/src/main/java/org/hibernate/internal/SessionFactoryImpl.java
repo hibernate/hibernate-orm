@@ -1568,6 +1568,17 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return tenantIdentifierJavaType;
 	}
 
+	boolean connectionProviderHandlesConnectionReadOnly() {
+		return multiTenantConnectionProvider != null
+				? multiTenantConnectionProvider.handlesConnectionReadOnly()
+				: connectionProvider.handlesConnectionReadOnly();
+	}
+
+	boolean connectionProviderHandlesConnectionSchema() {
+		return multiTenantConnectionProvider != null
+				? multiTenantConnectionProvider.handlesConnectionSchema()
+				: connectionProvider.handlesConnectionSchema();
+	}
 
 	// Serialization handling ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

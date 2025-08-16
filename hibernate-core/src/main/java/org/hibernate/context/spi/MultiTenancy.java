@@ -17,8 +17,11 @@ import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_IDENTIFIER_RES
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_SCHEMA_MAPPER;
 
 /**
- * Exposes useful strategy objects to user-written components, for example,
- * to a custom implementation of {@link MultiTenantConnectionProvider}.
+ * Exposes useful multitenancy-related strategy objects to user-written components.
+ * <p>
+ * The operation {@link #getTenantSchemaMapper} is especially useful in any custom
+ * implementation of {@link MultiTenantConnectionProvider} which takes on responsibility
+ * for {@linkplain MultiTenantConnectionProvider#handlesConnectionSchema setting the schema}.
  *
  * @since 7.1
  *
@@ -27,10 +30,16 @@ import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_SCHEMA_MAPPER;
 @Incubating
 public class MultiTenancy {
 
+	/**
+	 * Is a {@link MultiTenantConnectionProvider} available?
+	 */
 	public static boolean isMultiTenancyEnabled(ServiceRegistry serviceRegistry) {
 		return serviceRegistry.getService( MultiTenantConnectionProvider.class ) != null;
 	}
 
+	/**
+	 * Obtain the configured {@link CurrentTenantIdentifierResolver}.
+	 */
 	@SuppressWarnings("unchecked")
 	public static CurrentTenantIdentifierResolver<Object> getTenantIdentifierResolver(
 			Map<String,Object> settings, StandardServiceRegistry registry) {
@@ -52,6 +61,9 @@ public class MultiTenancy {
 		}
 	}
 
+	/**
+	 * Obtain the configured {@link TenantSchemaMapper}.
+	 */
 	@SuppressWarnings("unchecked")
 	public static TenantSchemaMapper<Object> getTenantSchemaMapper(
 			Map<String,Object> settings, StandardServiceRegistry registry) {

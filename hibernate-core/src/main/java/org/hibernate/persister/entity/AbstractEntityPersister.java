@@ -1876,62 +1876,62 @@ public abstract class AbstractEntityPersister
 		// Wrap expressions with aliases
 		final SelectClause selectClause = rootQuerySpec.getSelectClause();
 		final List<SqlSelection> sqlSelections = selectClause.getSqlSelections();
+		final Set<String> processedExpressions = new HashSet<>( sqlSelections.size() );
 		int i = 0;
-		int columnIndex = 0;
-		final String[] columnAliases = getSubclassColumnAliasClosure();
-		final int columnAliasesSize = columnAliases.length;
-		for ( String identifierAlias : identifierAliases ) {
-			sqlSelections.set(
-					i,
-					new SqlSelectionImpl(
-							i,
-							new AliasedExpression( sqlSelections.get( i ).getExpression(), identifierAlias + suffix )
-					)
-			);
-			if ( i < columnAliasesSize && columnAliases[i].equals( identifierAlias ) ) {
-				columnIndex++;
+		final int identifierSelectionSize = identifierMapping.getJdbcTypeCount();
+		for ( int j = 0; j < identifierSelectionSize; j++ ) {
+			final SelectableMapping selectableMapping = identifierMapping.getSelectable( j );
+			if ( processedExpressions.add( selectableMapping.getSelectionExpression() ) ) {
+				aliasSelection( sqlSelections, i, identifierAliases[j] + suffix );
+				i++;
 			}
-			i++;
 		}
 
-		if ( entityMetamodel.hasSubclasses() ) {
-			sqlSelections.set(
-					i,
-					new SqlSelectionImpl(
-							i,
-							new AliasedExpression( sqlSelections.get( i ).getExpression(), getDiscriminatorAlias() + suffix )
-					)
-			);
-			i++;
+		if ( hasSubclasses() ) {
+			assert discriminatorMapping.getJdbcTypeCount() == 1;
+			final SelectableMapping selectableMapping = discriminatorMapping.getSelectable( 0 );
+			if ( processedExpressions.add( selectableMapping.getSelectionExpression() ) ) {
+				aliasSelection( sqlSelections, i, getDiscriminatorAlias() + suffix );
+				i++;
+			}
 		}
 
 		if ( hasRowId() ) {
-			sqlSelections.set(
-					i,
-					new SqlSelectionImpl(
-							i,
-							new AliasedExpression( sqlSelections.get( i ).getExpression(), ROWID_ALIAS + suffix )
-					)
-			);
-			i++;
+			final SelectableMapping selectableMapping = rowIdMapping;
+			if ( processedExpressions.add( selectableMapping.getSelectionExpression() ) ) {
+				aliasSelection( sqlSelections, i, ROWID_ALIAS + suffix );
+				i++;
+			}
 		}
 
+		final String[] columnAliases = getSubclassColumnAliasClosure();
 		final String[] formulaAliases = getSubclassFormulaAliasClosure();
+		int columnIndex = 0;
 		int formulaIndex = 0;
-		for ( ; i < sqlSelections.size(); i++ ) {
-			final SqlSelection sqlSelection = sqlSelections.get( i );
-			final ColumnReference columnReference = (ColumnReference) sqlSelection.getExpression();
-			final String selectAlias =
-					columnReference.isColumnExpressionFormula()
-							? formulaAliases[formulaIndex++] + suffix
-							: columnAliases[columnIndex++] + suffix;
-			sqlSelections.set(
-					i,
-					new SqlSelectionImpl(
-							sqlSelection.getValuesArrayPosition(),
-							new AliasedExpression( sqlSelection.getExpression(), selectAlias )
-					)
-			);
+		final int size = getNumberOfFetchables();
+		// getSubclassColumnAliasClosure contains the _identifierMapper columns when it has an id class,
+		// which need to be skipped
+		if ( identifierMapping instanceof NonAggregatedIdentifierMapping nonAggregatedIdentifierMapping
+			&& nonAggregatedIdentifierMapping.getIdClassEmbeddable() != null ) {
+			columnIndex = identifierSelectionSize;
+		}
+		for ( int j = 0; j < size; j++ ) {
+			final AttributeMapping fetchable = getFetchable( j );
+			if ( !(fetchable instanceof PluralAttributeMapping)
+				&& !skipFetchable( fetchable, fetchable.getMappedFetchOptions().getTiming() )
+				&& fetchable.isSelectable() ) {
+				final int jdbcTypeCount = fetchable.getJdbcTypeCount();
+				for ( int k = 0; k < jdbcTypeCount; k++ ) {
+					final SelectableMapping selectableMapping = fetchable.getSelectable( k );
+					if ( processedExpressions.add( selectableMapping.getSelectionExpression() ) ) {
+						final String baseAlias = selectableMapping.isFormula()
+								? formulaAliases[formulaIndex++]
+								: columnAliases[columnIndex++];
+						aliasSelection( sqlSelections, i, baseAlias + suffix );
+						i++;
+					}
+				}
+			}
 		}
 
 		final String sql =
@@ -1943,6 +1943,17 @@ public abstract class AbstractEntityPersister
 		return fromIndex != -1
 				? sql.substring( "select ".length(), fromIndex )
 				: sql.substring( "select ".length() );
+	}
+
+	private static void aliasSelection(
+			List<SqlSelection> sqlSelections,
+			int selectionIndex,
+			String alias) {
+		final Expression expression = sqlSelections.get( selectionIndex ).getExpression();
+		sqlSelections.set(
+				selectionIndex,
+				new SqlSelectionImpl( selectionIndex, new AliasedExpression( expression, alias ) )
+		);
 	}
 
 	private ImmutableFetchList fetchProcessor(FetchParent fetchParent, LoaderSqlAstCreationState creationState) {
@@ -5902,7 +5913,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public Fetchable getFetchable(int position) {
+	public AttributeMapping getFetchable(int position) {
 		return getStaticFetchableList().get( position );
 	}
 

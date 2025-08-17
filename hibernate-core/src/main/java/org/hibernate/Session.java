@@ -417,23 +417,27 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Change the default for entities and proxies loaded into this session
-	 * from modifiable to read-only mode, or from modifiable to read-only mode.
+	 * from modifiable to read-only mode, or from read-only to modifiable mode.
 	 * <p>
-	 * Read-only entities are not dirty-checked and snapshots of persistent
-	 * state are not maintained. Read-only entities can be modified, but
-	 * changes are not persisted.
+	 * Read-only entities are not dirty-checked, and snapshots of persistent
+	 * state are not maintained. Read-only entities can be modified, but a
+	 * modification to a field of a read-only entity is not made persistent.
 	 * <p>
 	 * When a proxy is initialized, the loaded entity will have the same
-	 * read-only/modifiable setting as the uninitialized proxy has,
-	 * regardless of the session's current setting.
+	 * read-only/modifiable setting as the uninitialized proxy, regardless of
+	 * the {@linkplain #isDefaultReadOnly current default read-only mode}
+	 * of the session.
 	 * <p>
 	 * To change the read-only/modifiable setting for a particular entity
-	 * or proxy that already belongs to this session use
+	 * or proxy that already belongs to this session, use
 	 * {@link #setReadOnly(Object, boolean)}.
 	 * <p>
-	 * To override this session's read-only/modifiable setting for all
-	 * entities and proxies loaded by a certain {@code Query} use
+	 * To override the default read-only mode of the current session for
+	 * all entities and proxies returned by a given {@code Query}, use
 	 * {@link Query#setReadOnly(boolean)}.
+	 * <p>
+	 * Every instance of an {@linkplain org.hibernate.annotations.Immutable
+	 * immutable} entity is loaded in read-only mode.
 	 *
 	 * @see #setReadOnly(Object,boolean)
 	 * @see Query#setReadOnly(boolean)
@@ -1287,7 +1291,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/**
 	 * Set an unmodified persistent object to read-only mode, or a read-only
 	 * object to modifiable mode. In read-only mode, no snapshot is maintained,
-	 * the instance is never dirty checked, and changes are not persisted.
+	 * the instance is never dirty-checked, and mutations to the fields of the
+	 * entity are not made persistent.
 	 * <p>
 	 * If the entity or proxy already has the specified read-only/modifiable
 	 * setting, then this method does nothing.
@@ -1296,17 +1301,24 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * and proxies that are loaded into the session use
 	 * {@link #setDefaultReadOnly(boolean)}.
 	 * <p>
-	 * To override this session's read-only/modifiable setting for entities
-	 * and proxies loaded by a {@code Query} use
-	 * {@link Query#setReadOnly(boolean)}
+	 * To override the default read-only mode of the current session for
+	 * all entities and proxies returned by a given {@code Query}, use
+	 * {@link Query#setReadOnly(boolean)}.
+	 * <p>
+	 * Every instance of an {@linkplain org.hibernate.annotations.Immutable
+	 * immutable} entity is loaded in read-only mode. An immutable entity may
+	 * not be set to modifiable.
 	 *
 	 * @see #setDefaultReadOnly(boolean)
 	 * @see Query#setReadOnly(boolean)
 	 * @see IdentifierLoadAccess#withReadOnly(boolean)
+	 * @see org.hibernate.annotations.Immutable
 	 *
 	 * @param entityOrProxy an entity or proxy
 	 * @param readOnly {@code true} if the entity or proxy should be made read-only;
 	 *				   {@code false} if the entity or proxy should be made modifiable
+	 *
+	 * @throws IllegalStateException if an immutable entity is set to modifiable
 	 */
 	void setReadOnly(Object entityOrProxy, boolean readOnly);
 

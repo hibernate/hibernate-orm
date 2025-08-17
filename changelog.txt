@@ -3,6 +3,16 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.26.Final (August 17, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/34859
+
+** Bug
+    * [HHH-18968] - MySQLDialect wrongly uses Timestamp as type for localtime function
+    * [HHH-18621] - Hibernate 6 disregards hibernate.jdbc.batch_versioned_data
+
+
 Changes in 6.6.25.Final (August 10, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

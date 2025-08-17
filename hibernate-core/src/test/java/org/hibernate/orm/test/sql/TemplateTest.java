@@ -206,7 +206,7 @@ public class TemplateTest {
 	}
 
 	@Test
-	public void testRenderTransformerReadFragment() {
+	public void testRenderTransformerReadFragment(SessionFactoryScope scope) {
 		// Test the renderTransformerReadFragment method
 		String fragment = "SELECT name, age FROM users WHERE id = ?";
 		String result = Template.renderTransformerReadFragment(fragment, "name", "age");
@@ -217,7 +217,6 @@ public class TemplateTest {
 		assertEquals(fragment, result);
 
 		// Test with empty column names array
-		//noinspection RedundantArrayCreation
 		result = Template.renderTransformerReadFragment(fragment, new String[0]);
 		assertEquals(fragment, result);
 

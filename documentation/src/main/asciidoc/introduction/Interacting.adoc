@@ -241,6 +241,8 @@ When a transaction rolls back, Hibernate makes no attempt to roll back the state
 After a transaction rollback, the persistence context must be discarded, and the state of its entities must be assumed inconsistent with the state held by the database.
 ====
 
+The interface link:{doc-javadoc-url}org/hibernate/Transaction.html[`Transaction`] extends `EntityTransaction` with some additional operations, including the ability to register transaction completion callbacks.
+
 [[persistence-operations]]
 === Operations on the persistence context
 
@@ -743,13 +745,13 @@ session.getTransaction().commit();
 | `ALWAYS` | | Flush before transaction commit, and before execution of every query
 |===
 
-A second way to reduce the cost of flushing is to load entities in _read-only_ mode:
+A second way to reduce the cost of flushing is to load entities in link:{doc-javadoc-url}org/hibernate/Session.html#setDefaultReadOnly(boolean)[_read-only_ mode]:
 
 - `Session.setDefaultReadOnly(true)` specifies that all entities loaded by a given session should be loaded in read-only mode by default,
 - `SelectionQuery.setReadOnly(true)` specifies that every entity returned by a given query should be loaded in read-only mode, and
 - `Session.setReadOnly(Object, true)` specifies that a given entity already loaded by the session should be switched to read-only mode.
 
-Hibernate's `ReadOnlyMode` is a custom `FindOption`:
+Hibernate's link:{doc-javadoc-url}org/hibernate/ReadOnlyMode.html[`ReadOnlyMode`] is a custom `FindOption`:
 
 [source,java]
 ----

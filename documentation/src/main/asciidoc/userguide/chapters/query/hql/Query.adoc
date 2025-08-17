@@ -52,6 +52,8 @@ include::{example-dir-model}/PhoneType.java[tags=hql-examples-domain-model-examp
 
 include::{example-dir-model}/Call.java[tags=hql-examples-domain-model-example]
 
+include::{example-dir-model}/Account.java[tags=hql-examples-domain-model-example]
+
 include::{example-dir-model}/Payment.java[tags=hql-examples-domain-model-example]
 
 include::{example-dir-model}/CreditCardPayment.java[tags=hql-examples-domain-model-example]
@@ -452,7 +454,7 @@ See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hi
 [[hql-read-only-entities]]
 ==== Querying for read-only entities
 
-As explained in <<chapters/domain/immutability.adoc#entity-immutability,entity immutability>>, fetching entities in read-only mode is more efficient than fetching entities whose state changes might need to be written to the database.
+As explained in <<chapters/domain/immutability.adoc#mutability-entity,entity immutability>>, fetching entities in read-only mode is more efficient than fetching entities whose state changes might need to be written to the database.
 Fortunately, even mutable entities may be fetched in read-only mode, with the benefit of reduced memory footprint and of a faster flushing process.
 
 Read-only entities are skipped by the dirty checking mechanism as illustrated by the following example:
@@ -476,11 +478,25 @@ In this example, no SQL `UPDATE` was executed.
 The method `Query#setReadOnly()` is an alternative to using a Jakarta Persistence query hint:
 
 [[hql-read-only-entities-native-example]]
-.Read-only entities native query example
+.Read-only entities - native - query example
 ====
 [source, java, indent=0]
 ----
 include::{example-dir-query}/HQLTest.java[tags=hql-read-only-entities-native-example]
+----
+====
+
+[WARNING]
+====
+When a parent entity is in a **read-only state**, operations are still cascaded to its child associations. For example, adding a new child to a collection on a read-only parent will result in the child entity being persisted. If this behavior is not desired, the parent entity needs to be evicted from the session before making modifications.
+====
+
+[[hql-read-only-entities-native-cascade-to-child-example]]
+.Read-only entities - native, cascade to child - query example
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/HQLTest.java[tags=hql-read-only-entities-native-cascade-to-child-example]
 ----
 ====
 

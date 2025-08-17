@@ -1134,6 +1134,11 @@ Additionally, the `CascadeType.ALL` will propagate any Hibernate-specific operat
 `REPLICATE`:: cascades the entity replicate operation.
 `LOCK`:: cascades the entity lock operation.
 
+[WARNING]
+====
+When a parent entity is in a **read-only state**, operations are still cascaded to its child associations. For example, adding a new child to a collection on a read-only parent will result in the child entity being persisted. If this behavior is not desired, the parent entity needs to be evicted from the session before making modifications.
+====
+
 The following examples will explain some of the aforementioned cascade operations using the following entities:
 
 [source, java, indent=0]

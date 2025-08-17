@@ -9,9 +9,11 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import jakarta.persistence.FlushModeType;
@@ -3102,6 +3104,76 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			.getResultList();
 			//end::hql-read-only-entities-native-example[]
 		});
+	}
+
+	@Test
+	public void test_hql_read_only_entities_native_cascade_to_child_example() {
+		AtomicReference<Long> cleanupAboveCallId = new AtomicReference<>();
+
+		doInJPA(
+				this::entityManagerFactory, entityManager -> {
+					//tag::hql-read-only-entities-native-cascade-to-child-example[]
+					Phone phone = (Phone) entityManager.createQuery(
+									"select p " +
+											"from Phone p " +
+											"where p.number = :phoneNumber ",
+									Phone.class
+							)
+							.setParameter( "phoneNumber", "123-456-7890" )
+							.unwrap( org.hibernate.query.Query.class )
+							.setReadOnly( true )
+							.list()
+							.get( 0 );
+					Call call = new Call();
+					call.setPhone( phone );
+					call.setDuration( 20 );
+					call.setTimestamp( LocalDateTime.of( 2000, 1, 1, 20, 0, 0 ) );
+					//end::hql-read-only-entities-native-cascade-to-child-example[]
+					cleanupAboveCallId.set(
+							phone.getCalls().stream().max( Comparator.comparing( Call::getId ) ).get().getId() );
+					//tag::hql-read-only-entities-native-cascade-to-child-example[]
+					phone.getCalls().add( call );
+					// The new Call child entity will be persisted during a transaction commit!
+					//end::hql-read-only-entities-native-cascade-to-child-example[]
+					assertEquals( 3, phone.getCalls().size() );
+				}
+		);
+
+		doInJPA(
+				this::entityManagerFactory, entityManager -> {
+					Phone phone = (Phone) entityManager.createQuery(
+									"select p " +
+											"from Phone p " +
+											"where p.number = :phoneNumber ",
+									Phone.class
+							)
+							.setParameter( "phoneNumber", "123-456-7890" )
+							.unwrap( org.hibernate.query.Query.class )
+							.setReadOnly( true )
+							.list()
+							.get( 0 );
+					assertEquals( 3, phone.getCalls().size() );
+					phone.getCalls().removeIf( call -> call.getId() > cleanupAboveCallId.get() );
+					assertEquals( 2, phone.getCalls().size() );
+				}
+		);
+
+		doInJPA(
+				this::entityManagerFactory, entityManager -> {
+					Phone phone = (Phone) entityManager.createQuery(
+									"select p " +
+											"from Phone p " +
+											"where p.number = :phoneNumber ",
+									Phone.class
+							)
+							.setParameter( "phoneNumber", "123-456-7890" )
+							.unwrap( org.hibernate.query.Query.class )
+							.setReadOnly( true )
+							.list()
+							.get( 0 );
+					assertEquals( 2, phone.getCalls().size() );
+				}
+		);
 	}
 
 	@Test

@@ -1009,8 +1009,14 @@ Indeed, the usual practice is to avoid having transactions that span user intera
 That said, there _is_ also a place for pessimistic locks, which can sometimes reduce the probability of transaction rollbacks.
 
 Therefore, the `find()`, `lock()`, and `refresh()` methods of the session accept an optional link:{doc-javadoc-url}/org/hibernate/LockMode.html[`LockMode`].
-We can also specify a `LockMode` for a query.
-The lock mode can be used to request a pessimistic lock, or to customize the behavior of optimistic locking:
+Here's the simplest way to execute a `select ... for update` in Hibernate:
+
+[source,java]
+Book book = session.find(Book.class, isbn, LockMode.PESSIMISTIC_WRITE);
+
+We can also link:{doc-javadoc-url}/org/hibernate/query/SelectionQuery.html#setLockMode(jakarta.persistence.LockModeType)[specify] a `LockMode` for a query.
+
+A lock mode can be used to request a pessimistic lock, or to customize the behavior of optimistic locking:
 
 .Optimistic and pessimistic lock modes
 [%breakable,cols="26,~"]
@@ -1047,6 +1053,17 @@ JPA has its own `LockModeType`, which enumerates most of the same modes.
 However, JPA's `LockModeType.READ` is a synonym for `OPTIMISTIC` -- it's not the same as Hibernate's `LockMode.READ`.
 Similarly, `LockModeType.WRITE` is a synonym for `OPTIMISTIC_FORCE_INCREMENT` and is not the same as `LockMode.WRITE`.
 ====
+
+A pessimistic lock request may be combined with an explicit `Timeout`.
+
+[source,java]
+session.lock(book, LockMode.PESSIMISTIC_WRITE, Timeout.seconds(2))
+
+The interface link:{doc-javadoc-url}/org/hibernate/Timeouts.html[`Timeouts`] defines some special instances of `Timeout` which may be used to request use of link:{doc-javadoc-url}/org/hibernate/Timeouts.html#NO_WAIT[`for update nowait`] or link:{doc-javadoc-url}/org/hibernate/Timeouts.html#SKIP_LOCKED[`for update skip locked`] on databases which support these options.
+
+[source,java]
+session.lock(book, LockMode.PESSIMISTIC_WRITE, Timeouts.NO_WAIT)
+
 
 [[statistics]]
 === Collecting statistics

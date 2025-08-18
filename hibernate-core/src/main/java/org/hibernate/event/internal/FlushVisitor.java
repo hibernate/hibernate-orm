@@ -32,7 +32,7 @@ public class FlushVisitor extends AbstractVisitor {
 			return null;
 		}
 		else if ( collection != null ) {
-			final EventSource session = getSession();
+			final var session = getSession();
 			final PersistentCollection<?> persistentCollection;
 			if ( type.hasHolder() ) {
 				persistentCollection = session.getPersistenceContextInternal().getCollectionHolder( collection );

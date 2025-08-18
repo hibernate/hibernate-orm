@@ -128,12 +128,13 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 			for ( var entry : managedToMergeEntitiesXref.entrySet() ) {
 				final Object managedEntity = entry.getKey();
 				final Set<Object> mergeEntities = entry.getValue();
-				final StringBuilder sb = new StringBuilder( "Details: merged ")
-						.append( mergeEntities.size() )
-						.append( " representations of the same entity " )
-						.append( infoString( session.getEntityName( managedEntity ),
-										session.getIdentifier( managedEntity ) ) )
-						.append( " being merged: " );
+				final var sb =
+						new StringBuilder( "Details: merged ")
+								.append( mergeEntities.size() )
+								.append( " representations of the same entity " )
+								.append( infoString( session.getEntityName( managedEntity ),
+												session.getIdentifier( managedEntity ) ) )
+								.append( " being merged: " );
 				boolean first = true;
 				for ( Object mergeEntity : mergeEntities ) {
 					if ( first ) {

@@ -20,7 +20,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.LazyInitializer;
 
 import static org.hibernate.event.internal.EntityState.getEntityState;
 import static org.hibernate.pretty.MessageHelper.infoString;
@@ -61,7 +60,7 @@ public class DefaultPersistEventListener
 	@Override
 	public void onPersist(PersistEvent event, PersistContext createCache) throws HibernateException {
 		final Object object = event.getObject();
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		final var lazyInitializer = HibernateProxy.extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
 			if ( lazyInitializer.isUninitialized() ) {
 				if ( lazyInitializer.getSession() != event.getSession() ) {
@@ -78,8 +77,8 @@ public class DefaultPersistEventListener
 	}
 
 	private void persist(PersistEvent event, PersistContext createCache, Object entity) {
-		final EventSource source = event.getSession();
-		final EntityEntry entityEntry = source.getPersistenceContextInternal().getEntry( entity );
+		final var source = event.getSession();
+		final var entityEntry = source.getPersistenceContextInternal().getEntry( entity );
 		final String entityName = entityName( event, entity, entityEntry );
 		switch ( getEntityState( entity, entityName, entityEntry, source, true ) ) {
 			case DETACHED:
@@ -120,7 +119,7 @@ public class DefaultPersistEventListener
 
 	protected void entityIsPersistent(PersistEvent event, PersistContext createCache) {
 		LOG.trace( "Ignoring persistent instance" );
-		final EventSource source = event.getSession();
+		final var source = event.getSession();
 		//TODO: check that entry.getIdentifier().equals(requestedId)
 		final Object entity = source.getPersistenceContextInternal().unproxy( event.getObject() );
 		if ( createCache.add( entity ) ) {
@@ -142,7 +141,7 @@ public class DefaultPersistEventListener
 	 */
 	protected void entityIsTransient(PersistEvent event, PersistContext createCache) {
 		LOG.trace( "Persisting transient instance" );
-		final EventSource source = event.getSession();
+		final var source = event.getSession();
 		final Object entity = source.getPersistenceContextInternal().unproxy( event.getObject() );
 		if ( createCache.add( entity ) ) {
 			saveWithGeneratedId( entity, event.getEntityName(), createCache, source, false );
@@ -150,9 +149,9 @@ public class DefaultPersistEventListener
 	}
 
 	private void entityIsDeleted(PersistEvent event, PersistContext createCache) {
-		final EventSource source = event.getSession();
+		final var source = event.getSession();
 		final Object entity = source.getPersistenceContextInternal().unproxy( event.getObject() );
-		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
+		final var persister = source.getEntityPersister( event.getEntityName(), entity );
 		if ( LOG.isTraceEnabled() ) {
 			final Object id = persister.getIdentifier( entity, source );
 			LOG.trace( "Unscheduling entity deletion: " + infoString( persister, id, source.getFactory() ) );

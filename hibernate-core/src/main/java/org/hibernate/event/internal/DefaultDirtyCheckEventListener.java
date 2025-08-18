@@ -9,7 +9,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityHolder;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.DirtyCheckEvent;
 import org.hibernate.event.spi.DirtyCheckEventListener;
@@ -38,8 +37,8 @@ public class DefaultDirtyCheckEventListener implements DirtyCheckEventListener {
 
 	@Override
 	public void onDirtyCheck(DirtyCheckEvent event) throws HibernateException {
-		final EventSource session = event.getSession();
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final var session = event.getSession();
+		final var persistenceContext = session.getPersistenceContext();
 		final var holdersByKey = persistenceContext.getEntityHoldersByKey();
 		if ( holdersByKey != null ) {
 			for ( var entry : holdersByKey.entrySet() ) {
@@ -61,7 +60,7 @@ public class DefaultDirtyCheckEventListener implements DirtyCheckEventListener {
 	}
 
 	private static boolean isEntityDirty(EntityHolder holder, EventSource session) {
-		final EntityEntry entityEntry = holder.getEntityEntry();
+		final var entityEntry = holder.getEntityEntry();
 		final Status status = entityEntry.getStatus();
 		return switch ( status ) {
 			case GONE, READ_ONLY -> false;

@@ -12,8 +12,6 @@ import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
@@ -50,8 +48,8 @@ public class DefaultReplicateEventListener
 	 */
 	@Override
 	public void onReplicate(ReplicateEvent event) {
-		final EventSource source = event.getSession();
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final var source = event.getSession();
+		final var persistenceContext = source.getPersistenceContextInternal();
 		if ( persistenceContext.reassociateIfUninitializedProxy( event.getObject() ) ) {
 			LOG.trace( "Uninitialized proxy passed to replicate()" );
 		}
@@ -68,8 +66,8 @@ public class DefaultReplicateEventListener
 	}
 
 	private void doReplicate(ReplicateEvent event, EventSource source, Object entity) {
-		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity);
-		final ReplicationMode replicationMode = event.getReplicationMode();
+		final var persister = source.getEntityPersister( event.getEntityName(), entity);
+		final var replicationMode = event.getReplicationMode();
 
 		// get the id from the object - we accept almost anything at all,
 		// except null (that is, even ids which look like they're unsaved)
@@ -110,7 +108,7 @@ public class DefaultReplicateEventListener
 							+ infoString( persister, id, event.getFactory() ) );
 			}
 			final boolean regenerate = persister.isIdentifierAssignedByInsert(); // prefer re-generation of identity!
-			final EntityKey key = regenerate ? null : source.generateEntityKey( id, persister );
+			final var key = regenerate ? null : source.generateEntityKey( id, persister );
 			performSaveOrReplicate( entity, key, persister, regenerate, replicationMode, source, false );
 		}
 	}
@@ -128,7 +126,7 @@ public class DefaultReplicateEventListener
 			Type[] types,
 			EventSource source) {
 		//TODO: we use two visitors here, inefficient!
-		OnReplicateVisitor visitor = new OnReplicateVisitor( source, id, entity, false );
+		final var visitor = new OnReplicateVisitor( source, id, entity, false );
 		visitor.processEntityPropertyValues( values, types );
 		return super.visitCollectionsBeforeSave( entity, id, values, types, source );
 	}
@@ -182,7 +180,7 @@ public class DefaultReplicateEventListener
 			EntityPersister persister,
 			ReplicationMode replicationMode,
 			EventSource source) {
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final var persistenceContext = source.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
 			Cascade.cascade(

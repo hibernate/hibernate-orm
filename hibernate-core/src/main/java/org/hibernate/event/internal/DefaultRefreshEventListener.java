@@ -15,11 +15,9 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
-import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.event.spi.RefreshEvent;
@@ -27,7 +25,6 @@ import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
@@ -59,8 +56,8 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 	 */
 	@Override
 	public void onRefresh(RefreshEvent event, RefreshContext refreshedAlready) {
-		final EventSource source = event.getSession();
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final var source = event.getSession();
+		final var persistenceContext = source.getPersistenceContextInternal();
 		final Object object = event.getObject();
 		if ( persistenceContext.reassociateIfUninitializedProxy( object ) ) {
 			handleUninitializedProxy( event, refreshedAlready, source, object, persistenceContext );
@@ -87,8 +84,8 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		// refresh of the parent will take care of initializing the lazy entity and setting the
 		// correct lock. This is needed only when the refresh is called directly on a lazy entity.
 		if ( refreshedAlready.isEmpty() ) {
-			final LazyInitializer lazyInitializer = extractLazyInitializer( object );
-			final EntityPersister persister = getPersister( lazyInitializer, source, object, isTransient );
+			final var lazyInitializer = extractLazyInitializer( object );
+			final var persister = getPersister( lazyInitializer, source, object, isTransient );
 			refresh(
 					event,
 					null,
@@ -131,9 +128,9 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 	}
 
 	private static void refresh(RefreshEvent event, RefreshContext refreshedAlready, Object object) {
-		final EventSource source = event.getSession();
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
-		final EntityEntry entry = persistenceContext.getEntry( object );
+		final var source = event.getSession();
+		final var persistenceContext = source.getPersistenceContextInternal();
+		final var entry = persistenceContext.getEntry( object );
 
 		final EntityPersister persister;
 		final Object id;
@@ -328,9 +325,9 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 	private static void evictCachedCollections(Type[] types, Object id, EventSource source)
 			throws HibernateException {
-		final SessionFactoryImplementor factory = source.getFactory();
-		final ActionQueue actionQueue = source.getActionQueue();
-		final MappingMetamodelImplementor metamodel = factory.getMappingMetamodel();
+		final var factory = source.getFactory();
+		final var actionQueue = source.getActionQueue();
+		final var metamodel = factory.getMappingMetamodel();
 		for ( Type type : types ) {
 			if ( type instanceof CollectionType collectionType ) {
 				final CollectionPersister collectionPersister =

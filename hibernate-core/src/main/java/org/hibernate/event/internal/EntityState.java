@@ -6,13 +6,10 @@ package org.hibernate.event.internal;
 
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.event.internal.EventUtil.getLoggableName;
 
@@ -69,11 +66,11 @@ public enum EntityState {
 			LOG.trace( "Detached instance of: " + getLoggableName( entityName, entity ) );
 		}
 
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final var persistenceContext = source.getPersistenceContextInternal();
 		if ( persistenceContext.containsDeletedUnloadedEntityKeys() ) {
-			final EntityPersister entityPersister = source.getEntityPersister( entityName, entity );
+			final var entityPersister = source.getEntityPersister( entityName, entity );
 			final Object identifier = entityPersister.getIdentifier( entity, source );
-			final EntityKey entityKey = source.generateEntityKey( identifier, entityPersister );
+			final var entityKey = source.generateEntityKey( identifier, entityPersister );
 			if ( persistenceContext.containsDeletedUnloadedEntityKey( entityKey ) ) {
 				return EntityState.DELETED;
 			}

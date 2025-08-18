@@ -5,8 +5,6 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CollectionEntry;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
@@ -66,8 +64,8 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 	}
 
 	protected static CollectionPersister getLoadedCollectionPersister( PersistentCollection<?> collection, EventSource source ) {
-		CollectionEntry ce = source.getPersistenceContextInternal().getCollectionEntry( collection );
-		return ce == null ? null : ce.getLoadedPersister();
+		final var entry = source.getPersistenceContextInternal().getCollectionEntry( collection );
+		return entry == null ? null : entry.getLoadedPersister();
 	}
 
 	protected static Object getLoadedOwnerOrNull( PersistentCollection<?> collection, EventSource source ) {
@@ -79,7 +77,7 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 	}
 
 	protected static Object getOwnerIdOrNull(Object owner, EventSource source ) {
-		final EntityEntry ownerEntry = source.getPersistenceContextInternal().getEntry( owner );
+		final var ownerEntry = source.getPersistenceContextInternal().getEntry( owner );
 		return ownerEntry == null ? null : ownerEntry.getId();
 	}
 
@@ -88,7 +86,7 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 			Object affectedOwner,
 			EventSource source ) {
 		if ( affectedOwner != null ) {
-			final EntityEntry entry =
+			final var entry =
 					source.getPersistenceContextInternal()
 							.getEntry( affectedOwner );
 			if ( entry != null && entry.getEntityName() != null ) {
@@ -96,15 +94,12 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 			}
 		}
 
-		if ( collectionPersister != null ) {
-			return collectionPersister.getOwnerEntityPersister().getEntityName();
-		}
-		else {
-			// collectionPersister should not be null,
-			// but we don't want to throw an exception
-			// if it is null
-			return null;
-		}
+		return collectionPersister != null
+				? collectionPersister.getOwnerEntityPersister().getEntityName()
+				// collectionPersister should not be null,
+				// but we don't want to throw an exception
+				// if it is null
+				: null;
 	}
 
 	public PersistentCollection<?> getCollection() {

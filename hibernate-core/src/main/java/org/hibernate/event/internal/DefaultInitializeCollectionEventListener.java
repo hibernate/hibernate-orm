@@ -6,7 +6,6 @@ package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.InitializeCollectionEvent;
@@ -15,7 +14,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.results.internal.ResultsHelper;
-import org.hibernate.stat.spi.StatisticsImplementor;
 
 import static org.hibernate.collection.spi.AbstractPersistentCollection.checkPersister;
 import static org.hibernate.loader.internal.CacheLoadHelper.initializeCollectionFromCache;
@@ -32,16 +30,16 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 	 */
 	@Override
 	public void onInitializeCollection(InitializeCollectionEvent event) throws HibernateException {
-		final PersistentCollection<?> collection = event.getCollection();
-		final SessionImplementor source = event.getSession();
+		final var collection = event.getCollection();
+		final var source = event.getSession();
 
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
-		final CollectionEntry ce = persistenceContext.getCollectionEntry( collection );
+		final var persistenceContext = source.getPersistenceContextInternal();
+		final var ce = persistenceContext.getCollectionEntry( collection );
 		if ( ce == null ) {
 			throw new HibernateException( "Collection was evicted" );
 		}
 		if ( !collection.wasInitialized() ) {
-			final CollectionPersister loadedPersister = ce.getLoadedPersister();
+			final var loadedPersister = ce.getLoadedPersister();
 			checkPersister(collection, loadedPersister);
 			final Object loadedKey = ce.getLoadedKey();
 			if ( LOG.isTraceEnabled() ) {
@@ -59,7 +57,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 				handlePotentiallyEmptyCollection( collection, persistenceContext, loadedKey, loadedPersister );
 				LOG.trace( "Collection initialized" );
 
-				final StatisticsImplementor statistics = source.getFactory().getStatistics();
+				final var statistics = source.getFactory().getStatistics();
 				if ( statistics.isStatisticsEnabled() ) {
 					statistics.fetchCollection( loadedPersister.getRole() );
 				}

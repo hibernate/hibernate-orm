@@ -112,7 +112,7 @@ public class EntityDeleteAction extends EntityAction {
 					.removeLocalResolution(
 							getId(),
 							naturalIdMapping.extractNaturalIdFromEntityState( state ),
-							getPersister()
+							persister
 					);
 		}
 
@@ -139,20 +139,21 @@ public class EntityDeleteAction extends EntityAction {
 			postDeleteUnloaded( id, persister, session, ck );
 		}
 
-		final var statistics = getSession().getFactory().getStatistics();
+		final var statistics = session.getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() && !veto ) {
-			statistics.deleteEntity( getPersister().getEntityName() );
+			statistics.deleteEntity( persister.getEntityName() );
 		}
 	}
 
 	protected Object getCurrentVersion() {
-		return getPersister().isVersionPropertyGenerated()
-						// skip if we're deleting an unloaded proxy, no need for the version
-						&& isInstanceLoaded()
+		final var persister = getPersister();
+		return persister.isVersionPropertyGenerated()
+			// skip if we're deleting an unloaded proxy, no need for the version
+			&& isInstanceLoaded()
 				// we need to grab the version value from the entity, otherwise
 				// we have issues with generated-version entities that may have
 				// multiple actions queued during the same flush
-				? getPersister().getVersion( getInstance() )
+				? persister.getVersion( getInstance() )
 				: version;
 	}
 
@@ -287,13 +288,14 @@ public class EntityDeleteAction extends EntityAction {
 	protected void removeCacheItem(Object ck) {
 		final var persister = getPersister();
 		if ( persister.canWriteToCache() ) {
-			persister.getCacheAccessStrategy().remove( getSession(), ck );
+			final var cache = persister.getCacheAccessStrategy();
+			cache.remove( getSession(), ck );
 
 			final var statistics = getSession().getFactory().getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.entityCacheRemove(
 						StatsHelper.getRootEntityRole( persister ),
-						getPersister().getCacheAccessStrategy().getRegion().getName()
+						cache.getRegion().getName()
 				);
 			}
 		}

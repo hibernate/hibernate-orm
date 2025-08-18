@@ -87,7 +87,8 @@ public class EntityUpdateAction extends EntityAction {
 			previousNaturalIdValues = null;
 		}
 		else {
-			previousNaturalIdValues = determinePreviousNaturalIdValues( persister, naturalIdMapping, id, previousState, session );
+			previousNaturalIdValues =
+					determinePreviousNaturalIdValues( persister, naturalIdMapping, id, previousState, session );
 			session.getPersistenceContextInternal().getNaturalIdResolutions().manageLocalResolution(
 					id,
 					naturalIdMapping.extractNaturalIdFromEntityState( state ),
@@ -223,7 +224,7 @@ public class EntityUpdateAction extends EntityAction {
 				if ( put && statistics.isStatisticsEnabled() ) {
 					statistics.entityCachePut(
 							StatsHelper.getRootEntityRole( persister ),
-							getPersister().getCacheAccessStrategy().getRegion().getName()
+							persister.getCacheAccessStrategy().getRegion().getName()
 					);
 				}
 			}
@@ -439,18 +440,19 @@ public class EntityUpdateAction extends EntityAction {
 			put = cache.afterUpdate( session, ck, cacheEntry, nextVersion, previousVersion, lock );
 		}
 		finally {
+			final var persister = getPersister();
 			eventMonitor.completeCachePutEvent(
 					cachePutEvent,
 					session,
 					cache,
-					getPersister(),
+					persister,
 					put,
 					EventMonitor.CacheActionDescription.ENTITY_AFTER_UPDATE
 			);
 			final var statistics = session.getFactory().getStatistics();
 			if ( put && statistics.isStatisticsEnabled() ) {
 				statistics.entityCachePut(
-						StatsHelper.getRootEntityRole( getPersister() ),
+						StatsHelper.getRootEntityRole( persister ),
 						cache.getRegion().getName()
 				);
 			}

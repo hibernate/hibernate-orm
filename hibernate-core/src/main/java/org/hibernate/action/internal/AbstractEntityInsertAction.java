@@ -127,24 +127,27 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 */
 	public final void makeEntityManaged() {
 		nullifyTransientReferencesIfNotAlready();
-		final Object version = getVersion( getState(), getPersister() );
+		final var persister = getPersister();
+		final var key = getEntityKey();
+		final Object[] state = getState();
+		final Object version = getVersion( state, persister );
 		final var persistenceContext = getSession().getPersistenceContextInternal();
-		final var entityHolder = persistenceContext.addEntityHolder( getEntityKey(), getInstance() );
+		final var entityHolder = persistenceContext.addEntityHolder( key, getInstance() );
 		final var entityEntry = persistenceContext.addEntry(
 				getInstance(),
-				getPersister().isMutable() ? Status.MANAGED : Status.READ_ONLY,
-				getState(),
+				persister.isMutable() ? Status.MANAGED : Status.READ_ONLY,
+				state,
 				getRowId(),
-				getEntityKey().getIdentifier(),
+				key.getIdentifier(),
 				version,
 				LockMode.WRITE,
 				isExecuted,
-				getPersister(),
+				persister,
 				isVersionIncrementDisabled
 		);
 		entityHolder.setEntityEntry( entityEntry );
 		if ( isEarlyInsert() ) {
-			addCollectionsByKeyToPersistenceContext( persistenceContext, getState() );
+			addCollectionsByKeyToPersistenceContext( persistenceContext, state );
 		}
 	}
 
@@ -270,7 +273,8 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 * @param generatedId The generated entity identifier
 	 */
 	public void handleNaturalIdPostSaveNotifications(Object generatedId) {
-		final var naturalIdMapping = getPersister().getNaturalIdMapping();
+		final var persister = getPersister();
+		final var naturalIdMapping = persister.getNaturalIdMapping();
 		if ( naturalIdMapping != null ) {
 			final Object naturalIdValues = naturalIdMapping.extractNaturalIdFromEntityState( state );
 			final var resolutions = getNaturalIdResolutions();
@@ -279,7 +283,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 				resolutions.manageLocalResolution(
 						generatedId,
 						naturalIdValues,
-						getPersister(),
+						persister,
 						CachedNaturalIdValueSource.INSERT
 				);
 			}
@@ -288,7 +292,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 					generatedId,
 					naturalIdValues,
 					null,
-					getPersister(),
+					persister,
 					CachedNaturalIdValueSource.INSERT
 			);
 		}

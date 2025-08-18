@@ -116,7 +116,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 			}
 			entry.postInsert( getState() );
 			handleGeneratedProperties( entry, generatedValues, persistenceContext );
-			persistenceContext.registerInsertedKey( persister, getId() );
+			persistenceContext.registerInsertedKey( persister, id );
 			addCollectionsByKeyToPersistenceContext( persistenceContext, getState() );
 		}
 		putCacheIfNecessary();
@@ -136,16 +136,17 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 			GeneratedValues generatedValues,
 			PersistenceContext persistenceContext) {
 		final var persister = getPersister();
+		final Object[] state = getState();
 		if ( persister.hasInsertGeneratedProperties() ) {
 			final Object instance = getInstance();
-			persister.processInsertGeneratedProperties( getId(), instance, getState(), generatedValues, getSession() );
+			persister.processInsertGeneratedProperties( getId(), instance, state, generatedValues, getSession() );
 			if ( persister.isVersionPropertyGenerated() ) {
-				version = Versioning.getVersion( getState(), persister );
+				version = Versioning.getVersion( state, persister );
 			}
-			entry.postUpdate( instance, getState(), version );
+			entry.postUpdate( instance, state, version );
 		}
 		else if ( persister.isVersionPropertyGenerated() ) {
-			version = Versioning.getVersion( getState(), persister );
+			version = Versioning.getVersion( state, persister );
 			entry.postInsert( version );
 		}
 		// Process row-id values when available early by replacing the entity entry

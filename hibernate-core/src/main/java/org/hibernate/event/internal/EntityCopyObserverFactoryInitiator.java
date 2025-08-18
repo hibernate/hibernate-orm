@@ -16,6 +16,8 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
+import static org.hibernate.cfg.AvailableSettings.MERGE_ENTITY_COPY_OBSERVER;
+
 /**
  * Looks for the configuration property {@value AvailableSettings#MERGE_ENTITY_COPY_OBSERVER} and registers
  * the matching {@link EntityCopyObserverFactory} based on the configuration observerClass.
@@ -69,7 +71,7 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 	}
 
 	private Object getConfigurationValue(final Map<?,?> configurationValues) {
-		final Object value = configurationValues.get( AvailableSettings.MERGE_ENTITY_COPY_OBSERVER );
+		final Object value = configurationValues.get( MERGE_ENTITY_COPY_OBSERVER );
 		if ( value == null ) {
 			return EntityCopyNotAllowedObserver.SHORT_NAME; //default
 		}

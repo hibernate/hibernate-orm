@@ -5,13 +5,8 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.event.monitor.spi.EventMonitor;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.FlushEvent;
 import org.hibernate.event.spi.FlushEventListener;
-import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * Defines the default flush event listeners used by hibernate for
@@ -26,12 +21,12 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 	 * @param event The flush event to be handled.
 	 */
 	public void onFlush(FlushEvent event) throws HibernateException {
-		final EventSource source = event.getSession();
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
-		final EventMonitor eventMonitor = source.getEventMonitor();
+		final var source = event.getSession();
+		final var persistenceContext = source.getPersistenceContextInternal();
+		final var eventMonitor = source.getEventMonitor();
 		if ( persistenceContext.getNumberOfManagedEntities() > 0
 				|| persistenceContext.getCollectionEntriesSize() > 0 ) {
-			final DiagnosticEvent flushEvent = eventMonitor.beginFlushEvent();
+			final var flushEvent = eventMonitor.beginFlushEvent();
 			try {
 				source.getEventListenerManager().flushStart();
 
@@ -49,7 +44,7 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 
 			postPostFlush( source );
 
-			final StatisticsImplementor statistics = source.getFactory().getStatistics();
+			final var statistics = source.getFactory().getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.flush();
 			}

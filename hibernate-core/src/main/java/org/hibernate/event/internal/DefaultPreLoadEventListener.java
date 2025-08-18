@@ -6,7 +6,6 @@ package org.hibernate.event.internal;
 
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
-import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Called before injecting property values into a newly
@@ -18,7 +17,7 @@ public class DefaultPreLoadEventListener implements PreLoadEventListener {
 
 	@Override
 	public void onPreLoad(PreLoadEvent event) {
-		final EntityPersister persister = event.getPersister();
+		final var persister = event.getPersister();
 		event.getSession().getInterceptor().onLoad(
 				event.getEntity(),
 				event.getId(),

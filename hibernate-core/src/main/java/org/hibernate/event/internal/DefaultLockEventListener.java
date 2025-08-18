@@ -12,12 +12,8 @@ import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.AbstractEvent;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LockEvent;
 import org.hibernate.event.spi.LockEventListener;
 import org.hibernate.internal.CoreMessageLogger;
@@ -58,23 +54,23 @@ public class DefaultLockEventListener implements LockEventListener {
 			throw new NullPointerException( "attempted to lock null" );
 		}
 
-		if ( event.getLockMode() == LockMode.WRITE ) {
+		final var lockMode = event.getLockMode();
+		if ( lockMode == LockMode.WRITE ) {
 			throw new HibernateException( "Invalid lock mode for lock()" );
 		}
-
-		if ( event.getLockMode() == LockMode.UPGRADE_SKIPLOCKED ) {
+		if ( lockMode == LockMode.UPGRADE_SKIPLOCKED ) {
 			LOG.explicitSkipLockedLockCombo();
 		}
 
-		final SessionImplementor source = event.getSession();
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final var source = event.getSession();
+		final var persistenceContext = source.getPersistenceContextInternal();
 		final Object entity = persistenceContext.unproxyAndReassociate( event.getObject() );
 		//TODO: if object was an uninitialized proxy, this is inefficient,
 		//      resulting in two SQL selects
 
-		EntityEntry entry = persistenceContext.getEntry( entity );
+		var entry = persistenceContext.getEntry( entity );
 		if ( entry == null ) {
-			final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
+			final var persister = source.getEntityPersister( event.getEntityName(), entity );
 			final Object id = persister.getIdentifier( entity, source );
 			if ( !ForeignKeys.isNotTransient( event.getEntityName(), entity, Boolean.FALSE, source ) ) {
 				throw new TransientObjectException( "Cannot lock unsaved transient instance of entity '"
@@ -88,8 +84,8 @@ public class DefaultLockEventListener implements LockEventListener {
 	}
 
 	private void cascadeOnLock(LockEvent event, EntityPersister persister, Object entity) {
-		final EventSource source = event.getSession();
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final var source = event.getSession();
+		final var persistenceContext = source.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
 			Cascade.cascade(
@@ -123,9 +119,9 @@ public class DefaultLockEventListener implements LockEventListener {
 			LOG.trace( "Reassociating transient instance: " + infoString( persister, id, event.getFactory() ) );
 		}
 
-		final EventSource source = event.getSession();
-		final EntityKey key = source.generateEntityKey( id, persister );
-		final PersistenceContext persistenceContext = source.getPersistenceContext();
+		final var source = event.getSession();
+		final var key = source.generateEntityKey( id, persister );
+		final var persistenceContext = source.getPersistenceContext();
 
 		persistenceContext.checkUniqueness( key, object );
 
@@ -139,7 +135,7 @@ public class DefaultLockEventListener implements LockEventListener {
 				source
 		);
 
-		final EntityEntry newEntry = persistenceContext.addEntity(
+		final var newEntry = persistenceContext.addEntity(
 				object,
 				persister.isMutable() ? Status.MANAGED : Status.READ_ONLY,
 				values,

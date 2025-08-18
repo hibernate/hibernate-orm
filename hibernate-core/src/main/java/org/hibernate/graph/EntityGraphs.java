@@ -321,7 +321,7 @@ public final class EntityGraphs {
 			return false;
 		}
 		for ( AttributeNode<?> aNode : aNodes ) {
-			String attributeName = aNode.getAttributeName();
+			final String attributeName = aNode.getAttributeName();
 			AttributeNode<?> bNode = null;
 			for ( AttributeNode<?> bCandidate : bNodes ) {
 				if ( attributeName.equals( bCandidate.getAttributeName() ) ) {

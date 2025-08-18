@@ -15,7 +15,6 @@ import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.CollectionEntry;
@@ -24,7 +23,6 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.FlushEntityEvent;
 import org.hibernate.event.spi.FlushEntityEventListener;
@@ -63,8 +61,8 @@ public abstract class AbstractFlushingEventListener {
 	 */
 	protected void flushEverythingToExecutions(FlushEvent event) throws HibernateException {
 		LOG.trace( "Flushing session" );
-		final EventSource session = event.getSession();
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final var session = event.getSession();
+		final var persistenceContext = session.getPersistenceContextInternal();
 		preFlush( session, persistenceContext );
 		flushEverythingToExecutions( event, persistenceContext, session );
 	}
@@ -98,9 +96,9 @@ public abstract class AbstractFlushingEventListener {
 
 	protected void logFlushResults(FlushEvent event) {
 		if ( LOG.isDebugEnabled() ) {
-			final EventSource session = event.getSession();
-			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-			final ActionQueue actionQueue = session.getActionQueue();
+			final var session = event.getSession();
+			final var persistenceContext = session.getPersistenceContextInternal();
+			final var actionQueue = session.getActionQueue();
 			LOG.debugf(
 					"Flushed: %s insertions, %s updates, %s deletions to %s objects",
 					actionQueue.numberOfInsertions(),
@@ -128,11 +126,11 @@ public abstract class AbstractFlushingEventListener {
 	private void prepareEntityFlushes(EventSource session, PersistenceContext persistenceContext)
 			throws HibernateException {
 		LOG.trace( "Processing flush-time cascades" );
-		final PersistContext context = PersistContext.create();
+		final var context = PersistContext.create();
 		// safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
 		for ( var me : persistenceContext.reentrantSafeEntityEntries() ) {
 //		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
-			final EntityEntry entry = me.getValue();
+			final var entry = me.getValue();
 			if ( flushable( entry ) ) {
 				cascadeOnFlush( session, entry.getPersister(), me.getKey(), context );
 			}
@@ -146,7 +144,7 @@ public abstract class AbstractFlushingEventListener {
 		// persistent when we do the check (I wonder if we could move this
 		// into Nullability, instead of abusing the Cascade infrastructure)
 		for ( var me : persistenceContext.reentrantSafeEntityEntries() ) {
-			final EntityEntry entry = me.getValue();
+			final var entry = me.getValue();
 			if ( checkable( entry ) ) {
 				Cascade.cascade(
 						CascadingActions.CHECK_ON_FLUSH,
@@ -175,7 +173,7 @@ public abstract class AbstractFlushingEventListener {
 
 	private void cascadeOnFlush(EventSource session, EntityPersister persister, Object object, PersistContext anything)
 			throws HibernateException {
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final var persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
 			Cascade.cascade( CascadingActions.PERSIST_ON_FLUSH, CascadePoint.BEFORE_FLUSH, session, persister, object, anything );
@@ -194,7 +192,9 @@ public abstract class AbstractFlushingEventListener {
 		LOG.trace( "Dirty checking collections" );
 		final var collectionEntries = persistenceContext.getCollectionEntries();
 		if ( collectionEntries != null ) {
-			final var identityMap = (InstanceIdentityMap<PersistentCollection<?>, CollectionEntry>) collectionEntries;
+			final var identityMap =
+					(InstanceIdentityMap<PersistentCollection<?>, CollectionEntry>)
+							collectionEntries;
 			for ( var entry : identityMap.toArray() ) {
 				entry.getValue().preFlush( entry.getKey() );
 			}
@@ -212,8 +212,8 @@ public abstract class AbstractFlushingEventListener {
 			throws HibernateException {
 		LOG.trace( "Flushing entities and processing referenced collections" );
 
-		final EventSource source = event.getSession();
-		final EventListenerGroup<FlushEntityEventListener> flushListeners =
+		final var source = event.getSession();
+		final var flushListeners =
 				event.getFactory().getEventListenerGroups().eventListenerGroup_FLUSH_ENTITY;
 
 		// Among other things, updateReachables() recursively loads all
@@ -227,7 +227,7 @@ public abstract class AbstractFlushingEventListener {
 		int eventGenerationId = 0; //Used to double-check the instance reuse won't cause problems
 		for ( var me : entityEntries ) {
 			// Update the status of the object and if necessary, schedule an update
-			final EntityEntry entry = me.getValue();
+			final var entry = me.getValue();
 			final Status status = entry.getStatus();
 			if ( status != Status.LOADING && status != Status.GONE ) {
 				entityEvent = createOrReuseEventInstance( entityEvent, source, me.getKey(), entry );
@@ -276,9 +276,11 @@ public abstract class AbstractFlushingEventListener {
 		}
 		else {
 			count = collectionEntries.size();
-			final var identityMap = (InstanceIdentityMap<PersistentCollection<?>, CollectionEntry>) collectionEntries;
+			final var identityMap =
+					(InstanceIdentityMap<PersistentCollection<?>, CollectionEntry>)
+							collectionEntries;
 			for ( var me : identityMap.toArray() ) {
-				final CollectionEntry ce = me.getValue();
+				final var ce = me.getValue();
 				if ( !ce.isReached() && !ce.isIgnore() ) {
 					processUnreachableCollection( me.getKey(), session );
 				}
@@ -288,8 +290,8 @@ public abstract class AbstractFlushingEventListener {
 		// Schedule updates to collections:
 
 		LOG.trace( "Scheduling collection removes/(re)creates/updates" );
-		final ActionQueue actionQueue = session.getActionQueue();
-		final Interceptor interceptor = session.getInterceptor();
+		final var actionQueue = session.getActionQueue();
+		final var interceptor = session.getInterceptor();
 		persistenceContext.forEachCollectionEntry(
 				(coll, ce) -> {
 					if ( ce.isDorecreate() ) {
@@ -366,8 +368,8 @@ public abstract class AbstractFlushingEventListener {
 		//		during-flush callbacks more leniency in regards to initializing proxies and
 		//		lazy collections during their processing.
 		// For more information, see HHH-2763
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+		final var persistenceContext = session.getPersistenceContextInternal();
+		final var jdbcCoordinator = session.getJdbcCoordinator();
 		try {
 			jdbcCoordinator.flushBeginning();
 			persistenceContext.setFlushing( true );
@@ -398,7 +400,7 @@ public abstract class AbstractFlushingEventListener {
 	protected void postFlush(SessionImplementor session) throws HibernateException {
 		LOG.trace( "Post flush" );
 
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final var persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.clearCollectionsByKey();
 
 		// the database has changed now, so the subselect results need to be invalidated

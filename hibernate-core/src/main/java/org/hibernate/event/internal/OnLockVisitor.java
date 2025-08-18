@@ -6,9 +6,7 @@ package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.CollectionType;
 
 /**
@@ -34,8 +32,8 @@ public class OnLockVisitor extends ReattachVisitor {
 			return null;
 		}
 
-		final SessionImplementor session = getSession();
-		final CollectionPersister persister =
+		final var session = getSession();
+		final var persister =
 				session.getFactory().getMappingMetamodel()
 						.getCollectionDescriptor( type.getRole() );
 		if ( collection instanceof PersistentCollection<?> persistentCollection ) {

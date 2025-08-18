@@ -18,24 +18,17 @@ import org.hibernate.engine.internal.Nullability.NullabilityCheckType;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.event.monitor.spi.EventMonitor;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.FlushEntityEvent;
 import org.hibernate.event.spi.FlushEntityEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
-import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
@@ -100,7 +93,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			Object[] loaded,
 			SessionImplementor session) {
 		if ( !isUninitializedEnhanced( entity ) ) {
-			final NaturalIdMapping naturalIdMapping = persister.getNaturalIdMapping();
+			final var naturalIdMapping = persister.getNaturalIdMapping();
 			if ( naturalIdMapping != null && entry.getStatus() != Status.READ_ONLY ) {
 				naturalIdMapping.verifyFlushState( entry.getId(), current, loaded, session );
 			}
@@ -109,7 +102,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 	private static boolean isUninitializedEnhanced(Object entity) {
 		if ( isPersistentAttributeInterceptable( entity ) ) {
-			final PersistentAttributeInterceptor interceptor =
+			final var interceptor =
 					asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 			// the entity is an un-initialized enhancement-as-proxy reference
 			return interceptor instanceof EnhancementAsProxyLazinessInterceptor;
@@ -126,8 +119,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	@Override
 	public void onFlushEntity(FlushEntityEvent event) throws HibernateException {
 		final Object entity = event.getEntity();
-		final EntityEntry entry = event.getEntityEntry();
-		final EventSource session = event.getSession();
+		final var entry = event.getEntityEntry();
+		final var session = event.getSession();
 
 		final boolean mightBeDirty = entry.requiresDirtyCheck( entity );
 
@@ -144,7 +137,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		}
 
 		if ( entry.getStatus() != Status.DELETED ) {
-			final EntityPersister persister = entry.getPersister();
+			final var persister = entry.getPersister();
 			// now update the object
 			// has to be outside the main if block above (because of collections)
 			if ( substitute ) {
@@ -171,7 +164,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				return loadedState;
 			}
 			else {
-				final EntityPersister persister = entry.getPersister();
+				final var persister = entry.getPersister();
 				checkId( entity, persister, entry, session );
 				// grab its current state
 				final Object[] values = persister.getValues( entity );
@@ -188,14 +181,14 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	private boolean wrapCollections(
 			FlushEntityEvent event,
 			Object[] values) {
-		final EntityEntry entry = event.getEntityEntry();
-		final EntityPersister persister = entry.getPersister();
+		final var entry = event.getEntityEntry();
+		final var persister = entry.getPersister();
 		if ( persister.hasCollections() ) {
 			// NOTE: we need to do the wrap here even if it's not "dirty",
 			// because collections need wrapping but changes to _them_
 			// don't dirty the container. Also, for versioned data, we
 			// need to wrap before calling searchForDirtyCollections
-			final WrapVisitor visitor = new WrapVisitor( event.getEntity(), entry.getId(), event.getSession() );
+			final var visitor = new WrapVisitor( event.getEntity(), entry.getId(), event.getSession() );
 			// substitutes into values by side effect
 			visitor.processEntityPropertyValues( values, persister.getPropertyTypes() );
 			return visitor.isSubstitutionRequired();
@@ -206,7 +199,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private boolean isUpdateNecessary(final FlushEntityEvent event, final boolean mightBeDirty) {
-		final EntityEntry entry = event.getEntityEntry();
+		final var entry = event.getEntityEntry();
 		if ( mightBeDirty || entry.getStatus() == Status.DELETED ) {
 			// compare to cached state (ignoring collections unless versioned)
 			dirtyCheck( event );
@@ -232,11 +225,11 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private boolean scheduleUpdate(final FlushEntityEvent event) {
-		final EntityEntry entry = event.getEntityEntry();
-		final EventSource session = event.getSession();
+		final var entry = event.getEntityEntry();
+		final var session = event.getSession();
 		final Object entity = event.getEntity();
 		final Status status = entry.getStatus();
-		final EntityPersister persister = entry.getPersister();
+		final var persister = entry.getPersister();
 		final Object[] values = event.getPropertyValues();
 
 		logScheduleUpdate( entry, event.getFactory(), status, persister );
@@ -323,11 +316,11 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	protected boolean invokeInterceptor(FlushEntityEvent event) {
-		final EntityEntry entry = event.getEntityEntry();
+		final var entry = event.getEntityEntry();
 		final Object entity = event.getEntity();
 		final Object id = entry.getId();
 		final Object[] values = event.getPropertyValues();
-		final EntityPersister persister = entry.getPersister();
+		final var persister = entry.getPersister();
 
 		final boolean isDirty =
 				entry.getStatus() != Status.DELETED && callbackRegistry.preUpdate( entity )
@@ -370,8 +363,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	 * Convenience method to retrieve an entities next version value
 	 */
 	private Object getNextVersion(FlushEntityEvent event) throws HibernateException {
-		final EntityEntry entry = event.getEntityEntry();
-		final EntityPersister persister = entry.getPersister();
+		final var entry = event.getEntityEntry();
+		final var persister = entry.getPersister();
 		if ( persister.isVersioned() ) {
 			final Object[] values = event.getPropertyValues();
 			if ( entry.isBeingReplicated() ) {
@@ -418,8 +411,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private boolean hasDirtyCollections(FlushEntityEvent event) {
-		final EntityEntry entityEntry = event.getEntityEntry();
-		final EntityPersister persister = entityEntry.getPersister();
+		final var entityEntry = event.getEntityEntry();
+		final var persister = entityEntry.getPersister();
 		if ( isCollectionDirtyCheckNecessary( persister, entityEntry.getStatus() ) ) {
 			final boolean hasDirtyCollections = hasDirtyCollections( event, persister );
 			event.setHasDirtyCollection( hasDirtyCollections );
@@ -431,7 +424,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private static boolean hasDirtyCollections(FlushEntityEvent event, EntityPersister persister) {
-		final DirtyCollectionSearchVisitor visitor =
+		final var visitor =
 				new DirtyCollectionSearchVisitor( event.getEntity(), event.getSession(),
 						persister.getPropertyVersionability() );
 		visitor.processEntityPropertyValues( event.getPropertyValues(), persister.getPropertyTypes() );
@@ -465,13 +458,13 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private static int[] performDirtyCheck(FlushEntityEvent event) {
-		final SessionImplementor session = event.getSession();
+		final var session = event.getSession();
 		final boolean dirtyCheckPossible;
 		int[] dirtyProperties = null;
-		final EventMonitor eventMonitor = session.getEventMonitor();
-		final DiagnosticEvent dirtyCalculationEvent = eventMonitor.beginDirtyCalculationEvent();
-		final EntityEntry entry = event.getEntityEntry();
-		final EntityPersister persister = entry.getPersister();
+		final var eventMonitor = session.getEventMonitor();
+		final var dirtyCalculationEvent = eventMonitor.beginDirtyCalculationEvent();
+		final var entry = event.getEntityEntry();
+		final var persister = entry.getPersister();
 		try {
 			session.getEventListenerManager().dirtyCalculationStart();
 			// object loaded by update()
@@ -542,8 +535,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private static int[] getDirtyPropertiesFromInterceptor(FlushEntityEvent event) {
-		final EntityEntry entry = event.getEntityEntry();
-		final EntityPersister persister = entry.getPersister();
+		final var entry = event.getEntityEntry();
+		final var persister = entry.getPersister();
 		return event.getSession().getInterceptor().findDirty(
 				event.getEntity(),
 				entry.getId(),
@@ -566,15 +559,15 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				}
 			}
 		}
-		final DirtyCheckContextImpl context = new DirtyCheckContextImpl();
+		final var context = new DirtyCheckContextImpl();
 		event.getFactory().getCustomEntityDirtinessStrategy()
 				.findDirty( event.getEntity(), event.getEntityEntry().getPersister(), event.getSession(), context );
 		return context.found;
 	}
 
 	private static int[] getDirtyPropertiesFromSelfDirtinessTracker(SelfDirtinessTracker tracker, FlushEntityEvent event) {
-		final EntityEntry entry = event.getEntityEntry();
-		final EntityPersister persister = entry.getPersister();
+		final var entry = event.getEntityEntry();
+		final var persister = entry.getPersister();
 		return tracker.$$_hibernate_hasDirtyAttributes() || persister.hasMutableProperties()
 				? resolveDirtyAttributeIndex( tracker, event, persister, entry )
 				: EMPTY_INT_ARRAY;
@@ -655,7 +648,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 	private void logDirtyProperties(EntityEntry entry, int[] dirtyProperties) {
 		if ( dirtyProperties != null && dirtyProperties.length > 0 && LOG.isTraceEnabled() ) {
-			final EntityPersister persister = entry.getPersister();
+			final var persister = entry.getPersister();
 			final String[] allPropertyNames = persister.getPropertyNames();
 			final String[] dirtyPropertyNames = new String[dirtyProperties.length];
 			for ( int i = 0; i < dirtyProperties.length; i++ ) {
@@ -667,12 +660,12 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private static Object[] getDatabaseSnapshot(EntityPersister persister, Object id, SessionImplementor session) {
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final var persistenceContext = session.getPersistenceContextInternal();
 		if ( persister.isSelectBeforeUpdateRequired() ) {
 			final Object[] snapshot = persistenceContext.getDatabaseSnapshot( id, persister );
 			if ( snapshot == null ) {
-				//do we even really need this? the update will fail anyway....
-				final StatisticsImplementor statistics = session.getFactory().getStatistics();
+				//do we even really need this? the update will fail anyway
+				final var statistics = session.getFactory().getStatistics();
 				if ( statistics.isStatisticsEnabled() ) {
 					statistics.optimisticFailure( persister.getEntityName() );
 				}

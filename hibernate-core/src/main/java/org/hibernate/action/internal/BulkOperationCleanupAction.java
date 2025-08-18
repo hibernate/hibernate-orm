@@ -26,6 +26,7 @@ import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 
 import static java.util.Collections.addAll;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 
 /**
  * An {@link org.hibernate.engine.spi.ActionQueue} {@link Executable} for
@@ -87,7 +88,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			}
 		}
 
-		affectedTableSpaces = spacesList.toArray( new String[ 0 ] );
+		affectedTableSpaces = spacesList.toArray( EMPTY_STRING_ARRAY );
 	}
 
 	/**
@@ -133,7 +134,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			}
 		} );
 
-		affectedTableSpaces = spacesList.toArray( new String[ 0 ] );
+		affectedTableSpaces = spacesList.toArray( EMPTY_STRING_ARRAY );
 	}
 
 	public static void schedule(SharedSessionContractImplementor session, SqmDmlStatement<?> statement) {

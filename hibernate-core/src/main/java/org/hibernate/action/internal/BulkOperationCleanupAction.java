@@ -108,7 +108,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		final LinkedHashSet<String> spacesList = new LinkedHashSet<>( tableSpaces );
 
 		final var metamodel = session.getFactory().getMappingMetamodel();
-		metamodel.forEachEntityDescriptor( (entityDescriptor) -> {
+		metamodel.forEachEntityDescriptor( entityDescriptor -> {
 			final String[] entitySpaces = (String[]) entityDescriptor.getQuerySpaces();
 			if ( affectedEntity( tableSpaces, entitySpaces ) ) {
 				addAll( spacesList, entitySpaces );
@@ -145,9 +145,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		}
 		for ( var cteStatement : statement.getCteStatements() ) {
 			if ( cteStatement.getCteDefinition() instanceof SqmDmlStatement<?> dmlStatement ) {
-				entityPersisters.add(
-						metamodel.getEntityDescriptor( dmlStatement.getTarget().getEntityName() )
-				);
+				entityPersisters.add( metamodel.getEntityDescriptor( dmlStatement.getTarget().getEntityName() ) );
 			}
 		}
 
@@ -194,13 +192,14 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		if ( affectedTableSpaces == null || affectedTableSpaces.isEmpty() ) {
 			return true;
 		}
-
-		for ( Serializable checkTableSpace : checkTableSpaces ) {
-			if ( affectedTableSpaces.contains( checkTableSpace ) ) {
-				return true;
+		else {
+			for ( Serializable checkTableSpace : checkTableSpaces ) {
+				if ( affectedTableSpaces.contains( checkTableSpace ) ) {
+					return true;
+				}
 			}
+			return false;
 		}
-		return false;
 	}
 
 	@Override
@@ -216,17 +215,17 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	@Override
 	public AfterTransactionCompletionProcess getAfterTransactionCompletionProcess() {
 		return (success, session) -> {
-			for ( EntityCleanup cleanup : entityCleanups ) {
+			for ( var cleanup : entityCleanups ) {
 				cleanup.release();
 			}
 			entityCleanups.clear();
 
-			for ( NaturalIdCleanup cleanup : naturalIdCleanups ) {
+			for ( var cleanup : naturalIdCleanups ) {
 				cleanup.release();
 			}
 			naturalIdCleanups.clear();
 
-			for ( CollectionCleanup cleanup : collectionCleanups ) {
+			for ( var cleanup : collectionCleanups ) {
 				cleanup.release();
 			}
 			collectionCleanups.clear();

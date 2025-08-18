@@ -11,7 +11,6 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.InstanceIdentityStore;
@@ -94,13 +93,13 @@ public class EntityEntryContext {
 		// Determine the appropriate ManagedEntity instance to use based on whether the entity is enhanced or not.
 		// Throw an exception if entity is a mutable ManagedEntity that is associated with a different
 		// PersistenceContext.
-		ManagedEntity managedEntity = getAssociatedManagedEntity( entity );
+		var managedEntity = getAssociatedManagedEntity( entity );
 
 		int instanceId = nextManagedEntityInstanceId();
 		final boolean alreadyAssociated = managedEntity != null;
 		if ( !alreadyAssociated ) {
 			if ( isManagedEntity( entity ) ) {
-				final ManagedEntity managed = asManagedEntity( entity );
+				final var managed = asManagedEntity( entity );
 				assert managed.$$_hibernate_getInstanceId() == 0;
 				if ( entityEntry.getPersister().isMutable() ) {
 					managedEntity = managed;
@@ -164,13 +163,14 @@ public class EntityEntryContext {
 
 	private ManagedEntity getAssociatedManagedEntity(Object entity) {
 		if ( isManagedEntity( entity ) ) {
-			final ManagedEntity managedEntity = asManagedEntity( entity );
+			final var managedEntity = asManagedEntity( entity );
 			if ( managedEntity.$$_hibernate_getEntityEntry() == null ) {
 				// it is not associated
 				return null;
 			}
-			final EntityEntryImpl entityEntry =
-					(EntityEntryImpl) managedEntity.$$_hibernate_getEntityEntry();
+			final var entityEntry =
+					(EntityEntryImpl)
+							managedEntity.$$_hibernate_getEntityEntry();
 
 			if ( entityEntry.getPersister().isMutable() ) {
 				return entityEntry.getPersistenceContext() == persistenceContext
@@ -210,7 +210,7 @@ public class EntityEntryContext {
 
 	private void checkNotAssociatedWithOtherPersistenceContextIfMutable(ManagedEntity managedEntity) {
 		// we only have to check mutable managedEntity
-		final EntityEntryImpl entityEntry = (EntityEntryImpl) managedEntity.$$_hibernate_getEntityEntry();
+		final var entityEntry = (EntityEntryImpl) managedEntity.$$_hibernate_getEntityEntry();
 		if ( entityEntry == null ||
 				!entityEntry.getPersister().isMutable() ||
 				entityEntry.getPersistenceContext() == null ||
@@ -250,7 +250,7 @@ public class EntityEntryContext {
 	 */
 	public EntityEntry getEntityEntry(Object entity) {
 		// locate a ManagedEntity for the entity, but only if it is associated with the same PersistenceContext.
-		final ManagedEntity managedEntity = getAssociatedManagedEntity( entity );
+		final var managedEntity = getAssociatedManagedEntity( entity );
 		// and get/return the EntityEntry from the ManagedEntry
 		return managedEntity == null
 				? null
@@ -267,7 +267,7 @@ public class EntityEntryContext {
 	public EntityEntry removeEntityEntry(Object entity) {
 		// locate a ManagedEntity for the entity, but only if it is associated with the same PersistenceContext.
 		// no need to check if the entity is a ManagedEntity that is associated with a different PersistenceContext
-		final ManagedEntity managedEntity = getAssociatedManagedEntity( entity );
+		final var managedEntity = getAssociatedManagedEntity( entity );
 		if ( managedEntity == null ) {
 			// not associated with this EntityEntryContext, so nothing to do.
 			return null;
@@ -301,8 +301,8 @@ public class EntityEntryContext {
 		}
 		else {
 			// otherwise, previous or next (or both) should be non-null
-			final ManagedEntity previous = managedEntity.$$_hibernate_getPreviousManagedEntity();
-			final ManagedEntity next = managedEntity.$$_hibernate_getNextManagedEntity();
+			final var previous = managedEntity.$$_hibernate_getPreviousManagedEntity();
+			final var next = managedEntity.$$_hibernate_getNextManagedEntity();
 			if ( previous == null ) {
 				// we are removing head
 				assert managedEntity == head;
@@ -340,7 +340,7 @@ public class EntityEntryContext {
 		if ( dirty ) {
 			reentrantSafeEntries = new EntityEntryCrossRefImpl[count];
 			int i = 0;
-			ManagedEntity managedEntity = head;
+			var managedEntity = head;
 			while ( managedEntity != null ) {
 				reentrantSafeEntries[i++] = new EntityEntryCrossRefImpl(
 						managedEntity.$$_hibernate_getEntityInstance(),
@@ -354,9 +354,9 @@ public class EntityEntryContext {
 	}
 
 	private void processEachManagedEntity(final Consumer<ManagedEntity> action) {
-		ManagedEntity node = head;
+		var node = head;
 		while ( node != null ) {
-			final ManagedEntity next = node.$$_hibernate_getNextManagedEntity();
+			final var next = node.$$_hibernate_getNextManagedEntity();
 			action.accept( node );
 			node = next;
 		}
@@ -367,9 +367,9 @@ public class EntityEntryContext {
 	// Also: we perform two operations at once, so to not iterate on the list twice;
 	// being a linked list, multiple iterations are not cache friendly at all.
 	private void clearAllReferencesFromManagedEntities() {
-		ManagedEntity nextManagedEntity = head;
+		var nextManagedEntity = head;
 		while ( nextManagedEntity != null ) {
-			final ManagedEntity current = nextManagedEntity;
+			final var current = nextManagedEntity;
 			nextManagedEntity = current.$$_hibernate_getNextManagedEntity();
 			Object toProcess = current.$$_hibernate_getEntityInstance();
 			unsetSession( asPersistentAttributeInterceptableOrNull( toProcess ) );
@@ -378,11 +378,10 @@ public class EntityEntryContext {
 	}
 
 	private static void unsetSession(PersistentAttributeInterceptable persistentAttributeInterceptable) {
-		if ( persistentAttributeInterceptable != null ) {
-			final PersistentAttributeInterceptor interceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
-			if ( interceptor instanceof LazyAttributeLoadingInterceptor ) {
-				( (LazyAttributeLoadingInterceptor) interceptor ).unsetSession();
-			}
+		if ( persistentAttributeInterceptable != null
+				&& persistentAttributeInterceptable.$$_hibernate_getInterceptor()
+						instanceof LazyAttributeLoadingInterceptor lazinessInterceptor ) {
+			lazinessInterceptor.unsetSession();
 		}
 	}
 
@@ -428,7 +427,7 @@ public class EntityEntryContext {
 	}
 
 	private static void downgradeLockOnManagedEntity(final ManagedEntity node) {
-		final EntityEntry entityEntry = node.$$_hibernate_getEntityEntry();
+		final var entityEntry = node.$$_hibernate_getEntityEntry();
 		if ( entityEntry != null ) {
 			entityEntry.setLockMode( LockMode.NONE );
 		}
@@ -448,7 +447,7 @@ public class EntityEntryContext {
 			return;
 		}
 
-		ManagedEntity managedEntity = head;
+		var managedEntity = head;
 		while ( managedEntity != null ) {
 			// so we know whether or not to build a ManagedEntityImpl on deserialize
 			oos.writeBoolean( managedEntity == managedEntity.$$_hibernate_getEntityInstance() );
@@ -478,7 +477,7 @@ public class EntityEntryContext {
 		final int count = ois.readInt();
 		log.tracef( "Starting deserialization of [%s] EntityEntry entries", count );
 
-		final EntityEntryContext context = new EntityEntryContext( rtn );
+		final var context = new EntityEntryContext( rtn );
 		context.count = count;
 		context.dirty = true;
 
@@ -499,19 +498,20 @@ public class EntityEntryContext {
 				entityEntryClassNameArr[j] = ois.readChar();
 			}
 
-			final EntityEntry entry = deserializeEntityEntry( entityEntryClassNameArr, ois, rtn );
+			final var entry = deserializeEntityEntry( entityEntryClassNameArr, ois, rtn );
 
 			final int instanceId = context.nextManagedEntityInstanceId();
 			final ManagedEntity managedEntity;
 			if ( isEnhanced ) {
-				final ManagedEntity castedEntity = asManagedEntity( entity );
+				final var castedEntity = asManagedEntity( entity );
 				if ( entry.getPersister().isMutable() ) {
 					managedEntity = castedEntity;
 				}
 				else {
-					managedEntity = new ImmutableManagedEntityHolder( castedEntity );
+					final var holder = new ImmutableManagedEntityHolder( castedEntity );
+					managedEntity = holder;
 					if ( !isReferenceCachingEnabled( entry.getPersister() ) ) {
-						context.putImmutableManagedEntity( castedEntity, instanceId, (ImmutableManagedEntityHolder) managedEntity );
+						context.putImmutableManagedEntity( castedEntity, instanceId, holder );
 					}
 					else {
 						context.putManagedEntity( entity, castedEntity );

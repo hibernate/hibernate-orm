@@ -6,10 +6,7 @@ package org.hibernate.engine.internal;
 
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.cache.spi.access.CachedDomainDataAccess;
-import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.monitor.spi.EventMonitor;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -39,11 +36,11 @@ public final class CacheHelper {
 			EntityPersister persister,
 			boolean isNaturalKey,
 			CachedDomainDataAccess cacheAccess) {
-		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
+		final var eventListenerManager = session.getEventListenerManager();
 		Object cachedValue = null;
 		eventListenerManager.cacheGetStart();
-		final EventMonitor eventMonitor = session.getEventMonitor();
-		final DiagnosticEvent cacheGetEvent = eventMonitor.beginCacheGetEvent();
+		final var eventMonitor = session.getEventMonitor();
+		final var cacheGetEvent = eventMonitor.beginCacheGetEvent();
 		try {
 			cachedValue = cacheAccess.get( session, cacheKey );
 		}
@@ -66,11 +63,11 @@ public final class CacheHelper {
 			Object cacheKey,
 			CollectionPersister persister,
 			CachedDomainDataAccess cacheAccess) {
-		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
+		final var eventListenerManager = session.getEventListenerManager();
 		Object cachedValue = null;
 		eventListenerManager.cacheGetStart();
-		final EventMonitor eventMonitor = session.getEventMonitor();
-		final DiagnosticEvent cacheGetEvent = eventMonitor.beginCacheGetEvent();
+		final var eventMonitor = session.getEventMonitor();
+		final var cacheGetEvent = eventMonitor.beginCacheGetEvent();
 		try {
 			cachedValue = cacheAccess.get( session, cacheKey );
 		}

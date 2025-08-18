@@ -920,7 +920,8 @@ public class InFlightMetadataCollectorImpl
 			String name,
 			String subselectFragment,
 			boolean isAbstract,
-			MetadataBuildingContext buildingContext) {
+			MetadataBuildingContext buildingContext,
+			boolean isExplicit) {
 		final Namespace namespace = getDatabase().locateNamespace(
 				getDatabase().toIdentifier( catalogName ),
 				getDatabase().toIdentifier( schemaName )
@@ -928,7 +929,7 @@ public class InFlightMetadataCollectorImpl
 
 		// annotation binding depends on the "table name" for @Subselect bindings
 		// being set into the generated table (mainly to avoid later NPE), but for now we need to keep that :(
-		final Identifier logicalName = name != null ? getDatabase().toIdentifier( name ) : null;
+		final Identifier logicalName = name != null ? getDatabase().toIdentifier( name, isExplicit ) : null;
 
 		if ( subselectFragment != null ) {
 			return new Table( buildingContext.getCurrentContributorName(),

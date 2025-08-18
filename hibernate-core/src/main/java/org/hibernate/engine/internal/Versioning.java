@@ -125,7 +125,9 @@ public final class Versioning {
 	 */
 	public static Object increment(Object version, EntityVersionMapping versionMapping, SharedSessionContractImplementor session) {
 		@SuppressWarnings("unchecked")
-		final VersionJavaType<Object> versionType = (VersionJavaType<Object>) versionMapping.getJavaType();
+		final var versionType =
+				(VersionJavaType<Object>) // Unsafe cast
+						versionMapping.getJavaType();
 		final Object next = versionType.next(
 				version,
 				versionMapping.getLength(),
@@ -178,15 +180,15 @@ public final class Versioning {
 		if ( hasDirtyCollections ) {
 			return true;
 		}
-
-		if ( dirtyProperties != null ) {
-			for ( int dirtyProperty : dirtyProperties ) {
-				if ( propertyVersionability[dirtyProperty] ) {
-					return true;
+		else {
+			if ( dirtyProperties != null ) {
+				for ( int dirtyProperty : dirtyProperties ) {
+					if ( propertyVersionability[dirtyProperty] ) {
+						return true;
+					}
 				}
 			}
+			return false;
 		}
-
-		return false;
 	}
 }

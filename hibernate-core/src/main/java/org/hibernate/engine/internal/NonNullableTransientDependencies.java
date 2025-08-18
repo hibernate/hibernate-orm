@@ -31,7 +31,7 @@ public final class NonNullableTransientDependencies {
 		if ( propertyPathsByTransientEntity == null ) {
 			propertyPathsByTransientEntity = new IdentityHashMap<>();
 		}
-		Set<String> propertyPaths = propertyPathsByTransientEntity.get( transientEntity );
+		var propertyPaths = propertyPathsByTransientEntity.get( transientEntity );
 		if ( propertyPaths == null ) {
 			propertyPaths = new HashSet<>();
 			propertyPathsByTransientEntity.put( transientEntity, propertyPaths );
@@ -90,8 +90,7 @@ public final class NonNullableTransientDependencies {
 	 * @return The loggable representation
 	 */
 	public String toLoggableString(SharedSessionContractImplementor session) {
-		final StringBuilder result =
-				new StringBuilder( getClass().getSimpleName() ).append( '[' );
+		final var result = new StringBuilder( getClass().getSimpleName() ).append( '[' );
 		if ( propertyPathsByTransientEntity != null ) {
 			for ( var entry : propertyPathsByTransientEntity.entrySet() ) {
 				result.append( "transientEntityName=" )

@@ -10,7 +10,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.UnsupportedLockAttemptException;
@@ -21,14 +20,11 @@ import org.hibernate.engine.spi.EntityEntryExtraState;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.util.ImmutableBitSet;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.TypeHelper;
 
@@ -153,8 +149,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 			final boolean isBeingReplicated,
 			final boolean mutable,
 			final PersistenceContext persistenceContext) {
-		final SessionFactoryImplementor factory =
-				persistenceContext.getSession().getFactory();
+		final var factory = persistenceContext.getSession().getFactory();
 		this.persister =
 				factory == null
 						? null
@@ -223,18 +218,18 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 
 	@Override
 	public Object[] getDeletedState() {
-		final EntityEntryExtraStateHolder extra = getExtraState( EntityEntryExtraStateHolder.class );
+		final var extra = getExtraState( EntityEntryExtraStateHolder.class );
 		return extra == null ? null : extra.getDeletedState();
 	}
 
 	@Override
 	public void setDeletedState(Object[] deletedState) {
-		final EntityEntryExtraStateHolder existingExtra = getExtraState( EntityEntryExtraStateHolder.class );
+		final var existingExtra = getExtraState( EntityEntryExtraStateHolder.class );
 		if ( existingExtra != null ) {
 			existingExtra.setDeletedState( deletedState );
 		}
 		else if ( deletedState != null ) {
-			final EntityEntryExtraStateHolder newExtra = new EntityEntryExtraStateHolder();
+			final var newExtra = new EntityEntryExtraStateHolder();
 			newExtra.setDeletedState( deletedState );
 			addExtraState( newExtra );
 		}
@@ -301,7 +296,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 		processIfSelfDirtinessTracker( entity, EntityEntryImpl::clearDirtyAttributes );
 		processIfManagedEntity( entity, EntityEntryImpl::useTracker );
 
-		final SharedSessionContractImplementor session = getPersistenceContext().getSession();
+		final var session = getPersistenceContext().getSession();
 		session.getFactory().getCustomEntityDirtinessStrategy()
 				.resetDirty( entity, persister, (SessionImplementor) session );
 	}
@@ -363,7 +358,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	private int propertyIndex(String propertyName) {
-		final AttributeMapping attributeMapping = persister.findAttributeMapping( propertyName );
+		final var attributeMapping = persister.findAttributeMapping( propertyName );
 		return attributeMapping != null ? attributeMapping.getStateArrayPosition() : -1;
 	}
 
@@ -391,17 +386,15 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 
 	private boolean isNonDirtyViaCustomStrategy(Object entity) {
 		if ( isPersistentAttributeInterceptable( entity ) ) {
-			final PersistentAttributeInterceptor interceptor =
-					asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+			if ( asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor()
+					instanceof EnhancementAsProxyLazinessInterceptor ) {
 				// we never have to check an uninitialized proxy
 				return true;
 			}
 		}
 
-		final SessionImplementor session = (SessionImplementor) getPersistenceContext().getSession();
-		final CustomEntityDirtinessStrategy customEntityDirtinessStrategy =
-				session.getFactory().getCustomEntityDirtinessStrategy();
+		final var session = (SessionImplementor) getPersistenceContext().getSession();
+		final var customEntityDirtinessStrategy = session.getFactory().getCustomEntityDirtinessStrategy();
 		return customEntityDirtinessStrategy.canDirtyCheck( entity, persister, session )
 			&& !customEntityDirtinessStrategy.isDirty( entity, persister, session );
 	}
@@ -409,9 +402,8 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	private boolean isNonDirtyViaTracker(Object entity) {
 		final boolean uninitializedProxy;
 		if ( isPersistentAttributeInterceptable( entity ) ) {
-			final PersistentAttributeInterceptor interceptor =
-					asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor ) {
+			if ( asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor()
+					instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor ) {
 				return !lazinessInterceptor.hasWrittenFieldNames();
 			}
 			else {

@@ -79,9 +79,10 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 			final var eventMonitor = session.getEventMonitor();
 			final var event = eventMonitor.beginEntityInsertEvent();
 			boolean success = false;
+			final Object[] state = getState();
 			final GeneratedValues generatedValues;
 			try {
-				generatedValues = persister.getInsertCoordinator().insert( instance, getState(), session );
+				generatedValues = persister.getInsertCoordinator().insert( instance, state, session );
 				generatedId = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
 				success = true;
 			}
@@ -96,12 +97,12 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 				}
 			}
 			if ( persister.hasInsertGeneratedProperties() ) {
-				persister.processInsertGeneratedProperties( generatedId, instance, getState(), generatedValues, session );
+				persister.processInsertGeneratedProperties( generatedId, instance, state, generatedValues, session );
 			}
 			//need to do that here rather than in the save event listener to let
 			//the post insert events to have an id-filled entity when IDENTITY is used (EJB3)
 			persister.setIdentifier( instance, generatedId, session );
-			persistenceContext.registerInsertedKey( getPersister(), generatedId );
+			persistenceContext.registerInsertedKey( persister, generatedId );
 			entityKey = session.generateEntityKey( generatedId, persister );
 			persistenceContext.checkUniqueness( entityKey, getInstance() );
 		}
@@ -118,7 +119,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 
 		final var statistics = session.getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() && !isVeto() ) {
-			statistics.insertEntity( getPersister().getEntityName() );
+			statistics.insertEntity( persister.getEntityName() );
 		}
 
 		markExecuted();

@@ -21,24 +21,16 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
-import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.access.CollectionDataAccess;
-import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CollectionEntry;
-import org.hibernate.engine.spi.EffectiveEntityGraph;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
@@ -62,16 +54,10 @@ import org.hibernate.event.spi.PreCollectionRemoveEventListener;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.event.spi.PreDeleteEvent;
-import org.hibernate.event.spi.PreDeleteEventListener;
 import org.hibernate.event.spi.PreInsertEvent;
-import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.event.spi.PreUpdateEvent;
-import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.event.spi.PreUpsertEvent;
-import org.hibernate.event.spi.PreUpsertEventListener;
 import org.hibernate.generator.BeforeExecutionGenerator;
-import org.hibernate.generator.Generator;
-import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerationException;
@@ -81,12 +67,10 @@ import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.internal.CacheLoadHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.tuple.entity.EntityMetamodel;
 
 import jakarta.persistence.EntityGraph;
 import jakarta.transaction.SystemException;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
@@ -160,6 +144,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return FlushMode.MANUAL;
 	}
 
+	private StatisticsImplementor getStatistics() {
+		return getFactory().getStatistics();
+	}
+
 	// inserts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
@@ -184,7 +172,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public Object insert(String entityName, Object entity) {
 		checkOpen();
-		final EntityPersister persister = getEntityPersister( entityName, entity );
+		final var persister = getEntityPersister( entityName, entity );
 		final Object id;
 		final Object[] state = persister.getValues( entity );
 		if ( persister.isVersioned() ) {
@@ -192,7 +180,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				persister.setValues( entity, state );
 			}
 		}
-		final Generator generator = persister.getGenerator();
+		final var generator = persister.getGenerator();
 		if ( generator.generatedBeforeExecution( entity, this ) ) {
 			if ( !generator.generatesOnInsert() ) {
 				throw new IdentifierGenerationException( "Identifier generator must generate on insert" );
@@ -205,8 +193,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 			else {
 				getInterceptor().onInsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
-				final EventMonitor eventMonitor = getEventMonitor();
-				final DiagnosticEvent event = eventMonitor.beginEntityInsertEvent();
+				final var eventMonitor = getEventMonitor();
+				final var event = eventMonitor.beginEntityInsertEvent();
 				boolean success = false;
 				try {
 					persister.getInsertCoordinator().insert( entity, id, state, this );
@@ -226,13 +214,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 			else {
 				getInterceptor().onInsert( entity, null, state, persister.getPropertyNames(), persister.getPropertyTypes() );
-				final GeneratedValues generatedValues;
-				final EventMonitor eventMonitor = getEventMonitor();
-				final DiagnosticEvent event = eventMonitor.beginEntityInsertEvent();
+				final var eventMonitor = getEventMonitor();
+				final var event = eventMonitor.beginEntityInsertEvent();
 				boolean success = false;
 				Object generatedId = null;
 				try {
-					generatedValues = persister.getInsertCoordinator().insert( entity, state, this );
+					final var generatedValues = persister.getInsertCoordinator().insert( entity, state, this );
 					generatedId = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
 					id = generatedId;
 					success = true;
@@ -253,8 +240,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 			else {
 				getInterceptor().onInsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
-				final EventMonitor eventMonitor = getEventMonitor();
-				final DiagnosticEvent event = eventMonitor.beginEntityInsertEvent();
+				final var eventMonitor = getEventMonitor();
+				final var event = eventMonitor.beginEntityInsertEvent();
 				boolean success = false;
 				try {
 					persister.getInsertCoordinator().insert( entity, id, state, this );
@@ -267,7 +254,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		recreateCollections( entity, id, persister );
 		firePostInsert( entity, id, state, persister );
-		final StatisticsImplementor statistics = getFactory().getStatistics();
+		final var statistics = getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
 			statistics.insertEntity( persister.getEntityName() );
 		}
@@ -277,13 +264,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	private void recreateCollections(Object entity, Object id, EntityPersister persister) {
 		if ( persister.hasOwnedCollections() ) {
 			final String entityName = persister.getEntityName();
-			final EventMonitor eventMonitor = getEventMonitor();
-			final StatisticsImplementor statistics = getFactory().getStatistics();
+			final var eventMonitor = getEventMonitor();
+			final var statistics = getStatistics();
 			forEachOwnedCollection( entity, id, persister,
 					(descriptor, collection) -> {
 						final String role = descriptor.getRole();
 						firePreRecreate( collection, id, entityName, entity );
-						final DiagnosticEvent event = eventMonitor.beginCollectionRecreateEvent();
+						final var event = eventMonitor.beginCollectionRecreateEvent();
 						boolean success = false;
 						try {
 							descriptor.recreate( collection, id, this );
@@ -324,15 +311,15 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void delete(String entityName, Object entity) {
 		checkOpen();
-		final EntityPersister persister = getEntityPersister( entityName, entity );
+		final var persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
 		final Object version = persister.getVersion( entity );
 		if ( !firePreDelete(entity, id, persister) ) {
 			getInterceptor().onDelete( entity, id, persister.getPropertyNames(), persister.getPropertyTypes() );
 			removeCollections( entity, id, persister );
 			final Object ck = lockCacheItem( id, version, persister );
-			final EventMonitor eventMonitor = getEventMonitor();
-			final DiagnosticEvent event = eventMonitor.beginEntityDeleteEvent();
+			final var eventMonitor = getEventMonitor();
+			final var event = eventMonitor.beginEntityDeleteEvent();
 			boolean success = false;
 			try {
 				persister.getDeleteCoordinator().delete( entity, id, version, this );
@@ -343,7 +330,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 			removeCacheItem( ck, persister );
 			firePostDelete( entity, id, persister );
-			final StatisticsImplementor statistics = getFactory().getStatistics();
+			final var statistics = getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.deleteEntity( persister.getEntityName() );
 			}
@@ -353,8 +340,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	private void removeCollections(Object entity, Object id, EntityPersister persister) {
 		if ( persister.hasOwnedCollections() ) {
 			final String entityName = persister.getEntityName();
-			final EventMonitor eventMonitor = getEventMonitor();
-			final StatisticsImplementor statistics = getFactory().getStatistics();
+			final var eventMonitor = getEventMonitor();
+			final var statistics = getStatistics();
 			forEachOwnedCollection( entity, id, persister,
 					(descriptor, collection) -> {
 						final String role = descriptor.getRole();
@@ -401,7 +388,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void update(String entityName, Object entity) {
 		checkOpen();
-		final EntityPersister persister = getEntityPersister( entityName, entity );
+		final var persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
 		final Object[] state = persister.getValues( entity );
 		final Object oldVersion;
@@ -417,8 +404,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		if ( !firePreUpdate(entity, id, state, persister) ) {
 			getInterceptor().onUpdate( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
 			final Object ck = lockCacheItem( id, oldVersion, persister );
-			final EventMonitor eventMonitor = getEventMonitor();
-			final DiagnosticEvent event = eventMonitor.beginEntityUpdateEvent();
+			final var eventMonitor = getEventMonitor();
+			final var event = eventMonitor.beginEntityUpdateEvent();
 			boolean success = false;
 			try {
 				persister.getUpdateCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
@@ -430,7 +417,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			removeCacheItem( ck, persister );
 			removeAndRecreateCollections( entity, id, persister );
 			firePostUpdate( entity, id, state, persister );
-			final StatisticsImplementor statistics = getFactory().getStatistics();
+			final var statistics = getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.updateEntity( persister.getEntityName() );
 			}
@@ -440,8 +427,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	private void removeAndRecreateCollections(Object entity, Object id, EntityPersister persister) {
 		if ( persister.hasOwnedCollections() ) {
 			final String entityName = persister.getEntityName();
-			final EventMonitor eventMonitor = getEventMonitor();
-			final StatisticsImplementor statistics = getFactory().getStatistics();
+			final var eventMonitor = getEventMonitor();
+			final var statistics = getStatistics();
 			forEachOwnedCollection( entity, id, persister,
 					(descriptor, collection) -> {
 						final String role = descriptor.getRole();
@@ -487,15 +474,15 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void upsert(String entityName, Object entity) {
 		checkOpen();
-		final EntityPersister persister = getEntityPersister( entityName, entity );
+		final var persister = getEntityPersister( entityName, entity );
 		final Object id = idToUpsert( entity, persister );
 		final Object[] state = persister.getValues( entity );
 		if ( !firePreUpsert(entity, id, state, persister) ) {
 			getInterceptor().onUpsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
 			final Object oldVersion = versionToUpsert( entity, persister, state );
 			final Object ck = lockCacheItem( id, oldVersion, persister );
-			final EventMonitor eventMonitor = getEventMonitor();
-			final DiagnosticEvent event = eventMonitor.beginEntityUpsertEvent();
+			final var eventMonitor = getEventMonitor();
+			final var event = eventMonitor.beginEntityUpsertEvent();
 			boolean success = false;
 			try {
 				persister.getMergeCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
@@ -505,7 +492,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				eventMonitor.completeEntityUpsertEvent( event, id, persister.getEntityName(), success, this );
 			}
 			removeCacheItem( ck, persister );
-			final StatisticsImplementor statistics = getFactory().getStatistics();
+			final var statistics = getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.upsertEntity( persister.getEntityName() );
 			}
@@ -565,8 +552,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		else {
 			boolean veto = false;
-			final PreInsertEvent event = new PreInsertEvent( entity, id, state, persister, null );
-			for ( PreInsertEventListener listener : eventListenerGroups.eventListenerGroup_PRE_INSERT.listeners() ) {
+			final var event = new PreInsertEvent( entity, id, state, persister, null );
+			for ( var listener : eventListenerGroups.eventListenerGroup_PRE_INSERT.listeners() ) {
 				veto |= listener.onPreInsert( event );
 			}
 			return veto;
@@ -580,8 +567,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		else {
 			boolean veto = false;
-			final PreUpdateEvent event = new PreUpdateEvent( entity, id, state, null, persister, null );
-			for ( PreUpdateEventListener listener : eventListenerGroups.eventListenerGroup_PRE_UPDATE.listeners() ) {
+			final var event = new PreUpdateEvent( entity, id, state, null, persister, null );
+			for ( var listener : eventListenerGroups.eventListenerGroup_PRE_UPDATE.listeners() ) {
 				veto |= listener.onPreUpdate( event );
 			}
 			return veto;
@@ -595,8 +582,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		else {
 			boolean veto = false;
-			final PreUpsertEvent event = new PreUpsertEvent( entity, id, state, persister, null );
-			for ( PreUpsertEventListener listener : eventListenerGroups.eventListenerGroup_PRE_UPSERT.listeners() ) {
+			final var event = new PreUpsertEvent( entity, id, state, persister, null );
+			for ( var listener : eventListenerGroups.eventListenerGroup_PRE_UPSERT.listeners() ) {
 				veto |= listener.onPreUpsert( event );
 			}
 			return veto;
@@ -610,8 +597,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		else {
 			boolean veto = false;
-			final PreDeleteEvent event = new PreDeleteEvent( entity, id, null, persister, null );
-			for ( PreDeleteEventListener listener : eventListenerGroups.eventListenerGroup_PRE_DELETE.listeners() ) {
+			final var event = new PreDeleteEvent( entity, id, null, persister, null );
+			for ( var listener : eventListenerGroups.eventListenerGroup_PRE_DELETE.listeners() ) {
 				veto |= listener.onPreDelete( event );
 			}
 			return veto;
@@ -696,8 +683,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			EntityPersister persister, BiConsumer<CollectionPersister, PersistentCollection<?>> action) {
 		persister.visitAttributeMappings( attribute -> {
 			if ( attribute.isPluralAttributeMapping() ) {
-				final CollectionPersister descriptor =
-						attribute.asPluralAttributeMapping().getCollectionDescriptor();
+				final var descriptor = attribute.asPluralAttributeMapping().getCollectionDescriptor();
 				final Object ck = lockCacheItem( key, descriptor );
 				if ( !descriptor.isInverse() ) {
 					final Object value = attribute.getPropertyAccess().getGetter().get(entity);
@@ -755,7 +741,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public Object get(String entityName, Object id, LockMode lockMode) {
 		checkOpen();
 
-		final EntityPersister persister = requireEntityPersister( entityName );
+		final var persister = requireEntityPersister( entityName );
 		if ( persister.canReadFromCache() ) {
 			final Object cachedEntity =
 					loadFromSecondLevelCache( persister, generateEntityKey( id, persister ), null, lockMode );
@@ -790,11 +776,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public  <T> T get(
 			EntityGraph<T> graph, GraphSemantic graphSemantic,
 			Object id, LockMode lockMode) {
-		final RootGraphImplementor<T> rootGraph = (RootGraphImplementor<T>) graph;
+		final var rootGraph = (RootGraphImplementor<T>) graph;
 		checkOpen();
 
-		final EffectiveEntityGraph effectiveEntityGraph =
-				getLoadQueryInfluencers().getEffectiveEntityGraph();
+		final var effectiveEntityGraph = getLoadQueryInfluencers().getEffectiveEntityGraph();
 		effectiveEntityGraph.applyGraph( rootGraph, graphSemantic );
 
 		try {
@@ -813,8 +798,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 		}
 
-		final EntityPersister persister = requireEntityPersister( entityClass.getName() );
-		final List<?> results = persister.multiLoad( ids.toArray(), this, new MultiLoadOptions(lockMode) );
+		final var persister = requireEntityPersister( entityClass.getName() );
+		final var results = persister.multiLoad( ids.toArray(), this, new MultiLoadOptions(lockMode) );
 		//noinspection unchecked
 		return (List<T>) results;
 	}
@@ -831,15 +816,14 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 		}
 
-		final RootGraphImplementor<T> rootGraph = (RootGraphImplementor<T>) entityGraph;
+		final var rootGraph = (RootGraphImplementor<T>) entityGraph;
 
-		final EffectiveEntityGraph effectiveEntityGraph =
-				getLoadQueryInfluencers().getEffectiveEntityGraph();
+		final var effectiveEntityGraph = getLoadQueryInfluencers().getEffectiveEntityGraph();
 		effectiveEntityGraph.applyGraph( rootGraph, graphSemantic );
 
 		try {
-			final EntityPersister persister = requireEntityPersister( rootGraph.getGraphedType().getTypeName() );
-			final List<?> results = persister.multiLoad( ids.toArray(), this, MULTI_ID_LOAD_OPTIONS );
+			final var persister = requireEntityPersister( rootGraph.getGraphedType().getTypeName() );
+			final var results = persister.multiLoad( ids.toArray(), this, MULTI_ID_LOAD_OPTIONS );
 			//noinspection unchecked
 			return (List<T>) results;
 		}
@@ -856,8 +840,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 		}
 
-		final EntityPersister persister = requireEntityPersister( entityClass.getName() );
-		final List<?> results = persister.multiLoad( ids.toArray(), this, MULTI_ID_LOAD_OPTIONS );
+		final var persister = requireEntityPersister( entityClass.getName() );
+		final var results = persister.multiLoad( ids.toArray(), this, MULTI_ID_LOAD_OPTIONS );
 		//noinspection unchecked
 		return (List<T>) results;
 
@@ -918,14 +902,14 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void refresh(String entityName, Object entity, LockMode lockMode) {
 		checkOpen();
-		final EntityPersister persister = getEntityPersister( entityName, entity );
+		final var persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Refreshing transient {0}", infoString( persister, id, getFactory() ) );
 		}
 
 		if ( persister.canWriteToCache() ) {
-			final EntityDataAccess cacheAccess = persister.getCacheAccessStrategy();
+			final var cacheAccess = persister.getCacheAccessStrategy();
 			if ( cacheAccess != null ) {
 				final Object ck = cacheAccess.generateCacheKey(
 						id,
@@ -959,13 +943,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void initializeCollection(PersistentCollection<?> collection, boolean writing) {
 		checkOpen();
-		final PersistenceContext persistenceContext = getPersistenceContextInternal();
-		final CollectionEntry ce = persistenceContext.getCollectionEntry( collection );
+		final var persistenceContext = getPersistenceContextInternal();
+		final var ce = persistenceContext.getCollectionEntry( collection );
 		if ( ce == null ) {
 			throw new HibernateException( "no entry for collection" );
 		}
 		if ( !collection.wasInitialized() ) {
-			final CollectionPersister loadedPersister = ce.getLoadedPersister();
+			final var loadedPersister = ce.getLoadedPersister();
 			final Object loadedKey = ce.getLoadedKey();
 			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Initializing collection "
@@ -980,7 +964,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				loadedPersister.initialize( loadedKey, this );
 				handlePotentiallyEmptyCollection( collection, persistenceContext, loadedKey, loadedPersister );
 				LOG.trace( "Collection initialized" );
-				final StatisticsImplementor statistics = getFactory().getStatistics();
+				final var statistics = getStatistics();
 				if ( statistics.isStatisticsEnabled() ) {
 					statistics.fetchCollection( loadedPersister.getRole() );
 				}
@@ -1007,12 +991,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			boolean nullable) {
 		checkOpen();
 
-		final EntityPersister persister = requireEntityPersister( entityName );
-		final EntityKey entityKey = generateEntityKey( id, persister );
+		final var persister = requireEntityPersister( entityName );
+		final var entityKey = generateEntityKey( id, persister );
 
 		// first, try to load it from the temp PC associated to this SS
-		final PersistenceContext persistenceContext = getPersistenceContext();
-		final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
+		final var persistenceContext = getPersistenceContext();
+		final var holder = persistenceContext.getEntityHolder( entityKey );
 		if ( holder != null && holder.getEntity() != null ) {
 			// we found it in the temp PC.  Should indicate we are in the midst of processing a result set
 			// containing eager fetches via join fetch
@@ -1025,8 +1009,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 			// first, check to see if we can use "bytecode proxies"
 
-			final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
-			final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
+			final var entityMetamodel = persister.getEntityMetamodel();
+			final var enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
 			if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
 				// if the entity defines a HibernateProxy factory, see if there is an
 				// existing proxy associated with the PC - and if so, use it
@@ -1059,12 +1043,9 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			else {
 				if ( persister.hasProxy() ) {
 					final Object existingProxy = holder == null ? null : holder.getProxy();
-					if ( existingProxy != null ) {
-						return persistenceContext.narrowProxy( existingProxy, persister, entityKey, null );
-					}
-					else {
-						return createProxy( entityKey );
-					}
+					return existingProxy != null
+							? persistenceContext.narrowProxy( existingProxy, persister, entityKey, null )
+							: createProxy( entityKey );
 				}
 			}
 		}
@@ -1095,8 +1076,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void fetch(Object association) {
 		checkOpen();
-		final PersistenceContext persistenceContext = getPersistenceContext();
-		final LazyInitializer initializer = extractLazyInitializer( association );
+		final var persistenceContext = getPersistenceContext();
+		final var initializer = extractLazyInitializer( association );
 		if ( initializer != null ) {
 			if ( initializer.isUninitialized() ) {
 				final String entityName = initializer.getEntityName();
@@ -1137,7 +1118,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		else if ( association instanceof PersistentCollection<?> collection ) {
 			if ( !collection.wasInitialized() ) {
-				final CollectionPersister collectionDescriptor = requireCollectionPersister( collection.getRole() );
+				final var collectionDescriptor = requireCollectionPersister( collection.getRole() );
 				final Object key = collection.getKey();
 				persistenceContext.addUninitializedCollection( collectionDescriptor, collection, key );
 				collection.setCurrentSession( this );
@@ -1152,7 +1133,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 						handlePotentiallyEmptyCollection( collection, getPersistenceContextInternal(), key,
 								collectionDescriptor );
 						LOG.trace( "Collection fetched" );
-						final StatisticsImplementor statistics = getFactory().getStatistics();
+						final var statistics = getStatistics();
 						if ( statistics.isStatisticsEnabled() ) {
 							statistics.fetchCollection( collectionDescriptor.getRole() );
 						}
@@ -1201,7 +1182,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public String bestGuessEntityName(Object object) {
-		final LazyInitializer lazyInitializer = extractLazyInitializer( object );
+		final var lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
 			object = lazyInitializer.getImplementation();
 		}
@@ -1238,7 +1219,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public Object getEntityUsingInterceptor(EntityKey key) {
 		checkOpen();
 
-		final PersistenceContext persistenceContext = getPersistenceContext();
+		final var persistenceContext = getPersistenceContext();
 		final Object result = persistenceContext.getEntity( key );
 		if ( result != null ) {
 			return result;
@@ -1376,7 +1357,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	protected Object lockCacheItem(Object id, Object previousVersion, EntityPersister persister) {
 		if ( persister.canWriteToCache() ) {
-			final EntityDataAccess cache = persister.getCacheAccessStrategy();
+			final var cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
 					id,
 					persister,
@@ -1400,7 +1381,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	protected Object lockCacheItem(Object key, CollectionPersister persister) {
 		if ( persister.hasCache() ) {
-			final CollectionDataAccess cache = persister.getCacheAccessStrategy();
+			final var cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
 					key,
 					persister,
@@ -1429,9 +1410,9 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public void lock(String entityName, Object child, LockOptions lockOptions) {
-		final EntityPersister persister = getEntityPersister( entityName, child );
+		final var persister = getEntityPersister( entityName, child );
 		persister.lock( persister.getIdentifier( child ), persister.getVersion( child ), child, lockOptions, this );
-		final EntityEntry entry = getPersistenceContextInternal().getEntry( child );
+		final var entry = getPersistenceContextInternal().getEntry( child );
 		if ( entry == null ) {
 			throw new AssertionFailure( "no entry in temporary persistence context" );
 		}

@@ -18,6 +18,7 @@ import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.RefreshOption;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TransactionRequiredException;
+import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.Metamodel;
@@ -35,12 +36,9 @@ import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
-import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.event.spi.*;
 import org.hibernate.event.spi.LoadEventListener.LoadType;
@@ -58,19 +56,13 @@ import org.hibernate.loader.internal.LoadAccessContext;
 import org.hibernate.loader.internal.NaturalIdLoadAccessImpl;
 import org.hibernate.loader.internal.SimpleNaturalIdLoadAccessImpl;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownSqlResultSetMappingException;
-import org.hibernate.query.criteria.CriteriaDefinition;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
-import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -80,7 +72,6 @@ import org.hibernate.resource.transaction.spi.TransactionObserver;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
-import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 import java.io.IOException;
@@ -134,6 +125,7 @@ import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 import static org.hibernate.jpa.internal.util.CacheModeHelper.interpretCacheMode;
+import static org.hibernate.jpa.internal.util.ConfigurationHelper.getBoolean;
 import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.getFlushModeType;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
@@ -198,7 +190,7 @@ public class SessionImpl
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 
-		final DiagnosticEvent sessionOpenEvent = getEventMonitor().beginSessionOpenEvent();
+		final var sessionOpenEvent = getEventMonitor().beginSessionOpenEvent();
 		try {
 			persistenceContext = createPersistenceContext();
 			actionQueue = createActionQueue();
@@ -230,7 +222,7 @@ public class SessionImpl
 
 			setUpMultitenancy( factory, loadQueryInfluencers );
 
-			final StatisticsImplementor statistics = factory.getStatistics();
+			final var statistics = factory.getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.openSession();
 			}
@@ -284,7 +276,7 @@ public class SessionImpl
 	}
 
 	protected void applyLockOptionsHint(SelectionQuery<?> query) {
-		final LockOptions lockOptionsForRead = getLockOptionsForRead();
+		final var lockOptionsForRead = getLockOptionsForRead();
 		if ( lockOptionsForRead.getLockMode() != LockMode.NONE ) {
 			query.setLockMode( getLockMode( lockOptionsForRead.getLockMode() ) );
 		}
@@ -386,8 +378,8 @@ public class SessionImpl
 			log.tracef( "Closing session [%s]", getSessionIdentifier() );
 		}
 
-		final EventMonitor eventMonitor = getEventMonitor();
-		final DiagnosticEvent sessionClosedEvent = eventMonitor.beginSessionClosedEvent();
+		final var eventMonitor = getEventMonitor();
+		final var sessionClosedEvent = eventMonitor.beginSessionClosedEvent();
 		try {
 			if ( isJpaBootstrap() ) {
 				// Original HEM close behavior
@@ -413,7 +405,7 @@ public class SessionImpl
 			}
 		}
 		finally {
-			final StatisticsImplementor statistics = getSessionFactory().getStatistics();
+			final var statistics = getSessionFactory().getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.closeSession();
 			}
@@ -540,7 +532,7 @@ public class SessionImpl
 			throw new NullPointerException( "null object passed to getCurrentLockMode()" );
 		}
 
-		final LazyInitializer lazyInitializer = extractLazyInitializer( object );
+		final var lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
 			object = lazyInitializer.getImplementation( this );
 			if ( object == null ) {
@@ -548,7 +540,7 @@ public class SessionImpl
 			}
 		}
 
-		final EntityEntry entry = getEntityEntry( object );
+		final var entry = getEntityEntry( object );
 		if ( entry.getStatus().isDeletedOrGone() ) {
 			throw new ObjectDeletedException( "Given entity was removed", entry.getId(),
 					entry.getPersister().getEntityName() );
@@ -620,7 +612,7 @@ public class SessionImpl
 
 	@Override
 	public void lock(Object object, LockMode lockMode) {
-		final LockOptions lockOptions = copySessionLockOptions();
+		final var lockOptions = copySessionLockOptions();
 		lockOptions.setLockMode( lockMode );
 		fireLock( new LockEvent( object, lockOptions, this ) );
 	}
@@ -875,7 +867,7 @@ public class SessionImpl
 
 	private void logRemoveOrphanBeforeUpdates(String timing, String entityName, Object entity) {
 		if ( log.isTraceEnabled() ) {
-			final EntityEntry entityEntry = persistenceContext.getEntry( entity );
+			final var entityEntry = persistenceContext.getEntry( entity );
 			log.tracef(
 					"%s remove orphan before updates: [%s]",
 					timing,
@@ -1015,23 +1007,23 @@ public class SessionImpl
 	@Override
 	public Object immediateLoad(String entityName, Object id) {
 		if ( log.isDebugEnabled() ) {
-			final EntityPersister persister = requireEntityPersister( entityName );
+			final var persister = requireEntityPersister( entityName );
 			log.tracef( "Initializing proxy: %s", infoString( persister, id, getFactory() ) );
 		}
 		final LoadEvent event = makeLoadEvent( entityName, id, getReadOnlyFromLoadQueryInfluencers(), true );
 		fireLoadNoChecks( event, IMMEDIATE_LOAD );
 		final Object result = event.getResult();
 		releaseLoadEvent( event );
-		final LazyInitializer lazyInitializer = extractLazyInitializer( result );
+		final var lazyInitializer = extractLazyInitializer( result );
 		return lazyInitializer != null ? lazyInitializer.getImplementation() : result;
 	}
 
 	@Override
 	public Object internalLoad(String entityName, Object id, boolean eager, boolean nullable) {
 		final LoadType type = internalLoadType( eager, nullable );
-		final EffectiveEntityGraph effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
-		final GraphSemantic semantic = effectiveEntityGraph.getSemantic();
-		final RootGraphImplementor<?> graph = effectiveEntityGraph.getGraph();
+		final var effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
+		final var semantic = effectiveEntityGraph.getSemantic();
+		final var graph = effectiveEntityGraph.getGraph();
 		boolean clearedEffectiveGraph;
 		if ( semantic == null
 				|| graph.appliesTo( getFactory().getJpaMetamodel().entity( entityName ) ) ) {
@@ -1558,7 +1550,7 @@ public class SessionImpl
 		if ( object == null ) {
 			throw new IllegalArgumentException( "Entity may not be null" );
 		}
-		final LazyInitializer lazyInitializer = extractLazyInitializer( object );
+		final var lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
 			checkOwnsProxy( lazyInitializer );
 			return lazyInitializer.getInternalIdentifier();
@@ -1576,19 +1568,18 @@ public class SessionImpl
 	@Override
 	public Object getContextEntityIdentifier(Object object) {
 		checkOpenOrWaitingForAutoClose();
-		final LazyInitializer lazyInitializer = extractLazyInitializer( object );
+		final var lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
 			return lazyInitializer.getInternalIdentifier();
 		}
 		else if ( isPersistentAttributeInterceptable( object ) ) {
-			final PersistentAttributeInterceptor interceptor =
-					asPersistentAttributeInterceptable( object ).$$_hibernate_getInterceptor();
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				return ( (EnhancementAsProxyLazinessInterceptor) interceptor ).getIdentifier();
+			if ( asPersistentAttributeInterceptable( object ).$$_hibernate_getInterceptor()
+					instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor ) {
+				return lazinessInterceptor.getIdentifier();
 			}
 		}
 
-		final EntityEntry entry = persistenceContext.getEntry( object );
+		final var entry = persistenceContext.getEntry( object );
 		return entry != null ? entry.getId() : null;
 	}
 
@@ -1602,7 +1593,7 @@ public class SessionImpl
 		}
 
 		try {
-			final LazyInitializer lazyInitializer = extractLazyInitializer( object );
+			final var lazyInitializer = extractLazyInitializer( object );
 			if ( lazyInitializer != null ) {
 				// don't use proxiesByKey, since not all
 				// proxies that point to this session's
@@ -1625,7 +1616,7 @@ public class SessionImpl
 			// A session is considered to contain an entity only if the entity has
 			// an entry in the session's persistence context and the entry reports
 			// that the entity has not been removed
-			final EntityEntry entry = persistenceContext.getEntry( object );
+			final var entry = persistenceContext.getEntry( object );
 			delayedAfterCompletion();
 
 			if ( entry == null ) {
@@ -1670,7 +1661,7 @@ public class SessionImpl
 		}
 
 		try {
-			final LazyInitializer lazyInitializer = extractLazyInitializer( object );
+			final var lazyInitializer = extractLazyInitializer( object );
 			if ( lazyInitializer == null && persistenceContext.getEntry( object ) == null ) {
 				// check if it is an entity -> if not throw an exception (per JPA)
 				try {
@@ -1702,7 +1693,7 @@ public class SessionImpl
 			// A session is considered to contain an entity only if the entity has
 			// an entry in the session's persistence context and the entry reports
 			// that the entity has not been removed
-			final EntityEntry entry = persistenceContext.getEntry( object );
+			final var entry = persistenceContext.getEntry( object );
 			delayedAfterCompletion();
 			return entry != null && !entry.getStatus().isDeletedOrGone();
 		}
@@ -1737,31 +1728,7 @@ public class SessionImpl
 
 	@Override
 	public <T> QueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery) {
-		checkOpen();
-		if ( selectQuery instanceof CriteriaDefinition<T> criteriaDefinition ) {
-			return (QueryImplementor<T>) criteriaDefinition.createSelectionQuery(this);
-		}
-		else {
-			try {
-				final SqmSelectStatement<T> selectStatement = (SqmSelectStatement<T>) selectQuery;
-				if ( ! ( selectStatement.getQueryPart() instanceof SqmQueryGroup ) ) {
-					final SqmQuerySpec<T> querySpec = selectStatement.getQuerySpec();
-					if ( querySpec.getSelectClause().getSelections().isEmpty() ) {
-						if ( querySpec.getFromClause().getRoots().size() == 1 ) {
-							querySpec.getSelectClause().setSelection( querySpec.getFromClause().getRoots().get(0) );
-						}
-					}
-				}
-
-				return createCriteriaQuery( selectStatement, selectStatement.getResultType() );
-			}
-			catch (RuntimeException e) {
-				if ( getSessionFactory().getSessionFactoryOptions().getJpaCompliance().isJpaTransactionComplianceEnabled() ) {
-					markForRollbackOnly();
-				}
-				throw getExceptionConverter().convert( e );
-			}
-		}
+		return createQuery( (CriteriaQuery<T>) selectQuery );
 	}
 
 	@Override
@@ -1776,7 +1743,7 @@ public class SessionImpl
 
 	@Override
 	public String bestGuessEntityName(Object object) {
-		final LazyInitializer lazyInitializer = extractLazyInitializer( object );
+		final var lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
 			// it is possible for this method to be called during flush processing,
 			// so make certain that we do not accidentally initialize an uninitialized proxy
@@ -1785,7 +1752,7 @@ public class SessionImpl
 			}
 			object = lazyInitializer.getImplementation();
 		}
-		final EntityEntry entry = persistenceContext.getEntry( object );
+		final var entry = persistenceContext.getEntry( object );
 		return entry == null
 				? guessEntityName( object )
 				: entry.getPersister().getEntityName();
@@ -1793,7 +1760,7 @@ public class SessionImpl
 
 	@Override
 	public String bestGuessEntityName(Object object, EntityEntry entry) {
-		final LazyInitializer lazyInitializer = extractLazyInitializer( object );
+		final var lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
 			// it is possible for this method to be called during flush processing,
 			// so make certain that we do not accidentally initialize an uninitialized proxy
@@ -1816,7 +1783,7 @@ public class SessionImpl
 			throw new IllegalArgumentException( "Entity may not be null" );
 		}
 
-		final LazyInitializer lazyInitializer = extractLazyInitializer( object );
+		final var lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
 			checkOwnsProxy( lazyInitializer );
 			object = lazyInitializer.getImplementation();
@@ -1832,7 +1799,7 @@ public class SessionImpl
 	}
 
 	private EntityEntry getEntityEntry(Object object) {
-		final EntityEntry entry = persistenceContext.getEntry( object );
+		final var entry = persistenceContext.getEntry( object );
 		if ( entry == null ) {
 			throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
 		}
@@ -1842,12 +1809,12 @@ public class SessionImpl
 	@Override @SuppressWarnings("unchecked")
 	public <T> T getReference(T object) {
 		checkOpen();
-		final LazyInitializer lazyInitializer = extractLazyInitializer( object );
+		final var lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
 			return (T) getReference( lazyInitializer.getPersistentClass(), lazyInitializer.getInternalIdentifier() );
 		}
 		else {
-			final EntityPersister persister = getEntityPersister( null, object );
+			final var persister = getEntityPersister( null, object );
 			return (T) getReference( persister.getMappedClass(), persister.getIdentifier(object, this) );
 		}
 	}
@@ -1866,7 +1833,7 @@ public class SessionImpl
 
 	@Override
 	public String toString() {
-		final StringBuilder string =
+		final var string =
 				new StringBuilder( 500 )
 						.append( "SessionImpl(" )
 						.append( System.identityHashCode( this ) );
@@ -2388,7 +2355,7 @@ public class SessionImpl
 		if ( lockModeType == null ) {
 			throw new IllegalArgumentException("Given LockModeType was null");
 		}
-		final LockMode lockMode = LockModeTypeHelper.getLockMode( lockModeType );
+		final var lockMode = LockModeTypeHelper.getLockMode( lockModeType );
 		checkTransactionNeededForLock( lockMode );
 		return find( entityClass, primaryKey, buildLockOptions( lockMode, properties ), properties );
 	}
@@ -2528,8 +2495,8 @@ public class SessionImpl
 
 	@Override
 	public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
-		final RootGraph<T> graph = (RootGraph<T>) entityGraph;
-		final ManagedDomainType<T> type = graph.getGraphedType();
+		final var graph = (RootGraph<T>) entityGraph;
+		final var type = graph.getGraphedType();
 		final IdentifierLoadAccessImpl<T> loadAccess =
 				switch ( type.getRepresentationMode() ) {
 					case MAP -> byId( type.getTypeName() );
@@ -2556,7 +2523,7 @@ public class SessionImpl
 		}
 		else {
 			final Object value = properties.get( HINT_READ_ONLY );
-			return value == null ? null : ConfigurationHelper.getBoolean( value );
+			return value == null ? null : getBoolean( value );
 		}
 	}
 
@@ -2600,13 +2567,13 @@ public class SessionImpl
 
 	@Override
 	public Object find(String entityName, Object primaryKey) {
-		final IdentifierLoadAccessImpl<Object> loadAccess = byId( entityName );
+		final IdentifierLoadAccessImpl<?> loadAccess = byId( entityName );
 		return loadAccess.load( primaryKey );
 	}
 
 	@Override
 	public Object find(String entityName, Object primaryKey, FindOption... options) {
-		final IdentifierLoadAccessImpl<Object> loadAccess = byId( entityName );
+		final IdentifierLoadAccessImpl<?> loadAccess = byId( entityName );
 		setLoadAccessOptions( options, loadAccess );
 		return loadAccess.load( primaryKey );
 	}
@@ -2657,9 +2624,9 @@ public class SessionImpl
 	}
 
 	private LockOptions buildLockOptions(LockMode lockMode, LockOption[] options) {
-		final LockOptions lockOptions = copySessionLockOptions();
+		final var lockOptions = copySessionLockOptions();
 		lockOptions.setLockMode( lockMode );
-		for ( LockOption option : options ) {
+		for ( var option : options ) {
 			if ( option instanceof PessimisticLockScope lockScope ) {
 				lockOptions.setLockScope( lockScope );
 			}
@@ -2671,7 +2638,7 @@ public class SessionImpl
 	}
 
 	private LockOptions buildLockOptions(LockMode lockMode, Map<String, Object> properties) {
-		final LockOptions lockOptions = copySessionLockOptions();
+		final var lockOptions = copySessionLockOptions();
 		lockOptions.setLockMode( lockMode );
 		if ( properties != null ) {
 			applyPropertiesToLockOptions( properties, () -> lockOptions );
@@ -2680,7 +2647,7 @@ public class SessionImpl
 	}
 
 	private LockOptions copySessionLockOptions() {
-		final LockOptions copiedLockOptions = new LockOptions();
+		final var copiedLockOptions = new LockOptions();
 		if ( lockOptions != null ) {
 			LockOptions.copy( lockOptions, copiedLockOptions );
 		}
@@ -2889,7 +2856,7 @@ public class SessionImpl
 	public ProcedureCall createNamedStoredProcedureQuery(String name) {
 		checkOpen();
 		try {
-			final NamedCallableQueryMemento memento =
+			final var memento =
 					getFactory().getQueryEngine().getNamedObjectRepository()
 							.getCallableQueryMemento( name );
 			if ( memento == null ) {

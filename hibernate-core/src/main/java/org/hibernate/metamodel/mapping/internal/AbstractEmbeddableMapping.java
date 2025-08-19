@@ -202,6 +202,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 								creationProcess
 						)
 				);
+				toOne.setupCircularFetchModelPart( creationProcess );
 
 				attributeMapping = toOne;
 				currentIndex += attributeMapping.getJdbcTypeCount();

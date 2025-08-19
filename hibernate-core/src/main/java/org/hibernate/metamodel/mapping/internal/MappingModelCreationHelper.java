@@ -865,7 +865,8 @@ public class MappingModelCreationHelper {
 				return interpretNestedToOneKeyDescriptor(
 						referencedEntityDescriptor,
 						referencedPropertyName,
-						attributeMapping
+						attributeMapping,
+						creationProcess
 				);
 			}
 
@@ -893,6 +894,7 @@ public class MappingModelCreationHelper {
 						creationProcess
 				);
 				attributeMapping.setForeignKeyDescriptor( embeddedForeignKeyDescriptor );
+				attributeMapping.setupCircularFetchModelPart( creationProcess );
 			}
 			else if ( modelPart == null ) {
 				throw new IllegalArgumentException( "Unable to find attribute " + bootProperty.getPersistentClass()
@@ -985,6 +987,7 @@ public class MappingModelCreationHelper {
 					swapDirection
 			);
 			attributeMapping.setForeignKeyDescriptor( foreignKeyDescriptor );
+			attributeMapping.setupCircularFetchModelPart( creationProcess );
 			creationProcess.registerForeignKey( attributeMapping, foreignKeyDescriptor );
 		}
 		else if ( fkTarget instanceof EmbeddableValuedModelPart ) {
@@ -1001,6 +1004,7 @@ public class MappingModelCreationHelper {
 					creationProcess
 			);
 			attributeMapping.setForeignKeyDescriptor( embeddedForeignKeyDescriptor );
+			attributeMapping.setupCircularFetchModelPart( creationProcess );
 			creationProcess.registerForeignKey( attributeMapping, embeddedForeignKeyDescriptor );
 		}
 		else {
@@ -1021,13 +1025,15 @@ public class MappingModelCreationHelper {
 	 * @param referencedEntityDescriptor The entity which contains the inverse property
 	 * @param referencedPropertyName The inverse property name path
 	 * @param attributeMapping The attribute for which we try to set the foreign key
+	 * @param creationProcess The creation process
 	 * @return true if the foreign key is actually set
 	 */
 	private static boolean interpretNestedToOneKeyDescriptor(
 			EntityPersister referencedEntityDescriptor,
 			String referencedPropertyName,
-			ToOneAttributeMapping attributeMapping) {
-		String[] propertyPath = StringHelper.split( ".", referencedPropertyName );
+			ToOneAttributeMapping attributeMapping,
+			MappingModelCreationProcess creationProcess) {
+		final String[] propertyPath = StringHelper.split( ".", referencedPropertyName );
 		EmbeddableValuedModelPart lastEmbeddableModelPart = null;
 
 		for ( int i = 0; i < propertyPath.length; i++ ) {
@@ -1052,6 +1058,7 @@ public class MappingModelCreationHelper {
 				}
 
 				attributeMapping.setForeignKeyDescriptor( foreignKeyDescriptor );
+				attributeMapping.setupCircularFetchModelPart( creationProcess );
 				return true;
 			}
 			if ( modelPart instanceof EmbeddableValuedModelPart ) {

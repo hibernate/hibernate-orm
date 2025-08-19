@@ -230,7 +230,6 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
-import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.invariant;
 import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -1377,8 +1376,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		functionRegistry.register( "sql", new SqlFunction() );
 
 		functionRegistry.namedDescriptorBuilder( "regexp_like"  )
-				.setParameterTypes( STRING, STRING )
-				.setReturnTypeResolver( invariant( basicTypeRegistry.resolve( BOOLEAN ) ) )
+				.setArgumentCountBetween( 2, 3 )
+				.setParameterTypes( STRING, STRING, STRING )
+				.setInvariantType( basicTypeRegistry.resolve( BOOLEAN ) )
 				.register();
 	}
 

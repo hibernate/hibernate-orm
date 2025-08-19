@@ -60,7 +60,6 @@ import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtract
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
-import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.invariant;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.OTHER;
 import static org.hibernate.type.SqlTypes.UUID;
@@ -152,7 +151,7 @@ public class MariaDBDialect extends MySQLDialect {
 
 		functionRegistry.patternDescriptorBuilder( "regexp_like", "?1 regexp ?2" )
 				.setParameterTypes( STRING, STRING )
-				.setReturnTypeResolver( invariant( basicTypeRegistry.resolve( BOOLEAN ) ) )
+				.setInvariantType( basicTypeRegistry.resolve( BOOLEAN ) )
 				.register();
 	}
 

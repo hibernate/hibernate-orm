@@ -59,7 +59,6 @@ import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
-import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.invariant;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.DATE;
 import static org.hibernate.type.SqlTypes.NCLOB;
@@ -195,8 +194,8 @@ public class SybaseASEDialect extends SybaseDialect {
 		functionContributions.getFunctionRegistry()
 				.patternDescriptorBuilder( "regexp_like", "?1 regexp ?2" )
 				.setParameterTypes( STRING, STRING )
-				.setReturnTypeResolver( invariant( functionContributions.getTypeConfiguration().getBasicTypeRegistry()
-						.resolve( StandardBasicTypes.BOOLEAN ) ) )
+				.setInvariantType( functionContributions.getTypeConfiguration().getBasicTypeRegistry()
+						.resolve( StandardBasicTypes.BOOLEAN ) )
 				.register();
 	}
 

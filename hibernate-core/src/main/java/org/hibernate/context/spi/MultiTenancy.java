@@ -4,6 +4,7 @@
  */
 package org.hibernate.context.spi;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
@@ -41,6 +42,7 @@ public class MultiTenancy {
 	 * Obtain the configured {@link CurrentTenantIdentifierResolver}.
 	 */
 	@SuppressWarnings("unchecked")
+	@Nullable
 	public static CurrentTenantIdentifierResolver<Object> getTenantIdentifierResolver(
 			Map<String,Object> settings, StandardServiceRegistry registry) {
 		final var currentTenantIdentifierResolver =
@@ -65,6 +67,7 @@ public class MultiTenancy {
 	 * Obtain the configured {@link TenantSchemaMapper}.
 	 */
 	@SuppressWarnings("unchecked")
+	@Nullable
 	public static TenantSchemaMapper<Object> getTenantSchemaMapper(
 			Map<String,Object> settings, StandardServiceRegistry registry) {
 		final var tenantSchemaMapper =

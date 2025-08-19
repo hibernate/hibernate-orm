@@ -167,11 +167,12 @@ public final class Template {
 		boolean beforeTable = false;
 		boolean inFromClause = false;
 		boolean afterFromTable = false;
-		boolean inExtractOrTrim = false;
-		boolean inCast = false;
 		boolean afterCastAs = false;
 		boolean afterFetch = false;
 		boolean afterCurrent = false;
+		int inExtractOrTrim = -1;
+		int inCast = -1;
+		int nestingLevel = 0;
 
 		boolean hasMore = tokens.hasMoreTokens();
 		String nextToken = hasMore ? tokens.nextToken() : null;
@@ -245,12 +246,16 @@ public final class Template {
 				processedToken = token;
 			}
 			else if ( "(".equals(lcToken) ) {
+				nestingLevel ++;
 				processedToken = token;
 			}
 			else if ( ")".equals(lcToken) ) {
-				inExtractOrTrim = false;
-				if ( afterCastAs ) {
-					inCast = false;
+				nestingLevel --;
+				if ( nestingLevel == inExtractOrTrim ) {
+					inExtractOrTrim = -1;
+				}
+				if ( nestingLevel == inCast ) {
+					inCast = -1;
 					afterCastAs = false;
 				}
 				processedToken = token;
@@ -265,7 +270,7 @@ public final class Template {
 				processedToken = token;
 			}
 			else if ( BEFORE_TABLE_KEYWORDS.contains(lcToken) ) {
-				if ( !inExtractOrTrim ) {
+				if ( inExtractOrTrim == -1 ) {
 					beforeTable = true;
 					inFromClause = true;
 				}
@@ -282,7 +287,7 @@ public final class Template {
 			}
 			else if ( "as".equals( lcToken ) ) {
 				processedToken = token;
-				afterCastAs = inCast;
+				afterCastAs = inCast>-1;
 			}
 			else if ( isFetch( dialect, lcToken ) ) {
 				processedToken = token;
@@ -300,10 +305,10 @@ public final class Template {
 			}
 			else if ( isFunctionCall( nextToken, sql, symbols, tokens ) ) {
 				if ( FUNCTION_WITH_FROM_KEYWORDS.contains( lcToken ) ) {
-					inExtractOrTrim = true;
+					inExtractOrTrim = nestingLevel;
 				}
 				if ( "cast".equals( lcToken ) ) {
-					inCast = true;
+					inCast = nestingLevel;
 				}
 				processedToken = token;
 			}

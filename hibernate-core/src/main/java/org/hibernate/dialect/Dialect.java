@@ -149,7 +149,6 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.TableMigrator;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -230,12 +229,13 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
+import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.invariant;
 import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
-import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.DATE;
@@ -269,6 +269,7 @@ import static org.hibernate.type.SqlTypes.isIntegral;
 import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
 import static org.hibernate.type.SqlTypes.isVarbinaryType;
 import static org.hibernate.type.SqlTypes.isVarcharType;
+import static org.hibernate.type.StandardBasicTypes.BOOLEAN;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
@@ -434,7 +435,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
-		ddlTypeRegistry.addDescriptor( simpleSqlType( BOOLEAN ) );
+		ddlTypeRegistry.addDescriptor( simpleSqlType( SqlTypes.BOOLEAN ) );
 
 		ddlTypeRegistry.addDescriptor( simpleSqlType( TINYINT ) );
 		ddlTypeRegistry.addDescriptor( simpleSqlType( SMALLINT ) );
@@ -575,7 +576,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return switch (sqlTypeCode) {
 			case ROWID -> "rowid";
 
-			case BOOLEAN -> "boolean";
+			case SqlTypes.BOOLEAN -> "boolean";
 
 			case TINYINT -> "tinyint";
 			case SMALLINT -> "smallint";
@@ -1374,6 +1375,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		functionRegistry.registerAlternateKey( "current_instant", "instant" ); //deprecated legacy!
 
 		functionRegistry.register( "sql", new SqlFunction() );
+
+		functionRegistry.namedDescriptorBuilder( "regexp_like"  )
+				.setParameterTypes( STRING, STRING )
+				.setReturnTypeResolver( invariant( basicTypeRegistry.resolve( BOOLEAN ) ) )
+				.register();
 	}
 
 	/**

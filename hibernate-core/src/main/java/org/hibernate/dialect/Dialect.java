@@ -1103,8 +1103,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * functions with the same names.
 	 */
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
-		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+		final var typeConfiguration = functionContributions.getTypeConfiguration();
+		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 		final BasicType<Date> timestampType = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
 		final BasicType<Date> dateType = basicTypeRegistry.resolve( StandardBasicTypes.DATE );
 		final BasicType<Date> timeType = basicTypeRegistry.resolve( StandardBasicTypes.TIME );
@@ -1114,6 +1114,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		final BasicType<LocalTime> localTimeType = basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_TIME );
 		final BasicType<LocalDate> localDateType = basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_DATE );
 
+		final var functionRegistry = functionContributions.getFunctionRegistry();
 		final var functionFactory = new CommonFunctionFactory( functionContributions );
 
 		//standard aggregate functions count(), sum(), max(), min(), avg(),
@@ -1196,20 +1197,20 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		//only some databases support the ANSI SQL-style position() function, so
 		//define it here as an alias for locate()
 
-		functionContributions.getFunctionRegistry().register( "position",
+		functionRegistry.register( "position",
 				new LocatePositionEmulation( typeConfiguration ) );
 
 		//very few databases support ANSI-style overlay() function, so emulate
 		//it here in terms of either insert() or concat()/substring()
 
-		functionContributions.getFunctionRegistry().register( "overlay",
+		functionRegistry.register( "overlay",
 				new InsertSubstringOverlayEmulation( typeConfiguration, false ) );
 
 		//ANSI SQL trim() function is supported on almost all of the databases
 		//we care about, but on some it must be emulated using ltrim(), rtrim(),
 		//and replace()
 
-		functionContributions.getFunctionRegistry().register( "trim",
+		functionRegistry.register( "trim",
 				new TrimFunction( this, typeConfiguration ) );
 
 		//ANSI SQL cast() function is supported on the databases we care most
@@ -1220,7 +1221,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		// - casts to and from Boolean, and
 		// - casting Double or Float to String.
 
-		functionContributions.getFunctionRegistry().register(
+		functionRegistry.register(
 				"cast",
 				new CastFunction(
 						this,
@@ -1239,7 +1240,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		//additional non-standard temporal field types, which must be emulated in
 		//a very dialect-specific way
 
-		functionContributions.getFunctionRegistry().register( "extract",
+		functionRegistry.register( "extract",
 				new ExtractFunction( this, typeConfiguration ) );
 
 		//comparison functions supported on most databases, emulated on others
@@ -1250,7 +1251,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		//two-argument synonym for coalesce() supported on most but not every
 		//database, so define it here as an alias for coalesce(arg1,arg2)
 
-		functionContributions.getFunctionRegistry().register( "ifnull",
+		functionRegistry.register( "ifnull",
 				new CoalesceIfnullEmulation() );
 
 		//rpad() and pad() are supported on almost every database, and emulated
@@ -1261,23 +1262,23 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 		//pad() is a function we've designed to look like ANSI trim()
 
-		functionContributions.getFunctionRegistry().register( "pad",
+		functionRegistry.register( "pad",
 				new LpadRpadPadEmulation( typeConfiguration ) );
 
 		//legacy Hibernate convenience function for casting to string, defined
 		//here as an alias for cast(arg as String)
 
-		functionContributions.getFunctionRegistry().register( "str",
+		functionRegistry.register( "str",
 				new CastStrEmulation( typeConfiguration ) );
 
 		// Function to convert enum mapped as Ordinal to their ordinal value
 
-		functionContributions.getFunctionRegistry().register( "ordinal",
+		functionRegistry.register( "ordinal",
 				new OrdinalFunction( typeConfiguration ) );
 
 		// Function to convert enum mapped as String to their string value
 
-		functionContributions.getFunctionRegistry().register( "string",
+		functionRegistry.register( "string",
 				new StringFunction( typeConfiguration ) );
 
 		//format() function for datetimes, emulated on many databases using the
@@ -1290,13 +1291,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		//since there is a great variety of different ways to emulate them
 		//by default, we don't allow plain parameters for the timestamp argument as most database don't support this
 		functionFactory.timestampaddAndDiff( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
-		functionContributions.getFunctionRegistry().registerAlternateKey( "dateadd", "timestampadd" );
-		functionContributions.getFunctionRegistry().registerAlternateKey( "datediff", "timestampdiff" );
+		functionRegistry.registerAlternateKey( "dateadd", "timestampadd" );
+		functionRegistry.registerAlternateKey( "datediff", "timestampdiff" );
 
 		//ANSI SQL (and JPA) current date/time/timestamp functions, supported
 		//natively on almost every database, delegated back to the Dialect
 
-		functionContributions.getFunctionRegistry().register(
+		functionRegistry.register(
 				"current_date",
 				new CurrentFunction(
 						"current_date",
@@ -1304,7 +1305,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 						dateType
 				)
 		);
-		functionContributions.getFunctionRegistry().register(
+		functionRegistry.register(
 				"current_time",
 				new CurrentFunction(
 						"current_time",
@@ -1312,7 +1313,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 						timeType
 				)
 		);
-		functionContributions.getFunctionRegistry().register(
+		functionRegistry.register(
 				"current_timestamp",
 				new CurrentFunction(
 						"current_timestamp",
@@ -1320,12 +1321,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 						timestampType
 				)
 		);
-		functionContributions.getFunctionRegistry().registerAlternateKey( "current date", "current_date" );
-		functionContributions.getFunctionRegistry().registerAlternateKey( "current time", "current_time" );
-		functionContributions.getFunctionRegistry().registerAlternateKey( "current timestamp", "current_timestamp" );
+		functionRegistry.registerAlternateKey( "current date", "current_date" );
+		functionRegistry.registerAlternateKey( "current time", "current_time" );
+		functionRegistry.registerAlternateKey( "current timestamp", "current_timestamp" );
 		//HQL current instant/date/time/datetime functions, delegated back to the Dialect
 
-		functionContributions.getFunctionRegistry().register(
+		functionRegistry.register(
 				"local_date",
 				new CurrentFunction(
 						"local_date",
@@ -1333,7 +1334,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 						localDateType
 				)
 		);
-		functionContributions.getFunctionRegistry().register(
+		functionRegistry.register(
 				"local_time",
 				new CurrentFunction(
 						"local_time",
@@ -1341,7 +1342,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 						localTimeType
 				)
 		);
-		functionContributions.getFunctionRegistry().register(
+		functionRegistry.register(
 				"local_datetime",
 				new CurrentFunction(
 						"local_datetime",
@@ -1349,7 +1350,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 						localDateTimeType
 				)
 		);
-		functionContributions.getFunctionRegistry().register(
+		functionRegistry.register(
 				"offset_datetime",
 				new CurrentFunction(
 						"offset_datetime",
@@ -1357,12 +1358,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 						offsetDateTimeType
 				)
 		);
-		functionContributions.getFunctionRegistry().registerAlternateKey( "local date", "local_date" );
-		functionContributions.getFunctionRegistry().registerAlternateKey( "local time", "local_time" );
-		functionContributions.getFunctionRegistry().registerAlternateKey( "local datetime", "local_datetime" );
-		functionContributions.getFunctionRegistry().registerAlternateKey( "offset datetime", "offset_datetime" );
+		functionRegistry.registerAlternateKey( "local date", "local_date" );
+		functionRegistry.registerAlternateKey( "local time", "local_time" );
+		functionRegistry.registerAlternateKey( "local datetime", "local_datetime" );
+		functionRegistry.registerAlternateKey( "offset datetime", "offset_datetime" );
 
-		functionContributions.getFunctionRegistry().register(
+		functionRegistry.register(
 				"instant",
 				new CurrentFunction(
 						"instant",
@@ -1370,9 +1371,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 						instantType
 				)
 		);
-		functionContributions.getFunctionRegistry().registerAlternateKey( "current_instant", "instant" ); //deprecated legacy!
+		functionRegistry.registerAlternateKey( "current_instant", "instant" ); //deprecated legacy!
 
-		functionContributions.getFunctionRegistry().register( "sql", new SqlFunction() );
+		functionRegistry.register( "sql", new SqlFunction() );
 	}
 
 	/**

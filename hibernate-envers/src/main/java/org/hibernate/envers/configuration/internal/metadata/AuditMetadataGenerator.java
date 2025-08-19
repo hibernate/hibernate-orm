@@ -343,7 +343,10 @@ public final class AuditMetadataGenerator {
 				// Verifies if a mapping exists using a @JoinColumn against a @NaturalId field
 				// and if so, this eliminates the mapping property as it isn't needed.
 				if ( property instanceof SyntheticProperty ) {
-					if ( property.getValue().isAlternateUniqueKey() ) {
+					if ( property.getValue().isAlternateUniqueKey() ||
+							// HHH-14263
+							// If synthetic property is non-insertable, non-updatable, then no need to audit it
+							!(property.isInsertable() || property.isUpdateable()) ) {
 						continue;
 					}
 				}

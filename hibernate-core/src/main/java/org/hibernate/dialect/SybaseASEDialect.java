@@ -37,6 +37,7 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
@@ -57,6 +58,8 @@ import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
+import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.invariant;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.DATE;
 import static org.hibernate.type.SqlTypes.NCLOB;
@@ -188,6 +191,13 @@ public class SybaseASEDialect extends SybaseDialect {
 		functionFactory.unnest_sybasease();
 		functionFactory.generateSeries_sybasease( getMaximumSeriesSize() );
 		functionFactory.xmltable_sybasease();
+
+		functionContributions.getFunctionRegistry()
+				.patternDescriptorBuilder( "regexp_like", "?1 regexp ?2" )
+				.setParameterTypes( STRING, STRING )
+				.setReturnTypeResolver( invariant( functionContributions.getTypeConfiguration().getBasicTypeRegistry()
+						.resolve( StandardBasicTypes.BOOLEAN ) ) )
+				.register();
 	}
 
 	/**

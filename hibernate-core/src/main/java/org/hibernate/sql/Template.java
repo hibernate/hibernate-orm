@@ -249,8 +249,10 @@ public final class Template {
 			}
 			else if ( ")".equals(lcToken) ) {
 				inExtractOrTrim = false;
-				inCast = false;
-				afterCastAs = false;
+				if ( afterCastAs ) {
+					inCast = false;
+					afterCastAs = false;
+				}
 				processedToken = token;
 			}
 			else if ( ",".equals(lcToken) ) {

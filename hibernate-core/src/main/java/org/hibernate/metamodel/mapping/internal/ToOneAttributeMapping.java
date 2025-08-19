@@ -41,6 +41,7 @@ import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -178,6 +179,7 @@ public class ToOneAttributeMapping
 	private ForeignKeyDescriptor.Nature sideNature;
 	private String identifyingColumnsTableExpression;
 	private boolean canUseParentTableGroup;
+	private @Nullable EmbeddableValuedModelPart circularFetchModelPart;
 
 	/**
 	 * For Hibernate Reactive
@@ -868,6 +870,29 @@ public class ToOneAttributeMapping
 				&& declaringTableGroupProducer.containsTableReference( identifyingColumnsTableExpression );
 	}
 
+	public void setupCircularFetchModelPart(MappingModelCreationProcess creationProcess) {
+		final EntityIdentifierMapping entityIdentifierMapping = getAssociatedEntityMappingType().getIdentifierMapping();
+		if ( sideNature == ForeignKeyDescriptor.Nature.TARGET
+			&& entityIdentifierMapping instanceof CompositeIdentifierMapping
+			&& foreignKeyDescriptor.getKeyPart() != entityIdentifierMapping ) {
+			// Setup a special embeddable model part for fetching the key object for a circular fetch.
+			// This is needed if the association entity nests the "inverse" toOne association in the embedded id,
+			// because then, the key part of the foreign key is just a simple value instead of the expected embedded id
+			// when doing delayed creation/querying of target entities. See HHH-19687 for details
+			final CompositeIdentifierMapping identifierMapping = (CompositeIdentifierMapping) entityIdentifierMapping;
+			this.circularFetchModelPart = MappingModelCreationHelper.createInverseModelPart(
+					identifierMapping,
+					getDeclaringType(),
+					this,
+					foreignKeyDescriptor.getTargetPart(),
+					creationProcess
+			);
+		}
+		else {
+			this.circularFetchModelPart = null;
+		}
+	}
+
 	public String getIdentifyingColumnsTableExpression() {
 		return identifyingColumnsTableExpression;
 	}
@@ -1051,34 +1076,6 @@ public class ToOneAttributeMapping
 
 				We have a circularity but it is not bidirectional
 			 */
-			final TableGroup parentTableGroup = creationState
-					.getSqlAstCreationState()
-					.getFromClauseAccess()
-					.getTableGroup( fetchParent.getNavigablePath() );
-			final DomainResult<?> foreignKeyDomainResult;
-			assert !creationState.isResolvingCircularFetch();
-			try {
-				creationState.setResolvingCircularFetch( true );
-				if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
-					foreignKeyDomainResult = foreignKeyDescriptor.createKeyDomainResult(
-							fetchablePath,
-							createTableGroupForDelayedFetch( fetchablePath, parentTableGroup, null, creationState ),
-							fetchParent,
-							creationState
-					);
-				}
-				else {
-					foreignKeyDomainResult = foreignKeyDescriptor.createTargetDomainResult(
-							fetchablePath,
-							parentTableGroup,
-							fetchParent,
-							creationState
-					);
-				}
-			}
-			finally {
-				creationState.setResolvingCircularFetch( false );
-			}
 			return new CircularFetchImpl(
 					this,
 					fetchTiming,
@@ -1086,11 +1083,50 @@ public class ToOneAttributeMapping
 					fetchParent,
 					isSelectByUniqueKey( sideNature ),
 					parentNavigablePath,
-					foreignKeyDomainResult,
+					determineCircularKeyResult( fetchParent, fetchablePath, creationState ),
 					creationState
 			);
 		}
 		return null;
+	}
+
+	private DomainResult<?> determineCircularKeyResult(
+			FetchParent fetchParent,
+			NavigablePath fetchablePath,
+			DomainResultCreationState creationState) {
+		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
+		final TableGroup parentTableGroup = fromClauseAccess.getTableGroup( fetchParent.getNavigablePath() );
+		assert !creationState.isResolvingCircularFetch();
+		try {
+			creationState.setResolvingCircularFetch( true );
+			if ( circularFetchModelPart != null ) {
+				return circularFetchModelPart.createDomainResult(
+						fetchablePath,
+						createTableGroupForDelayedFetch( fetchablePath, parentTableGroup, null, creationState ),
+						null,
+						creationState
+				);
+			}
+			else if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
+				return foreignKeyDescriptor.createKeyDomainResult(
+						fetchablePath,
+						createTableGroupForDelayedFetch( fetchablePath, parentTableGroup, null, creationState ),
+						fetchParent,
+						creationState
+				);
+			}
+			else {
+				return foreignKeyDescriptor.createTargetDomainResult(
+						fetchablePath,
+						parentTableGroup,
+						fetchParent,
+						creationState
+				);
+			}
+		}
+		finally {
+			creationState.setResolvingCircularFetch( false );
+		}
 	}
 
 	protected boolean isBidirectionalAttributeName(

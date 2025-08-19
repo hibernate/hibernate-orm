@@ -8,6 +8,7 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Timeout;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.lock.PessimisticEntityLockException;
 import org.hibernate.jpa.SpecHints;
@@ -87,6 +88,7 @@ public class LockedRowsTests {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportNoWait.class)
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "no failure")
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Seems FOR UPDATE locks might block read accesses of other TXs")
 	void testLockNoWait(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			session.find(Book.class,1, PESSIMISTIC_WRITE);

@@ -680,7 +680,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	// collections ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	// Hibernate Reactive overrides this
+	// Hibernate Reactive calls this
 	protected void forEachOwnedCollection(
 			Object entity, Object key,
 			EntityPersister persister, BiConsumer<CollectionPersister, PersistentCollection<?>> action) {
@@ -701,7 +701,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 						collection =
 								value == null
 										? instantiateEmpty( key, descriptor )
-										: wrap( descriptor, value );
+										: wrap( descriptor, value, entity );
 					}
 					action.accept( descriptor, collection );
 				}
@@ -715,12 +715,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return descriptor.getCollectionSemantics().instantiateWrapper(key, descriptor, this);
 	}
 
-	//TODO: is this the right way to do this?
-	// Hibernate Reactive calls this
 	@SuppressWarnings({"rawtypes", "unchecked"})
-	protected PersistentCollection<?> wrap(CollectionPersister descriptor, Object collection) {
+	protected PersistentCollection<?> wrap(CollectionPersister descriptor, Object collection, Object owner) {
 		final CollectionSemantics collectionSemantics = descriptor.getCollectionSemantics();
-		return collectionSemantics.wrap(collection, descriptor, this);
+		var wrapped = collectionSemantics.wrap( collection, descriptor, this );
+		wrapped.setOwner( owner );
+		return wrapped;
 	}
 
 	// loading ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

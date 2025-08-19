@@ -45,7 +45,6 @@ import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMariaDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.SqlTypes;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharUUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -59,11 +58,11 @@ import java.util.Set;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.OTHER;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
+import static org.hibernate.type.StandardBasicTypes.BOOLEAN;
 
 /**
  * A {@linkplain Dialect SQL dialect} for MariaDB 10.6 and above.
@@ -121,15 +120,20 @@ public class MariaDBDialect extends MySQLDialect {
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
 
+		final var functionRegistry = functionContributions.getFunctionRegistry();
 		final var commonFunctionFactory = new CommonFunctionFactory( functionContributions );
+		final var basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 
 		commonFunctionFactory.windowFunctions();
 		commonFunctionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
-		functionContributions.getFunctionRegistry().registerNamed(
+		commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
+		commonFunctionFactory.median_medianOver();
+
+		commonFunctionFactory.regexpLike_regexp();
+
+		functionRegistry.registerNamed(
 				"json_valid",
-				functionContributions.getTypeConfiguration()
-						.getBasicTypeRegistry()
-						.resolve( StandardBasicTypes.BOOLEAN )
+				basicTypeRegistry.resolve( BOOLEAN )
 		);
 		commonFunctionFactory.jsonValue_mariadb();
 		commonFunctionFactory.jsonArray_mariadb();
@@ -139,13 +143,6 @@ public class MariaDBDialect extends MySQLDialect {
 		commonFunctionFactory.jsonArrayAppend_mariadb();
 		commonFunctionFactory.unnest_emulated();
 		commonFunctionFactory.jsonTable_mysql();
-
-		commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
-		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "median", "median(?1) over ()" )
-				.setInvariantType( functionContributions.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE ) )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
-				.register();
 	}
 
 	@Override
@@ -330,11 +327,6 @@ public class MariaDBDialect extends MySQLDialect {
 		builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 
 		return super.buildIdentifierHelper( builder, metadata );
-	}
-
-	@Override
-	public String getDual() {
-		return "dual";
 	}
 
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {

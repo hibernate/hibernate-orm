@@ -121,7 +121,7 @@ public class SelfRenderingSqmWindowFunction<T> extends SelfRenderingSqmFunction<
 		hql.append( getFunctionName() );
 		hql.append( '(' );
 		int i = 1;
-		if ( arguments.get( 0 ) instanceof SqmDistinct<?> ) {
+		if ( !arguments.isEmpty() && arguments.get( 0 ) instanceof SqmDistinct<?> ) {
 			arguments.get( 0 ).appendHqlString( hql, context );
 			if ( arguments.size() > 1 ) {
 				hql.append( ' ' );

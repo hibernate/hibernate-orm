@@ -149,7 +149,6 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.TableMigrator;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -1374,6 +1373,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		functionRegistry.registerAlternateKey( "current_instant", "instant" ); //deprecated legacy!
 
 		functionRegistry.register( "sql", new SqlFunction() );
+
+		functionFactory.regexpLike();
 	}
 
 	/**

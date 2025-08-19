@@ -10,21 +10,26 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.model.TableMapping;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -212,21 +217,61 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 	}
 
 	private void addColumnRefs(TableGroup tableGroup, List<String> lockItems) {
-		Collections.addAll( lockItems, determineKeyColumnRefs( tableGroup ) );
-	}
-
-	private String[] determineKeyColumnRefs(TableGroup tableGroup) {
 		final String[] keyColumns = determineKeyColumnNames( tableGroup.getModelPart() );
-		final String[] result = new String[keyColumns.length];
 		final String tableAlias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
 		for ( int i = 0; i < keyColumns.length; i++ ) {
 			// NOTE: in some tests with Oracle, the qualifiers are being applied twice;
 			//		still need to track that down.  possibly, unexpected calls to
 			//		`Dialect#applyLocksToSql`?
 			assert !keyColumns[i].contains( "." );
-			result[i] = tableAlias + "." + keyColumns[i];
+			lockItems.add( tableAlias + "." + keyColumns[i] );
 		}
-		return result;
+
+		final List<TableReferenceJoin> tableReferenceJoins = tableGroup.getTableReferenceJoins();
+		if ( CollectionHelper.isNotEmpty( tableReferenceJoins ) ) {
+			final EntityPersister entityPersister = determineEntityPersister( tableGroup.getModelPart() );
+			for ( int i = 0; i < tableReferenceJoins.size(); i++ ) {
+				final TableReferenceJoin tableReferenceJoin = tableReferenceJoins.get( i );
+				final NamedTableReference joinedTableReference = tableReferenceJoin.getJoinedTableReference();
+				final String tableJoinAlias = joinedTableReference.getIdentificationVariable();
+				final TableMapping tableMapping = determineTableMapping( entityPersister, tableReferenceJoin );
+				for ( TableDetails.KeyColumn keyColumn : tableMapping.getKeyDetails().getKeyColumns() ) {
+					lockItems.add( tableJoinAlias + "." + keyColumn.getColumnName() );
+				}
+			}
+		}
+	}
+
+	private TableMapping determineTableMapping(EntityPersister entityPersister, TableReferenceJoin tableReferenceJoin) {
+		final NamedTableReference joinedTableReference = tableReferenceJoin.getJoinedTableReference();
+		for ( EntityTableMapping tableMapping : entityPersister.getTableMappings() ) {
+			if ( joinedTableReference.containsAffectedTableName( tableMapping.getTableName() ) ) {
+				return tableMapping;
+			}
+		}
+		for ( EntityMappingType subMappingType : entityPersister.getSubMappingTypes() ) {
+			for ( EntityTableMapping tableMapping : subMappingType.getEntityPersister().getTableMappings() ) {
+				if ( joinedTableReference.containsAffectedTableName( tableMapping.getTableName() ) ) {
+					return tableMapping;
+				}
+			}
+		}
+		throw new IllegalArgumentException( "Couldn't find subclass index for joined table reference " + joinedTableReference );
+	}
+
+	private EntityPersister determineEntityPersister(ModelPartContainer modelPart) {
+		if ( modelPart instanceof EntityPersister entityPersister ) {
+			return entityPersister;
+		}
+		else if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping ) {
+			return pluralAttributeMapping.getCollectionDescriptor().getElementPersister();
+		}
+		else if ( modelPart instanceof EntityAssociationMapping entityAssociationMapping ) {
+			return entityAssociationMapping.getAssociatedEntityMappingType().getEntityPersister();
+		}
+		else {
+			throw new IllegalArgumentException( "Expected table group with table joins to have an entity typed model part but got: " + modelPart );
+		}
 	}
 
 	private String[] determineKeyColumnNames(ModelPart modelPart) {

@@ -332,23 +332,24 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		if ( converterDescriptor != null ) {
 			applyJpaConverter( value, converterDescriptor );
 		}
-
-		final var userTypeImpl =
-				kind.mappingAccess.customType( value, modelContext );
-		if ( userTypeImpl != null ) {
-			applyExplicitType( userTypeImpl,
-					kind.mappingAccess.customTypeParameters( value, modelContext ) );
-			// An explicit custom UserType has top precedence when we get to BasicValue resolution.
-			return;
-		}
-		else if ( modelClassDetails != null ) {
-			final var rawClassDetails = modelClassDetails.determineRawClass();
-			final var basicClass = rawClassDetails.toJavaClass();
-			final var registeredUserTypeImpl =
-					getMetadataCollector().findRegisteredUserType( basicClass );
-			if ( registeredUserTypeImpl != null ) {
-				applyExplicitType( registeredUserTypeImpl, emptyMap() );
+		else {
+			final var userTypeImpl =
+					kind.mappingAccess.customType( value, modelContext );
+			if ( userTypeImpl != null ) {
+				applyExplicitType( userTypeImpl,
+						kind.mappingAccess.customTypeParameters( value, modelContext ) );
+				// An explicit custom UserType has top precedence when we get to BasicValue resolution.
 				return;
+			}
+			else if ( modelClassDetails != null ) {
+				final var rawClassDetails = modelClassDetails.determineRawClass();
+				final var basicClass = rawClassDetails.toJavaClass();
+				final var registeredUserTypeImpl =
+						getMetadataCollector().findRegisteredUserType( basicClass );
+				if ( registeredUserTypeImpl != null ) {
+					applyExplicitType( registeredUserTypeImpl, emptyMap() );
+					return;
+				}
 			}
 		}
 

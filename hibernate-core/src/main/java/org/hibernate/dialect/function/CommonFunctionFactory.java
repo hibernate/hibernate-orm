@@ -404,6 +404,20 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * For MariaDB
+	 */
+	public void median_medianOver() {
+		functionRegistry.patternDescriptorBuilder(
+						"median",
+						"median(?1) over ()"
+				)
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+	}
+
+	/**
 	 * Warning: the semantics of this function are inconsistent between DBs.
 	 * <ul>
 	 * <li>On Postgres it means {@code stdev_samp()}
@@ -2648,6 +2662,24 @@ public class CommonFunctionFactory {
 				.setExactArgumentCount( 2 )
 				.setParameterTypes( TEMPORAL_UNIT, TEMPORAL )
 				.setArgumentListSignature( "(TEMPORAL_UNIT field, TEMPORAL datetime)" )
+				.register();
+	}
+
+	public void regexpLike() {
+		functionRegistry.namedDescriptorBuilder( "regexp_like"  )
+				.setArgumentCountBetween( 2, 3 )
+				.setParameterTypes( STRING, STRING, STRING )
+				.setInvariantType( booleanType )
+				.register();
+	}
+
+	/**
+	 * For MariaDB
+	 */
+	public void regexpLike_regexp() {
+		functionRegistry.patternDescriptorBuilder( "regexp_like", "?1 regexp ?2" )
+				.setParameterTypes( STRING, STRING )
+				.setInvariantType( booleanType )
 				.register();
 	}
 

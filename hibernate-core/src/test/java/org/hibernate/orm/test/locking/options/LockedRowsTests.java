@@ -8,7 +8,7 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Timeout;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.community.dialect.InformixDialect;
-import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.lock.PessimisticEntityLockException;
 import org.hibernate.jpa.SpecHints;
 import org.hibernate.testing.orm.AsyncExecutor;
@@ -87,6 +87,7 @@ public class LockedRowsTests {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportNoWait.class)
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "no failure")
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Seems FOR UPDATE locks might block read accesses of other TXs")
 	void testLockNoWait(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			session.find(Book.class,1, PESSIMISTIC_WRITE);
@@ -105,10 +106,6 @@ public class LockedRowsTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSkipLocked.class)
-	@SkipForDialect(
-			dialectClass = MariaDBDialect.class,
-			reason = "Cannot figure this out - it passes when run by itself, but fails when run as part of the complete suite."
-	)
 	void testQuerySkipLocked(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session1) -> {
 			session1.find(Book.class,1, PESSIMISTIC_WRITE);
@@ -127,10 +124,6 @@ public class LockedRowsTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSkipLocked.class)
-	@SkipForDialect(
-			dialectClass = MariaDBDialect.class,
-			reason = "Cannot figure this out - it passes when run by itself, but fails when run as part of the complete suite."
-	)
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "no failure")
 	void testFindSkipLocked(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {

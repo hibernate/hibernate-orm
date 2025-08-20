@@ -1495,7 +1495,7 @@ Their syntax is defined by:
 include::{extrasdir}/predicate_like_bnf.txt[]
 ----
 
-The expression on the right is a pattern, where:
+The expression on the right is usually a SQL-style pattern, where:
 
 * `_` matches any single character,
 * `%` matches any number of characters, and
@@ -1508,6 +1508,14 @@ from Book where title not like '% for Dummies'
 ----
 
 The optional `escape` character allows a pattern to include a literal `_` or `%` character.
+
+Alternatively, the `regexp` keyword specifies that the pattern should be interpreted as a regular expression:
+
+[[like-regexp-predicate-example]]
+[source, hql]
+----
+from Book where title not like regexp '.+ for Dummies'
+----
 
 As you can guess, `not like` and `not ilike` are the enemies of `like` and `ilike`, and evaluate to the exact opposite boolean values.
 

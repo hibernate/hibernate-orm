@@ -18,9 +18,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SessionFactory(useCollectingStatementInspector = true)
-@DomainModel(annotatedClasses = UpsertTest.Record.class)
+@DomainModel(annotatedClasses = {UpsertTest.Record.class, UpsertTest.IdOnly.class})
 public class UpsertTest {
 	@Test void test(SessionFactoryScope scope) {
 		scope.getSessionFactory().getSchemaManager().truncate();
@@ -96,6 +97,19 @@ public class UpsertTest {
 		scope.inStatelessTransaction(s-> assertDoesNotThrow(() -> s.upsert(new Record(123L,null, null))) );
 	}
 
+	@Test void testIdOnly(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
+
+		scope.inStatelessTransaction(s-> {
+			s.upsert(new IdOnly(123L));
+			s.upsert(new IdOnly(456L));
+		});
+		scope.inStatelessTransaction(s-> {
+			assertNotNull(s.get( IdOnly.class,123L));
+			assertNotNull(s.get( IdOnly.class,456L));
+		});
+	}
+
 	@Entity(name = "Record")
 	static class Record {
 		@Id Long id;
@@ -114,6 +128,18 @@ public class UpsertTest {
 		}
 
 		Record() {
+		}
+	}
+
+	@Entity(name = "IdOnly")
+	static class IdOnly {
+		@Id Long id;
+
+		IdOnly(Long id) {
+			this.id = id;
+		}
+
+		IdOnly() {
 		}
 	}
 }

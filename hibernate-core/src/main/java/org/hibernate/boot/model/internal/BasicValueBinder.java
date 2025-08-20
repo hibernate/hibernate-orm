@@ -332,23 +332,24 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		if ( converterDescriptor != null ) {
 			applyJpaConverter( value, converterDescriptor );
 		}
-
-		final Class<? extends UserType<?>> userTypeImpl =
-				kind.mappingAccess.customType( value, getSourceModelContext() );
-		if ( userTypeImpl != null ) {
-			applyExplicitType( userTypeImpl,
-					kind.mappingAccess.customTypeParameters( value, getSourceModelContext() ) );
-			// An explicit custom UserType has top precedence when we get to BasicValue resolution.
-			return;
-		}
-		else if ( modelClassDetails != null ) {
-			final ClassDetails rawClassDetails = modelClassDetails.determineRawClass();
-			final Class<?> basicClass = rawClassDetails.toJavaClass();
-			final Class<? extends UserType<?>> registeredUserTypeImpl =
-					getMetadataCollector().findRegisteredUserType( basicClass );
-			if ( registeredUserTypeImpl != null ) {
-				applyExplicitType( registeredUserTypeImpl, emptyMap() );
+		else {
+			final Class<? extends UserType<?>> userTypeImpl =
+					kind.mappingAccess.customType( value, getSourceModelContext() );
+			if ( userTypeImpl != null ) {
+				applyExplicitType( userTypeImpl,
+						kind.mappingAccess.customTypeParameters( value, getSourceModelContext() ) );
+				// An explicit custom UserType has top precedence when we get to BasicValue resolution.
 				return;
+			}
+			else if ( modelClassDetails != null ) {
+				final ClassDetails rawClassDetails = modelClassDetails.determineRawClass();
+				final Class<?> basicClass = rawClassDetails.toJavaClass();
+				final Class<? extends UserType<?>> registeredUserTypeImpl =
+						getMetadataCollector().findRegisteredUserType( basicClass );
+				if ( registeredUserTypeImpl != null ) {
+					applyExplicitType( registeredUserTypeImpl, emptyMap() );
+					return;
+				}
 			}
 		}
 

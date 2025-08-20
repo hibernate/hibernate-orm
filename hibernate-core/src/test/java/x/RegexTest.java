@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Jpa
 class RegexTest {
 	@Test
-	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 19)
+//	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 19)
 	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 21)
 	@SkipForDialect(dialectClass = SQLServerDialect.class,
 			reason = "regexp_like coming in 2025")

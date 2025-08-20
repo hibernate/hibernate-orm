@@ -367,6 +367,8 @@ public class InformixDialect extends Dialect {
 		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
 		final BasicType<String> stringBasicType =
 				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING );
+		final BasicType<Boolean> booleanBasicType =
+				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.BOOLEAN );
 
 		functionRegistry.registerAlternateKey( "var_samp", "variance" );
 
@@ -408,6 +410,12 @@ public class InformixDialect extends Dialect {
 		// parameter arguments to trim() require a cast
 		functionContributions.getFunctionRegistry().register( "trim",
 				new TrimFunction( this, typeConfiguration, SqlAstNodeRenderingMode.NO_UNTYPED ) );
+
+		//TODO: emulate support for the 'i' flag argument
+		functionRegistry.namedDescriptorBuilder( "regexp_like", "regex_match"  )
+				.setParameterTypes( STRING, STRING )
+				.setInvariantType( booleanBasicType )
+				.register();
 	}
 
 	@Override

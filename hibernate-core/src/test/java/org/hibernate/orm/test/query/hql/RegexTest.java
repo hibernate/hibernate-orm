@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.query.hql;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.OracleDialect;
@@ -41,6 +42,8 @@ class RegexTest {
 			reason = "regexp_like coming in 2025")
 	@SkipForDialect(dialectClass = SybaseASEDialect.class,
 			reason = "no regex support in Sybase ASE")
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "This could be made to work on Informix by changing the flags")
 	void testInSelectCaseInsensitive(EntityManagerFactoryScope scope) {
 		if ( !( scope.getDialect() instanceof OracleDialect dialect
 				&& ( dialect.isAutonomous() || dialect.getVersion().isBefore( 23 ) ) ) ) {

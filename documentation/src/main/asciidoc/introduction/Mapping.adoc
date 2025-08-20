@@ -168,6 +168,15 @@ is a bad idea, since it's impossible to create a foreign key constraint that tar
 // Hibernate doesn't support mixing ``InheritanceType``s within a single entity hierarchy.
 // However, it's possible to emulate a mix of `SINGLE_TABLE` and `JOINED` inheritance using the `@SecondaryTable` annotation.
 
+[CAUTION]
+====
+It's quite easy to overuse inheritance.
+We've occasionally seen extreme cases where a `JOINED` inheritance hierarchy includes _hundreds_ of entities, spanning hundreds of tables.
+Efficiently querying such a hierarchy is an almost impossible task for Hibernate.
+Fortunately, a `JOINED` inheritance relationship can always be remodeled as a <<one-to-one-pk,one-to-one association>>, allowing much more efficient queries.
+In general, a single entity inheritance hierarchy should never span more than a few tables, including secondary tables.
+====
+
 [[table-mappings]]
 === Mapping to tables
 

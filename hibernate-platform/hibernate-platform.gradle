@@ -36,6 +36,7 @@ dependencies {
 
         api jakartaLibs.jpa
         api jakartaLibs.jta
+        api jakartaLibs.data
 
         runtime libs.antlrRuntime
         runtime libs.logging

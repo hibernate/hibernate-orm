@@ -2671,7 +2671,6 @@ public class CommonFunctionFactory {
 				.setParameterTypes( STRING, STRING, STRING )
 				.setInvariantType( booleanType )
 				.register();
-
 	}
 
 	/**

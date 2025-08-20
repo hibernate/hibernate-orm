@@ -292,6 +292,7 @@ POSITION			: [pP] [oO] [sS] [iI] [tT] [iI] [oO] [nN];
 PRECEDING			: [pP] [rR] [eE] [cC] [eE] [dD] [iI] [nN] [gG];
 QUARTER				: [qQ] [uU] [aA] [rR] [tT] [eE] [rR];
 RANGE				: [rR] [aA] [nN] [gG] [eE];
+REGEXP              : [rR] [eE] [gG] [eE] [xX] [pP];
 RESPECT				: [rR] [eE] [sS] [pP] [eE] [cC] [tT];
 RETURNING			: [rR] [eE] [tT] [uU] [rR] [nN] [iI] [nN] [gG];
 RIGHT				: [rR] [iI] [gG] [hH] [tT];

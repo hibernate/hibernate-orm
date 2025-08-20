@@ -3222,10 +3222,34 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmPredicate visitLikePredicate(HqlParser.LikePredicateContext ctx) {
 		final boolean negated = ctx.NOT() != null;
 		final boolean caseSensitive = ctx.LIKE() != null;
-		if ( ctx.likeEscape() == null ) {
+		final SqmExpression<?> expression = (SqmExpression<?>) ctx.expression( 0 ).accept( this );
+		final SqmExpression<?> pattern = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
+		if ( ctx.REGEXP() != null ) {
+			if ( ctx.likeEscape() != null ) {
+				throw new SemanticException( "'ESCAPE' may not be used with 'LIKE REGEXP'", query );
+			}
+			return new SqmBooleanExpressionPredicate(
+					getFunctionDescriptor( "regexp_like" )
+							.generateSqmExpression(
+									caseSensitive
+											? asList( expression, pattern )
+											: asList( expression, pattern,
+													new SqmLiteral<>( "i",
+															resolveExpressibleTypeBasic( String.class ),
+															nodeBuilder()
+													)
+											),
+									null,
+									queryEngine()
+							),
+					negated,
+					nodeBuilder()
+			);
+		}
+		else if ( ctx.likeEscape() == null ) {
 			return new SqmLikePredicate(
-					(SqmExpression<?>) ctx.expression(0).accept( this ),
-					(SqmExpression<?>) ctx.expression(1).accept( this ),
+					expression,
+					pattern,
 					negated,
 					caseSensitive,
 					nodeBuilder()
@@ -3233,8 +3257,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		else {
 			return new SqmLikePredicate(
-					(SqmExpression<?>) ctx.expression(0).accept( this ),
-					(SqmExpression<?>) ctx.expression(1).accept( this ),
+					expression,
+					pattern,
 					(SqmExpression<?>) ctx.likeEscape().accept( this ),
 					negated,
 					caseSensitive,
@@ -4338,9 +4362,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private SqmLiteral<String> javaStringLiteral(String text) {
-		String unquoted = unquoteJavaStringLiteral( text );
 		return new SqmLiteral<>(
-				unquoted,
+				unquoteJavaStringLiteral( text ),
 				resolveExpressibleTypeBasic( String.class ),
 				nodeBuilder()
 		);

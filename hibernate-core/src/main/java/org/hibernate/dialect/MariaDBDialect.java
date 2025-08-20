@@ -58,14 +58,11 @@ import java.util.Set;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.OTHER;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.StandardBasicTypes.BOOLEAN;
-import static org.hibernate.type.StandardBasicTypes.DOUBLE;
 
 /**
  * A {@linkplain Dialect SQL dialect} for MariaDB 10.6 and above.

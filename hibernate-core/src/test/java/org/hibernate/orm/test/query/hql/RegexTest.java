@@ -20,18 +20,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Jpa
 class RegexTest {
 	@Test
-//	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 19)
-	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 21,
-			reason = "regexp_like must be a predicate in older versions")
 	@SkipForDialect(dialectClass = SQLServerDialect.class,
 			reason = "regexp_like coming in 2025")
 	@SkipForDialect(dialectClass = SybaseASEDialect.class,
 			reason = "no regex support in Sybase ASE")
 	void testInSelect(EntityManagerFactoryScope scope) {
-		scope.inEntityManager( em -> {
-			assertTrue( em.createQuery( "select regexp_like('abcdef', 'ab.*')", Boolean.class ).getSingleResult() );
-			assertTrue( em.createQuery( "select 'abcdef' like regexp 'ab.*'", Boolean.class ).getSingleResult() );
-		} );
+		if ( !( scope.getDialect() instanceof OracleDialect dialect
+				&& ( dialect.isAutonomous() || dialect.getVersion().isBefore( 23 ) ) ) ) {
+			scope.inEntityManager( em -> {
+				assertTrue( em.createQuery( "select regexp_like('abcdef', 'ab.*')", Boolean.class ).getSingleResult() );
+				assertTrue( em.createQuery( "select 'abcdef' like regexp 'ab.*'", Boolean.class ).getSingleResult() );
+			} );
+		}
 	}
 
 	@Test

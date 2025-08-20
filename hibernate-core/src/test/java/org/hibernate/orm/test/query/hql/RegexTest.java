@@ -44,6 +44,7 @@ class RegexTest {
 	void testInSelectCaseInsensitive(EntityManagerFactoryScope scope) {
 		scope.inEntityManager( em -> {
 			assertTrue( em.createQuery( "select regexp_like('ABCDEF', 'ab.*', 'i')", Boolean.class ).getSingleResult() );
+			assertTrue( em.createQuery( "select 'abcdef' ilike regexp 'ab.*'", Boolean.class ).getSingleResult() );
 		} );
 	}
 
@@ -55,6 +56,7 @@ class RegexTest {
 	void testInWhere(EntityManagerFactoryScope scope) {
 		scope.inEntityManager( em -> {
 			assertEquals( 1, em.createQuery( "select 1 where regexp_like('abcdef', 'ab.*')", Integer.class ).getSingleResult() );
+			assertEquals( 1, em.createQuery( "select 1 where 'abcdef' like regexp 'ab.*'", Integer.class ).getSingleResult() );
 		} );
 	}
 }

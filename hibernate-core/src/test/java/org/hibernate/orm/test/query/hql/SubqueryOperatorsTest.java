@@ -54,7 +54,7 @@ public class SubqueryOperatorsTest {
 	}
 
 	@Test @SuppressWarnings("deprecation")
-	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE does not allow a subquery in the order by clause, but we could move it to the select clause and refer to it by position", matchSubTypes = true)
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE does not allow a subquery in the order by clause, but we could move it to the select clause and refer to it by position")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "A syntax error has occurred")
 	public void testSubqueryInVariousClauses(SessionFactoryScope scope) {
 		scope.inTransaction(

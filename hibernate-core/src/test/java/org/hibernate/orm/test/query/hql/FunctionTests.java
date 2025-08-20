@@ -1178,8 +1178,9 @@ public class FunctionTests {
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTruncateWithCast.class, comment = "Dialect does not support truncate with cast" )
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support casting to binary types")
-	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "PostgreSQL bytea doesn't have a length")
-	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true, reason = "CockroachDB bytes doesn't have a length")
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, reason = "PostgreSQL bytea doesn't have a length")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "PostgresPlus bytea doesn't have a length")
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB bytes doesn't have a length")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle cast to raw does not do truncation")
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, minorVersion = 5, reason = "On this version the length of the cast to the parameter appears to be > 2")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL interprets string as hex literal and produces error")
@@ -1211,7 +1212,9 @@ public class FunctionTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "PostgreSQL bytea doesn't have a length")
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, reason = "PostgreSQL bytea doesn't have a length")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "PostgresPlus bytea doesn't have a length")
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB bytes doesn't have a length")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support binary literals")
 	public void testCastBinaryWithLengthForDerby(SessionFactoryScope scope) {
 		scope.inTransaction(

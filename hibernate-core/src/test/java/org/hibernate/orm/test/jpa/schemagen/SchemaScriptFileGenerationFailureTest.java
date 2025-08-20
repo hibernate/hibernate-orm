@@ -19,6 +19,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -64,7 +65,9 @@ public class SchemaScriptFileGenerationFailureTest {
 
 	@Test
 	@JiraKey(value = "HHH-12192")
-	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true,
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class,
+			reason = "on postgres we send 'set client_min_messages = WARNING'")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class,
 			reason = "on postgres we send 'set client_min_messages = WARNING'")
 	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "on gauss we send 'set client_min_messages = WARNING'")
 	public void testErrorMessageContainsTheFailingDDLCommand() {

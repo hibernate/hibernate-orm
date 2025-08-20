@@ -44,6 +44,8 @@ public @interface RequiresDialect {
 
 	int microVersion() default -1;
 
+	VersionMatchMode versionMatchMode() default VersionMatchMode.SAME_OR_NEWER;
+
 	/**
 	 * Comment describing the reason why the dialect is required.
 	 *

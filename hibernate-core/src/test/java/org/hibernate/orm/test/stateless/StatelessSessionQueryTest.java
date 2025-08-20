@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class StatelessSessionQueryTest {
 
 	@Test
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testHQL(SessionFactoryScope scope) {
 		scope.inStatelessSession(
 				session ->
@@ -51,7 +51,7 @@ public class StatelessSessionQueryTest {
 
 	@Test
 	@JiraKey(value = "HHH-13194")
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testNewQueryApis(SessionFactoryScope scope) {
 
 		final String queryString = "from Contact c join fetch c.org o join fetch o.country";

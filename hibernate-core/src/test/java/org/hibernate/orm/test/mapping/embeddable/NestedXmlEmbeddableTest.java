@@ -17,6 +17,7 @@ import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.hibernate.type.SqlTypes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlAggregate.class)
-@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 23, matchSubTypes = true,
+@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 23, versionMatchMode = VersionMatchMode.SAME_OR_NEWER,
 		reason = "Currently failing on Oracle 23+ due to Bug 37319693 - ORA-00600 with check constraint on xml type")
 public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 

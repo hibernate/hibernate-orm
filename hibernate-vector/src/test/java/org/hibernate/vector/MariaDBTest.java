@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @DomainModel(annotatedClasses = MariaDBTest.VectorEntity.class)
 @SessionFactory
-@RequiresDialect(value = MariaDBDialect.class, matchSubTypes = false, majorVersion = 11, minorVersion = 7)
+@RequiresDialect(value = MariaDBDialect.class, majorVersion = 11, minorVersion = 7)
 public class MariaDBTest {
 
 	private static final float[] V1 = new float[]{ 1, 2, 3 };

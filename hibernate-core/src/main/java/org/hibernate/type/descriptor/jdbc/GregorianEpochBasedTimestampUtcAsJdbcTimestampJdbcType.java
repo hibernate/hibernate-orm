@@ -4,16 +4,7 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
-import java.sql.CallableStatement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.time.Instant;
-import java.util.Calendar;
-import java.util.TimeZone;
-
+import jakarta.persistence.TemporalType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -23,19 +14,28 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterTemporal;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import jakarta.persistence.TemporalType;
+import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 /**
  * Descriptor for {@link SqlTypes#TIMESTAMP_UTC TIMESTAMP_UTC} handling.
  *
  * @author Christian Beikov
  */
-public class TimestampUtcAsJdbcTimestampJdbcType implements JdbcType {
+public class GregorianEpochBasedTimestampUtcAsJdbcTimestampJdbcType implements JdbcType {
 
-	public static final TimestampUtcAsJdbcTimestampJdbcType INSTANCE = new TimestampUtcAsJdbcTimestampJdbcType();
+	public static final GregorianEpochBasedTimestampUtcAsJdbcTimestampJdbcType INSTANCE = new GregorianEpochBasedTimestampUtcAsJdbcTimestampJdbcType();
 	private static final Calendar UTC_CALENDAR = Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) );
 
-	public TimestampUtcAsJdbcTimestampJdbcType() {
+	public GregorianEpochBasedTimestampUtcAsJdbcTimestampJdbcType() {
 	}
 
 	@Override
@@ -81,20 +81,28 @@ public class TimestampUtcAsJdbcTimestampJdbcType implements JdbcType {
 		return new BasicBinder<>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
+//				final Instant instant = javaType.unwrap( value, Instant.class, options );
 				st.setTimestamp( index, getBindValue( value, options ), UTC_CALENDAR );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
+//				final Instant instant = javaType.unwrap( value, Instant.class, options );
 				st.setTimestamp( name, getBindValue( value, options ), UTC_CALENDAR );
 			}
 
 			@Override
 			public Timestamp getBindValue(X value, WrapperOptions options) {
-				final Instant instant = javaType.unwrap( value, Instant.class, options );
-//				return Timestamp.from( instant );
-				return DateTimeUtils.toUtcTimestamp( instant );
+				final Timestamp timestamp = javaType.unwrap( value, Timestamp.class, options );
+				if ( timestamp.getTime() < DateTimeUtils.GREGORIAN_START_EPOCH_MILLIS ) {
+					final long epochSecond =
+							DateTimeUtils.toLocalDateTime( timestamp ).toEpochSecond( ZoneOffset.UTC );
+					return new Timestamp( epochSecond * 1000 );
+				}
+				else {
+					return timestamp;
+				}
 			}
 		};
 	}
@@ -118,17 +126,15 @@ public class TimestampUtcAsJdbcTimestampJdbcType implements JdbcType {
 			}
 
 			private X getExtractValue(Timestamp value, WrapperOptions options) {
-//				return javaType.wrap( value == null ? null : value.toInstant(), options );
-				return javaType.wrap( value == null ? null : DateTimeUtils.toUtcInstant( value ), options );
-//				if ( value != null && value.getTime() < DateTimeUtils.GREGORIAN_START_EPOCH_MILLIS ) {
-//					final Timestamp julianTimestamp = Timestamp.valueOf(
-//							Instant.ofEpochMilli( value.getTime() ).atOffset( ZoneOffset.UTC ).toLocalDateTime()
-//					);
-//					return javaType.wrap( julianTimestamp, options );
-//				}
-//				else {
-//					return javaType.wrap( value == null ? null : DateTimeUtils.toInstant( value ), options );
-//				}
+				if ( value != null && value.getTime() < DateTimeUtils.GREGORIAN_START_EPOCH_MILLIS ) {
+					final Timestamp julianTimestamp = Timestamp.valueOf(
+							Instant.ofEpochMilli( value.getTime() ).atOffset( ZoneOffset.UTC ).toLocalDateTime()
+					);
+					return javaType.wrap( julianTimestamp, options );
+				}
+				else {
+					return javaType.wrap( value, options );
+				}
 			}
 		};
 	}

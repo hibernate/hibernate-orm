@@ -67,10 +67,7 @@ public class GregorianEpochBasedTimestampJdbcType extends TimestampJdbcType {
 			@Override
 			public Timestamp getBindValue(X value, WrapperOptions options) {
 				final Timestamp timestamp = javaType.unwrap( value, Timestamp.class, options );
-				if ( value instanceof Calendar ) {
-					return timestamp;
-				}
-				else if ( timestamp.getTime() < DateTimeUtils.GREGORIAN_START_EPOCH_MILLIS ) {
+				if ( timestamp.getTime() < DateTimeUtils.GREGORIAN_START_EPOCH_MILLIS ) {
 					final long epochSecond =
 							DateTimeUtils.toLocalDateTime( timestamp ).toEpochSecond( ZoneOffset.UTC );
 					return new Timestamp( epochSecond * 1000 );

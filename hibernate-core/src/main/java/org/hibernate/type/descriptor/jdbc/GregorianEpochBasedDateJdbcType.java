@@ -62,10 +62,7 @@ public class GregorianEpochBasedDateJdbcType extends DateJdbcType {
 			@Override
 			public Date getBindValue(X value, WrapperOptions options) {
 				final Date date = javaType.unwrap( value, Date.class, options );
-				if ( value instanceof Calendar ) {
-					return date;
-				}
-				else if ( date.getTime() < DateTimeUtils.GREGORIAN_START_EPOCH_MILLIS ) {
+				if ( date.getTime() < DateTimeUtils.GREGORIAN_START_EPOCH_MILLIS ) {
 					final long epochSecond =
 							DateTimeUtils.toLocalDate( date ).toEpochSecond( LocalTime.MIN, ZoneOffset.UTC );
 					return new java.sql.Date( epochSecond * 1000 );

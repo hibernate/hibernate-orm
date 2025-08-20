@@ -1491,9 +1491,9 @@ public class OracleLegacyDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				appender.appendSql( "time '" );
-				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
-				appender.appendSql( '\'' );
+				appender.appendSql( "to_date('1970-01-01 " );
+				appendAsTime( appender, temporalAccessor, false, jdbcTimeZone );
+				appender.appendSql( "','YYYY-MM-DD HH24:MI:SS')" );
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "timestamp '" );
@@ -1514,9 +1514,9 @@ public class OracleLegacyDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				appender.appendSql( "time '" );
+				appender.appendSql( "to_date('1970-01-01 " );
 				appendAsLocalTime( appender, date );
-				appender.appendSql( '\'' );
+				appender.appendSql( "','YYYY-MM-DD HH24:MI:SS')" );
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "timestamp '" );
@@ -1537,9 +1537,9 @@ public class OracleLegacyDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				appender.appendSql( "time '" );
+				appender.appendSql( "to_date('1970-01-01 " );
 				appendAsLocalTime( appender, calendar );
-				appender.appendSql( '\'' );
+				appender.appendSql( "','YYYY-MM-DD HH24:MI:SS')" );
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "timestamp '" );

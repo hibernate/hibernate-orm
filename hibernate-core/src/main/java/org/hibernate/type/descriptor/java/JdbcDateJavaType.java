@@ -89,7 +89,8 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 
 		return calendar1.get( Calendar.MONTH ) == calendar2.get( Calendar.MONTH )
 			&& calendar1.get( Calendar.DAY_OF_MONTH ) == calendar2.get( Calendar.DAY_OF_MONTH )
-			&& calendar1.get( Calendar.YEAR ) == calendar2.get( Calendar.YEAR );
+			&& calendar1.get( Calendar.YEAR ) == calendar2.get( Calendar.YEAR )
+			&& calendar1.get( Calendar.ERA ) == calendar2.get( Calendar.ERA );
 	}
 
 	@Override
@@ -100,6 +101,7 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 		hashCode = 31 * hashCode + calendar.get( Calendar.MONTH );
 		hashCode = 31 * hashCode + calendar.get( Calendar.DAY_OF_MONTH );
 		hashCode = 31 * hashCode + calendar.get( Calendar.YEAR );
+		hashCode = 31 * hashCode + calendar.get( Calendar.ERA );
 		return hashCode;
 	}
 

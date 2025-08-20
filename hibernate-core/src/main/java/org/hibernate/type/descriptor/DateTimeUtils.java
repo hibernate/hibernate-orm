@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.chrono.IsoEra;
 import java.time.format.DateTimeFormatter;
@@ -988,6 +989,29 @@ public final class DateTimeUtils {
 		}
 	}
 
+	public static Timestamp toUtcTimestamp(Instant instant) {
+		/*
+		 * This works around two bugs:
+		 * - HHH-13266 (JDK-8061577): around and before 1900,
+		 * the number of milliseconds since the epoch does not mean the same thing
+		 * for java.util and java.time, so conversion must be done using the year, month, day, hour, etc.
+		 * - HHH-13379 (JDK-4312621): after 1908 (approximately),
+		 * Daylight Saving Time introduces ambiguity in the year/month/day/hour/etc representation once a year
+		 * (on DST end), so conversion must be done using the number of milliseconds since the epoch.
+		 * - around 1905, both methods are equally valid, so we don't really care which one is used.
+		 */
+		final ZonedDateTime zonedDateTime = instant.atZone( ZoneOffset.UTC );
+		if ( zonedDateTime.getYear() < 1905 ) {
+			return new Timestamp(
+					Timestamp.valueOf( zonedDateTime.toLocalDateTime() ).getTime()
+					+ TimeZone.getDefault().getOffset( instant.toEpochMilli() )
+			);
+		}
+		else {
+			return Timestamp.from( instant );
+		}
+	}
+
 	public static java.sql.Date toSqlDate(Instant instant) {
 		/*
 		 * This works around two bugs:
@@ -1021,6 +1045,26 @@ public final class DateTimeUtils {
 		 */
 		if ( timestamp.getYear() < 5 ) { // Timestamp year 0 is 1900
 			return toLocalDateTime( timestamp ).atZone( ZoneId.systemDefault() ).toInstant();
+		}
+		else {
+			return timestamp.toInstant();
+		}
+	}
+
+	public static Instant toUtcInstant(Timestamp timestamp) {
+		/*
+		 * This works around two bugs:
+		 * - HHH-13266 (JDK-8061577): around and before 1900,
+		 * the number of milliseconds since the epoch does not mean the same thing
+		 * for java.util and java.time, so conversion must be done using the year, month, day, hour, etc.
+		 * - HHH-13379 (JDK-4312621): after 1908 (approximately),
+		 * Daylight Saving Time introduces ambiguity in the year/month/day/hour/etc representation once a year
+		 * (on DST end), so conversion must be done using the number of milliseconds since the epoch.
+		 * - around 1905, both methods are equally valid, so we don't really care which one is used.
+		 */
+		if ( timestamp.getYear() < 5 ) { // Timestamp year 0 is 1900
+			return toLocalDateTime( timestamp ).minusSeconds( TimeZone.getDefault().getOffset( timestamp.getTime() ) / 1000L )
+					.toInstant( ZoneOffset.UTC );
 		}
 		else {
 			return timestamp.toInstant();

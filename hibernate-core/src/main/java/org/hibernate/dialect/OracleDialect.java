@@ -166,8 +166,6 @@ import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
-import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
-import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDateWithoutYear0;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
@@ -1572,9 +1570,9 @@ public class OracleDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				appender.appendSql( "time '" );
-				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
-				appender.appendSql( '\'' );
+				appender.appendSql( "to_date('1970-01-01 " );
+				appendAsTime( appender, temporalAccessor, false, jdbcTimeZone );
+				appender.appendSql( "','YYYY-MM-DD HH24:MI:SS')" );
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "timestamp '" );
@@ -1595,9 +1593,9 @@ public class OracleDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				appender.appendSql( "time '" );
+				appender.appendSql( "to_date('1970-01-01 " );
 				appendAsLocalTime( appender, date );
-				appender.appendSql( '\'' );
+				appender.appendSql( "','YYYY-MM-DD HH24:MI:SS')" );
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "timestamp '" );
@@ -1618,9 +1616,9 @@ public class OracleDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				appender.appendSql( JDBC_ESCAPE_START_TIME );
+				appender.appendSql( "to_date('1970-01-01 " );
 				appendAsLocalTime( appender, calendar );
-				appender.appendSql( JDBC_ESCAPE_END );
+				appender.appendSql( "','YYYY-MM-DD HH24:MI:SS')" );
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "timestamp '" );

@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @DomainModel(annotatedClasses = OracleGenericVectorTest.VectorEntity.class)
 @SessionFactory
-@RequiresDialect(value = OracleDialect.class, matchSubTypes = false, majorVersion = 23, minorVersion = 4)
+@RequiresDialect(value = OracleDialect.class, majorVersion = 23, minorVersion = 4)
 public class OracleGenericVectorTest {
 
 	private static final float[] V1 = new float[] { 1, 2, 3 };

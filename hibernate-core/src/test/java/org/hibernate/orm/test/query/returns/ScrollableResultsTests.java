@@ -52,7 +52,7 @@ public class ScrollableResultsTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA supports only ResultSet.TYPE_FORWARD_ONLY")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA supports only ResultSet.TYPE_FORWARD_ONLY")
 	public void testCursorPositioning(SessionFactoryScope scope) {
 		// create an extra row so we can better test cursor positioning
 		scope.inTransaction(

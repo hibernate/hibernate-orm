@@ -136,9 +136,9 @@ public abstract class XmlMappingTests {
 
 	@Test
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support comparing CLOBs with the = operator")
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA doesn't support comparing LOBs with the = operator")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA doesn't support comparing LOBs with the = operator")
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase doesn't support comparing LOBs with the = operator")
-	@SkipForDialect(dialectClass = OracleDialect.class, matchSubTypes = true, reason = "Oracle doesn't support comparing JSON with the = operator")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle doesn't support comparing JSON with the = operator")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase doesn't support comparing CLOBs with the = operator")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Blobs are not allowed in this expression")
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "GaussDB doesn't support comparing CLOBs with the = operator")

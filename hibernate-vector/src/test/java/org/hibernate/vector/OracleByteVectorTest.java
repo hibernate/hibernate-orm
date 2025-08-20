@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @DomainModel(annotatedClasses = OracleByteVectorTest.VectorEntity.class)
 @SessionFactory
-@RequiresDialect(value = OracleDialect.class, matchSubTypes = false, majorVersion = 23, minorVersion = 4)
+@RequiresDialect(value = OracleDialect.class, majorVersion = 23, minorVersion = 4)
 public class OracleByteVectorTest {
 
 	private static final byte[] V1 = new byte[]{ 1, 2, 3 };

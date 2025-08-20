@@ -42,10 +42,14 @@ class RegexTest {
 	@SkipForDialect(dialectClass = SybaseASEDialect.class,
 			reason = "no regex support in Sybase ASE")
 	void testInSelectCaseInsensitive(EntityManagerFactoryScope scope) {
-		scope.inEntityManager( em -> {
-			assertTrue( em.createQuery( "select regexp_like('ABCDEF', 'ab.*', 'i')", Boolean.class ).getSingleResult() );
-			assertTrue( em.createQuery( "select 'abcdef' ilike regexp 'ab.*'", Boolean.class ).getSingleResult() );
-		} );
+		if ( !( scope.getDialect() instanceof OracleDialect dialect
+				&& ( dialect.isAutonomous() || dialect.getVersion().isBefore( 23 ) ) ) ) {
+			scope.inEntityManager( em -> {
+				assertTrue( em.createQuery( "select regexp_like('ABCDEF', 'ab.*', 'i')", Boolean.class )
+						.getSingleResult() );
+				assertTrue( em.createQuery( "select 'abcdef' ilike regexp 'ab.*'", Boolean.class ).getSingleResult() );
+			} );
+		}
 	}
 
 	@Test

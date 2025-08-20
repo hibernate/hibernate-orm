@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package x;
+package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
@@ -21,7 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class RegexTest {
 	@Test
 //	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 19)
-	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 21)
+	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 21,
+			reason = "regexp_like must be a predicate in older versions")
 	@SkipForDialect(dialectClass = SQLServerDialect.class,
 			reason = "regexp_like coming in 2025")
 	@SkipForDialect(dialectClass = SybaseASEDialect.class,
@@ -32,6 +33,7 @@ class RegexTest {
 			assertTrue( em.createQuery( "select 'abcdef' like regexp 'ab.*'", Boolean.class ).getSingleResult() );
 		} );
 	}
+
 	@Test
 	@SkipForDialect(dialectClass = MariaDBDialect.class)
 	@SkipForDialect(dialectClass = HSQLDialect.class)
@@ -45,6 +47,7 @@ class RegexTest {
 			assertTrue( em.createQuery( "select 'abcdef' ilike regexp 'ab.*'", Boolean.class ).getSingleResult() );
 		} );
 	}
+
 	@Test
 	@SkipForDialect(dialectClass = SQLServerDialect.class,
 			reason = "regexp_like coming in 2025")

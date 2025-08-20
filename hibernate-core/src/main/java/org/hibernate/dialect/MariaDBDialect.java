@@ -129,6 +129,11 @@ public class MariaDBDialect extends MySQLDialect {
 
 		commonFunctionFactory.windowFunctions();
 		commonFunctionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+		commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
+		commonFunctionFactory.median_medianOver();
+
+		commonFunctionFactory.regexpLike_regexp();
+
 		functionRegistry.registerNamed(
 				"json_valid",
 				basicTypeRegistry.resolve( BOOLEAN )
@@ -141,18 +146,6 @@ public class MariaDBDialect extends MySQLDialect {
 		commonFunctionFactory.jsonArrayAppend_mariadb();
 		commonFunctionFactory.unnest_emulated();
 		commonFunctionFactory.jsonTable_mysql();
-
-		commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
-		functionRegistry.patternDescriptorBuilder( "median", "median(?1) over ()" )
-				.setInvariantType( basicTypeRegistry.resolve( DOUBLE ) )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
-				.register();
-
-		functionRegistry.patternDescriptorBuilder( "regexp_like", "?1 regexp ?2" )
-				.setParameterTypes( STRING, STRING )
-				.setInvariantType( basicTypeRegistry.resolve( BOOLEAN ) )
-				.register();
 	}
 
 	@Override

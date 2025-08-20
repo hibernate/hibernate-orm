@@ -229,7 +229,6 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -268,7 +267,6 @@ import static org.hibernate.type.SqlTypes.isIntegral;
 import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
 import static org.hibernate.type.SqlTypes.isVarbinaryType;
 import static org.hibernate.type.SqlTypes.isVarcharType;
-import static org.hibernate.type.StandardBasicTypes.BOOLEAN;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
@@ -1375,11 +1373,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 		functionRegistry.register( "sql", new SqlFunction() );
 
-		functionRegistry.namedDescriptorBuilder( "regexp_like"  )
-				.setArgumentCountBetween( 2, 3 )
-				.setParameterTypes( STRING, STRING, STRING )
-				.setInvariantType( basicTypeRegistry.resolve( BOOLEAN ) )
-				.register();
+		functionFactory.regexpLike();
 	}
 
 	/**

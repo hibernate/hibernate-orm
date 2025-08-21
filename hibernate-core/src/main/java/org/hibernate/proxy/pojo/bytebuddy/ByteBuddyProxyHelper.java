@@ -7,10 +7,7 @@ package org.hibernate.proxy.pojo.bytebuddy;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Locale;
-import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -49,12 +46,6 @@ public class ByteBuddyProxyHelper implements Serializable {
 	public Class buildProxy(
 			final Class<?> persistentClass,
 			final Class<?>[] interfaces) {
-		Set<Class<?>> key = new HashSet<>();
-		if ( interfaces.length == 1 ) {
-			key.add( persistentClass );
-		}
-		Collections.addAll( key, interfaces );
-
 		final String proxyClassName = persistentClass.getTypeName() + "$" + PROXY_NAMING_SUFFIX;
 		return byteBuddyState.loadProxy( persistentClass, proxyClassName,
 				proxyBuilder( TypeDescription.ForLoadedType.of( persistentClass ), new TypeList.Generic.ForLoadedTypes( interfaces ) ) );

@@ -174,11 +174,8 @@ public class SqmMutationStrategyHelper {
 		final SessionFactoryImplementor sessionFactory = attributeMapping.getCollectionDescriptor().getFactory();
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 
-		if ( separateCollectionTable == null ) {
-			// one-to-many - update the matching rows in the associated table setting the fk column(s) to null
-			// not yet implemented - do nothing
-		}
-		else {
+		// Skip deleting rows in collection tables if cascade delete is enabled
+		if ( separateCollectionTable != null && !attributeMapping.getCollectionDescriptor().isCascadeDeleteEnabled() ) {
 			// element-collection or many-to-many - delete the collection-table row
 
 			final NamedTableReference tableReference = new NamedTableReference(

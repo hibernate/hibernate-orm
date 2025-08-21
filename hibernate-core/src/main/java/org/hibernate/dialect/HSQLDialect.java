@@ -239,6 +239,7 @@ public class HSQLDialect extends Dialect {
 		) );
 
 		functionFactory.hex( "hex(?1)" );
+		functionFactory.regexpLike_hsql();
 	}
 
 	/**

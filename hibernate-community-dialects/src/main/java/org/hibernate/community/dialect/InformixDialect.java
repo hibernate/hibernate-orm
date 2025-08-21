@@ -16,6 +16,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.community.dialect.function.InformixRegexpLikeFunction;
 import org.hibernate.community.dialect.identity.InformixIdentityColumnSupport;
 import org.hibernate.community.dialect.pagination.FirstLimitHandler;
 import org.hibernate.community.dialect.pagination.SkipFirstLimitHandler;
@@ -411,11 +412,7 @@ public class InformixDialect extends Dialect {
 		functionContributions.getFunctionRegistry().register( "trim",
 				new TrimFunction( this, typeConfiguration, SqlAstNodeRenderingMode.NO_UNTYPED ) );
 
-		//TODO: emulate support for the 'i' flag argument
-		functionRegistry.namedDescriptorBuilder( "regexp_like", "regex_match"  )
-				.setParameterTypes( STRING, STRING )
-				.setInvariantType( booleanBasicType )
-				.register();
+		functionRegistry.register( "regexp_like", new InformixRegexpLikeFunction( typeConfiguration ) );
 	}
 
 	@Override

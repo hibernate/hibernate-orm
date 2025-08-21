@@ -548,6 +548,7 @@ public class CockroachLegacyDialect extends Dialect {
 				)
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+		functionFactory.regexpLike_postgresql( false );
 	}
 
 	@Override

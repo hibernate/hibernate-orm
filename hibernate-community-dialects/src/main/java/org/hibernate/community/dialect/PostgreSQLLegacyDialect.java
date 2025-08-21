@@ -768,6 +768,8 @@ public class PostgreSQLLegacyDialect extends Dialect {
 
 		functionFactory.unnest_postgresql( getVersion().isSameOrAfter( 17 ) );
 		functionFactory.generateSeries( null, "ordinality", false );
+
+		functionFactory.regexpLike_postgresql( getVersion().isSameOrAfter( 15 ) );
 	}
 
 	@Override

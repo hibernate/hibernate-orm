@@ -1373,8 +1373,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		functionRegistry.registerAlternateKey( "current_instant", "instant" ); //deprecated legacy!
 
 		functionRegistry.register( "sql", new SqlFunction() );
-
-		functionFactory.regexpLike();
 	}
 
 	/**

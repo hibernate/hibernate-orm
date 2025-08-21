@@ -521,6 +521,9 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 				functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
 			}
 		}
+		if ( getVersion().isSameOrAfter( 17 ) ) {
+			functionFactory.regexpLike_predicateFunction();
+		}
 	}
 
 	/**

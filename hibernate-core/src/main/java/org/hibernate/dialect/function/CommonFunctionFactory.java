@@ -2674,13 +2674,38 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * For MariaDB
+	 * For legacy PostgreSQL and CockroachDB
+	 */
+	public void regexpLike_postgresql(boolean supportsStandard) {
+		functionRegistry.register( "regexp_like", new RegexpLikeOperatorFunction( typeConfiguration, supportsStandard ) );
+	}
+
+	/**
+	 * For MariaDB, legacy MySQL, SingleStore and SQLite
 	 */
 	public void regexpLike_regexp() {
-		functionRegistry.patternDescriptorBuilder( "regexp_like", "?1 regexp ?2" )
-				.setParameterTypes( STRING, STRING )
-				.setInvariantType( booleanType )
-				.register();
+		functionRegistry.register( "regexp_like", new RegexpPredicateFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * For HSQLDB
+	 */
+	public void regexpLike_hsql() {
+		functionRegistry.register( "regexp_like", new HSQLRegexpLikeFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * For Oracle and SQL Server
+	 */
+	public void regexpLike_predicateFunction() {
+		functionRegistry.register( "regexp_like", new RegexpLikePredicateFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * For SAP HANA
+	 */
+	public void regexpLike_like_regexp() {
+		functionRegistry.register( "regexp_like", new HANARegexpLikeFunction( typeConfiguration ) );
 	}
 
 	/**

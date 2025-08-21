@@ -354,6 +354,7 @@ public class SQLiteDialect extends Dialect {
 		}
 		functionFactory.windowFunctions();
 		functionFactory.listagg_groupConcat();
+		functionFactory.regexpLike_regexp();
 	}
 
 	@Override

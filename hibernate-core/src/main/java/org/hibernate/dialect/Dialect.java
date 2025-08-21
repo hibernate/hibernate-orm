@@ -4187,6 +4187,16 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this dialect support named column-level check constraints?
+	 *
+	 * @return True if named column-level {@code check} constraints are supported;
+	 *         false otherwise.
+	 */
+	public boolean supportsNamedColumnCheck() {
+		return supportsColumnCheck();
+	}
+
+	/**
 	 * Does this dialect support table-level check constraints?
 	 *
 	 * @return True if table-level {@code check} constraints are supported;

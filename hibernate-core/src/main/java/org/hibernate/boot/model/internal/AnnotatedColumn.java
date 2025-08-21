@@ -967,7 +967,7 @@ public class AnnotatedColumn {
 		if ( isNotEmpty( checkConstraintAnnotationUsages ) ) {
 			for ( jakarta.persistence.CheckConstraint checkConstraintAnnotationUsage : checkConstraintAnnotationUsages ) {
 				addCheckConstraint(
-						checkConstraintAnnotationUsage.name(),
+						nullIfEmpty( checkConstraintAnnotationUsage.name() ),
 						checkConstraintAnnotationUsage.constraint(),
 						checkConstraintAnnotationUsage.options()
 				);
@@ -983,7 +983,7 @@ public class AnnotatedColumn {
 			if ( checksAnn != null ) {
 				final Check[] checkAnns = checksAnn.value();
 				for ( Check checkAnn : checkAnns ) {
-					addCheckConstraint( checkAnn.name(), checkAnn.constraints() );
+					addCheckConstraint( nullIfEmpty( checkAnn.name() ), checkAnn.constraints() );
 				}
 			}
 			else {

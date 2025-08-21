@@ -243,6 +243,11 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	public boolean supportsNamedColumnCheck() {
+		return false;
+	}
+
+	@Override
 	public boolean doesRoundTemporalOnOverflow() {
 		// See https://jira.mariadb.org/browse/MDEV-16991
 		return false;

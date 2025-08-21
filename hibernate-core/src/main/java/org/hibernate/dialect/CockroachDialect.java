@@ -512,6 +512,7 @@ public class CockroachDialect extends Dialect {
 		functionFactory.hex( "encode(?1, 'hex')" );
 		functionFactory.sha( "digest(?1, 'sha256')" );
 		functionFactory.md5( "digest(?1, 'md5')" );
+		functionFactory.regexpLike_postgresql( false );
 	}
 
 	@Override

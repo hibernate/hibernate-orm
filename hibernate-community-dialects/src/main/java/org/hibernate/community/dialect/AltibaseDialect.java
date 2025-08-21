@@ -257,6 +257,7 @@ public class AltibaseDialect extends Dialect {
 							.setExactArgumentCount( 2 )
 							.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 							.register();
+		functionFactory.regexpLike_predicateFunction();
 	}
 
 	@Override

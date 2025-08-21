@@ -71,11 +71,14 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 				"substring",
 				new DB2SubstringFunction( false, functionContributions.getTypeConfiguration() )
 		);
-		if ( getVersion().isSameOrAfter( 7, 2 ) ) {
+		if ( getVersion().isSameOrAfter( 7, 1 ) ) {
 			CommonFunctionFactory functionFactory = new CommonFunctionFactory( functionContributions );
-			functionFactory.listagg( null );
-			functionFactory.inverseDistributionOrderedSetAggregates();
-			functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+			functionFactory.regexpLike();
+			if ( getVersion().isSameOrAfter( 7, 2 ) ) {
+				functionFactory.listagg( null );
+				functionFactory.inverseDistributionOrderedSetAggregates();
+				functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+			}
 		}
 	}
 

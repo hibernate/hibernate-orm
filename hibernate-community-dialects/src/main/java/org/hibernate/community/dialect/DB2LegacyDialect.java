@@ -504,6 +504,8 @@ public class DB2LegacyDialect extends Dialect {
 		if ( getDB2Version().isSameOrAfter( 11 ) ) {
 			functionFactory.sha( "hash(?1, 2)" );
 			functionFactory.md5( "hash(?1, 0)" );
+
+			functionFactory.regexpLike();
 		}
 	}
 

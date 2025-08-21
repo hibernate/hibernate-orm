@@ -695,6 +695,7 @@ public class MySQLLegacyDialect extends Dialect {
 		functionRegistry.registerAlternateKey( "char", "chr" );
 
 		functionFactory.listagg_groupConcat();
+		functionFactory.regexpLike_regexp();
 
 		if ( getMySQLVersion().isSameOrAfter( 5, 7 ) ) {
 			functionFactory.jsonValue_mysql();
@@ -715,6 +716,7 @@ public class MySQLLegacyDialect extends Dialect {
 			if ( getMySQLVersion().isSameOrAfter( 8 ) ) {
 				functionFactory.unnest_emulated();
 				functionFactory.jsonTable_mysql();
+				functionFactory.regexpLike();
 			}
 			if ( supportsRecursiveCTE() ) {
 				functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );

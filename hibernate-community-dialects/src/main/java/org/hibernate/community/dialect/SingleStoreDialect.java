@@ -651,6 +651,7 @@ public class SingleStoreDialect extends Dialect {
 		functionRegistry.register( "json_mergepatch", new SingleStoreJsonMergepatchFunction( typeConfiguration ) );
 		functionRegistry.register( "json_array_append", new SingleStoreJsonArrayAppendFunction( typeConfiguration ) );
 		functionRegistry.register( "json_array_insert", new SingleStoreJsonArrayInsertFunction( typeConfiguration ) );
+		commonFunctionFactory.regexpLike_regexp();
 	}
 
 

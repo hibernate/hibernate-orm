@@ -88,5 +88,8 @@ class OnDeleteManyToManyTest {
 	static class B {
 		@Id
 		long id;
+		@ManyToMany(mappedBy = "bs")
+		@OnDelete(action = OnDeleteAction.CASCADE)
+		Set<A> as = new HashSet<>();
 	}
 }

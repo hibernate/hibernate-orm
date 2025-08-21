@@ -1256,6 +1256,26 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public JpaPredicate likeRegexp(Expression<String> x, String pattern) {
+		return criteriaBuilder.likeRegexp( x, pattern );
+	}
+
+	@Override
+	public JpaPredicate ilikeRegexp(Expression<String> x, String pattern) {
+		return criteriaBuilder.ilikeRegexp( x, pattern );
+	}
+
+	@Override
+	public JpaPredicate notLikeRegexp(Expression<String> x, String pattern) {
+		return criteriaBuilder.notLikeRegexp( x, pattern );
+	}
+
+	@Override
+	public JpaPredicate notIlikeRegexp(Expression<String> x, String pattern) {
+		return criteriaBuilder.notIlikeRegexp( x, pattern );
+	}
+
+	@Override
 	public <T> JpaInPredicate<T> in(Expression<? extends T> expression) {
 		return criteriaBuilder.in( expression );
 	}

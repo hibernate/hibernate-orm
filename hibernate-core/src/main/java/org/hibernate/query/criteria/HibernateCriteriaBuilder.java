@@ -998,6 +998,14 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	JpaPredicate notIlike(Expression<String> x, String pattern, char escapeChar);
 
+	JpaPredicate likeRegexp(Expression<String> x, String pattern);
+
+	JpaPredicate ilikeRegexp(Expression<String> x, String pattern);
+
+	JpaPredicate notLikeRegexp(Expression<String> x, String pattern);
+
+	JpaPredicate notIlikeRegexp(Expression<String> x, String pattern);
+
 	@Override
 	<T> JpaInPredicate<T> in(Expression<? extends T> expression);
 

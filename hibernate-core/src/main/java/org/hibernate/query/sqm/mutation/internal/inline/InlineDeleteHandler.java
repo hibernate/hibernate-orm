@@ -70,7 +70,9 @@ public class InlineDeleteHandler extends AbstractInlineHandler implements Delete
 			SqmMutationStrategyHelper.visitCollectionTables(
 					getEntityDescriptor(),
 					pluralAttribute -> {
-						if ( pluralAttribute.getSeparateCollectionTable() != null ) {
+						// Skip deleting rows in collection tables if cascade delete is enabled
+						if ( pluralAttribute.getSeparateCollectionTable() != null
+							&& !pluralAttribute.getCollectionDescriptor().isCascadeDeleteEnabled() ) {
 							// this collection has a separate collection table, meaning it is one of:
 							//		1) element-collection
 							//		2) many-to-many

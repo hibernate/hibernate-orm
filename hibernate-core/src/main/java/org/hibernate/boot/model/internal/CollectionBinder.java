@@ -50,6 +50,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.UnsupportedMappingException;
@@ -2746,6 +2747,13 @@ public abstract class CollectionBinder {
 			//TODO always a many to one?
 			manyToOne.setReferencedPropertyName( referencedPropertyName );
 			metadataCollector.addUniquePropertyReference( targetEntity.getEntityName(), referencedPropertyName );
+		}
+		// Ensure that we copy over the delete action from the owner side before creating the foreign key
+		if ( property.getValue() instanceof Collection collectionValue ) {
+			manyToOne.setOnDeleteAction( ( (SimpleValue) collectionValue.getKey() ).getOnDeleteAction() );
+		}
+		else if ( property.getValue() instanceof ToOne toOne ) {
+			manyToOne.setOnDeleteAction( toOne.getOnDeleteAction() );
 		}
 		manyToOne.setReferenceToPrimaryKey( referencedPropertyName == null );
 		value.createForeignKey();

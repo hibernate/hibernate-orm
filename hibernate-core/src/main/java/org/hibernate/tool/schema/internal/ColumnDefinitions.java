@@ -144,34 +144,41 @@ class ColumnDefinitions {
 		}
 
 		if ( dialect.supportsColumnCheck() ) {
-			// some databases (Maria, SQL Server) don't like multiple 'check' clauses
 			final List<CheckConstraint> checkConstraints = column.getCheckConstraints();
-			long anonConstraints = checkConstraints.stream().filter(CheckConstraint::isAnonymous).count();
-			if ( anonConstraints == 1 ) {
-				for ( CheckConstraint constraint : checkConstraints ) {
-					definition.append( constraint.constraintString( dialect ) );
+			boolean hasAnonymousConstraints = false;
+			for ( CheckConstraint constraint : checkConstraints ) {
+				if ( constraint.isAnonymous() ) {
+					if ( !hasAnonymousConstraints ) {
+						definition.append(" check (");
+						hasAnonymousConstraints = true;
+					}
+					else {
+						definition.append(" and ");
+					}
+					definition.append( constraint.getConstraintInParens() );
 				}
 			}
-			else {
-				boolean first = true;
-				for ( CheckConstraint constraint : checkConstraints ) {
-					if ( constraint.isAnonymous() ) {
-						if ( first ) {
-							definition.append(" check (");
-							first = false;
-						}
-						else {
-							definition.append(" and ");
-						}
-						definition.append( constraint.getConstraintInParens() );
-					}
-				}
-				if ( !first ) {
-					definition.append(")");
-				}
+			if ( hasAnonymousConstraints ) {
+				definition.append( ')' );
+			}
+
+			if ( !dialect.supportsTableCheck() ) {
+				// When table check constraints are not supported, try to render all named constraints
 				for ( CheckConstraint constraint : checkConstraints ) {
 					if ( constraint.isNamed() ) {
 						definition.append( constraint.constraintString( dialect ) );
+					}
+				}
+			}
+			else if ( !hasAnonymousConstraints && dialect.supportsNamedColumnCheck() ) {
+				// Otherwise only render the first named constraint as column constraint if there are no anonymous
+				// constraints and named column check constraint are supported, because some database don't like
+				// multiple check clauses.
+				// Note that the TableExporter will take care of named constraints then
+				for ( CheckConstraint constraint : checkConstraints ) {
+					if ( constraint.isNamed() ) {
+						definition.append( constraint.constraintString( dialect ) );
+						break;
 					}
 				}
 			}

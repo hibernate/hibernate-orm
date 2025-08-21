@@ -371,7 +371,7 @@ EOF
 }
 
 mssql() {
-  mssql_2022
+  mssql_2025
 }
 
 mssql_2017() {
@@ -407,6 +407,28 @@ mssql_2022() {
         # We need a database that uses a non-lock based MVCC approach
         # https://github.com/microsoft/homebrew-mssql-release/issues/2#issuecomment-682285561
         $CONTAINER_CLI exec mssql bash -c 'echo "create database hibernate_orm_test collate SQL_Latin1_General_CP1_CS_AS; alter database hibernate_orm_test set READ_COMMITTED_SNAPSHOT ON" | /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin' && break
+        echo "Waiting for SQL Server to start..."
+        n=$((n+1))
+        sleep 5
+    done
+    if [ "$n" -ge 5 ]; then
+      echo "SQL Server failed to start and configure after 25 seconds"
+    else
+      echo "SQL Server successfully started"
+    fi
+}
+
+mssql_2025() {
+    $CONTAINER_CLI rm -f mssql || true
+    #This sha256 matches a specific tag of 2025-latest (https://mcr.microsoft.com/en-us/product/mssql/server/tags):
+    $CONTAINER_CLI run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Hibernate_orm_test" -e ACCEPT_EULA=Y ${DB_IMAGE_MSSQL_2025:-mcr.microsoft.com/mssql/server@sha256:2fa59c23272a23dfd9600abf4ee52c0de6ae7ac640f14c617bc717ec139a5295}
+    sleep 5
+    n=0
+    until [ "$n" -ge 5 ]
+    do
+        # We need a database that uses a non-lock based MVCC approach
+        # https://github.com/microsoft/homebrew-mssql-release/issues/2#issuecomment-682285561
+        $CONTAINER_CLI exec mssql bash -c 'echo "create database hibernate_orm_test collate SQL_Latin1_General_CP1_CS_AS; alter database hibernate_orm_test set READ_COMMITTED_SNAPSHOT ON" | /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin' && break
         echo "Waiting for SQL Server to start..."
         n=$((n+1))
         sleep 5

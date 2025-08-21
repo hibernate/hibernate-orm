@@ -68,6 +68,10 @@ develocity:
 licenseAgreement:
   enabled: true
   ignore:
-    # See the `build-dependencies` group in the Dependabot's configuration file
     - user: dependabot[bot]
       titlePattern: "Bump.*"
+    # Members of this team already agreed to both LGPL and ASL2 for all their contributions.
+    - team:
+          name: license-agreement
+          organization: hibernate
+      titlePattern: ".*"

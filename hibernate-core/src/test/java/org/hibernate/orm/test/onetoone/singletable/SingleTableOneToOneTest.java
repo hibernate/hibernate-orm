@@ -58,7 +58,7 @@ public class SingleTableOneToOneTest {
 	@Test
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true,
 			reason = "SybaseDialect ignores unique constraints on nullable columns")
-	@SkipForDialect(dialectClass = InformixDialect.class, matchSubTypes = true,
+	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "InformixDialect ignores unique constraints on nullable columns")
 	public void testMultipleRelationshipsOnSingleTableInheritanceWronglyMappedAsOneToOne(SessionFactoryScope scope) {
 		assertThrows(

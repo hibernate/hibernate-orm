@@ -20,9 +20,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Steve Ebersole
  */
-@SkipForDialect(dialectClass = OracleDialect.class, matchSubTypes = true,
+@SkipForDialect(dialectClass = OracleDialect.class,
 		reason = "Oracle do not support identity key generation")
-@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true,
+@SkipForDialect(dialectClass = HANADialect.class,
 		reason = "Hana do not support identity key generation")
 @SkipForDialect(dialectClass = AltibaseDialect.class,
 		reason = "Altibase do not support identity key generation")

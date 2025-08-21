@@ -219,7 +219,7 @@ public class VarbinaryArrayTest {
 
 	@ParameterizedTest
 	@MethodSource("perTypeArguments")
-	@SkipForDialect( dialectClass = HANADialect.class, matchSubTypes = true,
+	@SkipForDialect( dialectClass = HANADialect.class,
 			reason = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "The statement failed because binary large objects are not allowed in the Union, Intersect, or Minus queries")

@@ -197,37 +197,43 @@ public class StandardTableExporter implements Exporter<Table> {
 
 	protected void applyTableCheck(Table table, StringBuilder buf) {
 		if ( dialect.supportsTableCheck() ) {
-			if ( !dialect.supportsColumnCheck() ) {
-				for ( Column column : table.getColumns() ) {
-					// some databases (Maria, SQL Server) don't like multiple 'check' clauses
-					final List<CheckConstraint> checkConstraints = column.getCheckConstraints();
-					long anonConstraints = checkConstraints.stream().filter( CheckConstraint::isAnonymous ).count();
-					if ( anonConstraints == 1 ) {
-						for ( CheckConstraint constraint : checkConstraints ) {
-							buf.append( "," ).append( constraint.constraintString( dialect ) );
+			for ( Column column : table.getColumns() ) {
+				final List<CheckConstraint> checkConstraints = column.getCheckConstraints();
+				boolean hasAnonymousConstraints = false;
+				if ( !dialect.supportsColumnCheck() ) {
+					for ( CheckConstraint constraint : checkConstraints ) {
+						if ( constraint.isAnonymous() ) {
+							if ( !hasAnonymousConstraints ) {
+								buf.append( ", check (" );
+								hasAnonymousConstraints = true;
+							}
+							else {
+								buf.append( " and " );
+							}
+							buf.append( constraint.getConstraintInParens() );
 						}
 					}
-					else {
-						boolean first = true;
-						for ( CheckConstraint constraint : checkConstraints ) {
-							if ( constraint.isAnonymous() ) {
-								if ( first ) {
-									buf.append( "," ).append( " check (" );
-									first = false;
-								}
-								else {
-									buf.append( " and " );
-								}
-								buf.append( constraint.getConstraintInParens() );
-							}
+					if ( hasAnonymousConstraints ) {
+						buf.append( ')' );
+					}
+				}
+				else {
+					hasAnonymousConstraints = checkConstraints.stream().anyMatch( CheckConstraint::isAnonymous );
+				}
+
+				// Since some databases don't like when multiple check clauses appear for a colum definition,
+				// named constraints need to be hoisted to the table definition.
+				// Skip the first named constraint if the column has no anonymous constraints and the dialect
+				// supports named column check constraints, because ColumnDefinitions will render the first check
+				// constraint already.
+				boolean skipNextNamedConstraint = !hasAnonymousConstraints && dialect.supportsNamedColumnCheck();
+				for ( CheckConstraint constraint : checkConstraints ) {
+					if ( constraint.isNamed() ) {
+						if ( skipNextNamedConstraint ) {
+							skipNextNamedConstraint = false;
 						}
-						if ( !first ) {
-							buf.append( ")" );
-						}
-						for ( CheckConstraint constraint : checkConstraints ) {
-							if ( constraint.isNamed() ) {
-								buf.append( constraint.constraintString( dialect ) );
-							}
+						else {
+							buf.append( ',' ).append( constraint.constraintString( dialect ) );
 						}
 					}
 				}

@@ -3210,11 +3210,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					query
 			);
 		}
-		final SelfRenderingSqmFunction<Boolean> contains = getFunctionDescriptor( "array_intersects" ).generateSqmExpression(
-				asList( lhs, rhs ),
-				null,
-				queryEngine()
-		);
+		final SelfRenderingSqmFunction<Boolean> contains =
+				getFunctionDescriptor( "array_intersects" )
+						.generateSqmExpression(
+								asList( lhs, rhs ),
+								null,
+								queryEngine()
+						);
 		return new SqmBooleanExpressionPredicate( contains, negated, nodeBuilder() );
 	}
 

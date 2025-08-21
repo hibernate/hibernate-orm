@@ -85,9 +85,7 @@ public class DialectFilterExtension implements ExecutionCondition {
 							matchingMinorVersion,
 							matchingMicroVersion,
 							dialect,
-							requiresDialect.matchSubTypes()
-									? VersionMatchMode.SAME_OR_NEWER
-									: VersionMatchMode.SAME
+							requiresDialect.versionMatchMode()
 					);
 				}
 				else {
@@ -159,28 +157,25 @@ public class DialectFilterExtension implements ExecutionCondition {
 			return false;
 		}
 
-		if ( matchingMinorVersion < 0 ) {
-			matchingMinorVersion = 0;
-		}
+		final int minorVersion = Math.max( matchingMinorVersion, 0 );
+		final int microVersion = Math.max( matchingMicroVersion, 0 );
 
-		if ( matchingMicroVersion < 0 ) {
-			matchingMicroVersion = 0;
-		}
-
-		if ( matchMode == VersionMatchMode.SAME_OR_NEWER ) {
-			return dialect.getVersion().isSameOrAfter( matchingMajorVersion, matchingMinorVersion, matchingMicroVersion );
-		}
-		if ( matchMode == VersionMatchMode.SAME_OR_OLDER
-				&& dialect.getVersion().isBefore( matchingMajorVersion, matchingMinorVersion, matchingMicroVersion ) ) {
-			return true;
-		}
-		return dialect.getVersion().isSame( matchingMajorVersion );
-	}
-
-	public enum VersionMatchMode {
-		SAME,
-		SAME_OR_NEWER,
-		SAME_OR_OLDER
+		return switch ( matchMode ) {
+			case SAME -> {
+				if ( matchingMicroVersion < 0 ) {
+					yield matchingMinorVersion < 0
+							? dialect.getVersion().isSame( matchingMajorVersion )
+							: dialect.getVersion().isSame( matchingMajorVersion, matchingMinorVersion );
+				}
+				else {
+					yield dialect.getVersion().isSame( matchingMajorVersion, matchingMinorVersion, matchingMicroVersion );
+				}
+			}
+			case SAME_OR_OLDER -> dialect.getVersion().isSameOrBefore( matchingMajorVersion, minorVersion, microVersion );
+			case SAME_OR_NEWER -> dialect.getVersion().isSameOrAfter( matchingMajorVersion, minorVersion, microVersion );
+			case NEWER -> dialect.getVersion().isAfter( matchingMajorVersion, minorVersion, microVersion );
+			case OLDER -> dialect.getVersion().isBefore( matchingMajorVersion, minorVersion, microVersion );
+		};
 	}
 
 	record DialectVersionKey(Class<? extends Dialect> dialect, DatabaseVersion version) {
@@ -239,9 +234,7 @@ public class DialectFilterExtension implements ExecutionCondition {
 						effectiveSkipForDialect.minorVersion(),
 						effectiveSkipForDialect.microVersion(),
 						dialect,
-						effectiveSkipForDialect.matchSubTypes()
-								? VersionMatchMode.SAME_OR_OLDER
-								: VersionMatchMode.SAME
+						effectiveSkipForDialect.versionMatchMode()
 				);
 
 				if ( versionsMatch ) {

@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 /**
  * @author Gavin King
  */
-@SkipForDialect(dialectClass = SQLServerDialect.class, matchSubTypes = true)
+@SkipForDialect(dialectClass = SQLServerDialect.class)
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/tm/Item.hbm.xml",
 		concurrencyStrategy = "transactional"

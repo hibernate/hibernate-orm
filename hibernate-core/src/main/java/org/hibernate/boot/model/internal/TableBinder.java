@@ -44,6 +44,7 @@ import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.isQuoted;
 import static org.hibernate.internal.util.StringHelper.nullIfBlank;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.unquote;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
@@ -896,7 +897,7 @@ public class TableBinder {
 			for ( jakarta.persistence.CheckConstraint checkConstraintAnnotationUsage : checkConstraintAnnotationUsages ) {
 				table.addCheck(
 						new CheckConstraint(
-								checkConstraintAnnotationUsage.name(),
+								nullIfEmpty( checkConstraintAnnotationUsage.name() ),
 								checkConstraintAnnotationUsage.constraint(),
 								checkConstraintAnnotationUsage.options()
 						)

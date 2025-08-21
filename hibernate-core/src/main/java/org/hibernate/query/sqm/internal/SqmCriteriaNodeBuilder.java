@@ -2954,6 +2954,66 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
+	public JpaPredicate likeRegexp(Expression<String> x, String pattern) {
+		return new SqmBooleanExpressionPredicate(
+				getFunctionDescriptor( "regexp_like" )
+						.generateSqmExpression(
+								asList( (SqmExpression<String>) x,
+										literal( pattern ) ),
+								null,
+								getQueryEngine()
+						),
+				this
+		);
+	}
+
+	@Override
+	public JpaPredicate ilikeRegexp(Expression<String> x, String pattern) {
+		return new SqmBooleanExpressionPredicate(
+				getFunctionDescriptor( "regexp_like" )
+						.generateSqmExpression(
+								asList( (SqmExpression<String>) x,
+										literal( pattern ),
+										literal( "i" ) ),
+								null,
+								getQueryEngine()
+						),
+				this
+		);
+	}
+
+	@Override
+	public JpaPredicate notLikeRegexp(Expression<String> x, String pattern) {
+		return new SqmBooleanExpressionPredicate(
+				getFunctionDescriptor( "regexp_like" )
+						.generateSqmExpression(
+								asList( (SqmExpression<String>) x,
+										literal( pattern ) ),
+								null,
+								getQueryEngine()
+						),
+				true,
+				this
+		);
+	}
+
+	@Override
+	public JpaPredicate notIlikeRegexp(Expression<String> x, String pattern) {
+		return new SqmBooleanExpressionPredicate(
+				getFunctionDescriptor( "regexp_like" )
+						.generateSqmExpression(
+								asList( (SqmExpression<String>) x,
+										literal( pattern ),
+										literal( "i" ) ),
+								null,
+								getQueryEngine()
+						),
+				true,
+				this
+		);
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public <T> SqmInPredicate<T> in(Expression<? extends T> expression) {
 		return new SqmInListPredicate<>( (SqmExpression<T>) expression, this );

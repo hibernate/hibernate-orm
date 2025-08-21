@@ -154,7 +154,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "No support for the tinyint datatype so we use smallint")
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "No support for the tinyint datatype so we use smallint")
 	@SkipForDialect(dialectClass = AbstractTransactSQLDialect.class, matchSubTypes = true, reason = "No support for the tinyint datatype so we use smallint")
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "No support for the tinyint datatype so we use smallint")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "No support for the tinyint datatype so we use smallint")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle maps tinyint to number")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "No support for the tinyint datatype so we use smallint")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase maps tinyint to smallint")
@@ -189,7 +189,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "Value is too big for the maximum allowed precision of DB2")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Value is too big for the maximum allowed precision of Oracle")
 	@SkipForDialect(dialectClass = AbstractTransactSQLDialect.class, matchSubTypes = true, reason = "Value is too big for the maximum allowed precision of SQL Server and Sybase")
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "Value is too big for the maximum allowed precision of HANA")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "Value is too big for the maximum allowed precision of HANA")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Value is too big for the maximum allowed precision of Firebird")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Value is too big for the maximum allowed precision of Altibase")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "The scale exceeds the maximum precision specified")
@@ -205,7 +205,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "Value is too big for the maximum allowed precision of DB2")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Value is too big for the maximum allowed precision of Oracle")
 	@SkipForDialect(dialectClass = AbstractTransactSQLDialect.class, matchSubTypes = true, reason = "Value is too big for the maximum allowed precision of SQL Server and Sybase")
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "Value is too big for the maximum allowed precision of HANA")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "Value is too big for the maximum allowed precision of HANA")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Value is too big for the maximum allowed precision of Firebird")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Value is too big for the maximum allowed precision of Altibase")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "The scale exceeds the maximum precision specified")
@@ -229,7 +229,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle maps LONGVARCHAR to CLOB")
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 maps LONGVARCHAR to CLOB")
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase maps LONGVARCHAR to CLOB")
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA maps LONGVARCHAR to CLOB")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA maps LONGVARCHAR to CLOB")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase maps LONGVARCHAR to CLOB")
 	public void longCharType() {
 		createEntityManagerFactory(
@@ -269,7 +269,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 maps LONGVARBINARY to BLOB")
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase maps LONGVARBINARY to BLOB")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase maps LONGVARBINARY to BLOB")
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA maps LONGVARCHAR to BLOB")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA maps LONGVARCHAR to BLOB")
 	public void longBinaryType() {
 		createEntityManagerFactory(
 				LongvarbinaryEntity.class

@@ -172,8 +172,8 @@ public class JavaTimeJdbcTypeTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle drivers truncate fractional seconds from the LocalTime", matchSubTypes = true)
-	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA time type does not support fractional seconds", matchSubTypes = true)
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle drivers truncate fractional seconds from the LocalTime")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA time type does not support fractional seconds")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase drivers truncate fractional seconds from the LocalTime")
 	void testLocalTime(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();

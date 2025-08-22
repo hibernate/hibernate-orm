@@ -7,6 +7,7 @@ package org.hibernate.sql.exec.internal;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.DatabaseOperation;
+import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.PostAction;
 import org.hibernate.sql.exec.spi.PreAction;
 import org.hibernate.sql.exec.spi.SecondaryAction;
@@ -18,13 +19,18 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * Abstract support for DatabaseOperation implementations, mainly
+ * managing {@linkplain PreAction pre-} and {@linkplain PostAction post-}
+ * actions.
+ *
  * @author Steve Ebersole
  */
-@SuppressWarnings("ALL")
-public abstract class AbstractDatabaseOperation implements DatabaseOperation {
+public abstract class AbstractDatabaseOperation<P extends JdbcOperation>
+		implements DatabaseOperation<P> {
 	protected final PreAction[] preActions;
 	protected final PostAction[] postActions;
 
+	@SuppressWarnings("unused")
 	public AbstractDatabaseOperation() {
 		this( null, null );
 	}
@@ -77,7 +83,8 @@ public abstract class AbstractDatabaseOperation implements DatabaseOperation {
 		protected abstract T getThis();
 
 		/**
-		 * Appends the {@code actions} to the growing list of pre-actions
+		 * Appends the {@code actions} to the growing list of pre-actions,
+		 * executed (in order) after all currently registered actions.
 		 *
 		 * @return {@code this}, for method chaining.
 		 */
@@ -98,9 +105,8 @@ public abstract class AbstractDatabaseOperation implements DatabaseOperation {
 			if ( preActions == null ) {
 				preActions = new ArrayList<>();
 			}
-			for ( int i = actions.length - 1; i >= 0; i-- ) {
-				preActions.add( 0, actions[i] );
-			}
+			// todo (DatabaseOperation) : should we invert the order of the incoming actions?
+			Collections.addAll( preActions, actions );
 			return getThis();
 		}
 
@@ -126,15 +132,17 @@ public abstract class AbstractDatabaseOperation implements DatabaseOperation {
 			if ( postActions == null ) {
 				postActions = new ArrayList<>();
 			}
-			for ( int i = actions.length - 1; i >= 0; i-- ) {
-				postActions.add( 0, actions[i] );
-			}
+			// todo (DatabaseOperation) : should we invert the order of the incoming actions?
+			Collections.addAll( postActions, actions );
 			return getThis();
 		}
 
 		/**
-		 * Adds a secondary action.  Assumes the action implements both
-		 * {@linkplain PreAction} and {@linkplain PostAction}.
+		 * Adds a secondary action pair.
+		 * Assumes the {@code action} implements both {@linkplain PreAction} and {@linkplain PostAction}.
+		 *
+		 * @apiNote Prefer {@linkplain #addSecondaryActionPair(PreAction, PostAction)} to avoid
+		 * the casts needed here.
 		 *
 		 * @see #prependPreAction
 		 * @see #appendPostAction

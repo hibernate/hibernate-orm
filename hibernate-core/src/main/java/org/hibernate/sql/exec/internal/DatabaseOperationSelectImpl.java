@@ -27,7 +27,7 @@ import java.util.Set;
  * @author Steve Ebersole
  */
 public class DatabaseOperationSelectImpl
-		extends AbstractDatabaseOperation
+		extends AbstractDatabaseOperation<JdbcOperationQuerySelect>
 		implements DatabaseOperationSelect {
 	private final JdbcOperationQuerySelect primaryOperation;
 

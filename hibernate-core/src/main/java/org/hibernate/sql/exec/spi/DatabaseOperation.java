@@ -9,18 +9,18 @@ import org.hibernate.Incubating;
 import java.util.Set;
 
 /**
- * An operation against the database, comprised of a single
- * {@linkplain #getPrimaryOperation primary operation} and zero-or-more
- * before/after {@linkplain SecondaryAction secondary actions}.
+ * An operation against the database, comprised of a
+ * {@linkplain #getPrimaryOperation primary operation} and
+ * zero-or-more {@linkplain SecondaryAction secondary actions}.
  *
  * @author Steve Ebersole
  */
 @Incubating
-public interface DatabaseOperation {
+public interface DatabaseOperation<P extends JdbcOperation> {
 	/**
 	 * The primary operation for the group.
 	 */
-	JdbcOperation getPrimaryOperation();
+	P getPrimaryOperation();
 
 	/**
 	 * The names of tables referenced or affected by this operation.

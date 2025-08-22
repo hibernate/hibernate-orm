@@ -12,15 +12,12 @@ import org.hibernate.sql.results.spi.RowTransformer;
 import java.sql.PreparedStatement;
 
 /**
- * {@linkplain DatabaseOperation} whose primary operation is a selection.
+ * {@linkplain DatabaseOperation} whose primary operation is a {@linkplain JdbcOperationQuerySelect selection}.
  *
  * @author Steve Ebersole
  */
 @Incubating
-public interface DatabaseOperationSelect extends DatabaseOperation {
-	@Override
-	JdbcOperationQuerySelect getPrimaryOperation();
-
+public interface DatabaseOperationSelect extends DatabaseOperation<JdbcOperationQuerySelect> {
 	/**
 	 * Execute the underlying statements and return the result(s).
 	 *

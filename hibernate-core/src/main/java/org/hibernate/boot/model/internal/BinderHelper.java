@@ -45,7 +45,6 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
-import org.hibernate.type.descriptor.java.JavaType;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -372,8 +371,8 @@ public class BinderHelper {
 	 */
 	private static Property cloneProperty(PersistentClass ownerEntity, MetadataBuildingContext context, Property property) {
 		if ( property.isComposite() ) {
-			final Component component = (Component) property.getValue();
-			final Component copy = new Component( context, component );
+			final var component = (Component) property.getValue();
+			final var copy = new Component( context, component );
 			copy.setComponentClassName( component.getComponentClassName() );
 			copy.setEmbedded( component.isEmbedded() );
 			for ( Property subproperty : component.getProperties() ) {
@@ -727,45 +726,45 @@ public class BinderHelper {
 			EntityBinder entityBinder,
 			boolean optional,
 			MetadataBuildingContext context) {
-		final MemberDetails property = inferredData.getAttributeMember();
+		final var memberDetails = inferredData.getAttributeMember();
 
-		final Any value = new Any( context, keyColumns.getTable(), true );
-		value.setLazy( lazy );
-		value.setOnDeleteAction( onDeleteAction );
+		final var any = new Any( context, keyColumns.getTable(), true );
+		any.setLazy( lazy );
+		any.setOnDeleteAction( onDeleteAction );
 
-		final BasicValueBinder discriminatorValueBinder =
+		final var discriminatorValueBinder =
 				new BasicValueBinder( BasicValueBinder.Kind.ANY_DISCRIMINATOR, context );
 
 		// TODO: if there can be only one discriminator column,
 		//       why are we making a whole array of them??
-		final AnnotatedColumns discriminatorColumns = buildColumnOrFormulaFromAnnotation(
-				discriminatorColumn,
-				discriminatorFormula,
-				null,
-//				null,
-				nullability,
-				propertyHolder,
-				inferredData,
-				entityBinder.getSecondaryTables(),
-				context
-		);
+		final var discriminatorColumns =
+				buildColumnOrFormulaFromAnnotation(
+						discriminatorColumn,
+						discriminatorFormula,
+						null,
+//						null,
+						nullability,
+						propertyHolder,
+						inferredData,
+						entityBinder.getSecondaryTables(),
+						context
+				);
 		assert discriminatorColumns.getColumns().size() == 1;
 
-		discriminatorColumns.setTable( value.getTable() );
+		discriminatorColumns.setTable( any.getTable() );
 		discriminatorValueBinder.setColumns( discriminatorColumns );
 
 		discriminatorValueBinder.setReturnedClassName( inferredData.getTypeName() );
-		discriminatorValueBinder.setType( property, property.getType(), null, null );
+		discriminatorValueBinder.setType( memberDetails, memberDetails.getType(), null, null );
 
-		final BasicValue discriminatorDescriptor = discriminatorValueBinder.make();
-		value.setDiscriminator( discriminatorDescriptor );
+		final BasicValue discriminator = discriminatorValueBinder.make();
+		any.setDiscriminator( discriminator );
 		discriminatorValueBinder.fillSimpleValue();
 		// TODO: this is nasty
-		final AnnotatedColumn firstDiscriminatorColumn = discriminatorColumns.getColumns().get(0);
-		firstDiscriminatorColumn.linkWithValue( discriminatorDescriptor );
+		final var firstDiscriminatorColumn = discriminatorColumns.getColumns().get(0);
+		firstDiscriminatorColumn.linkWithValue( discriminator );
 
-		final JavaType<?> discriminatorJavaType =
-				discriminatorDescriptor.resolve().getRelationalJavaType();
+		final var discriminatorJavaType = discriminator.resolve().getRelationalJavaType();
 
 		final Map<Object,Class<?>> discriminatorValueMappings = new HashMap<>();
 		processAnyDiscriminatorValues(
@@ -776,50 +775,50 @@ public class BinderHelper {
 				),
 				context.getBootstrapContext().getModelsContext()
 		);
-		value.setDiscriminatorValueMappings( discriminatorValueMappings );
+		any.setDiscriminatorValueMappings( discriminatorValueMappings );
 
 
-		final AnyDiscriminatorImplicitValues anyDiscriminatorImplicitValues =
-				property.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class );
+		final var anyDiscriminatorImplicitValues =
+				memberDetails.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class );
 		if ( anyDiscriminatorImplicitValues != null ) {
-			value.setImplicitDiscriminatorValueStrategy( resolveImplicitDiscriminatorStrategy( anyDiscriminatorImplicitValues, context ) );
+			any.setImplicitDiscriminatorValueStrategy(
+					resolveImplicitDiscriminatorStrategy( anyDiscriminatorImplicitValues, context ) );
 		}
 
-		final BasicValueBinder keyValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ANY_KEY, context );
-		final List<AnnotatedJoinColumn> columns = keyColumns.getJoinColumns();
+		final var keyValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ANY_KEY, context );
+		final var columns = keyColumns.getJoinColumns();
 		assert columns.size() == 1;
-		keyColumns.setTable( value.getTable() );
+		keyColumns.setTable( any.getTable() );
 		keyValueBinder.setColumns( keyColumns );
 		if ( !optional ) {
 			for ( AnnotatedJoinColumn column : columns ) {
 				column.setNullable( false );
 			}
 		}
-		keyValueBinder.setType( property, property.getType(), null, null );
+		keyValueBinder.setType( memberDetails, memberDetails.getType(), null, null );
 		final BasicValue keyDescriptor = keyValueBinder.make();
-		value.setKey( keyDescriptor );
+		any.setKey( keyDescriptor );
 		keyValueBinder.fillSimpleValue();
 		keyColumns.checkPropertyConsistency();
 		columns.get(0).linkWithValue( keyDescriptor ); //TODO: nasty
-		return value;
+		return any;
 	}
 
 	private static void processAnyDiscriminatorValues(
 			MemberDetails property,
 			Consumer<AnyDiscriminatorValue> consumer,
 			ModelsContext sourceModelContext) {
-		final AnyDiscriminatorValues valuesAnn =
+		final var anyDiscriminatorValues =
 				property.locateAnnotationUsage( AnyDiscriminatorValues.class, sourceModelContext );
-		if ( valuesAnn != null ) {
-			final AnyDiscriminatorValue[] nestedList = valuesAnn.value();
-			ArrayHelper.forEach( nestedList, consumer );
-			return;
+		if ( anyDiscriminatorValues != null ) {
+			ArrayHelper.forEach( anyDiscriminatorValues.value(), consumer );
 		}
-
-		final AnyDiscriminatorValue valueAnn =
-				property.locateAnnotationUsage( AnyDiscriminatorValue.class, sourceModelContext );
-		if ( valueAnn != null ) {
-			consumer.accept( valueAnn );
+		else {
+			final var anyDiscriminatorValue =
+					property.locateAnnotationUsage( AnyDiscriminatorValue.class, sourceModelContext );
+			if ( anyDiscriminatorValue != null ) {
+				consumer.accept( anyDiscriminatorValue );
+			}
 		}
 	}
 
@@ -828,7 +827,7 @@ public class BinderHelper {
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
 			MetadataBuildingContext context) {
 		if ( declaringClass != null ) {
-			final InheritanceState inheritanceState = inheritanceStatePerClass.get( declaringClass );
+			final var inheritanceState = inheritanceStatePerClass.get( declaringClass );
 			if ( inheritanceState == null ) {
 				throw new AssertionFailure(
 						"Declaring class is not found in the inheritance state hierarchy: " + declaringClass
@@ -847,7 +846,7 @@ public class BinderHelper {
 
 	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){
 		final Map<String,String> result = new HashMap<>();
-		for ( SqlFragmentAlias aliasAnnotation : aliases ) {
+		for ( var aliasAnnotation : aliases ) {
 			final String table = aliasAnnotation.table();
 			if ( isNotBlank( table ) ) {
 				result.put( aliasAnnotation.alias(), table );
@@ -858,8 +857,8 @@ public class BinderHelper {
 
 	public static Map<String,String> toAliasEntityMap(SqlFragmentAlias[] aliases){
 		final Map<String,String> result = new HashMap<>();
-		for ( SqlFragmentAlias aliasAnnotation : aliases ) {
-			final Class<?> entityClass = aliasAnnotation.entity();
+		for ( var aliasAnnotation : aliases ) {
+			final var entityClass = aliasAnnotation.entity();
 			if ( entityClass != void.class ) {
 				result.put( aliasAnnotation.alias(), entityClass.getName() );
 			}
@@ -886,10 +885,7 @@ public class BinderHelper {
 			boolean orphanRemoval,
 			MetadataBuildingContext context) {
 		final var cascades = convertToHibernateCascadeType( cascadeTypes );
-		final CascadeType[] hibernateCascades =
-				cascadeAnnotation == null
-						? null
-						: cascadeAnnotation.value();
+		final var hibernateCascades = cascadeAnnotation == null ? null : cascadeAnnotation.value();
 		if ( !isEmpty( hibernateCascades ) ) {
 			addAll( cascades, hibernateCascades );
 		}

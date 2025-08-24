@@ -13,7 +13,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.internal.OffsetDateTimeCompositeUserType;
 import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
@@ -59,7 +58,7 @@ public class TimeZoneStorageHelper {
 	}
 
 	public static boolean isOffsetTimeClass(MemberDetails element) {
-		final TypeDetails type = element.getType();
+		final var type = element.getType();
 		return type != null
 			&& isOffsetTimeClass( type.determineRawClass().getClassName() );
 
@@ -70,7 +69,7 @@ public class TimeZoneStorageHelper {
 	}
 
 	static boolean useColumnForTimeZoneStorage(AnnotationTarget element, MetadataBuildingContext context) {
-		final TimeZoneStorage timeZoneStorage = element.getDirectAnnotationUsage( TimeZoneStorage.class );
+		final var timeZoneStorage = element.getDirectAnnotationUsage( TimeZoneStorage.class );
 		if ( timeZoneStorage == null ) {
 			return element instanceof MemberDetails attributeMember
 				&& isTemporalWithTimeZoneClass( attributeMember.getType().getName() )

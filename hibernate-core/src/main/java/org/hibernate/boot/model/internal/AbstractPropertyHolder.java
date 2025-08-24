@@ -87,7 +87,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 
 	@Override
 	public ConverterDescriptor<?,?> resolveAttributeConverterDescriptor(MemberDetails attributeMember, boolean autoApply) {
-		final AttributeConversionInfo info = locateAttributeConversionInfo( attributeMember );
+		final var info = locateAttributeConversionInfo( attributeMember );
 		if ( info != null ) {
 			if ( info.isConversionDisabled() ) {
 				return null;
@@ -101,11 +101,13 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 				}
 			}
 		}
-
-		return !autoApply ? null : context.getMetadataCollector()
-				.getConverterRegistry()
-				.getAttributeConverterAutoApplyHandler()
-				.findAutoApplyConverterForAttribute( attributeMember, context );
+		else {
+			return autoApply
+					? context.getMetadataCollector().getConverterRegistry()
+							.getAttributeConverterAutoApplyHandler()
+							.findAutoApplyConverterForAttribute( attributeMember, context )
+					: null;
+		}
 	}
 
 	protected IllegalStateException buildExceptionFromInstantiationError(AttributeConversionInfo info, Exception e) {
@@ -185,36 +187,36 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		// todo (jpa32) : some of this (association override handling esp) does the same work multiple times - consolidate
 
 		if ( attributeMember == null ) {
-			this.currentPropertyColumnOverride = null;
-			this.currentPropertyColumnTransformerOverride = null;
-			this.currentPropertyJoinColumnOverride = null;
-			this.currentPropertyJoinTableOverride = null;
-			this.currentPropertyForeignKeyOverride = null;
+			currentPropertyColumnOverride = null;
+			currentPropertyColumnTransformerOverride = null;
+			currentPropertyJoinColumnOverride = null;
+			currentPropertyJoinTableOverride = null;
+			currentPropertyForeignKeyOverride = null;
 		}
 		else {
-			this.currentPropertyColumnOverride = buildColumnOverride( attributeMember, getPath(), context );
-			if ( this.currentPropertyColumnOverride.isEmpty() ) {
-				this.currentPropertyColumnOverride = null;
+			currentPropertyColumnOverride = buildColumnOverride( attributeMember, getPath(), context );
+			if ( currentPropertyColumnOverride.isEmpty() ) {
+				currentPropertyColumnOverride = null;
 			}
 
-			this.currentPropertyColumnTransformerOverride = buildColumnTransformerOverride( attributeMember, context );
-			if ( this.currentPropertyColumnTransformerOverride.isEmpty() ) {
-				this.currentPropertyColumnTransformerOverride = null;
+			currentPropertyColumnTransformerOverride = buildColumnTransformerOverride( attributeMember, context );
+			if ( currentPropertyColumnTransformerOverride.isEmpty() ) {
+				currentPropertyColumnTransformerOverride = null;
 			}
 
-			this.currentPropertyJoinColumnOverride = buildJoinColumnOverride( attributeMember, getPath(), context );
-			if ( this.currentPropertyJoinColumnOverride.isEmpty() ) {
-				this.currentPropertyJoinColumnOverride = null;
+			currentPropertyJoinColumnOverride = buildJoinColumnOverride( attributeMember, getPath(), context );
+			if ( currentPropertyJoinColumnOverride.isEmpty() ) {
+				currentPropertyJoinColumnOverride = null;
 			}
 
-			this.currentPropertyJoinTableOverride = buildJoinTableOverride( attributeMember, getPath(), context );
-			if ( this.currentPropertyJoinTableOverride.isEmpty() ) {
-				this.currentPropertyJoinTableOverride = null;
+			currentPropertyJoinTableOverride = buildJoinTableOverride( attributeMember, getPath(), context );
+			if ( currentPropertyJoinTableOverride.isEmpty() ) {
+				currentPropertyJoinTableOverride = null;
 			}
 
-			this.currentPropertyForeignKeyOverride = buildForeignKeyOverride( attributeMember, getPath(), context );
-			if ( this.currentPropertyForeignKeyOverride.isEmpty() ) {
-				this.currentPropertyForeignKeyOverride = null;
+			currentPropertyForeignKeyOverride = buildForeignKeyOverride( attributeMember, getPath(), context );
+			if ( currentPropertyForeignKeyOverride.isEmpty() ) {
+				currentPropertyForeignKeyOverride = null;
 			}
 		}
 	}
@@ -227,15 +229,11 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	 */
 	@Override
 	public Column[] getOverriddenColumn(String propertyName) {
-		final Column[] result = getExactOverriddenColumn( propertyName );
-		if ( result == null ) {
-			if ( propertyName.contains( ".{element}." ) ) {
-				//support for non map collections where no prefix is needed
-				//TODO cache the underlying regexp
-				return getExactOverriddenColumn( propertyName.replace( ".{element}.", "."  ) );
-			}
-		}
-		return result;
+		final var overriddenColumn = getExactOverriddenColumn( propertyName );
+		// support for non-map collections where no prefix is needed
+		return overriddenColumn == null && propertyName.contains( ".{element}." )
+				? getExactOverriddenColumn( propertyName.replace( ".{element}.", "." ) )
+				: overriddenColumn;
 	}
 
 	@Override
@@ -291,7 +289,9 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			//TODO cache the underlying regexp
 			return getExactOverriddenJoinColumn( propertyName.replace( ".{element}.", "."  ) );
 		}
-		return result;
+		else {
+			return result;
+		}
 	}
 
 	/**
@@ -349,10 +349,9 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	public JoinTable getJoinTable(MemberDetails attributeMember) {
 		final String propertyName = qualify( getPath(), attributeMember.getName() );
 		final JoinTable result = getOverriddenJoinTable( propertyName );
-		if ( result == null ) {
-			return attributeMember.getDirectAnnotationUsage( JoinTable.class );
-		}
-		return result;
+		return result == null
+				? attributeMember.getDirectAnnotationUsage( JoinTable.class )
+				: result;
 	}
 
 	/**
@@ -368,7 +367,9 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			//TODO cache the underlying regexp
 			return getExactOverriddenJoinTable( propertyName.replace( ".{element}.", "."  ) );
 		}
-		return result;
+		else {
+			return result;
+		}
 	}
 
 	/**
@@ -435,12 +436,10 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			return result;
 		}
 
-		final ModelsContext sourceModelContext =
-				context.getBootstrapContext().getModelsContext();
+		final var modelContext = context.getBootstrapContext().getModelsContext();
 		final Map<String, List<Column>> columnOverrideMap = new HashMap<>();
 
-		final AttributeOverride[] overrides =
-				element.getRepeatedAnnotationUsages( AttributeOverride.class, sourceModelContext );
+		final var overrides = element.getRepeatedAnnotationUsages( AttributeOverride.class, modelContext );
 		if ( isNotEmpty( overrides ) ) {
 			for ( AttributeOverride depAttr : overrides ) {
 				final String qualifiedName = qualify( path, depAttr.name() );
@@ -459,7 +458,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			}
 		}
 		else if ( useColumnForTimeZoneStorage( element, context ) ) {
-			final Column column = createTemporalColumn( element, path, context );
+			final var column = createTemporalColumn( element, path, context );
 			if ( isOffsetTimeClass( element ) ) {
 				columnOverrideMap.put(
 						path + "." + OffsetTimeCompositeUserType.LOCAL_TIME_NAME,
@@ -472,7 +471,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 						List.of( column )
 				);
 			}
-			final Column offsetColumn = createTimeZoneColumn( element, column, context );
+			final var offsetColumn = createTimeZoneColumn( element, column, context );
 			columnOverrideMap.put(
 					path + "." + AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME,
 					List.of( offsetColumn )
@@ -489,11 +488,13 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			AnnotationTarget element,
 			Column column,
 			MetadataBuildingContext context) {
-		final TimeZoneColumn timeZoneColumn = element.getDirectAnnotationUsage( TimeZoneColumn.class );
-		final ColumnJpaAnnotation created = JpaAnnotations.COLUMN.createUsage( context.getBootstrapContext().getModelsContext() );
-		final String columnName = timeZoneColumn != null
-				? timeZoneColumn.name()
-				: column.name() + "_tz";
+		final var timeZoneColumn = element.getDirectAnnotationUsage( TimeZoneColumn.class );
+		final ColumnJpaAnnotation created =
+				JpaAnnotations.COLUMN.createUsage( context.getBootstrapContext().getModelsContext() );
+		final String columnName =
+				timeZoneColumn != null
+						? timeZoneColumn.name()
+						: column.name() + "_tz";
 		created.name( columnName );
 		created.nullable( column.nullable() );
 
@@ -523,7 +524,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			MetadataBuildingContext context) {
 		int precision;
 		int secondPrecision;
-		final Column annotatedColumn = element.getDirectAnnotationUsage( Column.class );
+		final var annotatedColumn = element.getDirectAnnotationUsage( Column.class );
 		if ( annotatedColumn != null ) {
 			if ( isNotBlank( annotatedColumn.name() ) ) {
 				return annotatedColumn;
@@ -571,7 +572,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	}
 
 	private static Map<String, ColumnTransformer> buildColumnTransformerOverride(AnnotationTarget element, MetadataBuildingContext context) {
-		final ModelsContext sourceModelContext = context.getBootstrapContext().getModelsContext();
+		final var sourceModelContext = context.getBootstrapContext().getModelsContext();
 		final Map<String, ColumnTransformer> columnOverride = new HashMap<>();
 		if ( element != null ) {
 			element.forEachAnnotationUsage( ColumnTransformer.class, sourceModelContext, (usage) -> {
@@ -584,7 +585,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	private static Map<String, JoinColumn[]> buildJoinColumnOverride(AnnotationTarget element, String path, MetadataBuildingContext context) {
 		final Map<String, JoinColumn[]> columnOverride = new HashMap<>();
 		if ( element != null ) {
-			for ( AssociationOverride override : buildAssociationOverrides( element, path, context ) ) {
+			for ( var override : buildAssociationOverrides( element, path, context ) ) {
 				columnOverride.put( qualify( path, override.name() ), override.joinColumns() );
 			}
 		}
@@ -594,7 +595,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	private static Map<String, ForeignKey> buildForeignKeyOverride(AnnotationTarget element, String path, MetadataBuildingContext context) {
 		final Map<String, ForeignKey> foreignKeyOverride = new HashMap<>();
 		if ( element != null ) {
-			for ( AssociationOverride override : buildAssociationOverrides( element, path, context ) ) {
+			for ( var override : buildAssociationOverrides( element, path, context ) ) {
 				foreignKeyOverride.put( qualify( path, override.name() ), override.foreignKey() );
 			}
 		}
@@ -608,7 +609,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	private static Map<String, JoinTable> buildJoinTableOverride(AnnotationTarget element, String path, MetadataBuildingContext context) {
 		final Map<String, JoinTable> result = new HashMap<>();
 		if ( element != null ) {
-			for ( AssociationOverride override : buildAssociationOverrides( element, path, context ) ) {
+			for ( var override : buildAssociationOverrides( element, path, context ) ) {
 				if ( isEmpty( override.joinColumns() ) ) {
 					result.put( qualify( path, override.name() ), override.joinTable() );
 				}

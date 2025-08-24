@@ -12,7 +12,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.Internal;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
@@ -31,10 +31,10 @@ import org.hibernate.mapping.Table;
 
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
-import jakarta.persistence.UniqueConstraint;
 import org.hibernate.mapping.Value;
 
 import static org.hibernate.cfg.MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
+import static org.hibernate.cfg.MappingSettings.PREFERRED_POOLED_OPTIMIZER;
 import static org.hibernate.id.IdentifierGenerator.CONTRIBUTOR_NAME;
 import static org.hibernate.id.IdentifierGenerator.ENTITY_NAME;
 import static org.hibernate.id.IdentifierGenerator.JPA_ENTITY_NAME;
@@ -71,7 +71,7 @@ public class GeneratorParameters {
 			RootClass rootClass,
 			Map<String, Object> configuration,
 			ConfigurationService configService) {
-		final Properties params = new Properties();
+		final var params = new Properties();
 		collectParameters( identifierValue, dialect, rootClass, params::put, configService );
 		if ( configuration != null ) {
 			params.putAll( configuration );
@@ -94,7 +94,7 @@ public class GeneratorParameters {
 
 	public static int fallbackAllocationSize(Annotation generatorAnnotation, MetadataBuildingContext buildingContext) {
 		if ( generatorAnnotation == null ) {
-			final ConfigurationService configService = buildingContext.getBootstrapContext().getConfigurationService();
+			final var configService = buildingContext.getBootstrapContext().getConfigurationService();
 			final String idNamingStrategy = configService.getSetting( ID_DB_STRUCTURE_NAMING_STRATEGY, StandardConverters.STRING );
 			if ( LegacyNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
 					|| LegacyNamingStrategy.class.getName().equals( idNamingStrategy )
@@ -150,16 +150,16 @@ public class GeneratorParameters {
 				identifierValue.getBuildingContext().getCurrentContributorName() );
 
 		final Map<String, Object> settings = configService.getSettings();
-		if ( settings.containsKey( AvailableSettings.PREFERRED_POOLED_OPTIMIZER ) ) {
+		if ( settings.containsKey( PREFERRED_POOLED_OPTIMIZER ) ) {
 			parameterCollector.accept(
-					AvailableSettings.PREFERRED_POOLED_OPTIMIZER,
-					(String) settings.get( AvailableSettings.PREFERRED_POOLED_OPTIMIZER )
+					PREFERRED_POOLED_OPTIMIZER,
+					(String) settings.get( PREFERRED_POOLED_OPTIMIZER )
 			);
 		}
 	}
 
 	public static String identityTablesString(Dialect dialect, RootClass rootClass) {
-		final StringBuilder tables = new StringBuilder();
+		final var tables = new StringBuilder();
 		for ( Table table : rootClass.getIdentityTables() ) {
 			tables.append( table.getQuotedName( dialect ) );
 			if ( !tables.isEmpty() ) {
@@ -171,7 +171,7 @@ public class GeneratorParameters {
 
 	public static int defaultIncrement(ConfigurationService configService) {
 		final String idNamingStrategy =
-				configService.getSetting( AvailableSettings.ID_DB_STRUCTURE_NAMING_STRATEGY,
+				configService.getSetting( MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY,
 						StandardConverters.STRING, null );
 		if ( LegacyNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
 				|| LegacyNamingStrategy.class.getName().equals( idNamingStrategy )
@@ -252,8 +252,7 @@ public class GeneratorParameters {
 		);
 
 		// TODO : implement unique-constraint support
-		final UniqueConstraint[] uniqueConstraints = tableGeneratorAnnotation.uniqueConstraints();
-		if ( isNotEmpty( uniqueConstraints ) ) {
+		if ( isNotEmpty( tableGeneratorAnnotation.uniqueConstraints() ) ) {
 			LOG.ignoringTableGeneratorConstraints( tableGeneratorAnnotation.name() );
 		}
 	}

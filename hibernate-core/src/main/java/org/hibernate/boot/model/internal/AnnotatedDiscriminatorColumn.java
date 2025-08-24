@@ -47,12 +47,12 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 			Column columnOverride,
 			String defaultColumnName,
 			MetadataBuildingContext context) {
-		final AnnotatedColumns parent = new AnnotatedColumns();
+		final var parent = new AnnotatedColumns();
 		parent.setBuildingContext( context );
-		final AnnotatedDiscriminatorColumn column = new AnnotatedDiscriminatorColumn( defaultColumnName );
+		final var column = new AnnotatedDiscriminatorColumn( defaultColumnName );
 		final DiscriminatorType discriminatorType;
 		if ( discriminatorFormula != null ) {
-			final DiscriminatorType type = discriminatorFormula.discriminatorType();
+			final var type = discriminatorFormula.discriminatorType();
 			if ( type == DiscriminatorType.STRING ) {
 				discriminatorType = discriminatorColumn == null ? type : discriminatorColumn.discriminatorType();
 			}

@@ -65,7 +65,7 @@ public class ListBinder extends CollectionBinder {
 		}
 		indexColumn.getParent().setPropertyHolder( valueHolder );
 
-		final BasicValueBinder valueBinder = new BasicValueBinder( BasicValueBinder.Kind.LIST_INDEX, buildingContext );
+		final var valueBinder = new BasicValueBinder( BasicValueBinder.Kind.LIST_INDEX, buildingContext );
 		valueBinder.setColumns( indexColumn.getParent() );
 		valueBinder.setReturnedClassName( Integer.class.getName() );
 		valueBinder.setType( property, getElementType(), null, null );
@@ -89,8 +89,8 @@ public class ListBinder extends CollectionBinder {
 				&& !collection.getKey().isNullable()
 				&& !collection.isInverse() ) {
 			final String entityName = ( (OneToMany) collection.getElement() ).getReferencedEntityName();
-			final PersistentClass referenced = buildingContext.getMetadataCollector().getEntityBinding( entityName );
-			final IndexBackref backref = new IndexBackref();
+			final var referenced = buildingContext.getMetadataCollector().getEntityBinding( entityName );
+			final var backref = new IndexBackref();
 			backref.setName( '_' + propertyName + "IndexBackref" );
 			backref.setOptional( true );
 			backref.setUpdatable( false );

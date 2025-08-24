@@ -19,7 +19,6 @@ import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.models.spi.GlobalRegistrar;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -43,7 +42,6 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.internal.Helper;
 
@@ -51,7 +49,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -116,13 +113,13 @@ public class GeneratorBinder {
 		}
 
 		if ( generatorName.isEmpty() ) {
-			final GeneratedValue generatedValue = idAttributeMember.getDirectAnnotationUsage( GeneratedValue.class );
+			final var generatedValue = idAttributeMember.getDirectAnnotationUsage( GeneratedValue.class );
 			if ( generatedValue != null ) {
 				// The mapping used @GeneratedValue but specified no name.  This is a special case added in JPA 3.2.
 				// Look for a matching "implied generator" based on the GenerationType
-				final GenerationType strategy = generatedValue.strategy();
+				final var strategy = generatedValue.strategy();
 				final String strategyGeneratorClassName = correspondingGeneratorName( strategy );
-				final IdentifierGeneratorDefinition impliedGenerator =
+				final var impliedGenerator =
 						determineImpliedGenerator( strategy, strategyGeneratorClassName, localGenerators );
 				if ( impliedGenerator != null ) {
 					configuration.putAll( impliedGenerator.getParameters() );
@@ -152,10 +149,9 @@ public class GeneratorBinder {
 		}
 
 		if ( localGenerators.size() == 1 ) {
-			final IdentifierGeneratorDefinition generatorDefinition =
-					localGenerators.values().iterator().next();
-			// NOTE : a little bit of a special rule here for the case of just one -
-			// 		we consider it a match, based on strategy, if the strategy is AUTO or matches...
+			final var generatorDefinition = localGenerators.values().iterator().next();
+			// NOTE: a little bit of a special rule here for the case of just one -
+			// 		 we consider it a match, based on strategy, if the strategy is AUTO or matches
 			if ( strategy == AUTO
 					|| isImpliedGenerator( strategy, strategyGeneratorClassName, generatorDefinition ) ) {
 				return generatorDefinition;
@@ -163,7 +159,7 @@ public class GeneratorBinder {
 		}
 
 		IdentifierGeneratorDefinition matching = null;
-		for ( IdentifierGeneratorDefinition localGenerator : localGenerators.values() ) {
+		for ( var localGenerator : localGenerators.values() ) {
 			if ( isImpliedGenerator( strategy, strategyGeneratorClassName, localGenerator ) ) {
 				if ( matching != null ) {
 					// we found multiple matching generators
@@ -201,7 +197,7 @@ public class GeneratorBinder {
 			Map<String, Object> configuration) {
 		if ( !generatorName.isEmpty() ) {
 			//we have a named generator
-			final IdentifierGeneratorDefinition definition =
+			final var definition =
 					makeIdentifierGeneratorDefinition( generatorName, idAttributeMember, localGenerators, context );
 			if ( definition == null ) {
 				throw new AnnotationException( "No id generator was declared with the name '" + generatorName
@@ -230,19 +226,20 @@ public class GeneratorBinder {
 			Map<String, ? extends IdentifierGeneratorDefinition> localGenerators,
 			MetadataBuildingContext buildingContext) {
 		if ( localGenerators != null ) {
-			final IdentifierGeneratorDefinition result = localGenerators.get( name );
+			final var result = localGenerators.get( name );
 			if ( result != null ) {
 				return result;
 			}
 		}
 
-		final IdentifierGeneratorDefinition globalDefinition =
-				buildingContext.getMetadataCollector().getIdentifierGenerator( name );
+		final var globalDefinition =
+				buildingContext.getMetadataCollector()
+						.getIdentifierGenerator( name );
 		if ( globalDefinition != null ) {
 			return globalDefinition;
 		}
 		else {
-			final GeneratedValue generatedValue = idAttributeMember.getDirectAnnotationUsage( GeneratedValue.class );
+			final var generatedValue = idAttributeMember.getDirectAnnotationUsage( GeneratedValue.class );
 			if ( generatedValue == null ) {
 				throw new AssertionFailure( "No @GeneratedValue annotation" );
 			}
@@ -257,7 +254,7 @@ public class GeneratorBinder {
 
 	private static GenerationType interpretGenerationType(GeneratedValue generatedValueAnn) {
 		// todo (jpa32) : when can this ever be null?
-		final GenerationType strategy = generatedValueAnn.strategy();
+		final var strategy = generatedValueAnn.strategy();
 		return strategy == null ? AUTO : strategy;
 	}
 
@@ -265,24 +262,20 @@ public class GeneratorBinder {
 			AnnotationTarget annotatedElement,
 			Consumer<IdentifierGeneratorDefinition> consumer,
 			MetadataBuildingContext buildingContext) {
-		final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
-
+		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 		annotatedElement.forEachAnnotationUsage( TableGenerator.class, modelsContext,
 				usage -> consumer.accept( buildTableIdGenerator( usage ) ) );
-
 		annotatedElement.forEachAnnotationUsage( SequenceGenerator.class, modelsContext,
 				usage -> consumer.accept( buildSequenceIdGenerator( usage ) ) );
-
 		annotatedElement.forEachAnnotationUsage( GenericGenerator.class, modelsContext,
 				usage -> consumer.accept( buildIdGenerator( usage ) ) );
-
 	}
 
 	public static void registerGlobalGenerators(
 			AnnotationTarget annotatedElement,
 			MetadataBuildingContext context) {
 		if ( context.getBootstrapContext().getJpaCompliance().isGlobalGeneratorScopeEnabled() ) {
-			final InFlightMetadataCollector metadataCollector = context.getMetadataCollector();
+			final var metadataCollector = context.getMetadataCollector();
 			visitIdGeneratorDefinitions(
 					annotatedElement,
 					definition -> {
@@ -296,10 +289,9 @@ public class GeneratorBinder {
 	}
 
 	private static IdentifierGeneratorDefinition buildIdGenerator(GenericGenerator generatorAnnotation) {
-		final IdentifierGeneratorDefinition.Builder definitionBuilder =
-				new IdentifierGeneratorDefinition.Builder();
+		final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 		definitionBuilder.setName( generatorAnnotation.name() );
-		final Class<? extends Generator> generatorClass = generatorAnnotation.type();
+		final var generatorClass = generatorAnnotation.type();
 		final String strategy =
 				generatorClass.equals( Generator.class )
 						? generatorAnnotation.strategy()
@@ -315,7 +307,7 @@ public class GeneratorBinder {
 	}
 
 	private static IdentifierGeneratorDefinition buildSequenceIdGenerator(SequenceGenerator generatorAnnotation) {
-		final IdentifierGeneratorDefinition.Builder definitionBuilder = new IdentifierGeneratorDefinition.Builder();
+		final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 		interpretSequenceGenerator( generatorAnnotation, definitionBuilder );
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Added sequence generator with name: {0}", definitionBuilder.getName() );
@@ -324,7 +316,7 @@ public class GeneratorBinder {
 	}
 
 	private static IdentifierGeneratorDefinition buildTableIdGenerator(TableGenerator generatorAnnotation) {
-		final IdentifierGeneratorDefinition.Builder definitionBuilder = new IdentifierGeneratorDefinition.Builder();
+		final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 		interpretTableGenerator( generatorAnnotation, definitionBuilder );
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Added sequence generator with name: {0}", definitionBuilder.getName() );
@@ -357,10 +349,10 @@ public class GeneratorBinder {
 			Value value,
 			Annotation annotation,
 			BeanContainer beanContainer) {
-		final Class<? extends Annotation> annotationType = annotation.annotationType();
-		final ValueGenerationType generatorAnnotation = annotationType.getAnnotation( ValueGenerationType.class );
+		final var annotationType = annotation.annotationType();
+		final var generatorAnnotation = annotationType.getAnnotation( ValueGenerationType.class );
 		assert generatorAnnotation != null;
-		final Class<? extends Generator> generatorClass = generatorAnnotation.generatedBy();
+		final var generatorClass = generatorAnnotation.generatedBy();
 		checkGeneratorClass( generatorClass );
 		checkGeneratorInterfaces( generatorClass );
 		return creationContext -> {
@@ -409,10 +401,10 @@ public class GeneratorBinder {
 			Annotation annotation,
 			SimpleValue identifierValue,
 			BeanContainer beanContainer) {
-		final Class<? extends Annotation> annotationType = annotation.annotationType();
-		final IdGeneratorType idGeneratorAnnotation = annotationType.getAnnotation( IdGeneratorType.class );
+		final var annotationType = annotation.annotationType();
+		final var idGeneratorAnnotation = annotationType.getAnnotation( IdGeneratorType.class );
 		assert idGeneratorAnnotation != null;
-		final Class<? extends Generator> generatorClass = idGeneratorAnnotation.value();
+		final var generatorClass = idGeneratorAnnotation.value();
 		checkGeneratorClass( generatorClass );
 		return creationContext -> {
 			final Generator generator =
@@ -593,7 +585,7 @@ public class GeneratorBinder {
 			// a programming error of the generation type developer and thus should show up during testing, we don't
 			// check this explicitly; If required, this could be done e.g. using ClassMate
 			@SuppressWarnings("unchecked")
-			final AnnotationBasedGenerator<A> generation = (AnnotationBasedGenerator<A>) generator;
+			final var generation = (AnnotationBasedGenerator<A>) generator;
 			generation.initialize( annotation, memberDetails.toJavaMember(), creationContext );
 		}
 	}
@@ -661,9 +653,8 @@ public class GeneratorBinder {
 			PersistentClass persistentClass,
 			MetadataBuildingContext context) {
 		// NOTE: `generatedValue` is never null here
-		final GeneratedValue generatedValue = castNonNull( idMember.getDirectAnnotationUsage( GeneratedValue.class ) );
-
-		final InFlightMetadataCollector metadataCollector = context.getMetadataCollector();
+		final var generatedValue = castNonNull( idMember.getDirectAnnotationUsage( GeneratedValue.class ) );
+		final var metadataCollector = context.getMetadataCollector();
 		if ( isGlobalGeneratorNameGlobal( context ) ) {
 			// process and register any generators defined on the member.
 			// according to JPA these are also global.
@@ -726,7 +717,7 @@ public class GeneratorBinder {
 
 		if ( definition != null ) {
 			// see if the specified generator name matches a registered <identifier-generator/>
-			final IdentifierGeneratorDefinition generatorDef =
+			final var generatorDef =
 					sourceDocument.getMetadataCollector()
 							.getIdentifierGenerator( definition.getName() );
 			final Map<String,Object> configuration = new HashMap<>();
@@ -799,12 +790,10 @@ public class GeneratorBinder {
 			PropertyData inferredData,
 			SimpleValue idValue,
 			MetadataBuildingContext buildingContext) {
-		final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
-		final MemberDetails idAttributeMember = inferredData.getAttributeMember();
-		final List<? extends Annotation> idGeneratorAnnotations =
-				idAttributeMember.getMetaAnnotated( IdGeneratorType.class, modelsContext );
-		final List<? extends Annotation> generatorAnnotations =
-				idAttributeMember.getMetaAnnotated( ValueGenerationType.class, modelsContext );
+		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		final var idMemberDetails = inferredData.getAttributeMember();
+		final var idGeneratorAnnotations = idMemberDetails.getMetaAnnotated( IdGeneratorType.class, modelsContext );
+		final var generatorAnnotations = idMemberDetails.getMetaAnnotated( ValueGenerationType.class, modelsContext );
 		// Since these collections may contain Proxies created by common-annotations module we cannot reliably use simple remove/removeAll
 		// collection methods as those proxies do not implement hashcode/equals and even a simple `a.equals(a)` will return `false`.
 		// Instead, we will check the annotation types, since generator annotations should not be "repeatable" we should have only
@@ -823,14 +812,14 @@ public class GeneratorBinder {
 		}
 		if ( !idGeneratorAnnotations.isEmpty() ) {
 			idValue.setCustomIdGeneratorCreator( identifierGeneratorCreator(
-					idAttributeMember,
+					idMemberDetails,
 					idGeneratorAnnotations.get(0),
 					idValue,
 					beanContainer( buildingContext )
 			) );
 		}
 		else if ( !generatorAnnotations.isEmpty() ) {
-//			idValue.setCustomGeneratorCreator( generatorCreator( idAttributeMember, generatorAnnotation ) );
+//			idValue.setCustomGeneratorCreator( generatorCreator( idMemberDetails, generatorAnnotation ) );
 			throw new AnnotationException( String.format(
 					Locale.ROOT,
 					"Identifier attribute '%s' is annotated '%s' which is not an '@IdGeneratorType'",
@@ -838,8 +827,8 @@ public class GeneratorBinder {
 					generatorAnnotations.get(0).annotationType().getName()
 			) );
 		}
-		else if ( idAttributeMember.hasDirectAnnotationUsage( GeneratedValue.class ) ) {
-			createIdGenerator( idAttributeMember, idValue, propertyHolder.getPersistentClass(), buildingContext );
+		else if ( idMemberDetails.hasDirectAnnotationUsage( GeneratedValue.class ) ) {
+			createIdGenerator( idMemberDetails, idValue, propertyHolder.getPersistentClass(), buildingContext );
 		}
 	}
 
@@ -850,9 +839,9 @@ public class GeneratorBinder {
 	static GeneratorCreator createValueGeneratorFromAnnotations(
 			PropertyHolder holder, String propertyName,
 			Value value, MemberDetails property, MetadataBuildingContext buildingContext) {
-		final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
-		final List<? extends Annotation> generatorAnnotations =
-				property.getMetaAnnotated( ValueGenerationType.class, modelsContext );
+		final var generatorAnnotations =
+				property.getMetaAnnotated( ValueGenerationType.class,
+						buildingContext.getBootstrapContext().getModelsContext() );
 		return switch ( generatorAnnotations.size() ) {
 			case 0 -> null;
 			case 1 -> generatorCreator( property, value, generatorAnnotations.get(0), beanContainer( buildingContext ) );

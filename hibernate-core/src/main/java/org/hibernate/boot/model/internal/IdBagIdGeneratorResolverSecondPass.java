@@ -12,12 +12,7 @@ import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
-import org.hibernate.boot.models.spi.GlobalRegistrations;
-import org.hibernate.boot.models.spi.SequenceGeneratorRegistration;
-import org.hibernate.boot.models.spi.TableGeneratorRegistration;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.generator.Generator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.mapping.IdentifierBag;
 import org.hibernate.mapping.PersistentClass;
@@ -69,8 +64,7 @@ public class IdBagIdGeneratorResolverSecondPass implements IdGeneratorResolver {
 
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> idGeneratorDefinitionMap) throws MappingException {
-		final GeneratedValue generatedValue = idBagMember.getDirectAnnotationUsage( GeneratedValue.class );
-		switch ( generatedValue.strategy() ) {
+		switch ( idBagMember.getDirectAnnotationUsage( GeneratedValue.class ).strategy() ) {
 			case UUID -> handleUuidStrategy(
 					idValue,
 					idBagMember,
@@ -107,10 +101,9 @@ public class IdBagIdGeneratorResolverSecondPass implements IdGeneratorResolver {
 			SimpleValue idValue,
 			MemberDetails idBagMember,
 			MetadataBuildingContext buildingContext) {
-		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
-
-		final TableGeneratorRegistration globalTableGenerator =
-				metadataCollector.getGlobalRegistrations()
+		final var collector = buildingContext.getMetadataCollector();
+		final var globalTableGenerator =
+				collector.getGlobalRegistrations()
 						.getTableGeneratorRegistrations()
 						.get( generatorName );
 		if ( globalTableGenerator != null ) {
@@ -121,30 +114,30 @@ public class IdBagIdGeneratorResolverSecondPass implements IdGeneratorResolver {
 					idBagMember,
 					buildingContext
 			);
-			return;
 		}
-
-		final TableGenerator localizedTableMatch = findLocalizedMatch(
-				JpaAnnotations.TABLE_GENERATOR,
-				idBagMember,
-				buildingContext.getMetadataCollector().getClassDetailsRegistry()
-						.getClassDetails( entityMapping.getClassName() ),
-				TableGenerator::name,
-				generatorName,
-				buildingContext
-		);
-		if ( localizedTableMatch != null ) {
-			handleTableGenerator( generatorName, localizedTableMatch, idValue, idBagMember, buildingContext );
-			return;
+		else {
+			final var localizedTableMatch = findLocalizedMatch(
+					JpaAnnotations.TABLE_GENERATOR,
+					idBagMember,
+					collector.getClassDetailsRegistry()
+							.getClassDetails( entityMapping.getClassName() ),
+					TableGenerator::name,
+					generatorName,
+					buildingContext
+			);
+			if ( localizedTableMatch != null ) {
+				handleTableGenerator( generatorName, localizedTableMatch, idValue, idBagMember, buildingContext );
+			}
+			else {
+				handleTableGenerator(
+						generatorName,
+						new TableGeneratorJpaAnnotation( buildingContext.getBootstrapContext().getModelsContext() ),
+						idValue,
+						idBagMember,
+						buildingContext
+				);
+			}
 		}
-
-		handleTableGenerator(
-				generatorName,
-				new TableGeneratorJpaAnnotation( buildingContext.getBootstrapContext().getModelsContext() ),
-				idValue,
-				idBagMember,
-				buildingContext
-		);
 	}
 
 	private void handleSequenceStrategy(
@@ -152,10 +145,9 @@ public class IdBagIdGeneratorResolverSecondPass implements IdGeneratorResolver {
 			SimpleValue idValue,
 			MemberDetails idBagMember,
 			MetadataBuildingContext buildingContext) {
-		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
-
-		final SequenceGeneratorRegistration globalSequenceGenerator =
-				metadataCollector.getGlobalRegistrations()
+		final var collector = buildingContext.getMetadataCollector();
+		final var globalSequenceGenerator =
+				collector.getGlobalRegistrations()
 						.getSequenceGeneratorRegistrations()
 						.get( generatorName );
 		if ( globalSequenceGenerator != null ) {
@@ -166,30 +158,30 @@ public class IdBagIdGeneratorResolverSecondPass implements IdGeneratorResolver {
 					idBagMember,
 					buildingContext
 			);
-			return;
 		}
-
-		final SequenceGenerator localizedSequencedMatch = findLocalizedMatch(
-				JpaAnnotations.SEQUENCE_GENERATOR,
-				idBagMember,
-				buildingContext.getMetadataCollector().getClassDetailsRegistry()
-						.getClassDetails( entityMapping.getClassName() ),
-				SequenceGenerator::name,
-				generatorName,
-				buildingContext
-		);
-		if ( localizedSequencedMatch != null ) {
-			handleSequenceGenerator( generatorName, localizedSequencedMatch, idValue, idBagMember, buildingContext );
-			return;
+		else {
+			final var localizedSequencedMatch = findLocalizedMatch(
+					JpaAnnotations.SEQUENCE_GENERATOR,
+					idBagMember,
+					collector.getClassDetailsRegistry()
+							.getClassDetails( entityMapping.getClassName() ),
+					SequenceGenerator::name,
+					generatorName,
+					buildingContext
+			);
+			if ( localizedSequencedMatch != null ) {
+				handleSequenceGenerator( generatorName, localizedSequencedMatch, idValue, idBagMember, buildingContext );
+			}
+			else {
+				handleSequenceGenerator(
+						generatorName,
+						new SequenceGeneratorJpaAnnotation( buildingContext.getBootstrapContext().getModelsContext() ),
+						idValue,
+						idBagMember,
+						buildingContext
+				);
+			}
 		}
-
-		handleSequenceGenerator(
-				generatorName,
-				new SequenceGeneratorJpaAnnotation( buildingContext.getBootstrapContext().getModelsContext() ),
-				idValue,
-				idBagMember,
-				buildingContext
-		);
 	}
 
 	private void handleAutoStrategy(
@@ -197,10 +189,9 @@ public class IdBagIdGeneratorResolverSecondPass implements IdGeneratorResolver {
 			SimpleValue idValue,
 			MemberDetails idBagMember,
 			MetadataBuildingContext buildingContext) {
-		final GlobalRegistrations globalRegistrations =
-				buildingContext.getMetadataCollector().getGlobalRegistrations();
+		final var globalRegistrations = buildingContext.getMetadataCollector().getGlobalRegistrations();
 
-		final SequenceGeneratorRegistration globalSequenceGenerator =
+		final var globalSequenceGenerator =
 				globalRegistrations.getSequenceGeneratorRegistrations().get( generatorName );
 		if ( globalSequenceGenerator != null ) {
 			handleSequenceGenerator(
@@ -213,7 +204,7 @@ public class IdBagIdGeneratorResolverSecondPass implements IdGeneratorResolver {
 			return;
 		}
 
-		final TableGeneratorRegistration globalTableGenerator =
+		final var globalTableGenerator =
 				globalRegistrations.getTableGeneratorRegistrations().get( generatorName );
 		if ( globalTableGenerator != null ) {
 			handleTableGenerator(
@@ -227,7 +218,7 @@ public class IdBagIdGeneratorResolverSecondPass implements IdGeneratorResolver {
 		}
 
 
-		final Class<? extends Generator> legacyNamedGenerator = mapLegacyNamedGenerator( generatorName, idValue );
+		final var legacyNamedGenerator = mapLegacyNamedGenerator( generatorName, idValue );
 		if ( legacyNamedGenerator != null ) {
 			//generator settings
 			if ( idValue.getColumnSpan() == 1 ) {
@@ -242,7 +233,7 @@ public class IdBagIdGeneratorResolverSecondPass implements IdGeneratorResolver {
 			return;
 		}
 
-		final SequenceGenerator localizedSequencedMatch = findLocalizedMatch(
+		final var localizedSequencedMatch = findLocalizedMatch(
 				JpaAnnotations.SEQUENCE_GENERATOR,
 				idBagMember,
 				buildingContext.getMetadataCollector().getClassDetailsRegistry()
@@ -256,7 +247,7 @@ public class IdBagIdGeneratorResolverSecondPass implements IdGeneratorResolver {
 			return;
 		}
 
-		final TableGenerator localizedTableMatch = findLocalizedMatch(
+		final var localizedTableMatch = findLocalizedMatch(
 				JpaAnnotations.TABLE_GENERATOR,
 				idBagMember,
 				buildingContext.getMetadataCollector().getClassDetailsRegistry()

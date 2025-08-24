@@ -9,7 +9,6 @@ import jakarta.persistence.TableGenerator;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.IdGeneratorType;
-import org.hibernate.annotations.Parameter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.models.HibernateAnnotations;
@@ -36,7 +35,6 @@ import org.hibernate.models.spi.ModelsContext;
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -64,7 +62,7 @@ public class GeneratorAnnotationHelper {
 			@Nullable Function<A,String> nameExtractor,
 			@Nullable String matchName,
 			MetadataBuildingContext context) {
-		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
+		final var modelsContext = context.getBootstrapContext().getModelsContext();
 
 		A possibleMatch = null;
 
@@ -126,7 +124,7 @@ public class GeneratorAnnotationHelper {
 		}
 
 		// lastly, on the package
-		final ClassDetails packageInfo = locatePackageInfoDetails( idMember.getDeclaringType(), context );
+		final var packageInfo = locatePackageInfoDetails( idMember.getDeclaringType(), context );
 		if ( packageInfo != null ) {
 			for ( A generatorAnnotation:
 					packageInfo.getRepeatedAnnotationUsages( generatorAnnotationType, modelsContext ) ) {
@@ -151,8 +149,7 @@ public class GeneratorAnnotationHelper {
 	}
 
 	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, MetadataBuildingContext buildingContext) {
-		final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
-		return locatePackageInfoDetails( classDetails, modelsContext );
+		return locatePackageInfoDetails( classDetails, buildingContext.getBootstrapContext().getModelsContext() );
 	}
 
 	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, ModelsContext modelContext) {
@@ -177,10 +174,10 @@ public class GeneratorAnnotationHelper {
 			MemberDetails idMember,
 			MetadataBuildingContext buildingContext) {
 		idValue.setCustomIdGeneratorCreator( creationContext -> {
-			final SequenceStyleGenerator identifierGenerator =
+			final var sequenceStyleGenerator =
 					instantiateGenerator( beanContainer( buildingContext ), SequenceStyleGenerator.class );
 			prepareForUse(
-					identifierGenerator,
+					sequenceStyleGenerator,
 					generatorAnnotation,
 					idMember,
 					properties -> {
@@ -195,10 +192,11 @@ public class GeneratorAnnotationHelper {
 					},
 					generatorAnnotation == null
 							? null
-							: (a, properties) -> SequenceStyleGenerator.applyConfiguration( generatorAnnotation, properties::put ),
+							: (a, properties) ->
+									SequenceStyleGenerator.applyConfiguration( generatorAnnotation, properties::put ),
 					creationContext
 			);
-			return identifierGenerator;
+			return sequenceStyleGenerator;
 		} );
 	}
 
@@ -209,11 +207,11 @@ public class GeneratorAnnotationHelper {
 			MemberDetails idMember,
 			MetadataBuildingContext buildingContext) {
 		idValue.setCustomIdGeneratorCreator( creationContext -> {
-			final org.hibernate.id.enhanced.TableGenerator identifierGenerator =
+			final var tableGenerator =
 					instantiateGenerator( beanContainer( buildingContext ),
 							org.hibernate.id.enhanced.TableGenerator.class );
 			prepareForUse(
-					identifierGenerator,
+					tableGenerator,
 					generatorAnnotation,
 					idMember,
 					properties -> {
@@ -237,7 +235,7 @@ public class GeneratorAnnotationHelper {
 							),
 					creationContext
 			);
-			return identifierGenerator;
+			return tableGenerator;
 		} );
 	}
 
@@ -246,7 +244,7 @@ public class GeneratorAnnotationHelper {
 			SimpleValue idValue,
 			MemberDetails idMember,
 			MetadataBuildingContext buildingContext) {
-		final IdGeneratorType markerAnnotation =
+		final var markerAnnotation =
 				generatorAnnotation.annotationType().getAnnotation( IdGeneratorType.class );
 		idValue.setCustomIdGeneratorCreator( creationContext -> {
 			final Generator identifierGenerator =
@@ -282,11 +280,11 @@ public class GeneratorAnnotationHelper {
 			GeneratorCreationContext creationContext) {
 		if ( generator instanceof AnnotationBasedGenerator ) {
 			@SuppressWarnings("unchecked")
-			final AnnotationBasedGenerator<A> generation = (AnnotationBasedGenerator<A>) generator;
+			final var generation = (AnnotationBasedGenerator<A>) generator;
 			generation.initialize( annotation, idMember.toJavaMember(), creationContext );
 		}
 		if ( generator instanceof Configurable configurable ) {
-			final Properties properties = new Properties();
+			final var properties = new Properties();
 			if ( configBaseline != null ) {
 				configBaseline.accept( properties );
 			}
@@ -317,7 +315,7 @@ public class GeneratorAnnotationHelper {
 			MemberDetails idMember,
 			ClassDetails entityClass,
 			MetadataBuildingContext context) {
-		final org.hibernate.annotations.UuidGenerator generatorConfig = findLocalizedMatch(
+		final var generatorConfig = findLocalizedMatch(
 				HibernateAnnotations.UUID_GENERATOR,
 				idMember,
 				entityClass,
@@ -361,12 +359,14 @@ public class GeneratorAnnotationHelper {
 	}
 
 	private static String determineStrategyName(GenericGenerator generatorConfig) {
-		final Class<? extends Generator> type = generatorConfig.type();
-		return !Objects.equals( type, Generator.class ) ? type.getName() : generatorConfig.strategy();
+		final var generatorClass = generatorConfig.type();
+		return Generator.class.equals( generatorClass )
+				? generatorConfig.strategy()
+				: generatorClass.getName();
 	}
 
 	private static void applyAnnotationParameters(GenericGenerator generatorConfig, Map<String, String> configuration) {
-		for ( Parameter parameter : generatorConfig.parameters() ) {
+		for ( var parameter : generatorConfig.parameters() ) {
 			configuration.put( parameter.name(), parameter.value() );
 		}
 	}

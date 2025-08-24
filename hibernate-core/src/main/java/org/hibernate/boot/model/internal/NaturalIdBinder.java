@@ -10,10 +10,8 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
 import org.hibernate.models.spi.MemberDetails;
 
 import java.util.List;
@@ -34,9 +32,9 @@ class NaturalIdBinder {
 			MetadataBuildingContext context) {
 		// Natural ID columns must reside in one single UniqueKey within the Table.
 		// For now, simply ensure consistent naming.
-		final NaturalId naturalId = property.getDirectAnnotationUsage( NaturalId.class );
+		final var naturalId = property.getDirectAnnotationUsage( NaturalId.class );
 		if ( naturalId != null ) {
-			final AnnotatedColumns annotatedColumns = joinColumns != null ? joinColumns : columns;
+			final var annotatedColumns = joinColumns != null ? joinColumns : columns;
 			final Identifier name = uniqueKeyName( context, annotatedColumns );
 			if ( inSecondPass ) {
 				addColumnsToUniqueKey( annotatedColumns, name );
@@ -54,10 +52,10 @@ class NaturalIdBinder {
 	}
 
 	private static void addColumnsToUniqueKey(AnnotatedColumns columns, Identifier name) {
-		final InFlightMetadataCollector collector = columns.getBuildingContext().getMetadataCollector();
+		final var collector = columns.getBuildingContext().getMetadataCollector();
 		final Table table = columns.getTable();
-		final UniqueKey uniqueKey = table.getOrCreateUniqueKey( name.render( collector.getDatabase().getDialect() ) );
-		final Property property = columns.resolveProperty();
+		final var uniqueKey = table.getOrCreateUniqueKey( name.render( collector.getDatabase().getDialect() ) );
+		final var property = columns.resolveProperty();
 		if ( property.isComposite() ) {
 			for ( Selectable selectable : property.getValue().getSelectables() ) {
 				if ( selectable instanceof org.hibernate.mapping.Column column) {
@@ -66,7 +64,7 @@ class NaturalIdBinder {
 			}
 		}
 		else {
-			for ( AnnotatedColumn column : columns.getColumns() ) {
+			for ( var column : columns.getColumns() ) {
 				uniqueKey.addColumn( tableColumn( column.getMappingColumn(), table, collector ) );
 			}
 		}
@@ -75,7 +73,7 @@ class NaturalIdBinder {
 	private static org.hibernate.mapping.Column tableColumn(
 			org.hibernate.mapping.Column column, Table table, InFlightMetadataCollector collector) {
 		final String columnName = collector.getLogicalColumnName( table, column.getQuotedName() );
-		final org.hibernate.mapping.Column tableColumn = table.getColumn( collector, columnName );
+		final var tableColumn = table.getColumn( collector, columnName );
 		if ( tableColumn == null ) {
 			throw new AnnotationException(
 					"Table '" + table.getName() + "' has no column named '" + columnName

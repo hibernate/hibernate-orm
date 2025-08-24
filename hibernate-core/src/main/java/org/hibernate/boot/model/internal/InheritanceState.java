@@ -71,14 +71,14 @@ public class InheritanceState {
 	}
 
 	private void extractInheritanceType(ClassDetails classDetails) {
-		final Inheritance inheritanceAnn = classDetails.getDirectAnnotationUsage( Inheritance.class );
-		final MappedSuperclass mappedSuperAnn = classDetails.getDirectAnnotationUsage( MappedSuperclass.class );
-		if ( mappedSuperAnn != null ) {
+		final var inheritance = classDetails.getDirectAnnotationUsage( Inheritance.class );
+		final var mappedSuperclass = classDetails.getDirectAnnotationUsage( MappedSuperclass.class );
+		if ( mappedSuperclass != null ) {
 			setEmbeddableSuperclass( true );
-			setType( inheritanceAnn == null ? null : inheritanceAnn.strategy() );
+			setType( inheritance == null ? null : inheritance.strategy() );
 		}
 		else {
-			setType( inheritanceAnn == null ? SINGLE_TABLE : inheritanceAnn.strategy() );
+			setType( inheritance == null ? SINGLE_TABLE : inheritance.strategy() );
 		}
 	}
 
@@ -96,7 +96,7 @@ public class InheritanceState {
 		ClassDetails candidate = classDetails;
 		do {
 			candidate = candidate.getSuperClass();
-			final InheritanceState currentState = states.get( candidate );
+			final var currentState = states.get( candidate );
 			if ( currentState != null && !currentState.isEmbeddableSuperclass() ) {
 				return currentState;
 			}
@@ -193,7 +193,7 @@ public class InheritanceState {
 				return classDetails;
 			}
 			else {
-				final InheritanceState state = getSuperclassInheritanceState( classDetails, inheritanceStatePerClass );
+				final var state = getSuperclassInheritanceState( classDetails, inheritanceStatePerClass );
 				return state == null ? null : state.getClassWithIdClass( true );
 			}
 		}
@@ -234,7 +234,7 @@ public class InheritanceState {
 			final ArrayList<PropertyData> elements = new ArrayList<>();
 			int idPropertyCount = 0;
 			for ( ClassDetails classToProcessForMappedSuperclass : classesToProcessForMappedSuperclass ) {
-				final PropertyContainer container =
+				final var container =
 						new PropertyContainer( classToProcessForMappedSuperclass, classDetails, accessType );
 				idPropertyCount = addElementsOfClass( elements, container, buildingContext, idPropertyCount );
 			}
@@ -332,7 +332,7 @@ public class InheritanceState {
 			// todo (jpa32) : causes the mapped-superclass Class reference to be loaded...
 			//		- but this is how it's always worked, so...
 			final var mappedSuperclassDetails = classesToProcessForMappedSuperclass.get( index );
-			final Class<?> mappedSuperclassJavaType = mappedSuperclassDetails.toJavaClass();
+			final var mappedSuperclassJavaType = mappedSuperclassDetails.toJavaClass();
 			//add MappedSuperclass if not already there
 			mappedSuperclass = metadataCollector.getMappedSuperclass( mappedSuperclassJavaType );
 			if ( mappedSuperclass == null ) {

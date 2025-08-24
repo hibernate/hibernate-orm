@@ -50,7 +50,7 @@ public class IdBagBinder extends BagBinder {
 	protected boolean bindStarToManySecondPass(Map<String, PersistentClass> persistentClasses) {
 		boolean result = super.bindStarToManySecondPass( persistentClasses );
 
-		final CollectionId collectionIdAnn = property.getDirectAnnotationUsage( CollectionId.class );
+		final var collectionIdAnn = property.getDirectAnnotationUsage( CollectionId.class );
 		if ( collectionIdAnn == null ) {
 			throw new MappingException( "idbag mapping missing '@CollectionId' annotation" );
 		}
@@ -67,7 +67,7 @@ public class IdBagBinder extends BagBinder {
 				"id"
 		);
 
-		final AnnotatedColumns idColumns = AnnotatedColumn.buildColumnsFromAnnotations(
+		final var idColumns = AnnotatedColumn.buildColumnsFromAnnotations(
 				new Column[]{collectionIdAnn.column()},
 //				null,
 				null,
@@ -79,12 +79,11 @@ public class IdBagBinder extends BagBinder {
 		);
 
 		//we need to make sure all id columns must be not-null.
-		for ( AnnotatedColumn idColumn : idColumns.getColumns() ) {
+		for ( var idColumn : idColumns.getColumns() ) {
 			idColumn.setNullable( false );
 		}
 
-		final BasicValueBinder valueBinder =
-				new BasicValueBinder( BasicValueBinder.Kind.COLLECTION_ID, buildingContext );
+		final var valueBinder = new BasicValueBinder( BasicValueBinder.Kind.COLLECTION_ID, buildingContext );
 
 		final Table table = collection.getCollectionTable();
 		valueBinder.setTable( table );

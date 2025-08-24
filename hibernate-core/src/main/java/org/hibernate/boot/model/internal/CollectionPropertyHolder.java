@@ -104,7 +104,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		// of either is disabled for whatever reason. For example, if the Map is annotated with @Enumerated the
 		// elements cannot be converted so any @Convert likely meant the key, so we apply it to the key
 
-		final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, collectionProperty );
+		final var info = new AttributeConversionInfo( convertAnnotation, collectionProperty );
 		final String attributeName = info.getAttributeName();
 		if ( collection.isMap() ) {
 			logSpecNoncompliance( attributeName, collection.getRole() );
@@ -409,7 +409,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	public ConverterDescriptor<?,?> mapKeyAttributeConverterDescriptor(
 			MemberDetails memberDetails,
 			TypeDetails keyTypeDetails) {
-		final AttributeConversionInfo info = locateAttributeConversionInfo( "key" );
+		final var info = locateAttributeConversionInfo( "key" );
 		if ( info != null ) {
 			if ( info.isConversionDisabled() ) {
 				return null;

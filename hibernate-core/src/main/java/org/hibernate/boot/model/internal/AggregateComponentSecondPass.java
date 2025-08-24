@@ -13,14 +13,11 @@ import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Comment;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.SecondPass;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Collection;
@@ -36,7 +33,6 @@ import org.hibernate.metamodel.internal.EmbeddableHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.sql.Template;
 import org.hibernate.type.SqlTypes;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.internal.util.StringHelper.qualify;
 
@@ -68,11 +64,11 @@ public class AggregateComponentSecondPass implements SecondPass {
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
 		validateComponent( component, qualify( propertyHolder.getPath(), propertyName ), isAggregateArray() );
 
-		final InFlightMetadataCollector metadataCollector = context.getMetadataCollector();
-		final TypeConfiguration typeConfiguration = metadataCollector.getTypeConfiguration();
-		final Database database = metadataCollector.getDatabase();
-		final Dialect dialect = database.getDialect();
-		final AggregateSupport aggregateSupport = dialect.getAggregateSupport();
+		final var metadataCollector = context.getMetadataCollector();
+		final var typeConfiguration = metadataCollector.getTypeConfiguration();
+		final var database = metadataCollector.getDatabase();
+		final var dialect = database.getDialect();
+		final var aggregateSupport = dialect.getAggregateSupport();
 
 		// Sort the component properties early to ensure the aggregated
 		// columns respect the same order as the component's properties
@@ -94,26 +90,23 @@ public class AggregateComponentSecondPass implements SecondPass {
 			if ( !database.getDialect().supportsUserDefinedTypes() ) {
 				throw new MappingException( "Database does not support user-defined types (remove '@Struct' annotation)" );
 			}
-			final UserDefinedObjectType udt =
-					new UserDefinedObjectType( "orm", namespace, structName.getObjectName() );
-			final Comment comment = componentClassDetails.getDirectAnnotationUsage( Comment.class );
+			final var udt = new UserDefinedObjectType( "orm", namespace, structName.getObjectName() );
+			final var comment = componentClassDetails.getDirectAnnotationUsage( Comment.class );
 			if ( comment != null ) {
 				udt.setComment( comment.value() );
 			}
-			for ( org.hibernate.mapping.Column aggregatedColumn : aggregatedColumns ) {
+			for ( var aggregatedColumn : aggregatedColumns ) {
 				udt.addColumn( aggregatedColumn );
 			}
-			final UserDefinedObjectType registeredUdt = namespace.createUserDefinedType(
-					structName.getObjectName(),
-					name -> udt
-			);
+			final var registeredUdt = namespace.createUserDefinedType( structName.getObjectName(), name -> udt );
 			if ( registeredUdt == udt ) {
 				addAuxiliaryObjects = true;
 				orderColumns( registeredUdt, originalOrder );
 			}
 			else {
 				addAuxiliaryObjects =
-						isAggregateArray() && namespace.locateUserDefinedArrayType( Identifier.toIdentifier( aggregateColumn.getSqlType() ) ) == null;
+						isAggregateArray()
+							&& namespace.locateUserDefinedArrayType( Identifier.toIdentifier( aggregateColumn.getSqlType() ) ) == null;
 				validateEqual( registeredUdt, udt );
 			}
 		}
@@ -121,12 +114,11 @@ public class AggregateComponentSecondPass implements SecondPass {
 			addAuxiliaryObjects = true;
 		}
 		final String aggregateReadTemplate = aggregateColumn.getAggregateReadExpressionTemplate( dialect );
-		final String aggregateReadExpression = aggregateReadTemplate.replace(
-				Template.TEMPLATE + ".",
-				""
-		);
-		final String aggregateAssignmentExpression = aggregateColumn.getAggregateAssignmentExpressionTemplate( dialect )
-				.replace( Template.TEMPLATE + ".", "" );
+		final String aggregateReadExpression =
+				aggregateReadTemplate.replace( Template.TEMPLATE + ".", "" );
+		final String aggregateAssignmentExpression =
+				aggregateColumn.getAggregateAssignmentExpressionTemplate( dialect )
+						.replace( Template.TEMPLATE + ".", "" );
 		if ( addAuxiliaryObjects ) {
 			aggregateSupport.aggregateAuxiliaryDatabaseObjects(
 					database.getDefaultNamespace(),
@@ -144,7 +136,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 		);
 
 		// The following determines the custom read/write expression and write expression for aggregatedColumns
-		for ( org.hibernate.mapping.Column subColumn : aggregatedColumns ) {
+		for ( var subColumn : aggregatedColumns ) {
 			final String selectableExpression = subColumn.getText( dialect );
 			final String customReadExpression;
 			final String assignmentExpression = aggregateSupport.aggregateComponentAssignmentExpression(
@@ -291,9 +283,9 @@ public class AggregateComponentSecondPass implements SecondPass {
 					addColumns( orderedColumns, properties.get( propertyIndex ).getValue() );
 				}
 			}
-			final List<Column> reorderedColumn = context.getBuildingOptions()
-					.getColumnOrderingStrategy()
-					.orderUserDefinedTypeColumns( userDefinedType, context.getMetadataCollector() );
+			final List<Column> reorderedColumn =
+					context.getBuildingOptions().getColumnOrderingStrategy()
+							.orderUserDefinedTypeColumns( userDefinedType, context.getMetadataCollector() );
 			userDefinedType.reorderColumns( reorderedColumn != null ? reorderedColumn : orderedColumns );
 		}
 		else {

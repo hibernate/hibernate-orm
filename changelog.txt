@@ -3,6 +3,17 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.43.Final (August 24, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/34858
+
+** Bug
+    * [HHH-19719] - org.hibernate.query.sqm.function.SelfRenderingSqmWindowFunction#appendHqlString throws IndexOutOfBoundsException  when has no arguments
+    * [HHH-19712] - Column deduplication leads to wrong alias calculation for native query alias expansion
+    * [HHH-19687] - Criteria query with lazy @OneToOne and @EmbeddedId throws exception
+
+
 Changes in 6.2.42.Final (August 10, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -51,7 +51,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
@@ -106,6 +105,8 @@ import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClas
 import static org.hibernate.boot.model.internal.PropertyBinder.hasIdAnnotation;
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
+import static org.hibernate.boot.model.internal.QueryBinder.bindNativeQuery;
+import static org.hibernate.boot.model.internal.QueryBinder.bindQuery;
 import static org.hibernate.boot.model.internal.TableBinder.bindForeignKey;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.engine.OptimisticLockStyle.fromLockType;
@@ -342,8 +343,7 @@ public class EntityBinder {
 	}
 
 	private void callTypeBinders(PersistentClass persistentClass) {
-		final var metaAnnotatedList = annotatedClass.getMetaAnnotated( TypeBinderType.class, modelsContext() );
-		for ( var metaAnnotated : metaAnnotatedList ) {
+		for ( var metaAnnotated : annotatedClass.getMetaAnnotated( TypeBinderType.class, modelsContext() ) ) {
 			applyTypeBinder( metaAnnotated, persistentClass );
 		}
 	}
@@ -1157,13 +1157,14 @@ public class EntityBinder {
 		//@Inheritance(JOINED) subclass need to link back to the super entity
 		final var joinColumns = new AnnotatedJoinColumns();
 		joinColumns.setBuildingContext( context );
-
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
-		final var primaryKeyJoinColumns =
-				clazzToProcess.getAnnotationUsage( PrimaryKeyJoinColumns.class, modelsContext );
-		if ( primaryKeyJoinColumns != null
-				&& !ArrayHelper.isEmpty( primaryKeyJoinColumns.value() ) ) {
-			for ( var column : primaryKeyJoinColumns.value() ) {
+		if ( clazzToProcess.hasAnnotationUsage( PrimaryKeyJoinColumn.class, modelsContext ) ) {
+			final var columns = clazzToProcess.getRepeatedAnnotationUsages( PrimaryKeyJoinColumn.class, modelsContext );
+			if ( columns.length == 0 ) {
+				// PrimaryKeyJoinColumns must not be empty according to Javadoc
+				throw new AnnotationException( "Empty '@PrimaryKeyJoinColumns' annotation" );
+			}
+			for ( var column : columns ) {
 				buildInheritanceJoinColumn(
 						column,
 						null,
@@ -1175,7 +1176,7 @@ public class EntityBinder {
 		}
 		else {
 			buildInheritanceJoinColumn(
-					clazzToProcess.getAnnotationUsage( PrimaryKeyJoinColumn.class, modelsContext ),
+					null,
 					null,
 					superEntity.getIdentifier(),
 					joinColumns,
@@ -1424,14 +1425,14 @@ public class EntityBinder {
 		if ( sqlSelect != null ) {
 			final String loaderName = persistentClass.getEntityName() + "$SQLSelect";
 			persistentClass.setLoaderName( loaderName );
-			QueryBinder.bindNativeQuery( loaderName, sqlSelect, annotatedClass, context );
+			bindNativeQuery( loaderName, sqlSelect, annotatedClass, context );
 		}
 
 		final var hqlSelect = annotatedClass.getAnnotationUsage( HQLSelect.class, modelsContext() );
 		if ( hqlSelect != null ) {
 			final String loaderName = persistentClass.getEntityName() + "$HQLSelect";
 			persistentClass.setLoaderName( loaderName );
-			QueryBinder.bindQuery( loaderName, hqlSelect, context );
+			bindQuery( loaderName, hqlSelect, context );
 		}
 	}
 

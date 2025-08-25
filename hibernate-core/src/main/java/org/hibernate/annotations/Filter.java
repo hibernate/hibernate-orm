@@ -90,11 +90,11 @@ public @interface Filter {
 
 	/**
 	 * Explicitly specifies how aliases are interpolated into
-	 * the {@link #condition} SQL expression. Each {@link
-	 * SqlFragmentAlias} specifies a placeholder name and the
-	 * table whose alias should be interpolated. Placeholders
-	 * are of form {@code {name}} where {@code name} matches
-	 * a {@link SqlFragmentAlias#alias}.
+	 * the {@linkplain #condition SQL expression}. Each listed
+	 * {@link SqlFragmentAlias} specifies a placeholder name
+	 * and the table whose alias should be interpolated.
+	 * Placeholders are of form {@code {name}} where {@code name}
+	 * matches a given {@link SqlFragmentAlias#alias alias}.
 	 */
 	SqlFragmentAlias[] aliases() default {};
 }

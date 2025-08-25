@@ -16,6 +16,7 @@ import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.MappedSuperclass;
@@ -93,8 +94,8 @@ import static org.hibernate.boot.model.internal.AnnotatedJoinColumn.buildInherit
 import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
 import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
+import static org.hibernate.boot.model.internal.BinderHelper.handleForeignKeyConstraint;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
-import static org.hibernate.boot.model.internal.BinderHelper.noConstraint;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasEntityMap;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasTableMap;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
@@ -505,8 +506,7 @@ public class EntityBinder {
 					classWithIdClass,
 					compositeType,
 					baseInferredData,
-					propertyAccessor,
-					true
+					propertyAccessor
 			);
 			if ( idClassComponent.isSimpleRecord() ) {
 				mapper.setSimpleRecord( true );
@@ -552,8 +552,7 @@ public class EntityBinder {
 			ClassDetails classWithIdClass,
 			TypeDetails compositeClass,
 			PropertyData baseInferredData,
-			AccessType propertyAccessor,
-			boolean isIdClass) {
+			AccessType propertyAccessor) {
 		final var mapper = createMapper(
 				inheritanceStates,
 				persistentClass,
@@ -562,8 +561,7 @@ public class EntityBinder {
 				classWithIdClass,
 				compositeClass,
 				baseInferredData,
-				propertyAccessor,
-				isIdClass
+				propertyAccessor
 		);
 		final var mapperProperty = new SyntheticProperty();
 		mapperProperty.setName( NavigablePath.IDENTIFIER_MAPPER_PROPERTY );
@@ -583,8 +581,7 @@ public class EntityBinder {
 			ClassDetails classWithIdClass,
 			TypeDetails compositeClass,
 			PropertyData baseInferredData,
-			AccessType propertyAccessor,
-			boolean isIdClass) {
+			AccessType propertyAccessor) {
 		final var mapper = fillEmbeddable(
 				propertyHolder,
 				new PropertyPreloadedData(
@@ -605,7 +602,7 @@ public class EntityBinder {
 				null,
 				context,
 				inheritanceStates,
-				isIdClass
+				true
 		);
 		persistentClass.setIdentifierMapper( mapper );
 
@@ -824,18 +821,14 @@ public class EntityBinder {
 			InheritanceState inheritanceState,
 			PersistentClass superEntity,
 			PropertyHolder propertyHolder) {
-		final boolean isJoinedSubclass;
 		switch ( inheritanceState.getType() ) {
 			case JOINED:
 				joinedInheritance( inheritanceState, superEntity, propertyHolder );
-				isJoinedSubclass = inheritanceState.hasParents();
 				break;
 			case SINGLE_TABLE:
 				singleTableInheritance( inheritanceState, propertyHolder );
-				isJoinedSubclass = false;
 				break;
 			case TABLE_PER_CLASS:
-				isJoinedSubclass = false;
 				break;
 			default:
 				throw new AssertionFailure( "Unrecognized InheritanceType" );
@@ -843,19 +836,24 @@ public class EntityBinder {
 
 		bindDiscriminatorValue();
 
-		if ( !isJoinedSubclass ) {
+		if ( !isJoinedSubclass( inheritanceState ) ) {
 			checkNoJoinColumns( annotatedClass );
 			checkNoOnDelete( annotatedClass );
 		}
+	}
+
+	private static boolean isJoinedSubclass(InheritanceState inheritanceState) {
+		return inheritanceState.getType() == InheritanceType.JOINED
+			&& inheritanceState.hasParents();
 	}
 
 	private void singleTableInheritance(InheritanceState inheritanceState, PropertyHolder holder) {
 		final var discriminatorColumn = processSingleTableDiscriminatorProperties( inheritanceState );
 		// todo : sucks that this is separate from RootClass distinction
 		if ( !inheritanceState.hasParents() ) {
-			final var rootClass = (RootClass) persistentClass;
 			if ( inheritanceState.hasSiblings()
 					|| discriminatorColumn != null && !discriminatorColumn.isImplicit() ) {
+				final var rootClass = (RootClass) persistentClass;
 				bindDiscriminatorColumnToRootPersistentClass( rootClass, discriminatorColumn, holder );
 				if ( context.getBuildingOptions().shouldImplicitlyForceDiscriminatorInSelect() ) {
 					rootClass.setForceDiscriminator( true );
@@ -870,7 +868,7 @@ public class EntityBinder {
 			final var joinedSubclass = (JoinedSubclass) persistentClass;
 			final var key = new DependantValue( context, joinedSubclass.getTable(), joinedSubclass.getIdentifier() );
 			joinedSubclass.setKey( key );
-			handleForeignKeys( annotatedClass, context, key );
+			handleForeignKey( annotatedClass, context, key );
 			final var onDelete = annotatedClass.getAnnotationUsage( OnDelete.class, modelsContext() );
 			key.setOnDeleteAction( onDelete == null ? null : onDelete.action() );
 			//we are never in a second pass at that stage, so queue it
@@ -880,14 +878,15 @@ public class EntityBinder {
 		}
 
 		final var discriminatorColumn = processJoinedDiscriminatorProperties( state );
-		if ( !state.hasParents() ) {  // todo : sucks that this is separate from RootClass distinction
-			final var rootClass = (RootClass) persistentClass;
+		// todo : sucks that this is separate from RootClass distinction
+		if ( !state.hasParents() ) {
 			// the class we're processing is the root of the hierarchy, so
 			// let's see if we had a discriminator column (it's perfectly
 			// valid for joined inheritance to not have a discriminator)
 			if ( discriminatorColumn != null ) {
 				// we do have a discriminator column
 				if ( state.hasSiblings() || !discriminatorColumn.isImplicit() ) {
+					final var rootClass = (RootClass) persistentClass;
 					bindDiscriminatorColumnToRootPersistentClass( rootClass, discriminatorColumn, holder );
 					if ( context.getBuildingOptions().shouldImplicitlyForceDiscriminatorInSelect() ) {
 						rootClass.setForceDiscriminator( true );
@@ -912,39 +911,22 @@ public class EntityBinder {
 		}
 	}
 
-	private void handleForeignKeys(ClassDetails clazzToProcess, MetadataBuildingContext context, DependantValue key) {
+	private static void handleForeignKey(ClassDetails clazzToProcess, MetadataBuildingContext context, DependantValue key) {
+		final var foreignKey = clazzToProcess.getDirectAnnotationUsage( ForeignKey.class );
+		handleForeignKeyConstraint( key, foreignKey, nestedForeignKey( clazzToProcess ), context );
+	}
+
+	private static ForeignKey nestedForeignKey(ClassDetails clazzToProcess) {
 		final var pkJoinColumn = clazzToProcess.getDirectAnnotationUsage( PrimaryKeyJoinColumn.class );
 		final var pkJoinColumns = clazzToProcess.getDirectAnnotationUsage( PrimaryKeyJoinColumns.class );
-		final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
-		if ( pkJoinColumn != null && noConstraint( pkJoinColumn.foreignKey(), noConstraintByDefault )
-				|| pkJoinColumns != null && noConstraint( pkJoinColumns.foreignKey(), noConstraintByDefault ) ) {
-			key.disableForeignKey();
+		if ( pkJoinColumn != null ) {
+			return pkJoinColumn.foreignKey();
+		}
+		else if ( pkJoinColumns != null ) {
+			return pkJoinColumns.foreignKey();
 		}
 		else {
-			final var foreignKey = clazzToProcess.getDirectAnnotationUsage( ForeignKey.class );
-			if ( noConstraint( foreignKey, noConstraintByDefault ) ) {
-				key.disableForeignKey();
-			}
-			else if ( foreignKey != null ) {
-				key.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
-				key.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
-				key.setForeignKeyOptions( foreignKey.options() );
-			}
-			else if ( noConstraintByDefault ) {
-				key.disableForeignKey();
-			}
-			else if ( pkJoinColumns != null ) {
-				final var nestedFk = pkJoinColumns.foreignKey();
-				key.setForeignKeyName( nullIfEmpty( nestedFk.name() ) );
-				key.setForeignKeyDefinition( nullIfEmpty( nestedFk.foreignKeyDefinition() ) );
-				key.setForeignKeyOptions( nestedFk.options() );
-			}
-			else if ( pkJoinColumn != null ) {
-				final var nestedFk = pkJoinColumn.foreignKey();
-				key.setForeignKeyName( nullIfEmpty( nestedFk.name() ) );
-				key.setForeignKeyDefinition( nullIfEmpty( nestedFk.foreignKeyDefinition() ) );
-				key.setForeignKeyOptions( nestedFk.options() );
-			}
+			return null;
 		}
 	}
 

@@ -35,6 +35,7 @@ import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
@@ -65,6 +66,7 @@ import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.ANY_KEY;
 import static org.hibernate.boot.model.internal.ForeignKeyType.NON_PRIMARY_KEY_REFERENCE;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualifier;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.collections.ArrayHelper.isEmpty;
@@ -1003,7 +1005,7 @@ public class BinderHelper {
 		return false;
 	}
 
-	public static boolean noConstraint(ForeignKey foreignKey, boolean noConstraintByDefault) {
+	static boolean noConstraint(ForeignKey foreignKey, boolean noConstraintByDefault) {
 		if ( foreignKey == null ) {
 			return false;
 		}
@@ -1011,6 +1013,31 @@ public class BinderHelper {
 			final var mode = foreignKey.value();
 			return mode == NO_CONSTRAINT
 				|| mode == PROVIDER_DEFAULT && noConstraintByDefault;
+		}
+	}
+
+	static void handleForeignKeyConstraint(
+			SimpleValue key,
+			ForeignKey foreignKey,
+			ForeignKey nestedForeignKey,
+			MetadataBuildingContext context) {
+		final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
+		if ( noConstraint( foreignKey, noConstraintByDefault )
+				|| noConstraint( nestedForeignKey, noConstraintByDefault ) ) {
+			key.disableForeignKey();
+		}
+		else if ( foreignKey != null ) {
+			key.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
+			key.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+			key.setForeignKeyOptions( foreignKey.options() );
+		}
+		else if ( noConstraintByDefault ) {
+			key.disableForeignKey();
+		}
+		else if ( nestedForeignKey != null ) {
+			key.setForeignKeyName( nullIfEmpty( nestedForeignKey.name() ) );
+			key.setForeignKeyDefinition( nullIfEmpty( nestedForeignKey.foreignKeyDefinition() ) );
+			key.setForeignKeyOptions( nestedForeignKey.options() );
 		}
 	}
 

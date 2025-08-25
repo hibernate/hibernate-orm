@@ -66,6 +66,45 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 	}
 
 	@Test
+	public void testSubtypeAndTwoBasicAttributesParsing() {
+		var graph = parseGraph( "name, :GraphParsingTestSubEntity(sub), description" );
+		assertNotNull( graph );
+
+		AssertionHelper.assertBasicAttributes( graph, "name", "description" );
+
+		var treatedSubgraphs = graph.getTreatedSubgraphs();
+		assertEquals( 1, treatedSubgraphs.size() );
+
+		var subEntityGraph = treatedSubgraphs.get( GraphParsingTestSubEntity.class );
+		var subEntityGraphAttributes = subEntityGraph.getAttributeNodes();
+		assertNotNull( subEntityGraphAttributes );
+		assertEquals( 1, subEntityGraphAttributes.size() );
+
+		var subEntityGraphAttributeNode = subEntityGraphAttributes.get( 0 );
+		assertNotNull( subEntityGraphAttributeNode );
+		assertEquals( "sub", subEntityGraphAttributeNode.getAttributeName() );
+	}
+
+	@Test
+	public void testSubtypeParsing() {
+		var graph = parseGraph( ":GraphParsingTestSubEntity(sub)" );
+		assertNotNull( graph );
+
+		var treatedSubgraphs = graph.getTreatedSubgraphs();
+		assertEquals( 1, treatedSubgraphs.size() );
+
+		var subEntityGraph = treatedSubgraphs.get( GraphParsingTestSubEntity.class );
+		var subEntityGraphAttributes = subEntityGraph.getAttributeNodes();
+
+		assertNotNull( subEntityGraphAttributes );
+		assertEquals( 1, subEntityGraphAttributes.size() );
+
+		var attributeNode = subEntityGraphAttributes.get( 0 );
+		assertNotNull( attributeNode );
+		assertEquals( "sub", attributeNode.getAttributeName() );
+	}
+
+	@Test
 	public void testMapKeyParsing() {
 		EntityGraph<GraphParsingTestEntity> graph = parseGraph( "map.key(name, description)" );
 		assertNotNull( graph );
@@ -173,14 +212,37 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 
 	@Test
 	public void testLinkSubtypeParsing() {
-		RootGraphImplementor<GraphParsingTestEntity> graph = parseGraph( "linkToOne(name, description), linkToOne(GraphParsingTestSubEntity: sub)" );
+		RootGraphImplementor<GraphParsingTestEntity> graph = parseGraph(
+				"linkToOne(name, description), linkToOne(GraphParsingTestSubEntity: sub)" );
 		assertNotNull( graph );
 
-		List<? extends AttributeNodeImplementor<?,?,?>> attrs = graph.getAttributeNodeList();
+		List<? extends AttributeNodeImplementor<?, ?, ?>> attrs = graph.getAttributeNodeList();
 		assertNotNull( attrs );
 		assertEquals( 1, attrs.size() );
 
-		AttributeNodeImplementor<?,?,?> linkToOneNode = attrs.get( 0 );
+		AttributeNodeImplementor<?, ?, ?> linkToOneNode = attrs.get( 0 );
+		assertNotNull( linkToOneNode );
+		assertEquals( "linkToOne", linkToOneNode.getAttributeName() );
+
+		AssertionHelper.assertNullOrEmpty( linkToOneNode.getKeySubgraphs() );
+
+		final SubGraphImplementor<?> subgraph = linkToOneNode.getSubGraphs().get( GraphParsingTestSubEntity.class );
+		assertNotNull( subgraph );
+
+		AssertionHelper.assertBasicAttributes( subgraph, "sub" );
+	}
+
+	@Test
+	public void testLinkSubtypeParsingWithNewSyntax() {
+		RootGraphImplementor<GraphParsingTestEntity> graph = parseGraph(
+				"linkToOne(name, description), linkToOne:GraphParsingTestSubEntity(sub)" );
+		assertNotNull( graph );
+
+		List<? extends AttributeNodeImplementor<?, ?, ?>> attrs = graph.getAttributeNodeList();
+		assertNotNull( attrs );
+		assertEquals( 1, attrs.size() );
+
+		AttributeNodeImplementor<?, ?, ?> linkToOneNode = attrs.get( 0 );
 		assertNotNull( linkToOneNode );
 		assertEquals( "linkToOne", linkToOneNode.getAttributeName() );
 
@@ -204,7 +266,7 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 
 		assertEquals( subGraph.getGraphedType().getJavaType(), GraphParsingTestSubEntity.class );
 
-		final AttributeNodeImplementor<?,?,?> subTypeAttrNode = subGraph.findOrCreateAttributeNode( "sub" );
+		final AttributeNodeImplementor<?, ?, ?> subTypeAttrNode = subGraph.findOrCreateAttributeNode( "sub" );
 		assert subTypeAttrNode != null;
 	}
 
@@ -221,7 +283,10 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 		checkMapKeyAndValueSubgraphs( graph, mapAttributeName, keySubgraph, valueSubgraph );
 	}
 
-	private void checkMapKeyAndValueSubgraphs(EntityGraph<GraphParsingTestEntity> graph, final String mapAttributeName, Subgraph<GraphParsingTestEntity> keySubgraph,
+	private void checkMapKeyAndValueSubgraphs(
+			EntityGraph<GraphParsingTestEntity> graph,
+			final String mapAttributeName,
+			Subgraph<GraphParsingTestEntity> keySubgraph,
 			Subgraph<GraphParsingTestEntity> valueSubgraph) {
 		int count = 0;
 		for ( AttributeNode<?> node : graph.getAttributeNodes() ) {

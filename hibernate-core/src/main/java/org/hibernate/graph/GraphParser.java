@@ -116,16 +116,18 @@ public final class GraphParser {
 	 * @see org.hibernate.SessionFactory#parseEntityGraph(Class, CharSequence)
 	 *
 	 * @since 7.0
+	 * @deprecated This usage is deprecated. You must specify the entityType {see {@link #parse(Class, CharSequence, SessionFactory)} or {@link #parse(String, CharSequence, SessionFactory)}
 	 */
-		public static <T> RootGraph<T> parse(
-				final CharSequence graphText,
-				final SessionFactory sessionFactory) {
-			if ( graphText == null ) {
-				return null;
-			}
-			return GraphParsing.parse(
-					graphText.toString(),
-					sessionFactory.unwrap( SessionFactoryImplementor.class )
+	@Deprecated(forRemoval = true)
+	public static <T> RootGraph<T> parse(
+			final CharSequence graphText,
+			final SessionFactory sessionFactory) {
+		if ( graphText == null ) {
+			return null;
+		}
+		return GraphParsing.parse(
+				graphText.toString(),
+				sessionFactory.unwrap( SessionFactoryImplementor.class )
 		);
 	}
 

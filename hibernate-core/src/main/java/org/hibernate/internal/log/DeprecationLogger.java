@@ -226,4 +226,19 @@ public interface DeprecationLogger extends BasicLogger {
 			value = "Encountered deprecated hint [%s], use [%s] instead"
 	)
 	void deprecatedHint(String deprecatedHint, String replacementHint);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000038,
+			value = "Deprecated graph syntax: use 'field:SubType(attr1, ...)' instead of 'field(SubType: attr1, ...)'."
+	)
+	void deprecatedSubGraphWithTypeIndicatorSyntax();
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000039,
+			value = "Deprecated syntax when using @NamedEntityGraph: 'Type: attr1, attr2' is deprecated. " +
+					"Specify the root entity using the 'root' attribute instead of prefixing the graph with the entity type."
+	)
+	void deprecatedNamedEntityGraphTextThatContainTypeIndicator();
 }

@@ -18,10 +18,7 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.BasicPluralJavaType;
-import org.hibernate.type.descriptor.java.ByteJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
@@ -82,22 +79,9 @@ public abstract class AbstractOracleVectorJdbcType extends ArrayJdbcType {
 
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
-		final JavaType<T> elementJavaType;
-		if ( javaTypeDescriptor instanceof PrimitiveByteArrayJavaType ) {
-			// Special handling needed for Byte[], because that would conflict with the VARBINARY mapping
-			//noinspection unchecked
-			elementJavaType = (JavaType<T>) ByteJavaType.INSTANCE;
-		}
-		else if ( javaTypeDescriptor instanceof BasicPluralJavaType ) {
-			//noinspection unchecked
-			elementJavaType = ( (BasicPluralJavaType<T>) javaTypeDescriptor ).getElementJavaType();
-		}
-		else {
-			throw new IllegalArgumentException( "not a BasicPluralJavaType" );
-		}
 		return new OracleJdbcLiteralFormatterVector<>(
 				javaTypeDescriptor,
-				getElementJdbcType().getJdbcLiteralFormatter( elementJavaType ),
+				getElementJdbcType().getJdbcLiteralFormatter( elementJavaType( javaTypeDescriptor ) ),
 				getVectorParameters().replace( ",sparse", "" )
 		);
 	}

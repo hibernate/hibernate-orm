@@ -16,6 +16,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -47,6 +48,14 @@ public class MariaDBVectorJdbcType extends ArrayJdbcType {
 	}
 
 	@Override
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
+		return new MariaDBJdbcLiteralFormatterVector<>(
+				javaTypeDescriptor,
+				getElementJdbcType().getJdbcLiteralFormatter( elementJavaType( javaTypeDescriptor ) )
+		);
+	}
+
+	@Override
 	public void appendWriteExpression(
 			String writeExpression,
 			@Nullable Size size,
@@ -70,17 +79,17 @@ public class MariaDBVectorJdbcType extends ArrayJdbcType {
 		return new BasicExtractor<>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getObject( paramIndex, float[].class ), options );
+				return getJavaType().wrap( rs.getObject( paramIndex, float[].class ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getObject( index, float[].class ), options );
+				return getJavaType().wrap( statement.getObject( index, float[].class ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getObject( name, float[].class ), options );
+				return getJavaType().wrap( statement.getObject( name, float[].class ), options );
 			}
 
 		};
@@ -92,18 +101,18 @@ public class MariaDBVectorJdbcType extends ArrayJdbcType {
 
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				st.setObject( index, value );
+				st.setObject( index, getBindValue( value, options ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				st.setObject( name, value, java.sql.Types.ARRAY );
+				st.setObject( name, getBindValue( value, options ), java.sql.Types.ARRAY );
 			}
 
 			@Override
 			public Object getBindValue(X value, WrapperOptions options) {
-				return value;
+				return getJavaType().unwrap( value, float[].class, options );
 			}
 		};
 	}

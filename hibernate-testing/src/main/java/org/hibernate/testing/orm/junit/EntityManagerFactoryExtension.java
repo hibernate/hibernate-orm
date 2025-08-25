@@ -90,6 +90,9 @@ public class EntityManagerFactoryExtension
 						pui.getProperties().put( key, value )
 		);
 
+		// Use the context class loader for entity loading if configured,
+		// to make enhancement work for tests
+		pui.setClassLoader( Thread.currentThread().getContextClassLoader() );
 		pui.setTransactionType( emfAnn.transactionType() );
 		pui.setCacheMode( emfAnn.sharedCacheMode() );
 		pui.setValidationMode( emfAnn.validationMode() );

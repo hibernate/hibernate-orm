@@ -21,7 +21,6 @@ import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.spi.SimpleHqlInterpretationImpl;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
@@ -48,7 +47,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 
 	public QueryInterpretationCacheStandardImpl(int maxQueryPlanCount, ServiceRegistry serviceRegistry) {
 		log.tracef( "Starting query interpretation cache (size %s)", maxQueryPlanCount );
-		final InternalCacheFactory cacheFactory = serviceRegistry.requireService( InternalCacheFactory.class );
+		final var cacheFactory = serviceRegistry.requireService( InternalCacheFactory.class );
 		this.queryPlanCache = cacheFactory.createInternalCache( maxQueryPlanCount );
 		this.hqlInterpretationCache = cacheFactory.createInternalCache( maxQueryPlanCount );
 		this.nativeQueryParamCache = cacheFactory.createInternalCache( maxQueryPlanCount );
@@ -84,11 +83,11 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			K key,
 			Function<K, SelectQueryPlan<R>> creator) {
 		log.tracef( "Resolving cached query plan for [%s]", key );
-		final StatisticsImplementor statistics = getStatistics();
+		final var statistics = getStatistics();
 		final boolean stats = statistics.isStatisticsEnabled();
 
 		@SuppressWarnings("unchecked")
-		final SelectQueryPlan<R> cached = (SelectQueryPlan<R>) queryPlanCache.get( key );
+		final var cached = (SelectQueryPlan<R>) queryPlanCache.get( key );
 		if ( cached != null ) {
 			if ( stats ) {
 				statistics.queryPlanCacheHit( key.getQueryString() );
@@ -96,7 +95,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			return cached;
 		}
 
-		final SelectQueryPlan<R> plan = creator.apply( key );
+		final var plan = creator.apply( key );
 		queryPlanCache.put( key.prepareForStore(), plan );
 		if ( stats ) {
 			statistics.queryPlanCacheMiss( key.getQueryString() );
@@ -119,13 +118,13 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			Class<R> expectedResultType,
 			HqlTranslator translator) {
 		log.tracef( "Resolving HQL interpretation for [%s]", queryString );
-		final StatisticsImplementor statistics = getStatistics();
+		final var statistics = getStatistics();
 
 		final Object cacheKey = expectedResultType != null
 				? new HqlInterpretationCacheKey( queryString, expectedResultType )
 				: queryString;
 
-		final HqlInterpretation<?> existing = hqlInterpretationCache.get( cacheKey );
+		final var existing = hqlInterpretationCache.get( cacheKey );
 		if ( existing != null ) {
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.queryPlanCacheHit( queryString );
@@ -134,7 +133,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			return (HqlInterpretation<R>) existing;
 		}
 		else if ( expectedResultType != null ) {
-			final HqlInterpretation<?> existingQueryOnly = hqlInterpretationCache.get( queryString );
+			final var existingQueryOnly = hqlInterpretationCache.get( queryString );
 			if ( existingQueryOnly != null ) {
 				if ( statistics.isStatisticsEnabled() ) {
 					statistics.queryPlanCacheHit( queryString );
@@ -144,7 +143,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			}
 		}
 
-		final HqlInterpretation<R> hqlInterpretation =
+		final var hqlInterpretation =
 				createHqlInterpretation( queryString, expectedResultType, translator, statistics );
 		hqlInterpretationCache.put( cacheKey, hqlInterpretation );
 		return hqlInterpretation;
@@ -163,10 +162,10 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 		final boolean stats = statistics.isStatisticsEnabled();
 		final long startTime = stats ? System.nanoTime() : 0L;
 
-		final SqmStatement<R> sqmStatement = translator.translate( queryString, expectedResultType );
+		final var sqmStatement = translator.translate( queryString, expectedResultType );
+
 		final ParameterMetadataImplementor parameterMetadata;
 		final DomainParameterXref domainParameterXref;
-
 		if ( sqmStatement.getSqmParameters().isEmpty() ) {
 			domainParameterXref = DomainParameterXref.EMPTY;
 			parameterMetadata = ParameterMetadataImpl.EMPTY;
@@ -211,5 +210,4 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	 */
 	private record HqlInterpretationCacheKey(String queryString, Class<?> expectedResultType) {
 	}
-
 }

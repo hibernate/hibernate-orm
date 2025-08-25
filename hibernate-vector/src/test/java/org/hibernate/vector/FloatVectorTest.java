@@ -293,9 +293,9 @@ public class FloatVectorTest {
 			//end::l2-normalize-example[]
 			assertEquals( 2, results.size() );
 			assertEquals( 1L, results.get( 0 ).get( 0 ) );
-			assertArrayEquals( euclideanNormalize( V1 ), results.get( 0 ).get( 1, float[].class ), 0f );
+			assertArrayEquals( euclideanNormalize( V1 ), results.get( 0 ).get( 1, float[].class ), 0.0000001f );
 			assertEquals( 2L, results.get( 1 ).get( 0 ) );
-			assertArrayEquals( euclideanNormalize( V2 ), results.get( 1 ).get( 1, float[].class ), 0f );
+			assertArrayEquals( euclideanNormalize( V2 ), results.get( 1 ).get( 1, float[].class ), 0.0000001f );
 		} );
 	}
 

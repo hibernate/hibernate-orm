@@ -16,6 +16,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -50,6 +51,14 @@ public class MySQLVectorJdbcType extends ArrayJdbcType {
 	}
 
 	@Override
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
+		return new MySQLJdbcLiteralFormatterVector<>(
+				javaTypeDescriptor,
+				getElementJdbcType().getJdbcLiteralFormatter( elementJavaType( javaTypeDescriptor ) )
+		);
+	}
+
+	@Override
 	public void appendWriteExpression(
 			String writeExpression,
 			@Nullable Size size,
@@ -80,17 +89,17 @@ public class MySQLVectorJdbcType extends ArrayJdbcType {
 		return new BasicExtractor<>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( parseFloatVector( rs.getBytes( paramIndex ) ), options );
+				return getJavaType().wrap( parseFloatVector( rs.getBytes( paramIndex ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( parseFloatVector( statement.getBytes( index ) ), options );
+				return getJavaType().wrap( parseFloatVector( statement.getBytes( index ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( parseFloatVector( statement.getBytes( name ) ), options );
+				return getJavaType().wrap( parseFloatVector( statement.getBytes( name ) ), options );
 			}
 
 		};

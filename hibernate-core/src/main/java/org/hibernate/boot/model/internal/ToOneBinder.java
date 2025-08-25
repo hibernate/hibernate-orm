@@ -48,7 +48,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.aggregateCascadeTyp
 import static org.hibernate.boot.model.internal.BinderHelper.getFetchMode;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
-import static org.hibernate.boot.model.internal.BinderHelper.noConstraint;
+import static org.hibernate.boot.model.internal.BinderHelper.handleForeignKeyConstraint;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
@@ -580,46 +580,29 @@ public class ToOneBinder {
 
 	public static void bindForeignKeyNameAndDefinition(
 			SimpleValue value,
-			MemberDetails property,
+			MemberDetails memberDetails,
 			ForeignKey foreignKey,
 			MetadataBuildingContext context) {
-		if ( property.hasDirectAnnotationUsage( NotFound.class ) ) {
+		if ( memberDetails.hasDirectAnnotationUsage( NotFound.class ) ) {
 			// supersedes all others
 			value.disableForeignKey();
 		}
 		else {
-			final var joinColumn = property.getDirectAnnotationUsage( JoinColumn.class );
-			final var joinColumns = property.getDirectAnnotationUsage( JoinColumns.class );
-			final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
-			if ( joinColumn != null && noConstraint( joinColumn.foreignKey(), noConstraintByDefault )
-					|| joinColumns != null && noConstraint( joinColumns.foreignKey(), noConstraintByDefault ) ) {
-				value.disableForeignKey();
-			}
-			else {
-				if ( noConstraint( foreignKey, noConstraintByDefault ) ) {
-					value.disableForeignKey();
-				}
-				else if ( foreignKey != null ) {
-					value.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
-					value.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
-					value.setForeignKeyOptions( foreignKey.options() );
-				}
-				else if ( noConstraintByDefault ) {
-					value.disableForeignKey();
-				}
-				else if ( joinColumns != null ) {
-					final var joinColumnsForeignKey = joinColumns.foreignKey();
-					value.setForeignKeyName( nullIfEmpty( joinColumnsForeignKey.name() ) );
-					value.setForeignKeyDefinition( nullIfEmpty( joinColumnsForeignKey.foreignKeyDefinition() ) );
-					value.setForeignKeyOptions( joinColumnsForeignKey.options() );
-				}
-				else if ( joinColumn != null ) {
-					final var joinColumnForeignKey = joinColumn.foreignKey();
-					value.setForeignKeyName( nullIfEmpty( joinColumnForeignKey.name() ) );
-					value.setForeignKeyDefinition( nullIfEmpty( joinColumnForeignKey.foreignKeyDefinition() ) );
-					value.setForeignKeyOptions( joinColumnForeignKey.options() );
-				}
-			}
+			handleForeignKeyConstraint( value, foreignKey, nestedForeignKey( memberDetails ), context );
+		}
+	}
+
+	private static ForeignKey nestedForeignKey(MemberDetails memberDetails) {
+		final var joinColumn = memberDetails.getDirectAnnotationUsage( JoinColumn.class );
+		final var joinColumns = memberDetails.getDirectAnnotationUsage( JoinColumns.class );
+		if ( joinColumn != null ) {
+			return joinColumn.foreignKey();
+		}
+		else if ( joinColumns != null ) {
+			return joinColumns.foreignKey();
+		}
+		else {
+			return null;
 		}
 	}
 

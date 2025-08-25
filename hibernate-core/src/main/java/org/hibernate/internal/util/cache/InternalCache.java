@@ -27,16 +27,12 @@ public interface InternalCache<K, V> {
 	/**
 	 * Attempt to read from the cache. Will return null on cache miss.
 	 * It would typically be better to use {@link #computeIfAbsent(Object, Function)} instead.
-	 * @param key
-	 * @return
 	 */
 	V get(K key);
 
 	/**
 	 * Stores a key/value pair into the cache. Storage is not guaranteed, as the implementation
 	 * has liberty to cap internal storage or use various eviction strategies.
-	 * @param key
-	 * @param value
 	 */
 	void put(K key, V value);
 
@@ -55,7 +51,6 @@ public interface InternalCache<K, V> {
 	 * the general pattern of "try to read, or produce a value and then cache it" but avoiding
 	 * efficiency issues that would be caused by accessing the cache multiple times, not least
 	 * potentially a cache stampede, and concurrent need for generating the same value.
-	 * @param key
 	 * @param mappingFunction This function will be invoked to produce the value, and store it,
 	 * if a matching existing value couldn't be loaded from the cache.
 	 * @return Either the existing value, or the return from the provided function.

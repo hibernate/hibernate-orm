@@ -51,6 +51,7 @@ import jakarta.persistence.MapKeyJoinColumns;
 
 import static org.hibernate.boot.model.internal.AnnotatedClassType.EMBEDDABLE;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.NONE;
+import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.MAP_KEY;
 import static org.hibernate.boot.model.internal.BinderHelper.findPropertyByName;
 import static org.hibernate.boot.model.internal.BinderHelper.isPrimitive;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
@@ -361,7 +362,7 @@ public class MapBinder extends CollectionBinder {
 			TypeDetails keyTypeDetails,
 			CollectionPropertyHolder holder,
 			AccessType accessType) {
-		final var elementBinder = new BasicValueBinder( BasicValueBinder.Kind.MAP_KEY, buildingContext );
+		final var elementBinder = new BasicValueBinder( MAP_KEY, buildingContext );
 		elementBinder.setReturnedClassName(mapKeyType);
 		final var keyColumns = createElementColumnsIfNecessary(
 				collection,

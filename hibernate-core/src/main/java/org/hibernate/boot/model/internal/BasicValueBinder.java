@@ -293,11 +293,14 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		return typeConfiguration.getJdbcTypeRegistry().getDescriptor( code );
 	}
 
+	public void setType(MemberDetails value, TypeDetails typeDetails) {
+		setType( value, typeDetails, null, null );
+	}
 	public void setType(
 			MemberDetails value,
 			TypeDetails typeDetails,
-			String declaringClassName,
-			@Nullable ConverterDescriptor converterDescriptor) {
+			@Nullable String declaringClassName,
+			@Nullable ConverterDescriptor<?,?> converterDescriptor) {
 		this.memberDetails = value;
 		final boolean isArray = value.isArray();
 		if ( typeDetails == null && !isArray ) {

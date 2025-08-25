@@ -19,6 +19,8 @@ import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.spi.EmbeddableAggregateJavaType;
 
+import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.ATTRIBUTE;
+
 /**
  * Processes aggregate component annotations from Java classes and produces the Hibernate configuration-time metamodel,
  * that is, the objects defined in the package {@link org.hibernate.mapping}.
@@ -51,7 +53,7 @@ public final class AggregateComponentBinder {
 			component.setStructColumnNames( determineStructAttributeNames( inferredData, componentClassDetails ) );
 
 			// Determine the aggregate column
-			final var basicValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ATTRIBUTE, component, context );
+			final var basicValueBinder = new BasicValueBinder( ATTRIBUTE, component, context );
 			basicValueBinder.setReturnedClassName( inferredData.getClassOrElementType().getName() );
 			basicValueBinder.setColumns( columns );
 			basicValueBinder.setPersistentClassName( propertyHolder.getClassName() );

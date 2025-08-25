@@ -4,7 +4,6 @@
  */
 package org.hibernate.boot.model.internal;
 
-import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.ManyToOne;
@@ -37,7 +36,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SyntheticProperty;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.AnnotationTarget;
@@ -62,10 +60,11 @@ import static jakarta.persistence.ConstraintMode.PROVIDER_DEFAULT;
 import static java.util.Collections.addAll;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnOrFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.AnyBinder.resolveImplicitDiscriminatorStrategy;
+import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.ANY_DISCRIMINATOR;
+import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.ANY_KEY;
 import static org.hibernate.boot.model.internal.ForeignKeyType.NON_PRIMARY_KEY_REFERENCE;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
-import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.qualifier;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.collections.ArrayHelper.isEmpty;
@@ -146,16 +145,15 @@ public class BinderHelper {
 			// figure out which table has the columns by looking
 			// for a PersistentClass or Join in the hierarchy of
 			// the target entity which has the first column
-			final AttributeContainer columnOwner =
-					findReferencedColumnOwner( targetEntity, joinColumns.getJoinColumns().get(0), context );
+			final var firstJoinColumn = joinColumns.getJoinColumns().get( 0 );
+			final var columnOwner = findReferencedColumnOwner( targetEntity, firstJoinColumn, context );
 			checkColumnInSameTable( joinColumns, targetEntity, associatedEntity, context, columnOwner );
 			// find all properties mapped to each column
-			final List<Property> properties =
-					findPropertiesByColumns( columnOwner, joinColumns, associatedEntity, context );
+			final var properties = findPropertiesByColumns( columnOwner, joinColumns, associatedEntity, context );
 			// create a Property along with the new synthetic
 			// Component if necessary (or reuse the existing
 			// Property that matches exactly)
-			final Property property = referencedProperty(
+			final var property = referencedProperty(
 					targetEntity,
 					associatedEntity,
 					propertyName,
@@ -192,8 +190,8 @@ public class BinderHelper {
 			// we should only get called for owning side of association
 			throw new AssertionFailure("no need to create synthetic properties for unowned collections");
 		}
-		for ( AnnotatedJoinColumn column: joinColumns.getJoinColumns() ) {
-			final AttributeContainer owner = findReferencedColumnOwner( targetEntity, column, context );
+		for ( var column: joinColumns.getJoinColumns() ) {
+			final var owner = findReferencedColumnOwner( targetEntity, column, context );
 			if ( owner == null ) {
 				throw new AnnotationException( "A '@JoinColumn' for association "
 						+ associationMessage( associatedEntity, joinColumns )
@@ -202,7 +200,7 @@ public class BinderHelper {
 						+ targetEntity.getEntityName() + "'" );
 			}
 			if ( owner != columnOwner) {
-				final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
+				final var firstColumn = joinColumns.getJoinColumns().get(0);
 				throw new AnnotationException( "The '@JoinColumn's for association "
 						+ associationMessage( associatedEntity, joinColumns )
 						+ " reference columns of different tables mapped by the target entity '"
@@ -241,7 +239,7 @@ public class BinderHelper {
 				&& ownerEntity == columnOwner
 				&& !( properties.get(0).getValue() instanceof ToOne ) ) {
 			// no need to make a synthetic property
-			final Property property = properties.get( 0 );
+			final var property = properties.get( 0 );
 			// mark it unique
 			property.getValue().createUniqueKey( context );
 			return property;
@@ -320,9 +318,9 @@ public class BinderHelper {
 			MetadataBuildingContext context,
 			String syntheticPropertyName,
 			List<Property> properties) {
-		final Component embeddedComponent =
+		final var embeddedComponent =
 				embeddedComponent( ownerEntity, persistentClassOrJoin, context, properties );
-		final Property result = new SyntheticProperty();
+		final var result = new SyntheticProperty();
 		result.setName( syntheticPropertyName );
 		result.setPersistentClass( ownerEntity );
 		result.setUpdatable( false );
@@ -379,7 +377,7 @@ public class BinderHelper {
 				copy.addProperty( cloneProperty( ownerEntity, context, subproperty ) );
 			}
 			copy.sortProperties();
-			final Property result = new SyntheticProperty();
+			final var result = new SyntheticProperty();
 			result.setName( property.getName() );
 			result.setPersistentClass( ownerEntity );
 			result.setUpdatable( false );
@@ -389,7 +387,7 @@ public class BinderHelper {
 			return result;
 		}
 		else {
-			final Property clone = shallowCopy( property );
+			final var clone = shallowCopy( property );
 			clone.setInsertable( false );
 			clone.setUpdatable( false );
 			clone.setNaturalIdentifier( false );
@@ -403,7 +401,7 @@ public class BinderHelper {
 	 * and other attributes.
 	 */
 	public static Property shallowCopy(Property property) {
-		final Property clone = new SyntheticProperty();
+		final var clone = new SyntheticProperty();
 		clone.setCascade( property.getCascade() );
 		clone.setInsertable( property.isInsertable() );
 		clone.setLazy( property.isLazy() );
@@ -425,13 +423,12 @@ public class BinderHelper {
 			PersistentClass associatedEntity,
 			MetadataBuildingContext context) {
 
-		final Table referencedTable = columnOwner.getTable();
-
 		// Build the list of column names in the exact order they were
 		// specified by the @JoinColumn annotations.
 		final List<Column> orderedColumns = new ArrayList<>( columns.getJoinColumns().size() );
 		final Map<Column, Set<Property>> columnsToProperty = new HashMap<>();
 		final var collector = context.getMetadataCollector();
+		final var referencedTable = columnOwner.getTable();
 		for ( var joinColumn : columns.getJoinColumns() ) {
 			if ( joinColumn.isReferenceImplicit() ) {
 				throw new AnnotationException( "Association " + associationMessage( associatedEntity, columns )
@@ -439,7 +436,7 @@ public class BinderHelper {
 						+ " (when an association has multiple '@JoinColumn's, they must each specify their 'referencedColumnName')");
 			}
 			final String name = collector.getPhysicalColumnName( referencedTable, joinColumn.getReferencedColumn() );
-			final Column column = new Column( name );
+			final var column = new Column( name );
 			orderedColumns.add( column );
 			columnsToProperty.put( column, new LinkedHashSet<>() ); //need to use a LinkedHashSet here to make it deterministic
 		}
@@ -450,7 +447,7 @@ public class BinderHelper {
 		if ( columnOwner instanceof PersistentClass persistentClass ) {
 			// Process ToOne associations after Components, Basic and Id properties
 			final List<Property> toOneProperties = new ArrayList<>();
-			for ( Property property : persistentClass.getReferenceableProperties() ) {
+			for ( var property : persistentClass.getReferenceableProperties() ) {
 				if ( property.getValue() instanceof ToOne ) {
 					toOneProperties.add( property );
 				}
@@ -464,16 +461,16 @@ public class BinderHelper {
 			else {
 				// special case for entities with multiple @Id properties
 				final Component key = persistentClass.getIdentifierMapper();
-				for ( Property p : key.getProperties() ) {
+				for ( var p : key.getProperties() ) {
 					matchColumnsByProperty( p, columnsToProperty );
 				}
 			}
-			for ( Property property : toOneProperties ) {
+			for ( var property : toOneProperties ) {
 				matchColumnsByProperty( property, columnsToProperty );
 			}
 		}
 		else {
-			for ( Property property : ((Join) columnOwner).getProperties() ) {
+			for ( var property : ((Join) columnOwner).getProperties() ) {
 				matchColumnsByProperty( property, columnsToProperty );
 			}
 		}
@@ -582,7 +579,7 @@ public class BinderHelper {
 	 * If propertyName is null or empty, the IdentifierProperty is returned
 	 */
 	public static Property findPropertyByName(PersistentClass associatedClass, String propertyName) {
-		final Property idProperty = associatedClass.getIdentifierProperty();
+		final var idProperty = associatedClass.getIdentifierProperty();
 		final String idName = idProperty == null ? null : idProperty.getName();
 		try {
 			return isEmpty( propertyName ) || propertyName.equals( idName )
@@ -732,8 +729,7 @@ public class BinderHelper {
 		any.setLazy( lazy );
 		any.setOnDeleteAction( onDeleteAction );
 
-		final var discriminatorValueBinder =
-				new BasicValueBinder( BasicValueBinder.Kind.ANY_DISCRIMINATOR, context );
+		final var discriminatorValueBinder = new BasicValueBinder( ANY_DISCRIMINATOR, context );
 
 		// TODO: if there can be only one discriminator column,
 		//       why are we making a whole array of them??
@@ -755,7 +751,7 @@ public class BinderHelper {
 		discriminatorValueBinder.setColumns( discriminatorColumns );
 
 		discriminatorValueBinder.setReturnedClassName( inferredData.getTypeName() );
-		discriminatorValueBinder.setType( memberDetails, memberDetails.getType(), null, null );
+		discriminatorValueBinder.setType( memberDetails, memberDetails.getType() );
 
 		final BasicValue discriminator = discriminatorValueBinder.make();
 		any.setDiscriminator( discriminator );
@@ -785,7 +781,7 @@ public class BinderHelper {
 					resolveImplicitDiscriminatorStrategy( anyDiscriminatorImplicitValues, context ) );
 		}
 
-		final var keyValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ANY_KEY, context );
+		final var keyValueBinder = new BasicValueBinder( ANY_KEY, context );
 		final var columns = keyColumns.getJoinColumns();
 		assert columns.size() == 1;
 		keyColumns.setTable( any.getTable() );
@@ -795,7 +791,7 @@ public class BinderHelper {
 				column.setNullable( false );
 			}
 		}
-		keyValueBinder.setType( memberDetails, memberDetails.getType(), null, null );
+		keyValueBinder.setType( memberDetails, memberDetails.getType() );
 		final BasicValue keyDescriptor = keyValueBinder.make();
 		any.setKey( keyDescriptor );
 		keyValueBinder.fillSimpleValue();
@@ -848,7 +844,7 @@ public class BinderHelper {
 		final Map<String,String> result = new HashMap<>();
 		for ( var aliasAnnotation : aliases ) {
 			final String table = aliasAnnotation.table();
-			if ( isNotBlank( table ) ) {
+			if ( !table.isBlank() ) {
 				result.put( aliasAnnotation.alias(), table );
 			}
 		}
@@ -903,7 +899,7 @@ public class BinderHelper {
 	private static EnumSet<CascadeType> convertToHibernateCascadeType(jakarta.persistence.CascadeType[] cascades) {
 		final var cascadeTypes = EnumSet.noneOf( CascadeType.class );
 		if ( cascades != null ) {
-			for ( jakarta.persistence.CascadeType cascade: cascades ) {
+			for ( var cascade: cascades ) {
 				cascadeTypes.add( convertCascadeType( cascade ) );
 			}
 		}
@@ -963,7 +959,7 @@ public class BinderHelper {
 			PropertyHolder propertyHolder,
 			Map<String, PersistentClass> persistentClasses) {
 		if ( targetValue instanceof Collection collection ) {
-			final ToOne element = (ToOne) collection.getElement();
+			final var element = (ToOne) collection.getElement();
 			checkMappedByType( mappedBy, propertyName, propertyHolder, persistentClasses, element );
 		}
 		else if ( targetValue instanceof ToOne toOne ) {
@@ -982,8 +978,7 @@ public class BinderHelper {
 		PersistentClass ownerClass = propertyHolder.getPersistentClass();
 		while ( ownerClass != null ) {
 			if ( checkReferencedClass( ownerClass, referencedClass ) ) {
-				// the two entities map to the same table
-				// so we are good
+				// the two entities map to the same table, so we are good
 				return;
 			}
 			ownerClass = ownerClass.getSuperPersistentClass();
@@ -1013,7 +1008,7 @@ public class BinderHelper {
 			return false;
 		}
 		else {
-			final ConstraintMode mode = foreignKey.value();
+			final var mode = foreignKey.value();
 			return mode == NO_CONSTRAINT
 				|| mode == PROVIDER_DEFAULT && noConstraintByDefault;
 		}

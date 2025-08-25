@@ -19,6 +19,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.UserCollectionType;
 
+import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.LIST_INDEX;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
@@ -65,10 +66,10 @@ public class ListBinder extends CollectionBinder {
 		}
 		indexColumn.getParent().setPropertyHolder( valueHolder );
 
-		final var valueBinder = new BasicValueBinder( BasicValueBinder.Kind.LIST_INDEX, buildingContext );
+		final var valueBinder = new BasicValueBinder( LIST_INDEX, buildingContext );
 		valueBinder.setColumns( indexColumn.getParent() );
 		valueBinder.setReturnedClassName( Integer.class.getName() );
-		valueBinder.setType( property, getElementType(), null, null );
+		valueBinder.setType( property, getElementType() );
 //			valueBinder.setExplicitType( "integer" );
 		final SimpleValue indexValue = valueBinder.make();
 		indexColumn.linkWithValue( indexValue );

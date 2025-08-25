@@ -1509,16 +1509,16 @@ public class EntityBinder {
 	private void bindSynchronize() {
 		final var synchronize = annotatedClass.getAnnotationUsage( Synchronize.class, modelsContext() );
 		if ( synchronize != null ) {
-			final var jdbcEnvironment = getDatabase().getJdbcEnvironment();
 			final boolean logical = synchronize.logical();
 			for ( String tableName : synchronize.value() ) {
-				final String physicalName = logical ? toPhysicalName( jdbcEnvironment, tableName ) : tableName;
+				final String physicalName = logical ? toPhysicalName( tableName ) : tableName;
 				persistentClass.addSynchronizedTable( physicalName );
 			}
 		}
 	}
 
-	private String toPhysicalName(JdbcEnvironment jdbcEnvironment, String logicalName) {
+	private String toPhysicalName(String logicalName) {
+		final var jdbcEnvironment = getDatabase().getJdbcEnvironment();
 		final var identifier = jdbcEnvironment.getIdentifierHelper().toIdentifier( logicalName );
 		return getPhysicalNamingStrategy()
 				.toPhysicalTableName( identifier, jdbcEnvironment )
@@ -1650,7 +1650,7 @@ public class EntityBinder {
 								: annotatedClass.getName() + NATURAL_ID_CACHE_SUFFIX;
 			}
 			else {
-				naturalIdCacheRegion = naturalIdCache.region();
+				naturalIdCacheRegion = region;
 			}
 		}
 		else {
@@ -1802,7 +1802,7 @@ public class EntityBinder {
 	private void bindTableForDiscriminatedSubclass(String entityName) {
 		if ( !(persistentClass instanceof SingleTableSubclass) ) {
 			throw new AssertionFailure(
-					"Was expecting a discriminated subclass [" + SingleTableSubclass.class.getName() +
+					"Expecting a discriminated subclass [" + SingleTableSubclass.class.getName() +
 							"] but found [" + persistentClass.getClass().getName() + "] for entity [" +
 							persistentClass.getEntityName() + "]"
 			);
@@ -1827,27 +1827,18 @@ public class EntityBinder {
 			String rowId,
 			String viewQuery,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
-
 		final String entityName = persistentClass.getEntityName();
-
-		final var namingStrategyHelper =
-				new EntityTableNamingStrategyHelper( persistentClass.getClassName(), entityName, name );
-		final Identifier logicalName =
-				isNotBlank( tableName )
-						? namingStrategyHelper.handleExplicitName( tableName, context )
-						: namingStrategyHelper.determineImplicitName( context );
-
+		final Identifier logicalTableName = logicalTableName( tableName, entityName );
 		final Table table = TableBinder.buildAndFillTable(
 				schema,
 				catalog,
-				logicalName,
+				logicalTableName,
 				persistentClass.isAbstract(),
 				uniqueConstraints,
 				context,
 				subselect,
 				denormalizedSuperTableXref
 		);
-
 		table.setRowId( rowId );
 		table.setViewQuery( viewQuery );
 
@@ -1856,7 +1847,8 @@ public class EntityBinder {
 //			table.setComment( comment.value() );
 //		}
 
-		getMetadataCollector().addEntityTableXref( entityName, logicalName, table, denormalizedSuperTableXref );
+		getMetadataCollector()
+				.addEntityTableXref( entityName, logicalTableName, table, denormalizedSuperTableXref );
 
 		if ( persistentClass instanceof TableOwner tableOwner ) {
 			tableOwner.setTable( table );
@@ -1866,13 +1858,21 @@ public class EntityBinder {
 		}
 	}
 
+	private Identifier logicalTableName(String tableName, String entityName) {
+		final var namingStrategyHelper =
+				new EntityTableNamingStrategyHelper( persistentClass.getClassName(), entityName, name );
+		return isNotBlank( tableName )
+				? namingStrategyHelper.handleExplicitName( tableName, context )
+				: namingStrategyHelper.determineImplicitName( context );
+	}
+
 	public void finalSecondaryTableBinding(PropertyHolder propertyHolder) {
 		// This operation has to be done after the id definition of the persistence class.
 		// ie after the properties parsing
 		final var joinColumns = secondaryTableJoins.values().iterator();
-		for ( var entrySet : secondaryTables.entrySet() ) {
-			if ( !secondaryTablesFromAnnotation.containsKey( entrySet.getKey() ) ) {
-				createPrimaryColumnsToSecondaryTable( joinColumns.next(), propertyHolder, entrySet.getValue() );
+		for ( var entry : secondaryTables.entrySet() ) {
+			if ( !secondaryTablesFromAnnotation.containsKey( entry.getKey() ) ) {
+				createPrimaryColumnsToSecondaryTable( joinColumns.next(), propertyHolder, entry.getValue() );
 			}
 		}
 	}
@@ -1881,9 +1881,9 @@ public class EntityBinder {
 		// This operation has to be done before the end of the FK second pass processing in order
 		// to find the join columns belonging to secondary tables
 		final var joinColumns = secondaryTableFromAnnotationJoins.values().iterator();
-		for ( var entrySet : secondaryTables.entrySet() ) {
-			if ( secondaryTablesFromAnnotation.containsKey( entrySet.getKey() ) ) {
-				createPrimaryColumnsToSecondaryTable( joinColumns.next(), propertyHolder, entrySet.getValue() );
+		for ( var entry : secondaryTables.entrySet() ) {
+			if ( secondaryTablesFromAnnotation.containsKey( entry.getKey() ) ) {
+				createPrimaryColumnsToSecondaryTable( joinColumns.next(), propertyHolder, entry.getValue() );
 			}
 		}
 	}

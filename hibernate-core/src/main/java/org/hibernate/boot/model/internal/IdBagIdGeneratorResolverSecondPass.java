@@ -14,7 +14,6 @@ import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnota
 import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.id.PersistentIdentifierGenerator;
-import org.hibernate.mapping.IdentifierBag;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.models.spi.MemberDetails;
@@ -47,7 +46,6 @@ public class IdBagIdGeneratorResolverSecondPass implements IdGeneratorResolver {
 	private final Map<String,String> configuration;
 
 	public IdBagIdGeneratorResolverSecondPass(
-			IdentifierBag idBagMapping,
 			SimpleValue idValue,
 			MemberDetails idBagMember,
 			String generatorType,

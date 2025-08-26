@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.AbstractQuery;
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -204,6 +205,7 @@ public abstract class AbstractSqmDmlStatement<E>
 	}
 
 	@Override
+	@NullnessUtil.Initializer
 	public void setTarget(@Nonnull JpaRoot<E> root) {
 		this.target = (SqmRoot<E>) root;
 	}

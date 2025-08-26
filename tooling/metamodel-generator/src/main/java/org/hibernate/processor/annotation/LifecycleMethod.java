@@ -469,6 +469,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			return methodTypeParameters.contains( value )
 					? value
 					: annotationMetaEntity.importType(
+							// castNonNull shouldn't be necessary; see JavaxLangModelLibraryModels
 							resolveTypeName( element, castNonNull( method.getEnclosingElement() ), value ) );
 		}
 		else if ( type instanceof WildcardType wildcardType ) {

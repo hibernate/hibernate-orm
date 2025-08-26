@@ -7,17 +7,31 @@ package org.hibernate.internal.util;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
  * Utility class for nullness assertions.
  */
 @SuppressWarnings({
-		"nullness", // Nullness utilities are trusted regarding nullness.
+		"NullAway", // Nullness utilities are trusted regarding nullness.
 		"cast" // Casts look redundant if static nullness analysis is not run.
 })
 public final class NullnessUtil {
 
 	private NullnessUtil() {
 		throw new AssertionError( "shouldn't be instantiated" );
+	}
+
+	/**
+	 * Marks a method as an initializer,
+	 * allowing static analysis to infer correctness of initialization of non-null fields.
+	 */
+	@Target(ElementType.METHOD)
+	@Retention(RetentionPolicy.CLASS)
+	public @interface Initializer {
 	}
 
 	/**

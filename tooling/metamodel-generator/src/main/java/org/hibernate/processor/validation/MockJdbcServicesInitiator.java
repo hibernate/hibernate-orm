@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  * @author Gavin King
  */
-@SuppressWarnings("nullness")
+@SuppressWarnings("NullAway")
 class MockJdbcServicesInitiator extends JdbcServicesInitiator {
 
 	static final JdbcServicesInitiator INSTANCE = new MockJdbcServicesInitiator();

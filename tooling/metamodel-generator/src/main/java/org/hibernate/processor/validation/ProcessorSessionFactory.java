@@ -67,7 +67,7 @@ import static org.hibernate.processor.util.Constants.JAVA_OBJECT;
  *
  * @author Gavin King
  */
-@SuppressWarnings("nullness")
+@SuppressWarnings("NullAway")
 public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	public static MockSessionFactory create(

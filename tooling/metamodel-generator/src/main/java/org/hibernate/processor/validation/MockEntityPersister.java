@@ -31,7 +31,7 @@ import static java.util.Collections.emptyMap;
 /**
  * @author Gavin King
  */
-@SuppressWarnings("nullness")
+@SuppressWarnings("NullAway")
 public abstract class MockEntityPersister implements EntityPersister, Joinable {
 
 	private static final String[] ID_COLUMN = {"id"};

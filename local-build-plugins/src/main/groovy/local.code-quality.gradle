@@ -8,6 +8,13 @@ plugins {
     id "com.diffplug.spotless"
 }
 
+// Might need to skip errorprone when using JDK 17 to build.
+def skipErrorProne = project.findProperty('skipErrorProne') ?: false
+if (!skipErrorProne) {
+    plugins.apply( 'net.ltgt.errorprone' )
+    plugins.apply( 'net.ltgt.nullaway' )
+}
+
 tasks.register( "ciCheck" ) {
     // Task used by CI builds
     group = "verification"
@@ -111,6 +118,70 @@ dependencies {
     compileOnly libs.jakarta.annotation
     compileOnly libs.compilation.jetbrainsAnnotations
     testCompileOnly libs.jakarta.annotation
+}
+
+if (!skipErrorProne) {
+    dependencies {
+        errorprone libs.compilation.errorprone
+        errorprone libs.compilation.nullaway
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        def enableErrorProne = (name == 'compileJava') // Only enabled for the 'main' sourceSet
+        options.errorprone {
+            enabled = enableErrorProne
+
+            // We really are only interested in NullAway for now
+            disableAllChecks = true
+            disableWarningsInGeneratedCode = true
+
+            errorproneArgs.add("-XepAllErrorsAsWarnings")
+
+            nullaway {
+                error()
+                annotatedPackages.add("org.hibernate.processor")
+                onlyNullMarked = false
+                treatGeneratedAsUnannotated = true
+                checkContracts = true
+                checkOptionalEmptiness = true
+                exhaustiveOverride = true
+                excludedFieldAnnotations.add('jakarta.validation.constraints.NotNull')
+                excludedFieldAnnotations.add('jakarta.validation.constraints.NotEmpty')
+
+                customInitializerAnnotations.add('org.hibernate.internal.util.NullnessUtil.Initializer')
+            }
+        }
+    }
+}
+if (!skipErrorProne && layout.projectDirectory.dir("src/nullaway").asFile.exists()) {
+    sourceSets {
+        // Separate sourceSet for NullAway LibraryModels - compiled BEFORE main
+        nullaway {
+            java {
+                srcDirs = ['src/nullaway/java']
+            }
+            resources {
+                srcDirs = ['src/nullaway/resources']
+            }
+        }
+    }
+    dependencies {
+        // Dependencies for NullAway LibraryModels (separate sourceSet)
+        nullawayImplementation libs.compilation.nullaway
+        nullawayImplementation libs.compilation.guava
+    }
+
+    // Ensure NullAway LibraryModels are compiled and resources processed first
+    compileJava.dependsOn compileNullawayJava, processNullawayResources
+    // Add the compiled LibraryModels to annotation processor path (where NullAway can load them via ServiceLoader)
+    compileJava {
+        doFirst {
+            options.annotationProcessorPath += files(
+                    sourceSets.nullaway.output.classesDirs,
+                    sourceSets.nullaway.output.resourcesDir
+            )
+        }
+    }
 }
 
 tasks.withType(de.thetaphi.forbiddenapis.gradle.CheckForbiddenApis) {

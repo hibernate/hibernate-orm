@@ -63,6 +63,10 @@ updates:
           - "org.asciidoctor*"
           - "com.diffplug.spotless*"
           - "org.jetbrains.kotlin.jvm*"
+          - "net.ltgt.errorprone*"
+          - "net.ltgt.nullaway*"
+          - "com.google.errorprone*"
+          - "com.uber.nullaway*"
           # Local build plugin dependencies:
           - "org.apache.maven*"
           - "org.apache.httpcomponents*"

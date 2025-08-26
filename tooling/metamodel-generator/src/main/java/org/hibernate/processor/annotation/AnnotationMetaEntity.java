@@ -69,6 +69,7 @@ import jakarta.persistence.AccessType;
 import static java.beans.Introspector.decapitalize;
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
@@ -130,10 +131,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private boolean jakartaDataRepository;
 	private final boolean quarkusInjection;
 	private final boolean springInjection;
-	private String qualifiedName;
+	private @Nullable String qualifiedName;
 	private final boolean jakartaDataStaticModel;
 
-	private AccessTypeInformation entityAccessTypeInfo;
+	private @Nullable AccessTypeInformation entityAccessTypeInfo;
 
 	/**
 	 * Whether the members of this type have already been initialized or not.
@@ -153,7 +154,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 * lazily is required for embeddables and mapped supertypes, to only pull in those members matching the access
 	 * type as configured via the embedding entity or subclass (also see METAGEN-85).
 	 */
-	private Metamodel entityToMerge;
+	private @Nullable Metamodel entityToMerge;
 
 	/**
 	 * True if this "metamodel class" is actually an instantiable DAO-style repository.
@@ -229,7 +230,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return memberTypes.get( qualify(entityType, memberName) );
 	}
 
-	public AccessTypeInformation getEntityAccessTypeInfo() {
+	public @Nullable AccessTypeInformation getEntityAccessTypeInfo() {
 		return entityAccessTypeInfo;
 	}
 
@@ -2559,7 +2560,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final var attributeType = requireNonNullElse(
 					resolveTypeMirror(
 							entityType,
-							member.getEnclosingElement(),
+							requireNonNull( member.getEnclosingElement() ),
 							memberType.toString()
 					), memberType
 			);
@@ -2623,7 +2624,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						context.getTypeUtils()
 								.asMemberOf( (DeclaredType) element.asType(), method );
 		return methodType.getParameterTypes()
-				.get( method.getParameters().indexOf( param ) );
+				.get( requireNonNull( method ).getParameters().indexOf( param ) );
 	}
 
 	/**
@@ -3442,7 +3443,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private TypeMirror parameterType(VariableElement parameter) {
 		final ExecutableElement method =
-				(ExecutableElement) parameter.getEnclosingElement();
+				(ExecutableElement) requireNonNull( parameter.getEnclosingElement() );
 		final TypeMirror type =
 				memberMethodType(method).getParameterTypes()
 						.get( method.getParameters().indexOf(parameter) );
@@ -3690,7 +3691,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private static String messageWithLocation(Element element, String message) {
 		return element.getKind() == ElementKind.PARAMETER
 				? message + " for parameter '" + element.getSimpleName()
-						+ "' of inherited member '" + element.getEnclosingElement().getSimpleName() + "'"
+						+ "' of inherited member '" + requireNonNull( element.getEnclosingElement() ).getSimpleName() + "'"
 				: message + " for inherited member '" + element.getSimpleName() + "'";
 	}
 

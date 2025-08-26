@@ -22,6 +22,7 @@ import javax.lang.model.element.Element;
 import java.util.List;
 
 import static java.lang.Character.isJavaIdentifierStart;
+import static java.util.Objects.requireNonNull;
 import static org.hibernate.processor.util.Constants.ENTITY_GRAPH;
 import static org.hibernate.processor.util.Constants.HIB_ENABLED_FETCH_PROFILE;
 import static org.hibernate.processor.util.Constants.JAVA_OBJECT;
@@ -56,7 +57,7 @@ public abstract class AnnotationMeta implements Metamodel {
 
 	void checkNamedQueries() {
 		boolean checkHql = containsAnnotation( getElement(), Constants.CHECK_HQL )
-						|| containsAnnotation( getElement().getEnclosingElement(), Constants.CHECK_HQL );
+						|| containsAnnotation( requireNonNull( getElement().getEnclosingElement() ), Constants.CHECK_HQL );
 		handleNamedQueryAnnotation( NAMED_QUERY, checkHql );
 		handleNamedQueryRepeatableAnnotation( Constants.NAMED_QUERIES, checkHql );
 		handleNamedQueryAnnotation( Constants.HIB_NAMED_QUERY, checkHql );

@@ -25,6 +25,7 @@ import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static org.hibernate.processor.util.Constants.ELEMENT_COLLECTION;
 import static org.hibernate.processor.util.Constants.LIST_ATTRIBUTE;
 import static org.hibernate.processor.util.Constants.MANY_TO_ANY;
@@ -139,10 +140,10 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 		}
 	}
 
-	private void setAccessType(TypeMirror collectionElementType, TypeElement collectionElement) {
+	private void setAccessType(TypeMirror collectionElementType, @Nullable TypeElement collectionElement) {
 		final String elementTypeName = collectionElementType.toString();
 		final AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( elementTypeName );
-		final AccessType entityAccessType = entity.getEntityAccessTypeInfo().getAccessType();
+		final AccessType entityAccessType = requireNonNull( entity.getEntityAccessTypeInfo() ).getAccessType();
 		if ( accessTypeInfo == null ) {
 			context.addAccessTypeInformation(
 					elementTypeName,

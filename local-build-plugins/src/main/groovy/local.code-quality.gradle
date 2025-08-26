@@ -112,7 +112,9 @@ dependencies {
     //testCompileOnly libs.checkerFramework
     //checkerFramework libs.checkerFrameworkChecker
     api "org.jspecify:jspecify:1.0.0"
-    compileOnly "org.jetbrains:annotations:26.0.2"
+    // for use contract like @Nullable Boolean foo(final String a) @Contract(null->null)
+    // see https://github.com/uber/NullAway/wiki/Supported-Annotations#contracts
+    // compileOnly "org.jetbrains:annotations:26.0.2"
     errorprone "com.uber.nullaway:nullaway:0.12.9"
     errorprone "com.google.errorprone:error_prone_core:2.41.0"
 }

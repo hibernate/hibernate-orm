@@ -5,7 +5,7 @@
 package org.hibernate.processor.annotation;
 
 import org.antlr.v4.runtime.Token;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;

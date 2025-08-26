@@ -43,7 +43,7 @@ import org.hibernate.processor.util.TypeUtils;
 import org.hibernate.processor.util.xml.XmlParserHelper;
 
 import jakarta.persistence.AccessType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import static org.hibernate.processor.util.StringUtil.determineFullyQualifiedClassName;
 import static org.hibernate.processor.util.StringUtil.packageNameFromFullyQualifiedName;

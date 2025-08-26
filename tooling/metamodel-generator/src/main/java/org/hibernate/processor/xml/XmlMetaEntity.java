@@ -44,7 +44,7 @@ import org.hibernate.processor.util.StringUtil;
 import org.hibernate.processor.util.TypeUtils;
 
 import jakarta.persistence.AccessType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import static jakarta.persistence.AccessType.FIELD;
 import static java.util.Collections.emptyList;

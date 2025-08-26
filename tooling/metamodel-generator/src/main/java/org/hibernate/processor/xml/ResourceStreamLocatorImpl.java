@@ -12,7 +12,7 @@ import javax.tools.StandardLocation;
 import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.processor.Context;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * @author Steve Ebersole

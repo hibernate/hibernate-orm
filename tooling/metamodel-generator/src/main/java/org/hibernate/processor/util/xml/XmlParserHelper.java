@@ -25,7 +25,7 @@ import org.hibernate.boot.jaxb.cfg.spi.ObjectFactory;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.util.NullnessUtil;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.xml.sax.SAXException;
 
 /**

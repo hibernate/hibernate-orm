@@ -6,7 +6,7 @@ package org.hibernate.processor;
 
 import org.hibernate.processor.util.NullnessUtil;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Information about the Meta Model Generator version.

@@ -5,7 +5,7 @@
 package org.hibernate.processor.util;
 
 import jakarta.persistence.AccessType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.MetaModelGenerationException;
 import org.hibernate.processor.model.Metamodel;

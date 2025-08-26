@@ -5,9 +5,8 @@
 package org.hibernate.internal;
 
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
-import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableStrategy;
@@ -25,6 +24,7 @@ import static org.hibernate.cfg.ValidationSettings.JPA_VALIDATION_FACTORY;
 import static org.hibernate.engine.config.spi.StandardConverters.STRING;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.config.ConfigurationHelper.maskOut;
 
 /**
  * Helper methods used to set up a {@link SessionFactoryImpl}.
@@ -33,7 +33,7 @@ class SessionFactorySettings {
 
 	static Map<String, Object> getSettings(
 			SessionFactoryOptions options, SessionFactoryServiceRegistry serviceRegistry) {
-		final Map<String, Object> settings =
+		final var settings =
 				serviceRegistry.requireService( ConfigurationService.class )
 						.getSettings();
 		final Map<String,Object> result = new HashMap<>( settings );
@@ -48,6 +48,13 @@ class SessionFactorySettings {
 		return result;
 	}
 
+	static Map<String, Object> getMaskedSettings(
+			SessionFactoryOptions options, SessionFactoryServiceRegistry serviceRegistry) {
+		final var settings = getSettings( options, serviceRegistry );
+		deprecationCheck( settings );
+		return maskOutSensitiveInformation( settings );
+	}
+
 	static String getSessionFactoryName(
 			SessionFactoryOptions options, SessionFactoryServiceRegistry serviceRegistry) {
 		final String sessionFactoryName = options.getSessionFactoryName();
@@ -55,7 +62,7 @@ class SessionFactorySettings {
 			return sessionFactoryName;
 		}
 
-		final LoadedConfig loadedConfig =
+		final var loadedConfig =
 				serviceRegistry.requireService( CfgXmlAccessService.class )
 						.getAggregatedConfig();
 		if ( loadedConfig != null ) {
@@ -65,32 +72,25 @@ class SessionFactorySettings {
 			}
 		}
 
-		final ConfigurationService configurationService =
-				serviceRegistry.requireService( ConfigurationService.class );
-		return configurationService.getSetting( PERSISTENCE_UNIT_NAME, STRING );
+		return serviceRegistry.requireService( ConfigurationService.class )
+				.getSetting( PERSISTENCE_UNIT_NAME, STRING );
 	}
 
-	static void maskOutSensitiveInformation(Map<String, Object> props) {
-		maskOutIfSet( props, AvailableSettings.JPA_JDBC_USER );
-		maskOutIfSet( props, AvailableSettings.JPA_JDBC_PASSWORD );
-		maskOutIfSet( props, AvailableSettings.JAKARTA_JDBC_USER );
-		maskOutIfSet( props, AvailableSettings.JAKARTA_JDBC_PASSWORD );
-		maskOutIfSet( props, AvailableSettings.USER );
-		maskOutIfSet( props, AvailableSettings.PASS );
-	}
-
-	private static void maskOutIfSet(Map<String, Object> props, String setting) {
-		if ( props.containsKey( setting ) ) {
-			props.put( setting, "****" );
-		}
+	static Map<String, Object> maskOutSensitiveInformation(Map<String, Object> props) {
+		return maskOut( props,
+				JdbcSettings.JPA_JDBC_USER,
+				JdbcSettings.JPA_JDBC_PASSWORD,
+				JdbcSettings.JAKARTA_JDBC_USER,
+				JdbcSettings.JAKARTA_JDBC_PASSWORD,
+				JdbcSettings.USER,
+				JdbcSettings.PASS );
 	}
 
 	static String determineJndiName(
 			String name,
 			SessionFactoryOptions options,
 			SessionFactoryServiceRegistry serviceRegistry) {
-		final ConfigurationService configService =
-				serviceRegistry.requireService( ConfigurationService.class );
+		final var configService = serviceRegistry.requireService( ConfigurationService.class );
 		final String explicitJndiName = configService.getSetting( SESSION_FACTORY_JNDI_NAME, STRING );
 		if ( isNotEmpty( explicitJndiName ) ) {
 			return explicitJndiName;
@@ -100,13 +100,15 @@ class SessionFactorySettings {
 			return null;
 		}
 		else {
-			final String expliciSessionFactoryname = configService.getSetting( SESSION_FACTORY_NAME, STRING );
-			if ( isNotEmpty( expliciSessionFactoryname ) ) {
-				return expliciSessionFactoryname;
+			final String explicitSessionFactoryName = configService.getSetting( SESSION_FACTORY_NAME, STRING );
+			if ( isNotEmpty( explicitSessionFactoryName ) ) {
+				return explicitSessionFactoryName;
 			}
-			final String unitName = configService.getSetting( PERSISTENCE_UNIT_NAME, STRING );
-			// if name comes from JPA persistence-unit name
-			return ! isNotEmpty( unitName ) ? name : null;
+			else {
+				final String unitName = configService.getSetting( PERSISTENCE_UNIT_NAME, STRING );
+				// if name comes from JPA persistence-unit name
+				return !isNotEmpty( unitName ) ? name : null;
+			}
 		}
 	}
 

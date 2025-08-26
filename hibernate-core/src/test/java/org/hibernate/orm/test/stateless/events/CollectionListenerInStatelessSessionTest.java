@@ -18,6 +18,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DomainModel(annotatedClasses = {EntityA.class, EntityB.class})
@@ -64,6 +65,8 @@ class MyPreCollectionRecreateEventListener implements PreCollectionRecreateEvent
 
 	@Override
 	public void onPreRecreateCollection(PreCollectionRecreateEvent event) {
+		assertThat( event.getAffectedOwnerOrNull() ).isNotNull();
+		assertThat( event.getCollection().getOwner() ).isNotNull();
 		called++;
 	}
 
@@ -75,6 +78,8 @@ class MyPreCollectionRemoveEventListener implements PreCollectionRemoveEventList
 
 	@Override
 	public void onPreRemoveCollection(PreCollectionRemoveEvent event) {
+		assertThat( event.getAffectedOwnerOrNull() ).isNotNull();
+		assertThat( event.getCollection().getOwner() ).isNotNull();
 		called++;
 	}
 
@@ -86,6 +91,8 @@ class MyPostCollectionRecreateEventListener implements PostCollectionRecreateEve
 
 	@Override
 	public void onPostRecreateCollection(PostCollectionRecreateEvent event) {
+		assertThat( event.getAffectedOwnerOrNull() ).isNotNull();
+		assertThat( event.getCollection().getOwner() ).isNotNull();
 		called++;
 	}
 
@@ -97,6 +104,8 @@ class MyPostCollectionRemoveEventListener implements PostCollectionRemoveEventLi
 
 	@Override
 	public void onPostRemoveCollection(PostCollectionRemoveEvent event) {
+		assertThat( event.getAffectedOwnerOrNull() ).isNotNull();
+		assertThat( event.getCollection().getOwner() ).isNotNull();
 		called++;
 	}
 

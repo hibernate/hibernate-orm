@@ -23,7 +23,6 @@ import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
@@ -470,9 +469,9 @@ public class Configuration {
 	 * @param highlightSql should logged SQL be highlighted with pretty colors
 	 */
 	public Configuration showSql(boolean showSql, boolean formatSql, boolean highlightSql) {
-		setProperty( AvailableSettings.SHOW_SQL, Boolean.toString(showSql) );
-		setProperty( AvailableSettings.FORMAT_SQL, Boolean.toString(formatSql) );
-		setProperty( AvailableSettings.HIGHLIGHT_SQL, Boolean.toString(highlightSql) );
+		setProperty( JdbcSettings.SHOW_SQL, Boolean.toString(showSql) );
+		setProperty( JdbcSettings.FORMAT_SQL, Boolean.toString(formatSql) );
+		setProperty( JdbcSettings.HIGHLIGHT_SQL, Boolean.toString(highlightSql) );
 		return this;
 	}
 
@@ -482,7 +481,7 @@ public class Configuration {
 	 * @param action the {@link Action}
 	 */
 	public Configuration setSchemaExportAction(Action action) {
-		setProperty( AvailableSettings.HBM2DDL_AUTO, action.getExternalHbm2ddlName() );
+		setProperty( SchemaToolingSettings.HBM2DDL_AUTO, action.getExternalHbm2ddlName() );
 		return this;
 	}
 
@@ -493,8 +492,8 @@ public class Configuration {
 	 * @param pass the password
 	 */
 	public Configuration setCredentials(String user, String pass) {
-		setProperty( AvailableSettings.USER, user );
-		setProperty( AvailableSettings.PASS, pass );
+		setProperty( JdbcSettings.USER, user );
+		setProperty( JdbcSettings.PASS, pass );
 		return this;
 	}
 
@@ -514,7 +513,7 @@ public class Configuration {
 	 * @param jndiName the JNDI name of the datasource
 	 */
 	public Configuration setDatasource(String jndiName) {
-		setProperty( AvailableSettings.DATASOURCE, jndiName );
+		setProperty( JdbcSettings.DATASOURCE, jndiName );
 		return this;
 	}
 
@@ -524,7 +523,7 @@ public class Configuration {
 	 * @param transactionType the {@link PersistenceUnitTransactionType}
 	 */
 	public Configuration setTransactionType(PersistenceUnitTransactionType transactionType) {
-		setProperty( AvailableSettings.JAKARTA_TRANSACTION_TYPE, transactionType.toString() );
+		setProperty( PersistenceSettings.JAKARTA_TRANSACTION_TYPE, transactionType.toString() );
 		return this;
 	}
 
@@ -783,8 +782,8 @@ public class Configuration {
 	 *
 	 * @return this (for method chaining)
 	 */
-	public Configuration addAnnotatedClasses(Class... annotatedClasses) {
-		for (Class annotatedClass : annotatedClasses) {
+	public Configuration addAnnotatedClasses(Class<?>... annotatedClasses) {
+		for ( var annotatedClass : annotatedClasses ) {
 			addAnnotatedClass( annotatedClass );
 		}
 		return this;
@@ -814,7 +813,7 @@ public class Configuration {
 	 * @throws MappingException in case there is an error in the mapping data
 	 */
 	public Configuration addPackages(String... packageNames) throws MappingException {
-		for (String packageName : packageNames) {
+		for ( String packageName : packageNames ) {
 			addPackage( packageName );
 		}
 		return this;
@@ -1078,8 +1077,8 @@ public class Configuration {
 					.forEach( metadataBuilder::applyAttributeConverter );
 		}
 
-		final Metadata metadata = metadataBuilder.build();
-		final SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
+		final var metadata = metadataBuilder.build();
+		final var sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
 
 		if ( interceptor != null && interceptor != EmptyInterceptor.INSTANCE ) {
 			sessionFactoryBuilder.applyInterceptor( interceptor );
@@ -1130,7 +1129,7 @@ public class Configuration {
 	public SessionFactory buildSessionFactory() throws HibernateException {
 		log.trace( "Building session factory using internal StandardServiceRegistryBuilder" );
 		standardServiceRegistryBuilder.applySettings( properties );
-		StandardServiceRegistry serviceRegistry = standardServiceRegistryBuilder.build();
+		var serviceRegistry = standardServiceRegistryBuilder.build();
 		try {
 			return buildSessionFactory( serviceRegistry );
 		}

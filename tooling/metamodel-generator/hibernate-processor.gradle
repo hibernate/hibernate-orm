@@ -6,7 +6,7 @@
 plugins {
 	id "local.publishing-java-module"
 	id "local.publishing-group-relocation"
-	id "org.hibernate.build.version-injection"
+    id "org.hibernate.build.version-injection"
 }
 
 description = 'Hibernate compile-time tooling'
@@ -75,6 +75,10 @@ configurations {
     jakartaDataImplementation.extendsFrom(testImplementation)
     jakartaDataRuntimeOnly.extendsFrom(testRuntimeOnly)
     jakartaDataCompileOnly.extendsFrom(testCompileOnly)
+}
+
+versionInjection {
+    into( 'org.hibernate.processor.Version', 'initVersion' )
 }
 
 def quarkusOrmPanacheTestTask = tasks.register( 'quarkusOrmPanacheTest', Test ) {

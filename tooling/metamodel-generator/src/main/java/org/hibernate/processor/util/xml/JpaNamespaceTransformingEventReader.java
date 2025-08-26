@@ -4,6 +4,8 @@
  */
 package org.hibernate.processor.util.xml;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -86,7 +88,7 @@ public class JpaNamespaceTransformingEventReader extends EventReaderDelegate {
 	private static final String EMPTY_PREFIX = "";
 
 	private final XMLEventFactory xmlEventFactory;
-	private String currentDocumentNamespaceUri;
+	private @Nullable String currentDocumentNamespaceUri;
 
 	public JpaNamespaceTransformingEventReader(XMLEventReader reader) {
 		super( reader );
@@ -94,16 +96,16 @@ public class JpaNamespaceTransformingEventReader extends EventReaderDelegate {
 	}
 
 	@Override
-	public XMLEvent peek() throws XMLStreamException {
+	public @Nullable XMLEvent peek() throws XMLStreamException {
 		return wrap( super.peek() );
 	}
 
 	@Override
-	public XMLEvent nextEvent() throws XMLStreamException {
+	public @Nullable XMLEvent nextEvent() throws XMLStreamException {
 		return wrap( super.nextEvent() );
 	}
 
-	private XMLEvent wrap(XMLEvent event) {
+	private @Nullable XMLEvent wrap(@Nullable XMLEvent event) {
 		if ( event != null && event.isStartElement() ) {
 			return transform( event.asStartElement() );
 		}

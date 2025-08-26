@@ -7,6 +7,7 @@ package org.hibernate.processor.util.xml;
 import jakarta.xml.bind.ValidationEvent;
 import jakarta.xml.bind.ValidationEventHandler;
 import jakarta.xml.bind.ValidationEventLocator;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Validation event handler used for obtaining line and column numbers in case of parsing failures.
@@ -16,7 +17,7 @@ import jakarta.xml.bind.ValidationEventLocator;
 public class ContextProvidingValidationEventHandler implements ValidationEventHandler {
 	private int lineNumber;
 	private int columnNumber;
-	private String message;
+	private @Nullable String message;
 
 	@Override
 	public boolean handleEvent(ValidationEvent validationEvent) {
@@ -35,7 +36,7 @@ public class ContextProvidingValidationEventHandler implements ValidationEventHa
 		return columnNumber;
 	}
 
-	public String getMessage() {
+	public @Nullable String getMessage() {
 		return message;
 	}
 }

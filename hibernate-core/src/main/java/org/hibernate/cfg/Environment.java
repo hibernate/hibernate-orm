@@ -145,7 +145,8 @@ public final class Environment implements AvailableSettings {
 			InputStream stream = ConfigHelper.getResourceAsStream( "/hibernate.properties" );
 			try {
 				GLOBAL_PROPERTIES.load(stream);
-				LOG.propertiesLoaded( ConfigurationHelper.maskOut( GLOBAL_PROPERTIES, PASS ) );
+				LOG.propertiesLoaded( ConfigurationHelper.maskOut( GLOBAL_PROPERTIES,
+						PASS, JAKARTA_JDBC_PASSWORD, JPA_JDBC_PASSWORD ) );
 			}
 			catch (Exception e) {
 				LOG.unableToLoadProperties();
@@ -165,8 +166,8 @@ public final class Environment implements AvailableSettings {
 
 		try {
 			Properties systemProperties = System.getProperties();
-		    // Must be thread-safe in case an application changes System properties during Hibernate initialization.
-		    // See HHH-8383.
+			// Must be thread-safe in case an application changes System properties during Hibernate initialization.
+			// See HHH-8383.
 			synchronized (systemProperties) {
 				GLOBAL_PROPERTIES.putAll(systemProperties);
 			}

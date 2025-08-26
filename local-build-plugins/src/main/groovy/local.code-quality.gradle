@@ -4,7 +4,9 @@
  */
 
 plugins {
-    id "org.checkerframework"
+    //id "org.checkerframework"
+    id "net.ltgt.errorprone"
+    id "net.ltgt.nullaway"
     id "de.thetaphi.forbiddenapis"
     id "com.diffplug.spotless"
 }
@@ -106,11 +108,42 @@ spotless {
 tasks.compileJava.dependsOn tasks.spotlessJavaApply
 
 dependencies {
-    compileOnly libs.checkerFramework
-    testCompileOnly libs.checkerFramework
-    checkerFramework libs.checkerFrameworkChecker
+    //compileOnly libs.checkerFramework
+    //testCompileOnly libs.checkerFramework
+    //checkerFramework libs.checkerFrameworkChecker
+    api "org.jspecify:jspecify:1.0.0"
+    compileOnly "org.jetbrains:annotations:26.0.2"
+    errorprone "com.uber.nullaway:nullaway:0.12.9"
+    errorprone "com.google.errorprone:error_prone_core:2.41.0"
 }
 
+tasks.withType(JavaCompile).configureEach {
+    if (gradle.startParameter.taskNames.contains("ciCheck")) {
+        // options.errorprone.enabled = true
+    }
+    if (it.name.toLowerCase().contains("test")) {
+        options.errorprone.enabled = false
+    }
+    options.errorprone {
+        disableWarningsInGeneratedCode.set(true)
+
+        // error prone core = warnings
+        errorproneArgs.add("-XepAllErrorsAsWarnings")
+
+        nullaway {
+            error()
+            // annotatedPackages.add("org.hibernate")
+            onlyNullMarked.set(true)
+            treatGeneratedAsUnannotated.set(true)
+            checkContracts.set(true)
+            checkOptionalEmptiness.set(true)
+            exhaustiveOverride.set(true)
+            jspecifyMode.set(true)
+        }
+    }
+}
+
+/*
 checkerFramework {
     excludeTests = true
     skipCheckerFramework = !gradle.startParameter.taskNames.contains("ciCheck")
@@ -123,6 +156,7 @@ checkerFramework {
             '-AonlyDefs=^org\\.hibernate\\.(jdbc|exception|integrator|processor|service|spi|pretty|property\\.access|stat|engine\\.(config|jndi|profile|spi|transaction)|(action|context|bytecode)\\.spi)\\.'
     ]
 }
+*/
 
 tasks.forbiddenApisMain {
     // unfortunately we currently have many uses of default Locale implicitly (~370)

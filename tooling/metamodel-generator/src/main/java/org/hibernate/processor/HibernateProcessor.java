@@ -45,6 +45,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 import static java.lang.Boolean.parseBoolean;
+import static java.util.Objects.requireNonNull;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.hibernate.processor.HibernateProcessor.ADD_GENERATED_ANNOTATION;
@@ -711,7 +712,7 @@ public class HibernateProcessor extends AbstractProcessor {
 	}
 
 	private static boolean hasHandwrittenMetamodel(Element element) {
-		return element.getEnclosingElement().getEnclosedElements()
+		return requireNonNull( element.getEnclosingElement() ).getEnclosedElements()
 				.stream().anyMatch(e -> e.getSimpleName()
 						.contentEquals('_' + element.getSimpleName().toString()));
 	}
@@ -764,7 +765,7 @@ public class HibernateProcessor extends AbstractProcessor {
 			if ( fieldType.getKind() == ElementKind.ENUM ) {
 				for ( Element enumMember : fieldType.getEnclosedElements() ) {
 					if ( enumMember.getKind() == ElementKind.ENUM_CONSTANT ) {
-						final Element enclosingElement = fieldType.getEnclosingElement();
+						final Element enclosingElement = requireNonNull( fieldType.getEnclosingElement() );
 						final boolean hasOuterType =
 								enclosingElement.getKind().isClass() || enclosingElement.getKind().isInterface();
 						context.addEnumValue( fieldType.getQualifiedName().toString(),

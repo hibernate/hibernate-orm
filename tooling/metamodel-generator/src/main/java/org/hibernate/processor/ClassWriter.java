@@ -29,6 +29,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
 
+import static java.util.Objects.requireNonNull;
 import static org.hibernate.processor.util.Constants.SPRING_COMPONENT;
 import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
 import static org.hibernate.processor.util.TypeUtils.isMemberType;
@@ -270,7 +271,7 @@ public final class ClassWriter {
 
 	private static String getGeneratedClassName(TypeElement typeElement, boolean jakartaDataStyle) {
 		final String simpleName = typeElement.getSimpleName().toString();
-		final Element enclosingElement = typeElement.getEnclosingElement();
+		final Element enclosingElement = requireNonNull( typeElement.getEnclosingElement() );
 		return (enclosingElement instanceof TypeElement
 				? getGeneratedSuperclassName( enclosingElement, jakartaDataStyle )
 				: ((PackageElement) enclosingElement).getQualifiedName().toString())

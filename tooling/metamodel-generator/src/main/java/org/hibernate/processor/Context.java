@@ -81,16 +81,16 @@ public final class Context {
 	 * Whether all mapping files are xml-mapping-metadata-complete. In this case no annotation processing will take
 	 * place.
 	 */
-	private Boolean fullyXmlConfigured;
+	private @Nullable Boolean fullyXmlConfigured;
 	private boolean addInjectAnnotation = false;
 	private boolean addDependentAnnotation = false;
 	private boolean addComponentAnnotation = false;
 	private boolean addNonnullAnnotation = false;
 	private boolean addGeneratedAnnotation = true;
 	private boolean addGenerationDate;
-	private String[] suppressedWarnings;
+	private String @Nullable [] suppressedWarnings;
 	private boolean addTransactionScopedAnnotation;
-	private AccessType persistenceUnitDefaultAccessType;
+	private @Nullable AccessType persistenceUnitDefaultAccessType;
 	private boolean generateJakartaDataStaticMetamodel;
 	private boolean quarkusInjection;
 	private boolean springInjection;
@@ -213,7 +213,7 @@ public final class Context {
 		return suppressedWarnings != null;
 	}
 
-	public String[] getSuppressedWarnings() {
+	public String @Nullable [] getSuppressedWarnings() {
 		return suppressedWarnings;
 	}
 
@@ -402,7 +402,7 @@ public final class Context {
 				: this.fullyXmlConfigured && fullyXmlConfigured;
 	}
 
-	public AccessType getPersistenceUnitDefaultAccessType() {
+	public @Nullable AccessType getPersistenceUnitDefaultAccessType() {
 		return persistenceUnitDefaultAccessType;
 	}
 

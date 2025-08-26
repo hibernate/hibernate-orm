@@ -5,6 +5,7 @@
 package org.hibernate.jpamodelgen;
 
 import org.hibernate.processor.HibernateProcessor;
+import org.jspecify.annotations.NonNull;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -65,7 +66,7 @@ import static org.hibernate.processor.util.Constants.SQL_RESULT_SET_MAPPING;
 @Deprecated(forRemoval = true)
 public class JPAMetaModelEntityProcessor extends HibernateProcessor {
 	@Override
-	public synchronized void init(ProcessingEnvironment processingEnvironment) {
+	public synchronized void init(@NonNull ProcessingEnvironment processingEnvironment) {
 		processingEnvironment.getMessager().printMessage(
 				Diagnostic.Kind.WARNING,
 				"JPAMetaModelEntityProcessor is deprecated, replaced by org.hibernate.processor.HibernateProcessor"

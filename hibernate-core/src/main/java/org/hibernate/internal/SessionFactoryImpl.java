@@ -11,6 +11,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serial;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -93,7 +94,6 @@ import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.internal.QueryEngineImpl;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.spi.QueryEngine;
@@ -192,7 +192,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient CurrentSessionContext currentSessionContext;
 
 	private final transient Map<String, FilterDefinition> filters;
-	private final transient java.util.Collection<FilterDefinition> autoEnabledFilters = new HashSet<>();
+	private final transient Collection<FilterDefinition> autoEnabledFilters = new ArrayList<>();
 	private final transient JavaType<Object> tenantIdentifierJavaType;
 
 	private final transient EventListenerGroups eventListenerGroups;
@@ -251,19 +251,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		filters = new HashMap<>( bootMetamodel.getFilterDefinitions() );
 
-		final var tenantFilter = filters.get( TenantIdBinder.FILTER_NAME );
-		if ( tenantFilter == null ) {
-			tenantIdentifierJavaType = options.getDefaultTenantIdentifierJavaType();
-		}
-		else {
-			final var jdbcMapping = tenantFilter.getParameterJdbcMapping( TenantIdBinder.PARAMETER_NAME );
-			assert jdbcMapping != null;
-			//noinspection unchecked
-			tenantIdentifierJavaType = jdbcMapping.getJavaTypeDescriptor();
-		}
-		for ( var filterEntry : filters.entrySet() ) {
-			if ( filterEntry.getValue().isAutoEnabled() ) {
-				autoEnabledFilters.add( filterEntry.getValue() );
+		tenantIdentifierJavaType = tenantIdentifierType( options );
+
+		for ( var filter : filters.values() ) {
+			if ( filter.isAutoEnabled() ) {
+				autoEnabledFilters.add( filter );
 			}
 		}
 
@@ -354,6 +346,19 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Instantiated factory: " + uuid );
+		}
+	}
+
+	private JavaType<Object> tenantIdentifierType(SessionFactoryOptions options) {
+		final var tenantFilter = filters.get( TenantIdBinder.FILTER_NAME );
+		if ( tenantFilter == null ) {
+			return options.getDefaultTenantIdentifierJavaType();
+		}
+		else {
+			final var jdbcMapping = tenantFilter.getParameterJdbcMapping( TenantIdBinder.PARAMETER_NAME );
+			assert jdbcMapping != null;
+			//noinspection unchecked
+			return jdbcMapping.getJavaTypeDescriptor();
 		}
 	}
 
@@ -642,27 +647,25 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return buildEntityManager( SYNCHRONIZED, null );
 	}
 
-	private <K,V> Session buildEntityManager(final SynchronizationType synchronizationType, final Map<K,V> map) {
+	private Session buildEntityManager(SynchronizationType synchronizationType, Map<?,?> map) {
 		assert status != Status.CLOSED;
 
-		SessionBuilderImplementor builder = withOptions();
+		var builder = withOptions();
 		builder.autoJoinTransactions( synchronizationType == SYNCHRONIZED );
 
 		if ( map != null ) {
-			//noinspection SuspiciousMethodCalls
 			final Object tenantIdHint = map.get( HINT_TENANT_ID );
 			if ( tenantIdHint != null ) {
-				builder = (SessionBuilderImplementor) builder.tenantIdentifier( tenantIdHint );
+				builder = builder.tenantIdentifier( tenantIdHint );
 			}
 		}
 
-		final Session session = builder.openSession();
+		final var session = builder.openSession();
 		if ( map != null ) {
-			for ( Map.Entry<K, V> o : map.entrySet() ) {
-				final K key = o.getKey();
-				if ( key instanceof String string ) {
+			for ( var entry : map.entrySet() ) {
+				if ( entry.getKey() instanceof String string ) {
 					if ( !HINT_TENANT_ID.equals( string ) ) {
-						session.setProperty( string, o.getValue() );
+						session.setProperty( string, entry.getValue() );
 					}
 				}
 			}
@@ -670,8 +673,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return session;
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	public Session createEntityManager(Map map) {
+	public Session createEntityManager(Map<?,?> map) {
 		validateNotClosed();
 		return buildEntityManager( SYNCHRONIZED, map );
 	}
@@ -695,8 +697,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	public Session createEntityManager(SynchronizationType synchronizationType, Map map) {
+	@Override
+	public Session createEntityManager(SynchronizationType synchronizationType, Map<?,?> map) {
 		validateNotClosed();
 		errorIfResourceLocalDueToExplicitSynchronizationType();
 		return buildEntityManager( synchronizationType, map );
@@ -737,7 +739,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public String bestGuessEntityName(Object object) {
-		final LazyInitializer initializer = extractLazyInitializer( object );
+		final var initializer = extractLazyInitializer( object );
 		if ( initializer != null ) {
 			// it is possible for this method to be called during flush processing,
 			// so make certain that we do not accidentally initialize an uninitialized proxy
@@ -803,8 +805,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			LOG.closingFactory( getUuid() );
 			observer.sessionFactoryClosing( this );
 
-		// NOTE : the null checks below handle cases where close is called from
-		//		a failed attempt to create the SessionFactory
+			// NOTE: the null checks below handle cases where close is called
+			//		 from a failed attempt to create the SessionFactory
 
 			if ( cacheAccess != null ) {
 				cacheAccess.close();
@@ -962,7 +964,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public java.util.Collection<FilterDefinition> getAutoEnabledFilters() {
+	public Collection<FilterDefinition> getAutoEnabledFilters() {
 		return autoEnabledFilters;
 	}
 
@@ -1072,10 +1074,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	public static Interceptor configuredInterceptor(Interceptor interceptor, boolean explicitNoInterceptor, SessionFactoryOptions options) {
-		// NOTE : DO NOT return EmptyInterceptor.INSTANCE from here as a "default for the Session"
-		// 		we "filter" that one out here.  The return from here should represent the
-		//		explicitly configured Interceptor (if one).  Return null from here instead; Session
-		//		will handle it
+		// NOTE: DO NOT return EmptyInterceptor.INSTANCE from here as a "default for the Session"
+		// 		 we "filter" that one out here.  The return from here should represent the
+		//		 explicitly configured Interceptor (if one). Return null from here instead;
+		//		 Session will handle it
 
 		if ( interceptor != null && interceptor != EmptyInterceptor.INSTANCE ) {
 			return interceptor;
@@ -1087,7 +1089,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			return optionsInterceptor;
 		}
 
-		// If explicitly asking for no interceptor and there is no SessionFactory-scoped interceptors, then
+		// If explicitly asking for no interceptor and there is no SessionFactory-scoped interceptor, then
 		// no need to inherit from the configured stateless session ones.
 		if ( explicitNoInterceptor ) {
 			return null;
@@ -1349,7 +1351,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		public SessionBuilderImpl clearEventListeners() {
 			if ( listeners == null ) {
 				//Needs to initialize explicitly to an empty list as otherwise "null" implies the default listeners will be applied
-				this.listeners = new ArrayList<>( 3 );
+				listeners = new ArrayList<>( 3 );
 			}
 			else {
 				listeners.clear();

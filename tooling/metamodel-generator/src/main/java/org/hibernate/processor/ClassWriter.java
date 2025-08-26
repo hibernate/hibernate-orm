@@ -306,6 +306,9 @@ public final class ClassWriter {
 	private static String writeSuppressWarnings(Context context) {
 		final StringBuilder annotation = new StringBuilder("@SuppressWarnings({");
 		final String[] warnings = context.getSuppressedWarnings();
+		if (warnings == null || warnings.length == 0) {
+			return "@SuppressWarnings({})";
+		}
 		for (int i = 0; i < warnings.length; i++) {
 			if ( i>0 ) {
 				annotation.append(", ");

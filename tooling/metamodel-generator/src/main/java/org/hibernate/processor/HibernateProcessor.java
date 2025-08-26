@@ -513,7 +513,7 @@ public class HibernateProcessor extends AbstractProcessor {
 
 		for ( Metamodel aux : context.getMetaAuxiliaries() ) {
 			if ( !context.isAlreadyGenerated(aux)
-				&& !isClassRecordOrInterfaceType( aux.getElement().getEnclosingElement() ) ) {
+				&& !isClassRecordOrInterfaceType( requireNonNull( aux.getElement().getEnclosingElement() ) ) ) {
 				context.logMessage( Diagnostic.Kind.OTHER,
 						"Writing metamodel for auxiliary '" + aux + "'" );
 				ClassWriter.writeFile( aux, context );

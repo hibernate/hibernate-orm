@@ -158,7 +158,8 @@ public class JpaNamespaceTransformingEventReader extends EventReaderDelegate {
 		while ( existingAttributesIterator.hasNext() ) {
 			Attribute attribute = existingAttributesIterator.next();
 			if ( VERSION_ATTRIBUTE_NAME.equals( attribute.getName().getLocalPart() ) ) {
-				if ( currentDocumentNamespaceUri.equals( DEFAULT_PERSISTENCE_NAMESPACE ) ) {
+				if ( currentDocumentNamespaceUri != null &&
+					currentDocumentNamespaceUri.equals( DEFAULT_PERSISTENCE_NAMESPACE ) ) {
 					if ( !DEFAULT_PERSISTENCE_VERSION.equals( attribute.getName().getPrefix() ) ) {
 						newElementAttributeList.add(
 								xmlEventFactory.createAttribute(

@@ -420,7 +420,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						queryMethods.add( method );
 					}
 				}
-				else if ( method.getEnclosingElement().getKind().isInterface()
+				else if ( requireNonNull( method.getEnclosingElement() ).getKind().isInterface()
 						&& !method.isDefault()
 						&& !method.getModifiers().contains(Modifier.PRIVATE)
 						&& !isSessionGetter(method) ) {
@@ -1507,7 +1507,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private boolean isPersistent(Element memberOfClass, AccessType membersKind) {
-		return ( entityAccessTypeInfo.getAccessType() == membersKind
+		return ( ( entityAccessTypeInfo != null && entityAccessTypeInfo.getAccessType() == membersKind )
 					|| determineAnnotationSpecifiedAccessType( memberOfClass ) != null )
 			&& !containsAnnotation( memberOfClass, TRANSIENT )
 			&& !memberOfClass.getModifiers().contains( Modifier.TRANSIENT )

@@ -23,7 +23,7 @@ import org.hibernate.mapping.Value;
 public class CollateBinder implements AttributeBinder<Collate> {
 	@Override
 	public void bind(Collate collate, MetadataBuildingContext context, PersistentClass entity, Property property) {
-		Value value = property.getValue();
+		final Value value = property.getValue();
 		if ( value instanceof OneToMany ) {
 			throw new AnnotationException( "One to many association '" + property.getName()
 					+ "' was annotated '@Collate'");

@@ -24,8 +24,8 @@ public class AttributeAccessorBinder implements AttributeBinder<AttributeAccesso
 			MetadataBuildingContext buildingContext,
 			PersistentClass persistentClass,
 			Property property) {
-		String value = accessor.value();
-		Class<?> type = accessor.strategy();
+		final String value = accessor.value();
+		final Class<?> type = accessor.strategy();
 		if ( !value.isEmpty() ) {
 			property.setPropertyAccessorName( value );
 		}

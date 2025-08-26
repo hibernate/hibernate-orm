@@ -116,19 +116,33 @@ class SessionFactorySettings {
 		for ( String setting:settings.keySet() ) {
 			switch ( setting ) {
 				case "hibernate.hql.bulk_id_strategy.global_temporary.create_tables":
-					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.global_temporary.create_tables", GlobalTemporaryTableStrategy.CREATE_ID_TABLES );
+					DEPRECATION_LOGGER.deprecatedSetting(
+							"hibernate.hql.bulk_id_strategy.global_temporary.create_tables",
+							GlobalTemporaryTableStrategy.CREATE_ID_TABLES );
 				case "hibernate.hql.bulk_id_strategy.global_temporary.drop_tables":
-					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.global_temporary.drop_tables", GlobalTemporaryTableStrategy.DROP_ID_TABLES );
+					DEPRECATION_LOGGER.deprecatedSetting(
+							"hibernate.hql.bulk_id_strategy.global_temporary.drop_tables",
+							GlobalTemporaryTableStrategy.DROP_ID_TABLES );
 				case "hibernate.hql.bulk_id_strategy.persistent.create_tables":
-					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.persistent.create_tables", PersistentTableStrategy.CREATE_ID_TABLES );
+					DEPRECATION_LOGGER.deprecatedSetting(
+							"hibernate.hql.bulk_id_strategy.persistent.create_tables",
+							PersistentTableStrategy.CREATE_ID_TABLES );
 				case "hibernate.hql.bulk_id_strategy.persistent.drop_tables":
-					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.persistent.drop_tables", PersistentTableStrategy.DROP_ID_TABLES );
+					DEPRECATION_LOGGER.deprecatedSetting(
+							"hibernate.hql.bulk_id_strategy.persistent.drop_tables",
+							PersistentTableStrategy.DROP_ID_TABLES );
 				case "hibernate.hql.bulk_id_strategy.persistent.schema":
-					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.persistent.schema", PersistentTableStrategy.SCHEMA );
+					DEPRECATION_LOGGER.deprecatedSetting(
+							"hibernate.hql.bulk_id_strategy.persistent.schema",
+							PersistentTableStrategy.SCHEMA );
 				case "hibernate.hql.bulk_id_strategy.persistent.catalog":
-					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.persistent.catalog", PersistentTableStrategy.CATALOG );
+					DEPRECATION_LOGGER.deprecatedSetting(
+							"hibernate.hql.bulk_id_strategy.persistent.catalog",
+							PersistentTableStrategy.CATALOG );
 				case "hibernate.hql.bulk_id_strategy.local_temporary.drop_tables":
-					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.local_temporary.drop_tables", LocalTemporaryTableStrategy.DROP_ID_TABLES );
+					DEPRECATION_LOGGER.deprecatedSetting(
+							"hibernate.hql.bulk_id_strategy.local_temporary.drop_tables",
+							LocalTemporaryTableStrategy.DROP_ID_TABLES );
 			}
 		}
 	}

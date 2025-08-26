@@ -59,7 +59,6 @@ import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
@@ -453,13 +452,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private SessionBuilderImpl createDefaultSessionOpenOptionsIfPossible() {
 		final var tenantIdResolver = getCurrentTenantIdentifierResolver();
-		if ( tenantIdResolver == null ) {
-			return withOptions();
-		}
-		else {
-			//Don't store a default SessionBuilder when a CurrentTenantIdentifierResolver is provided
-			return null;
-		}
+		// Don't store a default SessionBuilder when a CurrentTenantIdentifierResolver is provided
+		return tenantIdResolver == null ? withOptions() : null;
 	}
 
 	private SessionBuilderImpl buildTemporarySessionOpenOptions() {
@@ -817,16 +811,16 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			}
 
 			if ( runtimeMetamodels != null && runtimeMetamodels.getMappingMetamodel() != null ) {
-				final JdbcConnectionAccess jdbcConnectionAccess = jdbcServices.getBootstrapJdbcConnectionAccess();
+				final var jdbcConnectionAccess = jdbcServices.getBootstrapJdbcConnectionAccess();
 				runtimeMetamodels.getMappingMetamodel().forEachEntityDescriptor(
 						entityPersister -> {
-							if ( entityPersister.getSqmMultiTableMutationStrategy() != null ) {
-								entityPersister.getSqmMultiTableMutationStrategy()
-										.release( this, jdbcConnectionAccess );
+							final var mutationStrategy = entityPersister.getSqmMultiTableMutationStrategy();
+							final var insertStrategy = entityPersister.getSqmMultiTableInsertStrategy();
+							if ( mutationStrategy != null ) {
+								mutationStrategy.release( this, jdbcConnectionAccess );
 							}
-							if ( entityPersister.getSqmMultiTableInsertStrategy() != null ) {
-								entityPersister.getSqmMultiTableInsertStrategy()
-										.release( this, jdbcConnectionAccess );
+							if ( insertStrategy != null ) {
+								insertStrategy.release( this, jdbcConnectionAccess );
 							}
 						}
 				);
@@ -960,7 +954,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	public FilterDefinition getFilterDefinition(String filterName) {
-		final FilterDefinition filterDefinition = filters.get( filterName );
+		final var filterDefinition = filters.get( filterName );
 		if ( filterDefinition == null ) {
 			throw new UnknownFilterException( filterName );
 		}
@@ -1088,7 +1082,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		// prefer the SessionFactory-scoped interceptor, prefer that to any Session-scoped interceptor prototype
-		final Interceptor optionsInterceptor = options.getInterceptor();
+		final var optionsInterceptor = options.getInterceptor();
 		if ( optionsInterceptor != null && optionsInterceptor != EmptyInterceptor.INSTANCE ) {
 			return optionsInterceptor;
 		}
@@ -1140,20 +1134,20 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.sessionFactory = sessionFactory;
 
 			// set up default builder values...
-			final SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
-			statementInspector = sessionFactoryOptions.getStatementInspector();
-			connectionHandlingMode = sessionFactoryOptions.getPhysicalConnectionHandlingMode();
-			autoClose = sessionFactoryOptions.isAutoCloseSessionEnabled();
-			defaultBatchFetchSize = sessionFactoryOptions.getDefaultBatchFetchSize();
-			subselectFetchEnabled = sessionFactoryOptions.isSubselectFetchEnabled();
-			identifierRollback = sessionFactoryOptions.isIdentifierRollbackEnabled();
+			final var options = sessionFactory.getSessionFactoryOptions();
+			statementInspector = options.getStatementInspector();
+			connectionHandlingMode = options.getPhysicalConnectionHandlingMode();
+			autoClose = options.isAutoCloseSessionEnabled();
+			defaultBatchFetchSize = options.getDefaultBatchFetchSize();
+			subselectFetchEnabled = options.isSubselectFetchEnabled();
+			identifierRollback = options.isIdentifierRollbackEnabled();
 
 			final var currentTenantIdentifierResolver =
 					sessionFactory.getCurrentTenantIdentifierResolver();
 			if ( currentTenantIdentifierResolver != null ) {
 				tenantIdentifier = currentTenantIdentifierResolver.resolveCurrentTenantIdentifier();
 			}
-			jdbcTimeZone = sessionFactoryOptions.getJdbcTimeZone();
+			jdbcTimeZone = options.getJdbcTimeZone();
 		}
 
 
@@ -1219,10 +1213,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		@Override
 		public String getTenantIdentifier() {
-			if ( tenantIdentifier == null ) {
-				return null;
-			}
-			return sessionFactory.getTenantIdentifierJavaType().toString( tenantIdentifier );
+			return tenantIdentifier != null
+					? sessionFactory.getTenantIdentifierJavaType().toString( tenantIdentifier )
+					: null;
 		}
 
 		@Override

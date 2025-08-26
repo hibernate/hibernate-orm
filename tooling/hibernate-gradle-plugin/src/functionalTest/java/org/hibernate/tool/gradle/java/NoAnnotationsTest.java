@@ -15,7 +15,6 @@ import java.util.List;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
 import org.hibernate.tool.it.gradle.TestTemplate;
 
@@ -24,16 +23,13 @@ public class NoAnnotationsTest extends TestTemplate {
 	private static final List<String> GRADLE_INIT_PROJECT_ARGUMENTS = List.of(
 			"init", "--type", "java-application", "--dsl", "groovy", "--test-framework", "junit-jupiter", "--java-version", "17");
 	
-	@TempDir
-	private File projectDir;
-	
 	private File gradlePropertiesFile;
 	private File gradleBuildFile;
 	private File databaseFile;
 	
 	@Test
 	public void testTutorial() throws Exception {
-		assertTrue(projectDir.exists());
+		assertTrue(getProjectDir().exists());
 		createGradleProject();
 		editGradleBuildFile();
 		editGradlePropertiesFile();
@@ -56,19 +52,19 @@ public class NoAnnotationsTest extends TestTemplate {
 		GradleRunner runner = GradleRunner.create();
 		runner.withArguments(GRADLE_INIT_PROJECT_ARGUMENTS);
 		runner.forwardOutput();
-		runner.withProjectDir(projectDir);
+		runner.withProjectDir(getProjectDir());
 		BuildResult buildResult = runner.build();
 		assertTrue(buildResult.getOutput().contains("BUILD SUCCESSFUL"));
-		gradlePropertiesFile = new File(projectDir, "gradle.properties");
+		gradlePropertiesFile = new File(getProjectDir(), "gradle.properties");
 		assertTrue(gradlePropertiesFile.exists());
 		assertTrue(gradlePropertiesFile.isFile());
-		File appDir = new File(projectDir, "app");
+		File appDir = new File(getProjectDir(), "app");
 		assertTrue(appDir.exists());
 		assertTrue(appDir.isDirectory());
 		gradleBuildFile = new File(appDir, "build.gradle");
 		assertTrue(gradleBuildFile.exists());
 		assertTrue(gradleBuildFile.isFile());
-		databaseFile = new File(projectDir, "database/test.mv.db");
+		databaseFile = new File(getProjectDir(), "database/test.mv.db");
 		assertFalse(databaseFile.exists());
 	}
 	
@@ -105,7 +101,7 @@ public class NoAnnotationsTest extends TestTemplate {
 	}
 	
 	private void createHibernatePropertiesFile() throws Exception {
-		File hibernatePropertiesFile = new File(projectDir, "app/src/main/resources/hibernate.properties");
+		File hibernatePropertiesFile = new File(getProjectDir(), "app/src/main/resources/hibernate.properties");
 		StringBuffer hibernatePropertiesFileContents = new StringBuffer();	
 		hibernatePropertiesFileContents
 			.append("hibernate.connection.driver_class=org.h2.Driver\n")
@@ -121,7 +117,7 @@ public class NoAnnotationsTest extends TestTemplate {
 	private void executeGenerateJavaTask() throws Exception {
 		GradleRunner gradleRunner = GradleRunner.create();
 		gradleRunner.forwardOutput();
-		gradleRunner.withProjectDir(projectDir);
+		gradleRunner.withProjectDir(getProjectDir());
 		gradleRunner.withPluginClasspath();
 		gradleRunner.withArguments("generateJava");
 		BuildResult buildResult = gradleRunner.build();
@@ -129,7 +125,7 @@ public class NoAnnotationsTest extends TestTemplate {
 	}
 	
 	private void verifyProject() throws Exception {
-		File generatedOutputFolder = new File(projectDir, "app/generated-sources");
+		File generatedOutputFolder = new File(getProjectDir(), "app/generated-sources");
 		assertTrue(generatedOutputFolder.exists());
 		assertTrue(generatedOutputFolder.isDirectory());
 		assertEquals(1, generatedOutputFolder.list().length);
@@ -168,7 +164,7 @@ public class NoAnnotationsTest extends TestTemplate {
 	}
 	
 	private String constructJdbcConnectionString() {
-		return "jdbc:h2:" + projectDir.getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
+		return "jdbc:h2:" + getProjectDir().getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
 	}
 	
 	private String constructHibernateToolsPluginLine() {

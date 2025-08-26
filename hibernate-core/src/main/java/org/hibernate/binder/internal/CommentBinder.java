@@ -27,9 +27,9 @@ import org.hibernate.mapping.Value;
 public class CommentBinder implements AttributeBinder<Comment>, TypeBinder<Comment> {
 	@Override
 	public void bind(Comment comment, MetadataBuildingContext context, PersistentClass entity, Property property) {
-		String text = comment.value();
-		String on = comment.on();
-		Value value = property.getValue();
+		final String text = comment.value();
+		final String on = comment.on();
+		final Value value = property.getValue();
 		if ( value instanceof OneToMany ) {
 			throw new AnnotationException( "One to many association '" + property.getName()
 					+ "' was annotated '@Comment'");
@@ -64,9 +64,9 @@ public class CommentBinder implements AttributeBinder<Comment>, TypeBinder<Comme
 
 	@Override
 	public void bind(Comment comment, MetadataBuildingContext context, PersistentClass entity) {
-		String text = comment.value();
-		String on = comment.on();
-		Table primary = entity.getTable();
+		final String text = comment.value();
+		final String on = comment.on();
+		final Table primary = entity.getTable();
 		// by default, the comment goes on the primary table
 		if ( on.isEmpty() || primary.getName().equalsIgnoreCase( on ) ) {
 			primary.setComment( text );
@@ -74,7 +74,7 @@ public class CommentBinder implements AttributeBinder<Comment>, TypeBinder<Comme
 		else {
 			// but if 'on' is explicit, it can go on a secondary table
 			for ( Join join : entity.getJoins() ) {
-				Table secondary = join.getTable();
+				final Table secondary = join.getTable();
 				if ( secondary.getName().equalsIgnoreCase( on ) ) {
 					secondary.setComment( text );
 					return;

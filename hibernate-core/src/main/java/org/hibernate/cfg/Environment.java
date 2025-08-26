@@ -144,7 +144,8 @@ public final class Environment implements AvailableSettings {
 			InputStream stream = ConfigHelper.getResourceAsStream( "/hibernate.properties" );
 			try {
 				GLOBAL_PROPERTIES.load(stream);
-				LOG.propertiesLoaded( ConfigurationHelper.maskOut( GLOBAL_PROPERTIES, PASS ) );
+				LOG.propertiesLoaded( ConfigurationHelper.maskOut( GLOBAL_PROPERTIES,
+						PASS, JAKARTA_JDBC_PASSWORD, JPA_JDBC_PASSWORD ) );
 			}
 			catch (Exception e) {
 				LOG.unableToLoadProperties();

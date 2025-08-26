@@ -270,7 +270,7 @@ public final class ConfigurationHelper {
 	}
 
 	/**
-	 * replace a property by a starred version
+	 * Replace a property by a starred version
 	 *
 	 * @param props properties to check
 	 * @param key property to mask
@@ -278,9 +278,27 @@ public final class ConfigurationHelper {
 	 * @return cloned and masked properties
 	 */
 	public static Properties maskOut(Properties props, String key) {
-		final Properties clone = (Properties) props.clone();
+		final var clone = (Properties) props.clone();
 		if ( clone.get( key ) != null ) {
 			clone.setProperty( key, "****" );
+		}
+		return clone;
+	}
+
+	/**
+	 * Replace properties by starred version
+	 *
+	 * @param props properties to check
+	 * @param keys properties to mask
+	 *
+	 * @return cloned and masked properties
+	 */
+	public static Properties maskOut(Properties props, String... keys) {
+		final var clone = (Properties) props.clone();
+		for ( String key : keys ) {
+			if ( clone.get( key ) != null ) {
+				clone.setProperty( key, "****" );
+			}
 		}
 		return clone;
 	}

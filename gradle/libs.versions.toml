@@ -111,12 +111,18 @@ asciidoctorj = "3.0.0"
 
 # Compilation (static checks)
 jetbrainsAnnotations = "26.1.0"
+errorprone = "2.49.0"
+nullaway = "0.13.4"
+## For custom NullAway LibraryModels
+guava = "33.6.0-jre"
 
 # Plugins
 develocity = "4.4.1"
 customUserData = "2.6.0"
 asciidoctor = "4.0.5"
 spotless = "8.5.1"
+errorpronePlugin = "5.1.0"
+nullawayPlugin = "3.0.0"
 pluginPublish = "2.1.1"
 kotlin = "2.3.21"
 mavenPluginDev = "1.0.3"
@@ -160,7 +166,11 @@ freemarker = { group = "org.freemarker", name = "freemarker", version.ref = "fre
 oracleucp = { group = "com.oracle.database.jdbc", name = "ucp17", version.ref = "oracle" }
 
 # Compilation (static checks)
-jetbrainsAnnotations = { group = "org.jetbrains", name = "annotations", version.ref = "jetbrainsAnnotations" }
+compilation-jetbrainsAnnotations = { group = "org.jetbrains", name = "annotations", version.ref = "jetbrainsAnnotations" }
+compilation-errorprone = { group = "com.google.errorprone", name = "error_prone_core", version.ref = "errorprone" }
+compilation-nullaway = { group = "com.uber.nullaway", name = "nullaway", version.ref = "nullaway" }
+## For custom NullAway LibraryModels
+compilation-guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
 
 # Jakarta
 jakarta-jpa = { group = "jakarta.persistence", name = "jakarta.persistence-api", version.ref = "jpa" }
@@ -271,6 +281,8 @@ customUserData = { id = "com.gradle.common-custom-user-data-gradle-plugin", vers
 asciidoctor-convert = { id = "org.asciidoctor.jvm.convert", version.ref = "asciidoctor" }
 asciidoctor-pdf = { id = "org.asciidoctor.jvm.pdf", version.ref = "asciidoctor" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+errorprone = { id = "net.ltgt.errorprone", version.ref = "errorpronePlugin" }
+nullaway = { id = "net.ltgt.nullaway", version.ref = "nullawayPlugin" }
 pluginPublish = { id = "com.gradle.plugin-publish", version.ref = "pluginPublish" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 mavenPluginDev = { id = "org.gradlex.maven-plugin-development", version.ref = "mavenPluginDev" }

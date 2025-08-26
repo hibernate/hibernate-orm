@@ -22,6 +22,8 @@ plugins {
     alias(libs.plugins.hibernateDatabaseService) apply false
     alias(libs.plugins.bndPlugin) apply false
 
+    alias(libs.plugins.errorprone) apply false
+    alias(libs.plugins.nullaway) apply false
     alias(libs.plugins.spotless)
 	alias(libs.plugins.hibernateBuildJdks)
 

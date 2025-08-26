@@ -12,6 +12,7 @@ import org.hibernate.query.sql.spi.ParameterRecognizer;
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.processor.annotation.QueryOptionsSupport.setQueryOptions;
 import static org.hibernate.processor.util.Constants.BOOLEAN;
 import static org.hibernate.processor.util.Constants.QUERY;
@@ -466,15 +467,17 @@ public class QueryMethod extends AbstractQueryMethod {
 		else {
 			declaration
 					.append( "\tvar _query = _builder.createQuery(" )
-					.append( annotationMetaEntity.importType( returnTypeClass ) )
+					// Never null when useAugmentedQuery() is true but useAugmentedQueryReference() is false
+					.append( annotationMetaEntity.importType( castNonNull( returnTypeClass ) ) )
 					.append( ".class, " )
 					.append( getConstantName() )
 					.append( ");\n" );
 		}
 		getRoot( declaration );
 		applyCriteriaRestrictionParameters( declaration, paramTypes, "\t\t", false );
-		applyCriteriaOrdering( declaration, paramTypes, "\t\t", selectionEntity, false );
-		select( declaration, selectionEntity, selection );
+		// Never null because this is called only when useAugmentedQuery() is true
+		applyCriteriaOrdering( declaration, paramTypes, "\t\t", castNonNull( selectionEntity ), false );
+		select( declaration, castNonNull( selectionEntity ), castNonNull( selection ) );
 		if ( augmentedQueryReference ) {
 			declaration.append( "\t});\n" );
 		}
@@ -485,7 +488,8 @@ public class QueryMethod extends AbstractQueryMethod {
 				.append( "\tvar _entity = (" )
 				.append( annotationMetaEntity.importType( "jakarta.persistence.criteria.Root" ) )
 				.append( "<" )
-				.append( annotationMetaEntity.importType( selectionEntity ) )
+				// Never null because this is called only when useAugmentedQuery() is true
+				.append( annotationMetaEntity.importType( castNonNull( selectionEntity ) ) )
 				// TODO: use getRootList().get(0) in next milestone!
 				.append( ">) _query.getRoots().iterator().next();\n" );
 	}

@@ -142,7 +142,7 @@ import static java.util.Collections.singletonList;
 /**
  * @author Gavin King
  */
-@SuppressWarnings({"nullness", "initialization"})
+@SuppressWarnings("NullAway")
 public abstract class MockSessionFactory
 		implements SessionFactoryImplementor, SessionFactoryOptions, QueryEngine, FunctionContributions,
 		MetadataBuildingOptions, MetadataBuildingContext, RuntimeModelCreationContext, BootstrapContext,

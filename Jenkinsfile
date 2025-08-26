@@ -43,7 +43,7 @@ stage('Configure') {
 		// We generally build with JDK 25, but our baseline is Java 17, so we test with JDK 17, to be sure everything works.
 		new BuildEnvironment( mainJdkVersion: '25', testJdkVersion: '17' ),
 		// Additionally, have one job that builds using JDK 17 as well
-		new BuildEnvironment( mainJdkVersion: '17', additionalOptions: '-Porm.jdk.min=17' ),
+		new BuildEnvironment( mainJdkVersion: '17', additionalOptions: '-Porm.jdk.min=17 -PskipErrorProne=true' ),
 		new BuildEnvironment( mainJdkVersion: '25', testJdkVersion: '21' ),
 		// We want to enable preview features when testing newer builds of OpenJDK:
 		// even if we don't use these features, just enabling them can cause side effects

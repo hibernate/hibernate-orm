@@ -74,8 +74,8 @@ public class LoadQueryInfluencers implements Serializable {
 		batchSize = options.getDefaultBatchFetchSize();
 		subselectFetchEnabled = options.isSubselectFetchEnabled();
 		effectiveEntityGraph = new EffectiveEntityGraph();
-		for ( FilterDefinition filterDefinition : sessionFactory.getAutoEnabledFilters() ) {
-			final FilterImpl filter = new FilterImpl( filterDefinition );
+		for ( var filterDefinition : sessionFactory.getAutoEnabledFilters() ) {
+			final var filter = new FilterImpl( filterDefinition );
 			if ( enabledFilters == null ) {
 				enabledFilters = new TreeMap<>();
 			}
@@ -84,7 +84,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public EffectiveEntityGraph applyEntityGraph(@Nullable RootGraphImplementor<?> rootGraph, @Nullable GraphSemantic graphSemantic) {
-		final EffectiveEntityGraph effectiveEntityGraph = getEffectiveEntityGraph();
+		final var effectiveEntityGraph = getEffectiveEntityGraph();
 		if ( graphSemantic != null ) {
 			if ( rootGraph == null ) {
 				throw new IllegalArgumentException( "Graph semantic specified, but no RootGraph was supplied" );
@@ -141,13 +141,13 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public Map<String,Filter> getEnabledFilters() {
-		final TreeMap<String, Filter> enabledFilters = this.enabledFilters;
+		final var enabledFilters = this.enabledFilters;
 		if ( enabledFilters == null ) {
 			return emptyMap();
 		}
 		else {
 			// First, validate all the enabled filters...
-			for ( Filter filter : enabledFilters.values() ) {
+			for ( var filter : enabledFilters.values() ) {
 				//TODO: this implementation has bad performance
 				filter.validate();
 			}
@@ -187,7 +187,7 @@ public class LoadQueryInfluencers implements Serializable {
 		if ( enabledFilters == null ) {
 			throw new IllegalArgumentException( "Filter [" + parsed[0] + "] currently not enabled" );
 		}
-		final FilterImpl filter = (FilterImpl) enabledFilters.get( parsed[0] );
+		final var filter = (FilterImpl) enabledFilters.get( parsed[0] );
 		if ( filter == null ) {
 			throw new IllegalArgumentException( "Filter [" + parsed[0] + "] currently not enabled" );
 		}
@@ -195,7 +195,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public static String [] parseFilterParameterName(String filterParameterName) {
-		int dot = filterParameterName.lastIndexOf( '.' );
+		final int dot = filterParameterName.lastIndexOf( '.' );
 		if ( dot <= 0 ) {
 			throw new IllegalArgumentException(
 					"Invalid filter-parameter name format [" + filterParameterName + "]; expecting {filter-name}.{param-name}"
@@ -246,14 +246,10 @@ public class LoadQueryInfluencers implements Serializable {
 	@Internal
 	public @Nullable HashSet<String> adjustFetchProfiles(
 			@Nullable Set<String> disabledFetchProfiles, @Nullable Set<String> enabledFetchProfiles) {
-		final HashSet<String> currentEnabledFetchProfileNames = this.enabledFetchProfileNames;
-		final HashSet<String> oldFetchProfiles;
-		if ( currentEnabledFetchProfileNames == null || currentEnabledFetchProfileNames.isEmpty() ) {
-			oldFetchProfiles = null;
-		}
-		else {
-			oldFetchProfiles = new HashSet<>( currentEnabledFetchProfileNames );
-		}
+		final var oldFetchProfiles =
+				enabledFetchProfileNames != null && !enabledFetchProfileNames.isEmpty()
+						? new HashSet<>( enabledFetchProfileNames )
+						: null;
 		if ( disabledFetchProfiles != null && enabledFetchProfileNames != null ) {
 			enabledFetchProfileNames.removeAll( disabledFetchProfiles );
 		}
@@ -292,7 +288,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public int effectiveBatchSize(CollectionPersister persister) {
-		int persisterBatchSize = persister.getBatchSize();
+		final int persisterBatchSize = persister.getBatchSize();
 		// persister-specific batch size overrides global setting
 		// (note that due to legacy, -1 means no explicit setting)
 		return persisterBatchSize >= 0 ? persisterBatchSize : batchSize;
@@ -303,7 +299,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public int effectiveBatchSize(EntityPersister persister) {
-		int persisterBatchSize = persister.getBatchSize();
+		final int persisterBatchSize = persister.getBatchSize();
 		// persister-specific batch size overrides global setting
 		// (note that due to legacy, -1 means no explicit setting)
 		return persisterBatchSize >= 0 ? persisterBatchSize : batchSize;
@@ -331,7 +327,8 @@ public class LoadQueryInfluencers implements Serializable {
 		if ( hasEnabledFetchProfiles() ) {
 			for ( String profile : getEnabledFetchProfileNames() ) {
 				final FetchProfile fetchProfile =
-						persister.getFactory().getSqlTranslationEngine().getFetchProfile( profile )	;
+						persister.getFactory().getSqlTranslationEngine()
+								.getFetchProfile( profile )	;
 				if ( fetchProfile != null ) {
 					final Fetch fetch = fetchProfile.getFetchByRole( persister.getRole() );
 					if ( fetch != null && fetch.getMethod() == SUBSELECT) {

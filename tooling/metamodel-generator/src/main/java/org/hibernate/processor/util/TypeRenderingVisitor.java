@@ -26,6 +26,7 @@ import javax.lang.model.util.SimpleTypeVisitor8;
 
 import org.jspecify.annotations.Nullable;
 
+import static java.util.Objects.requireNonNull;
 import static org.hibernate.processor.util.Constants.JAVA_OBJECT;
 
 /**
@@ -45,7 +46,7 @@ public final class TypeRenderingVisitor extends SimpleTypeVisitor8<@Nullable Obj
 			final Element typeVariableElement = ( (TypeVariable) typeMirror ).asElement();
 			if ( typeVariableElement instanceof TypeParameterElement ) {
 				final TypeParameterElement typeParameter = (TypeParameterElement) typeVariableElement;
-				if ( typeParameter.getEnclosingElement().getKind() == ElementKind.METHOD ) {
+				if ( requireNonNull( typeParameter.getEnclosingElement() ).getKind() == ElementKind.METHOD ) {
 					// But for method level type variable we return the upper bound
 					// because the type variable has no meaning except for that method
 					typeMirror = ( (TypeVariable) typeMirror ).getUpperBound();
@@ -106,7 +107,7 @@ public final class TypeRenderingVisitor extends SimpleTypeVisitor8<@Nullable Obj
 	}
 
 	@Override
-	public @Nullable Object visitArray(ArrayType t, @Nullable Object o) {
+	public Object visitArray(ArrayType t, @Nullable Object o) {
 		t.getComponentType().accept( this, null );
 		sb.append( "[]" );
 		return t;

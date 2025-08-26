@@ -23,7 +23,6 @@ public class TutorialTest extends TestTemplate {
 	private static final List<String> GRADLE_INIT_PROJECT_ARGUMENTS = List.of(
 			"init", "--type", "java-application", "--dsl", "groovy", "--test-framework", "junit-jupiter", "--java-version", "17");
 	
-	private File gradlePropertiesFile;
 	private File gradleBuildFile;
 	private File databaseFile;
 	
@@ -55,9 +54,9 @@ public class TutorialTest extends TestTemplate {
 		runner.withProjectDir(getProjectDir());
 		BuildResult buildResult = runner.build();
 		assertTrue(buildResult.getOutput().contains("BUILD SUCCESSFUL"));
-		gradlePropertiesFile = new File(getProjectDir(), "gradle.properties");
-		assertTrue(gradlePropertiesFile.exists());
-		assertTrue(gradlePropertiesFile.isFile());
+		setGradlePropertiesFile(new File(getProjectDir(), "gradle.properties"));
+		assertTrue(getGradlePropertiesFile().exists());
+		assertTrue(getGradlePropertiesFile().isFile());
 		File appDir = new File(getProjectDir(), "app");
 		assertTrue(appDir.exists());
 		assertTrue(appDir.isDirectory());
@@ -81,10 +80,10 @@ public class TutorialTest extends TestTemplate {
 		// As this is enabled by default when initializing a new Gradle project, the setting needs to be commented out
 		// in the gradle.properties file.
 		StringBuffer gradlePropertiesFileContents = new StringBuffer(
-				new String(Files.readAllBytes(gradlePropertiesFile.toPath())));
+				new String(Files.readAllBytes(getGradlePropertiesFile().toPath())));
 		int pos = gradlePropertiesFileContents.indexOf("org.gradle.configuration-cache=true");
 		gradlePropertiesFileContents.insert(pos, "#");
-		Files.writeString(gradlePropertiesFile.toPath(), gradlePropertiesFileContents.toString());
+		Files.writeString(getGradlePropertiesFile().toPath(), gradlePropertiesFileContents.toString());
 	}
 	
 	private void createDatabase() throws Exception {

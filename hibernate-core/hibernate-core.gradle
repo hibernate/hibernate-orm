@@ -8,6 +8,7 @@ plugins {
     id "local.publishing-java-module"
     id "local.publishing-group-relocation"
 
+    id "org.hibernate.build.version-injection"
     id "org.hibernate.orm.antlr"
     id "local-xjc-plugin"
 }
@@ -131,6 +132,10 @@ xjc {
             xjcExtensions += ['inheritance', 'simplify']
         }
     }
+}
+
+versionInjection {
+    into( 'org.hibernate.Version', 'initVersion' )
 }
 
 task copyBundleResourcesXml (type: Copy) {

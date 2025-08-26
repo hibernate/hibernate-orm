@@ -292,13 +292,37 @@ public final class ConfigurationHelper {
 	 * @return cloned and masked properties
 	 */
 	public static Properties maskOut(Properties props, String... keys) {
-		final var clone = (Properties) props.clone();
+		Properties result = props;
 		for ( String key : keys ) {
-			if ( clone.get( key ) != null ) {
-				clone.setProperty( key, "****" );
+			if ( props.get( key ) != null ) {
+				if ( result == props ) {
+					result = (Properties) props.clone();
+				}
+				result.setProperty( key, "****" );
 			}
 		}
-		return clone;
+		return result;
+	}
+
+	/**
+	 * Replace properties by starred version
+	 *
+	 * @param props properties to check
+	 * @param keys properties to mask
+	 *
+	 * @return cloned and masked properties
+	 */
+	public static Map<String, Object> maskOut(Map<String, Object> props, String... keys) {
+		Map<String,Object> result = props;
+		for ( String key : keys ) {
+			if ( props.containsKey( key ) ) {
+				if ( result == props ) {
+					result = new HashMap<>( props );
+				}
+				result.put( key, "****" );
+			}
+		}
+		return result;
 	}
 
 	/**

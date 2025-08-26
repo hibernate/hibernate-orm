@@ -137,11 +137,9 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.cfg.AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
 import static org.hibernate.internal.FetchProfileHelper.addFetchProfiles;
-import static org.hibernate.internal.SessionFactorySettings.deprecationCheck;
 import static org.hibernate.internal.SessionFactorySettings.determineJndiName;
+import static org.hibernate.internal.SessionFactorySettings.getMaskedSettings;
 import static org.hibernate.internal.SessionFactorySettings.getSessionFactoryName;
-import static org.hibernate.internal.SessionFactorySettings.getSettings;
-import static org.hibernate.internal.SessionFactorySettings.maskOutSensitiveInformation;
 import static org.hibernate.jpa.HibernateHints.HINT_TENANT_ID;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
@@ -239,9 +237,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		jdbcServices = serviceRegistry.requireService( JdbcServices.class );
 
-		settings = getSettings( options, serviceRegistry );
-		maskOutSensitiveInformation( settings );
-		deprecationCheck( settings );
+		settings = getMaskedSettings( options, serviceRegistry );
 		LOG.instantiatingFactory( uuid, settings );
 
 		sqlStringGenerationContext = createSqlStringGenerationContext( bootMetamodel, options, jdbcServices );

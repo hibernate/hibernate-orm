@@ -13,6 +13,8 @@ description = 'Hibernate\'s community supported dialects'
 dependencies {
     api project( ':hibernate-core' )
 
+    compileOnly libs.checkerFramework
+
     testImplementation project( ':hibernate-testing' )
     testImplementation project( path: ':hibernate-core', configuration: 'tests' )
 }

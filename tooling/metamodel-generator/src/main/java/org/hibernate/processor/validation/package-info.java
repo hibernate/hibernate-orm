@@ -7,4 +7,5 @@
  *
  * @see org.hibernate.processor.validation.Validation#validate
  */
+@org.jspecify.annotations.NullUnmarked
 package org.hibernate.processor.validation;

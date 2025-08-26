@@ -5,4 +5,5 @@
 /**
  * Implementation of the model classes backed by annotations.
  */
+@org.jspecify.annotations.NullMarked
 package org.hibernate.processor.xml;

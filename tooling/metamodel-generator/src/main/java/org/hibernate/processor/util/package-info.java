@@ -5,4 +5,5 @@
 /**
  * Helper classes for string and type processing as well as access type detection.
  */
+@org.jspecify.annotations.NullMarked
 package org.hibernate.processor.util;

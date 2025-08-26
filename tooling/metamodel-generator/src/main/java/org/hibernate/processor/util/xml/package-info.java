@@ -5,4 +5,5 @@
 /**
  * XML helper classes. Used for parsing persistence.xml and orm.xml.
  */
+@org.jspecify.annotations.NullMarked
 package org.hibernate.processor.util.xml;

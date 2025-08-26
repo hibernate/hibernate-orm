@@ -6,10 +6,9 @@
  */
 package org.hibernate.test.cdi.events;
 
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import org.hibernate.annotations.GenericGenerator;
+
+import javax.persistence.*;
 
 /**
  * @author Steve Ebersole
@@ -29,6 +28,8 @@ public class TheEntity {
 	}
 
 	@Id
+    @GeneratedValue(generator = "mygenerator")
+    @GenericGenerator(name = "mygenerator", strategy = "org.hibernate.test.cdi.events.MyIdGenerator")
 	public Integer getId() {
 		return id;
 	}

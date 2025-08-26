@@ -86,7 +86,7 @@ public class InvalidExtendedCdiSupportTest extends BaseUnitTestCase {
 			try {
 				inTransaction(
 						sessionFactory,
-						session -> session.persist( new TheEntity( 1 ) )
+						session -> session.persist( new TheEntity() )
 				);
 
 				inTransaction(

@@ -16,6 +16,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.test.cdi.events.MyIdGenerator;
 import org.hibernate.tool.schema.Action;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -74,7 +75,7 @@ public class DelayedCdiSupportTest extends BaseUnitTestCase {
 			try {
 				inTransaction(
 						sessionFactory,
-						session -> session.persist( new TheEntity( 1 ) )
+						session -> session.persist( new TheEntity() )
 				);
 
 				// The CDI bean should have been built on first use
@@ -84,7 +85,7 @@ public class DelayedCdiSupportTest extends BaseUnitTestCase {
 				inTransaction(
 						sessionFactory,
 						session -> {
-							TheEntity it = session.find( TheEntity.class, 1 );
+							TheEntity it = session.find( TheEntity.class, MyIdGenerator.HARDCODED_ID);
 							assertNotNull( it );
 						}
 				);

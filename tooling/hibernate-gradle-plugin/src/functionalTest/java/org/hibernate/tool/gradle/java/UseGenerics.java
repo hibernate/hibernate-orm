@@ -22,7 +22,6 @@ public class UseGenerics extends TestTemplate {
 	private static final List<String> GRADLE_INIT_PROJECT_ARGUMENTS = List.of(
 			"init", "--type", "java-application", "--dsl", "groovy", "--test-framework", "junit-jupiter", "--java-version", "17");
 	
-	private File gradleBuildFile;
 	private File databaseFile;
 	
 	@Test
@@ -50,19 +49,19 @@ public class UseGenerics extends TestTemplate {
 		File appDir = new File(getProjectDir(), "app");
 		assertTrue(appDir.exists());
 		assertTrue(appDir.isDirectory());
-		gradleBuildFile = new File(appDir, "build.gradle");
-		assertTrue(gradleBuildFile.exists());
-		assertTrue(gradleBuildFile.isFile());
+		setGradleBuildFile(new File(appDir, "build.gradle"));
+		assertTrue(getGradleBuildFile().exists());
+		assertTrue(getGradleBuildFile().isFile());
 		databaseFile = new File(getProjectDir(), "database/test.mv.db");
 		assertFalse(databaseFile.exists());
 	}
 	
 	private void editGradleBuildFile() throws Exception {
 		StringBuffer gradleBuildFileContents = new StringBuffer(
-				new String(Files.readAllBytes(gradleBuildFile.toPath())));
+				new String(Files.readAllBytes(getGradleBuildFile().toPath())));
 		addHibernateToolsPluginLine(gradleBuildFileContents);
 		addH2DatabaseDependencyLine(gradleBuildFileContents);
-		Files.writeString(gradleBuildFile.toPath(), gradleBuildFileContents.toString());
+		Files.writeString(getGradleBuildFile().toPath(), gradleBuildFileContents.toString());
 	}
 	
 	private void editGradlePropertiesFile() throws Exception {

@@ -1,10 +1,14 @@
 package org.hibernate.tool.it.gradle;
 
 import java.io.File;
+import java.util.List;
 
 import org.junit.jupiter.api.io.TempDir;
 
 public class TestTemplate {
+
+    protected static final List<String> GRADLE_INIT_PROJECT_ARGUMENTS = List.of(
+            "init", "--type", "java-application", "--dsl", "groovy", "--test-framework", "junit-jupiter", "--java-version", "17");
 
     @TempDir
     private File projectDir;

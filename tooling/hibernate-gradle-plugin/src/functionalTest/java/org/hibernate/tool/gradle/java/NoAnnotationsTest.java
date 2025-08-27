@@ -20,9 +20,6 @@ import org.hibernate.tool.it.gradle.TestTemplate;
 
 public class NoAnnotationsTest extends TestTemplate {
 	
-	private static final List<String> GRADLE_INIT_PROJECT_ARGUMENTS = List.of(
-			"init", "--type", "java-application", "--dsl", "groovy", "--test-framework", "junit-jupiter", "--java-version", "17");
-	
 	@Test
 	public void testTutorial() throws Exception {
 		assertTrue(getProjectDir().exists());

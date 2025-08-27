@@ -23,8 +23,6 @@ public class NoAnnotationsTest extends TestTemplate {
 	private static final List<String> GRADLE_INIT_PROJECT_ARGUMENTS = List.of(
 			"init", "--type", "java-application", "--dsl", "groovy", "--test-framework", "junit-jupiter", "--java-version", "17");
 	
-	private File databaseFile;
-	
 	@Test
 	public void testTutorial() throws Exception {
 		assertTrue(getProjectDir().exists());
@@ -62,8 +60,8 @@ public class NoAnnotationsTest extends TestTemplate {
 		setGradleBuildFile(new File(appDir, "build.gradle"));
 		assertTrue(getGradleBuildFile().exists());
 		assertTrue(getGradleBuildFile().isFile());
-		databaseFile = new File(getProjectDir(), "database/test.mv.db");
-		assertFalse(databaseFile.exists());
+		setDatabaseFile(new File(getProjectDir(), "database/test.mv.db"));
+		assertFalse(getDatabaseFile().exists());
 	}
 	
 	private void editGradleBuildFile() throws Exception {
@@ -94,8 +92,8 @@ public class NoAnnotationsTest extends TestTemplate {
 		statement.execute("insert into PERSON values (1, 'foo')");
 		statement.close();
 		connection.close();	
-		assertTrue(databaseFile.exists());
-		assertTrue(databaseFile.isFile());
+		assertTrue(getDatabaseFile().exists());
+		assertTrue(getDatabaseFile().isFile());
 	}
 	
 	private void createHibernatePropertiesFile() throws Exception {

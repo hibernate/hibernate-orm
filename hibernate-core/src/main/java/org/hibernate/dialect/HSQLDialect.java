@@ -8,6 +8,7 @@ import jakarta.persistence.TemporalType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.dialect.identity.HSQLIdentityColumnSupport;
@@ -47,6 +48,7 @@ import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -60,17 +62,28 @@ import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHSQLDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.descriptor.DateTimeUtils;
+import org.hibernate.type.descriptor.jdbc.GregorianEpochBasedDateJdbcType;
+import org.hibernate.type.descriptor.jdbc.GregorianEpochBasedTimestampJdbcType;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.DOUBLE;
 import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDateWithEraPrefix;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillisAndEraPrefix;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanosAndEraPrefix;
 
 /**
  * A {@linkplain Dialect SQL dialect} for HSQLDB (HyperSQL) 2.6.1 and above.
@@ -240,6 +253,85 @@ public class HSQLDialect extends Dialect {
 
 		functionFactory.hex( "hex(?1)" );
 		functionFactory.regexpLike_hsql();
+	}
+
+	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+		final JdbcTypeRegistry jdbcTypeRegistry =
+				typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
+
+		jdbcTypeRegistry.addDescriptor( GregorianEpochBasedDateJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( GregorianEpochBasedTimestampJdbcType.INSTANCE );
+	}
+
+	@Override
+	public void appendDateTimeLiteral(SqlAppender appender, TemporalAccessor temporalAccessor, TemporalType precision, TimeZone jdbcTimeZone) {
+		if ( precision != TemporalType.TIME && DateTimeUtils.isBcEra( temporalAccessor ) ) {
+			switch ( precision ) {
+				case DATE:
+					appender.appendSql( "to_date('" );
+					appendAsDateWithEraPrefix( appender, temporalAccessor );
+					appender.appendSql( "','BC YYYY-MM-DD')" );
+					break;
+				case TIMESTAMP:
+					appender.appendSql( "to_timestamp('" );
+					appendAsTimestampWithNanosAndEraPrefix( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+					appender.appendSql( "','BC YYYY-MM-DD HH:MI:SS.FF')" );
+					break;
+				default:
+					throw new IllegalArgumentException();
+			}
+		}
+		else {
+			super.appendDateTimeLiteral( appender, temporalAccessor, precision, jdbcTimeZone );
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+		if ( precision != TemporalType.TIME && DateTimeUtils.isBcEra( date ) ) {
+			switch ( precision ) {
+				case DATE:
+					appender.appendSql( "to_date('" );
+					appendAsDateWithEraPrefix( appender, date );
+					appender.appendSql( "','BC YYYY-MM-DD')" );
+					break;
+				case TIMESTAMP:
+					appender.appendSql( "to_timestamp('" );
+					appendAsTimestampWithNanosAndEraPrefix( appender, date, jdbcTimeZone );
+					appender.appendSql( "','BC YYYY-MM-DD HH:MI:SS.FF')" );
+					break;
+				default:
+					throw new IllegalArgumentException();
+			}
+		}
+		else {
+			super.appendDateTimeLiteral( appender, date, precision, jdbcTimeZone );
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(SqlAppender appender, Calendar calendar, TemporalType precision, TimeZone jdbcTimeZone) {
+		if ( precision != TemporalType.TIME && DateTimeUtils.isBcEra( calendar ) ) {
+			switch ( precision ) {
+				case DATE:
+					appender.appendSql( "to_date('" );
+					appendAsDateWithEraPrefix( appender, calendar );
+					appender.appendSql( "','BC YYYY-MM-DD')" );
+					break;
+				case TIMESTAMP:
+					appender.appendSql( "to_timestamp('" );
+					appendAsTimestampWithMillisAndEraPrefix( appender, calendar, jdbcTimeZone );
+					appender.appendSql( "','BC YYYY-MM-DD HH:MI:SS.FF')" );
+					break;
+				default:
+					throw new IllegalArgumentException();
+			}
+		}
+		else {
+			super.appendDateTimeLiteral( appender, calendar, precision, jdbcTimeZone );
+		}
 	}
 
 	/**

@@ -45,7 +45,10 @@ import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.community.dialect.IngresDialect;
+import org.hibernate.community.dialect.SQLiteDialect;
 import org.hibernate.community.dialect.TiDBDialect;
+import org.hibernate.community.dialect.TimesTenDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
@@ -1174,6 +1177,19 @@ abstract public class DialectFeatureChecks {
 		@Override
 		public boolean apply(Dialect dialect) {
 			return !ParameterMarkerStrategyStandard.isStandardRenderer( dialect.getNativeParameterMarkerStrategy() );
+		}
+	}
+
+	public static class SupportsDatesInBCEra implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect instanceof H2Dialect
+				|| dialect instanceof HSQLDialect
+				|| dialect instanceof PostgreSQLDialect
+				|| dialect instanceof CockroachDialect
+				|| dialect instanceof OracleDialect
+				|| dialect instanceof IngresDialect
+				|| dialect instanceof SQLiteDialect
+				|| dialect instanceof TimesTenDialect;
 		}
 	}
 

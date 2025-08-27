@@ -98,6 +98,7 @@ import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
@@ -158,11 +159,10 @@ import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDateWithEraSuffix;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicrosAndEraSuffix;
 
 /**
  * A {@linkplain Dialect SQL dialect} for PostgreSQL 8 and above.
@@ -1255,7 +1255,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		switch ( precision ) {
 			case DATE:
 				appender.appendSql( "date '" );
-				appendAsDate( appender, temporalAccessor );
+				appendAsDateWithEraSuffix( appender, temporalAccessor );
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
@@ -1272,12 +1272,12 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			case TIMESTAMP:
 				if ( supportsTemporalLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
 					appender.appendSql( "timestamp with time zone '" );
-					appendAsTimestampWithMicros( appender, temporalAccessor, true, jdbcTimeZone );
+					appendAsTimestampWithMicrosAndEraSuffix( appender, temporalAccessor, true, jdbcTimeZone );
 					appender.appendSql( '\'' );
 				}
 				else {
 					appender.appendSql( "timestamp '" );
-					appendAsTimestampWithMicros( appender, temporalAccessor, false, jdbcTimeZone );
+					appendAsTimestampWithMicrosAndEraSuffix( appender, temporalAccessor, false, jdbcTimeZone );
 					appender.appendSql( '\'' );
 				}
 				break;
@@ -1291,7 +1291,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		switch ( precision ) {
 			case DATE:
 				appender.appendSql( "date '" );
-				appendAsDate( appender, date );
+				appendAsDateWithEraSuffix( appender, date );
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
@@ -1301,7 +1301,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "timestamp with time zone '" );
-				appendAsTimestampWithMicros( appender, date, jdbcTimeZone );
+				appendAsTimestampWithMicrosAndEraSuffix( appender, date, jdbcTimeZone );
 				appender.appendSql( '\'' );
 				break;
 			default:
@@ -1318,7 +1318,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		switch ( precision ) {
 			case DATE:
 				appender.appendSql( "date '" );
-				appendAsDate( appender, calendar );
+				appendAsDateWithEraSuffix( appender, calendar );
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
@@ -1328,7 +1328,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "timestamp with time zone '" );
-				appendAsTimestampWithMillis( appender, calendar, jdbcTimeZone );
+				DateTimeUtils.appendAsTimestampWithMillisAndEraSuffix( appender, calendar, jdbcTimeZone );
 				appender.appendSql( '\'' );
 				break;
 			default:

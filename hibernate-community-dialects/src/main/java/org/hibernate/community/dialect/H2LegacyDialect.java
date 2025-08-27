@@ -78,6 +78,8 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLe
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.descriptor.jdbc.EnumJdbcType;
+import org.hibernate.type.descriptor.jdbc.GregorianEpochBasedDateJdbcType;
+import org.hibernate.type.descriptor.jdbc.GregorianEpochBasedTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.OrdinalEnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimeAsTimestampWithTimeZoneJdbcType;
@@ -294,6 +296,8 @@ public class H2LegacyDialect extends Dialect {
 			jdbcTypeRegistry.addDescriptor( TimeUtcAsOffsetTimeJdbcType.INSTANCE );
 		}
 		jdbcTypeRegistry.addDescriptor( TIMESTAMP_UTC, TimestampUtcAsInstantJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( GregorianEpochBasedDateJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( GregorianEpochBasedTimestampJdbcType.INSTANCE );
 		if ( getVersion().isSameOrAfter( 1, 4, 197 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 		}

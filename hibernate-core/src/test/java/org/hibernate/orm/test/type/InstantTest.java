@@ -29,6 +29,7 @@ import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimeZoneSupport;
 
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.junit.runners.Parameterized;
 
 /**
@@ -152,7 +153,7 @@ public class InstantTest extends AbstractJavaTimeTypeTest<Instant, InstantTest.E
 	protected void setJdbcValueForNonHibernateWrite(PreparedStatement statement, int parameterIndex) throws SQLException {
 		if ( sessionFactory().getJdbcServices().getDialect().getTimeZoneSupport() == TimeZoneSupport.NATIVE ) {
 			// Oracle and H2 require reading/writing through OffsetDateTime to avoid TZ related miscalculations
-			statement.setObject( parameterIndex, getExpectedJdbcValueAfterHibernateWrite().toInstant().atOffset( ZoneOffset.UTC ) );
+			statement.setObject( parameterIndex, DateTimeUtils.toInstant( getExpectedJdbcValueAfterHibernateWrite() ).atOffset( ZoneOffset.UTC ) );
 		}
 		else {
 			statement.setTimestamp(
@@ -165,14 +166,14 @@ public class InstantTest extends AbstractJavaTimeTypeTest<Instant, InstantTest.E
 
 	@Override
 	protected Timestamp getExpectedJdbcValueAfterHibernateWrite() {
-		return Timestamp.from( getExpectedPropertyValueAfterHibernateRead() );
+		return DateTimeUtils.toTimestamp( getExpectedPropertyValueAfterHibernateRead() );
 	}
 
 	@Override
 	protected Object getActualJdbcValue(ResultSet resultSet, int columnIndex) throws SQLException {
 		if ( sessionFactory().getJdbcServices().getDialect().getTimeZoneSupport() == TimeZoneSupport.NATIVE ) {
 			// Oracle and H2 require reading/writing through OffsetDateTime to avoid TZ related miscalculations
-			return Timestamp.from( resultSet.getObject( columnIndex, OffsetDateTime.class ).toInstant() );
+			return DateTimeUtils.toTimestamp( resultSet.getObject( columnIndex, OffsetDateTime.class ).toInstant() );
 		}
 		else {
 			return resultSet.getTimestamp( columnIndex, Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );

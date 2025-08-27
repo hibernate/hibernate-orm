@@ -5,6 +5,7 @@
 package org.hibernate.type.descriptor.java;
 
 import java.sql.Types;
+import java.time.Instant;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -13,6 +14,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.compare.CalendarComparator;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -121,6 +123,11 @@ public class CalendarDateJavaType extends AbstractTemporalJavaType<Calendar> {
 		else if ( value instanceof Date date ) {
 			final Calendar cal = new GregorianCalendar();
 			cal.setTime( date );
+			return cal;
+		}
+		else if ( value instanceof Instant instant ) {
+			final Calendar cal = new GregorianCalendar();
+			cal.setTime( DateTimeUtils.toSqlDate( instant ) );
 			return cal;
 		}
 		else {

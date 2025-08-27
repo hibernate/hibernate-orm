@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
@@ -8,13 +8,14 @@ import java.util.Set;
 
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 
 /**
  * @author Steve Ebersole
  */
-public interface AttributeContainer<J> {
+public interface AttributeContainer<J> extends ManagedDomainType<J> {
 	InFlightAccess<J> getInFlightAccess();
 
 	/**

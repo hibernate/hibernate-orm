@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.junit4;
@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
@@ -25,7 +26,9 @@ import org.hibernate.testing.Skip;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.orm.junit.DialectFeatureCheck;
 import org.hibernate.testing.orm.junit.DialectFilterExtension;
+import org.hibernate.testing.orm.junit.RequiresDialectFeatureGroup;
 import org.hibernate.testing.orm.junit.SkipForDialectGroup;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -321,9 +324,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 						effectiveSkipForDialect.minorVersion(),
 						effectiveSkipForDialect.microVersion(),
 						dialect,
-						effectiveSkipForDialect.matchSubTypes()
-								? DialectFilterExtension.VersionMatchMode.SAME_OR_OLDER
-								: DialectFilterExtension.VersionMatchMode.SAME
+						effectiveSkipForDialect.versionMatchMode()
 				);
 
 				if ( versionsMatch ) {
@@ -442,6 +443,30 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 			}
 		}
 
+		Collection<org.hibernate.testing.orm.junit.RequiresDialectFeature> effectiveRequiresDialectFeatures = Helper.collectAnnotations(
+				org.hibernate.testing.orm.junit.RequiresDialectFeature.class,
+				RequiresDialectFeatureGroup.class,
+				frameworkMethod,
+				getTestClass()
+		);
+
+		for ( org.hibernate.testing.orm.junit.RequiresDialectFeature effectiveRequiresDialectFeature : effectiveRequiresDialectFeatures ) {
+			try {
+				final Class<? extends DialectFeatureCheck> featureClass = effectiveRequiresDialectFeature.feature();
+				final DialectFeatureCheck featureCheck = featureClass.getConstructor().newInstance();
+				boolean testResult = featureCheck.apply( dialect );
+				if ( effectiveRequiresDialectFeature.reverse() ) {
+					testResult = !testResult;
+				}
+				if ( !testResult ) {
+					return buildIgnore( effectiveRequiresDialectFeature );
+				}
+			}
+			catch (ReflectiveOperationException e) {
+				throw new RuntimeException( "Unable to instantiate DialectFeatureCheck class", e );
+			}
+		}
+
 		return null;
 	}
 
@@ -475,9 +500,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 						matchingMinorVersion,
 						matchingMicroVersion,
 						dialect,
-						requiresDialect.matchSubTypes()
-								? DialectFilterExtension.VersionMatchMode.SAME_OR_NEWER
-								: DialectFilterExtension.VersionMatchMode.SAME
+						requiresDialect.versionMatchMode()
 				);
 			}
 			else {
@@ -562,6 +585,14 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 	private Ignore buildIgnore(RequiresDialectFeature requiresDialectFeature) {
 		return buildIgnore(
 				"@RequiresDialectFeature non-match",
+				requiresDialectFeature.comment(),
+				requiresDialectFeature.jiraKey()
+		);
+	}
+
+	private Ignore buildIgnore(org.hibernate.testing.orm.junit.RequiresDialectFeature requiresDialectFeature) {
+		return buildIgnore(
+				String.format( Locale.ROOT, "Failed @RequiresDialectFeature [%s]", requiresDialectFeature.feature() ),
 				requiresDialectFeature.comment(),
 				requiresDialectFeature.jiraKey()
 		);

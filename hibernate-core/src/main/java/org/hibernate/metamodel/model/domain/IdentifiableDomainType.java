@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain;
@@ -10,15 +10,15 @@ import java.util.function.Consumer;
 import jakarta.persistence.metamodel.IdentifiableType;
 import jakarta.persistence.metamodel.SingularAttribute;
 
-import org.hibernate.query.sqm.SqmPathSource;
-
 /**
  * Extension to the JPA {@link IdentifiableType} contract.
  *
  * @author Steve Ebersole
  */
-public interface IdentifiableDomainType<J> extends ManagedDomainType<J>, IdentifiableType<J> {
-	SqmPathSource<?> getIdentifierDescriptor();
+public interface IdentifiableDomainType<J>
+		extends ManagedDomainType<J>, IdentifiableType<J> {
+
+	PathSource<?> getIdentifierDescriptor();
 
 	@Override
 	<Y> SingularPersistentAttribute<? super J, Y> getId(Class<Y> type);

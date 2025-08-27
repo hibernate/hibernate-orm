@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql.spi;
@@ -13,11 +13,9 @@ import java.util.Map;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.query.QueryFlushMode;
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
@@ -26,54 +24,57 @@ import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.SqmQuery;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
-import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.transform.ResultTransformer;
 
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.Type;
 
 /**
  * {@link QueryImplementor} specialization for SQM-based Query references
  *
  * @author Steve Ebersole
  */
-public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, NameableQuery {
+public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery<R>, NameableQuery {
 	@Override
 	NamedSqmQueryMemento<R> toMemento(String name);
 
 	@Override
 	ParameterMetadataImplementor getParameterMetadata();
 
-	SqmStatement<R> getSqmStatement();
-
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// covariance
 
+	@Override
 	SqmQueryImplementor<R> setCacheMode(CacheMode cacheMode);
 
+	@Override
 	SqmQueryImplementor<R> setCacheable(boolean cacheable);
 
+	@Override
 	SqmQueryImplementor<R> setCacheRegion(String cacheRegion);
 
+	@Override
 	SqmQueryImplementor<R> setTimeout(int timeout);
 
+	@Override
 	SqmQueryImplementor<R> setFetchSize(int fetchSize);
 
+	@Override
 	SqmQueryImplementor<R> setReadOnly(boolean readOnly);
 
 	@Override
 	SqmQueryImplementor<R> applyGraph(@SuppressWarnings("rawtypes") RootGraph graph, GraphSemantic semantic);
 
-	@Override
+	@Override @Deprecated
 	default SqmQueryImplementor<R> applyFetchGraph(@SuppressWarnings("rawtypes") RootGraph graph) {
 		QueryImplementor.super.applyFetchGraph( graph );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	default SqmQueryImplementor<R> applyLoadGraph(@SuppressWarnings("rawtypes") RootGraph graph) {
 		QueryImplementor.super.applyLoadGraph( graph );
 		return this;
@@ -85,11 +86,8 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	@Override
 	SqmQueryImplementor<R> addQueryHint(String hint);
 
-	@Override
+	@Override @Deprecated
 	SqmQueryImplementor<R> setLockOptions(LockOptions lockOptions);
-
-	@Override
-	SqmQueryImplementor<R> setLockMode(String alias, LockMode lockMode);
 
 	@Override
 	<T> SqmQueryImplementor<T> setTupleTransformer(TupleTransformer<T> transformer);
@@ -97,8 +95,7 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	@Override
 	SqmQueryImplementor<R> setResultListTransformer(ResultListTransformer<R> transformer);
 
-	@Override
-	@Deprecated(since = "5.2")
+	@Override @Deprecated(since = "5.2")
 	default <T> SqmQueryImplementor<T> setResultTransformer(ResultTransformer<T> transformer) {
 		return setTupleTransformer( transformer ).setResultListTransformer( transformer );
 	}
@@ -110,7 +107,7 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	SqmQueryImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode);
 
 	@Override
-	SqmQueryImplementor<R> setMaxResults(int maxResult);
+	SqmQueryImplementor<R> setMaxResults(int maxResults);
 
 	@Override
 	SqmQueryImplementor<R> setFirstResult(int startPosition);
@@ -131,15 +128,15 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	<P> SqmQueryImplementor<R> setParameter(String name, P value, Class<P> type);
 
 	@Override
-	<P> SqmQueryImplementor<R> setParameter(String name, P value, BindableType<P> type);
+	<P> SqmQueryImplementor<R> setParameter(String name, P value, Type<P> type);
 
-	@Override
+	@Override @Deprecated
 	SqmQueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SqmQueryImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SqmQueryImplementor<R> setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
@@ -149,15 +146,15 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	<P> SqmQueryImplementor<R> setParameter(int position, P value, Class<P> type);
 
 	@Override
-	<P> SqmQueryImplementor<R> setParameter(int position, P value, BindableType<P> type);
+	<P> SqmQueryImplementor<R> setParameter(int position, P value, Type<P> type);
 
-	@Override
+	@Override @Deprecated
 	SqmQueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SqmQueryImplementor<R> setParameter(int position, Date value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SqmQueryImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType);
 
 	@Override
@@ -167,15 +164,15 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	<P> SqmQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Class<P> type);
 
 	@Override
-	<P> SqmQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, BindableType<P> type);
+	<P> SqmQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, Type<P> type);
 
 	@Override
 	<T> SqmQueryImplementor<R> setParameter(Parameter<T> param, T value);
 
-	@Override
+	@Override @Deprecated
 	SqmQueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SqmQueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override
@@ -185,7 +182,7 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	<P> SqmQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> SqmQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, BindableType<P> type);
+	<P> SqmQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Type<P> type);
 
 	@Override
 	SqmQueryImplementor<R> setParameterList(String name, Object[] values);
@@ -194,7 +191,7 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	<P> SqmQueryImplementor<R> setParameterList(String name, P[] values, Class<P> javaType);
 
 	@Override
-	<P> SqmQueryImplementor<R> setParameterList(String name, P[] values, BindableType<P> type);
+	<P> SqmQueryImplementor<R> setParameterList(String name, P[] values, Type<P> type);
 
 	@Override
 	SqmQueryImplementor<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
@@ -203,7 +200,7 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	<P> SqmQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> SqmQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, BindableType<P> type);
+	<P> SqmQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Type<P> type);
 
 	@Override
 	SqmQueryImplementor<R> setParameterList(int position, Object[] values);
@@ -212,7 +209,7 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	<P> SqmQueryImplementor<R> setParameterList(int position, P[] values, Class<P> javaType);
 
 	@Override
-	<P> SqmQueryImplementor<R> setParameterList(int position, P[] values, BindableType<P> type);
+	<P> SqmQueryImplementor<R> setParameterList(int position, P[] values, Type<P> type);
 
 	@Override
 	<P> SqmQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
@@ -221,7 +218,7 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	<P> SqmQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> SqmQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type);
+	<P> SqmQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type);
 
 	@Override
 	<P> SqmQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values);
@@ -230,7 +227,7 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	<P> SqmQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
 
 	@Override
-	<P> SqmQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type);
+	<P> SqmQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
 
 	@Override
 	SqmQueryImplementor<R> setProperties(Object bean);

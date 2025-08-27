@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.extract.internal;
@@ -14,6 +14,8 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -63,7 +65,8 @@ public class ExtractionContextImpl implements ExtractionContext {
 				jdbcConnection = jdbcConnectionAccess.obtainConnection();
 			}
 			catch (SQLException e) {
-				throw jdbcEnvironment.getSqlExceptionHelper().convert( e, "Unable to obtain JDBC Connection" );
+				throw jdbcEnvironment.getSqlExceptionHelper()
+						.convert( e, "Unable to obtain JDBC Connection" );
 			}
 		}
 		return jdbcConnection;
@@ -76,7 +79,8 @@ public class ExtractionContextImpl implements ExtractionContext {
 				jdbcDatabaseMetaData = getJdbcConnection().getMetaData();
 			}
 			catch (SQLException e) {
-				throw jdbcEnvironment.getSqlExceptionHelper().convert( e, "Unable to obtain JDBC DatabaseMetaData" );
+				throw jdbcEnvironment.getSqlExceptionHelper()
+						.convert( e, "Unable to obtain JDBC DatabaseMetaData" );
 			}
 		}
 		return jdbcDatabaseMetaData;
@@ -107,7 +111,8 @@ public class ExtractionContextImpl implements ExtractionContext {
 			try {
 				jdbcConnectionAccess.releaseConnection( jdbcConnection );
 			}
-			catch (SQLException ignore) {
+			catch (SQLException exception) {
+				JDBC_MESSAGE_LOGGER.unableToReleaseConnection( exception );
 			}
 		}
 	}

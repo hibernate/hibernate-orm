@@ -1,14 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.spi;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Information extracted from {@link java.sql.DatabaseMetaData} regarding what the JDBC driver reports as
@@ -24,6 +25,34 @@ public interface ExtractedDatabaseMetaData {
 	 * @return The JDBC environment
 	 */
 	JdbcEnvironment getJdbcEnvironment();
+
+	/**
+	 * The name of the database, according to the JDBC driver.
+	 */
+	String getDatabaseProductName();
+
+	/**
+	 * The version of the database, according to the JDBC driver.
+	 */
+	String getDatabaseProductVersion();
+
+	/**
+	 * Does this driver support named schemas in DML?
+	 *
+	 * @return {@code false} indicates the driver reported false;
+	 * {@code true} indicates the driver reported true or that
+	 * the driver could not be asked.
+	 */
+	boolean supportsSchemas();
+
+	/**
+	 * Does this driver support named catalogs in DML?
+	 *
+	 * @return {@code false} indicates the driver reported false;
+	 * {@code true} indicates the driver reported true or that
+	 * the driver could not be asked.
+	 */
+	boolean supportsCatalogs();
 
 	/**
 	 * Retrieve the name of the catalog in effect when we connected to the database.
@@ -54,8 +83,9 @@ public interface ExtractedDatabaseMetaData {
 	/**
 	 * Does the driver report supporting {@link java.sql.Types#REF_CURSOR}?
 	 *
-	 * @return {@code true} indicates the driver reported true; {@code false} indicates the driver reported false
-	 * or that the driver could not be asked.
+	 * @return {@code true} indicates the driver reported true;
+	 * {@code false} indicates the driver reported false or that
+	 * the driver could not be asked.
 	 *
 	 * @see java.sql.DatabaseMetaData#supportsRefCursors()
 	 * @see org.hibernate.dialect.Dialect#supportsRefCursors
@@ -123,11 +153,44 @@ public interface ExtractedDatabaseMetaData {
 	SQLStateType getSqlStateType();
 
 	/**
+	 * Retrieve the JDBC URL.
+	 *
+	 * @see java.sql.DatabaseMetaData#getURL()
+	 */
+	String getUrl();
+
+	/**
+	 * Retrieve the JDBC driver name.
+	 *
+	 * @see java.sql.DatabaseMetaData#getDriverName()
+	 */
+	String getDriver();
+
+	/**
+	 * Retrieve the transaction isolation level.
+	 *
+	 * @see java.sql.Connection#getTransactionIsolation()
+	 */
+	int getTransactionIsolation();
+
+	/**
+	 * Retrieve the default transaction isolation level.
+	 *
+	 * @see java.sql.DatabaseMetaData#getDefaultTransactionIsolation()
+	 */
+	int getDefaultTransactionIsolation();
+
+	/**
+	 * Retrieve the default JDBC {@linkplain java.sql.Statement#getFetchSize fetch size}.
+	 */
+	int getDefaultFetchSize();
+
+	/**
 	 * Retrieve the list of {@code SequenceInformation} objects which describe the underlying database sequences.
 	 *
 	 * @return {@code SequenceInformation} objects.
 	 */
 	default List<SequenceInformation> getSequenceInformationList() {
-		return Collections.emptyList();
+		return emptyList();
 	}
 }

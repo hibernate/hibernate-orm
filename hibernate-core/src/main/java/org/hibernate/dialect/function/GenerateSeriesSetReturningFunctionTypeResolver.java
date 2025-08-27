@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
@@ -13,8 +13,9 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
-import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.query.derived.AnonymousTupleType;
+import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -45,7 +46,7 @@ public class GenerateSeriesSetReturningFunctionTypeResolver implements SetReturn
 		final SqmTypedNode<?> stop = arguments.get( 1 );
 		final SqmExpressible<?> startExpressible = start.getExpressible();
 		final SqmExpressible<?> stopExpressible = stop.getExpressible();
-		final DomainType<?> type = NullnessHelper.coalesce(
+		final SqmDomainType<?> type = NullnessHelper.coalesce(
 				startExpressible == null ? null : startExpressible.getSqmType(),
 				stopExpressible == null ? null : stopExpressible.getSqmType()
 		);
@@ -53,7 +54,7 @@ public class GenerateSeriesSetReturningFunctionTypeResolver implements SetReturn
 			throw new IllegalArgumentException( "Couldn't determine types of arguments to function 'generate_series'" );
 		}
 
-		final SqmExpressible<?>[] componentTypes = new SqmExpressible<?>[]{ type, typeConfiguration.getBasicTypeForJavaType( Long.class ) };
+		final SqmBindableType<?>[] componentTypes = new SqmBindableType<?>[]{ type, typeConfiguration.getBasicTypeForJavaType( Long.class ) };
 		final String[] componentNames = new String[]{ CollectionPart.Nature.ELEMENT.getName(), CollectionPart.Nature.INDEX.getName() };
 		return new AnonymousTupleType<>( componentTypes, componentNames );
 	}

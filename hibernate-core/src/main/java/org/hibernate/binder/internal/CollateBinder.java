@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.binder.internal;
@@ -23,7 +23,7 @@ import org.hibernate.mapping.Value;
 public class CollateBinder implements AttributeBinder<Collate> {
 	@Override
 	public void bind(Collate collate, MetadataBuildingContext context, PersistentClass entity, Property property) {
-		Value value = property.getValue();
+		final Value value = property.getValue();
 		if ( value instanceof OneToMany ) {
 			throw new AnnotationException( "One to many association '" + property.getName()
 					+ "' was annotated '@Collate'");

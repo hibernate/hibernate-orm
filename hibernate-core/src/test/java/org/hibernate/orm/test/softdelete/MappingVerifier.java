@@ -1,10 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.softdelete;
 
+import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
+import org.hibernate.metamodel.mapping.internal.SoftDeleteMappingImpl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,6 +22,16 @@ public class MappingVerifier {
 		assertThat( mapping ).isNotNull();
 		assertThat( mapping.getColumnName() ).isEqualTo( expectedColumnName );
 		assertThat( mapping.getTableName() ).isEqualTo( expectedTableName );
-		assertThat( mapping.getDeletedLiteralValue() ).isEqualTo( expectedDeletedLiteralValue );
+		assertThat( ( (SoftDeleteMappingImpl) mapping ).getDeletionIndicator() ).isEqualTo( expectedDeletedLiteralValue );
+	}
+
+	public static void verifyTimestampMapping(
+			SoftDeleteMapping mapping,
+			String expectedColumnName,
+			String expectedTableName) {
+		assertThat( mapping ).isNotNull();
+		assertThat( mapping.getSoftDeleteStrategy() ).isEqualTo( SoftDeleteType.TIMESTAMP );
+		assertThat( mapping.getColumnName() ).isEqualTo( expectedColumnName );
+		assertThat( mapping.getTableName() ).isEqualTo( expectedTableName );
 	}
 }

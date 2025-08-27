@@ -1,12 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.component.proxy;
 
 import java.util.List;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
@@ -50,8 +49,7 @@ public class ComponentBasicProxyTest {
 	@Test
 	@JiraKey(value = "HHH-12791")
 	public void testOnlyOneProxyClassGenerated(DomainModelScope domainModelScope, SessionFactoryScope sfScope) {
-		final SessionFactoryImplementor sessionFactory = sfScope.getSessionFactory();
-
+		sfScope.getSessionFactory();
 		final PersistentClass personDescriptor = domainModelScope.getDomainModel().getEntityBinding( Person.class.getName() );
 		final CompositeTypeImplementor componentType = (CompositeTypeImplementor) personDescriptor.getIdentifierMapper().getType();
 		final EmbeddableValuedModelPart embedded = componentType.getMappingModelPart();
@@ -59,8 +57,8 @@ public class ComponentBasicProxyTest {
 				.getRepresentationStrategy()
 				.getInstantiator();
 
-		final Object instance1 = instantiator.instantiate( null, sessionFactory );
-		final Object instance2 = instantiator.instantiate( null, sessionFactory );
+		final Object instance1 = instantiator.instantiate( null );
+		final Object instance2 = instantiator.instantiate( null );
 		assertThat( instance1.getClass() ).isEqualTo( instance2.getClass() );
 	}
 }

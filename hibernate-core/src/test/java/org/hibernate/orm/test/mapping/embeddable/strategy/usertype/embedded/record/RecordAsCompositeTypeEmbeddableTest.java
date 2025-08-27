@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.embeddable.strategy.usertype.embedded.record;
@@ -11,7 +11,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.CompositeType;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.ValueAccess;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -71,18 +70,15 @@ public class RecordAsCompositeTypeEmbeddableTest extends BaseCoreFunctionalTestC
 		@Override
 		public Object getPropertyValue(MonetaryAmount component, int property) throws HibernateException {
 			//Alphabetical
-			switch ( property ) {
-				case 0:
-					return component.getNumber().numberValueExact( BigDecimal.class );
-				case 1:
-					return component.getCurrency().getCurrencyCode();
-				default:
-					return null;
-			}
+			return switch ( property ) {
+				case 0 -> component.getNumber().numberValueExact( BigDecimal.class );
+				case 1 -> component.getCurrency().getCurrencyCode();
+				default -> null;
+			};
 		}
 
 		@Override
-		public MonetaryAmount instantiate(ValueAccess values, SessionFactoryImplementor sessionFactory) {
+		public MonetaryAmount instantiate(ValueAccess values) {
 			//Alphabetical
 			BigDecimal amount = values.getValue( 0, BigDecimal.class );
 			String currency = values.getValue( 1, String.class );

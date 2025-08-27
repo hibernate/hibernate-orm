@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity;
@@ -40,11 +40,11 @@ import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.TableGroupFilterAliasGenerator;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -66,6 +66,8 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.VersionJavaType;
+
+import static org.hibernate.internal.util.StringHelper.unqualifyEntityName;
 
 /**
  * A strategy for persisting a mapped {@linkplain jakarta.persistence.Entity
@@ -161,10 +163,11 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Get the EntityEntryFactory indicated for the entity mapped by this persister.
+	 * Get the {@link EntityEntryFactory} indicated for the entity mapped by this persister.
 	 *
-	 * @return The proper EntityEntryFactory.
+	 * @deprecated No longer used
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	EntityEntryFactory getEntityEntryFactory();
 
 	/**
@@ -189,7 +192,10 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	String getJpaEntityName();
 
 	default String getImportedName() {
-		return getJpaEntityName() != null ? getJpaEntityName() : StringHelper.unqualifyEntityName( getEntityName() );
+		final String entityName = getJpaEntityName();
+		return entityName == null
+				? unqualifyEntityName( getEntityName() )
+				: entityName;
 	}
 
 	/**
@@ -332,7 +338,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	/**
 	 * Determine whether this entity has any
-	 * (non-{@linkplain org.hibernate.engine.spi.CascadeStyles#NONE none}) cascading.
+	 * {@linkplain org.hibernate.engine.spi.CascadeStyles#NONE cascading} operations.
 	 *
 	 * @return True if the entity has any properties with a cascade other than NONE;
 	 *         false otherwise (aka, no cascading).
@@ -341,15 +347,31 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	/**
 	 * Determine whether this entity has any
-	 * {@linkplain org.hibernate.engine.spi.CascadeStyles#DELETE delete cascading}.
+	 * {@linkplain org.hibernate.engine.spi.CascadeStyles#PERSIST persist cascading}.
 	 *
-	 * @return True if the entity has any properties with a cascade other than NONE;
+	 * @return True if the entity has any properties with a cascade PERSIST or ALL;
 	 *         false otherwise.
 	 */
-	default boolean hasCascadeDelete() {
-		//bad default implementation for compatibility
-		return hasCascades();
-	}
+	boolean hasCascadePersist();
+
+	/**
+	 * Determine whether this entity has any
+	 * {@linkplain org.hibernate.engine.spi.CascadeStyles#DELETE delete cascading}.
+	 *
+	 * @return True if the entity has any properties with a cascade REMOVE or ALL;
+	 *         false otherwise.
+	 */
+	boolean hasCascadeDelete();
+
+	/**
+	 * Determine whether this entity has any many-to-one or one-to-one associations.
+	 *
+	 * @return True if the entity has a many-to-one or one-to-one association;
+	 * false otherwise.
+	 *
+	 * @since 7
+	 */
+	boolean hasToOnes();
 
 	/**
 	 * Determine whether this entity has any owned collections.
@@ -357,10 +379,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @return True if the entity has an owned collection;
 	 * false otherwise.
 	 */
-	default boolean hasOwnedCollections() {
-		//bad default implementation for compatibility
-		return hasCollections();
-	}
+	boolean hasOwnedCollections();
 
 	/**
 	 * Determine whether instances of this entity are considered mutable.
@@ -537,8 +556,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 			JdbcValueBiConsumer<X, Y> valueConsumer,
 			SharedSessionContractImplementor session) {
 		int span = 0;
-		if ( domainValue instanceof Object[] ) {
-			final Object[] values = (Object[]) domainValue;
+		if ( domainValue instanceof Object[] values ) {
 			for ( int i = 0; i < getNumberOfAttributeMappings(); i++ ) {
 				final AttributeMapping attributeMapping = getAttributeMapping( i );
 				span += attributeMapping.breakDownJdbcValues( values[ i ], offset + span, x, y, valueConsumer, session );
@@ -625,8 +643,24 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @param loadOptions The options for loading
 	 *
 	 * @return The loaded, matching entities
+	 *
+	 * @deprecated Use {@link #multiLoad(Object[], SharedSessionContractImplementor, MultiIdLoadOptions)}
 	 */
-	List<?> multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions);
+	@Deprecated(since = "7")
+	default List<?> multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions) {
+		return multiLoad( ids, (SharedSessionContractImplementor) session, loadOptions );
+	}
+
+	/**
+	 * Performs a load of multiple entities (of this type) by identifier simultaneously.
+	 *
+	 * @param ids The identifiers to load
+	 * @param session The originating Session
+	 * @param loadOptions The options for loading
+	 *
+	 * @return The loaded, matching entities
+	 */
+	List<?> multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions);
 
 	@Override
 	default Object loadByUniqueKey(String propertyName, Object uniqueKey, SharedSessionContractImplementor session) {
@@ -638,13 +672,33 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	/**
 	 * Do a version check (optional operation)
+	 *
+	 * @deprecated Use {@link #lock(Object, Object, Object, LockMode, SharedSessionContractImplementor)}
 	 */
-	void lock(Object id, Object version, Object object, LockMode lockMode, EventSource session);
+	@Deprecated(since = "7")
+	default void lock(Object id, Object version, Object object, LockMode lockMode, EventSource session) {
+		lock( id, version, object, lockMode, (SharedSessionContractImplementor) session );
+	}
 
 	/**
 	 * Do a version check (optional operation)
 	 */
-	void lock(Object id, Object version, Object object, LockOptions lockOptions, EventSource session);
+	void lock(Object id, Object version, Object object, LockMode lockMode, SharedSessionContractImplementor session);
+
+	/**
+	 * Do a version check (optional operation)
+	 *
+	 * @deprecated Use {@link #lock(Object, Object, Object, LockOptions, SharedSessionContractImplementor)}
+	 */
+	@Deprecated(since = "7")
+	default void lock(Object id, Object version, Object object, LockOptions lockOptions, EventSource session) {
+		lock( id, version, object, lockOptions, (SharedSessionContractImplementor) session );
+	}
+
+	/**
+	 * Do a version check (optional operation)
+	 */
+	void lock(Object id, Object version, Object object, LockOptions lockOptions, SharedSessionContractImplementor session);
 
 	/**
 	 * Persist an instance
@@ -1079,11 +1133,6 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	Class<?> getMappedClass();
 
 	/**
-	 * Does the class implement the {@link org.hibernate.classic.Lifecycle} interface?
-	 */
-	boolean implementsLifecycle();
-
-	/**
 	 * Get the proxy interface that instances of <em>this</em> concrete class will be
 	 * cast to (optional operation).
 	 */
@@ -1248,7 +1297,13 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 		getIdentifierMapping().addToCacheKey( cacheKey, getIdentifier( value, session ), session );
 	}
 
-	BytecodeEnhancementMetadata getInstrumentationMetadata();
+	/**
+	 * @deprecated Use {@link #getBytecodeEnhancementMetadata()}
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	default BytecodeEnhancementMetadata getInstrumentationMetadata() {
+		throw new UnsupportedOperationException();
+	}
 
 	default BytecodeEnhancementMetadata getBytecodeEnhancementMetadata() {
 		return getInstrumentationMetadata();
@@ -1468,12 +1523,28 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	String selectFragment(String alias, String suffix);
 
 	/**
+	 * The type of the discriminator, or {@code null} if the entity does not have a discriminator.
+	 *
+	 * @return a {@link DiscriminatorType} or {@code null}
+	 *
+	 * @see #getDiscriminatorType()
+	 *
+	 * @since 7
+	 */
+	DiscriminatorType<?> getDiscriminatorDomainType();
+
+	/**
 	 * Retrieve the information needed to properly deal with this entity's discriminator
 	 * in a query.
 	 *
 	 * @return The entity discriminator metadata
+	 *
+	 * @deprecated Since {@link DiscriminatorMetadata} is deprecated
 	 */
-	DiscriminatorMetadata getTypeDiscriminatorMetadata();
+	@Deprecated(since = "6.2", forRemoval = true)
+	default DiscriminatorMetadata getTypeDiscriminatorMetadata() {
+		return this::getDiscriminatorDomainType;
+	}
 
 	/**
 	 * Given a property path, return the corresponding column name(s).

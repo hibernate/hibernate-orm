@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
@@ -45,6 +45,8 @@ public interface SessionCreationOptions {
 	String getTenantIdentifier();
 
 	Object getTenantIdentifierValue();
+
+	boolean isIdentifierRollbackEnabled();
 
 	TimeZone getJdbcTimeZone();
 

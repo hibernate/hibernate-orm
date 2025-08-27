@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.procedure;
@@ -432,11 +432,11 @@ public class StoredProcedureParameterTypeTest {
 				session -> {
 					ProcedureCall procedureCall = session.createStoredProcedureCall( "test" );
 					procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN );
-					procedureCall.setParameter( 1, new TypedParameterValue( StandardBasicTypes.STRING, "test" ) );
+					procedureCall.setParameter( 1, TypedParameterValue.of( StandardBasicTypes.STRING, "test" ) );
 
 					procedureCall = session.createStoredProcedureCall( "test" );
 					procedureCall.registerParameter( "test", StandardBasicTypes.STRING, ParameterMode.IN );
-					procedureCall.setParameter( "test", new TypedParameterValue( StandardBasicTypes.STRING, "test" ) );
+					procedureCall.setParameter( "test", TypedParameterValue.of( StandardBasicTypes.STRING, "test" ) );
 				}
 		);
 	}
@@ -449,7 +449,7 @@ public class StoredProcedureParameterTypeTest {
 					try {
 						ProcedureCall procedureCall = session.createStoredProcedureCall( "test" );
 						procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN );
-						procedureCall.setParameter( 1, new TypedParameterValue( StandardBasicTypes.INTEGER, 1 ) );
+						procedureCall.setParameter( 1, TypedParameterValue.of( StandardBasicTypes.INTEGER, 1 ) );
 					}
 					catch (IllegalArgumentException e) {
 						assertTrue( e.getMessage().contains( "was not of specified type" ) );

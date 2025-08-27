@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cache;
@@ -13,7 +13,7 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -91,14 +91,14 @@ public class SingleRegisteredProviderTest extends BaseUnitTestCase {
 			bsr.getService( StrategySelector.class ).registerStrategyImplementor(
 					ConnectionProvider.class,
 					"testing",
-					DriverManagerConnectionProviderImpl.class
+					DriverManagerConnectionProvider.class
 			);
 
 			final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr ).build();
 
 			final ConnectionProvider configuredProvider = ssr.getService( ConnectionProvider.class );
 
-			assertThat( configuredProvider, instanceOf( DriverManagerConnectionProviderImpl.class ) );
+			assertThat( configuredProvider, instanceOf( DriverManagerConnectionProvider.class ) );
 		}
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.json;
@@ -9,6 +9,7 @@ import java.util.List;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.type.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
@@ -19,7 +20,6 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JsonNullBehavior;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.query.sqm.produce.function.ArgumentTypesValidator.checkArgumentType;
 import static org.hibernate.query.sqm.produce.function.ArgumentTypesValidator.isUnknownExpressionType;
@@ -31,7 +31,7 @@ public class JsonObjectArgumentsValidator implements ArgumentsValidator {
 	public void validate(
 			List<? extends SqmTypedNode<?>> arguments,
 			String functionName,
-			TypeConfiguration typeConfiguration) {
+			BindingContext bindingContext) {
 		if ( !arguments.isEmpty() ) {
 			final SqmTypedNode<?> lastArgument = arguments.get( arguments.size() - 1 );
 			final int argumentsCount;
@@ -50,8 +50,7 @@ public class JsonObjectArgumentsValidator implements ArgumentsValidator {
 						: nodeType.getRelationalJavaType();
 				if ( !isUnknown( javaType ) ) {
 					final DomainType<?> domainType = key.getExpressible().getSqmType();
-					if ( domainType instanceof JdbcMapping ) {
-						final JdbcMapping jdbcMapping = (JdbcMapping) domainType;
+					if ( domainType instanceof JdbcMapping jdbcMapping ) {
 						checkArgumentType(
 								i,
 								functionName,
@@ -79,8 +78,7 @@ public class JsonObjectArgumentsValidator implements ArgumentsValidator {
 			checkArgumentsCount( argumentsCount );
 			for ( int i = 0; i < argumentsCount; i += 2 ) {
 				final SqlAstNode argument = arguments.get( i );
-				if ( argument instanceof Expression ) {
-					final Expression expression = (Expression) argument;
+				if ( argument instanceof Expression expression ) {
 					final JdbcMappingContainer expressionType = expression.getExpressionType();
 					if ( expressionType != null && !isUnknownExpressionType( expressionType ) ) {
 						final JdbcMapping mapping = expressionType.getSingleJdbcMapping();

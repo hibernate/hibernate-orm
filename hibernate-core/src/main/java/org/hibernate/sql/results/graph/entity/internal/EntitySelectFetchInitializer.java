@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.entity.internal;
@@ -170,13 +170,13 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 			else if ( lazyInitializer.isUninitialized() ) {
 				data.setState( State.RESOLVED );
 				if ( keyIsEager ) {
-					data.entityIdentifier = lazyInitializer.getIdentifier();
+					data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 				}
 			}
 			else {
 				data.setState( State.INITIALIZED );
 				if ( keyIsEager ) {
-					data.entityIdentifier = lazyInitializer.getIdentifier();
+					data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 				}
 			}
 			data.setInstance( instance );

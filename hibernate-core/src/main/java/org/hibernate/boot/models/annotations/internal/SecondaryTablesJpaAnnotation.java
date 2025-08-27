@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.SecondaryTables;
@@ -24,20 +24,20 @@ public class SecondaryTablesJpaAnnotation implements SecondaryTables, Repeatable
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public SecondaryTablesJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public SecondaryTablesJpaAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public SecondaryTablesJpaAnnotation(SecondaryTables annotation, SourceModelBuildingContext modelContext) {
+	public SecondaryTablesJpaAnnotation(SecondaryTables annotation, ModelsContext modelContext) {
 		this.value = extractJdkValue( annotation, JpaAnnotations.SECONDARY_TABLES, "value", modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public SecondaryTablesJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public SecondaryTablesJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.value = (SecondaryTable[]) attributeValues.get( "value" );
 	}
 

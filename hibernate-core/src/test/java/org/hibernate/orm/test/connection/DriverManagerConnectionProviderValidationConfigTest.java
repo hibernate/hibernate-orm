@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.connection;
@@ -9,7 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -27,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 		integrationSettings = {
 				// Force a non-shared connection provider to avoid re-creation of the shared pool
 				@Setting(name = AvailableSettings.CONNECTION_PROVIDER, value = ""),
-				@Setting(name = DriverManagerConnectionProviderImpl.VALIDATION_INTERVAL, value = "1")
+				@Setting(name = DriverManagerConnectionProvider.VALIDATION_INTERVAL, value = "1")
 		}
 )
 public class DriverManagerConnectionProviderValidationConfigTest {

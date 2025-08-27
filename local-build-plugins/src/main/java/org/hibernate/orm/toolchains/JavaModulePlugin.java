@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.toolchains;
 
@@ -20,15 +18,20 @@ import org.gradle.api.Task;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
-import org.gradle.api.tasks.compile.CompileOptions;
 import org.gradle.api.tasks.compile.ForkOptions;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.testing.Test;
-import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 
 /**
+ * Retrieves JDK versions exposed by {@link JdkVersionPlugin}
+ * and injects them in build tasks.
+ *
+ * @see JdkVersionConfig
+ * @see JdkVersionSettingsPlugin
+ * @see JdkVersionPlugin
+ *
  * @author Steve Ebersole
  */
 public class JavaModulePlugin implements Plugin<Project> {
@@ -49,74 +52,66 @@ public class JavaModulePlugin implements Plugin<Project> {
 
 		final SourceSetContainer sourceSets = javaPluginExtension.getSourceSets();
 		final SourceSet mainSourceSet = sourceSets.getByName( SourceSet.MAIN_SOURCE_SET_NAME );
-		final SourceSet testSourceSet = sourceSets.getByName( SourceSet.TEST_SOURCE_SET_NAME );
 
-		final JavaCompile mainCompileTask = (JavaCompile) project.getTasks().getByName( mainSourceSet.getCompileJavaTaskName() );
-		final JavaCompile testCompileTask = (JavaCompile) project.getTasks().getByName( testSourceSet.getCompileJavaTaskName() );
-		final Test testTask = (Test) project.getTasks().findByName( testSourceSet.getName() );
-
-		if ( !jdkVersionsConfig.isExplicitlyConfigured() ) {
-			mainCompileTask.setSourceCompatibility( jdkVersionsConfig.getMainReleaseVersion().toString() );
-			mainCompileTask.setTargetCompatibility( jdkVersionsConfig.getMainReleaseVersion().toString() );
-
-			testCompileTask.setSourceCompatibility( jdkVersionsConfig.getTestCompileVersion().toString() );
-			testCompileTask.setTargetCompatibility( jdkVersionsConfig.getTestCompileVersion().toString() );
+		if ( jdkVersionsConfig.getMain().isExplicit() ) {
+			javaPluginExtension.getToolchain().getLanguageVersion().set( jdkVersionsConfig.getMainCompilerVersion() );
 		}
-		else {
-			javaPluginExtension.getToolchain().getLanguageVersion().set( jdkVersionsConfig.getMainCompileVersion() );
 
-			configureCompileTasks( project );
-			configureTestTasks( project );
-			configureJavadocTasks( project, mainSourceSet );
-
-			configureCompileTask( mainCompileTask, jdkVersionsConfig.getMainReleaseVersion() );
-			configureCompileTask( testCompileTask, jdkVersionsConfig.getTestReleaseVersion() );
-
-			testCompileTask.getJavaCompiler().set(
-					toolchainService.compilerFor( javaToolchainSpec -> {
-						javaToolchainSpec.getLanguageVersion().set( jdkVersionsConfig.getTestCompileVersion() );
-					} )
-			);
-			if ( testTask != null ) {
-				testTask.getJavaLauncher().set(
-						toolchainService.launcherFor( javaToolchainSpec -> {
-							javaToolchainSpec.getLanguageVersion().set( jdkVersionsConfig.getTestLauncherVersion() );
-						} )
-				);
-			}
-		}
+		configureCompileTasks( project, mainSourceSet, jdkVersionsConfig );
+		configureTestTasks( project, jdkVersionsConfig );
+		configureJavadocTasks( project, mainSourceSet, jdkVersionsConfig );
 	}
 
-	private void configureCompileTask(JavaCompile compileTask, JavaLanguageVersion releaseVersion) {
-		final CompileOptions compileTaskOptions = compileTask.getOptions();
-		compileTaskOptions.getRelease().set( releaseVersion.asInt() );
-		// Needs add-opens because of https://github.com/gradle/gradle/issues/15538
-		addJvmArgs( compileTask, "--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED" );
-	}
-
-	private void configureCompileTasks(Project project) {
+	private void configureCompileTasks(Project project, SourceSet mainSourceSet, JdkVersionConfig jdkVersionsConfig) {
 		project.getTasks().withType( JavaCompile.class ).configureEach( new Action<JavaCompile>() {
 			@Override
 			public void execute(JavaCompile compileTask) {
 				addJvmArgs( compileTask,
 						project.property( "toolchain.compiler.jvmargs" ).toString().split( " " )
 				);
-				compileTask.doFirst(
-						new Action<Task>() {
-							@Override
-							public void execute(Task task) {
-								project.getLogger().lifecycle(
-										"Compiling with '{}'",
-										compileTask.getJavaCompiler().get().getMetadata().getInstallationPath()
-								);
+				if ( compileTask.getName().equals( mainSourceSet.getCompileJavaTaskName() ) ) {
+					compileTask.getOptions().getRelease().set( jdkVersionsConfig.getMainReleaseVersion().asInt() );
+					if ( jdkVersionsConfig.getMain().isExplicit() ) {
+						compileTask.getJavaCompiler().set(
+								toolchainService.compilerFor( javaToolchainSpec -> {
+									javaToolchainSpec.getLanguageVersion()
+											.set( jdkVersionsConfig.getMainCompilerVersion() );
+								} )
+						);
+					}
+				}
+				// Assume all non-main compile tasks are test compile tasks,
+				// because that's currently true,
+				// and there is no way to automatically determine whether a custom compile task if for main code or tests.
+				else {
+					compileTask.getOptions().getRelease().set( jdkVersionsConfig.getTestReleaseVersion().asInt() );
+					if ( jdkVersionsConfig.getTest().isExplicit() ) {
+						compileTask.getJavaCompiler().set(
+								toolchainService.compilerFor( javaToolchainSpec -> {
+									javaToolchainSpec.getLanguageVersion().set( jdkVersionsConfig.getTestCompilerVersion() );
+								} )
+						);
+					}
+				}
+				if ( jdkVersionsConfig.isExplicit() ) {
+					compileTask.doFirst(
+							new Action<Task>() {
+								@Override
+								public void execute(Task task) {
+									project.getLogger().lifecycle(
+											"Compiling with '{}' to release '{}'",
+											compileTask.getJavaCompiler().get().getMetadata().getInstallationPath(),
+											compileTask.getOptions().getRelease().get()
+									);
+								}
 							}
-						}
-				);
+					);
+				}
 			}
 		} );
 	}
 
-	private void configureTestTasks(Project project) {
+	private void configureTestTasks(Project project, JdkVersionConfig jdkVersionsConfig) {
 		project.getTasks().withType( Test.class ).configureEach( new Action<Test>() {
 			@Override
 			public void execute(Test testTask) {
@@ -132,33 +127,45 @@ public class JavaModulePlugin implements Plugin<Project> {
 							)
 					);
 				}
-				testTask.doFirst(
-						new Action<Task>() {
-							@Override
-							public void execute(Task task) {
-								project.getLogger().lifecycle(
-										"Testing with '{}'",
-										testTask.getJavaLauncher().get().getMetadata().getInstallationPath()
-								);
+				if ( jdkVersionsConfig.getTest().isExplicit() ) {
+					testTask.getJavaLauncher().set(
+							toolchainService.launcherFor( javaToolchainSpec -> {
+								javaToolchainSpec.getLanguageVersion()
+										.set( jdkVersionsConfig.getTestLauncherVersion() );
+							} )
+					);
+				}
+				if ( jdkVersionsConfig.isExplicit() ) {
+					testTask.doFirst(
+							new Action<Task>() {
+								@Override
+								public void execute(Task task) {
+									project.getLogger().lifecycle(
+											"Testing with '{}'",
+											testTask.getJavaLauncher().get().getMetadata().getInstallationPath()
+									);
+								}
 							}
-						}
-				);
+					);
+				}
 			}
 		} );
 	}
 
-	private void configureJavadocTasks(Project project, SourceSet mainSourceSet) {
+	private void configureJavadocTasks(Project project, SourceSet mainSourceSet, JdkVersionConfig jdkVersionsConfig) {
 		project.getTasks().named( mainSourceSet.getJavadocTaskName(), Javadoc.class, (task) -> {
 			task.getOptions().setJFlags( javadocFlags( project ) );
-			task.doFirst( new Action<Task>() {
-				@Override
-				public void execute(Task t) {
-					project.getLogger().lifecycle(
-							"Generating javadoc with '{}'",
-							task.getJavadocTool().get().getMetadata().getInstallationPath()
-					);
-				}
-			} );
+			if ( jdkVersionsConfig.isExplicit() ) {
+				task.doFirst( new Action<Task>() {
+					@Override
+					public void execute(Task t) {
+						project.getLogger().lifecycle(
+								"Generating javadoc with '{}'",
+								task.getJavadocTool().get().getMetadata().getInstallationPath()
+						);
+					}
+				} );
+			}
 		} );
 	}
 

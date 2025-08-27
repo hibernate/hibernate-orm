@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.sql;
@@ -29,7 +29,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryTransformer;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
-import jakarta.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *

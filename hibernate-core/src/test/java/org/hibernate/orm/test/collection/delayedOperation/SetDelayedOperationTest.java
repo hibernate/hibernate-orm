@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.collection.delayedOperation;
@@ -73,13 +73,7 @@ public class SetDelayedOperationTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					Parent parent = session.get( Parent.class, parentId );
-					parent.getChildren().clear();
-					session.remove( parent );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 
 		parentId = null;
 	}

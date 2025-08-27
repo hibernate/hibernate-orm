@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type.contributor;
@@ -25,6 +25,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 
@@ -35,6 +36,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -42,6 +44,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @SessionFactory
 @JiraKey(value = "HHH-15590")
+@SkipForDialect(dialectClass = InformixDialect.class,
+		reason = "Informix does not support binary literals")
 public class LiteralRenderingTest {
 
 	public static List<Object> literalValues() throws Exception {

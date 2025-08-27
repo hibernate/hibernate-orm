@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.resultmapping;
@@ -426,15 +426,6 @@ public class EntityResultTests extends AbstractUsageTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					// discriminator hierarchy data
-					session.createQuery( "delete DiscriminatedRoot" ).executeUpdate();
-					// converted values data
-					session.createQuery( "delete EntityOfBasics" ).executeUpdate();
-					// embedded values
-					session.createQuery( "delete EntityWithEmbedded" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.process.internal;
@@ -8,13 +8,14 @@ import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.util.ReflectHelper.ensureAccessibility;
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
  * @author Steve Ebersole
@@ -33,14 +34,13 @@ public class EnumeratedValueConverter<E extends Enum<E>,R> implements BasicValue
 		this.enumJavaType = enumJavaType;
 		this.relationalJavaType = relationalJavaType;
 
-		ReflectHelper.ensureAccessibility( valueField );
+		ensureAccessibility( valueField );
 
 		final Class<E> enumJavaTypeClass = enumJavaType.getJavaTypeClass();
 		final E[] enumConstants = enumJavaTypeClass.getEnumConstants();
-		relationalToEnumMap = CollectionHelper.mapOfSize( enumConstants.length );
-		enumToRelationalMap = CollectionHelper.mapOfSize( enumConstants.length );
-		for ( int i = 0; i < enumConstants.length; i++ ) {
-			final E enumConstant = enumConstants[i];
+		relationalToEnumMap = mapOfSize( enumConstants.length );
+		enumToRelationalMap = mapOfSize( enumConstants.length );
+		for ( final E enumConstant : enumConstants ) {
 			try {
 				//noinspection unchecked
 				final R relationalValue = (R) valueField.get( enumConstant );
@@ -60,18 +60,12 @@ public class EnumeratedValueConverter<E extends Enum<E>,R> implements BasicValue
 
 	@Override
 	public @Nullable E toDomainValue(@Nullable R relationalForm) {
-		if ( relationalForm == null ) {
-			return null;
-		}
-		return relationalToEnumMap.get( relationalForm );
+		return relationalForm == null ? null : relationalToEnumMap.get( relationalForm );
 	}
 
 	@Override
 	public @Nullable R toRelationalValue(@Nullable E domainForm) {
-		if ( domainForm == null ) {
-			return null;
-		}
-		return enumToRelationalMap.get( domainForm );
+		return domainForm == null ? null : enumToRelationalMap.get( domainForm );
 	}
 
 	@Override

@@ -1,8 +1,19 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.enhanced;
+
+import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.id.IntegralDataTypeHolder;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.query.sqm.BinaryArithmeticOperator;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.jboss.logging.Logger;
 
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
@@ -10,12 +21,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import org.hibernate.HibernateException;
-import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.internal.CoreMessageLogger;
-
-import org.jboss.logging.Logger;
 
 /**
  * Optimizer which uses a pool of values, storing the next low value of the range
@@ -57,11 +62,8 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 			throw new HibernateException( "increment size cannot be less than 1" );
 		}
 		if ( log.isTraceEnabled() ) {
-			log.tracev(
-					"Creating pooled optimizer with [incrementSize={0}; returnClass={1}]",
-					incrementSize,
-					returnClass.getName()
-			);
+			log.tracev( "Creating pooled optimizer with [incrementSize={0}; returnClass={1}]",
+					incrementSize, returnClass.getName() );
 		}
 	}
 
@@ -166,5 +168,16 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 	@Override
 	public void injectInitialValue(long initialValue) {
 		this.initialValue = initialValue;
+	}
+
+	@Override
+	public Expression createLowValueExpression(Expression databaseValue, SessionFactoryImplementor sessionFactory) {
+		BasicValuedMapping integerType = sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
+		return new BinaryArithmeticExpression(
+				databaseValue,
+				BinaryArithmeticOperator.SUBTRACT,
+				new QueryLiteral<>( incrementSize - 1, integerType ),
+				integerType
+		);
 	}
 }

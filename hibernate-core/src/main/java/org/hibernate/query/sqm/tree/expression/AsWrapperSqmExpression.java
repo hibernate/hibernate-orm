@@ -1,18 +1,21 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.type.BasicType;
+
+import java.util.Objects;
 
 public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 	private final SqmExpression<?> expression;
 
-	AsWrapperSqmExpression(SqmExpressible<T> type, SqmExpression<?> expression) {
+	AsWrapperSqmExpression(SqmBindableType<T> type, SqmExpression<?> expression) {
 		super( type, expression.nodeBuilder() );
 		this.expression = expression;
 	}
@@ -23,12 +26,12 @@ public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "wrap(" );
-		expression.appendHqlString( sb );
-		sb.append( " as " );
-		sb.append( getNodeType().getReturnedClassName() );
-		sb.append( ")" );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( "wrap(" );
+		expression.appendHqlString( hql, context );
+		hql.append( " as " );
+		hql.append( getNodeType().getReturnedClassName() );
+		hql.append( ")" );
 	}
 
 	@Override
@@ -48,5 +51,17 @@ public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 	@Override
 	public BasicType<T> getNodeType() {
 		return (BasicType<T>) super.getNodeType();
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof AsWrapperSqmExpression<?> that
+			&& Objects.equals( this.expression, that.expression )
+			&& Objects.equals( this.getNodeType(), that.getNodeType() );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode( expression );
 	}
 }

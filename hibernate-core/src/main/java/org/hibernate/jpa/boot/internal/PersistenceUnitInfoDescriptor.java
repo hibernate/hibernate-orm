@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.boot.internal;
@@ -8,22 +8,28 @@ import java.net.URL;
 import java.util.List;
 import java.util.Properties;
 
+import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.spi.ClassTransformer;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.jpa.internal.enhance.EnhancingClassTransformerImpl;
+
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.PersistenceUnitInfo;
 import jakarta.persistence.PersistenceUnitTransactionType;
 
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
-import org.hibernate.bytecode.spi.ClassTransformer;
-import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.jpa.internal.enhance.EnhancingClassTransformerImpl;
 import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 
 /**
  * @author Steve Ebersole
  */
 public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor {
+
+	private static final CoreMessageLogger LOGGER = CoreLogging.messageLogger( PersistenceUnitInfoDescriptor.class );
+
 	private final PersistenceUnitInfo persistenceUnitInfo;
 	private ClassTransformer classTransformer;
 
@@ -126,6 +132,10 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 		// During testing, we will return a null temp class loader
 		// in cases where we don't care about enhancement
 		if ( persistenceUnitInfo.getNewTempClassLoader() != null ) {
+			if ( LOGGER.isTraceEnabled() ) {
+				LOGGER.trace( "Pushing class transformers for PU named '" + getName()
+								+ "' on loading classloader " + enhancementContext.getLoadingClassLoader() );
+			}
 			final EnhancingClassTransformerImpl classTransformer =
 					new EnhancingClassTransformerImpl( enhancementContext );
 			this.classTransformer = classTransformer;

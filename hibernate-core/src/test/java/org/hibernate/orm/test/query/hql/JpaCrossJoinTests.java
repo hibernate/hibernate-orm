@@ -1,11 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -46,6 +47,7 @@ public class JpaCrossJoinTests {
 
 	@Test
 	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "Altibase dialect emulate cross join with inner join")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not have cross joins")
 	public void test2Roots(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -59,6 +61,7 @@ public class JpaCrossJoinTests {
 
 	@Test
 	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "Altibase dialect emulate cross join with inner join")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not have cross joins")
 	public void test2Roots2(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();

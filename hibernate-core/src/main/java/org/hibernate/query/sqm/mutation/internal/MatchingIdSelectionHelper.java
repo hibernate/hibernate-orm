@@ -1,25 +1,29 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.MutableObject;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
+import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.internal.CacheableSqmInterpretation;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
@@ -42,6 +46,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
@@ -220,16 +225,18 @@ public class MatchingIdSelectionHelper {
 	 * Centralized selection of ids matching the restriction of the DELETE
 	 * or UPDATE SQM query
 	 */
-	public static List<Object> selectMatchingIds(
+	public static CacheableSqmInterpretation<SelectStatement, JdbcOperationQuerySelect> createMatchingIdsSelect(
 			SqmDeleteOrUpdateStatement<?> sqmMutationStatement,
 			DomainParameterXref domainParameterXref,
-			DomainQueryExecutionContext executionContext) {
+			DomainQueryExecutionContext executionContext,
+			MutableObject<JdbcParameterBindings> firstJdbcParameterBindingsConsumer) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 
-		final EntityMappingType entityDescriptor = factory.getRuntimeMetamodels().getEntityMappingType(
-				sqmMutationStatement.getTarget().getModel().getHibernateEntityName()
-		);
-		final SqmSelectStatement<?> sqmSelectStatement = generateMatchingIdSelectStatement( sqmMutationStatement, entityDescriptor );
+		final EntityMappingType entityDescriptor =
+				factory.getMappingMetamodel()
+						.getEntityDescriptor( sqmMutationStatement.getTarget().getModel().getHibernateEntityName() );
+		final SqmSelectStatement<?> sqmSelectStatement =
+				generateMatchingIdSelectStatement( sqmMutationStatement, entityDescriptor );
 		final SqmQuerySpec<?> sqmQuerySpec = sqmSelectStatement.getQuerySpec();
 
 		if ( sqmMutationStatement instanceof SqmDeleteStatement<?> ) {
@@ -265,7 +272,7 @@ public class MatchingIdSelectionHelper {
 						domainParameterXref,
 						executionContext.getQueryParameterBindings(),
 						executionContext.getSession().getLoadQueryInfluencers(),
-						factory,
+						factory.getSqlTranslationEngine(),
 						true
 				);
 		final SqmTranslation<SelectStatement> translation = translator.translate();
@@ -275,10 +282,12 @@ public class MatchingIdSelectionHelper {
 				.getSqlAstTranslatorFactory()
 				.buildSelectTranslator( factory, translation.getSqlAst() );
 
+		final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref =
+				SqmUtil.generateJdbcParamsXref( domainParameterXref, translator );
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
-				SqmUtil.generateJdbcParamsXref( domainParameterXref, translator ),
+				jdbcParamsXref,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
@@ -303,22 +312,43 @@ public class MatchingIdSelectionHelper {
 					}
 			);
 		}
-		final JdbcOperationQuerySelect idSelectJdbcOperation = sqlAstSelectTranslator.translate(
-				jdbcParameterBindings,
-				executionContext.getQueryOptions()
+		firstJdbcParameterBindingsConsumer.set( jdbcParameterBindings );
+		return new CacheableSqmInterpretation<>(
+				translation.getSqlAst(),
+				sqlAstSelectTranslator.translate( jdbcParameterBindings, executionContext.getQueryOptions() ),
+				jdbcParamsXref,
+				translation.getSqmParameterMappingModelTypeResolutions()
 		);
-		lockOptions.setLockMode( lockMode );
+	}
 
+	/**
+	 * Centralized selection of ids matching the restriction of the DELETE
+	 * or UPDATE SQM query
+	 */
+	public static List<Object> selectMatchingIds(
+			SqmDeleteOrUpdateStatement<?> sqmMutationStatement,
+			DomainParameterXref domainParameterXref,
+			DomainQueryExecutionContext executionContext) {
+		final MutableObject<JdbcParameterBindings> jdbcParameterBindings = new MutableObject<>();
+		final CacheableSqmInterpretation<SelectStatement, JdbcOperationQuerySelect> interpretation =
+				createMatchingIdsSelect( sqmMutationStatement, domainParameterXref, executionContext, jdbcParameterBindings );
+		return selectMatchingIds( interpretation, jdbcParameterBindings.get(), executionContext );
+	}
+
+	public static List<Object> selectMatchingIds(
+			CacheableSqmInterpretation<SelectStatement, JdbcOperationQuerySelect> interpretation,
+			JdbcParameterBindings jdbcParameterBindings,
+			DomainQueryExecutionContext executionContext) {
 		final RowTransformer<?> rowTransformer;
-		if ( sqmQuerySpec.getSelectClause().getSelections().size() == 1 ) {
+		if ( interpretation.statement().getDomainResultDescriptors().size() == 1 ) {
 			rowTransformer = RowTransformerSingularReturnImpl.instance();
 		}
 		else {
 			rowTransformer = RowTransformerArrayImpl.instance();
 		}
 		//noinspection unchecked
-		return jdbcServices.getJdbcSelectExecutor().list(
-				idSelectJdbcOperation,
+		return executionContext.getSession().getFactory().getJdbcServices().getJdbcSelectExecutor().list(
+				interpretation.jdbcOperation(),
 				jdbcParameterBindings,
 				SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext ),
 				(RowTransformer<Object>) rowTransformer,

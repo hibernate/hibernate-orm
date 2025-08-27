@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -10,7 +10,9 @@ import org.hibernate.internal.util.StringHelper;
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
+import static org.hibernate.processor.util.Constants.BOOLEAN;
 import static org.hibernate.processor.util.Constants.QUERY;
+import static org.hibernate.processor.util.Constants.VOID;
 import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
@@ -80,7 +82,7 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	@Override
 	boolean singleResult() {
-		return containerType == null;
+		return containerType == null && !isUpdate;
 	}
 
 	@Override
@@ -88,39 +90,85 @@ public class QueryMethod extends AbstractQueryMethod {
 		final List<String> paramTypes = parameterTypes();
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
-		modifiers( paramTypes, declaration );
+		modifiers( declaration, paramTypes );
 		preamble( declaration, paramTypes );
-		collectOrdering( declaration, paramTypes );
+		nullChecks( declaration, paramTypes );
+		createSpecification( declaration );
+		handleRestrictionParameters( declaration, paramTypes );
+		collectOrdering( declaration, paramTypes, containerType );
 		chainSession( declaration );
 		tryReturn( declaration, paramTypes, containerType );
 		castResult( declaration );
 		createQuery( declaration );
 		setParameters( declaration, paramTypes, "");
 		handlePageParameters( declaration, paramTypes, containerType );
-		boolean unwrapped = !isUsingEntityManager();
-		unwrapped = applyOrder( declaration, paramTypes, containerType, unwrapped );
-		execute( declaration, unwrapped );
+		execute( declaration, initiallyUnwrapped() );
 		convertExceptions( declaration );
 		chainSessionEnd( isUpdate, declaration );
 		closingBrace( declaration );
 		return declaration.toString();
 	}
 
+	String specificationType() {
+		return isUpdate
+				? "org.hibernate.query.specification.MutationSpecification"
+				: "org.hibernate.query.specification.SelectionSpecification";
+	}
+
 	@Override
 	void createQuery(StringBuilder declaration) {
-		declaration
-				.append(localSessionName())
-				.append('.')
-				.append(createQueryMethod())
-				.append("(")
-				.append(getConstantName());
-		if ( returnTypeClass != null && !isUpdate ) {
-			declaration
-					.append(", ")
-					.append(annotationMetaEntity.importType(returnTypeClass))
-					.append(".class");
+		if ( isUsingSpecification() ) {
+			if ( isReactive() ) {
+				declaration
+						.append(localSessionName())
+						.append(".createQuery(_spec.buildCriteria(")
+						.append(localSessionName())
+						.append(".getFactory().getCriteriaBuilder()))\n");
+			}
+			else {
+				declaration
+						.append("_spec.createQuery(")
+						.append(localSessionName())
+						.append(getObjectCall())
+						.append(")\n");
+			}
 		}
-		declaration.append(")\n");
+		else {
+			declaration
+					.append(localSessionName())
+					.append(getObjectCall())
+					.append('.')
+					.append(createQueryMethod())
+					.append("(")
+					.append(getConstantName());
+			if ( returnTypeClass != null && !isUpdate ) {
+				declaration
+						.append(", ")
+						.append(annotationMetaEntity.importType(returnTypeClass))
+						.append(".class");
+			}
+			declaration.append(")\n");
+		}
+	}
+
+	@Override
+	void createSpecification(StringBuilder declaration) {
+		if ( returnTypeClass != null && isUsingSpecification() ) {
+			declaration
+					.append( "\tvar _spec = " )
+					.append( annotationMetaEntity.importType( specificationType() ) )
+					.append( ".create(" )
+					.append( annotationMetaEntity.importType( returnTypeClass ) )
+					.append( ".class, " )
+					.append( getConstantName() )
+					.append( ");\n" );
+		}
+	}
+
+	@Override
+	boolean isUsingSpecification() {
+		return returnTypeClass != null
+			&& ( hasRestriction() || hasOrder() && !isJakartaCursoredPage(containerType) );
 	}
 
 	private String createQueryMethod() {
@@ -150,14 +198,23 @@ public class QueryMethod extends AbstractQueryMethod {
 	private void execute(StringBuilder declaration, boolean unwrapped) {
 		if ( isUpdate ) {
 			declaration
-					.append("\t\t\t")
-					.append(".executeUpdate()");
-			if ( "boolean".equals(returnTypeName) ) {
-				declaration
-						.append(" > 0");
+					.append("\t\t\t.executeUpdate()");
+			if ( isReactive() ) {
+				if ( VOID.equals(returnTypeName) ) {
+					declaration
+							.append( "\n\t\t\t.replaceWithVoid()" );
+				}
+				else if ( BOOLEAN.equals(returnTypeName) ) {
+					declaration
+							.append( "\n\t\t\t.map(rows -> rows>0)" );
+				}
 			}
-			declaration
-					.append(";\n");
+			else {
+				if ( "boolean".equals( returnTypeName ) ) {
+					declaration
+							.append( " > 0" );
+				}
+			}
 		}
 		else {
 			final boolean mustUnwrap =
@@ -170,9 +227,8 @@ public class QueryMethod extends AbstractQueryMethod {
 	@Override
 	void setParameters(StringBuilder declaration, List<String> paramTypes, String indent) {
 		for ( int i = 0; i < paramNames.size(); i++ ) {
-			final String paramName = paramNames.get(i);
-			final String paramType = paramTypes.get(i);
-			if ( !isSpecialParam(paramType) ) {
+			if ( !isSpecialParam( paramTypes.get(i) ) ) {
+				final String paramName = paramNames.get(i);
 				final int ordinal = i+1;
 				if ( queryString.contains(":" + paramName) ) {
 					declaration.append(indent);
@@ -235,8 +291,7 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	private void comment(StringBuilder declaration) {
 		declaration
-				.append("\n/**");
-		declaration
+				.append("\n/**")
 				.append("\n * Execute the query {@value #")
 				.append(getConstantName())
 				.append("}.")
@@ -246,8 +301,9 @@ public class QueryMethod extends AbstractQueryMethod {
 				.append("\n **/\n");
 	}
 
-	private void modifiers(List<String> paramTypes, StringBuilder declaration) {
-		boolean hasVarargs = paramTypes.stream().anyMatch(ptype -> ptype.endsWith("..."));
+	private void modifiers(StringBuilder declaration, List<String> paramTypes) {
+		final boolean hasVarargs =
+				paramTypes.stream().anyMatch(ptype -> ptype.endsWith("..."));
 		if ( hasVarargs ) {
 			declaration
 					.append("@SafeVarargs\n");
@@ -266,9 +322,20 @@ public class QueryMethod extends AbstractQueryMethod {
 		}
 	}
 
+	void nullChecks(StringBuilder declaration, List<String> paramTypes) {
+		for ( int i = 0; i<paramNames.size(); i++ ) {
+			final String paramType = paramTypes.get( i );
+			// we don't do null checks on query parameters
+			if ( isSpecialParam(paramType) ) {
+				nullCheck( declaration, paramNames.get(i) );
+			}
+		}
+	}
+
 	@Override
 	public String getAttributeNameDeclarationString() {
-		StringBuilder declaration = new StringBuilder( queryString.length() + 200 );
+		final StringBuilder declaration =
+				new StringBuilder( queryString.length() + 200 );
 		declaration
 				.append("\n/**\n * @see ")
 				.append("#");
@@ -280,42 +347,33 @@ public class QueryMethod extends AbstractQueryMethod {
 				.append( " = \"" );
 		for ( int i = 0; i < queryString.length(); i++ ) {
 			final char c = queryString.charAt( i );
-			switch ( c ) {
-				case '\r':
-					declaration.append( "\\r" );
-					break;
-				case '\n':
-					declaration.append( "\\n" );
-					break;
-				case '\\':
-					declaration.append( "\\\\" );
-					break;
-				case '"':
-					declaration.append( "\\\"" );
-					break;
-				default:
-					declaration.append( c );
-					break;
-			}
+			declaration.append(switch ( c ) {
+				case '\r' -> "\\r";
+				case '\n' -> "\\n";
+				case '\\' -> "\\\\";
+				case '"' -> "\\\"";
+				default -> c;
+			});
 		}
-		return declaration.append("\";").toString();
+		return declaration
+				.append("\";")
+				.toString();
 	}
 
 	private String getConstantName() {
 		final String stem = getUpperUnderscoreCaseFromLowerCamelCase(methodName);
-		if ( paramTypes.isEmpty() ) {
-			return stem;
-		}
-		else {
-			return stem + "_"
-					+ paramTypes.stream()
-							.filter(type -> !isSpecialParam(type))
-							.map(type -> type.indexOf('<')>0 ? type.substring(0, type.indexOf('<')) : type)
-							.map(StringHelper::unqualify)
-							.map(type -> type.replace("[]", "Array"))
-							.reduce((x,y) -> x + '_' + y)
-							.orElse("");
-		}
+		return paramTypes.isEmpty()
+			|| paramTypes.stream().allMatch(AbstractQueryMethod::isSpecialParam)
+				? stem
+				: stem + "_" + paramTypes.stream()
+						.filter( type -> !isSpecialParam(type) )
+						.map( type -> type.indexOf('<') > 0
+								? type.substring(0, type.indexOf('<'))
+								: type )
+						.map( StringHelper::unqualify )
+						.map( type -> type.replace("[]", "Array") )
+						.reduce( (x, y) -> x + '_' + y )
+						.orElseThrow();
 	}
 
 	public String getTypeDeclaration() {

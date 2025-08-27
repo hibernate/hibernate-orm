@@ -268,16 +268,34 @@ var entityManager =
 
 However, since we often don't have this level of control over creation of the session, it's more common to supply an implementation of link:{doc-javadoc-url}org/hibernate/context/spi/CurrentTenantIdentifierResolver.html[`CurrentTenantIdentifierResolver`] to Hibernate.
 
-There are three common ways to implement multi-tenancy:
+To make use of multi-tenancy, we'll usually need to set at least one of these configuration properties:
+
+.Multi-tenancy configuration
+[%breakable,cols="36,~"]
+|===
+| Configuration property name           | Purpose
+
+| link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_IDENTIFIER_RESOLVER[`hibernate.tenant_identifier_resolver`]  | Specifies the `CurrentTenantIdentifierResolver`
+| link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_SCHEMA_MAPPER[`hibernate.multi_tenant.schema_mapper`]  | Specifies the `TenantSchemaMapper` for schema-based multi-tenancy
+| link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_CONNECTION_PROVIDER[`hibernate.multi_tenant_connection_provider`]  | Specifies the `MultiTenantConnectionProvider` for database-based multi-tenancy
+|===
+
+// Do not configure those properties if you would like the configured `BeanContainer` provide the implementation.
+
+There are three common approaches to multi-tenancy:
 
 1. each tenant has its own database,
 2. each tenant has its own schema, or
 3. tenants share tables in a single schema, and rows are tagged with the tenant id.
 
-From the point of view of Hibernate, there's little difference between the first two options.
-Hibernate will need to obtain a JDBC connection with permissions on the database and schema owned by the current tenant.
+[discrete]
+==== Database-based multi-tenancy
 
-Therefore, we must implement a link:{doc-javadoc-url}org/hibernate/engine/jdbc/connections/spi/MultiTenantConnectionProvider.html[`MultiTenantConnectionProvider`] which takes on this responsibility:
+The first option is to give each tenant its own database.
+That is, we'll use a separate source of JDBC connections for each tenant.
+
+The interface link:{doc-javadoc-url}org/hibernate/engine/jdbc/connections/spi/MultiTenantConnectionProvider.html[`MultiTenantConnectionProvider`] is responsible for obtaining an appropriate `Connection` for a given tenant.
+Typically, we'll provide a custom implementation of this interface:
 
 - from time to time, Hibernate will ask for a connection, passing the id of the current tenant, and then we must create an appropriate connection or obtain one from a pool, and return it to Hibernate, and
 - later, Hibernate will release the connection and ask us to destroy it or return it to the appropriate pool.
@@ -285,10 +303,21 @@ Therefore, we must implement a link:{doc-javadoc-url}org/hibernate/engine/jdbc/c
 [TIP]
 ====
 Check out link:{doc-javadoc-url}org/hibernate/engine/jdbc/connections/spi/DataSourceBasedMultiTenantConnectionProviderImpl.html[`DataSourceBasedMultiTenantConnectionProviderImpl`] for inspiration.
+If your source of JDBC connections is a set of JNDI-bound ``DataSource``s, you might even be able to use this implementation directly.
 ====
 
+[discrete]
+==== Schema-based multi-tenancy
+
+The second option is to keep all the data for different tenants in the same database, giving each tenant a different named database schema with its own set of tables.
+
+In this case we must supply a link:{doc-javadoc-url}org/hibernate/context/spi/TenantSchemaMapper.html[`TenantSchemaMapper`] which is responsible for mapping from tenant ids to schema names.
+
+[discrete]
+==== Discriminator-based multi-tenancy
+
 The third option is quite different.
-In this case we don't need a `MultiTenantConnectionProvider`, but we will need a dedicated column holding the tenant id mapped by each of our entities.
+In this case we store data from all tenants in the same tables, but each table has a dedicated column holding the tenant id mapped by each of our entities.
 
 [source,java]
 ----
@@ -308,20 +337,6 @@ Within a given session, our data is automatically filtered so that only rows tag
 ====
 Native SQL queries are _not_ automatically filtered by tenant id; you'll have to do that part yourself.
 ====
-
-To make use of multi-tenancy, we'll usually need to set at least one of these configuration properties:
-
-.Multi-tenancy configuration
-[%breakable,cols="36,~"]
-|===
-| Configuration property name           | Purpose
-
-| `hibernate.tenant_identifier_resolver`  | Specifies the `CurrentTenantIdentifierResolver`
-| `hibernate.multi_tenant_connection_provider`  | Specifies the `MultiTenantConnectionProvider`
-|===
-
-Do not configure those properties if you would like the configured `BeanContainer` provide the implementation.
-A longer discussion of multi-tenancy may be found in the {multitenacy-doc}[User Guide].
 
 [[custom-sql]]
 === Using custom-written SQL
@@ -467,7 +482,7 @@ Furthermore, the link:{doc-javadoc-url}org/hibernate/annotations/ValueGeneration
 // .The older APIs are still available in Hibernate 6
 ====
 These APIs were new in Hibernate 6, and supersede the classic `IdentifierGenerator` interface and `@GenericGenerator` annotation from older versions of Hibernate.
-However, the older APIs are still available and custom ``IdentifierGenerator``s written for older versions of Hibernate continue to work in Hibernate 6.
+However, the older APIs are still available and custom ``IdentifierGenerator``s written for older versions of Hibernate continue to work in Hibernate 7.
 ====
 
 Hibernate has a range of built-in generators which are defined in terms of this new framework.
@@ -477,12 +492,12 @@ Hibernate has a range of built-in generators which are defined in terms of this 
 |===
 | Annotation | Implementation | Purpose
 
-| `@Generated` | `GeneratedGeneration` | Generically handles database-generated values
-| `@GeneratedColumn` | `GeneratedAlwaysGeneration` | Handles values generated using `generated always`
-| `@CurrentTimestamp` | `CurrentTimestampGeneration` | Generic support for database or in-memory generation of creation or update timestamps
-| `@CreationTimestamp` | `CurrentTimestampGeneration` | A timestamp generated when an entity is first made persistent
-| `@UpdateTimestamp` | `CurrentTimestampGeneration` | A timestamp generated when an entity is made persistent, and regenerated every time the entity is modified
-| `@UuidGenerator` | `UuidGenerator` | A more flexible generator for RFC 4122 UUIDs
+| link:{doc-javadoc-url}org/hibernate/annotations/Generated.html[`@Generated`] | `GeneratedGeneration` | Generically handles database-generated values
+| link:{doc-javadoc-url}org/hibernate/annotations/GeneratedColumn.html[`@GeneratedColumn`] | `GeneratedAlwaysGeneration` | Handles values generated using `generated always`
+| link:{doc-javadoc-url}org/hibernate/annotations/CurrentTimestamp.html[`@CurrentTimestamp`] | `CurrentTimestampGeneration` | Generic support for database or in-memory generation of creation or update timestamps
+| link:{doc-javadoc-url}org/hibernate/annotations/CreationTimestamp.html[`@CreationTimestamp`] | `CurrentTimestampGeneration` | A timestamp generated when an entity is first made persistent
+| link:{doc-javadoc-url}org/hibernate/annotations/UpdateTimestamp.html[`@UpdateTimestamp`] | `CurrentTimestampGeneration` | A timestamp generated when an entity is made persistent, and regenerated every time the entity is modified
+| link:{doc-javadoc-url}org/hibernate/annotations/UuidGenerator.html[`@UuidGenerator`] | `UuidGenerator` | A more flexible generator for RFC 4122 UUIDs
 |===
 
 Furthermore, support for JPA's standard id generation strategies is also defined in terms of this framework.
@@ -582,9 +597,10 @@ We happen to not much like the naming rules defined by JPA, which specify that m
 We bet you could easily come up with a much better `ImplicitNamingStrategy` than that!
 (Hint: it should always produce legit mixed case identifiers.)
 ====
+
 [TIP]
 ====
-A popular `PhysicalNamingStrategy` produces snake case identifiers.
+The popular link:{doc-javadoc-url}org/hibernate/boot/model/naming/PhysicalNamingStrategySnakeCaseImpl.html[`PhysicalNamingStrategySnakeCaseImpl`] produces snake case identifiers.
 ====
 
 Custom naming strategies may be enabled using the configuration properties we already mentioned without much explanation back in <<minimizing>>.
@@ -594,8 +610,8 @@ Custom naming strategies may be enabled using the configuration properties we al
 |===
 | Configuration property name           | Purpose
 
-| `hibernate.implicit_naming_strategy`  | Specifies the `ImplicitNamingStrategy`
-| `hibernate.physical_naming_strategy`  | Specifies the `PhysicalNamingStrategy`
+| link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#IMPLICIT_NAMING_STRATEGY[`hibernate.implicit_naming_strategy`]  | Specifies the `ImplicitNamingStrategy`
+| link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#PHYSICAL_NAMING_STRATEGY[`hibernate.physical_naming_strategy`]  | Specifies the `PhysicalNamingStrategy`
 |===
 
 [[spatial]]
@@ -978,8 +994,17 @@ plugins {
     id "org.hibernate.orm" version "{fullVersion}"
 }
 
-hibernate { enhancement }
+hibernate {
+  enhancement {}
+}
 ----
+
+[CAUTION]
+====
+Some online documentation (including previous versions of the present one) suggest to use `hibernate { enhancement }`, which will _not_ work as it is interpreted by Gradle as a (pointless) getter call instead of actual configuration.
+That form will result in bytecode enhancement NOT happening (unfortunately silently).
+To enable bytecode enhancement, make sure to always use the block form (with `{}`).
+====
 
 // [discrete]
 // ==== Attribute-level lazy fetching
@@ -1038,6 +1063,10 @@ byte[] image;
 Interception is able to detect writes to the `image` field, that is, replacement of the whole array.
 It's not able to detect modifications made directly to the _elements_ of the array, and so such modifications may be lost.
 ====
+
+[IMPORTANT]
+Hibernate's extended bytecode enhancement feature has been deprecated, primarily because it relies on assumptions and behaviors that often require a broader runtime scope than what Hibernate alone can reliably provide, similar to container-based environments such as Quarkus or WildFly.
+Applications which make use of this feature should instead use proper object-oriented encapsulation, exposing managed state via getters and setters.
 
 [[fetch-profiles]]
 === Named fetch profiles
@@ -1139,12 +1168,27 @@ We may define as many different fetch profiles as we like.
 | `@FetchProfileOverride` | Specifies the fetch strategy for the annotated association, in a given fetch profile
 |===
 
-A fetch profile must be explicitly enabled for a given session by calling link:{doc-javadoc-url}org/hibernate/Session.html#enableFetchProfile(java.lang.String)[`enableFetchProfile()`]:
+A fetch profile must be explicitly enabled for a given session by passing the name of the profile to link:{doc-javadoc-url}org/hibernate/Session.html#enableFetchProfile(java.lang.String)[`enableFetchProfile()`]:
 
 [source,java]
 ----
 session.enableFetchProfile(Book_.PROFILE_EAGER_BOOK);
 Book eagerBook = session.find(Book.class, bookId);
+----
+
+Alternatively, an instance of link:{doc-javadoc-url}org/hibernate/EnabledFetchProfile.html[`EnabledFetchProfile`] may be obtained in a type safe way from the static metamodel, and applied to the session:
+
+[source,java]
+----
+Book_._EagerBook.enable(session);
+Book eagerBook = session.find(Book.class, bookId);
+----
+
+Even better, the `EnabledFetchProfile` may be passed as a `FindOption`:
+
+[source,java]
+----
+Book eagerBook = entityManager.find(Book.class, bookId, Book_._EagerBook);
 ----
 
 So why or when might we prefer named fetch profiles to entity graphs?

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.queryhint;
@@ -94,7 +94,7 @@ public class OracleQueryHintTest {
 		} );
 
 		statementInspector.assertExecutedCount( 1 );
-		assertTrue( statementInspector.getSqlQueries().get( 0 ).contains( "select /*+ ALL_ROWS, USE_CONCAT */" ) );
+		assertTrue( statementInspector.getSqlQueries().get( 0 ).contains( "select /*+ ALL_ROWS USE_CONCAT */" ) );
 		statementInspector.clear();
 
 		// ensure the insertion logic can handle a comment appended to the front

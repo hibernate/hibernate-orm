@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.typeliteral;
@@ -8,7 +8,7 @@ import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.EntityManager;
 
@@ -17,7 +17,8 @@ import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldIn
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfMethodInMetamodelFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
 
-public class TypeLiteralTest extends CompilationTest {
+@CompilationTest
+class TypeLiteralTest {
 
 	@Test
 	@WithClasses(value = {},
@@ -27,7 +28,7 @@ public class TypeLiteralTest extends CompilationTest {
 					"org.hibernate.processor.test.typeliteral.DebitAccount"
 			})
 	@TestForIssue(jiraKey = "HHH-18358")
-	public void inheritance() {
+	void inheritance() {
 		final var entityClass = "org.hibernate.processor.test.typeliteral.Account";
 		System.out.println( getMetaModelSourceAsString( entityClass ) );
 

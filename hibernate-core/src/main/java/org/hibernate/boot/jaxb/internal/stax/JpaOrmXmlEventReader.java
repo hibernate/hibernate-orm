@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.internal.stax;
@@ -81,7 +81,7 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 		// so that the event we ask it to generate for us has the same location info
 		xmlEventFactory.setLocation( startElement.getLocation() );
 		return xmlEventFactory.createStartElement(
-				new QName( MappingXsdSupport.INSTANCE.latestJpaDescriptor().getNamespaceUri(), startElement.getName().getLocalPart() ),
+				new QName( MappingXsdSupport.latestJpaDescriptor().getNamespaceUri(), startElement.getName().getLocalPart() ),
 				newElementAttributeList.iterator(),
 				newNamespaceList.iterator()
 		);
@@ -100,7 +100,6 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 		return mappedAttributes;
 	}
 
-	@SuppressWarnings("unchecked")
 	private Iterator<Attribute> existingXmlAttributesIterator(StartElement startElement) {
 		return startElement.getAttributes();
 	}
@@ -143,13 +142,12 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 		}
 
 		if ( mappedNamespaces.isEmpty() ) {
-			mappedNamespaces.add( xmlEventFactory.createNamespace( MappingXsdSupport.INSTANCE.latestJpaDescriptor().getNamespaceUri() ) );
+			mappedNamespaces.add( xmlEventFactory.createNamespace( MappingXsdSupport.latestJpaDescriptor().getNamespaceUri() ) );
 		}
 
 		return mappedNamespaces;
 	}
 
-	@SuppressWarnings("unchecked")
 	private Iterator<Namespace> existingXmlNamespacesIterator(StartElement startElement) {
 		return startElement.getNamespaces();
 	}
@@ -159,7 +157,7 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 			// this is a namespace "to map" so map it
 			return xmlEventFactory.createNamespace(
 					originalNamespace.getPrefix(),
-					MappingXsdSupport.INSTANCE.latestJpaDescriptor().getNamespaceUri()
+					MappingXsdSupport.latestJpaDescriptor().getNamespaceUri()
 			);
 		}
 
@@ -173,12 +171,11 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 		// so that the event we ask it to generate for us has the same location info
 		xmlEventFactory.setLocation( endElement.getLocation() );
 		return xmlEventFactory.createEndElement(
-				new QName( MappingXsdSupport.INSTANCE.latestJpaDescriptor().getNamespaceUri(), endElement.getName().getLocalPart() ),
+				new QName( MappingXsdSupport.latestJpaDescriptor().getNamespaceUri(), endElement.getName().getLocalPart() ),
 				targetNamespaces.iterator()
 		);
 	}
 
-	@SuppressWarnings("unchecked")
 	private Iterator<Namespace> existingXmlNamespacesIterator(EndElement endElement) {
 		return endElement.getNamespaces();
 	}

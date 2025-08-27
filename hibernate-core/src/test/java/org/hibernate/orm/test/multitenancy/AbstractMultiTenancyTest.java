@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.multitenancy;
@@ -23,7 +23,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.query.Query;
@@ -102,8 +102,8 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
 		properties.put(Environment.URL,
 			tenantUrl(properties.getProperty(Environment.URL), tenantIdentifier));
 
-		DriverManagerConnectionProviderImpl connectionProvider =
-			new DriverManagerConnectionProviderImpl();
+		DriverManagerConnectionProvider connectionProvider =
+			new DriverManagerConnectionProvider();
 		connectionProvider.configure( PropertiesHelper.map(properties) );
 		connectionProviderMap.put(tenantIdentifier, connectionProvider);
 	}

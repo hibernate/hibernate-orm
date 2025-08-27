@@ -1,51 +1,56 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.basic;
 
-import java.nio.charset.StandardCharsets;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.util.List;
-import java.util.Map;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.json.JsonValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.Root;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
-import org.hibernate.dialect.HANADialect;
 import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.SqlTypes;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-
+import org.hibernate.query.MutationQuery;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import java.nio.charset.StandardCharsets;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isOneOf;
 import static org.hamcrest.Matchers.isA;
+import static org.hamcrest.Matchers.isOneOf;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
@@ -77,6 +82,7 @@ public abstract class JsonMappingTests {
 	private final Map<StringNode, StringNode> objectMap;
 	private final List<StringNode> list;
 	private final String json;
+	Map<String, Map<String, List<Set<Long>>>> complexMap;
 
 	protected JsonMappingTests(boolean supportsObjectMapKey) {
 		this.stringMap = Map.of( "name", "ABC" );
@@ -86,24 +92,21 @@ public abstract class JsonMappingTests {
 		) : null;
 		this.list = List.of( new StringNode( "ABC" ) );
 		this.json = "{\"name\":\"abc\"}";
+		this.complexMap = Map.of( "name", Map.of( "inner", List.of( Set.of( 10L ), Set.of( 20L ) ) ) );
 	}
 
 	@BeforeEach
 	public void setup(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					session.persist( new EntityWithJson( 1, stringMap, objectMap, list, json ) );
+					session.persist( new EntityWithJson( 1, stringMap, objectMap, list, json, complexMap ) );
 				}
 		);
 	}
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					session.remove( session.find( EntityWithJson.class, 1 ) );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -120,7 +123,8 @@ public abstract class JsonMappingTests {
 				"objectMap" );
 		final BasicAttributeMapping listAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
 				"list" );
-		final BasicAttributeMapping jsonAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "jsonString" );
+		final BasicAttributeMapping jsonAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+				"jsonString" );
 
 		assertThat( stringMapAttribute.getJavaType().getJavaTypeClass(), equalTo( Map.class ) );
 		assertThat( objectMapAttribute.getJavaType().getJavaTypeClass(), equalTo( Map.class ) );
@@ -142,8 +146,8 @@ public abstract class JsonMappingTests {
 					assertThat( entityWithJson.stringMap, is( stringMap ) );
 					assertThat( entityWithJson.objectMap, is( objectMap ) );
 					assertThat( entityWithJson.list, is( list ) );
-					assertThat( entityWithJson.jsonNode, is( nullValue() ));
-					assertThat( entityWithJson.jsonValue, is( nullValue() ));
+					assertThat( entityWithJson.jsonNode, is( nullValue() ) );
+					assertThat( entityWithJson.jsonValue, is( nullValue() ) );
 				}
 		);
 	}
@@ -152,7 +156,7 @@ public abstract class JsonMappingTests {
 	public void verifyMergeWorks(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					session.merge( new EntityWithJson( 2, null, null, null, null ) );
+					session.merge( new EntityWithJson( 2, null, null, null, null, null) );
 				}
 		);
 
@@ -163,14 +167,15 @@ public abstract class JsonMappingTests {
 					assertThat( entityWithJson.objectMap, is( nullValue() ) );
 					assertThat( entityWithJson.list, is( nullValue() ) );
 					assertThat( entityWithJson.jsonString, is( nullValue() ) );
-					assertThat( entityWithJson.jsonNode, is( nullValue() ));
-					assertThat( entityWithJson.jsonValue, is( nullValue() ));
+					assertThat( entityWithJson.jsonNode, is( nullValue() ) );
+					assertThat( entityWithJson.jsonValue, is( nullValue() ) );
+					assertThat( entityWithJson.complexMap, is( nullValue() ) );
 				}
 		);
 	}
 
 	@Test
-	@JiraKey( "HHH-16682" )
+	@JiraKey("HHH-16682")
 	public void verifyDirtyChecking(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -187,14 +192,21 @@ public abstract class JsonMappingTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support comparing CLOBs with the = operator")
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA doesn't support comparing LOBs with the = operator")
-	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase doesn't support comparing LOBs with the = operator")
-	@SkipForDialect(dialectClass = OracleDialect.class, matchSubTypes = true, reason = "Oracle doesn't support comparing JSON with the = operator")
-	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase doesn't support comparing CLOBs with the = operator")
+	@SkipForDialect(dialectClass = DerbyDialect.class,
+			reason = "Derby doesn't support comparing CLOBs with the = operator")
+	@SkipForDialect(dialectClass = HANADialect.class,
+			reason = "HANA doesn't support comparing LOBs with the = operator")
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true,
+			reason = "Sybase doesn't support comparing LOBs with the = operator")
+	@SkipForDialect(dialectClass = OracleDialect.class,
+			reason = "Oracle doesn't support comparing JSON with the = operator")
+	@SkipForDialect(dialectClass = AltibaseDialect.class,
+			reason = "Altibase doesn't support comparing CLOBs with the = operator")
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Blobs are not allowed in this expression")
 	public void verifyComparisonWorks(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) ->  {
+				(session) -> {
 					// PostgreSQL returns the JSON slightly formatted
 					String alternativeJson = "{\"name\": \"abc\"}";
 					EntityWithJson entityWithJson = session.createQuery(
@@ -239,6 +251,33 @@ public abstract class JsonMappingTests {
 		);
 	}
 
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-18709")
+	public void verifyCriteriaUpdateQueryWorks(SessionFactoryScope scope) {
+		final Map<String, String> newMap = Map.of( "name", "ABC" );
+		final List<StringNode> newList = List.of( new StringNode( "ABC" ) );
+		final String newJson = "{\"count\":123}";
+		scope.inTransaction( session -> {
+			final HibernateCriteriaBuilder builder = session.getCriteriaBuilder();
+			final CriteriaUpdate<EntityWithJson> criteria = builder.createCriteriaUpdate( EntityWithJson.class );
+			final Root<EntityWithJson> root = criteria.from( EntityWithJson.class );
+			criteria.set( root.get( "stringMap" ), newMap );
+			criteria.set( "list", newList );
+			criteria.set( root.get( "jsonString" ), newJson );
+			criteria.where( builder.equal( root.get( "id" ), 1 ) );
+			final MutationQuery query = session.createMutationQuery( criteria );
+			final int count = query.executeUpdate();
+			assertThat( count, is( 1 ) );
+		} );
+		scope.inSession( session -> {
+			final EntityWithJson entityWithJson = session.find( EntityWithJson.class, 1 );
+			assertThat( entityWithJson.stringMap, is( newMap ) );
+			assertThat( entityWithJson.list, is( newList ) );
+			assertThat( entityWithJson.jsonString.replaceAll( "\\s", "" ), is( newJson ) );
+			assertThat( entityWithJson.complexMap, is( complexMap ) );
+		} );
+	}
+
 	@Entity(name = "EntityWithJson")
 	@Table(name = "EntityWithJson")
 	public static class EntityWithJson {
@@ -265,6 +304,9 @@ public abstract class JsonMappingTests {
 		@JdbcTypeCode( SqlTypes.JSON )
 		private JsonValue jsonValue;
 
+		@JdbcTypeCode( SqlTypes.JSON )
+		private Map<String, Map<String, List<Set<Long>>>> complexMap;
+
 		public EntityWithJson() {
 		}
 
@@ -273,12 +315,14 @@ public abstract class JsonMappingTests {
 				Map<String, String> stringMap,
 				Map<StringNode, StringNode> objectMap,
 				List<StringNode> list,
-				String jsonString) {
+				String jsonString,
+				Map<String, Map<String, List<Set<Long>>>> complexMap) {
 			this.id = id;
 			this.stringMap = stringMap;
 			this.objectMap = objectMap;
 			this.list = list;
 			this.jsonString = jsonString;
+			this.complexMap = complexMap;
 		}
 	}
 

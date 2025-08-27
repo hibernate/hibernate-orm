@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models;
@@ -113,6 +113,10 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<CollectionId,CollectionIdAnnotation> COLLECTION_ID = new OrmAnnotationDescriptor<>(
 			CollectionId.class,
 			CollectionIdAnnotation.class
+	);
+	OrmAnnotationDescriptor<CollectionIdJavaClass,CollectionIdJavaClassAnnotation> COLLECTION_ID_JAVA_CLASS = new OrmAnnotationDescriptor<>(
+			CollectionIdJavaClass.class,
+			CollectionIdJavaClassAnnotation.class
 	);
 	OrmAnnotationDescriptor<CollectionIdJavaType,CollectionIdJavaTypeAnnotation> COLLECTION_ID_JAVA_TYPE = new OrmAnnotationDescriptor<>(
 			CollectionIdJavaType.class,
@@ -239,6 +243,10 @@ public interface HibernateAnnotations {
 			EmbeddableInstantiatorRegistration.class,
 			EmbeddableInstantiatorRegistrationAnnotation.class,
 			EMBEDDABLE_INSTANTIATOR_REGISTRATIONS
+	);
+	OrmAnnotationDescriptor<EmbeddedColumnNaming,EmbeddedColumnNamingAnnotation> EMBEDDED_COLUMN_NAMING = new OrmAnnotationDescriptor<>(
+			EmbeddedColumnNaming.class,
+			EmbeddedColumnNamingAnnotation.class
 	);
 	OrmAnnotationDescriptor<Fetch,FetchAnnotation> FETCH = new OrmAnnotationDescriptor<>(
 			Fetch.class,
@@ -420,6 +428,15 @@ public interface HibernateAnnotations {
 			Mutability.class,
 			MutabilityAnnotation.class
 	);
+	OrmAnnotationDescriptor<NamedEntityGraphs, NamedEntityGraphsAnnotation> NAMED_ENTITY_GRAPHS = new OrmAnnotationDescriptor<>(
+			NamedEntityGraphs.class,
+			NamedEntityGraphsAnnotation.class
+	);
+	OrmAnnotationDescriptor<NamedEntityGraph, NamedEntityGraphAnnotation> NAMED_ENTITY_GRAPH = new OrmAnnotationDescriptor<>(
+			NamedEntityGraph.class,
+			NamedEntityGraphAnnotation.class,
+			NAMED_ENTITY_GRAPHS
+	);
 	OrmAnnotationDescriptor<NamedNativeQueries, NamedNativeQueriesAnnotation> NAMED_NATIVE_QUERIES = new OrmAnnotationDescriptor<>(
 			NamedNativeQueries.class,
 			NamedNativeQueriesAnnotation.class
@@ -586,9 +603,9 @@ public interface HibernateAnnotations {
 			Synchronize.class,
 			SynchronizeAnnotation.class
 	);
-	OrmAnnotationDescriptor<Target,TargetLegacyAnnotation> TARGET_LEGACY = new OrmAnnotationDescriptor<>(
-			Target.class,
-			TargetLegacyAnnotation.class
+	OrmAnnotationDescriptor<TargetEmbeddable,TargetEmbeddableAnnotation> TARGET_EMBEDDABLE = new OrmAnnotationDescriptor<>(
+			TargetEmbeddable.class,
+			TargetEmbeddableAnnotation.class
 	);
 	SpecializedAnnotationDescriptor<TenantId,TenantIdAnnotation> TENANT_ID = new SpecializedAnnotationDescriptor<>(
 			TenantId.class,

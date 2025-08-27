@@ -1,8 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa;
+
+import org.hibernate.Locking;
 
 /**
  * List of Hibernate-specific (extension) hints available to query,
@@ -100,18 +102,31 @@ public interface HibernateHints {
 	String HINT_COMMENT = "org.hibernate.comment";
 
 	/**
-	 * Hint to enable or disable the follow-on locking mechanism provided
-	 * by {@link org.hibernate.dialect.Dialect#useFollowOnLocking}.
-	 * <p>
-	 * A value of {@code true} enables follow-on-locking, whereas a value
-	 * of {@code false} disables it. If the value is {@code null}, the
-	 * dialect itself will determine whether follow-on locking is used.
+	 * Hint to enable or disable the follow-on locking.<ul>
+	 *     <li>{@code false} - {@linkplain Locking.FollowOn#DISALLOW disallows} follow-on locking
+	 *     <li>{@code null} or {@code true} - {@linkplain Locking.FollowOn#ALLOW allows} follow-on locking
+	 * </ul>
 	 *
 	 * @see org.hibernate.LockOptions#setFollowOnLocking(Boolean)
 	 *
 	 * @since 5.2
+	 *
+	 * @deprecated Use {@linkplain #HINT_FOLLOW_ON_STRATEGY} instead to allow an additional option
+	 * to {@linkplain Locking.FollowOn#IGNORE ignore} follow-on locking which will potentially
+	 * skip locking some rows but may be useful for applications targeting multiple databases.
+	 *
 	 */
+	@Deprecated(since = "7.1")
 	String HINT_FOLLOW_ON_LOCKING = "hibernate.query.followOnLocking";
+
+	/**
+	 * Hint to indicate how follow-on locking should be handled.
+	 * See {@linkplain Locking.FollowOn} for a discussion of the
+	 * options.
+	 *
+	 * @since 7.1
+	 */
+	String HINT_FOLLOW_ON_STRATEGY = "hibernate.query.followOnStrategy";
 
 	/**
 	 * Hint for specifying the lock mode to apply to the results of a
@@ -151,9 +166,32 @@ public interface HibernateHints {
 	/**
 	 * Whether to treat a {@link org.hibernate.procedure.ProcedureCall}
 	 * or {@link jakarta.persistence.StoredProcedureQuery} as a call
-	 * to a function rather than a call to a procedure.
+	 * to a function rather than a call to a procedure. Set hint to
+	 * {@link Boolean#TRUE TRUE} or {@code "true"} to indicated that
+	 * the call should be treated as a function call.
+	 * <p>
+	 * When no other return type is indicated, a function is assumed
+	 * to return {@link java.sql.Types#REF_CURSOR REF_CURSOR}.
+	 *
+	 * @see org.hibernate.procedure.ProcedureCall#markAsFunctionCall
+	 * @see #HINT_CALLABLE_FUNCTION_RETURN_TYPE
 	 */
 	String HINT_CALLABLE_FUNCTION = "org.hibernate.callableFunction";
+
+	/**
+	 * The {@linkplain org.hibernate.type.SqlTypes JDBC type code},
+	 * {@linkplain jakarta.persistence.metamodel.Type type}, or
+	 * {@link Class} of the value returned by a SQL function called
+	 * via {@link org.hibernate.procedure.ProcedureCall} or
+	 * {@link jakarta.persistence.StoredProcedureQuery}. Has the side
+	 * effect of causing the call to be treated as a function call
+	 * rather than a call to a stored procedure.
+	 *
+	 * @see org.hibernate.procedure.ProcedureCall#markAsFunctionCall(int)
+	 * @see org.hibernate.procedure.ProcedureCall#markAsFunctionCall(jakarta.persistence.metamodel.Type)
+	 * @see org.hibernate.procedure.ProcedureCall#markAsFunctionCall(Class)
+	 */
+	String HINT_CALLABLE_FUNCTION_RETURN_TYPE = "hibernate.procedure.function_return_jdbc_type_code";
 
 	/**
 	 * Hint for specifying the tenant id to use when creating an
@@ -166,10 +204,13 @@ public interface HibernateHints {
 
 	/**
 	 * Hint to enable a fetch profile for a given
-	 * {@link jakarta.persistence.EntityManager#setProperty(String, Object) EntityManager}.
+	 * {@link jakarta.persistence.EntityManager#setProperty(String, Object) EntityManager}
+	 * or {@link jakarta.persistence.Query#setHint(String, Object) Query}.
 	 *
 	 * @see org.hibernate.Session#enableFetchProfile(String)
+	 * @see org.hibernate.query.SelectionQuery#enableFetchProfile(String)
 	 * @see jakarta.persistence.EntityManager#setProperty(String, Object)
+	 * @see jakarta.persistence.Query#setHint(String, Object)
 	 */
 	String HINT_FETCH_PROFILE = "org.hibernate.fetchProfile";
 

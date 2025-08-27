@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql.internal;
@@ -192,7 +192,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		if ( allowReuse ) {
 			if ( !isTerminal ) {
 				for ( SqmJoin<?, ?> sqmJoin : lhs.getSqmJoins() ) {
-					if ( sqmJoin.getAlias() == null && sqmJoin.getReferencedPathSource() == subPathSource ) {
+					if ( sqmJoin.getAlias() == null && sqmJoin.getModel() == subPathSource ) {
 						return sqmJoin;
 					}
 				}
@@ -355,7 +355,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 				assert ! ( joinedEntityType instanceof SqmPolymorphicRootDescriptor );
 
 				if ( fetch ) {
-					log.debugf( "Ignoring fetch on entity join : %s(%s)", joinedEntityType.getHibernateEntityName(), alias );
+					log.debugf( "Ignoring fetch on entity join: %s(%s)", joinedEntityType.getHibernateEntityName(), alias );
 				}
 
 				join = new SqmEntityJoin<>( joinedEntityType, alias, joinType, sqmRoot );

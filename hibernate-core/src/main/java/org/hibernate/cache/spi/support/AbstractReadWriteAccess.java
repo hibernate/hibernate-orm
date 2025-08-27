@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.support;
@@ -17,7 +17,6 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
-import org.jboss.logging.Logger;
 
 import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
 
@@ -25,7 +24,6 @@ import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
  * @author Steve Ebersole
  */
 public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAccess {
-	private static final Logger log = Logger.getLogger( AbstractReadWriteAccess.class );
 
 	private final UUID uuid = UUID.randomUUID();
 	private final AtomicLong nextLockId = new AtomicLong();
@@ -63,31 +61,35 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 	 */
 	@Override
 	public Object get(SharedSessionContractImplementor session, Object key) {
-		final boolean debugEnabled = log.isDebugEnabled();
-		if ( debugEnabled ) {
-			log.debugf( "Getting cached data from region [`%s` (%s)] by key [%s]", getRegion().getName(), getAccessType(), key );
+		final boolean traceEnabled = L2CACHE_LOGGER.isTraceEnabled();
+		if ( traceEnabled ) {
+			L2CACHE_LOGGER.tracef( "Getting cached data from region ['%s' (%s)] by key [%s]",
+					getRegion().getName(), getAccessType(), key );
 		}
 		try {
 			readLock.lock();
 			final Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
 
 			if ( item == null ) {
-				if ( debugEnabled ) {
-					log.debugf( "Cache miss : region = `%s`, key = `%s`", getRegion().getName(), key );
+				if ( traceEnabled ) {
+					L2CACHE_LOGGER.tracef( "Cache miss: region = '%s', key = '%s'",
+							getRegion().getName(), key );
 				}
 				return null;
 			}
 
 			final boolean readable = item.isReadable( session.getCacheTransactionSynchronization().getCachingTimestamp() );
 			if ( readable ) {
-				if ( debugEnabled ) {
-					log.debugf( "Cache hit : region = `%s`, key = `%s`", getRegion().getName(), key );
+				if ( traceEnabled ) {
+					L2CACHE_LOGGER.tracef( "Cache hit: region = '%s', key = '%s'",
+							getRegion().getName(), key );
 				}
 				return item.getValue();
 			}
 			else {
-				if ( debugEnabled ) {
-					log.debugf( "Cache hit, but item is unreadable/invalid : region = `%s`, key = `%s`", getRegion().getName(), key );
+				if ( traceEnabled ) {
+					L2CACHE_LOGGER.tracef( "Cache hit, but item is unreadable/invalid: region = '%s', key = '%s'",
+							getRegion().getName(), key );
 				}
 				return null;
 			}
@@ -104,9 +106,10 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 			Object value,
 			Object version) {
 		try {
-			final boolean debugEnabled = log.isDebugEnabled();
-			if ( debugEnabled ) {
-				log.debugf( "Caching data from load [region=`%s` (%s)] : key[%s] -> value[%s]", getRegion().getName(), getAccessType(), key, value );
+			final boolean traceEnabled = L2CACHE_LOGGER.isTraceEnabled();
+			if ( traceEnabled ) {
+				L2CACHE_LOGGER.tracef( "Caching data from load [region='%s' (%s)] : key[%s] -> value[%s]",
+						getRegion().getName(), getAccessType(), key, value );
 			}
 			writeLock.lock();
 			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
@@ -121,9 +124,9 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 				return true;
 			}
 			else {
-				if ( debugEnabled ) {
-					log.debugf(
-							"Cache put-from-load [region=`%s` (%s), key=`%s`, value=`%s`] failed due to being non-writable",
+				if ( traceEnabled ) {
+					L2CACHE_LOGGER.tracef(
+							"Cache put-from-load [region='%s' (%s), key='%s', value='%s'] failed due to being non-writable",
 							getAccessType(),
 							getRegion().getName(),
 							key,
@@ -156,8 +159,9 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 			writeLock.lock();
 
 			long timeout = getRegion().getRegionFactory().nextTimestamp() + getRegion().getRegionFactory().getTimeout();
-			if ( log.isDebugEnabled() ) {
-				log.debugf( "Locking cache item [region=`%s` (%s)] : `%s` (timeout=%s, version=%s)", getRegion().getName(), getAccessType(), key, timeout, version );
+			if ( L2CACHE_LOGGER.isTraceEnabled() ) {
+				L2CACHE_LOGGER.tracef( "Locking cache item [region='%s' (%s)] : '%s' (timeout=%s, version=%s)",
+						getRegion().getName(), getAccessType(), key, timeout, version );
 			}
 
 			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
@@ -175,18 +179,14 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 	@Override
 	public void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) {
 		try {
-			if ( log.isDebugEnabled() ) {
-				log.debugf(
-						"Unlocking cache item [region=`%s` (%s)] : %s",
-						getRegion().getName(),
-						getAccessType(),
-						key
-				);
+			if ( L2CACHE_LOGGER.isTraceEnabled() ) {
+				L2CACHE_LOGGER.tracef( "Unlocking cache item [region='%s' (%s)] : %s",
+						getRegion().getName(), getAccessType(), key );
 			}
 			writeLock.lock();
 			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
 
-			if ( ( item != null ) && item.isUnlockable( lock ) ) {
+			if ( item != null && item.isUnlockable( lock ) ) {
 				decrementLock( session, key, (SoftLockImpl) item );
 			}
 			else {
@@ -205,7 +205,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 
 	protected void handleLockExpiry(SharedSessionContractImplementor session, Object key, Lockable lock) {
 		L2CACHE_LOGGER.softLockedCacheExpired( getRegion().getName(), key );
-		log.debugf( "Cached entry expired : %s", key );
+		L2CACHE_LOGGER.tracef( "Cached entry expired: %s", key );
 		final RegionFactory regionFactory = getRegion().getRegionFactory();
 
 		// create new lock that times out immediately
@@ -219,7 +219,9 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 	@Override
 	public void remove(SharedSessionContractImplementor session, Object key) {
 		if ( getStorageAccess().getFromCache( key, session ) instanceof SoftLock ) {
-			log.debugf( "Skipping #remove call in read-write access to maintain SoftLock : %s", key );
+			if ( L2CACHE_LOGGER.isDebugEnabled() ) {
+				L2CACHE_LOGGER.debugf( "Skipping remove call in read-write access to maintain SoftLock: ", key );
+			}
 			// don't do anything... we want the SoftLock to remain in place
 		}
 		else {
@@ -285,9 +287,9 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 
 		@Override
 		public boolean isReadable(long txTimestamp) {
-			if ( log.isDebugEnabled() ) {
-				log.debugf(
-						"Checking readability of read-write cache item [timestamp=`%s`, version=`%s`] : txTimestamp=`%s`",
+			if ( L2CACHE_LOGGER.isTraceEnabled() ) {
+				L2CACHE_LOGGER.tracef(
+						"Checking readability of read-write cache item [timestamp='%s', version='%s'] : txTimestamp='%s'",
 						(Object) timestamp,
 						version,
 						txTimestamp
@@ -299,9 +301,9 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 
 		@Override
 		public boolean isWriteable(long txTimestamp, Object newVersion, Comparator versionComparator) {
-			if ( log.isDebugEnabled() ) {
-				log.debugf(
-						"Checking writeability of read-write cache item [timestamp=`%s`, version=`%s`] : txTimestamp=`%s`, newVersion=`%s`",
+			if ( L2CACHE_LOGGER.isTraceEnabled() ) {
+				L2CACHE_LOGGER.tracef(
+						"Checking writeability of read-write cache item [timestamp='%s', version='%s'] : txTimestamp='%s', newVersion='%s'",
 						timestamp,
 						version,
 						txTimestamp,
@@ -372,9 +374,9 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 
 		@Override
 		public boolean isWriteable(long txTimestamp, Object newVersion, Comparator versionComparator) {
-			if ( log.isDebugEnabled() ) {
-				log.debugf(
-						"Checking writeability of read-write cache lock [timeout=`%s`, lockId=`%s`, version=`%s`, sourceUuid=%s, multiplicity=`%s`, unlockTimestamp=`%s`] : txTimestamp=`%s`, newVersion=`%s`",
+			if ( L2CACHE_LOGGER.isTraceEnabled() ) {
+				L2CACHE_LOGGER.tracef(
+						"Checking writeability of read-write cache lock [timeout='%s', lockId='%s', version='%s', sourceUuid=%s, multiplicity='%s', unlockTimestamp='%s'] : txTimestamp='%s', newVersion='%s'",
 						timeout,
 						lockId,
 						version,
@@ -416,8 +418,9 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 			if ( o == this ) {
 				return true;
 			}
-			else if ( o instanceof SoftLockImpl ) {
-				return ( lockId == ( (SoftLockImpl) o ).lockId ) && sourceUuid.equals( ( (SoftLockImpl) o ).sourceUuid );
+			else if ( o instanceof SoftLockImpl that ) {
+				return this.lockId == that.lockId
+					&& this.sourceUuid.equals( that.sourceUuid );
 			}
 			else {
 				return false;

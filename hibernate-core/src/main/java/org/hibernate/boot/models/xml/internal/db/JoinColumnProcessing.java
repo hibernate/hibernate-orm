@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.xml.internal.db;
@@ -85,10 +85,7 @@ public class JoinColumnProcessing {
 			List<Serializable> jaxbJoinColumnsOrFormulas,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbJoinColumnsOrFormulas ) ) {
-			return;
-		}
-		else {
+		if ( !CollectionHelper.isEmpty( jaxbJoinColumnsOrFormulas ) ) {
 			memberDetails.removeAnnotationUsage( JpaAnnotations.JOIN_COLUMN );
 			memberDetails.removeAnnotationUsage( JpaAnnotations.JOIN_COLUMNS );
 			final JoinColumnsOrFormulasAnnotation joinColumnsOrFormulasUsage = (JoinColumnsOrFormulasAnnotation) memberDetails.replaceAnnotationUsage(

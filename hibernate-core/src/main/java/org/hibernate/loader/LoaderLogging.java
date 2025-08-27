@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.Logger;
@@ -17,9 +18,9 @@ import org.jboss.logging.Logger;
  */
 @SubSystemLogging(
 		name = LoaderLogging.LOGGER_NAME,
-		description = "Logging related to loaders of domain model references (`org.hibernate.loader.ast.spi.Loader`); " +
-				"see also `" + SubSystemLogging.BASE + ".results`"
+		description = "Logging related to loaders of domain model references"
 )
+@Internal
 public interface LoaderLogging {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".loader";
 

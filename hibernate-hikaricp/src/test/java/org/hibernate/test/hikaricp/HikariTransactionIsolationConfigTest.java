@@ -1,12 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.test.hikaricp;
 
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.hikaricp.internal.HikariCPConnectionProvider;
 
@@ -19,6 +20,7 @@ import org.hibernate.testing.common.connections.BaseTransactionIsolationConfigTe
 @SkipForDialect(value = SybaseDialect.class, comment = "The jTDS driver doesn't implement Connection#getNetworkTimeout() so this fails")
 @SkipForDialect(value = TiDBDialect.class, comment = "Doesn't support SERIALIZABLE isolation")
 @SkipForDialect(value = AltibaseDialect.class, comment = "Altibase cannot change isolation level in autocommit mode")
+@SkipForDialect(value = GaussDBDialect.class, comment = "GaussDB does not support SERIALIZABLE isolation")
 public class HikariTransactionIsolationConfigTest extends BaseTransactionIsolationConfigTest {
 	@Override
 	protected ConnectionProvider getConnectionProviderUnderTest() {

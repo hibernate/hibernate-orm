@@ -1,25 +1,17 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.util;
 
-import org.junit.After;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-/**
- * Base class for annotation processor tests.
- *
- * @author Hardy Ferentschik
- */
-@RunWith(CompilationRunner.class)
-public abstract class CompilationTest {
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-	public CompilationTest() {
-	}
-
-	@After
-	public void cleanup() throws Exception {
-		TestUtil.deleteProcessorGeneratedFiles(getClass());
-	}
+@Inherited
+@Retention(RetentionPolicy.RUNTIME)
+@ExtendWith(CompilationExtension.class)
+public @interface CompilationTest {
 }

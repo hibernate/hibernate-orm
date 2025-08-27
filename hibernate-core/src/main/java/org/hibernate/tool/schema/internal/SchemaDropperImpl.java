@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
@@ -160,7 +160,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 					target.release();
 				}
 				catch (Exception e) {
-					log.debugf( "Problem releasing GenerationTarget [%s] : %s", target, e.getMessage() );
+					log.debugf( "Problem releasing GenerationTarget [%s]: %s", target, e.getMessage() );
 				}
 			}
 		}
@@ -434,7 +434,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 					Namespace.Name physicalName = namespace.getPhysicalName();
 
 					if ( tryToDropSchemas ) {
-						final Identifier schemaPhysicalName = context.schemaWithDefault( physicalName.getSchema() );
+						final Identifier schemaPhysicalName = context.schemaWithDefault( physicalName.schema() );
 						if ( schemaPhysicalName != null ) {
 							final String schemaName = schemaPhysicalName.render( dialect );
 							applySqlStrings( dialect.getDropSchemaCommand( schemaName ), formatter, options, targets);
@@ -442,8 +442,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 					}
 
 					if (tryToDropCatalogs) {
-						final Identifier catalogLogicalName = logicalName.getCatalog();
-						final Identifier catalogPhysicalName = context.catalogWithDefault( physicalName.getCatalog() );
+						final Identifier catalogLogicalName = logicalName.catalog();
+						final Identifier catalogPhysicalName = context.catalogWithDefault( physicalName.catalog() );
 						if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
 							final String catalogName = catalogPhysicalName.render( dialect );
 							applySqlStrings( dialect.getDropCatalogCommand( catalogName ), formatter, options, targets );
@@ -475,7 +475,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 				if ( table.isPhysicalTable()
 						&& schemaFilter.includeTable( table )
 						&& inclusionFilter.matches( table ) ) {
-					for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
+					for ( ForeignKey foreignKey : table.getForeignKeyCollection() ) {
 						applySqlStrings(
 								dialect.getForeignKeyExporter().getSqlDropStrings( foreignKey, metadata, context ),
 								formatter,

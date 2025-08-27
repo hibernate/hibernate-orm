@@ -24,7 +24,7 @@ class ForeignCustomer extends Customer {
 ----
 
 The general idea is that the attributes are ordered alphabetically, super attributes first.  Subtypes are sorted
-depth-first and the attributes are sorted alphabetically within each sub-type.  So the order of the attributes
+depth-first and the attributes are sorted alphabetically within each subtype.  So the order of the attributes
 depends on where we start.
 
 Starting from Customer we have: `[address, name, quota, attr1, attr2, taxId, attr3, attr4, vat]`

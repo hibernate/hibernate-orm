@@ -1,10 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.service.internal;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -26,6 +27,16 @@ public class SessionFactoryServiceRegistryBuilderImpl implements SessionFactoryS
 
 	public SessionFactoryServiceRegistryBuilderImpl(ServiceRegistryImplementor parent) {
 		this.parent = parent;
+		if ( parent != null ) {
+			for ( Iterator<SessionFactoryServiceInitiator<?>> iterator = initiators.iterator(); iterator.hasNext(); ) {
+				final SessionFactoryServiceInitiator<?> initiator = iterator.next();
+				if ( parent.locateServiceBinding( initiator.getServiceInitiated() ) != null ) {
+					// Parent takes precedence over the standard service initiators
+					iterator.remove();
+				}
+			}
+
+		}
 	}
 
 	/**

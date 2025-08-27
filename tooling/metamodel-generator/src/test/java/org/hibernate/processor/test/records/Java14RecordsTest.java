@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.records;
@@ -8,7 +8,7 @@ import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -18,25 +18,26 @@ import java.util.List;
 import static java.lang.reflect.Modifier.isStatic;
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getFieldFromMetamodelFor;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
-public class Java14RecordsTest extends CompilationTest {
+@CompilationTest
+class Java14RecordsTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-16261")
 	@WithClasses({Address.class, Author.class})
-	public void testEmbeddableRecordProperty() {
+	void testEmbeddableRecordProperty() {
 		assertMetamodelClassGeneratedFor(Address.class);
 		for (final String fieldName : List.of("street", "city", "postalCode")) {
-			assertNotNull("Address must contain '" + fieldName + "' field", getFieldFromMetamodelFor(Address.class, fieldName));
+			assertNotNull(getFieldFromMetamodelFor(Address.class, fieldName),"Address must contain '" + fieldName + "' field");
 		}
 		assertMetamodelClassGeneratedFor(Author.class);
 
 		final Field addressField = getFieldFromMetamodelFor(Author.class, "address");
-		assertNotNull("Author must contain 'address' field", addressField);
+		assertNotNull(addressField, "Author must contain 'address' field");
 		assertTrue(isStatic(addressField.getModifiers()));
 		if (addressField.getGenericType() instanceof ParameterizedType parameterizedType) {
 			assertEquals(SingularAttribute.class, parameterizedType.getRawType());
@@ -49,7 +50,7 @@ public class Java14RecordsTest extends CompilationTest {
 		}
 
 		final Field addressNameField = getFieldFromMetamodelFor(Author.class, "address".toUpperCase());
-		assertNotNull("Author must contain 'ADDRESS' field", addressNameField);
+		assertNotNull(addressNameField, "Author must contain 'ADDRESS' field");
 		assertTrue(isStatic(addressNameField.getModifiers()));
 		assertEquals(String.class, addressNameField.getGenericType());
 	}

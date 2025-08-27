@@ -4,6 +4,7 @@
 :core-project-dir: {root-project-dir}/hibernate-core
 :core-test-base: {core-project-dir}/src/test/java/org/hibernate/orm/test
 :example-dir-identifier: {core-test-base}/mapping/identifier
+:example-dir-generated: {core-test-base}/mapping/generated
 :example-dir-associations: {core-test-base}/associations
 :jpaJavadocUrl: https://javadoc.io/doc/jakarta.persistence/jakarta.persistence-api/latest/jakarta.persistence
 :extrasdir: extras
@@ -392,6 +393,24 @@ include::{example-dir-identifier}/SequenceGeneratorConfiguredTest.java[tag=ident
 Again the mapping specifies `explicit_product_sequence` as the physical sequence name, but it also specifies an
 explicit allocation-size ("increment by").
 
+The scope of the generator name can be controlled with the <<settings-hibernate.jpa.compliance.global_id_generators,`hibernate.jpa.compliance.global_id_generators`>>
+configuration setting. With <<settings-compliance,JPA compliance>> enabled, the name scope is global i.e.
+there may not be two generator definitions with the same name. Historically, Hibernate ORM used a local scope i.e.
+every managed type may have a generator with the same name, preferring the "local" definition over a more distant one.
+This behavior allows to model e.g. a mapped superclass with a generator that should apply to subclasses by default,
+yet allow an entity subclass to choose a custom generator by simply specifying the same generator name.
+
+[[identifiers-generators-sequence-override]]
+.Sequence override
+====
+[source,java]
+----
+include::{example-dir-generated}/override/SequenceGeneratorOverrideTest.java[tag=identifiers-generators-sequence-override-example, indent=0]
+----
+====
+
+In this case, `base_sequence` will be used when a `Entity1` is persisted,
+whereas for persists of a `Entity2`, Hibernate ORM will use `sub_sequence`.
 
 [[identifiers-generators-identity]]
 ==== Using IDENTITY columns

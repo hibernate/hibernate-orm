@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.collection.list</package>
+
+    <entity class="ListOwner">
+        <attributes>
+            <id name="name"/>
+            <many-to-one name="parent">
+                <join-column name="parent_fk"/>
+            </many-to-one>
+            <one-to-many name="children" mapped-by="parent" target-entity="ListOwner">
+                <order-column name="list_index"/>
+                <list-index-base>1</list-index-base>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="Order">
+        <table name="orders"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+            </id>
+            <basic name="code"/>
+            <one-to-many name="lineItems" mapped-by="order">
+                <order-column name="list_index"/>
+                <list-index-base>1</list-index-base>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="LineItem">
+        <table name="line_items"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+            </id>
+            <basic name="productCode">
+                <column name="prod_code"/>
+            </basic>
+            <basic name="quantity">
+                <column name="qty"/>
+            </basic>
+            <many-to-one name="order">
+                <join-column name="order_fk"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </many-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>
+

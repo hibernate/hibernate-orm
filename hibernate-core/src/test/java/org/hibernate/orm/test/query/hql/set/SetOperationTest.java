@@ -1,11 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql.set;
 
 import java.util.List;
 
+import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.SemanticException;
 
@@ -57,15 +58,7 @@ public class SetOperationTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					// Because, why not MySQL/MariaDB... https://bugs.mysql.com/bug.php?id=7412
-					session.createQuery( "update EntityWithManyToOneSelfReference set other = null" ).executeUpdate();
-					session.createQuery( "delete from EntityWithManyToOneSelfReference" ).executeUpdate();
-					session.createQuery( "delete from EntityOfLists" ).executeUpdate();
-					session.createQuery( "delete from SimpleEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -204,6 +197,7 @@ public class SetOperationTest {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInSubquery.class)
+	@SkipForDialect( dialectClass = FirebirdDialect.class, reason = "Dialect requires distinct column names in parenthesized subquery (treats it as a derived table)" )
 	public void testUnionAllLimitSubquery(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {

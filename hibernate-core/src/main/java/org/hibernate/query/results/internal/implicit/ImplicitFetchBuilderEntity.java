@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.implicit;
@@ -34,7 +34,7 @@ import static org.hibernate.query.results.internal.ResultsHelper.impl;
 public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 	private final NavigablePath fetchPath;
 	private final ToOneAttributeMapping fetchable;
-	private final Map<NavigablePath, FetchBuilder> fetchBuilders;
+	private final Map<Fetchable, FetchBuilder> fetchBuilders;
 
 	public ImplicitFetchBuilderEntity(
 			NavigablePath fetchPath,
@@ -43,30 +43,28 @@ public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 		this.fetchPath = fetchPath;
 		this.fetchable = fetchable;
 		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
-		final Map.Entry<String, NavigablePath> relativePath = creationStateImpl.getCurrentRelativePath();
-		final Function<String, FetchBuilder> fetchBuilderResolver = creationStateImpl.getCurrentExplicitFetchMementoResolver();
+		final Function<Fetchable, FetchBuilder> fetchBuilderResolver = creationStateImpl.getCurrentExplicitFetchMementoResolver();
 		final ForeignKeyDescriptor foreignKeyDescriptor = fetchable.getForeignKeyDescriptor();
 		final String associationKeyPropertyName;
 		final NavigablePath associationKeyFetchPath;
+		final Fetchable associationKey;
 		if ( fetchable.getReferencedPropertyName() == null ) {
 			associationKeyPropertyName = fetchable.getEntityMappingType().getIdentifierMapping().getPartName();
-			associationKeyFetchPath = relativePath.getValue().append( associationKeyPropertyName );
-		}
+			associationKey = (Fetchable) fetchable.findSubPart( associationKeyPropertyName );		}
 		else {
 			associationKeyPropertyName = fetchable.getReferencedPropertyName();
-			NavigablePath path = relativePath.getValue();
+			String keyName = associationKeyPropertyName;
 			for ( String part : split( ".", associationKeyPropertyName ) ) {
-				path = path.append( part );
+				keyName = part;
 			}
-			associationKeyFetchPath = path;
+			associationKey = (Fetchable) fetchable.findSubPart( keyName );
 		}
 		final FetchBuilder explicitAssociationKeyFetchBuilder =
-				fetchBuilderResolver.apply( relativePath.getKey() + "." + associationKeyPropertyName );
+				fetchBuilderResolver.apply( fetchable);
 		if ( explicitAssociationKeyFetchBuilder == null ) {
 			if ( foreignKeyDescriptor.getPartMappingType() instanceof EmbeddableMappingType embeddableType ) {
 				fetchBuilders = fetchBuilderMap(
 						fetchPath,
-						associationKeyFetchPath,
 						fetchBuilderResolver,
 						creationStateImpl,
 						embeddableType
@@ -77,22 +75,21 @@ public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 			}
 		}
 		else {
-			fetchBuilders = singletonMap( associationKeyFetchPath, explicitAssociationKeyFetchBuilder );
+			fetchBuilders = singletonMap( associationKey, explicitAssociationKeyFetchBuilder );
 		}
 	}
 
-	private static Map<NavigablePath, FetchBuilder> fetchBuilderMap(
-			NavigablePath fetchPath, NavigablePath associationKeyFetchPath,
-			Function<String, FetchBuilder> fetchBuilderResolver,
+	private static Map<Fetchable, FetchBuilder> fetchBuilderMap(
+			NavigablePath fetchPath,
+			Function<Fetchable, FetchBuilder> fetchBuilderResolver,
 			DomainResultCreationStateImpl creationStateImpl,
 			EmbeddableMappingType embeddableValuedModelPart) {
 		final int size = embeddableValuedModelPart.getNumberOfFetchables();
-		final Map<NavigablePath, FetchBuilder> fetchBuilders = linkedMapOfSize( size );
+		final Map<Fetchable, FetchBuilder> fetchBuilders = linkedMapOfSize( size );
 		for ( int i = 0; i < size; i++ ) {
 			final Fetchable subFetchable = embeddableValuedModelPart.getFetchable( i );
-			final NavigablePath subFetchPath = associationKeyFetchPath.append( subFetchable.getFetchableName() );
-			final FetchBuilder explicitFetchBuilder = fetchBuilderResolver.apply( subFetchPath.getFullPath() );
-			fetchBuilders.put( subFetchPath,
+			final FetchBuilder explicitFetchBuilder = fetchBuilderResolver.apply( subFetchable );
+			fetchBuilders.put( subFetchable,
 					explicitFetchBuilder == null
 							? Builders.implicitFetchBuilder( fetchPath, subFetchable, creationStateImpl )
 							: explicitFetchBuilder );
@@ -108,7 +105,7 @@ public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 		}
 		else {
 			fetchBuilders = new HashMap<>( original.fetchBuilders.size() );
-			for ( Map.Entry<NavigablePath, FetchBuilder> entry : original.fetchBuilders.entrySet() ) {
+			for ( Map.Entry<Fetchable, FetchBuilder> entry : original.fetchBuilders.entrySet() ) {
 				fetchBuilders.put( entry.getKey(), entry.getValue().cacheKeyInstance() );
 			}
 		}
@@ -136,8 +133,8 @@ public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 	}
 
 	@Override
-	public void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
-		fetchBuilders.forEach( (k, v) -> consumer.accept( k.getLocalName(), v ) );
+	public void visitFetchBuilders(BiConsumer<Fetchable, FetchBuilder> consumer) {
+		fetchBuilders.forEach( (k, v) -> consumer.accept( k, v ) );
 	}
 
 	@Override

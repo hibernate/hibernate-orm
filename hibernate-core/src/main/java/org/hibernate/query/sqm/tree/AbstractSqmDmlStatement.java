@@ -1,15 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
-
+import jakarta.persistence.criteria.AbstractQuery;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -22,8 +18,11 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
-import jakarta.persistence.criteria.AbstractQuery;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 
 /**
  * @author Steve Ebersole
@@ -93,23 +92,24 @@ public abstract class AbstractSqmDmlStatement<E>
 		return (JpaCteCriteria<X>) cteStatements.get( cteName );
 	}
 
-	@Override
+	@Override @Deprecated
 	public <X> JpaCteCriteria<X> with(AbstractQuery<X> criteria) {
-		return withInternal( SqmCreationHelper.acquireUniqueAlias(), criteria );
+		// Use of acquireUniqueAlias() results in interpretation cache miss
+		return withInternal( "_" + SqmCreationHelper.acquireUniqueAlias(), criteria );
 	}
 
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionAll(
 			AbstractQuery<X> baseCriteria,
 			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
-		return withInternal( SqmCreationHelper.acquireUniqueAlias(), baseCriteria, false, recursiveCriteriaProducer );
+		return withInternal( generateAlias(), baseCriteria, false, recursiveCriteriaProducer );
 	}
 
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionDistinct(
 			AbstractQuery<X> baseCriteria,
 			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
-		return withInternal( SqmCreationHelper.acquireUniqueAlias(), baseCriteria, true, recursiveCriteriaProducer );
+		return withInternal( generateAlias(), baseCriteria, true, recursiveCriteriaProducer );
 	}
 
 	@Override
@@ -195,11 +195,11 @@ public abstract class AbstractSqmDmlStatement<E>
 		return new SqmSubQuery<>( this, type, nodeBuilder() );
 	}
 
-	protected void appendHqlCteString(StringBuilder sb) {
+	protected void appendHqlCteString(StringBuilder sb, SqmRenderContext context) {
 		if ( !cteStatements.isEmpty() ) {
 			sb.append( "with " );
 			for ( SqmCteStatement<?> value : cteStatements.values() ) {
-				value.appendHqlString( sb );
+				value.appendHqlString( sb, context );
 				sb.append( ", " );
 			}
 			sb.setLength( sb.length() - 2 );

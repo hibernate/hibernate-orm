@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.backend.jdbc.internal;
@@ -47,7 +47,7 @@ public class DdlTransactionIsolatorNonJtaImpl implements DdlTransactionIsolator 
 					if ( jdbcConnection.getAutoCommit() != autocommit ) {
 						try {
 							if ( autocommit ) {
-								ConnectionAccessLogger.INSTANCE.informConnectionLocalTransactionForNonJtaDdl( jdbcContext.getJdbcConnectionAccess() );
+								ConnectionAccessLogger.INSTANCE.informConnectionLocalTransactionForNonJtaDdl();
 								jdbcConnection.commit();
 							}
 							jdbcConnection.setAutoCommit( autocommit );
@@ -122,7 +122,7 @@ public class DdlTransactionIsolatorNonJtaImpl implements DdlTransactionIsolator 
 				}
 			}
 			if ( originalException != null ) {
-				ExceptionHelper.doThrow( originalException );
+				ExceptionHelper.rethrow( originalException );
 			}
 		}
 	}

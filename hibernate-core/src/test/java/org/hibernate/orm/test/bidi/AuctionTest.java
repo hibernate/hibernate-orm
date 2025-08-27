@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bidi;
@@ -14,6 +14,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -23,11 +24,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Gavin King
  */
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/bidi/Auction.hbm.xml"
-)
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/bidi/Auction.xml")
 @SessionFactory
 public class AuctionTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
 	public void testLazy(SessionFactoryScope scope) {
@@ -42,6 +46,7 @@ public class AuctionTest {
 		bid.setItem( auction );
 		auction.getBids().add( bid );
 		auction.setSuccessfulBid( bid );
+		bid.setSuccessful( true );
 
 		scope.inTransaction(
 				session ->
@@ -53,7 +58,7 @@ public class AuctionTest {
 
 		scope.inTransaction(
 				session -> {
-					Bid b = session.get( Bid.class, bidId );
+					Bid b = session.find( Bid.class, bidId );
 					assertTrue( b.isSuccessful() );
 				}
 		);
@@ -63,7 +68,7 @@ public class AuctionTest {
 					Bid b = session.getReference( Bid.class, bidId );
 					assertFalse( Hibernate.isInitialized( b ) );
 
-					Bid initializedBid = session.get( Bid.class, bidId );
+					Bid initializedBid = session.find( Bid.class, bidId );
 					assertSame( initializedBid, b );
 					assertTrue( Hibernate.isInitialized( b ) );
 				}
@@ -73,7 +78,7 @@ public class AuctionTest {
 				session -> {
 					Bid b = session.getReference( Bid.class, bidId );
 					assertFalse( Hibernate.isInitialized( b ) );
-					Auction a = session.get( Auction.class, aid );
+					Auction a = session.find( Auction.class, aid );
 
 					List<Bid> bids = a.getBids();
 					assertFalse( Hibernate.isInitialized( bids ) );
@@ -125,9 +130,9 @@ public class AuctionTest {
 					Auction a = session.getReference( Auction.class, aid );
 					assertFalse( Hibernate.isInitialized( b ) );
 					assertFalse( Hibernate.isInitialized( a ) );
-					assertSame( session.get( Bid.class, bidId ), b );
+					assertSame( session.find( Bid.class, bidId ), b );
 					assertTrue( Hibernate.isInitialized( b ) );
-					assertSame( session.get( Auction.class, aid ), a );
+					assertSame( session.find( Auction.class, aid ), a );
 					assertTrue( Hibernate.isInitialized( a ) );
 					assertSame( b, a.getSuccessfulBid() );
 					assertFalse( Hibernate.isInitialized( a.getBids() ) );

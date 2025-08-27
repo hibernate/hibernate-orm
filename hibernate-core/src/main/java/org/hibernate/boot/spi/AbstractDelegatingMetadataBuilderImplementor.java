@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
@@ -204,7 +204,7 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(ConverterDescriptor descriptor) {
+	public MetadataBuilder applyAttributeConverter(ConverterDescriptor<?,?> descriptor) {
 		delegate.applyAttributeConverter( descriptor );
 		return getThis();
 	}

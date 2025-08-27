@@ -1,20 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 
-description = 'Integration for c3p0 Connection pooling into Hibernate ORM'
+plugins {
+    id "local.publishing-java-module"
+    id "local.publishing-group-relocation"
+}
 
-apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
+description = 'Integration for c3p0 Connection pooling into Hibernate ORM'
 
 dependencies {
     implementation project( ':hibernate-core' )
     implementation libs.c3p0
 
     testImplementation project( ':hibernate-testing' )
-    testImplementation libs.validator
-    testRuntimeOnly jakartaLibs.el
+    testImplementation jakartaLibs.validation
+    testImplementation testLibs.validator
 }
 

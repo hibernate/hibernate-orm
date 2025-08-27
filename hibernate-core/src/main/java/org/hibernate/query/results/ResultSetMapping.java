@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results;
@@ -95,9 +95,10 @@ public interface ResultSetMapping extends JdbcValuesMappingProducer {
 	}
 
 	static ResultSetMapping resolveResultSetMapping(String name, boolean isDynamic, SessionFactoryImplementor sessionFactory) {
-		return sessionFactory
-				.getFastSessionServices()
-				.getJdbcValuesMappingProducerProvider()
+		return sessionFactory.getJdbcValuesMappingProducerProvider()
 				.buildResultSetMapping( name, isDynamic, sessionFactory );
 	}
+
+	@Override
+	ResultSetMapping cacheKeyInstance();
 }

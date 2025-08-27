@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.access;
@@ -51,8 +51,8 @@ public interface EntityDataAccess extends CachedDomainDataAccess {
 	Object getCacheKeyId(Object cacheKey);
 
 	/**
-	 * Called afterQuery an item has been inserted (beforeQuery the transaction completes),
-	 * instead of calling evict().
+	 * Called after an item has been inserted (before the transaction completes),
+	 * instead of calling {@link #evict}.
 	 * This method is used by "synchronous" concurrency strategies.
 	 *
 	 * @param session Current session
@@ -65,8 +65,8 @@ public interface EntityDataAccess extends CachedDomainDataAccess {
 	boolean insert(SharedSessionContractImplementor session, Object key, Object value, Object version);
 
 	/**
-	 * Called afterQuery an item has been inserted (afterQuery the transaction completes),
-	 * instead of calling release().
+	 * Called after an item has been inserted (after the transaction completes),
+	 * instead of calling {@link #release}.
 	 * This method is used by "asynchronous" concurrency strategies.
 	 *
 	 * @param session Current session
@@ -79,9 +79,9 @@ public interface EntityDataAccess extends CachedDomainDataAccess {
 	boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value, Object version);
 
 	/**
-	 * Called afterQuery an item has been updated (beforeQuery the transaction completes),
-	 * instead of calling evict(). This method is used by "synchronous" concurrency
-	 * strategies.
+	 * Called after an item has been updated (before the transaction completes),
+	 * instead of calling {@link #evict}. This method is used by "synchronous"
+	 * concurrency strategies.
 	 *
 	 * @param session Current session
 	 * @param key The item key
@@ -99,8 +99,8 @@ public interface EntityDataAccess extends CachedDomainDataAccess {
 			Object previousVersion);
 
 	/**
-	 * Called afterQuery an item has been updated (afterQuery the transaction completes),
-	 * instead of calling release().  This method is used by "asynchronous"
+	 * Called after an item has been updated (after the transaction completes),
+	 * instead of calling {@link #release}. This method is used by "asynchronous"
 	 * concurrency strategies.
 	 *
 	 * @param session Current session

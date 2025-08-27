@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.lock;
 
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,12 +17,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import jakarta.persistence.Timeout;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
-import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.TransactionException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
+import org.hibernate.community.dialect.GaussDBDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.community.dialect.DerbyDialect;
@@ -69,6 +71,10 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
+		if ( getDialect() instanceof InformixDialect ) {
+			options.put( AvailableSettings.ISOLATION,
+					Connection.TRANSACTION_REPEATABLE_READ );
+		}
 		// We can't use a shared connection provider if we use TransactionUtil.setJdbcTimeout because that is set on the connection level
 //		options.remove( AvailableSettings.CONNECTION_PROVIDER );
 	}
@@ -304,9 +310,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		);
 
 		doInJPA( this::entityManagerFactory, _entityManagaer -> {
-			Map<String, Object> properties = new HashMap<>();
-			properties.put( AvailableSettings.JAKARTA_LOCK_TIMEOUT, LockOptions.SKIP_LOCKED );
-			_entityManagaer.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_READ, properties );
+			_entityManagaer.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_READ, Timeout.milliseconds( 0 ) );
 
 			try {
 				doInJPA( this::entityManagerFactory, entityManager -> {
@@ -1186,6 +1190,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(value = CockroachDialect.class, comment = "Cockroach supports the 'for no key update' syntax but it doesn't work")
 	@SkipForDialect(value = FirebirdDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = AltibaseDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
+	@SkipForDialect(value = GaussDBDialect.class, comment = "The USTORE storage engine does not support For Key Share and For No Key Update")
 	public void testLockInsertFkTarget() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -1225,6 +1230,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(value = CockroachDialect.class, comment = "Cockroach supports the 'for no key update' syntax but it doesn't work")
 	@SkipForDialect(value = FirebirdDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = AltibaseDialect.class, comment = "FK constraint checks are not compatible with exclusive locks")
+	@SkipForDialect(value = GaussDBDialect.class, comment = "The USTORE storage engine does not support For Key Share and For No Key Update")
 	public void testLockUpdateFkTarget() {
 		Lock lock1 = new Lock();
 		lock1.setName( "l1" );

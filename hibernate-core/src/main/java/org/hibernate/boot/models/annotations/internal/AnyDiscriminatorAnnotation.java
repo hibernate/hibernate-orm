@@ -1,11 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
 
 import org.hibernate.annotations.AnyDiscriminator;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;
@@ -18,21 +18,21 @@ public class AnyDiscriminatorAnnotation implements AnyDiscriminator {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public AnyDiscriminatorAnnotation(SourceModelBuildingContext modelContext) {
+	public AnyDiscriminatorAnnotation(ModelsContext modelContext) {
 		this.value = jakarta.persistence.DiscriminatorType.STRING;
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public AnyDiscriminatorAnnotation(AnyDiscriminator annotation, SourceModelBuildingContext modelContext) {
+	public AnyDiscriminatorAnnotation(AnyDiscriminator annotation, ModelsContext modelContext) {
 		this.value = annotation.value();
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public AnyDiscriminatorAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public AnyDiscriminatorAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.value = (jakarta.persistence.DiscriminatorType) attributeValues.get( "value" );
 	}
 

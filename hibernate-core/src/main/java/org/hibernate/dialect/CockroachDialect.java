@@ -1,29 +1,17 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
-import java.lang.invoke.MethodHandles;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.aggregate.AggregateSupport;
@@ -33,10 +21,22 @@ import org.hibernate.dialect.function.FormatFunction;
 import org.hibernate.dialect.function.PostgreSQLTruncFunction;
 import org.hibernate.dialect.identity.CockroachDBIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.CockroachLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sql.ast.CockroachSqlAstTranslator;
+import org.hibernate.dialect.type.PgJdbcHelper;
+import org.hibernate.dialect.type.PostgreSQLArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.PostgreSQLCastingInetJdbcType;
+import org.hibernate.dialect.type.PostgreSQLCastingIntervalSecondJdbcType;
+import org.hibernate.dialect.type.PostgreSQLCastingJsonArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.PostgreSQLCastingJsonJdbcType;
+import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
+import org.hibernate.dialect.type.PostgreSQLOrdinalEnumJdbcType;
+import org.hibernate.dialect.type.PostgreSQLUUIDJdbcType;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -44,16 +44,16 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.TransactionSerializationException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -64,11 +64,11 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
-import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
@@ -77,10 +77,18 @@ import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.jboss.logging.Logger;
-
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.TemporalType;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.lang.Integer.parseInt;
 import static org.hibernate.cfg.DialectSpecificSettings.COCKROACH_VERSION_STRING;
@@ -122,20 +130,19 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
- * A {@linkplain Dialect SQL dialect} for CockroachDB 21.1 and above.
+ * A {@linkplain Dialect SQL dialect} for CockroachDB 23.1 and above.
  *
  * @author Gavin King
  */
 public class CockroachDialect extends Dialect {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, CockroachDialect.class.getName() );
 	// KNOWN LIMITATIONS:
 	// * no support for java.sql.Clob
 
 	// Pre-compile and reuse pattern
 	private static final Pattern CRDB_VERSION_PATTERN = Pattern.compile( "v[\\d]+(\\.[\\d]+)?(\\.[\\d]+)?" );
 
-	protected static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 22, 2 );
+	protected static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 23, 1 );
 
 	protected final PostgreSQLDriverKind driverKind;
 
@@ -150,7 +157,9 @@ public class CockroachDialect extends Dialect {
 
 	public CockroachDialect(DialectResolutionInfo info, String versionString) {
 		this(
-				versionString != null ? parseVersion( versionString ) : info.makeCopyOrDefault( MINIMUM_VERSION ),
+				versionString == null
+						? info.makeCopyOrDefault( MINIMUM_VERSION )
+						: parseVersion( versionString ),
 				PostgreSQLDriverKind.determineKind( info )
 		);
 		registerKeywords( info );
@@ -173,11 +182,12 @@ public class CockroachDialect extends Dialect {
 
 	protected static DatabaseVersion fetchDataBaseVersion(DialectResolutionInfo info) {
 		String versionString = null;
-		if ( info.getDatabaseMetadata() != null ) {
-			try ( java.sql.Statement s = info.getDatabaseMetadata().getConnection().createStatement() ) {
-				final ResultSet rs = s.executeQuery( "SELECT version()" );
-				if ( rs.next() ) {
-					versionString = rs.getString( 1 );
+		final DatabaseMetaData databaseMetadata = info.getDatabaseMetadata();
+		if ( databaseMetadata != null ) {
+			try ( var statement = databaseMetadata.getConnection().createStatement() ) {
+				final ResultSet resultSet = statement.executeQuery( "SELECT version()" );
+				if ( resultSet.next() ) {
+					versionString = resultSet.getString( 1 );
 				}
 			}
 			catch (SQLException ex) {
@@ -204,11 +214,6 @@ public class CockroachDialect extends Dialect {
 				databaseVersion=  new SimpleDatabaseVersion( majorVersion, minorVersion, microVersion);
 		}
 		if ( databaseVersion == null ) {
-			LOG.unableToDetermineCockroachDatabaseVersion(
-					MINIMUM_VERSION.getDatabaseMajorVersion() + "." +
-							MINIMUM_VERSION.getDatabaseMinorVersion() + "." +
-							MINIMUM_VERSION.getDatabaseMicroVersion()
-			);
 			databaseVersion = MINIMUM_VERSION;
 		}
 		return databaseVersion;
@@ -376,9 +381,9 @@ public class CockroachDialect extends Dialect {
 		}
 
 		// Force Blob binding to byte[] for CockroachDB
-		jdbcTypeRegistry.addDescriptor( Types.BLOB, VarbinaryJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptor( Types.CLOB, VarcharJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptor( Types.NCLOB, VarcharJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcType.MATERIALIZED );
+		jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.MATERIALIZED );
+		jdbcTypeRegistry.addDescriptor( Types.NCLOB, ClobJdbcType.MATERIALIZED );
 
 		// The next two contributions are the same as for Postgresql
 		typeContributions.contributeJdbcType( ObjectNullAsBinaryTypeJdbcType.INSTANCE );
@@ -399,9 +404,10 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
+		super.initializeFunctionRegistry( functionContributions );
 
-		final CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
+
 		functionFactory.ascii();
 		functionFactory.char_chr();
 		functionFactory.overlay();
@@ -413,7 +419,6 @@ public class CockroachDialect extends Dialect {
 		functionFactory.substr();
 		functionFactory.reverse();
 		functionFactory.repeat();
-		functionFactory.md5();
 		functionFactory.sha1();
 		functionFactory.octetLength();
 		functionFactory.bitLength();
@@ -488,7 +493,7 @@ public class CockroachDialect extends Dialect {
 		functionFactory.jsonArrayAppend_postgresql( false );
 		functionFactory.jsonArrayInsert_postgresql();
 
-		functionFactory.unnest_postgresql();
+		functionFactory.unnest_postgresql( false );
 		functionFactory.generateSeries( null, "ordinality", true );
 		functionFactory.jsonTable_cockroachdb();
 
@@ -503,6 +508,11 @@ public class CockroachDialect extends Dialect {
 				new PostgreSQLTruncFunction( true, functionContributions.getTypeConfiguration() )
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+
+		functionFactory.hex( "encode(?1, 'hex')" );
+		functionFactory.sha( "digest(?1, 'sha256')" );
+		functionFactory.md5( "digest(?1, 'md5')" );
+		functionFactory.regexpLike_postgresql( false );
 	}
 
 	@Override
@@ -893,6 +903,11 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	public LockingSupport getLockingSupport() {
+		return CockroachLockingSupport.COCKROACH_LOCKING_SUPPORT;
+	}
+
+	@Override
 	public String getForUpdateString(String aliases) {
 		return getForUpdateString() + " of " + aliases;
 	}
@@ -904,54 +919,47 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
-		// Parent's implementation for (aliases, lockOptions) ignores aliases.
-		if ( aliases.isEmpty() ) {
-			final LockMode lockMode = lockOptions.getLockMode();
-			for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
-				// seek the highest lock mode
-				if ( entry.getValue().greaterThan( lockMode ) ) {
-					aliases = entry.getKey();
-				}
-			}
-		}
-		LockMode lockMode = lockOptions.getAliasSpecificLockMode( aliases );
-		if (lockMode == null ) {
-			lockMode = lockOptions.getLockMode();
-		}
+		final LockMode lockMode = lockOptions.getLockMode();
 		return switch (lockMode) {
-			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeOut() );
-			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeOut() );
+			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeout() );
+			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeout() );
 			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString( aliases );
 			case UPGRADE_SKIPLOCKED -> getForUpdateSkipLockedString( aliases );
 			default -> "";
 		};
 	}
 
+	private String withTimeout(String lockString, Timeout timeout) {
+		return withTimeout( lockString, timeout.milliseconds() );
+	}
+
 	private String withTimeout(String lockString, int timeout) {
+		// todo (db-locking) : see notes on `#supportsNoWait` and `#supportsSkipLocked`.
+		//  	not sure why we call those here.
 		return switch (timeout) {
-			case LockOptions.NO_WAIT -> supportsNoWait() ? lockString + " nowait" : lockString;
-			case LockOptions.SKIP_LOCKED -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case Timeouts.SKIP_LOCKED_MILLI -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
 			default -> lockString;
 		};
 	}
 
 	@Override
-	public String getWriteLockString(int timeout) {
+	public String getWriteLockString(Timeout timeout) {
 		return withTimeout( getForUpdateString(), timeout );
 	}
 
 	@Override
-	public String getWriteLockString(String aliases, int timeout) {
+	public String getWriteLockString(String aliases, Timeout timeout) {
 		return withTimeout( getForUpdateString( aliases ), timeout );
 	}
 
 	@Override
-	public String getReadLockString(int timeout) {
+	public String getReadLockString(Timeout timeout) {
 		return withTimeout( " for share", timeout );
 	}
 
 	@Override
-	public String getReadLockString(String aliases, int timeout) {
+	public String getReadLockString(String aliases, Timeout timeout) {
 		return withTimeout( " for share of " + aliases, timeout );
 	}
 
@@ -984,11 +992,6 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return false;
-	}
-
-	@Override
 	public boolean useInputStreamToInsertBlob() {
 		return false;
 	}
@@ -1014,29 +1017,8 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsNoWait() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsWait() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		// See https://www.cockroachlabs.com/docs/stable/select-for-update.html#wait-policies
-		return false;
-	}
-
-	@Override
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
 		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
-	}
-
-	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.TABLE;
 	}
 
 	@Override
@@ -1047,15 +1029,15 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData databaseMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 
-		if ( databaseMetaData == null ) {
+		if ( metadata == null ) {
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.LOWER );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 
-		return super.buildIdentifierHelper( builder, databaseMetaData );
+		return super.buildIdentifierHelper( builder, metadata );
 	}
 
 	@Override
@@ -1070,21 +1052,13 @@ public class CockroachDialect extends Dialect {
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
 				final String sqlState = extractSqlState( sqle );
-				if ( sqlState == null ) {
-					return null;
-				}
-				return switch ( parseInt( sqlState ) ) {
-					// CHECK VIOLATION
-					case 23514 -> extractUsingTemplate( "violates check constraint \"", "\"", sqle.getMessage() );
-					// UNIQUE VIOLATION
-					case 23505 -> extractUsingTemplate(" violates unique constraint \"", "\"", sqle.getMessage() );
-					// FOREIGN KEY VIOLATION
-					case 23503 -> extractUsingTemplate( "violates foreign key constraint \"", "\"", sqle.getMessage() );
-					// NOT NULL VIOLATION
-					case 23502 -> extractUsingTemplate( "null value in column \"", "\" violates not-null constraint", sqle.getMessage() );
-					// TODO: RESTRICT VIOLATION
-					case 23001 -> null;
-					// ALL OTHER
+				return sqlState == null ? null : switch ( parseInt( sqlState ) ) {
+					case 23505, 23514, 23503 ->
+						// UNIQUE, CHECK, OR FOREIGN KEY VIOLATION
+							extractUsingTemplate( "constraint \"", "\"", sqle.getMessage() );
+					case 23502 ->
+						// NOT NULL VIOLATION
+							extractUsingTemplate( "column \"", "\"", sqle.getMessage() );
 					default -> null;
 				};
 			} );
@@ -1093,19 +1067,22 @@ public class CockroachDialect extends Dialect {
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			final String sqlState = extractSqlState( sqlException );
-			if ( sqlState == null ) {
-				return null;
-			}
-			return switch (sqlState) {
-				// Serialization Exception
-				case "40001" -> message.contains("WriteTooOldError")
-						? new TransactionSerializationException( message, sqlException, sql )
-						: null;
-				// DEADLOCK DETECTED
-				case "40P01" -> new LockAcquisitionException( message, sqlException, sql );
-				// LOCK NOT AVAILABLE
-				case "55P03" -> new PessimisticLockException( message, sqlException, sql );
-				case "57014" -> new QueryTimeoutException( message, sqlException, sql );
+			return sqlState == null ? null : switch ( sqlState ) {
+				case "40001" ->
+						message.contains( "WriteTooOldError" ) // Serialization Exception
+							? new TransactionSerializationException( message, sqlException, sql )
+							: null;
+				case "40P01" ->
+					// DEADLOCK DETECTED
+						new LockAcquisitionException( message, sqlException, sql );
+				case "55P03" ->
+					// LOCK NOT AVAILABLE
+					//TODO: should we check that the message is "canceling statement due to lock timeout"
+					//      and return LockAcquisitionException if it is not?
+						new LockTimeoutException( message, sqlException, sql );
+				case "57014" ->
+					// QUERY CANCELLED
+						new QueryTimeoutException( message, sqlException, sql );
 				// returning null allows other delegates to operate
 				default -> null;
 			};
@@ -1168,5 +1145,41 @@ public class CockroachDialect extends Dialect {
 	@Override
 	public boolean supportsFromClauseInUpdate() {
 		return true;
+	}
+
+	@Override
+	public boolean supportsRowConstructor() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsArrayConstructor() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+
+	@Override
+	public String getWriteLockString(int timeout) {
+		return withTimeout( getForUpdateString(), timeout );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, int timeout) {
+		return withTimeout( getForUpdateString( aliases ), timeout );
+	}
+
+	@Override
+	public String getReadLockString(int timeout) {
+		return withTimeout( " for share", timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, int timeout) {
+		return withTimeout( " for share of " + aliases, timeout );
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.sequence;
@@ -41,12 +41,7 @@ public class SequenceGeneratorAndAutoFlushTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope){
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Person" ).executeUpdate();
-					entityManager.createQuery( "delete from Account" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

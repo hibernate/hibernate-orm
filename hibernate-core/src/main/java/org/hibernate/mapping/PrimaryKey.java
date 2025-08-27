@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -22,10 +22,11 @@ public class PrimaryKey extends Constraint {
 	private UniqueKey orderingUniqueKey = null;
 	private int[] originalOrder;
 
-	public PrimaryKey(Table table){
-		setTable( table );
+	public PrimaryKey(Table table) {
+		super( table );
 	}
 
+	@Deprecated(since = "7")
 	public PrimaryKey() {
 	}
 

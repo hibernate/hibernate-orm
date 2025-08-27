@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.unit.locktimeout;
@@ -10,13 +10,17 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.Test;
 
+import static org.hibernate.Timeouts.NO_WAIT;
+import static org.hibernate.Timeouts.SKIP_LOCKED;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
+@RequiresDialect(PostgreSQLDialect.class)
 public class PostgreSQLLockTimeoutTest extends BaseUnitTestCase {
 
 	private final Dialect dialect = new PostgreSQLDialect();
@@ -28,7 +32,7 @@ public class PostgreSQLLockTimeoutTest extends BaseUnitTestCase {
 				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_READ ) )
 		);
 		assertEquals(
-				" for update",
+				" for no key update",
 				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_WRITE ) )
 		);
 	}
@@ -38,12 +42,12 @@ public class PostgreSQLLockTimeoutTest extends BaseUnitTestCase {
 		assertEquals(
 				" for share nowait",
 				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_READ )
-													.setTimeOut( LockOptions.NO_WAIT ) )
+						.setTimeout( NO_WAIT ) )
 		);
 		assertEquals(
-				" for update nowait",
+				" for no key update nowait",
 				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-													.setTimeOut( LockOptions.NO_WAIT ) )
+						.setTimeout( NO_WAIT ) )
 		);
 	}
 
@@ -52,12 +56,12 @@ public class PostgreSQLLockTimeoutTest extends BaseUnitTestCase {
 		assertEquals(
 				" for share skip locked",
 				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_READ )
-													.setTimeOut( LockOptions.SKIP_LOCKED ) )
+						.setTimeout( SKIP_LOCKED ) )
 		);
 		assertEquals(
-				" for update skip locked",
+				" for no key update skip locked",
 				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-													.setTimeOut( LockOptions.SKIP_LOCKED ) )
+						.setTimeout( SKIP_LOCKED ) )
 		);
 	}
 
@@ -68,20 +72,14 @@ public class PostgreSQLLockTimeoutTest extends BaseUnitTestCase {
 				" for share of a",
 				dialect.getForUpdateString(
 						alias,
-						new LockOptions( LockMode.PESSIMISTIC_READ ).setAliasSpecificLockMode(
-								alias,
-								LockMode.PESSIMISTIC_READ
-						)
+						new LockOptions( LockMode.PESSIMISTIC_READ )
 				)
 		);
 		assertEquals(
-				" for update of a",
+				" for no key update of a",
 				dialect.getForUpdateString(
 						alias,
-						new LockOptions( LockMode.PESSIMISTIC_WRITE ).setAliasSpecificLockMode(
-								alias,
-								LockMode.PESSIMISTIC_WRITE
-						)
+						new LockOptions( LockMode.PESSIMISTIC_WRITE )
 				)
 		);
 	}
@@ -93,22 +91,14 @@ public class PostgreSQLLockTimeoutTest extends BaseUnitTestCase {
 				" for share of a nowait",
 				dialect.getForUpdateString(
 						alias,
-						new LockOptions( LockMode.PESSIMISTIC_READ ).setAliasSpecificLockMode(
-								alias,
-								LockMode.PESSIMISTIC_READ
-						)
-								.setTimeOut( LockOptions.NO_WAIT )
+						new LockOptions( LockMode.PESSIMISTIC_READ ).setTimeout( NO_WAIT )
 				)
 		);
 		assertEquals(
-				" for update of a nowait",
+				" for no key update of a nowait",
 				dialect.getForUpdateString(
 						alias,
-						new LockOptions( LockMode.PESSIMISTIC_WRITE ).setAliasSpecificLockMode(
-								alias,
-								LockMode.PESSIMISTIC_WRITE
-						)
-								.setTimeOut( LockOptions.NO_WAIT )
+						new LockOptions( LockMode.PESSIMISTIC_WRITE ).setTimeout( NO_WAIT )
 				)
 		);
 	}
@@ -120,22 +110,14 @@ public class PostgreSQLLockTimeoutTest extends BaseUnitTestCase {
 				" for share of a skip locked",
 				dialect.getForUpdateString(
 						alias,
-						new LockOptions( LockMode.PESSIMISTIC_READ ).setAliasSpecificLockMode(
-								alias,
-								LockMode.PESSIMISTIC_READ
-						)
-								.setTimeOut( LockOptions.SKIP_LOCKED )
+						new LockOptions( LockMode.PESSIMISTIC_READ ).setTimeout( SKIP_LOCKED )
 				)
 		);
 		assertEquals(
-				" for update of a skip locked",
+				" for no key update of a skip locked",
 				dialect.getForUpdateString(
 						alias,
-						new LockOptions( LockMode.PESSIMISTIC_WRITE ).setAliasSpecificLockMode(
-								alias,
-								LockMode.PESSIMISTIC_WRITE
-						)
-								.setTimeOut( LockOptions.SKIP_LOCKED )
+						new LockOptions( LockMode.PESSIMISTIC_WRITE ).setTimeout( SKIP_LOCKED )
 				)
 		);
 	}

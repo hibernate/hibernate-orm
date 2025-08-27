@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhance.version;
@@ -17,7 +17,7 @@ import jakarta.persistence.Table;
  */
 @Entity(name = "SimpleEntity")
 @Table(name = "SimpleEntity")
-@EnhancementInfo(version = "5.3.0.Final")
+@EnhancementInfo(version = "5.3.0.Final", includesDirtyChecking = false, includesAssociationManagement = false)
 public class SimpleEntity implements ManagedEntity {
 	@Id
 	private Integer id;
@@ -66,5 +66,15 @@ public class SimpleEntity implements ManagedEntity {
 	@Override
 	public boolean $$_hibernate_useTracker() {
 		return false;
+	}
+
+	@Override
+	public int $$_hibernate_getInstanceId() {
+		return 0;
+	}
+
+	@Override
+	public void $$_hibernate_setInstanceId(int id) {
+
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.jpa;
@@ -44,6 +44,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 	private List<String> mappingFiles;
 	private List<String> managedClassNames;
 	private boolean excludeUnlistedClasses;
+	private ClassLoader classLoader;
 
 	public PersistenceUnitInfoImpl(String name) {
 		this.name = name;
@@ -143,6 +144,15 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 	}
 
 	@Override
+	public ClassLoader getClassLoader() {
+		return classLoader;
+	}
+
+	public void setClassLoader(ClassLoader classLoader) {
+		this.classLoader = classLoader;
+	}
+
+	@Override
 	public String getPersistenceXMLSchemaVersion() {
 		return null;
 	}
@@ -164,11 +174,6 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 
 	@Override
 	public URL getPersistenceUnitRootUrl() {
-		return null;
-	}
-
-	@Override
-	public ClassLoader getClassLoader() {
 		return null;
 	}
 

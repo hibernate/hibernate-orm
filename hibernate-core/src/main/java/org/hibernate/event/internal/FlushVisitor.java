@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
@@ -32,7 +32,7 @@ public class FlushVisitor extends AbstractVisitor {
 			return null;
 		}
 		else if ( collection != null ) {
-			final EventSource session = getSession();
+			final var session = getSession();
 			final PersistentCollection<?> persistentCollection;
 			if ( type.hasHolder() ) {
 				persistentCollection = session.getPersistenceContextInternal().getCollectionHolder( collection );

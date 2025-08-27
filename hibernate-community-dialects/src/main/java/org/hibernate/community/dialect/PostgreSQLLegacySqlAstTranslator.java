@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -22,6 +22,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
@@ -43,6 +44,14 @@ public class PostgreSQLLegacySqlAstTranslator<T extends JdbcOperation> extends A
 
 	public PostgreSQLLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+		inArrayPredicate.getTestExpression().accept( this );
+		appendSql( " = any (" );
+		inArrayPredicate.getArrayParameter().accept( this );
+		appendSql( ")" );
 	}
 
 	@Override
@@ -175,32 +184,6 @@ public class PostgreSQLLegacySqlAstTranslator<T extends JdbcOperation> extends A
 		}
 	}
 
-	@Override
-	protected boolean supportsRowConstructor() {
-		return true;
-	}
-
-	@Override
-	protected boolean supportsArrayConstructor() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsFilterClause() {
-		return getDialect().getVersion().isSameOrAfter( 9, 4 );
-	}
-
-	@Override
-	protected String getForUpdate() {
-		return getDialect().getVersion().isSameOrAfter( 9, 3 ) ? " for no key update" : " for update";
-	}
-
-	@Override
-	protected String getForShare(int timeoutMillis) {
-		// Note that `for key share` is inappropriate as that only means "prevent PK changes"
-		return " for share";
-	}
-
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		if ( getQueryPartForRowNumbering() == queryPart || isRowsOnlyFetchClauseType( queryPart ) ) {
@@ -242,24 +225,9 @@ public class PostgreSQLLegacySqlAstTranslator<T extends JdbcOperation> extends A
 	}
 
 	@Override
-	protected boolean supportsRecursiveSearchClause() {
-		return getDialect().getVersion().isSameOrAfter( 14 );
-	}
-
-	@Override
-	protected boolean supportsRecursiveCycleClause() {
-		return getDialect().getVersion().isSameOrAfter( 14 );
-	}
-
-	@Override
-	protected boolean supportsRecursiveCycleUsingClause() {
-		return getDialect().getVersion().isSameOrAfter( 14 );
-	}
-
-	@Override
 	protected void renderStandardCycleClause(CteStatement cte) {
 		super.renderStandardCycleClause( cte );
-		if ( cte.getCycleMarkColumn() != null && cte.getCyclePathColumn() == null && supportsRecursiveCycleUsingClause() ) {
+		if ( cte.getCycleMarkColumn() != null && cte.getCyclePathColumn() == null && getDialect().supportsRecursiveCycleUsingClause() ) {
 			appendSql( " using " );
 			appendSql( determineCyclePathColumnName( cte ) );
 		}

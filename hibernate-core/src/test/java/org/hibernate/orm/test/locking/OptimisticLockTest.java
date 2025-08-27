@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.locking;
@@ -10,8 +10,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -29,7 +31,10 @@ public class OptimisticLockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = CockroachDialect.class, comment = "Fails at SERIALIZABLE isolation")
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Fails at SERIALIZABLE isolation")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 11, minorVersion = 6, microVersion = 2,
+			versionMatchMode = VersionMatchMode.SAME_OR_NEWER,
+			reason = "MariaDB will throw an error DB_RECORD_CHANGED when acquiring a lock on a record that have changed")
 	public void test() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Phone phone = new Phone();

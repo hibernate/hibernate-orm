@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.service.internal;
@@ -50,7 +50,8 @@ public class SessionFactoryServiceRegistryImpl
 			List<ProvidedService<?>> providedServices,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryOptions sessionFactoryOptions) {
-		SessionFactoryServiceRegistryImpl instance = new SessionFactoryServiceRegistryImpl( parent, sessionFactory, sessionFactoryOptions);
+		final SessionFactoryServiceRegistryImpl instance =
+				new SessionFactoryServiceRegistryImpl( parent, sessionFactory, sessionFactoryOptions );
 		instance.initialize( initiators, providedServices );
 		return instance;
 	}
@@ -76,9 +77,8 @@ public class SessionFactoryServiceRegistryImpl
 
 	@Override
 	public <R extends Service> void configureService(ServiceBinding<R> serviceBinding) {
-		if ( serviceBinding.getService() instanceof Configurable ) {
-			( (Configurable) serviceBinding.getService() )
-					.configure( requireService( ConfigurationService.class ).getSettings() );
+		if ( serviceBinding.getService() instanceof Configurable configurable ) {
+			configurable.configure( requireService( ConfigurationService.class ).getSettings() );
 		}
 	}
 
@@ -101,8 +101,8 @@ public class SessionFactoryServiceRegistryImpl
 	public <R extends Service> @Nullable R getService(Class<R> serviceRole) {
 		if ( serviceRole.equals( EventListenerRegistry.class ) ) {
 			log.debug(
-					"EventListenerRegistry access via ServiceRegistry is deprecated.  " +
-							"Use `sessionFactory.getEventEngine().getListenerRegistry()` instead"
+					"EventListenerRegistry access via ServiceRegistry is deprecated - "
+						+ "use 'sessionFactory.getEventEngine().getListenerRegistry()' instead"
 			);
 
 			//noinspection unchecked

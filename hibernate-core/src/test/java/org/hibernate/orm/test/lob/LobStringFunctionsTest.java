@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.lob;
@@ -7,12 +7,14 @@ package org.hibernate.orm.test.lob;
 import java.sql.Clob;
 import java.util.List;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,12 +30,14 @@ import jakarta.persistence.Tuple;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isOneOf;
 import static org.hamcrest.core.Is.is;
+import static org.hibernate.Hibernate.getLobHelper;
 
 @JiraKey(value = "HHH-15162")
 @DomainModel(
 		annotatedClasses = LobStringFunctionsTest.TestEntity.class
 )
 @SessionFactory
+@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not allow these functions for LOBs")
 public class LobStringFunctionsTest {
 
 	private static final int LONG_STRING_SIZE = 3999;
@@ -48,7 +52,7 @@ public class LobStringFunctionsTest {
 
 			entity.setFirstLobField( value1 );
 			entity.setSecondLobField( value2 );
-			entity.setClobField( session.getLobHelper().createClob( value2 ) );
+			entity.setClobField( getLobHelper().createClob( value2 ) );
 			session.persist( entity );
 		} );
 
@@ -60,10 +64,7 @@ public class LobStringFunctionsTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete from TestEntity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

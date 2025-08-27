@@ -1,17 +1,18 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
+import java.util.Objects;
 
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.SUBTRACT;
@@ -29,13 +30,12 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 			BinaryArithmeticOperator operator,
 			SqmExpression<?> lhsOperand,
 			SqmExpression<?> rhsOperand,
-			JpaMetamodel domainModel,
 			NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
-				(SqmExpressible<T>) domainModel.getTypeConfiguration().resolveArithmeticType(
-						lhsOperand.getNodeType(),
-						rhsOperand.getNodeType(),
+				(SqmBindableType<T>) nodeBuilder.getTypeConfiguration().resolveArithmeticType(
+						lhsOperand.getExpressible(),
+						rhsOperand.getExpressible(),
 						operator
 				),
 				nodeBuilder
@@ -49,15 +49,15 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 				( operator == ADD || operator == SUBTRACT ) ) {
 			return;
 		}
-		this.lhsOperand.applyInferableType( rhsOperand.getNodeType() );
-		this.rhsOperand.applyInferableType( lhsOperand.getNodeType() );
+		this.lhsOperand.applyInferableType( rhsOperand.getExpressible() );
+		this.rhsOperand.applyInferableType( lhsOperand.getExpressible() );
 	}
 
 	public SqmBinaryArithmetic(
 			BinaryArithmeticOperator operator,
 			SqmExpression<?> lhsOperand,
 			SqmExpression<?> rhsOperand,
-			SqmExpressible<T> expressibleType,
+			SqmBindableType<T> expressibleType,
 			NodeBuilder nodeBuilder) {
 		super( expressibleType, nodeBuilder );
 
@@ -122,7 +122,7 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 	}
 
 	@Override
-	protected void internalApplyInferableType(SqmExpressible<?> type) {
+	protected void internalApplyInferableType(SqmBindableType<?> type) {
 		rhsOperand.applyInferableType( type );
 		lhsOperand.applyInferableType( type );
 
@@ -135,12 +135,24 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		lhsOperand.appendHqlString( sb );
-		sb.append( ' ' );
-		sb.append( operator.getOperatorSqlText() );
-		sb.append( ' ' );
-		rhsOperand.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		lhsOperand.appendHqlString( hql, context );
+		hql.append( ' ' );
+		hql.append( operator.getOperatorSqlText() );
+		hql.append( ' ' );
+		rhsOperand.appendHqlString( hql, context );
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmBinaryArithmetic<?> that
+			&& this.operator == that.operator
+			&& Objects.equals( this.lhsOperand, that.lhsOperand )
+			&& Objects.equals( this.rhsOperand, that.rhsOperand );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( lhsOperand, rhsOperand, operator );
+	}
 }

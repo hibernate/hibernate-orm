@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.relational;
@@ -9,13 +9,8 @@ package org.hibernate.boot.model.relational;
  *
  * @author Steve Ebersole
  */
-public class InitCommand {
-	private final String[] initCommands;
-
-	public InitCommand(String... initCommands) {
-		this.initCommands = initCommands;
-	}
-
+public record InitCommand(String... initCommands) {
+	@Deprecated(since = "7")
 	public String[] getInitCommands() {
 		return initCommands;
 	}

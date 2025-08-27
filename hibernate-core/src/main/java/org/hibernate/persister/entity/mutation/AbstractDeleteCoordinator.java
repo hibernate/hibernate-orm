@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity.mutation;
@@ -13,7 +13,6 @@ import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -74,12 +73,11 @@ public abstract class AbstractDeleteCoordinator
 			SharedSessionContractImplementor session) {
 		boolean isImpliedOptimisticLocking = entityPersister().optimisticLockStyle().isAllOrDirty();
 
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final EntityEntry entry = persistenceContext.getEntry( entity );
+		final EntityEntry entry = session.getPersistenceContextInternal().getEntry( entity );
 		final Object[] loadedState = entry != null && isImpliedOptimisticLocking ? entry.getLoadedState() : null;
 		final Object rowId = entry != null ? entry.getRowId() : null;
 
-		if ( ( isImpliedOptimisticLocking && loadedState != null ) || ( rowId == null && entityPersister().hasRowId() ) ) {
+		if ( isImpliedOptimisticLocking && loadedState != null || rowId == null && entityPersister().hasRowId() ) {
 			doDynamicDelete( entity, id, rowId, loadedState, session );
 		}
 		else {
@@ -273,17 +271,20 @@ public abstract class AbstractDeleteCoordinator
 				session
 		);
 
-		mutationExecutor.execute(
-				entity,
-				null,
-				null,
-				(statementDetails, affectedRowCount, batchPosition) ->
-						resultCheck( id, statementDetails, affectedRowCount, batchPosition ),
-				session,
-				staleStateException -> staleObjectState( id, staleStateException )
-		);
-
-		mutationExecutor.release();
+		try {
+			mutationExecutor.execute(
+					entity,
+					null,
+					null,
+					(statementDetails, affectedRowCount, batchPosition) ->
+							resultCheck( id, statementDetails, affectedRowCount, batchPosition ),
+					session,
+					staleStateException -> staleObjectState( id, staleStateException )
+			);
+		}
+		finally {
+			mutationExecutor.release();
+		}
 	}
 
 	private StaleObjectStateException staleObjectState(Object id, StaleStateException staleStateException) {

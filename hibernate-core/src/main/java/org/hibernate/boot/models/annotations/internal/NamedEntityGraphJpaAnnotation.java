@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.NamedEntityGraph;
 
@@ -26,7 +26,7 @@ public class NamedEntityGraphJpaAnnotation implements NamedEntityGraph {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public NamedEntityGraphJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public NamedEntityGraphJpaAnnotation(ModelsContext modelContext) {
 		this.name = "";
 		this.attributeNodes = new jakarta.persistence.NamedAttributeNode[0];
 		this.includeAllAttributes = false;
@@ -37,7 +37,7 @@ public class NamedEntityGraphJpaAnnotation implements NamedEntityGraph {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public NamedEntityGraphJpaAnnotation(NamedEntityGraph annotation, SourceModelBuildingContext modelContext) {
+	public NamedEntityGraphJpaAnnotation(NamedEntityGraph annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.attributeNodes = extractJdkValue( annotation, NAMED_ENTITY_GRAPH, "attributeNodes", modelContext );
 		this.includeAllAttributes = annotation.includeAllAttributes();
@@ -48,7 +48,7 @@ public class NamedEntityGraphJpaAnnotation implements NamedEntityGraph {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public NamedEntityGraphJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public NamedEntityGraphJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.attributeNodes = (jakarta.persistence.NamedAttributeNode[]) attributeValues.get( "attributeNodes" );
 		this.includeAllAttributes = (boolean) attributeValues.get( "includeAllAttributes" );

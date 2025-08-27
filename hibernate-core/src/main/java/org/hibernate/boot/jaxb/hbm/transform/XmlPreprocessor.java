@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.hbm.transform;
@@ -16,7 +16,8 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmUnionSubclassEntityType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.internal.util.collections.CollectionHelper;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
  * @author Steve Ebersole
@@ -25,7 +26,7 @@ public class XmlPreprocessor {
 	public static List<Binding<JaxbEntityMappingsImpl>> preprocessHbmXml(
 			List<Binding<JaxbHbmHibernateMapping>> hbmXmlBindings,
 			TransformationState transformationState) {
-		final List<Binding<JaxbEntityMappingsImpl>> mappingBindings = CollectionHelper.arrayList( hbmXmlBindings.size() );
+		final List<Binding<JaxbEntityMappingsImpl>> mappingBindings = arrayList( hbmXmlBindings.size() );
 		hbmXmlBindings.forEach( (hbmXmlBinding) -> preProcessHbmXml( hbmXmlBinding, mappingBindings, transformationState ) );
 		return mappingBindings;
 	}

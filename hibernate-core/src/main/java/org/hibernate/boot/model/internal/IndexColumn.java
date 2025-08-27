@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -62,7 +62,7 @@ public class IndexColumn extends AnnotatedColumn {
 			Map<String,Join> secondaryTables,
 			IndexColumn column,
 			MetadataBuildingContext context) {
-		final AnnotatedColumns parent = new AnnotatedColumns();
+		final var parent = new AnnotatedColumns();
 		parent.setPropertyHolder( propertyHolder );
 		parent.setJoins( secondaryTables );
 		parent.setBuildingContext( context );
@@ -96,7 +96,7 @@ public class IndexColumn extends AnnotatedColumn {
 		if ( orderColumn != null ) {
 			final String sqlType = nullIfEmpty( orderColumn.columnDefinition() );
 			final String explicitName = orderColumn.name();
-			final String name = explicitName.isEmpty()
+			final String name = explicitName.isBlank()
 					? inferredData.getPropertyName() + "_ORDER"
 					: explicitName;
 			final IndexColumn column = new IndexColumn();

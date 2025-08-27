@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.expression;
@@ -19,8 +19,8 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  * @author Gavin King
  */
 public class ExtractUnit implements Expression, SqlAstNode {
-	private TemporalUnit unit;
-	private BasicValuedMapping type;
+	private final TemporalUnit unit;
+	private final BasicValuedMapping type;
 
 	public ExtractUnit(TemporalUnit unit, BasicValuedMapping type) {
 		this.unit = unit;

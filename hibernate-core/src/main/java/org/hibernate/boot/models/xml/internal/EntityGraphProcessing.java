@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.xml.internal;
@@ -20,7 +20,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MutableClassDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
@@ -44,7 +44,7 @@ public class EntityGraphProcessing {
 			return;
 		}
 
-		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
 		final NamedEntityGraphsJpaAnnotation entityGraphsUsage = (NamedEntityGraphsJpaAnnotation) classDetails.replaceAnnotationUsage(
 				JpaAnnotations.NAMED_ENTITY_GRAPH,
 				JpaAnnotations.NAMED_ENTITY_GRAPHS,
@@ -62,7 +62,7 @@ public class EntityGraphProcessing {
 	private static NamedEntityGraph extractGraph(
 			JaxbNamedEntityGraphImpl jaxbEntityGraph,
 			ClassDetails classDetails,
-			SourceModelBuildingContext modelBuildingContext,
+			ModelsContext modelBuildingContext,
 			XmlDocumentContext xmlDocumentContext) {
 		final NamedEntityGraphJpaAnnotation graphUsage = JpaAnnotations.NAMED_ENTITY_GRAPH.createUsage( modelBuildingContext );
 
@@ -107,7 +107,7 @@ public class EntityGraphProcessing {
 	private static NamedAttributeNode[] extractAttributeNodes(
 			List<JaxbNamedAttributeNodeImpl> jaxbAttributeNodes,
 			ClassDetails classDetails,
-			SourceModelBuildingContext modelBuildingContext,
+			ModelsContext modelBuildingContext,
 			XmlDocumentContext xmlDocumentContext) {
 		assert CollectionHelper.isNotEmpty( jaxbAttributeNodes );
 
@@ -133,7 +133,7 @@ public class EntityGraphProcessing {
 	private static NamedSubgraph[] extractSubgraphNodes(
 			List<JaxbNamedSubgraphImpl> jaxbSubgraphs,
 			ClassDetails classDetails,
-			SourceModelBuildingContext modelBuildingContext,
+			ModelsContext modelBuildingContext,
 			XmlDocumentContext xmlDocumentContext) {
 		assert CollectionHelper.isNotEmpty( jaxbSubgraphs );
 

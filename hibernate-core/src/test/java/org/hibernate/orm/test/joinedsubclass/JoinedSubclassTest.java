@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.joinedsubclass;
@@ -34,15 +34,8 @@ public class JoinedSubclassTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Employee" ).executeUpdate();
-					session.createMutationQuery( "delete from Customer" ).executeUpdate();
-					session.createMutationQuery( "delete from Person" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
-
 
 	@Test
 	public void testAccessAsIncorrectSubclass(SessionFactoryScope scope) {

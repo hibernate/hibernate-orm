@@ -1,15 +1,25 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
 import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.MutableObject;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.mutation.spi.MultiTableHandler;
+import org.hibernate.query.sqm.mutation.spi.MultiTableHandlerBuildResult;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+
+
 
 /**
  * This is a strategy that mimics temporary tables for databases which do not support
@@ -20,6 +30,31 @@ import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
  */
 public class PersistentTableInsertStrategy extends PersistentTableStrategy implements SqmMultiTableInsertStrategy {
 
+	public PersistentTableInsertStrategy(EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
+		this(
+				rootEntityDescriptor,
+				runtimeModelCreationContext.getDialect().getPersistentTemporaryTableStrategy(),
+				runtimeModelCreationContext
+		);
+	}
+
+	private PersistentTableInsertStrategy(
+			EntityMappingType rootEntityDescriptor,
+			TemporaryTableStrategy temporaryTableStrategy,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		this(
+				TemporaryTable.createEntityTable(
+						runtimeModelCreationContext.getMetadata()
+								.getEntityBinding( rootEntityDescriptor.getEntityName() ),
+						basename -> temporaryTableStrategy.adjustTemporaryTableName( TemporaryTable.ENTITY_TABLE_PREFIX + basename ),
+						TemporaryTableKind.PERSISTENT,
+						runtimeModelCreationContext.getDialect(),
+						runtimeModelCreationContext
+				),
+				runtimeModelCreationContext.getSessionFactory()
+		);
+	}
+
 	public PersistentTableInsertStrategy(
 			TemporaryTable entityTable,
 			SessionFactoryImplementor sessionFactory) {
@@ -27,17 +62,18 @@ public class PersistentTableInsertStrategy extends PersistentTableStrategy imple
 	}
 
 	@Override
-	public int executeInsert(
-			SqmInsertStatement<?> sqmInsertStatement,
-			DomainParameterXref domainParameterXref,
-			DomainQueryExecutionContext context) {
-		return new TableBasedInsertHandler(
+	public MultiTableHandlerBuildResult buildHandler(SqmInsertStatement<?> sqmInsertStatement, DomainParameterXref domainParameterXref, DomainQueryExecutionContext context) {
+		final MutableObject<JdbcParameterBindings> firstJdbcParameterBindings = new MutableObject<>();
+		final MultiTableHandler multiTableHandler = new TableBasedInsertHandler(
 				sqmInsertStatement,
 				domainParameterXref,
 				getTemporaryTable(),
-				getSessionFactory().getJdbcServices().getDialect().getTemporaryTableAfterUseAction(),
+				getTemporaryTableStrategy(),
+				false,
 				session -> session.getSessionIdentifier().toString(),
-				getSessionFactory()
-		).execute( context );
+				context,
+				firstJdbcParameterBindings
+		);
+		return new MultiTableHandlerBuildResult( multiTableHandler, firstJdbcParameterBindings.get() );
 	}
 }

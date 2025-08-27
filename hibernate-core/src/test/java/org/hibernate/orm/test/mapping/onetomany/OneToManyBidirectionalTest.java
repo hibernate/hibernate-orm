@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.onetomany;
@@ -73,10 +73,7 @@ public class OneToManyBidirectionalTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery( "delete from Item" ).executeUpdate();
-			session.createQuery( "delete from Order" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -517,7 +514,7 @@ public class OneToManyBidirectionalTest {
 			 */
 
 			// todo (6.0): this was originally intended to produce only a single SQL join,
-			//  but joins are created before fetches, thus we don't know about bi-directional fetching/joining
+			//  but joins are created before fetches, thus we don't know about bidirectional fetching/joining
 			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 2 );
 			sqlStatementInterceptor.clear();
 
@@ -562,7 +559,7 @@ public class OneToManyBidirectionalTest {
 			 */
 
 			// todo (6.0): this was originally intended to produce only a single SQL join,
-			//  but joins are created before fetches, thus we don't know about bi-directional fetching/joining
+			//  but joins are created before fetches, thus we don't know about bidirectional fetching/joining
 			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 2 );
 			sqlStatementInterceptor.clear();
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
@@ -204,14 +204,7 @@ public class LazyToOnesProxyWithSubclassesStatelessTest {
 
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from OtherEntity" ).executeUpdate();
-					session.createQuery( "delete from Human" ).executeUpdate();
-					session.createQuery( "delete from Primate" ).executeUpdate();
-					session.createQuery( "delete from Animal" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Animal")

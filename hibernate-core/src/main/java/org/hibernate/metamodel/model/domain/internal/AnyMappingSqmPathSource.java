@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
@@ -45,22 +45,23 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
 	}
 
 	@Override
-	public AnyMappingDomainType<J> getSqmPathType() {
-		return (AnyMappingDomainType<J>) super.getSqmPathType();
-	}
-
-	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		switch (name) {
-			case "id": // deprecated HQL .id syntax
-			case AnyKeyPart.KEY_NAME: // standard id() function
-				return keyPathSource;
-			case "class": // deprecated HQL .class syntax
-			case AnyDiscriminatorPart.ROLE_NAME: // standard type() function
-				return discriminatorPathSource;
-			default:
-				throw new UnsupportedMappingException( "Only the key and discriminator parts of an '@Any' mapping may be dereferenced" );
-		}
+		return switch ( name ) {
+			case AnyKeyPart.KEY_NAME ->
+				// standard id() function
+					keyPathSource;
+			case AnyDiscriminatorPart.ROLE_NAME ->
+				// standard type() function
+					discriminatorPathSource;
+			case "id" ->
+				// deprecated HQL .id syntax
+					keyPathSource;
+			case "class" ->
+				// deprecated HQL .class syntax
+					discriminatorPathSource;
+			default -> throw new UnsupportedMappingException(
+					"Only the key and discriminator parts of an '@Any' mapping may be dereferenced" );
+		};
 	}
 
 	@Override

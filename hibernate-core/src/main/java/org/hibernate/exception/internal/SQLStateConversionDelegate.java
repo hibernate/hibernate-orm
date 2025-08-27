@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.exception.internal;
@@ -7,10 +7,9 @@ package org.hibernate.exception.internal;
 import java.sql.SQLException;
 
 import org.hibernate.JDBCException;
-import org.hibernate.PessimisticLockException;
-import org.hibernate.QueryTimeoutException;
 import org.hibernate.exception.AuthException;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.DataException;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.exception.LockAcquisitionException;
@@ -21,7 +20,6 @@ import org.hibernate.exception.spi.ConversionContext;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.internal.util.JdbcExceptionHelper.determineSqlStateClassCode;
-import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 
 /**
@@ -52,17 +50,6 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 					return new AuthException( message, sqlException, sql );
 				case "40001":
 					return new LockAcquisitionException( message, sqlException, sql );
-				case "40XL1", "40XL2":
-					// Derby "A lock could not be obtained within the time requested."
-					return new PessimisticLockException( message, sqlException, sql );
-				case "70100":
-					// MySQL Query execution was interrupted
-					return new QueryTimeoutException(  message, sqlException, sql );
-				case "72000":
-					if ( extractErrorCode( sqlException ) == 1013 ) {
-						// Oracle user requested cancel of current operation
-						return new QueryTimeoutException(  message, sqlException, sql );
-					}
 			}
 			switch ( determineSqlStateClassCode( sqlState ) ) {
 				case
@@ -78,16 +65,22 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 					"23",	// "integrity constraint violation"
 					"27",	// "triggered data change violation"
 					"44":	// "with check option violation"
-					final String constraintName = getConversionContext()
-							.getViolatedConstraintNameExtractor()
-							.extractConstraintName( sqlException );
-					return new ConstraintViolationException( message, sqlException, sql, constraintName );
+					final String constraintName =
+							getConversionContext().getViolatedConstraintNameExtractor()
+									.extractConstraintName( sqlException );
+					if ( sqlState.length() >= 5 ) {
+						final ConstraintKind constraintKind = constraintKind( sqlState.substring( 0, 5 ) );
+						return new ConstraintViolationException( message, sqlException, sql, constraintKind, constraintName );
+					}
+					else {
+						return new ConstraintViolationException( message, sqlException, sql, constraintName );
+					}
 				case
 					"08":	// "connection exception"
 					return new JDBCConnectionException( message, sqlException, sql );
 				case
 					"21",	// "cardinality violation"
-					"22":	// "data exception"
+					"22":	// "data exception" (22001 is string too long; 22003 is numeric value out of range)
 					return new DataException( message, sqlException, sql );
 				case
 					"28":	// "authentication failure"
@@ -95,5 +88,18 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 			}
 		}
 		return null;
+	}
+
+	private static ConstraintKind constraintKind(String trimmedState) {
+		return switch ( trimmedState ) {
+			case "23502" -> ConstraintKind.NOT_NULL;
+			case "23505" -> ConstraintKind.UNIQUE;
+			case "23503" -> ConstraintKind.FOREIGN_KEY;
+			// 23510-3 indicate CHECK on Db2,
+			// 23514 indicates CHECK on Postgres,
+			// 23513-4 indicate CHECK on h2
+			case "23510", "23511", "23512", "23513", "23514" -> ConstraintKind.CHECK;
+			default -> ConstraintKind.OTHER;
+		};
 	}
 }

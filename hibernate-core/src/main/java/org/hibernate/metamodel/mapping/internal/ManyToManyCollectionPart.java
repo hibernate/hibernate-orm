@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -32,14 +32,12 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
-import org.hibernate.persister.collection.BasicCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
 import org.hibernate.spi.NavigablePath;
@@ -79,8 +77,8 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
  *
  * @author Steve Ebersole
  */
-public class ManyToManyCollectionPart extends AbstractEntityCollectionPart implements EntityAssociationMapping,
-		LazyTableGroup.ParentTableGroupUseChecker {
+public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
+		implements EntityAssociationMapping, LazyTableGroup.ParentTableGroupUseChecker {
 	private ForeignKeyDescriptor foreignKey;
 	private ValuedModelPart fkTargetModelPart;
 
@@ -125,15 +123,16 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		// to allow deferring the initialization of the target table group, omitting it if possible.
 		// This is not possible for one-to-many associations because we need to create the target table group eagerly,
 		// to preserve the cardinality. Also, the OneToManyTableGroup has no reference to the parent table group
-		if ( getTargetKeyPropertyNames().contains( name ) ) {
+		if ( foreignKey != null && getTargetKeyPropertyNames().contains( name ) ) {
 			final ModelPart keyPart = foreignKey.getKeyPart();
-			if ( keyPart instanceof EmbeddableValuedModelPart && keyPart instanceof VirtualModelPart ) {
-				return ( (ModelPartContainer) keyPart ).findSubPart( name, targetType );
-			}
-			return keyPart;
+			return keyPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart
+				&& keyPart instanceof VirtualModelPart
+					? embeddableValuedModelPart.findSubPart( name, targetType )
+					: keyPart;
 		}
-
-		return super.findSubPart( name, targetType );
+		else {
+			return super.findSubPart( name, targetType );
+		}
 	}
 
 	@Override
@@ -171,11 +170,9 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 	public void forEachInsertable(SelectableConsumer consumer) {
 		forEachSelectable(
 				(selectionIndex, selectableMapping) -> {
-					if ( !foreignKey.getKeyPart().getSelectable( selectionIndex ).isInsertable() ) {
-						return;
+					if ( foreignKey.getKeyPart().getSelectable( selectionIndex ).isInsertable() ) {
+						consumer.accept( selectionIndex, selectableMapping );
 					}
-
-					consumer.accept( selectionIndex, selectableMapping );
 				}
 		);
 	}
@@ -184,11 +181,9 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 	public void forEachUpdatable(SelectableConsumer consumer) {
 		forEachSelectable(
 				(selectionIndex, selectableMapping) -> {
-					if ( !foreignKey.getKeyPart().getSelectable( selectionIndex ).isUpdateable() ) {
-						return;
+					if ( foreignKey.getKeyPart().getSelectable( selectionIndex ).isUpdateable() ) {
+						consumer.accept( selectionIndex, selectableMapping );
 					}
-
-					consumer.accept( selectionIndex, selectableMapping );
 				}
 		);
 	}
@@ -248,10 +243,9 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 
 	@Override
 	public ModelPart getKeyTargetMatchPart() {
-		if ( fkTargetModelPart instanceof ToOneAttributeMapping ) {
-			return foreignKey.getKeyPart();
-		}
-		return fkTargetModelPart;
+		return fkTargetModelPart instanceof ToOneAttributeMapping
+				? foreignKey.getKeyPart()
+				: fkTargetModelPart;
 	}
 
 	@Override
@@ -397,8 +391,11 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 			}
 		}
 		else if ( StringHelper.isNotEmpty( bootCollectionDescriptor.getMappedByProperty() ) ) {
-			final ModelPart mappedByPart = resolveNamedTargetPart( bootCollectionDescriptor.getMappedByProperty(), getAssociatedEntityMappingType(), collectionDescriptor );
-			if ( mappedByPart instanceof ToOneAttributeMapping ) {
+			final ModelPart mappedByPart =
+					resolveNamedTargetPart( bootCollectionDescriptor.getMappedByProperty(),
+							getAssociatedEntityMappingType(), collectionDescriptor );
+			if ( mappedByPart instanceof ToOneAttributeMapping
+					|| mappedByPart instanceof DiscriminatedAssociationAttributeMapping ) {
 				////////////////////////////////////////////////
 				// E.g.
 				//
@@ -425,7 +422,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 				final ManyToOne elementDescriptor = (ManyToOne) bootCollectionDescriptor.getElement();
 				assert elementDescriptor.isReferenceToPrimaryKey();
 
-				final String collectionTableName = ( (BasicCollectionPersister) collectionDescriptor ).getTableName();
+				final String collectionTableName = collectionDescriptor.getTableName();
 
 				// this fk will refer to the associated entity's id.  if that id is not ready yet, delay this creation
 				if ( getAssociatedEntityMappingType().getIdentifierMapping() == null ) {
@@ -600,8 +597,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		assert fkTargetModelPart != null;
 
 		// If this is mapped by a to-one attribute, we can use the FK of that attribute
-		if ( fkTargetModelPart instanceof ToOneAttributeMapping ) {
-			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) fkTargetModelPart;
+		if ( fkTargetModelPart instanceof ToOneAttributeMapping toOneAttributeMapping ) {
 			if ( toOneAttributeMapping.getForeignKeyDescriptor() == null ) {
 				throw new IllegalStateException( "Not yet ready: " + toOneAttributeMapping );
 			}
@@ -612,9 +608,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 			);
 		}
 
-		if ( fkTargetModelPart instanceof ManyToManyCollectionPart ) {
+		if ( fkTargetModelPart instanceof ManyToManyCollectionPart targetModelPart ) {
 			// can this ever be anything other than another (the inverse) many-to-many part?
-			final ManyToManyCollectionPart targetModelPart = (ManyToManyCollectionPart) fkTargetModelPart;
 			if ( targetModelPart.getForeignKeyDescriptor() == null ) {
 				throw new IllegalStateException( "Not yet ready: " + targetModelPart );
 			}
@@ -625,7 +620,9 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 			);
 		}
 
-		final String collectionTableName = ( (CollectionMutationTarget) getCollectionDescriptor() ).getCollectionTableMapping().getTableName();
+		final String collectionTableName =
+				( (CollectionMutationTarget) getCollectionDescriptor() )
+						.getCollectionTableMapping().getTableName();
 
 		final BasicValuedModelPart basicFkTarget = fkTargetModelPart.asBasicValuedModelPart();
 		if ( basicFkTarget != null ) {
@@ -639,9 +636,9 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 			);
 		}
 
-		if ( fkTargetModelPart instanceof EmbeddableValuedModelPart ) {
+		if ( fkTargetModelPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
 			return MappingModelCreationHelper.buildEmbeddableForeignKeyDescriptor(
-					(EmbeddableValuedModelPart) fkTargetModelPart,
+					embeddableValuedModelPart,
 					fkBootDescriptorSource,
 					findContainingEntityMapping(),
 					getCollectionDescriptor().getAttributeMapping(),
@@ -665,16 +662,12 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		final int selectableCount = foreignKeyDescriptor.getJdbcTypeCount();
 		final ValuedModelPart keyPart = foreignKeyDescriptor.getKeyPart();
 		for ( int i = 0; i < selectableCount; i++ ) {
-			if ( keyPart.getSelectable( i ).isInsertable() != fkBootDescriptorSource.isColumnInsertable( i )
-					|| keyPart.getSelectable( i ).isUpdateable() != fkBootDescriptorSource.isColumnUpdateable( i ) ) {
+			final SelectableMapping selectable = keyPart.getSelectable( i );
+			if ( selectable.isInsertable() != fkBootDescriptorSource.isColumnInsertable( i )
+				|| selectable.isUpdateable() != fkBootDescriptorSource.isColumnUpdateable( i ) ) {
 				final AttributeMapping attributeMapping = keyPart.asAttributeMapping();
-				final ManagedMappingType declaringType;
-				if ( attributeMapping == null ) {
-					declaringType = null;
-				}
-				else {
-					declaringType = attributeMapping.getDeclaringType();
-				}
+				final ManagedMappingType declaringType =
+						attributeMapping == null ? null : attributeMapping.getDeclaringType();
 				final SelectableMappings selectableMappings = SelectableMappingsImpl.from(
 						keyPart.getContainingTableExpression(),
 						fkBootDescriptorSource,

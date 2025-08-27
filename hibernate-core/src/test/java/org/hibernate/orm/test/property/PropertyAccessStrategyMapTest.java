@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.property;
@@ -31,7 +31,7 @@ public class PropertyAccessStrategyMapTest extends BaseUnitTestCase {
 
 	@Test
 	public void testNonMap() {
-		final PropertyAccessStrategyMapImpl accessStrategy = PropertyAccessStrategyMapImpl.INSTANCE;
+		final var accessStrategy = PropertyAccessStrategyMapImpl.INSTANCE;
 
 		try {
 			accessStrategy.buildPropertyAccess( Date.class, "time", true );
@@ -51,7 +51,7 @@ public class PropertyAccessStrategyMapTest extends BaseUnitTestCase {
 		final String key = "testKey";
 		final String value = "testValue";
 
-		final PropertyAccessStrategyMapImpl accessStrategy = PropertyAccessStrategyMapImpl.INSTANCE;
+		final var accessStrategy = PropertyAccessStrategyMapImpl.INSTANCE;
 		final PropertyAccess access = accessStrategy.buildPropertyAccess( clazz, key, true );
 
 		final HashMap<String, String> map = new HashMap<>();

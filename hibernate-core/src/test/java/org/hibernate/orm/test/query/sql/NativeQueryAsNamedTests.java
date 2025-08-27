@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.sql;
@@ -8,7 +8,6 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
-import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -54,7 +53,7 @@ public class NativeQueryAsNamedTests {
 			session.getSessionFactory().addNamedQuery( "the_select", nativeQuery );
 
 			// and execute it as a named query
-			final QueryImplementor<String> namedQuery = session.createNamedQuery( "the_select" );
+			final Query<String> namedQuery = session.createNamedQuery( "the_select" );
 			bindParameters( namedQuery, session );
 			namedQuery.list();
 		} );
@@ -74,7 +73,7 @@ public class NativeQueryAsNamedTests {
 			session.getSessionFactory().addNamedQuery( "the_select", nativeQuery );
 
 			// and execute it as a named query
-			final QueryImplementor<String> namedQuery = session.createNamedQuery( "the_select", String.class );
+			final Query<String> namedQuery = session.createNamedQuery( "the_select", String.class );
 			bindParameters( namedQuery, session );
 			namedQuery.list();
 		} );

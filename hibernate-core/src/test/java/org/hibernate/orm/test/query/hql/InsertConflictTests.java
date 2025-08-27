@@ -1,11 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 
 import java.time.LocalDate;
 
+import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -53,10 +55,7 @@ public class InsertConflictTests {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from Contact" ).executeUpdate();
-			session.createMutationQuery( "delete from BasicEntity" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -111,6 +110,7 @@ public class InsertConflictTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "MATCHED does not support AND condition")
 	public void testOnConflictDoUpdateWithWhere(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -130,6 +130,10 @@ public class InsertConflictTests {
 						// Sybase seems to report all matched rows as affected and ignores additional predicates
 						assertEquals( 1, updated );
 					}
+					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof GaussDBDialect ) {
+						// GaussDB seems to report all matched rows as affected and ignores additional predicates
+						assertEquals( 1, updated );
+					}
 					else {
 						assertEquals( 0, updated );
 					}
@@ -141,6 +145,7 @@ public class InsertConflictTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "MATCHED does not support AND condition")
 	public void testOnConflictDoUpdateWithWhereCriteria(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -164,6 +169,10 @@ public class InsertConflictTests {
 					}
 					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseASEDialect ) {
 						// Sybase seems to report all matched rows as affected and ignores additional predicates
+						assertEquals( 1, updated );
+					}
+					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof GaussDBDialect ) {
+						// GaussDB seems to report all matched rows as affected and ignores additional predicates
 						assertEquals( 1, updated );
 					}
 					else {
@@ -231,6 +240,7 @@ public class InsertConflictTests {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "MERGE into a table that has a self-referential FK does not work")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "MATCHED does not support AND condition")
 	public void testOnConflictDoUpdateWithWhereMultiTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -248,6 +258,10 @@ public class InsertConflictTests {
 					}
 					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseASEDialect ) {
 						// Sybase seems to report all matched rows as affected and ignores additional predicates
+						assertEquals( 1, updated );
+					}
+					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof GaussDBDialect ) {
+						// GaussDB seems to report all matched rows as affected and ignores additional predicates
 						assertEquals( 1, updated );
 					}
 					else {

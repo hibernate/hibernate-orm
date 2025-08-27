@@ -1,12 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -67,8 +67,8 @@ public class SumReturnTypeResolver implements FunctionReturnTypeResolver {
 		}
 		final ReturnableType<?> argType = extractArgumentType( arguments, 1 );
 		final BasicType<?> basicType;
-		if (argType instanceof BasicType<?>) {
-			basicType = (BasicType<?>) argType;
+		if ( argType instanceof BasicType<?> type ) {
+			basicType = type;
 		}
 		else {
 			basicType = typeConfiguration.getBasicTypeForJavaType( argType.getJavaType() );

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -34,7 +34,7 @@ public final class SimpleAttributeMetadata implements AttributeMetadata {
 				mutabilityPlan,
 				value.isNullable(),
 				bootProperty.isInsertable(),
-				bootProperty.isUpdateable(),
+				bootProperty.isUpdatable(),
 				bootProperty.isOptimisticLocked(),
 				bootProperty.isSelectable()
 		);

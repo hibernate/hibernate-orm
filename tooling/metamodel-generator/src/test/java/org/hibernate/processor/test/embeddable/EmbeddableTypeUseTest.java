@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.embeddable;
@@ -8,7 +8,7 @@ import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
@@ -16,11 +16,12 @@ import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGen
 /**
  * @author Chris Cranford
  */
+@CompilationTest
 @TestForIssue(jiraKey = "HHH-12612")
-public class EmbeddableTypeUseTest extends CompilationTest {
+class EmbeddableTypeUseTest {
 	@Test
 	@WithClasses({SimpleEntity.class})
-	public void testAnnotatedEmbeddable() {
+	void testAnnotatedEmbeddable() {
 		System.out.println( TestUtil.getMetaModelSourceAsString( SimpleEntity.class ) );
 		assertMetamodelClassGeneratedFor( SimpleEntity.class );
 		assertAttributeTypeInMetaModelFor(

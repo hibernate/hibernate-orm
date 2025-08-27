@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetoone;
@@ -52,7 +52,7 @@ public class OverrideOneToOneJoinColumnTest {
 
 			final Table personTable = metadata.getDatabase().getDefaultNamespace().locateTable(
 					Identifier.toIdentifier( "PERSON_TABLE" ) );
-			final Collection<ForeignKey> foreignKeys = personTable.getForeignKeys().values();
+			final Collection<ForeignKey> foreignKeys = personTable.getForeignKeyCollection();
 			assertThat( foreignKeys.size(), is( 1 ) );
 			final Optional<ForeignKey> foreignKey = foreignKeys.stream().findFirst();
 
@@ -76,10 +76,16 @@ public class OverrideOneToOneJoinColumnTest {
 									.buildMetadata()
 			);
 
+			String errorMessage = ex.getMessage();
 			assertTrue(
-					ex.getMessage().contains( "is 'mappedBy' a different entity and may not explicitly specify the '@JoinColumn'" ),
+					errorMessage.contains( "is 'mappedBy' a different entity and may not explicitly specify the '@JoinColumn'" ),
 					"Should disallow exactly because of @JoinColumn override on side with mappedBy"
 			);
+			assertTrue( errorMessage.contains( "Association 'desk'" ),
+					"The error message doesn't contain the name of the association"  );
+			assertTrue( errorMessage.contains(  PartTimeEmployee.class.getSimpleName() ),
+					"The error message doesn't contain the name of the entity" );
+
 		}
 	}
 

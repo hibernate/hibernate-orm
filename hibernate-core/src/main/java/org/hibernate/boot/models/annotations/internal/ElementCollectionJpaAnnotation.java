@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.boot.models.annotations.spi.AttributeMarker;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.ElementCollection;
 
@@ -21,7 +21,7 @@ public class ElementCollectionJpaAnnotation implements ElementCollection, Attrib
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public ElementCollectionJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public ElementCollectionJpaAnnotation(ModelsContext modelContext) {
 		this.targetClass = void.class;
 		this.fetch = jakarta.persistence.FetchType.LAZY;
 	}
@@ -29,7 +29,7 @@ public class ElementCollectionJpaAnnotation implements ElementCollection, Attrib
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public ElementCollectionJpaAnnotation(ElementCollection annotation, SourceModelBuildingContext modelContext) {
+	public ElementCollectionJpaAnnotation(ElementCollection annotation, ModelsContext modelContext) {
 		this.targetClass = annotation.targetClass();
 		this.fetch = annotation.fetch();
 	}
@@ -39,7 +39,7 @@ public class ElementCollectionJpaAnnotation implements ElementCollection, Attrib
 	 */
 	public ElementCollectionJpaAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.targetClass = (Class<?>) attributeValues.get( "targetClass" );
 		this.fetch = (jakarta.persistence.FetchType) attributeValues.get( "fetch" );
 	}

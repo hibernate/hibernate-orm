@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.emops;
 
-import java.util.List;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -34,30 +33,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class MergeMultipleEntityCopiesDisallowedByDefaultTest {
 
 	@AfterEach
-	@SuppressWarnings("unchecked")
 	void cleanup(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					for ( Hoarder hoarder : (List<Hoarder>) entityManager.createQuery( "from Hoarder" ).getResultList() ) {
-						hoarder.getItems().clear();
-						entityManager.remove( hoarder );
-					}
-
-					for ( Category category : (List<Category>) entityManager.createQuery( "from Category" ).getResultList() ) {
-						if ( category.getExampleItem() != null ) {
-							category.setExampleItem( null );
-							entityManager.remove( category );
-						}
-					}
-
-					for ( Item item : (List<Item>) entityManager.createQuery( "from Item" ).getResultList() ) {
-						item.setCategory( null );
-						entityManager.remove( item );
-					}
-
-					entityManager.createQuery( "delete from Item" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

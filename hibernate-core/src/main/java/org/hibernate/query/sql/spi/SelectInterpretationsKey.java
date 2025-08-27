@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sql.spi;
@@ -10,6 +10,7 @@ import java.util.Objects;
 
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
+import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 
@@ -18,38 +19,51 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
  */
 public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 	private final String sql;
-	private final JdbcValuesMappingProducer jdbcValuesMappingProducer;
+	private final ResultSetMapping resultSetMapping;
 	private final Collection<String> querySpaces;
-	private final TupleTransformer tupleTransformer;
-	private final ResultListTransformer resultListTransformer;
+	private final int parameterStartPosition;
 	private final int hash;
 
+	@Deprecated(forRemoval = true)
 	public SelectInterpretationsKey(
 			String sql,
 			JdbcValuesMappingProducer jdbcValuesMappingProducer,
 			Collection<String> querySpaces,
-			TupleTransformer tupleTransformer,
-			ResultListTransformer resultListTransformer) {
+			TupleTransformer<?> tupleTransformer,
+			ResultListTransformer<?> resultListTransformer) {
+		this( sql, jdbcValuesMappingProducer, querySpaces );
+	}
+
+	@Deprecated(forRemoval = true)
+	public SelectInterpretationsKey(
+			String sql,
+			JdbcValuesMappingProducer jdbcValuesMappingProducer,
+			Collection<String> querySpaces) {
+		this( sql, (ResultSetMapping) jdbcValuesMappingProducer, querySpaces, 1 );
+	}
+
+	public SelectInterpretationsKey(
+			String sql,
+			ResultSetMapping jdbcValuesMappingProducer,
+			Collection<String> querySpaces,
+			int parameterStartPosition) {
 		this.sql = sql;
-		this.jdbcValuesMappingProducer = jdbcValuesMappingProducer;
+		this.resultSetMapping = jdbcValuesMappingProducer;
 		this.querySpaces = querySpaces;
-		this.tupleTransformer = tupleTransformer;
-		this.resultListTransformer = resultListTransformer;
+		this.parameterStartPosition = parameterStartPosition;
 		this.hash = generateHashCode();
 	}
 
 	private SelectInterpretationsKey(
 			String sql,
-			JdbcValuesMappingProducer jdbcValuesMappingProducer,
+			ResultSetMapping resultSetMapping,
 			Collection<String> querySpaces,
-			TupleTransformer tupleTransformer,
-			ResultListTransformer resultListTransformer,
+			int parameterStartPosition,
 			int hash) {
 		this.sql = sql;
-		this.jdbcValuesMappingProducer = jdbcValuesMappingProducer;
+		this.resultSetMapping = resultSetMapping;
 		this.querySpaces = querySpaces;
-		this.tupleTransformer = tupleTransformer;
-		this.resultListTransformer = resultListTransformer;
+		this.parameterStartPosition = parameterStartPosition;
 		this.hash = hash;
 	}
 
@@ -58,14 +72,21 @@ public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 		return sql;
 	}
 
+	public ResultSetMapping getResultSetMapping() {
+		return resultSetMapping;
+	}
+
+	public int getStartPosition() {
+		return parameterStartPosition;
+	}
+
 	@Override
 	public QueryInterpretationCache.Key prepareForStore() {
 		return new SelectInterpretationsKey(
 				sql,
-				jdbcValuesMappingProducer.cacheKeyInstance(),
+				resultSetMapping.cacheKeyInstance(),
 				new HashSet<>( querySpaces ),
-				tupleTransformer,
-				resultListTransformer,
+				parameterStartPosition,
 				hash
 		);
 	}
@@ -84,15 +105,12 @@ public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 		if ( this == o ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		if ( !(o instanceof SelectInterpretationsKey that) ) {
 			return false;
 		}
-
-		final SelectInterpretationsKey that = (SelectInterpretationsKey) o;
 		return sql.equals( that.sql )
-				&& Objects.equals( jdbcValuesMappingProducer, that.jdbcValuesMappingProducer )
-				&& Objects.equals( querySpaces, that.querySpaces )
-				&& Objects.equals( tupleTransformer, that.tupleTransformer )
-				&& Objects.equals( resultListTransformer, that.resultListTransformer );
+			&& Objects.equals( resultSetMapping, that.resultSetMapping )
+			&& Objects.equals( querySpaces, that.querySpaces )
+			&& parameterStartPosition == that.parameterStartPosition;
 	}
 }

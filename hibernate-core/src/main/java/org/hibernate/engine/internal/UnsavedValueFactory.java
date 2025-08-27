@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
@@ -9,7 +9,6 @@ import java.util.function.Supplier;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.mapping.KeyValue;
-import org.hibernate.mapping.KeyValue.NullValueSemantic;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.VersionJavaType;
@@ -35,7 +34,7 @@ public class UnsavedValueFactory {
 			JavaType<?> idJavaType,
 			Getter getter,
 			Supplier<?> templateInstanceAccess) {
-		final NullValueSemantic nullValueSemantic = bootIdMapping.getNullValueSemantic();
+		final var nullValueSemantic = bootIdMapping.getNullValueSemantic();
 		return nullValueSemantic == null
 				? inferUnsavedIdentifierValue( idJavaType, getter, templateInstanceAccess )
 				: switch ( nullValueSemantic ) {
@@ -75,9 +74,9 @@ public class UnsavedValueFactory {
 			VersionJavaType<T> versionJavaType,
 			Getter getter,
 			Supplier<?> templateInstanceAccess) {
-		final NullValueSemantic nullValueSemantic = bootVersionMapping.getNullValueSemantic();
+		final var nullValueSemantic = bootVersionMapping.getNullValueSemantic();
 		return nullValueSemantic == null
-				? inferUnsavedVersionValue( versionJavaType, getter, templateInstanceAccess )
+				? inferUnsavedVersionValue( getter, templateInstanceAccess )
 				: switch ( nullValueSemantic ) {
 					case UNDEFINED -> VersionValue.UNDEFINED;
 					case NULL -> VersionValue.NULL;
@@ -88,8 +87,7 @@ public class UnsavedValueFactory {
 				};
 	}
 
-	private static VersionValue inferUnsavedVersionValue(
-			VersionJavaType<?> versionJavaType, Getter getter, Supplier<?> templateInstanceAccess) {
+	private static VersionValue inferUnsavedVersionValue(Getter getter, Supplier<?> templateInstanceAccess) {
 		if ( getter != null && templateInstanceAccess != null ) {
 			final Object defaultValue = getter.get( templateInstanceAccess.get() );
 			// if the version of a newly instantiated object is null

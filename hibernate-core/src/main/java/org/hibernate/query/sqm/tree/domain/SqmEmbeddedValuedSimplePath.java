@@ -1,37 +1,38 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.TreatException;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static jakarta.persistence.metamodel.Type.PersistenceType.EMBEDDABLE;
+
 /**
  * @author Steve Ebersole
  */
 public class SqmEmbeddedValuedSimplePath<T>
 		extends AbstractSqmSimplePath<T>
-		implements SqmExpressible<T> {
+		implements SqmBindableType<T> {
+
 	public SqmEmbeddedValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
 			SqmPath<?> lhs,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
-
-		assert referencedPathSource.getSqmPathType() instanceof EmbeddableDomainType;
+		assert referencedPathSource.getPathType() instanceof EmbeddableDomainType;
 	}
 
 	@SuppressWarnings("unused")
@@ -42,8 +43,7 @@ public class SqmEmbeddedValuedSimplePath<T>
 			String explicitAlias,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );
-
-		assert referencedPathSource.getSqmPathType() instanceof EmbeddableDomainType;
+		assert referencedPathSource.getPathType() instanceof EmbeddableDomainType;
 	}
 
 	@Override
@@ -69,21 +69,22 @@ public class SqmEmbeddedValuedSimplePath<T>
 	}
 
 	@Override
-	public SqmExpressible<T> getExpressible() {
+	public SqmBindableType<T> getExpressible() {
 		return this;
 	}
 
 	@Override
-	public DomainType<T> getSqmType() {
-		//noinspection unchecked
-		return (DomainType<T>) getResolvedModel().getSqmType();
+	public PersistenceType getPersistenceType() {
+		return EMBEDDABLE;
 	}
 
 	@Override
-	public SqmPath<?> resolvePathPart(
-			String name,
-			boolean isTerminal,
-			SqmCreationState creationState) {
+	public SqmDomainType<T> getSqmType() {
+		return getResolvedModel().getSqmType();
+	}
+
+	@Override
+	public SqmPath<?> resolvePathPart(String name, boolean isTerminal, SqmCreationState creationState) {
 		final SqmPath<?> sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
@@ -113,11 +114,6 @@ public class SqmEmbeddedValuedSimplePath<T>
 	@Override
 	public Class<T> getJavaType() {
 		return getJavaTypeDescriptor().getJavaTypeClass();
-	}
-
-	@Override
-	public Class<T> getBindableJavaType() {
-		return getJavaType();
 	}
 
 	@Override

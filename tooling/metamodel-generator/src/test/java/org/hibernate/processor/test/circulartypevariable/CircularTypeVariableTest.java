@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.circulartypevariable;
@@ -9,15 +9,15 @@ import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-
+@CompilationTest
 @TestForIssue(jiraKey = "HHH-17253")
-public class CircularTypeVariableTest extends CompilationTest {
+class CircularTypeVariableTest {
 
 	@Test
 	@WithClasses({ RoleAccess.class, User.class })
-	public void testCircularTypeVariable() {
+	void testCircularTypeVariable() {
 		TestUtil.assertMetamodelClassGeneratedFor( RoleAccess.class );
 		TestUtil.assertMetamodelClassGeneratedFor( User.class );
 	}

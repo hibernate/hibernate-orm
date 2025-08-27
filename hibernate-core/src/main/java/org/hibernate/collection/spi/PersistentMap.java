@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.collection.spi;
@@ -445,6 +445,16 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 			}
 		}
 		return deletes.iterator();
+	}
+
+	@Override
+	public boolean hasDeletes(CollectionPersister persister) {
+		for ( Entry<?,?> e : ((Map<?,?>) getSnapshot()).entrySet() ) {
+			if ( e.getValue() != null && map.get( e.getKey() ) == null ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

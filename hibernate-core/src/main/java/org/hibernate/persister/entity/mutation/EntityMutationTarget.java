@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity.mutation;
@@ -59,10 +59,9 @@ public interface EntityMutationTarget extends MutationTarget<EntityTableMapping>
 	@Deprecated( forRemoval = true, since = "6.5" )
 	default InsertGeneratedIdentifierDelegate getIdentityInsertDelegate() {
 		final GeneratedValuesMutationDelegate insertDelegate = getInsertDelegate();
-		if ( insertDelegate instanceof InsertGeneratedIdentifierDelegate ) {
-			return (InsertGeneratedIdentifierDelegate) insertDelegate;
-		}
-		return null;
+		return insertDelegate instanceof InsertGeneratedIdentifierDelegate insertGeneratedIdentifierDelegate
+				? insertGeneratedIdentifierDelegate
+				: null;
 	}
 
 	GeneratedValuesMutationDelegate getInsertDelegate();
@@ -70,13 +69,10 @@ public interface EntityMutationTarget extends MutationTarget<EntityTableMapping>
 	GeneratedValuesMutationDelegate getUpdateDelegate();
 
 	default GeneratedValuesMutationDelegate getMutationDelegate(MutationType mutationType) {
-		switch ( mutationType ) {
-			case INSERT:
-				return getInsertDelegate();
-			case UPDATE:
-				return getUpdateDelegate();
-			default:
-				return null;
-		}
+		return switch ( mutationType ) {
+			case INSERT -> getInsertDelegate();
+			case UPDATE -> getUpdateDelegate();
+			default -> null;
+		};
 	}
 }

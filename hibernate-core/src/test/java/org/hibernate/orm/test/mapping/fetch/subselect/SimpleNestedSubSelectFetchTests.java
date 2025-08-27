@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.fetch.subselect;
@@ -13,8 +13,8 @@ import java.util.Set;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Fetch;
-import org.hibernate.query.spi.QueryImplementor;
 
+import org.hibernate.query.Query;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -71,7 +71,7 @@ public class SimpleNestedSubSelectFetchTests {
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
-			final QueryImplementor<Customer> query = session.createQuery( "from Customer c where c.name = 'John' or c.name = 'Sally' order by c.id", Customer.class );
+			final Query<Customer> query = session.createQuery( "from Customer c where c.name = 'John' or c.name = 'Sally' order by c.id", Customer.class );
 			final List<Customer> customers = query.list();
 
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.criteria.JpaXmlElementExpression;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.FunctionRenderer;
@@ -18,6 +18,7 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 
 import jakarta.persistence.criteria.Expression;
@@ -115,14 +116,14 @@ public class SqmXmlElementExpression extends SelfRenderingSqmFunction<String> im
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		final List<? extends SqmTypedNode<?>> arguments = getArguments();
-		sb.append( "xmlelement(name " );
-		arguments.get( 0 ).appendHqlString( sb );
+		hql.append( "xmlelement(name " );
+		arguments.get( 0 ).appendHqlString( hql, context );
 		for ( int i = 1; i < arguments.size(); i++ ) {
-			sb.append( ',' );
-			arguments.get( i ).appendHqlString( sb );
+			hql.append( ',' );
+			arguments.get( i ).appendHqlString( hql, context );
 		}
-		sb.append( ')' );
+		hql.append( ')' );
 	}
 }

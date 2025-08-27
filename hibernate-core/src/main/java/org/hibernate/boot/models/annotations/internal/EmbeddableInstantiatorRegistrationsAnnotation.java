@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -11,7 +11,7 @@ import org.hibernate.annotations.EmbeddableInstantiatorRegistration;
 import org.hibernate.annotations.EmbeddableInstantiatorRegistrations;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -24,7 +24,7 @@ public class EmbeddableInstantiatorRegistrationsAnnotation
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public EmbeddableInstantiatorRegistrationsAnnotation(SourceModelBuildingContext modelContext) {
+	public EmbeddableInstantiatorRegistrationsAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
@@ -32,7 +32,7 @@ public class EmbeddableInstantiatorRegistrationsAnnotation
 	 */
 	public EmbeddableInstantiatorRegistrationsAnnotation(
 			EmbeddableInstantiatorRegistrations annotation,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = extractJdkValue(
 				annotation,
 				HibernateAnnotations.EMBEDDABLE_INSTANTIATOR_REGISTRATIONS,
@@ -46,7 +46,7 @@ public class EmbeddableInstantiatorRegistrationsAnnotation
 	 */
 	public EmbeddableInstantiatorRegistrationsAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = (EmbeddableInstantiatorRegistration[]) attributeValues.get( "value" );
 	}
 

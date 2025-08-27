@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.collection.list</package>
+    <entity class="Parent">
+        <table name="parent_table"/>
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+            <one-to-many name="children" mapped-by="parent" orphan-removal="true">
+                <order-column name="seq_num"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+    <entity class="Child">
+        <table name="child_table"/>
+        <attributes>
+            <id name="id"/>
+            <many-to-one name="parent" optional="false">
+                <join-column name="parent_fk"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>

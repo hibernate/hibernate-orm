@@ -6,10 +6,8 @@ options {
 
 @header {
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.grammars.ordering;
 
@@ -25,7 +23,7 @@ package org.hibernate.grammars.ordering;
 // todo (6.0) : add hooks for keyword-as-identifier logging like we do for HQL?
 
 orderByFragment
-	: sortSpecification (COMMA sortSpecification)*
+	: sortSpecification (COMMA sortSpecification)* EOF
 	;
 
 sortSpecification

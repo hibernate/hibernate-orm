@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -11,7 +11,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbOrderColumnImpl;
 import org.hibernate.boot.models.annotations.spi.ColumnDetails;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.OrderColumn;
 
@@ -32,7 +32,7 @@ public class OrderColumnJpaAnnotation implements OrderColumn,
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public OrderColumnJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public OrderColumnJpaAnnotation(ModelsContext modelContext) {
 		this.name = "";
 		this.nullable = true;
 		this.insertable = true;
@@ -44,7 +44,7 @@ public class OrderColumnJpaAnnotation implements OrderColumn,
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public OrderColumnJpaAnnotation(OrderColumn annotation, SourceModelBuildingContext modelContext) {
+	public OrderColumnJpaAnnotation(OrderColumn annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.nullable = annotation.nullable();
 		this.insertable = annotation.insertable();
@@ -56,7 +56,7 @@ public class OrderColumnJpaAnnotation implements OrderColumn,
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public OrderColumnJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public OrderColumnJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.nullable = (boolean) attributeValues.get( "nullable" );
 		this.insertable = (boolean) attributeValues.get( "insertable" );

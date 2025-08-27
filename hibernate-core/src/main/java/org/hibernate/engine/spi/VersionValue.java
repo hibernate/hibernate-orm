@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
@@ -115,7 +115,7 @@ public class VersionValue implements UnsavedValueStrategy {
 
 	@Override
 	public @Nullable Boolean isUnsaved(@Nullable Object version) throws MappingException {
-		LOG.tracev( "Version unsaved-value: {0}", value );
+		LOG.tracef( "Version unsaved-value: %s", value );
 		return version == null || version.equals( value );
 	}
 

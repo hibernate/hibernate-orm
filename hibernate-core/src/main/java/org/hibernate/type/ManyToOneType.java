@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
@@ -10,13 +10,14 @@ import java.util.Arrays;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNotUnsaved;
 
 /**
  * A many-to-one association to an entity.
@@ -117,7 +118,8 @@ public class ManyToOneType extends EntityType {
 	/**
 	 * Register the entity as batch loadable, if enabled
 	 */
-	private void scheduleBatchLoadIfNeeded(Object id, SharedSessionContractImplementor session) throws MappingException {
+	private void scheduleBatchLoadIfNeeded(Object id, SharedSessionContractImplementor session)
+			throws MappingException {
 		//cannot batch fetch by unique key (property-ref associations)
 		if ( uniqueKeyPropertyName == null && id != null ) {
 			final EntityPersister persister = getAssociatedEntityPersister( session.getFactory() );
@@ -141,26 +143,28 @@ public class ManyToOneType extends EntityType {
 			Object old,
 			Object current,
 			boolean[] checkable,
-			SharedSessionContractImplementor session) throws HibernateException {
+			SharedSessionContractImplementor session)
+				throws HibernateException {
 		if ( current == null ) {
 			return old != null;
 		}
-		if ( old == null ) {
+		else if ( old == null ) {
 			// we already know current is not null...
 			return true;
 		}
-
-
-		// the ids are fully resolved, so compare them with isDirty(), not isModified()
-		return getIdentifierOrUniqueKeyType( session.getFactory() )
-				.isDirty( old, getIdentifier( current, session ), session );
+		else {
+			// the ids are fully resolved, so compare them with isDirty(), not isModified()
+			return getIdentifierOrUniqueKeyType( session.getFactory().getRuntimeMetamodels() )
+					.isDirty( old, getIdentifierEvenIfTransient( current, session ), session );
+		}
 	}
 
 	@Override
 	public Serializable disassemble(
 			Object value,
 			SharedSessionContractImplementor session,
-			Object owner) throws HibernateException {
+			Object owner)
+				throws HibernateException {
 
 		if ( value == null ) {
 			return null;
@@ -168,37 +172,33 @@ public class ManyToOneType extends EntityType {
 		else {
 			// cache the actual id of the object, not the value of the
 			// property-ref, which might not be initialized
-			Object id = ForeignKeys.getEntityIdentifierIfNotUnsaved(
-					getAssociatedEntityName(),
-					value,
-					session
-			);
-			if ( id == null ) {
-				throw new AssertionFailure(
-						"cannot cache a reference to an object with a null id: " +
-						getAssociatedEntityName()
-				);
-			}
+			final Object id = getEntityIdentifierIfNotUnsaved( getAssociatedEntityName(), value, session );
+			checkIdNotNull( id );
 			return getIdentifierType( session ).disassemble( id, session, owner );
 		}
 	}
 
 	@Override
-	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory)
+			throws HibernateException {
 		if ( value == null ) {
 			return null;
 		}
 		else {
 			// cache the actual id of the object, not the value of the
 			// property-ref, which might not be initialized
-			Object id = getIdentifier( value, sessionFactory );
-			if ( id == null ) {
-				throw new AssertionFailure(
-						"cannot cache a reference to an object with a null id: " +
-								getAssociatedEntityName()
-				);
-			}
-			return getIdentifierType( sessionFactory ).disassemble( id, sessionFactory );
+			final Object id = getIdentifier( value, sessionFactory );
+			checkIdNotNull( id );
+			return getIdentifierType( sessionFactory.getRuntimeMetamodels() )
+					.disassemble( id, sessionFactory );
+		}
+	}
+
+	private void checkIdNotNull(Object id) {
+		if ( id == null ) {
+			throw new AssertionFailure(
+					"cannot cache a reference to an object with a null id: " + getAssociatedEntityName()
+			);
 		}
 	}
 
@@ -207,18 +207,10 @@ public class ManyToOneType extends EntityType {
 			Serializable oid,
 			SharedSessionContractImplementor session,
 			Object owner) throws HibernateException {
-
 		//TODO: currently broken for unique-key references (does not detect
 		//      change to unique key property of the associated object)
-
-		Object id = assembleId( oid, session );
-
-		if ( id == null ) {
-			return null;
-		}
-		else {
-			return resolveIdentifier( id, session );
-		}
+		final Object id = assembleId( oid, session );
+		return id == null ? null : resolveIdentifier( id, session );
 	}
 
 	private Object assembleId(Serializable oid, SharedSessionContractImplementor session) {
@@ -233,7 +225,7 @@ public class ManyToOneType extends EntityType {
 
 	@Override
 	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
-		boolean[] result = new boolean[ getColumnSpan( mapping ) ];
+		final boolean[] result = new boolean[ getColumnSpan( mapping ) ];
 		if ( value != null ) {
 			Arrays.fill( result, true );
 		}
@@ -248,9 +240,12 @@ public class ManyToOneType extends EntityType {
 		if ( isSame( old, current ) ) {
 			return false;
 		}
-		Object oldid = getIdentifier( old, session );
-		Object newid = getIdentifier( current, session );
-		return getIdentifierOrUniqueKeyType( session.getFactory() ).isDirty( oldid, newid, session );
+		else {
+			final Object oldid = getIdentifierEvenIfTransient( old, session );
+			final Object newid = getIdentifierEvenIfTransient( current, session );
+			return getIdentifierOrUniqueKeyType( session.getFactory().getRuntimeMetamodels() )
+					.isDirty( oldid, newid, session );
+		}
 	}
 
 	@Override
@@ -262,15 +257,15 @@ public class ManyToOneType extends EntityType {
 		if ( isAlwaysDirtyChecked() ) {
 			return isDirty( old, current, session );
 		}
-		else {
-			if ( isSame( old, current ) ) {
-				return false;
-			}
-			Object oldid = getIdentifier( old, session );
-			Object newid = getIdentifier( current, session );
-			return getIdentifierOrUniqueKeyType( session.getFactory() ).isDirty( oldid, newid, checkable, session );
+		else if ( isSame( old, current ) ) {
+			return false;
 		}
-
+		else {
+			final Object oldid = getIdentifierEvenIfTransient( old, session );
+			final Object newid = getIdentifierEvenIfTransient( current, session );
+			return getIdentifierOrUniqueKeyType( session.getFactory().getRuntimeMetamodels() )
+					.isDirty( oldid, newid, checkable, session );
+		}
 	}
 
 }

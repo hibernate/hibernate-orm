@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.sql.internal;
@@ -151,8 +151,7 @@ public class SqlAstQueryPartProcessingStateImpl
 		if ( selectionMap != null ) {
 			existingSelection = selectionMap.get( expression );
 			if ( existingSelection != null ) {
-				if ( existingSelection instanceof SqlSelection ) {
-					final SqlSelection sqlSelection = (SqlSelection) existingSelection;
+				if ( existingSelection instanceof SqlSelection sqlSelection ) {
 					if ( sqlSelection.getExpressionType() == expression.getExpressionType() ) {
 						return sqlSelection;
 					}

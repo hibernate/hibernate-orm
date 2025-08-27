@@ -1,53 +1,83 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import jakarta.persistence.metamodel.*;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.CollectionAttribute;
+import jakarta.persistence.metamodel.ListAttribute;
+import jakarta.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.metamodel.SetAttribute;
+import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.metamodel.model.domain.*;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.SimpleDomainType;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Consumer;
 
+import static jakarta.persistence.metamodel.Bindable.BindableType.ENTITY_TYPE;
+import static jakarta.persistence.metamodel.Type.PersistenceType.ENTITY;
 import static java.util.Collections.unmodifiableMap;
+import static java.util.Comparator.comparing;
 
 /**
  * Acts as the {@link EntityDomainType} for a "polymorphic query" grouping.
  *
  * @author Steve Ebersole
  */
-public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
+public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
+
 	private final Set<EntityDomainType<? extends T>> implementors;
-	private final Map<String, PersistentAttribute<? super T,?>> commonAttributes;
+	private final Map<String, SqmPersistentAttribute<? super T,?>> commonAttributes;
 
 	private final JavaType<T> polymorphicJavaType;
+	private final JpaMetamodel jpaMetamodel;
 
 	public SqmPolymorphicRootDescriptor(
 			JavaType<T> polymorphicJavaType,
-			Set<EntityDomainType<? extends T>> implementors) {
+			Set<EntityDomainType<? extends T>> implementors,
+			JpaMetamodel jpaMetamodel) {
 		this.polymorphicJavaType = polymorphicJavaType;
-		TreeSet<EntityDomainType<? extends T>> treeSet = new TreeSet<>( Comparator.comparing(EntityDomainType::getTypeName) );
-		treeSet.addAll( implementors );
-		this.implementors = treeSet;
+		this.jpaMetamodel = jpaMetamodel;
+		this.implementors = new TreeSet<>( comparing(EntityDomainType::getTypeName) );
+		this.implementors.addAll( implementors );
 		this.commonAttributes = unmodifiableMap( inferCommonAttributes( implementors ) );
+	}
+
+	@Override
+	public JpaMetamodel getMetamodel() {
+		return jpaMetamodel;
 	}
 
 	/**
 	 * The attributes of a "polymorphic" root are the attributes which are
 	 * common to all subtypes of the root type.
 	 */
-	private Map<String, PersistentAttribute<? super T, ?>> inferCommonAttributes(Set<EntityDomainType<? extends T>> implementors) {
-		final Map<String, PersistentAttribute<? super T,?>> workMap = new HashMap<>();
+	private Map<String, SqmPersistentAttribute<? super T, ?>> inferCommonAttributes(Set<EntityDomainType<? extends T>> implementors) {
+		final Map<String, SqmPersistentAttribute<? super T,?>> workMap = new HashMap<>();
 		final ArrayList<EntityDomainType<?>> implementorsList = new ArrayList<>(implementors);
 		final EntityDomainType<?> firstImplementor = implementorsList.get( 0 );
 		if ( implementorsList.size() == 1 ) {
-			firstImplementor.visitAttributes(
-					attribute -> workMap.put( attribute.getName(), promote( attribute ) )
-			);
+			firstImplementor.visitAttributes( attribute -> workMap.put( attribute.getName(), promote( attribute ) ) );
 		}
 		else {
 			// we want to "expose" only the attributes that all the implementors expose
@@ -74,8 +104,8 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	 * type cast is actually perfectly correct.
 	 */
 	@SuppressWarnings("unchecked")
-	private PersistentAttribute<? super T, ?> promote(PersistentAttribute<?, ?> attribute) {
-		return (PersistentAttribute<? super T, ?>) attribute;
+	private SqmPersistentAttribute<? super T, ?> promote(PersistentAttribute<?, ?> attribute) {
+		return (SqmPersistentAttribute<? super T, ?>) attribute;
 	}
 
 	private static boolean isACommonAttribute(List<EntityDomainType<?>> subList, PersistentAttribute<?, ?> attribute) {
@@ -92,6 +122,11 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 
 	public Set<EntityDomainType<? extends T>> getImplementors() {
 		return implementors;
+	}
+
+	@Override
+	public Class<T> getBindableJavaType() {
+		return polymorphicJavaType.getJavaTypeClass();
 	}
 
 	@Override
@@ -115,28 +150,23 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	}
 
 	@Override
-	public DomainType<T> getSqmPathType() {
+	public SqmDomainType<T> getPathType() {
 		return this;
 	}
 
 	@Override
 	public BindableType getBindableType() {
-		return BindableType.ENTITY_TYPE;
+		return ENTITY_TYPE;
 	}
 
 	@Override
-	public Class<T> getBindableJavaType() {
+	public Class<T> getJavaType() {
 		return polymorphicJavaType.getJavaTypeClass();
 	}
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return PersistenceType.ENTITY;
-	}
-
-	@Override
-	public Class<T> getJavaType() {
-		return getBindableJavaType();
+		return ENTITY;
 	}
 
 	@Override
@@ -148,19 +178,13 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	// Attribute handling
 
 	@Override
-	public PersistentAttribute<? super T, ?> findAttribute(String name) {
+	public SqmPersistentAttribute<? super T, ?> findAttribute(String name) {
 		return commonAttributes.get( name );
 	}
 
 	@Override
-	public PersistentAttribute<?, ?> findSubTypesAttribute(String name) {
+	public SqmPersistentAttribute<?, ?> findSubTypesAttribute(String name) {
 		return commonAttributes.get( name );
-	}
-
-	@Override
-	public PersistentAttribute<? super T, ?> findAttributeInSuperTypes(String name) {
-		// there are effectively no super-types
-		return null;
 	}
 
 	@Override
@@ -173,8 +197,8 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	}
 
 	@Override
-	public PersistentAttribute<? super T, ?> getAttribute(String name) {
-		final PersistentAttribute<? super T, ?> attribute = findAttribute( name );
+	public SqmPersistentAttribute<? super T, ?> getAttribute(String name) {
+		final var attribute = findAttribute( name );
 		if ( attribute == null ) {
 			// per-JPA
 			throw new IllegalArgumentException();
@@ -183,42 +207,42 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	}
 
 	@Override
-	public PersistentAttribute<T, ?> getDeclaredAttribute(String name) {
+	public SqmPersistentAttribute<T, ?> getDeclaredAttribute(String name) {
 		throw new IllegalArgumentException();
 	}
 
 	@Override
-	public SingularPersistentAttribute<? super T, ?> findSingularAttribute(String name) {
-		return (SingularPersistentAttribute<? super T, ?>) findAttribute( name );
+	public SqmSingularPersistentAttribute<? super T, ?> findSingularAttribute(String name) {
+		return (SqmSingularPersistentAttribute<? super T, ?>) findAttribute( name );
 	}
 
 	@Override
-	public PluralPersistentAttribute<? super T, ?, ?> findPluralAttribute(String name) {
-		return (PluralPersistentAttribute<? super T, ?, ?>) findAttribute( name );
+	public SqmPluralPersistentAttribute<? super T, ?, ?> findPluralAttribute(String name) {
+		return (SqmPluralPersistentAttribute<? super T, ?, ?>) findAttribute( name );
 	}
 
 	@Override
-	public PersistentAttribute<? super T, ?> findConcreteGenericAttribute(String name) {
+	public SqmPersistentAttribute<? super T, ?> findConcreteGenericAttribute(String name) {
 		return null;
 	}
 
 	@Override
-	public PersistentAttribute<T, ?> findDeclaredAttribute(String name) {
+	public SqmPersistentAttribute<T, ?> findDeclaredAttribute(String name) {
 		return null;
 	}
 
 	@Override
-	public SingularPersistentAttribute<T, ?> findDeclaredSingularAttribute(String name) {
+	public SqmSingularPersistentAttribute<T, ?> findDeclaredSingularAttribute(String name) {
 		return null;
 	}
 
 	@Override
-	public PluralPersistentAttribute<T, ?, ?> findDeclaredPluralAttribute(String name) {
+	public SqmPluralPersistentAttribute<T, ?, ?> findDeclaredPluralAttribute(String name) {
 		return null;
 	}
 
 	@Override
-	public PersistentAttribute<T, ?> findDeclaredConcreteGenericAttribute(String name) {
+	public SqmPersistentAttribute<T, ?> findDeclaredConcreteGenericAttribute(String name) {
 		return null;
 	}
 
@@ -322,7 +346,7 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 
 	@Override
 	public SingularAttribute<? super T, ?> getSingularAttribute(String name) {
-		return (SingularPersistentAttribute<? super T, ?>) getAttribute( name );
+		return (SqmSingularPersistentAttribute<? super T, ?>) getAttribute( name );
 	}
 
 	@Override

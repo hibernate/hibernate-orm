@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.hbm.transform;
@@ -40,19 +40,16 @@ public enum UnsupportedFeatureHandling {
 
 	public static UnsupportedFeatureHandling fromSetting(Object value, Function<Object, UnsupportedFeatureHandling> defaultValueSupplier) {
 		if ( value != null ) {
-			if ( value instanceof UnsupportedFeatureHandling ) {
-				return (UnsupportedFeatureHandling) value;
+			if ( value instanceof UnsupportedFeatureHandling unsupportedFeatureHandling ) {
+				return unsupportedFeatureHandling;
 			}
-
-			if ( ERROR.name().equalsIgnoreCase( value.toString() ) ) {
+			else if ( ERROR.name().equalsIgnoreCase( value.toString() ) ) {
 				return ERROR;
 			}
-
-			if ( IGNORE.name().equalsIgnoreCase( value.toString() ) ) {
+			else if ( IGNORE.name().equalsIgnoreCase( value.toString() ) ) {
 				return IGNORE;
 			}
-
-			if ( PICK.name().equalsIgnoreCase( value.toString() ) ) {
+			else if ( PICK.name().equalsIgnoreCase( value.toString() ) ) {
 				return PICK;
 			}
 		}

@@ -1,17 +1,20 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+
+import java.util.Objects;
 
 /**
  * @author Steve Ebersole
@@ -26,7 +29,8 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 		//noinspection unchecked
 		super(
 				navigablePath,
-				( (PluralPersistentAttribute<?, ?, T>) pluralDomainPath.getReferencedPathSource() ).getElementPathSource(),
+				( (SqmPluralPersistentAttribute<?, ?, T>) pluralDomainPath.getReferencedPathSource() )
+						.getElementPathSource(),
 				pluralDomainPath,
 				pluralDomainPath.nodeBuilder()
 		);
@@ -83,7 +87,7 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 
 	@Override
 	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		if ( getReferencedPathSource().getSqmPathType() instanceof EntityDomainType ) {
+		if ( getReferencedPathSource().getPathType() instanceof EntityDomainType ) {
 			return getTreatedPath( treatTarget );
 		}
 
@@ -91,10 +95,23 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		getLhs().appendHqlString( sb );
-		sb.append( '[' );
-		selectorExpression.appendHqlString( sb );
-		sb.append( ']' );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		getLhs().appendHqlString( hql, context );
+		hql.append( '[' );
+		selectorExpression.appendHqlString( hql, context );
+		hql.append( ']' );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmIndexedCollectionAccessPath<?> that
+			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() )
+			&& Objects.equals( this.getLhs(), that.getLhs() )
+			&& Objects.equals( this.selectorExpression, that.selectorExpression );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( getLhs(), selectorExpression );
 	}
 }

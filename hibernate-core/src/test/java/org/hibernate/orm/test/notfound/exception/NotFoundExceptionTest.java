@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.notfound.exception;
@@ -43,10 +43,7 @@ public class NotFoundExceptionTest {
 
 	@AfterEach
 	public void setUp(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createNativeMutationQuery( "delete from CHESS_GAME" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -1,15 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.dialect.XmlHelper;
+import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -23,8 +23,11 @@ import org.hibernate.type.descriptor.java.BasicPluralJavaType;
  */
 public class PostgreSQLUnnestFunction extends UnnestFunction {
 
-	public PostgreSQLUnnestFunction() {
+	private final boolean supportsJsonTable;
+
+	public PostgreSQLUnnestFunction(boolean supportsJsonTable) {
 		super( null, "ordinality" );
+		this.supportsJsonTable = supportsJsonTable;
 	}
 
 	@Override
@@ -36,41 +39,54 @@ public class PostgreSQLUnnestFunction extends UnnestFunction {
 			AnonymousTupleTableGroupProducer tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
-		final AggregateSupport aggregateSupport = walker.getSessionFactory().getJdbcServices().getDialect()
-				.getAggregateSupport();
-		sqlAppender.appendSql( "(select" );
-		tupleType.forEachSelectable( 0, (selectionIndex, selectableMapping) -> {
-			if ( selectionIndex == 0 ) {
-				sqlAppender.append( ' ' );
-			}
-			else {
-				sqlAppender.append( ',' );
-			}
-			if ( CollectionPart.Nature.INDEX.getName().equals( selectableMapping.getSelectableName() ) ) {
-				sqlAppender.appendSql( "t.i" );
-			}
-			else {
-				sqlAppender.append( aggregateSupport.aggregateComponentCustomReadExpression(
-						"",
-						"",
-						"t.v",
-						selectableMapping.getSelectableName(),
-						SqlTypes.JSON,
-						selectableMapping,
-						walker.getSessionFactory().getTypeConfiguration()
-				) );
-			}
-			sqlAppender.append( " as " );
-			sqlAppender.append( selectableMapping.getSelectionExpression() );
-		} );
-		sqlAppender.appendSql( " from jsonb_array_elements(" );
-		array.accept( walker );
-		sqlAppender.appendSql( ')' );
-		if ( tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null ) != null ) {
-			sqlAppender.appendSql( " with ordinality t(v,i))" );
+		if ( supportsJsonTable ) {
+			super.renderJsonTable(
+					sqlAppender,
+					array,
+					pluralType,
+					sqlTypedMapping,
+					tupleType,
+					tableIdentifierVariable,
+					walker
+			);
 		}
 		else {
-			sqlAppender.appendSql( " t(v))" );
+			final AggregateSupport aggregateSupport = walker.getSessionFactory().getJdbcServices().getDialect()
+					.getAggregateSupport();
+			sqlAppender.appendSql( "(select" );
+			tupleType.forEachSelectable( 0, (selectionIndex, selectableMapping) -> {
+				if ( selectionIndex == 0 ) {
+					sqlAppender.append( ' ' );
+				}
+				else {
+					sqlAppender.append( ',' );
+				}
+				if ( CollectionPart.Nature.INDEX.getName().equals( selectableMapping.getSelectableName() ) ) {
+					sqlAppender.appendSql( "t.i" );
+				}
+				else {
+					sqlAppender.append( aggregateSupport.aggregateComponentCustomReadExpression(
+							"",
+							"",
+							"t.v",
+							selectableMapping.getSelectableName(),
+							SqlTypes.JSON,
+							selectableMapping,
+							walker.getSessionFactory().getTypeConfiguration()
+					) );
+				}
+				sqlAppender.append( " as " );
+				sqlAppender.append( selectableMapping.getSelectionExpression() );
+			} );
+			sqlAppender.appendSql( " from jsonb_array_elements(" );
+			array.accept( walker );
+			sqlAppender.appendSql( ')' );
+			if ( tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null ) != null ) {
+				sqlAppender.appendSql( " with ordinality t(v,i))" );
+			}
+			else {
+				sqlAppender.appendSql( " t(v))" );
+			}
 		}
 	}
 

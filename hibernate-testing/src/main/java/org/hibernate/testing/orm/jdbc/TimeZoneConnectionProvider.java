@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.jdbc;
@@ -9,7 +9,7 @@ import java.util.TimeZone;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProvider;
 
 /**
  * This {@link ConnectionProvider} extends any other ConnectionProvider that would be used by default taken the current configuration properties, and it
@@ -28,7 +28,7 @@ public class TimeZoneConnectionProvider
 		this.defaultTimeZone =  System.setProperty( "user.timezone", customTimeZone);
 		TimeZone.setDefault(TimeZone.getTimeZone( customTimeZone ));
 		// Clear the connection pool to avoid issues with drivers that initialize the session TZ to the system TZ
-		SharedDriverManagerConnectionProviderImpl.getInstance().onDefaultTimeZoneChange();
+		SharedDriverManagerConnectionProvider.getInstance().onDefaultTimeZoneChange();
 	}
 
 	@Override
@@ -37,6 +37,6 @@ public class TimeZoneConnectionProvider
 		System.setProperty( "user.timezone", defaultTimeZone);
 		TimeZone.setDefault(TimeZone.getTimeZone( defaultTimeZone ));
 		// Clear the connection pool to avoid issues with drivers that initialize the session TZ to the system TZ
-		SharedDriverManagerConnectionProviderImpl.getInstance().onDefaultTimeZoneChange();
+		SharedDriverManagerConnectionProvider.getInstance().onDefaultTimeZoneChange();
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.annotationtype;
@@ -9,18 +9,19 @@ import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 import org.hibernate.processor.test.util.WithMappingFiles;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Sergey Morgunov
  */
+@CompilationTest
 @TestForIssue(jiraKey = "HHH-13145")
-public class AnnotationTypeTest extends CompilationTest {
+class AnnotationTypeTest {
 
 	@Test
 	@WithClasses({ Entity.class })
 	@WithMappingFiles("orm.xml")
-	public void testXmlConfiguredEntityGenerated() {
+	void testXmlConfiguredEntityGenerated() {
 		TestUtil.assertMetamodelClassGeneratedFor( Entity.class );
 	}
 

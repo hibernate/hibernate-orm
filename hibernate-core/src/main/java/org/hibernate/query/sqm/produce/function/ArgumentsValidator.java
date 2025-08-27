@@ -1,10 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.produce.function;
 
-import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.type.BindingContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -20,20 +20,25 @@ import java.util.List;
  * @see ArgumentTypesValidator
  */
 public interface ArgumentsValidator {
+
 	/**
 	 * Perform validation that may be done using the {@link SqmTypedNode} tree and assigned Java types.
 	 *
-	 * @deprecated Use {@link #validate(List, String, TypeConfiguration)}
+	 * @since 7.0
 	 */
-	@Deprecated(since = "6.2")
-	default void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {
-		validate( arguments, functionName, queryEngine.getTypeConfiguration() );
+	default void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, BindingContext bindingContext) {
+		validate( arguments, functionName, bindingContext.getTypeConfiguration() );
 	}
 
 	/**
 	 * Perform validation that may be done using the {@link SqmTypedNode} tree and assigned Java types.
+	 *
+	 * @deprecated Implement {@link #validate(List, String, BindingContext)} instead
 	 */
-	default void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, TypeConfiguration typeConfiguration) {}
+	@Deprecated(since = "7.0", forRemoval = true)
+	default void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, TypeConfiguration typeConfiguration) {
+		throw new UnsupportedOperationException( "Deprecated operation not implemented" );
+	}
 
 	/**
 	 * Pretty-print the signature of the argument list.

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.subselect;
@@ -14,7 +14,7 @@ import org.hibernate.annotations.Synchronize;
  *
  */
 @Entity
-@Subselect("select Item.name as name, max(Bid.amount) as amount from Item, Bid where Bid.itemId = Item.id group by Item.name")
+@Subselect("select i.name as name, max(b.amount) as amount from Item i, Bid b where b.itemId = i.id group by i.name")
 @Synchronize({"Item", "Bid"})
 public class HighestBid {
 

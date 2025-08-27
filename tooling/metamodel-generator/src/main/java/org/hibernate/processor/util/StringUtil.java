@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.util;
@@ -100,13 +100,19 @@ public final class StringUtil {
 	public static String getUpperUnderscoreCaseFromLowerCamelCase(String lowerCamelCaseString) {
 		final StringBuilder result = new StringBuilder();
 		int position = 0;
+		boolean wasLowerCase = false;
 		while ( position < lowerCamelCaseString.length() ) {
 			final int codePoint = lowerCamelCaseString.codePointAt( position );
-			if ( position>0 && isUpperCase( codePoint ) ) {
+			final boolean isUpperCase = isUpperCase( codePoint );
+			if ( wasLowerCase && isUpperCase ) {
 				result.append('_');
 			}
 			result.appendCodePoint( toUpperCase( codePoint ) );
 			position += charCount( codePoint );
+			wasLowerCase = !isUpperCase;
+		}
+		if ( result.toString().equals( lowerCamelCaseString ) ) {
+			result.insert(0, '_');
 		}
 		return result.toString();
 	}
@@ -115,5 +121,17 @@ public final class StringUtil {
 		return string.length() > 1
 			&& isUpperCase( string.charAt( 0 ) )
 			&& isUpperCase( string.charAt( 1 ) );
+	}
+
+	/**
+	 * If this is an "intermediate" class providing {@code @Query}
+	 * annotations for the query by magical method name crap, then
+	 * by convention it will be named with a trailing $ sign. Strip
+	 * that off, so we get the standard constructor.
+	 */
+	public static String removeDollar(String simpleName) {
+		return simpleName.endsWith("$")
+				? simpleName.substring(0, simpleName.length()-1)
+				: simpleName;
 	}
 }

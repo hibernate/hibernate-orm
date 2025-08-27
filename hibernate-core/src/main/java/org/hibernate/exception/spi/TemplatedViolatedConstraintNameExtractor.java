@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.exception.spi;
@@ -66,7 +66,7 @@ public class TemplatedViolatedConstraintNameExtractor implements ViolatedConstra
 		}
 
 		int start = templateStartPosition + templateStart.length();
-		int end = message.indexOf( templateEnd, start );
+		int end = templateEnd.equals("\n") ? -1 : message.indexOf( templateEnd, start );
 		if ( end < 0 ) {
 			end = message.length();
 		}

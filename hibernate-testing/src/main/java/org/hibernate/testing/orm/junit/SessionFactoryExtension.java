@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.junit;
@@ -232,7 +232,7 @@ public class SessionFactoryExtension
 		throw throwable;
 	}
 
-	private static class SessionFactoryScopeImpl implements SessionFactoryScope, ExtensionContext.Store.CloseableResource {
+	private static class SessionFactoryScopeImpl implements SessionFactoryScope, AutoCloseable {
 		private final DomainModelScope modelScope;
 		private final SessionFactoryProducer producer;
 
@@ -408,6 +408,13 @@ public class SessionFactoryExtension
 			log.trace( "inStatelessTransaction(StatelessSession,Consumer)" );
 
 			TransactionUtil.inTransaction( session, action );
+		}
+
+		@Override
+		public void dropData() {
+			if ( sessionFactory != null ) {
+				sessionFactory.getSchemaManager().truncateMappedObjects();
+			}
 		}
 	}
 }

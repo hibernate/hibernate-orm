@@ -1,10 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.log;
 
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.Internal;
 
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
@@ -15,7 +15,7 @@ import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
 
-import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.TRACE;
 
 /**
  * @author Steve Ebersole
@@ -24,8 +24,9 @@ import static org.jboss.logging.Logger.Level.INFO;
 @ValidIdRange( min = 10001501, max = 10002000 )
 @SubSystemLogging(
 		name = ConnectionAccessLogger.LOGGER_NAME,
-		description = "Used to log details around use of `JdbcConnectionAccess`"
+		description = "Logging related to use of JdbcConnectionAccess"
 )
+@Internal
 public interface ConnectionAccessLogger extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".connections.access";
 
@@ -39,11 +40,11 @@ public interface ConnectionAccessLogger extends BasicLogger {
 	);
 
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = TRACE)
 	@Message(
-			value = "Connection obtained from JdbcConnectionAccess [%s] for (non-JTA) DDL execution was not in auto-commit mode; " +
+			value = "Connection obtained from JdbcConnectionAccess for (non-JTA) DDL execution was not in auto-commit mode; " +
 					"the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.",
 			id = 10001501
 	)
-	void informConnectionLocalTransactionForNonJtaDdl(JdbcConnectionAccess jdbcConnectionAccess);
+	void informConnectionLocalTransactionForNonJtaDdl();
 }

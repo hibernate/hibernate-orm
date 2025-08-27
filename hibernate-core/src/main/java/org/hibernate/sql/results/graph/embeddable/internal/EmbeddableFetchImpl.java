@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.graph.spi.GraphHelper;
 import org.hibernate.graph.spi.GraphImplementor;
@@ -12,11 +13,15 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
+import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -29,6 +34,7 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
+import org.hibernate.type.BasicType;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
@@ -44,6 +50,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 	private final boolean hasTableGroup;
 	private final EmbeddableMappingType fetchContainer;
 	private final BasicFetch<?> discriminatorFetch;
+	private final @Nullable DomainResult<Boolean> nullIndicatorResult;
 
 	public EmbeddableFetchImpl(
 			NavigablePath navigablePath,
@@ -81,6 +88,19 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 		);
 
 		this.discriminatorFetch = creationState.visitEmbeddableDiscriminatorFetch( this, false );
+		if ( fetchContainer.getAggregateMapping() != null ) {
+			final TableReference tableReference = tableGroup.resolveTableReference(
+					fetchContainer.getAggregateMapping().getContainingTableExpression() );
+			final Expression aggregateExpression = creationState.getSqlAstCreationState().getSqlExpressionResolver()
+					.resolveSqlExpression( tableReference, fetchContainer.getAggregateMapping() );
+			final BasicType<Boolean> booleanType = creationState.getSqlAstCreationState().getCreationContext()
+					.getTypeConfiguration().getBasicTypeForJavaType( Boolean.class );
+			this.nullIndicatorResult = new NullnessPredicate( aggregateExpression, false, booleanType )
+					.createDomainResult( null, creationState );
+		}
+		else {
+			this.nullIndicatorResult = null;
+		}
 
 		afterInitialize( this, creationState );
 	}
@@ -96,6 +116,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 		tableGroup = original.tableGroup;
 		hasTableGroup = original.hasTableGroup;
 		discriminatorFetch = original.discriminatorFetch;
+		nullIndicatorResult = original.nullIndicatorResult;
 	}
 
 	@Override
@@ -169,7 +190,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 
 	@Override
 	public EmbeddableInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
-		return new EmbeddableInitializerImpl( this, discriminatorFetch, parent, creationState, true );
+		return new EmbeddableInitializerImpl( this, discriminatorFetch, nullIndicatorResult, parent, creationState, true );
 	}
 
 	@Override
@@ -183,7 +204,13 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 		return this;
 	}
 
+	// Used by Hibernate Reactive
 	protected BasicFetch<?> getDiscriminatorFetch() {
 		return discriminatorFetch;
+	}
+
+	// Used by Hibernate Reactive
+	protected @Nullable DomainResult<Boolean> getNullIndicatorResult() {
+		return nullIndicatorResult;
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.filter;
@@ -69,10 +69,7 @@ public class FilterDotNameTest extends AbstractStatefulStatelessFilterTest {
 
 	@AfterEach
 	void tearDown() {
-		scope.inTransaction( session -> {
-			session.createQuery( "DELETE FROM PurchaseItem" ).executeUpdate();
-			session.createQuery( "DELETE FROM PurchaseOrder" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@ParameterizedTest

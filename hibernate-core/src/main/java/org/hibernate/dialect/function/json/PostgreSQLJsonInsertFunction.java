@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.json;
@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -35,7 +35,7 @@ public class PostgreSQLJsonInsertFunction extends AbstractJsonInsertFunction {
 		final Expression jsonPath = (Expression) arguments.get( 1 );
 		final SqlAstNode value = arguments.get( 2 );
 		sqlAppender.appendSql( "(select case when (t.d)#>>t.p is not null then t.d else jsonb_insert(t.d,t.p," );
-		if ( value instanceof Literal && ( (Literal) value ).getLiteralValue() == null ) {
+		if ( value instanceof Literal literal && literal.getLiteralValue() == null ) {
 			sqlAppender.appendSql( "null::jsonb" );
 		}
 		else {
@@ -66,8 +66,8 @@ public class PostgreSQLJsonInsertFunction extends AbstractJsonInsertFunction {
 			if ( pathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
 				sqlAppender.appendSingleQuoteEscapedString( attribute.attribute() );
 			}
-			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess ) {
-				final String parameterName = ( (JsonPathHelper.JsonParameterIndexAccess) pathElement ).parameterName();
+			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess parameterIndexAccess ) {
+				final String parameterName = parameterIndexAccess.parameterName();
 				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
 			}
 			else {

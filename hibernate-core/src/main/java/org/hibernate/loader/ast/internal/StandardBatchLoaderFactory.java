@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
@@ -33,18 +33,18 @@ public class StandardBatchLoaderFactory implements BatchLoaderFactory {
 	public <T> EntityBatchLoader<T> createEntityBatchLoader(
 			int domainBatchSize,
 			EntityMappingType entityDescriptor,
-			LoadQueryInfluencers loadQueryInfluencers) {
-		final SessionFactoryImplementor factory = loadQueryInfluencers.getSessionFactory();
+			LoadQueryInfluencers influencers) {
+		final SessionFactoryImplementor factory = influencers.getSessionFactory();
 		// NOTE : don't use the EntityIdentifierMapping here because it will not be known until later
 		final Type identifierType = entityDescriptor.getEntityPersister().getIdentifierType();
-		if ( identifierType.getColumnSpan( factory ) == 1
+		if ( identifierType.getColumnSpan( factory.getRuntimeMetamodels() ) == 1
 				&& supportsSqlArrayType( factory.getJdbcServices().getDialect() )
 				&& identifierType instanceof BasicType ) {
 			// we can use a single ARRAY parameter to send all the ids
-			return new EntityBatchLoaderArrayParam<>( domainBatchSize, entityDescriptor, loadQueryInfluencers );
+			return new EntityBatchLoaderArrayParam<>( domainBatchSize, entityDescriptor, influencers );
 		}
 		else {
-			return new EntityBatchLoaderInPredicate<>( domainBatchSize, entityDescriptor, loadQueryInfluencers );
+			return new EntityBatchLoaderInPredicate<>( domainBatchSize, entityDescriptor, influencers );
 		}
 	}
 

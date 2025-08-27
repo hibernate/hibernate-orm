@@ -1,15 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
 
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.cache.spi.access.CachedDomainDataAccess;
-import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -39,16 +36,16 @@ public final class CacheHelper {
 			EntityPersister persister,
 			boolean isNaturalKey,
 			CachedDomainDataAccess cacheAccess) {
-		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
+		final var eventListenerManager = session.getEventListenerManager();
 		Object cachedValue = null;
 		eventListenerManager.cacheGetStart();
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent cacheGetEvent = eventManager.beginCacheGetEvent();
+		final var eventMonitor = session.getEventMonitor();
+		final var cacheGetEvent = eventMonitor.beginCacheGetEvent();
 		try {
 			cachedValue = cacheAccess.get( session, cacheKey );
 		}
 		finally {
-			eventManager.completeCacheGetEvent(
+			eventMonitor.completeCacheGetEvent(
 					cacheGetEvent,
 					session,
 					cacheAccess.getRegion(),
@@ -66,16 +63,16 @@ public final class CacheHelper {
 			Object cacheKey,
 			CollectionPersister persister,
 			CachedDomainDataAccess cacheAccess) {
-		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
+		final var eventListenerManager = session.getEventListenerManager();
 		Object cachedValue = null;
 		eventListenerManager.cacheGetStart();
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent cacheGetEvent = eventManager.beginCacheGetEvent();
+		final var eventMonitor = session.getEventMonitor();
+		final var cacheGetEvent = eventMonitor.beginCacheGetEvent();
 		try {
 			cachedValue = cacheAccess.get( session, cacheKey );
 		}
 		finally {
-			eventManager.completeCacheGetEvent(
+			eventMonitor.completeCacheGetEvent(
 					cacheGetEvent,
 					session,
 					cacheAccess.getRegion(),

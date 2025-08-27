@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.namedquery;
@@ -7,16 +7,17 @@ package org.hibernate.processor.test.namedquery;
 import jakarta.persistence.EntityManager;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfMethodInMetamodelFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
 
-public class ThingTest extends CompilationTest {
+@CompilationTest
+class ThingTest {
 	@Test @WithClasses( Thing.class )
-	public void test() {
+	void test() {
 		System.out.println( getMetaModelSourceAsString( Thing.class) );
 		System.out.println( getMetaModelSourceAsString( Thing.class, true) );
 		assertMetamodelClassGeneratedFor(Thing.class);

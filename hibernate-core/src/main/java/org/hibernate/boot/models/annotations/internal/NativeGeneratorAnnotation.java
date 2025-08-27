@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -8,7 +8,7 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
 import org.hibernate.annotations.NativeGenerator;
 import org.hibernate.boot.model.internal.GeneratorStrategies;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;
@@ -30,7 +30,7 @@ public class NativeGeneratorAnnotation implements NativeGenerator {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public NativeGeneratorAnnotation(SourceModelBuildingContext modelContext) {
+	public NativeGeneratorAnnotation(ModelsContext modelContext) {
 		this.sequenceForm = new SequenceGeneratorJpaAnnotation( modelContext );
 		this.tableForm = new TableGeneratorJpaAnnotation( modelContext );
 	}
@@ -38,7 +38,7 @@ public class NativeGeneratorAnnotation implements NativeGenerator {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public NativeGeneratorAnnotation(NativeGenerator annotation, SourceModelBuildingContext modelContext) {
+	public NativeGeneratorAnnotation(NativeGenerator annotation, ModelsContext modelContext) {
 		this.sequenceForm = annotation.sequenceForm();
 		this.tableForm = annotation.tableForm();
 	}
@@ -46,7 +46,7 @@ public class NativeGeneratorAnnotation implements NativeGenerator {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public NativeGeneratorAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public NativeGeneratorAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.sequenceForm = (SequenceGenerator) attributeValues.get( "sequenceForm" );
 		this.tableForm = (TableGenerator) attributeValues.get( "tableForm" );
 	}

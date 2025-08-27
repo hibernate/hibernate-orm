@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
@@ -18,14 +18,15 @@ public enum ConnectionAcquisitionMode {
 	/**
 	 * The {@code Connection} will be acquired as soon as a session is opened.
 	 * <p>
-	 * This circumvents the {@link ConnectionReleaseMode}, as the {@code Connection}
-	 * will then be held until the session is closed.
+	 * In this acquisition mode, {@link ConnectionReleaseMode#ON_CLOSE} must be used.
 	 */
 	IMMEDIATELY,
 	/**
 	 * A {@code Connection} is acquired only when (and if) it's actually needed.
 	 * <p>
 	 * This is the default (and legacy) behavior.
+	 * <p>
+	 * In this acquisition mode, any {@link ConnectionReleaseMode} must be used.
 	 */
 	AS_NEEDED;
 
@@ -39,16 +40,13 @@ public enum ConnectionAcquisitionMode {
 		if ( setting == null ) {
 			return null;
 		}
-
-		if ( setting instanceof ConnectionAcquisitionMode mode ) {
+		else if ( setting instanceof ConnectionAcquisitionMode mode ) {
 			return mode;
 		}
-
-		final String value = setting.toString();
-		if ( isEmpty( value ) ) {
-			return null;
+		else {
+			final String value = setting.toString();
+			return isEmpty( value ) ? null : interpret( value );
 		}
 
-		return interpret( value );
 	}
 }

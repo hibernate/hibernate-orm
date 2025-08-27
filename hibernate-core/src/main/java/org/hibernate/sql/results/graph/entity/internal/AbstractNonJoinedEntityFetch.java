@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.entity.internal;
@@ -142,11 +142,10 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 	public DomainResultAssembler<?> createAssembler(
 			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
-		final EntityInitializer<?> entityInitializer =
-				creationState.resolveInitializer( this, parent, this )
-						.asEntityInitializer();
+		final EntityInitializer<?> entityInitializer = creationState.resolveInitializer( this, parent, this )
+				.asEntityInitializer();
 		assert entityInitializer != null;
-		return new EntityAssembler<>( getFetchedMapping().getJavaType(), entityInitializer );
+		return buildEntityAssembler( entityInitializer );
 	}
 
 	@Override
@@ -160,4 +159,10 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 	@Override
 	public abstract EntityInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState);
 
+	/**
+	 * Used By Hibernate Reactive
+	 */
+	protected EntityAssembler<?> buildEntityAssembler(EntityInitializer<?> entityInitializer) {
+		return new EntityAssembler<>( getFetchedMapping().getJavaType(), entityInitializer );
+	}
 }

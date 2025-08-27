@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
@@ -26,13 +26,24 @@ public class AggregateEmbeddableInitializerImpl extends EmbeddableInitializerImp
 			InitializerParent<?> parent,
 			AssemblerCreationState creationState,
 			boolean isResultInitializer) {
-		super( resultDescriptor, discriminatorFetch, parent, creationState, isResultInitializer );
+		super( resultDescriptor, discriminatorFetch, null, parent, creationState, isResultInitializer );
 		this.aggregateValuesArrayPositions = resultDescriptor.getAggregateValuesArrayPositions();
 	}
 
 	@Override
 	public void startLoading(RowProcessingState rowProcessingState) {
 		super.startLoading( NestedRowProcessingState.wrap( this, rowProcessingState ) );
+	}
+
+	@Override
+	protected void extractRowState(EmbeddableInitializerData data) {
+		super.extractRowState( data );
+		if ( data.getState() == State.MISSING
+			&& !isPartOfKey()
+			&& getJdbcValues( data.getRowProcessingState().unwrap() ) != null ) {
+			// When all values are null, the embeddable shall be non-null if the JDBC object is not null
+			data.setState( State.RESOLVED );
+		}
 	}
 
 	public int[] getAggregateValuesArrayPositions() {

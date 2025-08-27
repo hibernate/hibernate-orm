@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.backend.jdbc.internal;
@@ -26,15 +26,15 @@ public class JdbcResourceLocalTransactionCoordinatorBuilderImpl implements Trans
 	/**
 	 * Singleton access
 	 */
-	public static final JdbcResourceLocalTransactionCoordinatorBuilderImpl INSTANCE = new JdbcResourceLocalTransactionCoordinatorBuilderImpl();
+	public static final TransactionCoordinatorBuilder INSTANCE = new JdbcResourceLocalTransactionCoordinatorBuilderImpl();
 
 	@Override
 	public TransactionCoordinator buildTransactionCoordinator(TransactionCoordinatorOwner owner, Options options) {
-		if ( owner instanceof JdbcResourceTransactionAccess ) {
+		if ( owner instanceof JdbcResourceTransactionAccess transactionAccess ) {
 			return new JdbcResourceLocalTransactionCoordinatorImpl(
 					this,
 					owner,
-					(JdbcResourceTransactionAccess) owner
+					transactionAccess
 			);
 		}
 

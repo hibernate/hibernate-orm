@@ -1,12 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
 
 import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
 import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;
@@ -20,7 +20,7 @@ public class AnyDiscriminatorImplicitValuesAnnotation implements AnyDiscriminato
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public AnyDiscriminatorImplicitValuesAnnotation(SourceModelBuildingContext modelContext) {
+	public AnyDiscriminatorImplicitValuesAnnotation(ModelsContext modelContext) {
 		this.value = Strategy.CUSTOM;
 		this.implementation = ImplicitDiscriminatorStrategy.class;
 	}
@@ -28,7 +28,7 @@ public class AnyDiscriminatorImplicitValuesAnnotation implements AnyDiscriminato
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public AnyDiscriminatorImplicitValuesAnnotation(AnyDiscriminatorImplicitValues annotation, SourceModelBuildingContext modelContext) {
+	public AnyDiscriminatorImplicitValuesAnnotation(AnyDiscriminatorImplicitValues annotation, ModelsContext modelContext) {
 		this.value = annotation.value();
 		this.implementation = annotation.implementation();
 	}
@@ -36,7 +36,7 @@ public class AnyDiscriminatorImplicitValuesAnnotation implements AnyDiscriminato
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public AnyDiscriminatorImplicitValuesAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public AnyDiscriminatorImplicitValuesAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.value = (Strategy) attributeValues.get( "value" );
 		//noinspection unchecked
 		this.implementation = (Class<? extends ImplicitDiscriminatorStrategy>) attributeValues.get( "implementation" );

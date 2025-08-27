@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.basic;
@@ -45,9 +45,7 @@ public class ClobCharArrayTest {
 
 	@AfterEach
 	public void dropData(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.createQuery("delete Product").executeUpdate()
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	//tag::basic-clob-char-array-example[]

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql.internal;
@@ -14,7 +14,6 @@ import org.hibernate.query.sqm.EntityTypeException;
 import org.hibernate.query.sqm.PathElementException;
 import org.hibernate.query.SyntaxException;
 import org.hibernate.query.sqm.TerminalPathException;
-import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.sqm.InterpretationException;
@@ -35,6 +34,7 @@ import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 
 import static java.util.stream.Collectors.toList;
+import static org.hibernate.query.hql.HqlLogging.QUERY_LOGGER;
 
 /**
  * Standard implementation of {@link HqlTranslator}.
@@ -55,7 +55,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 
 	@Override
 	public <R> SqmStatement<R> translate(String query, Class<R> expectedResultType) {
-		HqlLogging.QUERY_LOGGER.debugf( "HQL : %s", query );
+		QUERY_LOGGER.tracef( "HQL: %s", query );
 
 		final HqlParser.StatementContext hqlParseTree = parseHql( query );
 
@@ -96,7 +96,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 		// Build the parse tree
 		final HqlParser hqlParser = HqlParseTreeBuilder.INSTANCE.buildHqlParser( hql, hqlLexer );
 
-		// try to use SLL(k)-based parsing first - its faster
+		// try to use SLL(k)-based parsing first - it's faster
 		hqlParser.getInterpreter().setPredictionMode( PredictionMode.SLL );
 		hqlParser.removeErrorListeners();
 		hqlParser.setErrorHandler( new BailErrorStrategy() );
@@ -125,7 +125,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 		}
 		catch ( ParsingException ex ) {
 			// Note that this is supposed to represent a bug in the parser
-			// Ee wrap and rethrow in order to attach the HQL query to the error
+			// We wrap and rethrow in order to attach the HQL query to the error
 			throw new QueryException( "Failed to interpret HQL syntax [" + ex.getMessage() + "]", hql, ex );
 		}
 	}
@@ -144,8 +144,8 @@ public class StandardHqlTranslator implements HqlTranslator {
 		String errorText = "";
 		if ( includeLocation ) {
 			errorText += "At " + line + ":" + charPositionInLine;
-			if ( offendingSymbol instanceof CommonToken ) {
-				String token = ( (CommonToken) offendingSymbol).getText();
+			if ( offendingSymbol instanceof CommonToken commonToken ) {
+				String token = commonToken.getText();
 				if ( token != null && !token.isEmpty() ) {
 					errorText += " and token '" + token + "'";
 				}

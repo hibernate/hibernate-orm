@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
@@ -20,17 +20,13 @@ import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.ParsingException;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
-
-import jakarta.persistence.metamodel.MapAttribute;
-import jakarta.persistence.metamodel.PluralAttribute;
-import jakarta.persistence.metamodel.SingularAttribute;
 
 /**
  * Models a reference to a part of the application's domain model as part of an SQM tree.
@@ -65,19 +61,6 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	void setExplicitAlias(String explicitAlias);
 
 	/**
-	 * Retrieve the explicit alias, if one, otherwise return a generated one and set that as explicit alias.
-	 */
-	default String resolveAlias() {
-		final String explicitAlias = getExplicitAlias();
-		if ( explicitAlias != null ) {
-			return explicitAlias;
-		}
-		final String generatedAlias = "alias_" + System.identityHashCode( this );
-		setExplicitAlias( generatedAlias );
-		return generatedAlias;
-	}
-
-	/**
 	 * Get the left-hand side of this path - may be null, indicating a
 	 * root, cross-join or entity-join
 	 */
@@ -104,10 +87,10 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	 * This node's type is its "referenced path source"
 	 */
 	@Override
-	SqmPathSource<T> getNodeType();
+	SqmBindableType<T> getNodeType();
 
 	@Override
-	default void applyInferableType(@Nullable SqmExpressible<?> type) {
+	default void applyInferableType(@Nullable SqmBindableType<?> type) {
 		// do nothing
 	}
 
@@ -155,7 +138,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	/**
 	 * Get this path's actual resolved model, i.e. the concrete type for generic attributes.
 	 */
-	SqmPathSource<?> getResolvedModel();
+	SqmPathSource<T> getResolvedModel();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides
@@ -187,6 +170,4 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 
 	@Override
 	SqmPath<T> copy(SqmCopyContext context);
-
-
 }

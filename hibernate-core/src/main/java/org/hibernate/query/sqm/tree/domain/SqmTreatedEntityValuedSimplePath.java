@@ -1,16 +1,18 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
+
+import java.util.Objects;
 
 /**
  * @author Steve Ebersole
@@ -19,12 +21,12 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 		extends SqmEntityValuedSimplePath<S>
 		implements SqmSimplePath<S>, SqmTreatedPath<T,S> {
 
-	private final EntityDomainType<S> treatTarget;
+	private final SqmEntityDomainType<S> treatTarget;
 	private final SqmPath<T> wrappedPath;
 
 	public SqmTreatedEntityValuedSimplePath(
 			SqmPluralValuedSimplePath<T> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			SqmEntityDomainType<S> treatTarget,
 			NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
@@ -41,7 +43,7 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 
 	public SqmTreatedEntityValuedSimplePath(
 			SqmPath<T> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			SqmEntityDomainType<S> treatTarget,
 			NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
@@ -59,7 +61,7 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 	private SqmTreatedEntityValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPath<T> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			SqmEntityDomainType<S> treatTarget,
 			NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
@@ -93,7 +95,7 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 	}
 
 	@Override
-	public EntityDomainType<S> getTreatTarget() {
+	public SqmEntityDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
 
@@ -103,7 +105,7 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 	}
 
 	@Override
-	public EntityDomainType<S> getNodeType() {
+	public SqmEntityDomainType<S> getNodeType() {
 		return treatTarget;
 	}
 
@@ -113,7 +115,7 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 	}
 
 	@Override
-	public SqmPathSource<?> getResolvedModel() {
+	public SqmPathSource<S> getResolvedModel() {
 		return treatTarget;
 	}
 
@@ -134,11 +136,24 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "treat(" );
-		wrappedPath.appendHqlString( sb );
-		sb.append( " as " );
-		sb.append( treatTarget.getName() );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( "treat(" );
+		wrappedPath.appendHqlString( hql, context );
+		hql.append( " as " );
+		hql.append( treatTarget.getName() );
+		hql.append( ')' );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmTreatedEntityValuedSimplePath<?, ?> that
+			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() )
+			&& Objects.equals( this.treatTarget.getTypeName(), that.treatTarget.getTypeName() )
+			&& Objects.equals( this.wrappedPath.getNavigablePath(), that.wrappedPath.getNavigablePath() );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( treatTarget.getTypeName(), wrappedPath.getNavigablePath() );
 	}
 }

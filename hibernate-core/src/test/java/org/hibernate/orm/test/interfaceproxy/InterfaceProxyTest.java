@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.interfaceproxy;
@@ -15,6 +15,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.Hibernate.getLobHelper;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -44,10 +45,10 @@ public class InterfaceProxyTest {
 			session.beginTransaction();
 			try {
 				doc.setName( "Hibernate in Action" );
-				doc.setContent( session.getLobHelper().createBlob( "blah blah blah".getBytes() ) );
+				doc.setContent( getLobHelper().createBlob( "blah blah blah".getBytes() ) );
 				session.persist( doc );
 				doc2.setName( "Secret" );
-				doc2.setContent( session.getLobHelper().createBlob( "wxyz wxyz".getBytes() ) );
+				doc2.setContent( getLobHelper().createBlob( "wxyz wxyz".getBytes() ) );
 				// SybaseASE15Dialect only allows 7-bits in a byte to be inserted into a tinyint
 				// column (0 <= val < 128)
 				doc2.setPermissionBits( (byte) 127 );

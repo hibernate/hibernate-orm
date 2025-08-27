@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.spi;
@@ -13,7 +13,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.ResultListTransformer;
-import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
@@ -33,10 +33,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 
 	/**
-	 * Let's be reasonable: a row estimate greater than 1M rows is probably either a misestimate or a bug,
-	 * so let's set {@code 2^20} which is a bit above 1M as maximum collection size.
+	 * Let's be reasonable: a row estimate greater than 8k rows is probably either a misestimate or a bug,
+	 * so let's set {@code 2^13} which is a bit above 8k as maximum collection size.
 	 */
-	private static final int INITIAL_COLLECTION_SIZE_LIMIT = 1 << 20;
+	private static final int INITIAL_COLLECTION_SIZE_LIMIT = 1 << 13;
 
 	private static final ListResultsConsumer<?> NEVER_DE_DUP_CONSUMER = new ListResultsConsumer<>( UniqueSemantic.NEVER );
 	private static final ListResultsConsumer<?> ALLOW_DE_DUP_CONSUMER = new ListResultsConsumer<>( UniqueSemantic.ALLOW );
@@ -46,23 +46,13 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 
 	@SuppressWarnings("unchecked")
 	public static <R> ListResultsConsumer<R> instance(UniqueSemantic uniqueSemantic) {
-		switch ( uniqueSemantic ) {
-			case ASSERT: {
-				return (ListResultsConsumer<R>) ERROR_DUP_CONSUMER;
-			}
-			case FILTER: {
-				return (ListResultsConsumer<R>) DE_DUP_CONSUMER;
-			}
-			case NEVER: {
-				return (ListResultsConsumer<R>) NEVER_DE_DUP_CONSUMER;
-			}
-			case ALLOW: {
-				return (ListResultsConsumer<R>) ALLOW_DE_DUP_CONSUMER;
-			}
-			default: {
-				return (ListResultsConsumer<R>) IGNORE_DUP_CONSUMER;
-			}
-		}
+		return (ListResultsConsumer<R>) switch ( uniqueSemantic ) {
+			case ASSERT -> ERROR_DUP_CONSUMER;
+			case FILTER -> DE_DUP_CONSUMER;
+			case NEVER -> NEVER_DE_DUP_CONSUMER;
+			case ALLOW -> ALLOW_DE_DUP_CONSUMER;
+			default -> IGNORE_DUP_CONSUMER;
+		};
 	}
 
 	/**
@@ -157,59 +147,26 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState,
 			RowProcessingStateStandardImpl rowProcessingState,
 			RowReader<R> rowReader) {
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final TypeConfiguration typeConfiguration = session.getTypeConfiguration();
-		final QueryOptions queryOptions = rowProcessingState.getQueryOptions();
-
 		rowReader.startLoading( rowProcessingState );
 
 		RuntimeException ex = null;
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.beforeLoad();
 		persistenceContext.getLoadContexts().register( jdbcValuesSourceProcessingState );
 		try {
 			final JavaType<R> domainResultJavaType = resolveDomainResultJavaType(
 					rowReader.getDomainResultResultJavaType(),
 					rowReader.getResultJavaTypes(),
-					typeConfiguration
+					session.getTypeConfiguration()
 			);
 
 			final boolean isEntityResultType = domainResultJavaType instanceof EntityJavaType;
 			final int initialCollectionSize = Math.min( jdbcValues.getResultCountEstimate(), INITIAL_COLLECTION_SIZE_LIMIT );
-
-			final Results<R> results;
-			if ( isEntityResultType
-					&& ( uniqueSemantic == UniqueSemantic.ALLOW
-						|| uniqueSemantic == UniqueSemantic.FILTER ) ) {
-				results = new EntityResult<>( domainResultJavaType, initialCollectionSize );
-			}
-			else {
-				results = new Results<>( domainResultJavaType, initialCollectionSize );
-			}
-
-			final int readRows;
-			if ( uniqueSemantic == UniqueSemantic.FILTER
-					|| uniqueSemantic == UniqueSemantic.ASSERT && rowReader.hasCollectionInitializers()
-					|| uniqueSemantic == UniqueSemantic.ALLOW && isEntityResultType ) {
-				readRows = readUnique( rowProcessingState, rowReader, results );
-			}
-			else if ( uniqueSemantic == UniqueSemantic.ASSERT ) {
-				readRows = readUniqueAssert( rowProcessingState, rowReader, results );
-			}
-			else {
-				readRows = read( rowProcessingState, rowReader, results );
-			}
-
+			final Results<R> results = createResults( isEntityResultType, domainResultJavaType, initialCollectionSize );
+			final int readRows = readRows( rowProcessingState, rowReader, isEntityResultType, results );
 			rowReader.finishUp( rowProcessingState );
 			jdbcValuesSourceProcessingState.finishUp( readRows > 1 );
-
-			//noinspection unchecked
-			final ResultListTransformer<R> resultListTransformer =
-					(ResultListTransformer<R>) queryOptions.getResultListTransformer();
-			if ( resultListTransformer != null ) {
-				return resultListTransformer.transformList( results.getResults() );
-			}
-
-			return results.getResults();
+			return transformList( rowProcessingState, results );
 		}
 		catch (RuntimeException e) {
 			ex = e;
@@ -236,6 +193,47 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			}
 		}
 		throw new IllegalStateException( "Should not reach this" );
+	}
+
+	private static <R> List<R> transformList(ExecutionContext executionContext, Results<R> results) {
+		final ResultListTransformer<R> transformer = getResultListTransformer( executionContext );
+		return transformer == null ? results.getResults() : transformer.transformList( results.getResults() );
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <R> ResultListTransformer<R> getResultListTransformer(ExecutionContext executionContext) {
+		return (ResultListTransformer<R>) executionContext.getQueryOptions().getResultListTransformer();
+	}
+
+	private Results<R> createResults(
+			boolean isEntityResultType,
+			JavaType<R> domainResultJavaType,
+			int initialCollectionSize) {
+		if ( isEntityResultType
+			&& ( uniqueSemantic == UniqueSemantic.ALLOW || uniqueSemantic == UniqueSemantic.FILTER ) ) {
+			return new EntityResult<>( domainResultJavaType, initialCollectionSize );
+		}
+		else {
+			return new Results<>( domainResultJavaType, initialCollectionSize );
+		}
+	}
+
+	private int readRows(
+			RowProcessingStateStandardImpl rowProcessingState,
+			RowReader<R> rowReader,
+			boolean isEntityResultType,
+			Results<R> results) {
+		if ( uniqueSemantic == UniqueSemantic.FILTER
+				|| uniqueSemantic == UniqueSemantic.ASSERT && rowReader.hasCollectionInitializers()
+				|| uniqueSemantic == UniqueSemantic.ALLOW && isEntityResultType ) {
+			return readUnique( rowProcessingState, rowReader, results );
+		}
+		else if ( uniqueSemantic == UniqueSemantic.ASSERT ) {
+			return readUniqueAssert( rowProcessingState, rowReader, results );
+		}
+		else {
+			return read( rowProcessingState, rowReader, results );
+		}
 	}
 
 	private static <R> int read(

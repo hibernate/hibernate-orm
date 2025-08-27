@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.spi;
@@ -13,6 +13,8 @@ import static java.util.Locale.ROOT;
 
 /**
  * A {@link TupleTransformer} for handling {@link Map} results from native queries.
+ *
+ * @since 6.3
  *
  * @author Gavin King
  */

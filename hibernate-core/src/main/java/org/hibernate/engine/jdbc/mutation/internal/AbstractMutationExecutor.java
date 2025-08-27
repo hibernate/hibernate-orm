@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.mutation.internal;
@@ -116,7 +116,7 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 		if ( inclusionChecker != null && !inclusionChecker.include( tableDetails ) ) {
 			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 				MODEL_MUTATION_LOGGER.tracef(
-						"Skipping execution of secondary insert : %s",
+						"Skipping execution of secondary insert: %s",
 						tableDetails.getTableName()
 				);
 			}

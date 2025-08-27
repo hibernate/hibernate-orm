@@ -1,16 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Collection;
 
-import org.hibernate.metamodel.internal.MetadataContext;
-import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
+import org.hibernate.query.sqm.tree.domain.SqmBagPersistentAttribute;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
@@ -19,10 +18,10 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
  */
 public class BagAttributeImpl<X, E>
 		extends AbstractPluralAttribute<X, Collection<E>, E>
-		implements BagPersistentAttribute<X, E> {
+		implements SqmBagPersistentAttribute<X, E> {
 
-	public BagAttributeImpl(PluralAttributeBuilder<X, Collection<E>, E, ?> xceBuilder, MetadataContext metadataContext) {
-		super( xceBuilder, metadataContext );
+	public BagAttributeImpl(PluralAttributeBuilder<X, Collection<E>, E, ?> xceBuilder) {
+		super( xceBuilder );
 	}
 
 	@Override

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.constant;
@@ -9,7 +9,7 @@ import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.EntityManager;
 
@@ -17,12 +17,13 @@ import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGen
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfMethodInMetamodelFor;
 
+@CompilationTest
 @TestForIssue(jiraKey = "HHH-18106")
-public class ConstantInNamedQueryTest extends CompilationTest {
+class ConstantInNamedQueryTest {
 
 	@Test
 	@WithClasses(value = {}, sources = "org.hibernate.processor.test.constant.CookBookWithCheck")
-	public void withCheckHQL() {
+	void withCheckHQL() {
 		final String entityClass = "org.hibernate.processor.test.constant.CookBookWithCheck";
 
 		System.out.println( TestUtil.getMetaModelSourceAsString( entityClass ) );
@@ -38,7 +39,7 @@ public class ConstantInNamedQueryTest extends CompilationTest {
 
 	@Test
 	@WithClasses(value = CookBookWithoutCheck.class, sources = "org.hibernate.processor.test.constant.NumericBookType")
-	public void withoutCheckHQL() {
+	void withoutCheckHQL() {
 		final String entityClass = "org.hibernate.processor.test.constant.CookBookWithoutCheck";
 
 		System.out.println( TestUtil.getMetaModelSourceAsString( entityClass ) );

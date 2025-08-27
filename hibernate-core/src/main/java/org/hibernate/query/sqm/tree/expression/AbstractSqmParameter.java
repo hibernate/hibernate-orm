@@ -1,12 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
-import org.hibernate.query.BindableType;
+import org.hibernate.type.BindableType;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -21,19 +22,17 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 
 	public AbstractSqmParameter(
 			boolean canBeMultiValued,
-			SqmExpressible<T> inherentType,
+			SqmBindableType<T> inherentType,
 			NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.canBeMultiValued = canBeMultiValued;
 	}
 
 	@Override
-	public void applyInferableType(@Nullable SqmExpressible<?> type) {
+	public void applyInferableType(@Nullable SqmBindableType<?> type) {
 		if ( type != null ) {
-			if ( type instanceof PluralPersistentAttribute ) {
-				final PluralPersistentAttribute<?, ?, ?> pluralPersistentAttribute =
-						(PluralPersistentAttribute<?, ?, ?>) type;
-				internalApplyInferableType( pluralPersistentAttribute.getElementType() );
+			if ( type instanceof PluralPersistentAttribute<?, ?, ?> pluralPersistentAttribute ) {
+				internalApplyInferableType( (SqmBindableType<?>) pluralPersistentAttribute.getElementType() );
 			}
 			else {
 				internalApplyInferableType( type );
@@ -57,17 +56,18 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 	}
 
 	public void disallowMultiValuedBinding() {
-		this.canBeMultiValued = false;
+		canBeMultiValued = false;
 	}
 
 	@Override
 	public BindableType<T> getAnticipatedType() {
-		return this.getNodeType();
+		return getNodeType();
 	}
 
 	@Override
 	public Class<T> getParameterType() {
-		return this.getNodeType().getExpressibleJavaType().getJavaTypeClass();
+		final SqmExpressible<T> nodeType = getNodeType();
+		return nodeType == null ? null : nodeType.getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util;
@@ -73,7 +73,7 @@ public final class NullnessUtil {
 	@EnsuresNonNull("#1")
 	public static <T extends @Nullable Object> @NonNull T castNonNull(@Nullable T ref) {
 		assert ref != null : "Misuse of castNonNull: called with a null argument";
-		return (@NonNull T) ref;
+		return ref;
 	}
 
 	/**
@@ -91,7 +91,7 @@ public final class NullnessUtil {
 	public static @EnsuresNonNull("#1") <T extends @Nullable Object> @NonNull T castNonNull(
 			@Nullable T ref, String message) {
 		assert ref != null : "Misuse of castNonNull: called with a null argument: " + message;
-		return (@NonNull T) ref;
+		return ref;
 	}
 
 	/**
@@ -110,7 +110,7 @@ public final class NullnessUtil {
 	@EnsuresNonNull("#1")
 	public static <T extends @Nullable Object> @NonNull T @NonNull [] castNonNullDeep(
 			T @Nullable [] arr) {
-		return (@NonNull T[]) castNonNullArray( arr, null );
+		return castNonNullArray( arr, null );
 	}
 
 	/**
@@ -130,7 +130,7 @@ public final class NullnessUtil {
 	@EnsuresNonNull("#1")
 	public static <T extends @Nullable Object> @NonNull T @NonNull [] castNonNullDeep(
 			T @Nullable [] arr, String message) {
-		return (@NonNull T[]) castNonNullArray( arr, message );
+		return castNonNullArray( arr, message );
 	}
 
 	/**
@@ -149,7 +149,7 @@ public final class NullnessUtil {
 	@EnsuresNonNull("#1")
 	public static <T extends @Nullable Object> @NonNull T @NonNull [][] castNonNullDeep(
 			T @Nullable [] @Nullable [] arr) {
-		return (@NonNull T[][]) castNonNullArray( arr, null );
+		return castNonNullArray( arr, null );
 	}
 
 	/**
@@ -169,7 +169,7 @@ public final class NullnessUtil {
 	@EnsuresNonNull("#1")
 	public static <T extends @Nullable Object> @NonNull T @NonNull [][] castNonNullDeep(
 			T @Nullable [] @Nullable [] arr, String message) {
-		return (@NonNull T[][]) castNonNullArray( arr, message );
+		return castNonNullArray( arr, message );
 	}
 
 	/**
@@ -188,7 +188,7 @@ public final class NullnessUtil {
 	@EnsuresNonNull("#1")
 	public static <T extends @Nullable Object> @NonNull T @NonNull [][][] castNonNullDeep(
 			T @Nullable [] @Nullable [] @Nullable [] arr) {
-		return (@NonNull T[][][]) castNonNullArray( arr, null );
+		return castNonNullArray( arr, null );
 	}
 
 	/**
@@ -208,7 +208,7 @@ public final class NullnessUtil {
 	@EnsuresNonNull("#1")
 	public static <T extends @Nullable Object> @NonNull T @NonNull [][][] castNonNullDeep(
 			T @Nullable [] @Nullable [] @Nullable [] arr, String message) {
-		return (@NonNull T[][][]) castNonNullArray( arr, message );
+		return castNonNullArray( arr, message );
 	}
 
 	/**
@@ -227,7 +227,7 @@ public final class NullnessUtil {
 	@EnsuresNonNull("#1")
 	public static <T extends @Nullable Object> @NonNull T @NonNull [][][][] castNonNullDeep(
 			T @Nullable [] @Nullable [] @Nullable [] @Nullable [] arr) {
-		return (@NonNull T[][][][]) castNonNullArray( arr, null );
+		return castNonNullArray( arr, null );
 	}
 
 	/**
@@ -247,7 +247,7 @@ public final class NullnessUtil {
 	@EnsuresNonNull("#1")
 	public static <T extends @Nullable Object> @NonNull T @NonNull [][][][] castNonNullDeep(
 			T @Nullable [] @Nullable [] @Nullable [] @Nullable [] arr, String message) {
-		return (@NonNull T[][][][]) castNonNullArray( arr, message );
+		return castNonNullArray( arr, message );
 	}
 
 	/**
@@ -266,7 +266,7 @@ public final class NullnessUtil {
 	@EnsuresNonNull("#1")
 	public static <T extends @Nullable Object> @NonNull T @NonNull [][][][][] castNonNullDeep(
 			T @Nullable [] @Nullable [] @Nullable [] @Nullable [] @Nullable [] arr) {
-		return (@NonNull T[][][][][]) castNonNullArray( arr, null );
+		return castNonNullArray( arr, null );
 	}
 
 	/**
@@ -286,7 +286,7 @@ public final class NullnessUtil {
 	@EnsuresNonNull("#1")
 	public static <T extends @Nullable Object> @NonNull T @NonNull [][][][][] castNonNullDeep(
 			T @Nullable [] @Nullable [] @Nullable [] @Nullable [] @Nullable [] arr, String message) {
-		return (@NonNull T[][][][][]) castNonNullArray( arr, message );
+		return castNonNullArray( arr, message );
 	}
 
 	/**
@@ -311,7 +311,7 @@ public final class NullnessUtil {
 					+ ( ( message == null ) ? "" : ( ": " + message ) );
 			checkIfArray( arr[i], message );
 		}
-		return (@NonNull T[]) arr;
+		return arr;
 	}
 
 	/**

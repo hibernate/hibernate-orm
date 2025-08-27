@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal;
@@ -32,7 +32,11 @@ public class SqmMultiTableMutationStrategyProviderStandard implements SqmMultiTa
 		if ( specifiedStrategy != null ) {
 			return specifiedStrategy;
 		}
-
+		final SqmMultiTableMutationStrategy specifiedEntityBaseStrategy =
+				options.resolveCustomSqmMultiTableMutationStrategy( rootEntityDescriptor, creationContext );
+		if ( specifiedEntityBaseStrategy != null ) {
+			return specifiedEntityBaseStrategy;
+		}
 		return creationContext.getDialect().getFallbackSqmMutationStrategy( rootEntityDescriptor, creationContext );
 	}
 
@@ -46,6 +50,11 @@ public class SqmMultiTableMutationStrategyProviderStandard implements SqmMultiTa
 		final SqmMultiTableInsertStrategy specifiedStrategy = options.getCustomSqmMultiTableInsertStrategy();
 		if ( specifiedStrategy != null ) {
 			return specifiedStrategy;
+		}
+		final SqmMultiTableInsertStrategy specifiedEntityBaseStrategy =
+				options.resolveCustomSqmMultiTableInsertStrategy( rootEntityDescriptor, creationContext );
+		if ( specifiedEntityBaseStrategy != null ) {
+			return specifiedEntityBaseStrategy;
 		}
 
 		return creationContext.getDialect().getFallbackSqmInsertStrategy( rootEntityDescriptor, creationContext );

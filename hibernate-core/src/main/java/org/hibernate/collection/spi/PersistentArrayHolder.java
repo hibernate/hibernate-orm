@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.collection.spi;
@@ -18,6 +18,7 @@ import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
@@ -34,6 +35,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 @Incubating
+@AllowReflection // We need the ability to create arrays of the same type as in the model.
 public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PersistentArrayHolder.class );
 
@@ -217,7 +219,7 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 	}
 
 	@Override
-	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
+	public Iterator<?> getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
 		final List<Integer> deletes = new ArrayList<>();
 		final Serializable sn = getSnapshot();
 		final int snSize = Array.getLength( sn );
@@ -241,6 +243,22 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 	}
 
 	@Override
+	public boolean hasDeletes(CollectionPersister persister) throws HibernateException {
+		final Serializable sn = getSnapshot();
+		final int snSize = Array.getLength( sn );
+		final int arraySize = Array.getLength( array );
+		if ( snSize > arraySize ) {
+			return true;
+		}
+		for ( int i=0; i<snSize; i++ ) {
+			if ( Array.get( array, i ) == null && Array.get( sn, i ) != null ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
 	public boolean needsInserting(Object entry, int i, Type elemType) throws HibernateException {
 		final Serializable sn = getSnapshot();
 		return Array.get( array, i ) != null && ( i >= Array.getLength( sn ) || Array.get( sn, i ) == null );
@@ -250,9 +268,9 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 	public boolean needsUpdating(Object entry, int i, Type elemType) throws HibernateException {
 		final Serializable sn = getSnapshot();
 		return i < Array.getLength( sn )
-				&& Array.get( sn, i ) != null
-				&& Array.get( array, i ) != null
-				&& elemType.isDirty( Array.get( array, i ), Array.get( sn, i ), getSession() );
+			&& Array.get( sn, i ) != null
+			&& Array.get( array, i ) != null
+			&& elemType.isDirty( Array.get( array, i ), Array.get( sn, i ), getSession() );
 	}
 
 	@Override

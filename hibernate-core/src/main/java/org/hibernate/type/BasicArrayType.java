@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
@@ -26,7 +26,20 @@ public class BasicArrayType<T,E>
 	public BasicArrayType(BasicType<E> baseDescriptor, JdbcType arrayJdbcType, JavaType<T> arrayTypeDescriptor) {
 		super( arrayJdbcType, arrayTypeDescriptor );
 		this.baseDescriptor = baseDescriptor;
-		this.name = baseDescriptor.getName() + "[]";
+		this.name = determineArrayTypeName( baseDescriptor );
+	}
+
+	static String determineElementTypeName(BasicType<?> baseDescriptor) {
+		final String elementName = baseDescriptor.getName();
+		return switch ( elementName ) {
+			case "boolean", "byte", "char", "short", "int", "long", "float", "double" ->
+					Character.toUpperCase( elementName.charAt( 0 ) ) + elementName.substring( 1 );
+			default -> elementName;
+		};
+	}
+
+	static String determineArrayTypeName(BasicType<?> baseDescriptor) {
+		return determineElementTypeName( baseDescriptor ) + "[]";
 	}
 
 	@Override

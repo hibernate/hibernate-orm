@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.lob.locator;
@@ -15,6 +15,8 @@ import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.descriptor.java.DataHelper;
+
+import static org.hibernate.Hibernate.getLobHelper;
 
 /**
  * @author Lukasz Antoniak
@@ -38,8 +40,8 @@ public class LobLocatorTest extends BaseCoreFunctionalTestCase {
 
 		session.getTransaction().begin();
 		LobHolder entity = new LobHolder(
-				session.getLobHelper().createBlob( "blob".getBytes() ),
-				session.getLobHelper().createClob( "clob" ), 0
+				getLobHelper().createBlob( "blob".getBytes() ),
+				getLobHelper().createClob( "clob" ), 0
 		);
 		session.persist( entity );
 		session.getTransaction().commit();
@@ -56,8 +58,8 @@ public class LobLocatorTest extends BaseCoreFunctionalTestCase {
 
 		session.getTransaction().begin();
 		entity = (LobHolder) session.get( LobHolder.class, entity.getId() );
-		entity.setBlobLocator( session.getLobHelper().createBlob( "updated blob".getBytes() ) );
-		entity.setClobLocator( session.getLobHelper().createClob( "updated clob" ) );
+		entity.setBlobLocator( getLobHelper().createBlob( "updated blob".getBytes() ) );
+		entity.setClobLocator( getLobHelper().createClob( "updated clob" ) );
 		entity = (LobHolder) session.merge( entity );
 		session.getTransaction().commit();
 

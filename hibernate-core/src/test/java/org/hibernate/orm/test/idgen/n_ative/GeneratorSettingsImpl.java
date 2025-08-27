@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.idgen.n_ative;
@@ -25,12 +25,12 @@ public class GeneratorSettingsImpl implements GeneratorSettings {
 		final Namespace defaultNamespace = database.getDefaultNamespace();
 		final Namespace.Name defaultNamespaceName = defaultNamespace.getName();
 
-		defaultCatalog = defaultNamespaceName.getCatalog() == null
+		defaultCatalog = defaultNamespaceName.catalog() == null
 				? ""
-				: defaultNamespaceName.getCatalog().render( database.getDialect() );
-		defaultSchema = defaultNamespaceName.getSchema() == null
+				: defaultNamespaceName.catalog().render( database.getDialect() );
+		defaultSchema = defaultNamespaceName.schema() == null
 				? ""
-				: defaultNamespaceName.getSchema().render( database.getDialect() );
+				: defaultNamespaceName.schema().render( database.getDialect() );
 
 		sqlStringGenerationContext = fromExplicit(
 				database.getJdbcEnvironment(),

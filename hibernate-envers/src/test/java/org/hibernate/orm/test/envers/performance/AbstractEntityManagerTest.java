@@ -1,15 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.performance;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Properties;
 
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
@@ -37,8 +34,6 @@ import jakarta.persistence.EntityManager;
 public abstract class AbstractEntityManagerTest extends AbstractEnversTest {
 	public static final Dialect DIALECT = DialectContext.getDialect();
 
-	private EntityManagerFactoryBuilderImpl entityManagerFactoryBuilder;
-	private StandardServiceRegistryImpl serviceRegistry;
 	private SessionFactoryImplementor emf;
 	private EntityManager entityManager;
 	private AuditReader auditReader;
@@ -70,11 +65,11 @@ public abstract class AbstractEntityManagerTest extends AbstractEnversTest {
 	}
 
 	@BeforeClassOnce
-	public void init() throws IOException {
+	public void init() {
 		init( true, getAuditStrategy() );
 	}
 
-	protected void init(boolean audited, String auditStrategy) throws IOException {
+	protected void init(boolean audited, String auditStrategy) {
 		this.audited = audited;
 
 		Properties configurationProperties = new Properties();
@@ -86,7 +81,7 @@ public abstract class AbstractEntityManagerTest extends AbstractEnversTest {
 			configurationProperties.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 			configurationProperties.setProperty( EnversSettings.USE_REVISION_ENTITY_WITH_NATIVE_ID, "false" );
 		}
-		if ( auditStrategy != null && !"".equals( auditStrategy ) ) {
+		if ( auditStrategy != null && !auditStrategy.isEmpty() ) {
 			configurationProperties.setProperty( "org.hibernate.envers.audit_strategy", auditStrategy );
 		}
 
@@ -94,16 +89,14 @@ public abstract class AbstractEntityManagerTest extends AbstractEnversTest {
 
 		configurationProperties.put( AvailableSettings.LOADED_CLASSES, Arrays.asList( getAnnotatedClasses() ) );
 
-		entityManagerFactoryBuilder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
-				new PersistenceUnitDescriptorAdapter(),
-				configurationProperties
-		);
+		EntityManagerFactoryBuilderImpl entityManagerFactoryBuilder =
+				(EntityManagerFactoryBuilderImpl)
+						Bootstrap.getEntityManagerFactoryBuilder(
+								new PersistenceUnitDescriptorAdapter(),
+								configurationProperties
+						);
 
 		emf = entityManagerFactoryBuilder.build().unwrap( SessionFactoryImplementor.class );
-
-		serviceRegistry = (StandardServiceRegistryImpl) emf.getSessionFactory()
-				.getServiceRegistry()
-				.getParentServiceRegistry();
 
 		newEntityManager();
 	}
@@ -114,10 +107,6 @@ public abstract class AbstractEntityManagerTest extends AbstractEnversTest {
 
 	protected boolean createSchema() {
 		return true;
-	}
-
-	private BootstrapServiceRegistryBuilder createBootstrapRegistryBuilder() {
-		return new BootstrapServiceRegistryBuilder();
 	}
 
 	@AfterClassOnce

@@ -1,12 +1,11 @@
 [[collections]]
 === Collections
-:majorMinorVersion: 6.2
 :root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :core-test-base: {core-project-dir}/src/test/java
 :example-dir-collection: {core-test-base}/org/hibernate/orm/test/mapping/collections
 :docs-base: https://docs.jboss.org/hibernate/orm/{majorMinorVersion}
-:javadoc-base: {docs-base}/javadoc
+:javadoc-base: {docs-base}/javadocs
 :java-javadoc-base: https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 :extrasdir: extras/collections
 
@@ -285,7 +284,16 @@ is available to have Hibernate interpret a `List` with no `@OrderColumn` and no 
 
 
 An ID_BAG is similar to a BAG, except that it maps a generated, per-row identifier into the collection
-table.  `@CollectionId` is the annotation to configure this identifier
+table.  `@CollectionId` is the annotation to configure this identifier.
+
+For details about defining an id-bad identifier, see the Javadocs for:
+
+* link:{javadoc-base}/org/hibernate/annotations/CollectionId.html[@CollectionId]
+* link:{javadoc-base}/org/hibernate/annotations/CollectionIdJavaClass.html[@CollectionIdJavaClass]
+* link:{javadoc-base}/org/hibernate/annotations/CollectionIdJavaType.html[@CollectionIdJavaType]
+* link:{javadoc-base}/org/hibernate/annotations/CollectionIdJdbcType.html[@CollectionIdJdbcType]
+* link:{javadoc-base}/org/hibernate/annotations/CollectionIdJdbcTypeCode.html[@CollectionIdJdbcTypeCode]
+* link:{javadoc-base}/org/hibernate/annotations/CollectionIdType.html[@CollectionIdType]
 
 
 // todo (6.0) - finish
@@ -300,7 +308,7 @@ Hibernate is able to map Object and primitive arrays as collections.  Mapping an
 the same as mapping a <<collection-list,list>>.
 
 There is a major limitation of mapping arrays to be aware of - the array cannot be lazy using
-<<collection-wrapper,wrappers>>.  It can, however, be lazy via <<bytecode-enhancement-guide,bytecode enhancement>>
+<<collection-wrapper,wrappers>>.  It can, however, be lazy via <<BytecodeEnhancement, bytecode enhancement>>
 of its owner.
 
 Note that Jakarta Persistence does not define support for arrays as plural attributes; according to the specification,

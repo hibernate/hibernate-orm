@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.internal.util;
@@ -101,11 +101,11 @@ public class FlushModeTypeHelper {
 		}
 
 		try {
-			log.debugf( "Attempting to interpret external setting [%s] as FlushMode name", externalName );
+			log.tracef( "Attempting to interpret external setting [%s] as FlushMode name", externalName );
 			return FlushMode.valueOf( externalName.toUpperCase( Locale.ROOT) );
 		}
 		catch ( IllegalArgumentException e ) {
-			log.debugf( "Attempting to interpret external setting [%s] as FlushModeType name", externalName );
+			log.tracef( "Attempting to interpret external setting [%s] as FlushModeType name", externalName );
 		}
 
 		try {

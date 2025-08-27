@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <persistence-unit-metadata>
+        <xml-mapping-metadata-complete/>
+    </persistence-unit-metadata>
+
+    <entity name="ItemBase">
+        <abstract>true</abstract>
+        <inheritance strategy="TABLE_PER_CLASS"/>
+        <attributes>
+            <id name="id">
+                <column length="16"/>
+                <generated-value generator="increment"/>
+                <target>Integer</target>
+            </id>
+            <basic name="name">
+                <column nullable="false" length="50"/>
+                <target>String</target>
+            </basic>
+            <basic name="description">
+                <column nullable="false" length="200"/>
+                <target>String</target>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity name="Item1">
+        <extends>ItemBase</extends>
+        <table name="item_1"/>
+        <attributes>
+            <basic name="prop1">
+                <target>int</target>
+            </basic>
+            <many-to-one name="entity" target-entity="Entity1" fetch-mode="SELECT">
+                <join-column name="entity_id"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+    <entity name="Item2">
+        <extends>ItemBase</extends>
+        <table name="item_2"/>
+        <attributes>
+            <basic name="prop2">
+                <target>String</target>
+            </basic>
+            <many-to-one name="entity" target-entity="Entity2" fetch-mode="SELECT" optional="false">
+                <join-column name="entity_id"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+    <entity name="Entity1">
+        <table name="entity_1"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+                <target>Integer</target>
+            </id>
+            <basic name="name">
+                <target>String</target>
+            </basic>
+            <one-to-many name="items" target-entity="Item1" fetch="LAZY" fetch-mode="SELECT" mapped-by="entity" classification="SET"/>
+        </attributes>
+    </entity>
+
+    <entity name="Entity2">
+        <table name="entity_2"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+                <target>Integer</target>
+            </id>
+            <basic name="name">
+                <column nullable="false"/>
+                <target>String</target>
+                <jdbc-type-code>-9</jdbc-type-code>
+            </basic>
+            <one-to-many name="items" target-entity="Item2" fetch="LAZY" fetch-mode="SELECT" mapped-by="entity" classification="SET"/>
+        </attributes>
+    </entity>
+</entity-mappings>

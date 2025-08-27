@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -42,10 +42,15 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author Gavin King
  *
  * @see DialectOverride.Check
+ *
+ * @deprecated Prefer {@link jakarta.persistence.Table#check},
+ *             {@link jakarta.persistence.Column#check}, etc.,
+ *             with {@link jakarta.persistence.CheckConstraint @CheckConstraint}.
  */
 @Target({TYPE, METHOD, FIELD})
 @Retention(RUNTIME)
 @Repeatable(Checks.class)
+@Deprecated(since = "7")
 public @interface Check {
 	/**
 	 * The optional name of the check constraint.

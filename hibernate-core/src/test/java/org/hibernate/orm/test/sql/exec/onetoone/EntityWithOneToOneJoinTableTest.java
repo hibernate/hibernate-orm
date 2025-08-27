@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.exec.onetoone;
@@ -38,15 +38,18 @@ import static org.junit.Assert.assertTrue;
 @SessionFactory(generateStatistics = true)
 public class EntityWithOneToOneJoinTableTest {
 
+	final int maxInt = Integer.MAX_VALUE - 1;
+	final int minInt = Integer.MIN_VALUE + 1;
+
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
-		EntityWithOneToOneJoinTable entity = new EntityWithOneToOneJoinTable( 1, "first", Integer.MAX_VALUE );
+		EntityWithOneToOneJoinTable entity = new EntityWithOneToOneJoinTable( 1, "first", maxInt );
 
 		SimpleEntity other = new SimpleEntity(
 				2,
 				Calendar.getInstance().getTime(),
 				null,
-				Integer.MAX_VALUE,
+				maxInt,
 				Long.MAX_VALUE,
 				null
 		);
@@ -65,7 +68,7 @@ public class EntityWithOneToOneJoinTableTest {
 					EntityWithOneToOneJoinTable entity2 = new EntityWithOneToOneJoinTable(
 							2,
 							"second",
-							Integer.MAX_VALUE
+							maxInt
 					);
 
 					SimpleEntity other2 = new SimpleEntity(
@@ -86,12 +89,7 @@ public class EntityWithOneToOneJoinTableTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from EntityWithOneToOneJoinTable" ).executeUpdate();
-					session.createQuery( "delete from SimpleEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -120,7 +118,7 @@ public class EntityWithOneToOneJoinTableTest {
 				session -> {
 					final SimpleEntity loaded = session.get( SimpleEntity.class, 2 );
 					assert loaded != null;
-					assertThat( loaded.getSomeInteger(), equalTo( Integer.MAX_VALUE ) );
+					assertThat( loaded.getSomeInteger(), equalTo( maxInt ) );
 				}
 		);
 	}
@@ -230,7 +228,7 @@ public class EntityWithOneToOneJoinTableTest {
 
 	@Test
 	public void testUpdate(SessionFactoryScope scope) {
-		EntityWithOneToOneJoinTable entity = new EntityWithOneToOneJoinTable( 3, "first", Integer.MAX_VALUE );
+		EntityWithOneToOneJoinTable entity = new EntityWithOneToOneJoinTable( 3, "first", maxInt );
 
 		SimpleEntity other = new SimpleEntity(
 				4,
@@ -254,7 +252,7 @@ public class EntityWithOneToOneJoinTableTest {
 				5,
 				Calendar.getInstance().getTime(),
 				null,
-				Integer.MIN_VALUE,
+				minInt,
 				Long.MAX_VALUE,
 				null
 		);

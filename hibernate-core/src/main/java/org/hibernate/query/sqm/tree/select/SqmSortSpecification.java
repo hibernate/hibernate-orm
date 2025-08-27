@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.select;
@@ -11,6 +11,7 @@ import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 import jakarta.persistence.criteria.Nulls;
@@ -33,7 +34,7 @@ public class SqmSortSpecification implements JpaOrder {
 	}
 
 	public SqmSortSpecification(
-				SqmExpression sortExpression,
+				SqmExpression<?> sortExpression,
 				SortDirection sortOrder,
 				Nulls nullPrecedence,
 				boolean ignoreCase) {
@@ -49,7 +50,7 @@ public class SqmSortSpecification implements JpaOrder {
 	/**
 	 * @deprecated Use {@link SqmSortSpecification#SqmSortSpecification(SqmExpression, SortDirection, Nulls)} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "7", forRemoval = true)
 	public SqmSortSpecification(
 			@SuppressWarnings("rawtypes") SqmExpression sortExpression,
 			SortDirection sortOrder,
@@ -115,8 +116,8 @@ public class SqmSortSpecification implements JpaOrder {
 		return sortOrder == SortDirection.ASCENDING;
 	}
 
-	public void appendHqlString(StringBuilder sb) {
-		sortExpression.appendHqlString( sb );
+	public void appendHqlString(StringBuilder sb, SqmRenderContext context) {
+		sortExpression.appendHqlString( sb, context );
 		if ( sortOrder == SortDirection.DESCENDING ) {
 			sb.append( " desc" );
 			if ( nullPrecedence != null ) {
@@ -140,20 +141,15 @@ public class SqmSortSpecification implements JpaOrder {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object other) {
+		if ( this == other ) {
 			return true;
 		}
-		else if ( !(o instanceof SqmSortSpecification) ) {
-			return false;
-		}
-		else {
-			// used in SqmInterpretationsKey.equals()
-			SqmSortSpecification that = (SqmSortSpecification) o;
-			return Objects.equals( sortExpression, that.sortExpression )
-				&& sortOrder == that.sortOrder
-				&& nullPrecedence == that.nullPrecedence;
-		}
+		// used in SqmInterpretationsKey.equals()
+		return other instanceof SqmSortSpecification that
+			&& Objects.equals( this.sortExpression, that.sortExpression )
+			&& this.sortOrder == that.sortOrder
+			&& this.nullPrecedence == that.nullPrecedence;
 	}
 
 	@Override

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.dynamic;
@@ -18,9 +18,10 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
+import org.hibernate.type.descriptor.converter.internal.AttributeConverterBean;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.Objects;
 
@@ -41,7 +42,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 			SessionFactoryImplementor sessionFactory) {
 		this.columnAlias = columnAlias;
 		final JavaTypeRegistry javaTypeRegistry = sessionFactory.getTypeConfiguration().getJavaTypeRegistry();
-		this.basicValueConverter = new JpaAttributeConverterImpl<>(
+		this.basicValueConverter = new AttributeConverterBean<>(
 				new ProvidedInstanceManagedBeanImpl<>( converter ),
 				javaTypeRegistry.getDescriptor( converter.getClass() ),
 				javaTypeRegistry.getDescriptor( domainJavaType ),
@@ -56,9 +57,9 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 			Class<? extends AttributeConverter<O, R>> converterJavaType,
 			SessionFactoryImplementor sessionFactory) {
 		this.columnAlias = columnAlias;
-		final ManagedBeanRegistry beans = sessionFactory.getServiceRegistry().requireService( ManagedBeanRegistry.class );
+		final ManagedBeanRegistry beans = sessionFactory.getManagedBeanRegistry();
 		final JavaTypeRegistry javaTypeRegistry = sessionFactory.getTypeConfiguration().getJavaTypeRegistry();
-		this.basicValueConverter = new JpaAttributeConverterImpl<>(
+		this.basicValueConverter = new AttributeConverterBean<>(
 				beans.getBean( converterJavaType ),
 				javaTypeRegistry.getDescriptor( converterJavaType ),
 				javaTypeRegistry.getDescriptor( domainJavaType ),
@@ -82,7 +83,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
 		final SqlAstCreationState sqlAstCreationState = domainResultCreationState.getSqlAstCreationState();
-		final SessionFactoryImplementor sessionFactory = sqlAstCreationState.getCreationContext().getSessionFactory();
+		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
 		final String columnName =
@@ -92,12 +93,11 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey( columnName ),
-						state ->
-								resultSetMappingSqlSelection( jdbcResultsMetadata, resultPosition, sessionFactory )
+						state -> resultSetMappingSqlSelection( jdbcResultsMetadata, resultPosition, typeConfiguration )
 				),
 				basicValueConverter.getRelationalJavaType(),
 				null,
-				sessionFactory.getTypeConfiguration()
+				typeConfiguration
 		);
 
 		return new BasicResult<>(
@@ -112,7 +112,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 	}
 
 	private ResultSetMappingSqlSelection resultSetMappingSqlSelection(
-			JdbcValuesMetadata jdbcResultsMetadata, int resultPosition, SessionFactoryImplementor sessionFactory) {
+			JdbcValuesMetadata jdbcResultsMetadata, int resultPosition, TypeConfiguration typeConfiguration) {
 		final int jdbcPosition =
 				columnAlias != null
 						? jdbcResultsMetadata.resolveColumnPosition( columnAlias )
@@ -120,7 +120,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 		final BasicType<?> basicType = jdbcResultsMetadata.resolveType(
 				jdbcPosition,
 				basicValueConverter.getRelationalJavaType(),
-				sessionFactory
+				typeConfiguration
 		);
 		final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
 		return new ResultSetMappingSqlSelection( valuesArrayPosition, (BasicValuedMapping) basicType );

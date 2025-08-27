@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -76,22 +76,22 @@ public class MappingModelCreationProcess {
 	 */
 	private void execute() {
 		for ( EntityPersister entityPersister : entityPersisterMap.values() ) {
-			if ( entityPersister instanceof InFlightEntityMappingType ) {
-				( (InFlightEntityMappingType) entityPersister ).linkWithSuperType( this );
+			if ( entityPersister instanceof InFlightEntityMappingType inFlightEntityMappingType ) {
+				inFlightEntityMappingType.linkWithSuperType( this );
 			}
 		}
 
 		for ( EntityPersister entityPersister : entityPersisterMap.values() ) {
 			currentlyProcessingRole = entityPersister.getEntityName();
 
-			if ( entityPersister instanceof InFlightEntityMappingType ) {
-				( (InFlightEntityMappingType) entityPersister ).prepareMappingModel( this );
+			if ( entityPersister instanceof InFlightEntityMappingType inFlightEntityMappingType ) {
+				inFlightEntityMappingType.prepareMappingModel( this );
 			}
 		}
 
 		for ( CollectionPersister collectionPersister : collectionPersisterMap.values() ) {
-			if ( collectionPersister instanceof InFlightCollectionMapping ) {
-				((InFlightCollectionMapping) collectionPersister).prepareMappingModel( this );
+			if ( collectionPersister instanceof InFlightCollectionMapping inFlightCollectionMapping ) {
+				inFlightCollectionMapping.prepareMappingModel( this );
 			}
 		}
 
@@ -99,7 +99,7 @@ public class MappingModelCreationProcess {
 	}
 
 	private void executePostInitCallbacks() {
-		MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf( "Starting post-init callbacks" );
+//		MAPPING_MODEL_CREATION_MESSAGE_LOGGER.tracef( "Starting post-init callbacks" );
 
 		Map<PostInitCallbackEntry, Exception> exceptions = new HashMap<>();
 		while ( postInitCallbacks != null && !postInitCallbacks.isEmpty() ) {
@@ -201,7 +201,7 @@ public class MappingModelCreationProcess {
 			consumer.accept( keyDescriptor );
 		}
 		else {
-			final List<Consumer<ForeignKeyDescriptor>> existingConsumers = keyDescriptorWaitingConsumerMap.get( navigableRole );
+			final var existingConsumers = keyDescriptorWaitingConsumerMap.get( navigableRole );
 			final List<Consumer<ForeignKeyDescriptor>> consumers;
 			if ( existingConsumers != null ) {
 				consumers = existingConsumers;
@@ -218,7 +218,7 @@ public class MappingModelCreationProcess {
 		final NavigableRole navigableRole = keyOwner.getNavigableRole();
 		keyDescriptorMap.put( navigableRole, keyDescriptor );
 
-		final List<Consumer<ForeignKeyDescriptor>> waitingConsumers = keyDescriptorWaitingConsumerMap.remove( navigableRole );
+		final var waitingConsumers = keyDescriptorWaitingConsumerMap.remove( navigableRole );
 		if ( waitingConsumers != null ) {
 			for ( int i = 0; i < waitingConsumers.size(); i++ ) {
 				waitingConsumers.get( i ).accept( keyDescriptor );
@@ -249,10 +249,10 @@ public class MappingModelCreationProcess {
 		}
 
 		private boolean process() {
-			MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
-					"Starting PostInitCallbackEntry : %s",
-					description
-			);
+//			MAPPING_MODEL_CREATION_MESSAGE_LOGGER.tracef(
+//					"Starting PostInitCallbackEntry : %s",
+//					description
+//			);
 			return callback.process();
 		}
 

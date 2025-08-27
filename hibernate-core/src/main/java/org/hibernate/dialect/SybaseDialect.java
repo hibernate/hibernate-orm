@@ -1,17 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
-
+import jakarta.persistence.TemporalType;
+import org.hibernate.HibernateException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -21,23 +15,29 @@ import org.hibernate.dialect.function.SybaseTruncFunction;
 import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SybaseJconnIdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.TransactSQLLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
+import org.hibernate.dialect.sql.ast.SybaseSqlAstTranslator;
+import org.hibernate.dialect.sql.ast.SybaseSqmToSqlAstConverter;
 import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.jdbc.env.internal.DefaultSchemaNameResolver;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
+import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.internal.JTDSCallableStatementSupport;
 import org.hibernate.procedure.internal.SybaseCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
@@ -63,7 +63,14 @@ import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import jakarta.persistence.TemporalType;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
@@ -91,6 +98,8 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Deprecated(forRemoval = true)
 	protected final boolean jtdsDriver;
 
+	private final SchemaNameResolver schemaNameResolver;
+
 	public SybaseDialect() {
 		this( MINIMUM_VERSION );
 	}
@@ -99,12 +108,22 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		super(version);
 		this.driverKind = SybaseDriverKind.OTHER;
 		this.jtdsDriver = true;
+		this.schemaNameResolver = determineSchemaNameResolver( driverKind );
+	}
+
+	private static SchemaNameResolver determineSchemaNameResolver(SybaseDriverKind driverKind) {
+		// if the driver is jTDS, then we need to use a query to determine the schema name.
+		// if we don't know the driver (OTHER), then be safe and use the query approach
+		return driverKind != SybaseDriverKind.JCONNECT
+				? new JTDSSchemaNameResolver()
+				: DefaultSchemaNameResolver.INSTANCE;
 	}
 
 	public SybaseDialect(DialectResolutionInfo info) {
 		super(info);
 		this.driverKind = SybaseDriverKind.determineKind( info );
 		this.jtdsDriver = driverKind == SybaseDriverKind.JTDS;
+		this.schemaNameResolver = determineSchemaNameResolver( driverKind );
 	}
 
 	@Override
@@ -190,6 +209,11 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public LockingSupport getLockingSupport() {
+		return TransactSQLLockingSupport.SYBASE;
+	}
+
+	@Override
 	public boolean supportsNullPrecedence() {
 		return false;
 	}
@@ -264,7 +288,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
 
 		functionFactory.stddev();
 		functionFactory.variance();
@@ -319,6 +343,11 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public boolean canCreateSchema() {
 		// As far as I can tell, it does not
 		return false;
+	}
+
+	@Override
+	public SchemaNameResolver getSchemaNameResolver() {
+		return schemaNameResolver;
 	}
 
 	@Override
@@ -475,15 +504,15 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 		// Default to MIXED because the jconnect driver doesn't seem to report anything useful
 		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
-		if ( dbMetaData == null ) {
+		if ( metadata == null ) {
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 
-		return super.buildIdentifierHelper( builder, dbMetaData );
+		return super.buildIdentifierHelper( builder, metadata );
 	}
 
 	@Override
@@ -535,4 +564,52 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public boolean supportsFromClauseInUpdate() {
 		return true;
 	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsWithClause() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return false;
+	}
+
+	@Override
+	public boolean addPartitionKeyToPrimaryKey() {
+		return true;
+	}
+
+	private static class JTDSSchemaNameResolver implements SchemaNameResolver {
+		@Override
+		public String resolveSchemaName(Connection connection, Dialect dialect) throws SQLException {
+			//noinspection deprecation
+			final String command = dialect.getCurrentSchemaCommand();
+			if ( command == null ) {
+				throw new HibernateException(
+						"Use of DefaultSchemaNameResolver requires Dialect to provide the " +
+						"proper SQL statement/command but provided Dialect [" +
+						dialect.getClass().getName() + "] did not return anything " +
+						"from Dialect#getCurrentSchemaCommand"
+				);
+			}
+
+			try ( var statement = connection.createStatement() ) {
+				try ( var resultSet = statement.executeQuery( command ) ) {
+					return resultSet.next() ? resultSet.getString( 1 ) : null;
+				}
+			}
+		}
+	}
+
 }

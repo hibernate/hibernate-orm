@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
@@ -122,7 +122,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 								target.release();
 							}
 							catch (Exception e) {
-								log.debugf( "Problem releasing GenerationTarget [%s] : %s", target, e.getMessage() );
+								log.debugf( "Problem releasing GenerationTarget [%s]: %s", target, e.getMessage() );
 							}
 						}
 					}
@@ -132,7 +132,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 						databaseInformation.cleanup();
 					}
 					catch (Exception e) {
-						log.debug( "Problem releasing DatabaseInformation : " + e.getMessage() );
+						log.debug( "Problem releasing DatabaseInformation: " + e.getMessage() );
 					}
 				}
 			}
@@ -435,7 +435,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			GenerationTarget... targets) {
 		if ( dialect.hasAlterTable() ) {
 			final Exporter<ForeignKey> exporter = dialect.getForeignKeyExporter();
-			for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
+			for ( ForeignKey foreignKey : table.getForeignKeyCollection() ) {
 				if ( foreignKey.isPhysicalConstraint()
 						&& foreignKey.isCreationEnabled()
 						&& ( tableInformation == null || !checkForExistingForeignKey( foreignKey, tableInformation ) ) ) {
@@ -530,8 +530,8 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			Namespace.Name physicalName = namespace.getPhysicalName();
 
 			if ( tryToCreateCatalogs ) {
-				final Identifier catalogLogicalName = logicalName.getCatalog();
-				final Identifier catalogPhysicalName = context.catalogWithDefault( physicalName.getCatalog() );
+				final Identifier catalogLogicalName = logicalName.catalog();
+				final Identifier catalogPhysicalName = context.catalogWithDefault( physicalName.catalog() );
 				if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName )
 						&& !existingDatabase.catalogExists( catalogPhysicalName ) ) {
 					applySqlStrings(
@@ -546,7 +546,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			}
 
 			if ( tryToCreateSchemas ) {
-				final Identifier schemaPhysicalName = context.schemaWithDefault( physicalName.getSchema() );
+				final Identifier schemaPhysicalName = context.schemaWithDefault( physicalName.schema() );
 				if ( schemaPhysicalName != null && !existingDatabase.schemaExists( physicalName ) ) {
 					applySqlStrings(
 							false,

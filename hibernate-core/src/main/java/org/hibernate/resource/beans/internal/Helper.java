@@ -1,15 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.internal;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.resource.beans.container.internal.ContainerManagedLifecycleStrategy;
-import org.hibernate.resource.beans.container.internal.JpaCompliantLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
-import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
+import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
@@ -40,25 +38,32 @@ public final class Helper {
 				.getSetting( ALLOW_EXTENSIONS_IN_CDI, BOOLEAN, false );
 	}
 
-	@SuppressWarnings("unused")
-	public static BeanLifecycleStrategy getLifecycleStrategy(boolean shouldRegistryManageLifecycle) {
-		return shouldRegistryManageLifecycle
-				? JpaCompliantLifecycleStrategy.INSTANCE
-				: ContainerManagedLifecycleStrategy.INSTANCE;
-	}
-
 	@Nullable
 	public static BeanContainer getBeanContainer(ServiceRegistry serviceRegistry) {
-		return allowExtensionsInCdi( serviceRegistry ) ? serviceRegistry.requireService( ManagedBeanRegistry.class ).getBeanContainer() : null;
+		return allowExtensionsInCdi( serviceRegistry )
+				? serviceRegistry.requireService( ManagedBeanRegistry.class ).getBeanContainer()
+				: null;
 	}
 
-	@SuppressWarnings( "unchecked" )
 	@Nullable
-	public static <T> T getBean(@Nullable BeanContainer beanContainer, Class<?> beanType, boolean canUseCachedReferences, boolean useJpaCompliantCreation, @Nullable Supplier<T> fallbackSupplier) {
-		if ( beanContainer == null ) {
-			return null;
-		}
-		return (T) beanContainer.getBean(
+	public static <T> T getBean(
+			@Nullable BeanContainer container,
+			Class<T> beanType,
+			boolean canUseCachedReferences,
+			boolean useJpaCompliantCreation,
+			@Nullable Supplier<T> fallbackSupplier) {
+		return container == null ? null
+				: containedBean( container, beanType, canUseCachedReferences, useJpaCompliantCreation, fallbackSupplier )
+						.getBeanInstance();
+	}
+
+	private static <T> ContainedBean<T> containedBean(
+			BeanContainer container,
+			Class<T> beanType,
+			boolean canUseCachedReferences,
+			boolean useJpaCompliantCreation,
+			Supplier<T> fallbackSupplier) {
+		return container.getBean(
 				beanType,
 				new BeanContainer.LifecycleOptions() {
 					@Override
@@ -72,18 +77,19 @@ public final class Helper {
 					}
 				},
 				new BeanInstanceProducer() {
-
-					@Override
+					@Override @SuppressWarnings( "unchecked" )
 					public <B> B produceBeanInstance(Class<B> beanType) {
-						return (B) (fallbackSupplier != null ? fallbackSupplier.get() : null);
+						return fallbackSupplier != null
+								? (B) fallbackSupplier.get()
+								: null;
 					}
 
 					@Override
 					public <B> B produceBeanInstance(String name, Class<B> beanType) {
-						throw new UnsupportedOperationException("The method shouldn't be called");
+						throw new UnsupportedOperationException( "The method shouldn't be called" );
 					}
 				}
-		).getBeanInstance();
+		);
 	}
 
 }

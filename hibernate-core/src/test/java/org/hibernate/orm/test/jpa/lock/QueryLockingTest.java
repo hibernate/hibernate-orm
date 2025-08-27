@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.lock;
@@ -37,7 +37,6 @@ import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -56,19 +55,13 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().begin();
 		org.hibernate.query.Query query = em.createQuery( "from Lockable l" ).unwrap( org.hibernate.query.Query.class );
 		assertEquals( LockMode.NONE, query.getLockOptions().getLockMode() );
-		assertNull( query.getLockOptions().getAliasSpecificLockMode( "l" ) );
-		assertEquals( LockMode.NONE, query.getLockOptions().getEffectiveLockMode( "l" ) );
 
 		// NOTE : LockModeType.READ should map to LockMode.OPTIMISTIC
 		query.setLockMode( LockModeType.READ );
 		assertEquals( LockMode.OPTIMISTIC, query.getLockOptions().getLockMode() );
-		assertNull( query.getLockOptions().getAliasSpecificLockMode( "l" ) );
-		assertEquals( LockMode.OPTIMISTIC, query.getLockOptions().getEffectiveLockMode( "l" ) );
 
-		query.setHint( HINT_NATIVE_LOCK_MODE + ".l", LockModeType.PESSIMISTIC_WRITE );
-		assertEquals( LockMode.OPTIMISTIC, query.getLockOptions().getLockMode() );
-		assertEquals( LockMode.PESSIMISTIC_WRITE, query.getLockOptions().getAliasSpecificLockMode( "l" ) );
-		assertEquals( LockMode.PESSIMISTIC_WRITE, query.getLockOptions().getEffectiveLockMode( "l" ) );
+		query.setHint( HINT_NATIVE_LOCK_MODE, LockModeType.PESSIMISTIC_WRITE );
+		assertEquals( LockMode.PESSIMISTIC_WRITE, query.getLockOptions().getLockMode() );
 
 		em.getTransaction().commit();
 		em.close();
@@ -139,13 +132,9 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		query.setHint( HINT_NATIVE_LOCK_MODE, LockModeType.READ );
 		// NOTE : LockModeType.READ should map to LockMode.OPTIMISTIC
 		assertEquals( LockMode.OPTIMISTIC, query.getLockOptions().getLockMode() );
-		assertNull( query.getLockOptions().getAliasSpecificLockMode( "l" ) );
-		assertEquals( LockMode.OPTIMISTIC, query.getLockOptions().getEffectiveLockMode( "l" ) );
 
-		query.setHint( HINT_NATIVE_LOCK_MODE +".l", LockModeType.PESSIMISTIC_WRITE );
-		assertEquals( LockMode.OPTIMISTIC, query.getLockOptions().getLockMode() );
-		assertEquals( LockMode.PESSIMISTIC_WRITE, query.getLockOptions().getAliasSpecificLockMode( "l" ) );
-		assertEquals( LockMode.PESSIMISTIC_WRITE, query.getLockOptions().getEffectiveLockMode( "l" ) );
+		query.setHint( HINT_NATIVE_LOCK_MODE, LockModeType.PESSIMISTIC_WRITE );
+		assertEquals( LockMode.PESSIMISTIC_WRITE, query.getLockOptions().getLockMode() );
 
 		em.getTransaction().commit();
 		em.close();
@@ -245,7 +234,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		Lockable reread = em.createQuery( "from Lockable l", Lockable.class )
-				.setHint( HINT_NATIVE_LOCK_MODE + ".l", LockModeType.OPTIMISTIC_FORCE_INCREMENT )
+				.setHint( HINT_NATIVE_LOCK_MODE, LockModeType.OPTIMISTIC_FORCE_INCREMENT )
 				.getSingleResult();
 		assertEquals( initial, reread.getVersion() );
 		em.getTransaction().commit();
@@ -289,31 +278,6 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey(value = "HHH-9419")
-	public void testNoVersionCheckAfterRemove() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		Lockable lock = new Lockable( "name" );
-		em.persist( lock );
-		em.getTransaction().commit();
-		em.close();
-		Integer initial = lock.getVersion();
-		assertNotNull( initial );
-
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		Lockable reread = em.createQuery( "from Lockable", Lockable.class )
-				.setLockMode( LockModeType.OPTIMISTIC )
-				.getSingleResult();
-		assertEquals( initial, reread.getVersion() );
-		assertTrue( em.unwrap( SessionImpl.class ).getActionQueue().hasBeforeTransactionActions() );
-		em.remove( reread );
-		em.getTransaction().commit();
-		em.close();
-		assertEquals( initial, reread.getVersion() );
-	}
-
-	@Test
 	public void testOptimisticSpecific() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -327,7 +291,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		Lockable reread = em.createQuery( "from Lockable l", Lockable.class )
-				.setHint( HINT_NATIVE_LOCK_MODE + ".l", LockModeType.OPTIMISTIC )
+				.setHint( HINT_NATIVE_LOCK_MODE, LockModeType.OPTIMISTIC )
 				.getSingleResult();
 		assertEquals( initial, reread.getVersion() );
 		assertTrue( em.unwrap( SessionImpl.class ).getActionQueue().hasBeforeTransactionActions() );

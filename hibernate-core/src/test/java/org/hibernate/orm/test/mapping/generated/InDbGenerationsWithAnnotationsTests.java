@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.generated;
@@ -35,7 +35,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @DomainModel( annotatedClasses = InDbGenerationsWithAnnotationsTests.AuditedEntity.class )
 @SessionFactory
-@RequiresDialectFeature(feature = DialectFeatureChecks.CurrentTimestampHasMicrosecondPrecision.class, comment = "Without this, we might not see an update to the timestamp")
+@RequiresDialectFeature(feature = DialectFeatureChecks.CurrentTimestampHasMicrosecondPrecision.class,
+		comment = "Without this, we might not see an update to the timestamp")
 public class InDbGenerationsWithAnnotationsTests {
 	@Test
 	public void testGenerations(SessionFactoryScope scope) {
@@ -57,9 +58,7 @@ public class InDbGenerationsWithAnnotationsTests {
 			waitALittle();
 
 			// then changing
-			final AuditedEntity merged = scope.fromTransaction( session, (s) -> {
-				return (AuditedEntity) session.merge( saved );
-			} );
+			final AuditedEntity merged = scope.fromTransaction( session, s -> s.merge( saved ) );
 
 			assertThat( merged ).isNotNull();
 			assertThat( merged.createdOn ).isNotNull();
@@ -69,10 +68,8 @@ public class InDbGenerationsWithAnnotationsTests {
 			//We need to wait a little to make sure the timestamps produced are different
 			waitALittle();
 
-			// lastly, make sure we can load it..
-			final AuditedEntity loaded = scope.fromTransaction( session, (s) -> {
-				return session.get( AuditedEntity.class, 1 );
-			} );
+			// lastly, make sure we can load it
+			final AuditedEntity loaded = scope.fromTransaction( session, s -> s.get( AuditedEntity.class, 1 ) );
 
 			assertThat( loaded ).isNotNull();
 			assertThat( loaded.createdOn ).isEqualTo( merged.createdOn );
@@ -82,7 +79,7 @@ public class InDbGenerationsWithAnnotationsTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.createQuery( "delete AuditedEntity" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "AuditedEntity" )

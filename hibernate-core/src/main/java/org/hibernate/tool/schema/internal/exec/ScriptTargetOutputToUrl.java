@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal.exec;
@@ -80,7 +80,7 @@ public class ScriptTargetOutputToUrl extends AbstractScriptTargetOutput implemen
 
 
 	private static Writer toWriter( URL url, String charsetName, boolean append ) {
-		log.debug( "Attempting to resolve writer for URL : " + url );
+		log.debug( "Attempting to resolve writer for URL: " + url );
 		// technically only "strings corresponding to file URLs" are supported, which I take to mean URLs whose
 		// protocol is "file"
 		try {

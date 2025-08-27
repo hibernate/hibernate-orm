@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.dialect.internal;
@@ -111,9 +111,9 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 		}
 		else {
 			// the referenced value is not null
-			return dialectReference instanceof String
+			return dialectReference instanceof String string
 				// if it is a String, it might still be empty though...
-				&& StringHelper.isEmpty((String) dialectReference);
+				&& StringHelper.isEmpty( string );
 		}
 	}
 

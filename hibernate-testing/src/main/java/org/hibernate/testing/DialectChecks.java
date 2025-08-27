@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing;
@@ -9,12 +9,11 @@ import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.DialectDelegateWrapper;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.community.dialect.TiDBDialect;
 
 /**
  * Container class for different implementation of the {@link DialectCheck} interface.
@@ -103,7 +102,6 @@ abstract public class DialectChecks {
 
 	public static class SupportsRowValueConstructorSyntaxCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return dialect instanceof HANADialect
 				|| dialect instanceof CockroachDialect
 				|| dialect instanceof MySQLDialect
@@ -244,7 +242,7 @@ abstract public class DialectChecks {
 
 	public static class SupportsTemporaryTable implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsTemporaryTables();
+			return dialect.getLocalTemporaryTableStrategy() != null || dialect.getGlobalTemporaryTableStrategy() != null;
 		}
 	}
 
@@ -262,7 +260,13 @@ abstract public class DialectChecks {
 
 	public static class SupportsTemporaryTableIdentity implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsTemporaryTablePrimaryKey();
+			return dialect.getLocalTemporaryTableStrategy() != null
+				&& dialect.getLocalTemporaryTableStrategy().supportsTemporaryTablePrimaryKey()
+				|| dialect.getGlobalTemporaryTableStrategy() != null
+					&& dialect.getGlobalTemporaryTableStrategy().supportsTemporaryTablePrimaryKey()
+				// Persistent tables definitely support identity
+				|| dialect.getLocalTemporaryTableStrategy() == null
+					&& dialect.getGlobalTemporaryTableStrategy() == null;
 		}
 	}
 

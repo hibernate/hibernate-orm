@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.usertype;
@@ -10,6 +10,8 @@ import java.util.function.BiConsumer;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Type;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.BasicJavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 
@@ -44,27 +46,26 @@ public class UserTypeLegacyBridge extends BaseUserTypeSupport<Object> implements
 
 	@Override
 	public void setParameterValues(Properties parameters) {
-		if ( hbmStyleTypeName != null ) {
-			// assume it was ctor-injected
-			return;
-		}
-
-		hbmStyleTypeName = parameters.getProperty( TYPE_NAME_PARAM_KEY );
 		if ( hbmStyleTypeName == null ) {
-			throw new MappingException( "Missing `@Parameter` for `" + TYPE_NAME_PARAM_KEY + "`" );
+			hbmStyleTypeName = parameters.getProperty( TYPE_NAME_PARAM_KEY );
+			if ( hbmStyleTypeName == null ) {
+				throw new MappingException( "Missing `@Parameter` for `" + TYPE_NAME_PARAM_KEY + "`" );
+			}
 		}
+		// otherwise assume it was ctor-injected
 	}
 
 	@Override
-	protected void resolve(BiConsumer resolutionConsumer) {
+	protected void resolve(BiConsumer<BasicJavaType<Object>, JdbcType> resolutionConsumer) {
 		assert typeConfiguration != null;
 
-		final BasicType<Object> registeredType = typeConfiguration
-				.getBasicTypeRegistry()
-				.getRegisteredType( hbmStyleTypeName );
+		final BasicType<Object> registeredType =
+						typeConfiguration.getBasicTypeRegistry()
+								.getRegisteredType( hbmStyleTypeName );
 
 		resolutionConsumer.accept(
-				registeredType.getJavaTypeDescriptor(),
+				(BasicJavaType<Object>)
+						registeredType.getJavaTypeDescriptor(),
 				registeredType.getJdbcType()
 		);
 	}

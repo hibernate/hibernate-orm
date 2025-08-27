@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
@@ -8,12 +8,12 @@ import java.util.List;
 import java.util.Objects;
 
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.type.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.type.BasicPluralType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A {@link ArgumentsValidator} that validates all arguments are of the same array type.
@@ -26,7 +26,7 @@ public class ArraysOfSameTypeArgumentValidator implements ArgumentsValidator {
 	public void validate(
 			List<? extends SqmTypedNode<?>> arguments,
 			String functionName,
-			TypeConfiguration typeConfiguration) {
+			BindingContext bindingContext) {
 		BasicPluralType<?, ?> arrayType = null;
 		for ( int i = 0; i < arguments.size(); i++ ) {
 			final SqmExpressible<?> expressible = arguments.get( i ).getExpressible();
@@ -61,8 +61,8 @@ public class ArraysOfSameTypeArgumentValidator implements ArgumentsValidator {
 	}
 
 	private static boolean isCompatible(BasicPluralType<?,?> arrayType, DomainType<?> sqmType) {
-		return arrayType == sqmType || sqmType instanceof BasicPluralType<?, ?>
-				&& Objects.equals( arrayType.getElementType(), ( (BasicPluralType<?, ?>) sqmType ).getElementType() );
+		return arrayType == sqmType || sqmType instanceof BasicPluralType<?, ?> basicPluralType
+			&& Objects.equals( arrayType.getElementType(), basicPluralType.getElementType() );
 	}
 
 	@Override

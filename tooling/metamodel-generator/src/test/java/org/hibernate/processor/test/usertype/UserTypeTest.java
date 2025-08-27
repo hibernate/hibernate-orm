@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.usertype;
@@ -7,7 +7,7 @@ package org.hibernate.processor.test.usertype;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
@@ -15,11 +15,12 @@ import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldIn
 /**
  * @author Hardy Ferentschik
  */
+@CompilationTest
 @TestForIssue(jiraKey = "METAGEN-28")
-public class UserTypeTest extends CompilationTest {
+class UserTypeTest {
 	@Test
 	@WithClasses({ ContactDetails.class, PhoneNumber.class })
-	public void testCustomUserTypeInMetaModel() {
+	void testCustomUserTypeInMetaModel() {
 		assertMetamodelClassGeneratedFor( ContactDetails.class );
 		assertPresenceOfFieldInMetamodelFor(
 				ContactDetails.class, "phoneNumber", "@Type annotated field should be in metamodel"

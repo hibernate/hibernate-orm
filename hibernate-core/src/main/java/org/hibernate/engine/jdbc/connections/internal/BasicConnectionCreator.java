@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.internal;
@@ -16,8 +16,8 @@ import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.exception.internal.SQLStateConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceException;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * Template (as in template pattern) support for {@link ConnectionCreator} implementors.
@@ -25,7 +25,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  * @author Steve Ebersole
  */
 public abstract class BasicConnectionCreator implements ConnectionCreator {
-	private final ServiceRegistryImplementor serviceRegistry;
+	private final ServiceRegistry serviceRegistry;
 
 	private final String url;
 	private final Properties connectionProps;
@@ -35,7 +35,7 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 	private final String initSql;
 
 	public BasicConnectionCreator(
-			ServiceRegistryImplementor serviceRegistry,
+			ServiceRegistry serviceRegistry,
 			String url,
 			Properties connectionProps,
 			boolean autocommit,

@@ -1,17 +1,16 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.query.ReturnableType;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.metamodel.model.domain.ReturnableType;
+import org.hibernate.type.BindingContext;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
-import org.hibernate.query.sqm.internal.TypecheckUtil;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
@@ -21,7 +20,8 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.BottomType;
-import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.query.sqm.internal.TypecheckUtil.areTypesComparable;
 
 public class ArrayConstructorFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
@@ -75,16 +75,15 @@ public class ArrayConstructorFunction extends AbstractSqmSelfRenderingFunctionDe
 		public void validate(
 				List<? extends SqmTypedNode<?>> arguments,
 				String functionName,
-				TypeConfiguration typeConfiguration) {
-			final SessionFactoryImplementor sessionFactory = typeConfiguration.getSessionFactory();
+				BindingContext bindingContext) {
 			final int size = arguments.size();
-			SqmExpressible<?> firstType = null;
+			SqmBindableType<?> firstType = null;
 			for ( int i = 0; i < size; i++ ) {
-				final SqmExpressible<?> argument = arguments.get( i ).getExpressible();
+				final SqmBindableType<?> argument = arguments.get( i ).getExpressible();
 				if ( firstType == null ) {
 					firstType = argument;
 				}
-				else if ( !TypecheckUtil.areTypesComparable( firstType, argument, sessionFactory ) ) {
+				else if ( !areTypesComparable( firstType, argument, bindingContext ) ) {
 					throw new FunctionArgumentException(
 							String.format(
 									"All array arguments must have a compatible type compatible to the first argument type [%s], but argument %d has type '%s'",

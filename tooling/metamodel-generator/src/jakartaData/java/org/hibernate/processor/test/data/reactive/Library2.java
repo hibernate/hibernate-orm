@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.data.reactive;
@@ -23,6 +23,7 @@ import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface Library2 {
@@ -31,6 +32,9 @@ public interface Library2 {
 
 	@Find
 	Uni<Book> book(String isbn);
+
+	@Find
+	Uni<Optional<Book>> maybeBook(String isbn);
 
 	@Find
 	Uni<List<Book>> books(@By("isbn") List<String> isbns);
@@ -86,6 +90,9 @@ public interface Library2 {
 
 	@Insert
 	Uni<Publisher[]> insertAll(Publisher[] publishers);
+
+	@Delete
+	Uni<Void> deleteAll(List<Publisher> publishers);
 
 	@Save
 	Uni<Publisher> save(Publisher publisher);

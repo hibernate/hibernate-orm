@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.internal;
@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.resource.beans.container.spi.BeanContainer;
-import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.container.spi.FallbackContainedBean;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
@@ -56,30 +55,11 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 			//noinspection unchecked
 			return (ManagedBean<T>) existing;
 		}
-
-		final ManagedBean<T> bean;
-		if ( beanContainer == null ) {
-			bean = new FallbackContainedBean<>( beanClass, fallbackBeanInstanceProducer );
-		}
 		else {
-			final ContainedBean<T> containedBean = beanContainer.getBean(
-					beanClass,
-					this,
-					fallbackBeanInstanceProducer
-			);
-
-			if ( containedBean instanceof ManagedBean ) {
-				//noinspection unchecked
-				bean = (ManagedBean<T>) containedBean;
-			}
-			else {
-				bean = new ContainedBeanManagedBeanAdapter<>( beanClass, containedBean );
-			}
+			final ManagedBean<T> bean = createBean( beanClass, fallbackBeanInstanceProducer );
+			registrations.put( beanClass.getName(), bean );
+			return bean;
 		}
-
-		registrations.put( beanClass.getName(), bean );
-
-		return bean;
 	}
 
 	@Override
@@ -93,37 +73,29 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 			Class<T> beanContract,
 			BeanInstanceProducer fallbackBeanInstanceProducer) {
 		final String key = beanContract.getName() + ':' + beanName;
-
 		final ManagedBean<?> existing = registrations.get( key );
 		if ( existing != null ) {
 			//noinspection unchecked
 			return (ManagedBean<T>) existing;
 		}
-
-		final ManagedBean<T> bean;
-		if ( beanContainer == null ) {
-			bean = new FallbackContainedBean<>( beanName, beanContract, fallbackBeanInstanceProducer );
-		}
 		else {
-			final ContainedBean<T> containedBean = beanContainer.getBean(
-					beanName,
-					beanContract,
-					this,
-					fallbackBeanInstanceProducer
-			);
-
-			if ( containedBean instanceof ManagedBean ) {
-				//noinspection unchecked
-				bean = (ManagedBean<T>) containedBean;
-			}
-			else {
-				bean = new ContainedBeanManagedBeanAdapter<>( beanContract, containedBean );
-			}
+			final ManagedBean<T> bean = createBean( beanName, beanContract, fallbackBeanInstanceProducer );
+			registrations.put( key, bean );
+			return bean;
 		}
+	}
 
-		registrations.put( key, bean );
+	private <T> ManagedBean<T> createBean(Class<T> beanClass, BeanInstanceProducer fallbackBeanInstanceProducer) {
+		return beanContainer == null
+				? new FallbackContainedBean<>( beanClass, fallbackBeanInstanceProducer )
+				: beanContainer.getBean( beanClass, this, fallbackBeanInstanceProducer );
+	}
 
-		return bean;
+	private <T> ManagedBean<T> createBean(
+			String beanName, Class<T> beanContract, BeanInstanceProducer fallbackBeanInstanceProducer) {
+		return beanContainer == null
+				? new FallbackContainedBean<>( beanName, beanContract, fallbackBeanInstanceProducer )
+				: beanContainer.getBean( beanName, beanContract, this, fallbackBeanInstanceProducer );
 	}
 
 	@Override
@@ -132,25 +104,5 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 			beanContainer.stop();
 		}
 		registrations.clear();
-	}
-
-	private static class ContainedBeanManagedBeanAdapter<B> implements ManagedBean<B> {
-		private final Class<B> beanClass;
-		private final ContainedBean<B> containedBean;
-
-		private ContainedBeanManagedBeanAdapter(Class<B> beanClass, ContainedBean<B> containedBean) {
-			this.beanClass = beanClass;
-			this.containedBean = containedBean;
-		}
-
-		@Override
-		public Class<B> getBeanClass() {
-			return beanClass;
-		}
-
-		@Override
-		public B getBeanInstance() {
-			return containedBean.getBeanInstance();
-		}
 	}
 }

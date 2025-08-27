@@ -1,12 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.query.BindableType;
+import org.hibernate.type.BindableType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -23,6 +23,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 public interface QueryParameterBindingTypeResolver {
 	<T> BindableType<? super T> resolveParameterBindType(T bindValue);
 	<T> BindableType<T> resolveParameterBindType(Class<T> clazz);
+
+	@Deprecated(since = "7.0", forRemoval = true)
 	TypeConfiguration getTypeConfiguration();
+	@Deprecated(since = "7.0", forRemoval = true)
 	MappingMetamodel getMappingMetamodel();
 }

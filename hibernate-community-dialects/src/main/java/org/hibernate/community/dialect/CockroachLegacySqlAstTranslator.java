@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.Locking;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
@@ -130,44 +131,14 @@ public class CockroachLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	@Override
-	protected boolean supportsRowConstructor() {
-		return true;
-	}
-
-	@Override
-	protected boolean supportsArrayConstructor() {
-		return true;
-	}
-
-	@Override
-	protected String getForShare(int timeoutMillis) {
-		return " for share";
-	}
-
-	@Override
-	protected String getForUpdate() {
-		return getDialect().getVersion().isBefore( 20, 1 ) ? "" : " for update";
-	}
-
-	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
+			Locking.FollowOn followOnLocking) {
 		// Support was added in 20.1: https://www.cockroachlabs.com/docs/v20.1/select-for-update.html
 		if ( getDialect().getVersion().isBefore( 20, 1 ) ) {
 			return LockStrategy.NONE;
 		}
-		return super.determineLockingStrategy( querySpec, forUpdateClause, followOnLocking );
-	}
-
-	@Override
-	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		// Support was added in 20.1: https://www.cockroachlabs.com/docs/v20.1/select-for-update.html
-		if ( getDialect().getVersion().isBefore( 20, 1 ) ) {
-			return;
-		}
-		super.renderForUpdateClause( querySpec, forUpdateClause );
+		return super.determineLockingStrategy( querySpec, followOnLocking );
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
@@ -242,11 +213,6 @@ public class CockroachLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 		else {
 			appendSql( " escape ''" );
 		}
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
 	}
 
 	@Override

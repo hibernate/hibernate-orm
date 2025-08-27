@@ -1,501 +1,69 @@
-= 7.0 Migration Guide
+= 7.1 Migration Guide
 :toc:
 :toclevels: 4
+:version: 7.2
 :docsBase: https://docs.jboss.org/hibernate/orm
-:versionDocBase: {docsBase}/7.0
+:versionDocBase: {docsBase}/{version}
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
+:whatsNewBase: {versionDocBase}/whats-new/whats-new.html
 :javadocsBase: {versionDocBase}/javadocs
+:releaseSeriesBase: https://hibernate.org/orm/releases/{version}/
 
-
-This guide discusses migration to Hibernate ORM version 7.0. For migration from
+This guide discusses migration to Hibernate ORM version {version}. For migration from
 earlier versions, see any other pertinent migration guides as well.
 
-[[jpa-32]]
-== Jakarta Persistence 3.2
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Requirements
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-7.0 migrates to Jakarta Persistence 3.2 which is fairly disruptive, mainly around:
+[[requirements]]
+== Requirements
 
-* type parameters
-  ** Affects much of the Criteria API - especially roots, joins, paths
-  ** Affects much of the Graph API -
-    *** org.hibernate.graph.Graph.addAttributeNode(java.lang.String) defines a return while
-                `jakarta.persistence.Graph.addAttributeNode(java.lang.String)` does not.
-* new JPA features colliding with previous Hibernate extension features
-  ** `Nulls` (JPA) v. `NullPrecedence` (Hibernate), including JPA's new `Order#getNullPrecedence()` returning `Nulls`
-        colliding with Hibernate's `SqmSortSpecification#getNullPrecedence` returning `NullPrecedence`.  Hibernate's form
-        was renamed to `SqmSortSpecification#getHibernateNullPrecedence` to avoid the collision.
-  ** `SchemaManager` is now also a JPA contract exposed as `EntityManagerFactory#getSchemaManager` which leads to type issues for
-        Hibernate's `SessionFactory#getSchemaManager`.  Hibernate's `SchemaManager` now extends the new JPA `SchemaManager`.
-        But that is a bytecode incompatibility.
-  ** JPA has added support in its Graph API for things Hibernate has supported for some time.  Some of those are collisions
-        requiring changes to the Hibernate API.
-  ** `Transaction#getTimeout`.  JPA 3.2 adds `#getTimeout` but uses `Integer` whereas Hibernate has historically used `int`.  Note that this raises the possibility of a `NullPointerException` during migration if, e.g., performing direct comparisons on the timeout value against an in (auto unboxing).
+See the link:{releaseSeriesBase}[website] for the list of requirements for the {version} series.
 
-See this https://in.relation.to/2024/04/01/jakarta-persistence-3/[blog post] for a good discussion of the changes in Jakarta Persistence 3.2.
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// New Features
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+[[new-features]]
+== New Features
 
-[[hibernate-models]]
-== Hibernate Models
+See the link:{releaseSeriesBase}#whats-new[website] for the list of new features in the {version} series.
 
-For many years Hibernate has used the Hibernate Commons Annotations (HCANN) library for handling various low-level tasks
-related to understanding the structure of an application domain model, reading annotations and weaving in XML
-mapping documents.
 
-However, HCANN suffers from a number of limitations that continued to be problematic.  And given
-the use of HCANN across multiple projects, doing the needed refactoring was simply not possible.
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// API changes
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The https://github.com/hibernate/hibernate-models[Hibernate Models] project was developed to be a better alternative
-to HCANN.  Hibernate Models is essentially an abstraction over reflection (`Type`, `Class`, `Member`, ...) and
-annotations.  Check out its project page for complete details.
+[[api-changes]]
+== Changes to API
 
-7.0 uses Hibernate Models in place of HCANN.
+This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#api[API].
 
-NOTE: Currently, the `hibernate-envers` module still uses HCANN.  That will change during continued 7.x development.
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// SPI changes
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+[[spi-changes]]
+== Changes to SPI
 
-[[model-validation]]
-== Domain Model Validations
+This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#spi[SPI].
 
-7.0 adds many more checks about illegal use of annotations.
 
-[[PersistentAttributeType]]
-=== PersistentAttributeType
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// DDL changes
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As of 7.0, Hibernate applies much better validation of an attribute specifying multiple PersistentAttributeTypes.
-Jakarta Persistence 3.2 has clarified this in the specification.  E.g., the following examples are all now illegal -
+[[ddl-changes]]
+== Changes to DDL generation
 
-[source,java]
-----
-@Basic
-@ManyToOne
-private Employee manager;
-----
+This section describes changes to DDL generated by the schema export tooling.
+Such changes typically do not impact programs using a relational schema managed externally to Hibernate.
 
-or
 
-[source,java]
-----
-@Lob
-@ManyToOne
-private Employee manager;
-----
+[[dependency-changes]]
+== Changes in Dependencies
 
+This section describes changes to dependencies used by Hibernate ORM.
 
-[[misplaced-annotations]]
-=== Misplaced Annotations
-
-7.0 does much more in-depth checking that annotations appear in the proper place.  While previous versions
-did not necessarily throw errors, in most cases these annotations were simply ignored.  E.g.
-
-
-[source,java]
-----
-@Entity
-class Book {
-	// defines FIELD access-type
-    @Id
-    Integer id;
-
-	// previously ignored, this is an error now
-    @Column(name="category")
-    String getType() { ... }
-}
-----
-
-[[id-generators]]
-=== Identifier Generators
-
-Starting in 7.0 it is no longer valid to combine `GenerationType#SEQUENCE` with anything other than
-`@SequenceGenerator` nor `GenerationType#TABLE` with anything other than `@TableGenerator`.  Previous
-versions did not validate this particularly well.
-
-
-[[java-beans]]
-=== JavaBean Conventions
-
-Previous versions allowed some questionable (at best) attribute naming patterns.  These are no longer supported.  E.g.
-
-[source,java]
-----
-@Basic
-String isDefault();
-----
-
-[[envers-rev-types]]
-== Hibernate Envers and custom revision entities
-
-Users that wanted to customize the `@RevisionEntity` used by Envers could do so by extending one on the four default revision entity types:
-
-[source]
-----
-org.hibernate.envers.DefaultRevisionEntity
-org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity
-org.hibernate.envers.enhanced.SequenceIdRevisionEntity
-org.hibernate.envers.enhanced.SequenceIdTrackingModifiedEntitiesRevisionEntity
-----
-
-These types are annotated with `@MappedSuperclass` to enable this custom extension. When no custom revision entity was specified, though,
-the same class was mapped as an entity type by Envers internals. This caused problems when dealing with the domain metamodel and static
-metamodel aspect of these types, so we chose to create *new separate classes* annotated `@MappedSuperclass` from which revision entities,
-meaning the default ones as well as yours, *should extend from*. These types are (in the same order):
-
-[source]
-----
-org.hibernate.envers.RevisionMapping
-org.hibernate.envers.TrackingModifiedEntitiesRevisionMapping
-org.hibernate.envers.enhanced.SequenceIdRevisionMapping
-org.hibernate.envers.enhanced.SequenceIdTrackingModifiedEntitiesRevisionMapping
-----
-
-Also, you can now write HQL queries using the simple class name of default revision entities to retrieve all revision information.
-Find out more in link:{user-guide-url}#envers-querying-revision-info[this user guide chapter].
-
-[[create-query]]
-== Queries with implicit `select` list and no explicit result type
-
-In previous versions, Hibernate allowed a query with no `select` list to be passed to the overload of `createQuery()` with no explicit result type parameter, for example:
-
-[source,java]
-List query =
-        session.createQuery("from X, Y")
-                .getResultList()
-
-or:
-
-[source,java]
-List query =
-        session.createQuery("from X join y")
-                .getResultList()
-
-The select list was inferred based on the `from` clause.
-
-In Hibernate 6 we decided to deprecate this overload of `createQuery()`, since:
-
-- it returns a raw type, resulting in compiler warnings in client code, and
-- the second query is truly ambiguous, with no obviously intuitive interpretation.
-
-As of Hibernate 7, the method is remains deprecated, and potentially-ambiguous queries _are no longer accepted_.
-Migration paths include:
-
-1. explicitly specify the `select` list,
-2. add `X.class` or `Object[].class` as a second argument, to disambiguate the interpretation of the query, or
-3. in the case where the query should return exactly one entity, explicitly assign the alias `this` to that entity.
-
-For example, the queries above may be migrated via:
-
-[source,java]
-List<Object[]> result =
-        session.createQuery("from X, Y", Object[].class)
-                .getResultList()
-
-or:
-
-[source,java]
-List<X> result =
-        session.createQuery("from X join y", X.class)
-                .getResultList()
-
-
-[[proxy-annotation]]
-== Replace `@Proxy`
-
-Applications will need to replace usages of the removed `@Proxy` annotation.
-
-`@Proxy#proxyClass` has no direct replacement, but was also never needed/useful.
-
-Here we focus on `@Proxy#laxy` attribute which, again, was hardly ever useful.
-By default (true), Hibernate would proxy an entity when possible and when asked for.
-"Asked for" includes calls to `Session#getReference` and lazy associations.
-All such cases though are already controllable by the application.
-
-* Instead of `Session#getReference`, use `Session#find`
-* Use eager associations, using
-** `FetchType.EAGER` (the default for to-one associations anyway), possibly combined with `@Fetch`
-** `EntityGraph`
-** `@FetchProfiles`
-
-The effect can also often be mitigated using Hibernate's bytecode-based laziness (possibly combined with `@ConcreteProxy`).
-
-
-[[flush-persist]]
-== Session flush and persist
-
-The removal of `CascadeType.SAVE_UPDATE` slightly changes the persist and flush behaviour to conform with Jakarta Persistence.
-
-Persisting a transient entity or flushing a manged entity with an associated detached entity having the association annotated with `cascade = CascadeType.ALL` or `cascade = CascadeType.PERSIST` throws now an `jakarta.persistence.EntityExistsException` if the detached entity has not been re-associated with the Session.
-
-To re-associate the detached entity with the Session the `Session#merge` method can be used.
-
-Consider the following model
-
-[source,java]
-----
-@Entity
-class Parent {
-	...
-
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "parent", orphanRemoval = true)
-	@LazyCollection(value = LazyCollectionOption.EXTRA)
-	private Set<Child> children = new HashSet<>();
-
-	public void addChild(Child child) {
-		children.add( child );
-		child.setParent( this );
-	}
-}
-
-@Entity
-class Child {
-	...
-
-	@ManyToOne
-	private Parent parent;
-}
-----
-
-Assuming we have `c1` as a detached `Child`, the following code will now result in `jakarta.persistence.EntityExistsException` being thrown at flush time:
-
-[source,java]
-----
-Parent parent = session.get( Parent.class, parentId );
-parent.addChild( c1 );
-----
-
-Instead, `c1` must first be re-associated with the Session using merge:
-
-
-[source,java]
-----
-Parent parent = session.get( Parent.class, parentId );
-Child merged = session.merge( c1 );
-parent.addChild( merged );
-----
-
-
-[[refresh-lock-deteached]]
-== Refreshing/locking detached entities
-
-Traditionally, Hibernate allowed detached entities to be refreshed. However, Jakarta Persistence prohibits this practice and specifies that an `IllegalArgumentException` should be thrown instead. Hibernate now fully aligns with the JPA specification in this regard.
-
-Along the same line of thought, also acquiring a lock on a detached entity is no longer allowed.
-
-To this effect the `hibernate.allow_refresh_detached_entity`, which allowed Hibernate's legacy refresh behaviour to be invoked, has been removed.
-
-
-[[auto-cascade-persist]]
-== Cascading persistence for `@Id` and `@MapsId` fields
-
-Previously Hibernate automatically enabled `cascade=PERSIST` for association fields annotated `@Id` or `@MapsId`.
-This was undocumented and unexpected behavior, and arguably against the intent of the Persistence specification.
-
-Existing code which relies on this behavior should be modified by addition of explicit `cascade=PERSIST` to the association field.
-
-
-[[enum-checks]]
-== Enums and Check Constraints
-
-Hibernate previously added support for generating check constraints for enums mapped using `@Enumerated`
-as part of schema generation.  7.0 adds the same capability for enums mapped using an `AttributeConverter`,
-by asking the converter to convert all the enum constants on start up.
-
-[[datetime-native]]
-== Date and time types returned by native queries
-
-In the absence of a `@SqlResultSetMapping`, previous versions of Hibernate used `java.sql` types (`Date`, `Time`, `Timestamp`) to represent date/time types returned by a native query.
-In 7.0, such queries return types defined by `java.time` (`LocalDate`, `LocalTime`, `LocalDateTime`) by default.
-The previous behavior may be recovered by setting `hibernate.query.native.prefer_jdbc_datetime_types` to `true`.
-
-
-[[ddl-implicit-datatype-timestamp]]
-== Default precision for `timestamp` on some databases
-
-The default precision for Oracle timestamps was changed to 9 i.e. nanosecond precision.
-The default precision for SQL Server timestamps was changed to 7 i.e. 100 nanosecond precision.
-
-Note that these changes only affect DDL generation.
-
-[[array-mapping-changes-on-db2-sap-hana-sql-server-and-sybase-ase]]
-== Array mapping changes on DB2, SAP HANA, SQL Server and Sybase ASE
-
-On DB2, SAP HANA, SQL Server and Sybase ASE, basic arrays now map to the `SqlTypes.XML_ARRAY` type code,
-whereas previously, the dialect mapped arrays to `SqlTypes.VARBINARY`.
-The `SqlTypes.XML_ARRAY` type uses the `xml` DDL type which enables using arrays in other features through the various XML functions.
-
-The migration requires to read data and re-save it. Note that XML support on Sybase ASE is not enabled by default
-and requires to run `sp_configure 'enable xml', 1`.
-
-To retain backwards compatibility, configure the setting `hibernate.type.preferred_array_jdbc_type` to `VARBINARY`.
-
-[[array-mapping-changes-on-mysql-mariadb]]
-== Array mapping changes on MySQL/MariaDB
-
-On MySQL and MariaDB, basic arrays now map to the `SqlTypes.JSON_ARRAY` type code,
-whereas previously, the dialect mapped arrays to `SqlTypes.VARBINARY`.
-The `SqlTypes.JSON_ARRAY` type uses the `json` DDL type which enables using arrays in other features through the various JSON functions.
-
-The migration requires to read data and re-save it.
-
-To retain backwards compatibility, configure the setting `hibernate.type.preferred_array_jdbc_type` to `VARBINARY`.
-
-[[xml-format-mapper-changes]]
-== XML FormatMapper changes
-
-Previous versions of Hibernate ORM used an undefined/provider-specific format for serialization/deserialization of
-collections, maps and byte arrays to/from XML, which is not portable.
-
-XML FormatMapper implementations were changed to now use a portable format for collections, maps and byte arrays.
-This change is necessary to allow mapping basic arrays as `SqlTypes.XML_ARRAY`.
-
-The migration requires to read data and re-save it.
-
-To retain backwards compatibility, configure the setting `hibernate.type.xml_format_mapper.legacy_format` to `true`.
-
-[[sf-name]]
-== SessionFactory Name (and JNDI)
-
-Hibernate defines `SessionFactory#getName` (specified via `cfg.xml` or  `hibernate.session_factory_name`) which is used to
-help with (de)serializing a `SessionFactory`.  It is also, unless `hibernate.session_factory_name_is_jndi` is set to `false`,
-used in biding the `SessionFactory` into JNDI.
-
-This `SessionFactory#getName` method pre-dates Jakarta Persistence (and JPA).  It now implements `EntityManagerFactory#getName`
-inherited from Jakarta Persistence, which states that this name should come from the persistence-unit name.
-To align with Jakarta Persistence (the 3.2 TCK tests this), Hibernate now considers the persistence-unit name if no
-`hibernate.session_factory_name` is specified.
-
-However, because `hibernate.session_factory_name` is also a trigger to attempt to bind the SessionFactory into JNDI,
-this change to consider persistence-unit name, means that each `SessionFactory` created through Jakarta Persistence now
-have a name and Hibernate attempted to bind these to JNDI.
-
-To work around this we have introduced a new `hibernate.session_factory_jndi_name` setting that can be used to explicitly
-specify a name for JNDI binding.  The new behavior is as follows (assuming `hibernate.session_factory_name_is_jndi` is not explicitly configured):
-
-* If `hibernate.session_factory_jndi_name` is specified, the name is used to bind into JNDI
-* If `hibernate.session_factory_name` is specified, the name is used to bind into JNDI
-
-Hibernate can use the persistence-unit name for binding into JNDI as well, but `hibernate.session_factory_name_is_jndi`
-must be explicitly set to true.
-
-[[configurable-generators]]
-== Configurable generators
-
-The signature of the `Configurable#configure` method changed from accepting just a `ServiceRegistry` instance to the new `GeneratorCreationContext` interface, which exposes a lot more useful information when configuring the generator itself. The old signature has been deprecated for removal, so you should migrate any custom `Configurable` generator implementation to the new one.
-
-[[stateless-session-jdbc-batching]]
-== JDBC batching with `StatelessSession`
-
-Automatic JDBC batching has the side effect of delaying the execution of the batched operation, and this undermines the synchronous nature of operations performed through a stateless session.
-In Hibernate 7, the configuration property `hibernate.jdbc.batch_size` now has no effect on a stateless session.
-Automatic batching may be enabled by explicitly calling `setJdbcBatchSize()`.
-However, the preferred approach is to explicitly batch operations via `insertMultiple()`, `updateMultiple()`, or `deleteMultiple()`.
-
-[[criteria-implicit-treat]]
-== Criteria API and inheritance subtypes attributes
-
-It was previously possible to use the string version of the `jakarta.persistence.criteria.Path#get` and `jakarta.persistence.criteria.From#join` methods with names of attributes defined in an inheritance subtype of the type represented by the path expression. This was handled internally by implicitly treating the path as the subtype which defines said attribute. Since Hibernate 7.0, aligning with the JPA specification, the Criteria API will no longer allow retrieving subtype attributes this way, and it's going to require an explicit `jakarta.persistence.criteria.CriteriaBuilder#treat` to be called on the path first to downcast it to the subtype which defines the attribute.
-
-Implicit treats are still going to be applied when an HQL query dereferences a path belonging to an inheritance subtype.
-
-[[hbm-transform]]
-== hbm.xml Transformation
-
-Hibernate's legacy `hbm.xml` mapping schema has been deprecated for quite some time, replaced by a new `mapping.xml`
-schema.  In 7.0, this `mapping.xml` is stabilized and we now offer a transformation of `hbm.xml` files into `mapping.xml` files.
-
-This tool is available as both -
-
-* build-time transformation (currently only offered as a Gradle plugin)
-* run-time transformation, using `hibernate.transform_hbm_xml.enabled=true`
-
-Build-time transformation is preferred.
-
-[NOTE]
-====
-Initial versions of the transformation processed one file at a time.
-This is now done across the entire set of `hbm.xml` files at once.
-While most users will never see this change, it might impact integrations which tie-in to XML processing.
-====
-
-[[mysql-varchar]]
-== Default DDL type for `char` and `Character` on MySQL
-
-Previously, `char` and `Character` fields were, by default, mapped to `char(1)` columns by the schema export tool.
-However, MySQL treats a `char(1)` containing a single space as an empty string, resulting in broken behavior for some HQL and SQL functions.
-Now, `varchar(1)` is used by default.
-
-[[unowned-order-column]]
-== `@OrderColumn` in unowned `@OneToMany` associations
-
-In an unowned (`mappedBy`) one-to-many association, an `@OrderColumn` should, in principle, also be mapped by a field of the associated entity, and the value of the order column should be determined by the value of this field, not by the position in the list.
-
-Previously, since version 4.1, https://hibernate.atlassian.net/issues/HHH-18830[Hibernate would issue superfluous SQL `UPDATE` statements] to set the value of the order column based on the state of the unowned collection.
-This was incorrect according to the JPA specification, and inconsistent with the natural semantics of Hibernate.
-
-In Hibernate 7, these SQL `UPDATE` statements only occur if the `@OrderColumn` is _not_ also mapped by a field of the entity.
-
-[[cleanup]]
-== Cleanup
-
-* Annotations
-** Removed `@Persister`
-** Removed `@Proxy` - see <<proxy-annotation>>
-** Removed `@SelectBeforeUpdate`
-** Removed `@DynamicInsert#value` and `@DynamicUpdate#value`
-** Removed `@Loader`
-** Removed `@Table` -> use JPA `@Table`
-** Removed `@Where` and `@WhereJoinTable` -> use `@SQLRestriction` or `@SQLJoinTableRestriction`
-** Removed `@OrderBy` -> use `@SQLOrder` or JPA `@OrderBy`
-** Removed `@ForeignKey` -> use JPA `@ForeignKey`
-** Removed `@Index` -> use JPA `@Index`
-** Removed `@IndexColumn` -> use JPA `@OrderColumn`
-** Removed `@GeneratorType` (and `GenerationTime`, etc)
-** Removed `@LazyToOne`
-** Removed `@LazyCollection`
-** Replaced uses of `CacheModeType` with `CacheMode`
-** Removed `@TestForIssue` (for testing purposes) -> use `org.hibernate.testing.orm.junit.JiraKey` and `org.hibernate.testing.orm.junit.JiraKeyGroup`
-
-* Classes/interfaces
-** Removed `SqmQualifiedJoin` (all joins are qualified)
-** Removed `AdditionalJaxbMappingProducer` -> `AdditionalMappingContributor`
-** Removed `MetadataContributor` -> `AdditionalMappingContributor`
-** Removed `EmptyInterceptor` -> implement `org.hibernate.Interceptor` directly
-
-* Behavior
-** Removed `org.hibernate.Session#save` in favor of `org.hibernate.Session#persist`
-** Removed `org.hibernate.Session#saveOrUpdate` in favor `#persist` if the entity is transient or `#merge` if the entity is detached.
-** Removed `org.hibernate.Session#update` in favor of `org.hibernate.Session.merge`
-** Removed `org.hibernate.annotations.CascadeType.SAVE_UPDATE` in favor of `org.hibernate.annotations.CascadeType.PERSIST` + `org.hibernate.annotations.CascadeType.MERGE`
-** Removed `org.hibernate.Session#delete` in favor of `org.hibernate.Session#remove`
-** Removed `org.hibernate.annotations.CascadeType.DELETE` in favor of `org.hibernate.annotations.CascadeType#REMOVE`
-** Removed `org.hibernate.Session#refresh(String entityName, Object object)` in favor of `org.hibernate.Session#refresh(Object object)`
-** Removed `org.hibernate.Session#refresh(String entityName, Object object, LockOptions lockOptions)` in favor of `org.hibernate.Session#refresh(Object object, LockOptions lockOptions)`
-** Removed `org.hibernate.integrator.spi.Integrator#integrate(Metadata,SessionFactoryImplementor,SessionFactoryServiceRegistry)` in favor of `org.hibernate.integrator.spi.Integrator#integrate(Metadata,BootstrapContext,SessionFactoryImplementor)`
-** Removed `org.hibernate.Interceptor#onLoad(Object, Serializable, Object[] , String[] , Type[] )` in favour of `org.hibernate.Interceptor#onLoad(Object, Object, Object[], String[], Type[] )`
-** Removed `org.hibernate.Interceptor#onFlushDirty(Object, Serializable, Object[] , Object[], String[] , Type[] )` in favour of `org.hibernate.Interceptor#onLoad(Object, Object, Object[], Object[], String[] , Type[] )`
-** Removed `org.hibernate.Interceptor#onSave(Object, Serializable, Object[], String[], Type[])` in favour of `org.hibernate.Interceptor#onSave(Object, Object, Object[], String[], Type[])`
-** Removed `org.hibernate.Interceptor#onDelete(Object, Serializable, Object[], String[], Type[])` in favour of `org.hibernate.Interceptor#onDelete(Object, Serializable, Object[], String[], Type[])`
-** Removed `org.hibernate.Interceptor#onCollectionRecreate(Object, Serializable)` in favour of `org.hibernate.Interceptor#onCollectionRecreate(Object, Object)`
-** Removed `org.hibernate.Interceptor#onCollectionRemove(Object, Serializable)` in favour of `org.hibernate.Interceptor#onCollectionRemove(Object, Object)`
-** Removed `org.hibernate.Interceptor#onCollectionUpdate(Object, Serializable)` in favour of `org.hibernate.Interceptor#onCollectionUpdate(Object, Object)`
-** Removed `org.hibernate.Interceptor#findDirty(Object, Serializable, Object[], Object[], String[], Type[])` in favour of `org.hibernate.Interceptor#findDirty(Object, Object, Object[], Object[], String[], Type[])`
-** Removed `org.hibernate.Interceptor#getEntity(String, Serializable)` in favour of `org.hibernate.Interceptor#getEntity(String, Serializable)`
-** Removed `org.hibernate.metamodel.spi.MetamodelImplementor` in favor of `org.hibernate.metamodela.MappingMetmodel` or `org.hibernate.metamodel.model.domain.JpaMetamodel`
-** Removed `org.hibernate.Metamodel` in favor of `org.hibernate.metamodel.model.domain.JpaMetamodel`
-** Removed `NaturalIdLoadAccess.using(Map)` and `NaturalIdMultiLoadAccess.compoundValue()` in favor of `Map.of()`
-
-* Settings
-** Removed `hibernate.mapping.precedence` and friends
-** Removed `hibernate.allow_refresh_detached_entity`
-
-
-[[reorg]]
-== Reorganize Packages (for api/spi/internal, etc)
-
-* Re-organized the `org.hibernate.query.results` package
-
-
-[[todo]]
-== Todos (dev)
-
-* Look for `todo (jpa 3.2)` comments
-* Look for `todo (7.0)` comments

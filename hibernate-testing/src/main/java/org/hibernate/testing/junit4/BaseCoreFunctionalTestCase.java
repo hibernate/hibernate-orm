@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.junit4;
@@ -375,17 +375,21 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@After
 	public final void afterTest() throws Exception {
-		// see https://github.com/hibernate/hibernate-orm/pull/3412#issuecomment-678338398
-		if ( getDialect() instanceof H2Dialect ) {
-			ReflectHelper.getMethod( Class.forName( "org.h2.util.DateTimeUtils" ), "resetCalendar" )
-					.invoke( null );
+		try {
+			// see https://github.com/hibernate/hibernate-orm/pull/3412#issuecomment-678338398
+			if ( getDialect() instanceof H2Dialect ) {
+				ReflectHelper.getMethod( Class.forName( "org.h2.util.DateTimeUtils" ), "resetCalendar" )
+						.invoke( null );
+			}
+			completeStrayTransaction();
+			if ( isCleanupTestDataRequired() ) {
+				cleanupTestData();
+			}
+			cleanupTest();
 		}
-		completeStrayTransaction();
-		if ( isCleanupTestDataRequired() ) {
-			cleanupTestData();
+		finally {
+			cleanupSession();
 		}
-		cleanupTest();
-		cleanupSession();
 		assertAllDataRemoved();
 	}
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.from;
@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedCrossJoin;
+import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedCrossJoin;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedFrom;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
@@ -23,6 +24,7 @@ import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.JoinType;
+
 
 import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildRootNavigablePath;
 
@@ -47,7 +49,7 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 	private final SqmPredicateCollection sqmJoinPredicates;
 
 	public SqmCrossJoin(
-			EntityDomainType<T> joinedEntityDescriptor,
+			SqmEntityDomainType<T> joinedEntityDescriptor,
 			String alias,
 			SqmRoot<?> sqmRoot) {
 		this(
@@ -60,7 +62,7 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 
 	protected SqmCrossJoin(
 			NavigablePath navigablePath,
-			EntityDomainType<T> joinedEntityDescriptor,
+			SqmEntityDomainType<T> joinedEntityDescriptor,
 			String alias,
 			SqmRoot<?> sqmRoot) {
 		super(
@@ -119,8 +121,8 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 	}
 
 	@Override
-	public EntityDomainType<T> getReferencedPathSource() {
-		return (EntityDomainType<T>) super.getReferencedPathSource();
+	public SqmEntityDomainType<T> getReferencedPathSource() {
+		return (SqmEntityDomainType<T>) super.getReferencedPathSource();
 	}
 
 	public String getEntityName() {
@@ -209,5 +211,17 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 	@Override
 	public <S extends T> SqmTreatedCrossJoin treatAs(EntityDomainType<S> treatAsType) {
 		return treatAs( treatAsType, null );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmCrossJoin<?>
+			&& super.equals( object );
+	}
+
+	@Override
+	// needed to make static code analyzer happy
+	public int hashCode() {
+		return super.hashCode();
 	}
 }

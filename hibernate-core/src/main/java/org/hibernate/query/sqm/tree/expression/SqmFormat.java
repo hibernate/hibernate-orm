@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
@@ -9,8 +9,9 @@ import java.util.regex.Pattern;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * Effectively a query-literal but we want to handle it specially in the SQM to SQL AST conversion
@@ -42,7 +43,7 @@ public class SqmFormat extends SqmLiteral<String> {
 
 	public SqmFormat(
 			String value,
-			SqmExpressible<String> inherentType,
+			SqmBindableType<String> inherentType,
 			NodeBuilder nodeBuilder) {
 		super(value, inherentType, nodeBuilder);
 		if (!FORMAT.matcher(value).matches()) {
@@ -74,7 +75,7 @@ public class SqmFormat extends SqmLiteral<String> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( getLiteralValue() );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( getLiteralValue() );
 	}
 }

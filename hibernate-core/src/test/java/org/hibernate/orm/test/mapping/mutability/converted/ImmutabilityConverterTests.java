@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.mutability.converted;
@@ -41,7 +41,7 @@ public class ImmutabilityConverterTests {
 		scope.withHierarchy( TestEntity.class, (entity) -> {
 			final Property theDateProperty = entity.getProperty( "theDate" );
 			assertThat( theDateProperty ).isNotNull();
-			assertThat( theDateProperty.isUpdateable() ).isTrue();
+			assertThat( theDateProperty.isUpdatable() ).isTrue();
 
 			final BasicValue basicValue = (BasicValue) theDateProperty.getValue();
 			final BasicValue.Resolution<?> resolution = basicValue.resolve();

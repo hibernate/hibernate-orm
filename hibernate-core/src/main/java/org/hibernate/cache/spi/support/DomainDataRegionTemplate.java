@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.support;
@@ -17,7 +17,8 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 
-import org.jboss.logging.Logger;
+
+import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
 
 /**
  * Abstract implementation of {@link  org.hibernate.cache.spi.DomainDataRegion} based
@@ -37,7 +38,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
-	private static final Logger log = Logger.getLogger( DomainDataRegionTemplate.class );
 
 	private final DomainDataStorageAccess storageAccess;
 
@@ -67,25 +67,15 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		final NavigableRole namedEntityRole = entityAccessConfig.getNavigableRole();
 		final AccessType accessType = entityAccessConfig.getAccessType();
 
-		log.debugf( "Generating entity cache access [%s] : %s", accessType.getExternalName(), namedEntityRole );
+		L2CACHE_LOGGER.tracef( "Generating entity cache access [%s] : %s",
+				accessType.getExternalName(), namedEntityRole );
 
-		switch ( accessType ) {
-			case READ_ONLY: {
-				return generateReadOnlyEntityAccess( entityAccessConfig );
-			}
-			case READ_WRITE: {
-				return generateReadWriteEntityAccess( entityAccessConfig );
-			}
-			case NONSTRICT_READ_WRITE: {
-				return generateNonStrictReadWriteEntityAccess( entityAccessConfig );
-			}
-			case TRANSACTIONAL: {
-				return generateTransactionalEntityDataAccess( entityAccessConfig );
-			}
-			default: {
-				throw new IllegalArgumentException( "Unrecognized cache AccessType - " + accessType );
-			}
-		}
+		return switch ( accessType ) {
+			case READ_ONLY -> generateReadOnlyEntityAccess( entityAccessConfig );
+			case READ_WRITE -> generateReadWriteEntityAccess( entityAccessConfig );
+			case NONSTRICT_READ_WRITE -> generateNonStrictReadWriteEntityAccess( entityAccessConfig );
+			case TRANSACTIONAL -> generateTransactionalEntityDataAccess( entityAccessConfig );
+		};
 	}
 
 	protected EntityDataAccess generateReadOnlyEntityAccess(EntityDataCachingConfig accessConfig) {
@@ -128,25 +118,15 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		final NavigableRole namedEntityRole = accessConfig.getNavigableRole();
 		final AccessType accessType = accessConfig.getAccessType();
 
-		log.debugf( "Generating entity natural-id access [%s] : %s", accessType.getExternalName(), namedEntityRole );
+		L2CACHE_LOGGER.tracef( "Generating entity natural-id access [%s] : %s",
+				accessType.getExternalName(), namedEntityRole );
 
-		switch ( accessType ) {
-			case READ_ONLY: {
-				return generateReadOnlyNaturalIdAccess( accessConfig );
-			}
-			case READ_WRITE: {
-				return generateReadWriteNaturalIdAccess( accessConfig );
-			}
-			case NONSTRICT_READ_WRITE: {
-				return generateNonStrictReadWriteNaturalIdAccess( accessConfig );
-			}
-			case TRANSACTIONAL: {
-				return generateTransactionalNaturalIdDataAccess( accessConfig );
-			}
-			default: {
-				throw new IllegalArgumentException( "Unrecognized cache AccessType - " + accessType );
-			}
-		}
+		return switch ( accessType ) {
+			case READ_ONLY -> generateReadOnlyNaturalIdAccess( accessConfig );
+			case READ_WRITE -> generateReadWriteNaturalIdAccess( accessConfig );
+			case NONSTRICT_READ_WRITE -> generateNonStrictReadWriteNaturalIdAccess( accessConfig );
+			case TRANSACTIONAL -> generateTransactionalNaturalIdDataAccess( accessConfig );
+		};
 	}
 
 	protected NaturalIdDataAccess generateReadOnlyNaturalIdAccess(NaturalIdDataCachingConfig accessConfig) {
@@ -184,25 +164,16 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 	public CollectionDataAccess generateCollectionAccess(CollectionDataCachingConfig accessConfig) {
 		final NavigableRole namedCollectionRole = accessConfig.getNavigableRole();
 
-		log.debugf( "Generating collection cache access : %s", namedCollectionRole );
-
-		switch ( accessConfig.getAccessType() ) {
-			case READ_ONLY: {
-				return generateReadOnlyCollectionAccess( accessConfig );
-			}
-			case READ_WRITE: {
-				return generateReadWriteCollectionAccess( accessConfig );
-			}
-			case NONSTRICT_READ_WRITE: {
-				return generateNonStrictReadWriteCollectionAccess( accessConfig );
-			}
-			case TRANSACTIONAL: {
-				return generateTransactionalCollectionDataAccess( accessConfig );
-			}
-			default: {
-				throw new IllegalArgumentException( "Unrecognized cache AccessType - " + accessConfig.getAccessType() );
-			}
+		if ( L2CACHE_LOGGER.isTraceEnabled() ) {
+			L2CACHE_LOGGER.trace( "Generating collection cache access: " + namedCollectionRole );
 		}
+
+		return switch ( accessConfig.getAccessType() ) {
+			case READ_ONLY -> generateReadOnlyCollectionAccess( accessConfig );
+			case READ_WRITE -> generateReadWriteCollectionAccess( accessConfig );
+			case NONSTRICT_READ_WRITE -> generateNonStrictReadWriteCollectionAccess( accessConfig );
+			case TRANSACTIONAL -> generateTransactionalCollectionDataAccess( accessConfig );
+		};
 	}
 
 	private CollectionDataAccess generateReadOnlyCollectionAccess(CollectionDataCachingConfig accessConfig) {

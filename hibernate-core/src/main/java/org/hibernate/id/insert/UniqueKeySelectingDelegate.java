@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.insert;
@@ -12,7 +12,6 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
-import org.hibernate.generator.values.GeneratedValueBasicResultBuilder;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -21,6 +20,7 @@ import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
 import org.hibernate.type.Type;
 
 import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getActualGeneratedModelPart;
+import static org.hibernate.internal.util.StringHelper.EMPTY_STRINGS;
 
 /**
  * Uses a unique key of the inserted entity to locate the newly inserted row.
@@ -50,14 +50,14 @@ public class UniqueKeySelectingDelegate extends AbstractSelectingDelegate {
 		if ( !persister.isIdentifierAssignedByInsert()
 				|| persister.getInsertGeneratedProperties().size() > 1
 				|| rowIdMapping != null ) {
-			final List<GeneratedValueBasicResultBuilder> resultBuilders = jdbcValuesMappingProducer.getResultBuilders();
+			final var resultBuilders = jdbcValuesMappingProducer.getResultBuilders();
 			final List<String> columnNames = new ArrayList<>( resultBuilders.size() );
-			for ( GeneratedValueBasicResultBuilder resultBuilder : resultBuilders ) {
+			for ( var resultBuilder : resultBuilders ) {
 				columnNames.add( getActualGeneratedModelPart( resultBuilder.getModelPart() ).getSelectionExpression() );
 			}
 			selectString = persister.getSelectByUniqueKeyString(
 					uniqueKeyPropertyNames,
-					columnNames.toArray( new String[0] )
+					columnNames.toArray( EMPTY_STRINGS )
 			);
 		}
 		else {
@@ -82,7 +82,7 @@ public class UniqueKeySelectingDelegate extends AbstractSelectingDelegate {
 		int index = 1;
 		for ( int i = 0; i < uniqueKeyPropertyNames.length; i++ ) {
 			uniqueKeyTypes[i].nullSafeSet( ps, persister.getPropertyValue( entity, uniqueKeyPropertyNames[i] ), index, session );
-			index += uniqueKeyTypes[i].getColumnSpan( session.getFactory() );
+			index += uniqueKeyTypes[i].getColumnSpan( session.getFactory().getRuntimeMetamodels() );
 		}
 	}
 }

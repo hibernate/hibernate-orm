@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -19,9 +19,9 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.boot.model.internal.AnnotatedJoinColumns;
@@ -35,8 +35,6 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -56,6 +54,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 
 import jakarta.persistence.AttributeConverter;
+import org.hibernate.usertype.DynamicParameterizedType.ParameterType;
 
 import static java.lang.Boolean.parseBoolean;
 import static org.hibernate.boot.model.convert.spi.ConverterDescriptor.TYPE_NAME_PREFIX;
@@ -64,6 +63,7 @@ import static org.hibernate.boot.model.internal.GeneratorBinder.ASSIGNED_IDENTIF
 import static org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl.fromExplicit;
 import static org.hibernate.internal.util.ReflectHelper.reflectedPropertyClass;
 import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray;
+import static org.hibernate.mapping.MappingHelper.classForName;
 
 /**
  * A mapping model object that represents any value that maps to columns.
@@ -72,7 +72,6 @@ import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray
  * @author Yanming Zhou
  */
 public abstract class SimpleValue implements KeyValue {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( SimpleValue.class );
 
 	@Deprecated(since = "7.0", forRemoval = true)
 	public static final String DEFAULT_ID_GEN_STRATEGY = ASSIGNED_GENERATOR_NAME;
@@ -102,7 +101,7 @@ public abstract class SimpleValue implements KeyValue {
 	private OnDeleteAction onDeleteAction;
 	private boolean foreignKeyEnabled = true;
 
-	private ConverterDescriptor attributeConverterDescriptor;
+	private ConverterDescriptor<?,?> attributeConverterDescriptor;
 	private Type type;
 
 	private GeneratorCreator customIdGeneratorCreator = ASSIGNED_IDENTIFIER_GENERATOR_CREATOR;
@@ -139,6 +138,8 @@ public abstract class SimpleValue implements KeyValue {
 		this.attributeConverterDescriptor = original.attributeConverterDescriptor;
 		this.type = original.type;
 		this.customIdGeneratorCreator = original.customIdGeneratorCreator;
+		this.nullValueSemantic = original.nullValueSemantic;
+		this.foreignKeyOptions = original.foreignKeyOptions;
 	}
 
 	@Override
@@ -171,23 +172,10 @@ public abstract class SimpleValue implements KeyValue {
 		return onDeleteAction;
 	}
 
-	/**
-	 * @deprecated use {@link #getOnDeleteAction()}
-	 */
-	@Deprecated(since = "6.2")
 	@Override
 	public boolean isCascadeDeleteEnabled() {
 		return onDeleteAction == OnDeleteAction.CASCADE;
 	}
-
-	/**
-	 * @deprecated use {@link #setOnDeleteAction(OnDeleteAction)}
-	 */
-	@Deprecated(since = "6.2")
-	public void setCascadeDeleteEnabled(boolean cascadeDeleteEnabled) {
-		this.onDeleteAction = cascadeDeleteEnabled ? OnDeleteAction.CASCADE : OnDeleteAction.NO_ACTION;
-	}
-
 
 	public void addColumn(Column column) {
 		addColumn( column, true, true );
@@ -298,14 +286,19 @@ public abstract class SimpleValue implements KeyValue {
 
 	void setAttributeConverterDescriptor(String typeName) {
 		final String converterClassName = typeName.substring( TYPE_NAME_PREFIX.length() );
-		this.attributeConverterDescriptor =
-				new ClassBasedConverterDescriptor( classLoaderService().classForName( converterClassName ),
-						false, getBuildingContext().getBootstrapContext().getClassmateContext() );
+		final MetadataBuildingContext context = getBuildingContext();
+		@SuppressWarnings("unchecked") // Completely safe
+		final Class<? extends AttributeConverter<?,?>> clazz =
+				(Class<? extends AttributeConverter<?,?>>)
+						classForName( AttributeConverter.class, converterClassName,
+								context.getBootstrapContext() );
+		attributeConverterDescriptor =
+				ConverterDescriptors.of( clazz, null, false,
+						context.getBootstrapContext().getClassmateContext() );
 	}
 
 	ClassLoaderService classLoaderService() {
-		return getMetadata().getMetadataBuildingOptions().getServiceRegistry()
-				.requireService( ClassLoaderService.class );
+		return getBuildingContext().getBootstrapContext().getClassLoaderService();
 	}
 
 	public void makeVersion() {
@@ -359,9 +352,27 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	@Override
+	public ForeignKey createForeignKeyOfEntity(String entityName, List<Column> referencedColumns) {
+		if ( isConstrained() ) {
+			final ForeignKey foreignKey = table.createForeignKey(
+					getForeignKeyName(),
+					getConstraintColumns(),
+					entityName,
+					getForeignKeyDefinition(),
+					getForeignKeyOptions(),
+					referencedColumns
+			);
+			foreignKey.setOnDeleteAction( onDeleteAction );
+			return foreignKey;
+		}
+
+		return null;
+	}
+
+	@Override
 	public void createUniqueKey(MetadataBuildingContext context) {
 		if ( hasFormula() ) {
-			throw new MappingException( "unique key constraint involves formulas" );
+			throw new MappingException( "Unique key constraint involves formulas" );
 		}
 		getTable().createUniqueKey( getConstraintColumns(), context );
 	}
@@ -595,7 +606,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.attributeConverterDescriptor = descriptor;
 	}
 
-	protected ConverterDescriptor getAttributeConverterDescriptor() {
+	protected ConverterDescriptor<?,?> getAttributeConverterDescriptor() {
 		return attributeConverterDescriptor;
 	}
 
@@ -712,10 +723,7 @@ public abstract class SimpleValue implements KeyValue {
 				new JpaAttributeConverterCreationContext() {
 					@Override
 					public ManagedBeanRegistry getManagedBeanRegistry() {
-						return getMetadata()
-								.getMetadataBuildingOptions()
-								.getServiceRegistry()
-								.requireService( ManagedBeanRegistry.class );
+						return getBuildingContext().getBootstrapContext().getManagedBeanRegistry();
 					}
 
 					@Override
@@ -826,7 +834,8 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public boolean isSame(Value other) {
-		return this == other || other instanceof SimpleValue && isSame( (SimpleValue) other );
+		return this == other
+			|| other instanceof SimpleValue simpleValue && isSame( simpleValue );
 	}
 
 	protected static boolean isSame(Value v1, Value v2) {
@@ -917,62 +926,24 @@ public abstract class SimpleValue implements KeyValue {
 		return array;
 	}
 
-	public ConverterDescriptor getJpaAttributeConverterDescriptor() {
+	public ConverterDescriptor<?,?> getJpaAttributeConverterDescriptor() {
 		return attributeConverterDescriptor;
 	}
 
-	public void setJpaAttributeConverterDescriptor(ConverterDescriptor descriptor) {
+	public void setJpaAttributeConverterDescriptor(ConverterDescriptor<?,?> descriptor) {
 		this.attributeConverterDescriptor = descriptor;
-	}
-
-	protected void createParameterImpl() {
-		try {
-			final String[] columnNames = new String[ columns.size() ];
-			final Long[] columnLengths = new Long[ columns.size() ];
-
-			for ( int i = 0; i < columns.size(); i++ ) {
-				final Selectable selectable = columns.get(i);
-				if ( selectable instanceof Column column ) {
-					columnNames[i] = column.getName();
-					columnLengths[i] = column.getLength();
-				}
-			}
-
-			final MemberDetails attributeMember = (MemberDetails) typeParameters.get( DynamicParameterizedType.XPROPERTY );
-			// todo : not sure this works for handling @MapKeyEnumerated
-			final Annotation[] annotations = getAnnotations( attributeMember );
-			typeParameters.put(
-					DynamicParameterizedType.PARAMETER_TYPE,
-					new ParameterTypeImpl(
-							classLoaderService()
-									.classForTypeName( typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS) ),
-							attributeMember != null ? attributeMember.getType() : null,
-							annotations,
-							table.getCatalog(),
-							table.getSchema(),
-							table.getName(),
-							parseBoolean( typeParameters.getProperty(DynamicParameterizedType.IS_PRIMARY_KEY) ),
-							columnNames,
-							columnLengths
-					)
-			);
-		}
-		catch ( ClassLoadingException e ) {
-			throw new MappingException( "Could not create DynamicParameterizedType for type: " + typeName, e );
-		}
 	}
 
 	private static final Annotation[] NO_ANNOTATIONS = new Annotation[0];
 	private static Annotation[] getAnnotations(MemberDetails memberDetails) {
-		final Collection<? extends Annotation> directAnnotationUsages = memberDetails == null
-				? null
-				: memberDetails.getDirectAnnotationUsages();
-		return directAnnotationUsages == null
-				? NO_ANNOTATIONS
+		final Collection<? extends Annotation> directAnnotationUsages =
+				memberDetails == null ? null
+						: memberDetails.getDirectAnnotationUsages();
+		return directAnnotationUsages == null ? NO_ANNOTATIONS
 				: directAnnotationUsages.toArray( Annotation[]::new );
 	}
 
-	public DynamicParameterizedType.ParameterType makeParameterImpl() {
+	protected ParameterType createParameterType() {
 		try {
 			final String[] columnNames = new String[ columns.size() ];
 			final Long[] columnLengths = new Long[ columns.size() ];
@@ -985,28 +956,31 @@ public abstract class SimpleValue implements KeyValue {
 				}
 			}
 
-			final MemberDetails attributeMember = (MemberDetails) typeParameters.get( DynamicParameterizedType.XPROPERTY );
 			// todo : not sure this works for handling @MapKeyEnumerated
-			final Annotation[] annotations = getAnnotations( attributeMember );
-			return new ParameterTypeImpl(
-					classLoaderService()
-							.classForTypeName( typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS) ),
-					attributeMember != null ? attributeMember.getType() : null,
-					annotations,
-					table.getCatalog(),
-					table.getSchema(),
-					table.getName(),
-					parseBoolean( typeParameters.getProperty(DynamicParameterizedType.IS_PRIMARY_KEY) ),
-					columnNames,
-					columnLengths
-			);
+			return createParameterType( columnNames, columnLengths );
 		}
 		catch ( ClassLoadingException e ) {
 			throw new MappingException( "Could not create DynamicParameterizedType for type: " + typeName, e );
 		}
 	}
 
-	private static final class ParameterTypeImpl implements DynamicParameterizedType.ParameterType {
+	private ParameterType createParameterType(String[] columnNames, Long[] columnLengths) {
+		final MemberDetails attribute = (MemberDetails) typeParameters.get( DynamicParameterizedType.XPROPERTY );
+		return new ParameterTypeImpl(
+				classLoaderService()
+						.classForTypeName( typeParameters.getProperty( DynamicParameterizedType.RETURNED_CLASS ) ),
+				attribute != null ? attribute.getType() : null,
+				getAnnotations( attribute ),
+				table.getCatalog(),
+				table.getSchema(),
+				table.getName(),
+				parseBoolean( typeParameters.getProperty( DynamicParameterizedType.IS_PRIMARY_KEY ) ),
+				columnNames,
+				columnLengths
+		);
+	}
+
+	private static final class ParameterTypeImpl implements ParameterType {
 
 		private final Class<?> returnedClass;
 		private final java.lang.reflect.Type returnedJavaType;

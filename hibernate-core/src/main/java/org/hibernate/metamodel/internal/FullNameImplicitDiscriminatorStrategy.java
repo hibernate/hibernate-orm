@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
@@ -28,7 +28,6 @@ public class FullNameImplicitDiscriminatorStrategy implements ImplicitDiscrimina
 	public EntityMappingType toEntityMapping(Object discriminatorValue, NavigableRole discriminatorRole, MappingMetamodelImplementor mappingModel) {
 		if ( discriminatorValue instanceof String assumedEntityName ) {
 			final EntityPersister persister = mappingModel.findEntityDescriptor( assumedEntityName );
-
 			if ( persister != null ) {
 				return persister;
 			}

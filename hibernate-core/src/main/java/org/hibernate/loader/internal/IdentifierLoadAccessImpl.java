@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.internal;
@@ -9,27 +9,23 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import jakarta.persistence.EntityGraph;
+
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.IdentifierLoadAccess;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.UnknownProfileException;
-import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
-import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
-import org.hibernate.engine.spi.EffectiveEntityGraph;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -40,6 +36,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  *
  * @author Steve Ebersole
  */
+// Hibernate Reactive extends this class: see ReactiveIdentifierLoadAccessImpl
 public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, JavaType.CoercionContext {
 	private final LoadAccessContext context;
 	private final EntityPersister entityPersister;
@@ -64,6 +61,25 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 	}
 
 	@Override
+	public IdentifierLoadAccess<T> with(LockMode lockMode, PessimisticLockScope lockScope) {
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions();
+		}
+		lockOptions.setLockMode( lockMode );
+		lockOptions.setLockScope( lockScope );
+		return this;
+	}
+
+	@Override
+	public IdentifierLoadAccess<T> with(Timeout timeout) {
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions();
+		}
+		lockOptions.setTimeOut( timeout.milliseconds() );
+		return this;
+	}
+
+	@Override
 	public IdentifierLoadAccess<T> with(CacheMode cacheMode) {
 		this.cacheMode = cacheMode;
 		return this;
@@ -76,7 +92,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 	}
 
 	@Override
-	public IdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic) {
+	public IdentifierLoadAccess<T> with(EntityGraph<T> graph, GraphSemantic semantic) {
 		this.rootGraph = (RootGraphImplementor<T>) graph;
 		this.graphSemantic = semantic;
 		return this;
@@ -87,9 +103,10 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 		return perform( () -> doGetReference( id ) );
 	}
 
+	// Hibernate Reactive overrides this
 	protected T perform(Supplier<T> executor) {
-		final SessionImplementor session = context.getSession();
-		final CacheMode sessionCacheMode = session.getCacheMode();
+		final var session = context.getSession();
+		final var sessionCacheMode = session.getCacheMode();
 
 		boolean cacheModeChanged = false;
 		if ( cacheMode != null ) {
@@ -102,11 +119,9 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 		}
 
 		try {
-			final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
-			final HashSet<String> fetchProfiles =
-					influencers.adjustFetchProfiles( disabledFetchProfiles, enabledFetchProfiles );
-			final EffectiveEntityGraph effectiveEntityGraph =
-					influencers.applyEntityGraph( rootGraph, graphSemantic);
+			final var influencers = session.getLoadQueryInfluencers();
+			final var fetchProfiles = influencers.adjustFetchProfiles( disabledFetchProfiles, enabledFetchProfiles );
+			final var effectiveEntityGraph = influencers.applyEntityGraph( rootGraph, graphSemantic);
 			try {
 				return executor.get();
 			}
@@ -124,20 +139,16 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 	}
 
 	@SuppressWarnings( "unchecked" )
+	// Hibernate Reactive overrides this
 	protected T doGetReference(Object id) {
-		final SessionImplementor session = context.getSession();
-		final SessionFactoryImplementor factory = session.getFactory();
-		final EntityMappingType concreteType = entityPersister.resolveConcreteProxyTypeForId( id, session );
-		return (T) getReference(
-				coerceId( id, factory ),
-				session.asEventSource(),
-				factory,
-				concreteType.getEntityName(),
-				isReadOnly( session )
-		);
+		final var session = context.getSession();
+		final var concreteType = entityPersister.resolveConcreteProxyTypeForId( id, session );
+		return (T) context.load( LoadEventListener.LOAD, coerceId( id, session.getFactory() ),
+				concreteType.getEntityName(), lockOptions, isReadOnly( session ) );
 	}
 
-	private Boolean isReadOnly(SessionImplementor session) {
+	// Hibernate Reactive might need to call this
+	protected Boolean isReadOnly(SessionImplementor session) {
 		return readOnly != null
 				? readOnly
 				: session.getLoadQueryInfluencers().getReadOnly();
@@ -154,71 +165,24 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 	}
 
 	@SuppressWarnings( "unchecked" )
-	protected final T doLoad(Object id) {
-		final SessionImplementor session = context.getSession();
-		final Object result = load(
-				coerceId( id, session.getFactory() ),
-				session.asEventSource(),
-				entityPersister.getEntityName(),
-				isReadOnly( session )
-		);
+	// Hibernate Reactive overrides this
+	protected T doLoad(Object id) {
+		final var session = context.getSession();
+		Object result;
+		try {
+			result = context.load( LoadEventListener.GET, coerceId( id, session.getFactory() ),
+					entityPersister.getEntityName(), lockOptions, isReadOnly( session ) );
+		}
+		catch (ObjectNotFoundException notFoundException) {
+			// if session cache contains proxy for non-existing object
+			result = null;
+		}
 		initializeIfNecessary( result );
 		return (T) result;
 	}
 
-	private Object getReference(
-			Object id,
-			EventSource eventSource,
-			SessionFactoryImplementor factory,
-			String entityName,
-			Boolean readOnly) {
-		if ( lockOptions != null ) {
-			final LoadEvent event = new LoadEvent( id, entityName, lockOptions, eventSource, readOnly );
-			context.fireLoad( event, LoadEventListener.LOAD );
-			return event.getResult();
-		}
-		else {
-			final LoadEvent event = new LoadEvent( id, entityName, false, eventSource, readOnly );
-			boolean success = false;
-			try {
-				context.fireLoad( event, LoadEventListener.LOAD );
-				final Object result = event.getResult();
-				if ( result == null ) {
-					factory.getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
-				}
-				success = true;
-				return result;
-			}
-			finally {
-				context.afterOperation( success );
-			}
-		}
-	}
-
-	private Object load(Object id, EventSource eventSource, String entityName, Boolean readOnly) {
-		final LoadEvent event;
-		if ( lockOptions != null ) {
-			event = new LoadEvent( id, entityName, lockOptions, eventSource, readOnly );
-			context.fireLoad( event, LoadEventListener.GET );
-		}
-		else {
-			event = new LoadEvent( id, entityName, false, eventSource, readOnly );
-			boolean success = false;
-			try {
-				context.fireLoad( event, LoadEventListener.GET );
-				success = true;
-			}
-			catch (ObjectNotFoundException e) {
-				// if session cache contains proxy for non-existing object
-			}
-			finally {
-				context.afterOperation( success );
-			}
-		}
-		return event.getResult();
-	}
-
-	private Object coerceId(Object id, SessionFactoryImplementor factory) {
+	// Used by Hibernate Reactive
+	protected Object coerceId(Object id, SessionFactoryImplementor factory) {
 		if ( isLoadByIdComplianceEnabled( factory ) ) {
 			return id;
 		}
@@ -237,23 +201,19 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 
 	private void initializeIfNecessary(Object result) {
 		if ( result != null ) {
-			final LazyInitializer lazyInitializer = extractLazyInitializer( result );
+			final var lazyInitializer = extractLazyInitializer( result );
 			if ( lazyInitializer != null ) {
 				if ( lazyInitializer.isUninitialized() ) {
 					lazyInitializer.initialize();
 				}
 			}
 			else {
-				final BytecodeEnhancementMetadata enhancementMetadata =
+				final var enhancementMetadata =
 						entityPersister.getEntityMetamodel().getBytecodeEnhancementMetadata();
-				if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
-					final BytecodeLazyAttributeInterceptor interceptor =
-							enhancementMetadata.extractLazyInterceptor( result);
-					if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-						final EnhancementAsProxyLazinessInterceptor lazinessInterceptor =
-								(EnhancementAsProxyLazinessInterceptor) interceptor;
-						lazinessInterceptor.forceInitialize( result, null );
-					}
+				if ( enhancementMetadata.isEnhancedForLazyLoading()
+						&& enhancementMetadata.extractLazyInterceptor( result )
+								instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor ) {
+					lazinessInterceptor.forceInitialize( result, null );
 				}
 			}
 		}
@@ -293,5 +253,31 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 			enabledFetchProfiles.remove( profileName );
 		}
 		return this;
+	}
+
+	// Getters for Hibernate Reactive
+
+	protected CacheMode getCacheMode() {
+		return cacheMode;
+	}
+
+	protected GraphSemantic getGraphSemantic() {
+		return graphSemantic;
+	}
+
+	protected LoadAccessContext getContext() {
+		return context;
+	}
+
+	protected EntityPersister getEntityPersister() {
+		return entityPersister;
+	}
+
+	protected LockOptions getLockOptions() {
+		return lockOptions;
+	}
+
+	public RootGraphImplementor<T> getRootGraph() {
+		return rootGraph;
 	}
 }

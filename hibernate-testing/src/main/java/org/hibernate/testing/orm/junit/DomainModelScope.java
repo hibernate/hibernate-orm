@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.junit;
 
-import java.util.Locale;
 import java.util.function.Consumer;
 
 import org.hibernate.UnknownEntityTypeException;
@@ -28,21 +27,14 @@ public interface DomainModelScope {
 		);
 	}
 
-	default void withHierarchy(Class rootType, Consumer<RootClass> action) {
+	default void withHierarchy(Class<?> rootType, Consumer<RootClass> action) {
 		withHierarchy( rootType.getName(), action );
 	}
 
 	default void withHierarchy(String rootTypeName, Consumer<RootClass> action) {
 		final PersistentClass entityBinding = getDomainModel().getEntityBinding( rootTypeName );
-
 		if ( entityBinding == null ) {
-			throw new UnknownEntityTypeException(
-					String.format(
-							Locale.ROOT,
-							"Could not resolve `%s` as an entity type",
-							rootTypeName
-					)
-			);
+			throw new UnknownEntityTypeException( rootTypeName );
 		}
 
 		action.accept( entityBinding.getRootClass() );

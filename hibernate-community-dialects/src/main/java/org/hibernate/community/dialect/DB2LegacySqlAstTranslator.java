@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -14,7 +14,7 @@ import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.sql.ast.Clause;
@@ -75,12 +75,7 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		return false;
-	}
-
-	@Override
-	protected void renderTableReferenceJoins(TableGroup tableGroup, int swappedJoinIndex, boolean forceLeftJoin) {
+	protected void renderTableReferenceJoins(TableGroup tableGroup, LockMode lockMode, int swappedJoinIndex, boolean forceLeftJoin) {
 		// When we are in a recursive CTE, we can't render joins on DB2...
 		// See https://modern-sql.com/feature/with-recursive/db2/error-345-state-42836
 		if ( isInRecursiveQueryPart() ) {
@@ -107,7 +102,7 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 			}
 		}
 		else {
-			super.renderTableReferenceJoins( tableGroup, swappedJoinIndex, forceLeftJoin );
+			super.renderTableReferenceJoins( tableGroup, lockMode, swappedJoinIndex, forceLeftJoin );
 		}
 	}
 
@@ -123,7 +118,7 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 			}
 			appendSql( COMMA_SEPARATOR_CHAR );
 
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+			renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 			if ( tableGroupJoin.getPredicate() != null && !tableGroupJoin.getPredicate().isEmpty() ) {
 				addAdditionalWherePredicate( tableGroupJoin.getPredicate() );
 			}
@@ -215,21 +210,6 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 		else {
 			super.visitAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
 		}
-	}
-
-	@Override
-	protected String getForUpdate() {
-		return " for read only with rs use and keep update locks";
-	}
-
-	@Override
-	protected String getForShare(int timeoutMillis) {
-		return " for read only with rs use and keep share locks";
-	}
-
-	@Override
-	protected String getSkipLocked() {
-		return " skip locked data";
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
@@ -621,21 +601,6 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 		else {
 			expression.accept( this );
 		}
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
 	}
 
 	@Override

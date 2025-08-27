@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
@@ -52,6 +52,9 @@ public class EmbeddableForeignKeyResultImpl<T>
 		resetFetches( creationState.visitFetches( this ) );
 	}
 
+	/*
+	 * Used by Hibernate Reactive
+	 */
 	protected EmbeddableForeignKeyResultImpl(EmbeddableForeignKeyResultImpl<T> original) {
 		super( original );
 		this.resultVariable = original.resultVariable;
@@ -83,9 +86,8 @@ public class EmbeddableForeignKeyResultImpl<T>
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final boolean shouldSelect;
-		if ( fetchable instanceof ToOneAttributeMapping ) {
+		if ( fetchable instanceof ToOneAttributeMapping toOne ) {
 			// We need to make sure to-ones are always delayed to avoid cycles while resolving entity keys
-			final ToOneAttributeMapping toOne = (ToOneAttributeMapping) fetchable;
 			shouldSelect = selected && !creationState.isAssociationKeyVisited(
 					toOne.getForeignKeyDescriptor().getAssociationKey()
 			) && !ForeignKeyDescriptor.PART_NAME.equals( getNavigablePath().getLocalName() )
@@ -124,7 +126,7 @@ public class EmbeddableForeignKeyResultImpl<T>
 	public EmbeddableInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return getReferencedModePart() instanceof NonAggregatedIdentifierMapping
 				? new NonAggregatedIdentifierMappingInitializer( this, null, creationState, true )
-				: new EmbeddableInitializerImpl( this, null, null, creationState, true );
+				: new EmbeddableInitializerImpl( this, null, null, null, creationState, true );
 	}
 
 	@Override

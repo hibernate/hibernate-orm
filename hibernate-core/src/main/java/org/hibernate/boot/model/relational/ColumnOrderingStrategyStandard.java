@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.relational;
@@ -47,8 +47,8 @@ public class ColumnOrderingStrategyStandard implements ColumnOrderingStrategy {
 	public List<Column> orderConstraintColumns(Constraint constraint, Metadata metadata) {
 		// We try to find uniqueKey constraint containing only primary key.
 		//	This uniqueKey then orders primaryKey columns. Otherwise, order as usual.
-		if ( constraint instanceof PrimaryKey ) {
-			UniqueKey uniqueKey = ((PrimaryKey) constraint).getOrderingUniqueKey();
+		if ( constraint instanceof PrimaryKey primaryKey ) {
+			final UniqueKey uniqueKey = primaryKey.getOrderingUniqueKey();
 			if ( uniqueKey != null ) {
 				return uniqueKey.getColumns();
 			}

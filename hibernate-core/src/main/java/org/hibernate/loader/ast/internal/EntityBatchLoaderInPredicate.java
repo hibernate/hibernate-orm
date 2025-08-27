@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
@@ -9,7 +9,6 @@ import java.util.Locale;
 
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.BatchFetchQueue;
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
@@ -17,6 +16,7 @@ import org.hibernate.loader.ast.spi.EntityBatchLoader;
 import org.hibernate.loader.ast.spi.SqlInPredicateMultiKeyLoader;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
@@ -24,6 +24,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * An {@link EntityBatchLoader} using one or more SQL queries, which each initialize up
@@ -41,7 +42,6 @@ public class EntityBatchLoaderInPredicate<T>
 	private final int domainBatchSize;
 	private final int sqlBatchSize;
 
-	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final JdbcParametersList jdbcParameters;
 	private final SelectStatement sqlAst;
 	private final JdbcOperationQuerySelect jdbcSelectOperation;
@@ -54,27 +54,26 @@ public class EntityBatchLoaderInPredicate<T>
 			EntityMappingType entityDescriptor,
 			LoadQueryInfluencers loadQueryInfluencers) {
 		super( entityDescriptor, loadQueryInfluencers );
-		this.loadQueryInfluencers = loadQueryInfluencers;
 		this.domainBatchSize = domainBatchSize;
-		int idColumnCount = entityDescriptor.getEntityPersister().getIdentifierType().getColumnSpan( sessionFactory );
-		this.sqlBatchSize = sessionFactory.getJdbcServices()
-				.getDialect()
-				.getBatchLoadSizingStrategy()
-				.determineOptimalBatchLoadSize( idColumnCount, domainBatchSize, false );
+		final int idColumnCount =
+				entityDescriptor.getEntityPersister().getIdentifierType()
+						.getColumnSpan( sessionFactory .getRuntimeMetamodels());
+		sqlBatchSize =
+				sessionFactory.getJdbcServices().getDialect().getBatchLoadSizingStrategy()
+						.determineOptimalBatchLoadSize( idColumnCount, domainBatchSize, false );
 
-		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.debugf(
-					"Batch fetching `%s` entity using padded IN-list : %s (%s)",
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.tracef(
+					"Batch fetching enabled for entity '%s' using IN-predicate with batch size %s (%s)",
 					entityDescriptor.getEntityName(),
-					domainBatchSize,
-					sqlBatchSize
+					sqlBatchSize,
+					domainBatchSize
 			);
 		}
 
 		final EntityIdentifierMapping identifierMapping = getLoadable().getIdentifierMapping();
-
 		final int expectedNumberOfParameters = identifierMapping.getJdbcTypeCount() * sqlBatchSize;
-		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder( expectedNumberOfParameters );
+		final JdbcParametersList.Builder builder = JdbcParametersList.newBuilder( expectedNumberOfParameters );
 		sqlAst = LoaderSelectBuilder.createSelect(
 				getLoadable(),
 				// null here means to select everything
@@ -83,18 +82,17 @@ public class EntityBatchLoaderInPredicate<T>
 				null,
 				sqlBatchSize,
 				loadQueryInfluencers,
-				LockOptions.NONE,
-				jdbcParametersBuilder::add,
+				new LockOptions(),
+				builder::add,
 				sessionFactory
 		);
-		this.jdbcParameters = jdbcParametersBuilder.build();
+		jdbcParameters = builder.build();
 		assert jdbcParameters.size() == expectedNumberOfParameters;
 
-		jdbcSelectOperation = sessionFactory.getJdbcServices()
-				.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
-				.buildSelectTranslator( sessionFactory, sqlAst )
-				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
+		jdbcSelectOperation =
+				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+						.buildSelectTranslator( sessionFactory, sqlAst )
+						.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
 	}
 
 	@Override
@@ -124,65 +122,65 @@ public class EntityBatchLoaderInPredicate<T>
 			LockOptions lockOptions,
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.debugf( "Ids to batch-fetch initialize (`%s#%s`) %s",
-					getLoadable().getEntityName(), pkValue, Arrays.toString(idsToInitialize) );
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.tracef( "Entity ids to initialize via batch fetching (%s) %s",
+					infoString( getLoadable(), pkValue ),
+					Arrays.toString(idsToInitialize) );
 		}
-		final MultiKeyLoadChunker<Object> chunker = new MultiKeyLoadChunker<>(
+
+		final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
+		final EntityPersister persister = getLoadable().getEntityPersister();
+		getChunker( getLoadable().getIdentifierMapping() )
+				.processChunks(
+						idsToInitialize,
+						sqlBatchSize,
+						(jdbcParameterBindings, session1) -> {
+							// Create a RegistrationHandler for handling any
+							// subselect fetches we encounter handling this chunk
+							return new SingleIdExecutionContext(
+									pkValue,
+									entityInstance,
+									getLoadable().getRootEntityDescriptor(),
+									readOnly,
+									lockOptions,
+									SubselectFetch.createRegistrationHandler(
+											batchFetchQueue,
+											sqlAst,
+											jdbcParameters,
+											jdbcParameterBindings
+									),
+									session
+							);
+						},
+						(key, relativePosition, absolutePosition) -> {
+							if ( key != null ) {
+								batchFetchQueue.removeBatchLoadableEntityKey( session.generateEntityKey( key, persister ) );
+							}
+						},
+						(startIndex) -> {
+							if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+								MULTI_KEY_LOAD_LOGGER.tracef(
+										"Processing entity batch-fetch chunk (%s) %s - %s",
+										infoString( getLoadable(), pkValue ),
+										startIndex,
+										startIndex + ( sqlBatchSize - 1 )
+								);
+							}
+						},
+						(startIndex, nonNullElementCount) -> {
+						},
+						session
+				);
+	}
+
+	private MultiKeyLoadChunker<Object> getChunker(EntityIdentifierMapping identifierMapping) {
+		return new MultiKeyLoadChunker<>(
 				sqlBatchSize,
-				getLoadable().getIdentifierMapping().getJdbcTypeCount(),
-				getLoadable().getIdentifierMapping(),
+				identifierMapping.getJdbcTypeCount(),
+				identifierMapping,
 				jdbcParameters,
 				sqlAst,
 				jdbcSelectOperation
-		);
-
-		final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
-
-		chunker.processChunks(
-				idsToInitialize,
-				sqlBatchSize,
-				(jdbcParameterBindings, session1) -> {
-					// Create a RegistrationHandler for handling any subselect fetches we encounter handling this chunk
-					final SubselectFetch.RegistrationHandler registrationHandler = SubselectFetch.createRegistrationHandler(
-							batchFetchQueue,
-							sqlAst,
-							jdbcParameters,
-							jdbcParameterBindings
-					);
-					return new SingleIdExecutionContext(
-							pkValue,
-							entityInstance,
-							getLoadable().getRootEntityDescriptor(),
-							readOnly,
-							lockOptions,
-							registrationHandler,
-							session
-					);
-				},
-				(key, relativePosition, absolutePosition) -> {
-					if ( key != null ) {
-						final EntityKey entityKey = session.generateEntityKey(
-								key,
-								getLoadable().getEntityPersister()
-						);
-						batchFetchQueue.removeBatchLoadableEntityKey( entityKey );
-					}
-				},
-				(startIndex) -> {
-					if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-						MULTI_KEY_LOAD_LOGGER.debugf(
-								"Processing entity batch-fetch chunk (`%s#%s`) %s - %s",
-								getLoadable().getEntityName(),
-								pkValue,
-								startIndex,
-								startIndex + ( sqlBatchSize - 1 )
-						);
-					}
-				},
-				(startIndex, nonNullElementCount) -> {
-				},
-				session
 		);
 	}
 

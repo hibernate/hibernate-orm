@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -30,7 +30,7 @@ public @interface SecondaryRow {
 	String table() default "";
 
 	/**
-	 * If enabled, Hibernate will never insert or update the columns of the secondary table.
+	 * If disabled, Hibernate will never insert or update the columns of the secondary table.
 	 * <p>
 	 * This setting is useful if data in the secondary table belongs to some other entity,
 	 * or if it is maintained externally to Hibernate.

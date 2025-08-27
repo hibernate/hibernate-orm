@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap;
@@ -498,9 +498,8 @@ public class BootstrapTest {
 
 			// As you might expect, an EventListenerRegistry is the thing with which event
 			// listeners are registered
-			// It is a service so we look it up using the service registry
-			final EventListenerRegistry eventListenerRegistry =
-				bootstrapContext.getServiceRegistry().getService(EventListenerRegistry.class);
+			// It is a service, so we look it up using the service registry
+			final EventListenerRegistry eventListenerRegistry = sessionFactory.getEventListenerRegistry();
 
 			// If you wish to have custom determination and handling of "duplicate" listeners,
 			// you would have to add an implementation of the

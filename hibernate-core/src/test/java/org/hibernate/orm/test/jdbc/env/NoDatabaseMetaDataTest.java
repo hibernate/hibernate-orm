@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jdbc.env;
@@ -63,7 +63,7 @@ public class NoDatabaseMetaDataTest extends BaseUnitTestCase {
 
 		assertNull( extractedDatabaseMetaData.getConnectionCatalogName() );
 		assertNull( extractedDatabaseMetaData.getConnectionSchemaName() );
-		assertTrue( extractedDatabaseMetaData.supportsNamedParameters() );
+		assertFalse( extractedDatabaseMetaData.supportsNamedParameters() );
 		assertFalse( extractedDatabaseMetaData.supportsRefCursors() );
 		assertFalse( extractedDatabaseMetaData.supportsScrollableResults() );
 		assertFalse( extractedDatabaseMetaData.supportsGetGeneratedKeys() );
@@ -76,11 +76,6 @@ public class NoDatabaseMetaDataTest extends BaseUnitTestCase {
 	}
 
 	public static class TestDialect extends Dialect {
-		@Override
-		public boolean supportsNamedParameters(java.sql.DatabaseMetaData databaseMetaData) {
-			return true;
-		}
-
 		@Override
 		public DatabaseVersion getVersion() {
 			return ZERO_VERSION;

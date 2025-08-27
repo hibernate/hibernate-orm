@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tuple;
@@ -94,11 +94,12 @@ public final class PropertyFactory {
 				new BaselineAttributeInformation.Builder()
 						.setLazy( lazy )
 						.setInsertable( property.isInsertable() )
-						.setUpdateable( property.isUpdateable() )
+						.setUpdateable( property.isUpdatable() )
 						.setNullable( property.isOptional() )
-						.setDirtyCheckable( property.isUpdateable() && !lazy )
+						.setDirtyCheckable( property.isUpdatable() && !lazy )
 						.setVersionable( property.isOptimisticLocked() )
 						.setCascadeStyle( property.getCascadeStyle() )
+						.setOnDeleteAction( property.getOnDeleteAction() )
 						.createInformation()
 		);
 	}
@@ -164,11 +165,12 @@ public final class PropertyFactory {
 						new BaselineAttributeInformation.Builder()
 								.setLazy( lazy )
 								.setInsertable( property.isInsertable() )
-								.setUpdateable( property.isUpdateable() )
+								.setUpdateable( property.isUpdatable() )
 								.setNullable( property.isOptional() )
-								.setDirtyCheckable( alwaysDirtyCheck || property.isUpdateable() )
+								.setDirtyCheckable( alwaysDirtyCheck || property.isUpdatable() )
 								.setVersionable( property.isOptimisticLocked() )
 								.setCascadeStyle( property.getCascadeStyle() )
+								.setOnDeleteAction( property.getOnDeleteAction() )
 								.setFetchMode( property.getValue().getFetchMode() )
 								.createInformation()
 				);
@@ -183,11 +185,12 @@ public final class PropertyFactory {
 						new BaselineAttributeInformation.Builder()
 								.setLazy( lazy )
 								.setInsertable( property.isInsertable() )
-								.setUpdateable( property.isUpdateable() )
+								.setUpdateable( property.isUpdatable() )
 								.setNullable( property.isOptional() )
-								.setDirtyCheckable( alwaysDirtyCheck || property.isUpdateable() )
+								.setDirtyCheckable( alwaysDirtyCheck || property.isUpdatable() )
 								.setVersionable( property.isOptimisticLocked() )
 								.setCascadeStyle( property.getCascadeStyle() )
+								.setOnDeleteAction( property.getOnDeleteAction() )
 								.setFetchMode( property.getValue().getFetchMode() )
 								.createInformation()
 				);
@@ -204,11 +207,12 @@ public final class PropertyFactory {
 						new BaselineAttributeInformation.Builder()
 								.setLazy( lazy )
 								.setInsertable( property.isInsertable() )
-								.setUpdateable( property.isUpdateable() )
+								.setUpdateable( property.isUpdatable() )
 								.setNullable( property.isOptional() )
-								.setDirtyCheckable( alwaysDirtyCheck || property.isUpdateable() )
+								.setDirtyCheckable( alwaysDirtyCheck || property.isUpdatable() )
 								.setVersionable( property.isOptimisticLocked() )
 								.setCascadeStyle( property.getCascadeStyle() )
+								.setOnDeleteAction( property.getOnDeleteAction() )
 								.setFetchMode( property.getValue().getFetchMode() )
 								.createInformation()
 				);

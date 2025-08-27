@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.mutation.internal;
@@ -51,8 +51,8 @@ public class StandardMutationExecutorService implements MutationExecutorService 
 
 		if ( operationGroup.getNumberOfOperations() == 1 ) {
 			final MutationOperation singleOperation = operationGroup.getSingleOperation();
-			if ( singleOperation instanceof SelfExecutingUpdateOperation ) {
-				return new MutationExecutorSingleSelfExecuting( (SelfExecutingUpdateOperation) singleOperation, session );
+			if ( singleOperation instanceof SelfExecutingUpdateOperation selfExecutingUpdateOperation ) {
+				return new MutationExecutorSingleSelfExecuting( selfExecutingUpdateOperation, session );
 			}
 
 			final PreparableMutationOperation jdbcOperation = (PreparableMutationOperation) singleOperation;

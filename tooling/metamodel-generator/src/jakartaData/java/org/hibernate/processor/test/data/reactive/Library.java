@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.data.reactive;
@@ -107,4 +107,13 @@ public interface Library {
 
 	@Find
 	Uni<List<Author>> authorsByCityAndPostcode(String address_city, String address_postcode);
+
+	@Query("update Author set address = :address where ssn = :id")
+	Uni<Void> updateAuthorAddress1(String id, Address address);
+
+	@Query("update Author set address = :address where ssn = :id")
+	Uni<Integer> updateAuthorAddress2(String id, Address address);
+
+	@Query("update Author set address = :address where ssn = :id")
+	Uni<Boolean> updateAuthorAddress3(String id, Address address);
 }

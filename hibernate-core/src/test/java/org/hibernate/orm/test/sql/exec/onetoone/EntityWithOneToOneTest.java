@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.exec.onetoone;
@@ -40,15 +40,18 @@ import static org.junit.Assert.assertTrue;
 @SessionFactory(generateStatistics = true)
 public class EntityWithOneToOneTest {
 
+	final int maxInt = Integer.MAX_VALUE - 1;
+	final int minInt = Integer.MIN_VALUE + 1;
+
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
-		EntityWithOneToOne entity = new EntityWithOneToOne( 1, "first", Integer.MAX_VALUE );
+		EntityWithOneToOne entity = new EntityWithOneToOne( 1, "first", maxInt );
 
 		SimpleEntity other = new SimpleEntity(
 				2,
 				Calendar.getInstance().getTime(),
 				null,
-				Integer.MAX_VALUE,
+				maxInt,
 				Long.MAX_VALUE,
 				null
 		);
@@ -91,7 +94,7 @@ public class EntityWithOneToOneTest {
 				session -> {
 					final SimpleEntity loaded = session.get( SimpleEntity.class, 2 );
 					assert loaded != null;
-					assertThat( loaded.getSomeInteger(), equalTo( Integer.MAX_VALUE ) );
+					assertThat( loaded.getSomeInteger(), equalTo( maxInt ) );
 				}
 		);
 	}
@@ -102,7 +105,7 @@ public class EntityWithOneToOneTest {
 				3,
 				Calendar.getInstance().getTime(),
 				null,
-				Integer.MIN_VALUE,
+				minInt,
 				Long.MIN_VALUE,
 				null
 		);

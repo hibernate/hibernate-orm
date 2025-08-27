@@ -1,11 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
@@ -176,4 +176,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 		);
 	}
 
+	public static boolean filterClauseSupported(SqlAstTranslator<?> translator) {
+		return translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause();
+	}
 }

@@ -1,11 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import jakarta.persistence.EntityManager;
@@ -21,6 +20,8 @@ import jakarta.persistence.metamodel.Metamodel;
 
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.exception.GenericJDBCException;
+import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.orm.test.jpa.metamodel.Address;
 import org.hibernate.orm.test.jpa.metamodel.Alias;
@@ -37,13 +38,14 @@ import org.hibernate.orm.test.jpa.metamodel.ShelfLife;
 import org.hibernate.orm.test.jpa.metamodel.Spouse;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
@@ -282,36 +284,40 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-10737")
-	@FailureExpected(jiraKey = "HHH-10737")
 	public void testMissingDialectFunction() {
-		doInJPA( this::entityManagerFactory, em -> {
+		TransactionUtil2.inTransaction( entityManagerFactory(), (em) -> {
 			Human human = new Human();
 			human.setId( 200L );
 			human.setName( "2" );
-			human.setBorn( new Date() );
 			em.persist( human );
+		} );
 
-			em.getTransaction().commit();
-
+		TransactionUtil2.inTransaction( entityManagerFactory(), (em) -> {
 			CriteriaBuilder cb = em.getCriteriaBuilder();
-			CriteriaQuery<HumanDTO> criteria = cb.createQuery( HumanDTO.class );
+			CriteriaQuery<Long> criteria = cb.createQuery( Long.class );
+
 			Root<Human> root = criteria.from( Human.class );
 
-			criteria.select(
-					cb.construct(
-							HumanDTO.class,
-							root.get( Human_.id ),
+			criteria.select( cb.count( cb.literal( 1 ) ) );
+
+			criteria.where(
+					cb.equal(
 							root.get( Human_.name ),
 							cb.function(
-									"convert",
+									"does_not_exist",
 									String.class,
-									root.get( Human_.born ),
-									cb.literal( 110 )
+									root.get( Human_.id )
 							)
 					)
 			);
 
-			em.createQuery( criteria ).getResultList();
+			try {
+				em.createQuery( criteria ).getResultList();
+				fail( "Expecting a SQLGrammarException" );
+			}
+			catch (SQLGrammarException | GenericJDBCException expected) {
+				// on Sybase, this results in GenericJDBCException
+			}
 		} );
 	}
 

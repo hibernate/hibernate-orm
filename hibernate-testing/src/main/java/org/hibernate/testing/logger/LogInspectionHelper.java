@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.logger;
@@ -32,9 +32,8 @@ public final class LogInspectionHelper {
 	}
 
 	private static Log4J2DelegatingLogger convertType(BasicLogger log) {
-		if ( log instanceof DelegatingBasicLogger) {
+		if ( log instanceof DelegatingBasicLogger wrapper) {
 			//Most loggers generated via the annotation processor are of this type
-			DelegatingBasicLogger wrapper = (DelegatingBasicLogger) log;
 			try {
 				return extractFromWrapper( wrapper );
 			}

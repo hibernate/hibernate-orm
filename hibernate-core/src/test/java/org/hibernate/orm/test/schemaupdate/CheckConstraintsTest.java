@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate;
@@ -56,6 +56,7 @@ public class CheckConstraintsTest {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTableCheck.class)
 	public void testCheckConstraintsAtEntityLevelAreApplied() throws Exception {
 		createSchema( EntityLevelCheck.class );
 		String fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase()

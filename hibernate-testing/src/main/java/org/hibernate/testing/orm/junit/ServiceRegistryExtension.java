@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.junit;
@@ -259,6 +259,8 @@ public class ServiceRegistryExtension
 
 	private static void configureServices(ServiceRegistry serviceRegistryAnn, StandardServiceRegistryBuilder ssrb) {
 		try {
+			applyConfigurationSets( serviceRegistryAnn, ssrb );
+
 			for ( Setting setting : serviceRegistryAnn.settings() ) {
 				ssrb.applySetting( setting.name(), setting.value() );
 			}
@@ -284,6 +286,19 @@ public class ServiceRegistryExtension
 		}
 		catch (Exception e) {
 			throw new RuntimeException( "Could not configure StandardServiceRegistryBuilder", e );
+		}
+	}
+
+	private static void applyConfigurationSets(ServiceRegistry serviceRegistryAnn, StandardServiceRegistryBuilder ssrb) {
+		final SettingConfiguration[] settingConfigurations = serviceRegistryAnn.settingConfigurations();
+		for ( int i = 0; i < settingConfigurations.length; i++ ) {
+			try {
+				final SettingConfiguration.Configurer configurer = settingConfigurations[i].configurer().getDeclaredConstructor().newInstance();
+				configurer.applySettings( ssrb );
+			}
+			catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+				throw new RuntimeException( e );
+			}
 		}
 	}
 
@@ -316,7 +331,7 @@ public class ServiceRegistryExtension
 		throw throwable;
 	}
 
-	private static class ServiceRegistryScopeImpl implements ServiceRegistryScope, ExtensionContext.Store.CloseableResource {
+	private static class ServiceRegistryScopeImpl implements ServiceRegistryScope, AutoCloseable {
 		private BootstrapServiceRegistryProducer bsrProducer;
 		private ServiceRegistryProducer ssrProducer;
 

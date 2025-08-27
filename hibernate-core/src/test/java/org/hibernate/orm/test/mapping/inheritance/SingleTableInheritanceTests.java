@@ -1,10 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.inheritance;
 
 import java.util.List;
+
+import jakarta.persistence.Basic;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
@@ -142,16 +144,7 @@ public class SingleTableInheritanceTests {
 
 	@AfterEach
 	public void cleanupTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "from DomesticCustomer", DomesticCustomer.class ).list().forEach(
-							cust -> session.remove( cust )
-					);
-					session.createQuery( "from ForeignCustomer", ForeignCustomer.class ).list().forEach(
-							cust -> session.remove( cust )
-					);
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "Customer" )
@@ -179,6 +172,7 @@ public class SingleTableInheritanceTests {
 			this.id = id;
 		}
 
+		@Basic( optional = false )
 		public String getName() {
 			return name;
 		}
@@ -201,6 +195,7 @@ public class SingleTableInheritanceTests {
 			this.taxId = taxId;
 		}
 
+		@Basic( optional = false )
 		public String getTaxId() {
 			return taxId;
 		}
@@ -223,6 +218,7 @@ public class SingleTableInheritanceTests {
 			this.vat = vat;
 		}
 
+		@Basic( optional = false )
 		public String getVat() {
 			return vat;
 		}

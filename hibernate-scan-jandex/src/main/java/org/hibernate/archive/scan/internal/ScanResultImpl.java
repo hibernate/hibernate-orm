@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.archive.scan.internal;
@@ -14,21 +14,13 @@ import org.hibernate.boot.archive.scan.spi.ScanResult;
 
 
 /**
-* @author Steve Ebersole
-*/
-public class ScanResultImpl implements ScanResult, Serializable {
-	private final Set<PackageDescriptor> packageDescriptorSet;
-	private final Set<ClassDescriptor> classDescriptorSet;
-	private final Set<MappingFileDescriptor> mappingFileSet;
-
-	public ScanResultImpl(
-			Set<PackageDescriptor> packageDescriptorSet,
-			Set<ClassDescriptor> classDescriptorSet,
-			Set<MappingFileDescriptor> mappingFileSet) {
-		this.packageDescriptorSet = packageDescriptorSet;
-		this.classDescriptorSet = classDescriptorSet;
-		this.mappingFileSet = mappingFileSet;
-	}
+ * @author Steve Ebersole
+ */
+public record ScanResultImpl(
+		Set<PackageDescriptor> packageDescriptorSet,
+		Set<ClassDescriptor> classDescriptorSet,
+		Set<MappingFileDescriptor> mappingFileSet
+) implements ScanResult, Serializable {
 
 	@Override
 	public Set<PackageDescriptor> getLocatedPackages() {

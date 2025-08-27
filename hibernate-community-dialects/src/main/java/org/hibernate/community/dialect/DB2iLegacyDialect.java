@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -7,9 +7,12 @@ package org.hibernate.community.dialect;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
+import org.hibernate.dialect.function.DB2SubstringFunction;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
+import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.DB2LockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LegacyDB2LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -56,13 +59,26 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 	}
 
 	@Override
+	protected LockingSupport buildLockingSupport() {
+		return DB2LockingSupport.forDB2i();
+	}
+
+	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
-		if ( getVersion().isSameOrAfter( 7, 2 ) ) {
-			CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
-			functionFactory.listagg( null );
-			functionFactory.inverseDistributionOrderedSetAggregates();
-			functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+		super.initializeFunctionRegistry( functionContributions );
+		// DB2 for i doesn't allow code units: https://www.ibm.com/docs/en/i/7.1.0?topic=functions-substring
+		functionContributions.getFunctionRegistry().register(
+				"substring",
+				new DB2SubstringFunction( false, functionContributions.getTypeConfiguration() )
+		);
+		if ( getVersion().isSameOrAfter( 7, 1 ) ) {
+			CommonFunctionFactory functionFactory = new CommonFunctionFactory( functionContributions );
+			functionFactory.regexpLike();
+			if ( getVersion().isSameOrAfter( 7, 2 ) ) {
+				functionFactory.listagg( null );
+				functionFactory.inverseDistributionOrderedSetAggregates();
+				functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+			}
 		}
 	}
 
@@ -110,7 +126,7 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 	@Override
 	public String getQuerySequencesString() {
 		if ( getVersion().isSameOrAfter(7,3) ) {
-			return "select distinct sequence_name from qsys2.syssequences " +
+			return "select distinct sequence_schema as seqschema, sequence_name as seqname, START, minimum_value as minvalue, maximum_value as maxvalue, increment from qsys2.syssequences " +
 					"where current_schema='*LIBL' and sequence_schema in (select schema_name from qsys2.library_list_info) " +
 					"or sequence_schema=current_schema";
 		}
@@ -129,12 +145,7 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return getVersion().isSameOrAfter(7, 3)
 				? DB2IdentityColumnSupport.INSTANCE
-				: DB2390IdentityColumnSupport.INSTANCE;
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		return true;
+				: DB2zIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

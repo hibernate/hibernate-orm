@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.procedure;
@@ -7,7 +7,6 @@ package org.hibernate.orm.test.procedure;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalDateTime;
@@ -231,34 +230,6 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 				}
 			} );
 			assertEquals( Long.valueOf( 2 ), phoneCount );
-		} );
-	}
-
-	@Test
-	public void testFunctionWithJDBCByName() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			try {
-				Session session = entityManager.unwrap( Session.class );
-				Long phoneCount = session.doReturningWork( connection -> {
-					CallableStatement function = null;
-					try {
-						function = connection.prepareCall( "{ ? = call fn_count_phones(?) }" );
-						function.registerOutParameter( "phoneCount", Types.BIGINT );
-						function.setLong( "personId", 1L );
-						function.execute();
-						return function.getLong( 1 );
-					}
-					finally {
-						if ( function != null ) {
-							function.close();
-						}
-					}
-				} );
-				assertEquals( Long.valueOf( 2 ), phoneCount );
-			}
-			catch (Exception e) {
-				assertEquals( SQLFeatureNotSupportedException.class, e.getCause().getClass() );
-			}
 		} );
 	}
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -12,7 +12,7 @@ import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.MapKeyJoinColumn;
 
@@ -35,7 +35,7 @@ public class MapKeyJoinColumnJpaAnnotation implements MapKeyJoinColumn {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public MapKeyJoinColumnJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public MapKeyJoinColumnJpaAnnotation(ModelsContext modelContext) {
 		this.name = "";
 		this.referencedColumnName = "";
 		this.unique = false;
@@ -51,7 +51,7 @@ public class MapKeyJoinColumnJpaAnnotation implements MapKeyJoinColumn {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public MapKeyJoinColumnJpaAnnotation(MapKeyJoinColumn annotation, SourceModelBuildingContext modelContext) {
+	public MapKeyJoinColumnJpaAnnotation(MapKeyJoinColumn annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.referencedColumnName = annotation.referencedColumnName();
 		this.unique = annotation.unique();
@@ -67,7 +67,7 @@ public class MapKeyJoinColumnJpaAnnotation implements MapKeyJoinColumn {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public MapKeyJoinColumnJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public MapKeyJoinColumnJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.referencedColumnName = (String) attributeValues.get( "referencedColumnName" );
 		this.unique = (boolean) attributeValues.get( "unique" );

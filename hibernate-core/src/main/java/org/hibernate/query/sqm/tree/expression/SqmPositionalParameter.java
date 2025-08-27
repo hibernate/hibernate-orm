@@ -1,13 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * Models a positional parameter expression
@@ -27,7 +28,7 @@ public class SqmPositionalParameter<T> extends AbstractSqmParameter<T> {
 	public SqmPositionalParameter(
 			int position,
 			boolean canBeMultiValued,
-			SqmExpressible<T> expressibleType,
+			SqmBindableType<T> expressibleType,
 			NodeBuilder nodeBuilder) {
 		super( canBeMultiValued, expressibleType, nodeBuilder );
 		this.position = position;
@@ -78,15 +79,26 @@ public class SqmPositionalParameter<T> extends AbstractSqmParameter<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( '?' );
-		sb.append( getPosition() );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( '?' );
+		hql.append( getPosition() );
 	}
 
 	@Override
-	public int compareTo(SqmParameter anotherParameter) {
-		return anotherParameter instanceof SqmPositionalParameter<?>
-				? getPosition().compareTo( ( (SqmPositionalParameter<?>) anotherParameter ).getPosition() )
+	public int compareTo(SqmParameter<T> parameter) {
+		return parameter instanceof SqmPositionalParameter<T> positionalParameter
+				? getPosition().compareTo( positionalParameter.getPosition() )
 				: 1;
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmPositionalParameter<?> that
+			&& position == that.position;
+	}
+
+	@Override
+	public int hashCode() {
+		return position;
 	}
 }

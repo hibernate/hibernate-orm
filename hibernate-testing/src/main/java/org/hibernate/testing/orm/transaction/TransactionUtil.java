@@ -1,19 +1,30 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.transaction;
 
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import jakarta.persistence.EntityManager;
 
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.testing.orm.AsyncExecutor;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.jboss.logging.Logger;
+
+import static org.junit.jupiter.api.Assertions.fail;
 
 public abstract class TransactionUtil {
 	private static final Logger log = Logger.getLogger( TransactionUtil.class );
@@ -138,6 +149,62 @@ public abstract class TransactionUtil {
 				// 		to clean up.
 			}
 			throw t;
+		}
+	}
+
+	public static void assertRowLock(SessionFactoryScope factoryScope, String tableName, String columnName, String idColumn, Number id, boolean expectingToBlock) {
+		final Dialect dialect = factoryScope.getSessionFactory().getJdbcServices().getDialect();
+		final boolean skipLocked = dialect.getLockingSupport().getMetadata().supportsSkipLocked();
+		// SQL Server readpast hint doesn't really work unfortunately
+		if ( skipLocked && !( dialect instanceof SQLServerDialect ) ) {
+			factoryScope.inTransaction( (session) -> {
+				final String baseSql = String.format( "select %s from %s t where %s=%s", columnName, tableName, idColumn, id );
+				final String sql = dialect.applyLocksToSql(
+						baseSql,
+						new LockOptions( LockMode.UPGRADE_SKIPLOCKED ),
+						Map.of( "t", new String[0] )
+				);
+				final int resultSize = session.createNativeQuery( sql ).getResultList().size();
+				if ( expectingToBlock && resultSize > 0 ) {
+					fail( "Expecting update to " + tableName + " to block dues to locks" );
+				}
+				else if ( !expectingToBlock && resultSize == 0 ) {
+					fail( "Unexpected lock found on " + tableName );
+				}
+			} );
+		}
+		else {
+			try {
+				AsyncExecutor.executeAsync( 2, TimeUnit.SECONDS, () -> {
+					factoryScope.inTransaction( (session) -> {
+						//noinspection deprecation
+						final String sql = String.format( "update %s set %s = null", tableName, columnName );
+						session.createNativeQuery( sql ).executeUpdate();
+						if ( expectingToBlock ) {
+							fail( "Expecting update to " + tableName + " to block dues to locks" );
+						}
+					} );
+				} );
+			}
+			catch (AsyncExecutor.TimeoutException expected) {
+				if ( !expectingToBlock ) {
+					fail( "Expecting update to " + tableName + " to succeed, but failed due to async timeout (presumably due to locks)", expected );
+				}
+			}
+			catch (RuntimeException re) {
+				if ( re.getCause() instanceof jakarta.persistence.LockTimeoutException
+					|| re.getCause() instanceof org.hibernate.exception.LockTimeoutException ) {
+					if ( !expectingToBlock ) {
+						fail( "Expecting update to " + tableName + " to succeed, but failed due to async timeout (presumably due to locks)", re.getCause() );
+					}
+				}
+				else if ( re.getCause() instanceof ConstraintViolationException cve ) {
+					throw cve;
+				}
+				else {
+					throw re;
+				}
+			}
 		}
 	}
 

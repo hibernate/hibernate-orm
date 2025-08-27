@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -21,12 +21,10 @@ import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.Hibernate.getLobHelper;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@DomainModel(
-		annotatedClasses = { Person.class },
-		xmlMappings = "org/hibernate/community/dialect/Person.hbm.xml"
-)
+@DomainModel(annotatedClasses = Person.class)
 @RequiresDialect(AltibaseDialect.class)
 @SessionFactory
 public class AltibaseFunctionsTest {
@@ -52,8 +50,8 @@ public class AltibaseFunctionsTest {
 					{
 						arry[i] = (byte)i;
 					}
-					person.setBinaryData( session.getLobHelper().createBlob(arry) );
-					person.setComments( session.getLobHelper().createClob("blahblah") );
+					person.setBinaryData( getLobHelper().createBlob(arry) );
+					person.setComments( getLobHelper().createClob("blahblah") );
 					session.persist( person );
 				}
 		);

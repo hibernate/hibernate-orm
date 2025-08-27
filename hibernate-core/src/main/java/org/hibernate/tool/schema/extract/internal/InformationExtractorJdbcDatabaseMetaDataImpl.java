@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.extract.internal;
@@ -12,6 +12,7 @@ import java.util.StringTokenizer;
 
 import org.hibernate.boot.model.naming.DatabaseIdentifier;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
@@ -157,11 +158,12 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 
 		// We use this dummy query to retrieve the table information through the ResultSetMetaData
 		// Significantly better than using DatabaseMetaData especially on Oracle with synonyms enabled
+		final QualifiedTableName qualifiedTableName = tableInformation.getName();
 		final String tableName =
 				extractionContext.getSqlStringGenerationContext()
 						// The name comes from the database, so the case is correct
 						// But we quote here to avoid issues with reserved words
-						.format( tableInformation.getName().quote() );
+						.format( qualifiedTableName.quote() );
 
 		try {
 			extractionContext.getQueryResults(
@@ -178,9 +180,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 			);
 		}
 		catch (SQLException e) {
-			throw convertSQLException( e,
-					"Error accessing column metadata: "
-							+ tableInformation.getName().toString() );
+			throw convertSQLException( e, "Error accessing column metadata: " + qualifiedTableName );
 		}
 	}
 

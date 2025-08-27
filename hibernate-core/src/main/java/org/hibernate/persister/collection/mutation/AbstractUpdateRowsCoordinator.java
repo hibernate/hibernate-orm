@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.collection.mutation;
@@ -46,7 +46,7 @@ public abstract class AbstractUpdateRowsCoordinator implements UpdateRowsCoordin
 		// update all the modified entries
 		int count = doUpdate( key, collection, session );
 
-		MODEL_MUTATION_LOGGER.debugf( "Updated `%s` collection rows - %s#%s", count, mutationTarget.getRolePath(), key );
+		MODEL_MUTATION_LOGGER.tracef( "Updated %s collection rows - %s#%s", count, mutationTarget.getRolePath(), key );
 	}
 
 	protected abstract int doUpdate(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session);

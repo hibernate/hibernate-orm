@@ -1,13 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
 /**
- * An event class for merge() and saveOrUpdateCopy()
+ * Event class for {@link org.hibernate.Session#merge}.
  *
  * @author Gavin King
+ *
+ * @see org.hibernate.Session#merge
  */
 public class MergeEvent extends AbstractEvent {
 
@@ -26,18 +28,14 @@ public class MergeEvent extends AbstractEvent {
 		this(entityName, original, source);
 		this.requestedId = id;
 		if ( requestedId == null ) {
-			throw new IllegalArgumentException(
-					"attempt to create merge event with null identifier"
-				);
+			throw new IllegalArgumentException( "Identifier may not be null" );
 		}
 	}
 
 	public MergeEvent(Object object, EventSource source) {
 		super(source);
 		if ( object == null ) {
-			throw new IllegalArgumentException(
-					"attempt to create merge event with null entity"
-				);
+			throw new IllegalArgumentException( "Entity may not be null" );
 		}
 		this.original = object;
 	}

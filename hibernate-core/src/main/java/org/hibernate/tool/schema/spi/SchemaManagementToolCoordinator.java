@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.spi;
@@ -68,7 +68,7 @@ public class SchemaManagementToolCoordinator {
 
 		if ( groupings.isEmpty() ) {
 			// no actions specified
-			log.debug( "No actions found; doing nothing" );
+			log.debug( "No schema management actions found" );
 			return;
 		}
 
@@ -120,12 +120,12 @@ public class SchemaManagementToolCoordinator {
 				StandardConverters.BOOLEAN,
 				false
 		);
-		final ExceptionHandler exceptionHandler = haltOnError ? ExceptionHandlerHaltImpl.INSTANCE : ExceptionHandlerLoggedImpl.INSTANCE;
 
-		final ExecutionOptions executionOptions = buildExecutionOptions(
-				configurationValues,
-				exceptionHandler
-		);
+		final ExecutionOptions executionOptions =
+				buildExecutionOptions( configurationValues,
+						haltOnError
+								? ExceptionHandlerHaltImpl.INSTANCE
+								: ExceptionHandlerLoggedImpl.INSTANCE );
 
 		if ( scriptActionMap != null ) {
 			scriptActionMap.forEach(
@@ -196,7 +196,7 @@ public class SchemaManagementToolCoordinator {
 			final ExecutionOptions executionOptions,
 			ContributableMatcher contributableInclusionFilter) {
 
-		// IMPL NOTE : JPA binds source and target info..
+		// IMPL NOTE : JPA binds source and target info
 
 		switch ( action ) {
 			case CREATE_ONLY: {
@@ -291,6 +291,18 @@ public class SchemaManagementToolCoordinator {
 								serviceRegistry
 						)
 				);
+				break;
+			}
+			case POPULATE: {
+				tool.getSchemaPopulator( executionOptions.getConfigurationValues() ).doPopulation(
+						executionOptions,
+						buildDatabaseTargetDescriptor(
+								executionOptions.getConfigurationValues(),
+								CreateSettingSelector.INSTANCE,
+								serviceRegistry
+						)
+				);
+				break;
 			}
 		}
 	}
@@ -739,7 +751,7 @@ public class SchemaManagementToolCoordinator {
 				}
 
 				if ( databaseActionToUse == Action.NONE &&  scriptActionToUse == Action.NONE ) {
-					log.debugf( "No schema actions specified for contributor `%s`; doing nothing", contributor );
+					log.debugf( "No schema actions specified for contributor '%s'", contributor );
 					continue;
 				}
 

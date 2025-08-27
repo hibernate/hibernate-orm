@@ -1,14 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 
-description = 'Hibernate\'s entity version (audit/history) support'
+plugins {
+    id "local.publishing-java-module"
+    id "local.publishing-group-relocation"
+}
 
-apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
-apply plugin: 'org.hibernate.matrix-test'
+description = "Hibernate's entity version (audit/history) support"
 
 dependencies {
     api project( ':hibernate-core' )
@@ -25,6 +25,8 @@ dependencies {
     compileOnly jakartaLibs.annotation
 
     testImplementation project( ':hibernate-testing' )
+
+    testAnnotationProcessor project( ':hibernate-processor' )
 }
 
 test {
@@ -71,10 +73,4 @@ task testJar(type: Jar, dependsOn: testClasses) {
 
 artifacts {
     tests testJar
-}
-
-tasks."matrix_mariadb" {
-    beforeTest { descriptor ->
-        println "Starting test: " + descriptor
-    }
 }

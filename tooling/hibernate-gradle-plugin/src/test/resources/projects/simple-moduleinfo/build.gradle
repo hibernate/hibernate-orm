@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 
 plugins {
@@ -14,8 +12,8 @@ repositories {
     mavenCentral()
 
     maven {
-        name 'jboss-snapshots-repository'
-        url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
+        name = 'ossrh-snapshots-repository'
+        url = 'https://oss.sonatype.org/content/repositories/snapshots'
     }
 }
 
@@ -30,10 +28,10 @@ hibernate {
     useSameVersion = false
     enhancement {
         enableLazyInitialization.set(true)
-        lazyInitialization = true
+        enableLazyInitialization = true
 
         enableDirtyTracking.set(true)
-        dirtyTracking = true
+        enableDirtyTracking = true
 
         enableExtendedEnhancement.set(true)
     }

@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain;
 
-import org.hibernate.query.sqm.SqmPathSource;
 
 import jakarta.persistence.metamodel.MappedSuperclassType;
 
@@ -13,9 +12,6 @@ import jakarta.persistence.metamodel.MappedSuperclassType;
  *
  * @author Steve Ebersole
  */
-public interface MappedSuperclassDomainType<J> extends IdentifiableDomainType<J>, MappedSuperclassType<J>, SqmPathSource<J> {
-	@Override
-	default DomainType<J> getSqmType() {
-		return IdentifiableDomainType.super.getSqmType();
-	}
+public interface MappedSuperclassDomainType<J>
+		extends IdentifiableDomainType<J>, MappedSuperclassType<J>, PathSource<J> {
 }

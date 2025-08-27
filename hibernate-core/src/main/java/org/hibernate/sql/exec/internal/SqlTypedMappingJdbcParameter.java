@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.exec.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 
 /**
@@ -15,6 +16,11 @@ public class SqlTypedMappingJdbcParameter extends AbstractJdbcParameter {
 
 	public SqlTypedMappingJdbcParameter(SqlTypedMapping sqlTypedMapping) {
 		super( sqlTypedMapping.getJdbcMapping() );
+		this.sqlTypedMapping = sqlTypedMapping;
+	}
+
+	public SqlTypedMappingJdbcParameter(SqlTypedMapping sqlTypedMapping, @Nullable Integer parameterId) {
+		super( sqlTypedMapping.getJdbcMapping(), parameterId );
 		this.sqlTypedMapping = sqlTypedMapping;
 	}
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.basic;
@@ -19,6 +19,7 @@ import jakarta.persistence.Table;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests for mapping wrapper values
@@ -35,8 +36,8 @@ public class WrapperArrayHandlingDisallowTests {
 		}
 		catch (Exception e) {
 			final Throwable rootCause = ExceptionHelper.getRootCause( e );
-			Assertions.assertEquals( MappingException.class, rootCause.getClass() );
-			assertThat( rootCause.getMessage(), containsString( WrapperArrayHandlingDisallowTests.EntityOfByteArrays.class.getName() + "#wrapper" ) );
+			assertEquals( MappingException.class, rootCause.getClass() );
+			assertThat( rootCause.getMessage(), containsString( WrapperArrayHandlingDisallowTests.EntityOfByteArrays.class.getName() + ".wrapper" ) );
 		}
 	}
 

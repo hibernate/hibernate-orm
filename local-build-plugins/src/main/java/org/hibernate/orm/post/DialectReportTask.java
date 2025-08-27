@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.post;
 
@@ -28,7 +26,8 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
 
-import org.hibernate.orm.env.HibernateVersion;
+import org.hibernate.build.HibernateVersion;
+import org.hibernate.build.OrmBuildDetails;
 
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Index;
@@ -133,7 +132,7 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 				fileWriter.write(
 						"Supported Dialects along with the minimum supported version of the underlying database.\n\n\n" );
 
-				HibernateVersion ormVersion = (HibernateVersion) getProject().getRootProject().getExtensions().getByName( "ormVersion" );
+				HibernateVersion ormVersion = getProject().getExtensions().getByType( OrmBuildDetails.class ).getHibernateVersion();
 				fileWriter.write( "NOTE: Hibernate version " + ormVersion.getFamily() + "\n\n" );
 			}
 
@@ -193,10 +192,6 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 		}
 
 		public DialectDelegate createDialectDelegate(String dialectImplClassName) {
-			if ( dialectImplClassName.endsWith( "DialectDelegateWrapper" ) ) {
-				return null;
-			}
-
 			try {
 				final Class<?> dialectImplClass;
 				try {

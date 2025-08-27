@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.jdbc.spi;
@@ -16,32 +16,32 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  */
 public interface JdbcSessionContext {
 	/**
-	 * @see org.hibernate.cfg.AvailableSettings#USE_SCROLLABLE_RESULTSET
+	 * @see org.hibernate.cfg.JdbcSettings#USE_SCROLLABLE_RESULTSET
 	 */
 	boolean isScrollableResultSetsEnabled();
 
 	/**
-	 * @see org.hibernate.cfg.AvailableSettings#USE_GET_GENERATED_KEYS
+	 * @see org.hibernate.cfg.JdbcSettings#USE_GET_GENERATED_KEYS
 	 */
 	boolean isGetGeneratedKeysEnabled();
 
 	/**
-	 * @see org.hibernate.cfg.AvailableSettings#STATEMENT_FETCH_SIZE
+	 * @see org.hibernate.cfg.JdbcSettings#STATEMENT_FETCH_SIZE
 	 */
 	Integer getFetchSizeOrNull();
 
 	/**
-	 * @see org.hibernate.cfg.AvailableSettings#CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT
+	 * @see org.hibernate.cfg.JdbcSettings#CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT
 	 */
 	boolean doesConnectionProviderDisableAutoCommit();
 
 	/**
-	 * @see org.hibernate.cfg.AvailableSettings#PREFER_USER_TRANSACTION
+	 * @see org.hibernate.cfg.TransactionSettings#PREFER_USER_TRANSACTION
 	 */
 	boolean isPreferUserTransaction();
 
 	/**
-	 * @see org.hibernate.cfg.AvailableSettings#JTA_TRACK_BY_THREAD
+	 * @see org.hibernate.cfg.TransactionSettings#JTA_TRACK_BY_THREAD
 	 */
 	boolean isJtaTrackByThread();
 

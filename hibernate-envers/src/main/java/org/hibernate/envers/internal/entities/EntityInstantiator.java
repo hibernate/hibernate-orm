@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities;
@@ -77,7 +77,7 @@ public class EntityInstantiator {
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityName )
 				.getRepresentationStrategy().getInstantiator()
-				.instantiate( versionsReader.getSessionImplementor().getSessionFactory() );
+				.instantiate();
 
 		// Putting the newly created entity instance into the first level cache, in case a one-to-one bidirectional
 		// relation is present (which is eagerly loaded).

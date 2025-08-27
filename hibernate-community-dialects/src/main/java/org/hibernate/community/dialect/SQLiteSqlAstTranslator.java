@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.Locking;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
@@ -34,14 +35,8 @@ public class SQLiteSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
+			Locking.FollowOn followOnLocking) {
 		return LockStrategy.NONE;
-	}
-
-	@Override
-	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		// SQLite does not support the FOR UPDATE clause
 	}
 
 	@Override
@@ -52,16 +47,6 @@ public class SQLiteSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 			}
 			appendSql( "materialized " );
 		}
-	}
-
-	@Override
-	public boolean supportsFilterClause() {
-		return getDialect().getVersion().isSameOrAfter( 3, 3 );
-	}
-
-	@Override
-	protected boolean supportsQuantifiedPredicates() {
-		return false;
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {

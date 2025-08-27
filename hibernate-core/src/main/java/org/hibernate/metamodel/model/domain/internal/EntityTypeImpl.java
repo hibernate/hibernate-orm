@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
@@ -14,24 +14,25 @@ import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
-import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
-import org.hibernate.persister.entity.DiscriminatorMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.domain.SqmManagedDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.query.sqm.tree.domain.SqmPersistentAttribute;
+import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static jakarta.persistence.metamodel.Bindable.BindableType.ENTITY_TYPE;
+import static jakarta.persistence.metamodel.Type.PersistenceType.ENTITY;
 import static org.hibernate.metamodel.model.domain.internal.DomainModelHelper.isCompatible;
 
 /**
@@ -42,7 +43,7 @@ import static org.hibernate.metamodel.model.domain.internal.DomainModelHelper.is
  */
 public class EntityTypeImpl<J>
 		extends AbstractIdentifiableType<J>
-		implements EntityDomainType<J>, Serializable {
+		implements SqmEntityDomainType<J>, Serializable {
 
 	private final String jpaEntityName;
 	private final JpaMetamodelImplementor metamodel;
@@ -70,16 +71,15 @@ public class EntityTypeImpl<J>
 		this.jpaEntityName = jpaEntityName;
 		this.metamodel = metamodel;
 
+		discriminatorPathSource = entityDiscriminatorPathSource( metamodel );
+	}
+
+	private EntityDiscriminatorSqmPathSource<?> entityDiscriminatorPathSource(JpaMetamodelImplementor metamodel) {
 		final EntityPersister entityDescriptor =
 				metamodel.getMappingMetamodel()
 						.getEntityDescriptor( getHibernateEntityName() );
-		final DiscriminatorMetadata discriminatorMetadata = entityDescriptor.getTypeDiscriminatorMetadata();
-		final DomainType<?> discriminatorType =
-				discriminatorMetadata != null
-						? (DomainType<?>) discriminatorMetadata.getResolutionType()
-						: metamodel.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING );
-
-		this.discriminatorPathSource = discriminatorType == null ? null
+		final DiscriminatorType<?> discriminatorType = entityDescriptor.getDiscriminatorDomainType();
+		return discriminatorType == null ? null
 				: new EntityDiscriminatorSqmPathSource<>( discriminatorType, this, entityDescriptor );
 	}
 
@@ -123,8 +123,18 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
+	public Class<J> getBindableJavaType() {
+		return getJavaType();
+	}
+
+	@Override
 	public String getHibernateEntityName() {
 		return super.getTypeName();
+	}
+
+	@Override
+	public SqmEntityDomainType<J> getSqmType() {
+		return this;
 	}
 
 	@Override
@@ -133,7 +143,7 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public EntityDomainType<J> getSqmPathType() {
+	public SqmEntityDomainType<J> getPathType() {
 		return this;
 	}
 
@@ -146,12 +156,20 @@ public class EntityTypeImpl<J>
 		else if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
 			return hasSingleIdAttribute() ? findIdAttribute() : getIdentifierDescriptor();
 		}
+		else if ( EntityVersionMapping.matchesRoleName( name ) ) {
+			return hasVersionAttribute() ? findVersionAttribute() : null;
+		}
 		else if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {
 			return discriminatorPathSource;
 		}
 		else {
 			return null;
 		}
+	}
+
+	@Override
+	public SqmPathSource<?> getIdentifierDescriptor() {
+		return super.getIdentifierDescriptor();
 	}
 
 	@Override
@@ -179,10 +197,10 @@ public class EntityTypeImpl<J>
 		}
 	}
 
-	private PersistentAttribute<?, ?> findSubtypeAttribute(String name) {
-		PersistentAttribute<?,?> subtypeAttribute = null;
-		for ( ManagedDomainType<?> subtype : getSubTypes() ) {
-			final PersistentAttribute<?,?> candidate = subtype.findSubTypesAttribute( name );
+	private SqmPersistentAttribute<?, ?> findSubtypeAttribute(String name) {
+		SqmPersistentAttribute<?,?> subtypeAttribute = null;
+		for ( SqmManagedDomainType<?> subtype : getSubTypes() ) {
+			final SqmPersistentAttribute<?,?> candidate = subtype.findSubTypesAttribute( name );
 			if ( candidate != null ) {
 				if ( subtypeAttribute != null
 						&& !isCompatible( subtypeAttribute, candidate, metamodel.getMappingMetamodel() ) ) {
@@ -204,8 +222,8 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public PersistentAttribute<? super J, ?> findAttribute(String name) {
-		final PersistentAttribute<? super J, ?> attribute = super.findAttribute( name );
+	public SqmPersistentAttribute<? super J, ?> findAttribute(String name) {
+		final var attribute = super.findAttribute( name );
 		if ( attribute != null ) {
 			return attribute;
 		}
@@ -219,23 +237,18 @@ public class EntityTypeImpl<J>
 
 	@Override
 	public BindableType getBindableType() {
-		return BindableType.ENTITY_TYPE;
+		return ENTITY_TYPE;
 	}
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return PersistenceType.ENTITY;
+		return ENTITY;
 	}
 
 	@Override
-	public IdentifiableDomainType<? super J> getSuperType() {
-		return super.getSuperType();
-	}
-
-	@Override
-	public Collection<? extends EntityDomainType<? extends J>> getSubTypes() {
+	public Collection<? extends SqmEntityDomainType<? extends J>> getSubTypes() {
 		//noinspection unchecked
-		return (Collection<? extends EntityDomainType<? extends J>>) super.getSubTypes();
+		return (Collection<? extends SqmEntityDomainType<? extends J>>) super.getSubTypes();
 	}
 
 	@Override

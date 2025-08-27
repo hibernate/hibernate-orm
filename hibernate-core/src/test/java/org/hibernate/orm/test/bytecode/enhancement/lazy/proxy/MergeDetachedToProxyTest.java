@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
@@ -141,12 +141,7 @@ public class MergeDetachedToProxyTest {
 
 	@AfterEach
 	public void clearTestData(SessionFactoryScope scope){
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from AEntity" ).executeUpdate();
-					session.createQuery( "delete from BEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	private void assertIsEnhancedProxy(Object entity) {

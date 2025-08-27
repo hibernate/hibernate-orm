@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.xml;
@@ -53,7 +53,7 @@ import static org.hibernate.processor.util.StringUtil.determineFullyQualifiedCla
 import static org.hibernate.processor.util.StringUtil.isFullyQualified;
 import static org.hibernate.processor.util.StringUtil.packageNameFromFullyQualifiedName;
 import static org.hibernate.processor.util.TypeUtils.extractClosestRealTypeAsString;
-import static org.hibernate.processor.util.TypeUtils.findMappedSuperClass;
+import static org.hibernate.processor.util.TypeUtils.findMappedSuperElement;
 import static org.hibernate.processor.util.TypeUtils.getElementKindForAccessType;
 
 /**
@@ -165,8 +165,8 @@ public class XmlMetaEntity implements Metamodel {
 	}
 
 	@Override
-	public @Nullable String getSupertypeName() {
-		return findMappedSuperClass( this, context );
+	public @Nullable Element getSuperTypeElement() {
+		return findMappedSuperElement( this, context );
 	}
 
 	public List<MetaAttribute> getMembers() {

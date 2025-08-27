@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
@@ -18,6 +18,20 @@ public class PostCollectionRemoveEvent extends AbstractCollectionEvent {
 			PersistentCollection<?> collection,
 			EventSource source,
 			Object loadedOwner) {
-		super( collectionPersister, collection, source, loadedOwner, getOwnerIdOrNull( loadedOwner, source ) );
+		super(
+				collectionPersister,
+				collection,
+				source,
+				loadedOwner,
+				getOwnerIdOrNull( loadedOwner, source )
+		);
+	}
+
+	public PostCollectionRemoveEvent(
+			PersistentCollection<?> collection,
+			Object id,
+			String entityName,
+			Object loadedOwner) {
+		super( collection, entityName, loadedOwner, id );
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.spatial.testing;
@@ -40,7 +40,8 @@ public abstract class SpatialSessionFactoryAware extends SpatialTestDataProvider
 	}
 
 	public boolean isSupported(CommonSpatialFunction function) {
-		return supportedFunctions.contains( function.name() );
+		return supportedFunctions.contains( function.getKey().getName() ) ||
+			( function.getKey().getAltName().isPresent() && supportedFunctions.contains( function.getKey().getAltName().get() ) );
 	}
 
 	protected void initH2GISExtensionsForInMemDb() {

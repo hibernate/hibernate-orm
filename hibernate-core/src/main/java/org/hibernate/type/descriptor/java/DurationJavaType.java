@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -44,6 +44,11 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Duration;
+	}
+
+	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		return context.getTypeConfiguration()
 				.getJdbcTypeRegistry()
@@ -60,10 +65,12 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 		if ( value == null ) {
 			return null;
 		}
-		String seconds = String.valueOf( value.getSeconds() );
-		String nanos = String.valueOf( value.getNano() );
-		String zeros = StringHelper.repeat( '0', 9 - nanos.length() );
+		else {
+		final String seconds = String.valueOf( value.getSeconds() );
+		final String nanos = String.valueOf( value.getNano() );
+		final String zeros = StringHelper.repeat( '0', 9 - nanos.length() );
 		return seconds + zeros + nanos;
+		}
 	}
 
 	@Override
@@ -71,11 +78,13 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 		if ( string == null ) {
 			return null;
 		}
-		int cutoff = string.length() - 9;
-		return Duration.ofSeconds(
-				Long.parseLong( string.subSequence( 0, cutoff ).toString() ),
-				Long.parseLong( string.subSequence( cutoff, string.length() ).toString() )
-		);
+		else {
+			final int cutoff = string.length() - 9;
+			return Duration.ofSeconds(
+					Long.parseLong( string.subSequence( 0, cutoff ).toString() ),
+					Long.parseLong( string.subSequence( cutoff, string.length() ).toString() )
+			);
+		}
 	}
 
 	@Override

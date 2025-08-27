@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.mutation.internal;
@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jdbc.Expectation;
@@ -29,6 +30,8 @@ public class PreparedStatementDetailsStandard implements PreparedStatementDetail
 	private final JdbcServices jdbcServices;
 
 	private PreparedStatement statement;
+
+	private boolean toRelease;
 
 	public PreparedStatementDetailsStandard(
 			PreparableMutationOperation tableMutation,
@@ -64,8 +67,11 @@ public class PreparedStatementDetailsStandard implements PreparedStatementDetail
 	@Override
 	public void releaseStatement(SharedSessionContractImplementor session) {
 		if ( statement != null ) {
-			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( statement );
+			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+			jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( statement );
 			statement = null;
+			toRelease = false;
+			jdbcCoordinator.afterStatementExecution();
 		}
 	}
 
@@ -82,6 +88,7 @@ public class PreparedStatementDetailsStandard implements PreparedStatementDetail
 	@Override
 	public PreparedStatement resolveStatement() {
 		if ( statement == null ) {
+			toRelease = true;
 			statement = jdbcStatementCreator.get();
 			try {
 				expectation.prepare( statement );
@@ -100,6 +107,11 @@ public class PreparedStatementDetailsStandard implements PreparedStatementDetail
 	@Override
 	public Expectation getExpectation() {
 		return expectation;
+	}
+
+	@Override
+	public boolean toRelease() {
+		return toRelease;
 	}
 
 	@Override

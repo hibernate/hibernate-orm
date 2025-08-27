@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql.internal;
 
-import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -32,11 +31,11 @@ public class DomainPathPart implements SemanticPathPart {
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		HqlLogging.QUERY_LOGGER.tracef(
-				"Resolving DomainPathPart(%s) sub-part : %s",
-				currentPath,
-				name
-		);
+//		HqlLogging.QUERY_LOGGER.tracef(
+//				"Resolving DomainPathPart(%s) sub-part : %s",
+//				currentPath,
+//				name
+//		);
 		currentPath = currentPath.resolvePathPart( name, isTerminal, creationState );
 		if ( isTerminal ) {
 			return currentPath;

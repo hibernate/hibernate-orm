@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
@@ -7,8 +7,6 @@ package org.hibernate.event.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.type.CollectionType;
 
@@ -33,13 +31,14 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 
 	public DirtyCollectionSearchVisitor(Object entity, EventSource session, boolean[] propertyVersionability) {
 		super( session );
-		EnhancementAsProxyLazinessInterceptor interceptor = null;
-		if ( isPersistentAttributeInterceptable( entity ) ) {
-			PersistentAttributeInterceptor attributeInterceptor =
-					asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
-			if ( attributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				interceptor = (EnhancementAsProxyLazinessInterceptor) attributeInterceptor;
-			}
+		final EnhancementAsProxyLazinessInterceptor interceptor;
+		if ( isPersistentAttributeInterceptable( entity )
+				&& asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor()
+						instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor ) {
+			interceptor = lazinessInterceptor;
+		}
+		else {
+			interceptor = null;
 		}
 		this.interceptor = interceptor;
 		this.propertyVersionability = propertyVersionability;
@@ -49,9 +48,10 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 		return dirty;
 	}
 
+	@Override
 	Object processCollection(Object collection, CollectionType type) throws HibernateException {
 		if ( collection != null ) {
-			final SessionImplementor session = getSession();
+			final var session = getSession();
 			if ( type.isArrayType() ) {
 				// if no array holder we found an unwrapped array, it's dirty
 				// (this can't occur, because we now always call wrap() before getting to here)
@@ -74,6 +74,7 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 		return null;
 	}
 
+	@Override
 	boolean includeEntityProperty(Object[] values, int i) {
 		return propertyVersionability[i] && super.includeEntityProperty( values, i );
 	}

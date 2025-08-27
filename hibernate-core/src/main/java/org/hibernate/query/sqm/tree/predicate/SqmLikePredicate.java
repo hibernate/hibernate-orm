@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.predicate;
@@ -7,9 +7,12 @@ package org.hibernate.query.sqm.tree.predicate;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+
+import java.util.Objects;
 
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertString;
 
@@ -51,7 +54,7 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 		this.pattern = pattern;
 		this.escapeCharacter = escapeCharacter;
 		this.isCaseSensitive = isCaseSensitive;
-		final SqmExpressible<?> expressibleType = QueryHelper.highestPrecedenceType(
+		final SqmBindableType<?> expressibleType = QueryHelper.highestPrecedenceType(
 				matchExpression.getExpressible(),
 				pattern.getExpressible()
 		);
@@ -126,17 +129,32 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		matchExpression.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		matchExpression.appendHqlString( hql, context );
 		if ( isNegated() ) {
-			sb.append( " not" );
+			hql.append( " not" );
 		}
-		sb.append( " like " );
-		pattern.appendHqlString( sb );
+		hql.append( " like " );
+		pattern.appendHqlString( hql, context );
 		if ( escapeCharacter != null ) {
-			sb.append( " escape " );
-			escapeCharacter.appendHqlString( sb );
+			hql.append( " escape " );
+			escapeCharacter.appendHqlString( hql, context );
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmLikePredicate that
+			&& this.isNegated() == that.isNegated()
+			&& isCaseSensitive == that.isCaseSensitive
+			&& Objects.equals( this.matchExpression, that.matchExpression )
+			&& Objects.equals( pattern, that.pattern )
+			&& Objects.equals( escapeCharacter, that.escapeCharacter );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( isNegated(), matchExpression, pattern, escapeCharacter, isCaseSensitive );
 	}
 
 	@Override

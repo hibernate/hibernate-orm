@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity;
@@ -126,32 +126,27 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T> {
 	}
 
 	@Override
-	public String toLoggableString(Object value, SessionFactoryImplementor factory) throws HibernateException {
+	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
 		return value == null ? "[null]" : value.toString();
 	}
 
 	@Override
-	public Object deepCopy(Object value, SessionFactoryImplementor factory)
-			throws HibernateException {
+	public Object deepCopy(Object value, SessionFactoryImplementor factory) {
 		return value;
 	}
 
 	@Override
-	public Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map<Object, Object> copyCache)
-			throws HibernateException {
+	public Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map<Object, Object> copyCache) {
 		return original;
 	}
 
 	@Override
 	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
-		return value == null
-				? ArrayHelper.FALSE
-				: ArrayHelper.TRUE;
+		return value == null ? ArrayHelper.FALSE : ArrayHelper.TRUE;
 	}
 
 	@Override
-	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session)
-			throws HibernateException {
+	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session) {
 		return Objects.equals( old, current );
 	}
 

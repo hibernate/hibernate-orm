@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -23,6 +23,12 @@ public abstract class Constraint implements Exportable, Serializable {
 	private final ArrayList<Column> columns = new ArrayList<>();
 	private Table table;
 	private String options = "";
+
+	Constraint() {}
+
+	Constraint(Table table) {
+		this.table = table;
+	}
 
 	public String getName() {
 		return name;
@@ -76,6 +82,7 @@ public abstract class Constraint implements Exportable, Serializable {
 		return table;
 	}
 
+	@Deprecated(since = "7")
 	public void setTable(Table table) {
 		this.table = table;
 	}

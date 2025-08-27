@@ -1,12 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
 import java.util.Set;
 
-/** Defines an event class for the auto-flushing of a session.
+/**
+ * Event class for {@link org.hibernate.FlushMode#AUTO automatic}
+ * stateful session flush.
  *
  * @author Steve Ebersole
  */
@@ -14,7 +16,7 @@ public class AutoFlushEvent extends FlushEvent {
 
 	private Set<String> querySpaces;
 	private boolean flushRequired;
-	private boolean skipPreFlush;
+	private final boolean skipPreFlush;
 
 	public AutoFlushEvent(Set<String> querySpaces, EventSource source) {
 		this( querySpaces, false, source );
@@ -30,7 +32,7 @@ public class AutoFlushEvent extends FlushEvent {
 		return querySpaces;
 	}
 
-	public void setQuerySpaces(Set querySpaces) {
+	public void setQuerySpaces(Set<String> querySpaces) {
 		this.querySpaces = querySpaces;
 	}
 

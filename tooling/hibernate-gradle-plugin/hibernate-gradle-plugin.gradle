@@ -1,23 +1,20 @@
-import org.apache.tools.ant.filters.ReplaceTokens
-
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
+import org.apache.tools.ant.filters.ReplaceTokens
+import org.gradle.api.internal.provider.DefaultProvider
 
 plugins {
 	id 'java-gradle-plugin'
-	id 'com.gradle.plugin-publish' version '1.2.1'
+	id "local.java-module"
+	id "local.javadoc"
+	id "local.code-quality"
 
+	id 'com.gradle.plugin-publish' version '1.2.1'
 	// for local publishing
 	id 'maven-publish'
 }
-
-apply from: rootProject.file( 'gradle/module.gradle' )
-apply from: rootProject.file( 'gradle/javadoc.gradle' )
-apply from: rootProject.file( 'gradle/releasable.gradle' )
 
 description = "Gradle plugin for integrating Hibernate aspects into your build"
 
@@ -38,6 +35,7 @@ dependencies {
 	testImplementation testLibs.junit5Api
 
 	testRuntimeOnly testLibs.junit5Engine
+	testRuntimeOnly testLibs.junit5Launcher
 }
 
 gradlePlugin {
@@ -63,18 +61,35 @@ tasks.withType(AbstractArchiveTask).configureEach {
 test {
 	useJUnitPlatform()
 	if ( project.hasProperty( 'excludeTests' ) ) {
-		exclude project.property( 'excludeTests' )
+		exclude project.property( 'excludeTests' ) as String
 	}
+	jvmArgs("--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED",
+			"--add-opens", "java.base/java.util=ALL-UNNAMED",
+			"--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED")
 }
 
-// Publish to the Gradle Plugin Portal
-tasks.release.dependsOn tasks.publishPlugins
+def releasePrepareTask = tasks.register("releasePrepare") {
+	group "release-prepare"
+	description "See :release:releasePrepare for details.  Here we hook in the `check` task."
 
-// local publishing (SNAPSHOT testing)
-tasks.publish.dependsOn tasks.publishPlugins
+	dependsOn tasks.check
+}
 
-// Make sure that the publishReleaseArtifacts task of the release module runs the release task of this sub module
-tasks.getByPath( ':release:publishReleaseArtifacts' ).dependsOn tasks.release
+// used from the h2 CI job
+tasks.register("preVerifyRelease") {
+	group "release-prepare"
+	description "Delegates to `releasePrepare` task"
+
+	dependsOn releasePrepareTask
+}
+
+tasks.register("releasePerform") {
+	group "release-perform"
+	description "See :release:releasePerform for details.  Here we hook in publishing to the Plugin Portal"
+
+	dependsOn tasks.publishPlugins
+}
+
 
 // local publishing (SNAPSHOT testing)
 publishing {
@@ -86,67 +101,94 @@ publishing {
 	}
 }
 
-// local publishing (SNAPSHOT testing), cont.
-//		- https://github.com/gradle-nexus/publish-plugin/issues/143
-//		- https://github.com/gradle-nexus/publish-plugin/pull/144
-gradle.taskGraph.whenReady {
-	tasks.withType(PublishToMavenRepository) { PublishToMavenRepository t ->
-		if ( t.repository == null ) {
-			logger.info( "Task `{}` had null repository", t.path )
-		}
-		else if ( t.repository.name == "sonatype" ) {
-			logger.debug( "Disabling task `{}` because it publishes to Sonatype", t.path )
-			t.enabled = false
-		}
-	}
-}
-
 processResources {
 	inputs.property( "orm-version", getVersion() )
 	description = description + " (injected with Hibernate version)"
 	filter( ReplaceTokens, tokens: [ 'hibernateVersion': getVersion() ] )
 }
 
-tasks.withType( JavaCompile ) {
+tasks.withType(JavaCompile).configureEach {
 	options.encoding = 'UTF-8'
 }
 
 if ( !jdkVersions.explicit ) {
-	tasks.withType( GroovyCompile ) {
-		sourceCompatibility = JavaVersion.toVersion( jdkVersions.baseline )
-		targetCompatibility = JavaVersion.toVersion( jdkVersions.baseline )
+	tasks.withType(GroovyCompile).configureEach {
+		sourceCompatibility = JavaVersion.toVersion(jdkVersions.baseline)
+		targetCompatibility = JavaVersion.toVersion(jdkVersions.baseline)
 	}
 }
 else {
 	logger.warn( "[WARN] Toolchains are not yet supported for Groovy compilation." +
 						 " Using the JDK that runs Gradle for Groovy compilation." )
-}
-
-tasks.named( "javadoc", Javadoc ) {
-	configure( options ) {
-		windowTitle = "Hibernate Javadocs ($project.name)"
-		docTitle = "Hibernate Javadocs ($project.name : $project.version)"
+	if ( jdkVersions.test.explicit && jdkVersions.test.launcher.asInt() > jdkVersions.min.asInt() ) {
+		// Configure the gradle plugin to also compile test to at most the orm.jdk.min version,
+		// because the test will have to be able to run with a JVM of version orm.jdk.min
+		tasks.named( "compileTestJava", JavaCompile ).configure {
+			options.release = Math.min( jdkVersions.test.compiler.asInt(), jdkVersions.min.asInt() )
+		}
+		// Must configure the test launcher to a version <= orm.jdk.max, because the tests invoke gradle,
+		// which inherently can only run with a JDK up to orm.jdk.max.
+		// Since we only support running Gradle with JDKs in the range of orm.jdk.min up to orm.jdk.max,
+		// we use a test java launcher for the latest available/configured JDK version
+		tasks.named( "test", Test ).configure {
+			def launcher = javaToolchains.launcherFor {
+				languageVersion = jdkVersions.min
+			}
+			for ( int version = jdkVersions.min.asInt() + 1; version <= jdkVersions.max.asInt(); version++ ) {
+				launcher = new DefaultProvider(() -> {
+					try {
+						return javaToolchains.launcherFor {
+							languageVersion = JavaLanguageVersion.of( version )
+						}.get()
+					}
+					catch (GradleException ex) {
+						// JavaToolchainQueryService unfortunately throws an exception if a version is not found,
+						// so we have to catch the exception and return null here to allow a fallback
+						return null
+					}
+				}).orElse( launcher )
+			}
+			javaLauncher = launcher
+		}
 	}
 }
 
-tasks.publish.enabled !project.ormVersion.isSnapshot
-tasks.publishPlugins.enabled !project.ormVersion.isSnapshot
+tasks.publish.enabled !ormBuildDetails.hibernateVersion.isSnapshot
+tasks.publishPlugins.enabled !ormBuildDetails.hibernateVersion.isSnapshot
 
 gradle.taskGraph.whenReady { tg ->
-	if ( tg.hasTask( project.tasks.publishPlugins ) && project.tasks.publishPlugins.enabled  ) {
-		// look for sys-prop or env-var overrides of the tokens used for publishing
-		if ( project.properties.containsKey( 'gradle.publish.key' )
-				|| project.properties.containsKey( 'gradle.publish.secret' ) ) {
-			// nothing to do - already explicitly set
+	// local publishing (SNAPSHOT testing), cont.
+	//		- https://github.com/gradle-nexus/publish-plugin/issues/143
+	//		- https://github.com/gradle-nexus/publish-plugin/pull/144
+	tasks.withType(PublishToMavenRepository).configureEach {t->
+		if (t.repository == null) {
+			logger.info("Task `{}` had null repository", t.path)
+		}
+		else if (t.repository.name == "sonatype") {
+			logger.debug("Disabling task `{}` because it publishes to Sonatype", t.path)
+			t.enabled = false
+		}
+	}
+
+	// verify credentials for publishing the plugin up front to avoid any work (only if we are publishing)
+	if ( tg.hasTask( ":publishPlugins" ) && project.tasks.publishPlugins.enabled  ) {
+		// we are publishing the plugin - make sure there is a credentials pair
+		//
+		// first, check the `GRADLE_PUBLISH_KEY` / `GRADLE_PUBLISH_SECRET` combo (env vars)
+		// and then the `gradle.publish.key` / `gradle.publish.secret` combo (project prop)
+		//		- see https://docs.gradle.org/current/userguide/publishing_gradle_plugins.html#account_setup
+		if ( System.getenv().get("GRADLE_PUBLISH_KEY") != null ) {
+			if ( System.getenv().get("GRADLE_PUBLISH_SECRET") != null ) {
+				throw new RuntimeException( "`GRADLE_PUBLISH_KEY` specified, but not `GRADLE_PUBLISH_SECRET` for publishing Gradle plugin" )
+			}
+		}
+		else if ( project.findProperty( 'gradle.publish.key' ) != null ) {
+			if ( project.findProperty( 'gradle.publish.secret' ) != null ) {
+				throw new RuntimeException( "`gradle.publish.key` specified, but not `gradle.publish.secret` for publishing Gradle plugin" )
+			}
 		}
 		else {
-			// use the values from the credentials provider, if any
-			if ( project.property( 'gradle.publish.key' ) == null ) {
-				throw new RuntimeException( "`-Pgradle.publish.key=...` not found" )
-			}
-			if ( project.property( 'gradle.publish.secret' ) == null ) {
-				throw new RuntimeException( "`-Pgradle.publish.secret=...` not found" )
-			}
+			throw new RuntimeException( "No credentials specified for publishing Gradle plugin" )
 		}
 	}
 }

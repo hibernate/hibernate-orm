@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
@@ -47,7 +47,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 			ByteBuddyEnhancementContext enhancementContext,
 			AnnotatedFieldDescription persistentField,
 			Implementation implementation) {
-		if ( !enhancementContext.doBiDirectionalAssociationManagement( persistentField ) ) {
+		if ( !enhancementContext.doBiDirectionalAssociationManagement() ) {
 			return implementation;
 		}
 
@@ -66,7 +66,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 		if ( bidirectionalAttributeName == null || bidirectionalAttributeName.isEmpty() ) {
 			if ( log.isInfoEnabled() ) {
 				log.infof(
-						"Bi-directional association not managed for field [%s#%s]: Could not find target field in [%s]",
+						"Bidirectional association not managed for field [%s#%s]: Could not find target field in [%s]",
 						managedCtClass.getName(),
 						persistentField.getName(),
 						targetEntity.getCanonicalName()
@@ -78,6 +78,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 		TypeDescription targetType = FieldLocator.ForClassHierarchy.Factory.INSTANCE.make( targetEntity )
 				.locate( bidirectionalAttributeName )
 				.getField()
+				.asDefined()
 				.getType()
 				.asErasure();
 
@@ -121,7 +122,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 			if ( persistentField.getType().asErasure().isAssignableTo( Map.class ) || targetType.isAssignableTo( Map.class ) ) {
 				if ( log.isInfoEnabled() ) {
 					log.infof(
-							"Bi-directional association not managed for field [%s#%s]: @ManyToMany in java.util.Map attribute not supported ",
+							"Bidirectional association not managed for field [%s#%s]: @ManyToMany in java.util.Map attribute not supported ",
 							managedCtClass.getName(),
 							persistentField.getName()
 					);
@@ -168,7 +169,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 			if ( targetClass == null ) {
 				if ( log.isInfoEnabled() ) {
 					log.infof(
-							"Bi-directional association not managed for field [%s#%s]: Could not find target type",
+							"Bidirectional association not managed for field [%s#%s]: Could not find target type",
 							managedCtClass.getName(),
 							persistentField.getName()
 					);
@@ -207,7 +208,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 			return null;
 		}
 		else {
-			// HHH-13446 - mappedBy from annotation may not be a valid bi-directional association, verify by calling isValidMappedBy()
+			// HHH-13446 - mappedBy from annotation may not be a valid bidirectional association, verify by calling isValidMappedBy()
 			return isValidMappedBy( target, targetEntity, mappedBy, context ) ? mappedBy : null;
 		}
 	}
@@ -252,8 +253,8 @@ final class BiDirectionalAssociationHandler implements Implementation {
 			if ( context.isPersistentField( annotatedF )
 					&& target.getName().equals( getMappedBy( annotatedF, entityType( annotatedF.getType() ), context ) )
 					&& target.getDeclaringType().asErasure().isAssignableTo( entityType( annotatedF.getType() ) ) ) {
-				if ( log.isDebugEnabled() ) {
-					log.debugf(
+				if ( log.isTraceEnabled() ) {
+					log.tracef(
 							"mappedBy association for field [%s#%s] is [%s#%s]",
 							target.getDeclaringType().asErasure().getName(),
 							target.getName(),

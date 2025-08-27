@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
@@ -23,7 +23,6 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
@@ -45,6 +44,7 @@ import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 
 /**
@@ -60,12 +60,12 @@ public class Helper {
 			Object scriptSourceSetting, //Reader or String URL
 			ClassLoaderService classLoaderService,
 			String charsetName ) {
-		if ( scriptSourceSetting instanceof Reader ) {
-			return new ScriptSourceInputFromReader( (Reader) scriptSourceSetting );
+		if ( scriptSourceSetting instanceof Reader reader ) {
+			return new ScriptSourceInputFromReader( reader );
 		}
 		else {
 			final String scriptSourceSettingString = scriptSourceSetting.toString();
-			log.debugf( "Attempting to resolve script source setting : %s", scriptSourceSettingString );
+			log.tracef( "Attempting to resolve script source setting: %s", scriptSourceSettingString );
 
 			final String[] paths = splitAtCommas( scriptSourceSettingString );
 			if ( paths.length == 1 ) {
@@ -92,13 +92,10 @@ public class Helper {
 		log.trace( "Trying as URL..." );
 		// ClassLoaderService.locateResource() first tries the given resource name as url form...
 		final URL url = classLoaderService.locateResource( scriptSourceSettingString );
-		if ( url != null ) {
-			return new ScriptSourceInputFromUrl( url, charsetName );
-		}
-
-		// assume it is a File path
-		final File file = new File( scriptSourceSettingString );
-		return new ScriptSourceInputFromFile( file, charsetName );
+		return url != null
+				? new ScriptSourceInputFromUrl( url, charsetName )
+				// assume it is a File path
+				: new ScriptSourceInputFromFile( new File( scriptSourceSettingString ), charsetName );
 	}
 
 	public static ScriptTargetOutput interpretScriptTargetSetting(
@@ -109,12 +106,12 @@ public class Helper {
 		if ( scriptTargetSetting == null ) {
 			return null;
 		}
-		else if ( scriptTargetSetting instanceof Writer ) {
-			return new ScriptTargetOutputToWriter( (Writer) scriptTargetSetting );
+		else if ( scriptTargetSetting instanceof Writer writer ) {
+			return new ScriptTargetOutputToWriter( writer );
 		}
 		else {
 			final String scriptTargetSettingString = scriptTargetSetting.toString();
-			log.debugf( "Attempting to resolve script source setting : %s", scriptTargetSettingString );
+			log.tracef( "Attempting to resolve script source setting: %s", scriptTargetSettingString );
 
 			// setting could be either:
 			//		1) string URL representation (i.e., "file://...")
@@ -124,31 +121,15 @@ public class Helper {
 			log.trace( "Trying as URL..." );
 			// ClassLoaderService.locateResource() first tries the given resource name as url form...
 			final URL url = classLoaderService.locateResource( scriptTargetSettingString );
-			if ( url != null ) {
-				return new ScriptTargetOutputToUrl( url, charsetName );
-			}
-
-			// assume it is a File path
-			final File file = new File( scriptTargetSettingString );
-			return new ScriptTargetOutputToFile( file, charsetName, append );
+			return url != null
+					? new ScriptTargetOutputToUrl( url, charsetName )
+					// assume it is a File path
+					: new ScriptTargetOutputToFile( new File( scriptTargetSettingString ), charsetName, append );
 		}
 	}
 
 	public static boolean interpretNamespaceHandling(Map<String,Object> configurationValues) {
-		//Print a warning if multiple conflicting properties are being set:
-		int count = 0;
-		if ( configurationValues.containsKey( AvailableSettings.HBM2DDL_CREATE_SCHEMAS ) ) {
-			count++;
-		}
-		if ( configurationValues.containsKey( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS ) ) {
-			count++;
-		}
-		if ( configurationValues.containsKey( AvailableSettings.HBM2DDL_CREATE_NAMESPACES ) ) {
-			count++;
-		}
-		if ( count > 1 ) {
-			log.multipleSchemaCreationSettingsDefined();
-		}
+		warnIfConflictingPropertiesSet( configurationValues );
 		// prefer the JPA setting...
 		return ConfigurationHelper.getBoolean(
 				AvailableSettings.HBM2DDL_CREATE_SCHEMAS,
@@ -166,11 +147,25 @@ public class Helper {
 		);
 	}
 
+	private static void warnIfConflictingPropertiesSet(Map<String, Object> configurationValues) {
+		//Print a warning if multiple conflicting properties are being set:
+		int count = 0;
+		if ( configurationValues.containsKey( AvailableSettings.HBM2DDL_CREATE_SCHEMAS ) ) {
+			count++;
+		}
+		if ( configurationValues.containsKey( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS ) ) {
+			count++;
+		}
+		if ( configurationValues.containsKey( AvailableSettings.HBM2DDL_CREATE_NAMESPACES ) ) {
+			count++;
+		}
+		if ( count > 1 ) {
+			log.multipleSchemaCreationSettingsDefined();
+		}
+	}
+
 	public static boolean interpretFormattingEnabled(Map<String,Object> configurationValues) {
-		return ConfigurationHelper.getBoolean(
-				AvailableSettings.FORMAT_SQL,
-				configurationValues
-		);
+		return ConfigurationHelper.getBoolean( AvailableSettings.FORMAT_SQL, configurationValues );
 	}
 
 	public static DatabaseInformation buildDatabaseInformation(
@@ -178,7 +173,7 @@ public class Helper {
 			DdlTransactionIsolator ddlTransactionIsolator,
 			SqlStringGenerationContext context,
 			SchemaManagementTool tool) {
-		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
+		final JdbcEnvironment jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
 		try {
 			return new DatabaseInformationImpl(
 					serviceRegistry,
@@ -189,7 +184,8 @@ public class Helper {
 			);
 		}
 		catch (SQLException e) {
-			throw jdbcEnvironment.getSqlExceptionHelper().convert( e, "Unable to build DatabaseInformation" );
+			throw jdbcEnvironment.getSqlExceptionHelper()
+					.convert( e, "Unable to build DatabaseInformation" );
 		}
 	}
 
@@ -207,12 +203,10 @@ public class Helper {
 			Formatter formatter,
 			ExecutionOptions options,
 			GenerationTarget... targets) {
-		if ( sqlStrings == null ) {
-			return;
-		}
-
-		for ( String sqlString : sqlStrings ) {
-			applySqlString( sqlString, formatter, options, targets );
+		if ( sqlStrings != null ) {
+			for ( String sqlString : sqlStrings ) {
+				applySqlString( sqlString, formatter, options, targets );
+			}
 		}
 	}
 
@@ -221,17 +215,15 @@ public class Helper {
 			Formatter formatter,
 			ExecutionOptions options,
 			GenerationTarget... targets) {
-		if ( StringHelper.isEmpty( sqlString ) ) {
-			return;
-		}
-
-		String sqlStringFormatted = formatter.format( sqlString );
-		for ( GenerationTarget target : targets ) {
-			try {
-				target.accept( sqlStringFormatted );
-			}
-			catch (CommandAcceptanceException e) {
-				options.getExceptionHandler().handleException( e );
+		if ( !isEmpty( sqlString ) ) {
+			final String sqlStringFormatted = formatter.format( sqlString );
+			for ( GenerationTarget target : targets ) {
+				try {
+					target.accept( sqlStringFormatted );
+				}
+				catch (CommandAcceptanceException e) {
+					options.getExceptionHandler().handleException( e );
+				}
 			}
 		}
 	}

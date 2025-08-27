@@ -1,23 +1,30 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.ordering;
 
+import org.antlr.v4.runtime.ANTLRErrorListener;
+import org.antlr.v4.runtime.BaseErrorListener;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
+import org.hibernate.QueryException;
 import org.hibernate.grammars.ordering.OrderingLexer;
 import org.hibernate.grammars.ordering.OrderingParser;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.ast.ParseTreeVisitor;
 
-import org.jboss.logging.Logger;
 
 import org.antlr.v4.runtime.BailErrorStrategy;
-import org.antlr.v4.runtime.BufferedTokenStream;
 import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.ConsoleErrorListener;
 import org.antlr.v4.runtime.DefaultErrorStrategy;
 import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
+import org.hibernate.query.SyntaxException;
+import org.hibernate.query.sqm.ParsingException;
+
+import static org.hibernate.query.hql.internal.StandardHqlTranslator.prettifyAntlrError;
 
 /**
  * Responsible for performing the translation of the order-by fragment associated
@@ -28,7 +35,6 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
  * @see jakarta.persistence.OrderBy
  */
 public class OrderByFragmentTranslator {
-	private static final Logger LOG = Logger.getLogger( OrderByFragmentTranslator.class.getName() );
 
 	/**
 	 * Perform the translation of the user-supplied fragment, returning the translation.
@@ -43,28 +49,22 @@ public class OrderByFragmentTranslator {
 			String fragment,
 			PluralAttributeMapping pluralAttributeMapping,
 			TranslationContext context) {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef(
-					"Beginning parsing of order-by fragment [%s] : %s",
-					pluralAttributeMapping.getCollectionDescriptor().getRole(),
-					fragment
-			);
-		}
-
-		final OrderingParser.OrderByFragmentContext parseTree = buildParseTree( context, fragment );
-
-		final ParseTreeVisitor visitor = new ParseTreeVisitor( pluralAttributeMapping, context );
-
+		final var parseTree = buildParseTree( fragment );
+		final var visitor = new ParseTreeVisitor( pluralAttributeMapping, context );
 		return new OrderByFragmentImpl( visitor.visitOrderByFragment( parseTree ) );
 	}
 
+	public static void check(String fragment) {
+		final var parseTree = buildParseTree( fragment );
+		// TODO: check against the model (requires the PluralAttributeMapping)
+	}
 
-	private static OrderingParser.OrderByFragmentContext buildParseTree(TranslationContext context, String fragment) {
-		final OrderingLexer lexer = new OrderingLexer( CharStreams.fromString( fragment ) );
+	private static OrderingParser.OrderByFragmentContext buildParseTree(String fragment) {
+		final var lexer = new OrderingLexer( CharStreams.fromString( fragment ) );
 
-		final OrderingParser parser = new OrderingParser( new BufferedTokenStream( lexer ) );
+		final var parser = new OrderingParser( new CommonTokenStream( lexer ) );
 
-		// try to use SLL(k)-based parsing first - its faster
+		// try to use SLL(k)-based parsing first - it's faster
 		parser.getInterpreter().setPredictionMode( PredictionMode.SLL );
 		parser.removeErrorListeners();
 		parser.setErrorHandler( new BailErrorStrategy() );
@@ -79,10 +79,22 @@ public class OrderByFragmentTranslator {
 
 			// fall back to LL(k)-based parsing
 			parser.getInterpreter().setPredictionMode( PredictionMode.LL );
-			parser.addErrorListener( ConsoleErrorListener.INSTANCE );
+//			parser.addErrorListener( ConsoleErrorListener.INSTANCE );
 			parser.setErrorHandler( new DefaultErrorStrategy() );
 
+			final ANTLRErrorListener errorListener = new BaseErrorListener() {
+				@Override
+				public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
+					throw new SyntaxException( prettifyAntlrError( offendingSymbol, line, charPositionInLine, msg, e, fragment, true ), fragment );
+				}
+			};
+			parser.addErrorListener( errorListener );
+
 			return parser.orderByFragment();
+		}
+		catch ( ParsingException ex ) {
+			// Note that this is supposed to represent a bug in the parser
+			throw new QueryException( "Failed to interpret syntax [" + ex.getMessage() + "]", fragment, ex );
 		}
 	}
 

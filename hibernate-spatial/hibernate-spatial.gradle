@@ -1,21 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 
+plugins {
+	id "local.publishing-java-module"
+	id "local.publishing-group-relocation"
+}
+
 description = 'Integrate support for Spatial/GIS data into Hibernate O/RM'
-
-apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
-apply plugin: 'org.hibernate.matrix-test'
-
 
 dependencies {
 	api project( ':hibernate-core' )
 	api libs.geolatte
 
-	compileOnly dbLibs.postgresql
+	compileOnly jdbcLibs.postgresql
 
 	testImplementation project( ':hibernate-testing' )
 	testImplementation project( ':hibernate-ant' )
@@ -23,13 +22,12 @@ dependencies {
 	testImplementation jakartaLibs.validation
 	testImplementation libs.jandex
 	testImplementation libs.classmate
-	testImplementation libs.validator
+	testImplementation testLibs.validator
 	testImplementation 'org.dom4j:dom4j:2.1.3@jar'
 
-	testImplementation dbLibs.postgresql
-	testImplementation dbLibs.h2gis
+	testImplementation jdbcLibs.postgresql
+	testImplementation jdbcLibs.h2gis
 
-	testRuntimeOnly jakartaLibs.el
 	testRuntimeOnly 'jaxen:jaxen:1.1'
 	testRuntimeOnly libs.byteBuddy
 }

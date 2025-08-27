@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.json;
@@ -13,8 +13,8 @@ import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
-import org.hibernate.query.ReturnableType;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.metamodel.model.domain.ReturnableType;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.function.FunctionRenderer;
@@ -60,9 +60,10 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+
+import static java.util.Collections.emptyList;
 
 
 /**
@@ -161,8 +162,7 @@ public class H2JsonTableFunction extends JsonTableFunction {
 				else {
 					predicateContainer = querySpec;
 				}
-				final BasicType<Integer> integerType = converter.getCreationContext()
-						.getSessionFactory()
+				final BasicType<Integer> integerType = converter.getSqmCreationContext()
 						.getNodeBuilder()
 						.getIntegerType();
 				final Expression jsonDocument;
@@ -221,20 +221,19 @@ public class H2JsonTableFunction extends JsonTableFunction {
 										maximumArraySize,
 										lastArrayIndex
 								),
-								Collections.emptyList(),
+								emptyList(),
 								null,
 								null
 						),
 						tableIdentifierVariable + "_synthetic_",
-						Collections.emptyList(),
+						emptyList(),
 						Set.of( "" ),
 						false,
 						false,
 						true,
 						converter.getCreationContext().getSessionFactory()
 				);
-				final BasicType<Integer> integerType = converter.getCreationContext()
-						.getSessionFactory()
+				final BasicType<Integer> integerType = converter.getSqmCreationContext()
 						.getNodeBuilder()
 						.getIntegerType();
 
@@ -751,8 +750,8 @@ public class H2JsonTableFunction extends JsonTableFunction {
 				//noinspection unchecked
 				final String sqlLiteral = defaultExpression.getJdbcMapping().getJdbcLiteralFormatter().toJdbcLiteral(
 						defaultExpression.getLiteralValue(),
-						converter.getCreationContext().getSessionFactory().getJdbcServices().getDialect(),
-						converter.getCreationContext().getSessionFactory().getWrapperOptions()
+						converter.getCreationContext().getDialect(),
+						converter.getCreationContext().getWrapperOptions()
 				);
 				sb.append( sqlLiteral );
 				sb.append( ')' );

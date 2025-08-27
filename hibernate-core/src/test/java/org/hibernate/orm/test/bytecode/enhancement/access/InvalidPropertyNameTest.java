@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.access;
@@ -81,10 +81,7 @@ public class InvalidPropertyNameTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery( "delete from SomeEntity" ).executeUpdate();
-			session.createQuery( "delete from SomeEntityWithFalsePositive" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "SomeEntity")

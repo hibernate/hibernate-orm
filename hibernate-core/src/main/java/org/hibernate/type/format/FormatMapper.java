@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.format;
@@ -7,6 +7,8 @@ package org.hibernate.type.format;
 import org.hibernate.Incubating;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import java.io.IOException;
 
 /**
  * A mapper for mapping objects to and from a format.
@@ -41,4 +43,30 @@ public interface FormatMapper {
 	 * Serializes the object to a string.
 	 */
 	<T> String toString(T value, JavaType<T> javaType, WrapperOptions wrapperOptions);
+
+	/**
+	 * Checks that this mapper supports a type as a source type.
+	 * @param sourceType the source type
+	 * @return <code>true</code> if the type is supported, false otherwise.
+	 */
+	default boolean supportsSourceType(Class<?> sourceType) {
+		return false;
+	};
+
+	/**
+	 * Checks that this mapper supports a type as a target type.
+	 * @param targetType the target type
+	 * @return <code>true</code> if the type is supported, false otherwise.
+	 */
+	default boolean supportsTargetType(Class<?> targetType) {
+		return false;
+	}
+
+	default <T> void writeToTarget(T value, JavaType<T> javaType, Object target, WrapperOptions options) throws IOException {
+		throw new UnsupportedOperationException( "Unsupportd target type " + target.getClass() );
+	};
+
+	default <T> T readFromSource(JavaType<T> javaType, Object source, WrapperOptions options) throws IOException {
+		throw new UnsupportedOperationException( "Unsupportd source type " + source.getClass() );
+	};
 }

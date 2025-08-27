@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
@@ -20,4 +20,8 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 public interface SqmCorrelation<L,R> extends SqmFrom<L,R>, SqmPathWrapper<R,R> {
 	SqmRoot<L> getCorrelatedRoot();
 
+	@Override
+	default SqmRoot<?> findRoot() {
+		return getCorrelatedRoot();
+	}
 }

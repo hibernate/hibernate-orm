@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
@@ -34,10 +34,10 @@ public class NestedRowProcessingState extends BaseExecutionContext implements Ro
 	public static NestedRowProcessingState wrap(
 			AggregateEmbeddableInitializerImpl aggregateEmbeddableInitializer,
 			RowProcessingState processingState) {
-		if ( processingState instanceof NestedRowProcessingState ) {
+		if ( processingState instanceof NestedRowProcessingState nestedRowProcessingState ) {
 			return new NestedRowProcessingState(
 					aggregateEmbeddableInitializer,
-					( (NestedRowProcessingState) processingState ).processingState
+					nestedRowProcessingState.processingState
 			);
 		}
 		return new NestedRowProcessingState( aggregateEmbeddableInitializer, processingState );

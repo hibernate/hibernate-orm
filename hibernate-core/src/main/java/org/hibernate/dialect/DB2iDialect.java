@@ -1,21 +1,25 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
-import org.hibernate.LockOptions;
+import jakarta.persistence.Timeout;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
-import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.DB2SubstringFunction;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.DB2LockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LegacyDB2LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2iSequenceSupport;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sql.ast.DB2iSqlAstTranslator;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Column;
@@ -30,15 +34,15 @@ import java.util.List;
 import static org.hibernate.type.SqlTypes.ROWID;
 
 /**
- * A SQL dialect for DB2 for IBM i version 7.1 and above, previously known as "DB2/400".
+ * A SQL dialect for DB2 for IBM i version 7.2 and above, previously known as "DB2/400".
  *
  * @author Peter DeGregorio (pdegregorio)
  * @author Christian Beikov
  */
 public class DB2iDialect extends DB2Dialect {
 
-	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 7, 1 );
-	final static DatabaseVersion DB2_LUW_VERSION = DB2Dialect.MINIMUM_VERSION;
+	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 7, 2 );
+	public final static DatabaseVersion DB2_LUW_VERSION = DB2Dialect.MINIMUM_VERSION;
 
 	private static final String FOR_UPDATE_SQL = " for update with rs";
 	private static final String FOR_UPDATE_SKIP_LOCKED_SQL = FOR_UPDATE_SQL + " skip locked data";
@@ -57,19 +61,23 @@ public class DB2iDialect extends DB2Dialect {
 	}
 
 	@Override
-	protected DatabaseVersion getMinimumSupportedVersion() {
-		return MINIMUM_VERSION;
+	protected LockingSupport buildLockingSupport() {
+		return DB2LockingSupport.forDB2i();
 	}
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
-		if ( getVersion().isSameOrAfter( 7, 2 ) ) {
-			CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
-			functionFactory.listagg( null );
-			functionFactory.inverseDistributionOrderedSetAggregates();
-			functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
-		}
+		super.initializeFunctionRegistry( functionContributions );
+		// DB2 for i doesn't allow code units: https://www.ibm.com/docs/en/i/7.1.0?topic=functions-substring
+		functionContributions.getFunctionRegistry().register(
+				"substring",
+				new DB2SubstringFunction( false, functionContributions.getTypeConfiguration() )
+		);
+	}
+
+	@Override
+	protected DatabaseVersion getMinimumSupportedVersion() {
+		return MINIMUM_VERSION;
 	}
 
 	@Override
@@ -95,14 +103,9 @@ public class DB2iDialect extends DB2Dialect {
 	}
 
 	@Override
-	public boolean supportsDistinctFromPredicate() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsUpdateReturning() {
-		// Only supported for insert statements on DB2 for i: https://www.ibm.com/docs/en/i/7.1?topic=clause-table-reference
-		return false;
+		// Only supported as of version 7.6: https://www.ibm.com/docs/en/i/7.6.0?topic=clause-table-reference
+		return getVersion().isSameOrAfter( 7, 6 );
 	}
 
 	/**
@@ -117,7 +120,7 @@ public class DB2iDialect extends DB2Dialect {
 	@Override
 	public String getQuerySequencesString() {
 		if ( getVersion().isSameOrAfter(7,3) ) {
-			return "select distinct sequence_name from qsys2.syssequences " +
+			return "select distinct sequence_schema as seqschema, sequence_name as seqname, START, minimum_value as minvalue, maximum_value as maxvalue, increment from qsys2.syssequences " +
 					"where current_schema='*LIBL' and sequence_schema in (select schema_name from qsys2.library_list_info) " +
 					"or sequence_schema=current_schema";
 		}
@@ -138,11 +141,6 @@ public class DB2iDialect extends DB2Dialect {
 		return getVersion().isSameOrAfter(7, 3)
 				? DB2IdentityColumnSupport.INSTANCE
 				: DB2zIdentityColumnSupport.INSTANCE;
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		return true;
 	}
 
 	@Override
@@ -193,15 +191,29 @@ public class DB2iDialect extends DB2Dialect {
 	}
 
 	@Override
+	public String getWriteLockString(Timeout timeout) {
+		return timeout.milliseconds() == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
+				? FOR_UPDATE_SKIP_LOCKED_SQL
+				: FOR_UPDATE_SQL;
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		return timeout.milliseconds() == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
+				? FOR_UPDATE_SKIP_LOCKED_SQL
+				: FOR_UPDATE_SQL;
+	}
+
+	@Override
 	public String getWriteLockString(int timeout) {
-		return timeout == LockOptions.SKIP_LOCKED && supportsSkipLocked()
+		return timeout == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
 				? FOR_UPDATE_SKIP_LOCKED_SQL
 				: FOR_UPDATE_SQL;
 	}
 
 	@Override
 	public String getReadLockString(int timeout) {
-		return timeout == LockOptions.SKIP_LOCKED && supportsSkipLocked()
+		return timeout == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
 				? FOR_UPDATE_SKIP_LOCKED_SQL
 				: FOR_UPDATE_SQL;
 	}

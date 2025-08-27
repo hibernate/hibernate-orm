@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.spi;
 
+import org.hibernate.Internal;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 
@@ -38,6 +39,18 @@ public interface DatabaseConnectionInfo {
 	DatabaseVersion getDialectVersion();
 
 	/**
+	 * The default schema
+	 */
+	@Nullable
+	String getSchema();
+
+	/**
+	 * The default catalog
+	 */
+	@Nullable
+	String getCatalog();
+
+	/**
 	 * The transaction auto-commit mode in effect.
 	 */
 	@Nullable
@@ -60,6 +73,18 @@ public interface DatabaseConnectionInfo {
 	 */
 	@Nullable
 	Integer getPoolMaxSize();
+
+	/**
+	 * The default JDBC fetch size.
+	 */
+	@Nullable
+	Integer getJdbcFetchSize();
+
+	@Internal
+	boolean hasSchema();
+
+	@Internal
+	boolean hasCatalog();
 
 	/**
 	 * Collects the information available here as a single String with the intent of using it in logging.

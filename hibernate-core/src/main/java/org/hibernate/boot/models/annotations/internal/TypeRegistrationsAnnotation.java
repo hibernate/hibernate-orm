@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -11,7 +11,7 @@ import org.hibernate.annotations.TypeRegistration;
 import org.hibernate.annotations.TypeRegistrations;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -23,20 +23,20 @@ public class TypeRegistrationsAnnotation implements TypeRegistrations, Repeatabl
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public TypeRegistrationsAnnotation(SourceModelBuildingContext modelContext) {
+	public TypeRegistrationsAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public TypeRegistrationsAnnotation(TypeRegistrations annotation, SourceModelBuildingContext modelContext) {
+	public TypeRegistrationsAnnotation(TypeRegistrations annotation, ModelsContext modelContext) {
 		this.value = extractJdkValue( annotation, HibernateAnnotations.TYPE_REGISTRATIONS, "value", modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public TypeRegistrationsAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public TypeRegistrationsAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.value = (TypeRegistration[]) attributeValues.get( "value" );
 	}
 

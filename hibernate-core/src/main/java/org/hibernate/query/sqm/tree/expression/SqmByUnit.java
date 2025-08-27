@@ -1,13 +1,16 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
+
+import java.util.Objects;
 
 /**
  * @author Gavin King
@@ -19,7 +22,7 @@ public class SqmByUnit extends AbstractSqmExpression<Long> {
 	public SqmByUnit(
 			SqmDurationUnit<?> unit,
 			SqmExpression<?> duration,
-			SqmExpressible longType,
+			SqmBindableType<Long> longType,
 			NodeBuilder nodeBuilder) {
 		super( longType, nodeBuilder );
 		this.unit = unit;
@@ -57,10 +60,23 @@ public class SqmByUnit extends AbstractSqmExpression<Long> {
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitByUnit( this );
 	}
+
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		duration.appendHqlString( sb );
-		sb.append( " by " );
-		sb.append( unit.getUnit() );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		duration.appendHqlString( hql, context );
+		hql.append( " by " );
+		hql.append( unit.getUnit() );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmByUnit that
+			&& Objects.equals( this.unit, that.unit )
+			&& Objects.equals( this.duration, that.duration );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( unit, duration );
 	}
 }

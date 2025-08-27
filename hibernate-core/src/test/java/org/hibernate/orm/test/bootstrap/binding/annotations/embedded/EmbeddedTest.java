@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.binding.annotations.embedded;
@@ -62,15 +62,7 @@ public class EmbeddedTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			for ( Person person : session.createQuery( "from Person", Person.class ).getResultList() ) {
-				session.remove( person );
-			}
-			session.createQuery( "delete from InternetProvider" ).executeUpdate();
-			session.createQuery( "delete from Manager" ).executeUpdate();
-			session.createQuery( "delete from Book" ).executeUpdate();
-			session.createQuery( "delete from FavoriteThings" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -1,15 +1,17 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.predicate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 import jakarta.persistence.criteria.Expression;
@@ -77,8 +79,20 @@ public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		booleanExpression.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		booleanExpression.appendHqlString( hql, context );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmBooleanExpressionPredicate that
+			&& this.isNegated() == that.isNegated()
+			&& Objects.equals( this.booleanExpression, that.booleanExpression );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( booleanExpression, isNegated() );
 	}
 
 	@Override
@@ -88,11 +102,8 @@ public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate
 
 	@Override
 	public String toString() {
-		if ( isNegated() ) {
-			return "SqmBooleanExpressionPredicate( (not) " + booleanExpression + " )";
-		}
-		else {
-			return "SqmBooleanExpressionPredicate( " + booleanExpression + " )";
-		}
+		return isNegated()
+				? "SqmBooleanExpressionPredicate( (not) " + booleanExpression + " )"
+				: "SqmBooleanExpressionPredicate( " + booleanExpression + " )";
 	}
 }

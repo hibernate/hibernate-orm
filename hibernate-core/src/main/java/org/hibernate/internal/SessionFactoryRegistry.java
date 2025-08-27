@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
@@ -48,7 +48,7 @@ public class SessionFactoryRegistry {
 	private final ConcurrentHashMap<String, String> nameUuidXref = new ConcurrentHashMap<>();
 
 	private SessionFactoryRegistry() {
-		LOG.debugf( "Initializing SessionFactoryRegistry : %s", this );
+		LOG.tracef( "Initializing SessionFactoryRegistry @%s", hashCode() );
 	}
 
 	/**
@@ -146,14 +146,14 @@ public class SessionFactoryRegistry {
 	 * @return The SessionFactory
 	 */
 	public SessionFactoryImplementor getNamedSessionFactory(String name) {
-		LOG.debugf( "Lookup: name=%s", name );
+		LOG.tracef( "Lookup: name=%s", name );
 		final String uuid = nameUuidXref.get( name );
 		// protect against NPE -- see HHH-8428
 		return uuid == null ? null : getSessionFactory( uuid );
 	}
 
 	public SessionFactoryImplementor getSessionFactory(String uuid) {
-		LOG.debugf( "Lookup: uid=%s", uuid );
+		LOG.tracef( "Lookup: uid=%s", uuid );
 		final SessionFactoryImplementor sessionFactory = sessionFactoryMap.get( uuid );
 		if ( sessionFactory == null && LOG.isDebugEnabled() ) {
 			LOG.debugf( "Not found: %s", uuid );
@@ -234,7 +234,7 @@ public class SessionFactoryRegistry {
 	public static class ObjectFactoryImpl implements ObjectFactory {
 		@Override
 		public Object getObjectInstance(Object reference, Name name, Context nameCtx, Hashtable<?, ?> environment) {
-			LOG.debugf( "JNDI lookup: %s", name );
+			LOG.tracef( "JNDI lookup: %s", name );
 			final String uuid = (String) ( (Reference) reference ).get( 0 ).getContent();
 			LOG.tracef( "Resolved to UUID = %s", uuid );
 			return INSTANCE.getSessionFactory( uuid );

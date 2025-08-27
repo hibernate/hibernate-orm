@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.internal;
@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
+import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl.CaseStatementDiscriminatorExpression;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.sql.ast.spi.AbstractSqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
@@ -119,8 +119,7 @@ public class TableGroupHelper extends AbstractSqlAstWalker {
 		final TableReferenceJoin tableReferenceJoin = tableGroup.getTableReferenceJoins().get( index );
 		final NamedTableReference joinedTableReference = tableReferenceJoin.getJoinedTableReference();
 		final Predicate predicate = tableReferenceJoin.getPredicate();
-		if ( predicate instanceof Junction ) {
-			final Junction junction = (Junction) predicate;
+		if ( predicate instanceof Junction junction ) {
 			if ( junction.getNature() == Junction.Nature.CONJUNCTION ) {
 				for ( Predicate subPredicate : junction.getPredicates() ) {
 					if ( !isComparison( subPredicate, primaryTableReference, joinedTableReference ) ) {
@@ -137,12 +136,11 @@ public class TableGroupHelper extends AbstractSqlAstWalker {
 	}
 
 	private static boolean isComparison(Predicate predicate, TableReference table1, TableReference table2) {
-		if ( predicate instanceof ComparisonPredicate ) {
-			final ComparisonPredicate comparisonPredicate = (ComparisonPredicate) predicate;
+		if ( predicate instanceof ComparisonPredicate comparisonPredicate ) {
 			final Expression lhs = comparisonPredicate.getLeftHandExpression();
 			final Expression rhs = comparisonPredicate.getRightHandExpression();
 			final SqlTuple lhsTuple;
-			if ( lhs instanceof SqlTupleContainer && ( lhsTuple = ( (SqlTupleContainer) lhs ).getSqlTuple() ) != null ) {
+			if ( lhs instanceof SqlTupleContainer tupleContainer && ( lhsTuple = tupleContainer.getSqlTuple() ) != null ) {
 				final SqlTuple rhsTuple = ( (SqlTupleContainer) rhs ).getSqlTuple();
 				final List<? extends Expression> lhsExpressions = lhsTuple.getExpressions();
 				final List<? extends Expression> rhsExpressions = rhsTuple.getExpressions();
@@ -227,11 +225,11 @@ public class TableGroupHelper extends AbstractSqlAstWalker {
 
 	@Override
 	public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
-		if ( expression instanceof SelfRenderingSqlFragmentExpression ) {
-			checkSql( ( (SelfRenderingSqlFragmentExpression) expression ).getExpression() );
+		if ( expression instanceof SelfRenderingSqlFragmentExpression selfRenderingSqlFragmentExpression ) {
+			checkSql( selfRenderingSqlFragmentExpression.getExpression() );
 		}
-		else if ( expression instanceof CaseStatementDiscriminatorMappingImpl.CaseStatementDiscriminatorExpression ) {
-			for ( TableReference usedTableReference : ( (CaseStatementDiscriminatorMappingImpl.CaseStatementDiscriminatorExpression) expression ).getUsedTableReferences() ) {
+		else if ( expression instanceof CaseStatementDiscriminatorExpression caseStatementDiscriminatorExpression ) {
+			for ( TableReference usedTableReference : caseStatementDiscriminatorExpression.getUsedTableReferences() ) {
 				usedTableReference.accept( this );
 			}
 		}

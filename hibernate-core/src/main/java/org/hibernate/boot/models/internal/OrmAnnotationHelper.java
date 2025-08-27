@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.internal;
@@ -22,7 +22,7 @@ import org.hibernate.boot.models.XmlAnnotations;
 import org.hibernate.models.AnnotationAccessException;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.AttributeDescriptor;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 
 /**
@@ -57,14 +57,14 @@ public class OrmAnnotationHelper {
 		}
 	}
 
-	public static <V, A extends Annotation> V extractJdkValue(A jdkAnnotation, AttributeDescriptor<V> attributeDescriptor, SourceModelBuildingContext modelContext) {
+	public static <V, A extends Annotation> V extractJdkValue(A jdkAnnotation, AttributeDescriptor<V> attributeDescriptor, ModelsContext modelContext) {
 		return attributeDescriptor
 				.getTypeDescriptor()
 				.createJdkValueExtractor( modelContext )
 				.extractValue( jdkAnnotation, attributeDescriptor, modelContext );
 	}
 
-	public static <V, A extends Annotation> V extractJdkValue(A jdkAnnotation, AnnotationDescriptor<A> annotationDescriptor, String attributeName, SourceModelBuildingContext modelContext) {
+	public static <V, A extends Annotation> V extractJdkValue(A jdkAnnotation, AnnotationDescriptor<A> annotationDescriptor, String attributeName, ModelsContext modelContext) {
 		final AttributeDescriptor<V> attributeDescriptor = annotationDescriptor.getAttribute( attributeName );
 		return extractJdkValue( jdkAnnotation, attributeDescriptor, modelContext );
 	}

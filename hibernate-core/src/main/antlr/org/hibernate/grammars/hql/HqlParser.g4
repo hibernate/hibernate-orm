@@ -6,10 +6,8 @@ options {
 
 @header {
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.grammars.hql;
 }
@@ -161,9 +159,9 @@ queryExpression
  * A query with an optional 'order by' clause
  */
 orderedQuery
-	: query queryOrder?										# QuerySpecExpression
-	| LEFT_PAREN queryExpression RIGHT_PAREN queryOrder?	# NestedQueryExpression
-	| queryOrder											# QueryOrderExpression
+	: query orderByClause? limitOffset                                   # QuerySpecExpression
+	| LEFT_PAREN queryExpression RIGHT_PAREN orderByClause? limitOffset  # NestedQueryExpression
+	| orderByClause	limitOffset                                          # QueryOrderExpression
 	;
 
 /**
@@ -176,10 +174,10 @@ setOperator
 	;
 
 /**
- * The 'order by' clause and optional subclauses for limiting and pagination
+ * Optional subclauses for limiting and pagination
  */
-queryOrder
-	: orderByClause limitClause? offsetClause? fetchClause?
+limitOffset
+	: limitClause? offsetClause? fetchClause?
 	;
 
 /**
@@ -187,11 +185,14 @@ queryOrder
  *
  * - The 'select' clause may come first, in which case 'from' is optional
  * - The 'from' clause may come first, in which case 'select' is optional, and comes last
+ * - If both 'select' and 'from' are missing, a 'where' clause on its own is allowed
+ *
+ * Note that 'having' is only allowed with 'group by', but we don't enforce
+ * that in the grammar.
  */
 query
-// TODO: add with clause
-	: selectClause fromClause? whereClause? (groupByClause havingClause?)?
-	| fromClause whereClause? (groupByClause havingClause?)? selectClause?
+	: selectClause fromClause? whereClause? groupByClause? havingClause?
+	| fromClause whereClause? groupByClause? havingClause? selectClause?
 	| whereClause
 	;
 
@@ -668,7 +669,7 @@ predicate
 	| expression NOT? MEMBER OF? path											# MemberOfPredicate
 	| expression NOT? IN inList													# InPredicate
 	| expression NOT? BETWEEN expression AND expression							# BetweenPredicate
-	| expression NOT? (LIKE | ILIKE) expression likeEscape?						# LikePredicate
+	| expression NOT? (LIKE | ILIKE) REGEXP? expression likeEscape?				# LikePredicate
 	| expression NOT? CONTAINS expression										# ContainsPredicate
 	| expression NOT? INCLUDES expression										# IncludesPredicate
 	| expression NOT? INTERSECTS expression										# IntersectsPredicate
@@ -1997,6 +1998,7 @@ xmltableDefaultClause
 	| PRECEDING
 	| QUARTER
 	| RANGE
+	| REGEXP
 	| RESPECT
 	| RETURNING
 //	| RIGHT

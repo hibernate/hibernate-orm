@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.flush;
@@ -35,16 +35,14 @@ public class HibernateAutoFlushTest extends BaseNonConfigCoreFunctionalTestCase 
 		doInHibernate(this::sessionFactory, session -> {
 			log.info("testFlushAutoSQLNativeSession");
 			//tag::flushing-auto-flush-sql-native-example[]
-			assertTrue(((Number) session
-					.createNativeQuery("select count(*) from Person", Integer.class)
-					.getSingleResult()).intValue() == 0);
+			assertTrue( session.createNativeQuery( "select count(*) from Person", Integer.class )
+					.getSingleResult() == 0);
 
 			Person person = new Person("John Doe");
 			session.persist(person);
 
-			assertTrue(((Number) session
-					.createNativeQuery("select count(*) from Person", Integer.class)
-					.uniqueResult()).intValue() == 0);
+			assertTrue( session.createNativeQuery( "select count(*) from Person", Integer.class )
+					.uniqueResult() == 0);
 			//end::flushing-auto-flush-sql-native-example[]
 		});
 	}

@@ -1,16 +1,16 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
-import org.hibernate.dialect.XmlHelper;
+import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.dialect.function.UnnestSetReturningFunctionTypeResolver;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingSetReturningFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -50,9 +50,8 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		final Expression array = (Expression) sqlAstArguments.get( 0 );
-		final @Nullable SqlTypedMapping sqlTypedMapping = array.getExpressionType() instanceof SqlTypedMapping
-				? (SqlTypedMapping) array.getExpressionType()
-				: null;
+		final @Nullable SqlTypedMapping sqlTypedMapping =
+				array.getExpressionType() instanceof SqlTypedMapping sqlTyped ? sqlTyped : null;
 		final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) array.getExpressionType().getSingleJdbcMapping();
 		final int ddlTypeCode = pluralType.getJdbcType().getDefaultSqlTypeCode();
 		if ( ddlTypeCode == SqlTypes.JSON_ARRAY ) {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate;
@@ -88,9 +88,8 @@ public class ExportIdentifierTest extends BaseUnitTestCase {
 			final Table table = new Table( "orm", namespace, Identifier.toIdentifier( name ), false );
 			addExportIdentifier( table, exportIdentifierList, exportIdentifierSet );
 
-			final ForeignKey foreignKey = new ForeignKey();
+			final ForeignKey foreignKey = new ForeignKey( table );
 			foreignKey.setName( name );
-			foreignKey.setTable( table );
 			addExportIdentifier( foreignKey, exportIdentifierList, exportIdentifierSet );
 
 			final Index index = new Index();
@@ -102,9 +101,8 @@ public class ExportIdentifierTest extends BaseUnitTestCase {
 			primaryKey.setName( name );
 			addExportIdentifier( primaryKey, exportIdentifierList, exportIdentifierSet );
 
-			final UniqueKey uniqueKey = new UniqueKey();
+			final UniqueKey uniqueKey = new UniqueKey( table );
 			uniqueKey.setName( name );
-			uniqueKey.setTable( table );
 			addExportIdentifier( uniqueKey, exportIdentifierList, exportIdentifierSet );
 		}
 	}
@@ -119,8 +117,8 @@ public class ExportIdentifierTest extends BaseUnitTestCase {
 			addExportIdentifier(
 					new Sequence(
 							"orm",
-							namespace.getName().getCatalog(),
-							namespace.getName().getSchema(),
+							namespace.getName().catalog(),
+							namespace.getName().schema(),
 							Identifier.toIdentifier( name )
 					),
 					exportIdentifierList,

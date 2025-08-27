@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal;
@@ -10,7 +10,7 @@ import java.util.Locale;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.RuntimeMetamodels;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -157,9 +157,9 @@ public class Builders {
 			);
 		}
 
-		final RuntimeMetamodels runtimeMetamodels = sessionFactory.getRuntimeMetamodels();
-		final String fullEntityName = runtimeMetamodels.getMappingMetamodel().getImportedName( entityName );
-		final EntityPersister entityMapping = runtimeMetamodels.getMappingMetamodel().findEntityDescriptor( fullEntityName );
+		final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getMappingMetamodel();
+		final String fullEntityName = mappingMetamodel.getImportedName( entityName );
+		final EntityPersister entityMapping = mappingMetamodel.findEntityDescriptor( fullEntityName );
 		if ( entityMapping == null ) {
 			throw new IllegalArgumentException( "Could not locate entity mapping : " + fullEntityName );
 		}
@@ -169,8 +169,7 @@ public class Builders {
 			throw new IllegalArgumentException( "Could not locate attribute mapping : " + fullEntityName + "." + attributePath );
 		}
 
-		if ( attributeMapping instanceof SingularAttributeMapping ) {
-			final SingularAttributeMapping singularAttributeMapping = (SingularAttributeMapping) attributeMapping;
+		if ( attributeMapping instanceof SingularAttributeMapping singularAttributeMapping ) {
 			return new DynamicResultBuilderAttribute( singularAttributeMapping, columnAlias, fullEntityName, attributePath );
 		}
 
@@ -185,14 +184,17 @@ public class Builders {
 		);
 	}
 
-	public static ResultBuilder attributeResult(String columnAlias, SingularAttribute<?, ?> attribute) {
-		if ( ! ( attribute.getDeclaringType() instanceof EntityType ) ) {
+	public static ResultBuilder attributeResult(
+			String columnAlias,
+			SingularAttribute<?, ?> attribute,
+			SessionFactoryImplementor sessionFactory) {
+		if ( ! ( attribute.getDeclaringType() instanceof EntityType<?> entityType ) ) {
 			throw new UnsupportedOperationException(
 					"Support for defining a NativeQuery attribute result based on a composite path is not yet implemented"
 			);
 		}
 
-		throw new UnsupportedOperationException();
+		return attributeResult( columnAlias, entityType.getName(), attribute.getName(), sessionFactory );
 	}
 
 	/**
@@ -203,9 +205,8 @@ public class Builders {
 			String tableAlias,
 			String entityName,
 			SessionFactoryImplementor sessionFactory) {
-		final RuntimeMetamodels runtimeMetamodels = sessionFactory.getRuntimeMetamodels();
-		final EntityMappingType entityMapping = runtimeMetamodels.getEntityMappingType( entityName );
-
+		final EntityMappingType entityMapping =
+				sessionFactory.getMappingMetamodel().getEntityDescriptor( entityName );
 		return new DynamicResultBuilderEntityStandard( entityMapping, tableAlias );
 	}
 
@@ -236,26 +237,23 @@ public class Builders {
 			String entityName,
 			LockMode explicitLockMode,
 			SessionFactoryImplementor sessionFactory) {
-		final EntityMappingType entityMapping = sessionFactory.getRuntimeMetamodels().getEntityMappingType( entityName );
+		final EntityMappingType entityMapping = sessionFactory.getMappingMetamodel().getEntityDescriptor( entityName );
 		return new DynamicResultBuilderEntityCalculated( entityMapping, tableAlias, explicitLockMode );
 	}
 
-	public static DynamicFetchBuilderLegacy fetch(String tableAlias, String ownerTableAlias, String joinPropertyName) {
-		return new DynamicFetchBuilderLegacy( tableAlias, ownerTableAlias, joinPropertyName, new ArrayList<>(), new HashMap<>() );
+	public static DynamicFetchBuilderLegacy fetch(String tableAlias, String ownerTableAlias, Fetchable fetchable) {
+		return new DynamicFetchBuilderLegacy( tableAlias, ownerTableAlias, fetchable, new ArrayList<>(), new HashMap<>() );
 	}
 
 	public static ResultBuilder resultClassBuilder(
 			Class<?> resultMappingClass,
 			ResultSetMappingResolutionContext resolutionContext) {
-		return resultClassBuilder( resultMappingClass, resolutionContext.getSessionFactory() );
+		return resultClassBuilder( resultMappingClass, resolutionContext.getMappingMetamodel() );
 	}
 
 	public static ResultBuilder resultClassBuilder(
 			Class<?> resultMappingClass,
-			SessionFactoryImplementor sessionFactory) {
-		final MappingMetamodelImplementor mappingMetamodel =
-				sessionFactory.getRuntimeMetamodels()
-						.getMappingMetamodel();
+			MappingMetamodel mappingMetamodel) {
 		final EntityMappingType entityMappingType = mappingMetamodel.findEntityDescriptor( resultMappingClass );
 		if ( entityMappingType != null ) {
 			// the resultClass is an entity
@@ -277,28 +275,26 @@ public class Builders {
 			return new ImplicitFetchBuilderBasic( fetchPath, basicValuedFetchable, creationState );
 		}
 
-		if ( fetchable instanceof EmbeddableValuedFetchable ) {
-			final EmbeddableValuedFetchable embeddableValuedFetchable = (EmbeddableValuedFetchable) fetchable;
+		if ( fetchable instanceof EmbeddableValuedFetchable embeddableValuedFetchable ) {
 			return new ImplicitFetchBuilderEmbeddable( fetchPath, embeddableValuedFetchable, creationState );
 		}
 
-		if ( fetchable instanceof ToOneAttributeMapping ) {
-			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) fetchable;
+		if ( fetchable instanceof ToOneAttributeMapping toOneAttributeMapping ) {
 			return new ImplicitFetchBuilderEntity( fetchPath, toOneAttributeMapping, creationState );
 		}
 
-		if ( fetchable instanceof PluralAttributeMapping ) {
-			return new ImplicitFetchBuilderPlural( fetchPath, (PluralAttributeMapping) fetchable, creationState );
+		if ( fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {
+			return new ImplicitFetchBuilderPlural( fetchPath, pluralAttributeMapping, creationState );
 		}
 
-		if ( fetchable instanceof EntityCollectionPart ) {
-			return new ImplicitFetchBuilderEntityPart( fetchPath, (EntityCollectionPart) fetchable );
+		if ( fetchable instanceof EntityCollectionPart entityCollectionPart ) {
+			return new ImplicitFetchBuilderEntityPart( fetchPath, entityCollectionPart );
 		}
 
-		if ( fetchable instanceof DiscriminatedAssociationAttributeMapping ) {
+		if ( fetchable instanceof DiscriminatedAssociationAttributeMapping discriminatedAssociationAttributeMapping ) {
 			return new ImplicitFetchBuilderDiscriminatedAssociation(
 					fetchPath,
-					(DiscriminatedAssociationAttributeMapping) fetchable,
+					discriminatedAssociationAttributeMapping,
 					creationState
 			);
 		}

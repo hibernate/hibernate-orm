@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat.internal;
@@ -22,6 +22,7 @@ public class CacheRegionStatisticsImpl implements CacheRegionStatistics, Seriali
 	private final LongAdder hitCount = new LongAdder();
 	private final LongAdder missCount = new LongAdder();
 	private final LongAdder putCount = new LongAdder();
+	private final LongAdder removeCount = new LongAdder();
 
 	CacheRegionStatisticsImpl(Region region) {
 		this.region = region;
@@ -48,27 +49,29 @@ public class CacheRegionStatisticsImpl implements CacheRegionStatistics, Seriali
 	}
 
 	@Override
+	public long getRemoveCount() {
+		return removeCount.sum();
+	}
+
+	@Override
 	public long getElementCountInMemory() {
-		if ( region instanceof ExtendedStatisticsSupport ) {
-			return ( (ExtendedStatisticsSupport) region ).getElementCountInMemory();
-		}
-		return NO_EXTENDED_STAT_SUPPORT_RETURN;
+		return region instanceof ExtendedStatisticsSupport extended
+				? extended.getElementCountInMemory()
+				: NO_EXTENDED_STAT_SUPPORT_RETURN;
 	}
 
 	@Override
 	public long getElementCountOnDisk() {
-		if ( region instanceof ExtendedStatisticsSupport ) {
-			return ( (ExtendedStatisticsSupport) region ).getElementCountOnDisk();
-		}
-		return NO_EXTENDED_STAT_SUPPORT_RETURN;
+		return region instanceof ExtendedStatisticsSupport extended
+				? extended.getElementCountOnDisk()
+				: NO_EXTENDED_STAT_SUPPORT_RETURN;
 	}
 
 	@Override
 	public long getSizeInMemory() {
-		if ( region instanceof ExtendedStatisticsSupport ) {
-			return ( (ExtendedStatisticsSupport) region ).getSizeInMemory();
-		}
-		return NO_EXTENDED_STAT_SUPPORT_RETURN;
+		return region instanceof ExtendedStatisticsSupport extended
+				? extended.getSizeInMemory()
+				: NO_EXTENDED_STAT_SUPPORT_RETURN;
 	}
 
 	void incrementHitCount() {
@@ -83,6 +86,11 @@ public class CacheRegionStatisticsImpl implements CacheRegionStatistics, Seriali
 		putCount.increment();
 	}
 
+
+	public void incrementRemoveCount() {
+		removeCount.increment();
+	}
+
 	@Override
 	public String toString() {
 		String buf = "CacheRegionStatistics" +
@@ -90,6 +98,7 @@ public class CacheRegionStatisticsImpl implements CacheRegionStatistics, Seriali
 				",hitCount=" + this.hitCount +
 				",missCount=" + this.missCount +
 				",putCount=" + this.putCount +
+				",removeCount=" + this.removeCount +
 				",elementCountInMemory=" + this.getElementCountInMemory() +
 				",elementCountOnDisk=" + this.getElementCountOnDisk() +
 				",sizeInMemory=" + this.getSizeInMemory() +

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bidi;
@@ -10,9 +10,9 @@ import java.util.Date;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.JiraKeyGroup;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,17 +21,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Jan Schatteman
  */
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/bidi/Auction3.hbm.xml"
-)
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/bidi/Auction3.xml")
 @SessionFactory
-@JiraKeyGroup(
-		value = {
-				@JiraKey( value = "HHH-987" ),
-				@JiraKey( value = "HHH-992" )
-		}
-)
+@JiraKey( value = "HHH-987" )
+@JiraKey( value = "HHH-992" )
 public class AuctionWithAbstractBidClassTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
 	public void testAbstractSuperClassMapping(SessionFactoryScope scope) {
@@ -66,7 +65,7 @@ public class AuctionWithAbstractBidClassTest {
 
 		scope.inTransaction(
 				session -> {
-					SpecialAuction auc = session.get( SpecialAuction.class, auctionId );
+					SpecialAuction auc = session.find( SpecialAuction.class, auctionId );
 					SpecialBid successfulBid = (SpecialBid) auc.getSuccessfulBid();
 					assertTrue( successfulBid.isSuccessful() );
 					assertEquals( successfulBid.getId(), ssbidId );

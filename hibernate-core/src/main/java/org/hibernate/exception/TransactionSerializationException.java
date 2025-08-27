@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.exception;
@@ -7,9 +7,12 @@ package org.hibernate.exception;
 import org.hibernate.JDBCException;
 
 import java.sql.SQLException;
+
 /**
  * A {@link JDBCException} indicating a transaction failed because it could not be placed into a serializable ordering
- * among all of the currently-executing transactions
+ * among all currently-executing transactions
+ *
+ * @apiNote At present, this is only used to represent {@code WriteTooOldError} on CockroachDB.
  *
  * @author Karel Maesen
  */

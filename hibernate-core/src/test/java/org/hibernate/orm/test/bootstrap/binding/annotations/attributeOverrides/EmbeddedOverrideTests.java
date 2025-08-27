@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.binding.annotations.attributeOverrides;
@@ -120,16 +120,7 @@ public class EmbeddedOverrideTests {
 
 	@AfterEach
 	public void cleanupTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "from DomesticCustomer", DomesticCustomer.class )
-							.list()
-							.forEach( cust -> session.remove( cust ) );
-					session.createQuery( "from ForeignCustomer", ForeignCustomer.class )
-							.list()
-							.forEach( cust -> session.remove( cust ) );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Embeddable

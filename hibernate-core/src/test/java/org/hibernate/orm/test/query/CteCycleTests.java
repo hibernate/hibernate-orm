@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query;
@@ -7,7 +7,7 @@ package org.hibernate.orm.test.query;
 import java.time.LocalDate;
 import java.util.List;
 
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.contacts.Address;
@@ -41,7 +41,7 @@ public class CteCycleTests {
 	public void testRecursiveCycleClause(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<Tuple> query = session.createQuery(
+					final Query<Tuple> query = session.createQuery(
 							"with alternativeContacts as (" +
 									"select c.alternativeContact alt from Contact c where c.id = :param " +
 									"union all " +
@@ -102,9 +102,6 @@ public class CteCycleTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "update Contact set alternativeContact = null" ).executeUpdate();
-			session.createMutationQuery( "delete Contact" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

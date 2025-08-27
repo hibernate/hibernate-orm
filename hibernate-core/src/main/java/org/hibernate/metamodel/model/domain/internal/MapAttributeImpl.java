@@ -1,33 +1,33 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Map;
 
-import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
+import org.hibernate.query.sqm.tree.domain.SqmMapPersistentAttribute;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 /**
  * @author Steve Ebersole
  */
-public class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V> implements MapPersistentAttribute<X, K, V> {
+public class MapAttributeImpl<X, K, V>
+		extends AbstractPluralAttribute<X, Map<K, V>, V>
+		implements SqmMapPersistentAttribute<X, K, V> {
 	private final SqmPathSource<K> keyPathSource;
 
-	public MapAttributeImpl(PluralAttributeBuilder<X, Map<K, V>, V, K> xceBuilder, MetadataContext metadataContext) {
-		super( xceBuilder, metadataContext );
-
-		this.keyPathSource = SqmMappingModelHelper.resolveSqmKeyPathSource(
+	public MapAttributeImpl(PluralAttributeBuilder<X, Map<K, V>, V, K> xceBuilder) {
+		super( xceBuilder );
+		keyPathSource = SqmMappingModelHelper.resolveSqmKeyPathSource(
 				xceBuilder.getListIndexOrMapKeyType(),
 				BindableType.PLURAL_ATTRIBUTE,
 				xceBuilder.isGeneric()
@@ -70,28 +70,21 @@ public class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K,
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
-		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( name );
-		if ( nature != null ) {
-			switch ( nature ) {
-				case INDEX:
-					return keyPathSource;
-				case ELEMENT:
-					return getElementPathSource();
-			}
-		}
-		return getElementPathSource().findSubPathSource( name, includeSubtypes );
+		return CollectionPart.Nature.INDEX.getName().equals( name )
+				? keyPathSource
+				: super.findSubPathSource( name, includeSubtypes );
 	}
 
 	@Override
 	public SqmPathSource<?> getIntermediatePathSource(SqmPathSource<?> pathSource) {
 		final String pathName = pathSource.getPathName();
 		return pathName.equals( getElementPathSource().getPathName() )
-				|| pathName.equals( keyPathSource.getPathName() ) ? null : getElementPathSource();
+			|| pathName.equals( keyPathSource.getPathName() ) ? null : getElementPathSource();
 	}
 
 	@Override
 	public SimpleDomainType<K> getKeyType() {
-		return (SimpleDomainType<K>) keyPathSource.getSqmPathType();
+		return (SimpleDomainType<K>) keyPathSource.getPathType();
 	}
 
 	@Override

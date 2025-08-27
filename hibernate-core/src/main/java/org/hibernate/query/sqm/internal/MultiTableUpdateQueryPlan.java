@@ -1,35 +1,32 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.internal;
 
-import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
-import org.hibernate.query.spi.NonSelectQueryPlan;
+import org.hibernate.query.sqm.mutation.spi.MultiTableHandlerBuildResult;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
 /**
  * @author Steve Ebersole
  */
-public class MultiTableUpdateQueryPlan implements NonSelectQueryPlan {
-	private final SqmUpdateStatement sqmUpdate;
-	private final DomainParameterXref domainParameterXref;
-	private final SqmMultiTableMutationStrategy mutationStrategy;
+public class MultiTableUpdateQueryPlan extends AbstractMultiTableMutationQueryPlan<SqmUpdateStatement<?>, SqmMultiTableMutationStrategy> {
 
 	public MultiTableUpdateQueryPlan(
-			SqmUpdateStatement sqmUpdate,
+			SqmUpdateStatement<?> sqmUpdate,
 			DomainParameterXref domainParameterXref,
 			SqmMultiTableMutationStrategy mutationStrategy) {
-		this.sqmUpdate = sqmUpdate;
-		this.domainParameterXref = domainParameterXref;
-		this.mutationStrategy = mutationStrategy;
+		super( sqmUpdate, domainParameterXref, mutationStrategy );
 	}
 
 	@Override
-	public int executeUpdate(DomainQueryExecutionContext executionContext) {
-		BulkOperationCleanupAction.schedule( executionContext.getSession(), sqmUpdate );
-		return mutationStrategy.executeUpdate( sqmUpdate, domainParameterXref, executionContext );
+	protected MultiTableHandlerBuildResult buildHandler(
+			SqmUpdateStatement<?> statement,
+			DomainParameterXref domainParameterXref,
+			SqmMultiTableMutationStrategy strategy,
+			DomainQueryExecutionContext context) {
+		return strategy.buildHandler( statement, domainParameterXref, context );
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -27,11 +27,15 @@ public enum OnDeleteAction {
 
 	/**
 	 * Cascade deletion of the parent to the child.
+	 * <p>
+	 * Produces a foreign key constraint with {@code on delete cascade}.
 	 */
 	CASCADE,
 
 	/**
 	 * Prevents deletion of the parent by raising an error immediately.
+	 * <p>
+	 * Produces a foreign key constraint with {@code on delete restrict}.
 	 *
 	 * @since 6.2
 	 */
@@ -39,6 +43,8 @@ public enum OnDeleteAction {
 
 	/**
 	 * Set the referencing foreign key to null.
+	 * <p>
+	 * Produces a foreign key constraint with {@code on delete set null}.
 	 *
 	 * @since 6.2
 	 */
@@ -46,6 +52,8 @@ public enum OnDeleteAction {
 
 	/**
 	 * Set the referencing foreign key to its default value.
+	 * <p>
+	 * Produces a foreign key constraint with {@code on delete set default}.
 	 *
 	 * @since 6.2
 	 */
@@ -63,25 +71,25 @@ public enum OnDeleteAction {
 		if ( value == null ) {
 			return null;
 		}
-
-		if ( value instanceof OnDeleteAction onDeleteAction ) {
+		else if ( value instanceof OnDeleteAction onDeleteAction ) {
 			return onDeleteAction;
 		}
-
-		final String valueString = value.toString();
-		try {
-			return valueOf( valueString );
-		}
-		catch (IllegalArgumentException e) {
-			// the name did not match the enum value name...
-		}
-
-		for ( OnDeleteAction checkAction : values() ) {
-			if ( checkAction.getAlternativeName().equalsIgnoreCase( valueString ) ) {
-				return checkAction;
+		else {
+			final String valueString = value.toString();
+			try {
+				return valueOf( valueString );
 			}
-		}
+			catch (IllegalArgumentException e) {
+				// the name did not match the enum value name...
+			}
 
-		return null;
+			for ( OnDeleteAction checkAction : values() ) {
+				if ( checkAction.getAlternativeName().equalsIgnoreCase( valueString ) ) {
+					return checkAction;
+				}
+			}
+
+			return null;
+		}
 	}
 }

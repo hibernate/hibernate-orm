@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.usertypes;
@@ -13,7 +13,7 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
@@ -60,7 +60,7 @@ public class EnumUserType<T extends Enum<T>> implements UserType<T>, Parameteriz
 	}
 
 	@Override
-	public T nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+	public T nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 			throws SQLException {
 		final String name = rs.getString( position );
 		if ( rs.wasNull() ) {
@@ -78,7 +78,7 @@ public class EnumUserType<T extends Enum<T>> implements UserType<T>, Parameteriz
 			PreparedStatement preparedStatement,
 			T value,
 			int index,
-			SharedSessionContractImplementor session) throws SQLException {
+			WrapperOptions options) throws SQLException {
 		if ( null == value ) {
 			preparedStatement.setNull( index, Types.VARCHAR );
 		}

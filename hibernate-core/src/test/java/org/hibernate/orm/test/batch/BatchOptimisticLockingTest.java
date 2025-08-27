@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.batch;
@@ -14,6 +14,7 @@ import jakarta.persistence.RollbackException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
 
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -69,7 +70,7 @@ public class  BatchOptimisticLockingTest extends
 		} );
 
 		try {
-			inTransaction( (session) -> {
+			inTransaction( session -> {
 				List<Person> persons = session
 						.createSelectionQuery( "select p from Person p", Person.class )
 						.getResultList();
@@ -107,10 +108,19 @@ public class  BatchOptimisticLockingTest extends
 			}
 			else {
 				assertEquals( OptimisticLockException.class, expected.getClass() );
-				assertTrue(
-						expected.getMessage()
-								.startsWith("Batch update returned unexpected row count from update 1 (expected row count 1 but was 0) [update Person set name=?,version=? where id=? and version=?]")
-				);
+
+				if ( getDialect() instanceof MariaDBDialect && getDialect().getVersion().isAfter( 11, 6, 2 )) {
+					assertTrue(
+							expected.getMessage()
+									.contains( "Record has changed since last read in table 'Person'" )
+					);
+				} else {
+					assertTrue(
+							expected.getMessage()
+									.startsWith(
+											"Batch update returned unexpected row count from update 1 (expected row count 1 but was 0) [update Person set name=?,version=? where id=? and version=?]" )
+					);
+				}
 			}
 		}
 	}

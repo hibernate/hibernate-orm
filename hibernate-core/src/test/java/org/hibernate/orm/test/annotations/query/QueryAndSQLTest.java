@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.query;
@@ -15,7 +15,6 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.HANADialect;
-import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
@@ -107,7 +106,7 @@ public class QueryAndSQLTest {
 					session.createNativeQuery( sql ).addEntity( "t", AllTables.class ).list();
 					List<AllTables> allTables = session.createNativeQuery( sql, AllTables.class, "t" ).list();
 					session.createNativeQuery( sql2, "all" ).list();
-					List<String> allTableNames = session.createNativeQuery( sql2, "all", String.class ).list();
+					List<String> allTableNames = session.createNativeQuery( sql2, String.class ).list();
 					NativeQuery q = session.createNativeQuery( sql2 );
 					q.addRoot( "t", AllTables.class ).addProperty( "tableName", "t_name" ).addProperty(
 							"daysOld",
@@ -119,7 +118,7 @@ public class QueryAndSQLTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "invalid name of function or procedure: SYSDATE")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "invalid name of function or procedure: SYSDATE")
 	public void testNativeQueryWithFormulaAttributeWithoutAlias(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -596,8 +595,6 @@ public class QueryAndSQLTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true,
-			reason = "postgresql jdbc driver does not implement the setQueryTimeout method")
 	public void testCache(SessionFactoryScope scope) {
 		Plane plane = new Plane();
 		scope.inTransaction(

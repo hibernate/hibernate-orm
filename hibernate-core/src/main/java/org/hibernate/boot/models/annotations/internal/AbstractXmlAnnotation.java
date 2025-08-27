@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -7,14 +7,14 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 
 import org.hibernate.boot.internal.Abstract;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 /**
  * @author Steve Ebersole
  */
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 public class AbstractXmlAnnotation implements Abstract {
-	public AbstractXmlAnnotation(SourceModelBuildingContext modelContext) {
+	public AbstractXmlAnnotation(ModelsContext modelContext) {
 	}
 
 	@Override

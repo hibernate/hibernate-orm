@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm;
@@ -19,9 +19,8 @@ import java.util.Set;
 
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
+import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.NullPrecedence;
-import org.hibernate.query.BindingContext;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCastTarget;
@@ -32,10 +31,9 @@ import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSearchedCase;
-import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.criteria.JpaWindow;
-import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
@@ -66,7 +64,6 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CollectionJoin;
@@ -87,28 +84,39 @@ import jakarta.persistence.criteria.Subquery;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("unchecked")
-public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
-	JpaMetamodel getDomainModel();
+public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContext {
+	default JpaMetamodel getDomainModel() {
+		return getJpaMetamodel();
+	}
 
-	TypeConfiguration getTypeConfiguration();
+	default boolean isJpaQueryComplianceEnabled() {
+		return getJpaCompliance().isJpaQueryComplianceEnabled();
+	}
 
-	boolean isJpaQueryComplianceEnabled();
+	@Override
+	default NodeBuilder getNodeBuilder() {
+		return this;
+	}
 
-	QueryEngine getQueryEngine();
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Obsolete operations marked for removal
 
+	@Deprecated(since = "7", forRemoval = true)
 	<R> SqmTuple<R> tuple(
 			Class<R> tupleType,
 			SqmExpression<?>... expressions);
 
+	@Deprecated(since = "7", forRemoval = true)
 	<R> SqmTuple<R> tuple(
 			Class<R> tupleType,
 			List<? extends SqmExpression<?>> expressions);
 
+	@Deprecated(since = "7", forRemoval = true)
 	<R> SqmTuple<R> tuple(
 			SqmExpressible<R> tupleType,
 			SqmExpression<?>... expressions);
 
+	@Deprecated(since = "7", forRemoval = true)
 	<R> SqmTuple<R> tuple(
 			SqmExpressible<R> tupleType,
 			List<? extends SqmExpression<?>> expressions);
@@ -256,6 +264,18 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 	SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator);
 
 	@Override
+	SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression, Expression<String> defaultExpression);
+
+	@Override
+	SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression, String defaultValue);
+
+	@Override
+	SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator, Expression<String> defaultExpression);
+
+	@Override
+	SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator, String defaultValue);
+
+	@Override
 	<T> SqmPredicate arrayContains(Expression<T[]> arrayExpression, Expression<T> elementExpression);
 
 	@Override
@@ -273,32 +293,32 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 	@Override
 	<T> SqmPredicate arrayContainsNullable(T[] array, Expression<T> elementExpression);
 
-	@Override
+	@Override @Deprecated
 	default <T> SqmPredicate arrayContainsAll(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression) {
 		return arrayIncludes( arrayExpression, subArrayExpression );
 	}
 
-	@Override
+	@Override @Deprecated
 	default <T> SqmPredicate arrayContainsAll(Expression<T[]> arrayExpression, T[] subArray) {
 		return arrayIncludes( arrayExpression, subArray );
 	}
 
-	@Override
+	@Override @Deprecated
 	default <T> SqmPredicate arrayContainsAll(T[] array, Expression<T[]> subArrayExpression) {
 		return arrayIncludes( array, subArrayExpression );
 	}
 
-	@Override
+	@Override @Deprecated
 	default <T> SqmPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression) {
 		return arrayIncludesNullable( arrayExpression, subArrayExpression );
 	}
 
-	@Override
+	@Override @Deprecated
 	default <T> SqmPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, T[] subArray) {
 		return arrayIncludesNullable( arrayExpression, subArray );
 	}
 
-	@Override
+	@Override @Deprecated
 	default <T> SqmPredicate arrayContainsAllNullable(T[] array, Expression<T[]> subArrayExpression) {
 		return arrayIncludesNullable( array, subArrayExpression );
 	}
@@ -321,32 +341,32 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 	@Override
 	<T> SqmPredicate arrayIncludesNullable(T[] array, Expression<T[]> subArrayExpression);
 
-	@Override
+	@Override @Deprecated
 	default <T> SqmPredicate arrayOverlaps(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
 		return arrayIntersects( arrayExpression1, arrayExpression2 );
 	}
 
-	@Override
+	@Override @Deprecated
 	default <T> SqmPredicate arrayOverlaps(Expression<T[]> arrayExpression1, T[] array2) {
 		return arrayIntersects( arrayExpression1, array2 );
 	}
 
-	@Override
+	@Override @Deprecated
 	default <T> SqmPredicate arrayOverlaps(T[] array1, Expression<T[]> arrayExpression2) {
 		return arrayIntersects( array1, arrayExpression2 );
 	}
 
-	@Override
+	@Override @Deprecated
 	default <T> SqmPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
 		return arrayIntersectsNullable( arrayExpression1, arrayExpression2 );
 	}
 
-	@Override
+	@Override @Deprecated
 	default <T> SqmPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, T[] array2) {
 		return arrayIntersectsNullable( arrayExpression1, array2 );
 	}
 
-	@Override
+	@Override @Deprecated
 	default <T> SqmPredicate arrayOverlapsNullable(T[] array1, Expression<T[]> arrayExpression2) {
 		return arrayIntersectsNullable( array1, arrayExpression2 );
 	}
@@ -494,6 +514,18 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 
 	@Override
 	SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator);
+
+	@Override
+	SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression, Expression<String> defaultExpression);
+
+	@Override
+	SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression, String defaultValue);
+
+	@Override
+	SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator, Expression<String> defaultExpression);
+
+	@Override
+	SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator, String defaultValue);
 
 	@Override
 	<E> SqmPredicate collectionContains(Expression<? extends Collection<E>> collectionExpression, Expression<? extends E> elementExpression);
@@ -908,19 +940,19 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 	SqmSelectStatement<Tuple> createTupleQuery();
 
 	@Override
-	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, Selection<?>[] selections);
+	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, Selection<?>... selections);
 
 	@Override
-	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, List<? extends JpaSelection<?>> arguments);
+	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, List<? extends Selection<?>> arguments);
 
 	@Override
-	JpaCompoundSelection<Tuple> tuple(Selection<?>[] selections);
+	JpaCompoundSelection<Tuple> tuple(Selection<?>... selections);
 
 	@Override
 	JpaCompoundSelection<Tuple> tuple(List<Selection<?>> selections);
 
 	@Override
-	JpaCompoundSelection<Object[]> array(Selection<?>[] selections);
+	JpaCompoundSelection<Object[]> array(Selection<?>... selections);
 
 	@Override
 	JpaCompoundSelection<Object[]> array(List<Selection<?>> selections);
@@ -964,11 +996,19 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 	@Override
 	SqmPredicate wrap(Expression<Boolean> expression);
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	SqmPredicate wrap(Expression<Boolean>... expressions);
 
+	SqmPredicate wrap(List<? extends Expression<Boolean>> restrictions);
+
 	@Override
-	<P, F> SqmExpression<F> fk(Path<P> path);
+	SqmExpression<?> fk(Path<?> path);
+
+	@Override
+	SqmExpression<?> id(Path<?> path);
+
+	@Override
+	SqmExpression<?> version(Path<?> path);
 
 	@Override
 	<X, T extends X> SqmPath<T> treat(Path<X> path, Class<T> type);
@@ -1453,18 +1493,20 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 			Nulls nullPrecedence,
 			boolean ignoreCase);
 
-	@Override
+	@Override @Deprecated
 	default SqmSortSpecification sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
-		return (SqmSortSpecification) HibernateCriteriaBuilder.super.sort( sortExpression, sortOrder, nullPrecedence );
+		return (SqmSortSpecification)
+				HibernateCriteriaBuilder.super.sort( sortExpression, sortOrder, nullPrecedence );
 	}
 
-	@Override
+	@Override @Deprecated
 	default SqmSortSpecification sort(
 			JpaExpression<?> sortExpression,
 			SortDirection sortOrder,
 			NullPrecedence nullPrecedence,
 			boolean ignoreCase) {
-		return (SqmSortSpecification) HibernateCriteriaBuilder.super.sort( sortExpression, sortOrder, nullPrecedence, ignoreCase );
+		return (SqmSortSpecification)
+				HibernateCriteriaBuilder.super.sort( sortExpression, sortOrder, nullPrecedence, ignoreCase );
 	}
 
 	@Override
@@ -1489,5 +1531,8 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 
 	JpaCompliance getJpaCompliance();
 
+	@Deprecated(since = "7.0", forRemoval = true)
 	ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode();
+
+	boolean allowImmutableEntityUpdate();
 }

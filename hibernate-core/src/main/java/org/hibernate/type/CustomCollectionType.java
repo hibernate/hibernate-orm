@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
@@ -7,7 +7,6 @@ package org.hibernate.type;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -34,7 +33,6 @@ public class CustomCollectionType extends CollectionType {
 			String role,
 			String foreignKeyPropertyName) {
 		super(role, foreignKeyPropertyName );
-
 		userType = userTypeBean.getBeanInstance();
 		customLogging = userType instanceof LoggableUserType;
 	}
@@ -50,8 +48,7 @@ public class CustomCollectionType extends CollectionType {
 	}
 
 	@Override
-	public PersistentCollection<?> instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key)
-	throws HibernateException {
+	public PersistentCollection<?> instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key) {
 		return userType.instantiate( session, persister );
 	}
 
@@ -72,7 +69,7 @@ public class CustomCollectionType extends CollectionType {
 
 	@Override
 	public boolean contains(Object collection, Object entity, SharedSessionContractImplementor session) {
-		return userType.contains(collection, entity);
+		return userType.contains( collection, entity );
 	}
 
 	@Override
@@ -81,14 +78,19 @@ public class CustomCollectionType extends CollectionType {
 	}
 
 	@Override
-	public Object replaceElements(Object original, Object target, Object owner, Map copyCache, SharedSessionContractImplementor session)
-			throws HibernateException {
-		CollectionPersister cp = session.getFactory().getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( getRole() );
-		return userType.replaceElements(original, target, cp, owner, copyCache, session);
+	public Object replaceElements(
+			Object original,
+			Object target,
+			Object owner,
+			Map<Object,Object> copyCache,
+			SharedSessionContractImplementor session) {
+		final CollectionPersister collectionDescriptor =
+				session.getFactory().getMappingMetamodel().getCollectionDescriptor( getRole() );
+		return userType.replaceElements( original, target, collectionDescriptor, owner, copyCache, session );
 	}
 
 	@Override
-	protected String renderLoggableString(Object value, SessionFactoryImplementor factory) throws HibernateException {
+	protected String renderLoggableString(Object value, SessionFactoryImplementor factory) {
 		if ( customLogging ) {
 			return ( (LoggableUserType) userType ).toLoggableString( value, factory );
 		}

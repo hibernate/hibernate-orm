@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -491,14 +492,14 @@ public abstract class CollectionType extends AbstractType implements Association
 
 		// copy elements into newly empty target collection
 		final Type elemType = getElementType( session.getFactory() );
-		for ( Object o : (Collection) original ) {
-			result.add( elemType.replace( o, null, session, owner, copyCache ) );
+		for ( Object element : (Collection) original ) {
+			result.add( elemType.replace( element, null, session, owner, copyCache ) );
 		}
 
 		// if the original is a PersistentCollection, and that original
 		// was not flagged as dirty, then reset the target's dirty flag
 		// here after the copy operation.
-		// </p>
+		//
 		// One thing to be careful of here is a "bare" original collection
 		// in which case we should never ever ever reset the dirty flag
 		// on the target because we simply do not know...
@@ -563,30 +564,35 @@ public abstract class CollectionType extends AbstractType implements Association
 		return array;
 	}
 
-	private static Serializable createMapSnapshot(
-			Map<?, ?> map,
+	private static <K,V> Serializable createMapSnapshot(
+			Map<K, V> map,
 			PersistentCollection<?> result,
 			Type elemType,
 			Object owner,
 			Map<Object, Object> copyCache,
 			SharedSessionContractImplementor session) {
-		final Map<?,?> resultSnapshot = (Map<?,?>) result.getStoredSnapshot();
-		final Map<Object, Object> targetMap;
-		if ( map instanceof SortedMap<?,?> sortedMap ) {
-			//noinspection unchecked, rawtypes
-			targetMap = new TreeMap( sortedMap.comparator() );
+		final Map<K, V> targetMap;
+		final Serializable snapshot;
+		if ( map instanceof SortedMap<K,V> sortedMap ) {
+			final TreeMap<K, V> treeMap = new TreeMap<>( sortedMap.comparator() );
+			targetMap = treeMap;
+			snapshot = treeMap;
 		}
 		else {
-			targetMap = mapOfSize( map.size() );
+			final HashMap<K, V> hashMap = mapOfSize( map.size() );
+			targetMap = hashMap;
+			snapshot = hashMap;
 		}
-		for ( Map.Entry<?,?> entry : map.entrySet() ) {
-			final Object key = entry.getKey();
-			final Object value = entry.getValue();
+		final Map<?, ?> resultSnapshot = (Map<?,?>) result.getStoredSnapshot();
+		for ( Map.Entry<K,V> entry : map.entrySet() ) {
+			final K key = entry.getKey();
+			final V value = entry.getValue();
 			final Object resultSnapshotValue = resultSnapshot == null ? null : resultSnapshot.get( key );
 			final Object newValue = elemType.replace( value, resultSnapshotValue, session, owner, copyCache );
-			targetMap.put( key == value ? newValue : key, newValue );
+			//noinspection unchecked
+			targetMap.put( key == value ? (K) newValue : key, (V) newValue );
 		}
-		return (Serializable) targetMap;
+		return snapshot;
 	}
 
 	private static ArrayList<Object> createListSnapshot(
@@ -650,8 +656,8 @@ public abstract class CollectionType extends AbstractType implements Association
 			Object owner,
 			Map<Object, Object> copyCache) {
 
-		//for arrays, replaceElements() may return a different reference, since
-		//the array length might not match
+		// for arrays, replaceElements() may return a different reference, since
+		// the array length might not match
 		final Object result =
 				replaceElements( original,
 						instantiateResultIfNecessary( original, target ),
@@ -661,6 +667,20 @@ public abstract class CollectionType extends AbstractType implements Association
 			final boolean wasClean =
 					target instanceof PersistentCollection<?> collection
 							&& !collection.isDirty();
+			if ( target instanceof PersistentCollection<?> oldCollection
+				&& oldCollection.isDirectlyAccessible() ) {
+				// When a replacement or merge is requested and the underlying collection is directly accessible,
+				// use a new persistent collection, to avoid potential issues like the underlying collection being
+				// unmodifiable and hence failing the element replacement
+				final CollectionPersister collectionPersister = getPersister( session );
+				final Object key = oldCollection.getKey();
+				final PersistentCollection<?> newCollection = instantiate( session, collectionPersister, key );
+				newCollection.initializeEmptyCollection( collectionPersister );
+				newCollection.setSnapshot( key, oldCollection.getRole(), oldCollection.getStoredSnapshot() );
+				session.getPersistenceContextInternal()
+						.replaceCollection( collectionPersister, oldCollection, newCollection );
+				target = newCollection;
+			}
 			//TODO: this is a little inefficient, don't need to do a whole
 			//      deep replaceElements() call
 			replaceElements( result, target, owner, copyCache, session );
@@ -690,8 +710,8 @@ public abstract class CollectionType extends AbstractType implements Association
 			Object target,
 			SharedSessionContractImplementor session,
 			Map<Object, Object> copyCache) {
-		final PersistentCollection<?> persistentCollection = (PersistentCollection<?>) original;
-		if ( persistentCollection.hasQueuedOperations() ) {
+		final PersistentCollection<?> collection = (PersistentCollection<?>) original;
+		if ( collection.hasQueuedOperations() ) {
 			if ( original == target ) {
 				// A managed entity with an uninitialized collection is being merged,
 				// We need to replace any detached entities in the queued operations
@@ -702,8 +722,7 @@ public abstract class CollectionType extends AbstractType implements Association
 			else {
 				// original is a detached copy of the collection;
 				// it contains queued operations, which will be ignored
-				LOG.ignoreQueuedOperationsOnMerge(
-						collectionInfoString( getRole(), persistentCollection.getKey() ) );
+				LOG.ignoreQueuedOperationsOnMerge( collectionInfoString( getRole(), collection.getKey() ) );
 			}
 		}
 		return target;
@@ -813,8 +832,8 @@ public abstract class CollectionType extends AbstractType implements Association
 			persistenceContext.addCollectionHolder( collection );
 		}
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef( "Created collection wrapper: %s",
-					collectionInfoString( persister, collection, key, session ) );
+			LOG.trace( "Created collection wrapper: "
+						+ collectionInfoString( persister, collection, key, session ) );
 		}
 		return collection;
 	}

@@ -33,9 +33,25 @@ the connection pool.
 === Tuning the connection pool
 
 The connection pool built in to Hibernate is suitable for testing, but isn't intended for use in production.
-Instead, Hibernate supports a range of different connection pools, including our favorite, Agroal.
+Instead, Hibernate supports several different connection pools, including our favorite, Agroal.
 
-To select and configure Agroal, you'll need to set some extra configuration properties, in addition to the settings we already saw in <<basic-configuration-settings>>.
+Hibernate will automatically make use of `AgroalConnectionProvider` if the module `org.hibernate.orm:hibernate-agroal` is available at runtime.
+So just add it as a runtime dependency, and you're all set.
+
+Well, actually, that's a bit fragile, since Hibernate silently falls back to using the default connection pool if Agroal happens to be missing at runtime.
+Perhaps it's better to set this configuration property:
+
+[%breakable,cols="37,~"]
+|===
+| Configuration property name | Purpose
+
+| link:{doc-javadoc-url}/org/hibernate/cfg/JdbcSettings.html#CONNECTION_PROVIDER[`hibernate.connection.provider_class`] | Explicitly specify a link:{doc-javadoc-url}/org/hibernate/engine/jdbc/connections/spi/ConnectionProvider.html[connection pool], for example, `agroal`, `hikaricp` or `c3p0`.
+|===
+
+TIP: You can set `hibernate.connection.provider_class` to `agroal` so that Hibernate fails at startup if Agroal is missing.
+
+
+To properly configure Agroal, you'll need to set some extra configuration properties, in addition to the settings we already saw in <<basic-configuration-settings>>.
 Properties with the prefix `hibernate.agroal` are passed through to Agroal:
 
 [source,properties]
@@ -47,8 +63,7 @@ hibernate.agroal.acquisitionTimeout PT1s
 hibernate.agroal.reapTimeout PT10s
 ----
 
-As long as you set at least one property with the prefix `hibernate.agroal`, the `AgroalConnectionProvider` will be selected automatically.
-There are many to choose from:
+There are many to choose from, as enumerated by link:{doc-javadoc-url}/org/hibernate/cfg/AgroalSettings.html[`AgroalSettings`]:
 
 .Settings for configuring Agroal
 [%breakable,cols="37,~"]
@@ -72,15 +87,52 @@ The following settings are common to all connection pools supported by Hibernate
 .Common settings for connection pools
 [%breakable,cols="37,~"]
 |===
-| `hibernate.connection.autocommit` | The default autocommit mode
-| `hibernate.connection.isolation` | The default transaction isolation level
+| link:{doc-javadoc-url}/org/hibernate/cfg/JdbcSettings.html#POOL_SIZE[`hibernate.connection.pool_size`] | The size of the connection pool
+| link:{doc-javadoc-url}/org/hibernate/cfg/JdbcSettings.html#AUTOCOMMIT[`hibernate.connection.autocommit`] | The default autocommit mode
+| link:{doc-javadoc-url}/org/hibernate/cfg/JdbcSettings.html#ISOLATION[`hibernate.connection.isolation`] | The default transaction isolation level
 |===
+
+:hikaricp: https://github.com/brettwooldridge/HikariCP
+
+A popular alternative to Agroal is {hikaricp}[HikariCP].
+Integration with HikariCP is provided by the module `org.hibernate.orm:hibernate-hikaricp`.
+Its settings are enumerated by link:{doc-javadoc-url}/org/hibernate/cfg/HikariCPSettings.html[`HikariCPSettings`].
 
 .Container-managed datasources
 ****
 In a container environment, you usually don't need to configure a connection pool through Hibernate.
 Instead, you'll use a container-managed datasource, as we saw in <<basic-configuration-settings>>.
 ****
+
+A related important setting is the default JDBC fetch size.
+
+[[jdbc-fetch-size]]
+=== JDBC fetch size
+
+The _JDBC fetch size_ controls the maximum number of rows the JDBC driver fetches from the database in one round trip.
+In Hibernate we usually limit query result sets using <<pagination,pagination>>, and so we almost always prefer that the JDBC driver fetch the whole query result set in one trip.
+Most JDBC drivers accommodate this usage pattern by _not_ setting a default fetch size.
+However, there are a couple of exceptions to this and for the offending drivers you should probably override the default fetch size using the following configuration property.
+
+.Default JDBC fetch size
+[%breakable,cols="37,~"]
+|===
+| link:{doc-javadoc-url}/org/hibernate/cfg/JdbcSettings.html#STATEMENT_FETCH_SIZE[`hibernate.jdbc.fetch_size`] | The default JDBC fetch size
+|===
+
+The default fetch size can be overridden for a given query by calling link:{doc-javadoc-url}/org/hibernate/query/SelectionQuery.html#setFetchSize(int)[`setFetchSize()`], but this is rarely necessary.
+
+[WARNING]
+====
+The Oracle JDBC driver defaults to a JDBC fetch size of 10.
+You should _always_ set `hibernate.jdbc.fetch_size` explicitly if you're using Oracle, or, even better, specify the parameter `defaultRowPrefetch` in the JDBC connection URL.
+====
+
+[TIP]
+====
+The MySQL JDBC driver ignores the fetch size by default.
+The JDBC connection property `useCursorFetch=true` enables the use of server-side cursors, and with this setting the driver respects the fetch size.
+====
 
 [[statement-batching]]
 === Enabling statement batching
@@ -95,8 +147,12 @@ All we need to do is set a single property:
 |===
 | Configuration property name | Purpose | Alternative
 
-| `hibernate.jdbc.batch_size` | Maximum batch size for SQL statement batching | `setJdbcBatchSize()`
+| link:{doc-javadoc-url}/org/hibernate/cfg/BatchSettings.html#STATEMENT_BATCH_SIZE[`hibernate.jdbc.batch_size`] | Maximum batch size for SQL statement batching | `setJdbcBatchSize()`
 |===
+
+To confirm that statement batching is working, enable ``TRACE``-level logging for the category `org.hibernate.orm.jdbc.batch`.
+
+That said, batching is rarely the most convenient or most efficient way to update or delete many rows at once.
 
 [TIP]
 ====
@@ -365,7 +421,7 @@ Therefore, by default, an entity is not eligible for storage in the second-level
 We must explicitly mark each entity that will  be stored in the second-level cache with the link:{doc-javadoc-url}/org/hibernate/annotations/Cache.html[`@Cache`] annotation from `org.hibernate.annotations`.
 
 But that's still not enough.
-Hibernate does not itself contain an implementation of a second-level cache, so it's necessary to configure an external _cache provider_.
+Hibernate does not itself contain an implementation of a second-level cache, so it's also necessary to configure an external _cache provider_.
 
 [CAUTION]
 // .Caching is disabled by default
@@ -384,6 +440,14 @@ For example, there might be separate cache regions for `Author`, `Book`, `Author
 Each region is permitted its own policies for expiry, persistence, and replication. These policies must be configured externally to Hibernate.
 
 The appropriate policies depend on the kind of data an entity represents. For example, a program might have different caching policies for "reference" data, for transactional data, and for data used for analytics. Ordinarily, the implementation of those policies is the responsibility of the underlying cache implementation.
+
+[WARNING]
+====
+The second-level cache is never aware of any changes to data which are made externally to Hibernate.
+Updates made via direct JDBC--or by some other program--are never visible in the second-level cache.
+When such updates occur, we might need to <<second-level-cache-management,explicitly invalidate cached data>>.
+Alternatively, in cases where the program is able to tolerate somewhat stale data, an expiry policy might be an acceptable solution.
+====
 
 [[enable-second-level-cache]]
 === Specifying which data is cached
@@ -563,7 +627,7 @@ But in case it helps, we often test Hibernate with the following configuration, 
 |===
 | Configuration property name              | Property value
 
-| `hibernate.cache.region.factory_class`   | `jcache`
+| link:{doc-javadoc-url}org/hibernate/cfg/CacheSettings.html#CACHE_REGION_FACTORY[`hibernate.cache.region.factory_class`]   | `jcache`
 | `hibernate.javax.cache.uri`              | `/ehcache.xml`
 |===
 
@@ -600,7 +664,7 @@ Alternatively, to use Infinispan as the cache implementation, the following sett
 |===
 | Configuration property name              | Property value
 
-| `hibernate.cache.region.factory_class`   | `infinispan`
+| link:{doc-javadoc-url}org/hibernate/cfg/CacheSettings.html#CACHE_REGION_FACTORY[`hibernate.cache.region.factory_class`]   | `infinispan`
 | `hibernate.cache.infinispan.cfg`         a| Path to infinispan configuration file, for example:
 [%breakable,cols="~,35"]
 !===
@@ -621,7 +685,7 @@ Finally, there's a way to globally disable the second-level cache:
 |===
 | Configuration property name              | Property value
 
-| `hibernate.cache.use_second_level_cache` | `true` to enable caching, or `false` to disable it
+| link:{doc-javadoc-url}org/hibernate/cfg/CacheSettings.html#USE_SECOND_LEVEL_CACHE[`hibernate.cache.use_second_level_cache`] | `true` to enable caching, or `false` to disable it
 |===
 
 When `hibernate.cache.region.factory_class` is set, this property defaults to `true`.
@@ -647,7 +711,7 @@ The query cache must be enabled explicitly:
 |===
 | Configuration property name | Property value
 
-| `hibernate.cache.use_query_cache` | `true` to enable the query cache
+| link:{doc-javadoc-url}org/hibernate/cfg/CacheSettings.html#USE_QUERY_CACHE[`hibernate.cache.use_query_cache`] | `true` to enable the query cache
 |===
 
 To cache the results of a query, call `SelectionQuery.setCacheable(true)`:
@@ -805,8 +869,13 @@ sessionFactory.inSession(session -> {
 ----
 ====
 
-Very occasionally, it's necessary or advantageous to control the cache explicitly, for example, to evict some data that we know to be stale.
-The `Cache` interface allows programmatic eviction of cached items.
+Very occasionally, it's necessary or advantageous to control the cache explicitly.
+For example, we might need to evict some data that we know to be stale because it was updated:
+
+- via direct JDBC, or
+- by some other program.
+
+The link:{doc-javadoc-url}org/hibernate/Cache.html[`Cache`] interface allows programmatic eviction of cached items.
 
 [source,java]
 ----
@@ -849,7 +918,7 @@ StatelessSession ss = getSessionFactory().openStatelessSession();
 
 A stateless session:
 
-- doesn't have a first-level cache (persistence context), nor does it interact with any second-level caches, and
+- doesn't have a first-level cache (persistence context), and
 - doesn't implement transactional write-behind or automatic dirty checking, so all operations are executed immediately when they're explicitly called.
 
 For a stateless session, we're always working with detached objects.
@@ -876,12 +945,34 @@ NOTE: There's no `flush()` operation, and so `update()` is always explicit.
 
 In certain circumstances, this makes stateless sessions easier to work with and simpler to reason about, but with the caveat that a stateless session is much more vulnerable to data aliasing effects, since it's easy to get two non-identical Java objects which both represent the same row of a database table.
 
+Consider the following fragments:
+
+[source,java]
+----
+var b1 = statelessSession.get(Book.class, isbn);
+var b2 = statelessSession.get(Book.class, isbn);
+assert b1 == b2;  // fails
+----
+[source,java]
+----
+var b1 = statelessSession.get(Book.class, isbn);
+var b2 = statelessSession.get(Book.class, isbn);
+statelessSession.fetch(b1.publisher);
+statelessSession.fetch(b2.publisher);
+assert b1.publisher == b2.publisher;  // fails
+----
+
+In a stateful session, entity instances are canonicalized by primary key, and so we don't usually have two different objects representing a single row.
+No such canonicalization exists across invocations of a stateless session.
+In a stateless session, both the assertions fail.
+
 [%unbreakable]
 [CAUTION]
 ====
 If we use `fetch()` in a stateless session, we can very easily obtain two objects representing the same database row!
 ====
 
+But there are also some advantages to this model.
 In particular, the absence of a persistence context means that we can safely perform bulk-processing tasks without allocating huge quantities of memory.
 Use of a `StatelessSession` alleviates the need to call:
 
@@ -903,7 +994,7 @@ When many transactions try to read and update the same data, the program might b
 
 There's two basic approaches to data concurrency in Hibernate:
 
-- optimistic locking using `@Version` columns, and
+- optimistic locking using <<version-attributes,`@Version` columns>>, and
 - database-level pessimistic locking using the SQL `for update` syntax (or equivalent).
 
 In the Hibernate community it's _much_ more common to use optimistic locking, and Hibernate makes that incredibly easy.
@@ -917,8 +1008,8 @@ Indeed, the usual practice is to avoid having transactions that span user intera
 
 That said, there _is_ also a place for pessimistic locks, which can sometimes reduce the probability of transaction rollbacks.
 
-Therefore, the `find()`, `lock()`, and `refresh()` methods of the reactive session accept an optional `LockMode`.
-We can also specify a link:{doc-javadoc-url}/org/hibernate/LockMode.html[`LockMode`] for a query.
+Therefore, the `find()`, `lock()`, and `refresh()` methods of the session accept an optional link:{doc-javadoc-url}/org/hibernate/LockMode.html[`LockMode`].
+We can also specify a `LockMode` for a query.
 The lock mode can be used to request a pessimistic lock, or to customize the behavior of optimistic locking:
 
 .Optimistic and pessimistic lock modes
@@ -966,7 +1057,7 @@ We may ask Hibernate to collect statistics about its activity by setting this co
 |===
 | Configuration property name | Property value
 
-| `hibernate.generate_statistics` | `true` to enable collection of statistics
+| link:{doc-javadoc-url}org/hibernate/cfg/StatisticsSettings.html#GENERATE_STATISTICS[`hibernate.generate_statistics`] | `true` to enable collection of statistics
 |===
 
 The statistics are exposed by the link:{doc-javadoc-url}org/hibernate/stat/Statistics.html[`Statistics`] object:
@@ -989,6 +1080,17 @@ long publisherCacheMissCount =
 Hibernate's statistics enable observability.
 Both {micrometer}[Micrometer] and {smallrye-metrics}[SmallRye Metrics] are capable of exposing these metrics.
 
+[[jfr]]
+=== Using Java Flight Recorder
+
+Hibernate JFR is a separate module which reports events to link:https://developers.redhat.com/blog/2020/08/25/get-started-with-jdk-flight-recorder-in-openjdk-8u[Java Flight Recorder].
+This is different to reporting aggregated <<statistics,metrics>> via a tool like Micrometer, since JFR records information about the timing and duration of each discrete event, along with a stack trace.
+If anything, the information reported by JFR is a little _too_ detailed to make it really useful for performance tuning--it's perhaps more useful for _troubleshooting_.
+
+No special configuration is required to use Hibernate JFR.
+Just include `org.hibernate.orm:hibernate-jfr` as a runtime dependency.
+In particular, you _don't_ need to enable `hibernate.generate_statistics`.
+
 [[slow-queries]]
 === Tracking down slow queries
 
@@ -1000,8 +1102,8 @@ Hibernate offers two configuration properties that can make it easier to identif
 |===
 | Configuration property name | Purpose | Property value
 
-| `hibernate.log_slow_query` | Log slow queries at the `INFO` level | The minimum execution time, in milliseconds, which characterizes a "slow" query
-| `hibernate.use_sql_comments` | Prepend comments to the executed SQL | `true` or `false`
+| link:{doc-javadoc-url}org/hibernate/cfg/JdbcSettings.html#LOG_SLOW_QUERY[`hibernate.log_slow_query`] | Log slow queries at the `INFO` level | The minimum execution time, in milliseconds, which characterizes a "slow" query
+| link:{doc-javadoc-url}org/hibernate/cfg/JdbcSettings.html#USE_SQL_COMMENTS[`hibernate.use_sql_comments`] | Prepend comments to the executed SQL | `true` or `false`
 |===
 
 When `hibernate.use_sql_comments` is enabled, the text of the HQL query is prepended as a comment to the generated SQL, which usually makes it easy to find the HQL in the Java code.
@@ -1084,7 +1186,7 @@ It's much more typesafe to use one of the first two options.
 === Reactive programming with Hibernate
 
 :hr: https://hibernate.org/reactive/
-:hr-guide: https://hibernate.org/reactive/documentation/2.0/reference/html_single/
+:hr-guide: https://hibernate.org/reactive/documentation/3.0/reference/html_single/
 
 Finally, many systems which require high scalability now make use of reactive programming and reactive streams.
 {hr}[Hibernate Reactive] brings O/R mapping to the world of reactive programming.

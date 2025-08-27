@@ -1,16 +1,19 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 import jakarta.persistence.FindOption;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.RefreshOption;
+import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 
-import jakarta.persistence.LockModeType;
-
 import java.util.Locale;
+
+import static org.hibernate.Timeouts.NO_WAIT_MILLI;
+import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
 
 /**
  * Instances represent a lock mode for a row of a relational
@@ -21,7 +24,7 @@ import java.util.Locale;
  * <p>
  * A partial order of lock modes is defined such that every
  * optimistic lock mode is considered a weaker sort of lock than
- * evey pessimistic lock mode. If a session already holds a
+ * every pessimistic lock mode. If a session already holds a
  * stronger lock level on a given entity when a weaker lock level
  * is requested, then the request for the weaker lock level has
  * no effect.
@@ -38,8 +41,10 @@ import java.util.Locale;
  * @author Gavin King
  *
  * @see Session#lock(Object, LockMode)
+ * @see Session#lock(Object, LockMode, jakarta.persistence.LockOption...)
+ * @see Session#find(Class, Object, FindOption...)
+ * @see Session#refresh(Object, RefreshOption...)
  * @see LockModeType
- * @see LockOptions
  * @see org.hibernate.annotations.OptimisticLocking
  */
 public enum LockMode implements FindOption, RefreshOption {
@@ -50,7 +55,7 @@ public enum LockMode implements FindOption, RefreshOption {
 	 * rather than pull it from a cache.
 	 * <p>
 	 * This is the "default" lock mode, the mode requested by calling
-	 * {@link Session#get(Class, Object)} without passing an explicit
+	 * {@link Session#find(Class, Object)} without passing an explicit
 	 * mode. It permits the state of an object to be retrieved from
 	 * the cache without the cost of database access.
 	 *
@@ -103,7 +108,7 @@ public enum LockMode implements FindOption, RefreshOption {
 	 * <p>
 	 * This lock mode is for internal use only and is not a legal
 	 * argument to {@link Session#get(Class, Object, LockMode)},
-	 * {@link Session#refresh(Object, LockMode)}, or
+	 * {@link Session#refresh(Object, RefreshOption...)}, or
 	 * {@link Session#lock(Object, LockMode)}. These methods throw
 	 * an exception if {@code WRITE} is given as an argument.
 	 * <p>
@@ -112,25 +117,6 @@ public enum LockMode implements FindOption, RefreshOption {
 	 */
 	@Internal
 	WRITE,
-
-	/**
-	 * A pessimistic upgrade lock, obtained using an Oracle-style
-	 * {@code select for update nowait}. The semantics of this
-	 * lock mode, if the lock is successfully obtained, are the same
-	 * as {@link #PESSIMISTIC_WRITE}. If the lock is not immediately
-	 * available, an exception occurs.
-	 */
-	UPGRADE_NOWAIT,
-
-	/**
-	 * A pessimistic upgrade lock, obtained using an Oracle-style
-	 * {@code select for update skip locked}. The semantics of this
-	 * lock mode, if the lock is successfully obtained, are the same
-	 * as {@link #PESSIMISTIC_WRITE}. But if the lock is not
-	 * immediately available, no exception occurs, but the locked
-	 * row is not returned from the database.
-	 */
-	UPGRADE_SKIPLOCKED,
 
 	/**
 	 * A pessimistic shared lock, which prevents concurrent
@@ -164,7 +150,44 @@ public enum LockMode implements FindOption, RefreshOption {
 	 *
 	 * @see LockModeType#PESSIMISTIC_FORCE_INCREMENT
 	 */
-	PESSIMISTIC_FORCE_INCREMENT;
+	PESSIMISTIC_FORCE_INCREMENT,
+
+	/**
+	 * A pessimistic upgrade lock, obtained using an Oracle-style
+	 * {@code select for update nowait}. The semantics of this
+	 * lock mode, if the lock is successfully obtained, are the same
+	 * as {@link #PESSIMISTIC_WRITE}. If the lock is not immediately
+	 * available, an exception occurs.
+	 *
+	 * @apiNote This lock-mode is intended for use as a JPA
+	 * {@linkplain HibernateHints#HINT_NATIVE_LOCK_MODE query hint}.
+	 * Other cases should use the combination of
+	 * {@linkplain #PESSIMISTIC_WRITE} and {@linkplain Timeouts#NO_WAIT}
+	 * as find/refresh options - e.g. {@code session.find(Book.class, 1, PESSIMISTIC_WRITE, NO_WAIT)}
+	 *
+	 * @see #PESSIMISTIC_WRITE
+	 * @see Timeouts#NO_WAIT
+	 */
+	UPGRADE_NOWAIT,
+
+	/**
+	 * A pessimistic upgrade lock, obtained using an Oracle-style
+	 * {@code select for update skip locked}. The semantics of this
+	 * lock mode, if the lock is successfully obtained, are the same
+	 * as {@link #PESSIMISTIC_WRITE}. But if the lock is not
+	 * immediately available, no exception occurs, but the locked
+	 * row is not returned from the database.
+	 *
+	 * @apiNote This lock-mode is intended for use as a JPA
+	 * {@linkplain HibernateHints#HINT_NATIVE_LOCK_MODE query hint}.
+	 * Other cases should use the combination of
+	 * {@linkplain #PESSIMISTIC_WRITE} and {@linkplain Timeouts#SKIP_LOCKED}
+	 * as find/refresh options - e.g. {@code session.find(Book.class, 1, PESSIMISTIC_WRITE, SKIP_LOCKED)}
+	 *
+	 * @see #PESSIMISTIC_WRITE
+	 * @see Timeouts#NO_WAIT
+	 */
+	UPGRADE_SKIPLOCKED;
 
 	/**
 	 * @return an instance with the same semantics as the given JPA
@@ -275,19 +298,30 @@ public enum LockMode implements FindOption, RefreshOption {
 	/**
 	 * @return an instance of {@link LockOptions} with this lock mode, and
 	 *         all other settings defaulted.
+	 *
+	 * @deprecated With no replacement; {@linkplain LockOptions} is no longer considered an API.
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	public LockOptions toLockOptions() {
 		return switch (this) {
-			case NONE -> LockOptions.NONE;
-			case READ -> LockOptions.READ;
-			case OPTIMISTIC -> LockOptions.OPTIMISTIC;
-			case OPTIMISTIC_FORCE_INCREMENT -> LockOptions.OPTIMISTIC_FORCE_INCREMENT;
-			case UPGRADE_NOWAIT -> LockOptions.UPGRADE_NOWAIT;
-			case UPGRADE_SKIPLOCKED -> LockOptions.UPGRADE_SKIPLOCKED;
-			case PESSIMISTIC_READ -> LockOptions.PESSIMISTIC_READ;
-			case PESSIMISTIC_WRITE -> LockOptions.PESSIMISTIC_WRITE;
-			case PESSIMISTIC_FORCE_INCREMENT -> LockOptions.PESSIMISTIC_FORCE_INCREMENT;
+			case NONE -> new LockOptions();
+			case READ -> new LockOptions( READ );
+			case OPTIMISTIC -> new LockOptions( OPTIMISTIC );
+			case OPTIMISTIC_FORCE_INCREMENT -> new LockOptions( OPTIMISTIC_FORCE_INCREMENT );
+			case UPGRADE_NOWAIT -> new LockOptions( PESSIMISTIC_WRITE, NO_WAIT_MILLI, Locking.Scope.ROOT_ONLY, Locking.FollowOn.ALLOW );
+			case UPGRADE_SKIPLOCKED -> new LockOptions( PESSIMISTIC_WRITE, SKIP_LOCKED_MILLI, Locking.Scope.ROOT_ONLY, Locking.FollowOn.ALLOW );
+			case PESSIMISTIC_READ -> new LockOptions( PESSIMISTIC_READ );
+			case PESSIMISTIC_WRITE -> new LockOptions( PESSIMISTIC_WRITE );
+			case PESSIMISTIC_FORCE_INCREMENT -> new LockOptions( PESSIMISTIC_FORCE_INCREMENT );
 			case WRITE -> throw new UnsupportedOperationException( "WRITE is not a valid LockMode as an argument" );
 		};
+	}
+
+	public boolean isPessimistic() {
+		return this == PESSIMISTIC_READ
+			|| this == PESSIMISTIC_WRITE
+			|| this == PESSIMISTIC_FORCE_INCREMENT
+			|| this == UPGRADE_NOWAIT
+			|| this == UPGRADE_SKIPLOCKED;
 	}
 }

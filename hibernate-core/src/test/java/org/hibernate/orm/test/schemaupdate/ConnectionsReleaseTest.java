@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate;
@@ -20,7 +20,7 @@ import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProvider;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -40,11 +40,11 @@ public class ConnectionsReleaseTest extends BaseUnitTestCase {
 
 	private StandardServiceRegistry ssr;
 	private MetadataImplementor metadata;
-	private SharedDriverManagerConnectionProviderImpl connectionProvider;
+	private SharedDriverManagerConnectionProvider connectionProvider;
 
 	@Before
 	public void setUp() {
-		connectionProvider = SharedDriverManagerConnectionProviderImpl.getInstance();
+		connectionProvider = SharedDriverManagerConnectionProvider.getInstance();
 
 		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.addService( ConnectionProvider.class, connectionProvider )

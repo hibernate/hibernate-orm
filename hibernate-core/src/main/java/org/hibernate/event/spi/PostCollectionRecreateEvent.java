@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
@@ -25,5 +25,13 @@ public class PostCollectionRecreateEvent extends AbstractCollectionEvent {
 				collection.getOwner(),
 				getOwnerIdOrNull( collection.getOwner(), source )
 		);
+	}
+
+	public PostCollectionRecreateEvent(
+			PersistentCollection<?> collection,
+			Object id,
+			String entityName,
+			Object loadedOwner) {
+		super( collection, entityName, loadedOwner, id );
 	}
 }

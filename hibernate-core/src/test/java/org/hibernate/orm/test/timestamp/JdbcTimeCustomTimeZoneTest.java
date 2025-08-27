@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.timestamp;
@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
@@ -34,7 +34,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true)
+@SkipForDialect(dialectClass = InformixDialect.class,
+	reason = "Informix JDBC driver seems to misinterpret the JDBC time zone")
 public class JdbcTimeCustomTimeZoneTest
 		extends BaseSessionFactoryFunctionalTest {
 

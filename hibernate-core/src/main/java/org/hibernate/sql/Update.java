@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql;
@@ -30,7 +30,7 @@ public class Update implements RestrictionRenderingContext {
 	private int parameterCount;
 
 	public Update(SessionFactoryImplementor factory) {
-		this( factory.getFastSessionServices().parameterMarkerStrategy );
+		this( factory.getParameterMarkerStrategy() );
 	}
 
 	public Update(ParameterMarkerStrategy parameterMarkerStrategy) {

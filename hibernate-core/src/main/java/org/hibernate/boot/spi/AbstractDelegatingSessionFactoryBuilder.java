@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
@@ -16,6 +16,7 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -148,7 +149,7 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 		return getThis();
 	}
 
-	@Override
+	@Override @Deprecated
 	public T applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling) {
 		delegate.applyTempTableDdlTransactionHandling( handling );
 		return getThis();
@@ -205,6 +206,12 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	@Override
 	public T applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> resolver) {
 		delegate.applyCurrentTenantIdentifierResolver( resolver );
+		return getThis();
+	}
+
+	@Override
+	public SessionFactoryBuilder applyTenantSchemaMapper(TenantSchemaMapper<?> mapper) {
+		delegate.applyTenantSchemaMapper( mapper );
 		return getThis();
 	}
 
@@ -287,12 +294,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public T applyJdbcBatchingForVersionedEntities(boolean enabled) {
-		delegate.applyJdbcBatchingForVersionedEntities( enabled );
-		return getThis();
-	}
-
-	@Override
 	public T applyScrollableResultsSupport(boolean enabled) {
 		delegate.applyScrollableResultsSupport( enabled );
 		return getThis();
@@ -342,7 +343,7 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 		return getThis();
 	}
 
-	@Override
+	@Override @Deprecated
 	public T enableReleaseResourcesOnCloseEnabled(boolean enable) {
 		delegate.enableReleaseResourcesOnCloseEnabled( enable );
 		return getThis();

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.spi.interceptor;
@@ -10,49 +10,54 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Steve Ebersole
  */
 public abstract class AbstractInterceptor implements SessionAssociableInterceptor {
-	private final String entityName;
 
-	private transient SharedSessionContractImplementor session;
-	private boolean allowLoadOutsideTransaction;
-	private String sessionFactoryUuid;
+	private SessionAssociationMarkers sessionAssociation;
 
-	public AbstractInterceptor(String entityName) {
-		this.entityName = entityName;
-	}
-
-	public String getEntityName() {
-		return entityName;
+	protected AbstractInterceptor() {
 	}
 
 	@Override
 	public SharedSessionContractImplementor getLinkedSession() {
-		return session;
+		return this.sessionAssociation != null ? this.sessionAssociation.session : null;
 	}
 
 	@Override
 	public void setSession(SharedSessionContractImplementor session) {
-		this.session = session;
-		if ( session != null && !allowLoadOutsideTransaction ) {
-			this.allowLoadOutsideTransaction = session.getFactory().getSessionFactoryOptions().isInitializeLazyStateOutsideTransactionsEnabled();
-			if ( this.allowLoadOutsideTransaction ) {
-				this.sessionFactoryUuid = session.getFactory().getUuid();
-			}
+		if ( session != null ) {
+			this.sessionAssociation = session.getSessionAssociationMarkers();
+		}
+		else {
+			unsetSession();
 		}
 	}
 
 	@Override
 	public void unsetSession() {
-		this.session = null;
+		if ( this.sessionAssociation != null ) {
+			//We shouldn't mutate the original instance as it's shared across multiple entities,
+			//but we can get a version of it which represents the same state except it doesn't have the session set:
+			this.sessionAssociation = this.sessionAssociation.deAssociatedCopy();
+		}
 	}
 
 	@Override
 	public boolean allowLoadOutsideTransaction() {
-		return allowLoadOutsideTransaction;
+		if ( this.sessionAssociation != null ) {
+			return this.sessionAssociation.allowLoadOutsideTransaction;
+		}
+		else {
+			return false;
+		}
 	}
 
 	@Override
 	public String getSessionFactoryUuid() {
-		return sessionFactoryUuid;
+		if ( this.sessionAssociation != null ) {
+			return this.sessionAssociation.sessionFactoryUuid;
+		}
+		else {
+			return null;
+		}
 	}
 
 	/**

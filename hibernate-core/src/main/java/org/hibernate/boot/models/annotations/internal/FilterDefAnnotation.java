@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.boot.models.HibernateAnnotations;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -25,7 +25,7 @@ public class FilterDefAnnotation implements FilterDef {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public FilterDefAnnotation(SourceModelBuildingContext modelContext) {
+	public FilterDefAnnotation(ModelsContext modelContext) {
 		this.defaultCondition = "";
 		this.parameters = new org.hibernate.annotations.ParamDef[0];
 		this.autoEnabled = false;
@@ -34,18 +34,18 @@ public class FilterDefAnnotation implements FilterDef {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public FilterDefAnnotation(FilterDef annotation, SourceModelBuildingContext modelContext) {
+	public FilterDefAnnotation(FilterDef annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.defaultCondition = annotation.defaultCondition();
 		this.autoEnabled = annotation.autoEnabled();
-		this.applyToLoadByKey = annotation.applyToLoadByKey();;
+		this.applyToLoadByKey = annotation.applyToLoadByKey();
 		this.parameters = extractJdkValue( annotation, HibernateAnnotations.FILTER_DEF, "parameters", modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public FilterDefAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public FilterDefAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.defaultCondition = (String) attributeValues.get( "defaultCondition" );
 		this.autoEnabled = (boolean) attributeValues.get( "autoEnabled" );

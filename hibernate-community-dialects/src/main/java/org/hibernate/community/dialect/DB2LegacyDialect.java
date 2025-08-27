@@ -1,33 +1,18 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
-import java.sql.CallableStatement;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.ZonedDateTime;
-import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
-
-import org.hibernate.LockOptions;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.community.dialect.sequence.LegacyDB2SequenceSupport;
+import org.hibernate.community.dialect.temptable.DB2LegacyLocalTemporaryTableStrategy;
 import org.hibernate.dialect.DB2GetObjectExtractor;
-import org.hibernate.dialect.DB2StructJdbcType;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
@@ -43,12 +28,16 @@ import org.hibernate.dialect.function.DB2SubstringFunction;
 import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.DB2LockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.DB2LimitHandler;
 import org.hibernate.dialect.pagination.LegacyDB2LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2SequenceSupport;
-import org.hibernate.dialect.sequence.LegacyDB2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.temptable.DB2GlobalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
+import org.hibernate.dialect.type.DB2StructJdbcType;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
@@ -70,9 +59,9 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.DB2CallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -118,7 +107,23 @@ import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import jakarta.persistence.TemporalType;
+import java.sql.CallableStatement;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -171,16 +176,26 @@ public class DB2LegacyDialect extends Dialect {
 		}
 	};
 
+	private LockingSupport lockingSupport;
+
 	public DB2LegacyDialect() {
 		this( DatabaseVersion.make( 9, 0 ) );
 	}
 
 	public DB2LegacyDialect(DialectResolutionInfo info) {
 		super( info );
+		lockingSupport = buildLockingSupport();
 	}
 
 	public DB2LegacyDialect(DatabaseVersion version) {
 		super( version );
+		lockingSupport = buildLockingSupport();
+	}
+
+	protected LockingSupport buildLockingSupport() {
+		// Introduced in 11.5: https://www.ibm.com/docs/en/db2/11.5?topic=statement-concurrent-access-resolution-clause
+		final boolean supportsSkipLocked = getVersion().isSameOrAfter( 11, 5 );
+		return DB2LockingSupport.forDB2( supportsSkipLocked );
 	}
 
 	@Override
@@ -484,6 +499,14 @@ public class DB2LegacyDialect extends Dialect {
 		if ( supportsRecursiveCTE() ) {
 			functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, true );
 		}
+
+		functionFactory.hex( "hex(?1)" );
+		if ( getDB2Version().isSameOrAfter( 11 ) ) {
+			functionFactory.sha( "hash(?1, 2)" );
+			functionFactory.md5( "hash(?1, 0)" );
+
+			functionFactory.regexpLike();
+		}
 	}
 
 	/**
@@ -522,7 +545,7 @@ public class DB2LegacyDialect extends Dialect {
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		if ( getDB2Version().isBefore( 11 ) ) {
-			return DB2Dialect.timestampdiffPatternV10( unit, fromTemporalType, toTemporalType );
+			return timestampdiffPatternV10( unit, fromTemporalType, toTemporalType );
 		}
 		final StringBuilder pattern = new StringBuilder();
 		final String fromExpression;
@@ -558,7 +581,11 @@ public class DB2LegacyDialect extends Dialect {
 		switch ( unit ) {
 			case NATIVE:
 			case NANOSECOND:
-				pattern.append( "(seconds_between(" );
+				pattern.append( "(seconds_between(date_trunc('second'," );
+				pattern.append( toExpression );
+				pattern.append( "),date_trunc('second'," );
+				pattern.append( fromExpression );
+				pattern.append( "))" );
 				break;
 			//note: DB2 does have weeks_between()
 			case MONTH:
@@ -566,14 +593,18 @@ public class DB2LegacyDialect extends Dialect {
 				// the months_between() function results
 				// in a non-integral value, so trunc() it
 				pattern.append( "trunc(months_between(" );
+				pattern.append( toExpression );
+				pattern.append( ',' );
+				pattern.append( fromExpression );
+				pattern.append( ')' );
 				break;
 			default:
 				pattern.append( "?1s_between(" );
+				pattern.append( toExpression );
+				pattern.append( ',' );
+				pattern.append( fromExpression );
+				pattern.append( ')' );
 		}
-		pattern.append( toExpression );
-		pattern.append( ',' );
-		pattern.append( fromExpression );
-		pattern.append( ')' );
 		switch ( unit ) {
 			case NATIVE:
 				pattern.append( "+(microsecond(");
@@ -597,6 +628,97 @@ public class DB2LegacyDialect extends Dialect {
 				break;
 		}
 		return pattern.toString();
+	}
+
+	@SuppressWarnings("deprecation")
+	public static String timestampdiffPatternV10(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
+		final boolean isTime = fromTemporalType == TemporalType.TIME || toTemporalType == TemporalType.TIME;
+		final String fromExpression;
+		final String toExpression;
+		if ( unit.isDateUnit() ) {
+			if ( fromTemporalType == TemporalType.TIME ) {
+				fromExpression = "timestamp('1970-01-01',?2)";
+			}
+			else {
+				fromExpression = "?2";
+			}
+			if ( toTemporalType == TemporalType.TIME ) {
+				toExpression = "timestamp('1970-01-01',?3)";
+			}
+			else {
+				toExpression = "?3";
+			}
+		}
+		else {
+			if ( fromTemporalType == TemporalType.DATE ) {
+				fromExpression = "cast(?2 as timestamp)";
+			}
+			else {
+				fromExpression = "?2";
+			}
+			if ( toTemporalType == TemporalType.DATE ) {
+				toExpression = "cast(?3 as timestamp)";
+			}
+			else {
+				toExpression = "?3";
+			}
+		}
+		switch ( unit ) {
+			case NATIVE:
+				if ( isTime ) {
+					return "(midnight_seconds(" + toExpression + ")-midnight_seconds(" + fromExpression + "))";
+				}
+				else {
+					return "(select (days(t2)-days(t1))*86400+(midnight_seconds(t2)-midnight_seconds(t1))+(microsecond(t2)-microsecond(t1))/1e6 " +
+						"from lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
+				}
+			case NANOSECOND:
+				if ( isTime ) {
+					return "(midnight_seconds(" + toExpression + ")-midnight_seconds(" + fromExpression + "))*1e9";
+				}
+				else {
+					return "(select (days(t2)-days(t1))*86400+(midnight_seconds(t2)-midnight_seconds(t1))*1e9+(microsecond(t2)-microsecond(t1))*1e3 " +
+						"from lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
+				}
+			case SECOND:
+				if ( isTime ) {
+					return "(midnight_seconds(" + toExpression + ")-midnight_seconds(" + fromExpression + "))";
+				}
+				else {
+					return "(select (days(t2)-days(t1))*86400+(midnight_seconds(t2)-midnight_seconds(t1)) " +
+						"from lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
+				}
+			case MINUTE:
+				if ( isTime ) {
+					return "(midnight_seconds(" + toExpression + ")-midnight_seconds(" + fromExpression + "))/60";
+				}
+				else {
+					return "(select (days(t2)-days(t1))*1440+(midnight_seconds(t2)-midnight_seconds(t1))/60 from " +
+						"lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
+				}
+			case HOUR:
+				if ( isTime ) {
+					return "(midnight_seconds(" + toExpression + ")-midnight_seconds(" + fromExpression + "))/3600";
+				}
+				else {
+					return "(select (days(t2)-days(t1))*24+(midnight_seconds(t2)-midnight_seconds(t1))/3600 " +
+						"from lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
+				}
+			case YEAR:
+				return "(year(" + toExpression + ")-year(" + fromExpression + "))";
+			// the months_between() function results
+			// in a non-integral value, so trunc() it
+			case MONTH:
+				return "trunc(months_between(" + toExpression + ',' + fromExpression + "))";
+			case QUARTER:
+				return "trunc(months_between(" + toExpression + ',' + fromExpression + ")/3)";
+			case WEEK:
+				return "int((days" + toExpression + ")-days(" + fromExpression + "))/7)";
+			case DAY:
+				return "(days(" + toExpression + ")-days(" + fromExpression + "))";
+			default:
+				throw new UnsupportedOperationException( "Unsupported unit: " + unit );
+		}
 	}
 
 	@Override
@@ -764,9 +886,8 @@ public class DB2LegacyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSkipLocked() {
-		// Introduced in 11.5: https://www.ibm.com/docs/en/db2/11.5?topic=statement-concurrent-access-resolution-clause
-		return getDB2Version().isSameOrAfter( 11, 5 );
+	public LockingSupport getLockingSupport() {
+		return lockingSupport;
 	}
 
 	@Override
@@ -782,32 +903,35 @@ public class DB2LegacyDialect extends Dialect {
 	}
 
 	@Override
+	public String getWriteLockString(Timeout timeout) {
+		return timeout.milliseconds() == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
+				? FOR_UPDATE_SKIP_LOCKED_SQL
+				: FOR_UPDATE_SQL;
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		return timeout.milliseconds() == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
+				? FOR_SHARE_SKIP_LOCKED_SQL
+				: FOR_SHARE_SQL;
+	}
+
+	@Override
 	public String getWriteLockString(int timeout) {
-		return timeout == LockOptions.SKIP_LOCKED && supportsSkipLocked()
+		return timeout == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
 				? FOR_UPDATE_SKIP_LOCKED_SQL
 				: FOR_UPDATE_SQL;
 	}
 
 	@Override
 	public String getReadLockString(int timeout) {
-		return timeout == LockOptions.SKIP_LOCKED && supportsSkipLocked()
+		return timeout == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
 				? FOR_SHARE_SKIP_LOCKED_SQL
 				: FOR_SHARE_SQL;
 	}
 
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsExistsInSelect() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsLockTimeouts() {
-		//as far as I know, DB2 doesn't support this
 		return false;
 	}
 
@@ -889,6 +1013,22 @@ public class DB2LegacyDialect extends Dialect {
 	}
 
 	@Override
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		// would need multiple statements to 'set not null'/'drop not null', 'set default'/'drop default', 'set generated', etc
+		return "alter column " + columnName + " set data type " + columnType;
+	}
+
+	@Override
+	public boolean supportsAlterColumnType() {
+		return getVersion().isSameOrAfter( 10, 5 );
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeTableName() {
+		return getVersion().isSameOrAfter( 11, 5 );
+	}
+
+	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
@@ -896,10 +1036,30 @@ public class DB2LegacyDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsIsTrue() {
+		return getDB2Version().isSameOrAfter( 11 );
+	}
+
+	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new CteInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+	}
+
+	@Override
+	public @Nullable TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
+		// Starting in DB2 9.7, "real" global temporary tables that can be shared between sessions
+		// are supported; (obviously) data is not shared between sessions.
+		return getDB2Version().isBefore( 9, 7 ) ? null : DB2GlobalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
+	public @Nullable TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		// Prior to DB2 9.7, "real" global temporary tables that can be shared between sessions
+		// are *not* supported; even though the DB2 command says to declare a "global" temp table
+		// Hibernate treats it as a "local" temp table.
+		return getDB2Version().isBefore( 9, 7 ) ? DB2LegacyLocalTemporaryTableStrategy.INSTANCE : null;
 	}
 
 	@Override
@@ -933,6 +1093,11 @@ public class DB2LegacyDialect extends Dialect {
 
 	@Override
 	public boolean supportsLobValueChangePropagation() {
+		return false;
+	}
+
+	@Override
+	public boolean useInputStreamToInsertBlob() {
 		return false;
 	}
 
@@ -1240,10 +1405,10 @@ public class DB2LegacyDialect extends Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 		builder.setAutoQuoteInitialUnderscore(true);
-		return super.buildIdentifierHelper(builder, dbMetaData);
+		return super.buildIdentifierHelper(builder, metadata );
 	}
 
 	@Override
@@ -1306,4 +1471,25 @@ public class DB2LegacyDialect extends Dialect {
 	public String getFromDualForSelectOnly() {
 		return " from " + getDual();
 	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return false;
+	}
+
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.produce.function;
@@ -32,7 +32,7 @@ public interface FunctionArgumentTypeResolver {
 	 * @return The resolved type.
 	 * @deprecated Use {@link #resolveFunctionArgumentType(List, int, SqmToSqlAstConverter)} instead
 	 */
-	@Deprecated(forRemoval = true)
+	@Deprecated(forRemoval = true, since = "7.0")
 	@Nullable MappingModelExpressible<?> resolveFunctionArgumentType(
 			SqmFunction<?> function,
 			int argumentIndex,
@@ -58,7 +58,7 @@ public interface FunctionArgumentTypeResolver {
 						new NamedSqmFunctionDescriptor( "", false, null, null ),
 						null,
 						arguments,
-						converter.getCreationContext().getSessionFactory().getNodeBuilder()
+						converter.getSqmCreationContext().getNodeBuilder()
 				) {
 					@Override
 					public Expression convertToSqlAst(SqmToSqlAstConverter walker) {

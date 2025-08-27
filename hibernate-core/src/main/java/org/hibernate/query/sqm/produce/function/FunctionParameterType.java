@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.produce.function;
@@ -48,6 +48,10 @@ public enum FunctionParameterType {
 	 * a logical expression (predicate)
 	 */
 	BOOLEAN,
+	/**
+	 * @see org.hibernate.type.SqlTypes#isBinaryType(int)
+	 */
+	BINARY,
 	/**
 	 * Indicates a parameter that accepts any type
 	 */

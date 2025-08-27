@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.test.stat;
@@ -18,6 +18,9 @@ import org.junit.Test;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.search.MeterNotFoundException;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 /**
@@ -82,6 +85,7 @@ public class MicrometerStatisticsTest extends BaseCoreFunctionalTestCase {
 		Assert.assertNotNull(registry.get("hibernate.entities.inserts").functionCounter());
 		Assert.assertNotNull(registry.get("hibernate.entities.loads").functionCounter());
 		Assert.assertNotNull(registry.get("hibernate.entities.updates").functionCounter());
+		Assert.assertNotNull(registry.get("hibernate.entities.upserts").functionCounter());
 
 		Assert.assertNotNull(registry.get("hibernate.collections.deletes").functionCounter());
 		Assert.assertNotNull(registry.get("hibernate.collections.fetches").functionCounter());
@@ -135,10 +139,11 @@ public class MicrometerStatisticsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	void verifyMeterNotFoundException(String name) {
-		try {
-			registry.get(name).meter();
-			Assert.fail(name + " should not have been found");
-		} catch(MeterNotFoundException mnfe) {
-		}
+		MeterNotFoundException ex = assertThrows(
+				MeterNotFoundException.class,
+				() -> registry.get( name ).meter(), name + " should not have been found"
+		);
+		assertTrue( ex.getMessage().contains( name ) );
+
 	}
 }

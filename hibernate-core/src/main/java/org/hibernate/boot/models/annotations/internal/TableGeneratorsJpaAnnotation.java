@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.TableGenerator;
 import jakarta.persistence.TableGenerators;
@@ -24,20 +24,20 @@ public class TableGeneratorsJpaAnnotation implements TableGenerators, Repeatable
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public TableGeneratorsJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public TableGeneratorsJpaAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public TableGeneratorsJpaAnnotation(TableGenerators annotation, SourceModelBuildingContext modelContext) {
+	public TableGeneratorsJpaAnnotation(TableGenerators annotation, ModelsContext modelContext) {
 		this.value = extractJdkValue( annotation, JpaAnnotations.TABLE_GENERATORS, "value", modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public TableGeneratorsJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public TableGeneratorsJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.value = (TableGenerator[]) attributeValues.get( "value" );
 	}
 

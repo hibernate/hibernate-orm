@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -13,7 +13,7 @@ import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.AbstractOverrider;
 import org.hibernate.boot.models.annotations.spi.DialectOverrider;
 import org.hibernate.models.spi.AnnotationDescriptor;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.DialectOverrideAnnotations.DIALECT_OVERRIDE_SQL_ORDER;
 import static org.hibernate.boot.models.DialectOverrideAnnotations.DIALECT_OVERRIDE_SQL_RESTRICTION;
@@ -31,7 +31,7 @@ public class OverriddenSQLRestrictionAnnotation
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public OverriddenSQLRestrictionAnnotation(SourceModelBuildingContext sourceModelContext) {
+	public OverriddenSQLRestrictionAnnotation(ModelsContext sourceModelContext) {
 	}
 
 	/**
@@ -39,7 +39,7 @@ public class OverriddenSQLRestrictionAnnotation
 	 */
 	public OverriddenSQLRestrictionAnnotation(
 			DialectOverride.SQLRestriction annotation,
-			SourceModelBuildingContext sourceModelContext) {
+			ModelsContext sourceModelContext) {
 		dialect( annotation.dialect() );
 		before( annotation.before() );
 		sameOrAfter( annotation.sameOrAfter() );
@@ -51,7 +51,7 @@ public class OverriddenSQLRestrictionAnnotation
 	 */
 	public OverriddenSQLRestrictionAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext sourceModelContext) {
+			ModelsContext sourceModelContext) {
 		super( attributeValues, DIALECT_OVERRIDE_SQL_ORDER, sourceModelContext );
 		override( (SQLRestriction) attributeValues.get( "override" ) );
 	}

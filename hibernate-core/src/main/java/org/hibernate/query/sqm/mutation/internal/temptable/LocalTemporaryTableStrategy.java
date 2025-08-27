@@ -1,16 +1,21 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+
+import java.util.Objects;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * Strategy based on ANSI SQL's definition of a "local temporary table" (local to each db session).
@@ -27,25 +32,26 @@ public class LocalTemporaryTableStrategy {
 
 	private boolean dropIdTables;
 
-	public LocalTemporaryTableStrategy(
-			TemporaryTable temporaryTable,
-			SessionFactoryImplementor sessionFactory) {
+	public LocalTemporaryTableStrategy(TemporaryTable temporaryTable, SessionFactoryImplementor sessionFactory) {
 		this.temporaryTable = temporaryTable;
 		this.sessionFactory = sessionFactory;
 	}
 
-	public void prepare(
-			MappingModelCreationProcess mappingModelCreationProcess,
-			JdbcConnectionAccess connectionAccess) {
+	protected static TemporaryTableStrategy requireLocalTemporaryTableStrategy(Dialect dialect) {
+		return Objects.requireNonNull( dialect.getLocalTemporaryTableStrategy(),
+				"Dialect does not define a local temporary table strategy: " + dialect.getClass().getSimpleName() );
+	}
+
+	public TemporaryTableStrategy getTemporaryTableStrategy() {
+		return castNonNull( sessionFactory.getJdbcServices().getDialect().getLocalTemporaryTableStrategy() );
+	}
+
+	public void prepare(MappingModelCreationProcess mappingModelCreationProcess, JdbcConnectionAccess connectionAccess) {
 		final ConfigurationService configService =
 				mappingModelCreationProcess.getCreationContext()
 						.getBootstrapContext().getServiceRegistry()
 						.requireService( ConfigurationService.class );
-		this.dropIdTables = configService.getSetting(
-				DROP_ID_TABLES,
-				StandardConverters.BOOLEAN,
-				false
-		);
+		dropIdTables = configService.getSetting( DROP_ID_TABLES, StandardConverters.BOOLEAN, false );
 	}
 
 	public void release(SessionFactoryImplementor sessionFactory, JdbcConnectionAccess connectionAccess) {
@@ -54,10 +60,6 @@ public class LocalTemporaryTableStrategy {
 
 	public TemporaryTable getTemporaryTable() {
 		return temporaryTable;
-	}
-
-	public EntityMappingType getEntityDescriptor() {
-		return getTemporaryTable().getEntityDescriptor();
 	}
 
 	public boolean isDropIdTables() {

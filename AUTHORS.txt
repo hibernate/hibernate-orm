@@ -1,0 +1,295 @@
+# This file lists copyright owners of the project.
+# The list is not exhaustive: other copyright owners exist.
+# See CONTRIBUTING.md for instructions regarding how to be added to this list.
+
+# Corporate contributors
+
+Red Hat, Inc.
+Oracle, Corporation.
+
+# Individual contributors
+
+A Garcia <agarcia@jboss.com>
+Adam Warski <adam@warski.org>
+Adar Lieber-Dembo <adar@cloudera.com>
+Adrodoc <adrodoc55@googlemail.com>
+ageery <andrew_geery@windsorsolutions.com>
+Aleksander Blomskøld <aleksabl@gmail.com>
+Ales Justin <ales.justin@gmail.com>
+Alex Kalashnikov <neoasket@gmail.com>
+Alex Snaps <alex.snaps@gmail.com>
+Alex Soto <asotobu@gmail.com>
+Alexey Loubyansky
+Alexey Nesterov <email@alexnesterov.com>
+Alvaro Esteban Pedraza <aepedraza3117@gmail.com>
+amaeda <maeda.br@gmail.com>
+Amit Mendapara <mendapara.amit@gmail.com>
+amkad <amkad2@gmail.com>
+Anders Wallgren <anders_wallgren@alum.mit.edu>
+Andrea Boriero <andrea@hibernate.org>
+Andreas Asplund <andreas.asplund@lekab.com>
+Andreas Knees <andreas.knees@nikem.de>
+Andrei Ivanov <andrei.ivanov@gmail.com>
+Andrei Solntsev <andrei.solntsev@gmail.com>
+Andrew Clemons <andrew.clemons@sap.com>
+Andrew Guibert <andy.guibert@gmail.com>
+Andrew Judson <andrew.judson1@gmail.com>
+Andrew Lee Rubinger <alr@jboss.org>
+Andrig Miller <andy.miller@jboss.com>
+András Eisenberger <csirkeee@gmail.com>
+Andy2003 <andy.2003@gmail.com>
+Anilabha Baral <abaral@redhat.com>
+Anthony Patricio <apatrici@redhat.com>
+Antoine Reilles <areilles@gmail.com>
+Anton Marsden <anton.marsden@ninetyten.co.nz>
+Archie L. Cobbs <archie.cobbs@gmail.com>
+Arnold Galovics <galovicsarnold@gmail.com>
+bananan <bananan@ms.net.lodz.pl>
+Barnaby Court <bcourt@gmail.com>
+Barnaby Court <bcourt@redhat.com>
+Barney <barney2k7@gmail.com>
+Barry LaFond <blafond@redhat.com>
+Bas van Schaik <github@s.traiectum.net>
+Batbileg Dorj <batbileg289@gmail.com>
+Bato-Bair <bbtsyrenov@gmail.com>
+Bawany Satgunanathan <bsatguna@redhat.com>
+bb7133 <bb7133@gmail.com>
+Becca Gaspard <beccagaspard@gmail.com>
+Benedikt Waldvogel <mail@bwaldvogel.de>
+Benjamin Hartmann <benjamin.hartmann.ext@porscheinformatik.com>
+benoit <b.wiart@ubik-ingenierie.com>
+Bogdan Stirbat <bogdan.stirbat@gmail.com>
+Boris Korogvich <b.korogvich@gmail.com>
+boris-unckel <bu.githubcom@mail.unckel.net>
+Brad Koehn <brad.koehn@thomsonreuters.com>
+Bradley Hess <bdhess@pobox.com>
+Brett Meyer <brmeyer@redhat.com>
+Brian Stansberry <brian.stansberry@redhat.com>
+Bryan Varner <bryan@varnernet.com>
+Burkhard Graves <graves@id-on.de>
+Cash Costello <cash.costello@gmail.com>
+Cedomir Igaly <cedomir.igaly@e-dama.net>
+Chris Bredesen <cbredesen@redhat.com>
+Chris Cranford <chris@hibernate.org>
+Chris Dennis <chris.w.dennis@gmail.com>
+Christian Bauer <cb@4thline.com>
+Christian Beikov <christian.beikov@gmail.com>
+Christoph Dreis <christoph.dreis@freenet.de>
+clement <clement.denis@gmail.com>
+Cody Lerum <cody.lerum@gmail.com>
+Craig K <kapp.craig@gmail.com>
+cristhiank <calovi86@gmail.com>
+Csaba Varga <csaboka@gmail.com>
+Cédric Tabin <cedric.tabin@gmail.com>
+Damien Hollis <damien.hollis@unimarket.com>
+Daniel Black <daniel@mariadb.org>
+Daniel Gredler <daniel.gredler@gmail.com>
+Daniel Mensinger <d.mensinger@tup.com>
+Daniel Shuy <daniel_shuy@hotmail.com>
+Dave Stephan <dstephan@redhat.com>
+David Avenante <altus34@gmail.com>
+David Ellingsworth <david.ellingsworth@davey.com>
+David M. Lloyd <david.lloyd@redhat.com>
+Davide D'Alto <davide@hibernate.org>
+dcebotarenco <dcebotarenco@gmail.com>
+dewarder <dewarder@gmail.com>
+Dgray16 <vova235@gmail.com>
+Diego Plentz <diego@plentz.org>
+dkublik <dkublik@gmail.com>
+Dmitrii Bocharov <dbocharo@redhat.com>
+Dmitrii Karmanov <d.karmanov@celonis.com>
+Dmitry Kryukov <dk2k@ya.ru>
+Dmytro Bondar <work.bondar@gmail.com>
+Dominique Toupin <dtoupin@360-innovations.com>
+Edward.Wilson <ed.wilson2@hotmail.co.uk>
+Emmanuel Bernard <emmanuel@hibernate.org>
+Emmanuel Duchastenier <emmanuel.duchastenier@bonitasoft.com>
+Emond Papegaaij <emond.papegaaij@gmail.com>
+Eric Dalquist <eric.dalquist@gmail.com>
+Erik-Berndt Scheper <erik.berndt.scheper@gmail.com>
+Erin Schnabel <ebullient@redhat.com>
+Etienne Miret <etienne.miret@ens-lyon.org>
+Ettavolt <ettavolt@gmail.com>
+Fabio Massimo Ercoli <fabiomassimo.ercoli@gmail.com>
+Fabricio Gregorio <fabricio.gregorio@sofis.lat>
+Falko Modler <famod@users.noreply.github.com>
+Farah Juma <fjuma@redhat.com>
+Felix <vip.zatebe@mail.ru>
+Felix Feisst <feisst.felix@gmail.com>
+Fernando Guardiola <fernando.guardiola@axisdata.net>
+Filipe Roque <froque@premium-minds.com>
+Florian Heck <florian.heck@hotmail.de>
+fmusolino <fabiola.emilia.musolino@gmail.com>
+Francesco Nigro <nigro.fra@gmail.com>
+Frank Doherty <fdoherty@atlassian.com>
+Fábio Ueno <fabio.t.ueno@gmail.com>
+Gabriel Belingueres <belingueres@gmail.com>
+Gail Badner <gail@redhat.com>
+Galder Zamarreño <galder.zamarreno@redhat.com>
+Gary Gregory <garydgregory@gmail.com>
+Gary LosHuertos <gary.loshuertos@gmail.com>
+Gavin King <gavin@hibernate.org>
+Georg Echterling <g.echterling@jobware.de>
+George Gastaldi <gegastaldi@gmail.com>
+Georgios Andrianakis <geoand@gmail.com>
+graemerocher <graeme.rocher@gmail.com>
+Gregorio Palamà <gregoriopalama@gmail.com>
+Guenther Demetz <guenther.demetz@wuerth-phoenix.com>
+Guillaume Smet <guillaume@hibernate.org>
+Gunnar Morling <gunnar.morling@googlemail.com>
+H.Lo <horvoje@gmail.com>
+Hardy Ferentschik <hardy@hibernate.org>
+HARPER Jon <jon.harper87@gmail.com>
+Harsh Panchal <panchal.harsh18@gmail.com>
+Hassan AL Meftah <hassan.al.meftah@oracle.com>
+Hendrik Schreiber <hs@tagtraum.com>
+Henri Tremblay <henri.tremblay@gmail.com>
+hugothomas <hugo.thomas98@gmail.com>
+Hynek Svabek <hsvabek@redhat.com>
+Igor Vaynberg <igor.vaynberg@gmail.com>
+Ivan Munic <ivan.munic+github@gmail.com>
+Ivan Straka <istraka@redhat.com>
+Ivaylo Mitrev <ivaylo.mitrev@documaster.com>
+Jaikiran Pai <jaikiran.pai@gmail.com>
+James R. Perkins
+Jan Martiska <jmartisk@redhat.com>
+Jan Schatteman <jschatte@redhat.com>
+Jan-Willem Gmelig Meyling <jan-willem@youngmediaexperts.nl>
+Janario Oliveira <janario.oliveira@gmail.com>
+Jarkko Hyöty <jarkko.hyoty@gofore.com>
+Jason Pyeron <jpyeron@pdinc.us>
+Jason T. Greene
+jcibik <jcibik@redhat.com>
+Jere Penttinen <jere@disroot.org>
+Jeremy Whiting <jwhiting@redhat.com>
+Jerome Prinet <jprinet@gradle.com>
+Jocki Hendry <jocki.hendry@gmail.com>
+John Lin <johnlinp@gmail.com>
+John O'Hara <johara@redhat.com>
+John Verhaeg <jverhaeg@redhat.com>
+johnniang <johnniang@foxmail.com>
+Jonathan Bregler <jonathan.bregler@sap.com>
+Joseph B. Ottinger <joeo@enigmastation.com>
+João Carlos Heringer Moreira <joaochmoreira@gmail.com>
+Juraci Krohling <jcosta@redhat.com>
+k abram <karthik@k2d2.org>
+Kabir Khan
+Kai Suchomel <kai.suchomel@gec.io>
+Kamil Szymanski <kamil.szymanski.dev@gmail.com>
+Karel Maesen <karel@geovise.com>
+KARGET <karge@itestra.de>
+Ken Schosinsky <schosinsky@spirit-of-selling.de>
+Koen Aers <koen.aers@gmail.com>
+Kristoffer Lundberg <kristoffer@cambio.se>
+kubo <jsodpad@gmail.com>
+Ladislav Thon <lthon@redhat.com>
+Lars Storm <lars.storm@systematic.com>
+Laurent Almeras <lalmeras@gmail.com>
+Laurent RICHARD <laurent-richard@harvest.fr>
+ldelima <ldelima@redhat.com>
+Leandro Taveras <ltaveras@netflix.com>
+Legohuman <legohuman@gmail.com>
+Leonard Siu <leonard.siu@gmail.com>
+Louis Jacomet <ljacomet@gmail.com>
+Loïc Lefevre <loic.lefevre@gmail.com>
+lpradel <lukas.pradel@googlemail.com>
+Luca Molteni <volothamp@gmail.com>
+Luis Barreiro <lbarreiro@redhat.com>
+Lukasz Antoniak <lukasz.antoniak@gmail.com>
+Luke Chen <showuon@gmail.com>
+Madhumita Sadhukhan <madhumita.sadhukhan@gmail.com>
+magdalena <magdalena.moeller@gmail.com>
+Manik Surtani <manik@jboss.org>
+Manuel Bernhardt <bernhardt.manuel@gmail.com>
+Marcel Overdijk <marceloverdijk@gmail.com>
+marcgiffing <marcgiffing@web.de>
+Marco Belladelli <marco@hibernate.org>
+Marcus <mgb.klimstra@gmail.com>
+Mark Rotteveel <mark@lawinegevaar.nl>
+Marko Bekhta <marko.prykladna@gmail.com>
+Markus Heiden <markus@markusheiden.de>
+Martijn Blankestijn <martijnblankestijn@gmail.com>
+Martin Simka <msimka@redhat.com>
+Masafumi Miura <mmiura@redhat.com>
+Matej Pucihar <matej.pucihar@medius.si>
+Matt Drees <matt.drees@cru.org>
+Matthew Vance <yinzara@gmail.com>
+Matthias Kurz <m.kurz@irregular.at>
+Michael Rudolf <michael.rudolf01@sap.com>
+Michal Skowronek <michal.skowronek@uj.edu.pl>
+MilovanderZee <milo@vanderzee.org>
+Misty Stanley-Jones <misty@redhat.com>
+Moritz Becker <moritz.becker@gmx.at>
+mrizzi <mrizzi@redhat.com>
+msvticket <marten.svantesson@ticket.se>
+Mustafa Ulu <mustafau@sabanciuniv.edu>
+Nathan Xu <nathan.qingyang.xu@gmail.com>
+Nguyen Nhu Phuc <phucnn.work@gmail.com>
+Nikolay Shestakov <ns@xtesseract.com>
+Norbert Wirges <norbert.wirges@werum.com>
+Oliver Breidenbach <olly.breidenbach@googlemail.com>
+Oliver Saggau <oliver.saggau@sysvision.de>
+Owen Farrell <owen.farrell@gmail.com>
+Panagiotis Sotiropoulos <psotirop@redhat.com>
+Paul Ferraro <paul.ferraro@redhat.com>
+Petteri Pitkänen <petepitk@gmail.com>
+Philippe Marschall <philippe.marschall@gmail.com>
+Pierrick Rouxel <pierrick.rouxel@me.com>
+qinxi <qinxi199267@gmail.com>
+Radim Vansa <rvansa@redhat.com>
+Rafael Winterhalter <rafael.wth@gmail.com>
+Rafi Shamim <rafi@cockroachlabs.com>
+Randy May <randy.may@blaazinsoftware.com>
+Ratul sharker <sharker.ratul.08@gmail.com>
+rgarcia <rgarcia@cosium.com>
+rhart <rus@gradle.com>
+Richard Barnes <rpgingerbarnes@gmail.com>
+Richard Wilding <rwilding@redhat.com>
+rmartinc <rmartinc@redhat.com>
+Rob Worsnop <rworsnop@gmail.com>
+Roland Kurucz <rkurucz9@gmail.com>
+Rune Steinseth <rune@jpro.no>
+Russ Tennant <russ@venturetech.net>
+Réda Housni Alaoui <reda.housnialaoui@gmail.com>
+Sam De Block <sam.deblock@unifly.aero>
+Samuel Andersson <smulster@gmail.com>
+Sande Gilda <sgilda@redhat.com>
+Sanne Grinovero <sanne@hibernate.org>
+Scott Marlow <smarlow@redhat.com>
+Sebastian Nohn <sebastian@nohn.net>
+seregamorph <serega.morph@gmail.com>
+Sergey Chernolyas <sergey.chernolyas@gmail.com>
+Sergey Morgunov <smorgunov@at-consulting.ru>
+Shawn Clowater <shawn.clowater@entero.com>
+Simeon <simeon.malchev@gmail.com>
+Simon StJohn-Green <simon.stjohn-green@softwire.com>
+skis <sriharshareddyk@hotmail.com>
+Staffan Hörke <staffan.horke@maindialog.se>
+Stephanie Miller <smiller@generalcode.com>
+Steve Ebersole <steve@hibernate.org>
+Strong Liu <stliu@hibernate.org>
+Stuart Douglas <stuart.w.douglas@gmail.com>
+Ståle W. Pedersen <stale.pedersen@jboss.org>
+Stéphane Épardaud <stef@epardaud.fr>
+Sven Strickroth <email@cs-ware.de>
+Sylvain Dusart <sylvain.dusart@aca.fr>
+The Geeky Asian <msafeeransari@gmail.com>
+The-Huginn <rbudinsk@redhat.com>
+Thomas Heigl <thomas.heigl@gmail.com>
+Timo Verhoeven <timo.verhoeven@guidecom.de>
+Tomas Lamr <tomas.lamr@pricefx.eu>
+Torsten Schöne <torsten.schoene@de.markant.com>
+Vasily Kochnev <vasily.kochnev@gmail.com>
+Vedran Prišćan <vedran.priscan@amphinicy.com>
+Vincent Bouthinon <v-bouthinon@efluid.fr>
+Vincent Stradiot <vincent.stradiot@healthconnect.be>
+Vlad Kuznetsov <vladislav.u.kuznetsov@gmail.com>
+Vlad Mihalcea <mihalcea.vlad@gmail.com>
+Vladimír Kuruc <kuruc.v@chemosvit.sk>
+William Burns <mudokonman@gmail.com>
+xhuang <xhuang@jboss.com>
+Yanming Zhou <zhouyanming@gmail.com>
+yjpark <geoffrey.park@altibase.com>
+Yoann Rodière <yoann@hibernate.org>
+Zbyněk Roubalík <zroubali@redhat.com>
+Zhenlei Huang <zlei.huang@gmail.com>

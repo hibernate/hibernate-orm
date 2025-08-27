@@ -1,13 +1,16 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
+
+import java.util.Objects;
 
 /**
  * Represents a named query parameter in the SQM tree.
@@ -24,7 +27,7 @@ public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 	public SqmNamedParameter(
 			String name,
 			boolean canBeMultiValued,
-			SqmExpressible<T> inherentType,
+			SqmBindableType<T> inherentType,
 			NodeBuilder nodeBuilder) {
 		super( canBeMultiValued, inherentType, nodeBuilder );
 		this.name = name;
@@ -75,15 +78,25 @@ public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( ':' );
-		sb.append( getName() );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( ':' ).append( getName() );
 	}
 
 	@Override
-	public int compareTo(SqmParameter anotherParameter) {
-		return anotherParameter instanceof SqmNamedParameter<?>
-				? getName().compareTo( ( (SqmNamedParameter<?>) anotherParameter ).getName() )
+	public int compareTo(SqmParameter<T> parameter) {
+		return parameter instanceof SqmNamedParameter<T> namedParameter
+				? getName().compareTo( namedParameter.getName() )
 				: -1;
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmNamedParameter<?> that
+			&& Objects.equals( name, that.name );
+	}
+
+	@Override
+	public int hashCode() {
+		return name.hashCode();
 	}
 }

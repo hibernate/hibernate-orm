@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
@@ -144,34 +144,41 @@ class ColumnDefinitions {
 		}
 
 		if ( dialect.supportsColumnCheck() ) {
-			// some databases (Maria, SQL Server) don't like multiple 'check' clauses
 			final List<CheckConstraint> checkConstraints = column.getCheckConstraints();
-			long anonConstraints = checkConstraints.stream().filter(CheckConstraint::isAnonymous).count();
-			if ( anonConstraints == 1 ) {
-				for ( CheckConstraint constraint : checkConstraints ) {
-					definition.append( constraint.constraintString( dialect ) );
+			boolean hasAnonymousConstraints = false;
+			for ( CheckConstraint constraint : checkConstraints ) {
+				if ( constraint.isAnonymous() ) {
+					if ( !hasAnonymousConstraints ) {
+						definition.append(" check (");
+						hasAnonymousConstraints = true;
+					}
+					else {
+						definition.append(" and ");
+					}
+					definition.append( constraint.getConstraintInParens() );
 				}
 			}
-			else {
-				boolean first = true;
-				for ( CheckConstraint constraint : checkConstraints ) {
-					if ( constraint.isAnonymous() ) {
-						if ( first ) {
-							definition.append(" check (");
-							first = false;
-						}
-						else {
-							definition.append(" and ");
-						}
-						definition.append( constraint.getConstraintInParens() );
-					}
-				}
-				if ( !first ) {
-					definition.append(")");
-				}
+			if ( hasAnonymousConstraints ) {
+				definition.append( ')' );
+			}
+
+			if ( !dialect.supportsTableCheck() ) {
+				// When table check constraints are not supported, try to render all named constraints
 				for ( CheckConstraint constraint : checkConstraints ) {
 					if ( constraint.isNamed() ) {
 						definition.append( constraint.constraintString( dialect ) );
+					}
+				}
+			}
+			else if ( !hasAnonymousConstraints && dialect.supportsNamedColumnCheck() ) {
+				// Otherwise only render the first named constraint as column constraint if there are no anonymous
+				// constraints and named column check constraint are supported, because some database don't like
+				// multiple check clauses.
+				// Note that the TableExporter will take care of named constraints then
+				for ( CheckConstraint constraint : checkConstraints ) {
+					if ( constraint.isNamed() ) {
+						definition.append( constraint.constraintString( dialect ) );
+						break;
 					}
 				}
 			}
@@ -197,7 +204,11 @@ class ColumnDefinitions {
 			}
 			final String identityColumnString = dialect.getIdentityColumnSupport()
 					.getIdentityColumnString( column.getSqlTypeCode( metadata ) );
-			definition.append( ' ' ).append( identityColumnString );
+			// the custom columnDefinition might have already included the
+			// identity column generation clause, so try not to add it twice
+			if ( !definition.toString().toLowerCase(Locale.ROOT).contains( identityColumnString ) ) {
+				definition.append( ' ' ).append( identityColumnString );
+			}
 		}
 		else {
 			final String columnType = column.getSqlType( metadata );

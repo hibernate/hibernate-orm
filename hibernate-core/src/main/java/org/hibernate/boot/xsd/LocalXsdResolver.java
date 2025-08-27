@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.xsd;
@@ -101,7 +101,8 @@ public class LocalXsdResolver {
 					schemaStream.close();
 				}
 				catch ( IOException e ) {
-					Logger.getLogger( LocalXsdResolver.class ).debugf( "Problem closing schema stream [%s]", e.toString() );
+					Logger.getLogger( LocalXsdResolver.class )
+							.debugf( "Problem closing schema stream [%s]", e.toString() );
 				}
 			}
 		}

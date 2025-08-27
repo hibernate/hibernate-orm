@@ -1,10 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.any.annotations;
 
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -101,19 +101,7 @@ public class AnyImplicitDiscriminatorTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete StringProperty" ).executeUpdate();
-					session.createMutationQuery( "delete IntegerProperty" ).executeUpdate();
-					session.createMutationQuery( "delete LongProperty" ).executeUpdate();
-					session.createMutationQuery( "delete CharProperty" ).executeUpdate();
-
-					session.createMutationQuery( "delete ImplicitPropertyHolder" ).executeUpdate();
-					session.createMutationQuery( "delete ImplicitPropertyList" ).executeUpdate();
-					session.createMutationQuery( "delete ImplicitPropertyMap" ).executeUpdate();
-					session.createMutationQuery( "delete ImplicitPropertySet" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -247,7 +235,7 @@ public class AnyImplicitDiscriminatorTest {
 	public void testDefaultAnyAssociation(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<ImplicitPropertySet> query = session.createQuery(
+					final Query<ImplicitPropertySet> query = session.createQuery(
 							"select s from ImplicitPropertySet s where name = :name",
 							ImplicitPropertySet.class
 					);

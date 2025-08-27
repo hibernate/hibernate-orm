@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.util;
@@ -57,24 +57,6 @@ public class ReflectionUtil {
 					"Class " + target.getClass() + " does not contain a " + name + " field",
 					e
 			);
-		}
-		catch (IllegalAccessException e) {
-			throw new IllegalArgumentException( "Cannot set field " + name, e );
-		}
-	}
-
-	/**
-	 * Get a field value from a given class
-	 *
-	 * @param target Class whose field is being read
-	 * @param name field name
-	 *
-	 * @return field value
-	 */
-	public static <T> T getStaticFieldValue(Class<?> target, String name) {
-		try {
-			Field field = getField( target, name );
-			return (T) field.get( null );
 		}
 		catch (IllegalAccessException e) {
 			throw new IllegalArgumentException( "Cannot set field " + name, e );

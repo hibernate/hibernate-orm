@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.StringTokenizer;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.AssertionFailure;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -158,10 +159,11 @@ class IndexBinder {
 			String[] columnNames,
 			String[] orderings,
 			boolean unique,
+			boolean declaredAsIndex,
 			String options,
 			Selectable[] columns) {
-		final IndexOrUniqueKeyNameSource source =
-				new IndexOrUniqueKeyNameSource( context, table, columnNames, originalKeyName );
+		final var source =
+				new IndexOrUniqueKeyNameSource( context, table, columnNames, originalKeyName, declaredAsIndex );
 		boolean hasFormula = false;
 		for ( Selectable selectable : columns ) {
 			if ( selectable.isFormula() ) {
@@ -175,7 +177,12 @@ class IndexBinder {
 			uniqueKey.setNameExplicit( nameExplicit );
 			uniqueKey.setOptions( options );
 			for ( int i = 0; i < columns.length; i++ ) {
-				uniqueKey.addColumn( (Column) columns[i], orderings != null ? orderings[i] : null );
+				if ( columns[i] instanceof Column column) {
+					uniqueKey.addColumn( column, orderings != null ? orderings[i] : null );
+				}
+				else {
+					throw new AssertionFailure( "Not a column" );
+				}
 			}
 		}
 		else {
@@ -190,8 +197,8 @@ class IndexBinder {
 	}
 
 	void bindIndexes(Table table, jakarta.persistence.Index[] indexes) {
-		for ( jakarta.persistence.Index index : indexes ) {
-			final StringTokenizer tokenizer = new StringTokenizer( index.columnList(), "," );
+		for ( var index : indexes ) {
+			final var tokenizer = new StringTokenizer( index.columnList(), "," );
 			final List<String> parsed = new ArrayList<>();
 			while ( tokenizer.hasMoreElements() ) {
 				final String trimmed = tokenizer.nextToken().trim();
@@ -212,6 +219,7 @@ class IndexBinder {
 					columnExpressions,
 					ordering,
 					unique,
+					true,
 					options,
 					selectables( table, name, columnExpressions )
 			);
@@ -219,7 +227,7 @@ class IndexBinder {
 	}
 
 	void bindUniqueConstraints(Table table, UniqueConstraint[] constraints) {
-		for ( UniqueConstraint constraint : constraints ) {
+		for ( var constraint : constraints ) {
 			final String name = constraint.name();
 			final String[] columnNames = constraint.columnNames();
 			final String options = constraint.options();
@@ -230,6 +238,7 @@ class IndexBinder {
 					columnNames,
 					null,
 					true,
+					false,
 					options,
 					columns( table, name, columnNames )
 			);
@@ -255,17 +264,32 @@ class IndexBinder {
 		}
 	}
 
-	private class IndexOrUniqueKeyNameSource implements ImplicitIndexNameSource, ImplicitUniqueKeyNameSource {
+	private class IndexOrUniqueKeyNameSource
+			implements ImplicitIndexNameSource, ImplicitUniqueKeyNameSource {
 		private final MetadataBuildingContext buildingContext;
 		private final Table table;
 		private final String[] columnNames;
 		private final String originalKeyName;
+		private final boolean declaredAsIndex;
 
-		public IndexOrUniqueKeyNameSource(MetadataBuildingContext buildingContext, Table table, String[] columnNames, String originalKeyName) {
+		private IndexOrUniqueKeyNameSource(
+				MetadataBuildingContext buildingContext,
+				Table table,
+				String[] columnNames,
+				String originalKeyName,
+				boolean declaredAsIndex) {
 			this.buildingContext = buildingContext;
 			this.table = table;
 			this.columnNames = columnNames;
 			this.originalKeyName = originalKeyName;
+			this.declaredAsIndex = declaredAsIndex;
+		}
+
+		@Override
+		public Kind kind() {
+			return declaredAsIndex
+					? ImplicitIndexNameSource.super.kind()
+					: ImplicitUniqueKeyNameSource.super.kind();
 		}
 
 		@Override
@@ -299,11 +323,12 @@ class IndexBinder {
 		if ( names == null ) {
 			return emptyList();
 		}
-
-		final List<Identifier> columnNames = arrayList( names.length );
-		for ( String name : names ) {
-			columnNames.add( getDatabase().toIdentifier( name ) );
+		else {
+			final List<Identifier> columnNames = arrayList( names.length );
+			for ( String name : names ) {
+				columnNames.add( getDatabase().toIdentifier( name ) );
+			}
+			return columnNames;
 		}
-		return columnNames;
 	}
 }

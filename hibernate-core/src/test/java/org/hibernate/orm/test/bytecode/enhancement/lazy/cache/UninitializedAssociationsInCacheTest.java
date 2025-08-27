@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.cache;
@@ -7,10 +7,8 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy.cache;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Hibernate;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.CacheRegionStatistics;
 
@@ -21,7 +19,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
@@ -36,11 +34,16 @@ import jakarta.persistence.Table;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.Hibernate.isInitialized;
+import static org.hibernate.Hibernate.isPropertyInitialized;
+import static org.hibernate.cfg.CacheSettings.USE_SECOND_LEVEL_CACHE;
+import static org.hibernate.cfg.StatisticsSettings.GENERATE_STATISTICS;
+import static org.hibernate.cfg.TransactionSettings.ENABLE_LAZY_LOAD_NO_TRANS;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				UninitializedAssociationsInCacheTest.Employee.class
@@ -48,9 +51,9 @@ import static org.junit.Assert.assertTrue;
 )
 @ServiceRegistry(
 		settings = {
-				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ),
-				@Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "false" ),
-				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = USE_SECOND_LEVEL_CACHE, value = "true" ),
+				@Setting( name = ENABLE_LAZY_LOAD_NO_TRANS, value = "false" ),
+				@Setting( name = GENERATE_STATISTICS, value = "true" ),
 		}
 )
 @SessionFactory(
@@ -87,26 +90,26 @@ public class UninitializedAssociationsInCacheTest {
 		scope.inTransaction(
 				(s) -> {
 					final Employee boss = s.find( Employee.class, 1 );
-					Assert.assertEquals( "boss", boss.regularString );
+					assertEquals( "boss", boss.regularString );
 					final Employee leader = s.find( Employee.class, 2 );
-					Assert.assertEquals( "leader", leader.regularString );
+					assertEquals( "leader", leader.regularString );
 					final Employee member = s.find( Employee.class, 3 );
-					Assert.assertEquals( "member", member.regularString );
+					assertEquals( "member", member.regularString );
 
-					assertTrue( Hibernate.isPropertyInitialized( boss, "superior" ) );
-					assertTrue( Hibernate.isInitialized( boss.superior ) );
+					assertTrue( isPropertyInitialized( boss, "superior" ) );
+					assertTrue( isInitialized( boss.superior ) );
 					assertThat( boss.superior, not( instanceOf( HibernateProxy.class ) ) );
-					Assert.assertFalse( Hibernate.isPropertyInitialized( boss, "subordinates" ) );
+					assertFalse( isPropertyInitialized( boss, "subordinates" ) );
 
-					assertTrue( Hibernate.isPropertyInitialized( leader, "superior" ) );
-					assertTrue( Hibernate.isInitialized( leader.superior ) );
+					assertTrue( isPropertyInitialized( leader, "superior" ) );
+					assertTrue( isInitialized( leader.superior ) );
 					assertThat( leader.superior, not( instanceOf( HibernateProxy.class ) ) );
-					Assert.assertFalse( Hibernate.isPropertyInitialized( leader, "subordinates" ) );
+					assertFalse( isPropertyInitialized( leader, "subordinates" ) );
 
-					assertTrue( Hibernate.isPropertyInitialized( member, "superior" ) );
-					assertTrue( Hibernate.isInitialized( member.superior ) );
+					assertTrue( isPropertyInitialized( member, "superior" ) );
+					assertTrue( isInitialized( member.superior ) );
 					assertThat( member.superior, not( instanceOf( HibernateProxy.class ) ) );
-					Assert.assertFalse( Hibernate.isPropertyInitialized( member, "subordinates" ) );
+					assertFalse( isPropertyInitialized( member, "subordinates" ) );
 				}
 		);
 
@@ -119,29 +122,29 @@ public class UninitializedAssociationsInCacheTest {
 					final Employee boss = s.find( Employee.class, 1 );
 					final Employee leader = s.find( Employee.class, 2 );
 					final Employee member = s.find( Employee.class, 3 );
-					Assert.assertTrue( Hibernate.isPropertyInitialized( boss, "superior" ) );
-					Assert.assertFalse( Hibernate.isPropertyInitialized( boss, "subordinates" ) );
+					assertTrue( isPropertyInitialized( boss, "superior" ) );
+					assertFalse( isPropertyInitialized( boss, "subordinates" ) );
 
-					Assert.assertTrue( Hibernate.isPropertyInitialized( member, "superior" ) );
-					Assert.assertFalse( Hibernate.isPropertyInitialized( member, "subordinates" ) );
-					Assert.assertNull( boss.superior );
+					assertTrue( isPropertyInitialized( member, "superior" ) );
+					assertFalse( isPropertyInitialized( member, "subordinates" ) );
+					Assertions.assertNull( boss.superior );
 
-					assertTrue( Hibernate.isPropertyInitialized( boss, "superior" ) );
-					Assert.assertFalse( Hibernate.isPropertyInitialized( boss, "subordinates" ) );
-					Assert.assertEquals( leader, boss.subordinates.iterator().next() );
-					assertTrue( Hibernate.isPropertyInitialized( boss, "subordinates" ) );
+					assertTrue( isPropertyInitialized( boss, "superior" ) );
+					assertFalse( isPropertyInitialized( boss, "subordinates" ) );
+					assertEquals( leader, boss.subordinates.iterator().next() );
+					assertTrue( isPropertyInitialized( boss, "subordinates" ) );
 
-					Assert.assertTrue( Hibernate.isPropertyInitialized( leader, "superior" ) );
-					Assert.assertFalse( Hibernate.isPropertyInitialized( leader, "subordinates" ) );
-					Assert.assertEquals( boss, leader.superior );
-					Assert.assertEquals( member, leader.subordinates.iterator().next() );
-					assertTrue( Hibernate.isPropertyInitialized( leader, "subordinates" ) );
+					assertTrue( isPropertyInitialized( leader, "superior" ) );
+					assertFalse( isPropertyInitialized( leader, "subordinates" ) );
+					assertEquals( boss, leader.superior );
+					assertEquals( member, leader.subordinates.iterator().next() );
+					assertTrue( isPropertyInitialized( leader, "subordinates" ) );
 
-					Assert.assertTrue( Hibernate.isPropertyInitialized( member, "superior" ) );
-					Assert.assertFalse( Hibernate.isPropertyInitialized( member, "subordinates" ) );
-					Assert.assertEquals( leader, member.superior );
+					assertTrue( isPropertyInitialized( member, "superior" ) );
+					assertFalse( isPropertyInitialized( member, "subordinates" ) );
+					assertEquals( leader, member.superior );
 					assertTrue( member.subordinates.isEmpty() );
-					assertTrue( Hibernate.isPropertyInitialized( member, "subordinates" ) );
+					assertTrue( isPropertyInitialized( member, "subordinates" ) );
 				}
 		);
 

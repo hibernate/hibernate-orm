@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.internal;
@@ -8,7 +8,7 @@ import java.sql.Driver;
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * The default factory for {@link ConnectionCreator} instances.
@@ -25,7 +25,7 @@ public class ConnectionCreatorFactoryImpl implements ConnectionCreatorFactory {
 	@Override
 	public ConnectionCreator create(
 			Driver driver,
-			ServiceRegistryImplementor serviceRegistry,
+			ServiceRegistry serviceRegistry,
 			String url,
 			Properties connectionProps,
 			Boolean autoCommit,

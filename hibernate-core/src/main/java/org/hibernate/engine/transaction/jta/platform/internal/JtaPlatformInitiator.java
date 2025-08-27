@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.transaction.jta.platform.internal;
@@ -37,25 +37,26 @@ public class JtaPlatformInitiator implements StandardServiceInitiator<JtaPlatfor
 	@Override
 	public @Nullable JtaPlatform initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final Object setting = configurationValues.get( AvailableSettings.JTA_PLATFORM );
-		JtaPlatform platform = registry.requireService( StrategySelector.class )
-				.resolveStrategy( JtaPlatform.class, setting );
+		JtaPlatform platform =
+				registry.requireService( StrategySelector.class )
+						.resolveStrategy( JtaPlatform.class, setting );
 
 		if ( platform == null ) {
-			LOG.debug( "No JtaPlatform was specified, checking resolver" );
+			LOG.trace( "No JtaPlatform was specified, checking resolver" );
 			platform = registry.requireService( JtaPlatformResolver.class )
 					.resolveJtaPlatform( configurationValues, registry );
 		}
 
 		if ( platform == null ) {
-			LOG.debug( "No JtaPlatform was specified, checking fallback provider" );
+			LOG.trace( "No JtaPlatform was specified, checking fallback provider" );
 			platform = getFallbackProvider( configurationValues, registry );
 		}
 
-		if ( platform != null && !(platform instanceof NoJtaPlatform) ) {
-			LOG.usingJtaPlatform( platform.getClass().getName() );
+		if ( platform == null || platform instanceof NoJtaPlatform ) {
+			LOG.noJtaPlatform();
 		}
 		else {
-			LOG.noJtaPlatform();
+			LOG.usingJtaPlatform( platform.getClass().getName() );
 		}
 		return platform;
 	}

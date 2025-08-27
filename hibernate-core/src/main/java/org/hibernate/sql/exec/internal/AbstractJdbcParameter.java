@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.exec.internal;
@@ -7,6 +7,7 @@ package org.hibernate.sql.exec.internal;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -16,7 +17,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SqlExpressible;
-import org.hibernate.query.BindableType;
+import org.hibernate.type.BindableType;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.ExecutionException;
@@ -36,9 +37,15 @@ public abstract class AbstractJdbcParameter
 		implements JdbcParameter, JdbcParameterBinder, MappingModelExpressible, SqlExpressible, BasicValuedMapping {
 
 	private final JdbcMapping jdbcMapping;
+	private final @Nullable Integer parameterId;
 
 	public AbstractJdbcParameter(JdbcMapping jdbcMapping) {
+		this( jdbcMapping, null );
+	}
+
+	public AbstractJdbcParameter(JdbcMapping jdbcMapping, @Nullable Integer parameterId) {
 		this.jdbcMapping = jdbcMapping;
+		this.parameterId = parameterId;
 	}
 
 	@Override
@@ -54,6 +61,11 @@ public abstract class AbstractJdbcParameter
 	@Override
 	public MappingType getMappedType() {
 		return jdbcMapping;
+	}
+
+	@Override
+	public @Nullable Integer getParameterId() {
+		return parameterId;
 	}
 
 	@Override

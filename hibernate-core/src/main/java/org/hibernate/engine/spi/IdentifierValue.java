@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
@@ -127,7 +127,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 */
 	@Override
 	public @Nullable Boolean isUnsaved(@Nullable Object id) {
-		LOG.tracev( "ID unsaved-value: {0}", value );
+		LOG.tracef( "ID unsaved-value: %s", value );
 		return id == null || id.equals( value );
 	}
 

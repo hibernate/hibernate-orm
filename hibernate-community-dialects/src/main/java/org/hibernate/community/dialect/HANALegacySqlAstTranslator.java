@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -12,7 +12,7 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -39,7 +39,7 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.internal.TableInsertStandard;
 
-import static org.hibernate.dialect.SybaseASESqlAstTranslator.isLob;
+import static org.hibernate.dialect.sql.ast.SybaseASESqlAstTranslator.isLob;
 
 /**
  * An SQL AST translator for the Legacy HANA dialect.
@@ -152,12 +152,6 @@ public class HANALegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
 				&& !isRowsOnlyFetchClauseType( queryPart );
-	}
-
-	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		// HANA doesn't seem to support correlation, so we just report false here for simplicity
-		return false;
 	}
 
 	@Override
@@ -313,16 +307,6 @@ public class HANALegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorGtLtSyntax() {
-		return false;
-	}
-
-	@Override
 	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
 		throw new MappingException(
 				String.format(
@@ -341,10 +325,5 @@ public class HANALegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	@Override
 	public void visitValuesTableReference(ValuesTableReference tableReference) {
 		emulateValuesTableReferenceColumnAliasing( tableReference );
-	}
-
-	@Override
-	protected String getSkipLocked() {
-		return " ignore locked";
 	}
 }

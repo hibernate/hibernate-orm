@@ -3,10 +3,8 @@ lexer grammar OrderingLexer;
 
 @header {
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.grammars.ordering;
 }
@@ -139,8 +137,31 @@ COMMA		: ',';
 DOT			: '.';
 
 PLUS 		: '+';
-MINUS 		:	'-';
+MINUS 		: '-';
 MULTIPLY 	: '*';
 DIVIDE 		: '/';
 MODULO		: '%';
 
+// Not used, but necessary for error reporting
+
+EQUAL : '=';
+NOT_EQUAL : '!=' | '^=' | '<>';
+GREATER : '>';
+GREATER_EQUAL : '>=';
+LESS : '<';
+LESS_EQUAL : '<=';
+
+LEFT_BRACKET : '[';
+RIGHT_BRACKET : ']';
+LEFT_BRACE : '{';
+RIGHT_BRACE : '}';
+AMPERSAND : '&';
+SEMICOLON :	';';
+COLON : ':';
+PIPE : '|';
+DOUBLE_PIPE : '||';
+QUESTION_MARK :	'?';
+ARROW :	'->';
+BANG: '!';
+AT: '@';
+HASH: '#';

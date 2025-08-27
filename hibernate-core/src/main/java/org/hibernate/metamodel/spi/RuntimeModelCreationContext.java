@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.spi;
@@ -14,8 +14,11 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.Generator;
 import org.hibernate.mapping.GeneratorSettings;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -34,7 +37,8 @@ public interface RuntimeModelCreationContext {
 	MappingMetamodelImplementor getDomainModel();
 
 	default TypeConfiguration getTypeConfiguration() {
-		return getBootstrapContext().getTypeConfiguration();
+		return getBootstrapContext() == null ? getSessionFactory().getTypeConfiguration()
+				: getBootstrapContext().getTypeConfiguration();
 	}
 
 	default JavaTypeRegistry getJavaTypeRegistry() {
@@ -64,4 +68,11 @@ public interface RuntimeModelCreationContext {
 	Map<String, Generator> getGenerators();
 
 	GeneratorSettings getGeneratorSettings();
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	default EntityMetamodel createEntityMetamodel(PersistentClass persistentClass, EntityPersister persister) {
+		return new EntityMetamodel( persistentClass, persister, this );
+	}
 }

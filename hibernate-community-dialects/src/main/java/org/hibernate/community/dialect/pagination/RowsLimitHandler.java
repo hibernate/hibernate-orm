@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect.pagination;
@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 
 import org.hibernate.dialect.pagination.AbstractSimpleLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.compile;
@@ -30,8 +31,24 @@ public class RowsLimitHandler extends AbstractSimpleLimitHandler {
 	}
 
 	@Override
+	protected String limitClause(boolean hasFirstRow, int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
+		final String firstParameter = parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null );
+		if ( hasFirstRow ) {
+			return " rows " + firstParameter + " to " + parameterMarkerStrategy.createMarker( jdbcParameterCount + 2, null );
+		}
+		else {
+			return " rows " + firstParameter;
+		}
+	}
+
+	@Override
 	protected String offsetOnlyClause() {
 		return " rows ? to " + Integer.MAX_VALUE;
+	}
+
+	@Override
+	protected String offsetOnlyClause(int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
+		return " rows " + parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null ) + " to " + Integer.MAX_VALUE;
 	}
 
 	@Override
@@ -55,5 +72,10 @@ public class RowsLimitHandler extends AbstractSimpleLimitHandler {
 	@Override
 	public boolean supportsOffset() {
 		return true;
+	}
+
+	@Override
+	public boolean processSqlMutatesState() {
+		return false;
 	}
 }

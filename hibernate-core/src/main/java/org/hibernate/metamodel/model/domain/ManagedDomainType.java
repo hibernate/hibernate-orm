@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain;
@@ -7,8 +7,8 @@ package org.hibernate.metamodel.model.domain;
 import java.util.Collection;
 import java.util.function.Consumer;
 
+import org.hibernate.Internal;
 import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.query.sqm.SqmExpressible;
 
 import jakarta.persistence.metamodel.ManagedType;
 
@@ -17,29 +17,51 @@ import jakarta.persistence.metamodel.ManagedType;
  *
  * @author Steve Ebersole
  */
-public interface ManagedDomainType<J> extends SqmExpressible<J>, DomainType<J>, ManagedType<J> {
+public interface ManagedDomainType<J> extends DomainType<J>, ManagedType<J> {
 	/**
-	 * Get the type name.
+	 * The name of the managed type.
 	 *
 	 * @apiNote This usually returns the name of the Java class. However, for
 	 *          {@linkplain RepresentationMode#MAP dynamic models}, this returns
 	 *          the symbolic name since the Java type is {@link java.util.Map}.
 	 *
-	 * @return The type name.
-	 *
 	 * @see #getRepresentationMode()
 	 */
+	@Override
 	String getTypeName();
 
+	/**
+	 * The parent {@linkplain JpaMetamodel metamodel}.
+	 */
+	JpaMetamodel getMetamodel();
+
+	/**
+	 * The representation mode.
+	 *
+	 * @return {@link RepresentationMode#POJO POJO} for Java class entities,
+	 *         or {@link RepresentationMode#MAP MAP} for dynamic entities.
+	 */
 	RepresentationMode getRepresentationMode();
+
+	/**
+	 * The Java class of the entity type.
+	 */
+	@Override
+	default Class<J> getJavaType() {
+		return getExpressibleJavaType().getJavaTypeClass();
+	}
 
 	/**
 	 * The descriptor of the supertype of this type.
 	 */
 	ManagedDomainType<? super J> getSuperType();
 
+	/**
+	 * The descriptors of all known managed subtypes of this type.
+	 */
 	Collection<? extends ManagedDomainType<? extends J>> getSubTypes();
 
+	@Internal
 	void addSubType(ManagedDomainType<? extends J> subType);
 
 	void visitAttributes(Consumer<? super PersistentAttribute<? super J, ?>> action);
@@ -54,7 +76,14 @@ public interface ManagedDomainType<J> extends SqmExpressible<J>, DomainType<J>, 
 	PersistentAttribute<? super J,?> findAttribute(String name);
 
 	PersistentAttribute<?, ?> findSubTypesAttribute(String name);
-	PersistentAttribute<? super J, ?> findAttributeInSuperTypes(String name);
+
+	/**
+	 * @deprecated Use {@link #findAttribute(String)}
+	 */
+	@Deprecated(since = "7.0", forRemoval = true)
+	default PersistentAttribute<? super J, ?> findAttributeInSuperTypes(String name) {
+		return findAttribute( name );
+	}
 
 	SingularPersistentAttribute<? super J,?> findSingularAttribute(String name);
 	PluralPersistentAttribute<? super J, ?,?> findPluralAttribute(String name);

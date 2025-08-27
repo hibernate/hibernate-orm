@@ -1,14 +1,16 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaSetReturningFunction;
-import org.hibernate.query.derived.AnonymousTupleType;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.function.SqmSetReturningFunctionDescriptor;
@@ -26,8 +28,8 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
  * @since 7.0
  */
 @Incubating
-public abstract class SqmSetReturningFunction<T> extends AbstractSqmNode implements SqmVisitableNode,
-		JpaSetReturningFunction<T> {
+public abstract class SqmSetReturningFunction<T> extends AbstractSqmNode
+		implements SqmVisitableNode, JpaSetReturningFunction<T> {
 	// this function-name is the one used to resolve the descriptor from
 	// the function registry (which may or may not be a db function name)
 	private final String functionName;
@@ -78,19 +80,34 @@ public abstract class SqmSetReturningFunction<T> extends AbstractSqmNode impleme
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( functionName );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( functionName );
 		if ( arguments.isEmpty() ) {
-			sb.append( "()" );
-			return;
+			hql.append( "()" );
 		}
-		sb.append( '(' );
-		arguments.get( 0 ).appendHqlString( sb );
-		for ( int i = 1; i < arguments.size(); i++ ) {
-			sb.append( ", " );
-			arguments.get( i ).appendHqlString( sb );
+		else {
+			hql.append( '(' );
+			arguments.get( 0 ).appendHqlString( hql, context );
+			for ( int i = 1; i < arguments.size(); i++ ) {
+				hql.append( ", " );
+				arguments.get( i ).appendHqlString( hql, context );
+			}
+			hql.append( ')' );
 		}
+	}
 
-		sb.append( ')' );
+	@Override
+	// TODO: override on all subtypes
+	public boolean equals(Object other) {
+		return other instanceof SqmSetReturningFunction<?> that
+			&& Objects.equals( this.functionName, that.functionName )
+			&& Objects.equals( this.arguments, that.arguments )
+			&& this.getClass() == that.getClass()
+			&& Objects.equals( this.toHqlString(), that.toHqlString() );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( functionName, arguments, getClass() );
 	}
 }

@@ -1,12 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.extract.spi;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -38,7 +37,7 @@ public interface ExtractionContext {
 			String queryString,
 			Object[] positionalParameters,
 			ResultSetProcessor<T> resultSetProcessor) throws SQLException {
-		try (PreparedStatement statement = getJdbcConnection().prepareStatement( queryString )) {
+		try ( var statement = getJdbcConnection().prepareStatement( queryString ) ) {
 			if ( positionalParameters != null ) {
 				for ( int i = 0 ; i < positionalParameters.length ; i++ ) {
 					statement.setObject( i + 1, positionalParameters[i] );

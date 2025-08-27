@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.xml;
@@ -21,7 +21,7 @@ import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.function.SelfRenderingSqmSetReturningFunction;
@@ -437,9 +437,8 @@ public class HANAXmlTableFunction extends XmlTableFunction {
 			if ( isBoolean( type ) ) {
 				//noinspection unchecked
 				final JdbcLiteralFormatter<Object> jdbcLiteralFormatter = type.getJdbcLiteralFormatter();
-				final SessionFactoryImplementor sessionFactory = converter.getCreationContext().getSessionFactory();
-				final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
-				final WrapperOptions wrapperOptions = sessionFactory.getWrapperOptions();
+				final Dialect dialect = converter.getCreationContext().getDialect();
+				final WrapperOptions wrapperOptions = converter.getCreationContext().getWrapperOptions();
 				final Object trueValue = type.convertToRelationalValue( true );
 				final Object falseValue = type.convertToRelationalValue( false );
 				final String trueFragment = jdbcLiteralFormatter.toJdbcLiteral( trueValue, dialect, wrapperOptions );

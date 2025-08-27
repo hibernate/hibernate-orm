@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.loading.multiLoad;
@@ -46,7 +46,7 @@ public class MultiIdEntityLoadTests {
 
 	@Test
 	@JiraKey( "HHH-17201" )
-	public void testSimpleEntityUnOrderedMultiLoad(SessionFactoryScope scope) {
+	public void testSimpleEntityUnorderedMultiLoad(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					List<Integer> idList = List.of( 0, 1 );
@@ -122,7 +122,7 @@ public class MultiIdEntityLoadTests {
 	//		````
 
 	@Test
-	public void testBasicEntityUnOrderedDeleteCheckLoad(SessionFactoryScope scope) {
+	public void testBasicEntityUnorderedDeleteCheckLoad(SessionFactoryScope scope) {
 
 		// using un-ordered results
 		scope.inTransaction(
@@ -205,12 +205,7 @@ public class MultiIdEntityLoadTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete BasicEntity" ).executeUpdate();
-					session.createQuery( "delete EntityWithAggregateId" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -48,7 +48,7 @@ public abstract class AbstractJavaType<T> implements BasicJavaType<T>, Serializa
 	protected AbstractJavaType(Type type, MutabilityPlan<T> mutabilityPlan) {
 		this.type = type;
 		this.mutabilityPlan = mutabilityPlan;
-		this.comparator = Comparable.class.isAssignableFrom( getJavaTypeClass() )
+		this.comparator = type != null && Comparable.class.isAssignableFrom( getJavaTypeClass() )
 				? (Comparator<T>) ComparableComparator.INSTANCE
 				: null;
 	}

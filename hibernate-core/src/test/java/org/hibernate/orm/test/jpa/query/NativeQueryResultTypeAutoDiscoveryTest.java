@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.query;
@@ -24,6 +24,8 @@ import org.hibernate.annotations.Nationalized;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
+import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
@@ -38,8 +40,9 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
@@ -72,6 +75,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hibernate.Hibernate.getLobHelper;
 
 /**
  * Test how the type of results are detected from the JDBC type in native queries,
@@ -150,10 +154,12 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "No support for the tinyint datatype so we use smallint")
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "No support for the tinyint datatype so we use smallint")
 	@SkipForDialect(dialectClass = AbstractTransactSQLDialect.class, matchSubTypes = true, reason = "No support for the tinyint datatype so we use smallint")
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "No support for the tinyint datatype so we use smallint")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "No support for the tinyint datatype so we use smallint")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle maps tinyint to number")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "No support for the tinyint datatype so we use smallint")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase maps tinyint to smallint")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "informix maps tinyint to smallint")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.Turns tinyints into shorts in result sets and advertises the type as short in the metadata")
 	public void tinyintType() {
 		createEntityManagerFactory( TinyintEntity.class );
 		doTest( TinyintEntity.class, (byte)127 );
@@ -183,9 +189,10 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "Value is too big for the maximum allowed precision of DB2")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Value is too big for the maximum allowed precision of Oracle")
 	@SkipForDialect(dialectClass = AbstractTransactSQLDialect.class, matchSubTypes = true, reason = "Value is too big for the maximum allowed precision of SQL Server and Sybase")
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "Value is too big for the maximum allowed precision of HANA")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "Value is too big for the maximum allowed precision of HANA")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Value is too big for the maximum allowed precision of Firebird")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Value is too big for the maximum allowed precision of Altibase")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "The scale exceeds the maximum precision specified")
 	public void numericType() {
 		createEntityManagerFactory(
 				NumericEntity.class
@@ -198,9 +205,10 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "Value is too big for the maximum allowed precision of DB2")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Value is too big for the maximum allowed precision of Oracle")
 	@SkipForDialect(dialectClass = AbstractTransactSQLDialect.class, matchSubTypes = true, reason = "Value is too big for the maximum allowed precision of SQL Server and Sybase")
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "Value is too big for the maximum allowed precision of HANA")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "Value is too big for the maximum allowed precision of HANA")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Value is too big for the maximum allowed precision of Firebird")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Value is too big for the maximum allowed precision of Altibase")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "The scale exceeds the maximum precision specified")
 	public void decimalType() {
 		createEntityManagerFactory( DecimalEntity.class );
 		doTest( DecimalEntity.class, new BigDecimal( "5464384284258458485484848458.48465843584584684" )  );
@@ -221,7 +229,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle maps LONGVARCHAR to CLOB")
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 maps LONGVARCHAR to CLOB")
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase maps LONGVARCHAR to CLOB")
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA maps LONGVARCHAR to CLOB")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA maps LONGVARCHAR to CLOB")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase maps LONGVARCHAR to CLOB")
 	public void longCharType() {
 		createEntityManagerFactory(
@@ -261,7 +269,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 maps LONGVARBINARY to BLOB")
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase maps LONGVARBINARY to BLOB")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase maps LONGVARBINARY to BLOB")
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA maps LONGVARCHAR to BLOB")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA maps LONGVARCHAR to BLOB")
 	public void longBinaryType() {
 		createEntityManagerFactory(
 				LongvarbinaryEntity.class
@@ -282,12 +290,12 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 		doTest(
 				ClobEntity.class,
 				Clob.class,
-				session -> session.getLobHelper().createClob( "some text" )
+				session -> getLobHelper().createClob( "some text" )
 		);
 		doTest(
 				BlobEntity.class,
 				Blob.class,
-				session -> session.getLobHelper().createBlob( "some text".getBytes() )
+				session -> getLobHelper().createBlob( "some text".getBytes() )
 		);
 	}
 
@@ -296,6 +304,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "EDB maps DATE and TIME to TIMESTAMP")
 	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Sybase maps DATE and TIME to TIMESTAMP", matchSubTypes = true)
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase maps DATE and TIME to TIMESTAMP")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.GaussDB's Oracle model maps DATE and TIME to TIMESTAMP")
 	public void dateTimeTypes() {
 		createEntityManagerFactory(
 				DateEntity.class,
@@ -327,9 +336,8 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 		doTest( TimestampEntity.class, new Timestamp( zonedDateTime.toInstant().toEpochMilli() ) );
 	}
 
-	@SuppressWarnings("unchecked")
 	private <E extends TestedEntity<T>, T> void doTest(Class<E> entityType, T testedValue) {
-		this.doTest( entityType, (Class<? extends T>) testedValue.getClass(), ignored -> testedValue );
+		this.doTest( entityType, ReflectHelper.getClass( testedValue ), ignored -> testedValue );
 	}
 
 	private <E extends TestedEntity<T>, T> void doTest(Class<E> entityType, Class<? extends T> testedValueClass,

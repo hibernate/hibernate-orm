@@ -1,31 +1,23 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot;
-
-import java.io.File;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
-import org.hibernate.boot.jaxb.internal.XmlSources;
+import org.hibernate.boot.jaxb.internal.CacheableFileXmlSource;
+import org.hibernate.boot.jaxb.internal.FileXmlSource;
+import org.hibernate.boot.jaxb.internal.InputStreamAccessXmlSource;
+import org.hibernate.boot.jaxb.internal.InputStreamXmlSource;
+import org.hibernate.boot.jaxb.internal.JarFileEntryXmlSource;
+import org.hibernate.boot.jaxb.internal.UrlXmlSource;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
-import org.hibernate.boot.jaxb.spi.XmlSource;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -37,6 +29,20 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.SerializationException;
 
+import java.io.File;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+
+import static java.util.Collections.addAll;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
@@ -128,45 +134,44 @@ public class MetadataSources implements Serializable {
 	/**
 	 * @deprecated Prefer {@linkplain #getMappingXmlBindings()} and/or {@linkplain #getHbmXmlBindings()}
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Deprecated(since = "7.0")
-	public List<Binding<JaxbBindableMappingDescriptor>> getXmlBindings() {
+	public List<? extends Binding<? extends JaxbBindableMappingDescriptor>> getXmlBindings() {
 		if ( mappingXmlBindings == null && hbmXmlBindings == null ) {
-			return Collections.emptyList();
+			return emptyList();
 		}
-
-		if ( hbmXmlBindings == null ) {
-			return (List) mappingXmlBindings;
+		else if ( hbmXmlBindings == null ) {
+			return mappingXmlBindings;
 		}
-
-		if ( mappingXmlBindings == null ) {
-			return (List) hbmXmlBindings;
+		else if ( mappingXmlBindings == null ) {
+			return hbmXmlBindings;
 		}
-
-		final ArrayList<Binding<JaxbBindableMappingDescriptor>> combined = arrayList( mappingXmlBindings.size() + hbmXmlBindings.size() );
-		combined.addAll( (List) mappingXmlBindings );
-		combined.addAll( (List) hbmXmlBindings );
-		return combined;
+		else {
+			final ArrayList<Binding<? extends JaxbBindableMappingDescriptor>> combined =
+					arrayList( mappingXmlBindings.size() + hbmXmlBindings.size() );
+			combined.addAll( mappingXmlBindings );
+			combined.addAll( hbmXmlBindings );
+			return combined;
+		}
 	}
 
 	public List<Binding<JaxbEntityMappingsImpl>> getMappingXmlBindings() {
-		return mappingXmlBindings == null ? Collections.emptyList() : mappingXmlBindings;
+		return mappingXmlBindings == null ? emptyList() : mappingXmlBindings;
 	}
 
 	public List<Binding<JaxbHbmHibernateMapping>> getHbmXmlBindings() {
-		return hbmXmlBindings == null ? Collections.emptyList() : hbmXmlBindings;
+		return hbmXmlBindings == null ? emptyList() : hbmXmlBindings;
 	}
 
 	public Collection<String> getAnnotatedPackages() {
-		return annotatedPackages == null ? Collections.emptySet() : annotatedPackages;
+		return annotatedPackages == null ? emptySet() : annotatedPackages;
 	}
 
 	public Collection<Class<?>> getAnnotatedClasses() {
-		return annotatedClasses == null ? Collections.emptySet() : annotatedClasses;
+		return annotatedClasses == null ? emptySet() : annotatedClasses;
 	}
 
 	public Collection<String> getAnnotatedClassNames() {
-		return annotatedClassNames == null ? Collections.emptySet() : annotatedClassNames;
+		return annotatedClassNames == null ? emptySet() : annotatedClassNames;
 	}
 
 	public Map<String,Class<?>> getExtraQueryImports() {
@@ -202,7 +207,7 @@ public class MetadataSources implements Serializable {
 	 */
 	private MetadataBuilder getCustomBuilderOrDefault(MetadataBuilderImpl defaultBuilder) {
 
-		Collection<MetadataBuilderFactory> discoveredBuilderFactories =
+		final Collection<MetadataBuilderFactory> discoveredBuilderFactories =
 				serviceRegistry.requireService( ClassLoaderService.class )
 						.loadJavaServices( MetadataBuilderFactory.class );
 
@@ -269,7 +274,7 @@ public class MetadataSources implements Serializable {
 			if ( this.annotatedClasses == null ) {
 				this.annotatedClasses = new LinkedHashSet<>();
 			}
-			Collections.addAll( this.annotatedClasses, annotatedClasses );
+			addAll( this.annotatedClasses, annotatedClasses );
 		}
 		return this;
 	}
@@ -297,7 +302,7 @@ public class MetadataSources implements Serializable {
 	 */
 	public MetadataSources addAnnotatedClassNames(String... annotatedClassNames) {
 		if ( annotatedClassNames != null && annotatedClassNames.length > 0 ) {
-			Collections.addAll( this.annotatedClassNames, annotatedClassNames );
+			addAll( this.annotatedClassNames, annotatedClassNames );
 		}
 		return this;
 	}
@@ -306,9 +311,7 @@ public class MetadataSources implements Serializable {
 		if ( extraQueryImports == null ) {
 			extraQueryImports = new HashMap<>();
 		}
-
 		extraQueryImports.put( importedName, target );
-
 		return this;
 	}
 
@@ -359,9 +362,8 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addResource(String name) {
-		final XmlSource xmlSource = XmlSources.fromResource( name, classLoaderService );
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
-		addXmlBinding( xmlSource.doBind( binderAccess.getMappingBinder() ) );
+		addXmlBinding( UrlXmlSource.fromResource( name, classLoaderService, binderAccess.getMappingBinder() ) );
 		return this;
 	}
 
@@ -389,9 +391,8 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addFile(File file) {
-		final XmlSource xmlSource = XmlSources.fromFile( file );
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
-		addXmlBinding( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
+		addXmlBinding( FileXmlSource.fromFile( file, binderAccess.getMappingBinder() ) );
 		return this;
 	}
 
@@ -511,9 +512,13 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addCacheableFile(File file, File cacheDirectory) {
-		final XmlSource xmlSource = XmlSources.fromCacheableFile( file, cacheDirectory );
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
-		addXmlBinding( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
+		addXmlBinding( CacheableFileXmlSource.fromCacheableFile(
+				file,
+				cacheDirectory,
+				false,
+				binderAccess.getMappingBinder()
+		) );
 		return this;
 	}
 
@@ -531,9 +536,13 @@ public class MetadataSources implements Serializable {
 	 * @throws MappingNotFoundException Indicates that the cached file was not found or was not usable.
 	 */
 	public MetadataSources addCacheableFileStrictly(File file) throws SerializationException {
-		final XmlSource xmlSource = XmlSources.fromCacheableFile( file, true );
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
-		addXmlBinding( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
+		addXmlBinding( CacheableFileXmlSource.fromCacheableFile(
+				file,
+				null,
+				true,
+				binderAccess.getMappingBinder()
+		) );
 		return this;
 	}
 
@@ -551,9 +560,13 @@ public class MetadataSources implements Serializable {
 	 * @throws MappingNotFoundException Indicates that the cached file was not found or was not usable.
 	 */
 	public MetadataSources addCacheableFileStrictly(File file, File cacheDir) throws SerializationException {
-		final XmlSource xmlSource = XmlSources.fromCacheableFile( file, cacheDir, true );
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
-		addXmlBinding( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
+		addXmlBinding( CacheableFileXmlSource.fromCacheableFile(
+				file,
+				cacheDir,
+				true,
+				binderAccess.getMappingBinder()
+		) );
 		return this;
 	}
 
@@ -565,9 +578,8 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addInputStream(InputStreamAccess xmlInputStreamAccess) {
-		final XmlSource xmlSource = XmlSources.fromStream( xmlInputStreamAccess );
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
-		addXmlBinding( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
+		addXmlBinding( InputStreamAccessXmlSource.fromStreamAccess( xmlInputStreamAccess, binderAccess.getMappingBinder() ) );
 		return this;
 	}
 
@@ -579,9 +591,8 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addInputStream(InputStream xmlInputStream) {
-		final XmlSource xmlSource = XmlSources.fromStream( xmlInputStream );
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
-		addXmlBinding( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
+		addXmlBinding( InputStreamXmlSource.fromStream( xmlInputStream, binderAccess.getMappingBinder() ) );
 		return this;
 	}
 
@@ -593,9 +604,8 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addURL(URL url) {
-		final XmlSource xmlSource = XmlSources.fromUrl( url );
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
-		addXmlBinding( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
+		addXmlBinding( UrlXmlSource.fromUrl( url, binderAccess.getMappingBinder() ) );
 		return this;
 	}
 
@@ -611,10 +621,7 @@ public class MetadataSources implements Serializable {
 	 */
 	public MetadataSources addJar(File jar) {
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
-		XmlSources.fromJar(
-				jar,
-				xmlSource -> addXmlBinding( xmlSource.doBind( binderAccess.getMappingBinder() ) )
-		);
+		JarFileEntryXmlSource.fromJar( jar, binderAccess.getMappingBinder(), this::addXmlBinding );
 		return this;
 	}
 
@@ -632,8 +639,8 @@ public class MetadataSources implements Serializable {
 	 * processing the contained mapping documents.
 	 */
 	public MetadataSources addDirectory(File dir) {
-		File[] files = dir.listFiles();
-		if ( files != null && files.length > 0 ) {
+		final File[] files = dir.listFiles();
+		if ( files != null ) {
 			for ( File file : files ) {
 				if ( file.isDirectory() ) {
 					addDirectory( file );

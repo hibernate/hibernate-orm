@@ -1,18 +1,18 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query;
 
 import java.util.function.Consumer;
 
+import org.hibernate.query.Query;
 import org.hibernate.query.common.JoinType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaDerivedJoin;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSubQuery;
-import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -67,7 +67,7 @@ public class SubQueryInFromInverseOneTests {
 					cq.multiselect( root.get( "name" ), a.get( "contact" ).get( "id" ) );
 					cq.orderBy( cb.asc( root.get( "id" ) ) );
 
-					final QueryImplementor<Tuple> query = session.createQuery(
+					final Query<Tuple> query = session.createQuery(
 							"select c.name, a.contact.id from Contact c " +
 									"left join lateral (" +
 									"select alt as contact " +
@@ -116,7 +116,7 @@ public class SubQueryInFromInverseOneTests {
 					cq.multiselect( root.get( "name" ), alt.get( "name" ) );
 					cq.orderBy( cb.asc( root.get( "id" ) ) );
 
-					final QueryImplementor<Tuple> query = session.createQuery(
+					final Query<Tuple> query = session.createQuery(
 							"select c.name, alt.name from Contact c " +
 									"left join lateral (" +
 									"select alt as contact " +
@@ -163,7 +163,7 @@ public class SubQueryInFromInverseOneTests {
 					cq.multiselect( root.get( "name" ), a.get( "contact" ).get( "name" ) );
 					cq.orderBy( cb.asc( root.get( "id" ) ) );
 
-					final QueryImplementor<Tuple> query = session.createQuery(
+					final Query<Tuple> query = session.createQuery(
 							"select c.name, a.contact.name from Contact c " +
 									"left join lateral (" +
 									"select alt as contact " +
@@ -219,10 +219,7 @@ public class SubQueryInFromInverseOneTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createQuery( "update Contact set primaryContact = null" ).executeUpdate();
-			session.createQuery( "delete Contact" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	/**

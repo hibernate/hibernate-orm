@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetomany;
@@ -19,6 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.persistence.criteria.Nulls;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
@@ -31,7 +32,6 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.Query;
 import org.hibernate.sql.SimpleSelect;
 
@@ -517,7 +517,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.DEFAULT_NULL_ORDERING, NullPrecedence.LAST );
+		configuration.setProperty( AvailableSettings.DEFAULT_NULL_ORDERING, Nulls.LAST );
 		configuration.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
 	}
 

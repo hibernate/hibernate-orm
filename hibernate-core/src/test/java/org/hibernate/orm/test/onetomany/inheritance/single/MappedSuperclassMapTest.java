@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.onetomany.inheritance.single;
@@ -121,10 +121,7 @@ public class MappedSuperclassMapTest {
 
 	@AfterEach
 	protected void cleanupTestData(SessionFactoryScope scope) throws Exception {
-		scope.inTransaction( sess -> {
-			sess.createQuery( "delete from Book" ).executeUpdate();
-			sess.createQuery( "delete from Library" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 }

@@ -1,19 +1,18 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.enhanced;
 
-import java.lang.invoke.MethodHandles;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Map;
 import java.util.Properties;
 import java.util.function.BiConsumer;
 
+import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
@@ -34,33 +33,39 @@ import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.generator.GeneratorCreationContext;
-import org.hibernate.id.ExportableColumn;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.id.PersistentIdentifierGenerator;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.SimpleSelect;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
-import org.jboss.logging.Logger;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Properties;
+import java.util.function.BiConsumer;
 
-import static java.util.Collections.singletonMap;
 import static org.hibernate.boot.model.internal.GeneratorBinder.applyIfNotEmpty;
+import static org.hibernate.id.enhanced.TableGeneratorLogger.TABLE_GENERATOR_MESSAGE_LOGGER;
 import static org.hibernate.id.IdentifierGeneratorHelper.getNamingStrategy;
 import static org.hibernate.id.enhanced.OptimizerFactory.determineImplicitOptimizerName;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
-import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
@@ -134,11 +139,6 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
  * @author Steve Ebersole
  */
 public class TableGenerator implements PersistentIdentifierGenerator {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			TableGenerator.class.getName()
-	);
 
 	/**
 	 * By default, in the absence of a {@value #SEGMENT_VALUE_PARAM} setting, we use a single row for all
@@ -466,7 +466,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	protected String determineDefaultSegmentValue(Properties params) {
 		final boolean preferSegmentPerEntity = getBoolean( CONFIG_PREFER_SEGMENT_PER_ENTITY, params );
 		final String defaultToUse = preferSegmentPerEntity ? params.getProperty( TABLE ) : DEF_SEGMENT_VALUE;
-		LOG.usingDefaultIdGeneratorSegmentValue( qualifiedTableName.render(), segmentColumnName, defaultToUse );
+		TABLE_GENERATOR_MESSAGE_LOGGER.usingDefaultIdGeneratorSegmentValue( qualifiedTableName.render(), segmentColumnName, defaultToUse );
 		return defaultToUse;
 	}
 
@@ -492,14 +492,13 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	}
 
 	protected String buildSelectQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {
-		final String alias = "tbl";
-		final String query = "select " + qualify( alias, valueColumnName )
-				+ " from " + formattedPhysicalTableName + ' ' + alias
-				+ " where " + qualify( alias, segmentColumnName ) + "=?";
 		final LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
-		lockOptions.setAliasSpecificLockMode( alias, LockMode.PESSIMISTIC_WRITE );
-		final Map<String,String[]> updateTargetColumnsMap = singletonMap( alias, new String[] { valueColumnName } );
-		return context.getDialect().applyLocksToSql( query, lockOptions, updateTargetColumnsMap );
+		final SimpleSelect select = new SimpleSelect( context.getDialect() )
+				.addColumn( valueColumnName )
+				.setTableName( formattedPhysicalTableName )
+				.addRestriction( segmentColumnName )
+				.setLockOptions( lockOptions );
+		return select.toStatementString();
 	}
 
 	protected String buildUpdateQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {
@@ -565,7 +564,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		final IntegralDataTypeHolder value = makeValue();
 		int rows;
 		do {
-
+			TABLE_GENERATOR_MESSAGE_LOGGER.retrievingCurrentValueForSegment( segmentValue );
 			try ( PreparedStatement selectPS = prepareStatement( connection, selectQuery, logger, listener, session ) ) {
 				selectPS.setString( 1, segmentValue );
 				final ResultSet selectRS = executeQuery( selectPS, listener, selectQuery, session );
@@ -573,8 +572,8 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 					final long initializationValue = storeLastUsedValue ? initialValue - 1 : initialValue;
 					value.initialize( initializationValue );
 
+					TABLE_GENERATOR_MESSAGE_LOGGER.insertingInitialValueForSegment( value, segmentValue );
 					try ( PreparedStatement statement = prepareStatement( connection, insertQuery, logger, listener, session ) ) {
-						LOG.tracef( "binding parameter [%s] - [%s]", 1, segmentValue );
 						statement.setString( 1, segmentValue );
 						value.bind( statement, 2 );
 						executeUpdate( statement, listener, insertQuery, session);
@@ -583,30 +582,36 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 				else {
 					final int defaultValue = storeLastUsedValue ? 0 : 1;
 					value.initialize( selectRS, defaultValue );
+					if ( selectRS.wasNull() ) {
+						throw new HibernateException(
+								String.format( "%s for %s '%s' is null",
+										valueColumnName, segmentColumnName,
+										segmentValue ) );
+					}
 				}
 				selectRS.close();
 			}
 			catch (SQLException e) {
-				LOG.unableToReadOrInitHiValue( e );
+				TABLE_GENERATOR_MESSAGE_LOGGER.unableToReadOrInitializeHiValue( physicalTableName.render(), e );
 				throw e;
 			}
 
-
+			final IntegralDataTypeHolder updateValue = value.copy();
+			if ( optimizer.applyIncrementSizeToSourceValues() ) {
+				updateValue.add( incrementSize );
+			}
+			else {
+				updateValue.increment();
+			}
+			TABLE_GENERATOR_MESSAGE_LOGGER.updatingCurrentValueForSegment( updateValue, segmentValue );
 			try ( PreparedStatement statement = prepareStatement( connection, updateQuery, logger, listener, session ) ) {
-				final IntegralDataTypeHolder updateValue = value.copy();
-				if ( optimizer.applyIncrementSizeToSourceValues() ) {
-					updateValue.add( incrementSize );
-				}
-				else {
-					updateValue.increment();
-				}
 				updateValue.bind( statement, 1 );
 				value.bind( statement, 2 );
 				statement.setString( 3, segmentValue );
 				rows = executeUpdate( statement, listener, updateQuery, session );
 			}
 			catch (SQLException e) {
-				LOG.unableToUpdateQueryHiValue( physicalTableName.render(), e );
+				TABLE_GENERATOR_MESSAGE_LOGGER.unableToUpdateHiValue( physicalTableName.render(), e );
 				throw e;
 			}
 		}
@@ -623,8 +628,8 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			SessionEventListenerManager listener,
 			SharedSessionContractImplementor session) throws SQLException {
 		logger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent creationEvent = eventManager.beginJdbcPreparedStatementCreationEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent creationEvent = eventMonitor.beginJdbcPreparedStatementCreationEvent();
 		final StatisticsImplementor stats = session.getFactory().getStatistics();
 		try {
 			listener.jdbcPrepareStatementStart();
@@ -634,7 +639,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			return connection.prepareStatement( sql );
 		}
 		finally {
-			eventManager.completeJdbcPreparedStatementCreationEvent( creationEvent, sql );
+			eventMonitor.completeJdbcPreparedStatementCreationEvent( creationEvent, sql );
 			listener.jdbcPrepareStatementEnd();
 			if ( stats != null && stats.isStatisticsEnabled() ) {
 				stats.closeStatement();
@@ -647,14 +652,14 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			SessionEventListenerManager listener,
 			String sql,
 			SharedSessionContractImplementor session) throws SQLException {
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent executionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			listener.jdbcExecuteStatementStart();
 			return ps.executeUpdate();
 		}
 		finally {
-			eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
+			eventMonitor.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 			listener.jdbcExecuteStatementEnd();
 		}
 	}
@@ -664,14 +669,14 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			SessionEventListenerManager listener,
 			String sql,
 			SharedSessionContractImplementor session) throws SQLException {
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent executionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			listener.jdbcExecuteStatementStart();
 			return ps.executeQuery();
 		}
 		finally {
-			eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
+			eventMonitor.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 			listener.jdbcExecuteStatementEnd();
 		}
 	}
@@ -695,14 +700,13 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 			final BasicTypeRegistry basicTypeRegistry = database.getTypeConfiguration().getBasicTypeRegistry();
 			// todo : not sure the best solution here.  do we add the columns if missing?  other?
-			final Column segmentColumn = new ExportableColumn(
+			final DdlTypeRegistry ddlTypeRegistry = database.getTypeConfiguration().getDdlTypeRegistry();
+			final Column segmentColumn = ExportableColumnHelper.column(
 					database,
 					table,
 					segmentColumnName,
 					basicTypeRegistry.resolve( StandardBasicTypes.STRING ),
-					database.getTypeConfiguration()
-							.getDdlTypeRegistry()
-							.getTypeName( Types.VARCHAR, Size.length( segmentValueLength ) )
+					ddlTypeRegistry.getTypeName( Types.VARCHAR, Size.length( segmentValueLength ) )
 			);
 			segmentColumn.setNullable( false );
 			table.addColumn( segmentColumn );
@@ -711,11 +715,13 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			table.setPrimaryKey( new PrimaryKey( table ) );
 			table.getPrimaryKey().addColumn( segmentColumn );
 
-			final Column valueColumn = new ExportableColumn(
+			final BasicType<?> type = basicTypeRegistry.resolve( StandardBasicTypes.LONG );
+			final Column valueColumn = ExportableColumnHelper.column(
 					database,
 					table,
 					valueColumnName,
-					basicTypeRegistry.resolve( StandardBasicTypes.LONG )
+					type,
+					ddlTypeRegistry.getTypeName( type.getJdbcType().getDdlTypeCode(), database.getDialect() )
 			);
 			table.addColumn( valueColumn );
 		}

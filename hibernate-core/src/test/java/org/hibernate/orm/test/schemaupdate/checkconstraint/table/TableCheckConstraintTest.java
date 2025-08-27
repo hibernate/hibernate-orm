@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate.checkconstraint.table;
@@ -14,6 +14,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
@@ -31,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @BaseUnitTest
 @JiraKey("HHH-18054")
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsColumnCheck.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTableCheck.class)
 public class TableCheckConstraintTest {
 	static final String CONSTRAINTS = "NAME_COLUMN is not null";
 	static final String SECONDARY_TABLE_CONSTRAINTS = "SECOND_NAME is not null";
@@ -175,9 +176,10 @@ public class TableCheckConstraintTest {
 			String[] fileContent,
 			String tableName,
 			String secondaryTableConstraints) {
-		for ( int i = 0; i < fileContent.length; i++ ) {
-			String statement = fileContent[i].toUpperCase( Locale.ROOT );
-			if ( statement.contains( "CREATE TABLE " + tableName.toUpperCase( Locale.ROOT ) ) ) {
+		final String createTableString = DialectContext.getDialect().getCreateTableString().toUpperCase( Locale.ROOT );
+		for ( String string : fileContent ) {
+			String statement = string.toUpperCase( Locale.ROOT );
+			if ( statement.contains( createTableString + " " + tableName.toUpperCase( Locale.ROOT ) ) ) {
 				if ( statement.contains( secondaryTableConstraints.toUpperCase( Locale.ROOT ) ) ) {
 					return true;
 				}
@@ -186,10 +188,10 @@ public class TableCheckConstraintTest {
 		return false;
 	}
 
-	private void createSchema(Class... annotatedClasses) {
+	private void createSchema(Class<?>... annotatedClasses) {
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 
-		for ( Class c : annotatedClasses ) {
+		for ( Class<?> c : annotatedClasses ) {
 			metadataSources.addAnnotatedClass( c );
 		}
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();

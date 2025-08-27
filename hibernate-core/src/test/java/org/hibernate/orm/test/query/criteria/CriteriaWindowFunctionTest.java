@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.criteria;
@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -105,9 +106,7 @@ public class CriteriaWindowFunctionTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> session.createMutationQuery( "delete from EntityOfBasics" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -201,6 +200,7 @@ public class CriteriaWindowFunctionTest {
 	@Test
 	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "No support for nth_value function")
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for nth_value function")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "No support for nth_value function")
 	public void testNthValue(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -255,7 +255,7 @@ public class CriteriaWindowFunctionTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for percent_rank and cume_dist functions")
+	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for percent_rank and cume_dist functions before DB2 11")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "No support for percent_rank and cume_dist functions with over clause")
 	public void testReusableWindow(SessionFactoryScope scope) {
 		scope.inTransaction(

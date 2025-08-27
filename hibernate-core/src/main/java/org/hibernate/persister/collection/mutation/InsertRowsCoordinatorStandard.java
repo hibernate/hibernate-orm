@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.collection.mutation;
@@ -65,8 +65,8 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 			operationGroup = createOperationGroup();
 		}
 
-		if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
-			MODEL_MUTATION_LOGGER.debugf(
+		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+			MODEL_MUTATION_LOGGER.tracef(
 					"Inserting collection rows - %s : %s",
 					mutationTarget.getRolePath(),
 					id
@@ -87,7 +87,7 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 			final Iterator<?> entries = collection.entries( collectionDescriptor );
 			collection.preInsert( collectionDescriptor );
 			if ( !entries.hasNext() ) {
-				MODEL_MUTATION_LOGGER.debugf(
+				MODEL_MUTATION_LOGGER.tracef(
 						"No collection rows to insert - %s : %s",
 						mutationTarget.getRolePath(),
 						id
@@ -118,7 +118,8 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 				entryCount++;
 			}
 
-			MODEL_MUTATION_LOGGER.debugf( "Done inserting `%s` collection rows : %s", entryCount, mutationTarget.getRolePath() );
+			MODEL_MUTATION_LOGGER.tracef( "Done inserting %s collection rows : %s",
+					entryCount, mutationTarget.getRolePath() );
 
 		}
 		finally {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.uuid;
@@ -13,7 +13,6 @@ import org.hibernate.Internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.UUIDGenerationStrategy;
 
-import static java.time.temporal.ChronoUnit.MILLIS;
 
 /**
  * Implements UUID Version 7 generation strategy as defined by the <a href="https://datatracker.ietf.org/doc/html/rfc9562#name-uuid-version-7">RFC 9562</a>.
@@ -26,8 +25,7 @@ import static java.time.temporal.ChronoUnit.MILLIS;
  *         to guarantee additional monotonicity.
  *     </li>
  *     <li>2 bits - variant field, set to 0b10.</li>
- *     <li>14 bits - counter to guarantee additional monotonicity, resets to 0 when timestamp changes. </li>
- *     <li>48 bits - pseudorandom data to provide uniqueness.</li>
+ *     <li>62 bits - pseudorandom counter to guarantee additional monotonicity, uniqueness, and good entropy.</li>
  * </ul>
  *
  * @author Cedomir Igaly
@@ -37,43 +35,47 @@ import static java.time.temporal.ChronoUnit.MILLIS;
  */
 public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGenerator {
 
+	private static final long MAX_RANDOM_SEQUENCE = 0x3FFF_FFFF_FFFF_FFFFL;
+
 	public static final UuidVersion7Strategy INSTANCE = new UuidVersion7Strategy();
 
-	private static class Holder {
+	@Internal
+	public static class Holder {
 		private static final SecureRandom numberGenerator = new SecureRandom();
 
 	}
 
-	public record State(Instant lastTimestamp, int lastSequence) {
+	public record State(Instant lastTimestamp, long lastSequence, long nanos) {
+
+		State(Instant lastTimestamp, long lastSequence) {
+			this( lastTimestamp, lastSequence, nanos( lastTimestamp ) );
+		}
+
 		public long millis() {
 			return lastTimestamp.toEpochMilli();
 		}
 
-		public long nanos() {
-			return (long) ( ( lastTimestamp.getNano() % 1_000_000L ) * 0.004096 );
+		private static long nanos(Instant timestamp) {
+			return (long) ((timestamp.getNano() % 1_000_000L) * 0.004096);
 		}
 
 		public State getNextState() {
 			final Instant now = Instant.now();
-			if ( lastTimestamp.toEpochMilli() < now.toEpochMilli() ) {
-				return new State(
-						now.truncatedTo( MILLIS ),
-						randomSequence()
-				);
+			if ( lastTimestamp.toEpochMilli() < now.toEpochMilli() ||
+				lastTimestamp.toEpochMilli() == now.toEpochMilli() && nanos < nanos( now ) ) {
+				return new State( now, randomSequence() );
 			}
-			else if ( lastSequence == 0x3FFF ) {
-				return new State(
-						lastTimestamp.plusMillis( 1 ),
-						Holder.numberGenerator.nextInt( 1 << 14 )
-				);
+			final long nextSequence = lastSequence + Holder.numberGenerator.nextLong( 0xFFFF_FFFFL );
+			if ( nextSequence > MAX_RANDOM_SEQUENCE ) {
+				return new State( lastTimestamp.plusNanos( 250 ), randomSequence() );
 			}
 			else {
-				return new State( lastTimestamp, lastSequence + 1 );
+				return new State( lastTimestamp, nextSequence );
 			}
 		}
 
-		private static int randomSequence() {
-			return Holder.numberGenerator.nextInt( 1 << 14 );
+		private static long randomSequence() {
+			return Holder.numberGenerator.nextLong( MAX_RANDOM_SEQUENCE );
 		}
 	}
 
@@ -81,11 +83,11 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 
 	@Internal
 	public UuidVersion7Strategy() {
-		this( Instant.EPOCH, Integer.MIN_VALUE );
+		this( Instant.EPOCH, Long.MIN_VALUE );
 	}
 
 	@Internal
-	public UuidVersion7Strategy(final Instant initialTimestamp, final int initialSequence) {
+	public UuidVersion7Strategy(final Instant initialTimestamp, final long initialSequence) {
 		this.lastState = new AtomicReference<>( new State( initialTimestamp, initialSequence ) );
 	}
 
@@ -115,14 +117,8 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 				| state.nanos() & 0xFFFL,
 				// LSB bits 0-1 - variant = 4
 				0x8000_0000_0000_0000L
-				// LSB bits 2-15 - counter
-				| (long) state.lastSequence << 48
-				// LSB bits 16-63 - pseudorandom data
-				| randomNode()
+				// LSB bits 2-15 - pseudorandom counter
+				| state.lastSequence
 		);
-	}
-
-	private static long randomNode() {
-		return Holder.numberGenerator.nextLong( 0x1_0000_0000_0000L ) | 0x1000_0000_0000L;
 	}
 }

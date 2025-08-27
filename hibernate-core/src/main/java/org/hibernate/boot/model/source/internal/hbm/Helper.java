@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -33,6 +33,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
+import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
 
 /**
  * @author Steve Ebersole
@@ -97,7 +98,7 @@ public class Helper {
 	}
 
 	public static String getPropertyAccessorName(String access, boolean isEmbedded, String defaultAccess) {
-		return getValue( access, isEmbedded ? "embedded" : defaultAccess );
+		return getValue( access, isEmbedded ? EMBEDDED.getExternalName() : defaultAccess );
 	}
 
 	public static <T> T getValue(T value, T defaultValue){

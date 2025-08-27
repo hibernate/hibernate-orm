@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.exec.manytoone;
@@ -58,15 +58,7 @@ public class EntityWithEagerManyToOneTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "update LazyAbstractEntityReference e set e.entity = null" ).executeUpdate();
-					session.createQuery( "update LazyConcreteEntityReference e set e.entity = null" ).executeUpdate();
-					session.createQuery( "delete from ConcreteEntity" ).executeUpdate();
-					session.createQuery( "delete from LazyAbstractEntityReference" ).executeUpdate();
-					session.createQuery( "delete from LazyConcreteEntityReference" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

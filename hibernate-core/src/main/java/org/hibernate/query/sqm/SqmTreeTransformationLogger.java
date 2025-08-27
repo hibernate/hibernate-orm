@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm;
@@ -16,6 +16,4 @@ public interface SqmTreeTransformationLogger {
 
 	Logger LOGGER = Logger.getLogger( LOGGER_NAME );
 
-	boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
-	boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
 }

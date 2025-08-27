@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type.contributor;
@@ -9,49 +9,27 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import jakarta.persistence.AttributeConverter;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.BindingContext;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.query.BindableType;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaType;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
-import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
 /**
  * @author Vlad Mihalcea
  */
-public class ArrayType implements UserType<Array>, BindableType<Array>, BasicValueConverter<Array, String> {
+public class ArrayType implements UserType<Array>, AttributeConverter<Array, String> {
+
 	public static final ArrayType INSTANCE = new ArrayType();
 
 	private final BasicJavaType<Array> javaType = ArrayJavaType.INSTANCE;
 	private final JdbcType jdbcType = VarcharJdbcType.INSTANCE;
 
 	@Override
-	public Class<Array> getBindableJavaType() {
-		// really a UserType should not implement BindableType
-		return Array.class;
-	}
-
-	@Override
-	public SqmExpressible<Array> resolveExpressible(BindingContext bindingContext) {
-		// really a UserType should not implement BindableType
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public int getSqlType() {
 		return jdbcType.getJdbcTypeCode();
-	}
-
-	@Override
-	public JdbcType getJdbcType(TypeConfiguration typeConfiguration) {
-		return jdbcType;
 	}
 
 	@Override
@@ -70,40 +48,30 @@ public class ArrayType implements UserType<Array>, BindableType<Array>, BasicVal
 	}
 
 	@Override
-	public Array nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+	public Array nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 			throws SQLException {
-		return jdbcType.getExtractor( javaType ).extract( rs, position, session );
+		return jdbcType.getExtractor( javaType ).extract( rs, position, options );
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Array value, int index, SharedSessionContractImplementor session)
+	public void nullSafeSet(PreparedStatement st, Array value, int index, WrapperOptions options)
 			throws SQLException {
-		jdbcType.getBinder( javaType ).bind( st, value, index, session );
+		jdbcType.getBinder( javaType ).bind( st, value, index, options );
 	}
 
 	@Override
-	public BasicValueConverter<Array, Object> getValueConverter() {
-		return (BasicValueConverter) this;
+	public AttributeConverter<Array, String> getValueConverter() {
+		return this;
 	}
 
 	@Override
-	public Array toDomainValue(String relationalForm) {
-		return assemble( relationalForm, null );
-	}
-
-	@Override
-	public String toRelationalValue(Array domainForm) {
+	public String convertToDatabaseColumn(Array domainForm) {
 		return (String) disassemble( domainForm );
 	}
 
 	@Override
-	public JavaType<Array> getDomainJavaType() {
-		return javaType;
-	}
-
-	@Override
-	public JavaType<String> getRelationalJavaType() {
-		return StringJavaType.INSTANCE;
+	public Array convertToEntityAttribute(String relationalForm) {
+		return assemble( relationalForm, null );
 	}
 
 	@Override

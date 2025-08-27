@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor;
@@ -20,6 +20,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.sql.ast.spi.SqlAppender;
 
@@ -32,6 +33,7 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
  * @author Steve Ebersole
  * @author Gavin King
  */
+@Internal
 public final class DateTimeUtils {
 	private DateTimeUtils() {
 	}
@@ -236,19 +238,16 @@ public final class DateTimeUtils {
 				);
 			}
 		}
-		else if ( temporalAccessor instanceof Instant ) {
+		else if ( temporalAccessor instanceof Instant instant ) {
 			if ( supportsOffset ) {
 				formatWithOffset.formatTo(
-						( (Instant) temporalAccessor ).atZone( jdbcTimeZone.toZoneId() ),
+						instant.atZone( jdbcTimeZone.toZoneId() ),
 						appender
 				);
 			}
 			else {
 				format.formatTo(
-						LocalDateTime.ofInstant(
-								(Instant) temporalAccessor,
-								jdbcTimeZone.toZoneId()
-						),
+						LocalDateTime.ofInstant( instant, jdbcTimeZone.toZoneId() ),
 						appender
 				);
 			}
@@ -435,8 +434,8 @@ public final class DateTimeUtils {
 		return adjustToPrecision( temporal, d.getDefaultTimestampPrecision(), d );
 	}
 
-	public static <T extends Temporal> T adjustToPrecision(T temporal, int precision, Dialect d) {
-		return d.doesRoundTemporalOnOverflow()
+	public static <T extends Temporal> T adjustToPrecision(T temporal, int precision, Dialect dialect) {
+		return dialect.doesRoundTemporalOnOverflow()
 				? roundToSecondPrecision( temporal, precision )
 				: truncateToPrecision( temporal, precision );
 	}
@@ -484,6 +483,7 @@ public final class DateTimeUtils {
 		}
 		final long nanos = roundToPrecision( temporal.get( ChronoField.NANO_OF_SECOND ), precision );
 		if ( nanos == 1000000000L ) {
+			//noinspection unchecked
 			return (T) temporal.plus( 1L, ChronoUnit.SECONDS ).with( ChronoField.NANO_OF_SECOND, 0L );
 		}
 		//noinspection unchecked
@@ -501,27 +501,17 @@ public final class DateTimeUtils {
 	}
 
 	private static int pow10(int exponent) {
-		switch ( exponent ) {
-			case 0:
-				return 1;
-			case 1:
-				return 10;
-			case 2:
-				return 100;
-			case 3:
-				return 1_000;
-			case 4:
-				return 10_000;
-			case 5:
-				return 100_000;
-			case 6:
-				return 1_000_000;
-			case 7:
-				return 10_000_000;
-			case 8:
-				return 100_000_000;
-			default:
-				return (int) Math.pow( 10, exponent );
-		}
+		return switch ( exponent ) {
+			case 0 -> 1;
+			case 1 -> 10;
+			case 2 -> 100;
+			case 3 -> 1_000;
+			case 4 -> 10_000;
+			case 5 -> 100_000;
+			case 6 -> 1_000_000;
+			case 7 -> 10_000_000;
+			case 8 -> 100_000_000;
+			default -> (int) Math.pow( 10, exponent );
+		};
 	}
 }

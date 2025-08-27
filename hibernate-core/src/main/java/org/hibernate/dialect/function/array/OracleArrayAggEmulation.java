@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
@@ -7,7 +7,7 @@ package org.hibernate.dialect.function.array;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
@@ -73,7 +73,7 @@ public class OracleArrayAggEmulation extends AbstractSqmSelfRenderingFunctionDes
 					"Oracle array_agg emulation requires a basic plural return type, but resolved return type was: " + returnType
 			);
 		}
-		final boolean returnJson = pluralType.getJdbcType().getDefaultSqlTypeCode() == SqlTypes.JSON;
+		final boolean returnJson = pluralType.getJdbcType().getDefaultSqlTypeCode() == SqlTypes.JSON_ARRAY;
 		if ( returnJson ) {
 			sqlAppender.append( "json_arrayagg(" );
 		}
@@ -87,9 +87,9 @@ public class OracleArrayAggEmulation extends AbstractSqmSelfRenderingFunctionDes
 		}
 		final SqlAstNode firstArg = sqlAstArguments.get( 0 );
 		final Expression arg;
-		if ( firstArg instanceof Distinct ) {
+		if ( firstArg instanceof Distinct distinct ) {
 			sqlAppender.appendSql( "distinct " );
-			arg = ( (Distinct) firstArg ).getExpression();
+			arg = distinct.getExpression();
 		}
 		else {
 			arg = (Expression) firstArg;

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast;
@@ -10,19 +10,38 @@ import java.util.Set;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 /**
+ * {@linkplain #translate Translates} a {@linkplain #getSqlAst() SQL AST}
+ * and produces a {@linkplain JdbcOperation}
+ *
  * @author Steve Ebersole
  */
 public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker {
+	/**
+	 * Perform the translation and produce the JdbcOperation.
+	 */
+	T translate(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions);
 
+	/**
+	 * The SQL AST being translated.
+	 *
+	 * @since 7.1
+	 */
+	@Incubating
+	Statement getSqlAst();
+
+	/**
+	 * Access to the SessionFactory.
+	 */
 	SessionFactoryImplementor getSessionFactory();
 
 	/**
@@ -45,11 +64,6 @@ public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker 
 	void render(SqlAstNode sqlAstNode, SqlAstNodeRenderingMode renderingMode);
 
 	/**
-	 * Whether the FILTER clause for aggregate functions is supported.
-	 */
-	boolean supportsFilterClause();
-
-	/**
 	 * Returns the current query part that is translated.
 	 */
 	QueryPart getCurrentQueryPart();
@@ -65,5 +79,5 @@ public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker 
 	 */
 	Set<String> getAffectedTableNames();
 
-	T translate(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions);
+	void addAffectedTableName(String tableName);
 }

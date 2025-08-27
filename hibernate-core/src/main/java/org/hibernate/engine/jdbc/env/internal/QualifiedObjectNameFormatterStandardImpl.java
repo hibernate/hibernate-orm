@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.internal;
@@ -55,9 +55,9 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 		}
 	}
 
-	public QualifiedObjectNameFormatterStandardImpl(NameQualifierSupport nameQualifierSupport) {
+	public QualifiedObjectNameFormatterStandardImpl(NameQualifierSupport nameQualifierSupport, String catalogSeparator) {
 		// most dbs simply do <catalog>.<schema>.<name>
-		this( nameQualifierSupport, ".", false );
+		this( nameQualifierSupport, catalogSeparator, false );
 	}
 
 	public QualifiedObjectNameFormatterStandardImpl(

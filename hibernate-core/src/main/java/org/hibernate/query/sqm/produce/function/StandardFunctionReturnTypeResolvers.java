@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.produce.function;
@@ -11,8 +11,7 @@ import java.util.function.Supplier;
 import org.hibernate.Internal;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -80,7 +79,7 @@ public class StandardFunctionReturnTypeResolvers {
 					@Nullable SqmToSqlAstConverter converter,
 					List<? extends SqmTypedNode<?>> arguments,
 					TypeConfiguration typeConfiguration) {
-				ReturnableType<?> argType = extractArgumentType( arguments, argPosition );
+				final var argType = extractArgumentType( arguments, argPosition );
 				return isAssignableTo( argType, impliedType ) ? impliedType : argType;
 			}
 
@@ -88,7 +87,7 @@ public class StandardFunctionReturnTypeResolvers {
 			public BasicValuedMapping resolveFunctionReturnType(
 					Supplier<BasicValuedMapping> impliedTypeAccess,
 					List<? extends SqlAstNode> arguments) {
-				final BasicValuedMapping specifiedArgType = extractArgumentValuedMapping( arguments, argPosition );
+				final var specifiedArgType = extractArgumentValuedMapping( arguments, argPosition );
 				return useImpliedTypeIfPossible( specifiedArgType, impliedTypeAccess.get() );
 			}
 		};
@@ -101,17 +100,11 @@ public class StandardFunctionReturnTypeResolvers {
 					Supplier<BasicValuedMapping> impliedTypeAccess,
 					List<? extends SqlAstNode> arguments) {
 				for ( SqlAstNode arg: arguments ) {
-					if ( ! ( arg instanceof Expression ) ) {
-						continue;
-					}
-
-					final JdbcMappingContainer nodeType = ( (Expression) arg ).getExpressionType();
-					if ( nodeType instanceof BasicValuedMapping ) {
-						final BasicValuedMapping argType = (BasicValuedMapping) nodeType;
+					if ( arg instanceof Expression expression
+							&& expression.getExpressionType() instanceof BasicValuedMapping argType ) {
 						return useImpliedTypeIfPossible( argType, impliedTypeAccess.get() );
 					}
 				}
-
 				return impliedTypeAccess.get();
 			}
 
@@ -123,7 +116,7 @@ public class StandardFunctionReturnTypeResolvers {
 					TypeConfiguration typeConfiguration) {
 				for ( int i = 0; i < arguments.size(); i++ ) {
 					if ( arguments.get( i ) != null ) {
-						final ReturnableType<?> argType = extractArgumentType( arguments, i + 1 );
+						final var argType = extractArgumentType( arguments, i + 1 );
 						if ( argType != null ) {
 							return isAssignableTo( argType, impliedType ) ? impliedType : argType;
 						}
@@ -135,7 +128,6 @@ public class StandardFunctionReturnTypeResolvers {
 	}
 
 
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Internal helpers
 
@@ -144,18 +136,14 @@ public class StandardFunctionReturnTypeResolvers {
 		if ( implied == null ) {
 			return false;
 		}
-
-		if ( defined == null ) {
+		else if ( defined == null ) {
 			return true;
 		}
-
-		if ( !( implied instanceof BasicType ) || !( defined instanceof BasicType ) ) {
-			return false;
+		else {
+			return implied instanceof BasicType<?> impliedType
+				&& defined instanceof BasicType<?> definedType
+				&& isAssignableTo( definedType.getJdbcMapping(), impliedType.getJdbcMapping() );
 		}
-		return isAssignableTo(
-				( (BasicType<?>) defined ).getJdbcMapping(),
-				( (BasicType<?>) implied ).getJdbcMapping()
-		);
 	}
 
 	@Internal
@@ -165,60 +153,56 @@ public class StandardFunctionReturnTypeResolvers {
 		//that is determined by how the function is used in the HQL query. In essence
 		//the types are compatible if the map to the same JDBC type, of if they are
 		//both numeric types.
-		int impliedTypeCode = implied.getJdbcType().getDefaultSqlTypeCode();
-		int definedTypeCode = defined.getJdbcType().getDefaultSqlTypeCode();
+		final int impliedTypeCode = implied.getJdbcType().getDefaultSqlTypeCode();
+		final int definedTypeCode = defined.getJdbcType().getDefaultSqlTypeCode();
 		return impliedTypeCode == definedTypeCode
-				|| isNumericType( impliedTypeCode ) && isNumericType( definedTypeCode )
-				|| isCharacterOrClobType( impliedTypeCode ) && isCharacterOrClobType( definedTypeCode );
+			|| isNumericType( impliedTypeCode ) && isNumericType( definedTypeCode )
+			|| isCharacterOrClobType( impliedTypeCode ) && isCharacterOrClobType( definedTypeCode );
 	}
 
 	@Internal
-	public static BasicValuedMapping useImpliedTypeIfPossible(
-			BasicValuedMapping defined,
-			BasicValuedMapping implied) {
+	public static BasicValuedMapping useImpliedTypeIfPossible(BasicValuedMapping defined, BasicValuedMapping implied) {
 		if ( defined == null ) {
 			return implied;
 		}
-
-		if ( implied == null ) {
+		else if ( implied == null ) {
 			return defined;
 		}
-
-		return areCompatible( defined, implied ) ? implied : defined;
+		else {
+			return areCompatible( defined, implied ) ? implied : defined;
+		}
 	}
 
-	private static boolean areCompatible(
-			BasicValuedMapping defined,
-			BasicValuedMapping implied) {
+	private static boolean areCompatible(BasicValuedMapping defined, BasicValuedMapping implied) {
 		if ( defined == null || implied == null) {
 			return true;
 		}
-
-		if ( defined.getJdbcMapping() == null ) {
+		else if ( defined.getJdbcMapping() == null ) {
 			return true;
 		}
-
-		if ( implied.getJdbcMapping() == null ) {
+		else if ( implied.getJdbcMapping() == null ) {
 			return true;
 		}
-
-		//This list of cases defines legal promotions from a SQL function return
-		//type specified in the function template (i.e. in the Dialect) and a type
-		//that is determined by how the function is used in the HQL query. In essence
-		//the types are compatible if the map to the same JDBC type, of if they are
-		//both numeric types.
-		return isAssignableTo( defined.getJdbcMapping(), implied.getJdbcMapping() );
+		else {
+			//This list of cases defines legal promotions from a SQL function return
+			//type specified in the function template (i.e. in the Dialect) and a type
+			//that is determined by how the function is used in the HQL query. In essence
+			//the types are compatible if the map to the same JDBC type, of if they are
+			//both numeric types.
+			return isAssignableTo( defined.getJdbcMapping(), implied.getJdbcMapping() );
+		}
 	}
 
-	public static ReturnableType<?> extractArgumentType(
-			List<? extends SqmTypedNode<?>> arguments,
-			int position) {
+	public static ReturnableType<?> extractArgumentType(List<? extends SqmTypedNode<?>> arguments, int position) {
 		final SqmTypedNode<?> specifiedArgument = arguments.get( position - 1 );
 		final SqmExpressible<?> specifiedArgType = getArgumentExpressible( specifiedArgument );
 		if ( specifiedArgType == null || specifiedArgType instanceof NullSqmExpressible ) {
 			return null;
 		}
-		else if ( !(specifiedArgType instanceof ReturnableType) ) {
+		else if ( specifiedArgType instanceof ReturnableType<?> returnableType ) {
+			return returnableType;
+		}
+		else {
 			throw new FunctionArgumentException(
 					String.format(
 							Locale.ROOT,
@@ -229,9 +213,6 @@ public class StandardFunctionReturnTypeResolvers {
 					)
 			);
 		}
-		else {
-			return (ReturnableType<?>) specifiedArgType;
-		}
 	}
 
 	private static SqmExpressible<?> getArgumentExpressible(SqmTypedNode<?> specifiedArgument) {
@@ -239,52 +220,53 @@ public class StandardFunctionReturnTypeResolvers {
 		return expressible != null ? expressible.getSqmType() : null;
 	}
 
-	public static JdbcMapping extractArgumentJdbcMapping(
-			TypeConfiguration typeConfiguration,
-			List<? extends SqmTypedNode<?>> arguments,
-			int position) {
-		final SqmTypedNode<?> specifiedArgument = arguments.get( position - 1 );
-		final SqmExpressible<?> specifiedArgType = specifiedArgument.getNodeType();
-		if ( specifiedArgType instanceof BasicType<?> ) {
-			return ( (BasicType<?>) specifiedArgType ).getJdbcMapping();
-		}
-		else {
-			final BasicType<?> basicType = typeConfiguration.getBasicTypeForJavaType(
-					specifiedArgType.getExpressibleJavaType().getJavaTypeClass()
-			);
-			if ( basicType == null ) {
-				throw new FunctionArgumentException(
-						String.format(
-								Locale.ROOT,
-								"Function argument [%s] of type [%s] at specified position [%d] in call arguments was not typed as basic type",
-								specifiedArgument,
-								specifiedArgType,
-								position
-						)
-				);
-			}
-
-			return basicType.getJdbcMapping();
-		}
-	}
+//	public static JdbcMapping extractArgumentJdbcMapping(
+//			TypeConfiguration typeConfiguration,
+//			List<? extends SqmTypedNode<?>> arguments,
+//			int position) {
+//		final SqmTypedNode<?> specifiedArgument = arguments.get( position - 1 );
+//		final SqmExpressible<?> specifiedArgType = specifiedArgument.getNodeType();
+//		if ( specifiedArgType instanceof BasicType<?> ) {
+//			return ( (BasicType<?>) specifiedArgType ).getJdbcMapping();
+//		}
+//		else {
+//			final BasicType<?> basicType = typeConfiguration.getBasicTypeForJavaType(
+//					specifiedArgType.getExpressibleJavaType().getJavaTypeClass()
+//			);
+//			if ( basicType == null ) {
+//				throw new FunctionArgumentException(
+//						String.format(
+//								Locale.ROOT,
+//								"Function argument [%s] of type [%s] at specified position [%d] in call arguments was not typed as basic type",
+//								specifiedArgument,
+//								specifiedArgType,
+//								position
+//						)
+//				);
+//			}
+//
+//			return basicType.getJdbcMapping();
+//		}
+//	}
 
 	public static BasicValuedMapping extractArgumentValuedMapping(List<? extends SqlAstNode> arguments, int position) {
 		final SqlAstNode specifiedArgument = arguments.get( position-1 );
-		final JdbcMappingContainer specifiedArgType = specifiedArgument instanceof Expression
-				? ( (Expression) specifiedArgument ).getExpressionType()
-				: null;
-
-		if ( specifiedArgType instanceof BasicValuedMapping ) {
-			return (BasicValuedMapping) specifiedArgType;
+		final var specifiedArgType =
+				specifiedArgument instanceof Expression expression
+						? expression.getExpressionType()
+						: null;
+		if ( specifiedArgType instanceof BasicValuedMapping basicValuedMapping ) {
+			return basicValuedMapping;
 		}
-
-		throw new FunctionArgumentException(
-				String.format(
-						Locale.ROOT,
-						"Function argument [%s] at specified position [%d] in call arguments was not typed as an allowable function return type",
-						specifiedArgument,
-						position
-				)
-		);
+		else {
+			throw new FunctionArgumentException(
+					String.format(
+							Locale.ROOT,
+							"Function argument [%s] at specified position [%d] in call arguments was not typed as an allowable function return type",
+							specifiedArgument,
+							position
+					)
+			);
+		}
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -19,7 +19,6 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -29,7 +28,6 @@ import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
 import org.hibernate.type.CollectionType;
@@ -43,6 +41,7 @@ import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectation
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.root;
 import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
+import static org.hibernate.mapping.MappingHelper.classForName;
 import static org.hibernate.sql.Template.collectColumnNames;
 
 /**
@@ -50,7 +49,9 @@ import static org.hibernate.sql.Template.collectColumnNames;
  *
  * @author Gavin King
  */
-public abstract class PersistentClass implements IdentifiableTypeClass, AttributeContainer, Filterable, MetaAttributable, Contributable, Serializable {
+public abstract sealed class PersistentClass
+		implements IdentifiableTypeClass, AttributeContainer, Filterable, MetaAttributable, Contributable, Serializable
+		permits RootClass, Subclass {
 
 	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
 
@@ -157,18 +158,17 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		this.proxyInterface = null;
 	}
 
-	private ClassLoaderAccess getClassLoaderAccess() {
-		return metadataBuildingContext.getBootstrapContext().getClassLoaderAccess();
+	private Class<?> getClassForName(String className) {
+		return classForName( className, metadataBuildingContext.getBootstrapContext() );
 	}
 
 	public Class<?> getMappedClass() throws MappingException {
 		if ( className == null ) {
 			return null;
 		}
-
 		try {
 			if ( mappedClass == null ) {
-				mappedClass = getClassLoaderAccess().classForName( className );
+				mappedClass = getClassForName( className );
 			}
 			return mappedClass;
 		}
@@ -183,7 +183,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		}
 		try {
 			if ( proxyInterface == null ) {
-				proxyInterface = getClassLoaderAccess().classForName( proxyInterfaceName );
+				proxyInterface = getClassForName( proxyInterfaceName );
 			}
 			return proxyInterface;
 		}
@@ -223,10 +223,11 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		while ( superclass != null ) {
 			if ( subclass.getEntityName().equals( superclass.getEntityName() ) ) {
 				throw new MappingException(
-						"Circular inheritance mapping detected: " +
-								subclass.getEntityName() +
-								" will have itself as superclass when extending " +
-								getEntityName()
+						"Circular inheritance mapping: '"
+							+ subclass.getEntityName()
+							+ "' will have itself as superclass when extending '"
+							+ getEntityName()
+							+ "'"
 				);
 			}
 			superclass = superclass.getSuperclass();
@@ -251,7 +252,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	 */
 	public List<Subclass> getSubclasses() {
 		@SuppressWarnings("unchecked")
-		List<Subclass>[] subclassLists = new List[subclasses.size() + 1];
+		final List<Subclass>[] subclassLists = new List[subclasses.size() + 1];
 		int j;
 		for (j = 0; j < subclasses.size(); j++) {
 			subclassLists[j] = subclasses.get(j).getSubclasses();
@@ -426,8 +427,20 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		final PrimaryKey pk = new PrimaryKey( table );
 		pk.setName( PK_ALIAS.toAliasString( table.getName() ) );
 		pk.addColumns( getKey() );
-
+		if ( addPartitionKeyToPrimaryKey() ) {
+			for ( Property property : getProperties() ) {
+				if ( property.getValue().isPartitionKey() ) {
+					pk.addColumns( property.getValue() );
+				}
+			}
+		}
 		table.setPrimaryKey( pk );
+	}
+
+	private boolean addPartitionKeyToPrimaryKey() {
+		return metadataBuildingContext.getMetadataCollector()
+				.getDatabase().getDialect()
+				.addPartitionKeyToPrimaryKey();
 	}
 
 	public abstract String getWhere();
@@ -528,7 +541,8 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 				}
 				else {
 					//flat recursive algorithm
-					property = ( (Component) property.getValue() ).getProperty( element );
+					final var value = (Component) property.getValue();
+					property = value.getProperty( element );
 				}
 			}
 		}
@@ -540,26 +554,27 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	}
 
 	private Property getProperty(String propertyName, List<Property> properties) throws MappingException {
-		String root = root( propertyName );
-		for ( Property prop : properties ) {
-			if ( prop.getName().equals( root )
-					|| ( prop instanceof Backref || prop instanceof IndexBackref )
-							&& prop.getName().equals( propertyName ) ) {
-				return prop;
+		final String root = root( propertyName );
+		for ( Property property : properties ) {
+			if ( property.getName().equals( root )
+					|| ( property instanceof Backref || property instanceof IndexBackref )
+							&& property.getName().equals( propertyName ) ) {
+				return property;
 			}
 		}
 		throw new MappingException( "property [" + propertyName + "] not found on entity [" + getEntityName() + "]" );
 	}
 
+	@Override
 	public Property getProperty(String propertyName) throws MappingException {
-		Property identifierProperty = getIdentifierProperty();
+		final Property identifierProperty = getIdentifierProperty();
 		if ( identifierProperty != null
 				&& identifierProperty.getName().equals( root( propertyName ) ) ) {
 			return identifierProperty;
 		}
 		else {
 			List<Property> closure = getPropertyClosure();
-			Component identifierMapper = getIdentifierMapper();
+			final Component identifierMapper = getIdentifierMapper();
 			if ( identifierMapper != null ) {
 				closure = new JoinedList<>( identifierMapper.getProperties(), closure );
 			}
@@ -579,14 +594,14 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		if ( identifierProperty != null && identifierProperty.getName().equals( name ) ) {
 			return true;
 		}
-
-		for ( Property property : getPropertyClosure() ) {
-			if ( property.getName().equals(name) ) {
-				return true;
+		else {
+			for ( Property property : getPropertyClosure() ) {
+				if ( property.getName().equals( name ) ) {
+					return true;
+				}
 			}
+			return false;
 		}
-
-		return false;
 	}
 
 	/**
@@ -646,9 +661,9 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 
 	private void checkPropertyDuplication() throws MappingException {
 		final HashSet<String> names = new HashSet<>();
-		for ( Property prop : getProperties() ) {
-			if ( !names.add( prop.getName() ) ) {
-				throw new MappingException( "Duplicate property mapping of " + prop.getName() + " found in " + getEntityName() );
+		for ( Property property : getProperties() ) {
+			if ( !names.add( property.getName() ) ) {
+				throw new MappingException( "Duplicate property mapping of " + property.getName() + " found in " + getEntityName() );
 			}
 		}
 	}
@@ -899,13 +914,12 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	private boolean hasCollectionNotReferencingPK(Collection<Property> properties) {
 		for ( Property property : properties ) {
 			final Value value = property.getValue();
-			if ( value instanceof Component ) {
-				if ( hasCollectionNotReferencingPK( ( (Component) value ).getProperties() ) ) {
+			if ( value instanceof Component component ) {
+				if ( hasCollectionNotReferencingPK( component.getProperties() ) ) {
 					return true;
 				}
 			}
-			else if ( value instanceof org.hibernate.mapping.Collection ) {
-				final org.hibernate.mapping.Collection collection = (org.hibernate.mapping.Collection) value;
+			else if ( value instanceof org.hibernate.mapping.Collection collection ) {
 				if ( !( (CollectionType) collection.getType() ).useLHSPrimaryKey() ) {
 					return true;
 				}
@@ -920,7 +934,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		}
 		for ( Property property : getProperties() ) {
 			final Value value = property.getValue();
-			if ( value instanceof BasicValue && ( (BasicValue) value ).isPartitionKey() ) {
+			if ( value instanceof BasicValue basicValue && basicValue.isPartitionKey() ) {
 				return true;
 			}
 		}
@@ -1017,7 +1031,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 			// in SQL formulas
 			final Dialect dialect = context.getDialect();
 			final TypeConfiguration types = context.getTypeConfiguration();
-			final SqmFunctionRegistry functions = context.getFunctionRegistry();
 
 			// now, move @Formulas to the correct AttributeContainers
 			//TODO: skip this step for hbm.xml
@@ -1026,7 +1039,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 					if ( selectable.isFormula() && properties.contains( property ) ) {
 						final Formula formula = (Formula) selectable;
 						final AttributeContainer container =
-								container( collectColumnNames( formula.getTemplate( dialect, types, functions ) ) );
+								container( collectColumnNames( formula.getTemplate( dialect, types ) ) );
 						if ( !container.contains( property ) ) {
 							properties.remove( property );
 							container.addProperty( property );
@@ -1211,5 +1224,15 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 
 	public void setDeleteExpectation(Supplier<? extends Expectation> deleteExpectation) {
 		this.deleteExpectation = deleteExpectation;
+	}
+
+	public void removeProperty(Property property) {
+		if ( !declaredProperties.remove( property ) ) {
+			throw new IllegalArgumentException( "Property not among declared properties: " + property.getName() );
+		}
+		properties.remove( property );
+	}
+
+	public void createConstraints(MetadataBuildingContext context) {
 	}
 }

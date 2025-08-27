@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.GeneratedValue;
 
@@ -20,7 +20,7 @@ public class GeneratedValueJpaAnnotation implements GeneratedValue {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public GeneratedValueJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public GeneratedValueJpaAnnotation(ModelsContext modelContext) {
 		this.strategy = jakarta.persistence.GenerationType.AUTO;
 		this.generator = "";
 	}
@@ -28,7 +28,7 @@ public class GeneratedValueJpaAnnotation implements GeneratedValue {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public GeneratedValueJpaAnnotation(GeneratedValue annotation, SourceModelBuildingContext modelContext) {
+	public GeneratedValueJpaAnnotation(GeneratedValue annotation, ModelsContext modelContext) {
 		this.strategy = annotation.strategy();
 		this.generator = annotation.generator();
 	}
@@ -36,7 +36,7 @@ public class GeneratedValueJpaAnnotation implements GeneratedValue {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public GeneratedValueJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public GeneratedValueJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.strategy = (jakarta.persistence.GenerationType) attributeValues.get( "strategy" );
 		this.generator = (String) attributeValues.get( "generator" );
 	}

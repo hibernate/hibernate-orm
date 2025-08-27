@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.internal;
@@ -9,7 +9,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * A specialized {@link ConnectionCreator} which uses {@link DriverManager#getConnection(String, Properties)}
@@ -19,7 +19,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  */
 public class DriverManagerConnectionCreator extends BasicConnectionCreator {
 	public DriverManagerConnectionCreator(
-			ServiceRegistryImplementor serviceRegistry,
+			ServiceRegistry serviceRegistry,
 			String url,
 			Properties connectionProps,
 			Boolean autocommit,

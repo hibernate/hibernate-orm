@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
@@ -194,7 +194,7 @@ public class EntityJoinTest {
 											DomainParameterXref.EMPTY,
 											QueryParameterBindingsImpl.EMPTY,
 											new LoadQueryInfluencers( factory ),
-											factory,
+											factory.getSqlTranslationEngine(),
 											true
 									)
 									.translate();
@@ -295,13 +295,7 @@ public class EntityJoinTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					session.createQuery( "delete FinancialRecord" ).executeUpdate();
-					session.createQuery( "delete User" ).executeUpdate();
-					session.createQuery( "delete Customer" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Customer")

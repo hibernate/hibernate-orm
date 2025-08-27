@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.json;
@@ -7,7 +7,7 @@ package org.hibernate.dialect.function.json;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.CteGenerateSeriesFunction;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.SelfRenderingSqmSetReturningFunction;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -326,7 +326,7 @@ public class DB2JsonTableFunction extends JsonTableFunction {
 				sqlAppender.appendSql( ") " );
 				sqlAppender.appendSql( existsColumnDefinition.name() );
 			}
-			else if ( columnDefinition instanceof JsonTableOrdinalityColumnDefinition ordinalityColumnDefinition) {
+			else if ( columnDefinition instanceof JsonTableOrdinalityColumnDefinition ordinalityColumnDefinition ) {
 				// DB2 doesn't support the for ordinality syntax in json_table() since it has no support for array either
 				if ( isArray ) {
 					// If the document is an array, a series table with alias `i` is joined to emulate array support.

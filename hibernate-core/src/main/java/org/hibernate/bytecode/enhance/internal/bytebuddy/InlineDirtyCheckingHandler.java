@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
@@ -57,7 +57,7 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 			ByteBuddyEnhancementContext enhancementContext,
 			AnnotatedFieldDescription persistentField,
 			Implementation implementation) {
-		if ( enhancementContext.doDirtyCheckingInline( managedCtClass ) ) {
+		if ( enhancementContext.doDirtyCheckingInline() ) {
 
 			if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
 				implementation = Advice.to( CodeTemplates.CompositeDirtyCheckingHandler.class ).wrap( implementation );
@@ -75,8 +75,9 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 			}
 
 			if ( enhancementContext.isCompositeField( persistentField )
-					// Don't do composite owner tracking for records
-					&& !persistentField.getType().isRecord() ) {
+				&& !persistentField.hasAnnotation( EmbeddedId.class )
+				// Don't do composite owner tracking for records
+				&& !persistentField.getType().isRecord() ) {
 
 				// HHH-13759 - Call getter on superclass if field is not visible
 				// An embedded field won't be visible if declared private in a superclass

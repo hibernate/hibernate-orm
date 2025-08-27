@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -7,13 +7,12 @@ package org.hibernate.boot.model.internal;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 
 import static org.hibernate.boot.model.internal.BinderHelper.createSyntheticPropertyReference;
@@ -26,15 +25,17 @@ import static org.hibernate.internal.util.StringHelper.qualify;
  *
  * @author Emmanuel Bernard
  */
-public class ToOneFkSecondPass extends FkSecondPass {
+class ToOneFkSecondPass implements FkSecondPass {
 	private final PersistentClass persistentClass;
 	private final MetadataBuildingContext buildingContext;
 	private final boolean unique;
 	private final String path;
 	private final String entityClassName;
 	private final boolean annotatedEntity;
+	private final ToOne value;
+	private final AnnotatedJoinColumns columns;
 
-	public ToOneFkSecondPass(
+	ToOneFkSecondPass(
 			ToOne value,
 			AnnotatedJoinColumns columns,
 			boolean unique,
@@ -42,7 +43,8 @@ public class ToOneFkSecondPass extends FkSecondPass {
 			PersistentClass persistentClass,
 			String path,
 			MetadataBuildingContext buildingContext) {
-		super( value, columns );
+		this.value = value;
+		this.columns = columns;
 		this.persistentClass = persistentClass;
 		this.buildingContext = buildingContext;
 		this.unique = unique;
@@ -52,8 +54,13 @@ public class ToOneFkSecondPass extends FkSecondPass {
 	}
 
 	@Override
+	public SimpleValue getValue() {
+		return value;
+	}
+
+	@Override
 	public String getReferencedEntityName() {
-		return ( (ToOne) value ).getReferencedEntityName();
+		return value.getReferencedEntityName();
 	}
 
 	@Override
@@ -61,9 +68,9 @@ public class ToOneFkSecondPass extends FkSecondPass {
 		if ( entityClassName == null ) {
 			return false;
 		}
-		final PersistentClass persistentClass =
+		final var persistentClass =
 				buildingContext.getMetadataCollector().getEntityBinding( entityClassName );
-		final Property property = persistentClass.getIdentifierProperty();
+		final var property = persistentClass.getIdentifierProperty();
 		if ( path == null ) {
 			return false;
 		}
@@ -81,8 +88,9 @@ public class ToOneFkSecondPass extends FkSecondPass {
 					localPath = path.substring( 3 );
 				}
 
-				for ( Property idProperty : component.getProperties() ) {
-					if ( localPath.equals( idProperty.getName() ) || localPath.startsWith( idProperty.getName() + "." ) ) {
+				for ( var idProperty : component.getProperties() ) {
+					if ( localPath.equals( idProperty.getName() )
+							|| localPath.startsWith( idProperty.getName() + "." ) ) {
 						return true;
 					}
 				}
@@ -97,7 +105,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 			//TODO: move this validation logic to a separate ManyToOneSecondPass
 			//      for consistency with how this is handled for OneToOnes
 			final String targetEntityName = manyToOne.getReferencedEntityName();
-			final PersistentClass targetEntity = persistentClasses.get( targetEntityName );
+			final var targetEntity = persistentClasses.get( targetEntityName );
 			if ( targetEntity == null ) {
 				final String problem = annotatedEntity
 						? " which does not belong to the same persistence unit"
@@ -150,7 +158,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 		manyToOne.setReferenceToPrimaryKey( false );
 
 		final String entityName = targetEntity.getEntityName();
-		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
+		final var metadataCollector = buildingContext.getMetadataCollector();
 		metadataCollector.addUniquePropertyReference( entityName, referencedPropertyName );
 		metadataCollector.addPropertyReferencedAssociation( entityName, path, referencedPropertyName );
 	}

@@ -1,0 +1,343 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id "java-library"
+    id "local.module"
+    id "local.javadoc"
+    id "local.databases"
+
+    id "biz.aQute.bnd.builder"
+
+    id "org.hibernate.orm.database-service"
+    id "org.hibernate.orm.build.java-module"
+
+    id "build-dashboard"
+    id "project-report"
+}
+
+def hibernateVersion = ormBuildDetails.hibernateVersion
+def jpaVersion = ormBuildDetails.jpaVersion
+
+def java9ModuleNameBase = project.name.startsWith( 'hibernate-' ) ? name.drop( 'hibernate-'.length() ): name
+def java9ModuleName = "org.hibernate.orm.$java9ModuleNameBase".replace('-','.')
+
+sourceSets {
+    test {
+        resources {
+            configure( srcDir('src/test/resources') ) {
+                filter {
+                    include '*.properties'
+                    include '*.xml'
+                    include '**/*.properties'
+                    include '**/*.xml'
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation libs.logging
+
+    compileOnly libs.loggingAnnotations
+    // Used for compiling some Oracle specific JdbcTypes
+    compileOnly jdbcLibs.oracle
+    compileOnly (jdbcLibs.oracleJdbcJacksonOsonExtension) {
+        exclude group: 'com.oracle.database.jdbc', module: 'ojdbc8'
+    }
+
+    // JUnit dependencies made up of:
+    // 		* JUnit 5
+    // 		* the Jupiter engine which runs JUnit 5 based tests
+    //		* the "vintage" engine - which runs JUnit 3 and 4 based tests
+    testImplementation testLibs.junit5Api
+    testImplementation testLibs.junit5Engine
+    testImplementation testLibs.junit5Params
+    testImplementation testLibs.junit5Launcher
+    testImplementation testLibs.junit4
+    testImplementation testLibs.junit4Engine
+    testImplementation testLibs.assertjCore
+
+    testRuntimeOnly testLibs.log4j2
+    testRuntimeOnly libs.byteBuddy
+
+    //Databases
+    testRuntimeOnly jdbcLibs.h2
+    testRuntimeOnly jdbcLibs.derby
+    testRuntimeOnly jdbcLibs.derbyTools
+    testRuntimeOnly jdbcLibs.hsqldb
+    testRuntimeOnly jdbcLibs.postgresql
+    testRuntimeOnly jdbcLibs.edb
+    testRuntimeOnly jdbcLibs.mssql
+    testRuntimeOnly jdbcLibs.informix
+    testRuntimeOnly jdbcLibs.cockroachdb
+    testRuntimeOnly jdbcLibs.gaussdb
+    testRuntimeOnly jdbcLibs.sybase
+    testRuntimeOnly jdbcLibs.teradata
+    testRuntimeOnly rootProject.fileTree(dir: 'drivers', include: '*.jar')
+
+    // Since both the DB2 driver and HANA have a package "net.jpountz" we have to add dependencies conditionally
+    // This is due to the "no split-packages" requirement of Java 9+
+
+    if ( db.startsWith( 'db2' ) ) {
+        testRuntimeOnly jdbcLibs.db2
+    }
+    else if ( db.startsWith( 'hana' ) ) {
+        testRuntimeOnly jdbcLibs.hana
+    }
+    else if ( db.startsWith( 'mysql' ) || db.startsWith( 'tidb' ) ) {
+        testRuntimeOnly jdbcLibs.mysql
+    }
+    else if ( db.startsWith( 'mariadb' ) ) {
+        testRuntimeOnly jdbcLibs.mariadb
+    }
+    else if ( db.startsWith( 'firebird' ) ) {
+        testRuntimeOnly jdbcLibs.firebird
+    }
+    else if ( db.startsWith( 'oracle' ) ) {
+        testRuntimeOnly jdbcLibs.oracle
+        testRuntimeOnly jdbcLibs.oracleXml
+        testRuntimeOnly jdbcLibs.oracleXmlParser
+        testRuntimeOnly (jdbcLibs.oracleJdbcJacksonOsonExtension) {
+            exclude group: 'com.oracle.database.jdbc', module: 'ojdbc8'
+        }
+    }
+    else if ( db.startsWith( 'altibase' ) ) {
+        testRuntimeOnly jdbcLibs.altibase
+    }
+    else if ( db.startsWith( 'informix' ) ) {
+        testRuntimeOnly jdbcLibs.informix
+    }
+
+    annotationProcessor libs.loggingProcessor
+    annotationProcessor libs.logging
+    annotationProcessor libs.loggingAnnotations
+
+
+    constraints {
+        implementation('org.apache.logging.log4j:log4j-core') {
+            version {
+                strictly('[2.17.1, 3[')
+                prefer('2.17.1')
+            }
+            because('CVE-2021-44228, CVE-2021-45046, CVE-2021-45105, CVE-2021-44832: Log4j vulnerable to remote code execution and other critical security vulnerabilities')
+        }
+    }
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Compilation
+
+tasks.register('compile') {
+    dependsOn compileJava
+    dependsOn processResources
+    dependsOn compileTestJava
+    dependsOn processTestResources
+}
+
+tasks.withType( JavaCompile ).configureEach {
+    options.encoding = 'UTF-8'
+    options.warnings false
+    options.fork = true
+    options.forkOptions.memoryMaximumSize = '896m'
+
+    options.compilerArgs += [
+            // disable adding @Generated annotation in the logger impls to make
+            // the logging annotation processor create the same sources each time.
+            "-Aorg.jboss.logging.tools.addGeneratedAnnotation=false"
+    ]
+
+    // stubs argument needs to be passed as an absolute path, JavaCompile uses the Worker API which changes the current
+    // working directory and prevents from using a relative path to locate a project file.
+    // Using a CommandLineArgumentProvider allows build cache hits when the build cache is relocated.
+    options.compilerArgumentProviders.add(new CompilerStubsArgumentProvider(stubsDir: new File(project.rootDir, "checkerstubs")))
+
+    if (System.getProperty('APT_DEBUG', 'false') == 'true') {
+        task.options.forkOptions.jvmArgs += ['-Xdebug', '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=9099']
+    }
+}
+
+processTestResources {
+    duplicatesStrategy DuplicatesStrategy.INCLUDE
+
+    inputs.property( "db", db )
+    inputs.property( "dbHost", dbHost )
+    inputs.property( "dbConfig", dbBundle[db])
+
+    doLast {
+        copy {
+            from( sourceSets.test.java.srcDirs ) {
+                include '**/*.properties'
+                include '**/*.xml'
+            }
+            into sourceSets.test.java.classesDirectory
+        }
+        copy {
+            from file( 'src/test/resources' )
+            into file( "${buildDir}/resources/test" )
+            exclude 'src/test/resources/hibernate.properties'
+        }
+        copy {
+            from file( 'src/test/resources/hibernate.properties' )
+            into file( "${buildDir}/resources/test" )
+            filter( ReplaceTokens, tokens: dbBundle[db] )
+        }
+    }
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Testing
+
+tasks.withType( Test.class ).each { test ->
+    test.useJUnitPlatform()
+
+    test.usesService( project.gradle.sharedServices.registrations.getByName( 'databaseService' ).service )
+
+    // Byteman needs this property to be set, https://developer.jboss.org/thread/274997
+    test.jvmArgs += ["-Djdk.attach.allowAttachSelf=true"]
+
+    test.jvmArgumentProviders.add(
+            new HeapDumpPathProvider( path: project.layout.buildDirectory.dir("OOM-dump") )
+    )
+
+    test.jvmArgs += [
+            '-XX:+HeapDumpOnOutOfMemoryError',
+            '-XX:MetaspaceSize=256M'
+    ]
+
+    test.maxHeapSize = '3G'
+
+    test.systemProperties['hibernate.test.validatefailureexpected'] = true
+    test.systemProperties['hibernate.highlight_sql'] = false
+    test.systemProperties += System.properties.findAll { it.key.startsWith( "hibernate." ) }
+
+    test.enableAssertions = true
+
+    if ( project.name != 'hibernate-testing' ) {
+        test.dependsOn ':hibernate-testing:test'
+    }
+
+    // Allow to exclude specific tests
+    if ( project.hasProperty( 'excludeTests' ) ) {
+        test.filter {
+            excludeTestsMatching project.property('excludeTests').toString()
+        }
+    }
+}
+
+test {
+    // Keep system properties in sync with gradle.properties!
+    systemProperty 'user.language', 'en'
+    systemProperty 'user.country', 'US'
+    systemProperty 'user.timezone', 'UTC'
+    systemProperty 'file.encoding', 'UTF-8'
+    // Needed for AdoptOpenJDK on alpine? The problem is similar to this: https://github.com/mockito/mockito/issues/978
+    jvmArgs '-XX:+StartAttachListener'
+
+    if ( project.findProperty( 'log-test-progress' )?.toString()?.toBoolean() ) {
+        // Log a statement for each test.
+        // Used in the Travis build so that Travis doesn't end up panicking because there's no output for a long time.
+        testLogging {
+            events "passed", "skipped", "failed"
+            exceptionFormat = 'full'
+        }
+    }
+}
+
+// Attach tools JAR to the classpath for byteman tests
+final File toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
+if ( toolsJar.exists() ) {
+    dependencies{
+        testImplementation files( toolsJar )
+    }
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Bundling
+
+java {
+    // Configure the Java "software component" to include javadoc and sources jars in addition to the classes jar.
+    withJavadocJar()
+    withSourcesJar()
+}
+
+tasks.withType(Jar).configureEach {
+    manifest {
+        attributes(
+                // Basic JAR manifest attributes
+                'Specification-Title': project.name,
+                'Specification-Version': project.version,
+                'Specification-Vendor': 'Hibernate.org',
+                'Implementation-Title': project.name,
+                'Implementation-Version': project.version,
+                'Implementation-Vendor': 'Hibernate.org',
+                'Implementation-Vendor-Id': 'org.hibernate',
+                'Implementation-Url': 'https://hibernate.org/orm',
+
+                // Hibernate-specific JAR manifest attributes
+                'Hibernate-VersionFamily': hibernateVersion.family,
+                'Hibernate-JpaVersion': jpaVersion.name,
+
+                'Bundle-Vendor': 'Hibernate.org',
+                'Bundle-DocURL': "https://hibernate.org/orm/releases/${hibernateVersion.family}"
+        )
+    }
+}
+
+tasks.named("jar") {
+    manifest {
+        attributes(
+                // Java 9 module name
+                'Automatic-Module-Name': java9ModuleName,
+
+                // BND Plugin instructions (for OSGi):
+                '-reproducible': true,
+                '-noextraheaders': true,
+                'Bundle-Name': project.name,
+                'Bundle-SymbolicName': java9ModuleName,
+                // This is overridden in some sub-projects
+                'Import-Package': [
+                        // Temporarily support JTA 1.1 -- Karaf and other frameworks still
+                        // use it.  Without this, the plugin generates [1.2,2).
+                        'javax.transaction;version="[1.1,2)"',
+                        // Also import every package referenced in the code
+                        // (note that '*' is resolved at build time to a list of packages)
+                        '*'
+                ].join( ',' ),
+                '-exportcontents': "*;version=${project.version}"
+        )
+    }
+}
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Reproducible Builds
+
+// https://docs.gradle.org/current/userguide/working_with_files.html#sec:reproducible_archives
+// Configure archive tasks to produce reproducible archives:
+tasks.withType(AbstractArchiveTask).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Configurations and Dependencies
+
+configurations.configureEach {
+    resolutionStrategy.eachDependency { details ->
+        //Force the "byte buddy agent" version to match the Byte Buddy version
+        // we use, as Mockito might pull in a mismatched version transitively
+        if (details.requested.group == "net.bytebuddy" && details.requested.name == 'byte-buddy-agent') {
+            details.useVersion libs.versions.byteBuddy.get()
+        }
+    }
+}

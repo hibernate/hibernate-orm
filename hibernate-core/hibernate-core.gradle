@@ -1,20 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
+    id "local.publishing-java-module"
+    id "local.publishing-group-relocation"
+
+    id "org.hibernate.orm.antlr"
     id "local-xjc-plugin"
 }
 
 description = 'Hibernate\'s core ORM functionality'
-
-apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
-apply plugin: 'org.hibernate.orm.antlr'
-apply plugin: 'org.hibernate.matrix-test'
 
 configurations {
     tests {
@@ -43,29 +41,24 @@ dependencies {
     compileOnly jakartaLibs.jsonbApi
     compileOnly libs.jackson
     compileOnly libs.jacksonXml
-    compileOnly dbLibs.postgresql
-
-//    annotationProcessor project( ":annotation-descriptor-generator" )
-    compileOnly project( ":annotation-descriptor-generator" )
+    compileOnly jdbcLibs.postgresql
+    compileOnly jdbcLibs.edb
 
     testImplementation project(':hibernate-testing')
     testImplementation project(':hibernate-ant')
     testImplementation project(':hibernate-scan-jandex')
 
-    testImplementation testLibs.shrinkwrapApi
     testImplementation testLibs.shrinkwrap
     testImplementation testLibs.shrinkwrapDescriptors
-    testImplementation testLibs.shrinkwrapDescriptorsApi
     testImplementation jakartaLibs.cdi
     testImplementation jakartaLibs.jacc
     testImplementation jakartaLibs.validation
-    testImplementation jakartaLibs.el
-    testImplementation( libs.validator ) {
+    testImplementation( testLibs.validator ) {
         // for test runtime
         transitive = true
     }
     testImplementation "joda-time:joda-time:2.3"
-    testImplementation dbLibs.h2
+    testImplementation jdbcLibs.h2
     testImplementation libs.hibernateModelsJandex
 
     testRuntimeOnly libs.byteBuddy
@@ -272,6 +265,7 @@ tasks.withType( Test.class ).each { test ->
 tasks.named( "javadoc", Javadoc ) {
     configure(options) {
         overview = rootProject.file( "shared/javadoc/overview.html" )
+        exclude( "**/internal/**", "org/hibernate/boot/jaxb/**", "org/hibernate/tuple/**" )
     }
 }
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.transaction;
@@ -19,7 +19,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 
 import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProvider;
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 import org.hibernate.orm.test.jpa.SettingsGenerator;
 
@@ -123,7 +123,7 @@ public class TransactionCommitFailureTest {
 	public static class ProxyConnectionProvider extends ConnectionProviderDelegate {
 
 		public ProxyConnectionProvider() {
-			setConnectionProvider( SharedDriverManagerConnectionProviderImpl.getInstance() );
+			setConnectionProvider( SharedDriverManagerConnectionProvider.getInstance() );
 		}
 
 		@Override

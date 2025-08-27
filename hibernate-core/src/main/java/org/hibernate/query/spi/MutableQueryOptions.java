@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
@@ -11,9 +11,10 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.query.QueryLogging;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
+
+import static org.hibernate.query.QueryLogging.QUERY_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -39,7 +40,7 @@ public interface MutableQueryOptions extends QueryOptions {
 	 */
 	default void setCacheMode(CacheMode cacheMode) {
 		if ( cacheMode == null ) {
-			QueryLogging.QUERY_LOGGER.debug( "Null CacheMode passed to #setCacheMode; falling back to `NORMAL`" );
+			QUERY_LOGGER.debug( "Null CacheMode passed to #setCacheMode; falling back to 'NORMAL'" );
 			cacheMode = CacheMode.NORMAL;
 		}
 

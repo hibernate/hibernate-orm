@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.formula;
@@ -14,6 +14,7 @@ import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.Formula;
 
 import org.hibernate.community.dialect.FirebirdDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -86,9 +87,7 @@ public class FormulaTests {
 
 	@AfterEach
 	void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery( "delete from Account" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Account")
@@ -114,13 +113,15 @@ public class FormulaTests {
 		@DialectOverride.Formula(dialect = DB2Dialect.class,
 				override = @Formula("varchar_format(rate * 100) || '%'"))
 		@DialectOverride.Formula(dialect = OracleDialect.class,
-				override = @Formula("to_char(rate * 100) || '%'"))
+				override = @Formula("to_char(cast(rate * 100 as number(10,2))) || '%'"))
 		@DialectOverride.Formula(dialect = SQLServerDialect.class,
 				override = @Formula("ltrim(str(rate * 100, 10, 2)) + '%'"))
 		@DialectOverride.Formula(dialect = SybaseDialect.class,
 				override = @Formula("ltrim(str(rate * 100, 10, 2)) + '%'"))
 		@DialectOverride.Formula(dialect = FirebirdDialect.class,
 				override = @Formula("cast(rate * 100 as decimal(10,2)) || '%'"))
+		@DialectOverride.Formula(dialect = InformixDialect.class,
+				override = @Formula("trim(concat(to_char(rate * 100,'#&.&&'), '%'))"))
 		private String ratePercent;
 
 		public Long getId() {

@@ -1,13 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.util;
 
+import jakarta.persistence.AccessType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.MetaModelGenerationException;
-import org.hibernate.processor.annotation.AnnotationMetaEntity;
 import org.hibernate.processor.model.Metamodel;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -16,6 +16,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
@@ -29,16 +30,18 @@ import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleTypeVisitor8;
 import javax.tools.Diagnostic;
-
-import jakarta.persistence.AccessType;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static java.beans.Introspector.decapitalize;
+import static java.util.stream.Stream.concat;
+import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.processor.util.AccessTypeInformation.DEFAULT_ACCESS_TYPE;
 import static org.hibernate.processor.util.Constants.ACCESS;
 import static org.hibernate.processor.util.Constants.BASIC;
@@ -57,6 +60,7 @@ import static org.hibernate.processor.util.Constants.ONE_TO_MANY;
 import static org.hibernate.processor.util.Constants.ONE_TO_ONE;
 import static org.hibernate.processor.util.NullnessUtil.castNonNull;
 import static org.hibernate.processor.util.StringUtil.isProperty;
+import static org.hibernate.processor.util.StringUtil.removeDollar;
 
 /**
  * Utility class.
@@ -190,12 +194,7 @@ public final class TypeUtils {
 				return context.getTypeUtils().getDeclaredType(
 						typeElement,
 						declaredType.getTypeArguments().stream()
-								.map( new Function<TypeMirror, TypeMirror>() {
-											@Override
-											public @Nullable TypeMirror apply(TypeMirror arg) {
-												return extractClosestRealType( arg, context, beingVisited );
-											}
-										} )
+								.map( arg -> extractClosestRealType( arg, context, beingVisited ) )
 								.toArray( TypeMirror[]::new )
 				);
 			default:
@@ -253,6 +252,26 @@ public final class TypeUtils {
 		return null;
 	}
 
+	/**
+	 * Checks whether the {@code Element} hosts the annotation (directly or inherited) with the given fully qualified class name.
+	 *
+	 * @param element the element to check for the hosted annotation
+	 * @param qualifiedName the fully qualified class name of the annotation to check for
+	 *
+	 * @return the annotation mirror for the specified annotation class from the {@code Element} or {@code null} in case
+	 *         the {@code TypeElement} does not host the specified annotation (directly or inherited).
+	 */
+	public static @Nullable AnnotationMirror getInheritedAnnotationMirror(Elements elements, Element element, String qualifiedName) {
+		assert element != null;
+		assert qualifiedName != null;
+		for ( AnnotationMirror mirror : elements.getAllAnnotationMirrors(element) ) {
+			if ( isAnnotationMirrorOfType( mirror, qualifiedName ) ) {
+				return mirror;
+			}
+		}
+		return null;
+	}
+
 	public static boolean hasAnnotation(Element element, String qualifiedName) {
 		return getAnnotationMirror( element, qualifiedName ) != null;
 	}
@@ -264,6 +283,10 @@ public final class TypeUtils {
 			}
 		}
 		return false;
+	}
+
+	public static @Nullable AnnotationValue getAnnotationValue(AnnotationMirror annotationMirror) {
+		return getAnnotationValue( annotationMirror, DEFAULT_ANNOTATION_PARAMETER_NAME );
 	}
 
 	public static @Nullable AnnotationValue getAnnotationValue(AnnotationMirror annotationMirror, String member) {
@@ -366,7 +389,12 @@ public final class TypeUtils {
 
 	private static void updateEmbeddableAccessType(Context context, AccessType defaultAccessType, TypeElement embedded) {
 		final String embeddedClassName = embedded.getQualifiedName().toString();
-		final AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo(embeddedClassName);
+		final AccessType forcedAccessType = determineAnnotationSpecifiedAccessType( embedded );
+		final AccessTypeInformation accessTypeInfo =
+				forcedAccessType != null
+						? new AccessTypeInformation( embeddedClassName, null, forcedAccessType )
+						: context.getAccessTypeInfo( embeddedClassName );
+
 		if ( accessTypeInfo == null ) {
 			final AccessTypeInformation newAccessTypeInfo =
 					new AccessTypeInformation( embeddedClassName, null, defaultAccessType );
@@ -480,7 +508,7 @@ public final class TypeUtils {
 	public static @Nullable AccessType determineAnnotationSpecifiedAccessType(Element element) {
 		final AnnotationMirror mirror = getAnnotationMirror( element, ACCESS );
 		if ( mirror != null ) {
-			final AnnotationValue accessType = getAnnotationValue( mirror, DEFAULT_ANNOTATION_PARAMETER_NAME );
+			final AnnotationValue accessType = getAnnotationValue( mirror );
 			if ( accessType != null ) {
 				final VariableElement enumValue = (VariableElement) accessType.getValue();
 				final Name enumValueName = enumValue.getSimpleName();
@@ -515,6 +543,14 @@ public final class TypeUtils {
 		// we want to accept classes and records but not enums,
 		// and we want to avoid depending on ElementKind.RECORD
 		return kind.isClass() && kind != ElementKind.ENUM;
+	}
+
+	public static boolean isClassRecordOrInterfaceType(Element element) {
+		final ElementKind kind = element.getKind();
+		// we want to accept classes and records but not enums,
+		// and we want to avoid depending on ElementKind.RECORD
+		return kind.isClass() && kind != ElementKind.ENUM
+			|| kind.isInterface() && kind != ElementKind.ANNOTATION_TYPE;
 	}
 
 	public static boolean primitiveClassMatchesKind(Class<?> itemType, TypeKind kind) {
@@ -571,34 +607,34 @@ public final class TypeUtils {
 					|| isAnnotationMirrorOfType( mirror, ONE_TO_ONE ) ) {
 				return getFullyQualifiedClassNameOfTargetEntity( mirror, "targetEntity" );
 			}
-			else if ( isAnnotationMirrorOfType( mirror, "org.hibernate.annotations.Target") ) {
+			else if ( isAnnotationMirrorOfType( mirror, "org.hibernate.annotations.TargetEmbeddable") ) {
 				return getFullyQualifiedClassNameOfTargetEntity( mirror, "value" );
 			}
 		}
 		return null;
 	}
 
-	public static String propertyName(AnnotationMetaEntity parent, Element element) {
-		final Elements elementsUtil = parent.getContext().getElementUtils();
-		if ( element.getKind() == ElementKind.FIELD ) {
-			return element.getSimpleName().toString();
-		}
-		else if ( element.getKind() == ElementKind.METHOD ) {
-			final String name = element.getSimpleName().toString();
-			if ( name.startsWith( "get" ) ) {
-				return elementsUtil.getName(decapitalize(name.substring(3))).toString();
-			}
-			else if ( name.startsWith( "is" ) ) {
-				return elementsUtil.getName(decapitalize(name.substring(2))).toString();
-			}
-			return elementsUtil.getName(decapitalize(name)).toString();
-		}
-		else {
-			return elementsUtil.getName(element.getSimpleName() + "/* " + element.getKind() + " */").toString();
+	public static String propertyName(Element element) {
+		switch ( element.getKind() ) {
+			case FIELD:
+				return element.getSimpleName().toString();
+			case METHOD:
+				final Name name = element.getSimpleName();
+				if ( name.length() > 3 && name.subSequence( 0, 3 ).equals( "get" ) ) {
+					return decapitalize( name.subSequence( 3, name.length() ).toString() );
+				}
+				else if ( name.length() > 2 && name.subSequence( 0, 2 ).equals( "is" ) ) {
+					return decapitalize( name.subSequence( 2, name.length() ).toString() );
+				}
+				else {
+					return decapitalize( name.toString() );
+				}
+			default:
+				return element.getSimpleName() + "/* " + element.getKind() + " */";
 		}
 	}
 
-	public static @Nullable String findMappedSuperClass(Metamodel entity, Context context) {
+	public static @Nullable Element findMappedSuperElement(Metamodel entity, Context context) {
 		final Element element = entity.getElement();
 		if ( element instanceof TypeElement typeElement ) {
 			TypeMirror superClass = typeElement.getSuperclass();
@@ -607,7 +643,7 @@ public final class TypeUtils {
 				final DeclaredType declaredType = (DeclaredType) superClass;
 				final TypeElement superClassElement = (TypeElement) declaredType.asElement();
 				if ( extendsSuperMetaModel( superClassElement, entity.isMetaComplete(), context ) ) {
-					return superClassElement.getQualifiedName().toString();
+					return superClassElement;
 				}
 				superClass = superClassElement.getSuperclass();
 			}
@@ -651,6 +687,14 @@ public final class TypeUtils {
 				}
 			}
 		}
+		TypeMirror superclass = type.getSuperclass();
+		if ( superclass != null && superclass.getKind() == TypeKind.DECLARED  ) {
+			final DeclaredType declaredType = (DeclaredType) superclass;
+			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+			if ( implementsInterface( typeElement, interfaceName) ) {
+				return true;
+			}
+		}
 		return false;
 	}
 
@@ -665,6 +709,44 @@ public final class TypeUtils {
 			superclass = typeElement.getSuperclass();
 		}
 		return false;
+	}
+
+	public static boolean isMemberType(Element element) {
+		return element.getEnclosingElement() instanceof TypeElement;
+	}
+
+	public static String getGeneratedClassFullyQualifiedName(TypeElement typeElement, boolean jakartaDataStyle) {
+		final String simpleName = typeElement.getSimpleName().toString();
+		final Element enclosingElement = typeElement.getEnclosingElement();
+		return qualifiedName( enclosingElement, jakartaDataStyle )
+				+ "." + (jakartaDataStyle ? '_' + simpleName : simpleName + '_');
+	}
+
+	private static String qualifiedName(Element enclosingElement, boolean jakartaDataStyle) {
+		if ( enclosingElement instanceof TypeElement typeElement ) {
+			return getGeneratedClassFullyQualifiedName( typeElement, jakartaDataStyle );
+		}
+		else if ( enclosingElement instanceof PackageElement packageElement ) {
+			return packageElement.getQualifiedName().toString();
+		}
+		else {
+			throw new MetaModelGenerationException( "Unexpected enclosing element: " + enclosingElement );
+		}
+	}
+
+
+	public static String getGeneratedClassFullyQualifiedName(TypeElement element, String packageName, boolean jakartaDataStyle) {
+		final StringBuilder builder = new StringBuilder( packageName );
+		final Name qualifiedName = element.getQualifiedName();
+		final String tail = qualifiedName.subSequence( builder.length(), qualifiedName.length() ).toString();
+		for ( String bit : split( ".", tail ) ) {
+			final String part = removeDollar( bit );
+			if ( !builder.isEmpty() ) {
+				builder.append( "." );
+			}
+			builder.append( jakartaDataStyle ? '_' + part : part + '_' );
+		}
+		return builder.toString();
 	}
 
 	static class EmbeddedAttributeVisitor extends SimpleTypeVisitor8<@Nullable TypeElement, Element> {
@@ -701,4 +783,46 @@ public final class TypeUtils {
 
 	public static final Set<String> PRIMITIVE_TYPES =
 			Set.of("boolean", "char", "long", "int", "short", "byte", "double", "float");
+
+	public static String resolveTypeName(TypeElement typeElement, Element element, String name) {
+		final var mirror = resolveTypeMirror( typeElement, element, name );
+		return mirror == null ? name : mirror.toString();
+	}
+
+	public static @Nullable TypeMirror resolveTypeMirror(TypeElement typeElement, Element element, String name) {
+		final var mirrorMap = resolveTypeParameters( typeElement.asType(), element, Map.of(), new HashSet<>() );
+		return mirrorMap == null ? null : mirrorMap.get( name );
+	}
+
+	private static @Nullable Map<String, TypeMirror> resolveTypeParameters(TypeMirror type, Element element, Map<String, TypeMirror> parametersMap, Collection<Element> visited) {
+		if ( !(type instanceof DeclaredType declaredType
+			&& declaredType.asElement() instanceof TypeElement typeElement) ) {
+			return null;
+		}
+		if ( !visited.add( typeElement ) ) {
+			return null;
+		}
+		final var generic = typeElement.getTypeParameters();
+		final var map = new HashMap<String, TypeMirror>();
+		var typeArguments = declaredType.getTypeArguments();
+		if ( !(typeArguments.isEmpty() || generic.size() == typeArguments.size()) ) {
+			return null;
+		}
+		for ( var n = 0; n < generic.size(); ++n ) {
+			final var mirror = typeArguments.isEmpty()
+					? generic.get( 0 ).getBounds().get( 0 )
+					: typeArguments.get( n );
+			final var value = mirror.toString();
+			map.put( generic.get( n ).asType().toString(), parametersMap.getOrDefault( value, mirror ) );
+		}
+		if ( typeElement.equals( element ) ) {
+			return map;
+		}
+		return concat(
+				Stream.of( typeElement.getSuperclass() ),
+				typeElement.getInterfaces().stream()
+		).map( tm -> resolveTypeParameters( tm, element, map, visited ) )
+				.filter( Objects::nonNull )
+				.findFirst().orElse( null );
+	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.insert;
@@ -62,6 +62,13 @@ public class InsertSelectStatement extends AbstractMutationStatement implements 
 		for ( int i = 0; i < targetColumnReferences.size(); i++ ) {
 			consumer.accept( i, targetColumnReferences.get( i ) );
 		}
+	}
+
+	public void addTargetColumnReference(ColumnReference reference) {
+		if ( targetColumnReferences == null ) {
+			targetColumnReferences = new ArrayList<>();
+		}
+		targetColumnReferences.add( reference );
 	}
 
 	public void addTargetColumnReferences(ColumnReference... references) {

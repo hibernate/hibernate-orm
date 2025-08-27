@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -15,7 +15,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeJavaClassMappings;
  */
 public interface BasicJavaType<T> extends JavaType<T> {
 	/**
-	 * Obtain the "recommended" {@link JdbcType SQL type descriptor}
+	 * Obtain the "recommended" {@linkplain JdbcType SQL type descriptor}
 	 * for this Java type. Often, but not always, the source of this
 	 * recommendation is the JDBC specification.
 	 *

@@ -1,12 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query;
 
 import java.util.List;
 
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -63,7 +63,7 @@ public class NativeQueryDynamicInstantiationAndTupleResultTest {
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					QueryImplementor query = session.createNamedQuery( "Demo.findAllCustom" );
+					Query query = session.createNamedQuery( "Demo.findAllCustom" );
 					List<DemoPojo> resultList = query.getResultList();
 					assertThat( resultList.size() ).isEqualTo( 1 );
 
@@ -78,7 +78,7 @@ public class NativeQueryDynamicInstantiationAndTupleResultTest {
 	public void testQuery2(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					QueryImplementor query = session.createNamedQuery( "Demo.findAllCustom", DemoPojo.class );
+					Query query = session.createNamedQuery( "Demo.findAllCustom", DemoPojo.class );
 					List<DemoPojo> resultList = query.getResultList();
 					assertThat( resultList.size() ).isEqualTo( 1 );
 
@@ -93,7 +93,7 @@ public class NativeQueryDynamicInstantiationAndTupleResultTest {
 	public void testQuery3(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					QueryImplementor query = session.createNamedQuery( "Demo.findAllCustom", Tuple.class );
+					Query query = session.createNamedQuery( "Demo.findAllCustom", Tuple.class );
 					List<Tuple> resultList = query.getResultList();
 					assertThat( resultList.size() ).isEqualTo( 1 );
 

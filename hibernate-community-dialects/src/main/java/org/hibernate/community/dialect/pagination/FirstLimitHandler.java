@@ -1,11 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect.pagination;
 
 import org.hibernate.dialect.pagination.AbstractNoOffsetLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.query.spi.Limit;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
  * A {@link LimitHandler} for older versions of Informix, Ingres,
@@ -28,6 +30,11 @@ public class FirstLimitHandler extends AbstractNoOffsetLimitHandler {
 	}
 
 	@Override
+	protected String limitClause(int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
+		return " first " + parameterMarkerStrategy.createMarker( 1, null ) + " rows only";
+	}
+
+	@Override
 	protected String insert(String first, String sql) {
 		return insertAfterSelect( first, sql );
 	}
@@ -35,5 +42,15 @@ public class FirstLimitHandler extends AbstractNoOffsetLimitHandler {
 	@Override
 	public boolean bindLimitParametersFirst() {
 		return true;
+	}
+
+	@Override
+	public boolean processSqlMutatesState() {
+		return false;
+	}
+
+	@Override
+	public int getParameterPositionStart(Limit limit) {
+		return hasMaxRows( limit ) && supportsVariableLimit() ? 2 : 1;
 	}
 }

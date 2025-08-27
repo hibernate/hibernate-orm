@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers;
@@ -11,10 +11,10 @@ import java.lang.annotation.Target;
 
 /**
  * <p>
- * Annotation to specify a "fake" bi-directional relation. Such a relation uses {@code @OneToMany} +
+ * Annotation to specify a "fake" bidirectional relation. Such a relation uses {@code @OneToMany} +
  * {@code @JoinColumn} on the one side, and {@code @ManyToOne} + {@code @Column(insertable=false, updatable=false)} on
  * the many side. Then, Envers won't use a join table to audit this relation, but will store changes as in a normal
- * bi-directional relation.
+ * bidirectional relation.
  * </p>
  * <p>
  * This annotation is <b>experimental</b> and may change in future releases.

@@ -1,10 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
-import org.hibernate.query.NullPrecedence;
+import jakarta.persistence.criteria.Nulls;
 import org.hibernate.query.SortDirection;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -43,7 +43,7 @@ public class SelfRenderingOrderingExpression extends SelfRenderingSqlFragmentExp
 			String collation,
 			String modelPartName,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence,
+			Nulls nullPrecedence,
 			SqlAstCreationState creationState) {
 		final Expression expression = resolve( ast, tableGroup, modelPartName, creationState );
 		// It makes no sense to order by an expression multiple times
@@ -55,13 +55,10 @@ public class SelfRenderingOrderingExpression extends SelfRenderingSqlFragmentExp
 				}
 			}
 		}
-		final Expression sortExpression = OrderingExpression.applyCollation(
-				expression,
-				collation,
-				creationState
-		);
 
-		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence.getJpaValue() ) );
+		final Expression sortExpression =
+				OrderingExpression.applyCollation( expression, collation, creationState );
+		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence ) );
 	}
 
 	@Override

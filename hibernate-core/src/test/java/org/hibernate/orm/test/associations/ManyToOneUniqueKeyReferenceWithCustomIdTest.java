@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.associations;
@@ -13,11 +13,11 @@ import jakarta.persistence.ManyToOne;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.Type;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.EnhancedUserType;
 import org.junit.jupiter.api.Test;
 
@@ -127,12 +127,12 @@ public class ManyToOneUniqueKeyReferenceWithCustomIdTest {
 
 		@Override
 		public void nullSafeSet(PreparedStatement st, CustomId value, int position,
-								SharedSessionContractImplementor session) throws SQLException {
+								WrapperOptions options) throws SQLException {
 			st.setObject( position, value.toString(), getSqlType() );
 		}
 
 		@Override
-		public CustomId nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+		public CustomId nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 				throws SQLException {
 			String idValue = rs.getString( position );
 			return idValue != null ? fromStringValue( idValue ) : null;

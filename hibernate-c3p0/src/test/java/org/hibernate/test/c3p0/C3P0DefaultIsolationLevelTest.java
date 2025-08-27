@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.test.c3p0;
@@ -11,7 +11,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.RequiresDialect;
@@ -20,6 +19,8 @@ import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
+import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER;
+import static org.hibernate.cfg.JdbcSettings.ISOLATION;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -52,8 +53,8 @@ public class C3P0DefaultIsolationLevelTest extends
 	@Override
 	protected void addSettings(Map<String,Object> settings) {
 		connectionProvider = new C3P0ProxyConnectionProvider();
-		settings.put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
-		settings.put( AvailableSettings.ISOLATION, "READ_COMMITTED" );
+		settings.put( CONNECTION_PROVIDER, connectionProvider );
+		settings.put( ISOLATION, "READ_COMMITTED" );
 	}
 
 	@Test

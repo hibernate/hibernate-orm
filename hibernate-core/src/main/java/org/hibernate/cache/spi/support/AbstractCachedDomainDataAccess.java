@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.support;
@@ -10,13 +10,13 @@ import org.hibernate.cache.spi.access.CachedDomainDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
-import org.jboss.logging.Logger;
+
+import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractCachedDomainDataAccess implements CachedDomainDataAccess, AbstractDomainDataRegion.Destructible {
-	private static final Logger log = Logger.getLogger( AbstractCachedDomainDataAccess.class );
 
 	private final DomainDataRegion region;
 	private final DomainDataStorageAccess storageAccess;
@@ -39,7 +39,7 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 	}
 
 	protected void clearCache() {
-		log.debugf( "Clearing cache data map [region=`%s`]", region.getName() );
+		L2CACHE_LOGGER.tracef( "Clearing cache data map [region='%s']", region.getName() );
 		getStorageAccess().evictData();
 	}
 

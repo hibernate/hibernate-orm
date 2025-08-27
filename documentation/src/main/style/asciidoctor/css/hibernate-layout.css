@@ -14,15 +14,36 @@ body:before {
 #header {
     width: 1000px !important;
 }
-.sidebarblock>.content>.title,h4,h5,h6 {
-    font-family: 'Noto Serif', "Open Sans", "DejaVu Sans", sans-serif !important;
-    font-size: 1.3em !important;
-    margin-top:0em !important;
-    margin-bottom:1em !important;
-    line-height:1.0125em !important
+
+.sidebarblock {
+    background-color: #7a251805 !important;
+    .content>.title,h4,h5,h6 {
+        font-family: 'Noto Serif', "Open Sans", "DejaVu Sans", sans-serif !important;
+        font-size: 1.3em !important;
+        margin-top: 0 !important;
+        margin-bottom: 1em !important;
+        line-height: 1.0125em !important;
+        color: #7a2518 !important;
+    }
+    .content>.title {
+        border-bottom: 1px solid #7a251820 !important;
+        padding-bottom: 0.5em !important;
+    }
+    .content>.quoteblock>blockquote>.paragraph>p {
+        color: #7a2518 !important;
+    }
 }
+.sidebarblock pre {
+    background-color: #7a251805 !important;
+}
+/*.sidebarblock .listingblock {*/
+/*    padding: 0 !important;*/
+/*    margin: 0 !important;*/
+/*}*/
+
 #toctitle {
     font-family: 'Noto Serif', "Open Sans", "DejaVu Sans", sans-serif !important;
+    color: #4a5d75 !important;
 }
 #toctitle>.content>.title,h4,h5,h6 {
     font-family: 'Noto Serif', "Open Sans", "DejaVu Sans", sans-serif !important;
@@ -57,7 +78,7 @@ body:before {
 }
 h1 {
     font-size: 2.5em !important;
-    color:#182737 !important;
+    color:#4a5d75 !important;
     font-family: 'Noto Serif', 'Lucida Grande', Geneva, Verdana, Arial, sans-serif !important;
     font-weight: bold !important;
     text-align: center !important;
@@ -104,23 +125,65 @@ font-weight: bold !important;
     color:#4a5d75 !important;
     font-family: 'Noto Serif', 'Lucida Grande', Geneva, Verdana, Arial, sans-serif !important
 }
-.admonitionblock{
-    background-color: antiquewhite !important;
-    border: none !important;
-    border-radius: 0.3em !important;
-    width: 100% !important;
-}
-td.icon {
-    /* display:block !important; */
-}
-td.content {
-    text-align:left !important;
-    font-size:1em !important;
-    display:block !important;
-}
-.admonitionblock>table td.content {
-    border-left: none !important;
-    padding: 1em;
+.admonitionblock {
+    table {
+        background: #f8f8f9 none repeat scroll 0 0;
+        border-radius: 0.285714rem;
+        box-shadow: 0 0 0 1px rgba(34, 36, 38, 0.22) inset, 0 0 0 0 rgba(0, 0, 0, 0);
+        color: rgba(0, 0, 0, 0.87);
+        line-height: 1.4285em;
+        margin: 1em 0;
+        min-height: 1em;
+        padding: 1em 1.5em;
+    }
+
+    &.tip table {
+        box-shadow: 0 0 0 1px #a9d5de inset, 0 0 0 0 transparent;
+        background-color: #f8ffff;
+        color: #276f86;
+    }
+    &.tip pre {
+        background-color: #f8ffff !important;
+    }
+    &.tip .listingblock {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    &.important table, &.note table {
+        box-shadow: 0 0 0 1px #c9ba9b inset, 0 0 0 0 transparent;
+        background-color: #fffaf3;
+        color: #573a08;
+    }
+    &.important pre, &.note pre {
+        background-color: #fffaf3 !important;
+    }
+    &.important .listingblock, &.note .listingblock {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    &.warning table, &.caution table {
+        box-shadow: 0 0 0 1px #e0b4b4 inset, 0 0 0 0 transparent;
+        background-color: #fff6f6;
+        color: #9f3a38;
+    }
+    &.warning pre, &.caution pre {
+        background-color: #fff6f6 !important;
+    }
+    &.warning .listingblock, &.caution .listingblock {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .title {
+        font-weight: bold;
+        margin-bottom: .5em;
+    }
+
+    p {
+        margin-bottom: 0px;
+    }
 }
 .admonitionblock .icon [class^="fa icon-tip"]{
     background-image: url(../images/org/hibernate/docbook/tip.png) !important;
@@ -250,7 +313,7 @@ code[data-lang='antlrv4']>.pun {
     color: black !important;
 }
 pre {
-    background-color: aliceblue !important;
+    background-color: #f0f8ff7f !important;
     border-radius: 0.3em !important;
     font-size:1.05em !important;
 }

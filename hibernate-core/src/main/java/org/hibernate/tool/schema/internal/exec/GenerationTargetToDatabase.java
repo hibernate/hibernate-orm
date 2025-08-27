@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal.exec;
@@ -111,7 +111,8 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 				jdbcStatement = getIsolatedConnection().createStatement();
 			}
 			catch (SQLException e) {
-				throw getSqlExceptionHelper().convert( e, "Unable to create JDBC Statement for DDL execution" );
+				throw getSqlExceptionHelper()
+						.convert( e, "Unable to create JDBC Statement for DDL execution" );
 			}
 		}
 
@@ -126,7 +127,8 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 				jdbcStatement = null;
 			}
 			catch (SQLException e) {
-				throw getSqlExceptionHelper().convert( e, "Unable to close JDBC Statement after DDL execution" );
+				throw getSqlExceptionHelper()
+						.convert( e, "Unable to close JDBC Statement after DDL execution" );
 			}
 		}
 		if ( releaseAfterUse ) {

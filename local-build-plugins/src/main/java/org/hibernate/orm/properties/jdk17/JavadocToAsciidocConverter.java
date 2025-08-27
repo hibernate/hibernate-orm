@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.properties.jdk17;
 
@@ -45,13 +43,13 @@ public class JavadocToAsciidocConverter {
 	}
 
 	private static Elements cleanupFieldJavadocElement(Element fieldJavadocElement,
-													   String className,
-													   String simpleFieldName,
-													   String publishedJavadocsUrl) {
+													String className,
+													String simpleFieldName,
+													String publishedJavadocsUrl) {
 		// Before proceeding let's make sure that the javadoc structure is the one that we expect:
 		if ( !isValidFieldJavadocStructure( fieldJavadocElement ) ) {
 			throw new IllegalStateException( "Javadoc's DOM doesn't match the expected structure. " +
-													 "This may lead to unexpected results in rendered configuration properties in the User Guide." );
+													"This may lead to unexpected results in rendered configuration properties in the User Guide." );
 		}
 
 		fixUrls( className, publishedJavadocsUrl, fieldJavadocElement );
@@ -65,10 +63,10 @@ public class JavadocToAsciidocConverter {
 		usefulDocsPart.add( new Element( "div" )
 									.appendChild( new Element( "b" ).text( "See: " ) )
 									.appendChild( new Element( "a" )
-														  .attr(
-																  "href",
-																  Utils.fieldJavadocLink( publishedJavadocsUrl, className, simpleFieldName )
-														  ).text( Utils.withoutPackagePrefix( className ) + "." + simpleFieldName ) ) );
+														.attr(
+																"href",
+																Utils.fieldJavadocLink( publishedJavadocsUrl, className, simpleFieldName )
+														).text( Utils.withoutPackagePrefix( className ) + "." + simpleFieldName ) ) );
 
 		return usefulDocsPart;
 	}

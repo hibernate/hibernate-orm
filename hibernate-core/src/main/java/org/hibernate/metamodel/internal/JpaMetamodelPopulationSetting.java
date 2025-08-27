@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
@@ -26,10 +26,10 @@ public enum JpaMetamodelPopulationSetting {
 		};
 	}
 
-	public static JpaMetamodelPopulationSetting determineJpaMetaModelPopulationSetting(Map configurationValues) {
+	public static JpaMetamodelPopulationSetting determineJpaMetaModelPopulationSetting(Map<String, Object> settings) {
 		String setting = ConfigurationHelper.getString(
 				AvailableSettings.JPA_METAMODEL_POPULATION,
-				configurationValues,
+				settings,
 				"ignoreUnsupported"
 		);
 		return JpaMetamodelPopulationSetting.parse( setting );

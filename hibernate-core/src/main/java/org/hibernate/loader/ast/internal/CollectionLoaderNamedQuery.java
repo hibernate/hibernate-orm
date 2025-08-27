@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
@@ -44,9 +44,9 @@ public class CollectionLoaderNamedQuery implements CollectionLoader {
 		query.setHibernateFlushMode( FlushMode.MANUAL );
 		final List<?> resultList = query.getResultList();
 		// TODO: we need a good way to inspect the query itself to see what it returns
-		if ( !resultList.isEmpty() && resultList.get(0) instanceof PersistentCollection<?> ) {
+		if ( !resultList.isEmpty() && resultList.get(0) instanceof PersistentCollection<?> persistentCollection ) {
 			// in hbm.xml files we have the <load-collection/> element
-			return (PersistentCollection<?>) resultList.get(0);
+			return persistentCollection;
 		}
 		else {
 			// using annotations we have no way to specify a @CollectionResult

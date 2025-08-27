@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.events;
@@ -24,7 +24,6 @@ import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -65,16 +64,13 @@ public class PostCommitListenerTest extends BaseCoreFunctionalTestCase {
 					}
 
 					private void integrate(SessionFactoryImplementor sessionFactory) {
-						final ServiceRegistryImplementor serviceRegistry = sessionFactory.getServiceRegistry();
-						serviceRegistry.getService( EventListenerRegistry.class ).getEventListenerGroup(
-								EventType.POST_COMMIT_DELETE
-						).appendListener( postCommitDeleteEventListener );
-						serviceRegistry.getService( EventListenerRegistry.class ).getEventListenerGroup(
-								EventType.POST_COMMIT_UPDATE
-						).appendListener( postCommitUpdateEventListener );
-						serviceRegistry.getService( EventListenerRegistry.class ).getEventListenerGroup(
-								EventType.POST_COMMIT_INSERT
-						).appendListener( postCommitInsertEventListener );
+						final EventListenerRegistry listenerRegistry = sessionFactory.getEventListenerRegistry();
+						listenerRegistry.getEventListenerGroup( EventType.POST_COMMIT_DELETE )
+								.appendListener( postCommitDeleteEventListener );
+						listenerRegistry.getEventListenerGroup( EventType.POST_COMMIT_UPDATE )
+								.appendListener( postCommitUpdateEventListener );
+						listenerRegistry.getEventListenerGroup( EventType.POST_COMMIT_INSERT )
+								.appendListener( postCommitInsertEventListener );
 					}
 				}
 		);

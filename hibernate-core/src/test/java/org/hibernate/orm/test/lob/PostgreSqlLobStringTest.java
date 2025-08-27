@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.lob;
@@ -31,6 +31,7 @@ import jakarta.persistence.Table;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hibernate.Hibernate.getLobHelper;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -65,9 +66,9 @@ public class PostgreSqlLobStringTest {
 											"        (?, ?, ?, -1)"
 							)) {
 								int index = 1;
-								statement.setClob( index++, session.getLobHelper().createClob( value1 ) );
-								statement.setClob( index++, session.getLobHelper().createClob( value2 ) );
-								statement.setClob( index++, session.getLobHelper().createClob( value3 ) );
+								statement.setClob( index++, getLobHelper().createClob( value1 ) );
+								statement.setClob( index++, getLobHelper().createClob( value2 ) );
+								statement.setClob( index++, getLobHelper().createClob( value3 ) );
 
 								assertEquals( 1, statement.executeUpdate() );
 							}
@@ -142,10 +143,7 @@ public class PostgreSqlLobStringTest {
 
 	@AfterEach
 	public void cleanUp(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete from TestEntity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "TestEntity")

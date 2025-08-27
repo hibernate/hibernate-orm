@@ -1,17 +1,18 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.TerminalPathException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
 
 /**
  * @author Steve Ebersole
@@ -35,14 +36,14 @@ public class BasicSqmPathSource<J>
 	}
 
 	@Override
-	public BasicDomainType<J> getSqmPathType() {
-		return (BasicDomainType<J>) super.getSqmPathType();
+	public String getTypeName() {
+		return super.getTypeName();
 	}
 
-	@Override
-	public DomainType<J> getSqmType() {
-		return getSqmPathType();
-	}
+//	@Override
+//	public SqmDomainType<J> getSqmType() {
+//		return getPathType();
+//	}
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
@@ -63,7 +64,7 @@ public class BasicSqmPathSource<J>
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
+		return BASIC;
 	}
 
 	@Override

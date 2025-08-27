@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
@@ -79,20 +79,26 @@ public class XmlAsStringArrayJdbcType extends XmlArrayJdbcType implements Adjust
 		if ( length > maxLength ) {
 			return true;
 		}
-
-		final DdlTypeRegistry ddlTypeRegistry = indicators.getTypeConfiguration().getDdlTypeRegistry();
-		final String typeName = ddlTypeRegistry.getTypeName( getDdlTypeCode(), dialect );
-		return typeName.equals( ddlTypeRegistry.getTypeName( SqlTypes.CLOB, dialect ) )
+		else {
+			final DdlTypeRegistry ddlTypeRegistry = indicators.getTypeConfiguration().getDdlTypeRegistry();
+			final String typeName = ddlTypeRegistry.getTypeName( getDdlTypeCode(), dialect );
+			return typeName.equals( ddlTypeRegistry.getTypeName( SqlTypes.CLOB, dialect ) )
 				|| typeName.equals( ddlTypeRegistry.getTypeName( SqlTypes.NCLOB, dialect ) );
+		}
 	}
 
 	@Override
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
 		return new BasicBinder<>( javaType, this ) {
+
+			private XmlAsStringArrayJdbcType getXmlAsStringArrayJdbcType() {
+				return (XmlAsStringArrayJdbcType) getJdbcType();
+			}
+
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				final XmlAsStringArrayJdbcType jdbcType = (XmlAsStringArrayJdbcType) getJdbcType();
+				final XmlAsStringArrayJdbcType jdbcType = getXmlAsStringArrayJdbcType();
 				final String xml = jdbcType.toString( value, getJavaType(), options );
 				if ( jdbcType.nationalized && options.getDialect().supportsNationalizedMethods() ) {
 					st.setNString( index, xml );
@@ -105,7 +111,7 @@ public class XmlAsStringArrayJdbcType extends XmlArrayJdbcType implements Adjust
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final XmlAsStringArrayJdbcType jdbcType = (XmlAsStringArrayJdbcType) getJdbcType();
+				final XmlAsStringArrayJdbcType jdbcType = getXmlAsStringArrayJdbcType();
 				final String xml = jdbcType.toString( value, getJavaType(), options );
 				if ( jdbcType.nationalized && options.getDialect().supportsNationalizedMethods() ) {
 					st.setNString( name, xml );
@@ -120,9 +126,14 @@ public class XmlAsStringArrayJdbcType extends XmlArrayJdbcType implements Adjust
 	@Override
 	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 		return new BasicExtractor<>( javaType, this ) {
+
+			private XmlAsStringArrayJdbcType getXmlAsStringArrayJdbcType() {
+				return (XmlAsStringArrayJdbcType) getJdbcType();
+			}
+
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				final XmlAsStringArrayJdbcType jdbcType = (XmlAsStringArrayJdbcType) getJdbcType();
+				final XmlAsStringArrayJdbcType jdbcType = getXmlAsStringArrayJdbcType();
 				final String value;
 				if ( jdbcType.nationalized && options.getDialect().supportsNationalizedMethods() ) {
 					value = rs.getNString( paramIndex );
@@ -136,7 +147,7 @@ public class XmlAsStringArrayJdbcType extends XmlArrayJdbcType implements Adjust
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 					throws SQLException {
-				final XmlAsStringArrayJdbcType jdbcType = (XmlAsStringArrayJdbcType) getJdbcType();
+				final XmlAsStringArrayJdbcType jdbcType = getXmlAsStringArrayJdbcType();
 				final String value;
 				if ( jdbcType.nationalized && options.getDialect().supportsNationalizedMethods() ) {
 					value = statement.getNString( index );
@@ -150,7 +161,7 @@ public class XmlAsStringArrayJdbcType extends XmlArrayJdbcType implements Adjust
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				final XmlAsStringArrayJdbcType jdbcType = (XmlAsStringArrayJdbcType) getJdbcType();
+				final XmlAsStringArrayJdbcType jdbcType = getXmlAsStringArrayJdbcType();
 				final String value;
 				if ( jdbcType.nationalized && options.getDialect().supportsNationalizedMethods() ) {
 					value = statement.getNString( name );

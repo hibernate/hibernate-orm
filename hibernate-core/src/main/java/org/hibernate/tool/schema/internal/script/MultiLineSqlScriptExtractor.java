@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal.script;
@@ -26,11 +26,14 @@ import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 
 /**
- * Class responsible for extracting SQL statements from import script. Supports instructions/comments and quoted
- * strings spread over multiple lines. Each statement must end with semicolon.
+ * Class responsible for extracting SQL statements from an import script.
+ * Supports instructions/comments and quoted strings spread over multiple lines.
+ * Each statement must end with a semicolon.
  *
  * @author Lukasz Antoniak
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.cfg.SchemaToolingSettings#HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR
  */
 public class MultiLineSqlScriptExtractor implements SqlScriptCommandExtractor {
 	public static final String SHORT_NAME = "multi-line";
@@ -44,11 +47,11 @@ public class MultiLineSqlScriptExtractor implements SqlScriptCommandExtractor {
 			final SqlScriptVisitor visitor = new SqlScriptVisitor( dialect );
 			return visitor.visitScript( scriptParseTree );
 		}
-		catch (Exception e) {
-			if ( e instanceof SqlScriptException ) {
-				throw (SqlScriptException) e;
+		catch (Exception exception) {
+			if ( exception instanceof SqlScriptException sqlScriptException ) {
+				throw sqlScriptException;
 			}
-			throw new SqlScriptException( "Error during sql-script parsing.", e );
+			throw new SqlScriptException( "Error during sql-script parsing.", exception );
 		}
 	}
 

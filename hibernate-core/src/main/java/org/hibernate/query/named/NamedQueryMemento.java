@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.named;
@@ -63,6 +63,6 @@ public interface NamedQueryMemento<E> extends TypedQueryReference<E> {
 	<T> QueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> javaType);
 
 	interface ParameterMemento {
-		QueryParameterImplementor resolve(SharedSessionContractImplementor session);
+		QueryParameterImplementor<?> resolve(SharedSessionContractImplementor session);
 	}
 }

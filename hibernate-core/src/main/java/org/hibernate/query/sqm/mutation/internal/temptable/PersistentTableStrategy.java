@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
@@ -9,15 +9,19 @@ import java.sql.SQLException;
 
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableHelper;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 
 import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.jboss.logging.Logger;
+
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * This is a strategy that mimics temporary tables for databases which do not support
@@ -52,13 +56,13 @@ public abstract class PersistentTableStrategy {
 		this.temporaryTable = temporaryTable;
 		this.sessionFactory = sessionFactory;
 
-		if ( sessionFactory.getJdbcServices().getDialect().getTemporaryTableAfterUseAction() == AfterUseAction.DROP ) {
+		if ( sessionFactory.getJdbcServices().getDialect().getPersistentTemporaryTableStrategy().getTemporaryTableAfterUseAction() == AfterUseAction.DROP ) {
 			throw new IllegalArgumentException( "Persistent ID tables cannot use AfterUseAction.DROP : " + temporaryTable.getTableExpression() );
 		}
 	}
 
-	public EntityMappingType getEntityDescriptor() {
-		return getTemporaryTable().getEntityDescriptor();
+	public TemporaryTableStrategy getTemporaryTableStrategy() {
+		return castNonNull( sessionFactory.getJdbcServices().getDialect().getPersistentTemporaryTableStrategy() );
 	}
 
 	public void prepare(
@@ -116,7 +120,8 @@ public abstract class PersistentTableStrategy {
 			try {
 				connectionAccess.releaseConnection( connection );
 			}
-			catch (SQLException ignore) {
+			catch (SQLException exception) {
+				JDBC_MESSAGE_LOGGER.unableToReleaseConnection( exception );
 			}
 		}
 	}
@@ -131,12 +136,10 @@ public abstract class PersistentTableStrategy {
 		dropIdTables = false;
 
 		final TemporaryTable temporaryTable = getTemporaryTable();
-		log.debugf( "Dropping persistent ID table : %s", temporaryTable.getTableExpression() );
+		log.tracef( "Dropping persistent ID table: %s", temporaryTable.getTableExpression() );
 
-		final TemporaryTableHelper.TemporaryTableDropWork temporaryTableDropWork = new TemporaryTableHelper.TemporaryTableDropWork(
-				temporaryTable,
-				sessionFactory
-		);
+		final TemporaryTableHelper.TemporaryTableDropWork temporaryTableDropWork =
+				new TemporaryTableHelper.TemporaryTableDropWork( temporaryTable, sessionFactory );
 		Connection connection;
 		try {
 			connection = connectionAccess.obtainConnection();
@@ -158,7 +161,8 @@ public abstract class PersistentTableStrategy {
 			try {
 				connectionAccess.releaseConnection( connection );
 			}
-			catch (SQLException ignore) {
+			catch (SQLException exception) {
+				JDBC_MESSAGE_LOGGER.unableToReleaseConnection( exception );
 			}
 		}
 	}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.internal;
@@ -34,7 +34,13 @@ public class ParameterizedTypeImpl implements ParameterizedType {
 		final int argumentsSize = arguments.size();
 		final java.lang.reflect.Type[] argumentTypes = new java.lang.reflect.Type[argumentsSize];
 		for ( int i = 0; i < argumentsSize; i++ ) {
-			argumentTypes[i] = arguments.get( i ).determineRawClass().toJavaClass();
+			TypeDetails argument = arguments.get( i );
+			if ( argument.getTypeKind() == TypeDetails.Kind.PARAMETERIZED_TYPE ) {
+				argumentTypes[i] = from( argument.asParameterizedType() );
+			}
+			else {
+				argumentTypes[i] = argument.determineRawClass().toJavaClass();
+			}
 		}
 		final TypeVariableScope owner = typeDetails.asParameterizedType().getOwner();
 		final java.lang.reflect.Type ownerType;
@@ -61,13 +67,12 @@ public class ParameterizedTypeImpl implements ParameterizedType {
 
 	@Override
 	public boolean equals(Object obj) {
-		if ( !( obj instanceof ParameterizedType ) ) {
+		if ( !(obj instanceof ParameterizedType other) ) {
 			return false;
 		}
-		ParameterizedType other = (ParameterizedType) obj;
 		return Objects.equals( getOwnerType(), other.getOwnerType() )
-				&& Objects.equals( getRawType(), other.getRawType() )
-				&& Arrays.equals( getActualTypeArguments(), other.getActualTypeArguments() );
+			&& Objects.equals( getRawType(), other.getRawType() )
+			&& Arrays.equals( getActualTypeArguments(), other.getActualTypeArguments() );
 	}
 
 	@Override
@@ -85,18 +90,18 @@ public class ParameterizedTypeImpl implements ParameterizedType {
 
 			sb.append( "$" );
 
-			if ( ownerType instanceof ParameterizedType ) {
+			if ( ownerType instanceof ParameterizedType parameterizedType ) {
 				// Find simple name of nested type by removing the
 				// shared prefix with owner.
 				sb.append(
 						rawType.getTypeName().replace(
-								( (ParameterizedType) ownerType ).getRawType().getTypeName() + "$",
+								parameterizedType.getRawType().getTypeName() + "$",
 								""
 						)
 				);
 			}
-			else if ( rawType instanceof Class<?> ) {
-				sb.append( ( (Class<?>) rawType ).getSimpleName() );
+			else if ( rawType instanceof Class<?> clazz ) {
+				sb.append( clazz.getSimpleName() );
 			}
 			else {
 				sb.append( rawType.getTypeName() );

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.collection.idbag;
@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Steve Ebersole
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/collection/idbag/Mappings.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/collection/idbag/Mappings.xml"
 )
 @SessionFactory
 public class PersistentIdBagTest {

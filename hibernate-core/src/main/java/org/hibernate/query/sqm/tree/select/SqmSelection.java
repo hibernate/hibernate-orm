@@ -1,13 +1,18 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.select;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
+import org.hibernate.type.descriptor.java.JavaType;
+
+import java.util.Objects;
 
 /**
  * Represents an individual selection within a select clause.
@@ -51,6 +56,11 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 	}
 
 	@Override
+	public @Nullable JavaType<T> getNodeJavaType() {
+		return selectableNode.getNodeJavaType();
+	}
+
+	@Override
 	public String getAlias() {
 		return alias;
 	}
@@ -61,10 +71,23 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		selectableNode.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		selectableNode.appendHqlString( hql, context );
 		if ( alias != null ) {
-			sb.append( " as " ).append( alias );
+			hql.append( " as " ).append( alias );
 		}
+	}
+
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmSelection<?> that
+			&& Objects.equals( this.selectableNode, that.selectableNode )
+			&& Objects.equals( this.alias, that.alias );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( selectableNode, alias );
 	}
 }

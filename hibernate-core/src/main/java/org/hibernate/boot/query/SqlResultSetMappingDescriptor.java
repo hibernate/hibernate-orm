@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.query;
@@ -12,10 +12,8 @@ import java.util.Map;
 
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -47,6 +45,7 @@ import jakarta.persistence.FieldResult;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.SqlResultSetMapping;
 
+import static org.hibernate.boot.query.BootQueryLogging.BOOT_QUERY_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
@@ -141,7 +140,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		@Override
 		public ResultMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
-			BootQueryLogging.BOOT_QUERY_LOGGER.debugf(
+			BOOT_QUERY_LOGGER.tracef(
 					"Generating ScalarResultMappingMemento for JPA ColumnResult(%s) for ResultSet mapping `%s`",
 					columnResult.name(),
 					mappingName
@@ -202,7 +201,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		@Override
 		public ResultMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
-			BootQueryLogging.BOOT_QUERY_LOGGER.debugf(
+			BOOT_QUERY_LOGGER.tracef(
 					"Generating InstantiationResultMappingMemento for JPA ConstructorResult(%s) for ResultSet mapping `%s`",
 					targetJavaType.getName(),
 					mappingName
@@ -214,10 +213,9 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 					(mapping) -> argumentResultMementos.add( mapping.resolve( resolutionContext ) )
 			);
 
-			final SessionFactoryImplementor sessionFactory = resolutionContext.getSessionFactory();
-			final JavaType<?> targetJtd = sessionFactory.getTypeConfiguration()
-					.getJavaTypeRegistry()
-					.getDescriptor( targetJavaType );
+			final JavaType<?> targetJtd =
+					resolutionContext.getTypeConfiguration().getJavaTypeRegistry()
+							.getDescriptor( targetJavaType );
 
 			return new ResultMementoInstantiationStandard( targetJtd, argumentResultMementos );
 		}
@@ -270,8 +268,8 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		@Override
 		public ResultMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
-			final RuntimeMetamodels runtimeMetamodels = resolutionContext.getSessionFactory().getRuntimeMetamodels();
-			final EntityMappingType entityDescriptor = runtimeMetamodels.getEntityMappingType( entityName );
+			final EntityMappingType entityDescriptor =
+					resolutionContext.getMappingMetamodel().getEntityDescriptor( entityName );
 
 			final FetchMementoBasic discriminatorMemento = resolveDiscriminatorMemento(
 					entityDescriptor,
@@ -366,8 +364,8 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		@Override
 		public ResultMemento asResultMemento(NavigablePath path, ResultSetMappingResolutionContext resolutionContext) {
-			final RuntimeMetamodels runtimeMetamodels = resolutionContext.getSessionFactory().getRuntimeMetamodels();
-			final EntityMappingType entityMapping = runtimeMetamodels.getEntityMappingType( entityName );
+			final EntityMappingType entityMapping =
+					resolutionContext.getMappingMetamodel().getEntityDescriptor( entityName );
 
 			final ModelPart subPart = entityMapping.findSubPart( propertyPath, null );
 
@@ -386,8 +384,8 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		@Override
 		public FetchMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
-			final RuntimeMetamodels runtimeMetamodels = resolutionContext.getSessionFactory().getRuntimeMetamodels();
-			final EntityMappingType entityMapping = runtimeMetamodels.getEntityMappingType( entityName );
+			final EntityMappingType entityMapping =
+					resolutionContext.getMappingMetamodel().getEntityDescriptor( entityName );
 
 			ModelPart subPart = entityMapping.findSubPart(
 					propertyPathParts[0],
@@ -429,18 +427,20 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				assert columnNames.size() == 1;
 				return new FetchMementoBasicStandard( navigablePath, basicPart, columnNames.get( 0 ) );
 			}
-			else if ( subPart instanceof EntityValuedFetchable ) {
-				return new FetchMementoEntityStandard( navigablePath, (EntityValuedFetchable) subPart, columnNames );
+			else if ( subPart instanceof EntityValuedFetchable entityValuedFetchable ) {
+				return new FetchMementoEntityStandard( navigablePath, entityValuedFetchable, columnNames );
 			}
-			else if( subPart instanceof EmbeddedAttributeMapping ){
-				final ModelPart subPart1 = ( (EmbeddedAttributeMapping) subPart ).findSubPart( propertyPath.substring(
+			else if( subPart instanceof EmbeddedAttributeMapping embeddedAttributeMapping ){
+				final ModelPart subPart1 = embeddedAttributeMapping.findSubPart( propertyPath.substring(
 						propertyPath.indexOf( '.' ) + 1), null );
 				return getFetchMemento( navigablePath,subPart1 );
 			}
-			throw new UnsupportedOperationException(
-					"Only support for basic-valued, entity-valued and embedded model-parts have been implemented : " + propertyPath
-							+ " [" + subPart + "]"
-			);
+			else {
+				throw new UnsupportedOperationException(
+						"Only support for basic-valued, entity-valued and embedded model-parts have been implemented : " + propertyPath
+						+ " [" + subPart + "]"
+				);
+			}
 		}
 	}
 }

@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.Logger;
@@ -12,6 +13,7 @@ import org.jboss.logging.Logger;
 		name = JdbcBindingLogging.NAME,
 		description = "Logging of JDBC parameter value binding"
 )
+@Internal
 public interface JdbcBindingLogging {
 	String NAME = SubSystemLogging.BASE + ".jdbc.bind";
 

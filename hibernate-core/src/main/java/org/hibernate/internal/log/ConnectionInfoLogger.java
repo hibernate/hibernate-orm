@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.log;
@@ -7,6 +7,7 @@ package org.hibernate.internal.log;
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
 
+import org.hibernate.Internal;
 import org.hibernate.cfg.JdbcSettings;
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
@@ -29,6 +30,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 		name = ConnectionInfoLogger.LOGGER_NAME,
 		description = "Logging related to connection pooling"
 )
+@Internal
 public interface ConnectionInfoLogger extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".connections.pooling";
 
@@ -49,9 +51,13 @@ public interface ConnectionInfoLogger extends BasicLogger {
 	@Message(id = 10001006,
 			value = "No JDBC Driver class was specified by property '"
 					+ JdbcSettings.JAKARTA_JDBC_DRIVER + "', '"
-					+ JdbcSettings.JPA_JDBC_DRIVER +  "', or '"
+					+ JdbcSettings.JPA_JDBC_DRIVER + "', or '"
 					+ JdbcSettings.DRIVER + "'")
 	void jdbcDriverNotSpecified();
+
+	@LogMessage(level = INFO)
+	@Message(id = 10001007, value = "Available JDBC drivers: [%s]")
+	void availableJdbcDrivers(String availableDrivers);
 
 	@LogMessage(level = DEBUG)
 	@Message(value = "Cleaning up connection pool [%s]", id = 10001008)
@@ -66,10 +72,14 @@ public interface ConnectionInfoLogger extends BasicLogger {
 	void unableToDestroyConnectionPool(@Cause Exception e);
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Could not instantiate connection pool", id = 10001011)
+	@Message(value = "Could not create connection pool", id = 10001011)
 	void unableToInstantiateConnectionPool(@Cause Exception e);
 
 	@LogMessage(level = DEBUG)
 	@Message(value = "Configuring connection pool [%s]", id = 10001012)
 	void configureConnectionPool(String type);
+
+	@LogMessage(level = INFO)
+	@Message(value = "Ignoring setting '%s' for connection provider [%s]", id = 10001013)
+	void ignoredSetting(String setting, Class<?> provider);
 }

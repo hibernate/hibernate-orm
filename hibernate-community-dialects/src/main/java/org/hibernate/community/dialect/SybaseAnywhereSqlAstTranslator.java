@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
+import org.hibernate.dialect.sql.ast.SybaseSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -126,17 +127,7 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 	}
 
 	private void renderLockHint(LockMode lockMode) {
-		if ( LockMode.READ.lessThan( lockMode ) ) {
-			appendSql( " holdlock" );
-		}
-	}
-
-	@Override
-	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		if ( getDialect().getVersion().isBefore( 10 ) ) {
-			return;
-		}
-		super.renderForUpdateClause( querySpec, forUpdateClause );
+		append( SybaseSqlAstTranslator.determineLockHint( lockMode ) );
 	}
 
 	@Override
@@ -222,18 +213,4 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 		appendSql( CLOSE_PARENTHESIS );
 	}
 
-	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
 }

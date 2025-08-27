@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
@@ -7,14 +7,12 @@ package org.hibernate.action.internal;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCollectionRemoveEvent;
 import org.hibernate.event.spi.PostCollectionRemoveEventListener;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * The action for removing a collection
@@ -102,14 +100,26 @@ public final class CollectionRemoveAction extends CollectionAction {
 	@Override
 	public void execute() throws HibernateException {
 		preRemove();
-		final SharedSessionContractImplementor session = getSession();
+		final var session = getSession();
 		if ( !emptySnapshot ) {
 			// an existing collection that was either nonempty or uninitialized
 			// is replaced by null or a different collection
 			// (if the collection is uninitialized, Hibernate has no way of
 			// knowing if the collection is actually empty without querying the db)
-			getPersister().remove( getKey(), session );
+			final var persister = getPersister();
+			final Object key = getKey();
+			final var eventMonitor = session.getEventMonitor();
+			final var event = eventMonitor.beginCollectionRemoveEvent();
+			boolean success = false;
+			try {
+				persister.remove( key, session );
+				success = true;
+			}
+			finally {
+				eventMonitor.completeCollectionRemoveEvent( event, key, persister.getRole(), success, session );
+			}
 		}
+
 		final PersistentCollection<?> collection = getCollection();
 		if ( collection != null ) {
 			session.getPersistenceContextInternal().getCollectionEntry( collection ).afterAction( collection );
@@ -117,40 +127,30 @@ public final class CollectionRemoveAction extends CollectionAction {
 		evict();
 		postRemove();
 
-		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		final var statistics = session.getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
 			statistics.removeCollection( getPersister().getRole() );
 		}
 	}
 
 	private void preRemove() {
-		getFastSessionServices().eventListenerGroup_PRE_COLLECTION_REMOVE
+		getEventListenerGroups().eventListenerGroup_PRE_COLLECTION_REMOVE
 				.fireLazyEventOnEachListener( this::newPreCollectionRemoveEvent,
 						PreCollectionRemoveEventListener::onPreRemoveCollection );
 	}
 
 	private PreCollectionRemoveEvent newPreCollectionRemoveEvent() {
-		return new PreCollectionRemoveEvent(
-				getPersister(),
-				getCollection(),
-				eventSource(),
-				affectedOwner
-		);
+		return new PreCollectionRemoveEvent( getPersister(), getCollection(), eventSource(), affectedOwner );
 	}
 
 	private void postRemove() {
-		getFastSessionServices().eventListenerGroup_POST_COLLECTION_REMOVE
+		getEventListenerGroups().eventListenerGroup_POST_COLLECTION_REMOVE
 				.fireLazyEventOnEachListener( this::newPostCollectionRemoveEvent,
 						PostCollectionRemoveEventListener::onPostRemoveCollection );
 	}
 
 	private PostCollectionRemoveEvent newPostCollectionRemoveEvent() {
-		return new PostCollectionRemoveEvent(
-				getPersister(),
-				getCollection(),
-				eventSource(),
-				affectedOwner
-		);
+		return new PostCollectionRemoveEvent( getPersister(), getCollection(), eventSource(), affectedOwner );
 	}
 
 	public Object getAffectedOwner() {

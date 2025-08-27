@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.sequence;
@@ -33,6 +33,11 @@ public final class MariaDBSequenceSupport extends ANSISequenceSupport {
 	@Override
 	public String getSelectSequencePreviousValString(String sequenceName) throws MappingException {
 		return "previous value for " + sequenceName;
+	}
+
+	@Override
+	public String getDropSequenceString(String sequenceName) throws MappingException {
+		return "drop sequence if exists " + sequenceName;
 	}
 
 	@Override

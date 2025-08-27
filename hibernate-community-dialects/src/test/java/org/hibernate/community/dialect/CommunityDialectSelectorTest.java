@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -24,10 +24,10 @@ public class CommunityDialectSelectorTest {
 		testDialectNamingResolution( MimerSQLDialect.class );
 
 		testDialectNamingResolution( SybaseAnywhereDialect.class );
-
 		testDialectNamingResolution( TeradataDialect.class );
 		testDialectNamingResolution( TimesTenDialect.class );
 		testDialectNamingResolution( SingleStoreDialect.class );
+		testDialectNamingResolution( DerbyDialect.class );
 	}
 
 	private void testDialectNamingResolution(final Class<?> dialectClass) {

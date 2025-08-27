@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.binder.internal;
@@ -24,8 +24,8 @@ public class AttributeAccessorBinder implements AttributeBinder<AttributeAccesso
 			MetadataBuildingContext buildingContext,
 			PersistentClass persistentClass,
 			Property property) {
-		String value = accessor.value();
-		Class<?> type = accessor.strategy();
+		final String value = accessor.value();
+		final Class<?> type = accessor.strategy();
 		if ( !value.isEmpty() ) {
 			property.setPropertyAccessorName( value );
 		}

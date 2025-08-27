@@ -1,15 +1,18 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
+
 /**
- * Defines an event class for the dirty-checking of a session.
+ * Event class for {@link org.hibernate.Session#isDirty}.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.Session#isDirty
  */
-public class DirtyCheckEvent extends FlushEvent {
+public class DirtyCheckEvent extends AbstractEvent {
 	private boolean dirty;
 
 	public DirtyCheckEvent(EventSource source) {

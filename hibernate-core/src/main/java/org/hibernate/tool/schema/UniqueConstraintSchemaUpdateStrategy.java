@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema;
@@ -45,15 +45,15 @@ public enum UniqueConstraintSchemaUpdateStrategy {
 	}
 
 	public static UniqueConstraintSchemaUpdateStrategy interpret(Object setting) {
-		log.tracef( "Interpreting UniqueConstraintSchemaUpdateStrategy from setting : %s", setting );
+		log.tracef( "Interpreting UniqueConstraintSchemaUpdateStrategy from setting: %s", setting );
 
 		if ( setting == null ) {
 			// default
 			return DROP_RECREATE_QUIETLY;
 		}
 
-		if ( setting instanceof UniqueConstraintSchemaUpdateStrategy ) {
-			return (UniqueConstraintSchemaUpdateStrategy) setting;
+		if ( setting instanceof UniqueConstraintSchemaUpdateStrategy strategy) {
+			return strategy;
 		}
 
 		try {

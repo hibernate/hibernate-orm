@@ -1,7 +1,7 @@
 #! /bin/bash
 
 goal=
-if [ "$RDBMS" == "h2" ]; then
+if [ "$RDBMS" == "h2" ] || [ "$RDBMS" == "" ]; then
   # This is the default.
   goal="preVerifyRelease"
   # Settings needed for `preVerifyRelease` execution - for asciidoctor doc rendering
@@ -10,11 +10,13 @@ elif [ "$RDBMS" == "hsqldb" ] || [ "$RDBMS" == "hsqldb_2_6" ]; then
   goal="-Pdb=hsqldb"
 elif [ "$RDBMS" == "mysql" ] || [ "$RDBMS" == "mysql_8_0" ]; then
   goal="-Pdb=mysql_ci"
-elif [ "$RDBMS" == "mariadb" ] || [ "$RDBMS" == "mariadb_10_4" ]; then
+elif [ "$RDBMS" == "mariadb" ] || [ "$RDBMS" == "mariadb_10_6" ]; then
   goal="-Pdb=mariadb_ci"
-elif [ "$RDBMS" == "postgresql" ] || [ "$RDBMS" == "postgresql_12" ]; then
+elif [ "$RDBMS" == "postgresql" ] || [ "$RDBMS" == "postgresql_13" ]; then
   goal="-Pdb=pgsql_ci"
-elif [ "$RDBMS" == "edb" ] || [ "$RDBMS" == "edb_12" ]; then
+elif [ "$RDBMS" == "gaussdb"  ]; then
+  goal="-Pdb=gaussdb -DdbHost=localhost:8000"
+elif [ "$RDBMS" == "edb" ] || [ "$RDBMS" == "edb_13" ]; then
   goal="-Pdb=edb_ci -DdbHost=localhost:5444"
 elif [ "$RDBMS" == "oracle" ]; then
   goal="-Pdb=oracle_ci"
@@ -56,10 +58,8 @@ elif [ "$RDBMS" == "oracle_db23c" ]; then
   export SERVICE=$(echo $INFO | jq -r '.database' | jq -r '.service')
   # I have no idea why, but these tests don't seem to work on CI...
   goal="-Pdb=oracle_cloud_db23c -DrunID=$RUNID -DdbHost=$HOST -DdbService=$SERVICE"
-elif [ "$RDBMS" == "db2" ]; then
+elif [ "$RDBMS" == "db2" ] || [ "$RDBMS" == "db2_11_5" ]; then
   goal="-Pdb=db2_ci"
-elif [ "$RDBMS" == "db2_10_5" ]; then
-  goal="-Pdb=db2"
 elif [ "$RDBMS" == "mssql" ] || [ "$RDBMS" == "mssql_2017" ]; then
   goal="-Pdb=mssql_ci"
 # Exclude some Sybase tests on CI because they use `xmltable` function which has a memory leak on the DB version in CI
@@ -67,6 +67,8 @@ elif [ "$RDBMS" == "sybase" ]; then
   goal="-Pdb=sybase_ci -PexcludeTests=**.GenerateSeriesTest*"
 elif [ "$RDBMS" == "sybase_jconn" ]; then
   goal="-Pdb=sybase_jconn_ci -PexcludeTests=**.GenerateSeriesTest*"
+elif [ "$RDBMS" == "teradata" ]; then 
+  goal="-Pdb=teradata"
 elif [ "$RDBMS" == "tidb" ]; then
   goal="-Pdb=tidb"
 elif [ "$RDBMS" == "hana_cloud" ]; then
@@ -77,6 +79,9 @@ elif [ "$RDBMS" == "altibase" ]; then
   goal="-Pdb=altibase"
 elif [ "$RDBMS" == "informix" ]; then
   goal="-Pdb=informix"
+else
+  echo "Invalid value for RDBMS: $RDBMS"
+  exit 1
 fi
 
 function logAndExec() {

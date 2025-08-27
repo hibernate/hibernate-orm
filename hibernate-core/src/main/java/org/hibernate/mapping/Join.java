@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.hibernate.MappingException;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.Alias;
@@ -64,6 +65,11 @@ public class Join implements AttributeContainer, Serializable {
 		return properties.contains( property );
 	}
 
+	@Override
+	public Property getProperty(String propertyName) throws MappingException {
+		throw new UnsupportedOperationException(); //TODO
+	}
+
 	public void addMappedSuperclassProperty(Property property ) {
 		properties.add( property );
 		property.setPersistentClass( persistentClass );
@@ -81,6 +87,7 @@ public class Join implements AttributeContainer, Serializable {
 		return properties.contains( property );
 	}
 
+	@Override
 	public Table getTable() {
 		return table;
 	}

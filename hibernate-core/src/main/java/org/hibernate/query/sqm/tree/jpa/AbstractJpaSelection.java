@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.jpa;
@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -21,7 +21,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public abstract class AbstractJpaSelection<T>
 		extends AbstractJpaTupleElement<T>
 		implements SqmSelectableNode<T>, JpaSelection<T> {
-	protected AbstractJpaSelection(@Nullable SqmExpressible<? super T> sqmExpressible, NodeBuilder criteriaBuilder) {
+	protected AbstractJpaSelection(@Nullable SqmBindableType<? super T> sqmExpressible, NodeBuilder criteriaBuilder) {
 		super( sqmExpressible, criteriaBuilder );
 	}
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -11,17 +11,35 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.hibernate.LockOptions;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.*;
+import org.hibernate.community.dialect.pagination.LegacyOracleLimitHandler;
+import org.hibernate.dialect.BooleanDecoder;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.temptable.OracleLocalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.StandardGlobalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
+import org.hibernate.dialect.type.OracleBooleanJdbcType;
+import org.hibernate.dialect.type.OracleJdbcHelper;
+import org.hibernate.dialect.type.OracleJsonArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.OracleJsonJdbcType;
+import org.hibernate.dialect.type.OracleReflectionStructJdbcType;
+import org.hibernate.dialect.OracleTypes;
+import org.hibernate.dialect.Replacer;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.OracleAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -30,13 +48,15 @@ import org.hibernate.dialect.function.NvlCoalesceEmulation;
 import org.hibernate.dialect.function.OracleTruncFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
-import org.hibernate.dialect.pagination.LegacyOracleLimitHandler;
+import org.hibernate.dialect.lock.internal.OracleLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.Oracle12LimitHandler;
 import org.hibernate.dialect.sequence.OracleSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.type.OracleUserDefinedTypeExporter;
+import org.hibernate.dialect.type.OracleXmlJdbcType;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -62,11 +82,11 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -102,11 +122,10 @@ import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.TemporalType;
-
+import static java.lang.String.join;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.common.TemporalUnit.HOUR;
 import static org.hibernate.query.common.TemporalUnit.MINUTE;
@@ -187,16 +206,20 @@ public class OracleLegacyDialect extends Dialect {
 		}
 	};
 
+	private final LockingSupport lockingSupport;
+
 	public OracleLegacyDialect() {
 		this( DatabaseVersion.make( 8, 0 ) );
 	}
 
 	public OracleLegacyDialect(DatabaseVersion version) {
 		super(version);
+		lockingSupport = new OracleLockingSupport( version );
 	}
 
 	public OracleLegacyDialect(DialectResolutionInfo info) {
 		super(info);
+		lockingSupport = new OracleLockingSupport( getVersion() );
 	}
 
 	@Override
@@ -352,6 +375,7 @@ public class OracleLegacyDialect extends Dialect {
 
 		functionFactory.unnest_oracle();
 		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
+		functionFactory.regexpLike_predicateFunction();
 	}
 
 	/**
@@ -789,13 +813,6 @@ public class OracleLegacyDialect extends Dialect {
 	}
 
 	@Override
-	protected void initDefaultProperties() {
-		super.initDefaultProperties();
-		String newerVersion = Boolean.toString( getVersion().isSameOrAfter( 12 ) );
-		getDefaultProperties().setProperty( Environment.BATCH_VERSIONED_DATA, newerVersion );
-	}
-
-	@Override
 	public int getDefaultStatementBatchSize() {
 		return 15;
 	}
@@ -1204,33 +1221,27 @@ public class OracleLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return OracleLocalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
+	public TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
+		return StandardGlobalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						rootEntityDescriptor,
-						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new GlobalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						rootEntityDescriptor,
-						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new GlobalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
@@ -1240,7 +1251,7 @@ public class OracleLegacyDialect extends Dialect {
 
 	@Override
 	public String getTemporaryTableCreateOptions() {
-		return "on commit delete rows";
+		return StandardGlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
 	}
 
 	/**
@@ -1266,6 +1277,16 @@ public class OracleLegacyDialect extends Dialect {
 												|| queryOptions.getLimit().getFirstRow() != null
 								)
 				);
+	}
+
+	public String getQueryHintString(String query, List<String> hintList) {
+		if ( hintList.isEmpty() ) {
+			return query;
+		}
+		else {
+			final String hints = join( " ", hintList );
+			return isEmpty( hints ) ? query : getQueryHintString( query, hints );
+		}
 	}
 
 	@Override
@@ -1365,18 +1386,8 @@ public class OracleLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsNoWait() {
-		return getVersion().isSameOrAfter( 9 );
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		return getVersion().isSameOrAfter( 10 );
-	}
-
-	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.COLUMN;
+	public LockingSupport getLockingSupport() {
+		return lockingSupport;
 	}
 
 	@Override
@@ -1404,17 +1415,37 @@ public class OracleLegacyDialect extends Dialect {
 		return " for update of " + aliases + " skip locked";
 	}
 
+	private String withTimeout(String lockString, Timeout timeout) {
+		return withTimeout( lockString, timeout.milliseconds() );
+	}
+
+	@Override
+	public String getWriteLockString(Timeout timeout) {
+		return withTimeout( getForUpdateString(), timeout );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, Timeout timeout) {
+		return withTimeout( getForUpdateString(aliases), timeout );
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		return getWriteLockString( timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, Timeout timeout) {
+		return getWriteLockString( aliases, timeout );
+	}
+
 	private String withTimeout(String lockString, int timeout) {
-		switch (timeout) {
-			case LockOptions.NO_WAIT:
-				return supportsNoWait() ? lockString + " nowait" : lockString;
-			case LockOptions.SKIP_LOCKED:
-				return supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			case LockOptions.WAIT_FOREVER:
-				return lockString;
-			default:
-				return supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
-		}
+		return switch ( timeout ) {
+			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case Timeouts.SKIP_LOCKED_MILLI -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			case Timeouts.WAIT_FOREVER_MILLI -> lockString;
+			default -> supportsWait() ? lockString + " wait " + Timeouts.getTimeoutInSeconds( timeout ) : lockString;
+		};
 	}
 
 	@Override
@@ -1583,10 +1614,10 @@ public class OracleLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 		builder.setAutoQuoteInitialUnderscore(true);
-		return super.buildIdentifierHelper(builder, dbMetaData);
+		return super.buildIdentifierHelper(builder, metadata );
 	}
 
 	@Override
@@ -1651,6 +1682,53 @@ public class OracleLegacyDialect extends Dialect {
 	@Override
 	public String getFromDualForSelectOnly() {
 		return " from " + getDual();
+	}
+
+	@Override
+	public boolean supportsDuplicateSelectItemsInQueryGroup() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsNestedSubqueryCorrelation() {
+		// It seems it doesn't support it, at least on version 11
+		return false;
+	}
+
+	@Override
+	public boolean supportsRecursiveCycleClause() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRecursiveSearchClause() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		// Oracle has some limitations, see ORA-32034, so we just report false here for simplicity
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return getVersion().isSameOrAfter( 8, 2 );
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInSubQuery() {
+		return getVersion().isSameOrAfter( 9 );
 	}
 
 }

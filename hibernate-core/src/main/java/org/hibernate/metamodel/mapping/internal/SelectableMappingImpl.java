@@ -1,11 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Locale;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
@@ -124,7 +125,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 	public static SelectableMapping from(
 			final String containingTableExpression,
 			final Selectable selectable,
-			final SelectablePath parentPath,
+			@Nullable final SelectablePath parentPath,
 			final JdbcMapping jdbcMapping,
 			final TypeConfiguration typeConfiguration,
 			boolean insertable,
@@ -152,7 +153,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 	public static SelectableMapping from(
 			final String containingTableExpression,
 			final Selectable selectable,
-			final SelectablePath parentPath,
+			@Nullable final SelectablePath parentPath,
 			final JdbcMapping jdbcMapping,
 			final TypeConfiguration typeConfiguration,
 			boolean insertable,
@@ -172,7 +173,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		final boolean isLob;
 		final boolean isNullable;
 		if ( selectable.isFormula() ) {
-			columnExpression = selectable.getTemplate( dialect, typeConfiguration, sqmFunctionRegistry );
+			columnExpression = selectable.getTemplate( dialect, typeConfiguration );
 			columnDefinition = null;
 			length = null;
 			precision = null;
@@ -191,7 +192,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			scale = column.getScale();
 			temporalPrecision = column.getTemporalPrecision();
 
-			isNullable = forceNotNullable ? false : column.isNullable();
+			isNullable = !forceNotNullable && column.isNullable();
 			isLob = column.isSqlTypeLob( creationContext.getMetadata() );
 			selectableName = column.getQuotedName( dialect );
 		}

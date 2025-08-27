@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
@@ -86,7 +86,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	public Class<T> getJavaType() {
-		return this.getExpressibleJavaType().getJavaTypeClass();
+		return BasicType.super.getJavaType();
 	}
 
 	public T fromString(CharSequence string) {
@@ -298,11 +298,10 @@ public abstract class AbstractStandardBasicType<T>
 	@Override
 	@SuppressWarnings("unchecked")
 	public final Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map<Object, Object> copyCache) {
-		if ( original == null && target == null ) {
-			return null;
-		}
+		return original == null && target == null
+				? null
+				: javaType.getReplacement( (T) original, (T) target, session );
 
-		return javaType.getReplacement( (T) original, (T) target, session );
 	}
 
 	@Override

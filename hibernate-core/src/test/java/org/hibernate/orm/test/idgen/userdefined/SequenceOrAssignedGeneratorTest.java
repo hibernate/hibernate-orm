@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.idgen.userdefined;
@@ -257,15 +257,8 @@ public class SequenceOrAssignedGeneratorTest {
 	public static class SequenceOrAssignedGenerator extends SequenceStyleGenerator {
 		@Override
 		public Object generate(SharedSessionContractImplementor session, Object owner) throws HibernateException {
-			final Long id;
-			if ( owner instanceof MyEntity ) {
-				id = ( (MyEntity) owner ).getId();
-			}
-			else {
-				id = null;
-			}
-
-			return id != null ? id : super.generate( session, owner );
+			final Long id = owner instanceof MyEntity myEntity ? myEntity.getId() : null;
+			return id == null ? super.generate( session, owner ) : id;
 		}
 
 		@Override
@@ -293,13 +286,7 @@ public class SequenceOrAssignedGeneratorTest {
 				Object owner,
 				Object currentValue,
 				EventType eventType) {
-			final Long id;
-			if ( owner instanceof MyVersionedEntity ) {
-				id = ( (MyVersionedEntity) owner ).getId();
-			}
-			else {
-				id = null;
-			}
+			final Long id = owner instanceof MyVersionedEntity myVersionedEntity ? myVersionedEntity.getId() : null;
 			return id != null ? id : count++;
 		}
 

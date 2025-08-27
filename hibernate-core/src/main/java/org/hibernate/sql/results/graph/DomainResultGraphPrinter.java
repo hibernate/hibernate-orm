@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph;
@@ -7,6 +7,7 @@ package org.hibernate.sql.results.graph;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
@@ -24,28 +25,26 @@ import static org.hibernate.sql.results.graph.DomainResultGraphPrinter.Logging.A
 public class DomainResultGraphPrinter {
 	@SubSystemLogging(
 			name = Logging.LOGGER_NAME,
-			description = "Logging of `DomainResult` graphs"
+			description = "Logging of DomainResult graphs"
 	)
+	@Internal
 	interface Logging {
 		String LOGGER_NAME = ResultsLogger.LOGGER_NAME + ".graph.AST";
 		Logger AST_LOGGER = Logger.getLogger( LOGGER_NAME );
 	}
 
 	public static void logDomainResultGraph(List<DomainResult<?>> domainResults) {
-		logDomainResultGraph( "DomainResult Graph", domainResults );
+		logDomainResultGraph( "DomainResult graph", domainResults );
 	}
 
 	public static void logDomainResultGraph(String header, List<DomainResult<?>> domainResults) {
-		if ( !AST_LOGGER.isDebugEnabled() ) {
-			return;
+		if ( AST_LOGGER.isTraceEnabled() ) {
+			new DomainResultGraphPrinter( header ).visitDomainResults( domainResults );
 		}
-
-		final DomainResultGraphPrinter graphPrinter = new DomainResultGraphPrinter( header );
-		graphPrinter.visitDomainResults( domainResults );
 	}
 
 	private final StringBuilder buffer;
-	private final Stack<FetchParent> fetchParentStack = new StandardStack<>( FetchParent.class );
+	private final Stack<FetchParent> fetchParentStack = new StandardStack<>();
 
 	private DomainResultGraphPrinter(String header) {
 		buffer = new StringBuilder( header + ":" + System.lineSeparator() );
@@ -62,11 +61,7 @@ public class DomainResultGraphPrinter {
 			visitGraphNode( domainResult, lastInBranch );
 		}
 
-		AST_LOGGER.debug( buffer.toString() );
-
-		if ( AST_LOGGER.isTraceEnabled() ) {
-			AST_LOGGER.tracef( new Exception(), "Stack trace calling DomainResultGraphPrinter" );
-		}
+		AST_LOGGER.trace( buffer.toString() );
 	}
 
 	private void visitGraphNode(DomainResultGraphNode node, boolean lastInBranch) {
@@ -91,13 +86,9 @@ public class DomainResultGraphPrinter {
 		}
 		buffer.append( '\n' );
 
-		if ( node instanceof FetchParent ) {
-			visitFetches( (FetchParent) node );
+		if ( node instanceof FetchParent fetchParent ) {
+			visitFetches( fetchParent );
 		}
-	}
-
-	private void visitKeyGraphNode(DomainResultGraphNode node, boolean lastInBranch) {
-		visitGraphNode( node, lastInBranch, "(key) " + node.getClass().getSimpleName() );
 	}
 
 	private void visitFetches(FetchParent fetchParent) {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.insert;
@@ -20,6 +20,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -69,6 +70,10 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 			}
 			return insertionTargetPaths;
 		}
+	}
+
+	void setConflictClause(SqmConflictClause<T> conflictClause) {
+		this.conflictClause = conflictClause;
 	}
 
 	protected void verifyInsertTypesMatch(
@@ -178,18 +183,18 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		appendHqlCteString( sb );
-		sb.append( "insert into " );
-		sb.append( getTarget().getEntityName() );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		appendHqlCteString( hql, context );
+		hql.append( "insert into " );
+		hql.append( getTarget().getEntityName() );
 		if ( insertionTargetPaths != null && !insertionTargetPaths.isEmpty() ) {
-			sb.append( '(' );
-			insertionTargetPaths.get( 0 ).appendHqlString( sb );
+			hql.append( '(' );
+			insertionTargetPaths.get( 0 ).appendHqlString( hql, context );
 			for ( int i = 1; i < insertionTargetPaths.size(); i++ ) {
-				sb.append( ", " );
-				insertionTargetPaths.get( i ).appendHqlString( sb );
+				hql.append( ", " );
+				insertionTargetPaths.get( i ).appendHqlString( hql, context );
 			}
-			sb.append( ')' );
+			hql.append( ')' );
 		}
 	}
 }

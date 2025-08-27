@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazyCache;
@@ -133,7 +133,7 @@ public class InitFromCacheTest {
 	@Entity( name = "Document" )
 	@Table( name = "DOCUMENT" )
 	@Cacheable
-	@Cache( usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, include = "non-lazy", region = "foo" )
+	@Cache( usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, includeLazy = false, region = "foo" )
 	static class Document {
 
 		@Id

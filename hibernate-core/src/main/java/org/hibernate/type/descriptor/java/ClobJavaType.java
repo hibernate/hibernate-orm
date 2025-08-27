@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -45,6 +45,11 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 		return indicators.isNationalized()
 				? indicators.getJdbcType( Types.NCLOB )
 				: super.getRecommendedJdbcType( indicators );
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Clob;
 	}
 
 	@Override

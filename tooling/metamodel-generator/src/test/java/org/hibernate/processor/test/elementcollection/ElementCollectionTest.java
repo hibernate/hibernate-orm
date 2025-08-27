@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.elementcollection;
@@ -9,7 +9,7 @@ import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
 import org.hibernate.processor.test.util.WithMappingFiles;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertListAttributeTypeInMetaModelFor;
 import static org.hibernate.processor.test.util.TestUtil.assertMapAttributesInMetaModelFor;
@@ -19,12 +19,13 @@ import static org.hibernate.processor.test.util.TestUtil.assertNoSourceFileGener
 /**
  * @author Hardy Ferentschik
  */
-public class ElementCollectionTest extends CompilationTest {
+@CompilationTest
+class ElementCollectionTest {
 
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-8")
 	@WithClasses({ House.class, Room.class })
-	public void testElementCollectionOnMap() {
+	void testElementCollectionOnMap() {
 		assertMetamodelClassGeneratedFor( House.class );
 		assertMetamodelClassGeneratedFor( Room.class );
 		// side effect of METAGEN-8 was that a meta class for String was created!
@@ -34,7 +35,7 @@ public class ElementCollectionTest extends CompilationTest {
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-19")
 	@WithClasses({ Hotel.class, Room.class, Cleaner.class })
-	public void testMapKeyClass() {
+	void testMapKeyClass() {
 		assertMetamodelClassGeneratedFor( Hotel.class );
 		assertMapAttributesInMetaModelFor(
 				Hotel.class, "roomsByName", String.class, Room.class, "Wrong type in map attribute."
@@ -49,7 +50,7 @@ public class ElementCollectionTest extends CompilationTest {
 	@TestForIssue(jiraKey = "METAGEN-22")
 	@WithClasses({ Hostel.class, Room.class, Cleaner.class })
 	@WithMappingFiles("hostel.xml")
-	public void testMapKeyClassXmlConfigured() {
+	void testMapKeyClassXmlConfigured() {
 		assertMetamodelClassGeneratedFor( Hostel.class );
 		assertMapAttributesInMetaModelFor(
 				Hostel.class, "roomsByName", String.class, Room.class, "Wrong type in map attribute."
@@ -63,7 +64,7 @@ public class ElementCollectionTest extends CompilationTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-11004")
 	@WithClasses({ OfficeBuilding.class })
-	public void testArrayValueElementCollection() {
+	void testArrayValueElementCollection() {
 		assertMetamodelClassGeneratedFor( OfficeBuilding.class );
 		assertMapAttributesInMetaModelFor(
 				OfficeBuilding.class, "doorCodes", Integer.class, byte[].class, "Wrong type in map attribute."
@@ -73,7 +74,7 @@ public class ElementCollectionTest extends CompilationTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-11871")
 	@WithClasses({ Homework.class})
-	public void testListAttributeWithGenericTypeForJavaBeanGetter() {
+	void testListAttributeWithGenericTypeForJavaBeanGetter() {
 		assertMetamodelClassGeneratedFor( Homework.class );
 		assertListAttributeTypeInMetaModelFor( Homework.class, "paths", String.class, "ListAttribute generic type should be String" );
 	}

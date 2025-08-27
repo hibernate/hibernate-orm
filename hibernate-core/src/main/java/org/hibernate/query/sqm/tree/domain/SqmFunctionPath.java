@@ -1,11 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
@@ -13,11 +12,12 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.TreatException;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -28,6 +28,8 @@ import org.hibernate.type.BasicType;
 import jakarta.persistence.metamodel.Bindable;
 import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.Type;
+
+import java.util.Objects;
 
 import static java.util.Arrays.asList;
 
@@ -50,8 +52,8 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 
 	private static <X> SqmPathSource<X> determinePathSource(NavigablePath navigablePath, SqmFunction<?> function) {
 		//noinspection unchecked
-		final SqmExpressible<X> nodeType = (SqmExpressible<X>) function.getNodeType();
-		final Class<X> bindableJavaType = nodeType.getBindableJavaType();
+		final SqmBindableType<X> nodeType = (SqmBindableType<X>) function.getNodeType();
+		final Class<X> bindableJavaType = nodeType.getJavaType();
 		final ManagedType<X> managedType = function.nodeBuilder()
 				.getJpaMetamodel()
 				.findManagedType( bindableJavaType );
@@ -71,7 +73,7 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 			return new EmbeddedSqmPathSource<>(
 					navigablePath.getFullPath(),
 					null,
-					(EmbeddableDomainType<X>) managedType,
+					(SqmEmbeddableDomainType<X>) managedType,
 					Bindable.BindableType.SINGULAR_ATTRIBUTE,
 					false
 			);
@@ -125,7 +127,7 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 		if ( indexedPath != null ) {
 			return indexedPath;
 		}
-		if ( !( getNodeType().getSqmPathType() instanceof BasicPluralType<?, ?> ) ) {
+		if ( !( getReferencedPathSource().getPathType() instanceof BasicPluralType<?, ?> ) ) {
 			throw new UnsupportedOperationException( "Index access is only supported for basic plural types." );
 		}
 		final QueryEngine queryEngine = creationState.getCreationContext().getQueryEngine();
@@ -147,8 +149,8 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		function.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		function.appendHqlString( hql, context );
 	}
 
 	@Override
@@ -159,5 +161,17 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 	@Override
 	public <S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget) {
 		throw new TreatException( "Embeddable paths cannot be TREAT-ed" );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmFunctionPath<?> that
+			&& super.equals( object )
+			&& Objects.equals( function, that.function );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( super.hashCode(), function );
 	}
 }

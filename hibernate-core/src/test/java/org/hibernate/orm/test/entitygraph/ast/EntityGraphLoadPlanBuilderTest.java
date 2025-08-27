@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.entitygraph.ast;
@@ -63,6 +63,7 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.LockMode.READ;
 import static org.hibernate.testing.hamcrest.AssignableMatcher.assignableTo;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.isEmpty;
@@ -380,7 +381,7 @@ public class EntityGraphLoadPlanBuilderTest implements SessionFactoryScopeAware 
 				null,
 				1,
 				loadQueryInfluencers,
-				LockOptions.READ,
+				new LockOptions( READ ),
 				jdbcParameter -> {},
 				scope.getSessionFactory()
 		);

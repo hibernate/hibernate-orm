@@ -1,14 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.query.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.type.BindableType;
 
 /**
  * @apiNote Consider this contract (and its subcontracts) as incubating as we transition to 6.0 and SQM.
@@ -38,7 +38,7 @@ public abstract class AbstractParameterDescriptor<T> implements QueryParameter<T
 
 	@Override
 	public Class<T> getParameterType() {
-		return expectedType == null ? null : expectedType.getBindableJavaType();
+		return expectedType == null ? null : expectedType.getJavaType();
 	}
 
 	@Override

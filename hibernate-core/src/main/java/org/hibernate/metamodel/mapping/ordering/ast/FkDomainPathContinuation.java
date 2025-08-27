@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
@@ -41,7 +41,7 @@ public class FkDomainPathContinuation extends DomainPathContinuation {
 			boolean isTerminal,
 			TranslationContext translationContext) {
 		if ( !possiblePaths.contains( name ) ) {
-			throw new PathResolutionException( "Domain path of type `" + referencedModelPart.getPartMappingType() + "` -> `" + name + "`" );
+			throw new PathResolutionException( name );
 		}
 
 		final HashSet<String> furtherPaths = new HashSet<>();

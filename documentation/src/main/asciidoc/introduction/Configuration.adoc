@@ -69,7 +69,7 @@ driver for your database.
 | MariaDB                   | `org.mariadb.jdbc:mariadb-java-client:{version}`
 | DB2                       | `com.ibm.db2:jcc:{version}`
 | SQL Server                | `com.microsoft.sqlserver:mssql-jdbc:{version}`
-| Oracle                    | `com.oracle.database.jdbc:ojdbc11:{version}`
+| Oracle                    | `com.oracle.database.jdbc:ojdbc17:{version}`
 | H2                        | `com.h2database:h2:{version}`
 | HSQLDB                    | `org.hsqldb:hsqldb:{version}`
 |===
@@ -102,14 +102,12 @@ Optionally, you might also add any of the following additional features:
 | An {slf4j}[SLF4J] logging implementation |
 `org.apache.logging.log4j:log4j-core` +
 or `org.slf4j:slf4j-jdk14`
-| A JDBC connection pool, for example, {agroal}[Agroal] |
-`org.hibernate.orm:hibernate-agroal` +
-and `io.agroal:agroal-pool`
+| A JDBC connection pool, for example, {agroal}[Agroal] | `org.hibernate.orm:hibernate-agroal`
 | The {generator}[Hibernate Processor], especially if you're using Jakarta Data or the JPA criteria query API | `org.hibernate.orm:hibernate-processor`
 | The {query-validator}[Query Validator], for compile-time checking of HQL | `org.hibernate:query-validator`
 | {validator}[Hibernate Validator], an implementation of {bean-validation}[Bean Validation] |
 `org.hibernate.validator:hibernate-validator` +
-and `org.glassfish:jakarta.el`
+and `org.glassfish.expressly:expressly`
 | Local second-level cache support via JCache and {ehcache}[EHCache] | `org.hibernate.orm:hibernate-jcache` +
 and `org.ehcache:ehcache`
 | Local second-level cache support via JCache and {caffeine}[Caffeine]| `org.hibernate.orm:hibernate-jcache` +
@@ -121,6 +119,8 @@ and `com.github.ben-manes.caffeine:jcache`
 or `org.eclipse:yasson`
 | <<spatial,Hibernate Spatial>> | `org.hibernate.orm:hibernate-spatial`
 | <<envers,Envers>>, for auditing historical data | `org.hibernate.orm:hibernate-envers`
+| <<jfr,Hibernate JFR>>, for monitoring via Java Flight Recorder | `org.hibernate.orm:hibernate-jfr`
+| Hibernate Jandex integration, for <<entity-discovery,entity discovery>> | `org.hibernate.orm:hibernate-scan-jandex`
 |===
 
 You might also add the Hibernate {enhancer}[bytecode enhancer] to your
@@ -239,8 +239,14 @@ SessionFactory sessionFactory =
         new HibernatePersistenceConfiguration("Bookshop")
             .managedClass(Book.class)
             .managedClass(Author.class)
-            // Set properties
-            ...
+            // PostgreSQL
+            .jdbcUrl("jdbc:postgresql://localhost/example")
+            // Credentials
+            .jdbcCredentials(user, password)
+            // Automatic schema export
+            .schemaToolingAction(Action.SPEC_ACTION_DROP_AND_CREATE)
+            // SQL statement logging
+            .showSql(true, true, true)
             // Create a new SessionFactory
             .createEntityManagerFactory();
 ----
@@ -256,6 +262,35 @@ Actually, these APIs are very simple facades resting on the much more powerful--
 This API is useful if you have very advanced requirements, for example, if you're writing a framework or implementing a container.
 You'll find more information in the {native-bootstrap}[User Guide], and in the {boot}[package-level documentation] of `org.hibernate.boot`.
 ****
+
+[[entity-discovery]]
+=== Entity discovery
+
+In a Jakarta EE container environment, we don't usually need to list entity and embeddable classes explicitly in `persistence.xml`.
+Instead, the container scans the persistence unit `jar` file and automatically discovers classes annotated `@Entity`, `@Embeddable`, or `@MappedSuperclass`.
+
+`HibernatePersistenceConfiguration` offers the same functionality if the <<optional-dependencies,optional dependency>> `hibernate-scan-jandex` is available at runtime.
+
+In the following code, entity classes available on the class loader which loaded `Main.class` are automatically discovered.
+
+[source,java]
+----
+SessionFactory sessionFactory =
+        // entities discovered on ClassLoader of Main.class
+        new HibernatePersistenceConfiguration("Bookshop", Main.class)
+            // PostgreSQL
+            .jdbcUrl("jdbc:postgresql://localhost/example")
+            // Credentials
+            .jdbcCredentials(user, password)
+            // Automatic schema export
+            .schemaToolingAction(Action.SPEC_ACTION_DROP_AND_CREATE)
+            // SQL statement logging
+            .showSql(true, true, true)
+            // Create a new SessionFactory
+            .createEntityManagerFactory();
+----
+
+Notice that we were able to remove the calls to `managedClass()`.
 
 [[configuration-properties]]
 === Configuration using Hibernate properties file
@@ -348,8 +383,10 @@ You can set the size of Hibernate's built-in connection pool using this property
 |===
 | Configuration property name | Purpose
 
-| `hibernate.connection.pool_size` | The size of the built-in connection pool
+| `hibernate.connection.pool_size` | The size of the connection pool
 |===
+
+This configuration property is also respected when you use Agroal, HikariCP, or c3p0 for connection pooling.
 
 [CAUTION]
 // .The default connection pool is not meant for production use
@@ -388,13 +425,14 @@ properties:
 | Configuration property name                                | Purpose
 
 | `jakarta.persistence.schema-generation.database.action`
-a| * If `drop-and-create`, first drop the schema and then export tables, sequences, and constraints
-* If `create`, export tables, sequences, and constraints, without attempting to drop them first
-* If `create-drop`, drop the schema and recreate it on `SessionFactory` startup
-Additionally, drop the schema on `SessionFactory` shutdown
+a| * If `drop-and-create`, first drop the schema, then export tables, sequences, and constraints, and then populate initial data
+* If `create`, export tables, sequences, and constraints, without attempting to drop them first, and then populate initial data
+* If `create-drop`, drop the schema and recreate it on `SessionFactory` startup;
+additionally, drop the schema on `SessionFactory` shutdown
 * If `drop`, drop the schema on `SessionFactory` shutdown
 * If `validate`, validate the database schema without changing it
-* If `update`, only export what's missing in the schema
+* If `update`, only export what's missing in the schema, and alter incorrect column types
+* If `populate`, only populate initial data
 
 | `jakarta.persistence.create-database-schemas`
 | (Optional) If `true`, automatically create schemas and catalogs
@@ -407,6 +445,9 @@ Additionally, drop the schema on `SessionFactory` shutdown
 
 | `jakarta.persistence.sql-load-script-source`
 | (Optional) The name of a SQL DML script to be executed
+
+| `hibernate.hbm2ddl.import_files_sql_extractor`
+| (Optional) If `multi-line`, SQL statements may be split across multiple lines in scripts, and must be ``;``-terminated.
 |===
 
 This feature is extremely useful for testing.
@@ -426,7 +467,7 @@ As we mentioned <<testing,earlier>>, it can also be useful to control schema exp
 The link:{doc-javadoc-url}org/hibernate/relational/SchemaManager.html[`SchemaManager`] API allows programmatic control over schema export:
 
 [source,java]
-sessionFactory.getSchemaManager().export(true);
+sessionFactory.getSchemaManager().create(true);
 ====
 
 [[logging-generated-sql]]
@@ -450,7 +491,7 @@ These settings really help when troubleshooting the generated SQL statements.
 | `hibernate.highlight_sql`   | If `true`, log SQL with syntax highlighting via ANSI escape codes
 |===
 
-Alternatively, you can enable debug-level logging for the category `org.hibernate.SQL` using your preferred SLF4J logging implementation.
+Alternatively, you can enable ``DEBUG``-level logging for the category `org.hibernate.SQL` using your preferred SLF4J logging implementation.
 
 For example, if you're using Log4J 2 (as above in <<optional-dependencies>>), add these lines to your `log4j2.properties` file:
 
@@ -467,9 +508,12 @@ logger.jdbc-bind.level=trace
 logger.jdbc-extract.name=org.hibernate.orm.jdbc.extract
 logger.jdbc-extract.level=trace
 
+# JDBC batching
+logger.jdbc-batch.name=org.hibernate.orm.jdbc.batch
+logger.jdbc-batch.level=trace
 ----
 
-But with this approach we miss out on the pretty highlighting.
+SQL logging respects the settings `hibernate.format_sql` and `hibernate.highlight_sql`, so we don't miss out on the pretty formatting and highlighting.
 
 [[minimizing]]
 === Minimizing repetitive mapping information
@@ -497,10 +541,11 @@ We'll have more to say about them in <<naming-strategies>>.
 [[quoted-identifiers]]
 === Quoting SQL identifiers
 
-By default, Hibernate never quotes SQL table and column names in generated SQL.
+By default, Hibernate never quotes a SQL table or column name in generated SQL when the name contains only alphanumeric characters.
 This behavior is usually much more convenient, especially when working with a legacy schema, since unquoted identifiers aren't case-sensitive, and so Hibernate doesn't need to know or care whether a column is named `NAME`, `name`, or `Name` on the database side.
+On the other hand, any table or column name containing a punctuation character like `$` is automatically quoted by default.
 
-The following settings enable automatic quoting:
+The following settings enable additional automatic quoting:
 
 .Settings for identifier quoting
 [%breakable,cols="35,~"]

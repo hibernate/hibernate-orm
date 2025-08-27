@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -9,7 +9,6 @@ import java.util.function.BiConsumer;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
@@ -255,8 +254,6 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 		final TableGroup tableGroup = fromClauseAccess.getTableGroup( fetchablePath.getParent() );
 
 		final SqlAstCreationState astCreationState = creationState.getSqlAstCreationState();
-		final SqlAstCreationContext astCreationContext = astCreationState.getCreationContext();
-		final SessionFactoryImplementor sessionFactory = astCreationContext.getSessionFactory();
 		final SqlExpressionResolver sqlExpressionResolver = astCreationState.getSqlExpressionResolver();
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
@@ -266,7 +263,7 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 				),
 				type.getJdbcJavaType(),
 				fetchParent,
-				sessionFactory.getTypeConfiguration()
+				astCreationState.getCreationContext().getTypeConfiguration()
 		);
 
 		return new BasicFetch<>(
@@ -286,7 +283,6 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 			DomainResultCreationState creationState) {
 		final SqlAstCreationState astCreationState = creationState.getSqlAstCreationState();
 		final SqlAstCreationContext astCreationContext = astCreationState.getCreationContext();
-		final SessionFactoryImplementor sessionFactory = astCreationContext.getSessionFactory();
 		final SqlExpressionResolver sqlExpressionResolver = astCreationState.getSqlExpressionResolver();
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
@@ -296,7 +292,7 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 				),
 				type.getJdbcJavaType(),
 				null,
-				sessionFactory.getTypeConfiguration()
+				astCreationContext.getTypeConfiguration()
 		);
 
 		return new BasicResult<>(

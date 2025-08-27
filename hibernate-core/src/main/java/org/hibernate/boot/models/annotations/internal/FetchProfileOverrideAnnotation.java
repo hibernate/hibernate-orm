@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.FetchProfileOverride;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -21,7 +21,7 @@ public class FetchProfileOverrideAnnotation implements FetchProfileOverride {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public FetchProfileOverrideAnnotation(SourceModelBuildingContext modelContext) {
+	public FetchProfileOverrideAnnotation(ModelsContext modelContext) {
 		this.mode = org.hibernate.annotations.FetchMode.JOIN;
 		this.fetch = jakarta.persistence.FetchType.EAGER;
 	}
@@ -29,7 +29,7 @@ public class FetchProfileOverrideAnnotation implements FetchProfileOverride {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public FetchProfileOverrideAnnotation(FetchProfileOverride annotation, SourceModelBuildingContext modelContext) {
+	public FetchProfileOverrideAnnotation(FetchProfileOverride annotation, ModelsContext modelContext) {
 		this.mode = annotation.mode();
 		this.fetch = annotation.fetch();
 		this.profile = annotation.profile();
@@ -40,7 +40,7 @@ public class FetchProfileOverrideAnnotation implements FetchProfileOverride {
 	 */
 	public FetchProfileOverrideAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.mode = (org.hibernate.annotations.FetchMode) attributeValues.get( "mode" );
 		this.fetch = (jakarta.persistence.FetchType) attributeValues.get( "fetch" );
 		this.profile = (String) attributeValues.get( "profile" );

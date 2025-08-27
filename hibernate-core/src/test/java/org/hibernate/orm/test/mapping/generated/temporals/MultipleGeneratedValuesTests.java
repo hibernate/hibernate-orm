@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.generated.temporals;
@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.CurrentTimestampHasMicrosecondPrecision.class, comment = "Without this, we might not see an update to the timestamp")
 @RequiresDialectFeature( feature = DialectFeatureChecks.UsesStandardCurrentTimestampFunction.class )
-@SkipForDialect( dialectClass = SQLServerDialect.class, matchSubTypes = true, reason = "CURRENT_TIMESTAMP has millisecond precision" )
+@SkipForDialect( dialectClass = SQLServerDialect.class, reason = "CURRENT_TIMESTAMP has millisecond precision" )
 public class MultipleGeneratedValuesTests {
 	@Test
 	public void test(SessionFactoryScope scope) {

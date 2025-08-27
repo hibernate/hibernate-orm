@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
@@ -11,6 +11,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.loader.ast.spi.CollectionBatchLoader;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -23,6 +24,7 @@ import java.lang.reflect.Array;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.hasSingleId;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.trimIdBatch;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
+import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
  * @author Steve Ebersole
@@ -78,9 +80,9 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 
 	@Override
 	public PersistentCollection<?> load(Object key, SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.debugf( "Batch fetching collection: %s.%s",
-					getLoadable().getNavigableRole().getFullPath(), key );
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.trace( "Batch fetching collection: "
+					+ collectionInfoString( getLoadable(), key ) );
 		}
 
 		final Object[] keys = resolveKeysToInitialize( key, session );
@@ -104,9 +106,9 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 			return;
 		}
 
-		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.debugf( "Finishing initializing batch-fetched collection: %s.%s",
-					attributeMapping.getNavigableRole().getFullPath(), key );
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.trace( "Finishing initializing batch-fetched collection: "
+					+ collectionInfoString( attributeMapping, key ) );
 		}
 
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
@@ -126,6 +128,7 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 
 	}
 
+	@AllowReflection
 	Object[] resolveKeysToInitialize(Object keyBeingLoaded, SharedSessionContractImplementor session) {
 		final int length = getDomainBatchSize();
 		final Object[] keysToInitialize = (Object[]) Array.newInstance(
@@ -144,8 +147,8 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 	}
 
 	protected Class<?> getKeyType(ValuedModelPart keyPart) {
-		if ( keyPart instanceof NonAggregatedIdentifierMapping ) {
-			final IdClassEmbeddable idClassEmbeddable = ( (NonAggregatedIdentifierMapping) keyPart ).getIdClassEmbeddable();
+		if ( keyPart instanceof NonAggregatedIdentifierMapping nonAggregatedIdentifierMapping ) {
+			final IdClassEmbeddable idClassEmbeddable = nonAggregatedIdentifierMapping.getIdClassEmbeddable();
 			if ( idClassEmbeddable != null ) {
 				return idClassEmbeddable.getMappedJavaType().getJavaTypeClass();
 			}

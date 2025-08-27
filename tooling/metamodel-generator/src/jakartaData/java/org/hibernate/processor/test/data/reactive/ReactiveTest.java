@@ -1,12 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.data.reactive;
 
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
@@ -14,10 +14,11 @@ import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsStr
 /**
  * @author Gavin King
  */
-public class ReactiveTest extends CompilationTest {
+@CompilationTest
+class ReactiveTest {
 	@Test
-	@WithClasses({ Publisher.class, Author.class, Address.class, Book.class, Library.class, Library2.class })
-	public void test() {
+	@WithClasses({ Publisher.class, Author.class, Address.class, Book.class, Library.class, Library2.class, RepoWithPrimary.class })
+	void test() {
 		System.out.println( getMetaModelSourceAsString( Author.class ) );
 		System.out.println( getMetaModelSourceAsString( Book.class ) );
 		System.out.println( getMetaModelSourceAsString( Author.class, true ) );

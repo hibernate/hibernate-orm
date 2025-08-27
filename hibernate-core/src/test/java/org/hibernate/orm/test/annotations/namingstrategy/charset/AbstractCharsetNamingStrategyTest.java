@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.namingstrategy.charset;
@@ -17,7 +17,6 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.PropertiesHelper;
-import org.hibernate.mapping.UniqueKey;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
@@ -62,14 +61,13 @@ public abstract class AbstractCharsetNamingStrategyTest extends BaseUnitTestCase
 				.applyImplicitNamingStrategy( new LongIdentifierNamingStrategy() )
 				.build();
 
-		UniqueKey uniqueKey = metadata.getEntityBinding(Address.class.getName()).getTable().getUniqueKeys().values().iterator().next();
+		var uniqueKey = metadata.getEntityBinding(Address.class.getName()).getTable().getUniqueKeys().values().iterator().next();
 		assertEquals( expectedUniqueKeyName(), uniqueKey.getName() );
 
-		org.hibernate.mapping.ForeignKey foreignKey =
-				(org.hibernate.mapping.ForeignKey) metadata.getEntityBinding(Address.class.getName()).getTable().getForeignKeys().values().iterator().next();
+		var foreignKey = metadata.getEntityBinding(Address.class.getName()).getTable().getForeignKeyCollection().iterator().next();
 		assertEquals( expectedForeignKeyName(), foreignKey.getName() );
 
-		org.hibernate.mapping.Index index = metadata.getEntityBinding(Address.class.getName()).getTable().getIndexes().values().iterator().next();
+		var index = metadata.getEntityBinding(Address.class.getName()).getTable().getIndexes().values().iterator().next();
 		assertEquals( expectedIndexName(), index.getName() );
 	}
 

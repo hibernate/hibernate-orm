@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
@@ -15,6 +15,40 @@ import org.hibernate.type.Type;
  * since, by default, Hibernate must check each of the entity's attribute values one by one. Sometimes, an
  * application already has knowledge of an entity's dirtiness and making use of that information would save some
  * work. This contract allows the application to take over the task of determining if an entity is dirty.
+ * <p>
+ * For example, the application program might define an interface implemented by entities which keep track of
+ * their own modified fields:
+ * <pre>
+ * public interface DirtyTracker {
+ *     Set&lt;String&gt; changes();
+ * }
+ * </pre>
+ * Then the following implementation of {@code CustomEntityDirtinessStrategy} would be used:
+ * <pre>
+ * public class DirtyTrackerDirtinessStrategy implements CustomEntityDirtinessStrategy {
+ *     &#64;Override
+ *     public boolean canDirtyCheck(Object entity, EntityPersister persister, Session session) {
+ *         return entity instanceof DirtyTracker;
+ *     }
+ *
+ *     &#64;Override
+ *     public boolean isDirty(Object entity, EntityPersister persister, Session session) {
+ *         return !((DirtyTracker) entity).changes().isEmpty();
+ *     }
+ *
+ *     &#64;Override
+ *     public void resetDirty(Object entity, EntityPersister persister, Session session) {
+ *         ((DirtyTracker) entity).changes().clear();
+ *     }
+ *
+ *     &#64;Override
+ *     public void findDirty(Object entity, EntityPersister persister, Session session, DirtyCheckContext dirtyCheckContext) {
+ *         dirtyCheckContext.doDirtyChecking( attributeInformation ->
+ *                ((DirtyTracker) entity).changes().contains( attributeInformation.getName() ) );
+ *     }
+ * }
+ * </pre>
+ *
  *
  * @see org.hibernate.cfg.AvailableSettings#CUSTOM_ENTITY_DIRTINESS_STRATEGY
  * @see org.hibernate.cfg.Configuration#setCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy)

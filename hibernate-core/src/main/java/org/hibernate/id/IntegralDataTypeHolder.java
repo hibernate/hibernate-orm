@@ -1,9 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
+
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -183,4 +186,19 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 * @return The pre-incremented internal value
 	 */
 	Number makeValueThenAdd(long addend);
+
+	/**
+	 * Convert the internal value to {@code long}.
+	 */
+	long toLong();
+
+	/**
+	 * Convert the internal value to {@link BigInteger}.
+	 */
+	BigInteger toBigInteger();
+
+	/**
+	 * Convert the internal value to {@link BigDecimal}.
+	 */
+	BigDecimal toBigDecimal();
 }

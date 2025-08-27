@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.dynamic;
@@ -11,13 +11,14 @@ import java.util.Objects;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.sql.results.graph.Fetchable;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuilderContainer<T>>
 		implements DynamicFetchBuilderContainer {
-	private Map<String, FetchBuilder> fetchBuilderMap;
+	private Map<Fetchable, FetchBuilder> fetchBuilderMap;
 
 	protected AbstractFetchBuilderContainer() {
 	}
@@ -25,7 +26,7 @@ public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuild
 	protected AbstractFetchBuilderContainer(AbstractFetchBuilderContainer<T> original) {
 		if ( original.fetchBuilderMap != null ) {
 			fetchBuilderMap = new HashMap<>( original.fetchBuilderMap.size() );
-			for ( Map.Entry<String, FetchBuilder> entry : original.fetchBuilderMap.entrySet() ) {
+			for ( Map.Entry<Fetchable, FetchBuilder> entry : original.fetchBuilderMap.entrySet() ) {
 				final FetchBuilder fetchBuilder =
 						entry.getValue() instanceof DynamicFetchBuilderStandard dynamicFetchBuilderStandard
 								? dynamicFetchBuilderStandard.cacheKeyInstance( this )
@@ -38,54 +39,55 @@ public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuild
 	protected abstract String getPropertyBase();
 
 	@Override
-	public FetchBuilder findFetchBuilder(String fetchableName) {
-		return fetchBuilderMap == null ? null : fetchBuilderMap.get( fetchableName );
+	public FetchBuilder findFetchBuilder(Fetchable fetchable) {
+		return fetchBuilderMap == null ? null : fetchBuilderMap.get( fetchable );
 	}
 
 	@Override
-	public T addProperty(String propertyName, String columnAlias) {
-		final DynamicFetchBuilder fetchBuilder = addProperty( propertyName );
+	public T addProperty(Fetchable fetchable, String columnAlias) {
+		final DynamicFetchBuilder fetchBuilder = addProperty( fetchable );
 		fetchBuilder.addColumnAlias( columnAlias );
 		return (T) this;
 	}
 
 	@Override
-	public T addProperty(String propertyName, String... columnAliases) {
-		final DynamicFetchBuilder fetchBuilder = addProperty( propertyName );
+	public T addProperty(Fetchable fetchable, String... columnAliases) {
+		final DynamicFetchBuilder fetchBuilder = addProperty( fetchable );
 		ArrayHelper.forEach( columnAliases, fetchBuilder::addColumnAlias );
 		return (T) this;
 	}
 
 	@Override
-	public DynamicFetchBuilder addProperty(String propertyName) {
+	public DynamicFetchBuilder addProperty(Fetchable fetchable) {
 		if ( fetchBuilderMap == null ) {
 			fetchBuilderMap = new HashMap<>();
 		}
 		else {
-			final FetchBuilder existing = fetchBuilderMap.get( propertyName );
+			final FetchBuilder existing = fetchBuilderMap.get( fetchable );
 			if ( existing != null ) {
 				throw new IllegalArgumentException(
 						String.format(
 								Locale.ROOT,
 								"Fetch was already defined for %s.%s : %s",
 								getPropertyBase(),
-								propertyName,
+								fetchable,
 								existing
 						)
 				);
 			}
 		}
 
-		final DynamicFetchBuilderStandard fetchBuilder = new DynamicFetchBuilderStandard( propertyName );
-		fetchBuilderMap.put( propertyName, fetchBuilder );
+		final DynamicFetchBuilderStandard fetchBuilder = new DynamicFetchBuilderStandard( fetchable	);
+		fetchBuilderMap.put( fetchable, fetchBuilder );
 		return fetchBuilder;
 	}
 
-	public void addFetchBuilder(String propertyName, FetchBuilder fetchBuilder) {
+	@Override
+	public void addFetchBuilder(Fetchable fetchable, FetchBuilder fetchBuilder) {
 		if ( fetchBuilderMap == null ) {
 			fetchBuilderMap = new HashMap<>();
 		}
-		fetchBuilderMap.put( propertyName, fetchBuilder );
+		fetchBuilderMap.put( fetchable, fetchBuilder );
 	}
 
 	@Override

@@ -1,90 +1,68 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.loader;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.hibernate.ObjectNotFoundException;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Iterator;
 import java.util.Set;
 
-import org.hibernate.ObjectNotFoundException;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.resource.transaction.spi.TransactionStatus;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Emmanuel Bernard
  */
-public class LoaderTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
-				Player.class,
-				Team.class
-		};
-	}
-
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel( annotatedClasses = { Player.class, Team.class } )
+@SessionFactory
+public class LoaderTest {
 	@Test
-	public void testBasic() throws Exception {
+	public void testBasic(SessionFactoryScope sessions) throws Exception {
 		// set up data...
-		Session s = openSession( );
-		Transaction tx = s.beginTransaction();
-		Team t = new Team();
-		Player p = new Player();
-		p.setName( "me" );
-		t.getPlayers().add( p );
-		p.setTeam( t );
-		s.persist(p);
-		s.persist( t );
-		tx.commit();
-		s.close();
+		sessions.inTransaction( (session) -> {
+			Team t = new Team( 1L );
+			Player p = new Player( 1L, "me" );
+			t.addPlayer( p );
+			session.persist( p );
+			session.persist( t );
+		} );
 
-		s = openSession();
-		tx = s.beginTransaction();
-		Team t2 = s.getReference( Team.class, t.getId() );
-		Set<Player> players = t2.getPlayers();
-		Iterator<Player> iterator = players.iterator();
-		assertEquals( "me", iterator.next().getName() );
-		tx.commit();
-		s.close();
-
-		// clean up data
-		s = openSession();
-		tx = s.beginTransaction();
-		t = s.get( Team.class, t2.getId() );
-		p = s.get( Player.class, p.getId() );
-		s.remove( p );
-		s.remove( t );
-		tx.commit();
-		s.close();
+		// test
+		sessions.inTransaction( (session) -> {
+			Team t2 = session.getReference( Team.class, 1 );
+			Set<Player> players = t2.getPlayers();
+			Iterator<Player> iterator = players.iterator();
+			assertThat( iterator.next().getName() ).isEqualTo( "me" );
+		} );
 	}
 
 	@Test
-	public void testGetNotExisting() {
-		Session s = openSession();
-		s.beginTransaction();
+	public void testGetNotExisting(SessionFactoryScope sessions) {
+		sessions.inTransaction( (session) -> {
+			final Team reference = session.getReference( Team.class, 1 );
+			assertThat( reference ).isNotNull();
 
-		try {
-			long notExistingId = 1l;
-			s.getReference( Team.class, notExistingId );
-			s.get( Team.class, notExistingId );
-			s.getTransaction().commit();
-		}
-		catch (ObjectNotFoundException e) {
-			if ( s.getTransaction().getStatus() == TransactionStatus.ACTIVE ) {
-				s.getTransaction().rollback();
+			// now try a find which should return us a null
+			try {
+				final Team found = session.find( Team.class, 1 );
+				assertThat( found ).isNull();
 			}
-			fail("#get threw an ObjectNotFoundExcepton");
-		}
-		finally {
-			s.close();
-		}
+			catch (ObjectNotFoundException unexpected) {
+				fail( "#find threw an ObjectNotFoundException" );
+			}
+		} );
+	}
+
+	@AfterEach
+	public void dropTestData(SessionFactoryScope sessions) {
+		sessions.dropData();
 	}
 }

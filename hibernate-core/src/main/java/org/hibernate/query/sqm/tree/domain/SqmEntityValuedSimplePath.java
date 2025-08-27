@@ -1,10 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -62,9 +63,8 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	}
 
 	@Override
-	public SqmPathSource<T> getNodeType() {
-		//noinspection unchecked
-		return (SqmPathSource<T>) getReferencedPathSource().getSqmPathType();
+	public SqmBindableType<T> getNodeType() {
+		return getReferencedPathSource().getPathType();
 	}
 // We can't expose that the type is a EntityDomainType because it could also be a MappedSuperclass
 // Ideally, we would specify the return type to be IdentifiableDomainType, but that does not implement SqmPathSource yet

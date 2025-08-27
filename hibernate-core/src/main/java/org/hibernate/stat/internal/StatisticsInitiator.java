@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat.internal;
@@ -7,7 +7,6 @@ package org.hibernate.stat.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
@@ -38,30 +37,30 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 
 	@Override
 	public StatisticsImplementor initiateService(SessionFactoryServiceInitiatorContext context) {
-		final Object configValue = context.getServiceRegistry()
-				.requireService( ConfigurationService.class )
-				.getSettings()
-				.get( STATS_BUILDER );
-		return initiateServiceInternal( context.getSessionFactory(), configValue, context.getServiceRegistry() );
+		final Object configValue =
+				context.getServiceRegistry().requireService( ConfigurationService.class )
+						.getSettings().get( STATS_BUILDER );
+		final StatisticsFactory statisticsFactory = statisticsFactory( configValue, context.getServiceRegistry() );
+		final StatisticsImplementor statistics = statisticsFactory.buildStatistics( context.getSessionFactory() );
+		final boolean enabled = context.getSessionFactoryOptions().isStatisticsEnabled();
+		LOG.statisticsInitialized();
+		statistics.setStatisticsEnabled( enabled );
+		return statistics;
 	}
 
-	private StatisticsImplementor initiateServiceInternal(
-			SessionFactoryImplementor sessionFactory,
-			@Nullable Object configValue,
-			ServiceRegistryImplementor registry) {
-
-		final StatisticsFactory statisticsFactory;
+	private static StatisticsFactory statisticsFactory(
+			@Nullable Object configValue, ServiceRegistryImplementor registry) {
 		if ( configValue == null ) {
-			statisticsFactory = null; //We'll use the default
+			return StatisticsImpl::new; // Use the default implementation
 		}
-		else if ( configValue instanceof StatisticsFactory ) {
-			statisticsFactory = (StatisticsFactory) configValue;
+		else if ( configValue instanceof StatisticsFactory factory ) {
+			return factory;
 		}
 		else {
 			// assume it names the factory class
 			final ClassLoaderService classLoaderService = registry.requireService( ClassLoaderService.class );
 			try {
-				statisticsFactory = (StatisticsFactory) classLoaderService.classForName( configValue.toString() ).newInstance();
+				return (StatisticsFactory) classLoaderService.classForName( configValue.toString() ).newInstance();
 			}
 			catch (HibernateException e) {
 				throw e;
@@ -73,18 +72,5 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 				);
 			}
 		}
-		final StatisticsImplementor statistics;
-		if ( statisticsFactory == null ) {
-			// Default:
-			statistics = new StatisticsImpl( sessionFactory );
-		}
-		else {
-			statistics = statisticsFactory.buildStatistics( sessionFactory );
-		}
-		final boolean enabled = sessionFactory.getSessionFactoryOptions().isStatisticsEnabled();
-		statistics.setStatisticsEnabled( enabled );
-		LOG.debugf( "Statistics initialized [enabled=%s]", enabled );
-		return statistics;
 	}
-
 }

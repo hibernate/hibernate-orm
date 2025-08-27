@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.boot.models.annotations.spi.AttributeMarker;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.Basic;
 
@@ -23,7 +23,7 @@ public class BasicJpaAnnotation
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public BasicJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public BasicJpaAnnotation(ModelsContext modelContext) {
 		this.fetch = jakarta.persistence.FetchType.EAGER;
 		this.optional = true;
 	}
@@ -31,7 +31,7 @@ public class BasicJpaAnnotation
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public BasicJpaAnnotation(Basic annotation, SourceModelBuildingContext modelContext) {
+	public BasicJpaAnnotation(Basic annotation, ModelsContext modelContext) {
 		this.fetch = annotation.fetch();
 		this.optional = annotation.optional();
 	}
@@ -39,7 +39,7 @@ public class BasicJpaAnnotation
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public BasicJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public BasicJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.fetch = (jakarta.persistence.FetchType) attributeValues.get( "fetch" );
 		this.optional = (boolean) attributeValues.get( "optional" );
 	}

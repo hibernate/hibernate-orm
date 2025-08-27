@@ -1,12 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.json;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.function.array.DdlTypeHelper;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingSetReturningFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingSqmSetReturningFunction;
@@ -248,6 +248,12 @@ public class JsonTableFunction extends AbstractSqmSelfRenderingSetReturningFunct
 			sqlAppender.appendSql( " path " );
 			sqlAppender.appendSingleQuoteEscapedString( jsonPath );
 		}
+		else {
+			// Always append implicit path to avoid identifier case sensitivity issues
+			sqlAppender.appendSql( " path '$." );
+			sqlAppender.appendSql( name );
+			sqlAppender.appendSql( '\'' );
+		}
 	}
 
 	protected void renderJsonQueryColumnDefinition(SqlAppender sqlAppender, JsonTableQueryColumnDefinition definition, int clauseLevel, SqlAstTranslator<?> walker) {
@@ -322,29 +328,29 @@ public class JsonTableFunction extends AbstractSqmSelfRenderingSetReturningFunct
 			int nextIndex = 1;
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof Expression ) {
-					jsonPath = (Expression) node;
+				if ( node instanceof Expression expression ) {
+					jsonPath = expression;
 					nextIndex++;
 				}
 			}
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof JsonPathPassingClause ) {
-					passingClause = (JsonPathPassingClause) node;
+				if ( node instanceof JsonPathPassingClause jsonPathPassingClause ) {
+					passingClause = jsonPathPassingClause;
 					nextIndex++;
 				}
 			}
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof JsonTableErrorBehavior ) {
-					errorBehavior = (JsonTableErrorBehavior) node;
+				if ( node instanceof JsonTableErrorBehavior jsonTableErrorBehavior) {
+					errorBehavior = jsonTableErrorBehavior;
 					nextIndex++;
 				}
 			}
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof JsonTableColumnsClause ) {
-					columnsClause = (JsonTableColumnsClause) node;
+				if ( node instanceof JsonTableColumnsClause jsonTableColumnsClause ) {
+					columnsClause = jsonTableColumnsClause;
 				}
 			}
 			return new JsonTableArguments(

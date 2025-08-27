@@ -1,0 +1,13 @@
+= What's New in 7.2
+:toc:
+:toclevels: 4
+:version: 7.2
+:docsBase: https://docs.jboss.org/hibernate/orm
+:versionDocBase: {docsBase}/{version}
+:userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
+:migrationGuide: {versionDocBase}/migration-guide/migration-guide.html
+
+Describes the new features and capabilities added to Hibernate ORM in {version}.
+
+IMPORTANT: If migrating from earlier versions, be sure to also check out the link:{migrationGuide}[Migration Guide] for discussion of impactful changes.
+

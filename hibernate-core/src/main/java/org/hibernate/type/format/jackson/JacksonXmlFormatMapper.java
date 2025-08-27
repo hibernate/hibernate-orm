@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.format.jackson;
@@ -40,6 +40,7 @@ import org.hibernate.type.internal.ParameterizedTypeImpl;
 
 /**
  * @author Christian Beikov
+ * @author Emmanuel Jannetti
  */
 public final class JacksonXmlFormatMapper implements FormatMapper {
 
@@ -109,9 +110,10 @@ public final class JacksonXmlFormatMapper implements FormatMapper {
 					return javaType.wrap( map, wrapperOptions );
 				}
 				else if ( Collection.class.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
-					final Type elementType = javaType.getJavaType() instanceof ParameterizedType parameterizedType
-							? parameterizedType.getActualTypeArguments()[0]
-							: Object.class;
+					final Type elementType =
+							javaType.getJavaType() instanceof ParameterizedType parameterizedType
+									? parameterizedType.getActualTypeArguments()[0]
+									: Object.class;
 					final CollectionWrapper<?> collectionWrapper = objectMapper.readValue(
 							charSequence.toString(),
 							objectMapper.constructType(
@@ -167,9 +169,10 @@ public final class JacksonXmlFormatMapper implements FormatMapper {
 				);
 			}
 			else if ( Collection.class.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
-				final Type elementType = javaType.getJavaType() instanceof ParameterizedType parameterizedType
-						? parameterizedType.getActualTypeArguments()[0]
-						: Object.class;
+				final Type elementType =
+						javaType.getJavaType() instanceof ParameterizedType parameterizedType
+								? parameterizedType.getActualTypeArguments()[0]
+								: Object.class;
 				return writeValueAsString(
 						new CollectionWrapper<>( (Collection<?>) value ),
 						javaType,

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.jdbc.internal;
@@ -170,7 +170,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	@Override
 	public int getPosition() {
 		try {
-			return resultSet.getRow() - 1;
+			return resultSet.getRow();
 		}
 		catch (SQLException e) {
 			throw makeExecutionException( "Error calling ResultSet#getRow", e );
@@ -309,10 +309,9 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	}
 
 	private ExecutionException makeExecutionException(String message, SQLException cause) {
-		final JDBCException jdbcException = executionContext.getSession().getJdbcServices().getSqlExceptionHelper().convert(
-				cause,
-				message
-		);
+		final JDBCException jdbcException =
+				executionContext.getSession().getJdbcServices().getSqlExceptionHelper()
+						.convert( cause, message );
 		if ( jdbcException instanceof QueryTimeoutException
 				|| jdbcException instanceof DataException
 				|| jdbcException instanceof LockTimeoutException ) {
@@ -381,19 +380,18 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 		if ( !initializedIndexes.get( valueIndex ) ) {
 			initializedIndexes.set( valueIndex );
 			final SqlSelection sqlSelection = sqlSelections[valueIndex];
+			final int index = sqlSelection.getJdbcResultSetIndex();
 			try {
 				currentRowJdbcValues[valueIndex] = sqlSelection.getJdbcValueExtractor().extract(
 						resultSet,
-						sqlSelection.getJdbcResultSetIndex(),
+						index,
 						executionContext.getSession()
 				);
 			}
 			catch ( SQLException e ) {
 				// do not want to wrap in ExecutionException here
-				throw executionContext.getSession().getJdbcServices().getSqlExceptionHelper().convert(
-						e,
-						"Could not extract column [" + sqlSelection.getJdbcResultSetIndex() + "] from JDBC ResultSet"
-				);
+				throw executionContext.getSession().getJdbcServices().getSqlExceptionHelper()
+						.convert( e, "Could not extract column [" + index + "] from JDBC ResultSet" );
 			}
 		}
 		return currentRowJdbcValues[valueIndex];

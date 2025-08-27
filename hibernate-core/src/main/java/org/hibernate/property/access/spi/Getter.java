@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.spi;
@@ -39,7 +39,7 @@ public interface Getter extends Serializable {
 	 *
 	 * @return The extracted value.
 	 */
-	@Nullable Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session);
+	@Nullable Object getForInsert(Object owner, Map<Object, Object> mergeMap, SharedSessionContractImplementor session);
 
 	/**
 	 * Retrieve the declared Java type class

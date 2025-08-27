@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.generated.sql;
@@ -7,6 +7,7 @@ package org.hibernate.orm.test.mapping.generated.sql;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.Generated;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.generator.EventType;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -26,11 +27,12 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Gavin King
  */
-@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = SqlGeneratedTest.OrderLine.class)
 @SessionFactory
 @SkipForDialect(dialectClass = SybaseASEDialect.class,
 		reason = "The name 'current_timestamp' is illegal in this context. Only constants, constant expressions, or variables allowed here.")
+@SkipForDialect( dialectClass = InformixDialect.class,
+		reason = "No 'current_timestamp' function on Informix (test passes with 'current')")
 public class SqlGeneratedTest {
 
 	@Test
@@ -76,7 +78,7 @@ public class SqlGeneratedTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createQuery( "delete WithDefault" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name="WithDefault")

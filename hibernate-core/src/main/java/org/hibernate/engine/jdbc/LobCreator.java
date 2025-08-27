@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc;
@@ -14,7 +14,7 @@ import java.sql.NClob;
  * Contract for creating various LOB references.
  *
  * @apiNote This class is not intended to be called directly by the application program.
- *          Instead, use {@link org.hibernate.Session#getLobHelper()}.
+ *          Instead, use {@link org.hibernate.Hibernate#getLobHelper()}.
  *
  * @author Steve Ebersole
  * @author Gail Badner

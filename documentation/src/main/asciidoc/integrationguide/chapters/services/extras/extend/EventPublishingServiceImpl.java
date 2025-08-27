@@ -19,10 +19,10 @@ public class EventPublishingServiceImpl
         this.serviceRegistry = serviceRegistry;
     }
 
-    public void configure(Map configurationValues) {
-        this.jmsConnectionFactoryName = configurationValues
+    public void configure(Map<String, Object> configurationValues) {
+        this.jmsConnectionFactoryName = (String) configurationValues
             .get( JMS_CONNECTION_FACTORY_NAME_SETTING );
-        this.destinationName = configurationValues
+        this.destinationName = (String) configurationValues
             .get( JMS_DESTINATION_NAME_SETTING );
     }
 

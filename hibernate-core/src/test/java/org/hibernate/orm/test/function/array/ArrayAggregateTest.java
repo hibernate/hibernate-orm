@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.function.array;
@@ -11,7 +11,7 @@ import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.dialect.OracleArrayJdbcType;
+import org.hibernate.dialect.type.OracleArrayJdbcType;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.engine.jdbc.Size;
@@ -30,6 +30,7 @@ import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -101,9 +102,7 @@ public class ArrayAggregateTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( em -> {
-			em.createMutationQuery( "delete from EntityOfBasics" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -157,6 +156,17 @@ public class ArrayAggregateTest {
 			List<String[]> results = em.createQuery( cq ).getResultList();
 			assertEquals( 1, results.size() );
 			assertArrayEquals( new String[]{ "abc", "def", null }, results.get( 0 ) );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19666")
+	public void testNonExistingArrayType(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<Integer[]> results = em.createQuery( "select array_agg(e.id) within group (order by e.id) from EntityOfBasics e", Integer[].class )
+					.getResultList();
+			assertEquals( 1, results.size() );
+			assertArrayEquals( new Integer[]{ 1, 2, 3 }, results.get( 0 ) );
 		} );
 	}
 

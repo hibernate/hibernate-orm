@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 @FetchProfile(name = "mappedBy-package-profile-1", fetchOverrides = {
 		@FetchProfile.FetchOverride(entity = Address.class, association = "customer")
 })

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa;
@@ -77,7 +77,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		final Map<?,?> integration = wrap( properties );
 		final Collection<PersistenceUnitDescriptor> units = locatePersistenceUnits( integration, providedClassLoader, providedClassLoaderService );
 
-		log.debugf( "Located and parsed %s persistence units; checking each", units.size() );
+		log.tracef( "Located and parsed %s persistence units; checking each", units.size() );
 
 		if ( persistenceUnitName == null && units.size() > 1 ) {
 			// no persistence-unit name to look for was given and we found multiple persistence-units
@@ -85,8 +85,8 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		}
 
 		for ( PersistenceUnitDescriptor persistenceUnit : units ) {
-			if ( log.isDebugEnabled() ) {
-				log.debugf(
+			if ( log.isTraceEnabled() ) {
+				log.tracef(
 						"Checking persistence-unit [name=%s, explicit-provider=%s] against incoming persistence unit name [%s]",
 						persistenceUnit.getName(),
 						persistenceUnit.getProviderClassName(),
@@ -96,13 +96,13 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 			final boolean matches = persistenceUnitName == null || persistenceUnit.getName().equals( persistenceUnitName );
 			if ( !matches ) {
-				log.debug( "Excluding from consideration due to name mis-match" );
+				log.tracef( "Excluding from consideration due to name mismatch" );
 				continue;
 			}
 
 			// See if we (Hibernate) are the persistence provider
 			if ( ! ProviderChecker.isProvider( persistenceUnit, properties ) ) {
-				log.debug( "Excluding from consideration due to provider mis-match" );
+				log.tracef( "Excluding from consideration due to provider mismatch" );
 				continue;
 			}
 

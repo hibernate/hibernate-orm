@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.internal;
@@ -16,7 +16,7 @@ public class PropertyAccessStrategyGetterImpl implements PropertyAccessStrategy 
 	/**
 	 * Singleton access
 	 */
-	public static final PropertyAccessStrategyGetterImpl INSTANCE = new PropertyAccessStrategyGetterImpl();
+	public static final PropertyAccessStrategy INSTANCE = new PropertyAccessStrategyGetterImpl();
 
 	@Override
 	public PropertyAccess buildPropertyAccess(Class<?> containerJavaType, String propertyName, boolean setterRequired) {

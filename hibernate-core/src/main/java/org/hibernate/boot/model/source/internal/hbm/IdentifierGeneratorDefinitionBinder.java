@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -18,7 +18,7 @@ public class IdentifierGeneratorDefinitionBinder {
 	public static void processIdentifierGeneratorDefinition(
 			HbmLocalMetadataBuildingContext context,
 			JaxbHbmIdentifierGeneratorDefinitionType identifierGenerator) {
-		log.debugf( "Processing <identifier-generator/> : %s", identifierGenerator.getName() );
+		log.tracef( "Processing <identifier-generator/> : %s", identifierGenerator.getName() );
 
 		context.getMetadataCollector().addIdentifierGenerator(
 				new IdentifierGeneratorDefinition(

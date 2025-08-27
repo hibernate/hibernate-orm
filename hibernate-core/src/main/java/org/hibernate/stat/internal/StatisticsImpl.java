@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat.internal;
@@ -42,7 +42,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  */
 public class StatisticsImpl implements StatisticsImplementor, Service {
 
-	private static final CoreMessageLogger LOG = messageLogger( StatisticsImpl.class );
+	private static final CoreMessageLogger log = messageLogger( StatisticsImpl.class );
 
 	private final MappingMetamodelImplementor metamodel;
 	private final CacheImplementor cache;
@@ -66,6 +66,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	private final LongAdder entityLoadCount = new LongAdder();
 	private final LongAdder entityUpdateCount = new LongAdder();
+	private final LongAdder entityUpsertCount = new LongAdder();
 	private final LongAdder entityInsertCount = new LongAdder();
 	private final LongAdder entityDeleteCount = new LongAdder();
 	private final LongAdder entityFetchCount = new LongAdder();
@@ -133,7 +134,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 				20
 		);
 		resetStart();
-		metamodel = sessionFactory.getRuntimeMetamodels().getMappingMetamodel();
+		metamodel = sessionFactory.getMappingMetamodel();
 		cache = sessionFactory.getCache();
 		secondLevelCacheEnabled = sessionFactoryOptions.isSecondLevelCacheEnabled();
 		queryCacheEnabled = sessionFactoryOptions.isQueryCacheEnabled();
@@ -174,6 +175,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		entityDeleteCount.reset();
 		entityInsertCount.reset();
 		entityUpdateCount.reset();
+		entityUpsertCount.reset();
 		entityLoadCount.reset();
 		entityFetchCount.reset();
 
@@ -209,6 +211,8 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		queryPlanCacheMissCount.reset();
 
 		resetStart();
+
+		log.statisticsReset();
 	}
 
 	private void resetStart(@UnknownInitialization StatisticsImpl this) {
@@ -233,6 +237,12 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	@Override
 	public void setStatisticsEnabled(boolean enabled) {
 		isStatisticsEnabled = enabled;
+		if ( enabled ) {
+			log.statisticsEnabled();
+		}
+		else {
+			log.statisticsDisabled();
+		}
 	}
 
 
@@ -281,6 +291,11 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	}
 
 	@Override
+	public long getEntityUpsertCount() {
+		return entityUpsertCount.sum();
+	}
+
+	@Override
 	public long getOptimisticFailureCount() {
 		return optimisticFailureCount.sum();
 	}
@@ -301,6 +316,12 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	public void updateEntity(String entityName) {
 		entityUpdateCount.increment();
 		getEntityStatistics( entityName ).incrementUpdateCount();
+	}
+
+	@Override
+	public void upsertEntity(String entityName) {
+		entityUpsertCount.increment();
+		getEntityStatistics( entityName ).incrementUpsertCount();
 	}
 
 	@Override
@@ -340,6 +361,13 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		secondLevelCacheMissCount.increment();
 		getDomainDataRegionStatistics( regionName ).incrementMissCount();
 		getEntityStatistics( entityName.getFullPath() ).incrementCacheMissCount();
+	}
+
+	@Override
+	public void entityCacheRemove(NavigableRole entityName, String regionName) {
+		secondLevelCacheMissCount.increment();
+		getDomainDataRegionStatistics( regionName ).incrementRemoveCount();
+		getEntityStatistics( entityName.getFullPath() ).incrementCacheRemoveCount();
 	}
 
 
@@ -702,7 +730,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public void queryExecuted(String hql, int rows, long time) {
-		LOG.hql( hql, time, (long) rows );
+		log.hql( hql, time, (long) rows );
 		queryExecutionCount.increment();
 
 		boolean isLongestQuery;
@@ -724,8 +752,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public void queryCacheHit(String hql, String regionName) {
-		LOG.tracef( "Statistics#queryCacheHit( `%s`, `%s` )", hql, regionName );
-
 		queryCacheHitCount.increment();
 
 		getQueryRegionStats( regionName ).incrementHitCount();
@@ -737,8 +763,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public void queryCacheMiss(String hql, String regionName) {
-		LOG.tracef( "Statistics#queryCacheMiss( `%s`, `%s` )", hql, regionName );
-
 		queryCacheMissCount.increment();
 
 		getQueryRegionStats( regionName ).incrementMissCount();
@@ -750,8 +774,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public void queryCachePut(String hql, String regionName) {
-		LOG.tracef( "Statistics#queryCachePut( `%s`, `%s` )", hql, regionName );
-
 		queryCachePutCount.increment();
 
 		getQueryRegionStats( regionName ).incrementPutCount();
@@ -890,45 +912,47 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public void logSummary() {
-		LOG.loggingStatistics();
-		LOG.startTime( startTime.toEpochMilli() );
-		LOG.sessionsOpened( sessionOpenCount.sum() );
-		LOG.sessionsClosed( sessionCloseCount.sum() );
-		LOG.transactions( transactionCount.sum() );
-		LOG.successfulTransactions( committedTransactionCount.sum() );
-		LOG.optimisticLockFailures( optimisticFailureCount.sum() );
-		LOG.flushes( flushCount.sum() );
-		LOG.connectionsObtained( connectCount.sum() );
-		LOG.statementsPrepared( prepareStatementCount.sum() );
-		LOG.statementsClosed( closeStatementCount.sum() );
-		LOG.secondLevelCachePuts( secondLevelCachePutCount.sum() );
-		LOG.secondLevelCacheHits( secondLevelCacheHitCount.sum() );
-		LOG.secondLevelCacheMisses( secondLevelCacheMissCount.sum() );
-		LOG.entitiesLoaded( entityLoadCount.sum() );
-		LOG.entitiesUpdated( entityUpdateCount.sum() );
-		LOG.entitiesInserted( entityInsertCount.sum() );
-		LOG.entitiesDeleted( entityDeleteCount.sum() );
-		LOG.entitiesFetched( entityFetchCount.sum() );
-		LOG.collectionsLoaded( collectionLoadCount.sum() );
-		LOG.collectionsUpdated( collectionUpdateCount.sum() );
-		LOG.collectionsRemoved( collectionRemoveCount.sum() );
-		LOG.collectionsRecreated( collectionRecreateCount.sum() );
-		LOG.collectionsFetched( collectionFetchCount.sum() );
-		LOG.naturalIdCachePuts( naturalIdCachePutCount.sum() );
-		LOG.naturalIdCacheHits( naturalIdCacheHitCount.sum() );
-		LOG.naturalIdCacheMisses( naturalIdCacheMissCount.sum() );
-		LOG.naturalIdMaxQueryTime( naturalIdQueryExecutionMaxTime.get() );
-		LOG.naturalIdQueriesExecuted( naturalIdQueryExecutionCount.sum() );
-		LOG.queriesExecuted( queryExecutionCount.sum() );
-		LOG.queryCachePuts( queryCachePutCount.sum() );
-		LOG.timestampCachePuts( updateTimestampsCachePutCount.sum() );
-		LOG.timestampCacheHits( updateTimestampsCacheHitCount.sum() );
-		LOG.timestampCacheMisses( updateTimestampsCacheMissCount.sum() );
-		LOG.queryCacheHits( queryCacheHitCount.sum() );
-		LOG.queryCacheMisses( queryCacheMissCount.sum() );
-		LOG.maxQueryTime( queryExecutionMaxTime.get() );
-		LOG.queryPlanCacheHits( queryPlanCacheHitCount.sum() );
-		LOG.queryPlanCacheMisses( queryPlanCacheMissCount.sum() );
+		log.logStatistics(
+				startTime.toEpochMilli(),
+				sessionOpenCount.sum(),
+				sessionCloseCount.sum(),
+				transactionCount.sum(),
+				committedTransactionCount.sum(),
+				optimisticFailureCount.sum(),
+				flushCount.sum(),
+				connectCount.sum(),
+				prepareStatementCount.sum(),
+				closeStatementCount.sum(),
+				secondLevelCachePutCount.sum(),
+				secondLevelCacheHitCount.sum(),
+				secondLevelCacheMissCount.sum(),
+				entityLoadCount.sum(),
+				entityFetchCount.sum(),
+				entityUpdateCount.sum(),
+				entityUpsertCount.sum(),
+				entityInsertCount.sum(),
+				entityDeleteCount.sum(),
+				collectionLoadCount.sum(),
+				collectionFetchCount.sum(),
+				collectionUpdateCount.sum(),
+				collectionRemoveCount.sum(),
+				collectionRecreateCount.sum(),
+				naturalIdQueryExecutionCount.sum(),
+				naturalIdCachePutCount.sum(),
+				naturalIdCacheHitCount.sum(),
+				naturalIdCacheMissCount.sum(),
+				naturalIdQueryExecutionMaxTime.get(),
+				queryExecutionCount.sum(),
+				queryCachePutCount.sum(),
+				queryCacheHitCount.sum(),
+				queryCacheMissCount.sum(),
+				queryExecutionMaxTime.get(),
+				updateTimestampsCachePutCount.sum(),
+				updateTimestampsCacheHitCount.sum(),
+				updateTimestampsCacheMissCount.sum(),
+				queryPlanCacheHitCount.sum(),
+				queryPlanCacheMissCount.sum()
+		);
 	}
 
 	@Override
@@ -949,6 +973,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 				",second level cache misses=" + secondLevelCacheMissCount +
 				",entities loaded=" + entityLoadCount +
 				",entities updated=" + entityUpdateCount +
+				",entities upserted=" + entityUpsertCount +
 				",entities inserted=" + entityInsertCount +
 				",entities deleted=" + entityDeleteCount +
 				",entities fetched=" + entityFetchCount +

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
@@ -20,6 +20,7 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.metamodel.internal.AttributeFactory.determineSimpleType;
@@ -34,7 +35,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 	private final AttributeClassification attributeClassification;
 	private final CollectionClassification collectionClassification;
 
-	private final DomainType<E> elementType;
+	private final SqmDomainType<E> elementType;
 	private final DomainType<K> listIndexOrMapKeyType;
 
 	private final ManagedDomainType<D> declaringType;
@@ -47,7 +48,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 			boolean isGeneric,
 			AttributeClassification attributeClassification,
 			CollectionClassification collectionClassification,
-			DomainType<E> elementType,
+			SqmDomainType<E> elementType,
 			DomainType<K> listIndexOrMapKeyType,
 			ManagedDomainType<D> declaringType,
 			Property property,
@@ -63,60 +64,58 @@ public class PluralAttributeBuilder<D, C, E, K> {
 		this.member = member;
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static <Y, X> PersistentAttribute<X, Y> build(
 			PluralAttributeMetadata<?,Y,?> attributeMetadata,
 			boolean isGeneric,
 			MetadataContext metadataContext) {
 
-		final JavaType<Y> attributeJtd = metadataContext.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.getDescriptor( attributeMetadata.getJavaType() );
+		final JavaType<Y> attributeJtd =
+				metadataContext.getTypeConfiguration().getJavaTypeRegistry()
+						.getDescriptor( attributeMetadata.getJavaType() );
 
-		final PluralAttributeBuilder builder = new PluralAttributeBuilder(
+		final var builder = new PluralAttributeBuilder<>(
 				attributeJtd,
 				isGeneric,
 				attributeMetadata.getAttributeClassification(),
 				attributeMetadata.getCollectionClassification(),
-				determineSimpleType(
-						attributeMetadata.getElementValueContext(),
-						metadataContext
-				),
+				(SqmDomainType<?>) // TODO: this typecast is very ugly and fragile
+						determineSimpleType( attributeMetadata.getElementValueContext(), metadataContext ),
 				determineListIndexOrMapKeyType( attributeMetadata, metadataContext ),
 				attributeMetadata.getOwnerType(),
 				attributeMetadata.getPropertyMapping(),
 				attributeMetadata.getMember()
 		);
 
-		if ( Map.class.equals( attributeJtd.getJavaTypeClass() ) ) {
-			return new MapAttributeImpl( builder, metadataContext );
+		final Class<Y> javaClass = attributeJtd.getJavaTypeClass();
+		if ( Map.class.equals( javaClass ) ) {
+			return new MapAttributeImpl( builder );
 		}
-		else if ( Set.class.equals( attributeJtd.getJavaTypeClass() ) ) {
-			return new SetAttributeImpl( builder, metadataContext );
+		else if ( Set.class.equals( javaClass ) ) {
+			return new SetAttributeImpl( builder );
 		}
-		else if ( List.class.equals( attributeJtd.getJavaTypeClass() ) ) {
-			return new ListAttributeImpl( builder, metadataContext );
+		else if ( List.class.equals( javaClass ) ) {
+			return new ListAttributeImpl( builder );
 		}
-		else if ( Collection.class.equals( attributeJtd.getJavaTypeClass() ) ) {
-			return new BagAttributeImpl( builder, metadataContext );
+		else if ( Collection.class.equals( javaClass ) ) {
+			return new BagAttributeImpl( builder );
 		}
 
 		//apply loose rules
-		if ( attributeJtd.getJavaTypeClass().isArray() ) {
-			return new ListAttributeImpl( builder, metadataContext );
+		if ( javaClass.isArray() ) {
+			return new ListAttributeImpl( builder );
 		}
 
-		if ( Map.class.isAssignableFrom( attributeJtd.getJavaTypeClass() ) ) {
-			return new MapAttributeImpl( builder, metadataContext );
+		if ( Map.class.isAssignableFrom( javaClass ) ) {
+			return new MapAttributeImpl( builder );
 		}
-		else if ( Set.class.isAssignableFrom( attributeJtd.getJavaTypeClass() ) ) {
-			return new SetAttributeImpl( builder, metadataContext );
+		else if ( Set.class.isAssignableFrom( javaClass ) ) {
+			return new SetAttributeImpl( builder );
 		}
-		else if ( List.class.isAssignableFrom( attributeJtd.getJavaTypeClass() ) ) {
-			return new ListAttributeImpl( builder, metadataContext );
+		else if ( List.class.isAssignableFrom( javaClass ) ) {
+			return new ListAttributeImpl( builder );
 		}
-		else if ( Collection.class.isAssignableFrom( attributeJtd.getJavaTypeClass() ) ) {
-			return new BagAttributeImpl( builder, metadataContext );
+		else if ( Collection.class.isAssignableFrom( javaClass ) ) {
+			return new BagAttributeImpl( builder );
 		}
 
 		throw new UnsupportedMappingException( "Unknown collection: " + attributeJtd.getJavaType() );
@@ -125,13 +124,15 @@ public class PluralAttributeBuilder<D, C, E, K> {
 	private static SimpleDomainType<?> determineListIndexOrMapKeyType(
 			PluralAttributeMetadata<?,?,?> attributeMetadata,
 			MetadataContext metadataContext) {
-		if ( Map.class.isAssignableFrom( attributeMetadata.getJavaType() ) ) {
-			return (SimpleDomainType<?>) determineSimpleType( attributeMetadata.getMapKeyValueContext(), metadataContext );
+		final Class<?> javaType = attributeMetadata.getJavaType();
+		if ( Map.class.isAssignableFrom( javaType ) ) {
+			return (SimpleDomainType<?>)
+					determineSimpleType( attributeMetadata.getMapKeyValueContext(), metadataContext );
 		}
 
-		if ( List.class.isAssignableFrom( attributeMetadata.getJavaType() )
-				|| attributeMetadata.getJavaType().isArray() ) {
-			return metadataContext.getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( Integer.class );
+		if ( List.class.isAssignableFrom( javaType ) || javaType.isArray() ) {
+			return metadataContext.getTypeConfiguration().getBasicTypeRegistry()
+					.getRegisteredType( Integer.class );
 		}
 
 		return null;
@@ -161,7 +162,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 		return isGeneric;
 	}
 
-	public DomainType<E> getValueType() {
+	public SqmDomainType<E> getValueType() {
 		return elementType;
 	}
 

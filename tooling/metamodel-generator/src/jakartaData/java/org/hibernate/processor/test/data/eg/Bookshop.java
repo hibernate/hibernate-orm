@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.data.eg;
@@ -16,10 +16,12 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
+import static jakarta.transaction.Transactional.TxType.REQUIRES_NEW;
+
 @Repository
 public interface Bookshop extends CrudRepository<Book,String> {
 	@Find
-	@Transactional
+	@Transactional(REQUIRES_NEW)
 	List<Book> byPublisher(@Size(min=2,max=100) String publisher_name);
 
 	@Find

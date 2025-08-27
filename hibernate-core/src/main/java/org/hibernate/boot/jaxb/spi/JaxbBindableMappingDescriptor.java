@@ -1,8 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.spi;
+
+import java.io.Serializable;
 
 /**
  * Common type for things that can get be bound to a {@link Binding} for
@@ -13,5 +15,5 @@ package org.hibernate.boot.jaxb.spi;
  *
  * @author Steve Ebersole
  */
-public interface JaxbBindableMappingDescriptor {
+public interface JaxbBindableMappingDescriptor extends Serializable {
 }

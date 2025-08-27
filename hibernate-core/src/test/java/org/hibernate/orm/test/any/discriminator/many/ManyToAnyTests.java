@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.any.discriminator.many;
@@ -56,13 +56,7 @@ public class ManyToAnyTests {
 	}
 
 	@AfterEach
-	void dropTestData(SessionFactoryScope sessions) {
-		sessions.inTransaction( (session) -> {
-			session.createMutationQuery( "delete Loan" ).executeUpdate();
-			session.createMutationQuery( "delete CashPayment" ).executeUpdate();
-			session.createMutationQuery( "delete CardPayment" ).executeUpdate();
-			session.createMutationQuery( "delete CheckPayment" ).executeUpdate();
-		} );
-
+	void dropTestData(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

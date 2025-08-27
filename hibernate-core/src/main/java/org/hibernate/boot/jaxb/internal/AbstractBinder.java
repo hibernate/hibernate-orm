@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.internal;
@@ -99,7 +99,6 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 			}
 			catch (Exception e) {
 				log.debug( "Unable to close StAX reader", e );
-
 			}
 		}
 	}

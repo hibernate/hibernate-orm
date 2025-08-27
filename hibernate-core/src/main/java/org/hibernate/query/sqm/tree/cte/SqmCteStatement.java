@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.cte;
@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.cte;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 import org.hibernate.query.criteria.JpaCteCriteria;
@@ -14,6 +15,7 @@ import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
 import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.SortDirection;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
@@ -320,87 +322,110 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		if ( cteTable.getName() == null ) {
-			sb.append( "generated_" );
+			hql.append( "generated_" );
 		}
-		sb.append( cteTable.getCteName() );
-		sb.append( " (" );
+		hql.append( cteTable.getCteName() );
+		hql.append( " (" );
 		final List<SqmCteTableColumn> columns = cteTable.getColumns();
-		sb.append( columns.get( 0 ).getColumnName() );
+		hql.append( columns.get( 0 ).getColumnName() );
 		for ( int i = 1; i < columns.size(); i++ ) {
-			sb.append( ", " );
-			sb.append( columns.get( i ).getColumnName() );
+			hql.append( ", " );
+			hql.append( columns.get( i ).getColumnName() );
 		}
 
-		sb.append( ") as " );
+		hql.append( ") as " );
 
 		if ( getMaterialization() != CteMaterialization.UNDEFINED ) {
-			sb.append( getMaterialization() ).append( ' ' );
+			hql.append( getMaterialization() ).append( ' ' );
 		}
-		if ( getCteDefinition() instanceof SqmSubQuery<?> ) {
-			( (SqmSubQuery<?>) getCteDefinition() ).appendHqlString( sb );
+		if ( getCteDefinition() instanceof SqmSubQuery<?> subQuery ) {
+			subQuery.appendHqlString( hql, context );
 		}
-		else {
-			sb.append( '(' );
-			( (SqmSelectStatement<?>) getCteDefinition() ).appendHqlString( sb );
-			sb.append( ')' );
+		else if ( getCteDefinition() instanceof SqmSelectStatement<?> selectStatement ) {
+			hql.append( '(' );
+			selectStatement.appendHqlString( hql, context );
+			hql.append( ')' );
 		}
 		String separator;
 		if ( getSearchClauseKind() != null ) {
-			sb.append( " search " );
+			hql.append( " search " );
 			if ( getSearchClauseKind() == CteSearchClauseKind.DEPTH_FIRST ) {
-				sb.append( " depth " );
+				hql.append( " depth " );
 			}
 			else {
-				sb.append( " breadth " );
+				hql.append( " breadth " );
 			}
-			sb.append( " first by " );
+			hql.append( " first by " );
 			separator = "";
 			for ( JpaSearchOrder searchBySpecification : getSearchBySpecifications() ) {
-				sb.append( separator );
-				sb.append( searchBySpecification.getAttribute().getName() );
+				hql.append( separator );
+				hql.append( searchBySpecification.getAttribute().getName() );
 				if ( searchBySpecification.getSortOrder() != null ) {
 					if ( searchBySpecification.getSortOrder() == SortDirection.ASCENDING ) {
-						sb.append( " asc" );
+						hql.append( " asc" );
 					}
 					else {
-						sb.append( " desc" );
+						hql.append( " desc" );
 					}
 					if ( searchBySpecification.getNullPrecedence() != null ) {
 						switch ( searchBySpecification.getNullPrecedence() ) {
 							case FIRST:
-								sb.append( " nulls first" );
+								hql.append( " nulls first" );
 								break;
 							case LAST:
-								sb.append( " nulls last" );
+								hql.append( " nulls last" );
 								break;
 						}
 					}
 				}
 				separator = ", ";
 			}
-			sb.append( " set " );
-			sb.append( getSearchAttributeName() );
+			hql.append( " set " );
+			hql.append( getSearchAttributeName() );
 		}
 		if ( getCycleMarkAttributeName() != null ) {
-			sb.append( " cycle " );
+			hql.append( " cycle " );
 			separator = "";
 			for ( JpaCteCriteriaAttribute cycleColumn : getCycleAttributes() ) {
-				sb.append( separator );
-				sb.append( cycleColumn.getName() );
+				hql.append( separator );
+				hql.append( cycleColumn.getName() );
 				separator = ", ";
 			}
-			sb.append( " set " );
-			sb.append( getCycleMarkAttributeName() );
-			sb.append( " to " );
-			getCycleLiteral().appendHqlString( sb );
-			sb.append( " default " );
-			getNoCycleLiteral().appendHqlString( sb );
+			hql.append( " set " );
+			hql.append( getCycleMarkAttributeName() );
+			hql.append( " to " );
+			getCycleLiteral().appendHqlString( hql, context );
+			hql.append( " default " );
+			getNoCycleLiteral().appendHqlString( hql, context );
 			if ( getCyclePathAttributeName() != null ) {
-				sb.append( " using " );
-				sb.append( getCyclePathAttributeName() );
+				hql.append( " using " );
+				hql.append( getCyclePathAttributeName() );
 			}
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmCteStatement<?> that
+			&& Objects.equals( cteTable, that.cteTable )
+			&& Objects.equals( cteDefinition, that.cteDefinition )
+			&& materialization == that.materialization
+			&& searchClauseKind == that.searchClauseKind
+			&& Objects.equals( searchBySpecifications, that.searchBySpecifications )
+			&& Objects.equals( searchAttributeName, that.searchAttributeName )
+			&& Objects.equals( cycleAttributes, that.cycleAttributes )
+			&& Objects.equals( cycleMarkAttributeName, that.cycleMarkAttributeName )
+			&& Objects.equals( cyclePathAttributeName, that.cyclePathAttributeName )
+			&& Objects.equals( cycleValue, that.cycleValue )
+			&& Objects.equals( noCycleValue, that.noCycleValue );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( cteTable, cteDefinition, materialization,
+				searchClauseKind, searchBySpecifications, searchAttributeName,
+				cycleAttributes, cycleMarkAttributeName, cyclePathAttributeName, cycleValue, noCycleValue );
 	}
 }

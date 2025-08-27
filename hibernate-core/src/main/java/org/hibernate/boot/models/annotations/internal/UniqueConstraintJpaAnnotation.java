@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.UniqueConstraint;
 
@@ -21,7 +21,7 @@ public class UniqueConstraintJpaAnnotation implements UniqueConstraint {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public UniqueConstraintJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public UniqueConstraintJpaAnnotation(ModelsContext modelsContext) {
 		this.name = "";
 		this.options = "";
 	}
@@ -29,7 +29,7 @@ public class UniqueConstraintJpaAnnotation implements UniqueConstraint {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public UniqueConstraintJpaAnnotation(UniqueConstraint annotation, SourceModelBuildingContext modelContext) {
+	public UniqueConstraintJpaAnnotation(UniqueConstraint annotation, ModelsContext modelsContext) {
 		this.name = annotation.name();
 		this.columnNames = annotation.columnNames();
 		this.options = annotation.options();
@@ -38,7 +38,7 @@ public class UniqueConstraintJpaAnnotation implements UniqueConstraint {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public UniqueConstraintJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public UniqueConstraintJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelsContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.columnNames = (String[]) attributeValues.get( "columnNames" );
 		this.options = (String) attributeValues.get( "options" );

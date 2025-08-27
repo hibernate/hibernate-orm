@@ -17,5 +17,6 @@ include::Preface.adoc[]
 include::Repositories.adoc[]
 include::Configuration.adoc[]
 include::Pagination.adoc[]
+include::Reactive.adoc[]
 
 

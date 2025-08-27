@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql.internal;
@@ -13,18 +13,13 @@ import java.util.function.Function;
 
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.criteria.JpaCrossJoin;
-import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.AliasCollisionException;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
@@ -54,12 +49,11 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 	public SqmPathRegistryImpl(SqmCreationProcessingState associatedProcessingState) {
 		this.associatedProcessingState = associatedProcessingState;
-		this.jpaCompliance = associatedProcessingState.getCreationState().getCreationContext().getJpaMetamodel().getJpaCompliance();
+		this.jpaCompliance = associatedProcessingState.getCreationState().getCreationContext().getNodeBuilder().getJpaCompliance();
 	}
 
 	@Override
 	public void register(SqmPath<?> sqmPath) {
-		SqmTreeCreationLogger.LOGGER.tracef( "SqmProcessingIndex#register(SqmPath) : %s", sqmPath.getNavigablePath() );
 
 		// Generally we:
 		//		1) add the path to the path-by-path map
@@ -69,8 +63,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 		// Regarding part #1 (add to the path-by-path map), it is ok for a SqmFrom to replace a
 		// 		non-SqmFrom.  This should equate to, e.g., an implicit join.
 
-		if ( sqmPath instanceof SqmFrom<?, ?> ) {
-			final SqmFrom<?, ?> sqmFrom = (SqmFrom<?, ?>) sqmPath;
+		if ( sqmPath instanceof SqmFrom<?, ?> sqmFrom ) {
 
 			registerByAliasOnly( sqmFrom );
 
@@ -230,18 +223,12 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 			if ( parentRegistered != null ) {
 				// If a parent query contains the alias, we need to create a correlation on the subquery
 				final SqmSubQuery<?> selectQuery = ( SqmSubQuery<?> ) associatedProcessingState.getProcessingQuery();
-				SqmFrom<?, ?> correlated;
-				if ( parentRegistered instanceof Root<?> ) {
-					correlated = selectQuery.correlate( (Root<?>) parentRegistered );
+				final SqmFrom<?, ?> correlated;
+				if ( parentRegistered instanceof Root<?> root ) {
+					correlated = selectQuery.correlate( root );
 				}
-				else if ( parentRegistered instanceof Join<?, ?> ) {
-					correlated = selectQuery.correlate( (Join<?, ?>) parentRegistered );
-				}
-				else if ( parentRegistered instanceof SqmCrossJoin ) {
-					correlated = selectQuery.correlate( (JpaCrossJoin) parentRegistered );
-				}
-				else if ( parentRegistered instanceof SqmEntityJoin<?,?> ) {
-					correlated = selectQuery.correlate( (SqmEntityJoin<?,?>) parentRegistered );
+				else if ( parentRegistered instanceof Join<?, ?> join ) {
+					correlated = selectQuery.correlate( join );
 				}
 				else {
 					throw new UnsupportedOperationException( "Can't correlate from node: " + parentRegistered );
@@ -271,7 +258,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 		//  	(configurable?) option would be to simply pick the first one as a perf optimization
 
 		SqmFrom<?, ?> found = null;
-		for ( Map.Entry<NavigablePath, SqmFrom<?, ?>> entry : sqmFromByPath.entrySet() ) {
+		for ( var entry : sqmFromByPath.entrySet() ) {
 			final SqmFrom<?, ?> fromElement = entry.getValue();
 			if ( definesAttribute( fromElement.getReferencedPathSource(), navigableName ) ) {
 				if ( found != null ) {
@@ -284,18 +271,18 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 		if ( found == null ) {
 			if ( associatedProcessingState.getParentProcessingState() != null ) {
-				HqlLogging.QUERY_LOGGER.debugf(
-						"Unable to resolve unqualified attribute [%s] in local from-clause; checking parent ",
-						navigableName
-				);
+//				QUERY_LOGGER.tracef(
+//						"Unable to resolve unqualified attribute [%s] in local from-clause; checking parent ",
+//						navigableName
+//				);
 				found = associatedProcessingState.getParentProcessingState().getPathRegistry().findFromExposing( navigableName );
 			}
 		}
 
-		HqlLogging.QUERY_LOGGER.debugf(
-				"Unable to resolve unqualified attribute [%s] in local from-clause",
-				navigableName
-		);
+//		QUERY_LOGGER.tracef(
+//				"Unable to resolve unqualified attribute [%s] in local from-clause",
+//				navigableName
+//		);
 
 		//noinspection unchecked
 		return (X) found;
@@ -303,8 +290,6 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 	@Override
 	public <X extends SqmFrom<?, ?>> X resolveFrom(NavigablePath navigablePath, Function<NavigablePath, SqmFrom<?, ?>> creator) {
-		SqmTreeCreationLogger.LOGGER.tracef( "SqmProcessingIndex#resolvePath(NavigablePath) : %s", navigablePath );
-
 		final SqmFrom<?, ?> existing = sqmFromByPath.get( navigablePath );
 		if ( existing != null ) {
 			//noinspection unchecked
@@ -319,8 +304,6 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 	@Override
 	public <X extends SqmFrom<?, ?>> X resolveFrom(SqmPath<?> path) {
-		SqmTreeCreationLogger.LOGGER.tracef( "SqmProcessingIndex#resolvePath(SqmPath) : %s", path );
-
 		final SqmFrom<?, ?> existing = sqmFromByPath.get( path.getNavigablePath() );
 		if ( existing != null ) {
 			//noinspection unchecked
@@ -336,10 +319,6 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	private boolean definesAttribute(SqmPathSource<?> containerType, String name) {
 		return !( containerType.getSqmType() instanceof BasicDomainType )
 				&& containerType.findSubPathSource( name, true ) != null;
-	}
-
-	private JpaMetamodel getJpaMetamodel() {
-		return associatedProcessingState.getCreationState().getCreationContext().getJpaMetamodel();
 	}
 
 	@Override

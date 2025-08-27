@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util;
@@ -570,6 +570,10 @@ public final class StringHelper {
 		return string == null || string.isEmpty();
 	}
 
+	public static boolean isNotBlank(@Nullable String string) {
+		return string != null && !string.isBlank();
+	}
+
 	public static boolean isBlank(@Nullable String string) {
 		return string == null || string.isBlank();
 	}
@@ -642,6 +646,10 @@ public final class StringHelper {
 		return string.length() <= length ? string : string.substring( 0, length );
 	}
 
+	/**
+	 * @deprecated No longer used
+	 */
+	@Deprecated(since = "7", forRemoval = true)
 	public static String generateAlias(String description) {
 		return generateAliasRoot( description ) + '_';
 	}
@@ -654,7 +662,10 @@ public final class StringHelper {
 	 * @param unique A uniquing value
 	 *
 	 * @return an alias of the form <samp>foo1_</samp>
+	 *
+	 * @deprecated No longer used
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	public static String generateAlias(String description, int unique) {
 		return generateAliasRoot( description )
 				+ AliasConstantsHelper.get( unique );
@@ -668,7 +679,10 @@ public final class StringHelper {
 	 * @param description The root name from which to generate a root alias.
 	 *
 	 * @return The generated root alias.
+	 *
+	 * @deprecated No longer used
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	private static String generateAliasRoot(String description) {
 		String result = truncate( unqualifyEntityName( description ), ALIAS_TRUNCATE_LENGTH )
 				.toLowerCase( Locale.ROOT )
@@ -685,7 +699,10 @@ public final class StringHelper {
 	 * @param alias The generated alias to be cleaned.
 	 *
 	 * @return The cleaned alias, stripped of any leading non-alpha characters.
+	 *
+	 * @deprecated No longer used
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	private static String cleanAlias(String alias) {
 		final char[] chars = alias.toCharArray();
 		// shortcut check...
@@ -809,11 +826,15 @@ public final class StringHelper {
 		}
 	}
 
-	public static String nullIfEmpty(@Nullable String value) {
+	public static @Nullable String nullIfEmpty(@Nullable String value) {
 		return isEmpty( value ) ? null : value;
 	}
 
-	public static String subStringNullIfEmpty(String value, Character startChar) {
+	public static @Nullable String nullIfBlank(@Nullable String value) {
+		return isBlank( value ) ? null : value;
+	}
+
+	public static @Nullable String subStringNullIfEmpty(String value, Character startChar) {
 		if ( isEmpty( value ) ) {
 			return null;
 		}
@@ -823,7 +844,7 @@ public final class StringHelper {
 		}
 	}
 
-	public static String[] splitAtCommas(String incomingString) {
+	public static String[] splitAtCommas(@Nullable String incomingString) {
 		return incomingString==null || incomingString.isBlank()
 				? EMPTY_STRINGS
 				: COMMA_SEPARATED_PATTERN.split( incomingString );

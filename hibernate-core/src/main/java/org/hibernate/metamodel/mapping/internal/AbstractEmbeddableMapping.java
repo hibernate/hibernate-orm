@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -203,8 +203,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		// We copy the attributes from the inverse mappings and replace the selection mappings
 		for ( int j = 0; j < size; j++ ) {
 			AttributeMapping attributeMapping = inverseMappingType.getAttributeMapping( j );
-			if ( attributeMapping instanceof BasicAttributeMapping ) {
-				final BasicAttributeMapping original = (BasicAttributeMapping) attributeMapping;
+			if ( attributeMapping instanceof BasicAttributeMapping original ) {
 				final SelectableMapping selectableMapping = selectableMappings.getSelectable( currentIndex );
 				attributeMapping = BasicAttributeMapping.withSelectableMapping(
 						declaringType,
@@ -216,8 +215,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				);
 				currentIndex++;
 			}
-			else if ( attributeMapping instanceof ToOneAttributeMapping ) {
-				final ToOneAttributeMapping original = (ToOneAttributeMapping) attributeMapping;
+			else if ( attributeMapping instanceof ToOneAttributeMapping original ) {
 				ForeignKeyDescriptor foreignKeyDescriptor = original.getForeignKeyDescriptor();
 				if ( foreignKeyDescriptor == null ) {
 					// This is expected to happen when processing a
@@ -243,17 +241,18 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 								creationProcess
 						)
 				);
+				toOne.setupCircularFetchModelPart( creationProcess );
 
 				attributeMapping = toOne;
 				currentIndex += attributeMapping.getJdbcTypeCount();
 			}
-			else if ( attributeMapping instanceof EmbeddableValuedModelPart ) {
+			else if ( attributeMapping instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
 				final SelectableMapping[] subMappings = new SelectableMapping[attributeMapping.getJdbcTypeCount()];
 				for ( int i = 0; i < subMappings.length; i++ ) {
 					subMappings[i] = selectableMappings.getSelectable( currentIndex++ );
 				}
 				attributeMapping = MappingModelCreationHelper.createInverseModelPart(
-						(EmbeddableValuedModelPart) attributeMapping,
+						embeddableValuedModelPart,
 						declaringType,
 						declaringTableGroupProducer,
 						new SelectableMappingsImpl( subMappings ),
@@ -311,16 +310,15 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					if ( selectable.isFormula() ) {
 						columnExpression = selectable.getTemplate(
 								dialect,
-								creationProcess.getCreationContext().getTypeConfiguration(),
-								creationProcess.getSqmFunctionRegistry()
+								creationProcess.getCreationContext().getTypeConfiguration()
 						);
 					}
 					else {
 						columnExpression = selectable.getText( dialect );
 					}
 
-					if ( selectable instanceof Column ) {
-						containingTableExpression = concreteTableResolver.resolve( (Column) selectable, jdbcEnvironment );
+					if ( selectable instanceof Column column ) {
+						containingTableExpression = concreteTableResolver.resolve( column, jdbcEnvironment );
 					}
 					else {
 						containingTableExpression = rootTableExpression;
@@ -339,8 +337,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				final Integer temporalPrecision;
 				final boolean isLob;
 				final boolean nullable;
-				if ( selectable instanceof Column ) {
-					final Column column = (Column) selectable;
+				if ( selectable instanceof Column column ) {
 					columnDefinition = column.getSqlType();
 					length = column.getLength();
 					precision = column.getPrecision();
@@ -392,9 +389,8 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 				columnPosition++;
 			}
-			else if ( subtype instanceof AnyType ) {
+			else if ( subtype instanceof AnyType anyType ) {
 				final Any bootValueMapping = (Any) value;
-				final AnyType anyType = (AnyType) subtype;
 
 				final boolean nullable = bootValueMapping.isNullable();
 				final boolean insertable = value.isColumnInsertable( 0 );
@@ -428,8 +424,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						creationProcess
 				);
 			}
-			else if ( subtype instanceof CompositeType ) {
-				final CompositeType subCompositeType = (CompositeType) subtype;
+			else if ( subtype instanceof CompositeType subCompositeType ) {
 				final int columnSpan = subCompositeType.getColumnSpan( creationProcess.getCreationContext().getMetadata() );
 				final String subTableExpression;
 				final String[] subRootTableKeyColumnNames;
@@ -473,8 +468,8 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				);
 			}
 			else if ( subtype instanceof EntityType ) {
-				final EntityPersister entityPersister = creationProcess.getEntityPersister( bootDescriptor.getOwner()
-						.getEntityName() );
+				final EntityPersister entityPersister =
+						creationProcess.getEntityPersister( bootDescriptor.getOwner().getEntityName() );
 
 				attributeMapping = MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
 						bootPropertyDescriptor.getName(),
@@ -739,20 +734,17 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		if ( value == null ) {
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				if ( attributeMapping instanceof PluralAttributeMapping ) {
-					continue;
+				if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
+					span += attributeMapping.forEachJdbcValue( null, span + offset, x, y, valuesConsumer, session );
 				}
-				span += attributeMapping.forEachJdbcValue( null, span + offset, x, y, valuesConsumer, session );
 			}
 		}
 		else {
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				if ( attributeMapping instanceof PluralAttributeMapping ) {
-					continue;
+				if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
+					span += attributeMapping.forEachJdbcValue( getValue( value, i ), span + offset, x, y, valuesConsumer, session );
 				}
-				final Object o = getValue( value, i );
-				span += attributeMapping.forEachJdbcValue( o, span + offset, x, y, valuesConsumer, session );
 			}
 		}
 		return span;

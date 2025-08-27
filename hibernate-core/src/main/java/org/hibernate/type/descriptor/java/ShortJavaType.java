@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -41,6 +41,11 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 	@Override
 	public Short fromString(CharSequence string) {
 		return Short.valueOf( string.toString() );
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Short;
 	}
 
 	@Override

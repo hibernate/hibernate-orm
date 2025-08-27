@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.entitygraph.ast;
@@ -36,6 +36,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.LockMode.READ;
 
 /**
  * @author Steve Ebersole
@@ -55,9 +56,8 @@ public class LoadPlanBuilderTest {
 		final SingleIdEntityLoaderStandardImpl<?> loader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, new LoadQueryInfluencers( sessionFactory ) );
 
 		final SingleIdLoadPlan<?> loadPlan = loader.resolveLoadPlan(
-				LockOptions.READ,
-				new LoadQueryInfluencers( sessionFactory ),
-				sessionFactory
+				new LockOptions( READ ),
+				new LoadQueryInfluencers( sessionFactory )
 		);
 
 		final List<DomainResult<?>> domainResults = loadPlan.getJdbcSelect()
@@ -97,9 +97,8 @@ public class LoadPlanBuilderTest {
 		};
 
 		final SingleIdLoadPlan<?> loadPlan = loader.resolveLoadPlan(
-				LockOptions.READ,
-				influencers,
-				sessionFactory
+				new LockOptions( READ ),
+				influencers
 		);
 		final List<DomainResult<?>> domainResults = loadPlan.getJdbcSelect()
 				.getJdbcValuesMappingProducer()

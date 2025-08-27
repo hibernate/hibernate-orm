@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cut;
@@ -11,9 +11,7 @@ import java.util.List;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.query.Query;
 
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -36,12 +34,7 @@ public class CompositeUserTypeTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Transaction" ).executeUpdate();
-					session.createMutationQuery( "delete from MutualFund" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -132,177 +125,4 @@ public class CompositeUserTypeTest {
 				}
 		);
 	}
-
-	/**
-	 * Tests the {@code =} operator on composite types.
-	 */
-	@Test
-	public void testEqualOperator(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					final Transaction txn = new Transaction();
-					txn.setDescription( "foo" );
-					txn.setValue( new MonetoryAmount( new BigDecimal( 42 ), Currency.getInstance( "AUD" ) ) );
-					txn.setTimestamp( new CompositeDateTime( 2014, 8, 23, 14, 35, 0 ) );
-					session.persist( txn );
-					final Query<Transaction> q = session.createQuery(
-							"from Transaction where value = :amount",
-							Transaction.class
-					);
-
-					/* Both amount and currency match. */
-					q.setParameter(
-							"amount",
-							new MonetoryAmount( new BigDecimal( 42 ), Currency.getInstance( "AUD" ) )
-					);
-					assertEquals( 1, q.list().size() );
-
-					/* Only currency matches. */
-					q.setParameter(
-							"amount",
-							new MonetoryAmount( new BigDecimal( 36 ), Currency.getInstance( "AUD" ) )
-					);
-					assertEquals( 0, q.list().size() );
-
-					/* Only amount matches. */
-					q.setParameter(
-							"amount",
-							new MonetoryAmount( new BigDecimal( 42 ), Currency.getInstance( "EUR" ) )
-					);
-					assertEquals( 0, q.list().size() );
-
-					/* None match. */
-					q.setParameter(
-							"amount",
-							new MonetoryAmount( new BigDecimal( 76 ), Currency.getInstance( "USD" ) )
-					);
-					assertEquals( 0, q.list().size() );
-
-					final Query<Transaction> qTimestamp = session.createQuery(
-							"from Transaction where timestamp = :timestamp",
-							Transaction.class
-					);
-
-					/* All matches. */
-					qTimestamp.setParameter( "timestamp", new CompositeDateTime( 2014, 8, 23, 14, 35, 0 ) );
-					assertEquals( 1, qTimestamp.list().size() );
-
-					/* None matches. */
-					qTimestamp.setParameter( "timestamp", new CompositeDateTime( 2013, 9, 25, 12, 31, 25 ) );
-					assertEquals( 0, qTimestamp.list().size() );
-
-					/* Year doesn't match. */
-					qTimestamp.setParameter( "timestamp", new CompositeDateTime( 2013, 8, 23, 14, 35, 0 ) );
-					assertEquals( 0, qTimestamp.list().size() );
-
-					/* Month doesn't match. */
-					qTimestamp.setParameter( "timestamp", new CompositeDateTime( 2014, 9, 23, 14, 35, 0 ) );
-					assertEquals( 0, qTimestamp.list().size() );
-
-					/* Minute doesn't match. */
-					qTimestamp.setParameter( "timestamp", new CompositeDateTime( 2014, 8, 23, 14, 41, 0 ) );
-					assertEquals( 0, qTimestamp.list().size() );
-
-					/* Second doesn't match. */
-					qTimestamp.setParameter( "timestamp", new CompositeDateTime( 2014, 8, 23, 14, 35, 28 ) );
-					assertEquals( 0, qTimestamp.list().size() );
-				}
-		);
-	}
-
-	@Test
-	@JiraKey(value = "HHH-5946")
-	public void testNotEqualOperator(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					final Transaction t1 = new Transaction();
-					t1.setDescription( "foo" );
-					t1.setValue( new MonetoryAmount( new BigDecimal( 178 ), Currency.getInstance( "EUR" ) ) );
-					t1.setTimestamp( new CompositeDateTime( 2014, 8, 23, 14, 23, 0 ) );
-					session.persist( t1 );
-
-					final Transaction t2 = new Transaction();
-					t2.setDescription( "bar" );
-					t2.setValue( new MonetoryAmount( new BigDecimal( 1000000 ), Currency.getInstance( "USD" ) ) );
-					t2.setTimestamp( new CompositeDateTime( 2014, 8, 22, 14, 23, 0 ) );
-					session.persist( t2 );
-
-					final Transaction t3 = new Transaction();
-					t3.setDescription( "bar" );
-					t3.setValue( new MonetoryAmount( new BigDecimal( 1000000 ), Currency.getInstance( "EUR" ) ) );
-					t3.setTimestamp( new CompositeDateTime( 2014, 8, 22, 14, 23, 01 ) );
-					session.persist( t3 );
-
-					final Query q1 = session.createQuery( "from Transaction where value <> :amount" );
-					q1.setParameter(
-							"amount",
-							new MonetoryAmount( new BigDecimal( 178 ), Currency.getInstance( "EUR" ) )
-					);
-					assertEquals( 2, q1.list().size() );
-
-					final Query q2 = session.createQuery(
-							"from Transaction where value <> :amount and description = :str" );
-					q2.setParameter(
-							"amount",
-							new MonetoryAmount( new BigDecimal( 1000000 ), Currency.getInstance( "USD" ) )
-					);
-					q2.setParameter( "str", "bar" );
-					assertEquals( 1, q2.list().size() );
-
-					final Query q3 = session.createQuery( "from Transaction where timestamp <> :timestamp" );
-					q3.setParameter( "timestamp", new CompositeDateTime( 2014, 8, 23, 14, 23, 0 ) );
-					assertEquals( 2, q3.list().size() );
-				}
-		);
-	}
-
-	@Test
-	@JiraKey(value = "HHH-5946")
-	public void testLessThanOperator(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					final Query q = session.createQuery( "from Transaction where value < :amount", Transaction.class );
-					q.setParameter( "amount", new MonetoryAmount( BigDecimal.ZERO, Currency.getInstance( "EUR" ) ) );
-					q.list();
-				}
-		);
-
-	}
-
-	@Test
-	@JiraKey(value = "HHH-5946")
-	public void testLessOrEqualOperator(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					final Query q = session.createQuery( "from Transaction where value <= :amount", Transaction.class );
-					q.setParameter( "amount", new MonetoryAmount( BigDecimal.ZERO, Currency.getInstance( "USD" ) ) );
-					q.list();
-				}
-		);
-	}
-
-	@Test
-	@JiraKey(value = "HHH-5946")
-	public void testGreaterThanOperator(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					final Query q = session.createQuery( "from Transaction where value > :amount", Transaction.class );
-					q.setParameter( "amount", new MonetoryAmount( BigDecimal.ZERO, Currency.getInstance( "EUR" ) ) );
-					q.list();
-				}
-		);
-	}
-
-	@Test
-	@JiraKey(value = "HHH-5946")
-	public void testGreaterOrEqualOperator(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					final Query q = session.createQuery( "from Transaction where value >= :amount", Transaction.class );
-					q.setParameter( "amount", new MonetoryAmount( BigDecimal.ZERO, Currency.getInstance( "USD" ) ) );
-					q.list();
-				}
-		);
-	}
-
 }

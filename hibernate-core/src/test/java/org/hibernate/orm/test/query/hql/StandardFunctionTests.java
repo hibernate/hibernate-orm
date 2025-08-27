@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
@@ -13,6 +13,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 
 import org.hamcrest.number.IsCloseTo;
@@ -25,7 +26,8 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.anyOf;
@@ -45,7 +47,7 @@ import static org.hibernate.testing.orm.domain.gambit.EntityOfBasics.Gender.FEMA
 @SessionFactory
 public class StandardFunctionTests {
 
-	@BeforeAll
+	@BeforeEach
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				em -> {
@@ -58,6 +60,11 @@ public class StandardFunctionTests {
 					em.persist(entity);
 				}
 		);
+	}
+
+	@AfterEach
+	public void truncateDate(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -560,7 +567,10 @@ public class StandardFunctionTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unsupported binary operator: <date> - <timestamp(6)>")
+	@SkipForDialect(dialectClass = CockroachDialect.class,
+			reason = "unsupported binary operator: <date> - <timestamp(6)>")
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Intervals or datetimes are incompatible for the operation")
 	public void testIntervalDiffExpressionsDifferentTypes(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -582,6 +592,7 @@ public class StandardFunctionTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExtractDayOfWeekYearMonth.class)
 	public void testExtractFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -683,7 +694,7 @@ public class StandardFunctionTests {
 	}
 
 	@Test
-//	@FailureExpected
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExtractDayOfWeekYearMonth.class)
 	public void testExtractFunctionWithAssertions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

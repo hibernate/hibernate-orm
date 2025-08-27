@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jndi.internal;
@@ -61,27 +61,26 @@ final class JndiServiceImpl implements JndiService {
 		final Hashtable<String,Object> jndiProperties = new Hashtable<>();
 
 		for ( Map.Entry<?,?> entry : configurationValues.entrySet() ) {
-			if ( !(entry.getKey() instanceof String) ) {
-				continue;
-			}
-			final String propertyName = (String) entry.getKey();
-			final Object propertyValue = entry.getValue();
-			if ( propertyName.startsWith( Environment.JNDI_PREFIX ) ) {
-				// write the InitialContextFactory class and provider url to the result only if they are
-				// non-null; this allows the environmental defaults (if any) to remain in effect
-				if ( Environment.JNDI_CLASS.equals( propertyName ) ) {
-					if ( propertyValue != null ) {
-						jndiProperties.put( Context.INITIAL_CONTEXT_FACTORY, propertyValue );
+			if ( entry.getKey() instanceof String propertyName ) {
+				final Object propertyValue = entry.getValue();
+				if ( propertyName.startsWith( Environment.JNDI_PREFIX ) ) {
+					// write the InitialContextFactory class and provider url to the result only if they are
+					// non-null; this allows the environmental defaults (if any) to remain in effect
+					if ( Environment.JNDI_CLASS.equals( propertyName ) ) {
+						if ( propertyValue != null ) {
+							jndiProperties.put( Context.INITIAL_CONTEXT_FACTORY, propertyValue );
+						}
 					}
-				}
-				else if ( Environment.JNDI_URL.equals( propertyName ) ) {
-					if ( propertyValue != null ) {
-						jndiProperties.put( Context.PROVIDER_URL, propertyValue );
+					else if ( Environment.JNDI_URL.equals( propertyName ) ) {
+						if ( propertyValue != null ) {
+							jndiProperties.put( Context.PROVIDER_URL, propertyValue );
+						}
 					}
-				}
-				else {
-					final String passThruPropertyName = propertyName.substring( Environment.JNDI_PREFIX.length() + 1 );
-					jndiProperties.put( passThruPropertyName, NullnessUtil.castNonNull( propertyValue ) );
+					else {
+						final String passThruPropertyName = propertyName.substring(
+								Environment.JNDI_PREFIX.length() + 1 );
+						jndiProperties.put( passThruPropertyName, NullnessUtil.castNonNull( propertyValue ) );
+					}
 				}
 			}
 		}
@@ -168,7 +167,7 @@ final class JndiServiceImpl implements JndiService {
 
 	private void bind(Name name, Object value, Context context) {
 		try {
-			LOG.tracef( "Binding : %s", name );
+			LOG.tracef( "Binding: %s", name );
 			context.rebind( name, value );
 		}
 		catch ( Exception initialException ) {
@@ -186,7 +185,7 @@ final class JndiServiceImpl implements JndiService {
 
 				Context intermediateContext = null;
 				try {
-					LOG.tracev( "Intermediate lookup: {0}", intermediateContextName );
+					LOG.tracef( "Intermediate lookup: %s", intermediateContextName );
 					intermediateContext = (Context) intermediateContextBase.lookup( intermediateContextName );
 				}
 				catch ( NameNotFoundException handledBelow ) {
@@ -197,10 +196,10 @@ final class JndiServiceImpl implements JndiService {
 				}
 
 				if ( intermediateContext != null ) {
-					LOG.tracev( "Found intermediate context: {0}", intermediateContextName );
+					LOG.tracef( "Found intermediate context: %s", intermediateContextName );
 				}
 				else {
-					LOG.tracev( "Creating sub-context: {0}", intermediateContextName );
+					LOG.tracef( "Creating subcontext: %s", intermediateContextName );
 					try {
 						intermediateContext = intermediateContextBase.createSubcontext( intermediateContextName );
 					}
@@ -211,7 +210,7 @@ final class JndiServiceImpl implements JndiService {
 				intermediateContextBase = intermediateContext;
 				name = name.getSuffix( 1 );
 			}
-			LOG.tracev( "Binding : {0}", name );
+			LOG.tracef( "Binding: %s", name );
 			try {
 				intermediateContextBase.rebind( name, value );
 			}
@@ -219,7 +218,7 @@ final class JndiServiceImpl implements JndiService {
 				throw new JndiException( "Error performing intermediate bind [" + name + "]", e );
 			}
 		}
-		LOG.debugf( "Bound name: %s", name );
+		LOG.tracef( "Bound name: %s", name );
 	}
 
 	@Override

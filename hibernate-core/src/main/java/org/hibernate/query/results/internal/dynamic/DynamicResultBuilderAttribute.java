@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.dynamic;
@@ -103,8 +103,7 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 				),
 				attributeMapping.getJdbcMapping().getJdbcJavaType(),
 				null,
-				domainResultCreationState.getSqlAstCreationState().getCreationContext()
-						.getSessionFactory().getTypeConfiguration()
+				domainResultCreationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 		);
 	}
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
@@ -8,11 +8,11 @@ import java.lang.reflect.Array;
 import java.util.List;
 import java.util.function.Supplier;
 
-import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -52,11 +52,11 @@ public class JsonArrayViaElementArgumentReturnTypeResolver implements FunctionRe
 			}
 			final MappingModelExpressible<?> inferredType = converter.resolveFunctionImpliedReturnType();
 			if ( inferredType != null ) {
-				if ( inferredType instanceof ReturnableType<?> ) {
-					return (ReturnableType<?>) inferredType;
+				if ( inferredType instanceof ReturnableType<?> returnableType ) {
+					return returnableType;
 				}
-				else if ( inferredType instanceof BasicValuedMapping ) {
-					return (ReturnableType<?>) ( (BasicValuedMapping) inferredType ).getJdbcMapping();
+				else if ( inferredType instanceof BasicValuedMapping basicValuedMapping ) {
+					return (ReturnableType<?>) basicValuedMapping.getJdbcMapping();
 				}
 			}
 		}
@@ -79,25 +79,29 @@ public class JsonArrayViaElementArgumentReturnTypeResolver implements FunctionRe
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
-	public static BasicType<?> resolveJsonArrayType(DomainType<?> elementType, TypeConfiguration typeConfiguration) {
-		@SuppressWarnings("unchecked") final BasicPluralJavaType<Object> arrayJavaType = (BasicPluralJavaType<Object>) typeConfiguration.getJavaTypeRegistry()
-				.getDescriptor(
-						Array.newInstance( elementType.getBindableJavaType(), 0 ).getClass()
-				);
-		final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
-		final JdbcTypeIndicators jdbcTypeIndicators = new DelegatingJdbcTypeIndicators( typeConfiguration.getCurrentBaseSqlTypeIndicators() ) {
-			@Override
-			public Integer getExplicitJdbcTypeCode() {
-				return SqlTypes.JSON;
-			}
-		};
+	@AllowReflection
+	public static <T> BasicType<?> resolveJsonArrayType(DomainType<T> elementType, TypeConfiguration typeConfiguration) {
+		final Class<?> arrayClass = Array.newInstance( elementType.getJavaType(), 0 ).getClass();
+		@SuppressWarnings("unchecked")
+		final BasicPluralJavaType<T> arrayJavaType =
+				(BasicPluralJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( arrayClass );
+		final JdbcTypeIndicators currentBaseSqlTypeIndicators = typeConfiguration.getCurrentBaseSqlTypeIndicators();
 		return arrayJavaType.resolveType(
 				typeConfiguration,
-				dialect,
-				(BasicType<Object>) elementType,
+				currentBaseSqlTypeIndicators.getDialect(),
+				(BasicType<T>) elementType,
 				null,
-				jdbcTypeIndicators
+				new DelegatingJdbcTypeIndicators( currentBaseSqlTypeIndicators ) {
+					@Override
+					public Integer getExplicitJdbcTypeCode() {
+						return SqlTypes.JSON_ARRAY;
+					}
+
+					@Override
+					public  int getPreferredSqlTypeCodeForArray(int elementSqlTypeCode) {
+						return SqlTypes.JSON_ARRAY;
+					}
+				}
 		);
 	}
 }

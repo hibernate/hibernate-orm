@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type.descriptor.java;
@@ -12,9 +12,10 @@ import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.util.TimeZone;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.env.internal.NonContextualLobCreator;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.OffsetTimeJavaType;
@@ -22,6 +23,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.type.format.FormatMapper;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -36,11 +39,6 @@ public class OffsetTimeJavaTypeDescriptorTest {
 		final WrapperOptions wrapperOptions = new WrapperOptions() {
 			@Override
 			public SharedSessionContractImplementor getSession() {
-				return null;
-			}
-
-			@Override
-			public SessionFactoryImplementor getSessionFactory() {
 				return null;
 			}
 
@@ -63,6 +61,26 @@ public class OffsetTimeJavaTypeDescriptorTest {
 
 			@Override
 			public TimeZone getJdbcTimeZone() {
+				return null;
+			}
+
+			@Override
+			public Dialect getDialect() {
+				return null;
+			}
+
+			@Override
+			public TypeConfiguration getTypeConfiguration() {
+				return null;
+			}
+
+			@Override
+			public FormatMapper getXmlFormatMapper() {
+				return null;
+			}
+
+			@Override
+			public FormatMapper getJsonFormatMapper() {
 				return null;
 			}
 		};

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -60,7 +60,7 @@ public class DenormalizedTable extends Table {
 	@Override
 	public void createForeignKeys(MetadataBuildingContext context) {
 		includedTable.createForeignKeys( context );
-		for ( ForeignKey foreignKey : includedTable.getForeignKeys().values() ) {
+		for ( ForeignKey foreignKey : includedTable.getForeignKeyCollection() ) {
 			final PersistentClass referencedClass =
 					foreignKey.resolveReferencedClass( context.getMetadataCollector() );
 			// the ForeignKeys created in the first pass did not have their referenced table initialized

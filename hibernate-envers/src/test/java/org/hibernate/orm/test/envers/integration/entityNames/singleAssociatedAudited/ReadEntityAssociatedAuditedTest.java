@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.entityNames.singleAssociatedAudited;
@@ -9,14 +9,17 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 import org.hibernate.MappingException;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.orm.test.envers.AbstractOneSessionTest;
 import org.hibernate.orm.test.envers.Priority;
 
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.Test;
 
 /**
  * @author Hern&aacute;n Chanfreau
  */
+@RequiresDialect(H2Dialect.class)
 public class ReadEntityAssociatedAuditedTest extends AbstractOneSessionTest {
 
 	private long id_car1;

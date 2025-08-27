@@ -1,8 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
+
+import org.hibernate.MappingException;
 
 /**
  * Identifies a mapping model object which may have {@linkplain Property attributes}
@@ -22,9 +24,26 @@ package org.hibernate.mapping;
  */
 public interface AttributeContainer {
 	/**
-	 * Add a property to this {@link PersistentClass} or {@link Join}.
+	 * Add an attribute to this {@link PersistentClass} or {@link Join}.
 	 */
 	void addProperty(Property property);
+
+	/**
+	 * Determine if the given attribute belongs to this container.
+	 */
 	boolean contains(Property property);
+
+	/**
+	 * Get the attribute with the given name belonging to this container.
+	 * @param propertyName the name of an attribute
+	 * @throws MappingException if there is no attribute with the given name
+	 * @since 7.2
+	 */
+	Property getProperty(String propertyName) throws MappingException;
+
+	/**
+	 * The {@link Table} with the columns mapped by attributes belonging
+	 * to this container.
+	 */
 	Table getTable();
 }

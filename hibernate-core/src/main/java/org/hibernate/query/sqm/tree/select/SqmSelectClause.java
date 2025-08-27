@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.select;
@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.select;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -108,24 +109,18 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 
 	public JpaSelection<?> resolveJpaSelection() {
 		// NOTE : JPA's `Selection` contract is really better named `Selectable`
-		if ( selections == null || selections.size() != 1 ) {
-			return this;
-		}
-		else {
-			return selections.get( 0 ).getSelectableNode();
-		}
+		return selections != null && selections.size() == 1 ? selections.get( 0 ).getSelectableNode() : this;
 	}
 
 	@Override
 	public List<SqmSelectableNode<?>> getSelectionItems() {
 		final List<SqmSelectableNode<?>> subSelections = new ArrayList<>();
-
-		if ( this.selections != null ) {
-			if ( this.selections.size() == 1 ) {
-				this.selections.get( 0 ).getSelectableNode().visitSubSelectableNodes( subSelections::add );
+		if ( selections != null ) {
+			if ( selections.size() == 1 ) {
+				selections.get( 0 ).getSelectableNode().visitSubSelectableNodes( subSelections::add );
 			}
 			else {
-				for ( SqmSelection<?> selection : this.selections ) {
+				for ( SqmSelection<?> selection : selections ) {
 					selection.getSelectableNode().visitSubSelectableNodes( subSelections::add );
 				}
 			}
@@ -151,5 +146,17 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 	@Override
 	public String getAlias() {
 		return null;
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		return other instanceof SqmSelectClause that
+			&& distinct == that.distinct
+			&& Objects.equals( this.selections, that.selections );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( distinct, selections );
 	}
 }

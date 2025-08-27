@@ -57,7 +57,7 @@ Let's put them in a table, so we can more easily compare the points of differenc
 | `SINGLE_TABLE`
 | Map every class in the hierarchy to the same table, and uses the value of a _discriminator column_ to determine which concrete class each row represents.
 | To retrieve instances of a given class, we only need to query the one table.
-| Attributes declared by subclasses map to columns without `NOT NULL` constraints. 💀
+| Attributes declared by subclasses map to columns without `NOT NULL` constraints, and so their non-nullability is enforced via a `CHECK` constraint.
 
   Any association may have a `FOREIGN KEY` constraint. 🤓
 | Subclass data is denormalized. 🧐
@@ -167,6 +167,15 @@ is a bad idea, since it's impossible to create a foreign key constraint that tar
 //
 // Hibernate doesn't support mixing ``InheritanceType``s within a single entity hierarchy.
 // However, it's possible to emulate a mix of `SINGLE_TABLE` and `JOINED` inheritance using the `@SecondaryTable` annotation.
+
+[CAUTION]
+====
+It's quite easy to overuse inheritance.
+We've occasionally seen extreme cases where a `JOINED` inheritance hierarchy includes _hundreds_ of entities, spanning hundreds of tables.
+Efficiently querying such a hierarchy is an almost impossible task for Hibernate.
+Fortunately, a `JOINED` inheritance relationship can always be remodeled as a <<one-to-one-pk,one-to-one association>>, allowing much more efficient queries.
+In general, a single entity inheritance hierarchy should never span more than a few tables, including secondary tables.
+====
 
 [[table-mappings]]
 === Mapping to tables
@@ -470,6 +479,7 @@ Note that the `foreignKey` member is completely optional and only affects DDL ge
 If you don't supply an explicit name using `@ForeignKey`, Hibernate will generate a quite ugly name.
 The reason for this is that the maximum length of foreign key names on some databases is extremely constrained, and we need to avoid collisions.
 To be fair, this is perfectly fine if you're only using the generated DDL for testing.
+You can customize the generated constraint names by writing your own <<naming-strategies,`ImplicitNamingStrategy`>>.
 ====
 
 For composite foreign keys we might have multiple `@JoinColumn` annotations:

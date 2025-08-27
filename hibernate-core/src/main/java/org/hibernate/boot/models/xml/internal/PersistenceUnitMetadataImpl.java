@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.xml.internal;
@@ -89,8 +89,8 @@ public final class PersistenceUnitMetadataImpl implements PersistenceUnitMetadat
 
 		if ( isNotEmpty( defaults.getCatalog() ) ) {
 			if ( defaultCatalog != null ) {
-				XML_PROCESS_LOGGER.debugf(
-						"Setting already set default catalog : %s, %s",
+				XML_PROCESS_LOGGER.tracef(
+						"Setting already set default catalog: %s, %s",
 						defaultCatalog,
 						defaults.getCatalog()
 				);
@@ -100,8 +100,8 @@ public final class PersistenceUnitMetadataImpl implements PersistenceUnitMetadat
 
 		if ( isNotEmpty( defaults.getSchema() ) ) {
 			if ( defaultSchema != null ) {
-				XML_PROCESS_LOGGER.debugf(
-						"Setting already set default schema : %s, %s",
+				XML_PROCESS_LOGGER.tracef(
+						"Setting already set default schema: %s, %s",
 						defaultSchema,
 						defaults.getSchema()
 				);
@@ -111,8 +111,8 @@ public final class PersistenceUnitMetadataImpl implements PersistenceUnitMetadat
 
 		if ( defaults.getAccess() != null ) {
 			if ( accessType != null ) {
-				XML_PROCESS_LOGGER.debugf(
-						"Overriding already set default AccessType : %s, %s",
+				XML_PROCESS_LOGGER.tracef(
+						"Overriding already set default AccessType: %s, %s",
 						defaults.getAccess(),
 						accessType
 				);
@@ -122,8 +122,8 @@ public final class PersistenceUnitMetadataImpl implements PersistenceUnitMetadat
 
 		if ( isNotEmpty( defaults.getDefaultAccess() ) ) {
 			if ( defaultAccessStrategy != null ) {
-				XML_PROCESS_LOGGER.debugf(
-						"Overriding already set default access strategy : %s, %s",
+				XML_PROCESS_LOGGER.tracef(
+						"Overriding already set default access strategy: %s, %s",
 						accessType,
 						defaultAccessStrategy
 				);
@@ -133,8 +133,8 @@ public final class PersistenceUnitMetadataImpl implements PersistenceUnitMetadat
 
 		if ( defaults.getCascadePersist() != null
 				|| isNotEmpty( defaults.getDefaultCascade() ) ) {
-			if ( !this.defaultCascadeTypes.isEmpty() ) {
-				XML_PROCESS_LOGGER.debugf( "Adding cascades to already defined set of default cascades" );
+			if ( !defaultCascadeTypes.isEmpty() ) {
+				XML_PROCESS_LOGGER.tracef( "Adding cascades to already defined set of default cascades" );
 			}
 
 			if ( defaults.getCascadePersist() != null ) {

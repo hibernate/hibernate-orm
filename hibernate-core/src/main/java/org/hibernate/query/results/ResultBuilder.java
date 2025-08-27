@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results;
@@ -7,6 +7,7 @@ package org.hibernate.query.results;
 import org.hibernate.Incubating;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import java.util.function.BiConsumer;
@@ -46,6 +47,6 @@ public interface ResultBuilder extends GraphNodeBuilder {
 
 	ResultBuilder cacheKeyInstance();
 
-	default void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
+	default void visitFetchBuilders(BiConsumer<Fetchable, FetchBuilder> consumer) {
 	}
 }

@@ -1,12 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -20,13 +19,12 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
-import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaDerivedJoin;
+import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaFunctionJoin;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.JpaSelection;
@@ -37,6 +35,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
@@ -63,6 +62,8 @@ import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SetAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static org.hibernate.query.sqm.internal.SqmUtil.findCompatibleFetchJoin;
 
 /**
@@ -99,7 +100,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			NodeBuilder nodeBuilder) {
 		super(
 				SqmCreationHelper.buildRootNavigablePath( entityType.getHibernateEntityName(), alias ),
-				entityType,
+				(SqmEntityDomainType<T>) entityType,
 				null,
 				nodeBuilder
 		);
@@ -208,7 +209,12 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	@Override
 	public List<SqmJoin<T, ?>> getSqmJoins() {
-		return joins == null ? Collections.emptyList() : Collections.unmodifiableList( joins );
+		return joins == null ? emptyList() : unmodifiableList( joins );
+	}
+
+	@Override
+	public int getNumberOfJoins() {
+		return joins == null ? 0 : joins.size();
 	}
 
 	@Override
@@ -223,13 +229,13 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Internal
 	public void removeLeftFetchJoins() {
 		if ( joins != null ) {
-			for ( SqmJoin<T, ?> join : new ArrayList<>(joins) ) {
+			for ( var join : new ArrayList<>( joins ) ) {
 				if ( join instanceof SqmAttributeJoin<T, ?> attributeJoin ) {
 					if ( attributeJoin.isFetched() ) {
 						if ( join.getSqmJoinType() == SqmJoinType.LEFT ) {
 							joins.remove( join );
-							final List<SqmJoin<?, ?>> orderedJoins = findRoot().getOrderedJoins();
-							if (orderedJoins != null) {
+							final var orderedJoins = findRoot().getOrderedJoins();
+							if ( orderedJoins != null ) {
 								orderedJoins.remove( join );
 							}
 						}
@@ -251,12 +257,12 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	@Override
 	public List<SqmTreatedFrom<?,?,?>> getSqmTreats() {
-		return treats == null ? Collections.emptyList() : treats;
+		return treats == null ? emptyList() : treats;
 	}
 
 	protected <S extends T, X extends SqmTreatedFrom<O,T,S>> X findTreat(ManagedDomainType<S> targetType, String alias) {
 		if ( treats != null ) {
-			for ( SqmFrom<?, ?> treat : treats ) {
+			for ( var treat : treats ) {
 				if ( treat.getModel() == targetType ) {
 					if ( Objects.equals( treat.getExplicitAlias(), alias ) ) {
 						//noinspection unchecked
@@ -319,7 +325,9 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	@Override
 	public <A> SqmSingularJoin<T, A> join(SingularAttribute<? super T, A> attribute, JoinType jt) {
-		final SqmSingularJoin<T, A> join = buildSingularJoin( (SingularPersistentAttribute<? super T, A>) attribute, SqmJoinType.from( jt ), false );
+		final SqmSingularJoin<T, A> join =
+				buildSingularJoin( (SqmSingularPersistentAttribute<? super T, A>) attribute,
+						SqmJoinType.from( jt ), false );
 		addSqmJoin( join );
 		return join;
 	}
@@ -340,7 +348,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		final SqmRoot<T> root = (SqmRoot<T>) findRoot();
 		final SqmEntityJoin<T, X> sqmEntityJoin = new SqmEntityJoin<>(
 				targetEntityDescriptor,
-				null,
+				generateAlias(),
 				joinType,
 				root
 		);
@@ -354,9 +362,12 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <E> SqmBagJoin<T, E> join(CollectionAttribute<? super T, E> attribute, JoinType jt) {
-		final SqmBagJoin<T, E> join = buildBagJoin( (BagPersistentAttribute<T, E>) attribute, SqmJoinType.from( jt ), false );
+		final SqmBagJoin<T, E> join = buildBagJoin(
+				(BagPersistentAttribute<? super T, E>) attribute,
+				SqmJoinType.from( jt ),
+				false
+		);
 		addSqmJoin( join );
 		return join;
 	}
@@ -417,8 +428,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, Y> SqmAttributeJoin<X, Y> join(String attributeName, JoinType jt) {
-		final SqmPathSource<Y> subPathSource = (SqmPathSource<Y>) getReferencedPathSource()
-				.getSubPathSource( attributeName );
+		final SqmPathSource<Y> subPathSource = (SqmPathSource<Y>)
+				getReferencedPathSource().getSubPathSource( attributeName );
 		return (SqmAttributeJoin<X, Y>) buildJoin( subPathSource, SqmJoinType.from( jt ), false );
 	}
 
@@ -564,40 +575,42 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	public <Y> SqmEntityJoin<T, Y> join(EntityType<Y> entity, JoinType joinType) {
 		//noinspection unchecked
-		final SqmEntityJoin<T,Y> join = new SqmEntityJoin<>( entity, null, joinType, (SqmRoot<T>) findRoot() );
+		final SqmEntityJoin<T,Y> join =
+				new SqmEntityJoin<>( entity, generateAlias(), joinType, (SqmRoot<T>) findRoot() );
 		addSqmJoin( join );
 		return join;
 	}
 
 	@Override
 	public <X> JpaDerivedJoin<X> join(Subquery<X> subquery) {
-		return join( subquery, SqmJoinType.INNER, false, null );
+		return join( subquery, SqmJoinType.INNER, false, generateAlias() );
 	}
 
 	@Override
 	public <X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType) {
-		return join( subquery, joinType, false, null );
+		return join( subquery, joinType, false, generateAlias() );
 	}
 
 	@Override
 	public <X> JpaDerivedJoin<X> joinLateral(Subquery<X> subquery) {
-		return join( subquery, SqmJoinType.INNER, true, null );
+		return join( subquery, SqmJoinType.INNER, true, generateAlias() );
 	}
 
 	@Override
 	public <X> JpaDerivedJoin<X> joinLateral(Subquery<X> subquery, SqmJoinType joinType) {
-		return join( subquery, joinType, true, null );
+		return join( subquery, joinType, true, generateAlias() );
 	}
 
 	@Override
 	public <X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType, boolean lateral) {
-		return join( subquery, joinType, lateral, null );
+		return join( subquery, joinType, lateral, generateAlias() );
 	}
 
 	public <X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType, boolean lateral, String alias) {
 		validateComplianceFromSubQuery();
 		//noinspection unchecked
-		final JpaDerivedJoin<X> join = new SqmDerivedJoin<>( (SqmSubQuery<X>) subquery, alias, joinType, lateral, (SqmRoot<X>) findRoot() );
+		final JpaDerivedJoin<X> join =
+				new SqmDerivedJoin<>( (SqmSubQuery<X>) subquery, alias, joinType, lateral, (SqmRoot<X>) findRoot() );
 		//noinspection unchecked
 		addSqmJoin( (SqmJoin<T, ?>) join );
 		return join;
@@ -605,18 +618,19 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	@Override
 	public <X> SqmJoin<?, X> join(JpaCteCriteria<X> cte) {
-		return join( cte, SqmJoinType.INNER, null );
+		return join( cte, SqmJoinType.INNER, generateAlias() );
 	}
 
 	@Override
 	public <X> SqmJoin<?, X> join(JpaCteCriteria<X> cte, SqmJoinType joinType) {
-		return join( cte, joinType, null );
+		return join( cte, joinType, generateAlias() );
 	}
 
 	public <X> SqmJoin<?, X> join(JpaCteCriteria<X> cte, SqmJoinType joinType, String alias) {
 		validateComplianceFromSubQuery();
 		//noinspection unchecked
-		final SqmJoin<?, X> join = new SqmCteJoin<>( ( SqmCteStatement<X> ) cte, alias, joinType, (SqmRoot<X>) findRoot() );
+		final SqmJoin<?, X> join =
+				new SqmCteJoin<>( ( SqmCteStatement<X> ) cte, alias, joinType, (SqmRoot<X>) findRoot() );
 		//noinspection unchecked
 		addSqmJoin( (SqmJoin<T, ?>) join );
 		return join;
@@ -646,7 +660,13 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	public <X> JpaFunctionJoin<X> join(JpaSetReturningFunction<X> function, SqmJoinType joinType, boolean lateral) {
 		validateComplianceFromFunction();
 		//noinspection unchecked
-		final SqmFunctionJoin<X> join = new SqmFunctionJoin<>( (SqmSetReturningFunction<X>) function, alias, joinType, lateral, (SqmRoot<Object>) findRoot() );
+		final SqmFunctionJoin<X> join =
+				new SqmFunctionJoin<>(
+						(SqmSetReturningFunction<X>) function,
+						generateAlias(),
+						joinType, lateral,
+						(SqmRoot<Object>) findRoot()
+				);
 		//noinspection unchecked
 		addSqmJoin( (SqmJoin<T, ?>) join );
 		return join;
@@ -697,16 +717,16 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	private void validateComplianceFromSubQuery() {
 		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			throw new IllegalStateException(
-					"The JPA specification does not support subqueries in the from clause. " +
-							"Please disable the JPA query compliance if you want to use this feature." );
+					"The JPA specification does not support subqueries in the from clause. "
+					+ "Please disable the JPA query compliance if you want to use this feature." );
 		}
 	}
 
 	private void validateComplianceFromFunction() {
 		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			throw new IllegalStateException(
-					"The JPA specification does not support functions in the from clause. " +
-							"Please disable the JPA query compliance if you want to use this feature." );
+					"The JPA specification does not support functions in the from clause. "
+					+ "Please disable the JPA query compliance if you want to use this feature." );
 		}
 	}
 
@@ -717,7 +737,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	@Override
 	public <X> JpaCrossJoin<X> crossJoin(EntityDomainType<X> entity) {
-		final SqmCrossJoin<X> crossJoin = new SqmCrossJoin<>( entity, null, findRoot() );
+		final SqmCrossJoin<X> crossJoin =
+				new SqmCrossJoin<>( (SqmEntityDomainType<X>) entity, generateAlias(), findRoot() );
 		// noinspection unchecked
 		addSqmJoin( (SqmJoin<T, ?>) crossJoin );
 		return crossJoin;
@@ -739,21 +760,15 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	@Override
 	public <A> SqmSingularJoin<T, A> fetch(SingularAttribute<? super T, A> attribute, JoinType jt) {
-		final SingularPersistentAttribute<? super T, A> persistentAttribute = (SingularPersistentAttribute<? super T, A>) attribute;
-		final SqmAttributeJoin<T, A> compatibleFetchJoin = findCompatibleFetchJoin(
-				this,
-				persistentAttribute,
-				SqmJoinType.from( jt )
-		);
+		final var persistentAttribute = (SqmSingularPersistentAttribute<? super T, A>) attribute;
+		final SqmAttributeJoin<T, A> compatibleFetchJoin =
+				findCompatibleFetchJoin( this, persistentAttribute, SqmJoinType.from( jt ) );
 		if ( compatibleFetchJoin != null ) {
 			return (SqmSingularJoin<T, A>) compatibleFetchJoin;
 		}
 
-		final SqmSingularJoin<T, A> join = buildSingularJoin(
-				persistentAttribute,
-				SqmJoinType.from( jt ),
-				true
-		);
+		final SqmSingularJoin<T, A> join =
+				buildSingularJoin( persistentAttribute, SqmJoinType.from( jt ), true );
 		addSqmJoin( join );
 		return join;
 	}
@@ -766,7 +781,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	public <A> SqmAttributeJoin<T, A> fetch(PluralAttribute<? super T, ?, A> attribute, JoinType jt) {
 		return buildJoin(
-				(PluralPersistentAttribute<? super T, ?, A>) attribute,
+				(SqmPluralPersistentAttribute<? super T, ?, A>) attribute,
 				SqmJoinType.from( jt ),
 				true
 		);
@@ -780,10 +795,10 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, A> SqmAttributeJoin<X, A> fetch(String attributeName, JoinType jt) {
-		final SqmPathSource<A> fetchedPathSource = (SqmPathSource<A>) getReferencedPathSource()
-				.getSubPathSource( attributeName );
 		return (SqmAttributeJoin<X, A>) buildJoin(
-				fetchedPathSource,
+				(SqmPathSource<A>)
+						getReferencedPathSource()
+								.getSubPathSource( attributeName ),
 				SqmJoinType.from( jt ),
 				true
 		);
@@ -793,46 +808,35 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			SqmPathSource<A> joinedPathSource,
 			SqmJoinType joinType,
 			boolean fetched) {
-		final SqmAttributeJoin<T, A> compatibleFetchJoin = findCompatibleFetchJoin( this, joinedPathSource, joinType );
-		if ( compatibleFetchJoin != null ) {
-			return compatibleFetchJoin;
+		if ( fetched ) {
+			final SqmAttributeJoin<T, A> compatibleFetchJoin =
+					findCompatibleFetchJoin( this, joinedPathSource, joinType );
+			if ( compatibleFetchJoin != null ) {
+				return compatibleFetchJoin;
+			}
 		}
 
-		final SqmAttributeJoin<T, A> sqmJoin;
-		if ( joinedPathSource instanceof SingularPersistentAttribute<?, ?> ) {
-			sqmJoin = buildSingularJoin(
-					(SingularPersistentAttribute<T, A>) joinedPathSource,
-					joinType,
-					fetched
-			);
+		final SqmAttributeJoin<T, A> sqmJoin =
+				buildAttributeJoin( joinedPathSource, joinType, fetched );
+		addSqmJoin( sqmJoin );
+		return sqmJoin;
+	}
+
+	private <A> SqmAttributeJoin<T, A> buildAttributeJoin(SqmPathSource<A> joinedPathSource, SqmJoinType joinType, boolean fetched) {
+		if ( joinedPathSource instanceof SqmSingularPersistentAttribute<?, A> ) {
+			return buildSingularJoin( (SqmSingularPersistentAttribute<T, A>) joinedPathSource, joinType, fetched );
 		}
-		else if ( joinedPathSource instanceof BagPersistentAttribute<?, ?> ) {
-			sqmJoin = buildBagJoin(
-					(BagPersistentAttribute<T, A>) joinedPathSource,
-					joinType,
-					fetched
-			);
+		else if ( joinedPathSource instanceof SqmBagPersistentAttribute<?, A> ) {
+			return buildBagJoin( (SqmBagPersistentAttribute<T, A>) joinedPathSource, joinType, fetched );
 		}
-		else if ( joinedPathSource instanceof ListPersistentAttribute<?, ?> ) {
-			sqmJoin = buildListJoin(
-					(ListPersistentAttribute<T, A>) joinedPathSource,
-					joinType,
-					fetched
-			);
+		else if ( joinedPathSource instanceof SqmListPersistentAttribute<?, A> ) {
+			return buildListJoin( (SqmListPersistentAttribute<T, A>) joinedPathSource, joinType, fetched );
 		}
-		else if ( joinedPathSource instanceof MapPersistentAttribute<?, ?, ?> ) {
-			sqmJoin = buildMapJoin(
-					(MapPersistentAttribute<T, ?, A>) joinedPathSource,
-					joinType,
-					fetched
-			);
+		else if ( joinedPathSource instanceof SqmMapPersistentAttribute<?, ?, A> ) {
+			return buildMapJoin( (SqmMapPersistentAttribute<T, ?, A>) joinedPathSource, joinType, fetched );
 		}
-		else if ( joinedPathSource instanceof SetPersistentAttribute<?, ?> ) {
-			sqmJoin = buildSetJoin(
-					(SetPersistentAttribute<T, A>) joinedPathSource,
-					joinType,
-					fetched
-			);
+		else if ( joinedPathSource instanceof SqmSetPersistentAttribute<?, A> ) {
+			return buildSetJoin( (SqmSetPersistentAttribute<T, A>) joinedPathSource, joinType, fetched );
 		}
 		else {
 			throw new IllegalArgumentException(
@@ -845,20 +849,17 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 					)
 			);
 		}
-		addSqmJoin( sqmJoin );
-		return sqmJoin;
 	}
 
-	@SuppressWarnings("unchecked")
 	private <A> SqmSingularJoin<T, A> buildSingularJoin(
-			SingularPersistentAttribute<? super T, A> attribute,
+			SqmSingularPersistentAttribute<? super T, A> attribute,
 			SqmJoinType joinType,
 			boolean fetched) {
-		if ( attribute.getSqmPathType() instanceof ManagedDomainType ) {
+		if ( attribute.getPathType() instanceof ManagedDomainType ) {
 			return new SqmSingularJoin<>(
 					this,
-					(SingularPersistentAttribute<T, A>) attribute,
-					null,
+					attribute,
+					generateAlias(),
 					joinType,
 					fetched,
 					nodeBuilder()
@@ -868,60 +869,56 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		throw new SemanticException( "Attribute '" + attribute + "' is not joinable" );
 	}
 
-	@SuppressWarnings("unchecked")
 	private <E> SqmBagJoin<T, E> buildBagJoin(
 			BagPersistentAttribute<? super T, E> attribute,
 			SqmJoinType joinType,
 			boolean fetched) {
 		return new SqmBagJoin<>(
 				this,
-				(BagPersistentAttribute<T, E>)attribute,
-				null,
+				(SqmBagPersistentAttribute<? super T, E>) attribute,
+				generateAlias(),
 				joinType,
 				fetched,
 				nodeBuilder()
 		);
 	}
 
-	@SuppressWarnings("unchecked")
 	private <E> SqmListJoin<T, E> buildListJoin(
 			ListPersistentAttribute<? super T, E> attribute,
 			SqmJoinType joinType,
 			boolean fetched) {
 		return new SqmListJoin<>(
 				this,
-				(ListPersistentAttribute<T, E>) attribute,
-				null,
+				(SqmListPersistentAttribute<? super T, E>) attribute,
+				generateAlias(),
 				joinType,
 				fetched,
 				nodeBuilder()
 		);
 	}
 
-	@SuppressWarnings("unchecked")
 	private <K, V> SqmMapJoin<T, K, V> buildMapJoin(
 			MapPersistentAttribute<? super T, K, V> attribute,
 			SqmJoinType joinType,
 			boolean fetched) {
 		return new SqmMapJoin<>(
 				this,
-				(MapPersistentAttribute<T, K, V>) attribute,
-				null,
+				(SqmMapPersistentAttribute<? super T, K, V>) attribute,
+				generateAlias(),
 				joinType,
 				fetched,
 				nodeBuilder()
 		);
 	}
 
-	@SuppressWarnings("unchecked")
 	private <E> SqmSetJoin<T, E> buildSetJoin(
 			SetPersistentAttribute<? super T, E> attribute,
 			SqmJoinType joinType,
 			boolean fetched) {
 		return new SqmSetJoin<>(
 				this,
-				(SetPersistentAttribute<T, E>) attribute,
-				null,
+				(SqmSetPersistentAttribute<? super T, E>) attribute,
+				generateAlias(),
 				joinType,
 				fetched,
 				nodeBuilder()
@@ -959,14 +956,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		if ( alias == null ) {
-			// If we don't have an alias, this is the best we can do to at least ensure uniqueness
-			sb.append( "alias_" ).append( System.identityHashCode( this ) );
-		}
-		else {
-			sb.append( alias );
-		}
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( resolveAlias( context ) );
 	}
 
 	@Override
@@ -975,5 +966,26 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			setExplicitAlias( name );
 		}
 		return super.alias( name );
+	}
+
+	@Override
+	public JpaExpression<?> id() {
+		return nodeBuilder().id( this );
+	}
+
+	private int aliasCounter = 0;
+
+	private String generateAlias() {
+		final String prefix;
+		if ( alias == null ) {
+			prefix = "var_";
+		}
+		else if ( alias.startsWith( "var_" ) ) {
+			prefix = alias;
+		}
+		else {
+			prefix = "var_" + alias;
+		}
+		return prefix + "_" + (++aliasCounter);
 	}
 }

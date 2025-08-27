@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.cfg.internal;
@@ -33,7 +33,7 @@ public class NaturalIdDataCachingConfigImpl
 
 	private boolean hasAnyMutableNaturalIdProps() {
 		for ( Property property : rootEntityDescriptor.getDeclaredProperties() ) {
-			if ( property.isNaturalIdentifier() && property.isUpdateable() ) {
+			if ( property.isNaturalIdentifier() && property.isUpdatable() ) {
 				return true;
 			}
 		}

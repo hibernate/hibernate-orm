@@ -1,10 +1,8 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.manytomany.defaults;
-
-import java.util.Iterator;
 
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
@@ -200,8 +198,7 @@ public class ManyToManyImplicitNamingTest extends BaseNonConfigCoreFunctionalTes
 		}
 		boolean hasOwnerFK = false;
 		boolean hasInverseFK = false;
-		for (Iterator it = ownerCollection.getCollectionTable().getForeignKeys().values().iterator(); it.hasNext(); ) {
-			final ForeignKey fk = (ForeignKey) it.next();
+		for ( final ForeignKey fk : ownerCollection.getCollectionTable().getForeignKeyCollection() ) {
 			assertSame( ownerCollection.getCollectionTable(), fk.getTable() );
 			if ( fk.getColumnSpan() > 1 ) {
 				continue;
@@ -210,7 +207,7 @@ public class ManyToManyImplicitNamingTest extends BaseNonConfigCoreFunctionalTes
 				assertSame( ownerCollection.getOwner().getTable(), fk.getReferencedTable() );
 				hasOwnerFK = true;
 			}
-			else  if ( fk.getColumn( 0 ).getText().equals( inverseForeignKeyNameExpected ) ) {
+			else if ( fk.getColumn( 0 ).getText().equals( inverseForeignKeyNameExpected ) ) {
 				assertSame( associatedPersistentClass.getTable(), fk.getReferencedTable() );
 				hasInverseFK = true;
 			}

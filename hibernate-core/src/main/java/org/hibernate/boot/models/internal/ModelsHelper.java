@@ -1,25 +1,41 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.internal;
 
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.NClob;
 import java.util.function.Supplier;
 
 import org.hibernate.annotations.TenantId;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
+import org.hibernate.models.internal.jdk.JdkClassDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.RegistryPrimer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 
 /**
  * @author Steve Ebersole
  */
 public class ModelsHelper {
-	public static void preFillRegistries(RegistryPrimer.Contributions contributions, SourceModelBuildingContext buildingContext) {
+	public static void preFillRegistries(RegistryPrimer.Contributions contributions, ModelsContext buildingContext) {
 		OrmAnnotationHelper.forEachOrmAnnotation( contributions::registerAnnotation );
+
+		registerPrimitive( boolean.class, buildingContext );
+		registerPrimitive( byte.class, buildingContext );
+		registerPrimitive( short.class, buildingContext );
+		registerPrimitive( int.class, buildingContext );
+		registerPrimitive( long.class, buildingContext );
+		registerPrimitive( double.class, buildingContext );
+		registerPrimitive( float.class, buildingContext );
+		registerPrimitive( char.class, buildingContext );
+		registerPrimitive( Blob.class, buildingContext );
+		registerPrimitive( Clob.class, buildingContext );
+		registerPrimitive( NClob.class, buildingContext );
 
 		buildingContext.getAnnotationDescriptorRegistry().getDescriptor( TenantId.class );
 
@@ -55,6 +71,12 @@ public class ModelsHelper {
 //				);
 //			}
 //		}
+	}
+
+	private static void registerPrimitive(Class<?> theClass, ModelsContext buildingContext) {
+		final MutableClassDetailsRegistry classDetailsRegistry = buildingContext.getClassDetailsRegistry().as( MutableClassDetailsRegistry.class );
+		classDetailsRegistry.addClassDetails( new JdkClassDetails( theClass, buildingContext ) );
+
 	}
 
 	public static ClassDetails resolveClassDetails(

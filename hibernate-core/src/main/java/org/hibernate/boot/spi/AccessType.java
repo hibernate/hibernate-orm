@@ -1,10 +1,8 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
-
-import org.hibernate.AssertionFailure;
 
 /**
  * Enumerates various access strategies for accessing entity values.
@@ -38,17 +36,11 @@ public enum AccessType {
 	 * @return The external name
 	 */
 	public String getType() {
-		switch (this) {
-			case DEFAULT:
-			case PROPERTY:
-				return "property";
-			case FIELD:
-				return "field";
-			case RECORD:
-				return "record";
-			default:
-				throw new AssertionFailure("Unknown AccessType");
-		}
+		return switch ( this ) {
+			case DEFAULT, PROPERTY -> "property";
+			case FIELD -> "field";
+			case RECORD -> "record";
+		};
 	}
 
 	/**
@@ -79,16 +71,11 @@ public enum AccessType {
 	 * @return The Hibernate {@link AccessType}
 	 */
 	public static AccessType getAccessStrategy(jakarta.persistence.AccessType type) {
-		if ( type == null ) {
-			return DEFAULT;
-		}
-		switch ( type ) {
-			case FIELD:
-				return FIELD;
-			case PROPERTY:
-				return PROPERTY;
-			default:
-				throw new AssertionFailure( "unrecognized AccessType" );
-		}
+		return type == null
+				? DEFAULT
+				: switch ( type ) {
+					case FIELD -> FIELD;
+					case PROPERTY -> PROPERTY;
+				};
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.junit;
@@ -33,7 +33,7 @@ public class MessageKeyWatcherImpl implements MessageKeyWatcher, LogListener {
 		if ( loggerAnn.loggerNameClass() != void.class ) {
 			logger = Logger.getLogger( loggerAnn.loggerNameClass() );
 		}
-		else if ( ! "".equals( loggerAnn.loggerName().trim() ) ) {
+		else if ( !loggerAnn.loggerName().trim().isEmpty() ) {
 			logger = Logger.getLogger( loggerAnn.loggerName().trim() );
 		}
 		else {
@@ -52,7 +52,7 @@ public class MessageKeyWatcherImpl implements MessageKeyWatcher, LogListener {
 		if ( loggerAnn.loggerNameClass() != void.class ) {
 			logger = Logger.getLogger( loggerAnn.loggerNameClass() );
 		}
-		else if ( ! "".equals( loggerAnn.loggerName().trim() ) ) {
+		else if ( !loggerAnn.loggerName().trim().isEmpty() ) {
 			logger = Logger.getLogger( loggerAnn.loggerName().trim() );
 		}
 		else {

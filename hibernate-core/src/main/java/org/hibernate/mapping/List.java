@@ -1,12 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
 import java.util.function.Supplier;
 
-import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.CollectionType;
@@ -19,7 +18,7 @@ import org.hibernate.usertype.UserCollectionType;
  *
  * @author Gavin King
  */
-public class List extends IndexedCollection {
+public non-sealed class List extends IndexedCollection {
 
 	private int baseIndex;
 
@@ -51,7 +50,7 @@ public class List extends IndexedCollection {
 		return true;
 	}
 
-	public CollectionType getDefaultCollectionType() throws MappingException {
+	public CollectionType getDefaultCollectionType() {
 		return new ListType( getRole(), getReferencedPropertyName() );
 	}
 

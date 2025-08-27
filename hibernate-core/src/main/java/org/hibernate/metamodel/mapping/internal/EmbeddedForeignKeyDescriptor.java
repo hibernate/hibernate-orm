@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -113,11 +113,8 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 				() -> {
 					// todo (6.0) : how to make sure things we need are ready to go?
 					// 		- e.g., here, we need access to the sub-attributes
-					if ( targetMappingType.getEmbeddableTypeDescriptor().getNumberOfAttributeMappings() == 0 ) {
-						// todo (6.0) : ^^ for now, this is the only way we "know" that the embeddable has not been finalized yet
-						return false;
-					}
-					return true;
+					// todo (6.0) : ^^ for now, this is the only way we "know" that the embeddable has not been finalized yet
+					return targetMappingType.getEmbeddableTypeDescriptor().getNumberOfAttributeMappings() != 0;
 				}
 		);
 	}
@@ -196,8 +193,9 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		}
 		else {
 			AttributeMapping attributeMapping = modelPart.asAttributeMapping();
-			while ( attributeMapping != null && attributeMapping.getDeclaringType() instanceof EmbeddableMappingType ) {
-				final EmbeddableValuedModelPart declaringModelPart = ( (EmbeddableMappingType) attributeMapping.getDeclaringType() ).getEmbeddedValueMapping();
+			while ( attributeMapping != null
+					&& attributeMapping.getDeclaringType() instanceof EmbeddableMappingType embeddableMappingType ) {
+				final EmbeddableValuedModelPart declaringModelPart = embeddableMappingType.getEmbeddedValueMapping();
 				if ( declaringModelPart == keyPart ) {
 					return true;
 				}
@@ -272,7 +270,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		assert fromSide == Nature.TARGET
-				? targetTableGroup.getTableReference( navigablePath, associationKey.getTable(), false ) != null
+				? targetTableGroup.getTableReference( navigablePath, associationKey.table(), false ) != null
 				: isTargetTableGroup( targetTableGroup );
 		return createDomainResult(
 				navigablePath.append( ForeignKeyDescriptor.PART_NAME ),
@@ -321,9 +319,8 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	private boolean isTargetTableGroup(TableGroup tableGroup) {
 		tableGroup = getUnderlyingTableGroup( tableGroup );
 		final TableGroupProducer tableGroupProducer;
-		if ( tableGroup instanceof OneToManyTableGroup ) {
-			tableGroupProducer = (TableGroupProducer) ( (OneToManyTableGroup) tableGroup ).getElementTableGroup()
-					.getModelPart();
+		if ( tableGroup instanceof OneToManyTableGroup oneToManyTableGroup ) {
+			tableGroupProducer = (TableGroupProducer) oneToManyTableGroup.getElementTableGroup().getModelPart();
 		}
 		else {
 			tableGroupProducer = (TableGroupProducer) tableGroup.getModelPart();
@@ -445,10 +442,9 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 
 	@Override
 	public boolean isSimpleJoinPredicate(Predicate predicate) {
-		if ( !( predicate instanceof Junction ) ) {
+		if ( !(predicate instanceof Junction junction) ) {
 			return false;
 		}
-		final Junction junction = (Junction) predicate;
 		if ( junction.getNature() != Junction.Nature.CONJUNCTION ) {
 			return false;
 		}
@@ -459,20 +455,17 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		Boolean lhsIsKey = null;
 		for ( int i = 0; i < predicates.size(); i++ ) {
 			final Predicate p = predicates.get( i );
-			if ( !( p instanceof ComparisonPredicate ) ) {
+			if ( !(p instanceof ComparisonPredicate comparisonPredicate) ) {
 				return false;
 			}
-			final ComparisonPredicate comparisonPredicate = (ComparisonPredicate) p;
 			if ( comparisonPredicate.getOperator() != ComparisonOperator.EQUAL ) {
 				return false;
 			}
 			final Expression lhsExpr = comparisonPredicate.getLeftHandExpression();
 			final Expression rhsExpr = comparisonPredicate.getRightHandExpression();
-			if ( !( lhsExpr instanceof ColumnReference ) || !( rhsExpr instanceof ColumnReference ) ) {
+			if ( !(lhsExpr instanceof ColumnReference lhs) || !(rhsExpr instanceof ColumnReference rhs) ) {
 				return false;
 			}
-			final ColumnReference lhs = (ColumnReference) lhsExpr;
-			final ColumnReference rhs = (ColumnReference) rhsExpr;
 			if ( lhsIsKey == null ) {
 				final String keyExpression = keySelectableMappings.getSelectable( i ).getSelectionExpression();
 				final String targetExpression = targetSelectableMappings.getSelectable( i ).getSelectionExpression();
@@ -581,8 +574,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			}
 			return jdbcTypeCount;
 		}
-		else if ( domainValue instanceof Object[] ) {
-			final Object[] values = (Object[]) domainValue;
+		else if ( domainValue instanceof Object[] values ) {
 			final int jdbcTypeCount = keySelectableMappings.getJdbcTypeCount();
 			for ( int i = 0; i < jdbcTypeCount; i++ ) {
 				valueConsumer.consume( offset + i, x, y, values[i], keySelectableMappings.getSelectable( i ) );
@@ -614,16 +606,17 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			ForeignKeyDescriptor.Side side,
 			SharedSessionContractImplementor session) {
 		final ModelPart modelPart = side.getModelPart();
-
 		// If the mapping type has an identifier type, that identifier is the key
-		if ( modelPart instanceof SingleAttributeIdentifierMapping ) {
-			return ( (SingleAttributeIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );
+		if ( modelPart instanceof SingleAttributeIdentifierMapping singleAttributeIdentifierMapping ) {
+			return singleAttributeIdentifierMapping.getIdentifierIfNotUnsaved( targetObject, session );
 		}
-		else if ( modelPart instanceof CompositeIdentifierMapping ) {
-			return ( (CompositeIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );
+		else if ( modelPart instanceof CompositeIdentifierMapping compositeIdentifierMapping ) {
+			return compositeIdentifierMapping.getIdentifierIfNotUnsaved( targetObject, session );
 		}
-		// Otherwise, this is a key based on the target object i.e. without id-class
-		return targetObject;
+		else {
+			// Otherwise, this is a key based on the target object i.e. without id-class
+			return targetObject;
+		}
 	}
 
 	@Override

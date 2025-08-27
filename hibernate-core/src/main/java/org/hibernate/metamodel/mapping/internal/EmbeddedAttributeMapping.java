@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -154,8 +155,8 @@ public class EmbeddedAttributeMapping
 						: null,
 				inverseModelPart.getMappedFetchOptions(),
 				keyDeclaringType,
-				inverseModelPart instanceof PropertyBasedMapping
-						? ( (PropertyBasedMapping) inverseModelPart ).getPropertyAccess()
+				inverseModelPart instanceof PropertyBasedMapping propertyBasedMapping
+						? propertyBasedMapping.getPropertyAccess()
 						: null
 		);
 
@@ -399,11 +400,14 @@ public class EmbeddedAttributeMapping
 	public boolean containsTableReference(String tableExpression) {
 		final ManagedMappingType declaringType = getDeclaringType();
 		final TableGroupProducer producer;
-		if ( declaringType instanceof TableGroupProducer ) {
-			producer = (TableGroupProducer) declaringType;
+		if ( declaringType instanceof TableGroupProducer tableGroupProducer ) {
+			producer = tableGroupProducer;
+		}
+		else if ( declaringType instanceof EmbeddableMappingType embeddableMappingType ) {
+			producer = embeddableMappingType.getEmbeddedValueMapping();
 		}
 		else {
-			producer = ( (EmbeddableMappingType) declaringType ).getEmbeddedValueMapping();
+			throw new AssertionFailure( "Unexpected declaring type" );
 		}
 		return producer.containsTableReference( tableExpression );
 	}

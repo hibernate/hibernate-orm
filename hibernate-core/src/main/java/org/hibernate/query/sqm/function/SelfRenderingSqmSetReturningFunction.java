@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
@@ -13,8 +13,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
-import org.hibernate.query.derived.AnonymousTupleType;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
@@ -121,19 +121,14 @@ public class SelfRenderingSqmSetReturningFunction<T> extends SqmSetReturningFunc
 		if ( sqmArguments.isEmpty() ) {
 			return emptyList();
 		}
-		final FunctionArgumentTypeResolver argumentTypeResolver;
-		if ( getFunctionDescriptor() instanceof AbstractSqmSetReturningFunctionDescriptor ) {
-			argumentTypeResolver = ( (AbstractSqmSetReturningFunctionDescriptor) getFunctionDescriptor() ).getArgumentTypeResolver();
-		}
-		else {
-			argumentTypeResolver = null;
-		}
+		final FunctionArgumentTypeResolver argumentTypeResolver =
+				getFunctionDescriptor() instanceof AbstractSqmSetReturningFunctionDescriptor setReturningFunctionDescriptor
+						? setReturningFunctionDescriptor.getArgumentTypeResolver()
+						: null;
 		if ( argumentTypeResolver == null ) {
 			final ArrayList<SqlAstNode> sqlAstArguments = new ArrayList<>( sqmArguments.size() );
 			for ( int i = 0; i < sqmArguments.size(); i++ ) {
-				sqlAstArguments.add(
-						(SqlAstNode) sqmArguments.get( i ).accept( walker )
-				);
+				sqlAstArguments.add( (SqlAstNode) sqmArguments.get( i ).accept( walker ) );
 			}
 			return sqlAstArguments;
 		}
@@ -225,7 +220,8 @@ public class SelfRenderingSqmSetReturningFunction<T> extends SqmSetReturningFunc
 				tableGroupProducer.getCompatibleTableExpressions(),
 				lateral,
 				canUseInnerJoins,
-				getFunctionRenderer().rendersIdentifierVariable( arguments, walker.getCreationContext().getSessionFactory() ),
+				getFunctionRenderer()
+						.rendersIdentifierVariable( arguments, walker.getCreationContext().getSessionFactory() ),
 				walker.getCreationContext().getSessionFactory()
 		);
 	}

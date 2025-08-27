@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.mutability.attribute;
@@ -58,13 +58,13 @@ public class BasicAttributeMutabilityTests {
 
 		// `@Immutable`
 		final Property theDateProperty = persistentClass.getProperty( "theDate" );
-		assertThat( theDateProperty.isUpdateable() ).isFalse();
+		assertThat( theDateProperty.isUpdatable() ).isFalse();
 		final AttributeMapping theDateAttribute = entityDescriptor.findAttributeMapping( "theDate" );
 		assertThat( theDateAttribute.getExposedMutabilityPlan().isMutable() ).isFalse();
 
 		// `@Mutability(Immutability.class)`
 		final Property anotherDateProperty = persistentClass.getProperty( "anotherDate" );
-		assertThat( anotherDateProperty.isUpdateable() ).isTrue();
+		assertThat( anotherDateProperty.isUpdatable() ).isTrue();
 		final AttributeMapping anotherDateAttribute = entityDescriptor.findAttributeMapping( "anotherDate" );
 		assertThat( anotherDateAttribute.getExposedMutabilityPlan().isMutable() ).isFalse();
 	}
@@ -219,7 +219,7 @@ public class BasicAttributeMutabilityTests {
 
 	@AfterEach
 	void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.createMutationQuery( "delete TheEntity" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "TheEntity" )

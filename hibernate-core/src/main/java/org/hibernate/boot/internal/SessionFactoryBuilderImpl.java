@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
 
-import java.util.Map;
 import java.util.function.Supplier;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
@@ -23,6 +22,7 @@ import org.hibernate.bytecode.internal.SessionFactoryObserverForBytecodeEnhancer
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -58,7 +58,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		this.bootstrapContext = context;
 
 		if ( metadata.getSqlFunctionMap() != null ) {
-			for ( Map.Entry<String, SqmFunctionDescriptor> sqlFunctionEntry : metadata.getSqlFunctionMap().entrySet() ) {
+			for ( var sqlFunctionEntry : metadata.getSqlFunctionMap().entrySet() ) {
 				applySqlFunction( sqlFunctionEntry.getKey(), sqlFunctionEntry.getValue() );
 			}
 		}
@@ -192,7 +192,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling) {
 		this.optionsBuilder.applyTempTableDdlTransactionHandling( handling );
 		return this;
@@ -249,6 +249,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> resolver) {
 		this.optionsBuilder.applyCurrentTenantIdentifierResolver( resolver );
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyTenantSchemaMapper(TenantSchemaMapper<?> mapper) {
+		this.optionsBuilder.applyTenantSchemaMapper( mapper );
 		return this;
 	}
 
@@ -319,12 +325,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyJdbcBatchingForVersionedEntities(boolean enabled) {
-		this.optionsBuilder.enableJdbcBatchingForVersionedEntities( enabled );
-		return this;
-	}
-
-	@Override
 	public SessionFactoryBuilder applyScrollableResultsSupport(boolean enabled) {
 		this.optionsBuilder.enableScrollableResultSupport( enabled );
 		return this;
@@ -378,7 +378,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SessionFactoryBuilder enableReleaseResourcesOnCloseEnabled(boolean enable) {
 		this.optionsBuilder.enableReleaseResourcesOnClose( enable );
 		return this;

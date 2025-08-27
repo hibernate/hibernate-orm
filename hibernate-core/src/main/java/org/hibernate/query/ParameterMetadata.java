@@ -1,20 +1,26 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.function.Consumer;
+
 import jakarta.persistence.Parameter;
 
 import org.hibernate.Incubating;
+import org.hibernate.type.BindableType;
 
 
 /**
- * Access to known information about the parameters for a query.
+ * Information about the {@linkplain QueryParameter parameters}
+ * of a {@linkplain CommonQueryContract query}.
  *
  * @author Steve Ebersole
+ *
+ * @see CommonQueryContract#getParameterMetadata()
  */
 @Incubating
 public interface ParameterMetadata {
@@ -22,12 +28,21 @@ public interface ParameterMetadata {
 	// General purpose
 
 	/**
+	 * The {@link QueryParameter}s representing the parameters of the query,
+	 * in no particular well-defined order.
+	 *
+	 * @since 7.0
+	 */
+	Collection<QueryParameter<?>> getParameters();
+
+	/**
 	 * The total number of registered parameters.
 	 */
 	int getParameterCount();
 
 	/**
-	 * Find the QueryParameter registered under the given name, if one.
+	 * Find the {@linkplain QueryParameter parameter reference} registered
+	 * under the given name, if there is one.
 	 *
 	 * @return The registered match, or {@code null} is there is no match
 	 *
@@ -36,16 +51,18 @@ public interface ParameterMetadata {
 	QueryParameter<?> findQueryParameter(String name);
 
 	/**
-	 * Get the QueryParameter reference registered here under the given name.
+	 * Get the {@linkplain QueryParameter parameter reference} registered
+	 * under the given name.
 	 *
-	 * @return The registered match.  Never {@code null}
+	 * @return The registered match. Never {@code null}
 	 *
 	 * @throws IllegalArgumentException if no parameter is registered under that name
 	 */
 	QueryParameter<?> getQueryParameter(String name);
 
 	/**
-	 * Find the QueryParameter registered under the given position-label, if one.
+	 * Find the {@linkplain QueryParameter parameter reference} registered
+	 * at the given position-label, if there is one.
 	 *
 	 * @return The registered match, or {@code null} is there is no match
 	 *
@@ -54,26 +71,28 @@ public interface ParameterMetadata {
 	QueryParameter<?> findQueryParameter(int positionLabel);
 
 	/**
-	 * Get the QueryParameter reference registered here under the given position-label.
+	 * Get the {@linkplain QueryParameter parameter reference} registered
+	 * at the given position-label.
 	 *
-	 * @return The registered match.  Never {@code null}
+	 * @return The registered match. Never {@code null}
 	 *
 	 * @throws IllegalArgumentException if no parameter is registered under that position-label
 	 */
 	QueryParameter<?> getQueryParameter(int positionLabel);
 
 	/**
-	 * A deeper resolution attempt from a JPA parameter reference to Hibernate's
-	 * contract.  Generally should return the same param reference.
+	 * Obtain a {@link QueryParameter} representing the same parameter as the
+	 * given JPA-standard {@link Parameter}.
 	 *
-	 * According to the spec, only Parameter references obtained from the provider
-	 * are valid.
+	 * @apiNote According to the spec, only {@link Parameter} references obtained
+	 *          from the provider are valid.
 	 */
 	<P> QueryParameter<P> resolve(Parameter<P> param);
 
-	default <T> BindableType<T> getInferredParameterType(QueryParameter<T> parameter) {
-		return null;
-	}
+	/**
+	 * Get the type of the given parameter.
+	 */
+	<T> BindableType<T> getInferredParameterType(QueryParameter<T> parameter);
 
 	/**
 	 * Is this parameter reference registered in this collection?
@@ -85,7 +104,7 @@ public interface ParameterMetadata {
 	/**
 	 * General purpose visitation using functional
 	 */
-	void visitRegistrations(Consumer<? extends QueryParameter<?>> action);
+	void visitRegistrations(Consumer<QueryParameter<?>> action);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
@@ -116,5 +135,10 @@ public interface ParameterMetadata {
 	 */
 	boolean hasPositionalParameters();
 
+	/**
+	 * Get the position labels of all positional parameters.
+	 *
+	 * @return the position labels
+	 */
 	Set<Integer> getOrdinalParameterLabels();
 }

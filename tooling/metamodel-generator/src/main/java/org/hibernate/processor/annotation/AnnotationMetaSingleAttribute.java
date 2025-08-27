@@ -1,13 +1,17 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 
 import org.hibernate.processor.model.MetaSingleAttribute;
 import org.hibernate.processor.util.Constants;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Max Andersen
@@ -23,5 +27,10 @@ public class AnnotationMetaSingleAttribute extends AnnotationMetaAttribute imple
 	@Override
 	public final String getMetaType() {
 		return Constants.SINGULAR_ATTRIBUTE;
+	}
+
+	@Override
+	public List<AnnotationMirror> inheritedAnnotations() {
+		return new ArrayList<>(element.getAnnotationMirrors());
 	}
 }

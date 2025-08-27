@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.service.internal;
@@ -22,6 +22,7 @@ import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistrationException;
 import org.hibernate.event.service.spi.JpaBootstrapSensitive;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 
@@ -294,7 +295,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 		final T[] listenersWrite = createListenerArrayForWrite( size );
 		System.arraycopy( listenersRead, 0, listenersWrite, 0, size );
 
-		final boolean debugEnabled = log.isDebugEnabled();
+		final boolean traceEnabled = log.isTraceEnabled();
 
 		for ( DuplicationStrategy strategy : duplicationStrategies ) {
 
@@ -305,14 +306,14 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 			for ( int i = 0; i < size; i++ ) {
 				final T existingListener = listenersRead[i];
-				if ( debugEnabled ) {
-					log.debugf( "Checking incoming listener [`%s`] for match against existing listener [`%s`]",
+				if ( traceEnabled ) {
+					log.tracef( "Checking incoming listener [`%s`] for match against existing listener [`%s`]",
 							listener, existingListener );
 				}
 
 				if ( strategy.areMatch( listener,  existingListener ) ) {
-					if ( debugEnabled ) {
-						log.debugf( "Found listener match between `%s` and `%s`",
+					if ( traceEnabled ) {
+						log.tracef( "Found listener match between `%s` and `%s`",
 								listener, existingListener );
 					}
 
@@ -321,14 +322,14 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 						case ERROR:
 							throw new EventListenerRegistrationException( "Duplicate event listener found" );
 						case KEEP_ORIGINAL:
-							if ( debugEnabled ) {
-								log.debugf( "Skipping listener registration (%s) : `%s`",
+							if ( traceEnabled ) {
+								log.tracef( "Skipping listener registration (%s) : `%s`",
 										action, listener );
 							}
 							return;
 						case REPLACE_ORIGINAL:
-							if ( debugEnabled ) {
-								log.debugf( "Replacing listener registration (%s) : `%s` -> `%s`",
+							if ( traceEnabled ) {
+								log.tracef( "Replacing listener registration (%s) : `%s` -> `%s`",
 										action, existingListener, listener );
 							}
 							prepareListener( listener );
@@ -350,6 +351,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	@SuppressWarnings("unchecked")
+	@AllowReflection // Possible array types are registered in org.hibernate.graalvm.internal.StaticClassLists.typesNeedingArrayCopy
 	private T[] createListenerArrayForWrite(int len) {
 		return (T[]) Array.newInstance( eventType.baseListenerInterface(), len );
 	}

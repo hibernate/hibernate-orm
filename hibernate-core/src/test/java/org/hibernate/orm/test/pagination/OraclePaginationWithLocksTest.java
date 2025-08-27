@@ -1,31 +1,29 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.pagination;
 
-import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
-
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -58,11 +56,7 @@ public class OraclePaginationWithLocksTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete from Person" ).executeUpdate()
-
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -133,7 +127,8 @@ public class OraclePaginationWithLocksTest {
 					query.select( root );
 					final List<Person> people = session.createQuery( query )
 							.setMaxResults( 10 )
-							.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE ).setFollowOnLocking( false ) )
+							.setLockMode( LockModeType.PESSIMISTIC_WRITE )
+							.setFollowOnLocking( false )
 							.getResultList();
 					assertEquals( 10, people.size() );
 					assertSqlContainsFetch( session );
@@ -170,13 +165,47 @@ public class OraclePaginationWithLocksTest {
 	}
 
 	@Test
+	public void testHqlQueryBaseline(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			try {
+				List<Person> people = session.createQuery(
+								"select p from Person p", Person.class )
+						.setMaxResults( 10 )
+						.setLockMode( LockModeType.PESSIMISTIC_WRITE )
+						.setFollowOnLocking( false )
+						.getResultList();
+				assertEquals( 10, people.size() );
+				assertSqlContainsFetch( session );
+			}
+			catch (Exception e) {
+				throw new RuntimeException( e );
+			}
+
+			try {
+				List<Person> people = session.createQuery(
+								"select p from Person p where p.name = 'for update'", Person.class )
+						.setMaxResults( 10 )
+						.setLockMode( LockModeType.PESSIMISTIC_WRITE )
+						.setFollowOnLocking( false )
+						.getResultList();
+				assertEquals( 1, people.size() );
+				assertSqlContainsFetch( session );
+			}
+			catch (Exception e) {
+				throw new RuntimeException( e );
+			}
+		} );
+	}
+
+	@Test
 	public void testHqlQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					List<Person> people = session.createQuery(
 							"select p from Person p", Person.class )
 							.setMaxResults( 10 )
-							.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE ).setFollowOnLocking( false ) )
+							.setLockMode( LockModeType.PESSIMISTIC_WRITE )
+							.setFollowOnLocking( false )
 							.getResultList();
 					assertEquals( 10, people.size() );
 					assertSqlContainsFetch( session );
@@ -212,7 +241,8 @@ public class OraclePaginationWithLocksTest {
 					List<Person> people = session.createQuery(
 							"select p from Person p where p.name = 'for update'", Person.class )
 							.setMaxResults( 10 )
-							.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE ).setFollowOnLocking( false ) )
+							.setLockMode( LockModeType.PESSIMISTIC_WRITE )
+							.setFollowOnLocking( false )
 							.getResultList();
 					assertEquals( 1, people.size() );
 					assertSqlContainsFetch( session );

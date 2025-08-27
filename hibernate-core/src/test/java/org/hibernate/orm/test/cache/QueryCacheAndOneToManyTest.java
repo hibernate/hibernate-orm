@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cache;
@@ -48,12 +48,7 @@ public class QueryCacheAndOneToManyTest {
 
 	@AfterEach
 	public void setUp(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from MyEntity1" ).executeUpdate();
-					entityManager.createQuery( "delete from MyEntity2" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 
 	}
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util.collections;
@@ -7,7 +7,7 @@ package org.hibernate.internal.util.collections;
 public interface ReadOnlyMap<K, V> {
 
 	//To help saving memory
-	public static final ReadOnlyMap EMPTY = new EmptyReadOnlyMap();
+	ReadOnlyMap EMPTY = new EmptyReadOnlyMap();
 
 	/**
 	 * The main operation.

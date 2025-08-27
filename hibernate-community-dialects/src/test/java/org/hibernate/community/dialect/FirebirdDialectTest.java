@@ -1,10 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
 import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.orm.test.dialect.LimitQueryOptions;
 import org.hibernate.query.spi.Limit;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -29,7 +30,7 @@ class FirebirdDialectTest {
 	void insertOffsetLimitClause(int major, int minor, int offset, int limit, String expectedSql) {
 		String input = "select * from tablename t where t.cat = 5";
 		FirebirdDialect dialect = new FirebirdDialect( DatabaseVersion.make( major, minor ) );
-		String actual = dialect.getLimitHandler().processSql( input, new Limit( offset, limit ) );
+		String actual = dialect.getLimitHandler().processSql( input, -1, null, new LimitQueryOptions( new Limit( offset, limit ) ) );
 		assertEquals( expectedSql, actual );
 	}
 }

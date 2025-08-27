@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.archive.scan.internal;
@@ -11,9 +11,8 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 public class StandardScannerFactory implements ScannerFactory {
 	@Override
 	public Scanner getScanner(ArchiveDescriptorFactory archiveDescriptorFactory) {
-		if ( archiveDescriptorFactory == null ) {
-			return new StandardScanner();
-		}
-		return new StandardScanner( archiveDescriptorFactory );
+		return archiveDescriptorFactory == null
+				? new StandardScanner()
+				: new StandardScanner( archiveDescriptorFactory );
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
@@ -8,15 +8,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.query.NamedHqlQueryDefinition;
-import org.hibernate.boot.query.NamedNativeQueryDefinition;
-import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
+import org.hibernate.procedure.spi.ProcedureCallImplementor;
+import org.hibernate.query.hql.spi.SqmQueryImplementor;
+import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sqm.EntityTypeException;
 import org.hibernate.query.NamedQueryValidationException;
 import org.hibernate.query.sqm.PathElementException;
@@ -25,7 +30,6 @@ import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sqm.UnknownEntityException;
 import org.hibernate.query.sqm.UnknownPathException;
@@ -62,18 +66,75 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <R> Map<String, TypedQueryReference<R>> getNamedQueries(Class<R> resultType) {
-		final Map<String, TypedQueryReference<R>> namedQueries = new HashMap<>( sqmMementoMap.size() + sqlMementoMap.size() );
-		for ( Map.Entry<String, NamedSqmQueryMemento<?>> entry : sqmMementoMap.entrySet() ) {
+		final Map<String, TypedQueryReference<R>> namedQueries =
+				new HashMap<>( sqmMementoMap.size() + sqlMementoMap.size() );
+		for ( var entry : sqmMementoMap.entrySet() ) {
 			if ( resultType == entry.getValue().getResultType() ) {
 				namedQueries.put( entry.getKey(), (TypedQueryReference<R>) entry.getValue() );
 			}
 		}
-		for ( Map.Entry<String, NamedNativeQueryMemento<?>> entry : sqlMementoMap.entrySet() ) {
+		for ( var entry : sqlMementoMap.entrySet() ) {
 			if ( resultType == entry.getValue().getResultType() ) {
 				namedQueries.put( entry.getKey(), (TypedQueryReference<R>) entry.getValue() );
 			}
 		}
 		return namedQueries;
+	}
+
+	@Override
+	public void registerNamedQuery(String name, Query query) {
+		// use unwrap() here instead of 'instanceof' because the Query might be wrapped
+
+		// first, handle stored procedures
+		try {
+			final var unwrapped = query.unwrap( ProcedureCallImplementor.class );
+			if ( unwrapped != null ) {
+				registerCallableQueryMemento( name, unwrapped.toMemento( name ) );
+				return;
+			}
+		}
+		catch ( PersistenceException ignore ) {
+			// this means 'query' is not a ProcedureCallImplementor
+		}
+
+		// then try as a native SQL or JPQL query
+		try {
+			final var queryImplementor = query.unwrap( QueryImplementor.class );
+			if ( queryImplementor != null ) {
+				if ( queryImplementor instanceof NativeQueryImplementor<?> nativeQueryImplementor ) {
+					registerNativeQueryMemento( name, nativeQueryImplementor.toMemento( name ) );
+				}
+				else if ( queryImplementor instanceof SqmQueryImplementor<?> sqmQueryImplementor ) {
+					registerSqmQueryMemento( name, sqmQueryImplementor.toMemento( name ) );
+				}
+				else {
+					throw new AssertionFailure( "unknown QueryImplementor" );
+				}
+				return;
+			}
+		}
+		catch ( PersistenceException ignore ) {
+			// this means 'query' is not a native SQL or JPQL query
+		}
+
+		throw new PersistenceException( "Could not register named query: " + name );
+	}
+
+	@Override
+	public <R> TypedQueryReference<R> registerNamedQuery(String name, TypedQuery<R> query) {
+		if ( query instanceof NativeQueryImplementor<R> nativeQueryImplementor ) {
+			final var memento = nativeQueryImplementor.toMemento( name );
+			registerNativeQueryMemento( name, memento );
+			return memento;
+		}
+		else if ( query instanceof SqmQueryImplementor<R> sqmQueryImplementor ) {
+			final var memento = sqmQueryImplementor.toMemento( name );
+			registerSqmQueryMemento( name, memento );
+			return memento;
+		}
+		else {
+			throw new IllegalArgumentException( "unknown implementation of TypedQuery" );
+		}
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -173,23 +234,23 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 		if ( namedQuery != null ) {
 			return namedQuery;
 		}
-		final NamedHqlQueryDefinition<?> namedHqlQueryDefinition = bootMetamodel.getNamedHqlQueryMapping( registrationName );
+		final var namedHqlQueryDefinition = bootMetamodel.getNamedHqlQueryMapping( registrationName );
 		if ( namedHqlQueryDefinition != null ) {
-			final NamedSqmQueryMemento<?> resolved = namedHqlQueryDefinition.resolve( sessionFactory );
-			sqmMementoMap.put( namedHqlQueryDefinition.getRegistrationName(), resolved );
-			return resolved;
+			final var memento = namedHqlQueryDefinition.resolve( sessionFactory );
+			sqmMementoMap.put( namedHqlQueryDefinition.getRegistrationName(), memento );
+			return memento;
 		}
-		final NamedNativeQueryDefinition<?> namedNativeQueryDefinition = bootMetamodel.getNamedNativeQueryMapping( registrationName );
+		final var namedNativeQueryDefinition = bootMetamodel.getNamedNativeQueryMapping( registrationName );
 		if ( namedNativeQueryDefinition != null ) {
-			final NamedNativeQueryMemento<?> resolved = namedNativeQueryDefinition.resolve( sessionFactory );
-			sqlMementoMap.put( namedNativeQueryDefinition.getRegistrationName(), resolved );
-			return resolved;
+			final var memento = namedNativeQueryDefinition.resolve( sessionFactory );
+			sqlMementoMap.put( namedNativeQueryDefinition.getRegistrationName(), memento );
+			return memento;
 		}
-		final NamedProcedureCallDefinition namedCallableQueryDefinition = bootMetamodel.getNamedProcedureCallMapping( registrationName );
+		final var namedCallableQueryDefinition = bootMetamodel.getNamedProcedureCallMapping( registrationName );
 		if ( namedCallableQueryDefinition != null ) {
-			final NamedCallableQueryMemento resolved = namedCallableQueryDefinition.resolve( sessionFactory );
-			callableMementoMap.put( namedCallableQueryDefinition.getRegistrationName(), resolved );
-			return resolved;
+			final var memento = namedCallableQueryDefinition.resolve( sessionFactory );
+			callableMementoMap.put( namedCallableQueryDefinition.getRegistrationName(), memento );
+			return memento;
 		}
 		return null;
 	}
@@ -197,31 +258,27 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	@Override
 	public void prepare(SessionFactoryImplementor sessionFactory, Metadata bootMetamodel) {
 		bootMetamodel.visitNamedHqlQueryDefinitions(
-				namedHqlQueryDefinition -> {
-					final NamedSqmQueryMemento<?> resolved = namedHqlQueryDefinition.resolve( sessionFactory );
-					sqmMementoMap.put( namedHqlQueryDefinition.getRegistrationName(), resolved );
-				}
+				namedHqlQueryDefinition ->
+						sqmMementoMap.put( namedHqlQueryDefinition.getRegistrationName(),
+								namedHqlQueryDefinition.resolve( sessionFactory ) )
 		);
 
 		bootMetamodel.visitNamedNativeQueryDefinitions(
-				namedNativeQueryDefinition -> {
-					final NamedNativeQueryMemento<?> resolved = namedNativeQueryDefinition.resolve( sessionFactory );
-					sqlMementoMap.put( namedNativeQueryDefinition.getRegistrationName(), resolved );
-				}
+				namedNativeQueryDefinition ->
+						sqlMementoMap.put( namedNativeQueryDefinition.getRegistrationName(),
+								namedNativeQueryDefinition.resolve( sessionFactory ) )
 		);
 
 		bootMetamodel.visitNamedResultSetMappingDefinition(
-				namedResultSetMappingDefinition -> {
-					final NamedResultSetMappingMemento resolved = namedResultSetMappingDefinition.resolve( () -> sessionFactory );
-					resultSetMappingMementoMap.put( namedResultSetMappingDefinition.getRegistrationName(), resolved );
-				}
+				namedResultSetMappingDefinition ->
+						resultSetMappingMementoMap.put( namedResultSetMappingDefinition.getRegistrationName(),
+								namedResultSetMappingDefinition.resolve( () -> sessionFactory ) )
 		);
 
 		bootMetamodel.visitNamedProcedureCallDefinition(
-				namedProcedureCallDefinition -> {
-					final NamedCallableQueryMemento resolved = namedProcedureCallDefinition.resolve( sessionFactory );
-					callableMementoMap.put( namedProcedureCallDefinition.getRegistrationName(), resolved );
-				}
+				namedProcedureCallDefinition ->
+						callableMementoMap.put( namedProcedureCallDefinition.getRegistrationName(),
+								namedProcedureCallDefinition.resolve( sessionFactory ) )
 		);
 
 	}
@@ -232,18 +289,17 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 
 	@Override
 	public void validateNamedQueries(QueryEngine queryEngine) {
-		final Map<String, HibernateException> errors = checkNamedQueries( queryEngine );
+		final var errors = checkNamedQueries( queryEngine );
 		if ( !errors.isEmpty() ) {
 			int i = 0;
 			final StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
-			for ( Map.Entry<String, HibernateException> entry : errors.entrySet() ) {
+			for ( var entry : errors.entrySet() ) {
 				QUERY_MESSAGE_LOGGER.namedQueryError( entry.getKey(), entry.getValue() );
 				failingQueries.append( "\n" )
 						.append("  [").append(++i).append("] Error in query named '").append( entry.getKey() ).append("'")
 						.append(": ").append( entry.getValue().getMessage() );
 			}
-			final NamedQueryValidationException exception =
-					new NamedQueryValidationException( failingQueries.toString(), errors );
+			final var exception = new NamedQueryValidationException( failingQueries.toString(), errors );
 			errors.values().forEach( exception::addSuppressed );
 			throw exception;
 		}
@@ -253,20 +309,17 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	public Map<String, HibernateException> checkNamedQueries(QueryEngine queryEngine) {
 		Map<String,HibernateException> errors = new HashMap<>();
 
-		final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
+		final var interpretationCache = queryEngine.getInterpretationCache();
+		final var hqlTranslator = queryEngine.getHqlTranslator();
 
 		// Check named HQL queries
-		log.debugf( "Checking %s named HQL queries", sqmMementoMap.size() );
-		for ( NamedSqmQueryMemento<?> hqlMemento : sqmMementoMap.values() ) {
+		log.tracef( "Checking %s named HQL queries", sqmMementoMap.size() );
+		for ( var hqlMemento : sqmMementoMap.values() ) {
 			final String queryString = hqlMemento.getHqlString();
 			final String registrationName = hqlMemento.getRegistrationName();
 			try {
-				log.debugf( "Checking named HQL query: %s", registrationName );
-				interpretationCache.resolveHqlInterpretation(
-						queryString,
-						null,
-						queryEngine.getHqlTranslator()
-				);
+				log.tracef( "Checking named HQL query: %s", registrationName );
+				interpretationCache.resolveHqlInterpretation( queryString, null, hqlTranslator );
 			}
 			catch ( QueryException e ) {
 				errors.put( registrationName, e );
@@ -280,12 +333,12 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 		}
 
 		// Check native-sql queries
-		log.debugf( "Checking %s named SQL queries", sqlMementoMap.size() );
-		for ( NamedNativeQueryMemento<?> memento : sqlMementoMap.values() ) {
+		log.tracef( "Checking %s named SQL queries", sqlMementoMap.size() );
+		for ( var memento : sqlMementoMap.values() ) {
 			memento.validate( queryEngine );
 //			// this will throw an error if there's something wrong.
 //			try {
-//				log.debugf( "Checking named SQL query: %s", memento.getRegistrationName() );
+//				log.tracef( "Checking named SQL query: %s", memento.getRegistrationName() );
 //				// TODO : would be really nice to cache the spec on the query-def so as to not have to re-calc the hash;
 //				// currently not doable though because of the resultset-ref stuff...
 //				NativeSQLQuerySpecification spec;

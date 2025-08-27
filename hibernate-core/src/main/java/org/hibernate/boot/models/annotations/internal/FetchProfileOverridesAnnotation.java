@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -10,7 +10,7 @@ import java.util.Map;
 import org.hibernate.annotations.FetchProfileOverrides;
 import org.hibernate.boot.models.DialectOverrideAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -23,13 +23,13 @@ public class FetchProfileOverridesAnnotation
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public FetchProfileOverridesAnnotation(SourceModelBuildingContext modelContext) {
+	public FetchProfileOverridesAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public FetchProfileOverridesAnnotation(FetchProfileOverrides annotation, SourceModelBuildingContext modelContext) {
+	public FetchProfileOverridesAnnotation(FetchProfileOverrides annotation, ModelsContext modelContext) {
 		this.value = extractJdkValue(
 				annotation,
 				DialectOverrideAnnotations.FETCH_PROFILE_OVERRIDES,
@@ -43,7 +43,7 @@ public class FetchProfileOverridesAnnotation
 	 */
 	public FetchProfileOverridesAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = (org.hibernate.annotations.FetchProfileOverride[]) attributeValues.get( "value" );
 	}
 

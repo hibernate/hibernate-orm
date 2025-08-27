@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
@@ -27,10 +27,11 @@ public class MultiKeyLoadHelper {
 	}
 
 	public static JdbcMapping resolveArrayJdbcMapping(
-			BasicType<?> arrayBasicType,
 			JdbcMapping keyMapping,
-			Class<?> arrayClass,
+			Class<?> elementClass,
 			SessionFactoryImplementor sessionFactory) {
+		BasicType<?> arrayBasicType = sessionFactory.getTypeConfiguration().getBasicTypeRegistry()
+				.getRegisteredArrayType( elementClass );
 		if ( arrayBasicType != null ) {
 			return arrayBasicType;
 		}
@@ -38,12 +39,11 @@ public class MultiKeyLoadHelper {
 		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 
-		final JavaType<Object> rawArrayJavaType = javaTypeRegistry.resolveDescriptor( arrayClass );
-		if ( !(rawArrayJavaType instanceof BasicPluralJavaType ) ) {
-			throw new IllegalArgumentException( "Expecting BasicPluralJavaType for array class `" + arrayClass.getName() + "`, but got `" + rawArrayJavaType + "`" );
+		final JavaType<?> rawArrayJavaType = javaTypeRegistry.resolveArrayDescriptor( elementClass );
+		if ( !(rawArrayJavaType instanceof BasicPluralJavaType<?> arrayJavaType ) ) {
+			throw new IllegalArgumentException( "Expecting BasicPluralJavaType for array class `" + elementClass.getTypeName() + "[]`, but got `" + rawArrayJavaType + "`" );
 		}
 
-		final BasicPluralJavaType<?> arrayJavaType = (BasicPluralJavaType<?>) rawArrayJavaType;
 		//noinspection unchecked,rawtypes
 		return arrayJavaType.resolveType(
 				typeConfiguration,

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.namedquery;
@@ -9,7 +9,7 @@ import jakarta.persistence.TypedQueryReference;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.ParameterizedType;
 
@@ -23,10 +23,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Gavin King
  */
-public class AuxiliaryTest extends CompilationTest {
+@CompilationTest
+class AuxiliaryTest {
 	@Test
 	@WithClasses({ Book.class, Main.class })
-	public void test() {
+	void test() {
 		System.out.println( TestUtil.getMetaModelSourceAsString( Main.class ) );
 		System.out.println( TestUtil.getMetaModelSourceAsString( Book.class ) );
 		assertMetamodelClassGeneratedFor( Book.class );

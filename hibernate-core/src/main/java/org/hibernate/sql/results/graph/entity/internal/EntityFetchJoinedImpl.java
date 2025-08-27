@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.entity.internal;
@@ -129,9 +129,14 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 	public DomainResultAssembler<?> createAssembler(
 			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
-		return new EntityAssembler<>( getFetchedMapping().getJavaType(),
-				creationState.resolveInitializer( this, parent, this )
-						.asEntityInitializer() );
+		return buildEntityAssembler( creationState.resolveInitializer( this, parent, this ).asEntityInitializer() );
+	}
+
+	/**
+	 * Used by Hibernate Reactive
+	 */
+	protected EntityAssembler<?> buildEntityAssembler(EntityInitializer<?> entityInitializer) {
+		return new EntityAssembler<>( getFetchedMapping().getJavaType(), entityInitializer );
 	}
 
 	@Override

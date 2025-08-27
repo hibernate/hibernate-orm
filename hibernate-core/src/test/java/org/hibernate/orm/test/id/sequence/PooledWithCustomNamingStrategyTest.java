@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.sequence;
@@ -17,7 +17,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -91,7 +91,7 @@ public class PooledWithCustomNamingStrategyTest {
 
 	@BeforeAll
 	public void setUp() {
-		final DriverManagerConnectionProviderImpl provider = new DriverManagerConnectionProviderImpl();
+		final DriverManagerConnectionProvider provider = new DriverManagerConnectionProvider();
 		provider.configure( PropertiesHelper.map( Environment.getProperties() ) );
 		connectionProvider = provider;
 		try (final Connection connection = connectionProvider.getConnection();

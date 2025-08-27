@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa;
@@ -61,11 +61,7 @@ class DetachedPreviousRowStateTest {
 
 	@AfterEach
 	void cleanupData(EntityManagerFactoryScope scope) {
-		scope.inTransaction( em -> {
-			em.createQuery( "delete from LocalizedDescription l" ).executeUpdate();
-			em.createQuery( "delete from Description d" ).executeUpdate();
-			em.createQuery( "delete from Product p" ).executeUpdate();
-		} );
+		scope.getEntityManagerFactory().getSchemaManager().truncate();;
 	}
 
 	@Test

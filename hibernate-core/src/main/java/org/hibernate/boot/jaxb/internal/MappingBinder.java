@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.internal;
@@ -119,14 +119,10 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 		this(
 				serviceRegistry.getService( ClassLoaderService.class ),
 				(settingName) -> {
-					final ConfigurationService configurationService;
-					if ( serviceRegistry instanceof ServiceRegistryImplementor serviceRegistryImplementor ) {
-						configurationService = serviceRegistryImplementor.fromRegistryOrChildren( ConfigurationService.class );
-					}
-					else {
-						configurationService = serviceRegistry.getService( ConfigurationService.class );
-					}
-
+					final ConfigurationService configurationService =
+							serviceRegistry instanceof ServiceRegistryImplementor serviceRegistryImplementor
+									? serviceRegistryImplementor.fromRegistryOrChildren( ConfigurationService.class )
+									: serviceRegistry.getService( ConfigurationService.class );
 					return configurationService == null ? null : configurationService.getSettings().get( settingName );
 				}
 		);
@@ -167,8 +163,8 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 			Origin origin) {
 		final String rootElementLocalName = rootElementStartEvent.getName().getLocalPart();
 		if ( "hibernate-mapping".equals( rootElementLocalName ) ) {
-			if ( log.isDebugEnabled() ) {
-				log.debugf( "Performing JAXB binding of hbm.xml document : %s", origin.toString() );
+			if ( log.isTraceEnabled() ) {
+				log.tracef( "Performing JAXB binding of hbm.xml document: %s", origin.toString() );
 			}
 
 			final XMLEventReader hbmReader = new HbmEventReader( staxEventReader, xmlEventFactory );
@@ -185,7 +181,7 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 		else {
 			assert "entity-mappings".equals( rootElementLocalName );
 			try {
-				log.debugf( "Performing JAXB binding of orm.xml document : %s", origin.toString() );
+				log.tracef( "Performing JAXB binding of orm.xml document: %s", origin.toString() );
 
 				final XMLEventReader reader = new MappingEventReader( staxEventReader, xmlEventFactory );
 				final JaxbEntityMappingsImpl bindingRoot = jaxb(

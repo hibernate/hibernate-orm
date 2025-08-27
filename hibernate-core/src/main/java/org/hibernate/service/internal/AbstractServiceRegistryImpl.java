@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.service.internal;
@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
+import org.hibernate.Internal;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Environment;
@@ -182,9 +183,9 @@ public abstract class AbstractServiceRegistryImpl
 
 	@Override
 	public <R extends Service> @Nullable R getService(Class<R> serviceRole) {
-		//Fast-path for ClassLoaderService as it's extremely hot during bootstrap
-		//(and after bootstrap service loading performance is less interesting as it's
-		//ideally being cached by long term consumers)
+		// Fast-path for ClassLoaderService as it's extremely hot during bootstrap
+		// (and after bootstrap service loading performance is less interesting as it's
+		// ideally being cached by long-term consumers)
 		if ( ClassLoaderService.class == serviceRole ) {
 			if ( parent != null ) {
 				return parent.getService( serviceRole );
@@ -229,22 +230,22 @@ public abstract class AbstractServiceRegistryImpl
 
 	private <R extends Service> @Nullable R initializeService(ServiceBinding<R> serviceBinding) {
 		if ( log.isTraceEnabled() ) {
-			log.tracev( "Initializing service [role={0}]", serviceBinding.getServiceRole().getName() );
+			log.initializingService( serviceBinding.getServiceRole().getName() );
 		}
 
-		// PHASE 1 : create service
+		// PHASE 1: create service
 		R service = createService( serviceBinding );
 		if ( service == null ) {
 			return null;
 		}
 
-		// PHASE 2 : inject service (***potentially recursive***)
+		// PHASE 2: inject service (***potentially recursive***)
 		serviceBinding.getLifecycleOwner().injectDependencies( serviceBinding );
 
-		// PHASE 3 : configure service
+		// PHASE 3: configure service
 		serviceBinding.getLifecycleOwner().configureService( serviceBinding );
 
-		// PHASE 4 : Start service
+		// PHASE 4: Start service
 		serviceBinding.getLifecycleOwner().startService( serviceBinding );
 
 		return service;
@@ -259,8 +260,8 @@ public abstract class AbstractServiceRegistryImpl
 
 		try {
 			R service = serviceBinding.getLifecycleOwner().initiateService( serviceInitiator );
-			// IMPL NOTE : the register call here is important to avoid potential stack overflow issues
-			//		from recursive calls through #configureService
+			// IMPL NOTE: the register call here is important to avoid potential stack overflow issues
+			//		      from recursive calls through #configureService
 			if ( service != null ) {
 				registerService( serviceBinding, service );
 			}
@@ -281,24 +282,22 @@ public abstract class AbstractServiceRegistryImpl
 
 		applyInjections( service );
 
-		if ( service instanceof ServiceRegistryAwareService ) {
-			( (ServiceRegistryAwareService) service ).injectServices( this );
+		if ( service instanceof ServiceRegistryAwareService serviceRegistryAwareService ) {
+			serviceRegistryAwareService.injectServices( this );
 		}
 	}
 
 	private <R extends Service> void applyInjections(R service) {
 		try {
 			for ( Method method : service.getClass().getMethods() ) {
-				InjectService injectService = method.getAnnotation( InjectService.class );
-				if ( injectService == null ) {
-					continue;
+				final InjectService injectService = method.getAnnotation( InjectService.class );
+				if ( injectService != null ) {
+					processInjection( service, method, injectService );
 				}
-
-				processInjection( service, method, injectService );
 			}
 		}
 		catch (NullPointerException e) {
-			log.error( "NPE injecting service deps : " + service.getClass().getName() );
+			log.error( "NPE injecting service dependencies: " + service.getClass().getName() );
 		}
 	}
 
@@ -339,8 +338,8 @@ public abstract class AbstractServiceRegistryImpl
 
 	@Override
 	public <R extends Service> void startService(ServiceBinding<R> serviceBinding) {
-		if ( serviceBinding.getService() instanceof Startable ) {
-			( (Startable) serviceBinding.getService() ).start();
+		if ( serviceBinding.getService() instanceof Startable startable ) {
+			startable.start();
 		}
 	}
 
@@ -356,9 +355,8 @@ public abstract class AbstractServiceRegistryImpl
 				//threads not owning the synchronization lock can't get an invalid Service:
 				initializedServiceByRole.clear();
 				synchronized (serviceBindingList) {
-					ListIterator<ServiceBinding<?>> serviceBindingsIterator = serviceBindingList.listIterator(
-							serviceBindingList.size()
-					);
+					final ListIterator<ServiceBinding<?>> serviceBindingsIterator =
+							serviceBindingList.listIterator( serviceBindingList.size() );
 					while ( serviceBindingsIterator.hasPrevious() ) {
 						final ServiceBinding<?> serviceBinding = serviceBindingsIterator.previous();
 						serviceBinding.getLifecycleOwner().stopService( serviceBinding );
@@ -378,12 +376,12 @@ public abstract class AbstractServiceRegistryImpl
 	@Override
 	public synchronized <R extends Service> void stopService(ServiceBinding<R> binding) {
 		final Service service = binding.getService();
-		if ( service instanceof Stoppable ) {
+		if ( service instanceof Stoppable stoppable ) {
 			try {
-				( (Stoppable) service ).stop();
+				stoppable.stop();
 			}
 			catch ( Exception e ) {
-				log.unableToStopService( service.getClass(), e );
+				log.unableToStopService( binding.getServiceRole().getName(), e );
 			}
 		}
 	}
@@ -395,7 +393,7 @@ public abstract class AbstractServiceRegistryImpl
 		}
 		if ( !childRegistries.add( child ) ) {
 			log.warnf(
-					"Child ServiceRegistry [%s] was already registered; this will end badly later...",
+					"Child ServiceRegistry [%s] was already registered; this will end badly later",
 					child
 			);
 		}
@@ -409,17 +407,11 @@ public abstract class AbstractServiceRegistryImpl
 		childRegistries.remove( child );
 		if ( childRegistries.isEmpty() ) {
 			if ( autoCloseRegistry ) {
-				log.debug(
-						"Implicitly destroying ServiceRegistry on de-registration " +
-								"of all child ServiceRegistries"
-				);
+				log.trace( "Automatically destroying ServiceRegistry after deregistration of every child ServiceRegistry" );
 				destroy();
 			}
 			else {
-				log.debug(
-						"Skipping implicitly destroying ServiceRegistry on de-registration " +
-								"of all child ServiceRegistries"
-				);
+				log.trace( "Skipping destroying ServiceRegistry after deregistration of every child ServiceRegistry" );
 			}
 		}
 	}
@@ -429,18 +421,18 @@ public abstract class AbstractServiceRegistryImpl
 	 * experimentation with technologies such as GraalVM, Quarkus and Cri-O.
 	 */
 	public synchronized void resetParent(@Nullable BootstrapServiceRegistry newParent) {
-		if ( this.parent != null ) {
-			this.parent.deRegisterChild( this );
+		if ( parent != null ) {
+			parent.deRegisterChild( this );
 		}
 		if ( newParent != null ) {
 			if ( !(newParent instanceof ServiceRegistryImplementor) ) {
 				throw new IllegalArgumentException( "ServiceRegistry parent needs to implement ServiceRegistryImplementor" );
 			}
-			this.parent = (ServiceRegistryImplementor) newParent;
-			this.parent.registerChild( this );
+			parent = (ServiceRegistryImplementor) newParent;
+			parent.registerChild( this );
 		}
 		else {
-			this.parent = null;
+			parent = null;
 		}
 	}
 
@@ -472,9 +464,10 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	/**
-	 * Not intended for general use. We need the ability to stop and "reactivate" a registry to allow
-	 * experimentation with technologies such as GraalVM, Quarkus and Cri-O.
+	 * Not intended for general use. We need the ability to stop and "reactivate" a registry
+	 * to allow experimentation with technologies such as GraalVM, Quarkus and Cri-O.
 	 */
+	@Internal
 	public synchronized void reactivate() {
 		if ( !active.compareAndSet( false, true ) ) {
 			throw new IllegalStateException( "Was not inactive, could not reactivate" );

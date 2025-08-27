@@ -1,0 +1,818 @@
+[[queries]]
+== Executing queries
+
+:hql: {doc-user-guide-url}#query-language
+
+Hibernate features three complementary ways to write queries:
+
+- the _Hibernate Query Language_, an extremely powerful superset of JPQL, which abstracts most of the features of modern dialects of SQL,
+- the JPA _criteria query_ API, along with extensions, allowing almost any HQL query to be constructed programmatically via a typesafe API, and, of course
+- for when all else fails, _native SQL_ queries.
+
+In addition, Hibernate 7 provides a convenient new way to <<restrictions-and-ordering,programmatically customize>> a query before executing it.
+
+[[hql-queries]]
+=== HQL queries
+
+:hql: {doc-user-guide-url}#query-language
+
+A full discussion of the query language would require almost as much text as the rest of this Short Guide.
+Fortunately, HQL is already described in exhaustive (and exhausting) detail in {doc-query-language-url}[_A Guide to Hibernate Query Language_].
+It doesn't make sense to repeat that information here.
+// The query language is discussed in great detail below in <<query-language>>.
+
+Here we want to see how to execute a query via the `Session` or `EntityManager` API.
+The method we call depends on what kind of query it is:
+
+- _selection queries_ return a result list, but do not modify the data, but
+- _mutation queries_ modify data, and return the number of modified rows.
+
+Selection queries usually start with the keyword `select` or `from`, whereas mutation queries begin with the keyword `insert`, `update`, or `delete`.
+
+.Executing HQL
+[%breakable,cols="10,36,32,22"]
+|===
+| Kind | `Session` method | `EntityManager` method | `Query` execution method
+
+| Selection | link:{doc-javadoc-url}org/hibernate/query/QueryProducer.html#createSelectionQuery(java.lang.String,java.lang.Class)[`createSelectionQuery(String,Class)`] | `createQuery(String,Class)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
+| Mutation | link:{doc-javadoc-url}org/hibernate/query/QueryProducer.html#createMutationQuery(java.lang.String)[`createMutationQuery(String)`] | `createQuery(String)` | `executeUpdate()`
+|===
+
+So for the `Session` API we would write:
+
+[source,java]
+----
+List<Book> matchingBooks =
+        session.createSelectionQuery("from Book where title like :titleSearchPattern", Book.class)
+            .setParameter("titleSearchPattern", titleSearchPattern)
+            .getResultList();
+----
+
+Or, if we're sticking to the JPA-standard APIs:
+
+[source,java]
+----
+List<Book> matchingBooks =
+        entityManager.createQuery("select b from Book b where b.title like :titleSearchPattern", Book.class)
+            .setParameter("titleSearchPattern", titleSearchPattern)
+            .getResultList();
+----
+
+The main difference between `createSelectionQuery()` and `createQuery()` is that `createSelectionQuery()` throws an exception if passed a query string that begins with `insert`, `delete`, or `update`.
+
+We've been using link:{doc-javadoc-url}org/hibernate/query/SelectionQuery.html#getResultList()[`getResultList()`] because we've been expecting our queries to return multiple results.
+If we're expecting a query to return a single result, we can use link:{doc-javadoc-url}org/hibernate/query/SelectionQuery.html#getSingleResult()[`getSingleResult()`].
+
+[source,java]
+----
+Book book =
+        session.createSelectionQuery("from Book where isbn = ?1", Book.class)
+            .setParameter(1, isbn)
+            .getSingleResult();
+----
+
+Or, if we're expecting it to return at most one result, we can use link:{doc-javadoc-url}org/hibernate/query/SelectionQuery.html#getSingleResultOrNull()[`getSingleResultOrNull()`].
+
+[source,java]
+----
+Book bookOrNull =
+        session.createSelectionQuery("from Book where isbn = ?1", Book.class)
+            .setParameter(1, isbn)
+            .getSingleResultOrNull();
+----
+
+The difference, of course, is that `getSingleResult()` throws an exception if there's no matching row in the database, whereas `getSingleResultOrNull()` just returns `null`.
+
+To execute a `MutationQuery`, we use link:{doc-javadoc-url}org/hibernate/query/MutationQuery.html#executeUpdate()[`executeUpdate()`], which returns the number of entities affected by the `insert`, `update`, or `delete`.
+
+[[query-parameters]]
+=== Query parameters
+
+Queries are often parameterized.
+
+- In the query above, `:titleSearchPattern` is called a _named parameter_.
+- Alternatively, we may label a parameter by a number. Such a parameter is called an _ordinal parameter_.
+
+We may easily rewrite our query to use an ordinal parameter:
+
+[source,java]
+----
+List<Book> matchingBooks =
+        session.createSelectionQuery("from Book where title like ?1", Book.class)
+            .setParameter(1, titleSearchPattern)
+            .getResultList();
+----
+
+When a query has multiple parameters, named parameters tend to be easier to read, even if slightly more verbose.
+
+[WARNING]
+// .Using parameters to avoid injection attacks
+====
+_Never_ concatenate user input with HQL and pass the concatenated string to `createSelectionQuery()`.
+This would open up the possibility for an attacker to execute arbitrary code on your database server.
+====
+
+The link:{doc-javadoc-url}org/hibernate/query/CommonQueryContract.html#setParameter(java.lang.String,java.lang.Object)[`setParameter()`] methods specify arguments to query parameters.
+
+[TIP]
+====
+The two-argument forms of `setParameter()` are perfect for most purposes, but _very occasionally_ it's necessary to resolve an ambiguity in the interpretation of the argument value by explicitly specifying the <<compositional-basic-types,type>> of the argument.
+The best way to identify the type is via a reference to a JPA metamodel `Type`.
+There are two ways to do this:
+
+// - by passing a Java `Class` as a third argument to link:{doc-javadoc-url}org/hibernate/query/CommonQueryContract.html#setParameter(java.lang.String,java.lang.Object,java.lang.Class)[`setParameter()`] (this doesn't usually help very much),
+- by passing the `Type` as a third argument to link:{doc-javadoc-url}org/hibernate/query/CommonQueryContract.html#setParameter(java.lang.String,java.lang.Object,jakarta.persistence.metamodel.Type)[`setParameter()`], or
+- by packaging the argument and its `Type` in a link:{doc-javadoc-url}org/hibernate/query/TypedParameterValue.html[`TypedParameterValue`].
+
+For example, we may pass a <<static-metamodel,static metamodel>> reference to `setParameter()`.
+
+[source,java]
+----
+session.createSelectionQuery("from Person where address = :address")
+        .setParameter("address" address, Person_.address.getType())
+        .getResultList();
+----
+====
+
+[[auto-flush]]
+=== Auto-flush
+
+By default, Hibernate dirty checks entities in the persistence context before executing a query, in order to determine if there are changes which have not yet been flushed to the database, but which might affect the results of the query.
+If there are unflushed changes, then Hibernate goes ahead and executes an automatic <<flush,flush>> before executing the query.
+That way, the query won't return stale results which fail to reflect changes made to data within the current unit of work.
+But if there are many entities association with the persistence context, then this can be an expensive operation.
+
+To disable this behavior, set the link:{doc-javadoc-url}org/hibernate/query/QueryFlushMode.html[query flush mode] to `NO_FLUSH`:
+
+[source,java]
+----
+Book bookOrNull =
+        session.createSelectionQuery("from Book where isbn = ?1", Book.class)
+            .setParameter(1, isbn)
+            .setQueryFlushMode(QueryFlushMode.NO_FLUSH)
+            .getSingleResult();
+----
+
+Or, especially if you're using JPA-standard APIs, use `FlushModeType.COMMIT`:
+
+[source,java]
+----
+Book bookOrNull =
+        session.createSelectionQuery("from Book where isbn = ?1", Book.class)
+            .setParameter(1, isbn)
+            .setFlushMode(FlushModeType.COMMIT)
+            .getSingleResult();
+----
+
+[CAUTION]
+====
+Setting the flush mode to `NO_FLUSH`, `COMMIT`, or `MANUAL` might cause the query to return stale results.
+====
+
+Occasionally we need to build a query at runtime, from a set of optional conditions.
+For this, JPA offers an API which allows programmatic construction of a query.
+
+[[criteria-queries]]
+=== Criteria queries
+
+Imagine we're implementing some sort of search screen, where the user of our system is offered several different ways to constrain the query result set.
+For example, we might let them search for books by title and/or the author name.
+Of course, we could construct a HQL query by string concatenation, but this is a bit fragile, so it's quite nice to have an alternative.
+
+.HQL is implemented in terms of criteria objects
+****
+Actually, since Hibernate 6, every HQL query is compiled to a criteria query before being translated to SQL.
+This ensures that the semantics of HQL and criteria queries are identical.
+****
+
+First we need an object for building criteria queries.
+Using the JPA-standard APIs, this would be a `CriteriaBuilder`, and we get it from the `EntityManagerFactory`:
+
+[source,java]
+----
+CriteriaBuilder builder = entityManagerFactory.getCriteriaBuilder();
+----
+
+But if we have a `SessionFactory`, we get something much better, a link:{doc-javadoc-url}org/hibernate/query/criteria/HibernateCriteriaBuilder.html[`HibernateCriteriaBuilder`]:
+
+[source,java]
+----
+HibernateCriteriaBuilder builder = sessionFactory.getCriteriaBuilder();
+----
+
+The `HibernateCriteriaBuilder` extends `CriteriaBuilder` and adds many operations that JPQL doesn't have.
+
+[TIP]
+// .Getting a `HibernateCriteriaBuilder` in JPA
+====
+If you're using `EntityManagerFactory`, don't despair, you have two perfectly good ways to obtain the `HibernateCriteriaBuilder` associated with that factory.
+Either:
+
+[source,java]
+----
+HibernateCriteriaBuilder builder =
+        entityManagerFactory.unwrap(SessionFactory.class).getCriteriaBuilder();
+----
+
+Or simply:
+
+[source,java]
+----
+HibernateCriteriaBuilder builder =
+        (HibernateCriteriaBuilder) entityManagerFactory.getCriteriaBuilder();
+----
+====
+
+We're ready to create a criteria query.
+
+[[criteria-query-example]]
+[source,java]
+----
+CriteriaQuery<Book> query = builder.createQuery(Book.class);
+Root<Book> book = query.from(Book.class);
+Predicate where = builder.conjunction();
+if (titlePattern != null) {
+    where = builder.and(where, builder.like(book.get(Book_.title), titlePattern));
+}
+if (namePattern != null) {
+    Join<Book,Author> author = book.join(Book_.author);
+    where = builder.and(where, builder.like(author.get(Author_.name), namePattern));
+}
+query.select(book).where(where)
+    .orderBy(builder.asc(book.get(Book_.title)));
+----
+
+Here, as before, the classes `Book_` and `Author_` are generated by <<metamodel-generator,Hibernate Processor>>.
+
+[NOTE]
+// .Injection attacks and criteria queries
+====
+Notice that we didn't bother treating `titlePattern` and `namePattern` as parameters.
+That's safe because, by default, Hibernate automatically and transparently treats strings passed to the `CriteriaBuilder` as JDBC parameters.
+====
+
+Execution of a criteria query works almost exactly like execution of HQL.
+
+.Executing criteria queries
+[%breakable,cols="10,36,32,22"]
+|===
+| Kind | `Session` method | `EntityManager` method | `Query` execution method
+
+| Selection | link:{doc-javadoc-url}org/hibernate/query/QueryProducer.html#createSelectionQuery(jakarta.persistence.criteria.CriteriaQuery)[`createSelectionQuery(CriteriaQuery)`] | `createQuery(CriteriaQuery)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
+| Mutation | link:{doc-javadoc-url}org/hibernate/query/QueryProducer.html#createMutationQuery(jakarta.persistence.criteria.CriteriaUpdate)[`createMutationQuery(CriteriaUpdate)`] or link:{doc-javadoc-url}org/hibernate/query/QueryProducer.html#createMutationQuery(jakarta.persistence.criteria.CriteriaDelete)[`createMutationQuery(CriteriaDelete)`] |`createQuery(CriteriaUpdate)` or `createQuery(CriteriaDelete)` | `executeUpdate()`
+|===
+
+For example:
+
+[source,java]
+----
+List<Book> matchingBooks =
+        session.createSelectionQuery(query)
+            .getResultList();
+----
+
+Update, insert, and delete queries work similarly:
+
+[source,java]
+----
+CriteriaDelete<Book> delete = builder.createCriteriaDelete(Book.class);
+Root<Book> book = delete.from(Book.class);
+delete.where(builder.lt(builder.year(book.get(Book_.publicationDate)), 2000));
+session.createMutationQuery(delete).executeUpdate();
+----
+
+[TIP]
+====
+It's even possible to transform a HQL query string to a criteria query, and modify the query programmatically before execution:
+[source,java]
+----
+HibernateCriteriaBuilder builder = sessionFactory.getCriteriaBuilder();
+var query = builder.createQuery("from Book where year(publicationDate) > 2000", Book.class);
+var root = query.getRoot(0, Book.class);
+query.where(builder.like(root.get(Book_.title), builder.literal("Hibernate%")));
+query.orderBy(builder.asc(root.get(Book_.title)), builder.desc(root.get(Book_.isbn)));
+List<Book> matchingBooks = session.createSelectionQuery(query).getResultList();
+----
+This is starting to get a bit messy.
+In Hibernate 7, we can often use <<restrictions-and-ordering,`Restriction`>> instead.
+====
+
+Do you find some of the code above a bit too verbose?
+We do.
+
+[[criteria-definition]]
+=== A more comfortable way to write criteria queries
+
+Actually, what makes the JPA criteria API less ergonomic than it should be is the need to call all operations of the `CriteriaBuilder` as instance methods, instead of having them as `static` functions.
+The reason it works this way is that each JPA provider has its own implementation of `CriteriaBuilder`.
+
+// [%unbreakable]
+// [TIP]
+// ====
+The helper class link:{doc-javadoc-url}org/hibernate/query/criteria/CriteriaDefinition.html[`CriteriaDefinition`] can reduce the verbosity of criteria queries by eliminating the need to explicitly qualify calls to the methods of `CriteriaBuilder`.
+Our <<criteria-query-example,previous example>> would look like this:
+
+[source,java]
+----
+CriteriaQuery<Book> query =
+        new CriteriaDefinition(entityManagerFactory, Book.class) {{
+            select(book);
+            if (titlePattern != null) {
+                restrict(like(book.get(Book_.title), titlePattern));
+            }
+            if (namePattern != null) {
+                var author = book.join(Book_.author);
+                restrict(like(author.get(Author_.name), namePattern));
+            }
+            orderBy(asc(book.get(Book_.title)));
+        }};
+----
+// ====
+
+When all else fails, and sometimes even before that, we're left with the option of writing a query in SQL.
+
+[[native-queries]]
+=== Native SQL queries
+
+HQL is a powerful language which helps reduce the verbosity of SQL, and significantly increases portability of queries between databases.
+But ultimately, the true value of ORM is not in avoiding SQL, but in alleviating the pain involved in dealing with SQL result sets once we get them back to our Java program.
+As we said <<introduction,right up front>>, Hibernate's generated SQL is meant to be used in conjunction with handwritten SQL, and native SQL queries are one of the facilities we provide to make that easy.
+
+.Executing SQL
+[%breakable,cols="10,36,32,22"]
+|===
+| Kind | `Session` method | `EntityManager` method | `Query` execution method
+
+| Selection | link:{doc-javadoc-url}org/hibernate/query/QueryProducer.html#createNativeQuery(java.lang.String,java.lang.Class)[`createNativeQuery(String,Class)`] | `createNativeQuery(String,Class)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
+| Mutation | link:{doc-javadoc-url}org/hibernate/query/QueryProducer.html#createNativeMutationQuery(java.lang.String)[`createNativeMutationQuery(String)`] | `createNativeQuery(String)` | `executeUpdate()`
+| Stored procedure | link:{doc-javadoc-url}org/hibernate/SharedSessionContract.html#createStoredProcedureCall(java.lang.String)[`createStoredProcedureCall(String)`] | `createStoredProcedureQuery(String)` | `execute()`
+|===
+
+For the most simple cases, Hibernate can infer the shape of the result set:
+
+[source, java]
+----
+Book book =
+        session.createNativeQuery("select * from Books where isbn = ?1", Book.class)
+            .setParameter(1, isbn)
+            .getSingleResult();
+
+String title =
+        session.createNativeQuery("select title from Books where isbn = ?1", String.class)
+            .setParameter(1, isbn)
+            .getSingleResult();
+----
+
+However, in general, there isn't enough information in the JDBC `ResultSetMetaData` to infer the mapping of columns to entity objects.
+So for more complicated cases, you'll need to use the `@SqlResultSetMapping` annotation to define a named mapping, and pass the name to `createNativeQuery()`. This gets fairly messy, so we don't want to hurt your eyes by showing you an example of it.
+
+By default, Hibernate doesn't flush the session before execution of a native query.
+That's because the session is unaware of which modifications held in memory would affect the results of the query.
+
+So if there are any unflushed changes to ``Book``s, this query might return stale data:
+
+[source,java]
+----
+List<Book> books =
+        session.createNativeQuery("select * from Books", Book.class)
+            .getResultList();
+----
+
+There's two ways to ensure the persistence context is flushed before this query is executed.
+
+Either, we could simply force a flush by calling `flush()` or by setting the flush mode to `ALWAYS`:
+
+[source,java]
+----
+List<Book> books =
+        session.createNativeQuery("select * from Books", Book.class)
+            .setHibernateFlushMode(ALWAYS)
+            .getResultList();
+----
+
+Or, alternatively, we could tell Hibernate which modified state affects the results of the query:
+
+[source,java]
+----
+List<Book> books =
+        session.createNativeQuery("select * from Books", Book.class)
+            .addSynchronizedEntityClass(Book.class)
+            .getResultList();
+----
+
+[TIP]
+====
+You can call stored procedures using `createStoredProcedureQuery()` or `createStoredProcedureCall()`.
+====
+
+[[restrictions-and-ordering]]
+=== Restrictions and ordering
+
+We've already seen how the JPA <<criteria-queries,Criteria Query API>> can be used to construct a query completely programmatically.
+The Criteria API is powerful, but for the most common scenarios it's at least arguably overkill.
+The <<criteria-definition,`CriteriaDefinition`>> class helps a bit, but it doesn't completely eliminate the verbosity of programmatic query definition.
+
+In Hibernate 7, there's a new option, a very ergonomic API for programmatically adding restrictions or ordering to an existing query before executing it.
+(Actually, the ordering part of this was introduced in Hibernate 6.5.)
+This new API:
+
+- isn't part of the Criteria Query API, and so we don't need a `CriteriaQuery` object to make use of it,
+- _does_ make use of the JPA <<metamodel-generator,static metamodel>> for type safety,
+- works with both HQL and Criteria queries, and
+- is optimized for the case of a query which returns its single root entity.
+
+[source,java]
+----
+var selection =
+        SelectionSpecification.create(Book.class,
+            // an optional base query, written in HQL:
+                "from Book where year(publicationDate) > 2000");
+
+// add programmatic restrictions:
+if (titlePattern != null)
+    selection.restrict(Restriction.like(Book_.title, namePattern));
+if (isbns != null && !isbns.isEmpty())
+    selection.restrict(Restriction.in(Book_.isbn, isbns));
+
+// add programmatic ordering:
+if (orderByTitle) selection.sort(Order.asc(Book_.title));
+if (orderByIsbn) selection.sort(Order.asc(Book_.isbn));
+
+// add programmatic association fetching:
+if (fetchPublisher) selection.fetch(Path.from(Book.class).to(Book_.publisher));
+
+// execute the query in the given session:
+List<Book> matchingBooks = selection.createQuery(session).getResultList();
+----
+
+Notice that:
+
+- The link:{doc-javadoc-url}org/hibernate/query/restriction/Restriction.html[`Restriction`] interface has static methods for constructing a variety of different kinds of restriction in a completely typesafe way.
+- Similarly, the link:{doc-javadoc-url}org/hibernate/query/Order.html[`Order`] interface has a variety of static methods for constructing different kinds of sorting criteria.
+
+We need the following methods of link:{doc-javadoc-url}org/hibernate/query/programmatic/SelectionSpecification.html[`SelectionSpecification`]:
+
+.Methods for query restriction and ordering
+[%breakable,cols="20,~]
+|===
+| Method name | Purpose
+
+| `restrict()` | Add a `Restriction` on the query results
+| `sort()`, `resort()` | Specify how the query results should be ordered
+| `fetch()` | Add a fetched association `Path`
+| `augment()` | Add a custom function which directly manipulates the select query
+|===
+
+Two of these operations are also available for a link:{doc-javadoc-url}org/hibernate/query/programmatic/MutationSpecification.html[`MutationSpecification`]:
+
+.Methods for mutation restriction
+[%breakable,cols="20,~]
+|===
+| Method name | Purpose
+
+| `restrict()` | Add a `Restriction` on the records to be updated
+| `augment()` | Add a custom function which directly manipulates the update or delete query
+|===
+
+Alternatively, `Restriction` and `Order` can be used with <<paging-and-ordering,generated query or finder methods>>, and even with link:{doc-data-repositories-url}[Jakarta Data repositories].
+
+The interface link:{doc-javadoc-url}org/hibernate/query/restriction/Path.html[`Path`] may be used to express restrictions on fields of an embedded or associated entity class.
+It may even be used for association fetching.
+
+[source,java]
+----
+List<Book> booksForPublisher =
+        SelectionSpecification.create(Book.class)
+                .restrict(Path.from(Book.class).to(Book_.publisher).to(Publisher_.name)
+                                .equalTo(publisherName))
+                .fetch(Path.from(Book.class).to(Book_.publisher))
+                .createQuery(session)
+                .getResultList();
+----
+
+Specifications aren't for everything, however.
+
+[NOTE]
+====
+`SelectionSpecification` (similar to its friend `MutationSpecification`) may be used in cases where a query returns a single "root" entity, possibly with some fetched associations.
+It's not useful in cases where a query should return multiple entities, a projection of entity fields, or an aggregation.
+For such cases, the full Criteria API is appropriate.
+====
+
+Finally, the `augment()` method deserves its own subsection.
+
+[[augmentation]]
+=== Augmentation
+
+When `Restriction`, `Path`, and `Order` aren't expressive enough, we can _augment_ the query by manipulating its representation as a criteria:
+
+[source,java]
+----
+var books =
+        SelectionSpecification.create(Book.class)
+              .augment((builder, query, book) ->
+                      // augment the query via JPA Criteria API
+                      query.where(builder.like(book.get(Book_.title), titlePattern)))
+                          .orderBy(builder.asc(book.get(Book_.isbn)))
+              .createQuery(session)
+              .getResultList();
+----
+
+For really advanced cases, `augment()` works quite nicely with <<criteria-definition,`CriteriaDefinition`>>.
+
+[source,java]
+----
+var books =
+        SelectionSpecification.create(Book.class)
+              .augment((builder, query, book) ->
+                  // eliminate explicit references to 'builder'
+                  new CriteriaDefinition<>(query) {{
+                      where(like(entity.get(BasicEntity_.title), titlePattern),
+                            greaterThan(book.get(Book_.pages), minPages));
+                      orderBy(asc(book.get(Book_.isbn)));
+                  }}
+              )
+              .createQuery(session)
+              .getResultList();
+----
+
+However, we emphasize that this API shines in cases where complex manipulations are _not_ required.
+For complicated queries involving multiple entities, or with aggregation and projection, you're best off heading straight to the `CriteriaBuilder`.
+
+Programmatic restrictions, and especially programmatic ordering, are often used together with pagination.
+
+[[pagination]]
+=== Limits and pagination
+
+If a query might return more results than we can handle at one time, we may specify:
+
+- a _limit_ on the maximum number of rows returned, and,
+- optionally, an _offset_, the first row of an ordered result set to return.
+
+[TIP]
+====
+The offset is used to paginate query results.
+====
+
+There's two ways to add a limit or offset to a HQL or native SQL query:
+
+- using the syntax of the query language itself, for example, `offset 10 rows fetch next 20 rows only`, or
+- using the methods `setFirstResult()` and `setMaxResults()` of the `SelectionQuery` interface.
+
+If the limit or offset is parameterized, the second option is simpler.
+For example, this:
+
+[source,java]
+----
+List<Book> books =
+        session.createSelectionQuery("from Book where title like ?1 order by title", Book.class)
+            .setParameter(1, titlePattern)
+            .setMaxResults(MAX_RESULTS)
+            .getResultList();
+----
+
+is simpler than:
+
+[source,java]
+----
+// a worse way to do pagination
+List<Book> books =
+        session.createSelectionQuery("from Book where title like ?1 order by title fetch first ?2 rows only", Book.class)
+            .setParameter(1, titlePattern)
+            .setParameter(2, MAX_RESULTS)
+            .getResultList();
+----
+
+Hibernate's `SelectionQuery` has a slightly different way to paginate the query results:
+
+[source,java]
+----
+List<Book> books =
+        session.createSelectionQuery("from Book where title like ?1 order by title", Book.class)
+            .setParameter(1, titlePattern)
+            .setPage(Page.first(MAX_RESULTS))
+            .getResultList();
+----
+
+The `getResultCount()` method is useful for displaying the number of pages of results:
+
+[source,java]
+----
+SelectionQuery<Book> query =
+        session.createSelectionQuery("from Book where title like ?1 order by title", Book.class)
+            .setParameter(1, titlePattern);
+long results = query.getResultCount();
+long pages = results / MAX_RESULTS + (results % MAX_RESULTS == 0 ? 0 : 1);
+List<Book> books = query.setMaxResults(MAX_RESULTS).getResultList();
+----
+
+.Methods for query limits, pagination, and ordering
+[%breakable,cols="30,~,^15"]
+|===
+| Method name | Purpose | JPA-standard
+
+| `setMaxResults()` | Set a limit on the number of results returned by a query | &#10004;
+| `setFirstResult()` | Set an offset on the results returned by a query | &#10004;
+| `setPage()` | Set the limit and offset by specifying a `Page` object | &#10006;
+| `getResultCount()` | Determine how many results the query would return in the absence of any limit or offset | &#10006;
+|===
+
+It's quite common for pagination to be combined with the need to order query results by a field that's determined at runtime.
+The `Order` class we just met <<restrictions-and-ordering,above>> provides the ability to specify that the query results should be ordered by one or more fields of the entity type returned by the query:
+
+[[query-order-example]]
+[source,java]
+----
+List<Book> books =
+        session.createSelectionQuery("from Book where title like ?1", Book.class)
+            .setParameter(1, titlePattern)
+            .setOrder(List.of(Order.asc(Book_.title), Order.asc(Book_.isbn)))
+            .setMaxResults(MAX_RESULTS)
+            .getResultList();
+----
+
+The approach to pagination we've just seen is sometimes called _offset-based pagination_.
+Since Hibernate 6.5, there's an alternative approach, which offers some advantages, though it's a little more difficult to use.
+
+[[key-based-pagination]]
+=== Key-based pagination
+
+_Key-based pagination_ aims to reduce the likelihood of missed or duplicate results when data is modified between page requests.
+It's most easily illustrated with an example:
+
+[source,java]
+----
+String QUERY = "from Book where publicationDate > :minDate";
+
+// obtain the first page of results
+KeyedResultList<Book> first =
+        session.createSelectionQuery(QUERY, Book.class)
+                .setParameter("minDate", minDate)
+                .getKeyedResultList(Page.first(25)
+                        .keyedBy(Order.asc(Book_.isbn)));
+List<Book> firstPage = first.getResultList();
+...
+
+if (!firstPage.isLastPage()) {
+    // obtain the second page of results
+    KeyedResultList<Book> second =
+            session.createSelectionQuery(QUERY, Book.class)
+                    .setParameter("minDate", minDate))
+                    .getKeyedResultList(firstPage.getNextPage());
+    List<Book> secondPage = second.getResultList();
+    ...
+}
+----
+
+The "key" in key-based pagination refers to a unique key of the result set which determines a total order on the query results.
+In this example, `Book.isbn` is the key.
+
+Since this code is a little bit fiddly, key-based pagination works best with <<key-based-paging,generated query or finder methods>>.
+
+[[projection-lists]]
+=== Representing projection lists
+
+A _projection list_ is the list of things that a query returns, that is, the list of expressions in the `select` clause.
+Since Java has no tuple types, representing query projection lists in Java has always been a problem for JPA and Hibernate.
+Traditionally, we've just used `Object[]` most of the time:
+
+[source,java]
+----
+var results =
+        session.createSelectionQuery("select isbn, title from Book", Object[].class)
+            .getResultList();
+
+for (var result : results) {
+    var isbn = (String) result[0];
+    var title = (String) result[1];
+    ...
+}
+----
+
+This is really a bit ugly.
+Java's `record` types now offer an interesting alternative:
+
+[source,java]
+----
+record IsbnTitle(String isbn, String title) {}
+
+var results =
+        session.createSelectionQuery("select isbn, title from Book", IsbnTitle.class)
+            .getResultList();
+
+for (var result : results) {
+    var isbn = result.isbn();
+    var title = result.title();
+    ...
+}
+----
+Notice that we're able to declare the `record` right before the line which executes the query.
+
+This works just as well with queries written in SQL:
+
+[source,java]
+----
+record BookInfo(String isbn, String title, int pages) {}
+
+List<BookInfo> resultList =
+        session.createNativeQuery("select title, isbn, pages from Book", BookInfo.class)
+            .getResultList();
+----
+
+Now, this approach is only _superficially_ more typesafe, since the query itself is not checked statically, and so we can't say it's objectively better.
+But perhaps you find it more aesthetically pleasing.
+And if we're going to be passing query results around the system, the use of a `record` type is _much_ better.
+
+The criteria query API offers a much more satisfying solution to the problem.
+Consider the following code:
+
+[source,java]
+----
+var builder = sessionFactory.getCriteriaBuilder();
+var query = builder.createTupleQuery();
+var book = query.from(Book.class);
+var bookTitle = book.get(Book_.title);
+var bookIsbn = book.get(Book_.isbn);
+var bookPrice = book.get(Book_.price);
+query.select(builder.tuple(bookTitle, bookIsbn, bookPrice));
+var resultList = session.createSelectionQuery(query).getResultList();
+for (var result : resultList) {
+    String title = result.get(bookTitle);
+    String isbn = result.get(bookIsbn);
+    BigDecimal price = result.get(bookPrice);
+    ...
+}
+----
+
+This code is manifestly completely typesafe, and much better than we can hope to do with HQL.
+
+[[named-queries]]
+=== Named queries
+
+The `@NamedQuery` annotation lets us define a HQL query that is compiled and checked as part of the bootstrap process.
+This means we find out about errors in our queries earlier, instead of waiting until the query is actually executed.
+We can place the `@NamedQuery` annotation on any class, even on an entity class.
+
+[source,java]
+----
+@NamedQuery(name = "10BooksByTitle",
+            query = "from Book where title like :titlePattern order by title fetch first 10 rows only")
+class BookQueries {}
+----
+
+We have to make sure that the class with the `@NamedQuery` annotation will be scanned by Hibernate, either:
+
+- by adding `<class>org.hibernate.example.BookQueries</class>` to `persistence.xml`, or
+- by calling `persistenceConfiguration.managedClass(BookQueries.class)`.
+
+[TIP]
+====
+Unfortunately, JPA's `@NamedQuery` annotation can't be placed on a package descriptor.
+Therefore, Hibernate provides a very similar annotation, `@org.hibernate.annotations.NamedQuery` which _can_ be specified at the package level.
+If we declare a named query at the package level, we must call:
+[source,java]
+----
+configuration.addPackage("org.hibernate.example")
+----
+so that Hibernate knows where to find it.
+====
+
+The `@NamedNativeQuery` annotation lets us do the same for native SQL queries.
+There's much less advantage to using `@NamedNativeQuery`, because there is very little that Hibernate can do to validate the correctness of a query written in the native SQL dialect of your database.
+
+.Executing named queries
+[%breakable,cols="10,36,32,22"]
+|===
+| Kind | `Session` method | `EntityManager` method | `Query` execution method
+
+| Selection | `createNamedSelectionQuery(String,Class)` | `createNamedQuery(TypedQueryReference)`, `createNamedQuery(String,Class)` | `getResultList()`, `getSingleResult()`, `getSingleResultOrNull()`
+| Mutation | `createNamedMutationQuery(String)` | `createNamedQuery(TypedQueryReference)`, `createNamedQuery(String)` | `executeUpdate()`
+|===
+
+We execute our named query like this:
+
+[source,java]
+----
+List<Book> books =
+        entityManager.createQuery(BookQueries_._10BooksByTitle_)
+            .setParameter("titlePattern", titlePattern)
+            .getResultList()
+----
+
+Here, `BookQueries_.\_10BooksByTitle_` is an element of the JPA static metamodel of type `TypedQueryReference<Book>`, generated by Hibernate Processor.
+
+Note that the code which executes the named query is not aware of whether the query was written in HQL or in native SQL, making it slightly easier to change and optimize the query later.
+
+It's nice to have our queries checked at startup time.
+It's even better to have them checked at compile time.
+In <<organizing-persistence>>, we mentioned that the Hibernate Processor can do that for us, with the help of the `@CheckHQL` annotation, and we presented that as a reason to use `@NamedQuery`.
+
+[TIP]
+====
+:query-validator: https://github.com/hibernate/query-validator/
+
+Actually, Hibernate even has a separate <<query-validator,Query Validator>> capable of performing compile-time validation of HQL query strings that occur as arguments to `createQuery()` and friends.
+If we use the Query Validator, there's not much advantage to the use of named queries.
+====
+
+We're going to learn more about Hibernate Processor in the next chapter.

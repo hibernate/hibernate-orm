@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal;
@@ -58,7 +58,7 @@ public class ExpressionDomainResultProducer implements DomainResultProducer<Obje
 				expression,
 				expression.getExpressionType().getSingleJdbcMapping().getJdbcJavaType(),
 				null,
-				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 	}
 }

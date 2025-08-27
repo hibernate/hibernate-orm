@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -244,7 +244,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		if ( hasContainingClass() ) {
 			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
 			if ( lazyInitializer != null ) {
-				return lazyInitializer.getIdentifier();
+				return lazyInitializer.getInternalIdentifier();
 			}
 			final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
 			final Object[] propertyValues = new Object[embeddableTypeDescriptor.getNumberOfAttributeMappings()];
@@ -264,24 +264,19 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 				else if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping
 						&& !( identifierValueMapper.getAttributeMapping( i ) instanceof ToOneAttributeMapping ) ) {
 					final Object toOne = getIfMerged( o, mergeContext );
-					final ModelPart targetPart = toOneAttributeMapping.getForeignKeyDescriptor().getPart(
-							toOneAttributeMapping.getSideNature().inverse()
-					);
-					if ( targetPart.isEntityIdentifierMapping() ) {
-						propertyValues[i] = ( (EntityIdentifierMapping) targetPart ).getIdentifier( toOne, mergeContext );
-					}
-					else {
-						propertyValues[i] = toOne;
-					}
+					final ModelPart targetPart =
+							toOneAttributeMapping.getForeignKeyDescriptor()
+									.getPart( toOneAttributeMapping.getSideNature().inverse() );
+					propertyValues[i] =
+							targetPart.isEntityIdentifierMapping()
+									? ((EntityIdentifierMapping) targetPart).getIdentifier( toOne, mergeContext )
+									: toOne;
 				}
 				else {
 					propertyValues[i] = o;
 				}
 			}
-			return identifierValueMapper.getRepresentationStrategy().getInstantiator().instantiate(
-					() -> propertyValues,
-					sessionFactory
-			);
+			return identifierValueMapper.getRepresentationStrategy().getInstantiator().instantiate( () -> propertyValues );
 		}
 		else {
 			return entity;
@@ -306,8 +301,8 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			final AttributeMapping attribute = embeddableTypeDescriptor.getAttributeMapping( i );
 			final AttributeMapping mappedIdAttributeMapping = identifierValueMapper.getAttributeMapping( i );
 			Object o = mappedIdAttributeMapping.getValue( id );
-			if ( attribute instanceof ToOneAttributeMapping && !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
-				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attribute;
+			if ( attribute instanceof ToOneAttributeMapping toOneAttributeMapping
+					&& !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
 				final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType().getEntityPersister();
 				final EntityKey entityKey = session.generateEntityKey( o, entityPersister );
 				final PersistenceContext persistenceContext = session.getPersistenceContext();

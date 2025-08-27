@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.expression;
@@ -27,12 +27,12 @@ public class Distinct implements Expression, SqlExpressible, SqlAstNode {
 
 	@Override
 	public JdbcMapping getJdbcMapping() {
-		if ( expression instanceof SqlExpressible) {
-			return ( (SqlExpressible) expression ).getJdbcMapping();
+		if ( expression instanceof SqlExpressible sqlExpressible) {
+			return sqlExpressible.getJdbcMapping();
 		}
 
-		if ( getExpressionType() instanceof SqlExpressible) {
-			return ( (SqlExpressible) getExpressionType() ).getJdbcMapping();
+		if ( getExpressionType() instanceof SqlExpressible sqlExpressible ) {
+			return sqlExpressible.getJdbcMapping();
 		}
 
 		if ( getExpressionType() != null ) {

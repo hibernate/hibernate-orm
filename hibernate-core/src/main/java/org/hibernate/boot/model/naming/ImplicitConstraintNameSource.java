@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.naming;
@@ -11,8 +11,17 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
-public interface ImplicitConstraintNameSource extends ImplicitNameSource {
+public sealed interface ImplicitConstraintNameSource
+		extends ImplicitNameSource
+		permits ImplicitIndexNameSource, ImplicitUniqueKeyNameSource, ImplicitForeignKeyNameSource {
 	Identifier getTableName();
 	List<Identifier> getColumnNames();
 	Identifier getUserProvidedIdentifier();
+	Kind kind();
+
+	enum Kind {
+		FOREIGN_KEY,
+		UNIQUE_KEY,
+		INDEX
+	}
 }

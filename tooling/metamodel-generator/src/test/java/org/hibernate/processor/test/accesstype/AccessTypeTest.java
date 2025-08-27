@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.accesstype;
@@ -9,7 +9,7 @@ import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 import org.hibernate.processor.test.util.WithMappingFiles;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertAbsenceOfFieldInMetamodelFor;
 import static org.hibernate.processor.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
@@ -20,6 +20,7 @@ import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldIn
  * @author Hardy Ferentschik
  */
 // TODO - differentiate needed classes per test better. Right now all test classes are processed for each test (HF)
+@CompilationTest
 @WithClasses({
 		Address.class,
 		Area.class,
@@ -44,36 +45,36 @@ import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldIn
 		User.class
 })
 @WithMappingFiles("orm.xml")
-public class AccessTypeTest extends CompilationTest {
+class AccessTypeTest {
 
 	@Test
-	public void testXmlConfiguredEntityGenerated() {
+	void testXmlConfiguredEntityGenerated() {
 		TestUtil.assertMetamodelClassGeneratedFor( Order.class );
 	}
 
 	@Test
-	public void testExcludeTransientFieldAndStatic() {
+	void testExcludeTransientFieldAndStatic() {
 		TestUtil.assertAbsenceOfFieldInMetamodelFor( Product.class, "nonPersistent" );
 		TestUtil.assertAbsenceOfFieldInMetamodelFor( Product.class, "nonPersistent2" );
 	}
 
 	@Test
-	public void testDefaultAccessTypeOnEntity() {
+	void testDefaultAccessTypeOnEntity() {
 		TestUtil.assertAbsenceOfFieldInMetamodelFor( User.class, "nonPersistent" );
 	}
 
 	@Test
-	public void testDefaultAccessTypeForSubclassOfEntity() {
+	void testDefaultAccessTypeForSubclassOfEntity() {
 		TestUtil.assertAbsenceOfFieldInMetamodelFor( Customer.class, "nonPersistent" );
 	}
 
 	@Test
-	public void testDefaultAccessTypeForEmbeddable() {
+	void testDefaultAccessTypeForEmbeddable() {
 		TestUtil.assertAbsenceOfFieldInMetamodelFor( Detail.class, "nonPersistent" );
 	}
 
 	@Test
-	public void testInheritedAccessTypeForEmbeddable() {
+	void testInheritedAccessTypeForEmbeddable() {
 		TestUtil.assertAbsenceOfFieldInMetamodelFor( Country.class, "nonPersistent" );
 		assertAbsenceOfFieldInMetamodelFor(
 				Pet.class, "nonPersistent", "Collection of embeddable not taken care of"
@@ -82,7 +83,7 @@ public class AccessTypeTest extends CompilationTest {
 
 	@Test
 	@TestForIssue(jiraKey = " METAGEN-81")
-	public void testAccessTypeForEmbeddableDeterminedByIdAnnotationInRootEntity() {
+	void testAccessTypeForEmbeddableDeterminedByIdAnnotationInRootEntity() {
 		assertPresenceOfFieldInMetamodelFor(
 				Hotel.class, "webDomainExpert",
 				"Access type should be inherited position of the @Id field annotation in the root entity"
@@ -90,12 +91,12 @@ public class AccessTypeTest extends CompilationTest {
 	}
 
 	@Test
-	public void testDefaultAccessTypeForMappedSuperclass() {
+	void testDefaultAccessTypeForMappedSuperclass() {
 		TestUtil.assertAbsenceOfFieldInMetamodelFor( Detail.class, "volume" );
 	}
 
 	@Test
-	public void testExplicitAccessTypeAndDefaultFromRootEntity() {
+	void testExplicitAccessTypeAndDefaultFromRootEntity() {
 		assertAbsenceOfFieldInMetamodelFor(
 				LivingBeing.class,
 				"nonPersistent",
@@ -110,7 +111,7 @@ public class AccessTypeTest extends CompilationTest {
 	}
 
 	@Test
-	public void testMemberAccessType() {
+	void testMemberAccessType() {
 		assertPresenceOfFieldInMetamodelFor( Customer.class, "goodPayer", "access type overriding" );
 		assertAttributeTypeInMetaModelFor( Customer.class, "goodPayer", Boolean.class, "access type overriding" );
 	}

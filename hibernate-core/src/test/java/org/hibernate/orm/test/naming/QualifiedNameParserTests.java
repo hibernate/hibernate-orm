@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.naming;
@@ -75,7 +75,7 @@ public class QualifiedNameParserTests {
 
 	@Test
 	void testIndividualQuotes() {
-		final String name = "`schema2`.`catalog2`.`tbl`";
+		final String name = "`catalog2`.`schema2`.`tbl`";
 		test(
 				name,
 				NO_CATALOG,

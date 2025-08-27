@@ -1,10 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -17,9 +18,8 @@ import java.util.function.Predicate;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.compare.ComparableComparator;
-import org.hibernate.query.BindableType;
+import org.hibernate.type.BindableType;
 import org.hibernate.query.ParameterLabelException;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.UnknownParameterException;
@@ -30,6 +30,11 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
 
 import jakarta.persistence.Parameter;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableSet;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
  * Encapsulates metadata about parameters encountered within a query.
@@ -61,7 +66,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 		Map<Integer, QueryParameterImplementor<?>> tempQueryParametersByPosition = null;
 		// if we have any ordinal parameters, make sure the numbers
 		// start with 1 and are contiguous
-		for ( QueryParameterImplementor<?> queryParameter : queryParameters.keySet() ) {
+		for ( var queryParameter : queryParameters.keySet() ) {
 			if ( queryParameter.getPosition() != null ) {
 				if ( tempQueryParametersByPosition == null ) {
 					tempQueryParametersByPosition = new HashMap<>();
@@ -87,29 +92,29 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 	public ParameterMetadataImpl(
 			Map<Integer, QueryParameterImplementor<?>> positionalQueryParameters,
 			Map<String, QueryParameterImplementor<?>> namedQueryParameters) {
-		assert !CollectionHelper.isEmpty( positionalQueryParameters ) || !CollectionHelper.isEmpty( namedQueryParameters );
+		assert !isEmpty( positionalQueryParameters ) || !isEmpty( namedQueryParameters );
 		this.queryParameters = new LinkedHashMap<>();
 		Map<String, QueryParameterImplementor<?>> tempQueryParametersByName = null;
 		Map<Integer, QueryParameterImplementor<?>> tempQueryParametersByPosition = null;
 		if ( positionalQueryParameters != null ) {
-			for ( QueryParameterImplementor<?> value : positionalQueryParameters.values() ) {
-				this.queryParameters.put( value, Collections.emptyList() );
+			for ( var queryParameter : positionalQueryParameters.values() ) {
+				this.queryParameters.put( queryParameter, emptyList() );
 				if ( tempQueryParametersByPosition == null ) {
 					tempQueryParametersByPosition = new HashMap<>();
 				}
-				tempQueryParametersByPosition.put( value.getPosition(), value );
+				tempQueryParametersByPosition.put( queryParameter.getPosition(), queryParameter );
 			}
 			if ( tempQueryParametersByPosition != null ) {
 				verifyOrdinalParamLabels( tempQueryParametersByPosition.keySet() );
 			}
 		}
 		if ( namedQueryParameters != null ) {
-			for ( QueryParameterImplementor<?> value : namedQueryParameters.values() ) {
+			for ( var queryParameter : namedQueryParameters.values() ) {
 				if ( tempQueryParametersByName == null ) {
 					tempQueryParametersByName = new HashMap<>();
 				}
-				this.queryParameters.put( value, Collections.emptyList() );
-				tempQueryParametersByName.put( value.getName(), value );
+				this.queryParameters.put( queryParameter, emptyList() );
+				tempQueryParametersByName.put( queryParameter.getName(), queryParameter );
 			}
 		}
 		this.queryParametersByPosition = tempQueryParametersByPosition;
@@ -118,44 +123,44 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 	}
 
 	private static void verifyOrdinalParamLabels(Set<Integer> labels) {
-		if ( CollectionHelper.isEmpty( labels ) ) {
-			return;
-		}
+		if ( !isEmpty( labels ) ) {
+			final List<Integer> sortedLabels = new ArrayList<>( labels );
+			sortedLabels.sort( ComparableComparator.instance() );
 
-		final List<Integer> sortedLabels = new ArrayList<>( labels );
-		sortedLabels.sort( ComparableComparator.instance() );
-
-		int lastPosition = -1;
-		for ( Integer sortedPosition : sortedLabels ) {
-			if ( lastPosition == -1 ) {
-				if ( sortedPosition != 1 ) {
-					throw new ParameterLabelException(
-							String.format(
-									Locale.ROOT,
-									"Ordinal parameter labels start from '?%s' (ordinal parameters must be labelled from '?1')",
-									sortedPosition
-							)
-					);
+			int lastPosition = -1;
+			for ( Integer sortedPosition : sortedLabels ) {
+				if ( lastPosition == -1 ) {
+					if ( sortedPosition != 1 ) {
+						throw new ParameterLabelException(
+								String.format(
+										Locale.ROOT,
+										"Ordinal parameter labels start from '?%s' (ordinal parameters must be labelled from '?1')",
+										sortedPosition
+								)
+						);
+					}
 				}
-
+				else {
+					if ( sortedPosition != lastPosition + 1 ) {
+						throw new ParameterLabelException(
+								String.format(
+										Locale.ROOT,
+										"Gap between '?%s' and '?%s' in ordinal parameter labels [%s] (ordinal parameters must be labelled sequentially)",
+										lastPosition,
+										sortedPosition,
+										StringHelper.join( ",", sortedLabels.iterator() )
+								)
+						);
+					}
+				}
 				lastPosition = sortedPosition;
-				continue;
 			}
-
-			if ( sortedPosition != lastPosition + 1 ) {
-				throw new ParameterLabelException(
-						String.format(
-								Locale.ROOT,
-								"Gap between '?%s' and '?%s' in ordinal parameter labels [%s] (ordinal parameters must be labelled sequentially)",
-								lastPosition,
-								sortedPosition,
-								StringHelper.join( ",", sortedLabels.iterator() )
-						)
-				);
-			}
-
-			lastPosition = sortedPosition;
 		}
+	}
+
+	@Override
+	public Collection<QueryParameter<?>> getParameters() {
+		return unmodifiableSet( queryParameters.keySet() );
 	}
 
 	@Override
@@ -172,14 +177,15 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 
 	@Override
 	public <T> BindableType<T> getInferredParameterType(QueryParameter<T> parameter) {
-		final List<SqmParameter<?>> sqmParameters = queryParameters.get( parameter );
+		final var sqmParameters = queryParameters.get( (QueryParameterImplementor<T>) parameter );
 		if ( sqmParameters == null || sqmParameters.isEmpty() ) {
 			return null;
 		}
-		for ( SqmParameter<?> sqmParameter : sqmParameters ) {
-			final BindableType<T> nodeType = (BindableType<T>) sqmParameter.getNodeType();
+		for ( var sqmParameter : sqmParameters ) {
+			final var nodeType = sqmParameter.getNodeType();
 			if ( nodeType != null ) {
-				return nodeType;
+				//noinspection unchecked
+				return (BindableType<T>) nodeType;
 			}
 		}
 		return null;
@@ -192,18 +198,18 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 	}
 
 	@Override
-	public void visitParameters(Consumer<QueryParameterImplementor<?>> consumer) {
+	public void visitParameters(Consumer<QueryParameter<?>> consumer) {
 		queryParameters.keySet().forEach( consumer );
 	}
 
 	@Override
 	public Set<QueryParameterImplementor<?>> getRegistrations() {
-		return Collections.unmodifiableSet( queryParameters.keySet() );
+		return unmodifiableSet( queryParameters.keySet() );
 	}
 
 	@Override
 	public boolean hasAnyMatching(Predicate<QueryParameterImplementor<?>> filter) {
-		for ( QueryParameterImplementor<?> queryParameter : queryParameters.keySet() ) {
+		for ( var queryParameter : queryParameters.keySet() ) {
 			if ( filter.test( queryParameter ) ) {
 				return true;
 			}
@@ -214,8 +220,8 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 
 	@Override
 	public <P> QueryParameterImplementor<P> resolve(Parameter<P> param) {
-		if ( param instanceof QueryParameterImplementor ) {
-			return (QueryParameterImplementor<P>) param;
+		if ( param instanceof QueryParameterImplementor<P> parameterImplementor ) {
+			return parameterImplementor;
 		}
 
 		final String errorMessage = "Could not resolve jakarta.persistence.Parameter '" + param + "' to org.hibernate.query.QueryParameter";
@@ -236,10 +242,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 
 	@Override
 	public Set<String> getNamedParameterNames() {
-		if ( queryParametersByName == null ) {
-			return Collections.EMPTY_SET;
-		}
-		return queryParametersByName.keySet();
+		return queryParametersByName == null ? emptySet() : queryParametersByName.keySet();
 	}
 
 	@Override
@@ -252,22 +255,22 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 
 	@Override
 	public QueryParameterImplementor<?> getQueryParameter(String name) {
-		final QueryParameterImplementor<?> parameter = findQueryParameter( name );
-
+		final var parameter = findQueryParameter( name );
 		if ( parameter != null ) {
 			return parameter;
 		}
-
-		final String errorMessage = String.format(
-				Locale.ROOT,
-				"No parameter named ':%s' in query with named parameters [%s]",
-				name,
-				String.join( ", ", getNamedParameterNames() )
-		);
-		throw new IllegalArgumentException(
-				errorMessage,
-				new UnknownParameterException( errorMessage )
-		);
+		else {
+			final String errorMessage = String.format(
+					Locale.ROOT,
+					"No parameter named ':%s' in query with named parameters [%s]",
+					name,
+					String.join( ", ", getNamedParameterNames() )
+			);
+			throw new IllegalArgumentException(
+					errorMessage,
+					new UnknownParameterException( errorMessage )
+			);
+		}
 	}
 
 
@@ -280,37 +283,31 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 	}
 
 	public Set<Integer> getOrdinalParameterLabels() {
-		if ( queryParametersByPosition == null ) {
-			return Collections.EMPTY_SET;
-		}
-		return queryParametersByPosition.keySet();
+		return queryParametersByPosition == null ? emptySet() : queryParametersByPosition.keySet();
 	}
 
 	@Override
 	public QueryParameterImplementor<?> findQueryParameter(int positionLabel) {
-		if(queryParametersByPosition == null){
-			return null;
-		}
-		return queryParametersByPosition.get( positionLabel );
+		return queryParametersByPosition == null ? null : queryParametersByPosition.get( positionLabel );
 	}
 
 	@Override
 	public QueryParameterImplementor<?> getQueryParameter(int positionLabel) {
-		final QueryParameterImplementor<?> queryParameter = findQueryParameter( positionLabel );
-
+		final var queryParameter = findQueryParameter( positionLabel );
 		if ( queryParameter != null ) {
 			return queryParameter;
 		}
-
-		final String errorMessage = String.format(
-				Locale.ROOT,
-				"No parameter labelled '?%s' in query with ordinal parameters [%s]",
-				positionLabel,
-				StringHelper.join( ", ", getOrdinalParameterLabels() )
-		);
-		throw new IllegalArgumentException(
-				errorMessage,
-				new UnknownParameterException( errorMessage )
-		);
+		else {
+			final String errorMessage = String.format(
+					Locale.ROOT,
+					"No parameter labelled '?%s' in query with ordinal parameters [%s]",
+					positionLabel,
+					StringHelper.join( ", ", getOrdinalParameterLabels() )
+			);
+			throw new IllegalArgumentException(
+					errorMessage,
+					new UnknownParameterException( errorMessage )
+			);
+		}
 	}
 }

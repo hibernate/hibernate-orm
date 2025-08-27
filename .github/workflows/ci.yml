@@ -3,10 +3,18 @@ name: GH Actions CI
 on:
   push:
     branches:
+      # Pattern order matters: the last matching inclusion/exclusion wins
       - 'main'
+      # We don't want to run CI on branches for dependabot, just on the PR.
+      - '!dependabot/**'
   pull_request:
     branches:
       - 'main'
+      # Ignore dependabot PRs that are not just about build dependencies or workflows;
+      # we'll reject such PRs and send one ourselves.
+      - '!dependabot/**'
+      - 'dependabot/maven/build-dependencies-**'
+      - 'dependabot/github_actions/workflow-actions-**'
 
 permissions: { } # none
 
@@ -25,7 +33,7 @@ jobs:
   build:
     permissions:
       contents: read
-    name: OpenJDK 17 - ${{matrix.rdbms}}
+    name: OpenJDK 21 - ${{matrix.rdbms}}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -46,7 +54,7 @@ jobs:
     # Running with HANA requires at least 8GB memory just for the database, which we don't have on GH Actions runners
     #          - rdbms: hana
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
       - name: Reclaim Disk Space
@@ -55,11 +63,11 @@ jobs:
         env:
           RDBMS: ${{ matrix.rdbms }}
         run: ci/database-start.sh
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
+      - name: Set up Java 21
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: Generate cache key
         id: cache-key
@@ -73,7 +81,7 @@ jobs:
           echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
       - name: Cache Maven/Gradle Dependency/Dist Caches
         id: cache-maven
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         # if it's not a pull request, we restore and save the cache
         if: github.event_name != 'pull_request'
         with:
@@ -90,7 +98,7 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
       - name: Restore Maven/Gradle Dependency/Dist Caches
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         # if it a pull request, we restore the cache but we don't save it
         if: github.event_name == 'pull_request'
         with:
@@ -118,14 +126,14 @@ jobs:
       # The actual publishing must be done in a separate job (see ci-report.yml).
       # We don't write to the remote cache as that would be unsafe.
       - name: Upload GitHub Actions artifact for the Develocity build scan
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: "${{ github.event_name == 'pull_request' && !cancelled() }}"
         with:
           name: build-scan-data-${{ matrix.rdbms }}
           path: ~/.gradle/build-scan-data
 
       - name: Upload test reports (if Gradle failed)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: failure()
         with:
           name: test-reports-java11-${{ matrix.rdbms }}
@@ -151,7 +159,7 @@ jobs:
           - rdbms: oracle_db21c
           - rdbms: oracle_db23c
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
       - name: Reclaim disk space and sanitize user home
@@ -162,7 +170,7 @@ jobs:
           RUNID: ${{ github.run_number }}
         run: ci/database-start.sh
       - name: Set up Java 21
-        uses: graalvm/setup-graalvm@v1
+        uses: graalvm/setup-graalvm@aafbedb8d382ed0ca6167d3a051415f20c859274 # v1.2.8
         with:
           distribution: 'graalvm'
           java-version: '21'
@@ -179,7 +187,7 @@ jobs:
           echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
       - name: Cache Maven/Gradle Dependency/Dist Caches
         id: cache-maven
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         # if it's not a pull request, we restore and save the cache
         if: github.event_name != 'pull_request'
         with:
@@ -196,7 +204,7 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
       - name: Restore Maven/Gradle Dependency/Dist Caches
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         # if it a pull request, we restore the cache but we don't save it
         if: github.event_name == 'pull_request'
         with:
@@ -216,6 +224,9 @@ jobs:
           RUNID: ${{ github.run_number }}
           # These runners have no HOME variable set by default, we need to explicitly set it to make the build work
           HOME: /root
+          # Needed for TFO (TCP fast open)
+          LD_PRELOAD: /home/opc/libtfojdbc1.so
+          LD_LIBRARY_PATH: /home/opc
         run: ./ci/build-github.sh
         shell: bash
       # Upload build scan data.
@@ -223,13 +234,13 @@ jobs:
       # We don't write to the remote cache as that would be unsafe.
       # That's even on push, because we do not trust Atlas runners to hold secrets: they are shared infrastructure.
       - name: Upload GitHub Actions artifact for the Develocity build scan
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: "${{ !cancelled() }}"
         with:
           name: build-scan-data-${{ matrix.rdbms }}
           path: ~/.gradle/build-scan-data
       - name: Upload test reports (if Gradle failed)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: failure()
         with:
           name: test-reports-java11-${{ matrix.rdbms }}
@@ -245,16 +256,16 @@ jobs:
     name: Static code analysis
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
       - name: Reclaim disk space and sanitize user home
         run: .github/ci-prerequisites-atlas.sh
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
+      - name: Set up Java 21
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: Generate cache key
         id: cache-key
@@ -268,7 +279,7 @@ jobs:
           echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
       - name: Cache Maven/Gradle Dependency/Dist Caches
         id: cache-maven
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         # if it's not a pull request, we restore and save the cache
         if: github.event_name != 'pull_request'
         with:
@@ -285,7 +296,7 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
       - name: Restore Maven/Gradle Dependency/Dist Caches
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         # if it a pull request, we restore the cache but we don't save it
         if: github.event_name == 'pull_request'
         with:
@@ -311,14 +322,14 @@ jobs:
       # The actual publishing must be done in a separate job (see ci-report.yml).
       # We don't write to the remote cache as that would be unsafe.
       - name: Upload GitHub Actions artifact for the Develocity build scan
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: "${{ github.event_name == 'pull_request' && !cancelled() }}"
         with:
           name: build-scan-data-sca
           path: ~/.gradle/build-scan-data
 
       - name: Upload test reports (if Gradle failed)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: failure()
         with:
           name: test-reports-java11-sca

@@ -1,20 +1,15 @@
-import de.thetaphi.forbiddenapis.gradle.CheckForbiddenApis
-
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
+
+plugins {
+	id "local.publishing-java-module"
+	id "local.publishing-group-relocation"
+	id "org.hibernate.build.version-injection"
+}
+
 description = 'Hibernate compile-time tooling'
-
-apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
-apply plugin: 'org.hibernate.build.version-injection'
-
-//java {
-//	sourceCompatibility = jdks.versions.baseline.get()
-//	targetCompatibility = sourceCompatibility
-//}
 
 sourceSets {
 	quarkusOrmPanache {
@@ -62,11 +57,11 @@ dependencies {
     api libs.byteBuddy
 	api libs.logging
 
-	quarkusOrmPanacheImplementation "io.quarkus:quarkus-hibernate-orm-panache:3.6.2"
-	quarkusHrPanacheImplementation "io.quarkus:quarkus-hibernate-reactive-panache:3.6.2"
+	quarkusOrmPanacheImplementation "io.quarkus:quarkus-hibernate-orm-panache:3.24.1"
+	quarkusHrPanacheImplementation "io.quarkus:quarkus-hibernate-reactive-panache:3.24.1"
     jakartaDataImplementation "jakarta.data:jakarta.data-api:1.0.0"
-	jakartaDataImplementation "org.hibernate.reactive:hibernate-reactive-core:2.2.2.Final"
-	jakartaDataImplementation "io.quarkus:quarkus-hibernate-orm-panache:3.6.2"
+	jakartaDataImplementation "org.hibernate.reactive:hibernate-reactive-core:3.0.1.Final"
+	jakartaDataImplementation "io.quarkus:quarkus-hibernate-orm-panache:3.24.1"
 }
 
 // The source set gets a custom configuration which extends the normal test implementation config
@@ -85,46 +80,31 @@ configurations {
 def quarkusOrmPanacheTestTask = tasks.register( 'quarkusOrmPanacheTest', Test ) {
 	description = 'Runs the Quarkus ORM Panache tests.'
 	group = 'verification'
+	useJUnitPlatform()
 
 	testClassesDirs = sourceSets.quarkusOrmPanache.output.classesDirs
 	classpath = sourceSets.quarkusOrmPanache.runtimeClasspath
-	javaLauncher = tasks.test.javaLauncher
 	shouldRunAfter test
-}
-tasks.named( "compileQuarkusOrmPanacheJava", JavaCompile ) {
-	sourceCompatibility = tasks.compileTestJava.sourceCompatibility
-	targetCompatibility = tasks.compileTestJava.targetCompatibility
-	javaCompiler = tasks.compileTestJava.javaCompiler
 }
 
 def quarkusHrPanacheTestTask = tasks.register( 'quarkusHrPanacheTest', Test ) {
 	description = 'Runs the Quarkus HR Panache tests.'
 	group = 'verification'
+	useJUnitPlatform()
 
 	testClassesDirs = sourceSets.quarkusHrPanache.output.classesDirs
 	classpath = sourceSets.quarkusHrPanache.runtimeClasspath
-	javaLauncher = tasks.test.javaLauncher
 	shouldRunAfter test
-}
-tasks.named( "compileQuarkusHrPanacheJava", JavaCompile ) {
-	sourceCompatibility = tasks.compileTestJava.sourceCompatibility
-	targetCompatibility = tasks.compileTestJava.targetCompatibility
-	javaCompiler = tasks.compileTestJava.javaCompiler
 }
 
 def jakartaDataTestTask = tasks.register( 'jakartaDataTest', Test ) {
     description = 'Runs the Jakarta Data tests.'
     group = 'verification'
+	useJUnitPlatform()
 
     testClassesDirs = sourceSets.jakartaData.output.classesDirs
     classpath = sourceSets.jakartaData.runtimeClasspath
-	javaLauncher = tasks.test.javaLauncher
     shouldRunAfter test
-}
-tasks.named( "compileJakartaDataJava", JavaCompile ) {
-	sourceCompatibility = tasks.compileTestJava.sourceCompatibility
-	targetCompatibility = tasks.compileTestJava.targetCompatibility
-	javaCompiler = tasks.compileTestJava.javaCompiler
 }
 
 check.dependsOn quarkusHrPanacheTestTask
@@ -144,60 +124,29 @@ compileTestJava {
 	]
 }
 
-publishing {
-	publications {
-		// relocation for the published artifacts based on the old groupId
-		relocationPom(MavenPublication) {
-			pom {
-				name = 'hibernate-jpamodelgen - relocation'
-				groupId = 'org.hibernate.orm'
-				artifactId = 'hibernate-jpamodelgen'
+var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
+def oldGroupId = "org.hibernate"
+def oldArtifactId = "hibernate-jpamodelgen"
+
+publishingExtension.publications.named("groupRelocation", MavenPublication) {
+	artifactId = oldArtifactId
+	pom {
+		name = "Relocation : ${oldGroupId}:${oldArtifactId} -> ${project.group}:${project.name}"
+		description = "The `${oldArtifactId}` module has been renamed `${project.name}` and moved to the `${project.group}` group-id"
+	}
+}
+
+publishingExtension.publications.register("renameRelocation", MavenPublication) {
+	artifactId = oldArtifactId
+	pom {
+		name = "Relocation : ${project.group}:${oldArtifactId} -> ${project.group}:${project.name}"
+		description = "The `${oldArtifactId}` module has been renamed `${project.name}`"
+
+		distributionManagement {
+			relocation {
+				groupId = project.group
+				artifactId = project.name
 				version = project.version
-
-				description = project.description
-				url = 'https://hibernate.org/orm'
-
-				organization {
-					name = 'Hibernate.org'
-					url = 'https://hibernate.org'
-				}
-
-				licenses {
-					license {
-						name = 'GNU Library General Public License v2.1 or later'
-						url = 'https://www.opensource.org/licenses/LGPL-2.1'
-						comments = 'See discussion at https://hibernate.org/community/license/ for more details.'
-						distribution = 'repo'
-					}
-				}
-
-				scm {
-					url = 'https://github.com/hibernate/hibernate-orm'
-					connection = 'scm:git:https://github.com/hibernate/hibernate-orm.git'
-					developerConnection = 'scm:git:git@github.com:hibernate/hibernate-orm.git'
-				}
-
-				developers {
-					developer {
-						id = 'hibernate-team'
-						name = 'The Hibernate Development Team'
-						organization = 'Hibernate.org'
-						organizationUrl = 'https://hibernate.org'
-					}
-				}
-
-				issueManagement {
-					system = 'jira'
-					url = 'https://hibernate.atlassian.net/browse/HHH'
-				}
-
-				distributionManagement {
-					relocation {
-						groupId = 'org.hibernate.orm'
-						artifactId = project.name
-						version = project.version
-					}
-				}
 			}
 		}
 	}

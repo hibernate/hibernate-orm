@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.dynamic;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.NativeQuery;
@@ -20,6 +19,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.Objects;
 
@@ -120,12 +120,12 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
 		final SqlAstCreationState sqlAstCreationState = domainResultCreationState.getSqlAstCreationState();
-		final SessionFactoryImplementor sessionFactory = sqlAstCreationState.getCreationContext().getSessionFactory();
+		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
 		final Expression expression = sqlExpressionResolver.resolveSqlExpression(
 				SqlExpressionResolver.createColumnReferenceKey( columnName ),
-				state -> resultSetMappingSqlSelection( jdbcResultsMetadata, sessionFactory )
+				state -> resultSetMappingSqlSelection( jdbcResultsMetadata, typeConfiguration )
 		);
 
 		final JavaType<?> javaType;
@@ -146,7 +146,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 				expression,
 				jdbcJavaType,
 				null,
-				sessionFactory.getTypeConfiguration()
+				typeConfiguration
 		);
 
 		// StandardRowReader expects there to be a JavaType as part of the ResultAssembler.
@@ -164,7 +164,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 	}
 
 	private ResultSetMappingSqlSelection resultSetMappingSqlSelection(
-			JdbcValuesMetadata jdbcResultsMetadata, SessionFactoryImplementor sessionFactory) {
+			JdbcValuesMetadata jdbcResultsMetadata, TypeConfiguration typeConfiguration) {
 		final int jdbcPosition =
 				columnPosition > 0
 						? columnPosition
@@ -173,7 +173,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 		final BasicType<?> basicType =
 				explicitType != null
 						? explicitType
-						: jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaType, sessionFactory );
+						: jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaType, typeConfiguration );
 		return new ResultSetMappingSqlSelection( valuesArrayPosition, (BasicValuedMapping) basicType );
 	}
 

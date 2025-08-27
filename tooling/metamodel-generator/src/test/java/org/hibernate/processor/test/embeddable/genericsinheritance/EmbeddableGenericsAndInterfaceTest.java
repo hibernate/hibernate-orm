@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.embeddable.genericsinheritance;
@@ -7,15 +7,16 @@ package org.hibernate.processor.test.embeddable.genericsinheritance;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.assertSuperclassRelationshipInMetamodel;
 
-public class EmbeddableGenericsAndInterfaceTest extends CompilationTest {
+@CompilationTest
+class EmbeddableGenericsAndInterfaceTest {
 	@Test @WithClasses({ExampleEntity.class, UserEntity.class, ExampleEmbedded.class, ExampleSuperClassEmbedded.class})
-	public void test() {
+	void test() {
 		System.out.println( TestUtil.getMetaModelSourceAsString( ExampleEntity.class ) );
 		System.out.println( TestUtil.getMetaModelSourceAsString( ExampleSuperClassEmbedded.class ) );
 		System.out.println( TestUtil.getMetaModelSourceAsString( ExampleEmbedded.class ) );

@@ -1,95 +1,75 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.enumerated.mappedSuperclass;
 
-import java.io.Serializable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Table;
-
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.BasicType;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-
 import org.hibernate.type.SqlTypes;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.junit.jupiter.api.Test;
+
+import java.io.Serializable;
 
 import static jakarta.persistence.EnumType.STRING;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.isOneOf;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Originally developed to verify/diagnose HHH-10128
  *
  * @author Steve Ebersole
  */
-public class EnumeratedWithMappedSuperclassTest extends BaseUnitTestCase {
-	private StandardServiceRegistry ssr;
-
-	@Before
-	public void before() {
-		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( AvailableSettings.DIALECT, PostgreSQLDialect.class.getName() )
-				.applySetting( AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION, "8" )
-				.applySetting( AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSION, "1" )
-				.build();
-	}
-
-	@After
-	public void after() {
-		if ( ssr != null ) {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
-	}
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ServiceRegistry
+@DomainModel(annotatedClasses = {
+		EnumeratedWithMappedSuperclassTest.Entity.class,
+		EnumeratedWithMappedSuperclassTest.DescriptionEntity.class,
+		EnumeratedWithMappedSuperclassTest.AddressLevel.class
+} )
+@SessionFactory
+@RequiresDialect( value = PostgreSQLDialect.class, majorVersion = 8, minorVersion = 1 )
+public class EnumeratedWithMappedSuperclassTest {
 
 	@Test
-	public void testHHH10128() {
-		final Metadata metadata = new MetadataSources( ssr )
-				.addAnnotatedClass( Entity.class )
-				.addAnnotatedClass( DescriptionEntity.class )
-				.addAnnotatedClass( AddressLevel.class )
-				.buildMetadata();
-
-		final PersistentClass addressLevelBinding = metadata.getEntityBinding( AddressLevel.class.getName() );
-
+	public void testHHH10128(DomainModelScope modelScope, SessionFactoryScope factoryScope) {
+		// check the boot model
+		final MetadataImplementor domainModel = modelScope.getDomainModel();
+		final PersistentClass addressLevelBinding = domainModel.getEntityBinding( AddressLevel.class.getName() );
 		final Property natureProperty = addressLevelBinding.getProperty( "nature" );
 		//noinspection unchecked
 		BasicType<Nature> natureMapping = (BasicType<Nature>) natureProperty.getType();
-		assertThat(
-				natureMapping.getJdbcType().getJdbcTypeCode(),
-				isOneOf( SqlTypes.VARCHAR, SqlTypes.ENUM, SqlTypes.NAMED_ENUM )
-		);
+		assertThat( natureMapping.getJdbcType().getJdbcTypeCode() )
+				.isIn( SqlTypes.VARCHAR, SqlTypes.ENUM, SqlTypes.NAMED_ENUM );
 
-		try ( SessionFactoryImplementor sf = (SessionFactoryImplementor) metadata.buildSessionFactory() ) {
-			EntityPersister p = sf.getRuntimeMetamodels()
-					.getMappingMetamodel()
-					.getEntityDescriptor( AddressLevel.class.getName() );
-			//noinspection unchecked
-			BasicType<Nature> runtimeType = (BasicType<Nature>) p.getPropertyType( "nature" );
-			assertThat(
-					runtimeType.getJdbcType().getJdbcTypeCode(),
-					isOneOf( SqlTypes.VARCHAR, SqlTypes.ENUM, SqlTypes.NAMED_ENUM )
-			);
-		}
+		// check the runtime model
+		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
+		final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getMappingMetamodel();
+		final EntityPersister persister = mappingMetamodel.getEntityDescriptor( AddressLevel.class.getName() );
+		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) persister.findAttributeMapping( "nature" );
+		final JdbcType jdbcType = attributeMapping.getJdbcMapping().getJdbcType();
+		assertThat( jdbcType.getJdbcTypeCode() )
+				.isIn( SqlTypes.VARCHAR, SqlTypes.ENUM, SqlTypes.NAMED_ENUM );
 	}
 
 	@MappedSuperclass

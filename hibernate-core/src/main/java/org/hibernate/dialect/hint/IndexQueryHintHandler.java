@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.hint;
@@ -14,6 +14,6 @@ public class IndexQueryHintHandler implements QueryHintHandler {
 
 	@Override
 	public String addQueryHints(String query, String hints) {
-		return Dialect.addQueryHints( query, hints);
+		return Dialect.addUseIndexQueryHint( query, hints);
 	}
 }

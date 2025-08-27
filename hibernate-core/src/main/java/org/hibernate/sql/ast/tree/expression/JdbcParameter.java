@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 
 /**
@@ -11,4 +12,5 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
  */
 public interface JdbcParameter extends Expression {
 	JdbcParameterBinder getParameterBinder();
+	@Nullable Integer getParameterId();
 }

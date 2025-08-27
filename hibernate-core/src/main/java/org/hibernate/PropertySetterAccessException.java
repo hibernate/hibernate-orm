@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
@@ -11,6 +11,8 @@ import org.hibernate.proxy.HibernateProxy;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
+ * Thrown when an {@link IllegalArgumentException} occurs calling a property setter method.
+ *
  * @author Steve Ebersole
  */
 public class PropertySetterAccessException extends PropertyAccessException {
@@ -49,10 +51,9 @@ public class PropertySetterAccessException extends PropertyAccessException {
 	}
 
 	public static String loggablePropertyValueString(Object value) {
-		if ( value instanceof Collection || value instanceof HibernateProxy ) {
-			return value.getClass().getSimpleName();
-		}
-		return value.toString();
+		return value instanceof Collection || value instanceof HibernateProxy
+				? value.getClass().getSimpleName()
+				: value.toString();
 	}
 
 	@Override

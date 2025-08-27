@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -8,6 +8,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
+
+import static org.hibernate.processor.util.Constants.HIB_STATELESS_SESSION;
+import static org.hibernate.processor.util.Constants.INJECT;
+import static org.hibernate.processor.util.Constants.NONNULL;
 
 /**
  * A general purpose constructor which accepts the session.
@@ -67,7 +71,7 @@ public class RepositoryConstructor implements MetaAttribute {
 		final StringBuilder declaration = new StringBuilder();
 		declaration
 				.append('\n');
-		if ( annotationMetaEntity.getSupertypeName() == null ) {
+		if ( annotationMetaEntity.getSuperTypeElement() == null ) {
 			declaration
 					.append("protected ");
 			if ( !dataRepository ) {
@@ -96,7 +100,7 @@ public class RepositoryConstructor implements MetaAttribute {
 				.append(" ")
 				.append(sessionVariableName)
 				.append(") {\n");
-		if ( annotationMetaEntity.getSupertypeName() != null ) {
+		if ( annotationMetaEntity.getSuperTypeElement() != null ) {
 			declaration
 					.append("\tsuper(")
 					.append(sessionVariableName)
@@ -112,7 +116,8 @@ public class RepositoryConstructor implements MetaAttribute {
 		}
 		declaration
 				.append("}");
-		if ( annotationMetaEntity.getSupertypeName() == null ) {
+		// resource accessor method a.k.a. session getter
+		if ( annotationMetaEntity.getSuperTypeElement() == null ) {
 			declaration
 					.append("\n\n");
 			if (addOverrideAnnotation) {
@@ -122,15 +127,27 @@ public class RepositoryConstructor implements MetaAttribute {
 					.append("public ");
 			notNull( declaration );
 			declaration
-					.append(annotationMetaEntity.importType(sessionTypeName))
+					.append(annotationMetaEntity.importType(providedSessionType()))
 					.append(" ")
 					.append(methodName)
 					.append("() {")
 					.append("\n\treturn ")
-					.append(sessionVariableName)
+					.append(sessionVariableName);
+			if ( annotationMetaEntity.isProvidedSessionAccess() ) {
+				declaration
+						.append( ".getObject()" );
+			}
+			declaration
 					.append(";\n}");
 		}
 		return declaration.toString();
+	}
+
+	private String providedSessionType() {
+		return annotationMetaEntity.isProvidedSessionAccess()
+				//TODO: assuming provided sessions are always StatelessSessions for now
+				? HIB_STATELESS_SESSION
+				: sessionTypeName;
 	}
 
 	/**
@@ -168,7 +185,7 @@ public class RepositoryConstructor implements MetaAttribute {
 		if ( addInjectAnnotation && !annotationMetaEntity.needsDefaultConstructor() ) {
 			declaration
 					.append('@')
-					.append(annotationMetaEntity.importType("jakarta.inject.Inject"))
+					.append(annotationMetaEntity.importType(INJECT))
 					.append('\n');
 		}
 	}
@@ -177,7 +194,7 @@ public class RepositoryConstructor implements MetaAttribute {
 		if ( addNonnullAnnotation ) {
 			declaration
 					.append('@')
-					.append(annotationMetaEntity.importType("jakarta.annotation.Nonnull"))
+					.append(annotationMetaEntity.importType(NONNULL))
 					.append(' ');
 		}
 	}

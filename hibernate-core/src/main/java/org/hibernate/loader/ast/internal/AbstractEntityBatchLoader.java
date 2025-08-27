@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
@@ -15,6 +15,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.hasSingleId;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 public abstract class AbstractEntityBatchLoader<T>
 		extends SingleIdEntityLoaderSupport<T>
@@ -22,9 +23,9 @@ public abstract class AbstractEntityBatchLoader<T>
 
 	private final SingleIdEntityLoaderStandardImpl<T> singleIdLoader;
 
-	public AbstractEntityBatchLoader(EntityMappingType entityDescriptor, LoadQueryInfluencers loadQueryInfluencers) {
-		super( entityDescriptor, loadQueryInfluencers.getSessionFactory() );
-		this.singleIdLoader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, loadQueryInfluencers );
+	public AbstractEntityBatchLoader(EntityMappingType entityDescriptor, LoadQueryInfluencers influencers) {
+		super( entityDescriptor, influencers.getSessionFactory() );
+		this.singleIdLoader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, influencers );
 	}
 
 	protected abstract void initializeEntities(
@@ -44,12 +45,12 @@ public abstract class AbstractEntityBatchLoader<T>
 			LockOptions lockOptions,
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.debugf( "Batch fetching entity `%s#%s`", getLoadable().getEntityName(), id );
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.trace( "Batch fetching entity: "
+					+ infoString( getLoadable(), id ) );
 		}
 
 		final Object[] ids = resolveIdsToInitialize( id, session );
-
 		return load( id, ids, hasSingleId( ids ), entityInstance, lockOptions, readOnly, session );
 	}
 
@@ -59,15 +60,14 @@ public abstract class AbstractEntityBatchLoader<T>
 			Object entityInstance,
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.debugf( "Batch fetching entity `%s#%s`", getLoadable().getEntityName(), id );
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.trace( "Batch fetching entity: "
+					+ infoString( getLoadable(), id ) );
 		}
 
 		final Object[] ids = resolveIdsToInitialize( id, session );
 		final boolean hasSingleId = hasSingleId( ids );
-
 		final T entity = load( id, ids, hasSingleId, entityInstance, lockOptions, null, session );
-
 		if ( hasSingleId ) {
 			return entity;
 		}

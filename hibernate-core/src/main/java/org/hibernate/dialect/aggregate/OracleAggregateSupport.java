@@ -1,16 +1,17 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.aggregate;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.OracleArrayJdbcType;
-import org.hibernate.dialect.XmlHelper;
+import org.hibernate.dialect.type.OracleArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
@@ -34,10 +35,9 @@ import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.StructJdbcType;
+import org.hibernate.type.descriptor.jdbc.StructuredJdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
-import org.hibernate.type.internal.TypeConfigurationWrapperOptions;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.LinkedHashMap;
@@ -49,12 +49,13 @@ import static org.hibernate.type.SqlTypes.*;
 
 public class OracleAggregateSupport extends AggregateSupportImpl {
 
-	private static final AggregateSupport V23_INSTANCE = new OracleAggregateSupport( true, JsonSupport.OSON );
-	private static final AggregateSupport V21_INSTANCE = new OracleAggregateSupport( false, JsonSupport.OSON );
-	private static final AggregateSupport V19_INSTANCE = new OracleAggregateSupport( false, JsonSupport.MERGEPATCH );
-	private static final AggregateSupport V18_INSTANCE = new OracleAggregateSupport( false, JsonSupport.QUERY_AND_PATH );
-	private static final AggregateSupport V12_INSTANCE = new OracleAggregateSupport( false, JsonSupport.QUERY );
-	private static final AggregateSupport LEGACY_INSTANCE = new OracleAggregateSupport( false, JsonSupport.NONE );
+	protected static final AggregateSupport V23_INSTANCE = new OracleAggregateSupport( true, JsonSupport.OSON );
+	// Special instance used when an Oracle OSON extension is available and used
+	protected static final AggregateSupport V21_INSTANCE = new OracleAggregateSupport( false, JsonSupport.OSON );
+	protected static final AggregateSupport V19_INSTANCE = new OracleAggregateSupport( false, JsonSupport.MERGEPATCH );
+	protected static final AggregateSupport V18_INSTANCE = new OracleAggregateSupport( false, JsonSupport.QUERY_AND_PATH );
+	protected static final AggregateSupport V12_INSTANCE = new OracleAggregateSupport( false, JsonSupport.QUERY );
+	protected static final AggregateSupport LEGACY_INSTANCE = new OracleAggregateSupport( false, JsonSupport.NONE );
 
 	private static final String JSON_QUERY_START = "json_query(";
 	private static final String JSON_QUERY_JSON_END = "' returning json)";
@@ -76,26 +77,20 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 
 	public static AggregateSupport valueOf(Dialect dialect) {
 		final DatabaseVersion version = dialect.getVersion();
-		switch ( version.getMajor() ) {
-			case 12:
-			case 13:
-			case 14:
-			case 15:
-			case 16:
-			case 17:
-				return V12_INSTANCE;
-			case 18:
-				return V18_INSTANCE;
-			case 19:
-			case 20:
-				return V19_INSTANCE;
-			case 21:
-			case 22:
-				return V21_INSTANCE;
-		}
-		return version.isSameOrAfter( 23 )
-				? OracleAggregateSupport.V23_INSTANCE
-				: OracleAggregateSupport.LEGACY_INSTANCE;
+		return switch ( version.getMajor() ) {
+			case 12, 13, 14, 15, 16, 17 -> V12_INSTANCE;
+			case 18 -> V18_INSTANCE;
+			case 19, 20 -> V19_INSTANCE;
+			case 21, 22 -> V21_INSTANCE;
+			default -> version.isSameOrAfter( 23 )
+					? OracleAggregateSupport.V23_INSTANCE
+					: OracleAggregateSupport.LEGACY_INSTANCE;
+		};
+	}
+
+	private boolean supportsOson() {
+		// OSON is supported when check constraints are supported
+		return checkConstraintSupport;
 	}
 
 	@Override
@@ -132,7 +127,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 								final JdbcLiteralFormatter<Boolean> jdbcLiteralFormatter = (JdbcLiteralFormatter<Boolean>) column.getJdbcMapping().getJdbcType()
 										.getJdbcLiteralFormatter( column.getJdbcMapping().getMappedJavaType() );
 								final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
-								final WrapperOptions wrapperOptions = new TypeConfigurationWrapperOptions( typeConfiguration );
+								final WrapperOptions wrapperOptions = getWrapperOptions( typeConfiguration );
 								final String trueLiteral = jdbcLiteralFormatter.toJdbcLiteral( true, dialect, wrapperOptions );
 								final String falseLiteral = jdbcLiteralFormatter.toJdbcLiteral( false, dialect, wrapperOptions );
 								return template.replace(
@@ -149,27 +144,55 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 										placeholder,
 										"json_value(" + parentPartExpression + columnExpression + "' returning " + column.getColumnDefinition() + ')'
 								);
+
 							case DATE:
-								return template.replace(
-										placeholder,
-										"to_date(json_value(" + parentPartExpression + columnExpression + "'),'YYYY-MM-DD')"
-								);
+								if (supportsOson()) {
+									// Oracle OSON extension is used, value is not stored as string
+									return template.replace(
+											placeholder,
+											"json_value(" + parentPartExpression + columnExpression + "' returning date)"
+									);
+								}
+								else {
+									return template.replace(
+											placeholder,
+											"to_date(substr(json_value(" + parentPartExpression + columnExpression + "'),1,10),'YYYY-MM-DD')"
+									);
+								}
+
 							case TIME:
 								return template.replace(
 										placeholder,
 										"to_timestamp(json_value(" + parentPartExpression + columnExpression + "'),'hh24:mi:ss')"
 								);
 							case TIMESTAMP:
-								return template.replace(
-										placeholder,
-										"to_timestamp(json_value(" + parentPartExpression + columnExpression + "'),'YYYY-MM-DD\"T\"hh24:mi:ss.FF9')"
-								);
+								if (supportsOson()) {
+									return template.replace(
+											placeholder,
+											"json_value(" + parentPartExpression + columnExpression + "' returning timestamp(9))"
+									);
+								}
+								else {
+									return template.replace(
+											placeholder,
+											"to_timestamp(json_value(" + parentPartExpression + columnExpression + "'),'YYYY-MM-DD\"T\"hh24:mi:ss.FF9')"
+									);
+								}
 							case TIMESTAMP_WITH_TIMEZONE:
 							case TIMESTAMP_UTC:
-								return template.replace(
-										placeholder,
-										"to_timestamp_tz(json_value(" + parentPartExpression + columnExpression + "'),'YYYY-MM-DD\"T\"hh24:mi:ss.FF9TZH:TZM')"
-								);
+								if (supportsOson()) {
+									// Oracle OSON extension is used, value is not stored as string
+									return template.replace(
+											placeholder,
+											"json_value(" + parentPartExpression + columnExpression + "' returning timestamp(9) with time zone)"
+									);
+								}
+								else {
+									return template.replace(
+											placeholder,
+											"to_timestamp_tz(json_value(" + parentPartExpression + columnExpression + "'),'YYYY-MM-DD\"T\"hh24:mi:ss.FF9TZH:TZM')"
+									);
+								}
 							case UUID:
 								return template.replace(
 										placeholder,
@@ -229,6 +252,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 										placeholder,
 										"cast(json_value(" + parentPartExpression + columnExpression + "') as " + column.getColumnDefinition() + ')'
 								);
+
 						}
 					case NONE:
 						throw new UnsupportedOperationException( "The Oracle version doesn't support JSON aggregates!" );
@@ -242,7 +266,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 						final JdbcLiteralFormatter<Boolean> jdbcLiteralFormatter = (JdbcLiteralFormatter<Boolean>) column.getJdbcMapping().getJdbcType()
 								.getJdbcLiteralFormatter( column.getJdbcMapping().getMappedJavaType() );
 						final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
-						final WrapperOptions wrapperOptions = new TypeConfigurationWrapperOptions( typeConfiguration );
+						final WrapperOptions wrapperOptions = getWrapperOptions( typeConfiguration );
 						final String trueLiteral = jdbcLiteralFormatter.toJdbcLiteral( true, dialect, wrapperOptions );
 						final String falseLiteral = jdbcLiteralFormatter.toJdbcLiteral( false, dialect, wrapperOptions );
 						return template.replace(
@@ -316,6 +340,16 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				return template.replace( placeholder, aggregateParentReadExpression + "." + columnExpression );
 		}
 		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
+	}
+
+	private static WrapperOptions getWrapperOptions(TypeConfiguration typeConfiguration) {
+		try {
+			return typeConfiguration.getSessionFactory().getWrapperOptions();
+		}
+		catch (HibernateException e) {
+			// before we have a SessionFactory, no useful WrapperOptions to pass
+			return null;
+		}
 	}
 
 	private static String xmlExtractArguments(String aggregateParentReadExpression, String xpathFragment) {
@@ -433,7 +467,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 						final JdbcLiteralFormatter<Boolean> jdbcLiteralFormatter = (JdbcLiteralFormatter<Boolean>) jdbcMapping.getJdbcType()
 								.getJdbcLiteralFormatter( jdbcMapping.getMappedJavaType() );
 						final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
-						final WrapperOptions wrapperOptions = new TypeConfigurationWrapperOptions( typeConfiguration );
+						final WrapperOptions wrapperOptions = getWrapperOptions( typeConfiguration );
 						final String trueLiteral = jdbcLiteralFormatter.toJdbcLiteral( true, dialect, wrapperOptions );
 						final String falseLiteral = jdbcLiteralFormatter.toJdbcLiteral( false, dialect, wrapperOptions );
 						return "decode(" + customWriteExpression + "," + trueLiteral + ",'true'," + falseLiteral + ",'false')";
@@ -458,7 +492,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				final JdbcLiteralFormatter<Boolean> jdbcLiteralFormatter = (JdbcLiteralFormatter<Boolean>) jdbcMapping.getJdbcType()
 						.getJdbcLiteralFormatter( jdbcMapping.getMappedJavaType() );
 				final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
-				final WrapperOptions wrapperOptions = new TypeConfigurationWrapperOptions( typeConfiguration );
+				final WrapperOptions wrapperOptions = getWrapperOptions( typeConfiguration );
 				final String trueLiteral = jdbcLiteralFormatter.toJdbcLiteral( true, dialect, wrapperOptions );
 				final String falseLiteral = jdbcLiteralFormatter.toJdbcLiteral( false, dialect, wrapperOptions );
 				return "decode(" + customWriteExpression + "," + trueLiteral + ",'true'," + falseLiteral + ",'false')";
@@ -527,7 +561,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 					name -> new UserDefinedArrayType( "orm", namespace, name )
 			);
 			final ArrayJdbcType jdbcType = (ArrayJdbcType) ( (BasicType<?>) aggregateColumn.getValue().getType() ).getJdbcType();
-			final StructJdbcType elementJdbcType = (StructJdbcType) jdbcType.getElementJdbcType();
+			final StructuredJdbcType elementJdbcType = (StructuredJdbcType) jdbcType.getElementJdbcType();
 			if ( typeCode == STRUCT_ARRAY ) {
 				arrayType.setArraySqlTypeCode( ARRAY );
 				arrayType.setArrayLength( aggregateColumn.getArrayLength() == null ? 127 : aggregateColumn.getArrayLength() );
@@ -551,16 +585,11 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 		final String columnDefinition = aggregateColumn.getColumnDefinition();
 		if ( columnDefinition == null ) {
 			assert aggregateColumn.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() == JSON;
-			switch ( jsonSupport ) {
-				case OSON:
-					return "json";
-				case MERGEPATCH:
-				case QUERY_AND_PATH:
-				case QUERY:
-					return "blob";
-				case NONE:
-					return "clob";
-			}
+			return switch ( jsonSupport ) {
+				case OSON -> "json";
+				case MERGEPATCH, QUERY_AND_PATH, QUERY -> "blob";
+				case NONE -> "clob";
+			};
 		}
 		return columnDefinition;
 	}
@@ -570,7 +599,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 		MERGEPATCH,
 		QUERY_AND_PATH,
 		QUERY,
-		NONE;
+		NONE
 	}
 
 	interface JsonWriteExpression {

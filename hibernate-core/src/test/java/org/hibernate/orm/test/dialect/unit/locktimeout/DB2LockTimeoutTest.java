@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.unit.locktimeout;
@@ -10,13 +10,16 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.Test;
 
+import static org.hibernate.Timeouts.SKIP_LOCKED;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Gavin King
  */
+@RequiresDialect(DB2Dialect.class)
 public class DB2LockTimeoutTest extends BaseUnitTestCase {
 
 	private final Dialect dialect = new DB2Dialect( DatabaseVersion.make( 11, 5 ) );
@@ -37,13 +40,11 @@ public class DB2LockTimeoutTest extends BaseUnitTestCase {
 	public void testLockTimeoutNoAliasSkipLocked() {
 		assertEquals(
 				" for read only with rs use and keep share locks skip locked data",
-				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_READ )
-													.setTimeOut( LockOptions.SKIP_LOCKED ) )
+				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_READ ).setTimeout( SKIP_LOCKED ) )
 		);
 		assertEquals(
 				" for read only with rs use and keep update locks skip locked data",
-				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-													.setTimeOut( LockOptions.SKIP_LOCKED ) )
+				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_WRITE ).setTimeout( SKIP_LOCKED ) )
 		);
 	}
 }

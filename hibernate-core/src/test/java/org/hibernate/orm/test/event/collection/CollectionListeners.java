@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.event.collection;
@@ -147,7 +147,7 @@ public class CollectionListeners {
 		postCollectionRemoveListener = new PostCollectionRemoveListener( this );
 		postCollectionUpdateListener = new PostCollectionUpdateListener( this );
 
-		EventListenerRegistry registry = ( (SessionFactoryImplementor) sf ).getServiceRegistry().getService( EventListenerRegistry.class );
+		EventListenerRegistry registry = ( (SessionFactoryImplementor) sf ).getEventListenerRegistry();
 		registry.setListeners( EventType.INIT_COLLECTION, initializeCollectionListener );
 
 		registry.setListeners( EventType.PRE_COLLECTION_RECREATE, preCollectionRecreateListener );

@@ -1,10 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
 
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
@@ -17,6 +17,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Support for HQL functions that have different representations
@@ -115,6 +116,18 @@ public class PatternBasedSqmFunctionDescriptor
 
 	@Override
 	public String getArgumentListSignature() {
-		return argumentListSignature == null ? super.getArgumentListSignature() : argumentListSignature;
+		return argumentListSignature == null
+				? super.getArgumentListSignature()
+				: argumentListSignature;
 	}
+
+	@Override
+	public String toString() {
+		return String.format(
+				Locale.ROOT,
+				"PatternBasedSqmFunctionDescriptor(%s)",
+				getName()
+		);
+	}
+
 }

@@ -1,14 +1,17 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.locking;
 
 import org.hibernate.Hibernate;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.junit.jupiter.api.BeforeAll;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
@@ -34,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 )
 public class LockRefreshReferencedAndCascadingTest {
 
-	@BeforeAll
+	@BeforeEach
 	public void setUp(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -52,7 +55,14 @@ public class LockRefreshReferencedAndCascadingTest {
 		);
 	}
 
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
+	}
+
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Informix disallows FOR UPDATE with multi-table queries")
 	public void testRefreshBeforeRead(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -100,6 +110,8 @@ public class LockRefreshReferencedAndCascadingTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Informix disallows FOR UPDATE with multi-table queries")
 	public void testRefreshAfterRead(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -124,6 +136,8 @@ public class LockRefreshReferencedAndCascadingTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Informix disallows FOR UPDATE with multi-table queries")
 	public void testRefreshLockMode(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -150,6 +164,8 @@ public class LockRefreshReferencedAndCascadingTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Informix disallows FOR UPDATE with multi-table queries")
 	public void testFindWithLockMode(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

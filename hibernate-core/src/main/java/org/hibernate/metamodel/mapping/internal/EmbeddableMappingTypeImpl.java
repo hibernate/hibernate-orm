@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -51,7 +51,6 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -136,8 +135,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				creationContext
 		);
 
-		if ( compositeType instanceof CompositeTypeImplementor ) {
-			( (CompositeTypeImplementor) compositeType ).injectMappingModelPart( mappingType.getEmbeddedValueMapping(), creationProcess );
+		if ( compositeType instanceof CompositeTypeImplementor compositeTypeImplementor ) {
+			compositeTypeImplementor.injectMappingModelPart( mappingType.getEmbeddedValueMapping(), creationProcess );
 		}
 
 		creationProcess.registerInitializationCallback(
@@ -220,7 +219,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			}
 			else {
 				insertable = componentProperty.isInsertable();
-				updatable = componentProperty.isUpdateable();
+				updatable = componentProperty.isUpdatable();
 			}
 			this.aggregateMapping = SelectableMappingImpl.from(
 					bootDescriptor.getOwner().getTable().getQualifiedName( creationContext.getSqlStringGenerationContext() ),
@@ -453,8 +452,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					if ( selectable.isFormula() ) {
 						columnExpression = selectable.getTemplate(
 								dialect,
-								creationProcess.getCreationContext().getTypeConfiguration(),
-								creationProcess.getSqmFunctionRegistry()
+								creationProcess.getCreationContext().getTypeConfiguration()
 						);
 					}
 					else {
@@ -615,9 +613,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						creationProcess
 				);
 			}
-			else if ( subtype instanceof EntityType ) {
-				final EntityPersister entityPersister = creationProcess.getEntityPersister( bootDescriptor.getOwner().getEntityName() );
-
+			else if ( subtype instanceof EntityType subentityType ) {
 				attributeMapping = MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
 						bootPropertyDescriptor.getName(),
 						valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
@@ -625,8 +621,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						attributeIndex,
 						bootPropertyDescriptor,
 						this,
-						entityPersister,
-						(EntityType) subtype,
+						creationProcess.getEntityPersister( bootDescriptor.getOwner().getEntityName() ),
+						subentityType,
 						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
 						compositeType.getCascadeStyle( attributeIndex ),
 						creationProcess
@@ -726,8 +722,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			final Formula formula = (Formula) selectable;
 			discriminatorColumnExpression = name = formula.getTemplate(
 					creationContext.getDialect(),
-					creationContext.getTypeConfiguration(),
-					creationContext.getFunctionRegistry()
+					creationContext.getTypeConfiguration()
 			);
 			columnDefinition = null;
 			length = null;
@@ -748,7 +743,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		return new ExplicitColumnDiscriminatorMappingImpl(
 				this,
 				name,
-				bootDescriptor.getTable().getName(),
+				bootDescriptor.getTable().getQualifiedName( creationContext.getSqlStringGenerationContext() ),
 				discriminatorColumnExpression,
 				isFormula,
 				!isFormula,
@@ -876,7 +871,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						? getValue( compositeInstance, i )
 						: null;
 			}
-			results[i] = compositeInstance.getClass().getName();
+			results[i] = compositeInstance.getClass();
 			return results;
 		}
 	}
@@ -906,11 +901,10 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
-		if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {
-			return discriminatorMapping;
-		}
+		return EntityDiscriminatorMapping.matchesRoleName( name )
+				? discriminatorMapping
+				: super.findSubPart( name, treatTargetType );
 
-		return super.findSubPart( name, treatTargetType );
 	}
 
 	@Override
@@ -984,10 +978,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		if ( value == null ) {
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				if ( attributeMapping instanceof PluralAttributeMapping ) {
-					continue;
+				if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
+					span += attributeMapping.forEachJdbcValue( null, span + offset, x, y, valuesConsumer, session );
 				}
-				span += attributeMapping.forEachJdbcValue( null, span + offset, x, y, valuesConsumer, session );
 			}
 			if ( isPolymorphic() ) {
 				span += discriminatorMapping.forEachJdbcValue( null, offset + span, x, y, valuesConsumer, session );
@@ -997,13 +990,15 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			final ConcreteEmbeddableType concreteEmbeddableType = findSubtypeBySubclass( value.getClass().getName() );
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				if ( attributeMapping instanceof PluralAttributeMapping ) {
-					continue;
+				if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
+					final Object attributeValue =
+							concreteEmbeddableType == null
+								|| !concreteEmbeddableType.declaresAttribute( attributeMapping )
+									? null
+									: getValue( value, i );
+					span += attributeMapping.forEachJdbcValue( attributeValue, span + offset, x, y, valuesConsumer,
+							session );
 				}
-				final Object attributeValue = concreteEmbeddableType == null || !concreteEmbeddableType.declaresAttribute( attributeMapping )
-						? null
-						: getValue( value, i );
-				span += attributeMapping.forEachJdbcValue( attributeValue, span + offset, x, y, valuesConsumer, session );
 			}
 			if ( isPolymorphic() ) {
 				final Object d = concreteEmbeddableType == null ? null : concreteEmbeddableType.getDiscriminatorValue();

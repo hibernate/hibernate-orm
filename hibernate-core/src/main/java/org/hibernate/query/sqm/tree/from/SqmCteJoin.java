@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.from;
@@ -14,17 +14,20 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmJoin;
-import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedCteJoin;
+import org.hibernate.query.sqm.tree.domain.SqmSingularValuedJoin;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedJoin;
 import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.criteria.JoinType;
 
+import java.util.Objects;
+
 /**
  * @author Christian Beikov
  */
 @Incubating
-public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> {
+public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> implements SqmSingularValuedJoin<T, T> {
 	private final SqmCteStatement<T> cte;
 
 	public SqmCteJoin(
@@ -116,8 +119,8 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> {
 	// JPA
 
 	@Override
-	public SqmCorrelatedEntityJoin<T,T> createCorrelation() {
-		throw new UnsupportedOperationException();
+	public SqmCorrelatedCteJoin<T> createCorrelation() {
+		return new SqmCorrelatedCteJoin<>( this );
 	}
 
 	@Override
@@ -153,5 +156,17 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> {
 	@Override
 	public JoinType getJoinType() {
 		return getSqmJoinType().getCorrespondingJpaJoinType();
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmCteJoin<?> that
+			&& super.equals( object )
+			&& Objects.equals( this.cte.getName(), that.cte.getName() );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( super.hashCode(), cte.getName() );
 	}
 }

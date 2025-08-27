@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.tooling.gradle.misc;
 
@@ -12,6 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.gradle.api.Action;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.CacheableTask;
@@ -63,62 +62,37 @@ import jakarta.xml.bind.Marshaller;
  */
 @CacheableTask
 public abstract class TransformHbmXmlTask extends SourceTask {
-	private final TransformationNaming renaming;
-	private final Property<String> targetDatabaseName;
-	private final Property<UnsupportedFeatureHandling> unsupportedFeatures;
-	private final Property<Boolean> deleteHbmFiles;
-
-	private final DirectoryProperty outputDirectory;
 
 	public TransformHbmXmlTask() {
-		this.outputDirectory = getProject().getObjects().directoryProperty();
-
-		this.renaming = new TransformationNaming( getProject().getObjects() );
-
-		this.targetDatabaseName = getProject().getObjects().property( String.class );
-		this.targetDatabaseName.convention( "H2" );
-
-		this.unsupportedFeatures = getProject().getObjects().property( UnsupportedFeatureHandling.class );
-		this.unsupportedFeatures.convention( UnsupportedFeatureHandling.ERROR );
-
-		this.deleteHbmFiles = getProject().getObjects().property( Boolean.class );
-		this.deleteHbmFiles.convention( false );
+		getTargetDatabaseName().convention( "H2" );
+		getUnsupportedFeatures().convention( UnsupportedFeatureHandling.ERROR );
+		getDeleteHbmFiles().convention( false );
 	}
 
 	/**
 	 * Ability to create copies of the original with specific naming.
 	 */
-	@SuppressWarnings("unused")
 	@Nested
-	public TransformationNaming getRenaming() {
-		return renaming;
-	}
+	abstract public TransformationNaming getRenaming();
 
 	/**
 	 * @see Database
 	 */
-	@SuppressWarnings("unused")
 	@Input
-	public Property<String> getTargetDatabaseName() {
-		return targetDatabaseName;
-	}
+	abstract public Property<String> getTargetDatabaseName();
 
 	/**
 	 * How should features supported in `hbm.xml` files, which are not supported for transformation, be handled?
 	 */
 	@Input
-	public Property<UnsupportedFeatureHandling> getUnsupportedFeatures() {
-		return unsupportedFeatures;
-	}
+	abstract public Property<UnsupportedFeatureHandling> getUnsupportedFeatures();
 
 	/**
 	 * Should the {@code hbm.xml} files be deleted on successful transformation?
 	 * Default is false.
 	 */
 	@Input
-	public Property<Boolean> getDeleteHbmFiles() {
-		return deleteHbmFiles;
-	}
+	abstract public Property<Boolean> getDeleteHbmFiles();
 
 	/**
 	 * If set, transformed xml is written, relatively, to this directory.
@@ -129,15 +103,19 @@ public abstract class TransformHbmXmlTask extends SourceTask {
 	 * on {@link #getRenaming() naming} config)
 	 */
 	@OutputDirectory
-	public DirectoryProperty getOutputDirectory() {
-		return outputDirectory;
+	abstract public DirectoryProperty getOutputDirectory();
+
+	@SuppressWarnings("unused")
+	public void renaming(Action<TransformationNaming> action) {
+		action.execute( getRenaming() );
 	}
+
 
 	@TaskAction
 	public void transformFiles() {
 		final MappingBinder mappingBinder = new MappingBinder(
 				MappingBinder.class.getClassLoader()::getResourceAsStream,
-				unsupportedFeatures.getOrElse( UnsupportedFeatureHandling.ERROR )
+				getUnsupportedFeatures().get()
 		);
 
 		final List<Binding<JaxbHbmHibernateMapping>> hbmBindings = new ArrayList<>();
@@ -149,7 +127,7 @@ public abstract class TransformHbmXmlTask extends SourceTask {
 
 		try ( StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.clearSettings()
-				.applySetting( JdbcSettings.JAKARTA_HBM2DDL_DB_NAME, targetDatabaseName.get() )
+				.applySetting( JdbcSettings.JAKARTA_HBM2DDL_DB_NAME, getTargetDatabaseName().get() )
 				.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, false )
 				.build() ) {
 			performTransformation( hbmBindings, mappingBinder, serviceRegistry );
@@ -165,8 +143,7 @@ public abstract class TransformHbmXmlTask extends SourceTask {
 		final List<Binding<JaxbEntityMappingsImpl>> transformedBindings = HbmXmlTransformer.transform(
 				hbmBindings,
 				(MetadataImplementor) metadataSources.buildMetadata(),
-				serviceRegistry,
-				unsupportedFeatures.get()
+				getUnsupportedFeatures().get()
 		);
 
 		for ( int i = 0; i < hbmBindings.size(); i++ ) {
@@ -176,7 +153,7 @@ public abstract class TransformHbmXmlTask extends SourceTask {
 			final OriginImpl origin = (OriginImpl) hbmBinding.getOrigin();
 			final File hbmXmlFile = origin.getHbmXmlFile();
 
-			if ( deleteHbmFiles.getOrElse( false ) ) {
+			if ( getDeleteHbmFiles().get() ) {
 				final boolean deleted = hbmXmlFile.delete();
 				if ( !deleted ) {
 					getProject().getLogger().warn( "Unable to delete hbm.xml file `{}`", hbmXmlFile.getAbsoluteFile() );
@@ -221,8 +198,8 @@ public abstract class TransformHbmXmlTask extends SourceTask {
 	}
 
 	private File determineCopyFile(String copyName, File hbmXmlFile) {
-		if ( outputDirectory.isPresent() ) {
-			return outputDirectory.get().file( copyName ).getAsFile();
+		if ( getOutputDirectory().isPresent() ) {
+			return getOutputDirectory().get().file( copyName ).getAsFile();
 		}
 		else {
 			return new File( hbmXmlFile.getParentFile(), copyName );
@@ -231,7 +208,7 @@ public abstract class TransformHbmXmlTask extends SourceTask {
 
 	private String determineCopyName(File hbmXmlFile) {
 		final String hbmXmlFileName = hbmXmlFile.getName();
-		if ( renaming.areNoneDefined() ) {
+		if ( getRenaming().areNoneDefined() ) {
 			return hbmXmlFileName;
 		}
 
@@ -256,17 +233,17 @@ public abstract class TransformHbmXmlTask extends SourceTask {
 
 		String copyName = copyBaseName;
 
-		final String prefix = renaming.getPrefix().getOrNull();
+		final String prefix = getRenaming().getPrefix().getOrNull();
 		if ( prefix != null ) {
-			copyName = renaming.getPrefix().get() + copyName;
+			copyName = getRenaming().getPrefix().get() + copyName;
 		}
 
-		final String suffix = renaming.getSuffix().getOrNull();
+		final String suffix = getRenaming().getSuffix().getOrNull();
 		if ( suffix != null ) {
 			copyName += suffix;
 		}
 
-		final String extension = renaming.getExtension().getOrNull();
+		final String extension = getRenaming().getExtension().getOrNull();
 		if ( extension != null ) {
 			copyName += ".";
 			copyName += extension;

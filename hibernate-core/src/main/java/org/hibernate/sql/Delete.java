@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql;
@@ -27,7 +27,7 @@ public class Delete implements RestrictionRenderingContext {
 	private int parameterCount;
 
 	public Delete(SessionFactoryImplementor factory) {
-		this( factory.getFastSessionServices().parameterMarkerStrategy );
+		this( factory.getParameterMarkerStrategy() );
 	}
 
 	public Delete(ParameterMarkerStrategy parameterMarkerStrategy) {

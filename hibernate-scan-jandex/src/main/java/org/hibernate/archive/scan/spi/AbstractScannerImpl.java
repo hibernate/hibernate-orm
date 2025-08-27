@@ -1,11 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.archive.scan.spi;
 
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.archive.scan.internal.NoopEntryHandler;
@@ -27,7 +28,7 @@ import org.hibernate.boot.archive.spi.JarFileEntryUrlAdjuster;
  */
 public abstract class AbstractScannerImpl implements Scanner {
 	private final ArchiveDescriptorFactory archiveDescriptorFactory;
-	private final Map<URL, ArchiveDescriptorInfo> archiveDescriptorCache = new HashMap<>();
+	private final Map<String, ArchiveDescriptorInfo> archiveDescriptorCache = new HashMap<>();
 
 	protected AbstractScannerImpl(ArchiveDescriptorFactory archiveDescriptorFactory) {
 		this.archiveDescriptorFactory = archiveDescriptorFactory;
@@ -37,18 +38,19 @@ public abstract class AbstractScannerImpl implements Scanner {
 	public ScanResult scan(ScanEnvironment environment, ScanOptions options, ScanParameters parameters) {
 		final ScanResultCollector collector = new ScanResultCollector( environment, options, parameters );
 
-		if ( environment.getNonRootUrls() != null ) {
+		final List<URL> nonRootUrls = environment.getNonRootUrls();
+		if ( nonRootUrls != null ) {
 			final ArchiveContext context = new ArchiveContextImpl( false, collector );
-			for ( URL url : environment.getNonRootUrls() ) {
-				final ArchiveDescriptor descriptor = buildArchiveDescriptor( url, environment, false );
-				descriptor.visitArchive( context );
+			for ( URL url : nonRootUrls ) {
+				buildArchiveDescriptor( url, environment, false )
+						.visitArchive( context );
 			}
 		}
 
-		if ( environment.getRootUrl() != null ) {
-			final ArchiveContext context = new ArchiveContextImpl( true, collector );
-			final ArchiveDescriptor descriptor = buildArchiveDescriptor( environment.getRootUrl(), environment, true );
-			descriptor.visitArchive( context );
+		final URL rootUrl = environment.getRootUrl();
+		if ( rootUrl != null ) {
+			buildArchiveDescriptor( rootUrl, environment, true )
+					.visitArchive( new ArchiveContextImpl( true, collector ) );
 		}
 
 		return collector.toScanResult();
@@ -60,32 +62,19 @@ public abstract class AbstractScannerImpl implements Scanner {
 			ScanEnvironment environment,
 			boolean isRootUrl) {
 		final ArchiveDescriptor descriptor;
-		final ArchiveDescriptorInfo descriptorInfo = archiveDescriptorCache.get( url );
+		final ArchiveDescriptorInfo descriptorInfo = archiveDescriptorCache.get( url.toExternalForm() );
 		if ( descriptorInfo == null ) {
-			if ( !isRootUrl && archiveDescriptorFactory instanceof JarFileEntryUrlAdjuster ) {
-				url = ( (JarFileEntryUrlAdjuster) archiveDescriptorFactory ).adjustJarFileEntryUrl( url, environment.getRootUrl() );
+			if ( !isRootUrl && archiveDescriptorFactory instanceof JarFileEntryUrlAdjuster jarFileEntryUrlAdjuster ) {
+				url = jarFileEntryUrlAdjuster.adjustJarFileEntryUrl( url, environment.getRootUrl() );
 			}
 			descriptor = archiveDescriptorFactory.buildArchiveDescriptor( url );
-			archiveDescriptorCache.put(
-					url,
-					new ArchiveDescriptorInfo( descriptor, isRootUrl )
-			);
+			archiveDescriptorCache.put( url.toExternalForm(), new ArchiveDescriptorInfo( descriptor, isRootUrl ) );
 		}
 		else {
 			validateReuse( descriptorInfo, isRootUrl );
 			descriptor = descriptorInfo.archiveDescriptor;
 		}
 		return descriptor;
-	}
-
-	/**
-	 * Handle &lt;jar-file/&gt; references from a persistence.xml file.
-	 *
-	 * JPA allows for  to be specific
-	 * @return The resolved non-root URL
-	 */
-	protected URL resolveNonRootUrl(URL url) {
-		return null;
 	}
 
 	// This needs to be protected and attributes/constructor visible in case
@@ -136,9 +125,9 @@ public abstract class AbstractScannerImpl implements Scanner {
 				return packageEntryHandler;
 			}
 			else if ( nameWithinArchive.endsWith( "module-info.class" ) ) {
-				//There's two reasons to skip this: the most important one is that Jandex
-				//is unable to analyze them, so we need to dodge it.
-				//Secondarily, we have no use for these so let's save the effort.
+				// There are two reasons to skip this: the most important one is
+				// that Jandex is unable to analyze them, so we need to dodge it.
+				// Secondly, we have no use for these, so let's save the effort.
 				return NoopEntryHandler.NOOP_INSTANCE;
 			}
 			else if ( nameWithinArchive.endsWith( ".class" ) ) {

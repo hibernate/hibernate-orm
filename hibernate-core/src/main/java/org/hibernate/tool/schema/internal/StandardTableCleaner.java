@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
@@ -53,8 +53,8 @@ public class StandardTableCleaner implements Cleaner {
 		String[] truncateTableStatements = dialect.getTruncateTableStatements( tableNames );
 		String[] initStatements = tables.stream()
 				.flatMap( table -> table.getInitCommands( context ).stream() )
-				.flatMap( command -> stream( command.getInitCommands() ) )
-				.collect( toList() )
+				.flatMap( command -> stream( command.initCommands() ) )
+				.toList()
 				.toArray( ArrayHelper.EMPTY_STRING_ARRAY );
 		return join( truncateTableStatements, initStatements );
 	}

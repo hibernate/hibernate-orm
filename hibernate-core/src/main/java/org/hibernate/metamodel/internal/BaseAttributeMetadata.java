@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
@@ -28,8 +28,7 @@ public abstract class BaseAttributeMetadata<X, Y> implements AttributeMetadata<X
 			Property propertyMapping,
 			ManagedDomainType<X> ownerType,
 			Member member,
-			AttributeClassification attributeClassification,
-			MetadataContext metadataContext) {
+			AttributeClassification attributeClassification) {
 		this.propertyMapping = propertyMapping;
 		this.ownerType = ownerType;
 		this.member = member;
@@ -41,14 +40,14 @@ public abstract class BaseAttributeMetadata<X, Y> implements AttributeMetadata<X
 			// assume we have a MAP entity-mode "class"
 			declaredType = propertyMapping.getType().getReturnedClass();
 		}
-		else if ( member instanceof Field ) {
-			declaredType = ( (Field) member ).getType();
+		else if ( member instanceof Field field ) {
+			declaredType = field.getType();
 		}
-		else if ( member instanceof Method ) {
-			declaredType = ( (Method) member ).getReturnType();
+		else if ( member instanceof Method method ) {
+			declaredType = method.getReturnType();
 		}
-		else if ( member instanceof MapMember ) {
-			declaredType = ( (MapMember) member ).getType();
+		else if ( member instanceof MapMember mapMember ) {
+			declaredType = mapMember.getType();
 		}
 		else {
 			throw new IllegalArgumentException( "Cannot determine java-type from given member [" + member + "]" );

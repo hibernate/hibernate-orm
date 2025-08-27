@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.junit;
@@ -111,6 +111,9 @@ public class EntityManagerFactoryExtension
 	private static PersistenceUnitInfoImpl createPersistenceUnitInfo(Jpa jpa) {
 		final PersistenceUnitInfoImpl pui =
 				new PersistenceUnitInfoImpl( jpa.persistenceUnitName() );
+		// Use the context class loader for entity loading if configured,
+		// to make enhancement work for tests
+		pui.setClassLoader( Thread.currentThread().getContextClassLoader() );
 		pui.setTransactionType( jpa.transactionType() );
 		pui.setCacheMode( jpa.sharedCacheMode() );
 		pui.setValidationMode( jpa.validationMode() );

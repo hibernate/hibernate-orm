@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -9,6 +9,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
+import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
 import static org.hibernate.processor.util.Constants.HIB_SESSION;
 
 /**
@@ -73,8 +74,9 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 	void comment(StringBuilder declaration) {
 		declaration
 				.append("\n/**")
-				.append("\n * Find ")
-				.append("{@link ")
+				.append("\n * ")
+				.append(this instanceof CriteriaDeleteMethod ? "Delete" : "Find")
+				.append(" {@link ")
 				.append(annotationMetaEntity.importType(entity))
 				.append("}");
 		long paramCount = paramTypes.stream()
@@ -99,14 +101,20 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 					}
 					count++;
 					final String path = paramNames.get(i);
-					declaration
-							.append("{@link ")
-							.append(annotationMetaEntity.importType(entity))
-							.append('#')
-							.append(qualifier(path))
-							.append(' ')
-							.append(path)
-							.append("}");
+					if ( ID_ROLE_NAME.equals(path) ) {
+						declaration
+								.append("identifier");
+					}
+					else {
+						declaration
+								.append("{@link ")
+								.append(annotationMetaEntity.importType(entity))
+								.append('#')
+								.append(qualifier(path))
+								.append(' ')
+								.append(path)
+								.append("}");
+					}
 				}
 			}
 		}
@@ -162,7 +170,8 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 		}
 		declaration
 				.append("\treturn ")
-				.append(sessionName);
+				.append(sessionName)
+				.append(getObjectCall());
 	}
 
 	void modifiers(StringBuilder declaration) {

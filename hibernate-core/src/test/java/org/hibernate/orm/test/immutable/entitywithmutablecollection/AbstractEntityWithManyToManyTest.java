@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.immutable.entitywithmutablecollection;
@@ -8,7 +8,6 @@ import java.util.Iterator;
 
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.StaleStateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
@@ -919,12 +918,7 @@ public abstract class AbstractEntityWithManyToManyTest {
 					catch (PersistenceException ex) {
 						s.getTransaction().rollback();
 						assertTrue( isContractVersioned );
-						if ( !scope.getSessionFactory().getSessionFactoryOptions().isJdbcBatchVersionedData() ) {
-							assertTyping( StaleObjectStateException.class, ex.getCause() );
-						}
-						else {
-							assertTyping( StaleStateException.class, ex.getCause() );
-						}
+						assertTyping( StaleObjectStateException.class, ex.getCause() );
 					}
 				}
 		);

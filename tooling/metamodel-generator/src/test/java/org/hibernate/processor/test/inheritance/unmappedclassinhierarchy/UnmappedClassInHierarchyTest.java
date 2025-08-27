@@ -1,12 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.inheritance.unmappedclassinhierarchy;
 
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertSuperclassRelationshipInMetamodel;
 
@@ -14,7 +14,8 @@ import static org.hibernate.processor.test.util.TestUtil.assertSuperclassRelatio
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
-public class UnmappedClassInHierarchyTest extends CompilationTest {
+@CompilationTest
+class UnmappedClassInHierarchyTest {
 	@Test
 	@WithClasses({
 			BaseEntity.class,
@@ -24,7 +25,7 @@ public class UnmappedClassInHierarchyTest extends CompilationTest {
 			SubA.class,
 			SubB.class
 	})
-	public void testUnmappedClassInHierarchy() throws Exception {
+	void testUnmappedClassInHierarchy() throws Exception {
 		assertSuperclassRelationshipInMetamodel( SubA.class, BaseEntity.class );
 		assertSuperclassRelationshipInMetamodel( SubB.class, MappedBase.class );
 	}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.basic;
@@ -16,8 +16,8 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import org.hibernate.annotations.Type;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -127,7 +127,7 @@ public class RepeatedMappingUserTypeTests {
 		public SortedSet<Integer> nullSafeGet(
 				ResultSet rs,
 				int position,
-				SharedSessionContractImplementor session) throws SQLException {
+				WrapperOptions options) throws SQLException {
 			return convertToEntityAttribute( rs.getString( position ) );
 		}
 
@@ -136,7 +136,7 @@ public class RepeatedMappingUserTypeTests {
 				PreparedStatement st,
 				SortedSet<Integer> values,
 				int index,
-				SharedSessionContractImplementor session) throws SQLException {
+				WrapperOptions options) throws SQLException {
 			if ( values == null || values.isEmpty() ) {
 				st.setNull( index, SqlTypes.VARCHAR );
 				return;

@@ -1,12 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.enhanced;
 
-import java.io.Serializable;
-
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
+import org.hibernate.sql.ast.tree.expression.Expression;
+
+import java.io.Serializable;
 
 /**
  * An optimizer that performs no optimization. A round trip to
@@ -51,5 +53,10 @@ public final class NoopOptimizer extends AbstractOptimizer {
 		// ID generators; we don't apply a value of 0, so the default will be used instead.
 		// We don't apply an increment size of 1, since it is already the default.
 		return getIncrementSize() != 0 && getIncrementSize() != 1;
+	}
+
+	@Override
+	public Expression createLowValueExpression(Expression databaseValue, SessionFactoryImplementor sessionFactory) {
+		return databaseValue;
 	}
 }

@@ -1,16 +1,17 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 
 /**
@@ -45,12 +46,12 @@ public class SqmExtractUnit<T> extends AbstractSqmNode implements SqmTypedNode<T
 	}
 
 	@Override
-	public SqmExpressible<T> getNodeType() {
-		return type;
+	public SqmBindableType<T> getNodeType() {
+		return nodeBuilder().resolveExpressible( type );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( unit );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( unit );
 	}
 }

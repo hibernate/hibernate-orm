@@ -28,7 +28,7 @@ service is defined by the interface (service role) +org.hibernate.engine.jdbc.co
 which declares methods for obtaining and releasing the Connections.  There are then multiple implementations of that
 service contract, varying in how they actually manage the Connections:
 
-* +org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl+ for using a +javax.sql.DataSource+
+* +org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider+ for using a +javax.sql.DataSource+
 * +org.hibernate.c3p0.internal.C3P0ConnectionProvider+ for using a C3P0 Connection pool
 * etc.
 

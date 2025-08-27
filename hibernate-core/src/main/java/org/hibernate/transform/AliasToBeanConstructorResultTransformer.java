@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.transform;
@@ -65,7 +65,7 @@ public class AliasToBeanConstructorResultTransformer<T> implements ResultTransfo
 	 */
 	@Override
 	public boolean equals(Object other) {
-		return other instanceof AliasToBeanConstructorResultTransformer
-			&& constructor.equals( ( (AliasToBeanConstructorResultTransformer<?>) other ).constructor );
+		return other instanceof AliasToBeanConstructorResultTransformer<?> transformer
+			&& constructor.equals( transformer.constructor );
 	}
 }

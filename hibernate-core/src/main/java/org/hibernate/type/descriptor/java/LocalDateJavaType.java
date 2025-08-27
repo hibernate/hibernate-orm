@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -37,6 +37,11 @@ public class LocalDateJavaType extends AbstractTemporalJavaType<LocalDate> {
 
 	public LocalDateJavaType() {
 		super( LocalDate.class, ImmutableMutabilityPlan.instance() );
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof LocalDate;
 	}
 
 	@Override

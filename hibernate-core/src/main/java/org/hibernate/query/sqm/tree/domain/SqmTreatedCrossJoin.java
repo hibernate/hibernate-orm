@@ -1,14 +1,18 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.spi.NavigablePath;
+
+import java.util.Objects;
 
 /**
  * A TREAT form of {@linkplain SqmCrossJoin}
@@ -18,17 +22,17 @@ import org.hibernate.spi.NavigablePath;
 @SuppressWarnings("rawtypes")
 public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin {
 	private final SqmCrossJoin wrappedPath;
-	private final EntityDomainType treatTarget;
+	private final SqmEntityDomainType treatTarget;
 
 	private SqmTreatedCrossJoin(
 			NavigablePath navigablePath,
 			SqmCrossJoin<?> wrappedPath,
-			EntityDomainType<?> treatTarget,
+			SqmEntityDomainType<?> treatTarget,
 			String alias) {
 		//noinspection unchecked
 		super(
 				navigablePath,
-				(EntityDomainType) wrappedPath.getReferencedPathSource().getSqmPathType(),
+				(SqmEntityDomainType) wrappedPath.getReferencedPathSource().getPathType(),
 				alias,
 				wrappedPath.getRoot()
 		);
@@ -57,13 +61,13 @@ public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin 
 	}
 
 	@Override
-	public EntityDomainType getTreatTarget() {
+	public SqmEntityDomainType getTreatTarget() {
 		return treatTarget;
 	}
 
 	@Override
-	public EntityDomainType getModel() {
-		return getTreatTarget();
+	public SqmEntityDomainType getModel() {
+		return treatTarget;
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -72,15 +76,15 @@ public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin 
 		return wrappedPath;
 	}
 
-	@SuppressWarnings({ "rawtypes" })
+	@SuppressWarnings("rawtypes")
 	@Override
-	public SqmPathSource getNodeType() {
+	public SqmBindableType getNodeType() {
 		return treatTarget;
 	}
 
 	@SuppressWarnings({ "rawtypes" })
 	@Override
-	public EntityDomainType getReferencedPathSource() {
+	public SqmEntityDomainType getReferencedPathSource() {
 		return treatTarget;
 	}
 
@@ -90,12 +94,25 @@ public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin 
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "treat(" );
-		wrappedPath.appendHqlString( sb );
-		sb.append( " as " );
-		sb.append( treatTarget.getName() );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( "treat(" );
+		wrappedPath.appendHqlString( hql, context );
+		hql.append( " as " );
+		hql.append( treatTarget.getName() );
+		hql.append( ')' );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmTreatedCrossJoin that
+			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() )
+			&& Objects.equals( this.treatTarget.getName(), that.treatTarget.getName() )
+			&& Objects.equals( this.wrappedPath.getNavigablePath(), that.wrappedPath.getNavigablePath() );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( treatTarget.getName(), wrappedPath.getNavigablePath() );
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })

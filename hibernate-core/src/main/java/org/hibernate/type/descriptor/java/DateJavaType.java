@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -41,6 +41,11 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 
 	public DateJavaType() {
 		super( Date.class, DateMutabilityPlan.INSTANCE );
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Date;
 	}
 
 	@Override

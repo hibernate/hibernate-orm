@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.internal;
@@ -66,8 +66,7 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 			// because the EntityEntrys would already have the desired lock mode
 			return LockMode.NONE;
 		}
-		final LockMode effectiveLockMode = resultSetProcessingState.getQueryOptions().getLockOptions()
-				.getEffectiveLockMode( alias );
+		final LockMode effectiveLockMode = resultSetProcessingState.getQueryOptions().getLockOptions().getLockMode();
 		return effectiveLockMode == LockMode.NONE
 				? jdbcValues.getValuesMapping().determineDefaultLockMode( alias, effectiveLockMode )
 				: effectiveLockMode;

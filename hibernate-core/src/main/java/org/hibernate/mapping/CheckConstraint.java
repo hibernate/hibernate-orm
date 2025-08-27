@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -7,6 +7,8 @@ package org.hibernate.mapping;
 import java.util.Objects;
 
 import org.hibernate.dialect.Dialect;
+
+import static org.hibernate.internal.util.StringHelper.isBlank;
 
 /**
  * Represents a table or column level {@code check} constraint.
@@ -74,7 +76,7 @@ public class CheckConstraint {
 	 */
 	@Deprecated(since = "7.0")
 	public String constraintString() {
-		return name == null
+		return isBlank( name )
 				? " check (" + constraint + ")"
 				: " constraint " + name + " check (" + constraint + ")";
 	}

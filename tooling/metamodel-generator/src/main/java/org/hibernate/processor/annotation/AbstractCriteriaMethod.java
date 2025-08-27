@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -7,9 +7,12 @@ package org.hibernate.processor.annotation;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
+import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
 import static org.hibernate.processor.util.TypeUtils.isPrimitive;
 
 /**
@@ -52,7 +55,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 		modifiers( declaration );
 		preamble( declaration, paramTypes );
 		chainSession( declaration );
-		nullChecks( paramTypes, declaration );
+		nullChecks( declaration, paramTypes );
 		createBuilder(declaration);
 		createCriteriaQuery( declaration );
 		where( declaration, paramTypes );
@@ -72,13 +75,52 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 
 	abstract String createQueryMethod();
 
+	String specificationType() {
+		return "org.hibernate.query.specification.SelectionSpecification";
+	}
+
 	@Override
 	void createQuery(StringBuilder declaration) {
-		declaration
-				.append(localSessionName())
-				.append(".")
-				.append(createQueryMethod())
-				.append("(_query)\n");
+		final boolean specification = isUsingSpecification();
+		if ( specification && !isReactive() ) {
+			declaration
+					.append("_spec.createQuery(")
+					.append(localSessionName())
+					.append(getObjectCall())
+					.append(")\n");
+		}
+		else {
+			declaration
+					.append(localSessionName())
+					.append(getObjectCall())
+					.append(".")
+					.append(createQueryMethod())
+					.append('(');
+			if ( specification ) {
+				declaration
+						.append("_spec.buildCriteria(_builder)");
+			}
+			else {
+				declaration.append("_query");
+			}
+			declaration.append(")\n");
+		}
+	}
+
+	@Override
+	void createSpecification(StringBuilder declaration) {
+		if ( isUsingSpecification() ) {
+			declaration
+					.append( "\tvar _spec = " )
+					.append( annotationMetaEntity.importType( specificationType() ) )
+					.append( ".create(_query);\n" );
+		}
+	}
+
+	@Override
+	boolean isUsingSpecification() {
+		return hasRestriction()
+			|| hasOrder() && !isJakartaCursoredPage(containerType);
 	}
 
 	void createCriteriaQuery(StringBuilder declaration) {
@@ -98,29 +140,16 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 		declaration
 				.append("\tvar _builder = ")
 				.append(localSessionName())
-				.append(isUsingEntityManager()
-						? ".getEntityManagerFactory()"
-						: ".getFactory()")
+				.append(getObjectCall())
 				.append(".getCriteriaBuilder();\n");
 	}
 
-	void nullChecks(List<String> paramTypes, StringBuilder declaration) {
-		for ( int i = 0; i< paramNames.size(); i++ ) {
-			final String paramName = paramNames.get(i);
-			final String paramType = paramTypes.get(i);
-			if ( !isNullable(i) && !isPrimitive(paramType) ) {
-				nullCheck( declaration, paramName );
+	void nullChecks(StringBuilder declaration, List<String> paramTypes) {
+		for ( int i = 0; i<paramNames.size(); i++ ) {
+			if ( isNonNull(i, paramTypes) ) {
+				nullCheck( declaration, paramNames.get(i) );
 			}
 		}
-	}
-
-	private static void nullCheck(StringBuilder declaration, String paramName) {
-		declaration
-				.append("\tif (")
-				.append(paramName.replace('.', '$'))
-				.append(" == null) throw new IllegalArgumentException(\"Null ")
-				.append(paramName)
-				.append("\");\n");
 	}
 
 	void where(StringBuilder declaration, List<String> paramTypes) {
@@ -148,7 +177,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	private void condition(StringBuilder declaration, int i, String paramName, String paramType) {
 		declaration
 				.append("\n\t\t\t");
-		final String parameterName = paramName.replace('.', '$');
+		final String parameterName = parameterName(paramName);
 		if ( isNullable(i) && !isPrimitive(paramType) ) {
 			declaration
 					.append(parameterName)
@@ -194,14 +223,27 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	private void path(StringBuilder declaration, String paramName) {
 		final StringTokenizer tokens = new StringTokenizer(paramName, ".");
 		String typeName = entity;
-		while ( typeName!= null && tokens.hasMoreTokens() ) {
+		while ( typeName != null && tokens.hasMoreTokens() ) {
+			final TypeElement typeElement =
+					annotationMetaEntity.getContext().getElementUtils()
+							.getTypeElement( typeName );
 			final String memberName = tokens.nextToken();
 			declaration
-					.append(".get(")
-					.append(annotationMetaEntity.importType(typeName + '_'))
-					.append('.')
-					.append(memberName)
-					.append(')');
+					.append( ".get(" );
+			if ( ID_ROLE_NAME.equals(memberName) ) {
+				declaration
+						.append( '"' )
+						.append( memberName )
+						.append( '"' );
+			}
+			else {
+				declaration
+						.append( annotationMetaEntity.importType(
+								getGeneratedClassFullyQualifiedName( typeElement, false ) ) )
+						.append( '.' )
+						.append( memberName );
+			}
+			declaration.append( ')' );
 			typeName = annotationMetaEntity.getMemberType(typeName, memberName);
 		}
 	}

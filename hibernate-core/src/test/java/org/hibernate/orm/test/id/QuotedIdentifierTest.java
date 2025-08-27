@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id;
@@ -19,6 +19,7 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -27,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author Vlad Mihalcea
  */
 @RequiresDialectFeature(feature = SupportsIdentityColumns.class, jiraKey = "HHH-9271")
-@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 12, matchSubTypes = true, reason = "Oracle and identity column: java.sql.Connection#prepareStatement(String sql, int columnIndexes[]) does not work with quoted table names and/or quoted columnIndexes")
+@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 12, versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "Oracle and identity column: java.sql.Connection#prepareStatement(String sql, int columnIndexes[]) does not work with quoted table names and/or quoted columnIndexes")
 @DomainModel(
 		annotatedClasses = {
 				QuotedIdentifierTest.QuotedIdentifier.class

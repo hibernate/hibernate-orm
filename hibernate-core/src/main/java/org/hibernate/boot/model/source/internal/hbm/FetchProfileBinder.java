@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -50,7 +50,7 @@ public class FetchProfileBinder {
 			String containingEntityName) {
 		FetchProfile profile = context.getMetadataCollector().getFetchProfile( fetchProfileBinding.getName() );
 		if ( profile == null ) {
-			log.debugf( "Creating FetchProfile : %s", fetchProfileBinding.getName() );
+			log.tracef( "Creating FetchProfile: %s", fetchProfileBinding.getName() );
 			profile = new FetchProfile( fetchProfileBinding.getName(), MetadataSource.HBM );
 			context.getMetadataCollector().addFetchProfile( profile );
 		}

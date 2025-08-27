@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.collection;
@@ -22,7 +22,7 @@ import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FilterAliasGenerator;
-import org.hibernate.jdbc.Expectations;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -76,7 +76,6 @@ import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import static org.hibernate.internal.util.NullnessHelper.areAllNonNull;
 import static org.hibernate.internal.util.collections.ArrayHelper.isAnyTrue;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.sql.model.ast.builder.TableUpdateBuilder.NULL;
 
 /**
@@ -350,7 +349,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				null,
 				parameterBinders,
 				sqlWhereString,
-				Expectations.NONE
+				Expectation.None.INSTANCE
 		);
 	}
 
@@ -407,9 +406,9 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	private InsertRowsCoordinator buildInsertCoordinator() {
 		if ( isInverse() || !isRowInsertEnabled() ) {
-			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
-				MODEL_MUTATION_LOGGER.debugf( "Skipping collection (re)creation - %s", getRolePath() );
-			}
+//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+//				MODEL_MUTATION_LOGGER.tracef( "Skipping collection (re)creation - %s", getRolePath() );
+//			}
 			return new InsertRowsCoordinatorNoOp( this );
 		}
 		else {
@@ -424,9 +423,9 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	private UpdateRowsCoordinator buildUpdateCoordinator() {
 		if ( !isRowDeleteEnabled() && !isRowInsertEnabled() ) {
-			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
-				MODEL_MUTATION_LOGGER.debugf( "Skipping collection row updates - %s", getRolePath() );
-			}
+//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+//				MODEL_MUTATION_LOGGER.tracef( "Skipping collection row updates - %s", getRolePath() );
+//			}
 			return new UpdateRowsCoordinatorNoOp( this );
 		}
 		else {
@@ -440,9 +439,9 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	private DeleteRowsCoordinator buildDeleteCoordinator() {
 		if ( !needsRemove() ) {
-			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
-				MODEL_MUTATION_LOGGER.debugf( "Skipping collection row deletions - %s", getRolePath() );
-			}
+//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+//				MODEL_MUTATION_LOGGER.tracef( "Skipping collection row deletions - %s", getRolePath() );
+//			}
 			return new DeleteRowsCoordinatorNoOp( this );
 		}
 		else {
@@ -458,9 +457,9 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	private RemoveCoordinator buildDeleteAllCoordinator() {
 		if ( ! needsRemove() ) {
-			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
-				MODEL_MUTATION_LOGGER.debugf( "Skipping collection removals - %s", getRolePath() );
-			}
+//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+//				MODEL_MUTATION_LOGGER.tracef( "Skipping collection removals - %s", getRolePath() );
+//			}
 			return new RemoveCoordinatorNoOp( this );
 		}
 		else {

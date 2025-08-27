@@ -1,58 +1,50 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.MappingException;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.HANADialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.orm.junit.ServiceRegistryScope;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.MappingException;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.dialect.HANADialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.junit.jupiter.api.Test;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.Assert.fail;
 
-public class HANADialectTestCase extends BaseUnitTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ServiceRegistry
+@DomainModel( annotatedClasses = HANADialectTestCase.EntityWithIdentity.class )
+@RequiresDialect( HANADialect.class )
+public class HANADialectTestCase {
 	@Test
-	public void testSqlGeneratedForIdentityInsertNoColumns() {
-		ServiceRegistryScope.using(
-				() -> ServiceRegistryUtil.serviceRegistryBuilder()
-						.applySetting( AvailableSettings.DIALECT, HANADialect.class )
-						.build(),
-				registryScope -> {
-					final StandardServiceRegistry registry = registryScope.getRegistry();
-					final MetadataSources metadataSources = new MetadataSources( registry );
-					metadataSources.addAnnotatedClass( EntityWithIdentity.class );
+	public void testIdentityInsertNoColumns(DomainModelScope modelScope) {
+		final MetadataImplementor domainModel = modelScope.getDomainModel();
 
-					String errorMessage = assertThrows( MappingException.class, () -> {
-						try ( SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) metadataSources.buildMetadata().buildSessionFactory() ) {
-							// Nothing to do, we expect an exception
-						}
-					} ).getMessage();
-					assertThat( errorMessage )
-							.matches( "The INSERT statement for table \\[EntityWithIdentity\\] contains no column, and this is not supported by \\[" + HANADialect.class.getName() + ", version: [\\d\\.]+\\]" );
-				}
-		);
+		try ( SessionFactoryImplementor sessionFactory = domainModel.buildSessionFactory() ) {
+			fail( "Expecting a MappingException" );
+		}
+		catch (MappingException expected) {
+			assertThat( expected.getMessage() )
+					.matches( "The INSERT statement for table \\[EntityWithIdentity\\] contains no column, and this is not supported by \\[" + HANADialect.class.getName() + ", version: [\\d\\.]+\\]" );
+		}
 	}
 
 	/**
@@ -105,7 +97,7 @@ public class HANADialectTestCase extends BaseUnitTestCase {
 		sqlWithLock = dialect.applyLocksToSql( sql, lockOptions, new HashMap<>() );
 		assertEquals( sql + " for update wait 2", sqlWithLock );
 
-		lockOptions.setAliasSpecificLockMode( "dummy", LockMode.PESSIMISTIC_READ );
+		lockOptions.setLockMode( LockMode.PESSIMISTIC_READ );
 		keyColumns.put( "dummy", new String[]{ "dummy" } );
 		sqlWithLock = dialect.applyLocksToSql( sql, lockOptions, keyColumns );
 		assertEquals( sql + " for update of dummy.dummy wait 2", sqlWithLock );

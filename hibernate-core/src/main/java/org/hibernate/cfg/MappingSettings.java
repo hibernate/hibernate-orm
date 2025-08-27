@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
@@ -261,8 +261,8 @@ public interface MappingSettings {
 	 * @since 6.5
 	 *
 	 * @see org.hibernate.type.SqlTypes#NAMED_ENUM
-	 * @see org.hibernate.dialect.PostgreSQLEnumJdbcType
-	 * @see org.hibernate.dialect.OracleEnumJdbcType
+	 * @see org.hibernate.dialect.type.PostgreSQLEnumJdbcType
+	 * @see org.hibernate.dialect.type.OracleEnumJdbcType
 	 */
 	@Incubating
 	String PREFER_NATIVE_ENUM_TYPES = "hibernate.type.prefer_native_enum_types";
@@ -507,7 +507,17 @@ public interface MappingSettings {
 	String TRANSFORM_HBM_XML_FEATURE_HANDLING = "hibernate.transform_hbm_xml.unsupported_feature_handling";
 
 	/**
+	 * Specifies that Hibernate should always restrict by discriminator values in
+	 * SQL {@code select} statements, even when querying the root entity of an
+	 * entity inheritance hierarchy.
+	 * <p>
+	 * By default, Hibernate only restricts by discriminator values when querying
+	 * a subtype, or when the root entity is explicitly annotated
+	 * {@link org.hibernate.annotations.DiscriminatorOptions#force
+	 * DiscriminatorOptions(force=true)}.
+	 *
 	 * @see org.hibernate.boot.MetadataBuilder#enableImplicitForcingOfDiscriminatorsInSelect
+	 * @see org.hibernate.annotations.DiscriminatorOptions#force
 	 *
 	 * @settingDefault {@code false}
 	 */

@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.complete;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
@@ -16,6 +15,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.Objects;
 
@@ -90,7 +90,7 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationStateImpl creationStateImpl,
 			String columnName, int jdbcPosition) {
-		final SessionFactoryImplementor sessionFactory = creationStateImpl.getSessionFactory();
+		final TypeConfiguration typeConfiguration = creationStateImpl.getCreationContext().getTypeConfiguration();
 		return creationStateImpl.resolveSqlSelection(
 				creationStateImpl.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey( columnName ),
@@ -103,7 +103,7 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 								basicType = jdbcResultsMetadata.resolveType(
 										jdbcPosition,
 										explicitJavaType,
-										sessionFactory
+										typeConfiguration
 								);
 							}
 							final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
@@ -112,7 +112,7 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 				),
 				explicitJavaType,
 				null,
-				sessionFactory.getTypeConfiguration()
+				typeConfiguration
 		);
 	}
 

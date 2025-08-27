@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.model.ast.builder;
@@ -101,6 +101,11 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 		else {
 			valueBindings.add( valueBinding );
 		}
+	}
+
+	@Override
+	public void addValueColumn(ColumnValueBinding valueBinding) {
+		valueBindings.add( valueBinding );
 	}
 
 	@Override

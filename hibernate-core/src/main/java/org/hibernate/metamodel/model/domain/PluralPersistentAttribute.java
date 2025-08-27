@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain;
@@ -8,8 +8,6 @@ import jakarta.persistence.metamodel.PluralAttribute;
 
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.query.NotIndexedCollectionException;
-import org.hibernate.query.sqm.SqmJoinable;
-import org.hibernate.query.sqm.SqmPathSource;
 
 /**
  * Extension of the JPA-defined {@link PluralAttribute} interface.
@@ -17,15 +15,15 @@ import org.hibernate.query.sqm.SqmPathSource;
  * @author Steve Ebersole
  */
 public interface PluralPersistentAttribute<D, C, E>
-		extends PersistentAttribute<D, C>, SqmPathSource<E>, SqmJoinable<D,E>, PluralAttribute<D, C, E> {
+		extends PersistentAttribute<D, C>, PathSource<E>, PluralAttribute<D, C, E> {
 	@Override
 	ManagedDomainType<D> getDeclaringType();
 
 	CollectionClassification getCollectionClassification();
 
-	SqmPathSource<E> getElementPathSource();
+	PathSource<E> getElementPathSource();
 
-	default SqmPathSource<?> getIndexPathSource() {
+	default PathSource<?> getIndexPathSource() {
 		throw new NotIndexedCollectionException(
 				"Plural attribute [" +  getPathName() + "] is not indexed (list / map)"
 		);

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -121,6 +122,17 @@ public interface CompositeType extends Type {
 	 * @return The cascade style.
 	 */
 	CascadeStyle getCascadeStyle(int index);
+
+	/**
+	 * Retrieve the on delete action of the indicated component property.
+	 *
+	 * @param index The property index,
+	 *
+	 * @return The cascade style.
+	 *
+	 * @since 7.0
+	 */
+	OnDeleteAction getOnDeleteAction(int index);
 
 	/**
 	 * Retrieve the fetch mode of the indicated component property.

@@ -1,8 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.pagination;
+
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
  * A {@link LimitHandler} for databases which support the ANSI
@@ -25,12 +27,22 @@ public class FetchLimitHandler extends AbstractNoOffsetLimitHandler {
 	}
 
 	@Override
+	protected String limitClause(int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
+		return " fetch first " + parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null ) + " rows only";
+	}
+
+	@Override
 	protected String insert(String fetch, String sql) {
 		return insertBeforeForUpdate( fetch, sql );
 	}
 
 	@Override
 	public boolean bindLimitParametersFirst() {
+		return false;
+	}
+
+	@Override
+	public boolean processSqlMutatesState() {
 		return false;
 	}
 

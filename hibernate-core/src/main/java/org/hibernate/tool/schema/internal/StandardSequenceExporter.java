@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
@@ -15,6 +15,8 @@ import org.hibernate.tool.schema.spi.Exporter;
  * An {@link Exporter} for {@linkplain Sequence sequences}.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.dialect.sequence.SequenceSupport
  */
 public class StandardSequenceExporter implements Exporter<Sequence> {
 	private final Dialect dialect;

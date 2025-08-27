@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
@@ -7,10 +7,8 @@ package org.hibernate.metamodel.internal;
 
 import java.util.function.Supplier;
 
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
@@ -19,8 +17,9 @@ import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.usertype.CompositeUserType;
+
+import static org.hibernate.internal.util.ReflectHelper.isRecord;
 
 /**
  * @author Steve Ebersole
@@ -36,18 +35,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			PersistentClass bootDescriptor,
 			EntityPersister runtimeDescriptor,
 			RuntimeModelCreationContext creationContext) {
-//		RepresentationMode representation = bootDescriptor.getExplicitRepresentationMode();
-		RepresentationMode representation = null;
-		if ( representation == null ) {
-			if ( bootDescriptor.getMappedClass() == null ) {
-				representation = RepresentationMode.MAP;
-			}
-			else {
-				representation = RepresentationMode.POJO;
-			}
-		}
-
-		if ( representation == RepresentationMode.MAP ) {
+		if ( bootDescriptor.getMappedClass() == null ) { // i.e. RepresentationMode.MAP;
 			return new EntityRepresentationStrategyMap( bootDescriptor, creationContext );
 		}
 		else {
@@ -66,76 +54,12 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			Component bootDescriptor,
 			Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
 			RuntimeModelCreationContext creationContext) {
-//		RepresentationMode representation = bootDescriptor.getExplicitRepresentationMode();
-		final RepresentationMode representation;
-		if ( bootDescriptor.getComponentClassName() == null ) {
-			representation = RepresentationMode.MAP;
-		}
-		else {
-			representation = RepresentationMode.POJO;
-		}
 
-		final CompositeUserType<?> compositeUserType;
-		if ( bootDescriptor.getTypeName() != null ) {
-			final Class<CompositeUserType<?>> userTypeClass = creationContext.getBootstrapContext()
-					.getClassLoaderAccess()
-					.classForName( bootDescriptor.getTypeName() );
-			if ( !creationContext.getBootModel().getMetadataBuildingOptions().isAllowExtensionsInCdi() ) {
-				compositeUserType = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass );
-			}
-			else {
-				compositeUserType = creationContext.getBootstrapContext()
-						.getServiceRegistry()
-						.requireService( ManagedBeanRegistry.class )
-						.getBean( userTypeClass )
-						.getBeanInstance();
-			}
-		}
-		else {
-			compositeUserType = null;
-		}
-		final EmbeddableInstantiator customInstantiator;
-		if ( bootDescriptor.getCustomInstantiator() != null ) {
-			final Class<? extends EmbeddableInstantiator> instantiatorClass = bootDescriptor.getCustomInstantiator();
-			if ( !creationContext.getBootModel().getMetadataBuildingOptions().isAllowExtensionsInCdi() ) {
-				customInstantiator = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( instantiatorClass );
-			}
-			else {
-				customInstantiator = creationContext.getBootstrapContext()
-						.getServiceRegistry()
-						.requireService( ManagedBeanRegistry.class )
-						.getBean( instantiatorClass )
-						.getBeanInstance();
-			}
-		}
-		else if ( compositeUserType != null ) {
-			//noinspection unchecked,rawtypes
-			customInstantiator = new EmbeddableCompositeUserTypeInstantiator( (CompositeUserType) compositeUserType );
-		}
-		else if ( bootDescriptor.getComponentClassName() != null && ReflectHelper.isRecord( bootDescriptor.getComponentClass() ) ) {
-			if ( bootDescriptor.sortProperties() == null ) {
-				customInstantiator = new EmbeddableInstantiatorRecordStandard( bootDescriptor.getComponentClass() );
-			}
-			else {
-				customInstantiator = EmbeddableInstantiatorRecordIndirecting.of(
-						bootDescriptor.getComponentClass(),
-						bootDescriptor.getPropertyNames()
-				);
-			}
-		}
-		else if ( bootDescriptor.getInstantiator() != null ) {
-			bootDescriptor.sortProperties();
-			customInstantiator = EmbeddableInstantiatorPojoIndirecting.of(
-					bootDescriptor.getPropertyNames(),
-					bootDescriptor.getInstantiator(),
-					bootDescriptor.getInstantiatorPropertyNames()
-			);
-		}
-		else {
-			customInstantiator = null;
-		}
+		final CompositeUserType<?> compositeUserType = getCompositeUserType( bootDescriptor, creationContext );
+		final EmbeddableInstantiator customInstantiator =
+				getCustomInstantiator( bootDescriptor, creationContext, compositeUserType );
 
-		if ( representation == RepresentationMode.MAP ) {
+		if ( bootDescriptor.getComponentClassName() == null ) { // i.e. RepresentationMode.MAP;
 			return new EmbeddableRepresentationStrategyMap(
 					bootDescriptor,
 					runtimeDescriptorAccess,
@@ -159,5 +83,63 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 					creationContext
 			);
 		}
+	}
+
+	private static CompositeUserType<?> getCompositeUserType(
+			Component bootDescriptor, RuntimeModelCreationContext creationContext) {
+		if ( bootDescriptor.getTypeName() != null ) {
+			return beanInstance( creationContext,
+					creationContext.getBootstrapContext().getClassLoaderAccess()
+							.classForName( bootDescriptor.getTypeName() ) );
+		}
+		else {
+			return null;
+		}
+	}
+
+	private static EmbeddableInstantiator getCustomInstantiator(
+			Component bootDescriptor, RuntimeModelCreationContext creationContext, CompositeUserType<?> compositeUserType) {
+		if ( bootDescriptor.getCustomInstantiator() != null ) {
+			return beanInstance( creationContext, bootDescriptor.getCustomInstantiator() );
+		}
+		else if ( compositeUserType != null ) {
+			//noinspection unchecked,rawtypes
+			return new EmbeddableCompositeUserTypeInstantiator( (CompositeUserType) compositeUserType );
+		}
+		else if ( bootDescriptor.getComponentClassName() != null
+				&& isRecord( bootDescriptor.getComponentClass() ) ) {
+			if ( bootDescriptor.sortProperties() == null ) {
+				return new EmbeddableInstantiatorRecordStandard( bootDescriptor.getComponentClass() );
+			}
+			else {
+				return EmbeddableInstantiatorRecordIndirecting.of(
+						bootDescriptor.getComponentClass(),
+						bootDescriptor.getPropertyNames()
+				);
+			}
+		}
+		else if ( bootDescriptor.getInstantiator() != null ) {
+			bootDescriptor.sortProperties();
+			return EmbeddableInstantiatorPojoIndirecting.of(
+					bootDescriptor.getPropertyNames(),
+					bootDescriptor.getInstantiator(),
+					bootDescriptor.getInstantiatorPropertyNames()
+			);
+		}
+		else {
+			return null;
+		}
+	}
+
+	private static <T> T beanInstance(RuntimeModelCreationContext creationContext, Class<T> userTypeClass) {
+		return creationContext.getBootModel().getMetadataBuildingOptions().isAllowExtensionsInCdi()
+				? getBeanInstance( creationContext, userTypeClass )
+				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass );
+	}
+
+	private static <T> T getBeanInstance(RuntimeModelCreationContext creationContext, Class<T> userTypeClass) {
+		return creationContext.getBootstrapContext().getManagedBeanRegistry()
+				.getBean( userTypeClass )
+				.getBeanInstance();
 	}
 }

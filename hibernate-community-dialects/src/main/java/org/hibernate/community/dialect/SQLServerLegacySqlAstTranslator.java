@@ -1,21 +1,24 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
 import java.util.List;
 
+import org.hibernate.Internal;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.sql.ast.SQLServerSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.sql.ast.Clause;
@@ -46,6 +49,7 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.SqlTypes;
+
 
 /**
  * A SQL AST translator for SQL Server.
@@ -116,11 +120,6 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
 	protected void renderFromClauseAfterUpdateSet(UpdateStatement statement) {
 		if ( statement.getFromClause().getRoots().isEmpty() ) {
 			appendSql( " from " );
@@ -146,11 +145,6 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		return false;
-	}
-
-	@Override
 	protected void renderTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
 		appendSql( WHITESPACE );
 		if ( tableGroupJoin.getJoinedGroup().isLateral() ) {
@@ -172,15 +166,15 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				// We have to inject the lateral predicate into the sub-query
 				final Predicate lateralPredicate = this.lateralPredicate;
 				this.lateralPredicate = predicate;
-				renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+				renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 				this.lateralPredicate = lateralPredicate;
 			}
 			else {
-				renderTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
+				renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
 			}
 		}
 		else {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+			renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 		}
 	}
 
@@ -233,85 +227,32 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	private void renderLockHint(LockMode lockMode) {
-		if ( getDialect().getVersion().isSameOrAfter( 9 ) ) {
-			final int effectiveLockTimeout = getEffectiveLockTimeout( lockMode );
-			switch ( lockMode ) {
-				case PESSIMISTIC_WRITE:
-				case WRITE: {
-					switch ( effectiveLockTimeout ) {
-						case LockOptions.SKIP_LOCKED:
-							appendSql( " with (updlock,rowlock,readpast)" );
-							break;
-						case LockOptions.NO_WAIT:
-							appendSql( " with (updlock,holdlock,rowlock,nowait)" );
-							break;
-						default:
-							appendSql( " with (updlock,holdlock,rowlock)" );
-							break;
-					}
-					break;
-				}
-				case PESSIMISTIC_READ: {
-					switch ( effectiveLockTimeout ) {
-						case LockOptions.SKIP_LOCKED:
-							appendSql( " with (updlock,rowlock,readpast)" );
-							break;
-						case LockOptions.NO_WAIT:
-							appendSql( " with (holdlock,rowlock,nowait)" );
-							break;
-						default:
-							appendSql( " with (holdlock,rowlock)" );
-							break;
-					}
-					break;
-				}
-				case UPGRADE_SKIPLOCKED: {
-					if ( effectiveLockTimeout == LockOptions.NO_WAIT ) {
-						appendSql( " with (updlock,rowlock,readpast,nowait)" );
-					}
-					else {
-						appendSql( " with (updlock,rowlock,readpast)" );
-					}
-					break;
-				}
-				case UPGRADE_NOWAIT: {
-					appendSql( " with (updlock,holdlock,rowlock,nowait)" );
-					break;
-				}
-			}
+		append( determineLockHint( lockMode, getEffectiveLockTimeout( lockMode ), getDialect() ) );
+	}
+
+	@Internal
+	public static String determineLockHint(LockMode lockMode, int effectiveLockTimeout, Dialect dialect) {
+		// NOTE: exposed for tests
+
+		if ( dialect.getVersion().isSameOrAfter( 9 ) ) {
+			return SQLServerSqlAstTranslator.determineLockHint( lockMode, effectiveLockTimeout );
 		}
 		else {
-			switch ( lockMode ) {
-				case UPGRADE_NOWAIT:
-				case PESSIMISTIC_WRITE:
-				case WRITE: {
-					appendSql( " with (updlock,rowlock)" );
-					break;
-				}
-				case PESSIMISTIC_READ: {
-					appendSql( " with (holdlock,rowlock)" );
-					break;
-				}
-				case UPGRADE_SKIPLOCKED: {
-					appendSql( " with (updlock,rowlock,readpast)" );
-					break;
-				}
-			}
+			return switch ( lockMode ) {
+				case UPGRADE_NOWAIT, PESSIMISTIC_WRITE, WRITE -> " with (updlock,rowlock)";
+				case PESSIMISTIC_READ -> " with (holdlock,rowlock)";
+				case UPGRADE_SKIPLOCKED -> " with (updlock,rowlock,readpast)";
+				default -> "";
+			};
 		}
 	}
 
 	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
+			Locking.FollowOn followOnLocking) {
 		// No need for follow on locking
 		return LockStrategy.CLAUSE;
-	}
-
-	@Override
-	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		// SQL Server does not support the FOR UPDATE clause
 	}
 
 	protected OffsetFetchClauseMode getOffsetFetchClauseMode(QueryPart queryPart) {
@@ -354,14 +295,6 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				return OffsetFetchClauseMode.STANDARD;
 			}
 		}
-	}
-
-	@Override
-	protected boolean supportsSimpleQueryGrouping() {
-		// SQL Server is quite strict i.e. it requires `select .. union all select * from (select ...)`
-		// rather than `select .. union all (select ...)` because parenthesis followed by select
-		// is always treated as a subquery, which is not supported in a set operation
-		return false;
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
@@ -493,11 +426,11 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 			// In SQL Server, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
 			switch ( operator ) {
 				case DISTINCT_FROM:
-					if ( !supportsDistinctFromPredicate() ) {
+					if ( !getDialect().supportsDistinctFromPredicate() ) {
 						appendSql( "not " );
 					}
 				case NOT_DISTINCT_FROM: {
-					if ( !supportsDistinctFromPredicate() ) {
+					if ( !getDialect().supportsDistinctFromPredicate() ) {
 						appendSql( "exists (select cast(" );
 						getClauseStack().push( Clause.SELECT );
 						visitSqlSelectExpression( lhs );
@@ -527,17 +460,12 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 					break;
 			}
 		}
-		if ( supportsDistinctFromPredicate() ) {
+		if ( getDialect().supportsDistinctFromPredicate() ) {
 			renderComparisonStandard( lhs, operator, rhs );
 		}
 		else {
 			renderComparisonEmulateIntersect( lhs, operator, rhs );
 		}
-	}
-
-	@Override
-	protected boolean supportsDistinctFromPredicate() {
-		return getDialect().getVersion().isSameOrAfter( 16 );
 	}
 
 	@Override
@@ -571,21 +499,6 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
 		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
 	}
 
 	enum OffsetFetchClauseMode {

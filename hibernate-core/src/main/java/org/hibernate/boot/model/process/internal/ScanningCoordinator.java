@@ -1,16 +1,8 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.process.internal;
-
-import java.lang.reflect.Constructor;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
@@ -28,14 +20,22 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.jaxb.internal.InputStreamAccessXmlSource;
+import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
 
-import org.jboss.logging.Logger;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static org.hibernate.boot.archive.scan.internal.ScannerLogger.SCANNER_LOGGER;
 
 /**
  * Coordinates the process of executing {@link Scanner} (if enabled)
@@ -44,7 +44,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ScanningCoordinator {
-	private static final Logger log = Logger.getLogger( ScanningCoordinator.class );
 
 	/**
 	 * Singleton access
@@ -58,52 +57,28 @@ public class ScanningCoordinator {
 			ManagedResourcesImpl managedResources,
 			BootstrapContext bootstrapContext,
 			XmlMappingBinderAccess xmlMappingBinderAccess) {
-		if ( bootstrapContext.getScanEnvironment() == null ) {
-			return;
+		if ( bootstrapContext.getScanEnvironment() != null ) {
+			// NOTE: the idea with JandexInitializer/JandexInitManager was to allow adding classes
+			// to the index as we discovered them via scanning and .  Currently
+			final Scanner scanner = buildScanner( bootstrapContext );
+			final ScanResult scanResult = scanner.scan(
+					bootstrapContext.getScanEnvironment(),
+					bootstrapContext.getScanOptions(),
+					StandardScanParameters.INSTANCE
+			);
+
+			applyScanResultsToManagedResources( managedResources, scanResult, bootstrapContext, xmlMappingBinderAccess );
 		}
-
-		final ClassLoaderAccess classLoaderAccess = new ClassLoaderAccessImpl(
-				bootstrapContext.getJpaTempClassLoader(),
-				bootstrapContext.getServiceRegistry().requireService( ClassLoaderService.class )
-		);
-
-		// NOTE : the idea with JandexInitializer/JandexInitManager was to allow adding classes
-		// to the index as we discovered them via scanning and .  Currently
-		final Scanner scanner = buildScanner( bootstrapContext, classLoaderAccess );
-		final ScanResult scanResult = scanner.scan(
-				bootstrapContext.getScanEnvironment(),
-				bootstrapContext.getScanOptions(),
-				StandardScanParameters.INSTANCE
-		);
-
-		applyScanResultsToManagedResources( managedResources, scanResult, bootstrapContext, xmlMappingBinderAccess );
 	}
 
-	private static final Class<?>[] SINGLE_ARG = new Class[] { ArchiveDescriptorFactory.class };
-
-	@SuppressWarnings("unchecked")
-	private static Scanner buildScanner(BootstrapContext bootstrapContext, ClassLoaderAccess classLoaderAccess) {
+	private static Scanner buildScanner(BootstrapContext bootstrapContext) {
 		final Object scannerSetting = bootstrapContext.getScanner();
 		final ArchiveDescriptorFactory archiveDescriptorFactory = bootstrapContext.getArchiveDescriptorFactory();
-
 		if ( scannerSetting == null ) {
-			// No custom Scanner specified, use the StandardScanner
-			final Iterator<ScannerFactory> iterator = bootstrapContext.getServiceRegistry()
-					.requireService( ClassLoaderService.class )
-					.loadJavaServices( ScannerFactory.class )
-					.iterator();
-			if ( iterator.hasNext() ) {
-				// todo: check for multiple scanner and in case raise a warning?
-				final ScannerFactory factory = iterator.next();
-				return factory.getScanner( archiveDescriptorFactory );
-			}
-			else {
-				// todo: add a debug message that there is no Scanner?
-				return new DisabledScanner();
-			}
+			return getStandardScanner( bootstrapContext, archiveDescriptorFactory );
 		}
 		else {
-			if ( scannerSetting instanceof Scanner ) {
+			if ( scannerSetting instanceof Scanner scanner ) {
 				if ( archiveDescriptorFactory != null ) {
 					throw new IllegalStateException(
 							"A Scanner instance and an ArchiveDescriptorFactory were both specified; please " +
@@ -113,79 +88,120 @@ public class ScanningCoordinator {
 									"Scanner constructor assuming it is statically known."
 					);
 				}
-				return (Scanner) scannerSetting;
-			}
-
-			final Class<? extends Scanner> scannerImplClass;
-			if ( scannerSetting instanceof Class ) {
-				scannerImplClass = (Class<? extends Scanner>) scannerSetting;
+				return scanner;
 			}
 			else {
-				scannerImplClass = classLoaderAccess.classForName( scannerSetting.toString() );
+				return createScanner( archiveDescriptorFactory,
+						scannerClass( bootstrapContext, scannerSetting ) );
 			}
+		}
+	}
 
+	private static Class<? extends Scanner> scannerClass(
+			BootstrapContext bootstrapContext, Object scannerSetting) {
+		if ( scannerSetting instanceof Class<?> scannerSettingClass ) {
+			if ( !Scanner.class.isAssignableFrom( scannerSettingClass ) ) {
+				throw new IllegalArgumentException(
+						"Configuration provided a custom scanner class '" +
+								scannerSettingClass.getName() +
+								"' which does not implement 'Scanner'"
+				);
+			}
+			return scannerSettingClass.asSubclass( Scanner.class );
+		}
+		else {
+			final ClassLoaderAccess classLoaderAccess = new ClassLoaderAccessImpl(
+					bootstrapContext.getJpaTempClassLoader(),
+					bootstrapContext.getClassLoaderService()
+			);
+			return classLoaderAccess.classForName( scannerSetting.toString() );
+		}
+	}
 
-			if ( archiveDescriptorFactory != null ) {
-				// find the single-arg constructor - it's an error if none exists
+	private static Scanner createScanner(
+			ArchiveDescriptorFactory archiveDescriptorFactory,
+			Class<? extends Scanner> scannerImplClass) {
+
+		final var SINGLE_ARG = new Class[] { ArchiveDescriptorFactory.class };
+
+		if ( archiveDescriptorFactory != null ) {
+			// find the single-arg constructor - it's an error if none exists
+			try {
+				final var constructor = scannerImplClass.getConstructor( SINGLE_ARG );
 				try {
-					final Constructor<? extends Scanner> constructor = scannerImplClass.getConstructor( SINGLE_ARG );
-					try {
-						return constructor.newInstance( archiveDescriptorFactory );
-					}
-					catch (Exception e) {
-						throw new IllegalStateException(
-								"Error trying to instantiate custom specified Scanner [" +
-										scannerImplClass.getName() + "]",
-								e
-						);
-					}
+					return constructor.newInstance( archiveDescriptorFactory );
 				}
-				catch (NoSuchMethodException e) {
-					throw new IllegalArgumentException(
-							"Configuration named a custom Scanner and a custom ArchiveDescriptorFactory, but " +
-									"Scanner impl did not define a constructor accepting ArchiveDescriptorFactory"
+				catch (Exception e) {
+					throw new IllegalStateException(
+							"Error instantiating custom scanner class '" +
+							scannerImplClass.getName() + "'",
+							e
 					);
 				}
 			}
-			else {
-				// could be either ctor form...
-				// find the single-arg constructor - its an error if none exists
+			catch (NoSuchMethodException e) {
+				throw new IllegalArgumentException(
+						"Configuration specified a custom scanner class and a custom ArchiveDescriptorFactory, but " +
+								"Scanner implementation does not have a constructor accepting ArchiveDescriptorFactory"
+				);
+			}
+		}
+		else {
+			// could be either ctor form...
+			// find the single-arg constructor - it's an error if none exists
+			try {
+				final var constructor = scannerImplClass.getConstructor( SINGLE_ARG );
 				try {
-					final Constructor<? extends Scanner> constructor = scannerImplClass.getConstructor( SINGLE_ARG );
+					return constructor.newInstance( StandardArchiveDescriptorFactory.INSTANCE );
+				}
+				catch (Exception e) {
+					throw new IllegalStateException(
+							"Error instantiating custom scanner class '" +
+							scannerImplClass.getName() + "'",
+							e
+					);
+				}
+			}
+			catch (NoSuchMethodException e) {
+				try {
+					final var constructor = scannerImplClass.getConstructor();
 					try {
-						return constructor.newInstance( StandardArchiveDescriptorFactory.INSTANCE );
+						return constructor.newInstance();
 					}
-					catch (Exception e) {
+					catch (Exception e2) {
 						throw new IllegalStateException(
-								"Error trying to instantiate custom specified Scanner [" +
-										scannerImplClass.getName() + "]",
-								e
+								"Error instantiating custom scanner class '" +
+								scannerImplClass.getName() + "'",
+								e2
 						);
 					}
 				}
-				catch (NoSuchMethodException e) {
-					try {
-						final Constructor<? extends Scanner> constructor = scannerImplClass.getConstructor();
-						try {
-							return constructor.newInstance();
-						}
-						catch (Exception e2) {
-							throw new IllegalStateException(
-									"Error trying to instantiate custom specified Scanner [" +
-											scannerImplClass.getName() + "]",
-									e2
-							);
-						}
-					}
-					catch (NoSuchMethodException ignore) {
-						throw new IllegalArgumentException(
-								"Configuration named a custom Scanner, but we were unable to locate " +
-										"an appropriate constructor"
-						);
-					}
+				catch (NoSuchMethodException ignore) {
+					throw new IllegalArgumentException(
+							"Configuration specified a custom scanner class with no appropriate constructor"
+					);
 				}
 			}
 		}
+	}
+
+	private static Scanner getStandardScanner(
+			BootstrapContext bootstrapContext,
+			ArchiveDescriptorFactory archiveDescriptorFactory) {
+		// No custom Scanner specified, use the StandardScanner
+		final var scannerFactories =
+				bootstrapContext.getClassLoaderService()
+						.loadJavaServices( ScannerFactory.class );
+		for ( ScannerFactory scannerFactory : scannerFactories ) {
+			final Scanner scanner = scannerFactory.getScanner( archiveDescriptorFactory );
+			if ( scannerFactories.size() > 1 ) {
+				SCANNER_LOGGER.multipleScannerFactoriesAvailable(scanner.getClass().getName());
+			}
+			return scanner;
+		}
+
+		SCANNER_LOGGER.noScannerFactoryAvailable();
+		return new DisabledScanner();
 	}
 
 	public void applyScanResultsToManagedResources(
@@ -195,8 +211,7 @@ public class ScanningCoordinator {
 			XmlMappingBinderAccess xmlMappingBinderAccess) {
 
 		final ScanEnvironment scanEnvironment = bootstrapContext.getScanEnvironment();
-		final ClassLoaderService classLoaderService =
-				bootstrapContext.getServiceRegistry().requireService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = bootstrapContext.getClassLoaderService();
 
 
 		// mapping files ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -209,38 +224,45 @@ public class ScanningCoordinator {
 
 		if ( xmlMappingBinderAccess != null ) { // xml mapping is not disabled
 			for ( MappingFileDescriptor mappingFileDescriptor : scanResult.getLocatedMappingFiles() ) {
-				managedResources.addXmlBinding( xmlMappingBinderAccess.bind( mappingFileDescriptor.getStreamAccess() ) );
+				//noinspection unchecked,rawtypes
+				managedResources.addXmlBinding( (Binding) InputStreamAccessXmlSource.fromStreamAccess(
+						mappingFileDescriptor.getStreamAccess(),
+						xmlMappingBinderAccess.getMappingBinder()
+				) );
 				nonLocatedMappingFileNames.remove( mappingFileDescriptor.getName() );
 			}
 
 			for ( String name : nonLocatedMappingFileNames ) {
+				final Origin origin = new Origin( SourceType.RESOURCE, name );
 				final URL url = classLoaderService.locateResource( name );
 				if ( url == null ) {
-					throw new MappingException(
-							"Unable to resolve explicitly named mapping-file : " + name,
-							new Origin( SourceType.RESOURCE, name )
-					);
+					throw new MappingException( "Unable to resolve explicitly named mapping file: " + name, origin );
 				}
-				final UrlInputStreamAccess inputStreamAccess = new UrlInputStreamAccess( url );
-				managedResources.addXmlBinding( xmlMappingBinderAccess.bind( inputStreamAccess ) );
+				final UrlInputStreamAccess urlInputStreamAccess = new UrlInputStreamAccess( url );
+				//noinspection unchecked,rawtypes
+				managedResources.addXmlBinding( (Binding) InputStreamAccessXmlSource.fromStreamAccess(
+						urlInputStreamAccess,
+						origin,
+						xmlMappingBinderAccess.getMappingBinder()
+				) );
 			}
 		}
 
 		// classes and packages ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		final List<String> unresolvedListedClassNames = scanEnvironment.getExplicitlyListedClassNames() == null
-				? new ArrayList<>()
-				: new ArrayList<>( scanEnvironment.getExplicitlyListedClassNames() );
+		final List<String> explicitlyListedClassNames = scanEnvironment.getExplicitlyListedClassNames();
+		final List<String> unresolvedListedClassNames =
+				explicitlyListedClassNames == null
+						? new ArrayList<>()
+						: new ArrayList<>( explicitlyListedClassNames );
 
 		for ( ClassDescriptor classDescriptor : scanResult.getLocatedClasses() ) {
 			if ( classDescriptor.getCategorization() == ClassDescriptor.Categorization.CONVERTER ) {
 				// converter classes are safe to load because we never enhance them,
 				// and notice we use the ClassLoaderService specifically, not the temp ClassLoader (if any)
 				managedResources.addAttributeConverterDefinition(
-						new ClassBasedConverterDescriptor(
-								classLoaderService.classForName( classDescriptor.getName() ),
-								bootstrapContext.getClassmateContext()
-						)
+						ConverterDescriptors.of( classLoaderService.classForName( classDescriptor.getName() ),
+								bootstrapContext.getClassmateContext() )
 				);
 			}
 			else if ( classDescriptor.getCategorization() == ClassDescriptor.Categorization.MODEL ) {
@@ -249,49 +271,49 @@ public class ScanningCoordinator {
 			unresolvedListedClassNames.remove( classDescriptor.getName() );
 		}
 
-		// IMPL NOTE : "explicitlyListedClassNames" can contain class or package names...
+		// IMPL NOTE: 'explicitlyListedClassNames' can contain both class and package names
 		for ( PackageDescriptor packageDescriptor : scanResult.getLocatedPackages() ) {
 			managedResources.addAnnotatedPackageName( packageDescriptor.getName() );
 			unresolvedListedClassNames.remove( packageDescriptor.getName() );
 		}
 
 		for ( String unresolvedListedClassName : unresolvedListedClassNames ) {
-			// because the explicit list can contain either class names or package names
-			// we need to check for both here...
+			// because the explicit list can contain both class names and package names,
+			// we need to check for both possibilities here
 
 			// First, try it as a class name
-			final String classFileName = unresolvedListedClassName.replace( '.', '/' ) + ".class";
-			final URL classFileUrl = classLoaderService.locateResource( classFileName );
+			final URL classFileUrl =
+					classLoaderService.locateResource( classFileName( unresolvedListedClassName ) );
 			if ( classFileUrl != null ) {
 				managedResources.addAnnotatedClassName( unresolvedListedClassName );
-				continue;
 			}
-
-			// Then, try it as a package name
-			final String packageInfoFileName = unresolvedListedClassName.replace( '.', '/' ) + "/package-info.class";
-			final URL packageInfoFileUrl = classLoaderService.locateResource( packageInfoFileName );
-			if ( packageInfoFileUrl != null ) {
-				managedResources.addAnnotatedPackageName( unresolvedListedClassName );
-				continue;
-			}
-
-			// Last, try it by loading the class
-			try {
-				Class<?> clazz = classLoaderService.classForName( unresolvedListedClassName );
-				managedResources.addAnnotatedClassReference( clazz );
-				continue;
-			}
-			catch (ClassLoadingException ignore) {
-				// ignore this error
-			}
-
-			if ( log.isDebugEnabled() ) {
-				log.debugf(
-						"Unable to resolve class [%s] named in persistence unit [%s]",
-						unresolvedListedClassName,
-						scanEnvironment.getRootUrl()
-				);
+			else {
+				// Then, try it as a package name
+				final URL packageInfoFileUrl =
+						classLoaderService.locateResource( packageInfoFileName( unresolvedListedClassName ) );
+				if ( packageInfoFileUrl != null ) {
+					managedResources.addAnnotatedPackageName( unresolvedListedClassName );
+				}
+				else {
+					// Last, try it by loading the class
+					try {
+						final Class<?> clazz = classLoaderService.classForName( unresolvedListedClassName );
+						managedResources.addAnnotatedClassReference( clazz );
+					}
+					catch (ClassLoadingException ignore) {
+						// ignore this error
+						SCANNER_LOGGER.unableToResolveClass( unresolvedListedClassName, scanEnvironment.getRootUrl() );
+					}
+				}
 			}
 		}
+	}
+
+	private static String packageInfoFileName(String unresolvedListedClassName) {
+		return unresolvedListedClassName.replace( '.', '/' ) + "/package-info.class";
+	}
+
+	private static String classFileName(String unresolvedListedClassName) {
+		return unresolvedListedClassName.replace( '.', '/' ) + ".class";
 	}
 }

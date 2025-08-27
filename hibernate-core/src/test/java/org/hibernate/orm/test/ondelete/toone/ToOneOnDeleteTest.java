@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.ondelete.toone;
@@ -7,16 +7,13 @@ package org.hibernate.orm.test.ondelete.toone;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.dialect.SybaseDialect;
-
-import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -43,12 +40,7 @@ public class ToOneOnDeleteTest {
 	}
 
 	@Test
-	@SkipForDialect(
-			dialectClass = SybaseDialect.class,
-			matchSubTypes = true,
-			reason = "Sybase does not support on delete actions"
-	)
-	@SkipForDialect(dialectClass = TiDBDialect.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCascadeDeleteCheck.class)
 	public void testManyToOne(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

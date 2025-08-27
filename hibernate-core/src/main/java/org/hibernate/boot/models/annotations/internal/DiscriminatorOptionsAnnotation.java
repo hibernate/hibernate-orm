@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.DiscriminatorOptions;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -19,7 +19,7 @@ public class DiscriminatorOptionsAnnotation implements DiscriminatorOptions {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public DiscriminatorOptionsAnnotation(SourceModelBuildingContext modelContext) {
+	public DiscriminatorOptionsAnnotation(ModelsContext modelContext) {
 		this.force = false;
 		this.insert = true;
 	}
@@ -27,7 +27,7 @@ public class DiscriminatorOptionsAnnotation implements DiscriminatorOptions {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public DiscriminatorOptionsAnnotation(DiscriminatorOptions annotation, SourceModelBuildingContext modelContext) {
+	public DiscriminatorOptionsAnnotation(DiscriminatorOptions annotation, ModelsContext modelContext) {
 		this.force = annotation.force();
 		this.insert = annotation.insert();
 	}
@@ -35,7 +35,7 @@ public class DiscriminatorOptionsAnnotation implements DiscriminatorOptions {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public DiscriminatorOptionsAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public DiscriminatorOptionsAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.force = (boolean) attributeValues.get( "force");
 		this.insert = (boolean) attributeValues.get( "insert");
 	}

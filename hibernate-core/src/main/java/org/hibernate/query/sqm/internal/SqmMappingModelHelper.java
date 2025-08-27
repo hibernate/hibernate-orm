@@ -1,12 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.internal;
 
 import java.util.function.Function;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -17,10 +16,8 @@ import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.internal.AnyMappingSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
@@ -35,6 +32,9 @@ import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmSpecificPluralPartPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.domain.SqmEmbeddableDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmMappedSuperclassDomainType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.BasicType;
@@ -59,11 +59,10 @@ public class SqmMappingModelHelper {
 	 */
 	public static EntityPersister resolveEntityPersister(
 			EntityDomainType<?> entityType,
-			SessionFactoryImplementor sessionFactory) {
+			MappingMetamodel mappingMetamodel) {
 		// Our EntityTypeImpl#getType impl returns the Hibernate entity-name
 		// which is exactly what we want
-		final String hibernateEntityName = entityType.getHibernateEntityName();
-		return sessionFactory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( hibernateEntityName );
+		return mappingMetamodel.getEntityDescriptor( entityType.getHibernateEntityName() );
 	}
 
 	public static <J> SqmPathSource<J> resolveSqmKeyPathSource(
@@ -100,7 +99,6 @@ public class SqmMappingModelHelper {
 			JavaType<?> relationalJavaType,
 			Bindable.BindableType jpaBindableType,
 			boolean isGeneric) {
-
 		if ( valueDomainType instanceof BasicDomainType<?> ) {
 			return new BasicSqmPathSource<>(
 					name,
@@ -111,8 +109,7 @@ public class SqmMappingModelHelper {
 					isGeneric
 			);
 		}
-
-		if ( valueDomainType instanceof AnyMappingDomainType<?> ) {
+		else if ( valueDomainType instanceof AnyMappingDomainType<?> ) {
 			return new AnyMappingSqmPathSource<>(
 					name,
 					pathModel,
@@ -120,40 +117,38 @@ public class SqmMappingModelHelper {
 					jpaBindableType
 			);
 		}
-
-		if ( valueDomainType instanceof EmbeddableDomainType<?> ) {
+		else if ( valueDomainType instanceof SqmEmbeddableDomainType<J> embeddableDomainType ) {
 			return new EmbeddedSqmPathSource<>(
 					name,
 					pathModel,
-					(EmbeddableDomainType<J>) valueDomainType,
+					embeddableDomainType,
 					jpaBindableType,
 					isGeneric
 			);
 		}
-
-		if ( valueDomainType instanceof EntityDomainType<?> ) {
+		else if ( valueDomainType instanceof SqmEntityDomainType<J> entityDomainType ) {
 			return new EntitySqmPathSource<>(
 					name,
 					pathModel,
-					(EntityDomainType<J>) valueDomainType,
+					entityDomainType,
 					jpaBindableType,
 					isGeneric
 			);
 		}
-
-		if ( valueDomainType instanceof MappedSuperclassDomainType<?> ) {
+		else if ( valueDomainType instanceof SqmMappedSuperclassDomainType<J> mappedSuperclassDomainType ) {
 			return new MappedSuperclassSqmPathSource<>(
 					name,
 					pathModel,
-					(MappedSuperclassDomainType<J>) valueDomainType,
+					mappedSuperclassDomainType,
 					jpaBindableType,
 					isGeneric
 			);
 		}
-
-		throw new IllegalArgumentException(
-				"Unrecognized value type Java-type [" + valueDomainType.getTypeName() + "] for plural attribute value"
-		);
+		else {
+			throw new IllegalArgumentException(
+					"Unrecognized value type Java-type [" + valueDomainType.getTypeName() + "] for plural attribute value"
+			);
+		}
 	}
 
 	public static MappingModelExpressible<?> resolveMappingModelExpressible(
@@ -177,8 +172,7 @@ public class SqmMappingModelHelper {
 			MappingMetamodel domainModel,
 			Function<NavigablePath,TableGroup> tableGroupLocator) {
 
-		if ( sqmPath instanceof SqmTreatedPath<?, ?> ) {
-			final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) sqmPath;
+		if ( sqmPath instanceof SqmTreatedPath<?, ?> treatedPath ) {
 			final ManagedDomainType<?> treatTarget = treatedPath.getTreatTarget();
 			if ( treatTarget.getPersistenceType() == Type.PersistenceType.ENTITY ) {
 				final EntityDomainType<?> treatTargetType = (EntityDomainType<?>) treatTarget;
@@ -187,8 +181,7 @@ public class SqmMappingModelHelper {
 		}
 
 		// see if the LHS is treated
-		if ( sqmPath.getLhs() instanceof SqmTreatedPath<?, ?> ) {
-			final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) sqmPath.getLhs();
+		if ( sqmPath.getLhs() instanceof SqmTreatedPath<?, ?> treatedPath ) {
 			final ManagedDomainType<?> treatTarget = treatedPath.getTreatTarget();
 			if ( treatTarget.getPersistenceType() == Type.PersistenceType.ENTITY ) {
 				final EntityPersister container = domainModel.findEntityDescriptor( treatTarget.getTypeName() );
@@ -218,8 +211,7 @@ public class SqmMappingModelHelper {
 
 		if ( sqmPath.getLhs() == null ) {
 			final SqmPathSource<?> referencedPathSource = sqmPath.getReferencedPathSource();
-			if ( referencedPathSource instanceof EntityDomainType<?> ) {
-				final EntityDomainType<?> entityDomainType = (EntityDomainType<?>) referencedPathSource;
+			if ( referencedPathSource instanceof EntityDomainType<?> entityDomainType ) {
 				return domainModel.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
 			}
 			assert referencedPathSource instanceof SqmCteTable<?>;
@@ -256,13 +248,12 @@ public class SqmMappingModelHelper {
 			SqmPath<?> sqmPath,
 			SqmToSqlAstConverter converter) {
 		final SqmPath<?> parentPath = sqmPath.getLhs();
-		if ( parentPath instanceof SqmTreatedPath<?, ?> ) {
-			final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) parentPath;
+		if ( parentPath instanceof SqmTreatedPath<?, ?> treatedPath ) {
 			final ManagedDomainType<?> treatTarget = treatedPath.getTreatTarget();
 			if ( treatTarget.getPersistenceType() == Type.PersistenceType.ENTITY ) {
 				return resolveEntityPersister(
 						( (EntityDomainType<?>) treatTarget ),
-						converter.getCreationContext().getSessionFactory()
+						converter.getCreationContext().getMappingMetamodel()
 				);
 			}
 		}

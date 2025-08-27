@@ -1,12 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.locking;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
@@ -17,21 +14,22 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PessimisticLockScope;
-
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.Session;
+import org.hibernate.Timeouts;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.Query;
-
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.jboss.logging.Logger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import org.jboss.logging.Logger;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -52,10 +50,7 @@ public class ExplicitLockingTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager ->
-						entityManager.createQuery( "delete from Person" ).executeUpdate()
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -122,8 +117,7 @@ public class ExplicitLockingTest {
 			//tag::locking-session-lock-example[]
 			Person person = entityManager.find(Person.class, id);
 			Session session = entityManager.unwrap(Session.class);
-			LockOptions lockOptions = new LockOptions(LockMode.PESSIMISTIC_READ, LockOptions.NO_WAIT);
-			session.lock(person, lockOptions);
+			session.lock( person, LockMode.PESSIMISTIC_READ, Timeouts.NO_WAIT );
 			//end::locking-session-lock-example[]
 		});
 
@@ -132,8 +126,7 @@ public class ExplicitLockingTest {
 			//tag::locking-session-lock-scope-example[]
 			Person person = entityManager.find(Person.class, id);
 			Session session = entityManager.unwrap(Session.class);
-			LockOptions lockOptions = new LockOptions(LockMode.PESSIMISTIC_READ, LockOptions.NO_WAIT, PessimisticLockScope.EXTENDED);
-			session.lock(person, lockOptions);
+			session.lock(person, LockMode.PESSIMISTIC_READ, Timeouts.NO_WAIT, PessimisticLockScope.EXTENDED);
 			//end::locking-session-lock-scope-example[]
 		});
 
@@ -177,14 +170,12 @@ public class ExplicitLockingTest {
 
 		scope.inTransaction( entityManager -> {
 			//tag::locking-follow-on-explicit-example[]
-			List<Person> persons = entityManager.createQuery(
-				"select p from Person p", Person.class)
-			.setMaxResults(10)
-			.unwrap(Query.class)
-			.setLockOptions(
-				new LockOptions(LockMode.PESSIMISTIC_WRITE)
-					.setFollowOnLocking(false))
-			.getResultList();
+			List<Person> persons = entityManager.createQuery( "select p from Person p", Person.class )
+					.setMaxResults( 10 )
+					.setLockMode( LockModeType.PESSIMISTIC_WRITE )
+					.unwrap( Query.class )
+					.setFollowOnLocking( false )
+					.getResultList();
 			//end::locking-follow-on-explicit-example[]
 		});
 	}

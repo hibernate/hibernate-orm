@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.internal;
@@ -21,15 +21,13 @@ import org.hibernate.service.UnknownUnwrapTypeException;
 public class UserSuppliedConnectionProviderImpl implements ConnectionProvider {
 	@Override
 	public boolean isUnwrappableAs(Class<?> unwrapType) {
-		return ConnectionProvider.class.equals( unwrapType ) ||
-				UserSuppliedConnectionProviderImpl.class.isAssignableFrom( unwrapType );
+		return unwrapType.isAssignableFrom( UserSuppliedConnectionProviderImpl.class );
 	}
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( ConnectionProvider.class.equals( unwrapType ) ||
-				UserSuppliedConnectionProviderImpl.class.isAssignableFrom( unwrapType ) ) {
+		if ( unwrapType.isAssignableFrom( UserSuppliedConnectionProviderImpl.class ) ) {
 			return (T) this;
 		}
 		else {

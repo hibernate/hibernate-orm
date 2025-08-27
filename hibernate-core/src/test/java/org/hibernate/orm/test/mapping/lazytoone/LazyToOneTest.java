@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.lazytoone;
@@ -53,12 +53,7 @@ public class LazyToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
 	protected void cleanupTestData() throws Exception {
-		inTransaction(
-				(session) -> {
-					session.createQuery( "delete Flight" ).executeUpdate();
-					session.createQuery( "delete Airport" ).executeUpdate();
-				}
-		);
+		sessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

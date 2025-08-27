@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -19,6 +19,7 @@ import org.hibernate.boot.model.source.spi.SizeSource;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * @author Steve Ebersole
@@ -150,24 +151,7 @@ public class RelationalValueSourceHelper {
 		);
 
 		if ( sources.size() > 1 ) {
-			final String errorMessage;
-			if ( columnsAndFormulasSource.getSourceType().canBeNamed()
-					&& isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
-				errorMessage = String.format(
-						Locale.ENGLISH,
-						"Expecting just a single formula/column in context of <%s name=\"%s\"/>",
-						columnsAndFormulasSource.getSourceType().getElementName(),
-						columnsAndFormulasSource.getSourceName()
-				);
-			}
-			else {
-				errorMessage = String.format(
-						Locale.ENGLISH,
-						"Expecting just a single formula/column in context of <%s/>",
-						columnsAndFormulasSource.getSourceType().getElementName()
-				);
-			}
-			throw new MappingException( errorMessage, mappingDocument.getOrigin() );
+			throw new MappingException( multipleError( columnsAndFormulasSource ), mappingDocument.getOrigin() );
 		}
 
 		return sources.get( 0 );
@@ -195,51 +179,17 @@ public class RelationalValueSourceHelper {
 		);
 
 		if ( sources.size() > 1 ) {
-			final String errorMessage;
-			if ( columnsAndFormulasSource.getSourceType().canBeNamed()
-					&& isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
-				errorMessage = String.format(
-						Locale.ENGLISH,
-						"Expecting just a single formula/column in context of <%s name=\"%s\"/>",
-						columnsAndFormulasSource.getSourceType().getElementName(),
-						columnsAndFormulasSource.getSourceName()
-				);
-			}
-			else {
-				errorMessage = String.format(
-						Locale.ENGLISH,
-						"Expecting just a single formula/column in context of <%s/>",
-						columnsAndFormulasSource.getSourceType().getElementName()
-				);
-			}
-			throw new MappingException( errorMessage, mappingDocument.getOrigin() );
+			throw new MappingException( multipleError( columnsAndFormulasSource ), mappingDocument.getOrigin() );
 		}
 
 		final RelationalValueSource result = sources.get( 0 );
-		if ( !(result instanceof ColumnSource) ) {
-			final String errorMessage;
-			if ( columnsAndFormulasSource.getSourceType().canBeNamed()
-					&& isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
-				errorMessage = String.format(
-						Locale.ENGLISH,
-						"Expecting single column in context of <%s name=\"%s\"/>, but found formula [%s]",
-						columnsAndFormulasSource.getSourceType().getElementName(),
-						columnsAndFormulasSource.getSourceName(),
-						( (DerivedValueSource) result ).getExpression()
-				);
-			}
-			else {
-				errorMessage = String.format(
-						Locale.ENGLISH,
-						"Expecting single column in context of <%s/>, but found formula [%s]",
-						columnsAndFormulasSource.getSourceType().getElementName(),
-						( (DerivedValueSource) result ).getExpression()
-				);
-			}
-			throw new MappingException( errorMessage, mappingDocument.getOrigin() );
+		if ( result instanceof ColumnSource columnSource ) {
+			return columnSource;
 		}
-
-		return (ColumnSource) result;
+		else {
+			throw new MappingException( formulaError( columnsAndFormulasSource, (DerivedValueSource) result ),
+					mappingDocument.getOrigin() );
+		}
 	}
 
 	/**
@@ -264,31 +214,57 @@ public class RelationalValueSourceHelper {
 
 		final List<ColumnSource> columnSources = CollectionHelper.arrayList( sources.size() );
 		for ( RelationalValueSource source : sources ) {
-			if ( !(source instanceof ColumnSource) ) {
-				final String errorMessage;
-				if ( columnsAndFormulasSource.getSourceType().canBeNamed()
-						&& isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
-					errorMessage = String.format(
-							Locale.ENGLISH,
-							"Expecting only columns in context of <%s name=\"%s\"/>, but found formula [%s]",
-							columnsAndFormulasSource.getSourceType().getElementName(),
-							columnsAndFormulasSource.getSourceName(),
-							( (DerivedValueSource) source ).getExpression()
-					);
-				}
-				else {
-					errorMessage = String.format(
-							Locale.ENGLISH,
-							"Expecting only columns in context of <%s/>, but found formula [%s]",
-							columnsAndFormulasSource.getSourceType().getElementName(),
-							( (DerivedValueSource) source ).getExpression()
-					);
-				}
-				throw new MappingException( errorMessage, mappingDocument.getOrigin() );
+			if ( source instanceof ColumnSource columnSource ) {
+				columnSources.add( columnSource );
 			}
-			columnSources.add( (ColumnSource) source );
+			else {
+				throw new MappingException( formulaError( columnsAndFormulasSource, (DerivedValueSource) source ),
+						mappingDocument.getOrigin() );
+			}
 		}
 		return columnSources;
+	}
+
+	private static String multipleError(ColumnsAndFormulasSource columnsAndFormulasSource) {
+		final String errorMessage;
+		if ( columnsAndFormulasSource.getSourceType().canBeNamed()
+			&& isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
+			errorMessage = String.format(
+					Locale.ENGLISH,
+					"Expecting just a single formula/column in context of <%s name=\"%s\"/>",
+					columnsAndFormulasSource.getSourceType().getElementName(),
+					columnsAndFormulasSource.getSourceName()
+			);
+		}
+		else {
+			errorMessage = String.format(
+					Locale.ENGLISH,
+					"Expecting just a single formula/column in context of <%s/>",
+					columnsAndFormulasSource.getSourceType().getElementName()
+			);
+		}
+		return errorMessage;
+	}
+
+	private static String formulaError(ColumnsAndFormulasSource columnsAndFormulasSource, DerivedValueSource formulaSource) {
+		if ( columnsAndFormulasSource.getSourceType().canBeNamed()
+				&& isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {
+			return String.format(
+					Locale.ENGLISH,
+					"Expecting single column in context of <%s name=\"%s\"/>, but found formula [%s]",
+					columnsAndFormulasSource.getSourceType().getElementName(),
+					columnsAndFormulasSource.getSourceName(),
+					formulaSource.getExpression()
+			);
+		}
+		else {
+			return String.format(
+					Locale.ENGLISH,
+					"Expecting single column in context of <%s/>, but found formula [%s]",
+					columnsAndFormulasSource.getSourceType().getElementName(),
+					formulaSource.getExpression()
+			);
+		}
 	}
 
 	/**
@@ -319,12 +295,11 @@ public class RelationalValueSourceHelper {
 					)
 			);
 		}
-		else if ( CollectionHelper.isNotEmpty( columnsAndFormulasSource.getColumnOrFormulaElements() ) ) {
+		else if ( isNotEmpty( columnsAndFormulasSource.getColumnOrFormulaElements() ) ) {
 			validateUseOfColumnOrFormulaNestedElements( mappingDocument, columnsAndFormulasSource );
 
 			for ( Object selectable : columnsAndFormulasSource.getColumnOrFormulaElements() ) {
-				if ( selectable instanceof JaxbHbmColumnType ) {
-					final JaxbHbmColumnType columnElement = (JaxbHbmColumnType) selectable;
+				if ( selectable instanceof JaxbHbmColumnType columnElement ) {
 					result.add(
 							new ColumnSourceImpl(
 									mappingDocument,
@@ -335,10 +310,8 @@ public class RelationalValueSourceHelper {
 							)
 					);
 				}
-				else if ( selectable instanceof String ) {
-					result.add(
-							new FormulaImpl( mappingDocument, containingTableName, (String) selectable )
-					);
+				else if ( selectable instanceof String string ) {
+					result.add( new FormulaImpl( mappingDocument, containingTableName, string ) );
 				}
 				else {
 					throw new MappingException(
@@ -399,7 +372,7 @@ public class RelationalValueSourceHelper {
 			throw new MappingException( errorMessage, sourceDocument.getOrigin() );
 		}
 		//		2) and no column/formula nested elements
-		if ( CollectionHelper.isNotEmpty( columnsAndFormulasSource.getColumnOrFormulaElements() ) ) {
+		if ( isNotEmpty( columnsAndFormulasSource.getColumnOrFormulaElements() ) ) {
 			final String errorMessage;
 			if ( columnsAndFormulasSource.getSourceType().canBeNamed()
 					&& isNotEmpty( columnsAndFormulasSource.getSourceName() ) ) {

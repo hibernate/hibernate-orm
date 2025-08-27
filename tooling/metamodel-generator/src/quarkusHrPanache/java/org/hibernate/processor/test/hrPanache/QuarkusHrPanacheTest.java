@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.hrPanache;
@@ -7,7 +7,7 @@ package org.hibernate.processor.test.hrPanache;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
 
 import io.smallrye.mutiny.Uni;
@@ -21,10 +21,11 @@ import java.lang.reflect.Modifier;
 /**
  * @author Gavin King
  */
-public class QuarkusHrPanacheTest extends CompilationTest {
+@CompilationTest
+class QuarkusHrPanacheTest {
 	@Test
 	@WithClasses({ PanacheBook.class })
-	public void testPanacheEntityMetamodel() throws Exception {
+	void testPanacheEntityMetamodel() throws Exception {
 		// Panache entity
 		System.out.println( TestUtil.getMetaModelSourceAsString( PanacheBook.class ) );
 		Class<?> entityClass = getMetamodelClassFor( PanacheBook.class );
@@ -51,7 +52,7 @@ public class QuarkusHrPanacheTest extends CompilationTest {
 
 	@Test
 	@WithClasses({ PanacheBook.class, PanacheBookRepository.class })
-	public void testPanacheRepositoryMetamodel() throws Exception {
+	void testPanacheRepositoryMetamodel() throws Exception {
 		// Panache repository
 		System.out.println( TestUtil.getMetaModelSourceAsString( PanacheBookRepository.class ) );
 		Class<?> repositoryClass = getMetamodelClassFor( PanacheBookRepository.class );
@@ -82,7 +83,7 @@ public class QuarkusHrPanacheTest extends CompilationTest {
 
 	@Test
 	@WithClasses({ PanacheBook.class, QuarkusBookRepository.class })
-	public void testQuarkusRepositoryMetamodel() throws Exception {
+	void testQuarkusRepositoryMetamodel() throws Exception {
 		// Regular repository
 		System.out.println( TestUtil.getMetaModelSourceAsString( QuarkusBookRepository.class ) );
 		Class<?> repositoryClass = getMetamodelClassFor( QuarkusBookRepository.class );
@@ -128,7 +129,7 @@ public class QuarkusHrPanacheTest extends CompilationTest {
 
 	@Test
 	@WithClasses({ PanacheBook.class, BookRepositoryWithSession.class })
-	public void testBookRepositoryWithSessionMetamodel() throws Exception {
+	void testBookRepositoryWithSessionMetamodel() throws Exception {
 		// Regular repository with default session method
 		System.out.println( TestUtil.getMetaModelSourceAsString( BookRepositoryWithSession.class ) );
 		Class<?> repositoryClass = getMetamodelClassFor( BookRepositoryWithSession.class );
@@ -147,7 +148,7 @@ public class QuarkusHrPanacheTest extends CompilationTest {
 	// Not supported yet: https://hibernate.atlassian.net/browse/HHH-17960
 //	@Test
 //	@WithClasses({ PanacheBook.class, JakartaDataBookRepository.class })
-//	public void testJakartaDataRepositoryMetamodel() throws Exception {
+//	void testJakartaDataRepositoryMetamodel() throws Exception {
 //		// JD repository
 //		System.out.println( TestUtil.getMetaModelSourceAsString( JakartaDataBookRepository.class ) );
 //		Class<?> repositoryClass = getMetamodelClassFor( JakartaDataBookRepository.class );

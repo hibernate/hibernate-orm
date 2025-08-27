@@ -1,8 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.generator;
+
+import org.hibernate.Incubating;
 
 /**
  * Enumerates event types that can result in generation of a new value.
@@ -35,5 +37,13 @@ public enum EventType {
 	 * This indicates, for example, that a version number should be
 	 * incremented.
 	 */
-	UPDATE;
+	UPDATE,
+	/**
+	 * An event that occurs when attempting to acquire
+	 * {@linkplain org.hibernate.LockMode#OPTIMISTIC_FORCE_INCREMENT optimistic}
+	 * or {@linkplain org.hibernate.LockMode#PESSIMISTIC_FORCE_INCREMENT pessimistic}
+	 * locks which trigger forcing an increment to the {@linkplain jakarta.persistence.Version version}.
+	 */
+	@Incubating
+	FORCE_INCREMENT
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
@@ -15,7 +15,8 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.IdentitySet;
-import org.hibernate.pretty.MessageHelper;
+
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * An {@link EntityCopyObserver} implementation that allows multiple representations of
@@ -53,15 +54,10 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 			Object mergeEntity2,
 			EventSource session) {
 		final String entityName = session.getEntityName( managedEntity );
-		LOG.trace(
-				String.format(
-						"More than one representation of the same persistent entity being merged for: %s",
-						MessageHelper.infoString(
-								entityName,
-								session.getIdentifier( managedEntity )
-						)
-				)
-		);
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "More than one representation of the same persistent entity being merged for: "
+						+ infoString( entityName, session.getIdentifier( managedEntity ) ) );
+		}
 		Set<Object> detachedEntitiesForManaged = null;
 		if ( managedToMergeEntitiesXref == null ) {
 			// This is the first time multiple representations have been found;
@@ -114,7 +110,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 	public void topLevelMergeComplete(EventSource session) {
 		// Log the summary.
 		if ( countsByEntityName != null ) {
-			for ( Map.Entry<String, Integer> entry : countsByEntityName.entrySet() ) {
+			for ( var entry : countsByEntityName.entrySet() ) {
 				LOG.debug(
 						String.format(
 								"Summary: number of %s entities with multiple representations merged: %d",
@@ -125,23 +121,20 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 			}
 		}
 		else {
-			LOG.debug( "No entity copies merged." );
+			LOG.debug( "No entity copies merged" );
 		}
 
 		if ( managedToMergeEntitiesXref != null ) {
-			for ( Map.Entry<Object,Set<Object>> entry : managedToMergeEntitiesXref.entrySet() ) {
-				Object managedEntity = entry.getKey();
-				Set<Object> mergeEntities = entry.getValue();
-				StringBuilder sb = new StringBuilder( "Details: merged ")
-						.append( mergeEntities.size() )
-						.append( " representations of the same entity " )
-						.append(
-								MessageHelper.infoString(
-										session.getEntityName( managedEntity ),
-										session.getIdentifier( managedEntity )
-								)
-						)
-						.append( " being merged: " );
+			for ( var entry : managedToMergeEntitiesXref.entrySet() ) {
+				final Object managedEntity = entry.getKey();
+				final Set<Object> mergeEntities = entry.getValue();
+				final var sb =
+						new StringBuilder( "Details: merged ")
+								.append( mergeEntities.size() )
+								.append( " representations of the same entity " )
+								.append( infoString( session.getEntityName( managedEntity ),
+												session.getIdentifier( managedEntity ) ) )
+								.append( " being merged: " );
 				boolean first = true;
 				for ( Object mergeEntity : mergeEntities ) {
 					if ( first ) {

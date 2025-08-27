@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.Access;
 
@@ -20,20 +20,20 @@ public class AccessJpaAnnotation implements Access {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public AccessJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public AccessJpaAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public AccessJpaAnnotation(Access annotation, SourceModelBuildingContext modelContext) {
+	public AccessJpaAnnotation(Access annotation, ModelsContext modelContext) {
 		this.value = annotation.value();
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public AccessJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public AccessJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.value = (jakarta.persistence.AccessType) attributeValues.get( "value" );
 	}
 

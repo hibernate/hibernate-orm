@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
-import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -13,9 +12,9 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -24,6 +23,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Christian Beikov
  */
+@AllowReflection // Needed for arbitrary array wrapping/unwrapping
 public class IntegerPrimitiveArrayJavaType extends AbstractArrayJavaType<int[], Integer> {
 
 	public static final IntegerPrimitiveArrayJavaType INSTANCE = new IntegerPrimitiveArrayJavaType();
@@ -34,6 +34,11 @@ public class IntegerPrimitiveArrayJavaType extends AbstractArrayJavaType<int[], 
 
 	protected IntegerPrimitiveArrayJavaType(JavaType<Integer> baseDescriptor) {
 		super( int[].class, baseDescriptor, new ArrayMutabilityPlan() );
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof int[];
 	}
 
 	@Override
@@ -76,7 +81,7 @@ public class IntegerPrimitiveArrayJavaType extends AbstractArrayJavaType<int[], 
 		final char lastChar = charSequence.charAt( charSequence.length() - 1 );
 		final char firstChar = charSequence.charAt( 0 );
 		if ( firstChar != '{' || lastChar != '}' ) {
-			throw new IllegalArgumentException( "Cannot parse given string into array of strings. First and last character must be { and }" );
+			throw new IllegalArgumentException( "Cannot parse given string into array of integers. First and last character must be { and }" );
 		}
 		final int len = charSequence.length();
 		int elementStart = 1;
@@ -183,27 +188,10 @@ public class IntegerPrimitiveArrayJavaType extends AbstractArrayJavaType<int[], 
 		throw unknownWrap( value.getClass() );
 	}
 
-	private static class ArrayMutabilityPlan implements MutabilityPlan<int[]> {
-
+	private static class ArrayMutabilityPlan extends MutableMutabilityPlan<int[]> {
 		@Override
-		public boolean isMutable() {
-			return true;
+		protected int[] deepCopyNotNull(int[] value) {
+			return value.clone();
 		}
-
-		@Override
-		public int[] deepCopy(int[] value) {
-			return value == null ? null : value.clone();
-		}
-
-		@Override
-		public Serializable disassemble(int[] value, SharedSessionContract session) {
-			return deepCopy( value );
-		}
-
-		@Override
-		public int[] assemble(Serializable cached, SharedSessionContract session) {
-			return deepCopy( (int[]) cached );
-		}
-
 	}
 }

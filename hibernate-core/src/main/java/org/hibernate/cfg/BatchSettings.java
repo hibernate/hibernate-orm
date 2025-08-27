@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
@@ -21,9 +21,11 @@ public interface BatchSettings {
 
 	/**
 	 * Specifies the maximum number of {@linkplain java.sql.PreparedStatement statements}
-	 * to {@linkplain PreparedStatement#addBatch batch} together.
-	 * <p/>
-	 * A nonzero value enables batching
+	 * to {@linkplain PreparedStatement#addBatch batch} together in a stateful session.
+	 * <p>
+	 * Any positive value enables batching.
+	 * <p>
+	 * This setting has no effect on {@linkplain org.hibernate.StatelessSession stateless sessions}.
 	 *
 	 * @see java.sql.PreparedStatement#executeBatch
 	 * @see java.sql.PreparedStatement#addBatch
@@ -34,8 +36,15 @@ public interface BatchSettings {
 	String STATEMENT_BATCH_SIZE = "hibernate.jdbc.batch_size";
 
 	/**
-	 * Enable ordering of update statements by primary key value, for the purpose of more
-	 * efficient JDBC batching
+	 * Enable ordering of entity update statements by entity type and primary
+	 * key value, and of statements relating to collection modification by
+	 * collection role and foreign key value, for the purpose of more efficient
+	 * JDBC batching.
+	 * <p>
+	 * The sort order also reduces the chance of a unique key violation when
+	 * a collection element is moved from one parent to a different parent,
+	 * by executing collection updates involving removals before collection
+	 * updates which don't involve removals.
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyOrderingOfUpdates
 	 *
@@ -44,24 +53,17 @@ public interface BatchSettings {
 	String ORDER_UPDATES = "hibernate.order_updates";
 
 	/**
-	 * Enable ordering of insert statements by primary key value, for the purpose of more
-	 * efficient JDBC batching.
+	 * Enable ordering of entity insert statements by entity type and primary
+	 * key value, for the purpose of more efficient JDBC batching.
+	 * <p>
+	 * The sort order respects foreign key dependencies between entities, and
+	 * therefore does not increase the chance of a foreign key violation.
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyOrderingOfInserts
 	 *
 	 * @settingDefault {@code false}
 	 */
 	String ORDER_INSERTS = "hibernate.order_inserts";
-
-	/**
-	 * When enabled, specifies that {@linkplain jakarta.persistence.Version versioned}
-	 * data should be included in batching.
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcBatchingForVersionedEntities(boolean)
-	 *
-	 * @settingDefault Generally {@code true}, though can vary based on Dialect
-	 */
-	String BATCH_VERSIONED_DATA = "hibernate.jdbc.batch_versioned_data";
 
 	/**
 	 * @deprecated Use {@link #BUILDER} instead

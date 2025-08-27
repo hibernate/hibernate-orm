@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.jndi.JndiException;
 import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.internal.log.SubSystemLogging;
@@ -20,6 +21,7 @@ import java.lang.invoke.MethodHandles;
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
 import static org.jboss.logging.Logger.getMessageLogger;
 
@@ -29,6 +31,7 @@ import static org.jboss.logging.Logger.getMessageLogger;
 		name = SessionFactoryRegistryMessageLogger.LOGGER_NAME,
 		description = "Logging related to session factory registry"
 )
+@Internal
 public interface SessionFactoryRegistryMessageLogger extends BasicLogger  {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".factoryRegistry";
 
@@ -87,7 +90,7 @@ public interface SessionFactoryRegistryMessageLogger extends BasicLogger  {
 	@Message(value = "A SessionFactory was successfully bound to name: %s", id = 20282)
 	void factoryBoundToJndi(String name);
 
-	@LogMessage(level = DEBUG)
+	@LogMessage(level = TRACE)
 	@Message(value = "Not binding SessionFactory to JNDI, no JNDI name configured", id = 20385)
 	void notBindingSessionFactory();
 }

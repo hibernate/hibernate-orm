@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.hbm.transform;
@@ -21,7 +21,7 @@ public class TargetColumnAdapterJaxbJoinColumn implements TargetColumnAdapter {
 		this.jaxbColumn.setNullable( columnDefaults.isNullable() );
 		this.jaxbColumn.setUnique( columnDefaults.isUnique() );
 		this.jaxbColumn.setInsertable( columnDefaults.isInsertable() );
-		this.jaxbColumn.setUpdatable( columnDefaults.isUpdateable() );
+		this.jaxbColumn.setUpdatable( columnDefaults.isUpdatable() );
 	}
 
 	public JaxbJoinColumnImpl getTargetColumn() {

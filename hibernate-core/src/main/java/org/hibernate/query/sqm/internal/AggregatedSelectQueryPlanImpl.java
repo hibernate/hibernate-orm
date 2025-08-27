@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.internal;
@@ -76,7 +76,7 @@ public class AggregatedSelectQueryPlanImpl<R> implements SelectQueryPlan<R> {
 	@Override
 	public ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, DomainQueryExecutionContext executionContext) {
 		if ( executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0 ) {
-			return EmptyScrollableResults.INSTANCE;
+			return EmptyScrollableResults.instance();
 		}
 		throw new UnsupportedOperationException();
 	}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
@@ -25,7 +25,6 @@ import java.util.List;
  * A stateless session comes some with designed-in limitations:
  * <ul>
  * <li>it does not have a first-level cache,
- * <li>nor interact with any second-level cache,
  * <li>nor does it implement transactional write-behind or automatic dirty
  *     checking.
  * </ul>
@@ -55,8 +54,8 @@ import java.util.List;
  * Certain rules applying to stateful sessions are relaxed in a stateless
  * session:
  * <ul>
- * <li>it is not necessary to discard a session and its entities after an
- *     exception is thrown by a stateless sessions, and
+ * <li>it's not necessary to discard a stateless session and its entities
+ *     after an exception is thrown by the stateless session, and
  * <li>when an exception is thrown by a stateless session, the current
  *     transaction is not automatically marked for rollback.
  * </ul>
@@ -69,6 +68,13 @@ import java.util.List;
  * thus undermining the synchronous nature of operations performed through a
  * stateless session. A preferred approach is to explicitly batch operations via
  * {@link #insertMultiple}, {@link #updateMultiple}, or {@link #deleteMultiple}.
+ * <p>
+ * Since version 7, a stateless session makes use of the second-level cache by
+ * default. To bypass the second-level cache, call {@link #setCacheMode(CacheMode)},
+ * passing {@link CacheMode#IGNORE}, or set the configuration properties
+ * {@value org.hibernate.cfg.CacheSettings#JAKARTA_SHARED_CACHE_RETRIEVE_MODE}
+ * and {@value org.hibernate.cfg.CacheSettings#JAKARTA_SHARED_CACHE_STORE_MODE}
+ * to {@code BYPASS}.
  *
  * @author Gavin King
  */
@@ -102,7 +108,7 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @since 7.0
 	 */
 	@Incubating
-	void insertMultiple(List<Object> entities);
+	void insertMultiple(List<?> entities);
 
 	/**
 	 * Insert a record.
@@ -135,7 +141,7 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @since 7.0
 	 */
 	@Incubating
-	void updateMultiple(List<Object> entities);
+	void updateMultiple(List<?> entities);
 
 	/**
 	 * Update a record.
@@ -166,7 +172,7 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @since 7.0
 	 */
 	@Incubating
-	void deleteMultiple(List<Object> entities);
+	void deleteMultiple(List<?> entities);
 
 	/**
 	 * Delete a record.
@@ -214,7 +220,7 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @since 7.0
 	 */
 	@Incubating
-	void upsertMultiple(List<Object> entities);
+	void upsertMultiple(List<?> entities);
 
 	/**
 	 * Use a SQL {@code merge into} statement to perform an upsert.
@@ -234,7 +240,8 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @param entityName The name of the entity to retrieve
 	 * @param id The id of the entity to retrieve
 	 *
-	 * @return a detached entity instance
+	 * @return a detached entity instance, or null if there
+	 *         is no instance with the given id
 	 */
 	Object get(String entityName, Object id);
 
@@ -244,7 +251,8 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @param entityClass The class of the entity to retrieve
 	 * @param id The id of the entity to retrieve
 	 *
-	 * @return a detached entity instance
+	 * @return a detached entity instance, or null if there
+	 *         is no instance with the given id
 	 */
 	<T> T get(Class<T> entityClass, Object id);
 
@@ -255,7 +263,8 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @param id The id of the entity to retrieve
 	 * @param lockMode The lock mode to apply to the entity
 	 *
-	 * @return a detached entity instance
+	 * @return a detached entity instance, or null if there
+	 *         is no instance with the given id
 	 */
 	Object get(String entityName, Object id, LockMode lockMode);
 
@@ -266,9 +275,44 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @param id The id of the entity to retrieve
 	 * @param lockMode The lock mode to apply to the entity
 	 *
-	 * @return a detached entity instance
+	 * @return a detached entity instance, or null if there
+	 *         is no instance with the given id
 	 */
 	<T> T get(Class<T> entityClass, Object id, LockMode lockMode);
+
+	/**
+	 * Retrieve a record, fetching associations specified by the
+	 * given {@link EntityGraph}, which is interpreted as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph}.
+	 *
+	 * @param graph The {@link EntityGraph}, interpreted as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph}
+	 * @param id The id of the entity to retrieve
+	 *
+	 * @return a detached entity instance, or null if there
+	 *         is no instance with the given id
+	 *
+	 * @since 7.0
+	 */
+	<T> T get(EntityGraph<T> graph, Object id);
+
+	/**
+	 * Retrieve a record, fetching associations specified by the
+	 * given {@link EntityGraph}, which is interpreted as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph},
+	 * and obtaining the specified lock mode.
+	 *
+	 * @param graph The {@link EntityGraph}, interpreted as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph}
+	 * @param id The id of the entity to retrieve
+	 * @param lockMode The lock mode to apply to the entity
+	 *
+	 * @return a detached entity instance, or null if there
+	 *         is no instance with the given id
+	 *
+	 * @since 7.0
+	 */
+	<T> T get(EntityGraph<T> graph, Object id, LockMode lockMode);
 
 	/**
 	 * Retrieve a record, fetching associations specified by the
@@ -279,7 +323,8 @@ public interface StatelessSession extends SharedSessionContract {
 	 *                      how the graph should be interpreted
 	 * @param id The id of the entity to retrieve
 	 *
-	 * @return a detached entity instance
+	 * @return a detached entity instance, or null if there
+	 *         is no instance with the given id
 	 *
 	 * @since 6.3
 	 */
@@ -296,7 +341,8 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @param id The id of the entity to retrieve
 	 * @param lockMode The lock mode to apply to the entity
 	 *
-	 * @return a detached entity instance
+	 * @return a detached entity instance, or null if there
+	 *         is no instance with the given id
 	 *
 	 * @since 6.3
 	 */
@@ -315,7 +361,61 @@ public interface StatelessSession extends SharedSessionContract {
 	 *         null elements representing missing entities
 	 * @since 7.0
 	 */
-	<T> List<T> getMultiple(Class<T> entityClass, List<Object> ids);
+	<T> List<T> getMultiple(Class<T> entityClass, List<?> ids);
+
+	/**
+	 * Retrieve multiple rows, obtaining the specified lock mode,
+	 * and returning entity instances in a list where the position
+	 * of an instance in the list matches the position of its
+	 * identifier in the given array, and the list contains a null
+	 * value if there is no persistent instance matching a given
+	 * identifier.
+	 *
+	 * @param entityClass The class of the entity to retrieve
+	 * @param ids         The ids of the entities to retrieve
+	 * @param lockMode    The lock mode to apply to the entities
+	 * @return an ordered list of detached entity instances, with
+	 *         null elements representing missing entities
+	 * @since 7.0
+	 */
+	<T> List<T> getMultiple(Class<T> entityClass, List<?> ids, LockMode lockMode);
+
+	/**
+	 * Retrieve multiple rows, returning instances of the root
+	 * entity of the given {@link EntityGraph} with the fetched
+	 * associations specified by the graph, in a list where the
+	 * position of an instance in the list matches the position
+	 * of its identifier in the given array, and the list
+	 * contains a null value if there is no persistent instance
+	 * matching a given identifier.
+	 *
+	 * @param entityGraph The {@link EntityGraph}, interpreted as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph}
+	 * @param ids The ids of the entities to retrieve
+	 * @return an ordered list of detached entity instances, with
+	 *         null elements representing missing entities
+	 * @since 7.0
+	 */
+	<T> List<T> getMultiple(EntityGraph<T> entityGraph, List<?> ids);
+
+	/**
+	 * Retrieve multiple rows, returning instances of the root
+	 * entity of the given {@link EntityGraph} with the fetched
+	 * associations specified by the graph, in a list where the
+	 * position of an instance in the list matches the position
+	 * of its identifier in the given array, and the list
+	 * contains a null value if there is no persistent instance
+	 * matching a given identifier.
+	 *
+	 * @param entityGraph The {@link EntityGraph}
+	 * @param graphSemantic a {@link GraphSemantic} specifying
+	 *                      how the graph should be interpreted
+	 * @param ids The ids of the entities to retrieve
+	 * @return an ordered list of detached entity instances, with
+	 *         null elements representing missing entities
+	 * @since 7.0
+	 */
+	<T> List<T> getMultiple(EntityGraph<T> entityGraph, GraphSemantic graphSemantic, List<?> ids);
 
 	/**
 	 * Refresh the entity instance state from the database.

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
@@ -13,6 +13,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+
+import static org.hibernate.type.BasicArrayType.determineArrayTypeName;
 
 /**
  * Given a {@link BasicValueConverter} for an array type,
@@ -48,7 +50,7 @@ public class ConvertedBasicArrayType<T,S,E>
 		this.jdbcValueExtractor = (ValueExtractor<T>) arrayJdbcType.getExtractor( converter.getRelationalJavaType() );
 		this.jdbcLiteralFormatter = (JdbcLiteralFormatter<T>) arrayJdbcType.getJdbcLiteralFormatter( converter.getRelationalJavaType() );
 		this.baseDescriptor = baseDescriptor;
-		this.name = baseDescriptor.getName() + "[]";
+		this.name = determineArrayTypeName( baseDescriptor );
 	}
 
 	@Override
@@ -102,8 +104,8 @@ public class ConvertedBasicArrayType<T,S,E>
 	@Override
 	public boolean equals(Object o) {
 		return o == this || super.equals( o )
-				&& o instanceof ConvertedBasicArrayType<?, ?, ?>
-				&& Objects.equals( converter, ( (ConvertedBasicArrayType<?, ?, ?>) o ).converter );
+			&& o instanceof ConvertedBasicArrayType<?, ?, ?> that
+			&& Objects.equals( converter, that.converter );
 	}
 
 	@Override

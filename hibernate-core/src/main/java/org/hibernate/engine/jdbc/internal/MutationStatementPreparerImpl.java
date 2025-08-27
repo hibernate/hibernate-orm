@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.internal;
@@ -12,8 +12,8 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
@@ -94,22 +94,22 @@ public class MutationStatementPreparerImpl implements MutationStatementPreparer 
 				final PreparedStatement preparedStatement;
 				final JdbcSessionOwner jdbcSessionOwner = jdbcCoordinator.getJdbcSessionOwner();
 				final JdbcEventHandler jdbcEventHandler = jdbcSessionOwner.getJdbcSessionContext().getEventHandler();
-				final EventManager eventManager = jdbcSessionOwner.getEventManager();
-				final HibernateMonitoringEvent jdbcPreparedStatementCreation = eventManager.beginJdbcPreparedStatementCreationEvent();
+				final EventMonitor eventMonitor = jdbcSessionOwner.getEventMonitor();
+				final DiagnosticEvent jdbcPreparedStatementCreation = eventMonitor.beginJdbcPreparedStatementCreationEvent();
 				try {
 					jdbcEventHandler.jdbcPrepareStatementStart();
 					preparedStatement = doPrepare();
 					setStatementTimeout( preparedStatement );
 				}
 				finally {
-					eventManager.completeJdbcPreparedStatementCreationEvent( jdbcPreparedStatementCreation, sql );
+					eventMonitor.completeJdbcPreparedStatementCreationEvent( jdbcPreparedStatementCreation, sql );
 					jdbcEventHandler.jdbcPrepareStatementEnd();
 				}
 				postProcess( preparedStatement );
 				return preparedStatement;
 			}
 			catch (SQLException e) {
-				throw sqlExceptionHelper().convert( e, "could not prepare statement", sql );
+				throw sqlExceptionHelper().convert( e, "Could not prepare statement", sql );
 			}
 		}
 

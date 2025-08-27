@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.mutation.internal;
@@ -82,7 +82,7 @@ public class MutationQueryOptions implements QueryOptions {
 
 	@Override
 	public LockOptions getLockOptions() {
-		return LockOptions.NONE;
+		return null;
 	}
 
 	@Override

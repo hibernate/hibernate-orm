@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.temptable;
@@ -12,6 +12,7 @@ import java.sql.Statement;
 import java.util.function.Function;
 
 import org.hibernate.engine.jdbc.internal.FormatStyle;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
@@ -19,6 +20,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.AbstractWork;
 
 /**
@@ -32,7 +34,7 @@ public class TemporaryTableHelper {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Creation
 
-	public static class TemporaryTableCreationWork extends AbstractWork {
+	public static class TemporaryTableCreationWork extends AbstractReturningWork<Boolean> {
 		private final TemporaryTable temporaryTable;
 		private final TemporaryTableExporter exporter;
 		private final SessionFactoryImplementor sessionFactory;
@@ -57,7 +59,7 @@ public class TemporaryTableHelper {
 		}
 
 		@Override
-		public void execute(Connection connection) {
+		public Boolean execute(Connection connection) {
 			final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 
 			try {
@@ -67,10 +69,11 @@ public class TemporaryTableHelper {
 				try (Statement statement = connection.createStatement()) {
 					statement.executeUpdate( creationCommand );
 					jdbcServices.getSqlExceptionHelper().handleAndClearWarnings( statement, WARNING_HANDLER );
+					return Boolean.TRUE;
 				}
 				catch (SQLException e) {
 					log.debugf(
-							"unable to create temporary table [%s]; `%s` failed : %s",
+							"Unable to create temporary table [%s]; `%s` failed : %s",
 							temporaryTable.getQualifiedTableName(),
 							creationCommand,
 							e.getMessage()
@@ -80,6 +83,7 @@ public class TemporaryTableHelper {
 			catch( Exception e ) {
 				log.debugf( "Error creating temporary table(s) : %s", e.getMessage() );
 			}
+			return Boolean.FALSE;
 		}
 	}
 
@@ -125,7 +129,7 @@ public class TemporaryTableHelper {
 				}
 				catch (SQLException e) {
 					log.debugf(
-							"unable to drop temporary table [%s]; `%s` failed : %s",
+							"Unable to drop temporary table [%s]; `%s` failed : %s",
 							temporaryTable.getQualifiedTableName(),
 							dropCommand,
 							e.getMessage()
@@ -147,50 +151,54 @@ public class TemporaryTableHelper {
 			TemporaryTableExporter exporter,
 			Function<SharedSessionContractImplementor,String> sessionUidAccess,
 			SharedSessionContractImplementor session) {
-		PreparedStatement ps = null;
+		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+		PreparedStatement preparedStatement = null;
 		try {
 			final String sql = exporter.getSqlTruncateCommand( temporaryTable, sessionUidAccess, session );
-
-			ps = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
-
+			preparedStatement = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
 			if ( temporaryTable.getSessionUidColumn() != null ) {
 				final String sessionUid = sessionUidAccess.apply( session );
-				ps.setString( 1, sessionUid );
+				preparedStatement.setString( 1, sessionUid );
 			}
-
-			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( ps, sql );
+			jdbcCoordinator.getResultSetReturn().executeUpdate( preparedStatement, sql );
 		}
 		catch( Throwable t ) {
 			log.unableToCleanupTemporaryIdTable(t);
 		}
 		finally {
-			if ( ps != null ) {
+			if ( preparedStatement != null ) {
 				try {
-					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
+					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( preparedStatement );
 				}
 				catch( Throwable ignore ) {
 					// ignore
 				}
+				jdbcCoordinator.afterStatementExecution();
 			}
 		}
 	}
 
+	/**
+	 * Differs from
+	 * {@link org.hibernate.engine.jdbc.spi.SqlExceptionHelper.StandardWarningHandler}
+	 * because it logs only at DEBUG level.
+	 */
+	private static final SqlExceptionHelper.WarningHandler WARNING_HANDLER =
+			new SqlExceptionHelper.WarningHandlerLoggingSupport() {
+				public boolean doProcess() {
+					return log.isDebugEnabled();
+				}
 
-	private static SqlExceptionHelper.WarningHandler WARNING_HANDLER = new SqlExceptionHelper.WarningHandlerLoggingSupport() {
-		public boolean doProcess() {
-			return log.isDebugEnabled();
-		}
+				public void prepare(SQLWarning warning) {
+					log.warningsCreatingTempTable( warning );
+				}
 
-		public void prepare(SQLWarning warning) {
-			log.warningsCreatingTempTable( warning );
-		}
-
-		@Override
-		protected void logWarning(String description, String message) {
-			log.debug( description );
-			log.debug( message );
-		}
-	};
+				@Override
+				protected void logWarning(String description, String message) {
+					log.debug( description );
+					log.debug( message );
+				}
+			};
 
 
 	private static void logStatement(String sql, JdbcServices jdbcServices) {

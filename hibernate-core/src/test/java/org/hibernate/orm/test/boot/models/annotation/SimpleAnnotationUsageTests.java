@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.models.annotation;
@@ -10,7 +10,7 @@ import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.orm.test.boot.models.SourceModelTestHelper;
 
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class SimpleAnnotationUsageTests {
 	@Test
 	void testSimpleUsage() {
-		final SourceModelBuildingContext context = SourceModelTestHelper.createBuildingContext( SimpleEntity.class );
+		final ModelsContext context = SourceModelTestHelper.createBuildingContext( SimpleEntity.class );
 		final AnnotationDescriptorRegistry descriptorRegistry = context.getAnnotationDescriptorRegistry();
 		final AnnotationDescriptor<Entity> entityDescriptor = descriptorRegistry.getDescriptor( Entity.class );
 		assertThat( entityDescriptor ).isInstanceOf( OrmAnnotationDescriptor.class );

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -97,7 +97,7 @@ public @interface FilterDef {
 	ParamDef[] parameters() default {};
 
 	/**
-	 * Specifies that the filter auto-enabled, so that it is
+	 * Specifies that the filter is auto-enabled, so that it is
 	 * not necessary to call
 	 * {@link org.hibernate.Session#enableFilter(String)}.
 	 * <p>

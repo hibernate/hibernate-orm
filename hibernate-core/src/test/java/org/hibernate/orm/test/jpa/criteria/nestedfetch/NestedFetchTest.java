@@ -1,167 +1,181 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria.nestedfetch;
 
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jira;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
-import jakarta.persistence.Embeddable;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.Table;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Fetch;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import java.util.HashSet;
+import java.util.Set;
 
-@Jpa( annotatedClasses = {
-		NestedFetchTest.RootEntity.class,
-		NestedFetchTest.Chil1PK.class,
-		NestedFetchTest.Child1Entity.class,
-		NestedFetchTest.Child2Entity.class,
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel( annotatedClasses = {
+		NestedFetchTest.Product.class,
+		NestedFetchTest.Customer.class,
+		NestedFetchTest.Order.class,
+		NestedFetchTest.OrderLine.class,
 } )
+@SessionFactory( useCollectingStatementInspector = true )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16905" )
 public class NestedFetchTest {
 	@BeforeAll
-	public void setUp(EntityManagerFactoryScope scope) {
-		scope.inTransaction( entityManager -> {
-			final RootEntity root = new RootEntity();
-			entityManager.persist( root );
-			final Child2Entity child2 = new Child2Entity( "222" );
-			entityManager.persist( child2 );
-			final Child1Entity child1 = new Child1Entity( root, child2 );
-			entityManager.persist( child1 );
+	public void createTestData(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final Product sprocket = new Product( 1, "Sprocket" );
+			final Product thingamajig = new Product( 2, "Thingamajig" );
+			session.persist( sprocket );
+			session.persist( thingamajig );
+
+			final Customer ibm = new Customer( 1, "IBM" );
+			session.persist( ibm );
+
+			final Order order = new Order( 1, "ibm-1", ibm );
+			order.addOrderLine( sprocket, 20 );
+			order.addOrderLine( thingamajig, 1500 );
+			session.persist( order );
 		} );
 	}
 
 	@AfterAll
-	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction( entityManager -> {
-			entityManager.createQuery( "delete from Child1Entity" ).executeUpdate();
-			entityManager.createQuery( "delete from Child2Entity" ).executeUpdate();
-			entityManager.createQuery( "delete from RootEntity" ).executeUpdate();
-		} );
+	public void tearDown(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
 	@Test
-	public void testNestedFetch(EntityManagerFactoryScope scope) {
-		RootEntity rootEntity = scope.fromTransaction( entityManager -> {
-			final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-			final CriteriaQuery<RootEntity> cq = cb.createQuery( RootEntity.class );
-			final Root<RootEntity> fromRoot = cq.from( RootEntity.class );
-			final Fetch<RootEntity, Child1Entity> fetchDepth1 = fromRoot.fetch(
-					"child1Entities",
-					JoinType.LEFT
-			);
-			final Fetch<Child1Entity, Child2Entity> fetchDepth2 = fetchDepth1.fetch(
-					"child2Entity",
-					JoinType.LEFT
-			);
-			return entityManager.createQuery( cq.select( fromRoot ) ).getSingleResult();
+	public void testNestedFetch(SessionFactoryScope scope) {
+		final SQLStatementInspector sqlCollector = scope.getCollectingStatementInspector();
+		sqlCollector.clear();
+
+		final Customer customer = scope.fromTransaction( (session) -> {
+			final CriteriaBuilder cb = session.getCriteriaBuilder();
+			final CriteriaQuery<Customer> criteria = cb.createQuery( Customer.class );
+			final Root<Customer> fromRoot = criteria.from( Customer.class );
+			final Fetch<Customer, Order> ordersFetch = fromRoot.fetch( "orders", JoinType.LEFT );
+			final Fetch<Order, OrderLine> linesFetch = ordersFetch.fetch( "lines", JoinType.LEFT );
+			final Fetch<OrderLine, Product> productFetch = linesFetch.fetch( "product", JoinType.LEFT );
+			return session.createQuery( criteria.select( fromRoot ) ).getSingleResult();
 		} );
-		//dependent relations should already be fetched and be available outside the transaction
-		assertThat( rootEntity.getChild1Entities().size() ).isEqualTo( 1 );
-		final Child1Entity depth1Entity = rootEntity.getChild1Entities().iterator().next();
-		final Child2Entity depth2Entity = depth1Entity.getChild2Entity();
-		assertThat( depth2Entity ).isNotNull();
-		assertThat( depth2Entity.getVal() ).isEqualTo( "222" );
+
+		// make sure that the fetches really got fetched...
+		assertThat( customer.orders ).hasSize( 1 );
+		final Order order = customer.orders.iterator().next();
+		assertThat( order.lines ).hasSize( 2 );
+		assertThat( order.lines.stream().map( orderLine -> orderLine.product.name ) )
+				.contains( "Sprocket", "Thingamajig" );
+
+		// should have happened by joins
+		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 	}
 
-	@Entity( name = "RootEntity" )
-	public static class RootEntity {
+	@Entity
+	@Table(name="products")
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
+	public static class Product {
+		@Id
+		private Integer id;
+		private String name;
+
+		public Product() {
+		}
+
+		public Product(Integer id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+	}
+
+	@Entity
+	@Table(name="customers")
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
+	public static class Customer {
+		@Id
+		private Integer id;
+		private String name;
+		@OneToMany( mappedBy = "customer" )
+		private Set<Order> orders = new HashSet<>();
+
+		public Customer() {
+		}
+
+		public Customer(Integer id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+	}
+
+	@Entity
+	@Table(name="orders")
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
+	public static class Order {
+		@Id
+		private Integer id;
+		private String orderNumber;
+		@ManyToOne
+		@JoinColumn(name = "customer_fk")
+		private Customer customer;
+		@OneToMany( mappedBy = "order", cascade = CascadeType.ALL)
+		private Set<OrderLine> lines = new HashSet<>();
+
+		public Order() {
+		}
+
+		public Order(Integer id, String orderNumber, Customer customer) {
+			this.id = id;
+			this.orderNumber = orderNumber;
+			this.customer = customer;
+			customer.orders.add( this );
+		}
+
+		public void addOrderLine(Product product, int quantity) {
+			lines.add( new OrderLine( this, product, quantity ) );
+		}
+	}
+
+	@Entity(name="OrderLine")
+	@Table(name="OrderLine")
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
+	public static class OrderLine {
 		@Id
 		@GeneratedValue
-		private int id;
+		private Integer id;
+		@ManyToOne
+		@JoinColumn(name="order_fk")
+		private Order order;
+		@ManyToOne
+		@JoinColumn(name="product_fk")
+		private Product product;
+		private int quantity;
 
-		@OneToMany( mappedBy = "rootEntity" )
-		private Set<Child1Entity> child1Entities;
-
-		public Set<Child1Entity> getChild1Entities() {
-			return child1Entities;
-		}
-	}
-
-	@Embeddable
-	public static class Chil1PK implements Serializable {
-		@ManyToOne( fetch = FetchType.LAZY )
-		@JoinColumn( name = "rootId", referencedColumnName = "id", nullable = false )
-		private RootEntity rootEntity;
-
-		@ManyToOne( fetch = FetchType.LAZY )
-		@JoinColumn( name = "child2Id", referencedColumnName = "id", nullable = false )
-		private Child2Entity child2Entity;
-	}
-
-	@Entity( name = "Child1Entity" )
-	@IdClass( Chil1PK.class )
-	public static class Child1Entity {
-		@Id
-		@PrimaryKeyJoinColumn( name = "rootId", referencedColumnName = "id" )
-		@ManyToOne( fetch = FetchType.LAZY )
-		private RootEntity rootEntity;
-
-		@Id
-		@PrimaryKeyJoinColumn( name = "child2Id", referencedColumnName = "id" )
-		@ManyToOne( fetch = FetchType.LAZY )
-		private Child2Entity child2Entity;
-
-		public Child1Entity() {
+		public OrderLine() {
 		}
 
-		public Child1Entity(RootEntity rootEntity, Child2Entity child2Entity) {
-			this.rootEntity = rootEntity;
-			this.child2Entity = child2Entity;
-		}
-
-		public Child2Entity getChild2Entity() {
-			return child2Entity;
-		}
-	}
-
-
-	@Entity( name = "Child2Entity" )
-	public static class Child2Entity {
-		@Id
-		@GeneratedValue
-		private int id;
-
-		@OneToMany( mappedBy = "child2Entity" )
-		private Set<Child1Entity> child1Entities = new HashSet<>();
-
-		private String val;
-
-		public Child2Entity() {
-		}
-
-		public Child2Entity(String val) {
-			this.val = val;
-		}
-
-		public String getVal() {
-			return val;
-		}
-
-		public Set<Child1Entity> getChild1Entities() {
-			return child1Entities;
+		public OrderLine(Order order, Product product, int quantity) {
+			this.order = order;
+			this.product = product;
+			this.quantity = quantity;
 		}
 	}
 }

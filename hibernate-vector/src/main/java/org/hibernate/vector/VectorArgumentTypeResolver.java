@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.vector;
@@ -19,7 +19,7 @@ import org.hibernate.type.StandardBasicTypes;
 /**
  * A {@link FunctionArgumentTypeResolver} for {@link SqlTypes#VECTOR} functions.
  */
-public class VectorArgumentTypeResolver extends AbstractFunctionArgumentTypeResolver {
+public class VectorArgumentTypeResolver implements AbstractFunctionArgumentTypeResolver {
 
 	public static final FunctionArgumentTypeResolver INSTANCE = new VectorArgumentTypeResolver();
 
@@ -37,10 +37,7 @@ public class VectorArgumentTypeResolver extends AbstractFunctionArgumentTypeReso
 			}
 		}
 
-		return converter.getCreationContext()
-				.getSessionFactory()
-				.getTypeConfiguration()
-				.getBasicTypeRegistry()
+		return converter.getCreationContext().getTypeConfiguration().getBasicTypeRegistry()
 				.resolve( StandardBasicTypes.VECTOR );
 	}
 }

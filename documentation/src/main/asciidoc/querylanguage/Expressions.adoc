@@ -96,44 +96,72 @@ Similarly, the Java-style postfix is case-insensitive.
 [[datetime-literals]]
 ==== Date and time literals
 
-According to the JPQL specification, date and time literals may be specified using the JDBC escape syntax.
-Since this syntax is rather unpleasant to look at, HQL provides not one, but two alternatives.
+According to the JPQL specification, literal dates and times may be specified using the JDBC escape syntax.
 
+[cols="~,~,~,^15"]
 |===
-| Date/time type | Recommended Java type | JDBC escape syntax 💀| Braced literal syntax | Explicitly typed literal syntax
+| Date/time type | Java type | JDBC escape syntax | JPA standard
 
-| Date | `LocalDate` | `{d 'yyyy-mm-dd'}` | `{yyyy-mm-dd}` | `date yyyy-mm-dd`
-| Time | `LocalTime` | `{t 'hh:mm'}` | `{hh:mm}` | `time hh:mm`
-| Time with seconds | `LocalTime` | `{t 'hh:mm:ss'}` | `{hh:mm:ss}` | `time hh:mm:ss`
-| Datetime | `LocalDateTime` | `{ts 'yyyy-mm-ddThh:mm:ss'}` | `{yyyy-mm-dd hh:mm:ss}` | `datetime yyyy-mm-dd hh:mm:ss`
-| Datetime with milliseconds | `LocalDateTime` | `{ts 'yyyy-mm-ddThh:mm:ss.millis'}` | `{yyyy-mm-dd hh:mm:ss.millis}` | `datetime yyyy-mm-dd hh:mm:ss.millis`
-| Datetime with an offset | `OffsetDateTime` | `{ts 'yyyy-mm-ddThh:mm:ss+hh:mm'}` | `{yyyy-mm-dd hh:mm:ss +hh:mm}` | `datetime yyyy-mm-dd hh:mm:ss +hh:mm`
-| Datetime with a time zone | `OffsetDateTime` | `{ts 'yyyy-mm-ddThh:mm:ss GMT'}` | `{yyyy-mm-dd hh:mm:ss GMT}` | `datetime yyyy-mm-dd hh:mm:ss GMT`
-|===
-
-Literals referring to the current date and time are also provided.
-Again there is some flexibility.
-
-|===
-| Date/time type | Java type | Underscored syntax | Spaced syntax
-
-| Date | `java.time.LocalDate` | `local_date` | `local date`
-| Time | `java.time.LocalTime` | `local_time` | `local time`
-| Datetime | `java.time.LocalDateTime` | `local_datetime` | `local datetime`
-| Offset datetime | `java.time.OffsetDateTime`| `offset_datetime` | `offset datetime`
-| Instant | `java.time.Instant` | `instant` | `instant`
-| Date | `java.sql.Date` 💀| `current_date` | `current date`
-| Time | `java.sql.Time` 💀| `current_time` | `current time`
-| Datetime | `java.sql.Timestamp` 💀| `current_timestamp` | `current timestamp`
+| Date | `java.sql.Date` 💀 | `{d 'yyyy-mm-dd'}` | ✔
+| Time | `java.sql.Time` 💀 | `{t 'hh:mm'}` | ✔
+| Time with seconds | `java.sql.Time` 💀 | `{t 'hh:mm:ss'}` | ✔
+| Timestamp | `java.sql.Timestamp` 💀 | `{ts 'yyyy-mm-ddThh:mm:ss'}` | ✔
+| Timestamp with milliseconds | `java.sql.Timestamp` 💀 | `{ts 'yyyy-mm-ddThh:mm:ss.millis'}` | ✔
+| Timestamp with an offset | `java.sql.Timestamp` 💀 | `{ts 'yyyy-mm-ddThh:mm:ss+hh:mm'}` | ✔
+| Timestamp with a time zone | `java.sql.Timestamp` 💀 | `{ts 'yyyy-mm-ddThh:mm:ss GMT'}` | ✔
 |===
 
-Of these, only `local date`, `local time`, `local datetime`, `current_date`, `current_time`, and `current_timestamp` are defined by the JPQL specification.
+There's two problems here:
+
+1. this syntax is rather unpleasant to look at, and
+2. these literals are assigned types defined by JDBC, instead of date/time types defined in `java.time`.
 
 [IMPORTANT]
 ====
 The use of date and time types from the `java.sql` package is strongly discouraged!
+Jakarta Persistence 3.2 deprecates support for these types.
 Always use `java.time` types in new code.
 ====
+
+HQL provides not one, but two alternatives.
+
+[cols="~,~,~,~,^15"]
+|===
+| Date/time type | Java type| Braced literal syntax | Explicitly-typed literal syntax | JPA standard
+
+| Date | `LocalDate` | `{yyyy-mm-dd}` | `date yyyy-mm-dd` | ✖
+| Time | `LocalTime` | `{hh:mm}` | `time hh:mm` | ✖
+| Time with seconds | `LocalTime` | `{hh:mm:ss}` | `time hh:mm:ss` | ✖
+| Datetime | `LocalDateTime` | `{yyyy-mm-dd hh:mm:ss}` | `datetime yyyy-mm-dd hh:mm:ss` | ✖
+| Datetime with milliseconds | `LocalDateTime` | `{yyyy-mm-dd hh:mm:ss.millis}` | `datetime yyyy-mm-dd hh:mm:ss.millis` | ✖
+| Datetime with an offset | `OffsetDateTime` | `{yyyy-mm-dd hh:mm:ss +hh:mm}` | `datetime yyyy-mm-dd hh:mm:ss +hh:mm` | ✖
+| Datetime with a time zone | `OffsetDateTime` | `{yyyy-mm-dd hh:mm:ss GMT}` | `datetime yyyy-mm-dd hh:mm:ss GMT` | ✖
+|===
+
+Literals referring to the current date and time are also available.
+
+[cols="~,~,~,^15"]
+|===
+| Date/time type | Java type | Syntax | JPA standard
+
+| Date | `java.time.LocalDate` | `local date` | ✔
+| Time | `java.time.LocalTime` | `local time` | ✔
+| Datetime | `java.time.LocalDateTime` | `local datetime` | ✔
+| Offset datetime | `java.time.OffsetDateTime` | `offset datetime` | ✖
+| Instant | `java.time.Instant` | `instant` | ✖
+|===
+
+The following are deprecated in JPA 3.2.
+We include them here only for completeness:
+
+[cols="~,~,~,~,^15"]
+|===
+| Date/time type | Java type | JPA syntax ✔ | HQL syntax ✖ | JPA standard
+
+| JDBC date | `java.sql.Date` 💀| `current_date` | `current date` | 💀
+| JDBC time | `java.sql.Time` 💀| `current_time` | `current time` | 💀
+| JDBC timestamp | `java.sql.Timestamp` 💀| `current_timestamp` | `current timestamp` | 💀
+|===
 
 [[duration-literals]]
 ==== Duration literals
@@ -548,6 +576,7 @@ The following special functions make it possible to discover or narrow expressio
 | `cast()` | Narrow a basic type | `cast(x as Type)` | ✔
 | `str()` | Cast to a string | `str(x)` | ✖
 | `ordinal()` | Get the ordinal value of an enum | `ordinal(x)` | ✖
+| `string()` | Get the string-valued name of an enum | `string(x)` | ✖
 |===
 
 Let's see what these functions do.
@@ -619,15 +648,16 @@ select str(id) from Order
 
 [[function-ordinal]]
 [discrete]
-===== Extracting the ordinal value of an enum
+===== Extracting the ordinal value or name of an enum
 
-The function `ordinal(x)` extracts the ordinal value of an enum.
-It supports both enum fields mapped as `ORDINAL` and `STRING`.
+The function `ordinal(x)` extracts the ordinal value of an enum, and the function `string(x)` extracts the name of the enum value as a string.
 
 [source, hql]
 ----
-select ordinal(p.type) from Phone p
+select ordinal(p.type), string(p.type) from Phone p
 ----
+
+Both functions work with enum fields mapped as `ORDINAL` and with enum fields mapped as `STRING`.
 
 [[functions-null]]
 ==== Functions for working with null values
@@ -841,6 +871,7 @@ Naturally, there are a good number of functions for working with strings.
 | `replace()` | Replace every occurrence of a pattern in a string | `replace(str, patt, rep)` | ✔ / ✖
 | `repeat()` | Concatenate a string with itself multiple times | `repeat(str, times)` | ✖ / ✖
 | `collate()` | Select a collation | `collate(p.name as collation)` | ✖ / ✖
+| `hex()` | Encode a binary value as a hexadecimal string | `hex(image.bytes)` | ✖ / ✖
 |===
 
 Let's take a closer look at just some of these.
@@ -1174,8 +1205,8 @@ Finally, the following functions evaluate the id, version, or natural id of an e
 |===
 | Function | Purpose | JPA standard
 
-| `id()` | The value of the entity `@Id` attribute. | ✖
-| `version()` | The value of the entity `@Version` attribute. | ✖
+| `id()` | The value of the entity `@Id` attribute. | ✔
+| `version()` | The value of the entity `@Version` attribute. | ✔
 | `naturalid()` | The value of the entity `@NaturalId` attribute. | ✖
 | `fk()` | The value of the foreign key column mapped by a `@ManyToOne` (or logical `@OneToOne`) association.
 Useful with associations annotated `@NotFound`. | ✖
@@ -1206,6 +1237,23 @@ However, we note that the following language constructs work with arrays, and ar
 | `element in array` or `array contains element` | Determine if an element belongs to an array
 | `array includes subarray` | Determine if the elements of one array include all the elements of a second array
 |===
+
+[[functions-hash]]
+==== Hash functions
+
+The following functions work on most supported platforms:
+
+[[hash-functions]]
+[cols="12,~,^15"]
+|===
+| Function | Purpose | JPA standard
+
+| `sha()` | The SHA256 hash of a string. | ✖
+| `md5()` | The MD5 hash of a string. | ✖
+|===
+
+These functions accept a string and return `byte[]`.
+The return value is compatible with the byte array produced by Java's `MessageDigest`.
 
 [[embedding-sql]]
 ==== Embedding SQL expressions
@@ -1447,7 +1495,7 @@ Their syntax is defined by:
 include::{extrasdir}/predicate_like_bnf.txt[]
 ----
 
-The expression on the right is a pattern, where:
+The expression on the right is usually a SQL-style pattern, where:
 
 * `_` matches any single character,
 * `%` matches any number of characters, and
@@ -1460,6 +1508,14 @@ from Book where title not like '% for Dummies'
 ----
 
 The optional `escape` character allows a pattern to include a literal `_` or `%` character.
+
+Alternatively, the `regexp` keyword specifies that the pattern should be interpreted as a regular expression:
+
+[[like-regexp-predicate-example]]
+[source, hql]
+----
+from Book where title not like regexp '.+ for Dummies'
+----
 
 As you can guess, `not like` and `not ilike` are the enemies of `like` and `ilike`, and evaluate to the exact opposite boolean values.
 

@@ -1,17 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.exception;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.exception.ConstraintViolationException;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -28,25 +26,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Emmanuel Bernard
  */
-@Jpa(
-		annotatedClasses = {
-				Music.class,
-				Musician.class,
-				Instrument.class
-		},
-		integrationSettings = { @Setting(name = AvailableSettings.BATCH_VERSIONED_DATA, value = "false") }
-)
+@Jpa(annotatedClasses = {Music.class, Musician.class, Instrument.class})
 public class ExceptionTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Instrument" ).executeUpdate();
-					entityManager.createQuery( "delete from Musician" ).executeUpdate();
-					entityManager.createQuery( "delete from Music" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -131,7 +116,7 @@ public class ExceptionTest {
 						entityManager.getTransaction().commit();
 						try {
 							entityManager.getTransaction().begin();
-							String hqlDelete = "delete Music where name = :name";
+							String hqlDelete = "delete from Music where name = :name";
 							entityManager.createQuery( hqlDelete ).setParameter( "name", "Jazz" ).executeUpdate();
 							entityManager.getTransaction().commit();
 							fail();

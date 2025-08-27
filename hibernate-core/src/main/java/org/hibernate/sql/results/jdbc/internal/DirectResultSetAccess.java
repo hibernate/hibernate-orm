@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.jdbc.internal;
@@ -25,7 +25,8 @@ public class DirectResultSetAccess extends AbstractResultSetAccess {
 		this.resultSetSource = resultSetSource;
 		this.resultSet = resultSet;
 
-		persistenceContext.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().register( resultSet, resultSetSource );
+		persistenceContext.getJdbcCoordinator().getLogicalConnection().getResourceRegistry()
+				.register( resultSet, resultSetSource );
 	}
 
 	@Override
@@ -34,7 +35,7 @@ public class DirectResultSetAccess extends AbstractResultSetAccess {
 	}
 
 	@Override
-	public SessionFactoryImplementor getFactory() {
+	protected SessionFactoryImplementor getFactory() {
 		return getPersistenceContext().getFactory();
 	}
 

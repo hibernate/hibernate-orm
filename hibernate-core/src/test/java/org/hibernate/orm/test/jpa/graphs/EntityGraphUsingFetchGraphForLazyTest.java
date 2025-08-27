@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.graphs;
@@ -45,14 +45,7 @@ public class EntityGraphUsingFetchGraphForLazyTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from EntityGraphUsingFetchGraphForLazyTest$CustomerOrder" ).executeUpdate();
-					entityManager.createQuery( "delete from EntityGraphUsingFetchGraphForLazyTest$OrderPosition" ).executeUpdate();
-					entityManager.createQuery( "delete from EntityGraphUsingFetchGraphForLazyTest$Address" ).executeUpdate();
-					entityManager.createQuery( "delete from EntityGraphUsingFetchGraphForLazyTest$Product" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.notfound;
@@ -250,10 +250,7 @@ public class FkRefTests {
 
 	@AfterEach
 	public void cleanupTest(SessionFactoryScope scope) throws Exception {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete Coin" ).executeUpdate();
-			session.createMutationQuery( "delete Currency" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Coin")

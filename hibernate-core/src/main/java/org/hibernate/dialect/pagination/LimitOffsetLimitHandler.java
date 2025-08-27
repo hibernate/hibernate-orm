@@ -1,8 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.pagination;
+
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
  * A {@link LimitHandler} for databases like PostgreSQL, H2,
@@ -18,6 +20,10 @@ public class LimitOffsetLimitHandler extends AbstractSimpleLimitHandler {
 		protected String offsetOnlyClause() {
 			return " offset ?";
 		}
+		@Override
+		protected String offsetOnlyClause(int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
+			return " offset " + parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null );
+		}
 	};
 
 	@Override
@@ -26,8 +32,24 @@ public class LimitOffsetLimitHandler extends AbstractSimpleLimitHandler {
 	}
 
 	@Override
+	protected String limitClause(boolean hasFirstRow, int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
+		final String firstParameter = parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null );
+		if ( hasFirstRow ) {
+			return " limit " + firstParameter + " offset " + parameterMarkerStrategy.createMarker( jdbcParameterCount + 2, null );
+		}
+		else {
+			return " limit " + firstParameter;
+		}
+	}
+
+	@Override
 	protected String offsetOnlyClause() {
 		return " limit " + Integer.MAX_VALUE + " offset ?";
+	}
+
+	@Override
+	protected String offsetOnlyClause(int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
+		return " limit " + Integer.MAX_VALUE + " offset " + parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null );
 	}
 
 	@Override
@@ -38,5 +60,10 @@ public class LimitOffsetLimitHandler extends AbstractSimpleLimitHandler {
 	@Override
 	public boolean supportsOffset() {
 		return true;
+	}
+
+	@Override
+	public boolean processSqlMutatesState() {
+		return false;
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.query.internal.impl;
@@ -307,7 +307,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 			query.setTimeout( timeout );
 		}
 		if ( lockOptions != null && lockOptions.getLockMode() != LockMode.NONE ) {
-			query.setLockMode( REFERENCED_ENTITY_ALIAS, lockOptions.getLockMode() );
+			query.setHibernateLockMode( lockOptions.getLockMode() );
 		}
 	}
 

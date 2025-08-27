@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.mapping.Join;
@@ -33,7 +34,7 @@ public interface PropertyHolder {
 
 	void addProperty(Property prop, MemberDetails memberDetails, ClassDetails declaringClass);
 
-	void addProperty(Property prop, MemberDetails memberDetails, AnnotatedColumns columns, ClassDetails declaringClass);
+	void addProperty(Property prop, MemberDetails memberDetails, @Nullable AnnotatedColumns columns, ClassDetails declaringClass);
 
 	KeyValue getIdentifier();
 
@@ -108,5 +109,5 @@ public interface PropertyHolder {
 	 *
 	 * @return The ConverterDescriptor
 	 */
-	ConverterDescriptor resolveAttributeConverterDescriptor(MemberDetails property);
+	ConverterDescriptor<?,?> resolveAttributeConverterDescriptor(MemberDetails property, boolean autoApply);
 }

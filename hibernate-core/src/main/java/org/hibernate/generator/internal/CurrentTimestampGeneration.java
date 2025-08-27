@@ -1,10 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.generator.internal;
 
 import java.lang.reflect.Member;
+import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Clock;
@@ -26,7 +30,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.CurrentTimestamp;
@@ -35,6 +38,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.jdbc.spi.StatementPreparer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
@@ -45,7 +50,10 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.type.descriptor.java.ClockHelper;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.type.descriptor.java.JavaType;
 
+import static java.sql.Types.TIMESTAMP;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
 import static org.hibernate.generator.EventTypeSets.INSERT_AND_UPDATE;
 import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
 import static org.hibernate.generator.EventTypeSets.fromArray;
@@ -79,8 +87,9 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 	public static final String CLOCK_SETTING_NAME = "hibernate.testing.clock";
 
 	private final EnumSet<EventType> eventTypes;
-
+	private final JavaType<Object> propertyType;
 	private final CurrentTimestampGeneratorDelegate delegate;
+
 	private static final Map<Class<?>, BiFunction<@Nullable Clock, Integer, CurrentTimestampGeneratorDelegate>> GENERATOR_PRODUCERS = new HashMap<>();
 	private static final Map<Key, CurrentTimestampGeneratorDelegate> GENERATOR_DELEGATES = new ConcurrentHashMap<>();
 
@@ -185,16 +194,19 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 	public CurrentTimestampGeneration(CurrentTimestamp annotation, Member member, GeneratorCreationContext context) {
 		delegate = getGeneratorDelegate( annotation.source(), member, context );
 		eventTypes = fromArray( annotation.event() );
+		propertyType = getPropertyType( context );
 	}
 
 	public CurrentTimestampGeneration(CreationTimestamp annotation, Member member, GeneratorCreationContext context) {
 		delegate = getGeneratorDelegate( annotation.source(), member, context );
 		eventTypes = INSERT_ONLY;
+		propertyType = getPropertyType( context );
 	}
 
 	public CurrentTimestampGeneration(UpdateTimestamp annotation, Member member, GeneratorCreationContext context) {
 		delegate = getGeneratorDelegate( annotation.source(), member, context );
 		eventTypes = INSERT_AND_UPDATE;
+		propertyType = getPropertyType( context );
 	}
 
 	private static CurrentTimestampGeneratorDelegate getGeneratorDelegate(
@@ -208,41 +220,51 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 			SourceType source,
 			Class<?> propertyType,
 			GeneratorCreationContext context) {
-		switch (source) {
-			case VM:
+		return switch (source) {
+			case DB -> null;
+			case VM -> {
 				// Generator is only used for in-VM generation
-				final BasicValue basicValue = (BasicValue) context.getProperty().getValue();
-				final Size size = basicValue.getColumns().get( 0 ).getColumnSize(
-						context.getDatabase().getDialect(),
-						basicValue.getMetadata()
-				);
-				final Clock baseClock = context.getServiceRegistry()
-						.requireService( ConfigurationService.class )
-						.getSetting( CLOCK_SETTING_NAME, value -> (Clock) value );
-				final Key key = new Key( propertyType, baseClock, size.getPrecision() == null ? 0 : size.getPrecision() );
-				final CurrentTimestampGeneratorDelegate delegate = GENERATOR_DELEGATES.get( key );
+				final Key key = new Key( propertyType, getBaseClock( context ), getPrecision( context ) );
+				final var delegate = GENERATOR_DELEGATES.get( key );
 				if ( delegate != null ) {
-					return delegate;
+					yield delegate;
 				}
-				final BiFunction<@Nullable Clock, Integer, CurrentTimestampGeneratorDelegate> producer = GENERATOR_PRODUCERS.get( key.clazz );
-				if ( producer == null ) {
-					return null;
+				else {
+					final var producer = GENERATOR_PRODUCERS.get( key.clazz );
+					if ( producer == null ) {
+						yield null;
+					}
+					else {
+						final var generatorDelegate = producer.apply( key.clock, key.precision );
+						final var old = GENERATOR_DELEGATES.putIfAbsent( key, generatorDelegate );
+						yield old != null ? old : generatorDelegate;
+					}
 				}
-				final CurrentTimestampGeneratorDelegate generatorDelegate = producer.apply( key.clock, key.precision );
-				final CurrentTimestampGeneratorDelegate old = GENERATOR_DELEGATES.putIfAbsent(
-						key,
-						generatorDelegate
-				);
-				return old != null ? old : generatorDelegate;
-			case DB:
-				return null;
-			default:
-				throw new AssertionFailure("unknown source");
-		}
+			}
+		};
+	}
+
+	private static int getPrecision(GeneratorCreationContext context) {
+		final BasicValue basicValue = (BasicValue) context.getProperty().getValue();
+		final Size size =
+				basicValue.getColumns().get( 0 )
+						.getColumnSize( context.getDatabase().getDialect(),
+								basicValue.getMetadata() );
+		return size.getPrecision() == null ? 0 : size.getPrecision();
+	}
+
+	private static Clock getBaseClock(GeneratorCreationContext context) {
+		return context.getServiceRegistry().requireService( ConfigurationService.class )
+				.getSetting( CLOCK_SETTING_NAME, value -> (Clock) value );
 	}
 
 	public static <T extends Clock> T getClock(SessionFactory sessionFactory) {
 		return (T) sessionFactory.getProperties().get( CLOCK_SETTING_NAME );
+	}
+
+	private static JavaType<Object> getPropertyType(GeneratorCreationContext context) {
+		return context.getDatabase().getTypeConfiguration().getJavaTypeRegistry()
+				.getDescriptor( context.getProperty().getType().getReturnedClass() );
 	}
 
 	@Override
@@ -257,7 +279,15 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 
 	@Override
 	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
-		return delegate.generate();
+		if ( delegate == null ) {
+			if ( eventType != EventType.FORCE_INCREMENT ) {
+				throw new UnsupportedOperationException( "CurrentTimestampGeneration.generate() should not have been called" );
+			}
+			return propertyType.wrap( getCurrentTimestamp( session ), session );
+		}
+		else {
+			return delegate.generate();
+		}
 	}
 
 	@Override
@@ -280,40 +310,62 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		Object generate();
 	}
 
-	private static class Key {
-		private final Class<?> clazz;
-		private final @Nullable Clock clock;
-		private final int precision;
+	private record Key(Class<?> clazz, @Nullable Clock clock, int precision) {
+	}
 
-		public Key(Class<?> clazz, @Nullable Clock clock, int precision) {
-			this.clazz = clazz;
-			this.clock = clock;
-			this.precision = precision;
-		}
+	static Timestamp getCurrentTimestamp(SharedSessionContractImplementor session) {
+		final Dialect dialect = session.getJdbcServices().getJdbcEnvironment().getDialect();
+		return getCurrentTimestampFromDatabase(
+				dialect.getCurrentTimestampSelectString(),
+				dialect.isCurrentTimestampSelectStringCallable(),
+				session
+		);
+	}
 
-		@Override
-		public boolean equals(Object o) {
-			if ( this == o ) {
-				return true;
+	static Timestamp getCurrentTimestampFromDatabase(
+			String timestampSelectString,
+			boolean callable,
+			SharedSessionContractImplementor session) {
+		final JdbcCoordinator coordinator = session.getJdbcCoordinator();
+		final StatementPreparer statementPreparer = coordinator.getStatementPreparer();
+		PreparedStatement statement = null;
+		try {
+			statement = statementPreparer.prepareStatement( timestampSelectString, callable );
+			final Timestamp ts = callable
+					? extractCalledResult( statement, coordinator, timestampSelectString )
+					: extractResult( statement, coordinator, timestampSelectString );
+			if ( JDBC_MESSAGE_LOGGER.isTraceEnabled() ) {
+				JDBC_MESSAGE_LOGGER.currentTimestampRetrievedFromDatabase( ts, ts.getNanos(), ts.getTime() );
 			}
-			if ( o == null || getClass() != o.getClass() ) {
-				return false;
-			}
-
-			Key key = (Key) o;
-
-			if ( precision != key.precision ) {
-				return false;
-			}
-			return clock == key.clock && clazz.equals( key.clazz );
+			return ts;
 		}
-
-		@Override
-		public int hashCode() {
-			int result = clazz.hashCode();
-			result = 31 * result + ( clock == null ? 0 : clock.hashCode() );
-			result = 31 * result + precision;
-			return result;
+		catch (SQLException e) {
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
+					e,
+					"could not obtain current timestamp from database",
+					timestampSelectString
+			);
 		}
+		finally {
+			if ( statement != null ) {
+				coordinator.getLogicalConnection().getResourceRegistry().release( statement );
+				coordinator.afterStatementExecution();
+			}
+		}
+	}
+
+	static Timestamp extractResult(PreparedStatement statement, JdbcCoordinator coordinator, String sql)
+			throws SQLException {
+		final ResultSet resultSet = coordinator.getResultSetReturn().extract( statement, sql );
+		resultSet.next();
+		return resultSet.getTimestamp( 1 );
+	}
+
+	static Timestamp extractCalledResult(PreparedStatement statement, JdbcCoordinator coordinator, String sql)
+			throws SQLException {
+		final CallableStatement callable = (CallableStatement) statement;
+		callable.registerOutParameter( 1, TIMESTAMP );
+		coordinator.getResultSetReturn().execute( callable, sql );
+		return callable.getTimestamp( 1 );
 	}
 }

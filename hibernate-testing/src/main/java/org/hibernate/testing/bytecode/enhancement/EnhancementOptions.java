@@ -1,8 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.bytecode.enhancement;
+
+import org.hibernate.bytecode.enhance.spi.UnsupportedEnhancementStrategy;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -21,4 +23,5 @@ public @interface EnhancementOptions {
 	boolean inlineDirtyChecking() default false;
 	boolean lazyLoading() default false;
 	boolean extendedEnhancement() default false;
+	UnsupportedEnhancementStrategy unsupportedEnhancementStrategy() default UnsupportedEnhancementStrategy.SKIP;
 }

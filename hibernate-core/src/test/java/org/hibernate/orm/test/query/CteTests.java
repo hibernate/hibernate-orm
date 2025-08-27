@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query;
@@ -8,8 +8,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.community.dialect.TiDBDialect;
+import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaCteCriteria;
@@ -18,7 +20,6 @@ import org.hibernate.query.criteria.JpaJoin;
 import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSubQuery;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 
@@ -68,7 +69,7 @@ public class CteTests {
 					cq.multiselect( root.get( "id" ), root.get( "name" ) );
 					cq.orderBy( cb.asc( root.get( "id" ) ) );
 
-					final QueryImplementor<Tuple> query = session.createQuery(
+					final Query<Tuple> query = session.createQuery(
 							"with femaleContacts as (" +
 									"select c.id id, c.name name from Contact c where c.gender = FEMALE" +
 									")" +
@@ -109,7 +110,7 @@ public class CteTests {
 					cq.multiselect( root.get( "id" ), root.get( "name" ) );
 					cq.orderBy( cb.asc( root.get( "id" ) ) );
 
-					final QueryImplementor<Tuple> query = session.createQuery(
+					final Query<Tuple> query = session.createQuery(
 							"with femaleContacts as (" +
 									"select c.id id, c.name name from Contact c where c.gender = FEMALE" +
 									")" +
@@ -130,6 +131,8 @@ public class CteTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Apparently nested CTEs are not supported")
 	public void testNested(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -166,7 +169,7 @@ public class CteTests {
 					cq.multiselect( root.get( "id" ), root.get( "name" ) );
 					cq.orderBy( cb.asc( root.get( "id" ) ) );
 
-					final QueryImplementor<Tuple> query = session.createQuery(
+					final Query<Tuple> query = session.createQuery(
 							"with femaleContacts as (" +
 									"with allContacts as (" +
 									"select c.id id, c.name name, c.gender gender from Contact c" +
@@ -216,7 +219,7 @@ public class CteTests {
 					subquery.select( addressesRoot.get( "line" ) );
 					cq.where( cb.exists( subquery ) );
 
-					final QueryImplementor<Tuple> query = session.createQuery(
+					final Query<Tuple> query = session.createQuery(
 									"select c.id, c.name from Contact c where exists (" +
 									"with addresses as (" +
 									"select a.line1 line from c.addresses a" +
@@ -258,7 +261,7 @@ public class CteTests {
 			subquery.select( sqRoot.get( "id" ) );
 			cq.select( root.get( "name" ).get( "first" ) ).where( root.get( "id" ).in( subquery ) );
 
-			final QueryImplementor<String> query = session.createQuery(
+			final Query<String> query = session.createQuery(
 					"select c.name.first from Contact c where c.id in (" +
 							"with cte as (" +
 							"select c.id id, c.name.first firstName from Contact c " +
@@ -299,7 +302,7 @@ public class CteTests {
 					cq.multiselect( root.get( "id" ), root.get( "name" ) );
 					cq.orderBy( cb.asc( root.get( "id" ) ) );
 
-					final QueryImplementor<Tuple> query = session.createQuery(
+					final Query<Tuple> query = session.createQuery(
 							"with femaleContacts as materialized (" +
 									"select c.id id, c.name name from Contact c where c.gender = FEMALE" +
 									")" +
@@ -349,7 +352,7 @@ public class CteTests {
 					cq.multiselect( alt );
 					cq.orderBy( cb.asc( alt.get( "id" ) ) );
 
-					final QueryImplementor<Tuple> query = session.createQuery(
+					final Query<Tuple> query = session.createQuery(
 							"with alternativeContacts as (" +
 									"select c.alternativeContact alt from Contact c where c.id = :param " +
 									"union all " +
@@ -406,7 +409,7 @@ public class CteTests {
 					cq.multiselect( alt, root.get( "isCycle" ) );
 					cq.orderBy( cb.asc( alt.get( "id" ) ), cb.asc( root.get( "isCycle" ) ) );
 
-					final QueryImplementor<Tuple> query = session.createQuery(
+					final Query<Tuple> query = session.createQuery(
 							"with alternativeContacts as (" +
 									"select c.alternativeContact alt from Contact c where c.id = :param " +
 									"union all " +
@@ -469,7 +472,7 @@ public class CteTests {
 					cq.multiselect( alt, root.get( "isCycle" ) );
 					cq.orderBy( cb.asc( alt.get( "id" ) ), cb.asc( root.get( "isCycle" ) ) );
 
-					final QueryImplementor<Tuple> query = session.createQuery(
+					final Query<Tuple> query = session.createQuery(
 							"with alternativeContacts as (" +
 									"select c.alternativeContact alt from Contact c where c.id = :param " +
 									"union all " +
@@ -542,7 +545,7 @@ public class CteTests {
 					cq.orderBy( cb.asc( root.get( "orderAttr" ) ) );
 					cq.fetch( 4 );
 
-					final QueryImplementor<Tuple> breadthFirstQuery = session.createQuery(
+					final Query<Tuple> breadthFirstQuery = session.createQuery(
 							"with alternativeContacts as (" +
 									"select c.id id, c.alternativeContact.id altId, 1 depth from Contact c where c.id in :param " +
 									"union all " +
@@ -563,7 +566,7 @@ public class CteTests {
 							}
 					);
 
-					final QueryImplementor<Tuple> depthFirstQuery = session.createQuery(
+					final Query<Tuple> depthFirstQuery = session.createQuery(
 							"with alternativeContacts as (" +
 									"select c.id id, c.alternativeContact.id altId, 1 depth from Contact c where c.id in :param " +
 									"union all " +
@@ -675,9 +678,6 @@ public class CteTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "update Contact set alternativeContact = null" ).executeUpdate();
-			session.createMutationQuery( "delete Contact" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

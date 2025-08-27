@@ -1356,7 +1356,7 @@ include::{example-dir-basic-mapping}/basic/InetAddressMappingTests.java[tags=bas
 Hibernate will only use the `JSON` type if explicitly configured through `@JdbcTypeCode( SqlTypes.JSON )`.
 The JSON library used for serialization/deserialization is detected automatically,
 but can be overridden by setting `hibernate.type.json_format_mapper`
-as can be read in the <<appendices/Configurations.adoc#misc-options,Configurations>> section.
+as can be read in the <<appendices/SettingsReference.adoc#settings-hibernate.type.json_format_mapper,Configurations>> section.
 
 [[basic-json-example]]
 .Mapping JSON
@@ -1373,7 +1373,7 @@ include::{example-dir-basic-mapping}/basic/JsonMappingTests.java[tags=basic-json
 Hibernate will only use the `XML` type if explicitly configured through `@JdbcTypeCode( SqlTypes.SQLXML )`.
 The XML library used for serialization/deserialization is detected automatically,
 but can be overridden by setting `hibernate.type.xml_format_mapper`
-as can be read in the <<appendices/Configurations.adoc#misc-options,Configurations>> section.
+as can be read in the <<appendices/SettingsReference.adoc#settings-hibernate.type.xml_format_mapper,Configurations>> section.
 
 [[basic-xml-example]]
 .Mapping XML
@@ -2425,7 +2425,7 @@ include::{extrasdir}/basic/basic-auto-quoting-persistence-example.sql[indent=0]
 
 As you can see, both the table name and all the column have been quoted.
 
-For more about quoting-related configuration properties, check out the <<appendices/Configurations.adoc#configurations-mapping,Mapping configurations>> section as well.
+For more about quoting-related configuration properties, check out the <<appendices/SettingsReference.adoc#settings-mapping,Mapping configurations>> section as well.
 
 
 

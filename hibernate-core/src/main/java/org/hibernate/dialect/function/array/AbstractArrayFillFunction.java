@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
@@ -39,7 +39,7 @@ public abstract class AbstractArrayFillFunction extends AbstractSqmSelfRendering
 		return "(OBJECT element, INTEGER elementCount)";
 	}
 
-	private static class ArrayFillArgumentsValidator extends AbstractFunctionArgumentTypeResolver {
+	private static class ArrayFillArgumentsValidator implements AbstractFunctionArgumentTypeResolver {
 
 		public static final FunctionArgumentTypeResolver INSTANCE = new ArrayFillArgumentsValidator();
 
@@ -50,12 +50,12 @@ public abstract class AbstractArrayFillFunction extends AbstractSqmSelfRendering
 		public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
 			if ( argumentIndex == 0 ) {
 				final MappingModelExpressible<?> impliedReturnType = converter.resolveFunctionImpliedReturnType();
-				return impliedReturnType instanceof BasicPluralType<?, ?>
-						? ( (BasicPluralType<?, ?>) impliedReturnType ).getElementType()
+				return impliedReturnType instanceof BasicPluralType<?, ?> basicPluralType
+						? basicPluralType.getElementType()
 						: null;
 			}
 			else {
-				return converter.getCreationContext().getSessionFactory().getTypeConfiguration().getBasicTypeRegistry()
+				return converter.getCreationContext().getTypeConfiguration().getBasicTypeRegistry()
 						.getRegisteredType( Integer.class );
 			}
 		}

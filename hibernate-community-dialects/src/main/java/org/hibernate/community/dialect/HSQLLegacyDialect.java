@@ -1,39 +1,43 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
-import java.lang.invoke.MethodHandles;
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
-
+import jakarta.persistence.TemporalType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
+import org.hibernate.Locking;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.model.FunctionContributions;
-import org.hibernate.dialect.*;
+import org.hibernate.community.dialect.pagination.LegacyHSQLLimitHandler;
+import org.hibernate.dialect.BooleanDecoder;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
+import org.hibernate.dialect.FunctionalDependencyAnalysisSupportImpl;
+import org.hibernate.dialect.NullOrdering;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.dialect.identity.HSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.OptimisticLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticReadSelectLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
-import org.hibernate.dialect.pagination.LegacyHSQLLimitHandler;
+import org.hibernate.dialect.lock.internal.HSQLLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.HSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.HSQLLocalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.StandardGlobalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -41,7 +45,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.spi.EventSource;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
@@ -52,16 +56,15 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.dialect.NullOrdering;
-import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
-import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -74,10 +77,12 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHSQLDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.spi.TypeConfiguration;
-
 import org.jboss.logging.Logger;
 
-import jakarta.persistence.TemporalType;
+import java.lang.invoke.MethodHandles;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.sql.Types;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -287,6 +292,7 @@ public class HSQLLegacyDialect extends Dialect {
 				functionContributions.getTypeConfiguration(),
 				SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER
 		) );
+		functionFactory.regexpLike_hsql();
 	}
 
 	/**
@@ -449,8 +455,8 @@ public class HSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLockTimeouts() {
-		return false;
+	public LockingSupport getLockingSupport() {
+		return HSQLLockingSupport.LOCKING_SUPPORT;
 	}
 
 	@Override
@@ -645,28 +651,10 @@ public class HSQLLegacyDialect extends Dialect {
 		// can happen in the middle of a transaction
 
 		if ( getVersion().isBefore( 2 ) ) {
-			return new GlobalTemporaryTableMutationStrategy(
-					TemporaryTable.createIdTable(
-							rootEntityDescriptor,
-							basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-							this,
-							runtimeModelCreationContext
-					),
-					runtimeModelCreationContext.getSessionFactory()
-			);
+			return new GlobalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 		}
 		else {
-			return new LocalTemporaryTableMutationStrategy(
-					// With HSQLDB 2.0, the table name is qualified with MODULE to assist the drop
-					// statement (in-case there is a global name beginning with HT_)
-					TemporaryTable.createIdTable(
-							rootEntityDescriptor,
-							basename -> "MODULE." + TemporaryTable.ID_TABLE_PREFIX + basename,
-							this,
-							runtimeModelCreationContext
-					),
-					runtimeModelCreationContext.getSessionFactory()
-			);
+			return new LocalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 		}
 	}
 
@@ -685,28 +673,10 @@ public class HSQLLegacyDialect extends Dialect {
 		// can happen in the middle of a transaction
 
 		if ( getVersion().isBefore( 2 ) ) {
-			return new GlobalTemporaryTableInsertStrategy(
-					TemporaryTable.createEntityTable(
-							rootEntityDescriptor,
-							name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-							this,
-							runtimeModelCreationContext
-					),
-					runtimeModelCreationContext.getSessionFactory()
-			);
+			return new GlobalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 		}
 		else {
-			return new LocalTemporaryTableInsertStrategy(
-					// With HSQLDB 2.0, the table name is qualified with MODULE to assist the drop
-					// statement (in-case there is a global name beginning with HT_)
-					TemporaryTable.createEntityTable(
-							rootEntityDescriptor,
-							name -> "MODULE." + TemporaryTable.ENTITY_TABLE_PREFIX + name,
-							this,
-							runtimeModelCreationContext
-					),
-					runtimeModelCreationContext.getSessionFactory()
-			);
+			return new LocalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 		}
 	}
 
@@ -716,20 +686,31 @@ public class HSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
+		return StandardGlobalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return HSQLLocalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
 	public String getTemporaryTableCreateCommand() {
-		return getVersion().isBefore( 2 ) ? super.getTemporaryTableCreateCommand() : "declare local temporary table";
+		return (getVersion().isBefore( 2 ) ? StandardGlobalTemporaryTableStrategy.INSTANCE
+				: HSQLLocalTemporaryTableStrategy.INSTANCE).getTemporaryTableCreateCommand();
 	}
 
 	@Override
 	public AfterUseAction getTemporaryTableAfterUseAction() {
-		// Version 1.8 GLOBAL TEMPORARY table definitions persist beyond the end
-		// of the session (by default, data is cleared at commit).
-		return getVersion().isBefore( 2 ) ? AfterUseAction.CLEAN : AfterUseAction.DROP;
+		return (getVersion().isBefore( 2 ) ? StandardGlobalTemporaryTableStrategy.INSTANCE
+				: HSQLLocalTemporaryTableStrategy.INSTANCE).getTemporaryTableAfterUseAction();
 	}
 
 	@Override
 	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return getVersion().isBefore( 2 ) ? BeforeUseAction.NONE : BeforeUseAction.CREATE;
+		return (getVersion().isBefore( 2 ) ? StandardGlobalTemporaryTableStrategy.INSTANCE
+				: HSQLLocalTemporaryTableStrategy.INSTANCE).getTemporaryTableBeforeUseAction();
 	}
 
 	// current timestamp support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -763,32 +744,11 @@ public class HSQLLegacyDialect extends Dialect {
 		return false;
 	}
 
-	/**
-	 * For HSQLDB 2.0, this is a copy of the base class implementation.
-	 * For HSQLDB 1.8, only READ_UNCOMMITTED is supported.
-	 * <p>
-	 * {@inheritDoc}
-	 */
 	@Override
-	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
-		switch (lockMode) {
-			case PESSIMISTIC_FORCE_INCREMENT:
-				return new PessimisticForceIncrementLockingStrategy( lockable, lockMode);
-			case PESSIMISTIC_WRITE:
-				return new PessimisticWriteSelectLockingStrategy( lockable, lockMode);
-			case PESSIMISTIC_READ:
-				return new PessimisticReadSelectLockingStrategy( lockable, lockMode);
-			case OPTIMISTIC:
-				return new OptimisticLockingStrategy( lockable, lockMode);
-			case OPTIMISTIC_FORCE_INCREMENT:
-				return new OptimisticForceIncrementLockingStrategy( lockable, lockMode);
-		}
-		if ( getVersion().isBefore( 2 ) ) {
-			return new ReadUncommittedLockingStrategy( lockable, lockMode );
-		}
-		else {
-			return new SelectLockingStrategy( lockable, lockMode );
-		}
+	protected LockingStrategy buildReadStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+		return getVersion().isBefore( 2 )
+				? new ReadUncommittedLockingStrategy( lockable, lockMode )
+				: new SelectLockingStrategy( lockable, lockMode );
 	}
 
 	private static class ReadUncommittedLockingStrategy extends SelectLockingStrategy {
@@ -797,7 +757,7 @@ public class HSQLLegacyDialect extends Dialect {
 		}
 
 		@Override
-		public void lock(Object id, Object version, Object object, int timeout, EventSource session)
+		public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session)
 				throws StaleObjectStateException, JDBCException {
 			if ( getLockMode().greaterThan( LockMode.READ ) ) {
 				LOG.hsqldbSupportsOnlyReadCommittedIsolation();
@@ -875,11 +835,6 @@ public class HSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) {
-		return false;
-	}
-
-	@Override
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
 		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
 	}
@@ -924,10 +879,11 @@ public class HSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 		builder.setAutoQuoteInitialUnderscore(true);
-		return super.buildIdentifierHelper(builder, dbMetaData);
+		builder.setAutoQuoteDollar(true);
+		return super.buildIdentifierHelper(builder, metadata );
 	}
 
 	@Override
@@ -944,4 +900,36 @@ public class HSQLLegacyDialect extends Dialect {
 	public String getFromDualForSelectOnly() {
 		return " from " + getDual();
 	}
+
+	@Override
+	public boolean supportsFilterClause() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsArrayConstructor() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		// Doesn't support correlations in the WITH clause
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return false;
+	}
+
 }

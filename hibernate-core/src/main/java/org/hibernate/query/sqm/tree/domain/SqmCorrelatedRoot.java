@@ -1,13 +1,18 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.spi.NavigablePath;
+
+import java.util.Objects;
 
 /**
  * @author Steve Ebersole
@@ -23,6 +28,11 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 				correlationParent.getExplicitAlias(),
 				correlationParent.nodeBuilder()
 		);
+		this.correlationParent = correlationParent;
+	}
+
+	protected SqmCorrelatedRoot(NavigablePath navigablePath, SqmPathSource<T> referencedNavigable, NodeBuilder nodeBuilder, SqmRoot<T> correlationParent) {
+		super( navigablePath, referencedNavigable, nodeBuilder );
 		this.correlationParent = correlationParent;
 	}
 
@@ -79,5 +89,17 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitCorrelatedRoot( this );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmCorrelatedRoot<?> that
+			&& super.equals( object )
+			&& Objects.equals( this.correlationParent, that.correlationParent );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( super.hashCode(), correlationParent );
 	}
 }

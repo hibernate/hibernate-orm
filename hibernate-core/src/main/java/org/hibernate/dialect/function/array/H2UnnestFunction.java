@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
@@ -16,7 +16,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.function.SelfRenderingSqmSetReturningFunction;
@@ -63,7 +63,6 @@ public class H2UnnestFunction extends UnnestFunction {
 	protected <T> SelfRenderingSqmSetReturningFunction<T> generateSqmSetReturningFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			QueryEngine queryEngine) {
-		//noinspection unchecked
 		return new SelfRenderingSqmSetReturningFunction<>(
 				this,
 				this,
@@ -109,8 +108,7 @@ public class H2UnnestFunction extends UnnestFunction {
 									tg -> tg.findTableGroupJoin( functionTableGroup ) == null ? null : tg
 							);
 							final TableGroupJoin join = parentTableGroup.findTableGroupJoin( functionTableGroup );
-							final BasicType<Integer> integerType = walker.getCreationContext()
-									.getSessionFactory()
+							final BasicType<Integer> integerType = walker.getSqmCreationContext()
 									.getNodeBuilder()
 									.getIntegerType();
 							final Expression lhs = new SelfRenderingExpression() {

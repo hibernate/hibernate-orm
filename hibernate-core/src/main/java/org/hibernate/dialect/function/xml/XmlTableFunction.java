@@ -1,12 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.xml;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.function.array.DdlTypeHelper;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingSetReturningFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingSqmSetReturningFunction;
@@ -216,9 +216,8 @@ public class XmlTableFunction extends AbstractSqmSelfRenderingSetReturningFuncti
 			XmlTableColumnsClause columnsClause = null;
 			int nextIndex = 2;
 			if ( nextIndex < sqlAstArguments.size() ) {
-				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof XmlTableColumnsClause ) {
-					columnsClause = (XmlTableColumnsClause) node;
+				if ( sqlAstArguments.get( nextIndex ) instanceof XmlTableColumnsClause tableColumnsClause ) {
+					columnsClause = tableColumnsClause;
 				}
 			}
 			return new XmlTableArguments(

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -59,10 +59,10 @@ public class EntityHierarchyBuilder {
 	public List<EntityHierarchySourceImpl> buildHierarchies() throws HibernateException {
 		if ( toBeLinkedQueue != null && !toBeLinkedQueue.isEmpty() ) {
 			if ( log.isDebugEnabled() ) {
-				for ( Map.Entry<String, List<ExtendsQueueEntry>> waitingListEntry : toBeLinkedQueue.entrySet() ) {
+				for ( var waitingListEntry : toBeLinkedQueue.entrySet() ) {
 					for ( ExtendsQueueEntry waitingEntry : waitingListEntry.getValue() ) {
 						log.debugf(
-								"Entity super-type named as extends [%s] for subclass [%s:%s] not found",
+								"Entity supertype named as extends [%s] for subclass [%s:%s] not found",
 								waitingListEntry.getKey(),
 								waitingEntry.sourceMappingDocument.getOrigin(),
 								waitingEntry.sourceMappingDocument.determineEntityName( waitingEntry.jaxbSubEntityMapping )
@@ -71,7 +71,7 @@ public class EntityHierarchyBuilder {
 				}
 			}
 			throw new HibernateException(
-					"Not all named super-types (extends) were found : " + toBeLinkedQueue.keySet()
+					"Not all named supertypes (extends) were found : " + toBeLinkedQueue.keySet()
 			);
 		}
 
@@ -137,16 +137,13 @@ public class EntityHierarchyBuilder {
 			MappingDocument mappingDocument,
 			JaxbHbmEntityBaseDefinition entityBinding,
 			AbstractEntitySourceImpl container) {
-		if ( entityBinding instanceof JaxbHbmDiscriminatorSubclassEntityType ) {
-			final JaxbHbmDiscriminatorSubclassEntityType jaxbSubclass = (JaxbHbmDiscriminatorSubclassEntityType) entityBinding;
+		if ( entityBinding instanceof JaxbHbmDiscriminatorSubclassEntityType jaxbSubclass ) {
 			processElements( mappingDocument, jaxbSubclass.getSubclass(), container );
 		}
-		else if ( entityBinding instanceof JaxbHbmJoinedSubclassEntityType ) {
-			final JaxbHbmJoinedSubclassEntityType jaxbJoinedSubclass = (JaxbHbmJoinedSubclassEntityType) entityBinding;
+		else if ( entityBinding instanceof JaxbHbmJoinedSubclassEntityType jaxbJoinedSubclass ) {
 			processElements( mappingDocument, jaxbJoinedSubclass.getJoinedSubclass(), container );
 		}
-		else if ( entityBinding instanceof JaxbHbmUnionSubclassEntityType ) {
-			final JaxbHbmUnionSubclassEntityType jaxbUnionSubclass = (JaxbHbmUnionSubclassEntityType) entityBinding;
+		else if ( entityBinding instanceof JaxbHbmUnionSubclassEntityType jaxbUnionSubclass ) {
 			processElements( mappingDocument, jaxbUnionSubclass.getUnionSubclass(), container );
 		}
 	}

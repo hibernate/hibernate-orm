@@ -1,35 +1,50 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain;
 
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * Describes any type that occurs in the application's domain model.
+ * Describes any type forming part of the application domain model.
  * <p>
- * The base for Hibernate's extension of the JPA type system.
+ * This is the base type for Hibernate's extension of the standard metamodel
+ * of the {@linkplain jakarta.persistence.metamodel.Type JPA type system}.
  * <p>
- * Encapsulates a {@link JavaType} describing the more rudimentary
- * aspects of the Java type.  The DomainType is a higher-level construct
- * incorporating information such as bean properties, constructors, etc
+ * Encapsulates a {@link JavaType} describing the more rudimentary aspects
+ * of the Java type. The {@code DomainType} is a higher-level construct
+ * incorporating information such as bean properties, constructors, and so on.
  *
  * @implNote The actual JPA type system is more akin to {@link SimpleDomainType}.
- * This contract represents a "higher level" than JPA
- * including descriptors for collections (which JPA does not define) as well as
- * Hibernate-specific features (like dynamic models or ANY mappings).
+ *           This contract represents a "higher level" abstraction, allowing
+ *           descriptors for collections (which JPA does not define) as well
+ *           as Hibernate-specific features (like dynamic models and
+ *           {@link org.hibernate.annotations.Any @Any}).
  *
  * @author Steve Ebersole
  */
-public interface DomainType<J> extends SqmExpressible<J> {
-	@Override
-	default DomainType<J> getSqmType() {
-		return this;
-	}
+public interface DomainType<J> {
 
-	default int getTupleLength() {
-		return 1;
+	/**
+	 * The {@link JavaType} representing this domain type.
+	 */
+	JavaType<J> getExpressibleJavaType();
+
+	/**
+	 * The Java class which represents by this domain type.
+	 *
+	 * @see jakarta.persistence.metamodel.Type#getJavaType
+	 */
+	Class<J> getJavaType();
+
+	/**
+	 * The name of the type. Usually, but not always, the name of a Java class.
+	 *
+	 * @see ManagedDomainType#getTypeName()
+	 * @see org.hibernate.query.sqm.SqmExpressible#getTypeName()
+	 */
+	default String getTypeName() {
+		return getExpressibleJavaType().getTypeName();
 	}
 }

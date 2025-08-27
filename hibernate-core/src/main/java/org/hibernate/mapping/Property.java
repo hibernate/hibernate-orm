@@ -1,28 +1,31 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
-import org.hibernate.engine.spi.Mapping;
+import org.hibernate.jpa.event.internal.EmbeddableCallback;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.property.access.spi.Setter;
@@ -38,6 +41,11 @@ import org.hibernate.type.MappingContext;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static org.hibernate.boot.model.internal.BinderHelper.renderCascadeTypeList;
+import static org.hibernate.cfg.MappingSettings.WRAPPER_ARRAY_HANDLING;
+import static org.hibernate.internal.util.StringHelper.isBlank;
+import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.BASIC;
+import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.MAP;
 
 /**
  * A mapping model object representing a property or field of an {@linkplain PersistentClass entity}
@@ -49,7 +57,7 @@ public class Property implements Serializable, MetaAttributable {
 	private String name;
 	private Value value;
 	private String cascade;
-	private boolean updateable = true;
+	private boolean updatable = true;
 	private boolean insertable = true;
 	private boolean selectable = true;
 	private boolean optimisticLocked = true;
@@ -119,9 +127,10 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public void resetUpdateable(boolean updateable) {
-		setUpdateable( updateable );
-		boolean[] columnUpdateability = getValue().getColumnUpdateability();
-		for (int i=0; i<getColumnSpan(); i++ ) {
+		setUpdatable( updateable );
+		final boolean[] columnUpdateability = getValue().getColumnUpdateability();
+		final int columnSpan = getColumnSpan();
+		for ( int i = 0; i < columnSpan; i++ ) {
 			columnUpdateability[i] = updateable;
 		}
 	}
@@ -135,13 +144,17 @@ public class Property implements Serializable, MetaAttributable {
 		}
 	}
 
+	public OnDeleteAction getOnDeleteAction() {
+		return value instanceof ToOne toOne ? toOne.getOnDeleteAction() : null;
+	}
+
 	public CascadeStyle getCascadeStyle() throws MappingException {
 		final Type type = value.getType();
 		if ( type instanceof AnyType ) {
 			return getCascadeStyle( cascade );
 		}
-		if ( type instanceof ComponentType ) {
-			return getCompositeCascadeStyle( (ComponentType) type, cascade );
+		else if ( type instanceof ComponentType componentType ) {
+			return getCompositeCascadeStyle( componentType, cascade );
 		}
 		else if ( type instanceof CollectionType ) {
 			final Collection collection = (Collection) value;
@@ -175,8 +188,8 @@ public class Property implements Serializable, MetaAttributable {
 		if ( elementType instanceof AnyType ) {
 			return getCascadeStyle( cascade );
 		}
-		else if ( elementType instanceof ComponentType ) {
-			return getCompositeCascadeStyle( (ComponentType) elementType, cascade );
+		else if ( elementType instanceof ComponentType componentType ) {
+			return getCompositeCascadeStyle( componentType, cascade );
 		}
 		else {
 			return getCascadeStyle( cascade );
@@ -184,17 +197,23 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	private static CascadeStyle getCascadeStyle(String cascade) {
-		if ( cascade==null || cascade.equals("none") ) {
+		if ( cascade==null || cascade.equals("none") || isBlank(cascade) ) {
 			return CascadeStyles.NONE;
 		}
 		else {
-			final StringTokenizer tokens = new StringTokenizer(cascade, ", ");
-			final CascadeStyle[] styles = new CascadeStyle[ tokens.countTokens() ] ;
-			int i=0;
-			while ( tokens.hasMoreTokens() ) {
-				styles[i++] = CascadeStyles.getCascadeStyle( tokens.nextToken() );
+			final var tokens = new StringTokenizer(cascade, ", ");
+			final int length = tokens.countTokens();
+			if ( length == 1) {
+				return CascadeStyles.getCascadeStyle( tokens.nextToken() );
 			}
-			return new CascadeStyles.MultipleCascadeStyle(styles);
+			else {
+				final CascadeStyle[] styles = new CascadeStyle[length];
+				int i = 0;
+				while ( tokens.hasMoreTokens() ) {
+					styles[i++] = CascadeStyles.getCascadeStyle( tokens.nextToken() );
+				}
+				return new CascadeStyles.MultipleCascadeStyle( styles );
+			}
 		}
 	}
 
@@ -206,6 +225,10 @@ public class Property implements Serializable, MetaAttributable {
 		this.cascade = cascade;
 	}
 
+	public void setCascade(EnumSet<CascadeType> cascadeTypes) {
+		cascade = cascadeTypes == null ? null : renderCascadeTypeList( cascadeTypes );
+	}
+
 	public void setName(String name) {
 		this.name = name==null ? null : name.intern();
 	}
@@ -214,10 +237,18 @@ public class Property implements Serializable, MetaAttributable {
 		this.value = value;
 	}
 
+	public boolean isUpdatable() {
+		return updatable && value.hasAnyUpdatableColumns();
+	}
+
+	/**
+	 * @deprecated Use {@link #isUpdatable()}.
+	 */
+	@Deprecated(since = "7.1", forRemoval = true)
 	public boolean isUpdateable() {
 		// if the property mapping consists of all formulas,
 		// make it non-updatable
-		return updateable && value.hasAnyUpdatableColumns();
+		return isUpdatable();
 	}
 
 	public boolean isInsertable() {
@@ -236,8 +267,16 @@ public class Property implements Serializable, MetaAttributable {
 		this.generatorCreator = generator;
 	}
 
+	public void setUpdatable(boolean updatable) {
+		this.updatable = updatable;
+	}
+
+	/**
+	 * @deprecated Use {@link #setUpdatable(boolean)}.
+	 */
+	@Deprecated(since = "7.1", forRemoval = true)
 	public void setUpdateable(boolean mutable) {
-		this.updateable = mutable;
+		this.updatable = mutable;
 	}
 
 	public void setInsertable(boolean insertable) {
@@ -261,7 +300,8 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public boolean isBasicPropertyAccessor() {
-		return propertyAccessorName==null || "property".equals( propertyAccessorName );
+		return propertyAccessorName == null
+			|| BASIC.getExternalName().equals( propertyAccessorName );
 	}
 
 	public Map<String, MetaAttribute> getMetaAttributes() {
@@ -276,29 +316,22 @@ public class Property implements Serializable, MetaAttributable {
 		this.metaAttributes = metas;
 	}
 
-	/**
-	 * @deprecated use {@link #isValid(MappingContext)}
-	 */
-	@Deprecated(since = "7.0")
-	public boolean isValid(Mapping mapping) throws MappingException {
-		return isValid( (MappingContext) mapping);
-	}
-
 	public boolean isValid(MappingContext mappingContext) throws MappingException {
 		final Value value = getValue();
-		if ( value instanceof BasicValue && ( (BasicValue) value ).isDisallowedWrapperArray() ) {
+		if ( value instanceof BasicValue basicValue && basicValue.isDisallowedWrapperArray() ) {
 			throw new MappingException(
-					"The property " + persistentClass.getEntityName() + "#" + name +
-							" uses a wrapper type Byte[]/Character[] which indicates an issue in your domain model. " +
-							"These types have been treated like byte[]/char[] until Hibernate 6.2 which meant that " +
-							"null elements were not allowed, but on JDBC were processed like VARBINARY or VARCHAR. " +
-							"If you don't use nulls in your arrays, change the type of the property to byte[]/char[]. " +
-							"To allow explicit uses of the wrapper types Byte[]/Character[] which allows null element " +
-							"but has a different serialization format than before Hibernate 6.2, configure the " +
-							"setting " + AvailableSettings.WRAPPER_ARRAY_HANDLING + " to the value " + WrapperArrayHandling.ALLOW + ". " +
-							"To revert to the legacy treatment of these types, configure the value to " + WrapperArrayHandling.LEGACY + ". " +
-							"For more information on this matter, consult the migration guide of Hibernate 6.2 " +
-							"and the Javadoc of the org.hibernate.cfg.AvailableSettings.WRAPPER_ARRAY_HANDLING field."
+					"""
+					The property %s.%s uses a wrapper type Byte[]/Character[] which indicates an issue in your domain model. \
+					These types have been treated like byte[]/char[] until Hibernate 6.2 which meant that null elements were \
+					not allowed, but on JDBC were processed like VARBINARY or VARCHAR. If you don't use nulls in your arrays, \
+					change the type of the property to byte[]/char[]. To allow explicit uses of the types Byte[]/Character[], \
+					allowing null elements, but with a different serialization format than before Hibernate 6.2, configure \
+					the setting '%s' to the value '%s'. To revert to the legacy treatment of these types, configure the value to '%s'. \
+					For more information on this matter, consult the migration guide of Hibernate 6.2 and the Javadoc of the \
+					field 'org.hibernate.cfg.AvailableSettings.WRAPPER_ARRAY_HANDLING'.\
+					"""
+							.formatted( persistentClass.getEntityName(), name, WRAPPER_ARRAY_HANDLING,
+									WrapperArrayHandling.ALLOW, WrapperArrayHandling.LEGACY )
 			);
 		}
 		return value.isValid( mappingContext );
@@ -319,7 +352,7 @@ public class Property implements Serializable, MetaAttributable {
 	 * instance in its "base fetch group". It affects whether we list
 	 * this property's columns in the SQL select for the owning entity
 	 * when we load its "base fetch group". The actual value that is set
-	 * varies based on the nature (basic, etc) of the property.
+	 * varies based on the nature (basic, or whatever) of the property.
 	 *
 	 * @apiNote This method reports whether the property is considered
 	 * part of the base fetch group based solely on the information in
@@ -327,15 +360,10 @@ public class Property implements Serializable, MetaAttributable {
 	 * is also accounts for other details.
 	 */
 	public boolean isLazy() {
-		if ( value instanceof ToOne ) {
-			// For a many-to-one, this is always false. Whether the
-			// association is EAGER, PROXY or NO-PROXY we always want
-			// to select the foreign key
-			return false;
-		}
-		else {
-			return lazy;
-		}
+		// For a many-to-one, this is always false. Whether the
+		// association is EAGER, PROXY or NO-PROXY we always want
+		// to select the foreign key
+		return !(value instanceof ToOne) && lazy;
 	}
 
 	public String getLazyGroup() {
@@ -378,52 +406,72 @@ public class Property implements Serializable, MetaAttributable {
 		this.selectable = selectable;
 	}
 
-	// todo : remove
-	@Internal
-	public Getter getGetter(Class clazz) throws MappingException {
-		return getPropertyAccessStrategy( clazz ).buildPropertyAccess( clazz, name, true ).getGetter();
+	private PropertyAccess buildPropertyAccess(Class<?> clazz) {
+		return getPropertyAccessStrategy( clazz ).buildPropertyAccess( clazz, name, true );
 	}
 
 	// todo : remove
 	@Internal
-	public Setter getSetter(Class clazz) throws MappingException {
-		return getPropertyAccessStrategy( clazz ).buildPropertyAccess( clazz, name, true ).getSetter();
+	public Getter getGetter(Class<?> clazz) throws MappingException {
+		return buildPropertyAccess( clazz ).getGetter();
 	}
 
 	// todo : remove
 	@Internal
-	public PropertyAccessStrategy getPropertyAccessStrategy(Class clazz) throws MappingException {
-		final PropertyAccessStrategy propertyAccessStrategy = getPropertyAccessStrategy();
+	public Setter getSetter(Class<?> clazz) throws MappingException {
+		return buildPropertyAccess( clazz ).getSetter();
+	}
+
+	// todo : remove
+	@Internal
+	public PropertyAccessStrategy getPropertyAccessStrategy(Class<?> clazz) throws MappingException {
+		final var propertyAccessStrategy = getPropertyAccessStrategy();
 		if ( propertyAccessStrategy != null ) {
 			return propertyAccessStrategy;
 		}
-		String accessName = getPropertyAccessorName();
-		if ( accessName == null ) {
-			if ( clazz == null || java.util.Map.class.equals( clazz ) ) {
-				accessName = "map";
-			}
-			else {
-				accessName = "property";
-			}
+		else {
+			return getPropertyAccessStrategyResolver()
+					.resolvePropertyAccessStrategy(
+							clazz,
+							propertyAccessorName( clazz ),
+							isMapEntity( clazz )
+									? RepresentationMode.MAP
+									: RepresentationMode.POJO
+					);
 		}
-
-		final RepresentationMode representationMode = clazz == null || java.util.Map.class.equals( clazz )
-				? RepresentationMode.MAP
-				: RepresentationMode.POJO;
-
-		return resolveServiceRegistry()
-				.requireService( PropertyAccessStrategyResolver.class )
-				.resolvePropertyAccessStrategy( clazz, accessName, representationMode );
 	}
 
-	ServiceRegistry resolveServiceRegistry() {
+	private PropertyAccessStrategyResolver getPropertyAccessStrategyResolver() {
+		return resolveServiceRegistry()
+				.requireService( PropertyAccessStrategyResolver.class );
+	}
+
+	private String propertyAccessorName(Class<?> clazz) {
+		final String accessorName = getPropertyAccessorName();
+		if ( accessorName == null ) {
+			return isMapEntity( clazz )
+					? MAP.getExternalName()
+					: BASIC.getExternalName();
+		}
+		else {
+			return accessorName;
+		}
+	}
+
+	private static boolean isMapEntity(Class<?> clazz) {
+		return clazz == null || Map.class.equals( clazz );
+	}
+
+	private ServiceRegistry resolveServiceRegistry() {
 		if ( getPersistentClass() != null ) {
 			return getPersistentClass().getServiceRegistry();
 		}
-		if ( getValue() != null ) {
+		else if ( getValue() != null ) {
 			return getValue().getServiceRegistry();
 		}
-		throw new HibernateException( "Could not resolve ServiceRegistry" );
+		else {
+			throw new HibernateException( "Could not resolve ServiceRegistry" );
+		}
 	}
 
 	public boolean isNaturalIdentifier() {
@@ -450,6 +498,10 @@ public class Property implements Serializable, MetaAttributable {
 		this.lob = lob;
 	}
 
+	/**
+	 * @deprecated See discussion in {@link EmbeddableCallback}.
+	 */
+	@Deprecated(since = "7")
 	public void addCallbackDefinitions(java.util.List<CallbackDefinition> callbackDefinitions) {
 		if ( callbackDefinitions != null && !callbackDefinitions.isEmpty() ) {
 			if ( this.callbackDefinitions == null ) {
@@ -459,6 +511,10 @@ public class Property implements Serializable, MetaAttributable {
 		}
 	}
 
+	/**
+	 * @deprecated See discussion in {@link EmbeddableCallback}.
+	 */
+	@Deprecated(since = "7")
 	public java.util.List<CallbackDefinition> getCallbackDefinitions() {
 		return callbackDefinitions == null ? emptyList() : unmodifiableList( callbackDefinitions );
 	}
@@ -477,11 +533,14 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public Property copy() {
-		final Property property = this instanceof SyntheticProperty ? new SyntheticProperty() : new Property();
+		final Property property =
+				this instanceof SyntheticProperty
+						? new SyntheticProperty()
+						: new Property();
 		property.setName( getName() );
 		property.setValue( getValue() );
 		property.setCascade( getCascade() );
-		property.setUpdateable( isUpdateable() );
+		property.setUpdatable( isUpdatable() );
 		property.setInsertable( isInsertable() );
 		property.setSelectable( isSelectable() );
 		property.setOptimisticLocked( isOptimisticLocked() );

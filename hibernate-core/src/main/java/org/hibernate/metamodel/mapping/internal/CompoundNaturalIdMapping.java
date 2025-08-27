@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -10,10 +10,10 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.loader.ast.internal.CompoundNaturalIdLoader;
@@ -22,7 +22,6 @@ import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -89,7 +88,6 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 							)
 					);
 					this.jdbcMappings = jdbcMappings;
-
 					return true;
 				}
 		);
@@ -97,13 +95,10 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	private static boolean isMutable(List<SingularAttributeMapping> attributes) {
 		for ( int i = 0; i < attributes.size(); i++ ) {
-			final SingularAttributeMapping attributeMapping = attributes.get( i );
-			final AttributeMetadata metadata = attributeMapping.getAttributeMetadata();
-			if ( metadata.isUpdatable() ) {
+			if ( attributes.get( i ).getAttributeMetadata().isUpdatable() ) {
 				return true;
 			}
 		}
-
 		return false;
 	}
 
@@ -112,41 +107,34 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		if ( state == null ) {
 			return null;
 		}
-
-		if ( state.length == attributes.size() ) {
+		else if ( state.length == attributes.size() ) {
 			return state;
 		}
-
-		final Object[] values = new Object[ attributes.size() ];
-
-		for ( int i = 0; i <= attributes.size() - 1; i++ ) {
-			final SingularAttributeMapping attributeMapping = attributes.get( i );
-			values[ i ] = state[ attributeMapping.getStateArrayPosition() ];
+		else {
+			final Object[] values = new Object[attributes.size()];
+			for ( int i = 0; i <= attributes.size() - 1; i++ ) {
+				final SingularAttributeMapping attributeMapping = attributes.get( i );
+				values[i] = state[attributeMapping.getStateArrayPosition()];
+			}
+			return values;
 		}
-
-		return values;
 	}
 
 	@Override
 	public Object[] extractNaturalIdFromEntity(Object entity) {
 		final Object[] values = new Object[ attributes.size() ];
-
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			values[i] = attributes.get( i ).getPropertyAccess().getGetter().get( entity );
 		}
-
 		return values;
 	}
 
 	@Override
-	@SuppressWarnings( "rawtypes" )
 	public Object[] normalizeInput(Object incoming) {
-		if ( incoming instanceof Object[] ) {
-			return (Object[]) incoming;
+		if ( incoming instanceof Object[] array ) {
+			return array;
 		}
-
-		if ( incoming instanceof Map ) {
-			final Map valueMap = (Map) incoming;
+		else if ( incoming instanceof Map<?,?> valueMap ) {
 			final List<SingularAttributeMapping> attributes = getNaturalIdAttributes();
 			final Object[] values = new Object[ attributes.size() ];
 			for ( int i = 0; i < attributes.size(); i++ ) {
@@ -154,30 +142,28 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			}
 			return values;
 		}
-
-		throw new UnsupportedMappingException( "Do not know how to normalize compound natural-id value : " + incoming );
+		else {
+			throw new UnsupportedMappingException( "Could not normalize compound natural id value: " + incoming );
+		}
 	}
 
 	@Override
 	public void validateInternalForm(Object naturalIdValue) {
-		if ( naturalIdValue == null ) {
-			return;
-		}
-
-		// should be an array, with a size equal to the number of attributes making up this compound natural-id
-		if ( naturalIdValue instanceof Object[] ) {
-			final Object[] values = (Object[]) naturalIdValue;
-			if ( values.length != attributes.size() ) {
-				throw new IllegalArgumentException(
-						"Natural-id value [" + naturalIdValue + "] did not contain the expected number of elements ["
-								+ attributes.size() + "]"
-				);
+		if ( naturalIdValue != null ) {
+			// should be an array, with a size equal to the number of attributes making up this compound natural-id
+			if ( naturalIdValue instanceof Object[] values ) {
+				if ( values.length != attributes.size() ) {
+					throw new IllegalArgumentException(
+							"Natural-id value [" + naturalIdValue + "] did not contain the expected number of elements ["
+							+ attributes.size() + "]"
+					);
+				}
 			}
-
-			return;
+			else {
+				throw new IllegalArgumentException(
+						"Natural-id value [" + naturalIdValue + "] was not an array as expected" );
+			}
 		}
-
-		throw new IllegalArgumentException( "Natural-id value [" + naturalIdValue + "] was not an array as expected" );
 	}
 
 	@Override
@@ -185,71 +171,65 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		if ( value == null ) {
 			return 0;
 		}
-		Object[] values = (Object[]) value;
-		int hashcode = 0;
-		for ( int i = 0; i < attributes.size(); i++ ) {
-			final Object o = values[i];
-			if ( o != null ) {
-				hashcode = 27 * hashcode + ( (JavaType) attributes.get( i ).getExpressibleJavaType() ).extractHashCode( o );
+		else {
+			final Object[] values = (Object[]) value;
+			int hashcode = 0;
+			for ( int i = 0; i < attributes.size(); i++ ) {
+				final Object o = values[i];
+				if ( o != null ) {
+					hashcode = 27 * hashcode
+							+ ((JavaType) attributes.get( i ).getExpressibleJavaType()).extractHashCode( o );
+				}
 			}
+			return hashcode;
 		}
-		return hashcode;
 	}
 
 	@Override
 	public void verifyFlushState(Object id, Object[] currentState, Object[] loadedState, SharedSessionContractImplementor session) {
-		if ( isMutable() ) {
-			// EARLY EXIT!!!
-			// the natural id is mutable (!immutable), no need to do the checks
-			return;
-		}
+		if ( !isMutable() ) {
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			final EntityPersister persister = getDeclaringType().getEntityPersister();
 
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final EntityPersister persister = getDeclaringType().getEntityPersister();
+			final Object[] naturalId = extractNaturalIdFromEntityState( currentState );
+			final Object snapshot = loadedState == null
+					? persistenceContext.getNaturalIdSnapshot( id, persister )
+					: persister.getNaturalIdMapping().extractNaturalIdFromEntityState( loadedState );
+			final Object[] previousNaturalId = (Object[]) snapshot;
+			assert naturalId.length == getNaturalIdAttributes().size();
+			assert previousNaturalId.length == naturalId.length;
 
-		final Object[] naturalId = extractNaturalIdFromEntityState( currentState );
-
-		final Object snapshot = loadedState == null
-				? persistenceContext.getNaturalIdSnapshot( id, persister )
-				: persister.getNaturalIdMapping().extractNaturalIdFromEntityState( loadedState );
-		final Object[] previousNaturalId = (Object[]) snapshot;
-
-		assert naturalId.length == getNaturalIdAttributes().size();
-		assert previousNaturalId.length == naturalId.length;
-
-		for ( int i = 0; i < getNaturalIdAttributes().size(); i++ ) {
-			final SingularAttributeMapping attributeMapping = getNaturalIdAttributes().get( i );
-
-			final boolean updatable = attributeMapping.getAttributeMetadata().isUpdatable();
-			if ( updatable ) {
-				// property is updatable (mutable), there is nothing to check
-				continue;
-			}
-
-			final Object currentValue = naturalId[ i ];
-			final Object previousValue = previousNaturalId[ i ];
-
-			if ( ! attributeMapping.areEqual( currentValue, previousValue, session ) ) {
-				throw new HibernateException(
-						String.format(
-								"An immutable attribute [%s] within compound natural identifier of entity %s was altered from `%s` to `%s`",
-								attributeMapping.getAttributeName(),
-								persister.getEntityName(),
-								previousValue,
-								currentValue
-						)
-				);
+			for ( int i = 0; i < getNaturalIdAttributes().size(); i++ ) {
+				final SingularAttributeMapping attributeMapping = getNaturalIdAttributes().get( i );
+				final boolean updatable = attributeMapping.getAttributeMetadata().isUpdatable();
+				if ( !updatable ) {
+					final Object currentValue = naturalId[i];
+					final Object previousValue = previousNaturalId[i];
+					if ( !attributeMapping.areEqual( currentValue, previousValue, session ) ) {
+						throw new HibernateException(
+								String.format(
+										"An immutable attribute [%s] within compound natural identifier of entity %s was altered from `%s` to `%s`",
+										attributeMapping.getAttributeName(),
+										persister.getEntityName(),
+										previousValue,
+										currentValue
+								)
+						);
+					}
+				}
+				// else property is updatable (mutable), there is nothing to check
 			}
 		}
+		// otherwise the natural id is mutable (!immutable), no need to do the checks
 	}
 
 	@Override
 	public boolean areEqual(Object one, Object other, SharedSessionContractImplementor session) {
-		final Object[] one1 = (Object[]) one;
-		final Object[] other1 = (Object[]) other;
+		final Object[] oneArray = (Object[]) one;
+		final Object[] otherArray = (Object[]) other;
 		final List<SingularAttributeMapping> naturalIdAttributes = getNaturalIdAttributes();
 		for ( int i = 0; i < naturalIdAttributes.size(); i++ ) {
-			if ( !naturalIdAttributes.get( i ).areEqual( one1[i], other1[i], session ) ) {
+			if ( !naturalIdAttributes.get( i ).areEqual( oneArray[i], otherArray[i], session ) ) {
 				return false;
 			}
 		}
@@ -305,18 +285,14 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	public <T> DomainResult<T> createDomainResult(NavigablePath navigablePath, TableGroup tableGroup, String resultVariable, DomainResultCreationState creationState) {
 		assert navigablePath.getLocalName().equals( NaturalIdMapping.PART_NAME );
 
-		final SessionFactoryImplementor sessionFactory = creationState.getSqlAstCreationState().getCreationContext().getSessionFactory();
-
-		final JavaType<Object[]> jtd = sessionFactory
-				.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.getDescriptor( Object[].class );
+		final JavaType<Object[]> jtd =
+				creationState.getSqlAstCreationState().getCreationContext()
+						.getTypeConfiguration().getJavaTypeRegistry()
+						.getDescriptor( Object[].class );
 
 		// register the table group under `...{natural-id}` as well
-		creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
-				navigablePath,
-				(np) -> tableGroup
-		);
+		creationState.getSqlAstCreationState().getFromClauseAccess()
+				.resolveTableGroup( navigablePath, np -> tableGroup );
 
 		return (DomainResult<T>) new DomainResultImpl(
 				navigablePath,
@@ -352,15 +328,12 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		int span = 0;
 		if ( domainValue == null ) {
 			for ( int i = 0; i < attributes.size(); i++ ) {
-				span += attributes.get( i ).breakDownJdbcValues( null, offset + span, x, y, valueConsumer, session );
+				span += attributes.get( i )
+						.breakDownJdbcValues( null, offset + span, x, y, valueConsumer, session );
 			}
 		}
-		else {
-			assert domainValue instanceof Object[];
-
-			final Object[] values = (Object[]) domainValue;
+		else if ( domainValue instanceof Object[] values ) {
 			assert values.length == attributes.size();
-
 			for ( int i = 0; i < attributes.size(); i++ ) {
 				span += attributes.get( i ).breakDownJdbcValues(
 						values[i],
@@ -371,6 +344,9 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 						session
 				);
 			}
+		}
+		else {
+			throw new AssertionFailure("Unexpected domain value type");
 		}
 		return span;
 	}
@@ -412,19 +388,17 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		if ( value == null ) {
 			return null;
 		}
-		assert value instanceof Object[];
-
-		final Object[] incoming = (Object[]) value;
-		assert incoming.length == attributes.size();
-
-		final Object[] outgoing = new Object[ incoming.length ];
-
-		for ( int i = 0; i < attributes.size(); i++ ) {
-			final SingularAttributeMapping attribute = attributes.get( i );
-			outgoing[ i ] = attribute.disassemble( incoming[ i ], session );
+		else if ( value instanceof Object[] incoming ) {
+			assert incoming.length == attributes.size();
+			final Object[] outgoing = new Object[incoming.length];
+			for ( int i = 0; i < attributes.size(); i++ ) {
+				outgoing[i] = attributes.get( i ).disassemble( incoming[i], session );
+			}
+			return outgoing;
 		}
-
-		return outgoing;
+		else {
+			throw new AssertionFailure("Unexpected value");
+		}
 	}
 
 	@Override
@@ -434,15 +408,14 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 				attributes.get( i ).addToCacheKey( cacheKey, null, session );
 			}
 		}
-		else {
-			assert value instanceof Object[];
-
-			final Object[] values = (Object[]) value;
+		else if ( value instanceof Object[] values ) {
 			assert values.length == attributes.size();
-
 			for ( int i = 0; i < attributes.size(); i++ ) {
 				attributes.get( i ).addToCacheKey( cacheKey, values[i], session );
 			}
+		}
+		else {
+			throw new AssertionFailure("Unexpected value");
 		}
 	}
 
@@ -468,10 +441,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 				);
 			}
 		}
-		else {
-			assert value instanceof Object[];
-
-			final Object[] incoming = (Object[]) value;
+		else if ( value instanceof Object[] incoming ) {
 			assert incoming.length == attributes.size();
 			for ( int i = 0; i < attributes.size(); i++ ) {
 				final SingularAttributeMapping attribute = attributes.get( i );
@@ -484,6 +454,9 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 						session
 				);
 			}
+		}
+		else {
+			throw new AssertionFailure("Unexpected value");
 		}
 		return span;
 	}
@@ -503,16 +476,15 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 				span += attribute.forEachJdbcValue( null, span + offset, x, y, valuesConsumer, session );
 			}
 		}
-		else {
-			assert value instanceof Object[];
-
-			final Object[] incoming = (Object[]) value;
+		else if ( value instanceof Object[] incoming ) {
 			assert incoming.length == attributes.size();
-
 			for ( int i = 0; i < attributes.size(); i++ ) {
 				final SingularAttributeMapping attribute = attributes.get( i );
 				span += attribute.forEachJdbcValue( incoming[i], span + offset, x, y, valuesConsumer, session );
 			}
+		}
+		else {
+			throw new AssertionFailure("Unexpected value");
 		}
 		return span;
 	}
@@ -575,7 +547,6 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			this.naturalIdMapping = naturalIdMapping;
 			this.arrayJtd = arrayJtd;
 			this.resultVariable = resultVariable;
-
 			this.fetches = creationState.visitFetches( this );
 			this.hasJoinFetches = this.fetches.hasJoinFetches();
 			this.containsCollectionFetches = this.fetches.containsCollectionFetches();
@@ -593,13 +564,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		public DomainResultAssembler<Object[]> createResultAssembler(
 				InitializerParent<?> parent,
 				AssemblerCreationState creationState) {
-			return new AssemblerImpl(
-					fetches,
-					navigablePath,
-					naturalIdMapping,
-					arrayJtd,
-					creationState
-			);
+			return new AssemblerImpl( fetches, arrayJtd, creationState );
 		}
 
 		@Override
@@ -655,15 +620,9 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	private static class AssemblerImpl implements DomainResultAssembler<Object[]> {
 		private final JavaType<Object[]> jtd;
-
 		private final DomainResultAssembler<?>[] subAssemblers;
 
-		private AssemblerImpl(
-				ImmutableFetchList fetches,
-				NavigablePath navigablePath,
-				CompoundNaturalIdMapping naturalIdMapping,
-				JavaType<Object[]> jtd,
-				AssemblerCreationState creationState) {
+		private AssemblerImpl(ImmutableFetchList fetches, JavaType<Object[]> jtd, AssemblerCreationState creationState) {
 			this.jtd = jtd;
 			this.subAssemblers = new DomainResultAssembler[fetches.size()];
 			int i = 0;
@@ -672,14 +631,8 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			}
 		}
 
-		private AssemblerImpl(JavaType<Object[]> jtd, DomainResultAssembler<?>[] subAssemblers) {
-			this.jtd = jtd;
-			this.subAssemblers = subAssemblers;
-		}
-
 		@Override
-		public Object[] assemble(
-				RowProcessingState rowProcessingState) {
+		public Object[] assemble(RowProcessingState rowProcessingState) {
 			final Object[] result = new Object[ subAssemblers.length ];
 			for ( int i = 0; i < subAssemblers.length; i++ ) {
 				result[ i ] = subAssemblers[i].assemble( rowProcessingState );
@@ -710,7 +663,6 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		public JavaType<Object[]> getAssembledJavaType() {
 			return jtd;
 		}
-
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.boot.spi;
@@ -85,7 +85,7 @@ public final class ProviderChecker {
 			return persistenceUnitRequestedProvider;
 		}
 
-		// NOTE : if no provider requested we assume we are the provider (the calls got to us somehow...)
+		// NOTE: if no provider requested, we assume we are the provider (the calls got to us somehow...)
 		log.debug( "No PersistenceProvider explicitly requested, assuming Hibernate" );
 		return HibernatePersistenceProvider.class.getName();
 	}

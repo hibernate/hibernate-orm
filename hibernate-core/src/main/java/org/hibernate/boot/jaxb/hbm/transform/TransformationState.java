@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.hbm.transform;
@@ -88,11 +88,8 @@ public class TransformationState {
 			String entityName,
 			String attributeName,
 			List<Selectable> selectables) {
-		final Map<List<Selectable>, String> attributeByColumnsMap = mappableAttributesByColumnsByEntity.computeIfAbsent(
-				entityName,
-				s -> new HashMap<>()
-		);
-		attributeByColumnsMap.put( selectables, attributeName );
+		mappableAttributesByColumnsByEntity.computeIfAbsent( entityName, s -> new HashMap<>() )
+				.put( selectables, attributeName );
 	}
 
 	public Map<String, JaxbHbmTypeDefinitionType> getTypeDefMap() {

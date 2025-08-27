@@ -1,12 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.enhanced;
 
-import java.io.Serializable;
-
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
+import org.hibernate.sql.ast.tree.expression.Expression;
+
+import java.io.Serializable;
 
 /**
  * Performs optimization on an optimizable identifier generator.  Typically
@@ -59,4 +61,18 @@ public interface Optimizer {
 	 * case the increment is totally an in memory construct.
 	 */
 	boolean applyIncrementSizeToSourceValues();
+
+	/**
+	 * Creates an expression representing the low/base value for ID allocation in batch insert operations.
+	 * <p>
+	 * Each optimizer implementation should define its own
+	 * strategy for calculating the starting value of a sequence range.
+	 *
+	 * @param databaseValue The expression representing the next value from database sequence
+	 * @param sessionFactory The session factory
+	 * @return An expression that calculates the low/base value according to the optimizer strategy
+	 *
+	 * @since 7.1
+	 */
+	Expression createLowValueExpression(Expression databaseValue, SessionFactoryImplementor sessionFactory);
 }

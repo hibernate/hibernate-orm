@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -111,7 +111,7 @@ public class AnnotatedColumns {
 		final String explicitTableName = firstColumn.getExplicitTableName();
 		//note: checkPropertyConsistency() is responsible for ensuring they all have the same table name
 		return isNotEmpty( explicitTableName )
-			&& !getPropertyHolder().getTable().getName().equals( explicitTableName );
+			&& !getOwnerTable().getName().equals( explicitTableName );
 	}
 
 	/**
@@ -130,8 +130,16 @@ public class AnnotatedColumns {
 			// all the columns have to be mapped to the same table
 			// even though at the annotation level it looks like
 			// they could each specify a different table
-			return isSecondary() ? getJoin().getTable() : getPropertyHolder().getTable();
+			return isSecondary() ? getJoin().getTable() : getOwnerTable();
 		}
+	}
+
+	private Table getOwnerTable() {
+		PropertyHolder holder = getPropertyHolder();
+		while ( holder instanceof ComponentPropertyHolder componentPropertyHolder ) {
+			holder = componentPropertyHolder.parent;
+		}
+		return holder.getTable();
 	}
 
 	public void setTable(Table table) {

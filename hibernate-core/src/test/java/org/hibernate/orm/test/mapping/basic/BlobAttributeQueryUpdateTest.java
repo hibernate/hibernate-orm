@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.basic;
@@ -8,7 +8,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Blob;
 import java.sql.SQLException;
 
-import org.hibernate.LobHelper;
 import org.hibernate.engine.jdbc.proxy.BlobProxy;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -24,6 +23,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.TypedQuery;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.hibernate.Hibernate.getLobHelper;
 
 @DomainModel(
 		annotatedClasses = {
@@ -42,11 +42,10 @@ public class BlobAttributeQueryUpdateTest {
 	public void setup(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					LobHelper lobHelper = session.getLobHelper();
 					TestEntity testEntity = new TestEntity(
 							1,
 							"test",
-							lobHelper.createBlob( INITIAL_BYTES )
+							getLobHelper().createBlob( INITIAL_BYTES )
 					);
 					session.persist( testEntity );
 				}
@@ -55,10 +54,7 @@ public class BlobAttributeQueryUpdateTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createMutationQuery( "delete from TestEntity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -98,9 +94,8 @@ public class BlobAttributeQueryUpdateTest {
 	@Test
 	public void testUpdateUsingLobHelper(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			LobHelper lobHelper = session.getLobHelper();
 			TestEntity testEntity = session.find( TestEntity.class, 1 );
-			Blob blobValue1 = lobHelper.createBlob( UPDATED_BYTES_1 );
+			Blob blobValue1 = getLobHelper().createBlob( UPDATED_BYTES_1 );
 			testEntity.setBlobValue( blobValue1 );
 		} );
 
@@ -112,13 +107,12 @@ public class BlobAttributeQueryUpdateTest {
 
 		scope.inTransaction(
 				session -> {
-					LobHelper lobHelper = session.getLobHelper();
 					TypedQuery<?> query = session.createQuery(
 							"UPDATE TestEntity b SET b.blobValue = :blobValue WHERE b.id = :id",
 							null
 					);
 					query.setParameter( "id", 1 );
-					Blob value = lobHelper.createBlob( UPDATED_BYTES_2 );
+					Blob value = getLobHelper().createBlob( UPDATED_BYTES_2 );
 					query.setParameter( "blobValue", value );
 					query.executeUpdate();
 				}

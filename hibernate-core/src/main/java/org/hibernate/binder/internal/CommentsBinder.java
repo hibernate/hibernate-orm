@@ -1,11 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.binder.internal;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.Comments;
 import org.hibernate.binder.AttributeBinder;
 import org.hibernate.binder.TypeBinder;
@@ -25,9 +24,9 @@ import java.util.Set;
 public class CommentsBinder implements TypeBinder<Comments>, AttributeBinder<Comments> {
 	@Override
 	public void bind(Comments comments, MetadataBuildingContext context, PersistentClass entity, Property property) {
-		final CommentBinder commentBinder = new CommentBinder();
+		final var commentBinder = new CommentBinder();
 		final Set<String> ons = new HashSet<>( comments.value().length );
-		for ( Comment comment : comments.value() ) {
+		for ( var comment : comments.value() ) {
 			if ( !ons.add( comment.on() ) ) {
 				throw new AnnotationException( "Multiple '@Comment' annotations of '"
 						+ property.getName() + "' had the same 'on'" );
@@ -38,9 +37,9 @@ public class CommentsBinder implements TypeBinder<Comments>, AttributeBinder<Com
 
 	@Override
 	public void bind(Comments comments, MetadataBuildingContext context, PersistentClass entity) {
-		final CommentBinder commentBinder = new CommentBinder();
+		final var commentBinder = new CommentBinder();
 		final Set<String> ons = new HashSet<>( comments.value().length );
-		for ( Comment comment : comments.value() ) {
+		for ( var comment : comments.value() ) {
 			if ( !ons.add( comment.on() ) ) {
 				throw new AnnotationException( "Multiple '@Comment' annotations of entity '"
 						+ entity.getEntityName() + "' had the same 'on'" );

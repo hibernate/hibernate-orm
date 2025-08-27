@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
@@ -8,15 +8,15 @@ import org.hibernate.query.Query;
 
 /**
  * A result iterator that allows moving around within the results by
- * arbitrary increments. The {@link Query} / {@link ScrollableResults}
- * pattern is very similar to the JDBC {@link java.sql.PreparedStatement}/
+ * arbitrary increments.
+ *
+ * @apiNote The {@link Query} / {@link ScrollableResults} pattern is
+ * very similar to the JDBC {@link java.sql.PreparedStatement} /
  * {@link java.sql.ResultSet} pattern and so the semantics of methods
  * of this interface are similar to the similarly-named methods of
  * {@code ResultSet}.
- * <p>
- * Contrary to JDBC, columns of results are numbered from zero.
  *
- * @see Query#scroll()
+ * @see org.hibernate.query.SelectionQuery#scroll()
  *
  * @author Gavin King
  */
@@ -32,6 +32,11 @@ public interface ScrollableResults<R> extends AutoCloseable {
 	 * Release resources immediately.
 	 */
 	void close();
+
+	/**
+	 * @return {@code true} if {@link #close()} was already called
+	 */
+	boolean isClosed();
 
 	/**
 	 * Advance to the next result.
@@ -52,18 +57,40 @@ public interface ScrollableResults<R> extends AutoCloseable {
 	 * position.
 	 *
 	 * @param positions a positive (forward) or negative (backward)
-	 *                  number of rows
+	 *                  number of positions
 	 *
 	 * @return {@code true} if there is a result at the new location
 	 */
 	boolean scroll(int positions);
 
 	/**
-	 * Moves the result cursor to the specified position.
+	 * Moves the result cursor to the specified position. The index
+	 * may be a positive value, and the position may be reached by
+	 * counting forward from the first result at position {@code 1},
+	 * or it may be a negative value, so that the position may be
+	 * reached by counting backward from the last result at position
+	 * {@code -1}.
+	 *
+	 * @param position an absolute positive (from the start) or
+	 *                 negative (from the end) position within the
+	 *                 query results
 	 *
 	 * @return {@code true} if there is a result at the new location
 	 */
 	boolean position(int position);
+
+	/**
+	 * The current position within the query results. The first
+	 * query result, if any, is at position {@code 1}. An empty
+	 * or newly-created instance has position {@code 0}.
+	 *
+	 * @return the current position, a positive integer index
+	 *         starting at {@code 1}, or {@code 0} if this
+	 *         instance is empty or newly-created
+	 *
+	 * @since 7.0
+	 */
+	int getPosition();
 
 	/**
 	 * Go to the last result.
@@ -108,20 +135,24 @@ public interface ScrollableResults<R> extends AutoCloseable {
 	boolean isLast();
 
 	/**
-	 * Get the current position in the results.
-	 * <p>
-	 * The first position is number 0 (unlike JDBC).
+	 * Get the current position in the results, with the first
+	 * position labelled as row number {@code 0}. That is, this
+	 * operation returns {@link #getPosition() position-1}.
 	 *
-	 * @return The current position number, numbered from 0;
-	 *         -1 indicates that there is no current row
+	 * @return The current position number, numbered from {@code 0};
+	 *         {@code -1} indicates that there is no current row
+	 *
+	 * @deprecated Use {@link #getPosition()}
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	int getRowNumber();
 
 	/**
-	 * Set the current position in the result set.
-	 * <p>
-	 * Can be numbered from the first result (positive number)
-	 * or backward from the last result (negative number).
+	 * Set the current position in the result set, with the first
+	 * position labelled as row number {@code 1}, and the last
+	 * position labelled as row number {@code -1}. Results may be
+	 * numbered from the first result (using a positive position)
+	 * or backward from the last result (using a negative position).
 	 *
 	 * @param rowNumber the row number. A positive number indicates
 	 *                  a value numbered from the first row; a
@@ -129,7 +160,10 @@ public interface ScrollableResults<R> extends AutoCloseable {
 	 *                  from the last row.
 	 *
 	 * @return true if there is a row at that row number
+	 *
+	 * @deprecated Use {@link #position(int)}
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	boolean setRowNumber(int rowNumber);
 
 	/**

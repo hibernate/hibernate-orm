@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal.exec;
@@ -12,6 +12,8 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
 
 /**
  * Implementation of JdbcConnectionAccess for use in cases where we
@@ -43,14 +45,14 @@ public class JdbcConnectionAccessConnectionProviderImpl implements JdbcConnectio
 				try {
 					jdbcConnection.setAutoCommit( true );
 				}
-				catch (SQLException e) {
+				catch (SQLException exception) {
 					throw new PersistenceException(
 							String.format(
 									"Could not set provided connection [%s] to auto-commit mode" +
 											" (needed for schema generation)",
 									jdbcConnection
 							),
-							e
+							exception
 					);
 				}
 			}
@@ -59,7 +61,7 @@ public class JdbcConnectionAccessConnectionProviderImpl implements JdbcConnectio
 			wasInitiallyAutoCommit = false;
 		}
 
-		log.debugf( "wasInitiallyAutoCommit=%s", wasInitiallyAutoCommit );
+		log.tracef( "wasInitiallyAutoCommit=%s", wasInitiallyAutoCommit );
 		this.wasInitiallyAutoCommit = wasInitiallyAutoCommit;
 	}
 
@@ -88,8 +90,8 @@ public class JdbcConnectionAccessConnectionProviderImpl implements JdbcConnectio
 					jdbcConnection.setAutoCommit( false );
 				}
 			}
-			catch (SQLException e) {
-				log.info( "Was unable to reset JDBC connection to no longer be in auto-commit mode" );
+			catch (SQLException exception) {
+				JDBC_MESSAGE_LOGGER.unableToResetAutoCommitDisabled( exception );
 			}
 		}
 

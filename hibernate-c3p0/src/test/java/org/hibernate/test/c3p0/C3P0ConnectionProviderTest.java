@@ -1,23 +1,21 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.test.c3p0;
 
 import java.lang.management.ManagementFactory;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import org.hibernate.c3p0.internal.C3P0ConnectionProvider;
-import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
@@ -27,6 +25,8 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Strong Liu
  */
+@SkipForDialect(dialectClass = SybaseASEDialect.class,
+		reason = "JtdsConnection.isValid not implemented")
 public class C3P0ConnectionProviderTest extends BaseCoreFunctionalTestCase {
 
 	@Override
@@ -87,18 +87,5 @@ public class C3P0ConnectionProviderTest extends BaseCoreFunctionalTestCase {
 		}
 
 		assertTrue( "PooledDataSource BMean not found, please verify version of c3p0", mbeanfound );
-	}
-
-	@Test @JiraKey(value="HHH-9498")
-	public void testIsolationPropertyCouldBeEmpty() {
-		C3P0ConnectionProvider provider = new C3P0ConnectionProvider();
-		try {
-			Map<String,Object> configuration = new HashMap<>();
-			configuration.put( Environment.ISOLATION, "" );
-			provider.configure( configuration );
-		}
-		finally {
-			provider.stop();
-		}
 	}
 }

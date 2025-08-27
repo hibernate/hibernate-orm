@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
@@ -14,6 +14,8 @@ import org.hibernate.tool.schema.spi.Exporter;
  * An {@link Exporter} for {@linkplain UniqueKey unique constraints}.
  *
  * @author Brett Meyer
+ *
+ * @see org.hibernate.dialect.unique.UniqueDelegate
  */
 public class StandardUniqueKeyExporter implements Exporter<UniqueKey> {
 	private final Dialect dialect;

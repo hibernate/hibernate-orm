@@ -1,104 +1,107 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.beanvalidation;
 
 import java.math.BigDecimal;
-import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.PersistenceException;
 import jakarta.validation.ConstraintViolationException;
 
+import org.hibernate.cfg.ValidationSettings;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.testing.orm.junit.DialectContext.getDialect;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Vladimir Klyushnikov
  * @author Hardy Ferentschik
  */
-public class DDLWithoutCallbackTest extends BaseNonConfigCoreFunctionalTestCase {
+@ServiceRegistry(
+		settings = @Setting(name = ValidationSettings.JAKARTA_VALIDATION_MODE, value = "ddl")
+)
+@DomainModel(annotatedClasses = {
+		Address.class,
+		CupHolder.class,
+		MinMax.class,
+		DDLWithoutCallbackTest.RangeEntity.class
+})
+@SessionFactory
+class DDLWithoutCallbackTest {
 
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		settings.put( "jakarta.persistence.validation.mode", "ddl" );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Address.class,
-				CupHolder.class,
-				MinMax.class,
-				RangeEntity.class
-		};
-	}
-
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
+	@BeforeAll
+	static void beforeAll(SessionFactoryScope scope) {
+		// we want to get the SF built before we inspect the boot metamodel,
+		// if we don't -- the integrators won't get applied, and hence DDL validation mode will not be applied either:
+		scope.getSessionFactory();
 	}
 
 	@Test
-	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
-	public void testListeners() {
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsColumnCheck.class)
+	void testListeners(SessionFactoryScope scope) {
 		CupHolder ch = new CupHolder();
 		ch.setRadius( new BigDecimal( "12" ) );
-		assertDatabaseConstraintViolationThrown( ch );
+		assertDatabaseConstraintViolationThrown( scope, ch );
 	}
 
 	@Test
-	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
-	public void testMinAndMaxChecksGetApplied() {
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsColumnCheck.class)
+	public void testMinAndMaxChecksGetApplied(SessionFactoryScope scope) {
 		MinMax minMax = new MinMax( 1 );
-		assertDatabaseConstraintViolationThrown( minMax );
+		assertDatabaseConstraintViolationThrown( scope, minMax );
 
 		minMax = new MinMax( 11 );
-		assertDatabaseConstraintViolationThrown( minMax );
+		assertDatabaseConstraintViolationThrown( scope, minMax );
 
 		final MinMax validMinMax = new MinMax( 5 );
 
-		doInHibernate( this::sessionFactory, session -> {
-			session.persist( validMinMax );
+		scope.inTransaction( s -> {
+			s.persist( validMinMax );
 		} );
 	}
 
 	@Test
-	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
-	public void testRangeChecksGetApplied() {
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsColumnCheck.class)
+	public void testRangeChecksGetApplied(SessionFactoryScope scope) {
 		RangeEntity range = new RangeEntity( 1 );
-		assertDatabaseConstraintViolationThrown( range );
+		assertDatabaseConstraintViolationThrown( scope, range );
 
 		range = new RangeEntity( 11 );
-		assertDatabaseConstraintViolationThrown( range );
+		assertDatabaseConstraintViolationThrown( scope, range );
 
 		RangeEntity validRange = new RangeEntity( 5 );
 
-		doInHibernate( this::sessionFactory, session -> {
-			session.persist( validRange );
+		scope.inTransaction( s -> {
+			s.persist( validRange );
 		} );
 	}
 
 	@Test
-	public void testDDLEnabled() {
-		PersistentClass classMapping = metadata().getEntityBinding( Address.class.getName() );
+	public void testDDLEnabled(SessionFactoryScope scope) {
+		PersistentClass classMapping = scope.getMetadataImplementor().getEntityBinding( Address.class.getName() );
 		Column countryColumn = (Column) classMapping.getProperty( "country" ).getSelectables().get( 0 );
-		assertFalse( "DDL constraints are not applied", countryColumn.isNullable() );
+		assertThat( countryColumn.isNullable() ).as( "DDL constraints are not applied" ).isFalse();
 	}
 
-	private void assertDatabaseConstraintViolationThrown(Object o) {
-		doInHibernate( this::sessionFactory, session -> {
+	private void assertDatabaseConstraintViolationThrown(SessionFactoryScope scope, Object o) {
+		scope.inTransaction( session -> {
 			try {
 				session.persist( o );
 				session.flush();
@@ -120,6 +123,11 @@ public class DDLWithoutCallbackTest extends BaseNonConfigCoreFunctionalTestCase 
 				}
 			}
 		} );
+	}
+
+	@AfterEach
+	void dropTestData(SessionFactoryScope sessions) {
+		sessions.dropData();
 	}
 
 	@Entity(name = "RangeEntity")

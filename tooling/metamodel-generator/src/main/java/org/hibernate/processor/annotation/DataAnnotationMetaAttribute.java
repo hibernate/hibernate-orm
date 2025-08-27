@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -10,6 +10,7 @@ import org.hibernate.processor.model.Metamodel;
 
 import javax.lang.model.element.Element;
 
+import static org.hibernate.processor.util.Constants.STRING;
 import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 import static org.hibernate.processor.util.TypeUtils.propertyName;
 
@@ -44,7 +45,7 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 	}
 
 	private boolean isTextual() {
-		return String.class.getName().equals(type);
+		return STRING.equals(type);
 	}
 
 	@Override
@@ -81,7 +82,7 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 				.append("#")
 				.append( getPropertyName().replace('.','_') )
 				.append( "\n **/\n" )
-				.append(parent.importType(String.class.getName()))
+				.append(parent.importType(STRING))
 				.append(" ")
 				.append(fieldName())
 				.append(" = ")
@@ -98,7 +99,7 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 
 	@Override
 	public String getPropertyName() {
-		final String propertyName = propertyName(parent, element);
+		final String propertyName = propertyName(element);
 		return path == null ? propertyName : path + '.' + propertyName;
 	}
 

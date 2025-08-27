@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -12,12 +12,13 @@ import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterDefinitionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterParameterType;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 
 import org.jboss.logging.Logger;
 
 import jakarta.xml.bind.JAXBElement;
+
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
  * @author Steve Ebersole
@@ -39,9 +40,9 @@ class FilterDefinitionBinder {
 		String condition = jaxbFilterDefinitionMapping.getCondition();
 
 		for ( Serializable content : jaxbFilterDefinitionMapping.getContent() ) {
-			if ( content instanceof String ) {
-				final String contentString = content.toString().trim();
-				if ( StringHelper.isNotEmpty( contentString ) ) {
+			if ( content instanceof String string ) {
+				final String contentString = string.trim();
+				if ( isNotEmpty( contentString ) ) {
 					if ( condition != null && log.isDebugEnabled() ) {
 						log.debugf(
 								"filter-def [name=%s, origin=%s] defined multiple conditions, accepting arbitrary one",
@@ -53,8 +54,8 @@ class FilterDefinitionBinder {
 			}
 			else {
 				final JaxbHbmFilterParameterType jaxbParameterMapping;
-				if ( content instanceof JaxbHbmFilterParameterType ) {
-					jaxbParameterMapping = (JaxbHbmFilterParameterType) content;
+				if ( content instanceof JaxbHbmFilterParameterType filterParameterType ) {
+					jaxbParameterMapping = filterParameterType;
 				}
 				else if ( content instanceof JAXBElement ) {
 					final JAXBElement<JaxbHbmFilterParameterType> jaxbElement = (JAXBElement<JaxbHbmFilterParameterType>) content;
@@ -86,6 +87,6 @@ class FilterDefinitionBinder {
 				)
 		);
 
-		log.debugf( "Processed filter definition : %s", jaxbFilterDefinitionMapping.getName() );
+		log.tracef( "Processed filter definition: %s", jaxbFilterDefinitionMapping.getName() );
 	}
 }

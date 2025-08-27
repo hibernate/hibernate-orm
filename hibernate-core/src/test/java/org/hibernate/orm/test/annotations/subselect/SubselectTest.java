@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.subselect;
@@ -7,7 +7,6 @@ package org.hibernate.orm.test.annotations.subselect;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -45,15 +44,13 @@ public class SubselectTest extends BaseCoreFunctionalTestCase {
 		s.persist(bid2);
 
 		//Because we use 'synchronize' annotation, this query should trigger session flush
-		Query query = s.createQuery("from HighestBid b where b.name = :name");
+		var query = s.createQuery("from HighestBid b where b.name = :name", HighestBid.class);
 		query.setParameter( "name", "widget", StandardBasicTypes.STRING );
-		HighestBid highestBid = (HighestBid) query.list().iterator().next();
+		HighestBid highestBid = query.list().iterator().next();
 
 		Assert.assertEquals( 200.0, highestBid.getAmount(), 0.01 );
 		tx.rollback();
 		s.close();
-
-
 	}
 
 	@Override

@@ -1,9 +1,29 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.FindOption;
+import jakarta.persistence.SynchronizationType;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.TypedQueryReference;
+import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.graph.GraphParser;
+import org.hibernate.graph.InvalidGraphException;
+import org.hibernate.graph.RootGraph;
+import org.hibernate.graph.internal.RootGraphImpl;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.relational.SchemaManager;
+import org.hibernate.stat.Statistics;
+
+import javax.naming.Referenceable;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.List;
@@ -11,19 +31,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import javax.naming.Referenceable;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.SynchronizationType;
-import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.graph.RootGraph;
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.relational.SchemaManager;
-import org.hibernate.stat.Statistics;
-
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityManagerFactory;
 
 import static org.hibernate.internal.TransactionManagement.manageTransaction;
 
@@ -89,9 +96,9 @@ import static org.hibernate.internal.TransactionManagement.manageTransaction;
  * used in a sophisticated way by libraries or frameworks to implement generic
  * concerns involving entity classes.
  * <p>
- * When the Metamodel Generator is used, elements of this metamodel may also
- * be obtained in a typesafe way, via the generated metamodel classes. For
- * an entity class {@code Book}, the generated {@code Book_} class has:
+ * When Hibernate Processor is used, elements of this metamodel may also be
+ * obtained in a typesafe way, via the generated metamodel classes. For an
+ * entity class {@code Book}, the generated {@code Book_} class has:
  * <ul>
  * <li>a single member named {@code class_} of type
  *     {@link jakarta.persistence.metamodel.EntityType EntityType&lt;Book&gt;},
@@ -129,7 +136,8 @@ import static org.hibernate.internal.TransactionManagement.manageTransaction;
  * underlying {@code SessionFactory}.
  * <p>
  * The very simplest way to obtain a new {@code SessionFactory} is using a
- * {@link org.hibernate.cfg.Configuration}.
+ * {@link org.hibernate.cfg.Configuration} or
+ * {@link org.hibernate.jpa.HibernatePersistenceConfiguration}.
  *
  * @see Session
  * @see org.hibernate.cfg.Configuration
@@ -139,13 +147,14 @@ import static org.hibernate.internal.TransactionManagement.manageTransaction;
  */
 public interface SessionFactory extends EntityManagerFactory, Referenceable, Serializable {
 	/**
-	 * The JNDI name, used to bind the SessionFactory to JNDI
+	 * The JNDI name, used to bind the {@code SessionFactory} to JNDI.
 	 */
 	String getJndiName();
 
 	/**
-	 * Obtain a {@linkplain SessionBuilder session builder} for creating
-	 * new {@link Session}s with certain customized options.
+	 * Obtain a {@linkplain org.hibernate.SessionBuilder session builder}
+	 * for creating new instances of {@link org.hibernate.Session} with
+	 * certain customized options.
 	 *
 	 * @return The session builder
 	 */
@@ -203,7 +212,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	/**
 	 * Open a new stateless session.
 	 *
-	 * @return The created stateless session.
+	 * @return The new stateless session.
 	 */
 	StatelessSession openStatelessSession();
 
@@ -213,12 +222,24 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @param connection Connection provided by the application.
 	 *
-	 * @return The created stateless session.
+	 * @return The new stateless session.
 	 */
 	StatelessSession openStatelessSession(Connection connection);
 
 	/**
-	 * Open a {@link Session} and use it to perform an action.
+	 * Open a {@link Session} and use it to perform the given action.
+	 *
+	 * @apiNote This method does not begin a transaction, and so
+	 * the session is not automatically flushed before the method
+	 * returns unless either:
+	 * <ul>
+	 * <li>the given action calls {@link Session#flush() flush()}
+	 *     explicitly, or
+	 * <li>a transaction is initiated by the given action, using
+	 *     {@link Session#inTransaction}, for example.
+	 * </ul>
+	 *
+	 * @see #inTransaction(Consumer)
 	 */
 	default void inSession(Consumer<? super Session> action) {
 		try ( Session session = openSession() ) {
@@ -227,7 +248,20 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	}
 
 	/**
-	 * Open a {@link StatelessSession} and use it to perform an action.
+	 * Open a {@link StatelessSession} and use it to perform the
+	 * given action.
+	 *
+	 * @apiNote This method does not begin a transaction, and so
+	 * the session is not automatically flushed before the method
+	 * returns unless either:
+	 * <ul>
+	 * <li>the given action calls {@link Session#flush() flush()}
+	 *     explicitly, or
+	 * <li>a transaction is initiated by the given action, using
+	 *     {@link Session#inTransaction}, for example.
+	 * </ul>
+	 *
+	 * @see #inStatelessTransaction(Consumer)
 	 *
 	 * @since 6.3
 	 */
@@ -238,7 +272,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	}
 
 	/**
-	 * Open a {@link Session} and use it to perform an action
+	 * Open a {@link Session} and use it to perform the given action
 	 * within the bounds of a transaction.
 	 *
 	 * @apiNote This method competes with the JPA-defined method
@@ -260,6 +294,18 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 
 	/**
 	 * Open a {@link Session} and use it to obtain a value.
+	 *
+	 * @apiNote This method does not begin a transaction, and so
+	 * the session is not automatically flushed before the method
+	 * returns unless either:
+	 * <ul>
+	 * <li>the given action calls {@link Session#flush() flush()}
+	 *     explicitly, or
+	 * <li>a transaction is initiated by the given action, using
+	 *     {@link Session#inTransaction}, for example.
+	 * </ul>
+	 *
+	 * @see #fromTransaction(Function)
 	 */
 	default <R> R fromSession(Function<? super Session,R> action) {
 		try ( Session session = openSession() ) {
@@ -269,6 +315,18 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 
 	/**
 	 * Open a {@link StatelessSession} and use it to obtain a value.
+	 *
+	 * @apiNote This method does not begin a transaction, and so
+	 * the session is not automatically flushed before the method
+	 * returns unless either:
+	 * <ul>
+	 * <li>the given action calls {@link Session#flush() flush()}
+	 *     explicitly, or
+	 * <li>a transaction is initiated by the given action, using
+	 *     {@link Session#inTransaction}, for example.
+	 * </ul>
+	 *
+	 * @see #fromStatelessTransaction(Function)
 	 *
 	 * @since 6.3
 	 */
@@ -412,7 +470,102 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	RootGraph<?> findEntityGraphByName(String name);
 
 	/**
-	 * Obtain the set of names of all {@link org.hibernate.annotations.FilterDef
+	 *
+	 * Create an {@link EntityGraph} for the given entity type.
+	 *
+	 * @param entityType The entity type for the graph
+	 *
+	 * @see #createGraphForDynamicEntity(String)
+	 *
+	 * @since 7.0
+	 */
+	default <T> RootGraph<T> createEntityGraph(Class<T> entityType) {
+		return new RootGraphImpl<>( null, (EntityDomainType<T>) getMetamodel().entity( entityType ) );
+	}
+
+	/**
+	 * Create an {@link EntityGraph} which may be used from loading a
+	 * {@linkplain org.hibernate.metamodel.RepresentationMode#MAP dynamic}
+	 * entity with {@link Session#find(EntityGraph, Object, FindOption...)}.
+	 * <p>
+	 * This allows a dynamic entity to be loaded without the need for a cast.
+	 * <pre>
+	 * var MyDynamicEntity_ = factory.createGraphForDynamicEntity("MyDynamicEntity");
+	 * Map&lt;String,?&gt; myDynamicEntity = session.find(MyDynamicEntity_, id);
+	 * </pre>
+	 *
+	 * @apiNote Dynamic entities are normally defined using XML mappings.
+	 *
+	 * @param entityName The name of the dynamic entity
+	 *
+	 * @since 7.0
+	 *
+	 * @see Session#find(EntityGraph, Object, FindOption...)
+	 * @see #createEntityGraph(Class)
+	 */
+	RootGraph<Map<String,?>> createGraphForDynamicEntity(String entityName);
+
+	/**
+	 * Creates a {@link RootGraph} for the given {@code rootEntityClass} and parses the
+	 * graph text into it.
+	 *
+	 * @param rootEntityClass The entity class to use as the base of the created root-graph
+	 * @param graphText The textual representation of the graph
+	 *
+	 * @throws InvalidGraphException if the textual representation is invalid.
+	 *
+	 * @see GraphParser#parse(Class, CharSequence, SessionFactory)
+	 * @see #createEntityGraph(Class)
+	 *
+	 * @apiNote The string representation is expected to just be an attribute list.  E.g.
+	 * {@code "title, isbn, author(name, books)"}
+	 *
+	 * @since 7.0
+	 */
+	default <T> RootGraph<T> parseEntityGraph(Class<T> rootEntityClass, CharSequence graphText) {
+		return GraphParser.parse( rootEntityClass, graphText.toString(), unwrap( SessionFactoryImplementor.class ) );
+	}
+
+	/**
+	 * Creates a {@link RootGraph} for the given {@code rootEntityName} and parses the graph
+	 * text into it.
+	 *
+	 * @param rootEntityName The name of the entity to use as the base of the created root-graph
+	 * @param graphText The textual representation of the graph
+	 *
+	 * @throws InvalidGraphException if the textual representation is invalid.
+	 *
+	 * @see GraphParser#parse(String, CharSequence, SessionFactory)
+	 * @see #createEntityGraph(Class)
+	 *
+	 * @apiNote The string representation is expected to just be an attribute list.  E.g.
+	 * {@code "title, isbn, author(name, books)"}
+	 *
+	 * @since 7.0
+	 */
+	default <T> RootGraph<T> parseEntityGraph(String rootEntityName, CharSequence graphText) {
+		return GraphParser.parse( rootEntityName, graphText.toString(), unwrap( SessionFactoryImplementor.class ) );
+	}
+
+	/**
+	 * Creates a {@link RootGraph} based on the passed string representation.  Here, the
+	 * string representation is expected to include the root entity name.
+	 *
+	 * @param graphText The textual representation of the graph
+	 *
+	 * @throws InvalidGraphException if the textual representation is invalid.
+	 *
+	 * @apiNote The string representation is expected to an attribute list prefixed
+	 * with the name of the root entity.  E.g. {@code "Book: title, isbn, author(name, books)"}
+	 *
+	 * @since 7.0
+	 */
+	default <T> RootGraph<T> parseEntityGraph(CharSequence graphText) {
+		return GraphParser.parse( graphText.toString(), unwrap( SessionFactoryImplementor.class ) );
+	}
+
+	/**
+	 * Obtain the set of names of all {@linkplain org.hibernate.annotations.FilterDef
 	 * defined filters}.
 	 *
 	 * @return The set of filter names given by
@@ -435,7 +588,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	FilterDefinition getFilterDefinition(String filterName) throws HibernateException;
 
 	/**
-	 * Obtain the set of names of all {@link org.hibernate.annotations.FetchProfile
+	 * Obtain the set of names of all {@linkplain org.hibernate.annotations.FetchProfile
 	 * defined fetch profiles}.
 	 *
 	 * @return The set of fetch profile names given by
@@ -454,6 +607,47 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	default boolean containsFetchProfileDefinition(String name) {
 		return getDefinedFilterNames().contains( name );
 	}
+
+	/**
+	 * Add or override the definition of a named query, returning
+	 * a {@linkplain TypedQueryReference reference} to the query.
+	 * Settings such as first and max results, hints, flush mode,
+	 * cache mode, timeout, and lock options are preserved as part
+	 * of the named query definition. Any arguments bound to query
+	 * parameters are discarded.
+	 *
+	 * @param name the name to be assigned to the query
+	 * @param query the query, including first and max results, hints,
+	 *              flush mode, cache mode, timeout, and lock options
+	 *
+	 * @see #addNamedQuery(String, jakarta.persistence.Query)
+	 * @see org.hibernate.query.QueryProducer#createQuery(TypedQueryReference)
+	 * @see org.hibernate.query.QueryProducer#createSelectionQuery(String, Class)
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	<R> TypedQueryReference<R> addNamedQuery(String name, TypedQuery<R> query);
+
+	/**
+	 * The name assigned to this {@code SessionFactory}, if any.
+	 * <ul>
+	 * <li>When bootstrapping via JPA, this is the persistence unit name.
+	 * <li>Otherwise, the name may be specified by the configuration property
+	 *     {@value org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_NAME}.
+	 * </ul>
+	 * <p>
+	 * If {@value org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_NAME_IS_JNDI}
+	 * is enabled, then this name is used to bind this object to JNDI, unless
+	 * {@value org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_JNDI_NAME}
+	 * is also specified.
+	 *
+	 * @see org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_NAME
+	 * @see org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_NAME_IS_JNDI
+	 * @see jakarta.persistence.spi.PersistenceUnitInfo#getPersistenceUnitName
+	 */
+	@Override
+	String getName();
 
 	/**
 	 * Get the {@linkplain SessionFactoryOptions options} used to build this factory.

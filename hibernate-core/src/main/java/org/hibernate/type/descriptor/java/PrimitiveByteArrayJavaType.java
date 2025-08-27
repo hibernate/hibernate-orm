@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -28,9 +28,13 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 		implements VersionJavaType<byte[]> {
 	public static final PrimitiveByteArrayJavaType INSTANCE = new PrimitiveByteArrayJavaType();
 
-	@SuppressWarnings("unchecked")
 	public PrimitiveByteArrayJavaType() {
-		super( byte[].class, ArrayMutabilityPlan.INSTANCE, RowVersionComparator.INSTANCE );
+		super( byte[].class, new ArrayMutabilityPlan(), RowVersionComparator.INSTANCE );
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof byte[];
 	}
 
 	@Override
@@ -159,5 +163,12 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 			Integer precision,
 			Integer scale, SharedSessionContractImplementor session) {
 		return current;
+	}
+
+	private static class ArrayMutabilityPlan extends MutableMutabilityPlan<byte[]> {
+		@Override
+		protected byte[] deepCopyNotNull(byte[] value) {
+			return value.clone();
+		}
 	}
 }

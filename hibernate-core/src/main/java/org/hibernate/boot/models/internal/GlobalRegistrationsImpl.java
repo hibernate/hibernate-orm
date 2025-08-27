@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.internal;
@@ -83,7 +83,7 @@ import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserCollectionType;
 import org.hibernate.usertype.UserType;
@@ -119,7 +119,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
  * @author Steve Ebersole
  */
 public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegistrar {
-	private final SourceModelBuildingContext sourceModelContext;
+	private final ModelsContext sourceModelContext;
 	private final BootstrapContext bootstrapContext;
 
 	private List<JpaEventListener> jpaEventListeners;
@@ -144,7 +144,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 	private Map<String, NamedNativeQueryRegistration> namedNativeQueryRegistrations;
 	private Map<String, NamedStoredProcedureQueryRegistration> namedStoredProcedureQueryRegistrations;
 
-	public GlobalRegistrationsImpl(SourceModelBuildingContext sourceModelContext, BootstrapContext bootstrapContext) {
+	public GlobalRegistrationsImpl(ModelsContext sourceModelContext, BootstrapContext bootstrapContext) {
 		this.sourceModelContext = sourceModelContext;
 		this.bootstrapContext = bootstrapContext;
 	}
@@ -664,7 +664,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// EntityListenerRegistration
 
-	public void collectEntityListenerRegistrations(List<JaxbEntityListenerImpl> listeners, SourceModelBuildingContext modelsContext) {
+	public void collectEntityListenerRegistrations(List<JaxbEntityListenerImpl> listeners, ModelsContext modelsContext) {
 		if ( CollectionHelper.isEmpty( listeners ) ) {
 			return;
 		}

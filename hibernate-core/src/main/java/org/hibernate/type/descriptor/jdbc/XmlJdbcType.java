@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
@@ -10,7 +10,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 
-import org.hibernate.dialect.XmlHelper;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.SqlTypes;
@@ -81,11 +80,7 @@ public class XmlJdbcType implements AggregateJdbcType {
 		if ( embeddableMappingType != null ) {
 			return XmlHelper.toString( embeddableMappingType, value, options );
 		}
-		return options.getSessionFactory().getFastSessionServices().getXmlFormatMapper().toString(
-				value,
-				javaType,
-				options
-		);
+		return options.getXmlFormatMapper().toString( value, javaType, options );
 	}
 
 	protected <X> X fromString(String string, JavaType<X> javaType, WrapperOptions options) throws SQLException {
@@ -98,18 +93,14 @@ public class XmlJdbcType implements AggregateJdbcType {
 			);
 		}
 		if ( javaType.getJavaType() == SQLXML.class ) {
-			SQLXML sqlxml = options.getSession().getJdbcCoordinator().getLogicalConnection()
-					.getPhysicalConnection()
-					.createSQLXML();
+			final SQLXML sqlxml =
+					options.getSession().getJdbcCoordinator().getLogicalConnection().getPhysicalConnection()
+							.createSQLXML();
 			sqlxml.setString( string );
 			//noinspection unchecked
 			return (X) sqlxml;
 		}
-		return options.getSessionFactory().getFastSessionServices().getXmlFormatMapper().fromString(
-				string,
-				javaType,
-				options
-		);
+		return options.getXmlFormatMapper().fromString( string, javaType, options );
 	}
 
 	@Override
@@ -136,14 +127,12 @@ public class XmlJdbcType implements AggregateJdbcType {
 			}
 
 			private X getObject(SQLXML sqlxml, WrapperOptions options) throws SQLException {
-				if ( sqlxml == null ) {
-					return null;
-				}
-				return ( (XmlJdbcType) getJdbcType() ).fromString(
-						sqlxml.getString(),
-						getJavaType(),
-						options
-				);
+				return sqlxml == null ? null
+						: getXmlJdbcType().fromString( sqlxml.getString(), getJavaType(), options );
+			}
+
+			private XmlJdbcType getXmlJdbcType() {
+				return (XmlJdbcType) getJdbcType();
 			}
 		};
 	}
@@ -153,22 +142,27 @@ public class XmlJdbcType implements AggregateJdbcType {
 			super( javaType, jdbcType );
 		}
 
+		private XmlJdbcType getXmlJdbcType() {
+			return (XmlJdbcType) getJdbcType();
+		}
+
+		private SQLXML getSqlxml(PreparedStatement st, X value, WrapperOptions options) throws SQLException {
+			final String xml = getXmlJdbcType().toString( value, getJavaType(), options );
+			SQLXML sqlxml = st.getConnection().createSQLXML();
+			sqlxml.setString( xml );
+			return sqlxml;
+		}
+
 		@Override
 		protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 				throws SQLException {
-			final String xml = ( (XmlJdbcType) getJdbcType() ).toString( value, getJavaType(), options );
-			SQLXML sqlxml = st.getConnection().createSQLXML();
-			sqlxml.setString( xml );
-			st.setSQLXML( index, sqlxml );
+			st.setSQLXML( index, getSqlxml( st, value, options ) );
 		}
 
 		@Override
 		protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 				throws SQLException {
-			final String xml = ( (XmlJdbcType) getJdbcType() ).toString( value, getJavaType(), options );
-			SQLXML sqlxml = st.getConnection().createSQLXML();
-			sqlxml.setString( xml );
-			st.setSQLXML( name, sqlxml );
+			st.setSQLXML( name, getSqlxml( st, value, options ) );
 		}
 	}
 }

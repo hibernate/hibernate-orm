@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.internal;
@@ -125,7 +125,7 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 
 	@Override
 	public Class<J> getJavaType() {
-		return this.getExpressibleJavaType().getJavaTypeClass();
+		return getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override
@@ -318,11 +318,10 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 	@Override
 	@SuppressWarnings("unchecked")
 	public final Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map<Object, Object> copyCache) {
-		if ( original == null && target == null ) {
-			return null;
-		}
+		return original == null && target == null
+				? null
+				: converter.getDomainJavaType().getReplacement( (J) original, (J) target, session );
 
-		return converter.getDomainJavaType().getReplacement( (J) original, (J) target, session );
 	}
 
 	@Override

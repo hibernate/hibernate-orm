@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.produce.function;
@@ -11,6 +11,8 @@ import org.hibernate.Internal;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.query.sqm.tuple.TupleType;
+import org.hibernate.type.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmCollation;
@@ -24,7 +26,6 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.COMPARABLE;
 import static org.hibernate.type.descriptor.java.JavaTypeHelper.isUnknown;
@@ -71,15 +72,18 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	public void validate(
 			List<? extends SqmTypedNode<?>> arguments,
 			String functionName,
-			TypeConfiguration typeConfiguration) {
-		delegate.validate( arguments, functionName, typeConfiguration);
+			BindingContext bindingContext) {
+		delegate.validate( arguments, functionName, bindingContext );
 		int count = 0;
-		for (SqmTypedNode<?> argument : arguments) {
+		for ( var argument : arguments ) {
 //			JdbcTypeIndicators indicators = typeConfiguration.getCurrentBaseSqlTypeIndicators();
-			SqmExpressible<?> nodeType = argument.getNodeType();
-			FunctionParameterType type = count < types.length ? types[count++] : types[types.length - 1];
+			final SqmExpressible<?> nodeType = argument.getNodeType();
+			final FunctionParameterType type = count < types.length ? types[count++] : types[types.length - 1];
 			if ( nodeType != null && type != FunctionParameterType.ANY ) {
-				JavaType<?> javaType = nodeType.getRelationalJavaType();
+				if ( nodeType instanceof TupleType<?> ) {
+					throwTupleError(type, functionName, count);
+				}
+				final JavaType<?> javaType = nodeType.getRelationalJavaType();
 				if (javaType != null) {
 					checkArgumentType( functionName, count, argument, type, javaType );
 				}
@@ -178,7 +182,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 		for ( SqlAstNode argument : arguments ) {
 			if ( argument instanceof Expression expression ) {
 				final JdbcMappingContainer expressionType = expression.getExpressionType();
-				if (expressionType != null) {
+				if ( expressionType != null ) {
 					if ( isUnknownExpressionType( expressionType ) ) {
 						count += expressionType.getJdbcTypeCount();
 					}
@@ -195,15 +199,18 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	 */
 	public static boolean isUnknownExpressionType(JdbcMappingContainer expressionType) {
 		return expressionType instanceof JavaObjectType
-			|| expressionType instanceof BasicType
-				&& isUnknown( ((BasicType<?>) expressionType).getJavaTypeDescriptor() );
+			|| expressionType instanceof BasicType<?> basicType
+				&& isUnknown( basicType.getJavaTypeDescriptor() );
 	}
 
 	private int validateArgument(int paramNumber, JdbcMappingContainer expressionType, String functionName) {
 		final int jdbcTypeCount = expressionType.getJdbcTypeCount();
 		for ( int i = 0; i < jdbcTypeCount; i++ ) {
 			final JdbcMapping mapping = expressionType.getJdbcMapping( i );
-			FunctionParameterType type = paramNumber < types.length ? types[paramNumber++] : types[types.length - 1];
+			final FunctionParameterType type =
+					paramNumber < types.length
+							? types[paramNumber++]
+							: types[types.length - 1];
 			if ( type != null ) {
 				checkArgumentType(
 						paramNumber,
@@ -248,6 +255,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			case TEMPORAL -> jdbcType.isTemporal();
 			case DATE -> jdbcType.hasDatePart();
 			case TIME -> jdbcType.hasTimePart();
+			case BINARY -> jdbcType.isBinary();
 			case SPATIAL -> jdbcType.isSpatial();
 			case JSON -> jdbcType.isJson();
 			case IMPLICIT_JSON -> jdbcType.isImplicitJson();
@@ -283,6 +291,18 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 					)
 			);
 		}
+	}
+
+	private static void throwTupleError(
+			FunctionParameterType type, String functionName, int paramNumber) {
+		throw new FunctionArgumentException(
+				String.format(
+						"Parameter %d of function '%s()' has type '%s', but argument is a tuple",
+						paramNumber,
+						functionName,
+						type
+				)
+		);
 	}
 
 	@Override

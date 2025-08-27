@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -12,7 +12,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.Internal;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
@@ -25,18 +25,16 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.SingleNamingStrategy;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
-import jakarta.persistence.UniqueConstraint;
+import org.hibernate.mapping.Value;
 
 import static org.hibernate.cfg.MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
+import static org.hibernate.cfg.MappingSettings.PREFERRED_POOLED_OPTIMIZER;
 import static org.hibernate.id.IdentifierGenerator.CONTRIBUTOR_NAME;
 import static org.hibernate.id.IdentifierGenerator.ENTITY_NAME;
 import static org.hibernate.id.IdentifierGenerator.JPA_ENTITY_NAME;
@@ -47,6 +45,8 @@ import static org.hibernate.id.OptimizableGenerator.INITIAL_PARAM;
 import static org.hibernate.id.PersistentIdentifierGenerator.PK;
 import static org.hibernate.id.PersistentIdentifierGenerator.TABLE;
 import static org.hibernate.id.PersistentIdentifierGenerator.TABLES;
+import static org.hibernate.internal.util.StringHelper.isNotBlank;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * Responsible for setting up the parameters which are passed to
@@ -66,24 +66,13 @@ public class GeneratorParameters {
 	 * {@link Configurable#configure(GeneratorCreationContext, Properties)}.
 	 */
 	public static Properties collectParameters(
-			SimpleValue identifierValue,
-			Dialect dialect,
-			RootClass rootClass) {
-		final Properties params = new Properties();
-		collectParameters( identifierValue, dialect, rootClass, params::put );
-		return params;
-	}
-
-	/**
-	 * Collect the parameters which should be passed to
-	 * {@link Configurable#configure(GeneratorCreationContext, Properties)}.
-	 */
-	public static Properties collectParameters(
-			SimpleValue identifierValue,
+			Value identifierValue,
 			Dialect dialect,
 			RootClass rootClass,
-			Map<String, Object> configuration) {
-		final Properties params = collectParameters( identifierValue, dialect, rootClass );
+			Map<String, Object> configuration,
+			ConfigurationService configService) {
+		final var params = new Properties();
+		collectParameters( identifierValue, dialect, rootClass, params::put, configService );
 		if ( configuration != null ) {
 			params.putAll( configuration );
 		}
@@ -91,30 +80,21 @@ public class GeneratorParameters {
 	}
 
 	public static void collectParameters(
-			SimpleValue identifierValue,
+			Value identifierValue,
 			Dialect dialect,
 			RootClass rootClass,
-			BiConsumer<String,String> parameterCollector) {
-
-		final ConfigurationService configService = identifierValue
-				.getMetadata()
-				.getMetadataBuildingOptions()
-				.getServiceRegistry()
-				.requireService( ConfigurationService.class );
-
+			BiConsumer<String, String> parameterCollector,
+			ConfigurationService configService) {
 		// default initial value and allocation size per-JPA defaults
 		parameterCollector.accept( INITIAL_PARAM, String.valueOf( DEFAULT_INITIAL_VALUE ) );
 		parameterCollector.accept( INCREMENT_PARAM,	String.valueOf( defaultIncrement( configService ) ) );
 
-		collectBaselineProperties( identifierValue, dialect, rootClass, parameterCollector );
+		collectBaselineProperties( identifierValue, dialect, rootClass, parameterCollector, configService );
 	}
 
 	public static int fallbackAllocationSize(Annotation generatorAnnotation, MetadataBuildingContext buildingContext) {
 		if ( generatorAnnotation == null ) {
-			final ConfigurationService configService = buildingContext
-					.getBootstrapContext()
-					.getServiceRegistry()
-					.requireService( ConfigurationService.class );
+			final var configService = buildingContext.getBootstrapContext().getConfigurationService();
 			final String idNamingStrategy = configService.getSetting( ID_DB_STRUCTURE_NAMING_STRATEGY, StandardConverters.STRING );
 			if ( LegacyNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
 					|| LegacyNamingStrategy.class.getName().equals( idNamingStrategy )
@@ -127,18 +107,12 @@ public class GeneratorParameters {
 		return OptimizableGenerator.DEFAULT_INCREMENT_SIZE;
 	}
 
-	public static void collectBaselineProperties(
-			SimpleValue identifierValue,
+	static void collectBaselineProperties(
+			Value identifierValue,
 			Dialect dialect,
 			RootClass rootClass,
-			BiConsumer<String,String> parameterCollector) {
-
-		final ConfigurationService configService = identifierValue
-				.getMetadata()
-				.getMetadataBuildingOptions()
-				.getServiceRegistry()
-				.requireService( ConfigurationService.class );
-
+			BiConsumer<String,String> parameterCollector,
+			ConfigurationService configService) {
 		//init the table here instead of earlier, so that we can get a quoted table name
 		//TODO: would it be better to simply pass the qualified table name, instead of
 		//	  splitting it up into schema/catalog/table names
@@ -172,20 +146,20 @@ public class GeneratorParameters {
 			parameterCollector.accept( IMPLICIT_NAME_BASE, tableName );
 		}
 
-		parameterCollector.accept( CONTRIBUTOR_NAME, identifierValue.getBuildingContext().getCurrentContributorName() );
+		parameterCollector.accept( CONTRIBUTOR_NAME,
+				identifierValue.getBuildingContext().getCurrentContributorName() );
 
 		final Map<String, Object> settings = configService.getSettings();
-		if ( settings.containsKey( AvailableSettings.PREFERRED_POOLED_OPTIMIZER ) ) {
+		if ( settings.containsKey( PREFERRED_POOLED_OPTIMIZER ) ) {
 			parameterCollector.accept(
-					AvailableSettings.PREFERRED_POOLED_OPTIMIZER,
-					(String) settings.get( AvailableSettings.PREFERRED_POOLED_OPTIMIZER )
+					PREFERRED_POOLED_OPTIMIZER,
+					(String) settings.get( PREFERRED_POOLED_OPTIMIZER )
 			);
 		}
-
 	}
 
 	public static String identityTablesString(Dialect dialect, RootClass rootClass) {
-		final StringBuilder tables = new StringBuilder();
+		final var tables = new StringBuilder();
 		for ( Table table : rootClass.getIdentityTables() ) {
 			tables.append( table.getQuotedName( dialect ) );
 			if ( !tables.isEmpty() ) {
@@ -197,7 +171,7 @@ public class GeneratorParameters {
 
 	public static int defaultIncrement(ConfigurationService configService) {
 		final String idNamingStrategy =
-				configService.getSetting( AvailableSettings.ID_DB_STRUCTURE_NAMING_STRATEGY,
+				configService.getSetting( MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY,
 						StandardConverters.STRING, null );
 		if ( LegacyNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
 				|| LegacyNamingStrategy.class.getName().equals( idNamingStrategy )
@@ -220,22 +194,22 @@ public class GeneratorParameters {
 		definitionBuilder.addParam( org.hibernate.id.enhanced.TableGenerator.CONFIG_PREFER_SEGMENT_PER_ENTITY, "true" );
 
 		final String catalog = tableGeneratorAnnotation.catalog();
-		if ( StringHelper.isNotEmpty( catalog ) ) {
+		if ( isNotBlank( catalog ) ) {
 			definitionBuilder.addParam( PersistentIdentifierGenerator.CATALOG, catalog );
 		}
 
 		final String schema = tableGeneratorAnnotation.schema();
-		if ( StringHelper.isNotEmpty( schema ) ) {
+		if ( isNotBlank( schema ) ) {
 			definitionBuilder.addParam( PersistentIdentifierGenerator.SCHEMA, schema );
 		}
 
 		final String table = tableGeneratorAnnotation.table();
-		if ( StringHelper.isNotEmpty( table ) ) {
+		if ( isNotBlank( table ) ) {
 			definitionBuilder.addParam( org.hibernate.id.enhanced.TableGenerator.TABLE_PARAM, table );
 		}
 
 		final String pkColumnName = tableGeneratorAnnotation.pkColumnName();
-		if ( StringHelper.isNotEmpty( pkColumnName ) ) {
+		if ( isNotBlank( pkColumnName ) ) {
 			definitionBuilder.addParam(
 					org.hibernate.id.enhanced.TableGenerator.SEGMENT_COLUMN_PARAM,
 					pkColumnName
@@ -243,7 +217,7 @@ public class GeneratorParameters {
 		}
 
 		final String pkColumnValue = tableGeneratorAnnotation.pkColumnValue();
-		if ( StringHelper.isNotEmpty( pkColumnValue ) ) {
+		if ( isNotBlank( pkColumnValue ) ) {
 			definitionBuilder.addParam(
 					org.hibernate.id.enhanced.TableGenerator.SEGMENT_VALUE_PARAM,
 					pkColumnValue
@@ -251,7 +225,7 @@ public class GeneratorParameters {
 		}
 
 		final String valueColumnName = tableGeneratorAnnotation.valueColumnName();
-		if ( StringHelper.isNotEmpty( valueColumnName ) ) {
+		if ( isNotBlank( valueColumnName ) ) {
 			definitionBuilder.addParam(
 					org.hibernate.id.enhanced.TableGenerator.VALUE_COLUMN_PARAM,
 					valueColumnName
@@ -259,7 +233,7 @@ public class GeneratorParameters {
 		}
 
 		final String options = tableGeneratorAnnotation.options();
-		if ( StringHelper.isNotEmpty( options ) ) {
+		if ( isNotBlank( options ) ) {
 			definitionBuilder.addParam(
 					PersistentIdentifierGenerator.OPTIONS,
 					options
@@ -278,8 +252,7 @@ public class GeneratorParameters {
 		);
 
 		// TODO : implement unique-constraint support
-		final UniqueConstraint[] uniqueConstraints = tableGeneratorAnnotation.uniqueConstraints();
-		if ( CollectionHelper.isNotEmpty( uniqueConstraints ) ) {
+		if ( isNotEmpty( tableGeneratorAnnotation.uniqueConstraints() ) ) {
 			LOG.ignoringTableGeneratorConstraints( tableGeneratorAnnotation.name() );
 		}
 	}
@@ -292,17 +265,17 @@ public class GeneratorParameters {
 		definitionBuilder.setStrategy( SequenceStyleGenerator.class.getName() );
 
 		final String catalog = sequenceGeneratorAnnotation.catalog();
-		if ( StringHelper.isNotEmpty( catalog ) ) {
+		if ( isNotBlank( catalog ) ) {
 			definitionBuilder.addParam( PersistentIdentifierGenerator.CATALOG, catalog );
 		}
 
 		final String schema = sequenceGeneratorAnnotation.schema();
-		if ( StringHelper.isNotEmpty( schema ) ) {
+		if ( isNotBlank( schema ) ) {
 			definitionBuilder.addParam( PersistentIdentifierGenerator.SCHEMA, schema );
 		}
 
 		final String sequenceName = sequenceGeneratorAnnotation.sequenceName();
-		if ( StringHelper.isNotEmpty( sequenceName ) ) {
+		if ( isNotBlank( sequenceName ) ) {
 			definitionBuilder.addParam( SequenceStyleGenerator.SEQUENCE_PARAM, sequenceName );
 		}
 
@@ -316,7 +289,7 @@ public class GeneratorParameters {
 		);
 
 		final String options = sequenceGeneratorAnnotation.options();
-		if ( StringHelper.isNotEmpty( options ) ) {
+		if ( isNotBlank( options ) ) {
 			definitionBuilder.addParam( PersistentIdentifierGenerator.OPTIONS, options );
 		}
 	}

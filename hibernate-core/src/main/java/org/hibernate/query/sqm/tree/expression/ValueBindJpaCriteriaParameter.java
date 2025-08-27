@@ -1,27 +1,34 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.query.BindableType;
+import org.hibernate.type.BindableType;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
+
+import java.util.Objects;
+
 
 /**
- * It is a JpaCriteriaParameter created from a value when ValueHandlingMode is equal to BIND
+ * A {@link JpaCriteriaParameter} created from a value when
+ * {@link org.hibernate.query.criteria.ValueHandlingMode} is {@code BIND}.
  *
  * @see org.hibernate.query.criteria.ValueHandlingMode
  */
-public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
+public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 	private final T value;
 
-	public ValueBindJpaCriteriaParameter(
-			BindableType<? super T> type,
-			T value,
-			NodeBuilder nodeBuilder) {
+	public ValueBindJpaCriteriaParameter(BindableType<? super T> type, T value, NodeBuilder nodeBuilder) {
 		super( null, type, false, nodeBuilder );
-		assert value == null || type == null || type.isInstance( value );
+		assert value == null || type == null
+			|| ( type instanceof SqmBindableType<? super T> bindable
+					// TODO: why does SqmExpressible.getJavaType() return an apparently-wrong type?
+					? bindable.getExpressibleJavaType().isInstance( value )
+					: type.getJavaType().isInstance( value ) );
 		this.value = value;
 	}
 
@@ -33,10 +40,9 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
 	@Override
 	public ValueBindJpaCriteriaParameter<T> copy(SqmCopyContext context) {
 		final ValueBindJpaCriteriaParameter<T> existing = context.getCopy( this );
-		if ( existing != null ) {
-			return existing;
-		}
-		return context.registerCopy( this, new ValueBindJpaCriteriaParameter<>( this ) );
+		return existing != null
+				? existing
+				: context.registerCopy( this, new ValueBindJpaCriteriaParameter<>( this ) );
 	}
 
 	public T getValue() {
@@ -44,25 +50,38 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( value );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		SqmLiteral.appendHqlString( hql, getJavaTypeDescriptor(), value );
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		return this == o;
+	// TODO: fix this
+	public int compareTo(SqmParameter<T> parameter) {
+		return this == parameter ? 0 : 1;
+	}
+
+	// this is not really a parameter, it's really a literal value
+	// so use value equality based on its value
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof ValueBindJpaCriteriaParameter<?> that
+			&& Objects.equals( this.value, that.value );
+//			&& getJavaTypeDescriptor().areEqual( this.value, (T) that.value );
 	}
 
 	@Override
 	public int hashCode() {
-		return System.identityHashCode( this );
+		return value == null ? 0 : value.hashCode(); // getJavaTypeDescriptor().extractHashCode( value );
 	}
 
-	@Override
-	public int compareTo(SqmParameter anotherParameter) {
-		if ( this == anotherParameter ) {
-			return 0;
-		}
-		return 1;
-	}
+//	@Override
+//	public boolean equals(Object object) {
+//		return this == object;
+//	}
+//
+//	@Override
+//	public int hashCode() {
+//		return System.identityHashCode( this );
+//	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.immutable;
@@ -103,7 +103,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		}
 		catch ( PersistenceException ex ) {
 			// expected
-			assertTrue(ex.getMessage().contains("changed an immutable collection instance"));
+			assertTrue(ex.getMessage().contains("Immutable collection was modified"));
 			log.debug("success");
 		}
 		s.close();
@@ -120,7 +120,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 			tx.commit();
 			fail();
 		} catch (PersistenceException e) {
-			assertTrue(e.getMessage().contains("changed an immutable collection instance"));
+			assertTrue(e.getMessage().contains("Immutable collection was modified"));
 			log.debug("success");
 		}
 		s.close();

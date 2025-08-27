@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.fetchstrategyhelper;
@@ -9,10 +9,8 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.results.graph.FetchOptions;
-import org.hibernate.type.AssociationType;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -56,20 +54,20 @@ public class FetchStrategyDeterminationTests extends BaseCoreFunctionalTestCase 
 		assertEquals( mappedFetchOptions.getTiming(), FetchTiming.IMMEDIATE );
 		assertEquals( mappedFetchOptions.getStyle(), FetchStyle.SELECT );
 	}
-
-	private org.hibernate.FetchMode determineFetchMode(Class<?> entityClass, String path) {
-		AbstractEntityPersister entityPersister = (AbstractEntityPersister)
-				sessionFactory().getMappingMetamodel().getEntityDescriptor(entityClass.getName());
-		int index = entityPersister.getPropertyIndex( path );
-		return  entityPersister.getFetchMode( index );
-	}
-
-	private AssociationType determineAssociationType(Class<?> entityClass, String path) {
-		AbstractEntityPersister entityPersister = (AbstractEntityPersister)
-				sessionFactory().getMappingMetamodel().getEntityDescriptor(entityClass.getName());
-		int index = entityPersister.getPropertyIndex( path );
-		return (AssociationType) entityPersister.getSubclassPropertyType( index );
-	}
+//
+//	private org.hibernate.FetchMode determineFetchMode(Class<?> entityClass, String path) {
+//		AbstractEntityPersister entityPersister = (AbstractEntityPersister)
+//				sessionFactory().getMappingMetamodel().getEntityDescriptor(entityClass.getName());
+//		int index = entityPersister.getPropertyIndex( path );
+//		return  entityPersister.getFetchMode( index );
+//	}
+//
+//	private AssociationType determineAssociationType(Class<?> entityClass, String path) {
+//		AbstractEntityPersister entityPersister = (AbstractEntityPersister)
+//				sessionFactory().getMappingMetamodel().getEntityDescriptor(entityClass.getName());
+//		int index = entityPersister.getPropertyIndex( path );
+//		return (AssociationType) entityPersister.getSubclassPropertyType( index );
+//	}
 
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {

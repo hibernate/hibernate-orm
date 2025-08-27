@@ -1,22 +1,18 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.internal;
 
-import java.beans.Introspector;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Locale;
 
-import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.internal.util.NullnessUtil;
 
 import jakarta.persistence.Access;
@@ -31,6 +27,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isCompositeTracker
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptableType;
 import static org.hibernate.internal.util.ReflectHelper.NO_PARAM_SIGNATURE;
 import static org.hibernate.internal.util.ReflectHelper.findField;
+import static org.hibernate.internal.util.ReflectHelper.getterMethodOrNull;
 import static org.hibernate.internal.util.ReflectHelper.isRecord;
 
 /**
@@ -85,89 +82,9 @@ public class AccessStrategyHelper {
 			return AccessType.FIELD;
 		}
 
-		for ( Method method : containerClass.getDeclaredMethods() ) {
-			// if the method has parameters, skip it
-			if ( method.getParameterCount() != 0 ) {
-				continue;
-			}
-
-			// if the method is a "bridge", skip it
-			if ( method.isBridge() ) {
-				continue;
-			}
-
-			if ( method.isAnnotationPresent( Transient.class ) ) {
-				continue;
-			}
-
-			if ( Modifier.isStatic( method.getModifiers() ) ) {
-				continue;
-			}
-
-			final String methodName = method.getName();
-
-			// try "get"
-			if ( methodName.startsWith( "get" ) ) {
-				final String stemName = methodName.substring( 3 );
-				final String decapitalizedStemName = Introspector.decapitalize( stemName );
-				if ( stemName.equals( propertyName ) || decapitalizedStemName.equals( propertyName ) ) {
-					if ( method.isAnnotationPresent( Access.class ) ) {
-						return AccessType.PROPERTY;
-					}
-					else {
-						checkIsMethodVariant( containerClass, propertyName, method, stemName );
-					}
-				}
-			}
-
-			// if not "get", then try "is"
-			if ( methodName.startsWith( "is" ) ) {
-				final String stemName = methodName.substring( 2 );
-				String decapitalizedStemName = Introspector.decapitalize( stemName );
-				if ( stemName.equals( propertyName ) || decapitalizedStemName.equals( propertyName ) ) {
-					if ( method.isAnnotationPresent( Access.class ) ) {
-						return AccessType.PROPERTY;
-					}
-				}
-			}
-		}
-
-		return null;
-	}
-
-	private static void checkIsMethodVariant(
-			Class<?> containerClass,
-			String propertyName,
-			Method method,
-			String stemName) {
-		final Method isMethodVariant = findIsMethodVariant( containerClass, stemName );
-		if ( isMethodVariant == null ) {
-			return;
-		}
-
-		if ( !isMethodVariant.isAnnotationPresent( Access.class ) ) {
-			throw new MappingException(
-					String.format(
-							Locale.ROOT,
-							"Class '%s' declares both 'get' [%s] and 'is' [%s] variants of getter for property '%s'",
-							containerClass.getName(),
-							method.toString(),
-							isMethodVariant,
-							propertyName
-					)
-			);
-		}
-	}
-
-	public static @Nullable Method findIsMethodVariant(Class<?> containerClass, String stemName) {
-		// verify that the Class does not also define a method with the same stem name with 'is'
-		try {
-			final Method isMethod = containerClass.getDeclaredMethod( "is" + stemName );
-			if ( !Modifier.isStatic( isMethod.getModifiers() ) && isMethod.getAnnotation( Transient.class ) == null ) {
-				return isMethod;
-			}
-		}
-		catch (NoSuchMethodException ignore) {
+		final Method getter = getterMethodOrNull( containerClass, propertyName );
+		if ( getter != null && getter.isAnnotationPresent( Access.class ) ) {
+			return AccessType.PROPERTY;
 		}
 
 		return null;
@@ -198,9 +115,9 @@ public class AccessStrategyHelper {
 
 		// This marks the attribute as initialized, so it doesn't get lazily loaded afterward
 		if ( ( enhancementState & PERSISTENT_ATTRIBUTE_INTERCEPTABLE_MASK ) != 0 ) {
-			PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( target ).$$_hibernate_getInterceptor();
-			if ( interceptor instanceof BytecodeLazyAttributeInterceptor ) {
-				( (BytecodeLazyAttributeInterceptor) interceptor ).attributeInitialized( propertyName );
+			if ( asPersistentAttributeInterceptable( target ).$$_hibernate_getInterceptor()
+					instanceof BytecodeLazyAttributeInterceptor lazyAttributeInterceptor ) {
+				lazyAttributeInterceptor.attributeInitialized( propertyName );
 			}
 		}
 	}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.process.spi;
@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
@@ -49,6 +50,7 @@ import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.model.source.internal.hbm.ModelBinder;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
 import org.hibernate.boot.models.xml.spi.XmlProcessingResult;
@@ -64,16 +66,16 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
@@ -102,6 +104,7 @@ import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.AttributeConverter;
 
+import static org.hibernate.cfg.MappingSettings.XML_MAPPING_ENABLED;
 import static org.hibernate.internal.util.collections.CollectionHelper.mutableJoin;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForArray;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForDuration;
@@ -116,12 +119,11 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferre
  *     </li>
  *     <li>
  *         Two step : a first step coordinates resource scanning and some other preparation work; a second step
- *         builds the {@link org.hibernate.boot.Metadata}.  A hugely important distinction in the need for the
+ *         builds the {@link org.hibernate.boot.Metadata}. A hugely important distinction in the need for the
  *         steps is that the first phase should strive to not load user entity/component classes so that we can still
- *         perform enhancement on them later.  This approach caters to the 2-phase bootstrap we use in regards
- *         to WildFly Hibernate-JPA integration.  The first step is defined by {@link #prepare} which returns
- *         a {@link ManagedResources} instance.  The second step is defined by calling
- *         {@link #complete}
+ *         perform enhancement on them later. This approach caters to the 2-phase bootstrap we use in regard to
+ *         WildFly Hibernate-JPA integration. The first step is defined by {@link #prepare} which returns
+ *         a {@link ManagedResources} instance. The second step is defined by calling {@link #complete}
  *     </li>
  * </ul>
  *
@@ -156,13 +158,9 @@ public class MetadataBuildingProcess {
 			final MetadataSources sources,
 			final BootstrapContext bootstrapContext) {
 		final ManagedResourcesImpl managedResources = ManagedResourcesImpl.baseline( sources, bootstrapContext );
-		final ConfigurationService configService =
-				bootstrapContext.getServiceRegistry().requireService( ConfigurationService.class );
-		final boolean xmlMappingEnabled = configService.getSetting(
-				AvailableSettings.XML_MAPPING_ENABLED,
-				StandardConverters.BOOLEAN,
-				true
-		);
+		final boolean xmlMappingEnabled =
+				bootstrapContext.getConfigurationService()
+						.getSetting( XML_MAPPING_ENABLED, StandardConverters.BOOLEAN, true );
 		ScanningCoordinator.INSTANCE.coordinateScan(
 				managedResources,
 				bootstrapContext,
@@ -184,9 +182,8 @@ public class MetadataBuildingProcess {
 			final BootstrapContext bootstrapContext,
 			final MetadataBuildingOptions options) {
 
-		final ClassLoaderService classLoaderService = bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
-		assert classLoaderService != null;
-		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, options );
+		final InFlightMetadataCollectorImpl metadataCollector =
+				new InFlightMetadataCollectorImpl( bootstrapContext, options );
 
 		handleTypes( bootstrapContext, options, metadataCollector );
 
@@ -223,6 +220,7 @@ public class MetadataBuildingProcess {
 				metadataCollector
 		);
 
+		final ClassLoaderService classLoaderService = bootstrapContext.getClassLoaderService();
 		processAdditionalMappingContributions( metadataCollector, options, classLoaderService, rootMetadataBuildingContext );
 
 		applyExtraQueryImports( managedResources, metadataCollector );
@@ -363,7 +361,7 @@ public class MetadataBuildingProcess {
 		// 	- pre-process the XML
 		// 	- collect all known classes
 		// 	- resolve (possibly building) Jandex index
-		// 	- build the SourceModelBuildingContext
+		// 	- build the ModelsContext
 		//
 		// INPUTS:
 		//		- serviceRegistry
@@ -373,17 +371,15 @@ public class MetadataBuildingProcess {
 		// OUTPUTS:
 		//		- xmlPreProcessingResult
 		//		- allKnownClassNames (technically could be included in xmlPreProcessingResult)
-		//		- sourceModelBuildingContext
+		//		- ModelsContext
 
-		final SourceModelBuildingContext sourceModelBuildingContext = metadataCollector.getSourceModelBuildingContext();
+		final PersistenceUnitMetadata aggregatedPersistenceUnitMetadata = metadataCollector.getPersistenceUnitMetadata();
+		final ModelsContext modelsContext = bootstrapContext.getModelsContext();
 		final XmlPreProcessingResult xmlPreProcessingResult = XmlPreProcessor.preProcessXmlResources(
 				managedResources,
-				metadataCollector.getPersistenceUnitMetadata()
+				aggregatedPersistenceUnitMetadata
 		);
 
-		assert metadataCollector.getPersistenceUnitMetadata() == xmlPreProcessingResult.getPersistenceUnitMetadata();
-
-		//noinspection unchecked
 		final List<String> allKnownClassNames = mutableJoin(
 				managedResources.getAnnotatedClassReferences().stream().map( Class::getName ).collect( Collectors.toList() ),
 				managedResources.getAnnotatedClassNames(),
@@ -391,7 +387,7 @@ public class MetadataBuildingProcess {
 		);
 		managedResources.getAnnotatedPackageNames().forEach( (packageName) -> {
 			try {
-				final Class<?> packageInfoClass = sourceModelBuildingContext.getClassLoading().classForName( packageName + ".package-info" );
+				final Class<?> packageInfoClass = modelsContext.getClassLoading().classForName( packageName + ".package-info" );
 				allKnownClassNames.add( packageInfoClass.getName() );
 			}
 			catch (ClassLoadingException classLoadingException) {
@@ -409,56 +405,58 @@ public class MetadataBuildingProcess {
 		// INPUTS:
 		//		- "options" (areIdGeneratorsGlobal, etc)
 		//		- xmlPreProcessingResult
-		//		- sourceModelBuildingContext
+		//		- ModelsContext
 		//
 		// OUTPUTS
 		//		- rootEntities
 		//		- mappedSuperClasses
 		//  	- embeddables
 
-		// JPA id generator global-ity thing
-		final boolean areIdGeneratorsGlobal = true;
-		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+		final ClassDetailsRegistry classDetailsRegistry = modelsContext.getClassDetailsRegistry();
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
-				areIdGeneratorsGlobal,
 				metadataCollector.getGlobalRegistrations(),
-				sourceModelBuildingContext
+				modelsContext
 		);
 
 		final RootMappingDefaults rootMappingDefaults = new RootMappingDefaults(
 				optionDefaults,
-				xmlPreProcessingResult.getPersistenceUnitMetadata()
+				aggregatedPersistenceUnitMetadata
 		);
 		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml(
 				xmlPreProcessingResult,
-				modelCategorizationCollector,
-				sourceModelBuildingContext,
+				aggregatedPersistenceUnitMetadata,
+				modelCategorizationCollector::apply,
+				modelsContext,
 				bootstrapContext,
 				rootMappingDefaults
 		);
 
 		final HashSet<String> categorizedClassNames = new HashSet<>();
-		allKnownClassNames.forEach( (className) -> applyKnownClass(
-				className,
-				categorizedClassNames,
-				classDetailsRegistry,
-				modelCategorizationCollector
-		) );
-		xmlPreProcessingResult.getMappedNames().forEach( (className) -> applyKnownClass(
-				className,
-				categorizedClassNames,
-				classDetailsRegistry,
-				modelCategorizationCollector
-		) );
+		// apply known classes
+		allKnownClassNames.forEach( (className) -> {
+			if ( categorizedClassNames.add( className ) ) {
+				// not known yet
+				final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( className );
+				applyKnownClass( classDetails, categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
+			}
+		} );
+		// apply known "names" - generally this handles dynamic models
+		xmlPreProcessingResult.getMappedNames().forEach( (mappedName) -> {
+			if ( categorizedClassNames.add( mappedName ) ) {
+				// not known yet
+				final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( mappedName );
+				applyKnownClass( classDetails, categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
+			}
+		} );
 
-		xmlProcessingResult.apply( xmlPreProcessingResult.getPersistenceUnitMetadata() );
+		xmlProcessingResult.apply();
 
 		return new DomainModelSource(
 				classDetailsRegistry,
-				allKnownClassNames,
+				CollectionHelper.mutableJoin( allKnownClassNames, xmlPreProcessingResult.getMappedNames() ),
 				modelCategorizationCollector.getGlobalRegistrations(),
 				rootMappingDefaults,
-				xmlPreProcessingResult.getPersistenceUnitMetadata()
+				aggregatedPersistenceUnitMetadata
 		);
 	}
 
@@ -562,7 +560,8 @@ public class MetadataBuildingProcess {
 				additionalClassDetails = new ArrayList<>();
 			}
 			additionalClassDetails.add( classDetails );
-			metadataCollector.getSourceModelBuildingContext()
+			rootMetadataBuildingContext.getBootstrapContext()
+					.getModelsContext()
 					.getClassDetailsRegistry()
 					.as( MutableClassDetailsRegistry.class )
 					.addClassDetails( classDetails.getName(), classDetails );
@@ -574,11 +573,14 @@ public class MetadataBuildingProcess {
 			final Binding<JaxbBindableMappingDescriptor> binding = mappingBinder.bind( xmlStream, origin );
 
 			final JaxbBindableMappingDescriptor bindingRoot = binding.getRoot();
-			if ( bindingRoot instanceof JaxbHbmHibernateMapping ) {
-				contributeBinding( (JaxbHbmHibernateMapping) bindingRoot );
+			if ( bindingRoot instanceof JaxbHbmHibernateMapping hibernateMapping ) {
+				contributeBinding( hibernateMapping );
+			}
+			else if ( bindingRoot instanceof JaxbEntityMappingsImpl entityMappings ) {
+				contributeBinding( entityMappings );
 			}
 			else {
-				contributeBinding( (JaxbEntityMappingsImpl) bindingRoot );
+				throw new AssertionFailure( "Unexpected binding type" );
 			}
 		}
 
@@ -692,9 +694,7 @@ public class MetadataBuildingProcess {
 			BootstrapContext bootstrapContext,
 			MetadataBuildingOptions options,
 			InFlightMetadataCollector metadataCollector) {
-		final ClassLoaderService classLoaderService =
-				options.getServiceRegistry().requireService(ClassLoaderService.class);
-
+		final ClassLoaderService classLoaderService = bootstrapContext.getClassLoaderService();
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
 		final StandardServiceRegistry serviceRegistry = bootstrapContext.getServiceRegistry();
 		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
@@ -705,7 +705,7 @@ public class MetadataBuildingProcess {
 			}
 
 			@Override
-			public void contributeAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
+			public void contributeAttributeConverter(Class<? extends AttributeConverter<?,?>> converterClass) {
 				metadataCollector.getConverterRegistry().addAttributeConverter( converterClass );
 			}
 
@@ -727,7 +727,7 @@ public class MetadataBuildingProcess {
 			basicTypeRegistry.addTypeReferenceRegistrationKey(
 					StandardBasicTypes.BINARY_WRAPPER.getName(),
 					Byte[].class.getName(), "Byte[]"
-					);
+			);
 		}
 
 		// add Dialect contributed types
@@ -824,11 +824,8 @@ public class MetadataBuildingProcess {
 		// add explicit application registered types
 		typeConfiguration.addBasicTypeRegistrationContributions( options.getBasicTypeRegistrations() );
 		for ( CompositeUserType<?> compositeUserType : options.getCompositeUserTypes() ) {
-			//noinspection unchecked
-			metadataCollector.registerCompositeUserType(
-					compositeUserType.returnedClass(),
-					(Class<? extends CompositeUserType<?>>) compositeUserType.getClass()
-			);
+			metadataCollector.registerCompositeUserType( compositeUserType.returnedClass(),
+					ReflectHelper.getClass( compositeUserType.getClass() ) );
 		}
 
 		final JdbcType timestampWithTimeZoneOverride = getTimestampWithTimeZoneOverride( options, jdbcTypeRegistry );

@@ -1,15 +1,20 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
-
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
+import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.community.dialect.function.DerbyLpadEmulation;
+import org.hibernate.community.dialect.function.DerbyRpadEmulation;
+import org.hibernate.community.dialect.pagination.DerbyLimitHandler;
+import org.hibernate.community.dialect.sequence.DerbySequenceSupport;
+import org.hibernate.community.dialect.sequence.SequenceInformationExtractorDerbyDatabaseImpl;
+import org.hibernate.community.dialect.temptable.DerbyLocalTemporaryTableStrategy;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
@@ -21,18 +26,16 @@ import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.ChrLiteralEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
-import org.hibernate.community.dialect.function.DerbyLpadEmulation;
-import org.hibernate.community.dialect.function.DerbyRpadEmulation;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.LockingSupportSimple;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
-import org.hibernate.community.dialect.pagination.DerbyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.community.dialect.sequence.DerbySequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -46,24 +49,24 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
-import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.internal.PessimisticLockKind;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.community.dialect.sequence.SequenceInformationExtractorDerbyDatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.BasicType;
@@ -79,7 +82,9 @@ import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import jakarta.persistence.TemporalType;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.sql.Types;
 
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -579,18 +584,26 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.NONE;
-	}
-
-	@Override
-	public RowLockStrategy getReadRowLockStrategy() {
-		return RowLockStrategy.NONE;
+	protected LockingClauseStrategy buildLockingClauseStrategy(
+			PessimisticLockKind lockKind,
+			RowLockStrategy rowLockStrategy,
+			LockOptions lockOptions) {
+		return new DerbyLockingClauseStrategy( this, lockKind, rowLockStrategy, lockOptions );
 	}
 
 	@Override
 	public String getForUpdateString() {
 		return " for update with rs";
+	}
+
+	@Override
+	public String getWriteLockString(Timeout timeout) {
+		return " for update with rs";
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		return " for read only with rs";
 	}
 
 	@Override
@@ -604,21 +617,13 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		//TODO: check this!
-		return false;
+	public LockingSupport getLockingSupport() {
+		return LockingSupportSimple.NO_OUTER_JOIN;
 	}
 
 	@Override
 	public boolean supportsExistsInSelect() {
 		//TODO: check this!
-		return false;
-	}
-
-	@Override
-	public boolean supportsLockTimeouts() {
-		// To enable the lock timeout, we need a dedicated call
-		// 'call SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.locks.waitTimeout', '3')'
 		return false;
 	}
 
@@ -973,46 +978,18 @@ public class DerbyLegacyDialect extends Dialect {
 		registerKeyword( "YEAR" );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * <p>
-	 * From Derby docs:
-	 * <pre>
-	 *     The DECLARE GLOBAL TEMPORARY TABLE statement defines a temporary table for the current connection.
-	 * </pre>
-	 *
-	 * {@link DB2Dialect} returns a {@link GlobalTemporaryTableMutationStrategy} that
-	 * will make temporary tables created at startup and hence unavailable for subsequent connections.<br/>
-	 * see HHH-10238.
-	 */
 	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						rootEntityDescriptor,
-						basename -> "session." + TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new LocalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						rootEntityDescriptor,
-						name -> "session." + TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new LocalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
@@ -1021,23 +998,28 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public String getTemporaryTableCreateOptions() {
-		return "not logged";
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return DerbyLocalTemporaryTableStrategy.INSTANCE;
 	}
 
 	@Override
-	public boolean supportsTemporaryTablePrimaryKey() {
-		return false;
+	public String getTemporaryTableCreateOptions() {
+		return DerbyLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
 	}
 
 	@Override
 	public String getTemporaryTableCreateCommand() {
-		return "declare global temporary table";
+		return DerbyLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateCommand();
 	}
 
 	@Override
 	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return BeforeUseAction.CREATE;
+		return DerbyLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableBeforeUseAction();
+	}
+
+	@Override
+	public boolean supportsTemporaryTablePrimaryKey() {
+		return DerbyLocalTemporaryTableStrategy.INSTANCE.supportsTemporaryTablePrimaryKey();
 	}
 
 	@Override
@@ -1057,10 +1039,10 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 		builder.setAutoQuoteInitialUnderscore(true);
-		return super.buildIdentifierHelper(builder, dbMetaData);
+		return super.buildIdentifierHelper(builder, metadata );
 	}
 
 	@Override
@@ -1077,4 +1059,30 @@ public class DerbyLegacyDialect extends Dialect {
 	public String getFromDualForSelectOnly() {
 		return " from " + getDual() + " dual";
 	}
+
+	@Override
+	public boolean supportsJoinInMutationStatementSubquery() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsWithClause() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return false;
+	}
+
 }

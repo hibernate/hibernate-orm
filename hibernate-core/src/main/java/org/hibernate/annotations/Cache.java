@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -89,18 +89,4 @@ public @interface Cache {
 	 * @see LazyGroup
 	 */
 	boolean includeLazy() default true;
-
-	/**
-	 * When bytecode enhancement is used, and {@linkplain LazyGroup
-	 * field-level lazy fetching} is enabled, specifies which attributes
-	 * of the entity are included in the second-level cache, either:
-	 * <ul>
-	 * <li>{@code "all"} properties, the default, or
-	 * <li>only {@code "non-lazy"} properties.
-	 * </ul>
-	 *
-	 * @deprecated Use {@link #includeLazy()} for the sake of typesafety.
-	 */
-	@Deprecated(since="6.4")
-	String include() default "all";
 }

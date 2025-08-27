@@ -1,21 +1,20 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.internal.bytebuddy;
 
 import java.lang.reflect.Constructor;
 
+import net.bytebuddy.description.modifier.Visibility;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImplConstants;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.proxy.ProxyConfiguration;
 
-import net.bytebuddy.NamingStrategy;
-import net.bytebuddy.TypeCache;
-import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
 
 public class BasicProxyFactoryImpl implements BasicProxyFactory {
@@ -24,7 +23,6 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 	private static final String PROXY_NAMING_SUFFIX = "HibernateBasicProxy";
 
 	private final Class proxyClass;
-	private final ProxyConfiguration.Interceptor interceptor;
 	private final Constructor proxyClassConstructor;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -38,23 +36,23 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 		}
 
 		final Class<?> superClassOrMainInterface = superClass != null ? superClass : interfaceClass;
-		final TypeCache.SimpleKey cacheKey = new TypeCache.SimpleKey( superClassOrMainInterface );
+		final ByteBuddyState.ProxyDefinitionHelpers helpers = byteBuddyState.getProxyDefinitionHelpers();
+		final EnhancerImplConstants constants = byteBuddyState.getEnhancerConstants();
+		final String proxyClassName = superClassOrMainInterface.getName() + "$" + PROXY_NAMING_SUFFIX;
 
-		ByteBuddyState.ProxyDefinitionHelpers helpers = byteBuddyState.getProxyDefinitionHelpers();
-
-		this.proxyClass = byteBuddyState.loadBasicProxy( superClassOrMainInterface, cacheKey, byteBuddy ->
+		this.proxyClass = byteBuddyState.loadBasicProxy( superClassOrMainInterface, proxyClassName, (byteBuddy, namingStrategy) ->
 				helpers.appendIgnoreAlsoAtEnd( byteBuddy
-					.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( superClassOrMainInterface.getName() ) ) )
+					.with( namingStrategy )
 					.subclass( superClass == null ? Object.class : superClass, ConstructorStrategy.Default.DEFAULT_CONSTRUCTOR )
 					.implement( interfaceClass == null ? NO_INTERFACES : new Class[]{ interfaceClass } )
 					.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
 					.method( byteBuddyState.getProxyDefinitionHelpers().getVirtualNotFinalizerFilter() )
 							.intercept( byteBuddyState.getProxyDefinitionHelpers().getDelegateToInterceptorDispatcherMethodDelegation() )
-					.implement( ProxyConfiguration.class )
+					.implement( constants.INTERFACES_for_ProxyConfiguration )
 							.intercept( byteBuddyState.getProxyDefinitionHelpers().getInterceptorFieldAccessor() )
 				)
 		);
-		this.interceptor = new PassThroughInterceptor( proxyClass.getName() );
+
 		try {
 			proxyClassConstructor = proxyClass.getConstructor();
 		}
@@ -76,7 +74,9 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 		if ( proxyConfiguration == null ) {
 			throw new HibernateException( "Produced proxy does not correctly implement ProxyConfiguration" );
 		}
-		proxyConfiguration.$$_hibernate_set_interceptor( this.interceptor );
+		// Create a dedicated interceptor for the proxy. This is required as the interceptor is stateful.
+		final ProxyConfiguration.Interceptor interceptor = new PassThroughInterceptor( proxyClass.getName() );
+		proxyConfiguration.$$_hibernate_set_interceptor( interceptor );
 		return instance;
 	}
 

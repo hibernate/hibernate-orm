@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.tool.schema;
@@ -24,7 +24,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -77,14 +77,14 @@ public class IndividuallySchemaValidatorImplConnectionTest extends BaseUnitTestC
 
 	private ExecutionOptions executionOptions;
 
-	private DriverManagerConnectionProviderImpl connectionProvider;
+	private DriverManagerConnectionProvider connectionProvider;
 
 	private Connection connection;
 
 	@Before
 	public void setUp() throws Exception {
 		connectionProvider =
-				new DriverManagerConnectionProviderImpl();
+				new DriverManagerConnectionProvider();
 		connectionProvider.configure( PropertiesHelper.map( properties() ) );
 
 		connection = connectionProvider.getConnection();
@@ -142,8 +142,8 @@ public class IndividuallySchemaValidatorImplConnectionTest extends BaseUnitTestC
 				.applySettings( settings )
 				.build();
 
-		DriverManagerConnectionProviderImpl connectionProvider =
-				new DriverManagerConnectionProviderImpl();
+		DriverManagerConnectionProvider connectionProvider =
+				new DriverManagerConnectionProvider();
 		connectionProvider.configure( PropertiesHelper.map( properties() ) );
 
 		final GenerationTargetToDatabase schemaGenerator =  new GenerationTargetToDatabase(

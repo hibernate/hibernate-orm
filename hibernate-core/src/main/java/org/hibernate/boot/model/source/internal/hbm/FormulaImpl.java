@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -12,7 +12,7 @@ import org.hibernate.boot.model.source.spi.DerivedValueSource;
 class FormulaImpl
 		extends AbstractHbmSourceNode
 		implements DerivedValueSource {
-	private String tableName;
+	private final String tableName;
 	private final String expression;
 
 	FormulaImpl(MappingDocument mappingDocument, String tableName, String expression) {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.lock;
@@ -9,6 +9,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Query;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
@@ -39,8 +40,8 @@ public class LockTimeoutPropertyTest extends BaseEntityManagerFunctionalTestCase
 		Query query = em.createNamedQuery( "getAll" );
 		query.setLockMode( LockModeType.PESSIMISTIC_READ );
 
-		int timeout = query.unwrap( org.hibernate.query.Query.class ).getLockOptions().getTimeOut();
-		assertEquals( 3000, timeout );
+		Timeout timeout = query.unwrap( org.hibernate.query.Query.class ).getLockOptions().getTimeout();
+		assertEquals( 3000, timeout.milliseconds() );
 	}
 
 
@@ -54,14 +55,14 @@ public class LockTimeoutPropertyTest extends BaseEntityManagerFunctionalTestCase
 		int timeout = Integer.valueOf( em.getProperties().get( AvailableSettings.JPA_LOCK_TIMEOUT ).toString() );
 		assertEquals( 2000, timeout);
 		org.hibernate.query.Query q = (org.hibernate.query.Query) em.createQuery( "select u from UnversionedLock u" );
-		timeout = q.getLockOptions().getTimeOut();
+		timeout = q.getLockOptions().getTimeout().milliseconds();
 		assertEquals( 2000, timeout );
 
 		Query query = em.createQuery( "select u from UnversionedLock u" );
 		query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
 		query.setHint( AvailableSettings.JPA_LOCK_TIMEOUT, 3000 );
 		q = (org.hibernate.query.Query) query;
-		timeout = q.getLockOptions().getTimeOut();
+		timeout = q.getLockOptions().getTimeout().milliseconds();
 		assertEquals( 3000, timeout );
 		em.getTransaction().rollback();
 		em.close();

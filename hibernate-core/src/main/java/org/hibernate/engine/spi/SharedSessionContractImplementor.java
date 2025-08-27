@@ -1,22 +1,26 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
 import java.util.Set;
 import java.util.UUID;
-import jakarta.persistence.FlushModeType;
 import jakarta.persistence.TransactionRequiredException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.StatelessSession;
-import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.action.spi.AfterTransactionCompletionProcess;
+import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.query.Query;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
@@ -69,14 +73,6 @@ public interface SharedSessionContractImplementor
 		extends SharedSessionContract, JdbcSessionOwner, Options, LobCreationContext, WrapperOptions,
 					QueryProducerImplementor, JavaType.CoercionContext {
 
-	// todo : this is the shared contract between Session and StatelessSession,
-	//        but it defines methods that StatelessSession does not implement
-	//	      To me it seems like it is better to properly isolate those methods
-	//	      into just the Session hierarchy. They include (at least):
-	//		  1) get/set CacheMode
-	//		  2) get/set FlushMode
-	//		  3) get/set (default) read-only
-
 	/**
 	 * Obtain the {@linkplain SessionFactoryImplementor factory} which created this session.
 	 */
@@ -85,7 +81,7 @@ public interface SharedSessionContractImplementor
 	/**
 	 * Obtain the {@linkplain SessionFactoryImplementor factory} which created this session.
 	 */
-	@Override
+//	@Override
 	default SessionFactoryImplementor getSessionFactory() {
 		return getFactory();
 	}
@@ -96,6 +92,14 @@ public interface SharedSessionContractImplementor
 	@Override
 	default TypeConfiguration getTypeConfiguration() {
 		return getFactory().getTypeConfiguration();
+	}
+
+	/**
+	 * Obtain the {@link Dialect}.
+	 */
+	@Override
+	default Dialect getDialect() {
+		return getSessionFactory().getJdbcServices().getDialect();
 	}
 
 	/**
@@ -260,15 +264,6 @@ public interface SharedSessionContractImplementor
 	Interceptor getInterceptor();
 
 	/**
-	 * Enable or disable automatic cache clearing from after transaction
-	 * completion.
-	 *
-	 * @deprecated there's no good reason to expose this here
-	 */
-	@Deprecated(since = "6")
-	void setAutoClear(boolean enabled);
-
-	/**
 	 * Initialize the given collection (if not already initialized).
 	 */
 	void initializeCollection(PersistentCollection<?> collection, boolean writing)
@@ -345,7 +340,10 @@ public interface SharedSessionContractImplementor
 
 	/**
 	 * Instantiate the entity class, initializing with the given identifier.
+	 *
+	 * @deprecated No longer used, replaced by {@link #instantiate(EntityPersister, Object)}
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	Object instantiate(String entityName, Object id) throws HibernateException;
 
 	/**
@@ -363,53 +361,19 @@ public interface SharedSessionContractImplementor
 	 */
 	boolean isDefaultReadOnly();
 
-	/**
-	 * Get the current {@link CacheMode} for this session.
-	 */
-	CacheMode getCacheMode();
-
-	/**
-	 * Set the current {@link CacheMode} for this session.
-	 */
-	void setCacheMode(CacheMode cm);
+	boolean isIdentifierRollbackEnabled();
 
 	void setCriteriaCopyTreeEnabled(boolean jpaCriteriaCopyComplianceEnabled);
 
 	boolean isCriteriaCopyTreeEnabled();
 
+	void setCriteriaPlanCacheEnabled(boolean jpaCriteriaCacheEnabled);
+
+	boolean isCriteriaPlanCacheEnabled();
+
 	boolean getNativeJdbcParametersIgnored();
 
 	void setNativeJdbcParametersIgnored(boolean nativeJdbcParametersIgnored);
-
-	/**
-	 * Get the current {@link FlushModeType} for this session.
-	 * <p>
-	 * For users of the Hibernate native APIs, we've had to rename this method
-	 * as defined by Hibernate historically because the JPA contract defines a method of the same
-	 * name, but returning the JPA {@link FlushModeType} rather than Hibernate's {@link FlushMode}.
-	 * For the former behavior, use {@link #getHibernateFlushMode()} instead.
-	 *
-	 * @return The {@link FlushModeType} in effect for this Session.
-	 *
-	 * @deprecated there's no good reason to expose this here
-	 */
-	@Deprecated(since = "6")
-	FlushModeType getFlushMode();
-
-	/**
-	 * Set the current {@link FlushMode} for this session.
-	 * <p>
-	 * The flush mode determines the points at which the session is flushed.
-	 * <em>Flushing</em> is the process of synchronizing the underlying persistent
-	 * store with persistable state held in memory.
-	 * <p>
-	 * For a logically "read-only" session, it's reasonable to set the session
-	 * flush mode to {@link FlushMode#MANUAL} at the start of the session
-	 * (in order skip some work and gain some extra performance).
-	 *
-	 * @param flushMode the new flush mode
-	 */
-	void setHibernateFlushMode(FlushMode flushMode);
 
 	/**
 	 * Get the current {@link FlushMode} for this session.
@@ -452,26 +416,6 @@ public interface SharedSessionContractImplementor
 	 * does nothing.
 	 */
 	void afterScrollOperation();
-
-	/**
-	 * Should this session be automatically closed after the current
-	 * transaction completes?
-	 *
-	 * @deprecated there's no reason to expose this here
-	 */
-	@Deprecated(since = "6")
-	boolean shouldAutoClose();
-
-	/**
-	 * Is auto-close at transaction completion enabled?
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#AUTO_CLOSE_SESSION
-	 * @see SessionFactoryOptions#isAutoCloseSessionEnabled()
-	 *
-	 * @deprecated there's no reason to expose this here
-	 */
-	@Deprecated(since = "6")
-	boolean isAutoCloseSessionEnabled();
 
 	/**
 	 * Get the {@link LoadQueryInfluencers} associated with this session.
@@ -531,15 +475,22 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @return true if flush is required, false otherwise.
 	 */
-	boolean autoFlushIfRequired(Set<String> querySpaces) throws HibernateException;
-
-	default boolean autoFlushIfRequired(Set<String> querySpaces, boolean skipPreFlush)
-			throws HibernateException {
-		return autoFlushIfRequired( querySpaces );
+	default boolean autoFlushIfRequired(Set<String> querySpaces) {
+		return autoFlushIfRequired( querySpaces, false );
 	}
 
-	default void autoPreFlush(){
-	}
+	/**
+	 * detect in-memory changes, determine if the changes are to tables
+	 * named in the query and, if so, complete execution the flush
+	 *
+	 * @param querySpaces the tables named in the query.
+	 * @param skipPreFlush see {@link org.hibernate.event.spi.AutoFlushEvent#isSkipPreFlush}
+	 *
+	 * @return true if flush is required, false otherwise.
+	 */
+	boolean autoFlushIfRequired(Set<String> querySpaces, boolean skipPreFlush);
+
+	void autoPreFlush();
 
 	/**
 	 * Check if there is a Hibernate or JTA transaction in progress and,
@@ -555,32 +506,92 @@ public interface SharedSessionContractImplementor
 	 * Cast this object to {@link SessionImplementor}, if possible.
 	 *
 	 * @throws ClassCastException if the cast is not possible
+	 *
+	 * @deprecated No longer useful, since Java made downcasting safer
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	default SessionImplementor asSessionImplementor() {
 		throw new ClassCastException( "session is not a SessionImplementor" );
 	}
 
 	/**
 	 * Does this object implement {@link SessionImplementor}?
+	 *
+	 * @deprecated No longer useful, since Java made downcasting safer
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	default boolean isSessionImplementor() {
-		return false;
+		return this instanceof SessionImplementor;
 	}
 
 	/**
 	 * Cast this object to {@link StatelessSession}, if possible.
 	 *
 	 * @throws ClassCastException if the cast is not possible
+	 *
+	 * @deprecated No longer useful, since Java made downcasting safer
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	default StatelessSession asStatelessSession() {
-		throw new ClassCastException( "session is not a StatelessSession" );
+		return (StatelessSession) this;
 	}
 
 	/**
 	 * Does this object implement {@link StatelessSession}?
+	 *
+	 * @deprecated No longer useful, since Java made downcasting safer
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	default boolean isStatelessSession() {
-		return false;
+		return this instanceof StatelessSession;
 	}
 
+	/**
+	 * Cascade the lock operation to the given child entity.
+	 */
+	void lock(String entityName, Object child, LockOptions lockOptions);
+
+	/**
+	 * Registers the given process for execution after transaction completion.
+	 *
+	 * @param process The process to register
+	 * @since 7.0
+	 */
+	@Incubating
+	void registerProcess(AfterTransactionCompletionProcess process);
+
+	/**
+	 * Attempts to load the entity from the second-level cache.
+	 *
+	 * @param persister The persister for the entity being requested for load
+	 * @param entityKey The entity key
+	 * @param instanceToLoad The instance that is being initialized, or null
+	 * @param lockMode The lock mode
+	 *
+	 * @return The entity from the second-level cache, or null.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	Object loadFromSecondLevelCache(EntityPersister persister, EntityKey entityKey, Object instanceToLoad, LockMode lockMode);
+
+	/**
+	 * Wrap all state that lazy loading interceptors might need to
+	 * manage association with this session, or to handle lazy loading
+	 * after detachment via the UUID of the SessionFactory.
+	 * N.B. this captures the current Session, however it can get
+	 * updated to a null session (for detached entities) or updated to
+	 * a different Session.
+	 */
+	@Incubating
+	SessionAssociationMarkers getSessionAssociationMarkers();
+
+	@Override
+	<T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType);
+
+	@Override
+	RootGraphImplementor<?> createEntityGraph(String graphName);
+
+	@Override
+	RootGraphImplementor<?> getEntityGraph(String graphName);
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.criteria;
@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
@@ -19,8 +20,8 @@ import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -47,7 +48,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 } )
 @SessionFactory
 public class CriteriaMultiselectGroupByAndOrderByTest {
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Secondary secondaryA = new Secondary( 1, "a" );
@@ -69,12 +70,9 @@ public class CriteriaMultiselectGroupByAndOrderByTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from Primary" ).executeUpdate();
-			session.createMutationQuery( "delete from Secondary" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -129,14 +127,20 @@ public class CriteriaMultiselectGroupByAndOrderByTest {
 
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-17231" )
-	@SkipForDialect( dialectClass = SybaseASEDialect.class, reason = "Sybase doesn't support order by + offset in subqueries")
+	@SkipForDialect( dialectClass = SybaseASEDialect.class,
+			reason = "Sybase doesn't support order by + offset in subqueries")
+	@SkipForDialect( dialectClass = InformixDialect.class,
+			reason = "Informix doesn't support offset in subqueries")
 	public void testSubqueryGroupByAndOrderBy(SessionFactoryScope scope) {
 		executeSubquery( scope, true, false );
 	}
 
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-17231" )
-	@SkipForDialect( dialectClass = SybaseASEDialect.class, reason = "Sybase doesn't support order by + offset in subqueries")
+	@SkipForDialect( dialectClass = SybaseASEDialect.class,
+			reason = "Sybase doesn't support order by + offset in subqueries")
+	@SkipForDialect( dialectClass = InformixDialect.class,
+			reason = "Informix doesn't support offset in subqueries")
 	public void testSubqueryGroupByAndOrderByAndHaving(SessionFactoryScope scope) {
 		executeSubquery( scope, true, true );
 	}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
@@ -17,7 +17,6 @@ import java.util.Objects;
 
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
-import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
@@ -27,7 +26,6 @@ import net.bytebuddy.asm.ModifierAdjustment;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.modifier.ModifierContributor;
-import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
@@ -89,15 +87,19 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 
 	private final AnnotatedFieldDescription[] enhancedFields;
 
+	private final EnhancerImplConstants constants;
+
 	private PersistentAttributeTransformer(
 			TypeDescription managedCtClass,
 			ByteBuddyEnhancementContext enhancementContext,
 			TypePool classPool,
-			AnnotatedFieldDescription[] enhancedFields) {
+			AnnotatedFieldDescription[] enhancedFields,
+			EnhancerImplConstants constants) {
 		this.managedCtClass = managedCtClass;
 		this.enhancementContext = enhancementContext;
 		this.classPool = classPool;
 		this.enhancedFields = enhancedFields;
+		this.constants = constants;
 	}
 
 	public AnnotatedFieldDescription[] getEnhancedFields() {
@@ -107,7 +109,8 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 	public static PersistentAttributeTransformer collectPersistentFields(
 			TypeDescription managedCtClass,
 			ByteBuddyEnhancementContext enhancementContext,
-			TypePool classPool) {
+			TypePool classPool,
+			EnhancerImplConstants constants) {
 		List<AnnotatedFieldDescription> persistentFieldList = new ArrayList<>();
 		// HHH-10646 Add fields inherited from @MappedSuperclass
 		// HHH-10981 There is no need to do it for @MappedSuperclass
@@ -127,14 +130,14 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		}
 
 		AnnotatedFieldDescription[] orderedFields = enhancementContext.order( persistentFieldList.toArray( new AnnotatedFieldDescription[0] ) );
-		if ( log.isDebugEnabled() ) {
-			log.debugf(
+		if ( log.isTraceEnabled() ) {
+			log.tracef(
 					"Persistent fields for entity %s: %s",
 					managedCtClass.getName(),
 					Arrays.toString( orderedFields )
 			);
 		}
-		return new PersistentAttributeTransformer( managedCtClass, enhancementContext, classPool, orderedFields );
+		return new PersistentAttributeTransformer( managedCtClass, enhancementContext, classPool, orderedFields, constants );
 	}
 
 	private static Collection<AnnotatedFieldDescription> collectInheritPersistentFields(
@@ -155,7 +158,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 			return collectInheritPersistentFields( managedCtSuperclass, enhancementContext );
 		}
 
-		log.debugf( "Found @MappedSuperclass %s to collectPersistenceFields", managedCtSuperclass );
+		log.tracef( "Found @MappedSuperclass %s to collectPersistenceFields", managedCtSuperclass );
 
 		List<AnnotatedFieldDescription> persistentFieldList = new ArrayList<>();
 
@@ -262,7 +265,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 					.defineMethod(
 							EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + enhancedField.getName(),
 							enhancedField.asDefined().getType().asErasure(),
-							Visibility.PUBLIC
+							constants.modifierPUBLIC
 					)
 					.intercept( fieldReader( enhancedField ) );
 			// Final fields will only be written to from the constructor,
@@ -271,32 +274,32 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 				builder = builder
 						.defineMethod(
 								EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + enhancedField.getName(),
-								TypeDescription.VOID,
-								Visibility.PUBLIC
+								constants.TypeVoid,
+								constants.modifierPUBLIC
 						)
-						.withParameters( enhancedField.asDefined().getType().asErasure() )
+						.withParameter( enhancedField.asDefined().getType().asErasure() )
 						.intercept( fieldWriter( enhancedField ) );
 			}
 
 			if ( !compositeOwner
 					&& !enhancementContext.isMappedSuperclassClass( managedCtClass )
 					&& enhancementContext.isCompositeField( enhancedField )
-					&& enhancementContext.doDirtyCheckingInline( managedCtClass ) ) {
+					&& enhancementContext.doDirtyCheckingInline() ) {
 				compositeOwner = true;
 			}
 		}
 
 		if ( compositeOwner ) {
-			builder = builder.implement( CompositeOwner.class );
+			builder = builder.implement( constants.INTERFACES_for_CompositeOwner );
 
 			if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
-				builder = builder.defineMethod( EnhancerConstants.TRACKER_CHANGER_NAME, void.class, Visibility.PUBLIC )
-						.withParameters( String.class )
+				builder = builder.defineMethod( EnhancerConstants.TRACKER_CHANGER_NAME, void.class, constants.modifierPUBLIC )
+						.withParameter( constants.TypeString )
 						.intercept( Advice.to( CodeTemplates.CompositeOwnerDirtyCheckingHandler.class ).wrap( StubMethod.INSTANCE ) );
 			}
 		}
 
-		if ( enhancementContext.doExtendedEnhancement( managedCtClass ) ) {
+		if ( enhancementContext.doExtendedEnhancement() ) {
 			builder = applyExtended( builder );
 		}
 
@@ -316,7 +319,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 			}
 		}
 		else {
-			return new Implementation.Simple( FieldReaderAppender.of( managedCtClass, enhancedField ) );
+			return new Implementation.Simple( FieldReaderAppender.of( managedCtClass, enhancedField, constants ) );
 		}
 	}
 
@@ -342,7 +345,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 			}
 		}
 		else {
-			return new Implementation.Simple( FieldWriterAppender.of( managedCtClass, enhancedField ) );
+			return new Implementation.Simple( FieldWriterAppender.of( managedCtClass, enhancedField, constants ) );
 		}
 	}
 

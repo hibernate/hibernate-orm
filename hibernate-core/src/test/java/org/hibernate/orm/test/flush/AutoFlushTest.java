@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.flush;
@@ -129,9 +129,8 @@ public class AutoFlushTest extends BaseEntityManagerFunctionalTestCase {
 			//		or using Hibernate's FlushMode enum
 			//session.setHibernateFlushMode(FlushMode.COMMIT);
 
-			assertTrue(((Number) session
-					.createNativeQuery("select count(*) from Person", Integer.class)
-					.uniqueResult()).intValue() == 0);
+			assertTrue( session.createNativeQuery( "select count(*) from Person", Integer.class )
+					.uniqueResult() == 0);
 			//end::flushing-auto-flush-sql-native-example[]
 		});
 	}
@@ -152,10 +151,9 @@ public class AutoFlushTest extends BaseEntityManagerFunctionalTestCase {
 			entityManager.persist(person);
 			Session session = entityManager.unwrap(Session.class);
 
-			assertTrue(((Number) session
-					.createNativeQuery("select count(*) from Person", Integer.class)
-					.addSynchronizedEntityClass(Person.class)
-					.uniqueResult()).intValue() == 1);
+			assertTrue( session.createNativeQuery( "select count(*) from Person", Integer.class )
+					.addSynchronizedEntityClass( Person.class )
+					.uniqueResult() == 1);
 			//end::flushing-auto-flush-sql-synchronization-example[]
 		});
 	}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schematools;
@@ -176,7 +176,7 @@ public class TestExtraPhysicalTableTypes {
 		metadata.validate();
 	}
 
-	public class InformationExtractorJdbcDatabaseMetaDataImplTest extends InformationExtractorJdbcDatabaseMetaDataImpl {
+	public static class InformationExtractorJdbcDatabaseMetaDataImplTest extends InformationExtractorJdbcDatabaseMetaDataImpl {
 
 		private final ExtractionContext extractionContext;
 
@@ -194,7 +194,7 @@ public class TestExtraPhysicalTableTypes {
 		}
 	}
 
-	class DdlTransactionIsolatorImpl implements  DdlTransactionIsolator{
+	static class DdlTransactionIsolatorImpl implements  DdlTransactionIsolator{
 
 		@Override
 		public JdbcContext getJdbcContext() {

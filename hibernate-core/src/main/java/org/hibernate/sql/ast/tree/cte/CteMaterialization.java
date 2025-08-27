@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.cte;
@@ -22,5 +22,5 @@ public enum CteMaterialization {
 	/**
 	 * Do not materialize the CTE if possible.
 	 */
-	NOT_MATERIALIZED;
+	NOT_MATERIALIZED
 }

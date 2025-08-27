@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.query;
@@ -15,8 +15,8 @@ import java.util.Objects;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Type;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -131,7 +131,7 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 		}
 
 		@Override
-		public Boolean nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+		public Boolean nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 				throws SQLException {
 			return "Y".equals( rs.getString( position ) );
 		}
@@ -141,7 +141,7 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 				PreparedStatement st,
 				Boolean value,
 				int index,
-				SharedSessionContractImplementor session) throws SQLException {
+				WrapperOptions options) throws SQLException {
 			st.setString(index, value ? "Y" : "N");
 		}
 

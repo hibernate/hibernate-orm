@@ -1,13 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 
-description = 'Integration tests for running Hibernate ORM in the Java module path'
+plugins {
+	id "local.java-module"
+}
 
-apply from: rootProject.file( 'gradle/java-module.gradle' )
+def skipJacoco = project.hasProperty('skipJacoco') ? project.getProperty('skipJacoco').toBoolean() : false
+if (!skipJacoco) {
+	plugins.apply('jacoco')
+}
+
+description = 'Integration tests for running Hibernate ORM in the Java module path'
 
 // See https://docs.gradle.org/6.7.1/userguide/java_testing.html#blackbox_integration_testing
 // See https://docs.gradle.org/6.7.1/samples/sample_java_modules_multi_project_with_integration_tests.html

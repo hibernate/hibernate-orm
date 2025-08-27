@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.service.internal;
@@ -9,7 +9,6 @@ import java.lang.reflect.Field;
 import org.hibernate.event.internal.DefaultMergeEventListener;
 import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.MergeEventListener;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
@@ -62,8 +61,7 @@ public class EventListenerGroupAppendListenerTest extends BaseSessionFactoryFunc
 		inTransaction( session -> {
 
 			EventListenerGroup<MergeEventListener> group =
-					sessionFactory().getServiceRegistry()
-							.requireService( EventListenerRegistry.class )
+					sessionFactory().getEventListenerRegistry()
 							.getEventListenerGroup( EventType.MERGE );
 			if ( duplicationStrategy != null ) {
 				group.addDuplicationStrategy( duplicationStrategy );

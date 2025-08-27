@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cdi.lifecycle;
@@ -14,11 +14,11 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
 import org.junit.jupiter.api.Test;
@@ -91,14 +91,14 @@ public class ExtendedBeanManagerNotAvailableDuringCustomUserTypeInitTest {
 		}
 
 		@Override
-		public Object nullSafeGet(ResultSet rs, int i, SharedSessionContractImplementor sharedSessionContractImplementor)
+		public Object nullSafeGet(ResultSet rs, int i, WrapperOptions sharedSessionContractImplementor)
 				throws SQLException {
 			String xmldoc = rs.getString(i);
 			return rs.wasNull() ? null : xmldoc;
 		}
 
 		@Override
-		public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
+		public void nullSafeSet(PreparedStatement st, Object value, int index, WrapperOptions options)
 				throws SQLException  {
 			if (value == null) {
 				st.setNull(index, Types.OTHER);

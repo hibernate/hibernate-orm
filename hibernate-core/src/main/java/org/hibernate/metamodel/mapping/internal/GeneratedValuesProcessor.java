@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Incubating;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -80,7 +81,7 @@ public class GeneratedValuesProcessor {
 					null,
 					1,
 					new LoadQueryInfluencers( sessionFactory ),
-					LockOptions.READ,
+					new LockOptions( LockMode.READ ),
 					builder::add,
 					sessionFactory
 			);

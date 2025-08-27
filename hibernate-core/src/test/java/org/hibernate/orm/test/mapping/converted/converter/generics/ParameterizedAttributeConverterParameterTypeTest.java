@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.converted.converter.generics;
@@ -14,7 +14,8 @@ import jakarta.persistence.Id;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -46,10 +47,9 @@ public class ParameterizedAttributeConverterParameterTypeTest {
 	public void testGenericTypeParameters() {
 		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl();
 		try {
-			final ClassBasedConverterDescriptor converterDescriptor = new ClassBasedConverterDescriptor(
-					CustomAttributeConverter.class,
-					bootstrapContext.getClassmateContext()
-			);
+			final ConverterDescriptor<List<String>, Integer> converterDescriptor =
+					ConverterDescriptors.of( CustomAttributeConverter.class,
+							bootstrapContext.getClassmateContext() );
 			assertEquals( List.class, converterDescriptor.getDomainValueResolvedType().getErasedType() );
 		} finally {
 			bootstrapContext.close();

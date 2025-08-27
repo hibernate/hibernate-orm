@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.stats;
@@ -236,9 +236,7 @@ public class StatsTest {
 	}
 
 	private void cleanDb(Session s) {
-		s.createQuery( "delete Locality" ).executeUpdate();
-		s.createQuery( "delete Country" ).executeUpdate();
-		s.createQuery( "delete Continent" ).executeUpdate();
+		s.getSessionFactory().getSchemaManager().truncate();
 	}
 
 }

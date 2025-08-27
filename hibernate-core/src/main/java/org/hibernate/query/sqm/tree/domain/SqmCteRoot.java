@@ -1,11 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.Incubating;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -14,6 +13,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.NavigablePath;
+
+import java.util.Objects;
 
 /**
  * @author Christian Beikov
@@ -81,7 +82,7 @@ public class SqmCteRoot<T> extends SqmRoot<T> implements JpaRoot<T> {
 	// JPA
 
 	@Override
-	public EntityDomainType<T> getModel() {
+	public SqmEntityDomainType<T> getModel() {
 		// Or should we throw an exception instead?
 		return null;
 	}
@@ -92,12 +93,24 @@ public class SqmCteRoot<T> extends SqmRoot<T> implements JpaRoot<T> {
 	}
 
 	@Override
-	public SqmPathSource<?> getResolvedModel() {
+	public SqmPathSource<T> getResolvedModel() {
 		return getReferencedPathSource();
 	}
 
 	@Override
 	public SqmCorrelatedRoot<T> createCorrelation() {
-		throw new UnsupportedOperationException();
+		return new SqmCorrelatedDerivedRoot<>( this );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmCteRoot<?> that
+			&& super.equals( object )
+			&& Objects.equals( this.cte, that.cte );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( super.hashCode(), cte );
 	}
 }

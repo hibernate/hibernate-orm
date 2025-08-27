@@ -1,18 +1,18 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.type.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 import java.util.Locale;
@@ -32,8 +32,8 @@ public class GenerateSeriesArgumentValidator implements ArgumentsValidator {
 	public void validate(
 			List<? extends SqmTypedNode<?>> arguments,
 			String functionName,
-			TypeConfiguration typeConfiguration) {
-		delegate.validate( arguments, functionName, typeConfiguration );
+			BindingContext bindingContext) {
+		delegate.validate( arguments, functionName, bindingContext );
 
 		final SqmTypedNode<?> start = arguments.get( 0 );
 		final SqmTypedNode<?> stop = arguments.get( 1 );

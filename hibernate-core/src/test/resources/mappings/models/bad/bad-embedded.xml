@@ -1,0 +1,23 @@
+
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.boot.models.xml.bad</package>
+    <access>FIELD</access>
+    
+    <entity class="Book" metadata-complete="true">
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+            <embedded name="skew"/>
+        </attributes>
+    </entity>
+    
+    <embeddable class="Sku" metadata-complete="true">
+        <attributes>
+            <basic name="group"/>
+            <basic name="department"/>
+            <basic name="code"/>
+        </attributes>
+    </embeddable>
+</entity-mappings>

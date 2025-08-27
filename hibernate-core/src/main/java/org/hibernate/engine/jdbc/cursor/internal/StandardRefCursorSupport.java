@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.cursor.internal;
@@ -36,7 +36,8 @@ public class StandardRefCursorSupport implements RefCursorSupport {
 			statement.registerOutParameter( position, refCursorTypeCode() );
 		}
 		catch (SQLException e) {
-			throw jdbcServices.getSqlExceptionHelper().convert( e, "Error registering REF_CURSOR parameter [" + position + "]" );
+			throw jdbcServices.getSqlExceptionHelper()
+					.convert( e, "Error registering REF_CURSOR parameter [" + position + "]" );
 		}
 	}
 
@@ -46,7 +47,8 @@ public class StandardRefCursorSupport implements RefCursorSupport {
 			statement.registerOutParameter( name, refCursorTypeCode() );
 		}
 		catch (SQLException e) {
-			throw jdbcServices.getSqlExceptionHelper().convert( e, "Error registering REF_CURSOR parameter [" + name + "]" );
+			throw jdbcServices.getSqlExceptionHelper()
+					.convert( e, "Error registering REF_CURSOR parameter [" + name + "]" );
 		}
 	}
 
@@ -90,7 +92,7 @@ public class StandardRefCursorSupport implements RefCursorSupport {
 		}
 		catch (Exception throwable) {
 			//If the driver is not compatible with the Java 8 contract, the method might not exit.
-			log.debug( "Unexpected error trying to gauge level of JDBC REF_CURSOR support : " + throwable.getMessage() );
+			log.debug( "Unexpected error trying to gauge level of JDBC REF_CURSOR support: " + throwable.getMessage() );
 			return false;
 		}
 	}

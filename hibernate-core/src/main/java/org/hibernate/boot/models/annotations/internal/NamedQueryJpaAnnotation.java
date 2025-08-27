@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -11,7 +11,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedHqlQueryImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.QueryProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.NamedQuery;
 
@@ -30,7 +30,7 @@ public class NamedQueryJpaAnnotation implements NamedQuery {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public NamedQueryJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public NamedQueryJpaAnnotation(ModelsContext modelContext) {
 		this.resultClass = void.class;
 		this.lockMode = jakarta.persistence.LockModeType.NONE;
 		this.hints = new jakarta.persistence.QueryHint[0];
@@ -39,7 +39,7 @@ public class NamedQueryJpaAnnotation implements NamedQuery {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public NamedQueryJpaAnnotation(NamedQuery annotation, SourceModelBuildingContext modelContext) {
+	public NamedQueryJpaAnnotation(NamedQuery annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.query = annotation.query();
 		this.resultClass = annotation.resultClass();
@@ -50,7 +50,7 @@ public class NamedQueryJpaAnnotation implements NamedQuery {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public NamedQueryJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public NamedQueryJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.query = (String) attributeValues.get( "query" );
 		this.resultClass = (Class<?>) attributeValues.get( "resultClass" );

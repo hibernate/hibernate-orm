@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.multitenancy;
@@ -29,7 +29,7 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -104,8 +104,8 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
 			tenantUrl( properties.getProperty(Environment.URL), tenantIdentifier )
 	);
 
-		DriverManagerConnectionProviderImpl connectionProvider =
-				new DriverManagerConnectionProviderImpl();
+		DriverManagerConnectionProvider connectionProvider =
+				new DriverManagerConnectionProvider();
 		connectionProvider.configure( PropertiesHelper.map(properties) );
 
 		connectionProviderMap.put(tenantIdentifier, connectionProvider);
@@ -137,7 +137,7 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
 		}, true);
 
 		doInSession(FRONT_END_TENANT, session -> {
-			Timestamp personCreationTimestamp = (Timestamp) session
+			Timestamp personCreationTimestamp = session
 			.createNativeQuery(
 				"select p.created_on " +
 				"from Person p " +
@@ -152,7 +152,7 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
 		}, true);
 
 		doInSession(BACK_END_TENANT, session -> {
-			Timestamp personCreationTimestamp = (Timestamp) session
+			Timestamp personCreationTimestamp = session
 			.createNativeQuery(
 				"select p.created_on " +
 				"from Person p " +
@@ -169,7 +169,7 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
 
 		//tag::multitenacy-hibernate-not-applying-timezone-configuration-example[]
 		doInSession(FRONT_END_TENANT, session -> {
-			Timestamp personCreationTimestamp = (Timestamp) session
+			Timestamp personCreationTimestamp = session
 			.createNativeQuery(
 				"select p.created_on " +
 				"from Person p " +

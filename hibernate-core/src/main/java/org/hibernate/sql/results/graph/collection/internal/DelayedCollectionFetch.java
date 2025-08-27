@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.collection.internal;
@@ -41,12 +41,9 @@ public class DelayedCollectionFetch extends CollectionFetch {
 			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		// lazy attribute
-		if ( unfetched ) {
-			return new UnfetchedCollectionAssembler( getFetchedMapping() );
-		}
-		else {
-			return super.createAssembler( parent, creationState );
-		}
+		return unfetched
+				? new UnfetchedCollectionAssembler( getFetchedMapping() )
+				: super.createAssembler( parent, creationState );
 	}
 
 	public CollectionInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {

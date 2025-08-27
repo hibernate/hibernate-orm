@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -9,8 +9,10 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
+import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.DB2LockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
@@ -64,6 +66,11 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 	}
 
 	@Override
+	protected LockingSupport buildLockingSupport() {
+		return DB2LockingSupport.forDB2z();
+	}
+
+	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 		if ( getVersion().isSameOrAfter( 12 ) ) {
@@ -71,6 +78,7 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 			functionFactory.listagg( null );
 			functionFactory.inverseDistributionOrderedSetAggregates();
 			functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+			functionFactory.regexpLike();
 		}
 	}
 
@@ -146,12 +154,7 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return DB2390IdentityColumnSupport.INSTANCE;
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		return true;
+		return DB2zIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

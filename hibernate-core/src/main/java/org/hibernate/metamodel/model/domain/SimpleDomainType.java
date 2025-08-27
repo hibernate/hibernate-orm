@@ -1,17 +1,19 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain;
 
+import jakarta.persistence.metamodel.Type;
+
 /**
- * Describes any non-collection type
+ * Describes any non-collection type.
  *
  * @author Steve Ebersole
  */
-public interface SimpleDomainType<J> extends DomainType<J>, jakarta.persistence.metamodel.Type<J> {
+public interface SimpleDomainType<J> extends DomainType<J>, Type<J> {
 	@Override
-	default Class<J> getBindableJavaType() {
-		return getJavaType();
+	default Class<J> getJavaType() {
+		return getExpressibleJavaType().getJavaTypeClass();
 	}
 }

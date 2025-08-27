@@ -1,16 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.cfg.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
 import org.hibernate.cache.cfg.spi.DomainDataCachingConfig;
@@ -97,7 +95,7 @@ public class DomainDataRegionConfigImpl implements DomainDataRegionConfig {
 					x -> new EntityDataCachingConfigImpl(
 							rootEntityName,
 							bootEntityDescriptor.isVersioned()
-									? (Supplier<Comparator>) () -> ( (BasicType<?>) bootEntityDescriptor.getVersion().getType() ).getJavaTypeDescriptor().getComparator()
+									? () -> ( (BasicType<?>) bootEntityDescriptor.getVersion().getType() ).getJavaTypeDescriptor().getComparator()
 									: null,
 							bootEntityDescriptor.isMutable(),
 							accessType

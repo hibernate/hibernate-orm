@@ -1,13 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.expression.JsonNullBehavior;
 
@@ -29,7 +30,7 @@ public enum SqmJsonNullBehavior implements SqmTypedNode<Object> {
 	NULL;
 
 	@Override
-	public @Nullable SqmExpressible<Object> getNodeType() {
+	public @Nullable SqmBindableType<Object> getNodeType() {
 		return null;
 	}
 
@@ -50,12 +51,12 @@ public enum SqmJsonNullBehavior implements SqmTypedNode<Object> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		if ( this == NULL ) {
-			sb.append( " null on null" );
+			hql.append( " null on null" );
 		}
 		else {
-			sb.append( " absent on null" );
+			hql.append( " absent on null" );
 		}
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.hibernate.annotations.Any;
 import org.hibernate.boot.models.annotations.spi.AttributeMarker;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -20,7 +20,7 @@ public class AnyAnnotation implements Any, AttributeMarker, AttributeMarker.Fetc
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public AnyAnnotation(SourceModelBuildingContext modelContext) {
+	public AnyAnnotation(ModelsContext modelContext) {
 		this.fetch = jakarta.persistence.FetchType.EAGER;
 		this.optional = true;
 	}
@@ -28,7 +28,7 @@ public class AnyAnnotation implements Any, AttributeMarker, AttributeMarker.Fetc
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public AnyAnnotation(Any annotation, SourceModelBuildingContext modelContext) {
+	public AnyAnnotation(Any annotation, ModelsContext modelContext) {
 		this.fetch = annotation.fetch();
 		this.optional = annotation.optional();
 	}
@@ -36,7 +36,7 @@ public class AnyAnnotation implements Any, AttributeMarker, AttributeMarker.Fetc
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public AnyAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public AnyAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.fetch = (jakarta.persistence.FetchType) attributeValues.get( "fetch" );
 		this.optional = (boolean) attributeValues.get( "optional" );
 	}

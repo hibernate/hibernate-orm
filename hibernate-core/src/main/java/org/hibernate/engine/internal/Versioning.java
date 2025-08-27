@@ -1,18 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.java.VersionJavaType;
 
-import org.jboss.logging.Logger;
 
-import java.lang.invoke.MethodHandles;
 
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.EventType.UPDATE;
@@ -23,11 +20,7 @@ import static org.hibernate.generator.EventType.UPDATE;
  * @author Gavin King
  */
 public final class Versioning {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			Versioning.class.getName()
-	);
+	private static final VersionLogger LOG = VersionLogger.INSTANCE;
 
 	/**
 	 * Private constructor disallowing instantiation.
@@ -52,7 +45,7 @@ public final class Versioning {
 				versionMapping.getScale(),
 				session
 		);
-		LOG.tracef( "Seeding: %s", seed );
+		LOG.seed( seed );
 		return seed;
 	}
 
@@ -81,7 +74,7 @@ public final class Versioning {
 			return true;
 		}
 		else {
-			LOG.tracev( "Using initial version: {0}", initialVersion );
+			LOG.initial( initialVersion );
 			return false;
 		}
 	}
@@ -100,7 +93,7 @@ public final class Versioning {
 				// and for "older" behavior where version number did not get
 				// seeded if it was already set in the object
 				// TODO: shift it into unsaved-value strategy
-				initialVersion instanceof Number && ((Number) initialVersion).longValue() < 0;
+			initialVersion instanceof Number number && number.longValue() < 0;
 	}
 
 	/**
@@ -132,7 +125,9 @@ public final class Versioning {
 	 */
 	public static Object increment(Object version, EntityVersionMapping versionMapping, SharedSessionContractImplementor session) {
 		@SuppressWarnings("unchecked")
-		final VersionJavaType<Object> versionType = (VersionJavaType<Object>) versionMapping.getJavaType();
+		final var versionType =
+				(VersionJavaType<Object>) // Unsafe cast
+						versionMapping.getJavaType();
 		final Object next = versionType.next(
 				version,
 				versionMapping.getLength(),
@@ -142,13 +137,7 @@ public final class Versioning {
 				versionMapping.getScale(),
 				session
 		);
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef(
-					"Incrementing: %s to %s",
-					versionType.toString( version ),
-					versionType.toString( next )
-			);
-		}
+		LOG.incrementing( version, next );
 		return next;
 	}
 
@@ -191,15 +180,15 @@ public final class Versioning {
 		if ( hasDirtyCollections ) {
 			return true;
 		}
-
-		if ( dirtyProperties != null ) {
-			for ( int dirtyProperty : dirtyProperties ) {
-				if ( propertyVersionability[dirtyProperty] ) {
-					return true;
+		else {
+			if ( dirtyProperties != null ) {
+				for ( int dirtyProperty : dirtyProperties ) {
+					if ( propertyVersionability[dirtyProperty] ) {
+						return true;
+					}
 				}
 			}
+			return false;
 		}
-
-		return false;
 	}
 }

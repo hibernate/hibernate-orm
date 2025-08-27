@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.uniqueconstraint;
@@ -27,7 +27,6 @@ import static org.junit.Assert.fail;
 @DomainModel( annotatedClasses = { Room.class, Building.class, House.class } )
 @SessionFactory
 @SkipForDialect( dialectClass = InformixDialect.class,
-		matchSubTypes = true,
 		reason = "Informix does not properly support unique constraints on nullable columns" )
 @SkipForDialect( dialectClass = SybaseDialect.class,
 		matchSubTypes = true,

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.functional;
@@ -32,8 +32,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.QueryHint;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -243,10 +242,8 @@ public class OracleFollowOnLockingTest extends
 					IllegalQueryOperationException.class,
 					expected.getCause().getClass()
 			);
-			assertThat(
-					expected.getCause().getMessage(),
-					containsString( "Locking with OFFSET/FETCH is not supported" )
-			);
+			assertThat( expected.getCause().getMessage() )
+					.contains( "Locking with OFFSET/FETCH is not supported" );
 		}
 	}
 
@@ -559,11 +556,8 @@ public class OracleFollowOnLockingTest extends
 					IllegalQueryOperationException.class,
 					expected.getCause().getClass()
 			);
-			assertTrue(
-					expected.getCause().getMessage().contains(
-							"Locking with set operators is not supported"
-					)
-			);
+			assertThat( expected.getCause().getMessage() )
+					.contains( "Locking with set operators is not supported" );
 		}
 	}
 

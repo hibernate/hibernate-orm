@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -7,7 +7,6 @@ package org.hibernate.processor.annotation;
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
 
@@ -53,7 +52,7 @@ public class AnnotationMetaType implements MetaAttribute {
 
 	@Override
 	public String getMetaType() {
-		return ManagedDomainType.class.getName();
+		return "org.hibernate.metamodel.model.domain.ManagedDomainType";
 	}
 
 	@Override

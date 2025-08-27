@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.bootstrap.binding.mixed</package>
+    <entity class="XmlEntity" metadata-complete="true">
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+            </id>
+            <many-to-one name="association">
+                <join-column name="assoc_fk" nullable="false"/>
+                <cascade>
+                    <cascade-persist/>
+                    <cascade-merge/>
+                </cascade>
+            </many-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>

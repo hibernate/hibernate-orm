@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry.internal;
@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.Internal;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -77,14 +78,16 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 			List<ProvidedService<?>> providedServices,
 			Map<String,Object> configurationValues) {
 
-		StandardServiceRegistryImpl instance = new StandardServiceRegistryImpl( autoCloseRegistry, bootstrapServiceRegistry, configurationValues );
+		final StandardServiceRegistryImpl instance =
+				new StandardServiceRegistryImpl( autoCloseRegistry, bootstrapServiceRegistry, configurationValues );
 		instance.initialize();
 		instance.applyServiceRegistrations( serviceInitiators, providedServices );
 
 		return instance;
 	}
 
-	protected void applyServiceRegistrations(List<StandardServiceInitiator<?>> serviceInitiators, List<ProvidedService<?>> providedServices) {
+	protected void applyServiceRegistrations(
+			List<StandardServiceInitiator<?>> serviceInitiators, List<ProvidedService<?>> providedServices) {
 		try {
 			// process initiators
 			for ( ServiceInitiator<?> initiator : serviceInitiators ) {
@@ -105,13 +108,15 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 	}
 
 	/**
-	 * Not intended for general use. We need the ability to stop and "reactivate" a registry to allow
-	 * experimentation with technologies such as GraalVM, Quarkus and Cri-O.
+	 * Not intended for general use. We need the ability to stop and "reactivate" a registry
+	 * to allow experimentation with technologies such as GraalVM, Quarkus and Cri-O.
 	 */
-	public synchronized void resetAndReactivate(BootstrapServiceRegistry bootstrapServiceRegistry,
-												List<StandardServiceInitiator<?>> serviceInitiators,
-												List<ProvidedService<?>> providedServices,
-												Map<?, ?> configurationValues) {
+	@Internal
+	public synchronized void resetAndReactivate(
+			BootstrapServiceRegistry bootstrapServiceRegistry,
+			List<StandardServiceInitiator<?>> serviceInitiators,
+			List<ProvidedService<?>> providedServices,
+			Map<?, ?> configurationValues) {
 		if ( super.isActive() ) {
 			throw new IllegalStateException( "Can't reactivate an active registry" );
 		}
@@ -130,8 +135,8 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 
 	@Override
 	public synchronized <R extends Service> void configureService(ServiceBinding<R> serviceBinding) {
-		if ( serviceBinding.getService() instanceof Configurable ) {
-			( (Configurable) serviceBinding.getService() ).configure( configurationValues );
+		if ( serviceBinding.getService() instanceof Configurable configurable ) {
+			configurable.configure( configurationValues );
 		}
 	}
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.aggregate;
@@ -23,7 +23,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A set of operations providing support for aggregate column types
- * in a certain {@link Dialect SQL dialect}.
+ * in a certain {@linkplain Dialect SQL dialect}.
  *
  * @since 6.2
  */

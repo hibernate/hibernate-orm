@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.internal.util;
@@ -88,8 +88,8 @@ public final class PersistenceUtilHelper {
 		else if ( isPersistentAttributeInterceptable( reference ) ) {
 			return isInitialized( asPersistentAttributeInterceptable( reference ) ) ? LOADED : NOT_LOADED;
 		}
-		else if ( reference instanceof LazyInitializable) {
-			return ( (LazyInitializable) reference ).wasInitialized() ? LOADED : NOT_LOADED;
+		else if ( reference instanceof LazyInitializable lazyInitializable) {
+			return lazyInitializable.wasInitialized() ? LOADED : NOT_LOADED;
 		}
 		else {
 			return UNKNOWN;
@@ -116,7 +116,7 @@ public final class PersistenceUtilHelper {
 	 * @return The LoadState
 	 */
 	public static LoadState isLoadedWithoutReference(Object entity, String attributeName, MetadataCache cache) {
-		boolean sureFromUs = false;
+		final boolean sureFromUs;
 		final LazyInitializer lazyInitializer = extractLazyInitializer( entity );
 		if ( lazyInitializer != null ) {
 			if ( lazyInitializer.isUninitialized() ) {
@@ -129,50 +129,53 @@ public final class PersistenceUtilHelper {
 			}
 			sureFromUs = true;
 		}
+		else {
+			sureFromUs = false;
+		}
 
 		// we are instrumenting, but we can't assume we are the only ones
 		if ( isPersistentAttributeInterceptable( entity ) ) {
-			final BytecodeLazyAttributeInterceptor interceptor = extractInterceptor( asPersistentAttributeInterceptable( entity ) );
+			final BytecodeLazyAttributeInterceptor interceptor =
+					extractInterceptor( asPersistentAttributeInterceptable( entity ) );
 			final boolean isInitialized = interceptor == null || interceptor.isAttributeLoaded( attributeName );
-			LoadState state;
-			if (isInitialized && interceptor != null) {
-				// attributeName is loaded according to bytecode enhancement, but is it loaded as far as association?
-				// it's ours, we can read
-				try {
-					state = getLoadState( getAttributeValue( entity, attributeName, cache ) );
-					// it's ours so we know it's loaded
-					if ( state == UNKNOWN ) {
-						state = LOADED;
-					}
-				}
-				catch (AttributeExtractionException ignore) {
-					state = UNKNOWN;
-				}
-			}
-			else if ( interceptor != null ) {
-				state = NOT_LOADED;
-			}
-			else if ( sureFromUs ) {
-				// property is loaded according to bytecode enhancement, but is it loaded as far as association?
-				// it's ours, we can read
-				try {
-					state = getLoadState( getAttributeValue( entity, attributeName, cache ) );
-					// it's ours so we know it's loaded
-					if ( state == UNKNOWN ) {
-						state = LOADED;
-					}
-				}
-				catch (AttributeExtractionException ignore) {
-					state = UNKNOWN;
-				}
-			}
-			else {
-				state = UNKNOWN;
-			}
-
-			return state;
+			return getLoadState( entity, attributeName, cache, isInitialized, interceptor, sureFromUs );
 		}
 		else {
+			return UNKNOWN;
+		}
+	}
+
+	private static LoadState getLoadState(
+			Object entity, String attributeName,
+			MetadataCache cache,
+			boolean isInitialized,
+			BytecodeLazyAttributeInterceptor interceptor,
+			boolean sureFromUs) {
+		if ( isInitialized && interceptor != null) {
+			// attributeName is loaded according to bytecode enhancement, but is it loaded as far as association?
+			// it's ours, we can read
+			return getLoadState( entity, attributeName, cache );
+		}
+		else if ( interceptor != null ) {
+			return NOT_LOADED;
+		}
+		else if ( sureFromUs ) {
+			// property is loaded according to bytecode enhancement, but is it loaded as far as association?
+			// it's ours, we can read
+			return getLoadState( entity, attributeName, cache );
+		}
+		else {
+			return UNKNOWN;
+		}
+	}
+
+	private static LoadState getLoadState(Object entity, String attributeName, MetadataCache cache) {
+		try {
+			final LoadState state = getLoadState( getAttributeValue( entity, attributeName, cache ) );
+			// it's ours so we know it's loaded
+			return state == UNKNOWN ? LOADED : state;
+		}
+		catch (AttributeExtractionException ignore) {
 			return UNKNOWN;
 		}
 	}
@@ -328,7 +331,7 @@ public final class PersistenceUtilHelper {
 		}
 
 		private static List<Class<?>> findClassHierarchy(Class<?> clazz) {
-			List<Class<?>> classes = new ArrayList<>();
+			final List<Class<?>> classes = new ArrayList<>();
 			Class<?> current = clazz;
 			do {
 				classes.add( current );
@@ -374,9 +377,9 @@ public final class PersistenceUtilHelper {
 	 */
 	private static Method getMethod(Class<?> clazz, String attributeName) {
 		try {
-			char[] string = attributeName.toCharArray();
+			final char[] string = attributeName.toCharArray();
 			string[0] = Character.toUpperCase( string[0] );
-			String casedAttributeName = new String( string );
+			final String casedAttributeName = new String( string );
 			try {
 				return clazz.getDeclaredMethod( "get" + casedAttributeName );
 			}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal.script;
@@ -15,11 +15,14 @@ import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 import org.hibernate.tool.schema.spi.SqlScriptException;
 
 /**
- * Class responsible for extracting SQL statements from import script. Treats each line as a complete SQL statement.
- * Comment lines shall start with {@code --}, {@code //} or {@code /*} character sequence.
+ * Class responsible for extracting SQL statements from an import script.
+ * Treats each line as a complete SQL statement.
+ * Comment lines must start with {@code --}, {@code //}, or {@code /*}.
  *
  * @author Lukasz Antoniak
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.cfg.SchemaToolingSettings#HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR
  */
 public class SingleLineSqlScriptExtractor implements SqlScriptCommandExtractor {
 	public static final String SHORT_NAME = "single-line";

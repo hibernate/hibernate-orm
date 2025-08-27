@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
@@ -25,7 +25,6 @@ public final class EventType<T> {
 	private static final AtomicInteger STANDARD_TYPE_COUNTER = new AtomicInteger();
 
 	public static final EventType<LoadEventListener> LOAD = create( "load", LoadEventListener.class );
-	public static final EventType<ResolveNaturalIdEventListener> RESOLVE_NATURAL_ID = create( "resolve-natural-id", ResolveNaturalIdEventListener.class );
 
 	public static final EventType<InitializeCollectionEventListener> INIT_COLLECTION = create( "load-collection", InitializeCollectionEventListener.class );
 
@@ -156,8 +155,7 @@ public final class EventType<T> {
 		return eventName;
 	}
 
-	@SuppressWarnings("rawtypes")
-	public Class baseListenerInterface() {
+	public Class<T> baseListenerInterface() {
 		return baseListenerInterface;
 	}
 

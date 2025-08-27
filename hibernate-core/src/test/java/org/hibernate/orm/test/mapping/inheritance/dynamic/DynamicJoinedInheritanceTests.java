@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.inheritance.dynamic;
@@ -7,6 +7,7 @@ package org.hibernate.orm.test.mapping.inheritance.dynamic;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.graph.RootGraph;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -33,6 +34,20 @@ public class DynamicJoinedInheritanceTests {
 		} );
 	}
 
+	@Test
+	public void testLoadingNewApi(SessionFactoryScope scope) {
+		final RootGraph<Map<String, ?>> Sub_ =
+				scope.getSessionFactory()
+						.createGraphForDynamicEntity( "Sub" );
+		scope.inTransaction( (session) -> {
+			final Map<String,?> entity = session.find( Sub_, 1 );
+			assertThat( entity ).isNotNull();
+			assertThat( entity.get( "name" ) ).isEqualTo( "sub" );
+			assertThat( entity.get( TYPE_KEY ) ).isNotNull();
+			assertThat( entity.get( TYPE_KEY ) ).isEqualTo( "Sub" );
+		} );
+	}
+
 	@BeforeEach
 	public void createTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
@@ -46,8 +61,6 @@ public class DynamicJoinedInheritanceTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createQuery( "delete Sub" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

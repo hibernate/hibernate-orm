@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.spi;
@@ -40,6 +40,7 @@ public class IdentifierHelperBuilder {
 	private boolean skipGlobalQuotingForColumnDefinitions = false;
 	private boolean autoQuoteKeywords = true;
 	private boolean autoQuoteInitialUnderscore = false;
+	private boolean autoQuoteDollar = false;
 	private IdentifierCaseStrategy unquotedCaseStrategy = IdentifierCaseStrategy.UPPER;
 	private IdentifierCaseStrategy quotedCaseStrategy = IdentifierCaseStrategy.MIXED;
 
@@ -68,60 +69,57 @@ public class IdentifierHelperBuilder {
 	}
 
 	public void applyIdentifierCasing(DatabaseMetaData metaData) throws SQLException {
-		if ( metaData == null ) {
-			return;
-		}
+		if ( metaData != null ) {
+			final int unquotedAffirmatives = ArrayHelper.countTrue(
+					metaData.storesLowerCaseIdentifiers(),
+					metaData.storesUpperCaseIdentifiers(),
+					metaData.storesMixedCaseIdentifiers()
+			);
 
-		final int unquotedAffirmatives = ArrayHelper.countTrue(
-				metaData.storesLowerCaseIdentifiers(),
-				metaData.storesUpperCaseIdentifiers(),
-				metaData.storesMixedCaseIdentifiers()
-		);
-
-		if ( unquotedAffirmatives == 0 ) {
-			log.debug( "JDBC driver metadata reported database stores unquoted identifiers in neither upper, lower nor mixed case" );
-		}
-		else {
-			// NOTE : still "dodgy" if more than one is true
-			if ( unquotedAffirmatives > 1 ) {
-				log.debug( "JDBC driver metadata reported database stores unquoted identifiers in more than one case" );
-			}
-
-			if ( metaData.storesUpperCaseIdentifiers() ) {
-				unquotedCaseStrategy = IdentifierCaseStrategy.UPPER;
-			}
-			else if ( metaData.storesLowerCaseIdentifiers() ) {
-				unquotedCaseStrategy = IdentifierCaseStrategy.LOWER;
+			if ( unquotedAffirmatives == 0 ) {
+				log.trace( "JDBC driver metadata reported database stores unquoted identifiers in neither upper, lower nor mixed case" );
 			}
 			else {
-				unquotedCaseStrategy = IdentifierCaseStrategy.MIXED;
-			}
-		}
+				// NOTE: still "dodgy" if more than one is true
+				if ( unquotedAffirmatives > 1 ) {
+					log.trace( "JDBC driver metadata reported database stores unquoted identifiers in more than one case" );
+				}
 
-
-		final int quotedAffirmatives = ArrayHelper.countTrue(
-				metaData.storesLowerCaseQuotedIdentifiers(),
-				metaData.storesUpperCaseQuotedIdentifiers(),
-				metaData.storesMixedCaseQuotedIdentifiers()
-		);
-
-		if ( quotedAffirmatives == 0 ) {
-			log.debug( "JDBC driver metadata reported database stores quoted identifiers in neither upper, lower nor mixed case" );
-		}
-		else {
-			// NOTE : still "dodgy" if more than one is true
-			if ( quotedAffirmatives > 1 ) {
-				log.debug( "JDBC driver metadata reported database stores quoted identifiers in more than one case" );
+				if ( metaData.storesUpperCaseIdentifiers() ) {
+					unquotedCaseStrategy = IdentifierCaseStrategy.UPPER;
+				}
+				else if ( metaData.storesLowerCaseIdentifiers() ) {
+					unquotedCaseStrategy = IdentifierCaseStrategy.LOWER;
+				}
+				else {
+					unquotedCaseStrategy = IdentifierCaseStrategy.MIXED;
+				}
 			}
 
-			if ( metaData.storesMixedCaseQuotedIdentifiers() ) {
-				quotedCaseStrategy = IdentifierCaseStrategy.MIXED;
-			}
-			else if ( metaData.storesLowerCaseQuotedIdentifiers() ) {
-				quotedCaseStrategy = IdentifierCaseStrategy.LOWER;
+			final int quotedAffirmatives = ArrayHelper.countTrue(
+					metaData.storesLowerCaseQuotedIdentifiers(),
+					metaData.storesUpperCaseQuotedIdentifiers(),
+					metaData.storesMixedCaseQuotedIdentifiers()
+			);
+
+			if ( quotedAffirmatives == 0 ) {
+				log.trace( "JDBC driver metadata reported database stores quoted identifiers in neither upper, lower nor mixed case" );
 			}
 			else {
-				quotedCaseStrategy = IdentifierCaseStrategy.UPPER;
+				// NOTE: still "dodgy" if more than one is true
+				if ( quotedAffirmatives > 1 ) {
+					log.trace( "JDBC driver metadata reported database stores quoted identifiers in more than one case" );
+				}
+
+				if ( metaData.storesMixedCaseQuotedIdentifiers() ) {
+					quotedCaseStrategy = IdentifierCaseStrategy.MIXED;
+				}
+				else if ( metaData.storesLowerCaseQuotedIdentifiers() ) {
+					quotedCaseStrategy = IdentifierCaseStrategy.LOWER;
+				}
+				else {
+					quotedCaseStrategy = IdentifierCaseStrategy.UPPER;
+				}
 			}
 		}
 	}
@@ -148,6 +146,10 @@ public class IdentifierHelperBuilder {
 
 	public void setAutoQuoteInitialUnderscore(boolean autoQuoteInitialUnderscore) {
 		this.autoQuoteInitialUnderscore = autoQuoteInitialUnderscore;
+	}
+
+	public void setAutoQuoteDollar(boolean autoQuoteDollar) {
+		this.autoQuoteDollar = autoQuoteDollar;
 	}
 
 	public NameQualifierSupport getNameQualifierSupport() {
@@ -215,6 +217,7 @@ public class IdentifierHelperBuilder {
 				skipGlobalQuotingForColumnDefinitions,
 				autoQuoteKeywords,
 				autoQuoteInitialUnderscore,
+				autoQuoteDollar,
 				reservedWords,
 				unquotedCaseStrategy,
 				quotedCaseStrategy

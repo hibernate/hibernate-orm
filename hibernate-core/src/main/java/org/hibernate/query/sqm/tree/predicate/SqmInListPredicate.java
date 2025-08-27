@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.predicate;
@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.predicate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.criteria.JpaExpression;
@@ -14,6 +15,7 @@ import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 import jakarta.persistence.criteria.Expression;
@@ -146,18 +148,31 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		testExpression.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		testExpression.appendHqlString( hql, context );
 		if ( isNegated() ) {
-			sb.append( " not" );
+			hql.append( " not" );
 		}
-		sb.append( " in (" );
-		listExpressions.get( 0 ).appendHqlString( sb );
+		hql.append( " in (" );
+		listExpressions.get( 0 ).appendHqlString( hql, context );
 		for ( int i = 1; i < listExpressions.size(); i++ ) {
-			sb.append( ", " );
-			listExpressions.get( i ).appendHqlString( sb );
+			hql.append( ", " );
+			listExpressions.get( i ).appendHqlString( hql, context );
 		}
-		sb.append( ')' );
+		hql.append( ')' );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmInListPredicate<?> that
+			&& this.isNegated() == that.isNegated()
+			&& Objects.equals( this.testExpression, that.testExpression )
+			&& Objects.equals( this.listExpressions, that.listExpressions );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( isNegated(), testExpression, listExpressions );
 	}
 
 	@Override

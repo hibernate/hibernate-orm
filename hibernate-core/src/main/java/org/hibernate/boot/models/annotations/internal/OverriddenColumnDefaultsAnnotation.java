@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.hibernate.annotations.DialectOverride;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.DialectOverrideAnnotations.DIALECT_OVERRIDE_COLUMN_DEFAULTS;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
@@ -26,7 +26,7 @@ public class OverriddenColumnDefaultsAnnotation
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public OverriddenColumnDefaultsAnnotation(SourceModelBuildingContext modelContext) {
+	public OverriddenColumnDefaultsAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
@@ -34,7 +34,7 @@ public class OverriddenColumnDefaultsAnnotation
 	 */
 	public OverriddenColumnDefaultsAnnotation(
 			DialectOverride.ColumnDefaults annotation,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = extractJdkValue( annotation, DIALECT_OVERRIDE_COLUMN_DEFAULTS, "value", modelContext );
 	}
 
@@ -43,7 +43,7 @@ public class OverriddenColumnDefaultsAnnotation
 	 */
 	public OverriddenColumnDefaultsAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = (DialectOverride.ColumnDefault[]) attributeValues.get( "value" );
 	}
 

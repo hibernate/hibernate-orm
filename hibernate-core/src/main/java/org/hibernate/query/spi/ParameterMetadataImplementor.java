@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
@@ -16,16 +16,15 @@ import org.hibernate.query.QueryParameter;
  * @author Steve Ebersole
  */
 public interface ParameterMetadataImplementor extends ParameterMetadata {
-	void visitParameters(Consumer<QueryParameterImplementor<?>> consumer);
+	void visitParameters(Consumer<QueryParameter<?>> consumer);
 
-	default void collectAllParameters(Consumer<QueryParameterImplementor<?>> collector) {
+	default void collectAllParameters(Consumer<QueryParameter<?>> collector) {
 		visitParameters( collector );
 	}
 
 	@Override
-	default void visitRegistrations(Consumer<? extends QueryParameter<?>> action) {
-		//noinspection unchecked
-		visitParameters( (Consumer) action );
+	default void visitRegistrations(Consumer<QueryParameter<?>> action) {
+		visitParameters( action );
 	}
 
 	boolean hasAnyMatching(Predicate<QueryParameterImplementor<?>> filter);

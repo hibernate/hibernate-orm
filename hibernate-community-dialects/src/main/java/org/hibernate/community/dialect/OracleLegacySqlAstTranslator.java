@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -7,7 +7,8 @@ package org.hibernate.community.dialect;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.dialect.OracleArrayJdbcType;
+import org.hibernate.Locking;
+import org.hibernate.dialect.type.OracleArrayJdbcType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -17,11 +18,12 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.common.FrameExclusion;
 import org.hibernate.query.common.FrameKind;
+import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
@@ -55,7 +57,9 @@ import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -128,22 +132,6 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		// Oracle has some limitations, see ORA-32034, so we just report false here for simplicity
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRecursiveSearchClause() {
-		return true;
-	}
-
-	@Override
-	protected boolean supportsRecursiveCycleClause() {
-		return true;
-	}
-
-	@Override
 	public void visitSqlSelection(SqlSelection sqlSelection) {
 		if ( getCurrentCteStatement() != null ) {
 			if ( getCurrentCteStatement().getMaterialization() == CteMaterialization.MATERIALIZED ) {
@@ -156,30 +144,51 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
-		LockStrategy strategy = super.determineLockingStrategy( querySpec, forUpdateClause, followOnLocking );
-		final boolean followOnLockingDisabled = Boolean.FALSE.equals( followOnLocking );
+			Locking.FollowOn followOnStrategy) {
+		if ( followOnStrategy == Locking.FollowOn.FORCE ) {
+			return LockStrategy.FOLLOW_ON;
+		}
+
+		LockStrategy strategy = super.determineLockingStrategy( querySpec, followOnStrategy );
+
 		// Oracle also doesn't support locks with set operators
 		// See https://docs.oracle.com/cd/B19306_01/server.102/b14200/statements_10002.htm#i2066346
 		if ( strategy != LockStrategy.FOLLOW_ON && isPartOfQueryGroup() ) {
-			if ( followOnLockingDisabled ) {
+			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
 				throw new IllegalQueryOperationException( "Locking with set operators is not supported" );
 			}
-			strategy = LockStrategy.FOLLOW_ON;
+			else if ( followOnStrategy != Locking.FollowOn.IGNORE ) {
+				strategy = LockStrategy.NONE;
+			}
+			else {
+				strategy = LockStrategy.FOLLOW_ON;
+			}
 		}
+
 		if ( strategy != LockStrategy.FOLLOW_ON && hasSetOperations( querySpec ) ) {
-			if ( followOnLockingDisabled ) {
+			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
 				throw new IllegalQueryOperationException( "Locking with set operators is not supported" );
 			}
-			strategy = LockStrategy.FOLLOW_ON;
+			else if ( followOnStrategy != Locking.FollowOn.IGNORE ) {
+				strategy = LockStrategy.NONE;
+			}
+			else {
+				strategy = LockStrategy.FOLLOW_ON;
+			}
 		}
+
 		if ( strategy != LockStrategy.FOLLOW_ON && needsLockingWrapper( querySpec ) && !canApplyLockingWrapper( querySpec ) ) {
-			if ( followOnLockingDisabled ) {
+			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
 				throw new IllegalQueryOperationException( "Locking with OFFSET/FETCH is not supported" );
 			}
-			strategy = LockStrategy.FOLLOW_ON;
+			else if ( followOnStrategy != Locking.FollowOn.IGNORE ) {
+				strategy = LockStrategy.NONE;
+			}
+			else {
+				strategy = LockStrategy.FOLLOW_ON;
+			}
 		}
+
 		return strategy;
 	}
 
@@ -196,12 +205,6 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		// On Oracle 11 where there is no lateral support,
 		// make sure we don't use intersect if the query has an offset/fetch clause
 		return !queryPart.hasOffsetOrFetchClause();
-	}
-
-	@Override
-	protected boolean supportsNestedSubqueryCorrelation() {
-		// It seems it doesn't support it, at least on version 11
-		return false;
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
@@ -686,42 +689,47 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		}
 	}
 
-	@Override
-	protected boolean supportsDuplicateSelectItemsInQueryGroup() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return getDialect().getVersion().isSameOrAfter( 8, 2 );
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInSubQuery() {
-		return getDialect().getVersion().isSameOrAfter( 9 );
-	}
-
 	private boolean supportsOffsetFetchClause() {
 		return getDialect().supportsFetchClause( FetchClauseType.ROWS_ONLY );
 	}
 
 	@Override
+	protected void renderNull(Literal literal) {
+		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.NO_UNTYPED ) {
+			switch ( literal.getJdbcMapping().getJdbcType().getDdlTypeCode() ) {
+				case SqlTypes.BLOB:
+					appendSql( "to_blob(null)" );
+					break;
+				case SqlTypes.CLOB:
+					appendSql( "to_clob(null)" );
+					break;
+				case SqlTypes.NCLOB:
+					appendSql( "to_nclob(null)" );
+					break;
+				default:
+					super.renderNull( literal );
+					break;
+			}
+		}
+		else {
+			super.renderNull( literal );
+		}
+	}
+
+	@Override
 	protected void visitSetAssignment(Assignment assignment) {
+		final Assignable assignable = assignment.getAssignable();
+		if ( assignable instanceof SqmPathInterpretation<?> ) {
+			final String affectedTableName = ( (SqmPathInterpretation<?>) assignable ).getAffectedTableName();
+			if ( affectedTableName != null ) {
+				addAffectedTableName( affectedTableName );
+			}
+		}
 		final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
+		final Expression assignedValue = assignment.getAssignedValue();
 		if ( columnReferences.size() == 1 ) {
 			columnReferences.get( 0 ).appendColumnForWrite( this );
 			appendSql( '=' );
-			final Expression assignedValue = assignment.getAssignedValue();
 			final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( assignedValue );
 			if ( sqlTuple != null ) {
 				assert sqlTuple.getExpressions().size() == 1;
@@ -731,7 +739,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 				assignedValue.accept( this );
 			}
 		}
-		else {
+		else if ( assignedValue instanceof SelectStatement ) {
 			char separator = OPEN_PARENTHESIS;
 			for ( ColumnReference columnReference : columnReferences ) {
 				appendSql( separator );
@@ -740,6 +748,19 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 			}
 			appendSql( ")=" );
 			assignment.getAssignedValue().accept( this );
+		}
+		else {
+			assert assignedValue instanceof SqlTupleContainer;
+			final List<? extends Expression> expressions = ( (SqlTupleContainer) assignedValue ).getSqlTuple().getExpressions();
+			columnReferences.get( 0 ).appendColumnForWrite( this, null );
+			appendSql( '=' );
+			expressions.get( 0 ).accept( this );
+			for ( int i = 1; i < columnReferences.size(); i++ ) {
+				appendSql( ',' );
+				columnReferences.get( i ).appendColumnForWrite( this, null );
+				appendSql( '=' );
+				expressions.get( i ).accept( this );
+			}
 		}
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.generated;
@@ -13,6 +13,7 @@ import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.annotations.Generated;
 import org.hibernate.cfg.AvailableSettings;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -82,7 +83,7 @@ public class GeneratedAnnotationBatchTest {
 			entities.forEach( ge -> ge.setName( "updated" ) );
 
 			//We need to wait a little to make sure the timestamps produced are different
-			waitALittle();
+			waitALittle( scope );
 			session.flush(); // force update and retrieval of generated values
 
 			entities.forEach( ge -> assertThat( ge.getName() ).isEqualTo( "updated" ) );
@@ -129,9 +130,13 @@ public class GeneratedAnnotationBatchTest {
 		}
 	}
 
-	private static void waitALittle() {
+	private static void waitALittle(SessionFactoryScope scope) {
+		boolean waitLonger =
+				// informix clock has low resolution on Mac
+				scope.getSessionFactory().getJdbcServices().getDialect()
+						instanceof InformixDialect;
 		try {
-			Thread.sleep( 10 );
+			Thread.sleep( waitLonger ? 1_200 : 10 );
 		}
 		catch (InterruptedException e) {
 			throw new HibernateError( "Unexpected wakeup from test sleep" );

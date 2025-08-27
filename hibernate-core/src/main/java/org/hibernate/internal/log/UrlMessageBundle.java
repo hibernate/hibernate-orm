@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.log;
@@ -8,6 +8,7 @@ import java.lang.invoke.MethodHandles;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import org.hibernate.Internal;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.Cause;
 import org.jboss.logging.annotations.LogMessage;
@@ -30,6 +31,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 		name = UrlMessageBundle.LOGGER_NAME,
 		description = "Logging related to URL handling"
 )
+@Internal
 public interface UrlMessageBundle {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".url";
 

@@ -1,11 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
@@ -19,9 +19,10 @@ import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Provides a standard implementation that supports the majority of the HQL
@@ -105,7 +106,9 @@ public class NamedSqmFunctionDescriptor
 
 	@Override
 	public String getArgumentListSignature() {
-		return argumentListSignature == null ? super.getArgumentListSignature() : argumentListSignature;
+		return argumentListSignature == null
+				? super.getArgumentListSignature()
+				: argumentListSignature;
 	}
 
 	@Override
@@ -119,7 +122,7 @@ public class NamedSqmFunctionDescriptor
 			List<? extends SqlAstNode> sqlAstArguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		render( sqlAppender, sqlAstArguments, null, Collections.emptyList(), null, null, translator );
+		render( sqlAppender, sqlAstArguments, null, emptyList(), null, null, translator );
 	}
 
 	@Override
@@ -129,7 +132,7 @@ public class NamedSqmFunctionDescriptor
 			Predicate filter,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		render( sqlAppender, sqlAstArguments, filter, Collections.emptyList(), null, null, translator );
+		render( sqlAppender, sqlAstArguments, filter, emptyList(), null, null, translator );
 	}
 
 	@Override
@@ -152,7 +155,7 @@ public class NamedSqmFunctionDescriptor
 			Boolean fromFirst,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		render( sqlAppender, sqlAstArguments, filter, Collections.emptyList(), respectNulls, fromFirst, walker );
+		render( sqlAppender, sqlAstArguments, filter, emptyList(), respectNulls, fromFirst, walker );
 	}
 
 	private void render(
@@ -164,7 +167,10 @@ public class NamedSqmFunctionDescriptor
 			Boolean fromFirst,
 			SqlAstTranslator<?> translator) {
 		final boolean useParens = useParenthesesWhenNoArgs || !sqlAstArguments.isEmpty();
-		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
+		final boolean caseWrapper =
+				filter != null
+					&& !translator.getSessionFactory().getJdbcServices().getDialect()
+							.supportsFilterClause();
 
 		sqlAppender.appendSql( functionName );
 		if ( useParens ) {
@@ -242,7 +248,7 @@ public class NamedSqmFunctionDescriptor
 	public String toString() {
 		return String.format(
 				Locale.ROOT,
-				"NamedSqmFunctionTemplate(%s)",
+				"NamedSqmFunctionDescriptor(%s)",
 				functionName
 		);
 	}

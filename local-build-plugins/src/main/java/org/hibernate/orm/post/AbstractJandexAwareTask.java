@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.post;
 
@@ -22,6 +20,7 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.OutputFile;
 
+import org.hibernate.build.OrmBuildDetails;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.DotName;
@@ -41,7 +40,7 @@ public abstract class AbstractJandexAwareTask extends DefaultTask {
 		setGroup( TASK_GROUP_NAME );
 
 		this.indexManager = getProject().provider( () -> getProject().getExtensions().getByType( IndexManager.class ) );
-		getInputs().property( "version", getProject().getExtensions().getByName( "ormVersion" ) );
+		getInputs().property( "version", getProject().getExtensions().getByType( OrmBuildDetails.class ).getHibernateVersion() );
 	}
 
 	@Internal

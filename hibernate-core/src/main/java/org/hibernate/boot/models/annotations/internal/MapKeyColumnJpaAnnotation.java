@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -11,7 +11,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyColumnImpl;
 import org.hibernate.boot.models.annotations.spi.ColumnDetails;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MapKeyColumn;
@@ -40,7 +40,7 @@ public class MapKeyColumnJpaAnnotation implements MapKeyColumn,
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public MapKeyColumnJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public MapKeyColumnJpaAnnotation(ModelsContext modelContext) {
 		this.name = "";
 		this.unique = false;
 		this.nullable = false;
@@ -57,7 +57,7 @@ public class MapKeyColumnJpaAnnotation implements MapKeyColumn,
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public MapKeyColumnJpaAnnotation(MapKeyColumn annotation, SourceModelBuildingContext modelContext) {
+	public MapKeyColumnJpaAnnotation(MapKeyColumn annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.unique = annotation.unique();
 		this.nullable = annotation.nullable();
@@ -74,7 +74,7 @@ public class MapKeyColumnJpaAnnotation implements MapKeyColumn,
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public MapKeyColumnJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public MapKeyColumnJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.unique = (boolean) attributeValues.get( "unique" );
 		this.nullable = (boolean) attributeValues.get( "nullable" );
@@ -251,8 +251,8 @@ public class MapKeyColumnJpaAnnotation implements MapKeyColumn,
 
 	public static Column toColumnAnnotation(
 			MapKeyColumn mapKeyColumn,
-			SourceModelBuildingContext sourceModelBuildingContext) {
-		final ColumnJpaAnnotation column = new ColumnJpaAnnotation( sourceModelBuildingContext );
+			ModelsContext ModelsContext) {
+		final ColumnJpaAnnotation column = new ColumnJpaAnnotation( ModelsContext );
 		column.name( mapKeyColumn.name() );
 		column.table( mapKeyColumn.table() );
 		column.nullable( mapKeyColumn.nullable() );

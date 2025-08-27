@@ -1,6 +1,10 @@
 [[introduction]]
 == Introduction
 
+:persistence: https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2
+:data: https://jakarta.ee/specifications/data/1.0/jakarta-data-1.0
+
+
 Hibernate is usually described as a library that makes it easy to map Java classes to relational database tables.
 But this formulation does no justice to the central role played by the relational data itself.
 So a better description might be:
@@ -30,12 +34,27 @@ But if Hibernate is making things more difficult, for some particularly tricky p
 Just because you're using Hibernate for persistence doesn't mean you have to use it for _everything_.
 ====
 
+Let's underline the important point here: the goal of ORM is _not_ to hide SQL or the relational model.
+After all, Hibernate's query language is link:{doc-query-language-url}[nothing more than an object-oriented dialect of ANSI SQL].
+
+.Is Hibernate a "leaky abstraction"?
+****
+Hibernate--and ORM in general--has been accused of being a _leaky abstraction_, that is, of failing to completely hide the underlying relational database.
+Is this true?
+Well, as you can guess from what we've already said, the short answer is: yes, _and that's a good thing._
+Of course, whether you consider an abstraction "leaky" depends on what you think it's trying to abstract.
+Hibernate successfully abstracts many things: variations between dialects of SQL, messy interactions with JDBC, SQL object naming conventions, and so on.
+But it doesn't even attempt to pretend there's anything other than a relational data model underlying all this.
+The simple reason is performance. It's just not possible to <<tuning-and-performance,achieve acceptable performance>> in data access without acknowledging the nature of the underlying persistent representation.
+We're old enough to have seen multiple generations of developer relearn this lesson by experience.
+****
+
 Developers often ask about the relationship between Hibernate and JPA, so let's take a short detour into some history.
 
 [[hibernate-and-jpa]]
 === Hibernate and JPA
 
-Hibernate was the inspiration behind the _Java_ (now _Jakarta_) _Persistence API_, or JPA, and includes a complete implementation of the latest revision of this specification.
+Hibernate was the inspiration behind the _Java_ (now _Jakarta_) _Persistence API_, or JPA, and includes a complete implementation of the latest revision of link:{persistence}[this specification].
 
 .The early history of Hibernate and JPA
 ****
@@ -116,28 +135,6 @@ Take your time with this code, and try to produce a Java model that's as close a
 When in the slightest doubt, map a foreign key relationship using `@ManyToOne` with `@OneToMany(mappedBy=...)` in preference to more complicated association mappings.
 ====
 
-.What sort of logic belongs in an entity?
-****
-There exists an extensive online literature which posits that there are _rich domain models_, where entities have methods implementing interesting business logic, and _anemic domain models_, where the entities are pure data holders, and that a developer should hold an opinion that one or the other of these sorts of domain model is "better".
-
-We do not hold any such opinion, and if you ask us for one, we will most likely suddenly discover somewhere else we need to be.
-
-A more interesting question is not _how much_ logic belongs in the entity class, but _what sort_ of logic belongs there.
-We think the answer is that an entity should never implement technical concerns, and should never obtain references to framework objects.
-Nor should it hold extra mutable state which is not very directly related to its role in representing persistent state.
-For example:
-
-- an entity may compute totals and averages, even caching them if necessary, enforce its invariants, interact with and construct other entities, and so on,
-- but the entity should never call the `EntityManager` or a Jakarta Data repository, build a criteria query, send a JMS message, start a transaction, publish events to the CDI event bus, maintain a stateful queue of events to be published later, or anything of a similar nature.
-
-One way to summarize this is:
-
-> Entities do business logic; but they don't do orchestration.
-
-Later, we'll discuss various ways to <<managing-transactions,manage transactions>>, <<callbacks,send event notifications>>, and <<organizing-persistence,query the database>>.
-Such code will always be external to the entity itself.
-****
-
 The second part of the code is much trickier to get right. This code must:
 
 - manage transactions and sessions,
@@ -158,14 +155,13 @@ Responsibility for transaction and session management, and for recovery from cer
 // ====
 
 We're going to <<organizing-persistence,come back soon>> to the thorny question of how this persistence logic should be organized, and how it should fit into the rest of the system.
-// First we want to make the ideas above concrete by seeing a simple example program that uses Hibernate in isolation.
 
 [[hello-hibernate]]
 === Hello, Hibernate
 
 Before we get deeper into the weeds, we'll quickly present a basic example program that will help you get started if you don't already have Hibernate integrated into your project.
 
-We begin with a simple gradle build file:
+We begin with a simple https://gradle.org[Gradle] build file:
 
 [[build-gradle]]
 [source,groovy,subs="attributes+"]
@@ -186,23 +182,18 @@ dependencies {
     // the GOAT ORM
     implementation 'org.hibernate.orm:hibernate-core:{fullVersion}'
 
-    // Hibernate Validator
-    implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
-    implementation 'org.glassfish:jakarta.el:4.0.2'
-
-    // Agroal connection pool
-    implementation 'org.hibernate.orm:hibernate-agroal:{fullVersion}'
-    implementation 'io.agroal:agroal-pool:2.1'
-
-    // logging via Log4j
-    implementation 'org.apache.logging.log4j:log4j-core:2.24.1'
-
     // Hibernate Processor
     annotationProcessor 'org.hibernate.orm:hibernate-processor:{fullVersion}'
 
-    // Compile-time checking for HQL
-    //implementation 'org.hibernate:query-validator:2.0-SNAPSHOT'
-    //annotationProcessor 'org.hibernate:query-validator:2.0-SNAPSHOT'
+    // Hibernate Validator
+    implementation 'org.hibernate.validator:hibernate-validator:9.0.1.Final'
+    implementation 'org.glassfish.expressly:expressly:6.0.0'
+
+    // Agroal connection pool
+    runtimeOnly 'org.hibernate.orm:hibernate-agroal:{fullVersion}'
+
+    // logging via Log4j
+    runtimeOnly 'org.apache.logging.log4j:log4j-core:2.24.3'
 
     // H2 database
     runtimeOnly 'com.h2database:h2:2.3.232'
@@ -211,7 +202,7 @@ dependencies {
 
 Only the first of these dependencies is absolutely _required_ to run Hibernate.
 
-Next, we'll add a logging configuration file for log4j:
+Next, we'll add a logging configuration file for https://logging.apache.org/log4j/[log4j]:
 
 [source,properties]
 .`log4j2.properties`
@@ -220,9 +211,20 @@ rootLogger.level = info
 rootLogger.appenderRefs = console
 rootLogger.appenderRef.console.ref = console
 
+# SQL statements (set level=debug to enable)
 logger.hibernate.name = org.hibernate.SQL
 logger.hibernate.level = info
+# JDBC parameter binding (set level=trace to enable)
+logger.jdbc-bind.name=org.hibernate.orm.jdbc.bind
+logger.jdbc-bind.level=info
+# JDBC result set extraction (set level=trace to enable)
+logger.jdbc-extract.name=org.hibernate.orm.jdbc.extract
+logger.jdbc-extract.level=info
+# JDBC batching (set level=trace to enable)
+logger.batch.name=org.hibernate.orm.jdbc.batch
+logger.batch.level=info
 
+# direct log output to the console
 appender.console.name = console
 appender.console.type = Console
 appender.console.layout.type = PatternLayout
@@ -230,7 +232,7 @@ appender.console.layout.pattern = %highlight{[%p]} %m%n
 ----
 
 Now we need some Java code.
-We begin with our _entity class_:
+We begin with our <<domain-model,_entity class_>>:
 
 [[book]]
 [source,java]
@@ -259,9 +261,9 @@ class Book {
 }
 ----
 
-Finally, let's see code which configures and instantiates Hibernate and asks it to persist and query the entity.
+Finally, let's see code which <<configuration,configures>> and instantiates Hibernate and asks it to <<interacting,persist and query>> the entity.
 Don't worry if this makes no sense at all right now.
-It's the job of this Introduction to make all this crystal clear.
+It's the job of the rest of this Short Guide to make all this crystal clear.
 
 [[main-hibernate]]
 [source,java]
@@ -272,8 +274,6 @@ package org.hibernate.example;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 
 import static java.lang.System.out;
-import static jakarta.persistence.PersistenceConfiguration.*;
-import static org.hibernate.cfg.JdbcSettings.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -281,19 +281,16 @@ public class Main {
                 new HibernatePersistenceConfiguration("Bookshelf")
                         .managedClass(Book.class)
                         // use H2 in-memory database
-                        .property(JDBC_URL, "jdbc:h2:mem:db1")
-                        .property(JDBC_USER, "sa")
-                        .property(JDBC_PASSWORD, "")
-                        // use Agroal connection pool
-                        .property("hibernate.agroal.maxSize", 20)
+                        .jdbcUrl("jdbc:h2:mem:db1")
+                        .jdbcCredentials("sa", "")
+                        // set the Agroal connection pool size
+                        .jdbcPoolSize(16)
                         // display SQL in console
-                        .property(SHOW_SQL, true)
-                        .property(FORMAT_SQL, true)
-                        .property(HIGHLIGHT_SQL, true)
+                        .showSql(true, true, true)
                         .createEntityManagerFactory();
 
         // export the inferred database schema
-        sessionFactory.getSchemaManager().export(true);
+        sessionFactory.getSchemaManager().create(true);
 
         // persist an entity
         sessionFactory.inTransaction(session -> {
@@ -439,6 +436,106 @@ In practice, we never access the database directly from a `main()` method.
 So now let's talk about how to organize persistence logic in a real system.
 The rest of this chapter is not compulsory.
 If you're itching for more details about Hibernate itself, you're quite welcome to skip straight to the <<configuration,next chapter>>, and come back later.
+
+[[domain-model]]
+=== Entities
+
+A class in the domain model which directly represents a relational database table is called an <<entities,_entity_>>.
+Entity classes are central to object persistence and to object/relational mapping.
+They're also, typically, central players in the business logic of our application program.
+Entities represent the _things_ in our business domain.
+This makes them very important objects indeed!
+
+Given how much weight an entity already bears due to its very nature, we need to think carefully before weighing it down with too many additional responsibilities.
+
+[[entity-logic]]
+.What sort of logic belongs in an entity?
+****
+There exists an extensive online literature which posits that there are _rich domain models_, where entities have methods implementing interesting business logic, and _anemic domain models_, where the entities are pure data holders, and that a developer should hold an opinion that one or the other of these sorts of domain model is "better".
+
+We do not hold any such opinion, and if you ask us for one, we will most likely suddenly discover somewhere else we need to be.
+
+A more interesting question is not _how much_ logic belongs in the entity class, but _what sort_ of logic belongs there.
+We think the answer is that an entity should never implement technical concerns, and should never obtain references to framework objects.
+Nor should it hold extra mutable state which is not very directly related to its role in representing persistent state.
+For example:
+
+- an entity may compute totals and averages, even caching them if necessary, enforce its invariants, interact with and construct other entities, and so on, and its annotations express how it maps to database tables,
+- but the entity should not call the `EntityManager` or a Jakarta Data repository, build a criteria query, send a JMS message, start a transaction, publish events to the CDI event bus, maintain a stateful queue of events to be published later, or anything of a similar nature.
+
+One way to summarize this is:
+
+> Entities do business logic; but they don't do orchestration.
+
+Later, we'll discuss various ways to <<managing-transactions,manage transactions>>, <<callbacks,send event notifications>>, and <<organizing-persistence,query the database>>.
+Such code will always be external to the entity itself.
+****
+
+In keeping with our commitment to anti-dogmatism, we would like to add the following important caveat to the discussion in the previous callout.
+
+[[active-record]]
+.Active Record
+****
+The discussion <<entity-logic,above>> expresses our "traditional" approach--which lay behind the design of Hibernate, of JPA, and of Jakarta Data--where entity classes are plain Java objects without dependence on framework code.
+An alternative approach is the Active Record pattern, as exemplified by link:https://quarkus.io/guides/hibernate-orm-panache[Panache].
+In Active Record, entity types inherit framework objects, and persistence operations are located directly on the entities.
+You can think of this as merging the roles of entity and DAO/Repository into a single object.
+
+Active Record comes with both upsides and downsides, but we don't mean to exclude it from consideration.
+We must therefore slightly modify the prescription we've given above: in an Active Record, it's obviously OK to access the `EntityManager` and perform other persistence-related operations, and we therefore expect our Active Record class to look somewhat more "technical" than a trad entity.
+
+But the basic principle remains intact: an entity does not do orchestration, it does not manage transactions, it does not obtain references to _other_ sorts of framework object, and it does not hold mutable state unrelated to its persistent state.
+****
+
+For now, we're going to assume that entities are implemented as plain Java classes.
+
+[[stateful-and-stateless-sessions]]
+=== Stateful and stateless sessions
+
+It should be very clear from the example code <<hello-hibernate,above>>, that the session is also a very important object.
+It exposes basic operations like `persist()` and `createQuery()`, and so it's our first port of call when we want to <<interacting,interact with the database>> via Hibernate.
+In the code we just saw, we've used a _stateful session_.
+
+Later, we'll learn about the idea of a <<persistence-contexts,_persistence context_>>.
+Oversimplifying for now, you can think of it as a cache of data which has been read in the current transaction.
+Thus, in the architecture of Hibernate, it's sometimes called the _first-level cache_.
+Each stateful session -- that is, every Hibernate `Session`, and every JPA <<hibernate-and-jpa,`EntityManager`>> -- has its own persistence context.
+
+But stateful sessions have never been the only possibility.
+The <<stateless-sessions,`StatelessSession`>> interface offers a way to interact with Hibernate _without_ going through a persistence context.
+However, the programming model is somewhat different.
+
+.Stateless sessions
+****
+Among our biggest regrets is that we didn't give enough love to `StatelessSession` twenty years ago.
+Sure, a stateful session is in some sense more powerful, or at least more magical.
+But with that magic comes a loss of direct control over persistence operations, and some traps for inexperienced users.
+A significant minority of developers find working with a persistence context frustrating, and they would surely be better served by a stateless session.
+
+- We used to view `StatelessSession` as an API directed toward very specific usage patterns, in particular, batch processing of large numbers of entities.
+As a result, we left out certain functionality -- for example, use of the <<second-level-cache,second-level cache>> -- which didn't seem relevant to those use cases.
+This left `StatelessSession` lacking feature parity with `Session`, and it was a mistake.
+In Hibernate 7, we've fixed this mistake.
+A `StatelessSession` now offers essentially all the functionality of Hibernate except, naturally, the first-level cache.
+
+- Compounding our error, we left `StatelessSession` out of JPA.
+This meant that a large number of Hibernate users _didn't even realize this option existed._
+We promise to make sure there are stateless sessions in Jakarta Persistence 4.
+
+So, finally, let us state for the record: we messed up here.
+Hibernate is all about _object/relational mapping;_ persistence contexts are something extra on top.
+You don't have to use stateful sessions, and you're not doing anything wrong if you decide to use stateless sessions instead.
+****
+
+As of Hibernate 7, a key decision for any new project is which of these programming models to take as a baseline.
+Fortunately, the two models aren't mutually exclusive.
+This is a friendly competition, where the two APIs are designed to complement each other.
+Even if we decide to use stateful ``Session``s most of the time, we can still use a `StatelessSession` wherever it's more convenient.
+
+NOTE: On the other hand, if you decide to adopt Jakarta Data, the decision is made for you: repositories in Jakarta Data 1.0 are always stateless, and in https://hibernate.org/repositories/[Hibernate Data Repositories] a repository is backed by a `StatelessSession`.
+
+But now we've got just a little bit ahead of ourselves.
+In the next section taking we're taking a journey which _might_ -- but definitely doesn't _necessarily_ -- end at the idea of a "repository".
 
 [[organizing-persistence]]
 === Organizing persistence logic
@@ -678,7 +775,7 @@ Alternatively, if CDI isn't available, we may directly instantiate the generated
 
 [TIP]
 ====
-The Jakarta Data specification now formalizes this approach using standard annotations, and our implementation of this specification, Hibernate Data Repositories, is built into <<generator,Hibernate Processor>>.
+The link:{data}[Jakarta Data specification] now formalizes this approach using standard annotations, and our implementation of this specification, Hibernate Data Repositories, is built into <<generator,Hibernate Processor>>.
 You probably already have it available in your program.
 
 Unlike other repository frameworks, Hibernate Data Repositories offers something that plain JPA simply doesn’t have: full compile-time type safety for your queries. To learn more, please refer to link:{doc-data-repositories-url}[Introducing Hibernate Data Repositories].
@@ -690,7 +787,7 @@ At the time we wrote _An Introduction to Hibernate 6_, we were especially frustr
 In our considered opinion, such frameworks typically made JPA harder to use, sometimes misleading users into misuse of the technology.
 
 The birth of the Jakarta Data specification has obsoleted our arguments against repositories, along with the older frameworks which were the source of our frustration.
-Jakarta Data--as realized by Hibernate Data Repositories--offers a clean but very flexible way to organize code, along with much better compile-time type safety, without getting in the way of direct use of the `StatelessSession`.
+Jakarta Data--as realized by Hibernate Data Repositories--offers a clean but very flexible way to organize code, along with much better compile-time type safety, without getting in the way of direct use of the <<stateless-sessions,`StatelessSession`>>.
 ****
 
 Now that we have a rough picture of what our persistence logic might look like, it's natural to ask how we should test our code.
@@ -734,7 +831,7 @@ This option is especially convenient when writing tests.
 
 [source,java]
 ----
-sessionFactory.getSchemaManager().export(true);
+sessionFactory.getSchemaManager().create(true);
 ----
 
 Since executing DDL statements is very slow on many databases, we don't want to do this before every test.

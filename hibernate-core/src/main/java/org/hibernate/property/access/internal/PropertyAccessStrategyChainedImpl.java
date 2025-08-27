@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.internal;
@@ -21,7 +21,7 @@ public class PropertyAccessStrategyChainedImpl implements PropertyAccessStrategy
 
 	@Override
 	public PropertyAccess buildPropertyAccess(Class<?> containerJavaType, String propertyName, boolean setterRequired) {
-		for ( PropertyAccessStrategy candidate : chain ) {
+		for ( var candidate : chain ) {
 			try {
 				return candidate.buildPropertyAccess( containerJavaType, propertyName, true );
 			}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.FieldResult;
 
@@ -20,13 +20,13 @@ public class FieldResultJpaAnnotation implements FieldResult {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public FieldResultJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public FieldResultJpaAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public FieldResultJpaAnnotation(FieldResult annotation, SourceModelBuildingContext modelContext) {
+	public FieldResultJpaAnnotation(FieldResult annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.column = annotation.column();
 	}
@@ -34,7 +34,7 @@ public class FieldResultJpaAnnotation implements FieldResult {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public FieldResultJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public FieldResultJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.column = (String) attributeValues.get( "column" );
 	}

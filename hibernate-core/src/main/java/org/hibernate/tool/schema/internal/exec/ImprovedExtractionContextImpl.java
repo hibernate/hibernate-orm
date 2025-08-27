@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal.exec;
@@ -68,10 +68,8 @@ public class ImprovedExtractionContextImpl implements ExtractionContext {
 				jdbcDatabaseMetaData = getJdbcConnection().getMetaData();
 			}
 			catch (SQLException e) {
-				throw jdbcEnvironment.getSqlExceptionHelper().convert(
-						e,
-						"Unable to obtain JDBC DatabaseMetaData"
-				);
+				throw jdbcEnvironment.getSqlExceptionHelper()
+						.convert( e, "Unable to obtain JDBC DatabaseMetaData" );
 			}
 		}
 		return jdbcDatabaseMetaData;

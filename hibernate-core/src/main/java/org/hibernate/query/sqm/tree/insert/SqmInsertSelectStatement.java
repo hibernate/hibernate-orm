@@ -1,13 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.insert;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaConflictClause;
@@ -17,10 +17,10 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
@@ -32,7 +32,6 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Path;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
 
@@ -52,7 +51,7 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 		super(
 				new SqmRoot<>(
 						nodeBuilder.getDomainModel().entity( targetEntity ),
-						null,
+						"_0",
 						false,
 						nodeBuilder
 				),
@@ -81,19 +80,26 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 		if ( existing != null ) {
 			return existing;
 		}
-		return context.registerCopy(
-				this,
-				new SqmInsertSelectStatement<>(
-						nodeBuilder(),
-						context.getQuerySource() == null ? getQuerySource() : context.getQuerySource(),
-						copyParameters( context ),
-						copyCteStatements( context ),
-						getTarget().copy( context ),
-						copyInsertionTargetPaths( context ),
-						getConflictClause() == null ? null : getConflictClause().copy( context ),
-						selectQueryPart.copy( context )
-				)
+		final SqmInsertSelectStatement<T> sqmInsertSelectStatementCopy = new SqmInsertSelectStatement<>(
+				nodeBuilder(),
+				context.getQuerySource() == null ? getQuerySource() : context.getQuerySource(),
+				copyParameters( context ),
+				copyCteStatements( context ),
+				getTarget().copy( context ),
+				null,
+				null,
+				selectQueryPart.copy( context )
 		);
+
+		context.registerCopy( this, sqmInsertSelectStatementCopy );
+
+		sqmInsertSelectStatementCopy.setInsertionTargetPaths( copyInsertionTargetPaths( context ) );
+
+		if ( getConflictClause() != null ) {
+			sqmInsertSelectStatementCopy.setConflictClause( getConflictClause().copy( context ) );
+		}
+
+		return sqmInsertSelectStatementCopy;
 	}
 
 	@Override
@@ -140,19 +146,6 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public Set<ParameterExpression<?>> getParameters() {
-		// At this level, the number of parameters may still be growing as
-		// nodes are added to the Criteria - so we re-calculate this every
-		// time.
-		//
-		// for a "finalized" set of parameters, use `#resolveParameters` instead
-		assert getQuerySource() == SqmQuerySource.CRITERIA;
-		return getSqmParameters().stream()
-				.filter( parameterExpression -> !( parameterExpression instanceof ValueBindJpaCriteriaParameter ) )
-				.collect( Collectors.toSet() );
-	}
-
-	@Override
 	public SqmInsertSelectStatement<T> setInsertionTargetPaths(Path<?>... insertionTargetPaths) {
 		super.setInsertionTargetPaths( insertionTargetPaths );
 		return this;
@@ -171,13 +164,30 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		super.appendHqlString( sb );
-		sb.append( ' ' );
-		selectQueryPart.appendHqlString( sb );
-		final SqmConflictClause conflictClause = getConflictClause();
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		super.appendHqlString( hql, context );
+		hql.append( ' ' );
+		selectQueryPart.appendHqlString( hql, context );
+		final SqmConflictClause<?> conflictClause = getConflictClause();
 		if ( conflictClause != null ) {
-			conflictClause.appendHqlString( sb );
+			conflictClause.appendHqlString( hql, context );
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if ( !(object instanceof SqmInsertSelectStatement<?> that) ) {
+			return false;
+		}
+		return Objects.equals( selectQueryPart, that.selectQueryPart )
+			&& Objects.equals( this.getTarget(), that.getTarget() )
+			&& Objects.equals( this.getInsertionTargetPaths(), that.getInsertionTargetPaths() )
+			&& Objects.equals( this.getConflictClause(), that.getConflictClause() )
+			&& Objects.equals( this.getCteStatements(), that.getCteStatements() );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( selectQueryPart, getTarget(), getInsertionTargetPaths(), getConflictClause(), getCteStatements() );
 	}
 }

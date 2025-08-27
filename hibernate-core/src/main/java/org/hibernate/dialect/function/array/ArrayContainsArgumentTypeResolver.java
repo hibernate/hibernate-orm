@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * A {@link FunctionArgumentTypeResolver} that resolves the argument types for the {@code array_contains} function.
  */
-public class ArrayContainsArgumentTypeResolver extends AbstractFunctionArgumentTypeResolver {
+public class ArrayContainsArgumentTypeResolver implements AbstractFunctionArgumentTypeResolver {
 
 	public static final FunctionArgumentTypeResolver INSTANCE = new ArrayContainsArgumentTypeResolver();
 
@@ -27,8 +27,8 @@ public class ArrayContainsArgumentTypeResolver extends AbstractFunctionArgumentT
 	public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
 		if ( argumentIndex == 0 ) {
 			final SqmTypedNode<?> node = arguments.get( 1 );
-			if ( node instanceof SqmExpression<?> ) {
-				final MappingModelExpressible<?> expressible = converter.determineValueMapping( (SqmExpression<?>) node );
+			if ( node instanceof SqmExpression<?> sqmExpression ) {
+				final MappingModelExpressible<?> expressible = converter.determineValueMapping( sqmExpression );
 				if ( expressible != null ) {
 					if ( expressible.getSingleJdbcMapping() instanceof BasicPluralType<?, ?> ) {
 						return expressible;
@@ -36,7 +36,7 @@ public class ArrayContainsArgumentTypeResolver extends AbstractFunctionArgumentT
 					else {
 						return DdlTypeHelper.resolveArrayType(
 								(DomainType<?>) expressible.getSingleJdbcMapping(),
-								converter.getCreationContext().getSessionFactory().getTypeConfiguration()
+								converter.getCreationContext().getTypeConfiguration()
 						);
 					}
 				}
@@ -49,8 +49,8 @@ public class ArrayContainsArgumentTypeResolver extends AbstractFunctionArgumentT
 				return null;
 			}
 			final SqmTypedNode<?> node = arguments.get( 0 );
-			if ( node instanceof SqmExpression<?> ) {
-				final MappingModelExpressible<?> expressible = converter.determineValueMapping( (SqmExpression<?>) node );
+			if ( node instanceof SqmExpression<?> sqmExpression ) {
+				final MappingModelExpressible<?> expressible = converter.determineValueMapping( sqmExpression );
 				if ( expressible instanceof BasicPluralType<?, ?> ) {
 					return expressible;
 				}

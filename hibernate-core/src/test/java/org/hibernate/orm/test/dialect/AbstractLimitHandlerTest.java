@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect;
@@ -7,7 +7,6 @@ package org.hibernate.orm.test.dialect;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.query.spi.Limit;
-import org.hibernate.query.spi.QueryOptions;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.dialect.pagination.AbstractLimitHandler.hasFirstRow;
@@ -42,7 +41,8 @@ public abstract class AbstractLimitHandlerTest {
 	}
 
 	protected void assertGenerateExpectedSql(String expected, String sql) {
-		assertEquals(expected, getLimitHandler().processSql(sql, getLimit(), QueryOptions.NONE));
+		assertEquals( expected, getLimitHandler().processSql( sql, 0, null,
+				new LimitQueryOptions( AbstractLimitHandlerTest.this.getLimit() ) ) );
 	}
 
 	protected abstract LimitHandler getLimitHandler();
@@ -68,4 +68,5 @@ public abstract class AbstractLimitHandlerTest {
 		}
 		return " limit ?";
 	}
+
 }

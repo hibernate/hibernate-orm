@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -13,7 +13,6 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.CompositeType;
@@ -72,15 +71,6 @@ public interface Value extends Serializable {
 
 	Type getType() throws MappingException;
 
-
-	/**
-	 * @deprecated use {@link #getSelectableType(MappingContext, int)}
-	 */
-	@Deprecated(since = "7.0")
-	default JdbcMapping getSelectableType(Mapping factory, int index) throws MappingException {
-		return getSelectableType( (MappingContext) factory, index );
-	}
-
 	@Incubating
 	default JdbcMapping getSelectableType(MappingContext mappingContext, int index) throws MappingException {
 		return getType( mappingContext, getType(), index );
@@ -133,6 +123,8 @@ public interface Value extends Serializable {
 
 	boolean isAlternateUniqueKey();
 
+	boolean isPartitionKey();
+
 	boolean isNullable();
 
 	void createForeignKey();
@@ -143,14 +135,6 @@ public interface Value extends Serializable {
 	void createUniqueKey(MetadataBuildingContext context);
 
 	boolean isSimpleValue();
-
-	/**
-	 * @deprecated use {@link #isValid(MappingContext)}
-	 */
-	@Deprecated(since = "7.0")
-	default boolean isValid(Mapping mapping) throws MappingException{
-		return isValid( (MappingContext) mapping );
-	}
 
 	boolean isValid(MappingContext mappingContext) throws MappingException;
 

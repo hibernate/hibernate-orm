@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.tooling.maven;
@@ -38,31 +38,26 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 
 	@Parameter(
 			defaultValue = "${project.build.directory}/classes",
-			readonly = true,
 			required = true)
 	private File classesDirectory;
 
 	@Parameter(
 			defaultValue = "false",
-			readonly = true,
 			required = true)
 	private boolean enableAssociationManagement;
 
 	@Parameter(
 			defaultValue = "false",
-			readonly = true,
 			required = true)
 	private boolean enableDirtyTracking;
 
 	@Parameter(
 			defaultValue = "false",
-			readonly = true,
 			required = true)
 	private boolean enableLazyInitialization;
 
 	@Parameter(
 			defaultValue = "false",
-			readonly = true,
 			required = true)
 	private boolean enableExtendedEnhancement;
 

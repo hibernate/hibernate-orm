@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.notfound;
@@ -62,19 +62,7 @@ public class RequiredLazyNotFoundTest {
 
 	@AfterEach
 	public void cleanUp(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from " + PersonManyToOneSelectException.class.getName() )
-							.executeUpdate();
-					session.createQuery( "delete from " + PersonOneToOneSelectException.class.getName() )
-							.executeUpdate();
-					session.createQuery( "delete from " + PersonMapsIdSelectException.class.getName() ).executeUpdate();
-					session.createQuery( "delete from " + PersonPkjcSelectException.class.getName() ).executeUpdate();
-					session.createQuery( "delete from " + PersonMapsIdColumnSelectException.class.getName() )
-							.executeUpdate();
-					session.createQuery( "delete from " + City.class.getName() ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

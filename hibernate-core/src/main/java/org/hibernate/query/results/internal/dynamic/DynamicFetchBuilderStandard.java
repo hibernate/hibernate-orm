@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.dynamic;
@@ -36,30 +36,29 @@ import java.util.List;
 public class DynamicFetchBuilderStandard
 		implements DynamicFetchBuilder, NativeQuery.ReturnProperty {
 
-	private final String fetchableName;
+	private final Fetchable fetchable;
 	private final List<String> columnNames;
 
-	public DynamicFetchBuilderStandard(String fetchableName) {
-		this.fetchableName = fetchableName;
-		this.columnNames = new ArrayList<>();
+	public DynamicFetchBuilderStandard(Fetchable fetchable) {
+		this( fetchable, new ArrayList<>() );
 	}
 
-	private DynamicFetchBuilderStandard(String fetchableName, List<String> columnNames) {
-		this.fetchableName = fetchableName;
+	private DynamicFetchBuilderStandard(Fetchable fetchable, List<String> columnNames) {
+		this.fetchable = fetchable;
 		this.columnNames = columnNames;
 	}
 
 	@Override
 	public DynamicFetchBuilderStandard cacheKeyInstance() {
 		return new DynamicFetchBuilderStandard(
-				fetchableName,
+				fetchable,
 				List.copyOf( columnNames )
 		);
 	}
 
 	public DynamicFetchBuilderStandard cacheKeyInstance(DynamicFetchBuilderContainer container) {
 		return new DynamicFetchBuilderStandard(
-				fetchableName,
+				fetchable,
 				List.copyOf( columnNames )
 		);
 	}
@@ -74,14 +73,12 @@ public class DynamicFetchBuilderStandard
 		final TableGroup ownerTableGroup =
 				creationStateImpl.getFromClauseAccess().getTableGroup( parent.getNavigablePath() );
 
-		final Fetchable attributeMapping =
-				(Fetchable) parent.getReferencedMappingContainer().findSubPart( fetchableName, null );
 		final SqlExpressionResolver sqlExpressionResolver =
 				domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
 
-		final BasicValuedModelPart basicPart = attributeMapping.asBasicValuedModelPart();
+		final BasicValuedModelPart basicPart = fetchable.asBasicValuedModelPart();
 		if ( basicPart != null ) {
-			attributeMapping.forEachSelectable(
+			fetchable.forEachSelectable(
 					getSelectableConsumer(
 							fetchPath,
 							jdbcResultsMetadata,
@@ -93,7 +90,7 @@ public class DynamicFetchBuilderStandard
 					)
 			);
 			return parent.generateFetchableFetch(
-					attributeMapping,
+					fetchable,
 					fetchPath,
 					FetchTiming.IMMEDIATE,
 					true,
@@ -101,8 +98,8 @@ public class DynamicFetchBuilderStandard
 					creationStateImpl
 			);
 		}
-		else if ( attributeMapping instanceof EmbeddableValuedFetchable ) {
-			attributeMapping.forEachSelectable(
+		else if ( fetchable instanceof EmbeddableValuedFetchable embeddableValuedFetchable ) {
+			fetchable.forEachSelectable(
 					getSelectableConsumer(
 							fetchPath,
 							jdbcResultsMetadata,
@@ -110,11 +107,11 @@ public class DynamicFetchBuilderStandard
 							creationStateImpl,
 							ownerTableGroup,
 							sqlExpressionResolver,
-							(EmbeddableValuedFetchable) attributeMapping
+							embeddableValuedFetchable
 					)
 			);
 			return parent.generateFetchableFetch(
-					attributeMapping,
+					fetchable,
 					fetchPath,
 					FetchTiming.IMMEDIATE,
 					false,
@@ -122,7 +119,7 @@ public class DynamicFetchBuilderStandard
 					creationStateImpl
 			);
 		}
-		else if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping ) {
+		else if ( fetchable instanceof ToOneAttributeMapping toOneAttributeMapping ) {
 			toOneAttributeMapping.getForeignKeyDescriptor()
 					.getPart( toOneAttributeMapping.getSideNature() )
 					.forEachSelectable(
@@ -137,15 +134,15 @@ public class DynamicFetchBuilderStandard
 							)
 					);
 			return parent.generateFetchableFetch(
-					attributeMapping,
+					fetchable,
 					fetchPath,
-					attributeMapping.getMappedFetchOptions().getTiming(),
+					fetchable.getMappedFetchOptions().getTiming(),
 					false,
 					null,
 					creationStateImpl
 			);
 		}
-		else if ( attributeMapping instanceof PluralAttributeMapping pluralAttributeMapping ) {
+		else if ( fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {
 			pluralAttributeMapping.getKeyDescriptor().visitTargetSelectables(
 					getSelectableConsumer(
 							fetchPath,
@@ -158,9 +155,9 @@ public class DynamicFetchBuilderStandard
 					)
 			);
 			return parent.generateFetchableFetch(
-					attributeMapping,
+					fetchable,
 					fetchPath,
-					attributeMapping.getMappedFetchOptions().getTiming(),
+					fetchable.getMappedFetchOptions().getTiming(),
 					false,
 					null,
 					creationStateImpl
@@ -196,8 +193,7 @@ public class DynamicFetchBuilderStandard
 					),
 					selectableMapping.getJdbcMapping().getJdbcJavaType(),
 					null,
-					domainResultCreationState.getSqlAstCreationState().getCreationContext()
-							.getSessionFactory().getTypeConfiguration()
+					domainResultCreationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 			);
 		};
 	}
@@ -215,7 +211,7 @@ public class DynamicFetchBuilderStandard
 
 	@Override
 	public int hashCode() {
-		int result = fetchableName.hashCode();
+		int result = fetchable.hashCode();
 		result = 31 * result + columnNames.hashCode();
 		return result;
 	}
@@ -230,7 +226,7 @@ public class DynamicFetchBuilderStandard
 		}
 
 		final DynamicFetchBuilderStandard that = (DynamicFetchBuilderStandard) o;
-		return fetchableName.equals( that.fetchableName )
+		return fetchable.equals( that.fetchable )
 			&& columnNames.equals( that.columnNames );
 	}
 }

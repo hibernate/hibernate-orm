@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.cid;
@@ -184,14 +184,7 @@ public class HierarchicalCompositeIdMaxDepthTest {
 
 	@AfterEach
 	void cleanUp(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery("delete from Freight").executeUpdate();
-					entityManager.createQuery("delete from FlightSegmentConfiguration").executeUpdate();
-					entityManager.createQuery("delete from FlightSegment").executeUpdate();
-					entityManager.createQuery("delete from Flight").executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 }

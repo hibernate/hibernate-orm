@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hql;
@@ -66,13 +66,7 @@ public class NaturalIdDereferenceTest {
 
 	@AfterEach
 	public void deleteData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from BookRefRef" ).executeUpdate();
-					session.createQuery( "delete from BookRef" ).executeUpdate();
-					session.createQuery( "delete from Book" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -369,7 +363,7 @@ public class NaturalIdDereferenceTest {
 		private Long id;
 
 		@ManyToOne(optional = true)
-		@JoinColumn(nullable = true, columnDefinition = "id_ref")
+		@JoinColumn(nullable = true, name = "id_ref")
 		private Book normalBook;
 
 		@ManyToOne
@@ -387,7 +381,7 @@ public class NaturalIdDereferenceTest {
 		private Long id;
 
 		@ManyToOne
-		@JoinColumn(nullable = true, columnDefinition = "id_ref_ref")
+		@JoinColumn(nullable = true, name = "id_ref_ref")
 		private BookRef normalBookRef;
 
 		@ManyToOne

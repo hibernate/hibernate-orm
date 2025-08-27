@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hql;
@@ -10,8 +10,8 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
-import org.hibernate.dialect.SybaseASEDialect;
 
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -20,6 +20,7 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -44,8 +45,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class ScrollableCollectionFetchingTest {
 
 	@Test
-	@SkipForDialect(dialectClass=DB2Dialect.class, matchSubTypes = true)
-	@SkipForDialect(dialectClass= DerbyDialect.class)
+	@SkipForDialect(dialectClass = DB2Dialect.class, matchSubTypes = true)
+	@SkipForDialect(dialectClass = DerbyDialect.class)
 	public void testTupleReturnWithFetch(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -94,8 +95,8 @@ public class ScrollableCollectionFetchingTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 15, matchSubTypes = true, reason = "HHH-5229")
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA only supports forward-only cursors.")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 15, versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "HHH-5229")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA only supports forward-only cursors.")
 	public void testScrollingJoinFetchesEmptyResultSet(SessionFactoryScope scope) {
 		scope.inTransaction(
 				s -> {
@@ -163,7 +164,7 @@ public class ScrollableCollectionFetchingTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTemporaryTable.class)
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA only supports forward-only cursors")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA only supports forward-only cursors")
 	public void testScrollingJoinFetchesSingleRowResultSet(SessionFactoryScope scope) {
 
 		scope.inTransaction(
@@ -314,7 +315,7 @@ public class ScrollableCollectionFetchingTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTemporaryTable.class)
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA only supports forward-only cursors.")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA only supports forward-only cursors.")
 	public void testScrollingJoinFetchesReverse(SessionFactoryScope scope) {
 		TestData data = new TestData();
 		data.prepare( scope );
@@ -342,7 +343,71 @@ public class ScrollableCollectionFetchingTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTemporaryTable.class)
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA only supports forward-only cursors.")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA only supports forward-only cursors.")
+	public void testScrollingJoinFetchesWithNext(SessionFactoryScope scope) {
+		TestData data = new TestData();
+		data.prepare( scope );
+
+		scope.inTransaction(
+				session -> {
+					try (ScrollableResults results = session
+							.createQuery("from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
+							.setParameter( "desc", "root%" )
+							.scroll()) {
+
+						assertEquals( 0, results.getPosition() );
+
+						assertTrue( results.next() );
+						Animal animal = (Animal) results.get();
+						assertEquals( data.root1Id, animal.getId(), "next() did not return expected row" );
+						assertEquals( 1, results.getPosition() );
+
+						assertTrue( results.next() );
+						animal = (Animal) results.get();
+						assertEquals( data.root2Id, animal.getId(), "next() did not return expected row" );
+						assertEquals( 2, results.getPosition() );
+
+						assertFalse( results.next() );
+					}
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTemporaryTable.class)
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA only supports forward-only cursors.")
+	public void testScrollingNoJoinFetchesWithNext(SessionFactoryScope scope) {
+		TestData data = new TestData();
+		data.prepare( scope );
+
+		scope.inTransaction(
+				session -> {
+					try (ScrollableResults results = session
+							.createQuery("from Animal a where a.description like :desc order by a.id" )
+							.setParameter( "desc", "root%" )
+							.scroll()) {
+
+						assertEquals( 0, results.getPosition() );
+
+						assertTrue( results.next() );
+						Animal animal = (Animal) results.get();
+						assertEquals( data.root1Id, animal.getId(), "next() did not return expected row" );
+						assertEquals( 1, results.getPosition() );
+
+						assertTrue( results.next() );
+						animal = (Animal) results.get();
+						assertEquals( data.root2Id, animal.getId(), "next() did not return expected row" );
+						assertEquals( 2, results.getPosition() );
+
+						assertFalse( results.next() );
+					}
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTemporaryTable.class)
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA only supports forward-only cursors.")
 	public void testScrollingJoinFetchesPositioning(SessionFactoryScope scope) {
 		TestData data = new TestData();
 		data.prepare( scope );
@@ -350,30 +415,127 @@ public class ScrollableCollectionFetchingTest {
 		scope.inTransaction(
 				session -> {
 					try (ScrollableResults results = session
-							.createQuery(
-									"from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
+							.createQuery("from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
 							.setParameter( "desc", "root%" )
 							.scroll()) {
 
 						results.first();
 						Animal animal = (Animal) results.get();
 						assertEquals( data.root1Id, animal.getId(), "first() did not return expected row" );
+						assertEquals( 1, results.getPosition() );
 
 						results.scroll( 1 );
 						animal = (Animal) results.get();
 						assertEquals( data.root2Id, animal.getId(), "scroll(1) did not return expected row" );
+						assertEquals( 2, results.getPosition() );
 
 						results.scroll( -1 );
 						animal = (Animal) results.get();
 						assertEquals( data.root1Id, animal.getId(), "scroll(-1) did not return expected row" );
+						assertEquals( 1, results.getPosition() );
+
+						results.next();
+						animal = (Animal) results.get();
+						assertEquals( data.root2Id, animal.getId(), "next() did not return expected row" );
+						assertEquals( 2, results.getPosition() );
 
 						results.setRowNumber( 1 );
 						animal = (Animal) results.get();
 						assertEquals( data.root1Id, animal.getId(), "setRowNumber(1) did not return expected row" );
+						assertEquals( 1, results.getPosition() );
 
 						results.setRowNumber( 2 );
 						animal = (Animal) results.get();
 						assertEquals( data.root2Id, animal.getId(), "setRowNumber(2) did not return expected row" );
+						assertEquals( 2, results.getPosition() );
+
+						results.setRowNumber( -2 );
+						animal = (Animal) results.get();
+						assertEquals( data.root1Id, animal.getId(), "setRowNumber(-2) did not return expected row" );
+						assertEquals( 1, results.getPosition() );
+
+						results.setRowNumber( -1 );
+						animal = (Animal) results.get();
+						assertEquals( data.root2Id, animal.getId(), "setRowNumber(-1) did not return expected row" );
+						assertEquals( 2, results.getPosition() );
+
+						results.position( 1 );
+						animal = (Animal) results.get();
+						assertEquals( data.root1Id, animal.getId(), "position(1) did not return expected row" );
+						assertEquals( 1, results.getPosition() );
+
+						results.position( 2 );
+						animal = (Animal) results.get();
+						assertEquals( data.root2Id, animal.getId(), "position(2) did not return expected row" );
+						assertEquals( 2, results.getPosition() );
+					}
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTemporaryTable.class)
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA only supports forward-only cursors.")
+	public void testScrollingNoJoinFetchesPositioning(SessionFactoryScope scope) {
+		TestData data = new TestData();
+		data.prepare( scope );
+
+		scope.inTransaction(
+				session -> {
+					try (ScrollableResults results = session
+							.createQuery("from Animal a where a.description like :desc order by a.id" )
+							.setParameter( "desc", "root%" )
+							.scroll()) {
+
+						results.first();
+						Animal animal = (Animal) results.get();
+						assertEquals( data.root1Id, animal.getId(), "first() did not return expected row" );
+						assertEquals( 1, results.getPosition() );
+
+						results.scroll( 1 );
+						animal = (Animal) results.get();
+						assertEquals( data.root2Id, animal.getId(), "scroll(1) did not return expected row" );
+						assertEquals( 2, results.getPosition() );
+
+						results.scroll( -1 );
+						animal = (Animal) results.get();
+						assertEquals( data.root1Id, animal.getId(), "scroll(-1) did not return expected row" );
+						assertEquals( 1, results.getPosition() );
+
+						results.next();
+						animal = (Animal) results.get();
+						assertEquals( data.root2Id, animal.getId(), "next() did not return expected row" );
+						assertEquals( 2, results.getPosition() );
+
+						results.setRowNumber( 1 );
+						animal = (Animal) results.get();
+						assertEquals( data.root1Id, animal.getId(), "setRowNumber(1) did not return expected row" );
+						assertEquals( 1, results.getPosition() );
+
+						results.setRowNumber( 2 );
+						animal = (Animal) results.get();
+						assertEquals( data.root2Id, animal.getId(), "setRowNumber(2) did not return expected row" );
+						assertEquals( 2, results.getPosition() );
+
+						results.setRowNumber( -2 );
+						animal = (Animal) results.get();
+						assertEquals( data.root1Id, animal.getId(), "setRowNumber(-2) did not return expected row" );
+						assertEquals( 1, results.getPosition() );
+
+						results.setRowNumber( -1 );
+						animal = (Animal) results.get();
+						assertEquals( data.root2Id, animal.getId(), "setRowNumber(-1) did not return expected row" );
+						assertEquals( 2, results.getPosition() );
+
+						results.position( 1 );
+						animal = (Animal) results.get();
+						assertEquals( data.root1Id, animal.getId(), "position(1) did not return expected row" );
+						assertEquals( 1, results.getPosition() );
+
+						results.position( 2 );
+						animal = (Animal) results.get();
+						assertEquals( data.root2Id, animal.getId(), "position(2) did not return expected row" );
+						assertEquals( 2, results.getPosition() );
 					}
 				}
 		);

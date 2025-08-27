@@ -1,13 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.ormPanache;
 
+import org.hibernate.Session;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
 
 import jakarta.inject.Inject;
@@ -20,10 +21,11 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
 // Note: JD test is in jakartaData tests, due to requiring Java 17
-public class QuarkusOrmPanacheTest extends CompilationTest {
+@CompilationTest
+class QuarkusOrmPanacheTest {
 	@Test
 	@WithClasses({ PanacheBook.class })
-	public void testPanacheEntityMetamodel() throws Exception {
+	void testPanacheEntityMetamodel() throws Exception {
 		// Panache entity
 		System.out.println( TestUtil.getMetaModelSourceAsString( PanacheBook.class ) );
 		Class<?> entityClass = getMetamodelClassFor( PanacheBook.class );
@@ -48,7 +50,7 @@ public class QuarkusOrmPanacheTest extends CompilationTest {
 
 	@Test
 	@WithClasses({ PanacheBook.class, PanacheBookRepository.class })
-	public void testPanacheRepositoryMetamodel() throws Exception {
+	void testPanacheRepositoryMetamodel() throws Exception {
 		// Panache repository
 		System.out.println( TestUtil.getMetaModelSourceAsString( PanacheBookRepository.class ) );
 		Class<?> repositoryClass = getMetamodelClassFor( PanacheBookRepository.class );
@@ -73,7 +75,7 @@ public class QuarkusOrmPanacheTest extends CompilationTest {
 
 	@Test
 	@WithClasses({ PanacheBook.class, QuarkusBookRepository.class })
-	public void testQuarkusRepositoryMetamodel() throws Exception {
+	void testQuarkusRepositoryMetamodel() throws Exception {
 		// Panache repository
 		System.out.println( TestUtil.getMetaModelSourceAsString( QuarkusBookRepository.class ) );
 		Class<?> repositoryClass = getMetamodelClassFor( QuarkusBookRepository.class );
@@ -99,7 +101,7 @@ public class QuarkusOrmPanacheTest extends CompilationTest {
 		Assertions.assertFalse( Modifier.isStatic( method.getModifiers() ) );
 
 		// Make sure we have the proper constructor
-		Constructor<?> constructor = repositoryClass.getDeclaredConstructor( EntityManager.class );
+		Constructor<?> constructor = repositoryClass.getDeclaredConstructor( Session.class );
 		Assertions.assertNotNull( constructor );
 		Assertions.assertTrue( constructor.isAnnotationPresent( Inject.class ) );
 	}

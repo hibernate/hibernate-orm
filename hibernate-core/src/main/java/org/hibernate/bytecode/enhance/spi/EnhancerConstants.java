@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.spi;
@@ -183,6 +183,12 @@ public final class EnhancerConstants {
 	public static final String USE_TRACKER_FIELD_NAME = "$$_hibernate_useTracker";
 	public static final String USE_TRACKER_GETTER_NAME = "$$_hibernate_useTracker";
 	public static final String USE_TRACKER_SETTER_NAME = "$$_hibernate_setUseTracker";
+
+	public static final String INSTANCE_ID_FIELD_NAME = "$$_hibernate_instanceId";
+	public static final String INSTANCE_ID_GETTER_NAME = "$$_hibernate_getInstanceId";
+	public static final String INSTANCE_ID_SETTER_NAME = "$$_hibernate_setInstanceId";
+
+	public static final String PERSISTENCE_INFO_SETTER_NAME = "$$_hibernate_setPersistenceInfo";
 
 
 	private EnhancerConstants() {

@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.spi;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -11,12 +12,13 @@ import java.util.Locale;
 
 import org.hibernate.Internal;
 import org.hibernate.PropertyAccessException;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.internal.AbstractFieldSerialForm;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.util.ReflectHelper.setterMethodOrNull;
 
 /**
  * Field-based implementation of Setter
@@ -34,7 +36,7 @@ public class SetterFieldImpl implements Setter {
 		this.containerClass = containerClass;
 		this.propertyName = propertyName;
 		this.field = field;
-		this.setterMethod = ReflectHelper.setterMethodOrNull( containerClass, propertyName, field.getType() );
+		this.setterMethod = setterMethodOrNull( containerClass, propertyName, field.getType() );
 	}
 
 	public Class<?> getContainerClass() {
@@ -106,6 +108,7 @@ public class SetterFieldImpl implements Setter {
 		return setterMethod;
 	}
 
+	@Serial
 	private Object writeReplace() {
 		return new SerialForm( containerClass, propertyName, field );
 	}
@@ -121,6 +124,7 @@ public class SetterFieldImpl implements Setter {
 			this.propertyName = propertyName;
 		}
 
+		@Serial
 		private Object readResolve() {
 			return new SetterFieldImpl( containerClass, propertyName, resolveField() );
 		}

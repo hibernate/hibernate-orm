@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -8,7 +8,6 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -16,6 +15,7 @@ import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -44,6 +44,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	private final NavigableRole navigableRole;
 	private final String table;
 	private final String column;
+	private final SelectablePath selectablePath;
 	private final DiscriminatedAssociationModelPart anyPart;
 	private final String customReadExpression;
 	private final String customWriteExpression;
@@ -62,6 +63,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			DiscriminatedAssociationModelPart anyPart,
 			String table,
 			String column,
+			SelectablePath selectablePath,
 			String customReadExpression,
 			String customWriteExpression,
 			String columnDefinition,
@@ -76,6 +78,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 		this.navigableRole = navigableRole;
 		this.table = table;
 		this.column = column;
+		this.selectablePath = selectablePath;
 		this.anyPart = anyPart;
 		this.customReadExpression = customReadExpression;
 		this.customWriteExpression = customWriteExpression;
@@ -98,6 +101,16 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	@Override
 	public String getSelectionExpression() {
 		return column;
+	}
+
+	@Override
+	public String getSelectableName() {
+		return selectablePath.getSelectableName();
+	}
+
+	@Override
+	public SelectablePath getSelectablePath() {
+		return selectablePath;
 	}
 
 	@Override
@@ -219,10 +232,6 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 		final SqlExpressionResolver sqlExpressionResolver = creationState
 				.getSqlAstCreationState()
 				.getSqlExpressionResolver();
-		final SessionFactoryImplementor sessionFactory = creationState
-				.getSqlAstCreationState()
-				.getCreationContext()
-				.getSessionFactory();
 
 		final TableGroup tableGroup = fromClauseAccess.getTableGroup( fetchParent.getNavigablePath().getParent() );
 		final TableReference tableReference = tableGroup.resolveTableReference( fetchablePath, table );
@@ -236,7 +245,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 				columnReference,
 				jdbcMapping.getJdbcJavaType(),
 				fetchParent,
-				sessionFactory.getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 		);
 
 		return new BasicFetch<>(
@@ -371,7 +380,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 				),
 				jdbcMapping.getJdbcJavaType(),
 				null,
-				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 		);
 	}
 }

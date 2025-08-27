@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.cte;
@@ -11,13 +11,12 @@ import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
-import org.hibernate.query.derived.AnonymousTupleSimpleSqmPathSource;
-import org.hibernate.query.derived.AnonymousTupleType;
-import org.hibernate.query.derived.CteTupleTableGroupProducer;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleSimpleSqmPathSource;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
+import org.hibernate.query.sqm.tuple.internal.CteTupleTableGroupProducer;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
-import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.type.BasicType;
@@ -34,19 +33,13 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 	private SqmCteTable(
 			String name,
 			SqmCteStatement<T> cteStatement,
-			SqmSelectableNode<?>[] sqmSelectableNodes) {
-		super( sqmSelectableNodes );
+			SqmSelectQuery<T> selectStatement) {
+		super(selectStatement);
 		this.name = name;
 		this.cteStatement = cteStatement;
 		final List<SqmCteTableColumn> columns = new ArrayList<>( componentCount() );
 		for ( int i = 0; i < componentCount(); i++ ) {
-			columns.add(
-					new SqmCteTableColumn(
-							this,
-							getComponentName( i ),
-							get( i )
-					)
-			);
+			columns.add( new SqmCteTableColumn( this, getComponentName(i), get(i) ) );
 		}
 		this.columns = columns;
 	}
@@ -55,12 +48,7 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 			String name,
 			SqmCteStatement<X> cteStatement,
 			SqmSelectQuery<X> selectStatement) {
-		final SqmSelectableNode<?>[] sqmSelectableNodes = selectStatement.getQueryPart()
-				.getFirstQuerySpec()
-				.getSelectClause()
-				.getSelectionItems()
-				.toArray( SqmSelectableNode[]::new );
-		return new SqmCteTable<>( name, cteStatement, sqmSelectableNodes );
+		return new SqmCteTable<>( name, cteStatement, selectStatement );
 	}
 
 	@Override
@@ -97,11 +85,11 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 
 	@Override
 	public String getName() {
-		if ( Character.isDigit( name.charAt( 0 ) ) ) {
-			// Created through JPA criteria without an explicit name
-			return null;
-		}
-		return name;
+		// TODO: this is extremely fragile!
+		//       better to distinguish between generated and explicit aliases
+		return name.charAt( 0 ) == '_'
+				? null // Created through JPA criteria without an explicit name
+				: name;
 	}
 
 	@Override
@@ -118,15 +106,12 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 	@Override
 	public JpaCteCriteriaAttribute getAttribute(String name) {
 		final Integer index = getIndex( name );
-		if ( index == null ) {
-			return null;
-		}
-		return columns.get( index );
+		return index == null ? null : columns.get( index );
 	}
 
 	@Override
-	public SqmExpressible<?> get(String componentName) {
-		final SqmExpressible<?> sqmExpressible = super.get( componentName );
+	public SqmBindableType<?> get(String componentName) {
+		final SqmBindableType<?> sqmExpressible = super.get( componentName );
 		if ( sqmExpressible != null ) {
 			return sqmExpressible;
 		}

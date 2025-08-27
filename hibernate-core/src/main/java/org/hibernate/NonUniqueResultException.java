@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
@@ -13,6 +13,10 @@ import org.hibernate.query.Query;
  * this one is recoverable!
  *
  * @author Gavin King
+ *
+ * @see jakarta.persistence.Query#getSingleResult
+ * @see org.hibernate.query.SelectionQuery#getSingleResult
+ * @see jakarta.persistence.NonUniqueResultException
  */
 public class NonUniqueResultException extends HibernateException {
 

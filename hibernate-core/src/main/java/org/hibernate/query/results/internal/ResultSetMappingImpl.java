@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal;
@@ -16,10 +16,10 @@ import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
 
@@ -44,7 +44,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 	private final String mappingIdentifier;
 	private final boolean isDynamic;
 	private List<ResultBuilder> resultBuilders;
-	private Map<String, Map<String, LegacyFetchBuilder>> legacyFetchBuilders;
+	private Map<String, Map<Fetchable, LegacyFetchBuilder>> legacyFetchBuilders;
 
 	public ResultSetMappingImpl(String mappingIdentifier) {
 		this( mappingIdentifier, false );
@@ -72,15 +72,15 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			this.legacyFetchBuilders = null;
 		}
 		else {
-			final Map<String, Map<String, LegacyFetchBuilder>> legacyFetchBuilders = new HashMap<>( original.legacyFetchBuilders.size() );
-			for ( Map.Entry<String, Map<String, LegacyFetchBuilder>> entry : original.legacyFetchBuilders.entrySet() ) {
-				final Map<String, LegacyFetchBuilder> newValue = new HashMap<>( entry.getValue().size() );
-				for ( Map.Entry<String, LegacyFetchBuilder> builderEntry : entry.getValue().entrySet() ) {
+			final Map<String, Map<Fetchable, LegacyFetchBuilder>> builders = new HashMap<>( original.legacyFetchBuilders.size() );
+			for ( Map.Entry<String, Map<Fetchable, LegacyFetchBuilder>> entry : original.legacyFetchBuilders.entrySet() ) {
+				final Map<Fetchable, LegacyFetchBuilder> newValue = new HashMap<>( entry.getValue().size() );
+				for ( Map.Entry<Fetchable, LegacyFetchBuilder> builderEntry : entry.getValue().entrySet() ) {
 					newValue.put( builderEntry.getKey(), builderEntry.getValue().cacheKeyInstance() );
 				}
-				legacyFetchBuilders.put( entry.getKey(), newValue );
+				builders.put( entry.getKey(), newValue );
 			}
-			this.legacyFetchBuilders = legacyFetchBuilders;
+			this.legacyFetchBuilders = builders;
 		}
 	}
 
@@ -123,7 +123,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			return;
 		}
 
-		for ( Map.Entry<String, Map<String, LegacyFetchBuilder>> entry : legacyFetchBuilders.entrySet() ) {
+		for ( Map.Entry<String, Map<Fetchable, LegacyFetchBuilder>> entry : legacyFetchBuilders.entrySet() ) {
 			for ( LegacyFetchBuilder fetchBuilder : entry.getValue().values() ) {
 				resultBuilderConsumer.accept( fetchBuilder );
 			}
@@ -140,7 +140,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 
 	@Override
 	public void addLegacyFetchBuilder(LegacyFetchBuilder fetchBuilder) {
-		final Map<String, LegacyFetchBuilder> existingFetchBuildersByOwner;
+		final Map<Fetchable, LegacyFetchBuilder> existingFetchBuildersByOwner;
 
 		if ( legacyFetchBuilders == null ) {
 			legacyFetchBuilders = new HashMap<>();
@@ -150,7 +150,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			existingFetchBuildersByOwner = legacyFetchBuilders.get( fetchBuilder.getOwnerAlias() );
 		}
 
-		final Map<String, LegacyFetchBuilder> fetchBuildersByOwner;
+		final Map<Fetchable, LegacyFetchBuilder> fetchBuildersByOwner;
 		if ( existingFetchBuildersByOwner == null ) {
 			fetchBuildersByOwner = new HashMap<>();
 			legacyFetchBuilders.put( fetchBuilder.getOwnerAlias(), fetchBuildersByOwner );
@@ -159,7 +159,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			fetchBuildersByOwner = existingFetchBuildersByOwner;
 		}
 
-		fetchBuildersByOwner.put( fetchBuilder.getFetchableName(), fetchBuilder );
+		fetchBuildersByOwner.put( fetchBuilder.getFetchable(), fetchBuilder );
 	}
 
 	@Override
@@ -168,9 +168,9 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			return;
 		}
 
-		final EntityPersister entityDescriptor = sessionFactory.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.findEntityDescriptor( mappingIdentifier );
+		final EntityPersister entityDescriptor =
+				sessionFactory.getMappingMetamodel()
+						.findEntityDescriptor( mappingIdentifier );
 		if ( entityDescriptor == null ) {
 			return;
 		}
@@ -187,12 +187,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 		final int numberOfResults;
 		final int rowSize = jdbcResultsMetadata.getColumnCount();
 
-		if ( resultBuilders == null ) {
-			numberOfResults = rowSize;
-		}
-		else {
-			numberOfResults = resultBuilders.size();
-		}
+		numberOfResults = resultBuilders == null ? rowSize : resultBuilders.size();
 
 		final List<SqlSelection> sqlSelections = new ArrayList<>( rowSize );
 		final List<DomainResult<?>> domainResults = new ArrayList<>( numberOfResults );
@@ -203,6 +198,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 				legacyFetchBuilders,
 				sqlSelections::add,
 				loadQueryInfluencers,
+				true,
 				sessionFactory
 		);
 
@@ -307,7 +303,9 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			JdbcValuesMetadata jdbcResultsMetadata,
 			SessionFactoryImplementor sessionFactory) {
 		final int jdbcPosition = valuesArrayPosition + 1;
-		final BasicType<?> jdbcMapping = jdbcResultsMetadata.resolveType( jdbcPosition, null, sessionFactory );
+		final BasicType<?> jdbcMapping =
+				jdbcResultsMetadata.resolveType( jdbcPosition, null,
+						sessionFactory.getTypeConfiguration() );
 
 		final String name = jdbcResultsMetadata.resolveColumnName( jdbcPosition );
 
@@ -330,7 +328,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 	}
 
 	@Override
-	public JdbcValuesMappingProducer cacheKeyInstance() {
+	public ResultSetMapping cacheKeyInstance() {
 		return new ResultSetMappingImpl( this );
 	}
 

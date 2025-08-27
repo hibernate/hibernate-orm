@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.write;
@@ -167,12 +167,7 @@ public class DynamicUpdateTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete AttachableJob" ).executeUpdate();
-			session.createMutationQuery( "delete VersionedJob" ).executeUpdate();
-			session.createMutationQuery( "delete DirtyJob" ).executeUpdate();
-			session.createMutationQuery( "delete AllJob" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "DirtyJob" )

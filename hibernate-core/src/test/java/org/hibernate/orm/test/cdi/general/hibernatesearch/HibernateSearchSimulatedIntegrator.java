@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cdi.general.hibernatesearch;
@@ -63,7 +63,7 @@ public class HibernateSearchSimulatedIntegrator implements Integrator, BeanConta
 			Metadata metadata,
 			BootstrapContext bootstrapContext,
 			SessionFactoryImplementor sessionFactory) {
-		ManagedBeanRegistry registry = sessionFactory.getServiceRegistry().getService( ManagedBeanRegistry.class );
+		ManagedBeanRegistry registry = bootstrapContext.getManagedBeanRegistry();
 
 		BeanContainer beanContainer = registry.getBeanContainer();
 		assertThat( beanContainer, CoreMatchers.notNullValue() );

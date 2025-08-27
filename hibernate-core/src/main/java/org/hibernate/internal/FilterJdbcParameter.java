@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
@@ -7,6 +7,7 @@ package org.hibernate.internal;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstWalker;
@@ -46,6 +47,11 @@ public class FilterJdbcParameter implements JdbcParameter, JdbcParameterBinder {
 	@Override
 	public JdbcMappingContainer getExpressionType() {
 		return jdbcMapping;
+	}
+
+	@Override
+	public @Nullable Integer getParameterId() {
+		return null;
 	}
 
 	@Override

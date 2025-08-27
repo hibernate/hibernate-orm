@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.service;
@@ -10,7 +10,7 @@ import java.util.Properties;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess;
@@ -50,7 +50,7 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 					ConnectionProviderJdbcConnectionAccess.class,
 					jdbcServices.getBootstrapJdbcConnectionAccess()
 			);
-			assertTrue( connectionAccess.getConnectionProvider().isUnwrappableAs( DriverManagerConnectionProviderImpl.class ) );
+			assertTrue( connectionAccess.getConnectionProvider().isUnwrappableAs( DriverManagerConnectionProvider.class ) );
 			assertFalse( jdbcServices.getSqlStatementLogger().isLogToStdout() );
 		}
 		finally {
@@ -74,7 +74,7 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 					ConnectionProviderJdbcConnectionAccess.class,
 					jdbcServices.getBootstrapJdbcConnectionAccess()
 			);
-			assertTrue( connectionAccess.getConnectionProvider().isUnwrappableAs( DriverManagerConnectionProviderImpl.class ) );
+			assertTrue( connectionAccess.getConnectionProvider().isUnwrappableAs( DriverManagerConnectionProvider.class ) );
 			assertTrue( jdbcServices.getSqlStatementLogger().isLogToStdout() );
 		}
 		finally {
@@ -93,7 +93,7 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 					ConnectionProviderJdbcConnectionAccess.class,
 					jdbcServices.getBootstrapJdbcConnectionAccess()
 			);
-			assertTrue( connectionAccess.getConnectionProvider().isUnwrappableAs( DriverManagerConnectionProviderImpl.class ) );
+			assertTrue( connectionAccess.getConnectionProvider().isUnwrappableAs( DriverManagerConnectionProvider.class ) );
 		}
 		finally {
 			serviceRegistry.destroy();

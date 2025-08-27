@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.jdbc.spi;
@@ -15,4 +15,27 @@ public interface JdbcValuesSourceProcessingOptions {
 	Object getEffectiveOptionalId();
 
 	boolean shouldReturnProxies();
+
+	JdbcValuesSourceProcessingOptions NO_OPTIONS =
+			new JdbcValuesSourceProcessingOptions() {
+				@Override
+				public Object getEffectiveOptionalObject() {
+					return null;
+				}
+
+				@Override
+				public String getEffectiveOptionalEntityName() {
+					return null;
+				}
+
+				@Override
+				public Object getEffectiveOptionalId() {
+					return null;
+				}
+
+				@Override
+				public boolean shouldReturnProxies() {
+					return true;
+				}
+			};
 }

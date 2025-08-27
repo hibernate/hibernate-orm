@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -7,7 +7,6 @@ package org.hibernate.metamodel.mapping.internal;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
@@ -18,6 +17,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -55,6 +55,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 
 	private final String table;
 	private final String column;
+	private final SelectablePath selectablePath;
 	private final String customReadExpression;
 	private final String customWriteExpression;
 	private final String columnDefinition;
@@ -73,7 +74,10 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			NavigableRole partRole,
 			DiscriminatedAssociationModelPart declaringType,
 			String table,
-			String column, String customReadExpression, String customWriteExpression,
+			String column,
+			SelectablePath selectablePath,
+			String customReadExpression,
+			String customWriteExpression,
 			String columnDefinition,
 			Long length,
 			Integer precision,
@@ -89,6 +93,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 		this.declaringType = declaringType;
 		this.table = table;
 		this.column = column;
+		this.selectablePath = selectablePath;
 		this.customReadExpression = customReadExpression;
 		this.customWriteExpression = customWriteExpression;
 		this.columnDefinition = columnDefinition;
@@ -141,6 +146,16 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 	@Override
 	public String getSelectionExpression() {
 		return column;
+	}
+
+	@Override
+	public String getSelectableName() {
+		return selectablePath.getSelectableName();
+	}
+
+	@Override
+	public SelectablePath getSelectablePath() {
+		return selectablePath;
 	}
 
 	@Override
@@ -313,7 +328,6 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final SessionFactoryImplementor sessionFactory = sqlAstCreationState.getCreationContext().getSessionFactory();
 		final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
@@ -327,7 +341,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 				columnReference,
 				jdbcMapping().getJdbcJavaType(),
 				fetchParent,
-				sessionFactory.getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 
 		return new BasicFetch<>(
@@ -407,7 +421,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 				resolveSqlExpression( navigablePath, null, tableGroup, sqlAstCreationState ),
 				jdbcMapping().getJdbcJavaType(),
 				null,
-				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 		);
 	}
 }

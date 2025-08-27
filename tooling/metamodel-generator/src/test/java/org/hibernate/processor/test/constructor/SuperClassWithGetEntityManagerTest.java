@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.constructor;
@@ -12,7 +12,7 @@ import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test various scenarios where a superclass of an entity has a {@code getEntityManager()} method.
@@ -21,17 +21,18 @@ import org.junit.Test;
  * <p>
  * The method may be static or not.
  */
+@CompilationTest
 @TestForIssue(jiraKey = "HHH-17683")
-public class SuperClassWithGetEntityManagerTest extends CompilationTest {
+class SuperClassWithGetEntityManagerTest {
 	@Test
 	@WithClasses({ EntityWithInstanceGetEntityManager.class, EntityExtendingEntityWithInstanceGetEntityManager.class })
-	public void entityWithInstanceGetEntityManager() {
+	void entityWithInstanceGetEntityManager() {
 		doTest( EntityWithInstanceGetEntityManager.class, EntityExtendingEntityWithInstanceGetEntityManager.class );
 	}
 
 	@Test
 	@WithClasses({ EntityWithStaticGetEntityManager.class, EntityExtendingEntityWithStaticGetEntityManager.class })
-	public void entityWithStaticGetEntityManager() {
+	void entityWithStaticGetEntityManager() {
 		doTest( EntityWithStaticGetEntityManager.class, EntityExtendingEntityWithStaticGetEntityManager.class );
 	}
 
@@ -39,7 +40,7 @@ public class SuperClassWithGetEntityManagerTest extends CompilationTest {
 	@WithClasses({
 			NonEntityWithInstanceGetEntityManager.class, EntityExtendingNonEntityWithInstanceGetEntityManager.class
 	})
-	public void nonEntityWithInstanceGetEntityManager() {
+	void nonEntityWithInstanceGetEntityManager() {
 		doTest(
 				NonEntityWithInstanceGetEntityManager.class,
 				EntityExtendingNonEntityWithInstanceGetEntityManager.class
@@ -51,7 +52,7 @@ public class SuperClassWithGetEntityManagerTest extends CompilationTest {
 			NonEntityWithStaticGetEntityManager.class,
 			EntityExtendingNonEntityWithStaticGetEntityManager.class
 	})
-	public void nonEntityWithStaticGetEntityManager() {
+	void nonEntityWithStaticGetEntityManager() {
 		doTest(
 				NonEntityWithStaticGetEntityManager.class,
 				EntityExtendingNonEntityWithStaticGetEntityManager.class
@@ -63,7 +64,7 @@ public class SuperClassWithGetEntityManagerTest extends CompilationTest {
 			MapperSuperClassWithInstanceGetEntityManager.class,
 			EntityExtendingMapperSuperClassWithInstanceGetEntityManager.class
 	})
-	public void mappedSuperClassWithInstanceGetEntityManager() {
+	void mappedSuperClassWithInstanceGetEntityManager() {
 		doTest(
 				MapperSuperClassWithInstanceGetEntityManager.class,
 				EntityExtendingMapperSuperClassWithInstanceGetEntityManager.class
@@ -75,7 +76,7 @@ public class SuperClassWithGetEntityManagerTest extends CompilationTest {
 			MapperSuperClassWithStaticGetEntityManager.class,
 			EntityExtendingMapperSuperClassWithStaticGetEntityManager.class
 	})
-	public void mappedSuperClassWithStaticGetEntityManager() {
+	void mappedSuperClassWithStaticGetEntityManager() {
 		doTest(
 				MapperSuperClassWithStaticGetEntityManager.class,
 				EntityExtendingMapperSuperClassWithStaticGetEntityManager.class
@@ -88,7 +89,7 @@ public class SuperClassWithGetEntityManagerTest extends CompilationTest {
 			MapperSuperClassExtendingNonEntityWithInstanceGetEntityManager.class,
 			EntityExtendingMapperSuperClassExtendingNonEntityWithInstanceGetEntityManager.class
 	})
-	public void mappedSuperClassExtendingNonEntityWithInstanceGetEntityManager() {
+	void mappedSuperClassExtendingNonEntityWithInstanceGetEntityManager() {
 		doTest(
 				MapperSuperClassExtendingNonEntityWithInstanceGetEntityManager.class,
 				EntityExtendingMapperSuperClassExtendingNonEntityWithInstanceGetEntityManager.class
@@ -103,7 +104,7 @@ public class SuperClassWithGetEntityManagerTest extends CompilationTest {
 			MapperSuperClassExtendingNonEntityWithStaticGetEntityManager.class,
 			EntityExtendingMapperSuperClassExtendingNonEntityWithStaticGetEntityManager.class
 	})
-	public void mappedSuperClassExtendingNonEntityWithStaticGetEntityManager() {
+	void mappedSuperClassExtendingNonEntityWithStaticGetEntityManager() {
 		doTest(
 				MapperSuperClassExtendingNonEntityWithStaticGetEntityManager.class,
 				EntityExtendingMapperSuperClassExtendingNonEntityWithStaticGetEntityManager.class

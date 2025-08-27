@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.spi;
@@ -18,17 +18,19 @@ import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
-import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.ResultListTransformer;
+import org.hibernate.query.SelectionQuery;
+import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -41,24 +43,27 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
+import jakarta.persistence.metamodel.Type;
 
 @Incubating
 public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSelectionQueryImplementor<R> {
 
 	protected abstract SqmSelectionQueryImplementor<R> getDelegate();
 
-	@Override
+	@Override @Deprecated
 	public FlushModeType getFlushMode() {
 		return getDelegate().getFlushMode();
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmSelectionQueryImplementor<R> setFlushMode(FlushModeType flushMode) {
 		getDelegate().setFlushMode( flushMode );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public FlushMode getHibernateFlushMode() {
 		return getDelegate().getHibernateFlushMode();
 	}
@@ -156,7 +161,7 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	}
 
 	@Override
-	public SqmSelectionQueryImplementor<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic) {
+	public SqmSelectionQueryImplementor<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic) {
 		getDelegate().setEntityGraph( graph, semantic );
 		return this;
 	}
@@ -189,8 +194,8 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	}
 
 	@Override
-	public SqmSelectionQueryImplementor<R> setMaxResults(int maxResult) {
-		getDelegate().setMaxResults( maxResult );
+	public SqmSelectionQueryImplementor<R> setMaxResults(int maxResults) {
+		getDelegate().setMaxResults( maxResults );
 		return this;
 	}
 
@@ -260,7 +265,7 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 		return getDelegate().getCacheRegion();
 	}
 
-	@Override
+	@Override @Deprecated
 	public LockOptions getLockOptions() {
 		return getDelegate().getLockOptions();
 	}
@@ -294,16 +299,26 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	}
 
 	@Override
-	@Incubating
-	public SqmSelectionQueryImplementor<R> setOrder(List<? extends Order<? super R>> orders) {
-		getDelegate().setOrder( orders );
+	public SqmSelectionQueryImplementor<R> setTimeout(Timeout timeout) {
+		getDelegate().setTimeout( timeout );
 		return this;
 	}
 
 	@Override
-	@Incubating
-	public SqmSelectionQueryImplementor<R> setOrder(Order<? super R> order) {
-		getDelegate().setOrder( order );
+	public SelectionQuery<R> setLockScope(Locking.Scope lockScope) {
+		getDelegate().setLockScope( lockScope );
+		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> setFollowOnStrategy(Locking.FollowOn followOnStrategy) {
+		getDelegate().setFollowOnStrategy( followOnStrategy );
+		return this;
+	}
+
+	@Override
+	public SqmSelectionQueryImplementor<R> setLockScope(PessimisticLockScope lockScope) {
+		getDelegate().setLockScope( lockScope );
 		return this;
 	}
 
@@ -319,7 +334,7 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	}
 
 	@Override
-	public SqmStatement getSqmStatement() {
+	public SqmStatement<R> getSqmStatement() {
 		return getDelegate().getSqmStatement();
 	}
 
@@ -346,24 +361,24 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	}
 
 	@Override
-	public <P> SqmSelectionQueryImplementor<R> setParameter(String name, P value, BindableType<P> type) {
+	public <P> SqmSelectionQueryImplementor<R> setParameter(String name, P value, Type<P> type) {
 		getDelegate().setParameter( name, value, type );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmSelectionQueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType) {
 		getDelegate().setParameter( name, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmSelectionQueryImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType) {
 		getDelegate().setParameter( name, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmSelectionQueryImplementor<R> setParameter(String name, Date value, TemporalType temporalType) {
 		getDelegate().setParameter( name, value, temporalType );
 		return this;
@@ -382,24 +397,24 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	}
 
 	@Override
-	public <P> SqmSelectionQueryImplementor<R> setParameter(int position, P value, BindableType<P> type) {
+	public <P> SqmSelectionQueryImplementor<R> setParameter(int position, P value, Type<P> type) {
 		getDelegate().setParameter( position, value, type );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmSelectionQueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType) {
 		getDelegate().setParameter( position, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmSelectionQueryImplementor<R> setParameter(int position, Date value, TemporalType temporalType) {
 		getDelegate().setParameter( position, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmSelectionQueryImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType) {
 		getDelegate().setParameter( position, value, temporalType );
 		return this;
@@ -418,7 +433,7 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	}
 
 	@Override
-	public <P> SqmSelectionQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, BindableType<P> type) {
+	public <P> SqmSelectionQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, Type<P> type) {
 		getDelegate().setParameter( parameter, val, type );
 		return this;
 	}
@@ -429,20 +444,20 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmSelectionQueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
 		getDelegate().setParameter( param, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmSelectionQueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
 		getDelegate().setParameter( param, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public SqmSelectionQueryImplementor<R> setParameterList(String name, Collection values) {
+	public SqmSelectionQueryImplementor<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values) {
 		getDelegate().setParameterList( name, values );
 		return this;
 	}
@@ -457,7 +472,7 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	public <P> SqmSelectionQueryImplementor<R> setParameterList(
 			String name,
 			Collection<? extends P> values,
-			BindableType<P> type) {
+			Type<P> type) {
 		getDelegate().setParameterList( name, values, type );
 		return this;
 	}
@@ -475,13 +490,13 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	}
 
 	@Override
-	public <P> SqmSelectionQueryImplementor<R> setParameterList(String name, P[] values, BindableType<P> type) {
+	public <P> SqmSelectionQueryImplementor<R> setParameterList(String name, P[] values, Type<P> type) {
 		getDelegate().setParameterList( name, values, type );
 		return this;
 	}
 
 	@Override
-	public SqmSelectionQueryImplementor<R> setParameterList(int position, Collection values) {
+	public SqmSelectionQueryImplementor<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values) {
 		getDelegate().setParameterList( position, values );
 		return this;
 	}
@@ -496,7 +511,7 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	public <P> SqmSelectionQueryImplementor<R> setParameterList(
 			int position,
 			Collection<? extends P> values,
-			BindableType<P> type) {
+			Type<P> type) {
 		getDelegate().setParameterList( position, values, type );
 		return this;
 	}
@@ -514,7 +529,7 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	}
 
 	@Override
-	public <P> SqmSelectionQueryImplementor<R> setParameterList(int position, P[] values, BindableType<P> type) {
+	public <P> SqmSelectionQueryImplementor<R> setParameterList(int position, P[] values, Type<P> type) {
 		getDelegate().setParameterList( position, values, type );
 		return this;
 	}
@@ -538,7 +553,7 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	public <P> SqmSelectionQueryImplementor<R> setParameterList(
 			QueryParameter<P> parameter,
 			Collection<? extends P> values,
-			BindableType<P> type) {
+			Type<P> type) {
 		getDelegate().setParameterList( parameter, values, type );
 		return this;
 	}
@@ -556,7 +571,7 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	}
 
 	@Override
-	public <P> SqmSelectionQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type) {
+	public <P> SqmSelectionQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type) {
 		getDelegate().setParameterList( parameter, values, type );
 		return this;
 	}
@@ -568,12 +583,12 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	}
 
 	@Override
-	public SqmSelectionQueryImplementor<R> setProperties(Map bean) {
+	public SqmSelectionQueryImplementor<R> setProperties(@SuppressWarnings("rawtypes") Map bean) {
 		getDelegate().setProperties( bean );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmSelectionQueryImplementor<R> setHibernateFlushMode(FlushMode flushMode) {
 		getDelegate().setHibernateFlushMode( flushMode );
 		return this;
@@ -618,5 +633,16 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	@Override
 	public <T> T executeQuery(ResultsConsumer<T, R> resultsConsumer) {
 		return getDelegate().executeQuery( resultsConsumer );
+	}
+
+
+	@Override
+	public <T> SqmSelectionQuery<T> setTupleTransformer(TupleTransformer<T> transformer) {
+		return getDelegate().setTupleTransformer( transformer );
+	}
+
+	@Override
+	public SqmSelectionQuery<R> setResultListTransformer(ResultListTransformer<R> transformer) {
+		return getDelegate().setResultListTransformer( transformer );
 	}
 }

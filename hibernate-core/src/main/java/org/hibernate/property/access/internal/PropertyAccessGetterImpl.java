@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.internal;
@@ -35,23 +35,23 @@ public class PropertyAccessGetterImpl implements PropertyAccess {
 		final AccessType propertyAccessType = AccessStrategyHelper.getAccessType( containerJavaType, propertyName );
 		switch ( propertyAccessType ) {
 			case FIELD: {
-				Field field = AccessStrategyHelper.fieldOrNull( containerJavaType, propertyName );
+				final Field field = AccessStrategyHelper.fieldOrNull( containerJavaType, propertyName );
 				if ( field == null ) {
 					throw new PropertyAccessBuildingException(
 							"Could not locate field for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
 					);
 				}
-				this.getter = fieldGetter( containerJavaType, propertyName, field );
+				getter = fieldGetter( containerJavaType, propertyName, field );
 				break;
 			}
 			case PROPERTY: {
-				Method getterMethod = getterMethodOrNull( containerJavaType, propertyName );
+				final Method getterMethod = getterMethodOrNull( containerJavaType, propertyName );
 				if ( getterMethod == null ) {
 					throw new PropertyAccessBuildingException(
 							"Could not locate getter for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
 					);
 				}
-				this.getter = propertyGetter( containerJavaType, propertyName, getterMethod );
+				getter = propertyGetter( containerJavaType, propertyName, getterMethod );
 				break;
 			}
 			default: {

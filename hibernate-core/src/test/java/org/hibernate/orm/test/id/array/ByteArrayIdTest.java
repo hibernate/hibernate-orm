@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.array;
@@ -12,9 +12,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.annotations.JavaType;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.Query;
+import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.hibernate.type.descriptor.java.ByteArrayJavaType;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -33,11 +35,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Piotr Krauzowicz
  * @author Gail Badner
  */
-@SkipForDialect(dialectClass = MySQLDialect.class, majorVersion = 5, matchSubTypes = true, reason = "BLOB/TEXT column 'id' used in key specification without a key length")
-@SkipForDialect(dialectClass = OracleDialect.class, matchSubTypes = true, reason = "ORA-02329: column of datatype LOB cannot be unique or a primary key")
-@DomainModel(
-		annotatedClasses = ByteArrayIdTest.DemoEntity.class
-)
+@SkipForDialect(dialectClass = MySQLDialect.class, majorVersion = 5, versionMatchMode = VersionMatchMode.SAME_OR_OLDER,
+		reason = "BLOB/TEXT column 'id' used in key specification without a key length")
+@SkipForDialect(dialectClass = OracleDialect.class,
+		reason = "ORA-02329: column of datatype LOB cannot be unique or a primary key")
+@SkipForDialect(dialectClass = InformixDialect.class, reason = "Cannot add index")
+@DomainModel(annotatedClasses = ByteArrayIdTest.DemoEntity.class)
 @SessionFactory
 public class ByteArrayIdTest {
 
@@ -62,10 +65,7 @@ public class ByteArrayIdTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete from ByteArrayIdTest$DemoEntity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	/**

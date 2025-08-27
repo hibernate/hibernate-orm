@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 
+import org.hibernate.query.Query;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.animal.Classification;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -25,7 +26,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import org.hibernate.community.dialect.InformixDialect;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 
 import org.assertj.core.api.Assertions;
@@ -359,7 +359,7 @@ public class LiteralTests {
 		scope.inTransaction(
 				session -> {
 					{
-						final QueryImplementor<Object[]> query = session.createQuery( "select 1, org.hibernate.testing.orm.domain.animal.Classification.LAME" );
+						final Query<Object[]> query = session.createQuery( "select 1, org.hibernate.testing.orm.domain.animal.Classification.LAME" );
 						final Object[] result = query.getSingleResult();
 						final Object classification = result[ 1 ];
 
@@ -367,7 +367,7 @@ public class LiteralTests {
 					}
 
 					{
-						final QueryImplementor<Classification> query = session.createQuery( "select org.hibernate.testing.orm.domain.animal.Classification.LAME" );
+						final Query<Classification> query = session.createQuery( "select org.hibernate.testing.orm.domain.animal.Classification.LAME" );
 						final Classification result = query.getSingleResult();
 
 						Assertions.assertThat( result ).isEqualTo( Classification.LAME );

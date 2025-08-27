@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.process.internal;
@@ -23,6 +23,7 @@ import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.AdjustableBasicType;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicJavaType;
@@ -33,7 +34,6 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.SerializableJavaType;
 import org.hibernate.type.descriptor.java.TemporalJavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -60,16 +60,16 @@ public class InferredBasicValueResolver {
 			JdbcType explicitJdbcType,
 			Type resolvedJavaType,
 			Supplier<JavaType<T>> reflectedJtdResolver,
-			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
+			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
 			JdbcTypeIndicators stdIndicators,
 			Table table,
 			Selectable selectable,
 			String ownerName,
 			String propertyName,
 			MetadataBuildingContext buildingContext) {
-		final Dialect dialect = buildingContext.getMetadataCollector().getDatabase().getDialect();
 		final BootstrapContext bootstrapContext = buildingContext.getBootstrapContext();
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
+		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 
 		final JavaType<T> reflectedJtd = reflectedJtdResolver.get();
 
@@ -93,7 +93,7 @@ public class InferredBasicValueResolver {
 			}
 			else if ( explicitJdbcType != null ) {
 				// we also have an explicit JdbcType
-				jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve( explicitJavaType, explicitJdbcType );
+				jdbcMapping = basicTypeRegistry.resolve( explicitJavaType, explicitJdbcType );
 			}
 			else {
 				// we need to infer the JdbcType and use that to build the value-mapping
@@ -107,7 +107,7 @@ public class InferredBasicValueResolver {
 				else {
 					jdbcMapping = resolveSqlTypeIndicators(
 							stdIndicators,
-							typeConfiguration.getBasicTypeRegistry().resolve( explicitJavaType, inferredJdbcType ),
+							basicTypeRegistry.resolve( explicitJavaType, inferredJdbcType ),
 							explicitJavaType
 					);
 				}
@@ -116,9 +116,9 @@ public class InferredBasicValueResolver {
 		else if ( reflectedJtd != null ) {
 			// we were able to determine the "reflected java-type"
 			// Use JTD if we know it to apply any specialized resolutions
-			if ( reflectedJtd instanceof EnumJavaType ) {
+			if ( reflectedJtd instanceof EnumJavaType enumJavaType ) {
 				return fromEnum(
-						(EnumJavaType) reflectedJtd,
+						enumJavaType,
 						explicitJdbcType,
 						stdIndicators,
 						bootstrapContext
@@ -135,63 +135,21 @@ public class InferredBasicValueResolver {
 			}
 			else if ( explicitJdbcType != null ) {
 				// we also have an explicit JdbcType
-				jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve(
-						reflectedJtd,
-						explicitJdbcType
-				);
+				jdbcMapping = basicTypeRegistry.resolve( reflectedJtd, explicitJdbcType );
 			}
 			else {
 				// see if there is a registered BasicType for this JavaType and,
 				// if so, use it. This mimics the legacy handling.
-				final BasicType registeredType;
-				if ( reflectedJtd instanceof BasicPluralJavaType<?> ) {
-					final BasicPluralJavaType<?> containerJtd = (BasicPluralJavaType<?>) reflectedJtd;
-					final JavaType<?> elementJtd = containerJtd.getElementJavaType();
-					final BasicType registeredElementType;
-					if ( elementJtd instanceof EnumJavaType ) {
-						final BasicValue.Resolution<?> resolution = fromEnum(
-								(EnumJavaType<?>) elementJtd,
+				final BasicType registeredType =
+						registeredType(
 								explicitJdbcType,
-								stdIndicators,
-								bootstrapContext);
-						registeredElementType = (BasicType<?>) resolution.getJdbcMapping();
-					}
-					else if ( isTemporal( elementJtd ) ) {
-						final BasicValue.Resolution<?> resolution = fromTemporal(
-								(TemporalJavaType<?>) elementJtd,
-								null,
-								null,
 								explicitMutabilityPlanAccess,
-								stdIndicators
+								stdIndicators,
+								selectable,
+								reflectedJtd,
+								bootstrapContext,
+								buildingContext.getMetadataCollector().getDatabase().getDialect()
 						);
-						registeredElementType = resolution.getLegacyResolvedBasicType();
-					}
-					else {
-						registeredElementType = typeConfiguration.getBasicTypeRegistry()
-								.getRegisteredType( elementJtd.getJavaType() );
-					}
-					final ColumnTypeInformation columnTypeInformation;
-					if ( selectable instanceof ColumnTypeInformation ) {
-						columnTypeInformation = (ColumnTypeInformation) selectable;
-					}
-					else {
-						columnTypeInformation = null;
-					}
-					registeredType = registeredElementType == null ? null : containerJtd.resolveType(
-							typeConfiguration,
-							dialect,
-							resolveSqlTypeIndicators( stdIndicators, registeredElementType, elementJtd ),
-							columnTypeInformation,
-							stdIndicators
-					);
-					if ( registeredType instanceof BasicPluralType<?, ?> ) {
-						typeConfiguration.getBasicTypeRegistry().register( registeredType );
-					}
-				}
-				else {
-					registeredType = typeConfiguration.getBasicTypeRegistry()
-							.getRegisteredType( reflectedJtd.getJavaType() );
-				}
 
 				if ( registeredType != null ) {
 					// so here is the legacy resolution
@@ -221,7 +179,7 @@ public class InferredBasicValueResolver {
 					if ( recommendedJdbcType != null ) {
 						jdbcMapping = resolveSqlTypeIndicators(
 								stdIndicators,
-								typeConfiguration.getBasicTypeRegistry().resolve( reflectedJtd, recommendedJdbcType ),
+								basicTypeRegistry.resolve( reflectedJtd, recommendedJdbcType ),
 								reflectedJtd
 						);
 					}
@@ -242,8 +200,7 @@ public class InferredBasicValueResolver {
 				// NOTE : yes it's an odd case, but easy to implement here, so...
 				Integer length = null;
 				Integer scale = null;
-				if ( selectable instanceof Column ) {
-					final Column column = (Column) selectable;
+				if ( selectable instanceof Column column ) {
 					if ( column.getPrecision() != null && column.getPrecision() > 0 ) {
 						length = column.getPrecision();
 						scale = column.getScale();
@@ -262,7 +219,7 @@ public class InferredBasicValueResolver {
 						explicitJdbcType.getJdbcRecommendedJavaTypeMapping( length, scale, typeConfiguration );
 				jdbcMapping = resolveSqlTypeIndicators(
 						stdIndicators,
-						typeConfiguration.getBasicTypeRegistry().resolve( recommendedJtd, explicitJdbcType ),
+						basicTypeRegistry.resolve( recommendedJtd, explicitJdbcType ),
 						recommendedJtd
 				);
 			}
@@ -297,12 +254,74 @@ public class InferredBasicValueResolver {
 		);
 	}
 
+	private static <T> BasicType<?> registeredType(
+			JdbcType explicitJdbcType,
+			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
+			JdbcTypeIndicators stdIndicators,
+			Selectable selectable,
+			JavaType<T> reflectedJtd,
+			BootstrapContext bootstrapContext,
+			Dialect dialect) {
+		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
+
+		if ( reflectedJtd instanceof BasicPluralJavaType<?> pluralJavaType ) {
+			final JavaType<?> elementJavaType = pluralJavaType.getElementJavaType();
+			final BasicType registeredElementType = registeredElementType(
+					explicitJdbcType,
+					explicitMutabilityPlanAccess,
+					stdIndicators,
+					bootstrapContext,
+					elementJavaType
+			);
+			final BasicType<?> registeredType =
+					registeredElementType == null
+							? null
+							: pluralJavaType.resolveType(
+									typeConfiguration,
+									dialect,
+									resolveSqlTypeIndicators( stdIndicators, registeredElementType, elementJavaType ),
+									selectable instanceof ColumnTypeInformation information ? information : null,
+									stdIndicators
+							);
+			if ( registeredType instanceof BasicPluralType<?, ?> ) {
+				typeConfiguration.getBasicTypeRegistry().register( registeredType );
+			}
+			return registeredType;
+		}
+		else {
+			return typeConfiguration.getBasicTypeRegistry().getRegisteredType( reflectedJtd.getJavaType() );
+		}
+	}
+
+	private static BasicType<?> registeredElementType(
+			JdbcType explicitJdbcType,
+			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
+			JdbcTypeIndicators stdIndicators,
+			BootstrapContext context,
+			JavaType<?> elementJtd) {
+		if ( elementJtd instanceof EnumJavaType<?> enumJavaType ) {
+			return (BasicType<?>) fromEnum( enumJavaType, explicitJdbcType, stdIndicators, context ).getJdbcMapping();
+		}
+		else if ( isTemporal( elementJtd ) ) {
+			final BasicValue.Resolution<?> resolution = fromTemporal(
+					(TemporalJavaType<?>) elementJtd,
+					null,
+					null,
+					explicitMutabilityPlanAccess,
+					stdIndicators
+			);
+			return resolution.getLegacyResolvedBasicType();
+		}
+		else {
+			return context.getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( elementJtd.getJavaType() );
+		}
+	}
+
 	public static <T> BasicType<T> resolveSqlTypeIndicators(
 			JdbcTypeIndicators stdIndicators,
 			BasicType<T> resolved,
 			JavaType<T> domainJtd) {
-		if ( resolved instanceof AdjustableBasicType ) {
-			final AdjustableBasicType<T> indicatorCapable = (AdjustableBasicType<T>) resolved;
+		if ( resolved instanceof AdjustableBasicType<T> indicatorCapable ) {
 			final BasicType<T> indicatedType = indicatorCapable.resolveIndicatedType( stdIndicators, domainJtd );
 			return indicatedType != null ? indicatedType : resolved;
 		}
@@ -315,51 +334,19 @@ public class InferredBasicValueResolver {
 			EnumJavaType<E> enumJavaType,
 			JdbcType explicitJdbcType,
 			JdbcTypeIndicators stdIndicators,
-			BootstrapContext bootstrapContext) {
-		final Class<E> enumJavaTypeClass = enumJavaType.getJavaTypeClass();
-		final Field enumeratedValueField = determineEnumeratedValueField( enumJavaTypeClass );
+			BootstrapContext context) {
+		final Field enumeratedValueField = determineEnumeratedValueField( enumJavaType.getJavaTypeClass() );
 		if ( enumeratedValueField != null ) {
 			validateEnumeratedValue( enumeratedValueField, stdIndicators );
 		}
 
-		final JdbcType jdbcType;
-		if ( explicitJdbcType != null ) {
-			jdbcType = explicitJdbcType;
-		}
-		else if ( enumeratedValueField != null ) {
-			final JdbcTypeRegistry jdbcTypeRegistry = bootstrapContext.getTypeConfiguration().getJdbcTypeRegistry();
-			final Class<?> fieldType = enumeratedValueField.getType();
-			if ( String.class.equals( fieldType ) ) {
-				jdbcType = jdbcTypeRegistry.getDescriptor( SqlTypes.VARCHAR );
-			}
-			else if ( byte.class.equals( fieldType ) ) {
-				jdbcType = jdbcTypeRegistry.getDescriptor( SqlTypes.TINYINT );
-			}
-			else if ( short.class.equals( fieldType )
-					|| int.class.equals( fieldType ) ) {
-				jdbcType = jdbcTypeRegistry.getDescriptor( SMALLINT );
-			}
-			else {
-				throw new IllegalStateException();
-			}
-		}
-		else {
-			jdbcType = enumJavaType.getRecommendedJdbcType( stdIndicators );
-		}
-
-		final BasicType<E> basicType;
-		if ( enumeratedValueField != null ) {
-			basicType = createEnumeratedValueJdbcMapping( enumeratedValueField, enumJavaType, jdbcType, bootstrapContext );
-		}
-		else {
-			basicType = bootstrapContext.getTypeConfiguration().getBasicTypeRegistry().resolve(
-					enumJavaType,
-					jdbcType
-			);
-		}
-
-		bootstrapContext.registerAdHocBasicType( basicType );
-
+		final JdbcType jdbcType =
+				enumJdbcType( enumJavaType, explicitJdbcType, stdIndicators, context, enumeratedValueField );
+		final BasicType<E> basicType =
+				enumeratedValueField != null
+						? createEnumeratedValueJdbcMapping( enumeratedValueField, enumJavaType, jdbcType, context )
+						: context.getTypeConfiguration().getBasicTypeRegistry().resolve( enumJavaType, jdbcType );
+		context.registerAdHocBasicType( basicType );
 		return new InferredBasicValueResolution<>(
 				basicType,
 				enumJavaType,
@@ -370,14 +357,45 @@ public class InferredBasicValueResolver {
 		);
 	}
 
+	private static <E extends Enum<E>> JdbcType enumJdbcType(
+			EnumJavaType<E> enumJavaType,
+			JdbcType explicitJdbcType,
+			JdbcTypeIndicators stdIndicators,
+			BootstrapContext context,
+			Field enumeratedValueField) {
+		if ( explicitJdbcType != null ) {
+			return explicitJdbcType;
+		}
+		else if ( enumeratedValueField != null ) {
+			final JdbcTypeRegistry jdbcTypeRegistry = context.getTypeConfiguration().getJdbcTypeRegistry();
+			final Class<?> fieldType = enumeratedValueField.getType();
+			if ( String.class.equals( fieldType ) ) {
+				return jdbcTypeRegistry.getDescriptor( SqlTypes.VARCHAR );
+			}
+			else if ( byte.class.equals( fieldType ) ) {
+				return jdbcTypeRegistry.getDescriptor( SqlTypes.TINYINT );
+			}
+			else if ( short.class.equals( fieldType )
+					|| int.class.equals( fieldType ) ) {
+				return jdbcTypeRegistry.getDescriptor( SMALLINT );
+			}
+			else {
+				throw new IllegalStateException();
+			}
+		}
+		else {
+			return enumJavaType.getRecommendedJdbcType( stdIndicators );
+		}
+	}
+
 	private static <E extends Enum<E>> BasicType<E> createEnumeratedValueJdbcMapping(
 			Field enumeratedValueField,
 			EnumJavaType<E> enumJavaType,
 			JdbcType jdbcType,
-			BootstrapContext bootstrapContext) {
-		final JavaTypeRegistry javaTypeRegistry = bootstrapContext.getTypeConfiguration().getJavaTypeRegistry();
-		final Class<?> fieldType = enumeratedValueField.getType();
-		final JavaType<?> relationalJavaType = javaTypeRegistry.getDescriptor( fieldType );
+			BootstrapContext context) {
+		final JavaType<?> relationalJavaType =
+				context.getTypeConfiguration().getJavaTypeRegistry()
+						.getDescriptor( enumeratedValueField.getType() );
 		return new ConvertedBasicTypeImpl<>(
 				ConvertedBasicTypeImpl.EXTERNALIZED_PREFIX + enumJavaType.getTypeName(),
 				"EnumeratedValue conversion for " + enumJavaType.getTypeName(),
@@ -434,9 +452,10 @@ public class InferredBasicValueResolver {
 			TemporalJavaType<T> reflectedJtd,
 			BasicJavaType<?> explicitJavaType,
 			JdbcType explicitJdbcType,
-			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
+			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
 			JdbcTypeIndicators stdIndicators) {
 		final TypeConfiguration typeConfiguration = stdIndicators.getTypeConfiguration();
+		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 		final TemporalType requestedTemporalPrecision = stdIndicators.getTemporalPrecision();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -463,15 +482,14 @@ public class InferredBasicValueResolver {
 			final JdbcType jdbcType = explicitJdbcType != null
 					? explicitJdbcType
 					: explicitTemporalJtd.getRecommendedJdbcType( stdIndicators );
-			final BasicType<T> jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve( explicitTemporalJtd, jdbcType );
-			final MutabilityPlan<T> mutabilityPlan = determineMutabilityPlan( explicitMutabilityPlanAccess, explicitTemporalJtd, typeConfiguration );
+			final BasicType<T> jdbcMapping = basicTypeRegistry.resolve( explicitTemporalJtd, jdbcType );
 			return new InferredBasicValueResolution<>(
 					jdbcMapping,
 					explicitTemporalJtd,
 					explicitTemporalJtd,
 					jdbcType,
 					jdbcMapping,
-					mutabilityPlan
+					determineMutabilityPlan( explicitMutabilityPlanAccess, explicitTemporalJtd, typeConfiguration )
 			);
 		}
 
@@ -482,25 +500,19 @@ public class InferredBasicValueResolver {
 		// 		due to the new annotations being used
 
 		if ( explicitJdbcType != null ) {
-			final TemporalJavaType<T> jtd;
-
-			if ( requestedTemporalPrecision != null ) {
-				jtd = reflectedJtd.resolveTypeForPrecision( requestedTemporalPrecision, typeConfiguration );
-			}
-			else {
-				// Avoid using the DateJavaType and prefer the JdbcTimestampJavaType
-				jtd = reflectedJtd.resolveTypeForPrecision( reflectedJtd.getPrecision(), typeConfiguration );
-			}
-
-			final BasicType<T> jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve( jtd, explicitJdbcType );
-
+			final TemporalJavaType<T> temporalJavaType =
+					requestedTemporalPrecision != null
+							? reflectedJtd.resolveTypeForPrecision( requestedTemporalPrecision, typeConfiguration )
+							// Avoid using the DateJavaType and prefer the JdbcTimestampJavaType
+							: reflectedJtd.resolveTypeForPrecision( reflectedJtd.getPrecision(), typeConfiguration );
+			final BasicType<T> jdbcMapping = basicTypeRegistry.resolve( temporalJavaType, explicitJdbcType );
 			return new InferredBasicValueResolution<>(
 					jdbcMapping,
-					jtd,
-					jtd,
+					temporalJavaType,
+					temporalJavaType,
 					explicitJdbcType,
 					jdbcMapping,
-					jtd.getMutabilityPlan()
+					temporalJavaType.getMutabilityPlan()
 			);
 		}
 
@@ -509,15 +521,17 @@ public class InferredBasicValueResolver {
 		//
 		// 		- for the moment continue to use the legacy resolution to registered
 		// 		BasicType
+
 		final BasicType<T> basicType;
-		if ( requestedTemporalPrecision != null && requestedTemporalPrecision != reflectedJtd.getPrecision() ) {
-			basicType = typeConfiguration.getBasicTypeRegistry().resolve(
+		if ( requestedTemporalPrecision != null
+				&& requestedTemporalPrecision != reflectedJtd.getPrecision() ) {
+			basicType = basicTypeRegistry.resolve(
 					reflectedJtd.resolveTypeForPrecision( requestedTemporalPrecision, typeConfiguration ),
 					TemporalJavaType.resolveJdbcTypeCode( requestedTemporalPrecision )
 			);
 		}
 		else {
-			basicType = typeConfiguration.getBasicTypeRegistry().resolve(
+			basicType = basicTypeRegistry.resolve(
 					// Avoid using the DateJavaType and prefer the JdbcTimestampJavaType
 					reflectedJtd.resolveTypeForPrecision( reflectedJtd.getPrecision(), typeConfiguration ),
 					reflectedJtd.getRecommendedJdbcType( stdIndicators )
@@ -534,18 +548,18 @@ public class InferredBasicValueResolver {
 		);
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private static <T> MutabilityPlan<T> determineMutabilityPlan(
-			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
-			JavaType<T> jtd,
+			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
+			JavaType<T> javaType,
 			TypeConfiguration typeConfiguration) {
 		if ( explicitMutabilityPlanAccess != null ) {
-			final MutabilityPlan<T> mutabilityPlan = explicitMutabilityPlanAccess.apply( typeConfiguration );
+			final MutabilityPlan<?> mutabilityPlan = explicitMutabilityPlanAccess.apply( typeConfiguration );
 			if ( mutabilityPlan != null ) {
-				return mutabilityPlan;
+				//noinspection unchecked
+				return (MutabilityPlan<T>) mutabilityPlan;
 			}
 		}
-		return jtd.getMutabilityPlan();
+		return javaType.getMutabilityPlan();
 	}
 
 }

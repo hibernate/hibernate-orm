@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.service.internal;
@@ -29,7 +29,6 @@ import org.hibernate.event.internal.DefaultPostLoadEventListener;
 import org.hibernate.event.internal.DefaultPreLoadEventListener;
 import org.hibernate.event.internal.DefaultRefreshEventListener;
 import org.hibernate.event.internal.DefaultReplicateEventListener;
-import org.hibernate.event.internal.DefaultResolveNaturalIdEventListener;
 import org.hibernate.event.internal.PostDeleteEventListenerStandardImpl;
 import org.hibernate.event.internal.PostInsertEventListenerStandardImpl;
 import org.hibernate.event.internal.PostUpdateEventListenerStandardImpl;
@@ -39,6 +38,7 @@ import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistrationException;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 
 import static org.hibernate.event.spi.EventType.AUTO_FLUSH;
@@ -75,7 +75,6 @@ import static org.hibernate.event.spi.EventType.PRE_UPDATE;
 import static org.hibernate.event.spi.EventType.PRE_UPSERT;
 import static org.hibernate.event.spi.EventType.REFRESH;
 import static org.hibernate.event.spi.EventType.REPLICATE;
-import static org.hibernate.event.spi.EventType.RESOLVE_NATURAL_ID;
 
 /**
  * Standard implementation of EventListenerRegistry
@@ -123,8 +122,10 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 		setListeners( type, resolveListenerInstances( type, listenerClasses ) );
 	}
 
-	@SuppressWarnings( {"unchecked"})
+	@SafeVarargs
+	@AllowReflection // Possible array types are registered in org.hibernate.graalvm.internal.StaticClassLists.typesNeedingArrayCopy
 	private <T> T[] resolveListenerInstances(EventType<T> type, Class<? extends T>... listenerClasses) {
+		@SuppressWarnings("unchecked")
 		T[] listeners = (T[]) Array.newInstance( type.baseListenerInterface(), listenerClasses.length );
 		for ( int i = 0; i < listenerClasses.length; i++ ) {
 			listeners[i] = resolveListenerInstance( listenerClasses[i] );
@@ -132,8 +133,8 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 		return listeners;
 	}
 
-	@SuppressWarnings( {"unchecked"})
 	private <T> T resolveListenerInstance(Class<T> listenerClass) {
+		@SuppressWarnings("unchecked")
 		T listenerInstance = (T) listenerClassToInstanceMap.get( listenerClass );
 		if ( listenerInstance == null ) {
 			listenerInstance = instantiateListener( listenerClass );
@@ -239,9 +240,6 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 
 			// load listeners
 			prepareListeners( LOAD, new DefaultLoadEventListener() );
-
-			// resolve natural-id listeners
-			prepareListeners( RESOLVE_NATURAL_ID, new DefaultResolveNaturalIdEventListener() );
 
 			// load-collection listeners
 			prepareListeners( INIT_COLLECTION, new DefaultInitializeCollectionEventListener() );

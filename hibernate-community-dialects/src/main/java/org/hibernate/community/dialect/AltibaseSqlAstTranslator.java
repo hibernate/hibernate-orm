@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -12,7 +12,6 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.common.FrameExclusion;
 import org.hibernate.query.common.FrameKind;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
@@ -21,14 +20,11 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Over;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -64,7 +60,8 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	@Override
 	public void visitOver(Over<?> over) {
 		final Expression expression = over.getExpression();
-		if ( expression instanceof FunctionExpression && "row_number".equals( ( (FunctionExpression) expression ).getFunctionName() ) ) {
+		if ( expression instanceof FunctionExpression functionExpression
+				&& "row_number".equals( functionExpression.getFunctionName() ) ) {
 			if ( over.getPartitions().isEmpty() && over.getOrderList().isEmpty()
 					&& over.getStartKind() == FrameKind.UNBOUNDED_PRECEDING
 					&& over.getEndKind() == FrameKind.CURRENT_ROW
@@ -92,31 +89,6 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
 				&& getDialect().supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
-	}
-
-	@Override
-	protected void renderTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
-		// Use join instead because Altibase does not support cross apply
-		appendSql( WHITESPACE );
-		if ( tableGroupJoin.getJoinType() != SqlAstJoinType.CROSS ) {
-			// No support for cross joins, so we emulate it with an inner join and always true on condition
-			appendSql( tableGroupJoin.getJoinType().getText() );
-		}
-		appendSql( "join " );
-
-		final Predicate predicate;
-		if ( tableGroupJoin.getPredicate() == null ) {
-			predicate = new BooleanExpressionPredicate( new QueryLiteral<>( true, getBooleanType() ) );
-		}
-		else {
-			predicate = tableGroupJoin.getPredicate();
-		}
-		if ( predicate != null && !predicate.isEmpty() ) {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
-		}
-		else {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
-		}
 	}
 
 	@Override
@@ -220,26 +192,6 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 
 	@Override
 	protected boolean needsRecursiveKeywordInWithClause() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
-	protected boolean supportsSimpleQueryGrouping() {
 		return false;
 	}
 

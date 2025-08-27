@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.event.internal;
@@ -23,53 +23,59 @@ import org.jboss.logging.Logger;
 
 /**
  * The intent of this class is to use a lighter implementation
- * when JPA callbacks are disabled via
- * {@link SessionFactoryOptions#areJPACallbacksEnabled()}
+ * when standard JPA entity lifecycle callbacks are disabled via
+ * {@link SessionFactoryOptions#areJPACallbacksEnabled()}.
  */
 public final class CallbacksFactory {
 	private static final Logger log = Logger.getLogger( CallbacksFactory.class );
 
-	public static CallbackRegistry buildCallbackRegistry(SessionFactoryOptions options, ServiceRegistry serviceRegistry, Collection<PersistentClass> entityBindings) {
-		if ( !jpaCallBacksEnabled( options ) ) {
+	public static CallbackRegistry buildCallbackRegistry(
+			SessionFactoryOptions options, ServiceRegistry serviceRegistry, Collection<PersistentClass> entityBindings) {
+		if ( !options.areJPACallbacksEnabled() ) {
 			return new EmptyCallbackRegistryImpl();
 		}
-		ManagedBeanRegistry beanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
-		CallbackRegistryImpl.Builder registryBuilder = new CallbackRegistryImpl.Builder();
-		Set<Class<?>> entityClasses = new HashSet<>();
+		final ManagedBeanRegistry beanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
+		final CallbackRegistryImpl.Builder registryBuilder = new CallbackRegistryImpl.Builder();
+		final Set<Class<?>> entityClasses = new HashSet<>();
 
 		for ( PersistentClass persistentClass : entityBindings ) {
-			if ( persistentClass.getClassName() == null ) {
-				// we can have dynamic (non-java class) mapping
-				continue;
-			}
-
-			Class<?> entityClass = persistentClass.getMappedClass();
-
-			if ( !entityClasses.add( entityClass ) ) {
-				// this most likely means we have a class mapped multiple times using the hbm.xml
-				// "entity name" feature
-				if ( log.isDebugEnabled() ) {
-					log.debugf(
-							"Class [%s] already has callbacks registered; " +
-									"assuming this means the class was mapped twice " +
-									"(using hbm.xml entity-name support) - skipping subsequent registrations" +
-									"to avoid duplicates",
-							entityClass.getName()
-					);
+			if ( persistentClass.getClassName() != null ) {
+				final Class<?> entityClass = persistentClass.getMappedClass();
+				if ( !entityClasses.add( entityClass ) ) {
+					// this most likely means we have a class mapped multiple
+					// times using the hbm.xml "entity name" feature
+					if ( log.isDebugEnabled() ) {
+						log.debugf(
+								"Class [%s] already has callbacks registered; " +
+								"assuming this means the class was mapped twice " +
+								"(using hbm.xml entity-name support) - skipping subsequent registrations" +
+								"to avoid duplicates",
+								entityClass.getName()
+						);
+					}
 				}
-				continue;
+				else {
+					registerAllCallbacks( persistentClass, registryBuilder, entityClass, beanRegistry );
+				}
 			}
-
-			registryBuilder.registerCallbacks( persistentClass.getMappedClass(),
-					buildCallbacks( persistentClass.getCallbackDefinitions(), beanRegistry ) );
-
-			for ( Property property : persistentClass.getDeclaredProperties() ) {
-				registryBuilder.registerCallbacks( persistentClass.getMappedClass(),
-						buildCallbacks( property.getCallbackDefinitions(), beanRegistry ) );
-			}
+			// else we can have dynamic (non-java class) mapping
 		}
 
 		return registryBuilder.build();
+	}
+
+	private static void registerAllCallbacks(
+			PersistentClass persistentClass,
+			CallbackRegistryImpl.Builder registryBuilder,
+			Class<?> entityClass,
+			ManagedBeanRegistry beanRegistry) {
+		registryBuilder.registerCallbacks( entityClass,
+				buildCallbacks( persistentClass.getCallbackDefinitions(), beanRegistry ) );
+
+		for ( Property property : persistentClass.getDeclaredProperties() ) {
+			registryBuilder.registerCallbacks( entityClass,
+					buildCallbacks( property.getCallbackDefinitions(), beanRegistry ) );
+		}
 	}
 
 	private static Callback[] buildCallbacks(List<CallbackDefinition> callbackDefinitions,
@@ -77,15 +83,13 @@ public final class CallbacksFactory {
 		if ( callbackDefinitions == null || callbackDefinitions.isEmpty() ) {
 			return null;
 		}
-		List<Callback> callbacks = new ArrayList<>();
-		for ( CallbackDefinition definition : callbackDefinitions ) {
-			callbacks.add( definition.createCallback( beanRegistry ) );
+		else {
+			final List<Callback> callbacks = new ArrayList<>();
+			for ( CallbackDefinition definition : callbackDefinitions ) {
+				callbacks.add( definition.createCallback( beanRegistry ) );
+			}
+			return callbacks.toArray( new Callback[0] );
 		}
-		return callbacks.toArray( new Callback[0] );
-	}
-
-	private static boolean jpaCallBacksEnabled(SessionFactoryOptions options) {
-		return options.areJPACallbacksEnabled();
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.internal;
@@ -40,27 +40,27 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 		final AccessType propertyAccessType = AccessStrategyHelper.getAccessType( containerJavaType, propertyName );
 		switch ( propertyAccessType ) {
 			case FIELD: {
-				Field field = AccessStrategyHelper.fieldOrNull( containerJavaType, propertyName );
+				final Field field = AccessStrategyHelper.fieldOrNull( containerJavaType, propertyName );
 				if ( field == null ) {
 					throw new PropertyAccessBuildingException(
 							"Could not locate field for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
 					);
 				}
-				this.getter = fieldGetter( containerJavaType, propertyName, field );
-				this.setter = fieldSetter( containerJavaType, propertyName, field );
+				getter = fieldGetter( containerJavaType, propertyName, field );
+				setter = fieldSetter( containerJavaType, propertyName, field );
 				break;
 			}
 			case PROPERTY: {
-				Method getterMethod = getterMethodOrNull( containerJavaType, propertyName );
+				final Method getterMethod = getterMethodOrNull( containerJavaType, propertyName );
 				if ( getterMethod == null ) {
 					throw new PropertyAccessBuildingException(
 							"Could not locate getter for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
 					);
 				}
-				Method setterMethod = findSetterMethod( containerJavaType, propertyName, getterMethod.getReturnType() );
+				final Method setterMethod = findSetterMethod( containerJavaType, propertyName, getterMethod.getReturnType() );
 
-				this.getter = propertyGetter( containerJavaType, propertyName, getterMethod );
-				this.setter = propertySetter( containerJavaType, propertyName, setterMethod );
+				getter = propertyGetter( containerJavaType, propertyName, getterMethod );
+				setter = propertySetter( containerJavaType, propertyName, setterMethod );
 				break;
 			}
 			default: {

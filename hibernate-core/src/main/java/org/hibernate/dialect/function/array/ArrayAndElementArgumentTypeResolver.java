@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
@@ -21,7 +21,7 @@ import java.util.List;
  * A {@link FunctionArgumentTypeResolver} that resolves the array argument type based on the element argument type
  * or the element argument type based on the array argument type.
  */
-public class ArrayAndElementArgumentTypeResolver extends AbstractFunctionArgumentTypeResolver {
+public class ArrayAndElementArgumentTypeResolver implements AbstractFunctionArgumentTypeResolver {
 
 	public static final FunctionArgumentTypeResolver DEFAULT_INSTANCE = new ArrayAndElementArgumentTypeResolver( 0, 1 );
 
@@ -37,13 +37,16 @@ public class ArrayAndElementArgumentTypeResolver extends AbstractFunctionArgumen
 	public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
 		if ( argumentIndex == arrayIndex ) {
 			for ( int elementIndex : elementIndexes ) {
+				if ( elementIndex >= arguments.size() ) {
+					continue;
+				}
 				final SqmTypedNode<?> node = arguments.get( elementIndex );
-				if ( node instanceof SqmExpression<?> ) {
-					final MappingModelExpressible<?> expressible = converter.determineValueMapping( (SqmExpression<?>) node );
+				if ( node instanceof SqmExpression<?> sqmExpression ) {
+					final MappingModelExpressible<?> expressible = converter.determineValueMapping( sqmExpression );
 					if ( expressible != null ) {
 						return DdlTypeHelper.resolveArrayType(
 								(DomainType<?>) expressible.getSingleJdbcMapping(),
-								converter.getCreationContext().getSessionFactory().getTypeConfiguration()
+								converter.getCreationContext().getTypeConfiguration()
 						);
 					}
 				}
@@ -51,11 +54,11 @@ public class ArrayAndElementArgumentTypeResolver extends AbstractFunctionArgumen
 		}
 		else if ( ArrayHelper.contains( elementIndexes, argumentIndex ) ) {
 			final SqmTypedNode<?> node = arguments.get( arrayIndex );
-			if ( node instanceof SqmExpression<?> ) {
-				final MappingModelExpressible<?> expressible = converter.determineValueMapping( (SqmExpression<?>) node );
+			if ( node instanceof SqmExpression<?> sqmExpression ) {
+				final MappingModelExpressible<?> expressible = converter.determineValueMapping( sqmExpression );
 				if ( expressible != null ) {
-					if ( expressible.getSingleJdbcMapping() instanceof BasicPluralType<?, ?> ) {
-						return ( (BasicPluralType<?, ?>) expressible.getSingleJdbcMapping() ).getElementType();
+					if ( expressible.getSingleJdbcMapping() instanceof BasicPluralType<?, ?> basicPluralType ) {
+						return basicPluralType.getElementType();
 					}
 				}
 			}

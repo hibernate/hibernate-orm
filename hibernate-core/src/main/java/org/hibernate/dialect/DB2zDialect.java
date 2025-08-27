@@ -1,18 +1,19 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
 
-import org.hibernate.boot.model.FunctionContributions;
-import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.DB2LockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.DB2zSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sql.ast.DB2zSqlAstTranslator;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Column;
@@ -44,7 +45,7 @@ import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 public class DB2zDialect extends DB2Dialect {
 
 	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 12, 1 );
-	final static DatabaseVersion DB2_LUW_VERSION = DB2Dialect.MINIMUM_VERSION;
+	public final static DatabaseVersion DB2_LUW_VERSION = DB2Dialect.MINIMUM_VERSION;
 
 	public DB2zDialect(DialectResolutionInfo info) {
 		this( info.makeCopyOrDefault( MINIMUM_VERSION ) );
@@ -60,32 +61,22 @@ public class DB2zDialect extends DB2Dialect {
 	}
 
 	@Override
+	protected LockingSupport buildLockingSupport() {
+		return DB2LockingSupport.forDB2z();
+	}
+
+	@Override
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
 	}
 
 	@Override
-	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
-		if ( getVersion().isSameOrAfter( 12 ) ) {
-			CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
-			functionFactory.listagg( null );
-			functionFactory.inverseDistributionOrderedSetAggregates();
-			functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
-		}
-	}
-
-	@Override
 	protected String columnType(int sqlTypeCode) {
-		if ( getVersion().isAfter( 10 ) ) {
-			switch ( sqlTypeCode ) {
-				case TIME_WITH_TIMEZONE:
-				case TIMESTAMP_WITH_TIMEZONE:
-					// See https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/wnew/src/tpc/db2z_10_timestamptimezone.html
-					return "timestamp with time zone";
-			}
-		}
-		return super.columnType( sqlTypeCode );
+		return switch ( sqlTypeCode ) {
+			// See https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/wnew/src/tpc/db2z_10_timestamptimezone.html
+			case TIME_WITH_TIMEZONE, TIMESTAMP_WITH_TIMEZONE -> "timestamp with time zone";
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -111,14 +102,8 @@ public class DB2zDialect extends DB2Dialect {
 	}
 
 	@Override
-	public boolean supportsDistinctFromPredicate() {
-		// Supported at least since DB2 z/OS 9.0
-		return true;
-	}
-
-	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
-		return getVersion().isAfter(10) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
+		return TimeZoneSupport.NATIVE;
 	}
 
 	@Override
@@ -139,11 +124,6 @@ public class DB2zDialect extends DB2Dialect {
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return DB2zIdentityColumnSupport.INSTANCE;
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		return true;
 	}
 
 	@Override

@@ -1,12 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.locking.jpa;
 
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -41,7 +41,7 @@ public class AdvancedFollowOnLockingTest {
 				session -> {
 					statementInspector.clear();
 
-					final QueryImplementor<Department> query = session.createQuery(
+					final Query<Department> query = session.createQuery(
 							"select distinct d from Department d",
 							Department.class
 					);
@@ -69,7 +69,7 @@ public class AdvancedFollowOnLockingTest {
 				session -> {
 					statementInspector.clear();
 
-					final QueryImplementor<Tuple> query = session.createQuery(
+					final Query<Tuple> query = session.createQuery(
 							"select d, count(*) from Department d left join Department d2 on d.name = d2.name group by d",
 							Tuple.class
 					);
@@ -85,8 +85,6 @@ public class AdvancedFollowOnLockingTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete Department" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

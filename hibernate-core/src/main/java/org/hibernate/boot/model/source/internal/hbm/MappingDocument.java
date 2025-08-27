@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -18,7 +18,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTypeDefinitionType;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
-import org.hibernate.boot.model.TypeDefinitionRegistryStandardImpl;
+import org.hibernate.boot.internal.TypeDefinitionRegistryStandardImpl;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.source.internal.OverriddenMappingDefaults;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
@@ -49,7 +49,7 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 
 	private final ToolingHintContext toolingHintContext;
 
-	private final TypeDefinitionRegistryStandardImpl typeDefinitionRegistry;
+	private final TypeDefinitionRegistry typeDefinitionRegistry;
 
 	private final String contributor;
 
@@ -65,20 +65,21 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 
 		// todo : allow for a split in default-lazy for singular/plural
 
-		this.mappingDefaults = new OverriddenMappingDefaults.Builder( rootBuildingContext.getEffectiveDefaults() )
-				.setImplicitSchemaName( documentRoot.getSchema() )
-				.setImplicitCatalogName( documentRoot.getCatalog() )
-				.setImplicitPackageName( documentRoot.getPackage() )
-				.setImplicitPropertyAccessorName( documentRoot.getDefaultAccess() )
-//				.setImplicitCascadeStyleName( documentRoot.getDefaultCascade() )
-				.setEntitiesImplicitlyLazy( documentRoot.isDefaultLazy() )
-				.setAutoImportEnabled( documentRoot.isAutoImport() )
-				.setPluralAttributesImplicitlyLazy( documentRoot.isDefaultLazy() )
-				.build();
+		mappingDefaults =
+				new OverriddenMappingDefaults.Builder( rootBuildingContext.getEffectiveDefaults() )
+						.setImplicitSchemaName( documentRoot.getSchema() )
+						.setImplicitCatalogName( documentRoot.getCatalog() )
+						.setImplicitPackageName( documentRoot.getPackage() )
+						.setImplicitPropertyAccessorName( documentRoot.getDefaultAccess() )
+//						.setImplicitCascadeStyleName( documentRoot.getDefaultCascade() )
+						.setEntitiesImplicitlyLazy( documentRoot.isDefaultLazy() )
+						.setAutoImportEnabled( documentRoot.isAutoImport() )
+						.setPluralAttributesImplicitlyLazy( documentRoot.isDefaultLazy() )
+						.build();
 
-		this.toolingHintContext = Helper.collectToolingHints( null, documentRoot );
+		toolingHintContext = Helper.collectToolingHints( null, documentRoot );
 
-		this.typeDefinitionRegistry = new TypeDefinitionRegistryStandardImpl( rootBuildingContext.getTypeDefinitionRegistry() );
+		typeDefinitionRegistry = new TypeDefinitionRegistryStandardImpl( rootBuildingContext.getTypeDefinitionRegistry() );
 	}
 
 	public JaxbHbmHibernateMapping getDocumentRoot() {
@@ -103,7 +104,9 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 		if ( name.indexOf( '.' ) < 0 && implicitPackageName != null ) {
 			return implicitPackageName + '.' + name;
 		}
-		return name;
+		else {
+			return name;
+		}
 	}
 
 	@Override
@@ -183,7 +186,7 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 					? StringHelper.unqualify( name )
 					: renameBinding.getRename();
 			getMetadataCollector().addImport( rename, name );
-			log.debugf( "Import (query rename): %s -> %s", rename, name );
+			log.tracef( "Import (query rename): %s -> %s", rename, name );
 		}
 	}
 

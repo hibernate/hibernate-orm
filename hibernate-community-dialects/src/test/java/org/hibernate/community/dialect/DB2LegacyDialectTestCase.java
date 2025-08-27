@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -7,6 +7,7 @@ package org.hibernate.community.dialect;
 import java.sql.Types;
 
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.orm.test.dialect.LimitQueryOptions;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -79,7 +80,8 @@ public class DB2LegacyDialectTestCase extends BaseUnitTestCase {
 		Limit rowSelection = new Limit();
 		rowSelection.setFirstRow(1);
 		rowSelection.setMaxRows(Integer.MAX_VALUE);
-		String sql = dialect.getLimitHandler().processSql( "select a.id from tbl_a a order by a.id", rowSelection );
+		String sql = dialect.getLimitHandler().processSql( "select a.id from tbl_a a order by a.id", -1, null,
+				new LimitQueryOptions( rowSelection ) );
 		assertTrue(
 				"Integer overflow for max rows in: " + sql,
 				sql.contains("fetch first 2147483647 rows only")

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.c3p0.internal;
@@ -20,7 +20,6 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 public final class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Iterable<StrategyRegistration> getStrategyRegistrations() {
 		final SimpleStrategyRegistrationImpl<ConnectionProvider> c3p0 = new SimpleStrategyRegistrationImpl<>(
 				ConnectionProvider.class,

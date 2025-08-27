@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.junit;
@@ -15,11 +15,10 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.transaction.TransactionUtil;
-import org.junit.jupiter.api.extension.ExtensionContext;
 
 import org.jboss.logging.Logger;
 
-abstract class AbstractEntityManagerFactoryScope implements EntityManagerFactoryScope, ExtensionContext.Store.CloseableResource {
+abstract class AbstractEntityManagerFactoryScope implements EntityManagerFactoryScope, AutoCloseable {
 	private static final Logger log = Logger.getLogger( EntityManagerFactoryScope.class );
 
 	protected EntityManagerFactory emf;

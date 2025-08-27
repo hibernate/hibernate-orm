@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.spi;
@@ -70,27 +70,26 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
-		final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
+		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
 		final Object dataSourceConfigValue = configurationService.getSettings().get( DATASOURCE );
-		if ( !(dataSourceConfigValue instanceof String) ) {
+		if ( !(dataSourceConfigValue instanceof String configuredJndiName) ) {
 			throw new HibernateException( "illegal value for configuration setting '" + DATASOURCE + "'" );
 		}
-		jndiName = (String) dataSourceConfigValue;
+		jndiName = configuredJndiName;
 
 		jndiService = serviceRegistry.getService( JndiService.class );
 		if ( jndiService == null ) {
 			throw new HibernateException( "Could not locate JndiService from DataSourceBasedMultiTenantConnectionProviderImpl" );
 		}
 
-		final Object namedObject = jndiService.locate( jndiName );
+		final Object namedObject = jndiService.locate( this.jndiName );
 		if ( namedObject == null ) {
-			throw new HibernateException( "JNDI name [" + jndiName + "] could not be resolved" );
+			throw new HibernateException( "JNDI name [" + this.jndiName + "] could not be resolved" );
 		}
-
-		if ( namedObject instanceof DataSource datasource ) {
+		else if ( namedObject instanceof DataSource datasource ) {
 			final int loc = jndiName.lastIndexOf( '/' );
 			baseJndiNamespace = jndiName.substring( 0, loc );
-			final String prefix = jndiName.substring(loc + 1);
+			final String prefix = jndiName.substring( loc + 1);
 			tenantIdentifierForAny = (T) prefix;
 			dataSourceMap().put( tenantIdentifierForAny, datasource );
 		}
@@ -106,7 +105,7 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 		else {
 			throw new HibernateException(
 					"Unknown object type [" + namedObject.getClass().getName() +
-							"] found in JNDI location [" + jndiName + "]"
+					"] found in JNDI location [" + this.jndiName + "]"
 			);
 		}
 	}
@@ -121,7 +120,14 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 		return new DatabaseConnectionInfoImpl(
 				null,
 				null,
+				null,
+				dialect.getClass(),
 				dialect.getVersion(),
+				true,
+				true,
+				null,
+				null,
+				null,
 				null,
 				null,
 				null,

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure.internal;
@@ -24,7 +24,7 @@ public class OracleCallableStatementSupport extends StandardCallableStatementSup
 	@Override
 	protected void appendNameParameter(
 			StringBuilder buffer,
-			ProcedureParameterImplementor parameter,
+			ProcedureParameterImplementor<?> parameter,
 			JdbcCallParameterRegistration registration) {
 		buffer.append( parameter.getName() ).append( " => ?" );
 	}

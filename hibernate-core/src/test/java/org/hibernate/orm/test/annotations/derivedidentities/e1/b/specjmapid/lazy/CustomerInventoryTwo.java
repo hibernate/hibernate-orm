@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.derivedidentities.e1.b.specjmapid.lazy;
@@ -26,7 +26,6 @@ import jakarta.persistence.Version;
 import org.hibernate.orm.test.annotations.derivedidentities.e1.b.specjmapid.Item;
 
 @NamedQueries({ @NamedQuery(name = "CustomerInventoryTwo.selectAll", query = "select a from CustomerInventoryTwo a") })
-@SuppressWarnings("serial")
 @Entity
 @Table(name = "O_CUSTINVENTORY")
 @IdClass(CustomerInventoryTwoPK.class)

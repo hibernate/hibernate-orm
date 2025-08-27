@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.pagination;
@@ -48,6 +48,11 @@ public class LegacyDB2LimitHandler extends AbstractLimitHandler {
 
 	@Override
 	public final boolean supportsVariableLimit() {
+		return false;
+	}
+
+	@Override
+	public boolean processSqlMutatesState() {
 		return false;
 	}
 }

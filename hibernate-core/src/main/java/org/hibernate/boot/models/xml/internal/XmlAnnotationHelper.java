@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.xml.internal;
@@ -8,11 +8,23 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URL;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.NClob;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import jakarta.persistence.AccessType;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.NotFoundAction;
@@ -62,64 +74,16 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUniqueConstraintImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUserTypeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUuidGeneratorImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbVersionImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.XmlAnnotations;
-import org.hibernate.boot.models.annotations.internal.AssociationOverrideJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.AssociationOverridesJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.AttributeOverrideJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.AttributeOverridesJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.CascadeAnnotation;
-import org.hibernate.boot.models.annotations.internal.CheckConstraintJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.CollectionClassificationXmlAnnotation;
-import org.hibernate.boot.models.annotations.internal.CollectionIdAnnotation;
-import org.hibernate.boot.models.annotations.internal.CollectionTypeAnnotation;
-import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.ColumnTransformerAnnotation;
-import org.hibernate.boot.models.annotations.internal.ConvertJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.ConvertsJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.DiscriminatorColumnJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.DiscriminatorFormulaAnnotation;
-import org.hibernate.boot.models.annotations.internal.DiscriminatorOptionsAnnotation;
-import org.hibernate.boot.models.annotations.internal.DiscriminatorValueJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.EntityJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.EntityListenersJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.EnumeratedJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
-import org.hibernate.boot.models.annotations.internal.FilterJoinTableAnnotation;
-import org.hibernate.boot.models.annotations.internal.FilterJoinTablesAnnotation;
-import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
-import org.hibernate.boot.models.annotations.internal.GeneratedValueJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.GenericGeneratorAnnotation;
-import org.hibernate.boot.models.annotations.internal.IdClassJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.IndexJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.InheritanceJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.JavaTypeAnnotation;
-import org.hibernate.boot.models.annotations.internal.JdbcTypeAnnotation;
-import org.hibernate.boot.models.annotations.internal.JdbcTypeCodeAnnotation;
-import org.hibernate.boot.models.annotations.internal.NaturalIdCacheAnnotation;
-import org.hibernate.boot.models.annotations.internal.NotFoundAnnotation;
-import org.hibernate.boot.models.annotations.internal.ParameterAnnotation;
-import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnsJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.RowIdAnnotation;
-import org.hibernate.boot.models.annotations.internal.SQLJoinTableRestrictionAnnotation;
-import org.hibernate.boot.models.annotations.internal.SQLRestrictionAnnotation;
-import org.hibernate.boot.models.annotations.internal.SecondaryRowAnnotation;
-import org.hibernate.boot.models.annotations.internal.SecondaryRowsAnnotation;
-import org.hibernate.boot.models.annotations.internal.SecondaryTableJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.SecondaryTablesJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.TableJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.TargetXmlAnnotation;
-import org.hibernate.boot.models.annotations.internal.TemporalJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.UniqueConstraintJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.UuidGeneratorAnnotation;
+import org.hibernate.boot.models.annotations.internal.*;
 import org.hibernate.boot.models.annotations.spi.CustomSqlDetails;
 import org.hibernate.boot.models.annotations.spi.DatabaseObjectDetails;
 import org.hibernate.boot.models.JpaEventListenerStyle;
 import org.hibernate.boot.models.spi.JpaEventListener;
+import org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
 import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.internal.db.TableProcessing;
@@ -136,7 +100,7 @@ import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.type.SqlTypes;
 
 import jakarta.persistence.AssociationOverride;
@@ -175,6 +139,11 @@ import static org.hibernate.boot.models.JpaAnnotations.SECONDARY_TABLE;
 import static org.hibernate.boot.models.JpaAnnotations.UNIQUE_CONSTRAINT;
 import static org.hibernate.boot.models.xml.internal.UserTypeCasesMapKey.MAP_KEY_USER_TYPE_CASES;
 import static org.hibernate.boot.models.xml.internal.UserTypeCasesStandard.STANDARD_USER_TYPE_CASES;
+import static org.hibernate.internal.util.NullnessHelper.coalesce;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.unqualify;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
  * Helper for creating annotation from equivalent JAXB
@@ -194,7 +163,7 @@ public class XmlAnnotationHelper {
 				JpaAnnotations.ENTITY,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		if ( StringHelper.isNotEmpty( jaxbEntity.getName() ) ) {
+		if ( isNotEmpty( jaxbEntity.getName() ) ) {
 			entityAnn.name( jaxbEntity.getName() );
 		}
 	}
@@ -227,8 +196,8 @@ public class XmlAnnotationHelper {
 			JaxbColumnImpl jaxbColumn,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( StringHelper.isEmpty( jaxbColumn.getRead() )
-				&& StringHelper.isEmpty( jaxbColumn.getWrite() ) ) {
+		if ( isEmpty( jaxbColumn.getRead() )
+				&& isEmpty( jaxbColumn.getWrite() ) ) {
 			return;
 		}
 
@@ -239,10 +208,10 @@ public class XmlAnnotationHelper {
 
 		annotationUsage.forColumn( jaxbColumn.getName() );
 
-		if ( StringHelper.isNotEmpty( jaxbColumn.getRead() ) ) {
+		if ( isNotEmpty( jaxbColumn.getRead() ) ) {
 			annotationUsage.read( jaxbColumn.getRead() );
 		}
-		if ( StringHelper.isNotEmpty( jaxbColumn.getWrite() ) ) {
+		if ( isNotEmpty( jaxbColumn.getWrite() ) ) {
 			annotationUsage.write( jaxbColumn.getWrite() );
 		}
 	}
@@ -266,7 +235,7 @@ public class XmlAnnotationHelper {
 			MutableMemberDetails memberDetails,
 			UserTypeCases cases,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbType == null || StringHelper.isEmpty( jaxbType.getValue() ) ) {
+		if ( jaxbType == null || isEmpty( jaxbType.getValue() ) ) {
 			cases.handleNone( jaxbType, memberDetails, xmlDocumentContext );
 			return;
 		}
@@ -327,8 +296,8 @@ public class XmlAnnotationHelper {
 
 	public static Parameter[] collectParameters(
 			List<JaxbConfigurationParameterImpl> jaxbParameters,
-			SourceModelBuildingContext sourceModelContext) {
-		if ( CollectionHelper.isEmpty( jaxbParameters ) ) {
+			ModelsContext sourceModelContext) {
+		if ( isEmpty( jaxbParameters ) ) {
 			return NO_PARAMETERS;
 		}
 
@@ -383,8 +352,25 @@ public class XmlAnnotationHelper {
 		}
 
 		final JaxbGeneratedValueImpl generator = jaxbCollectionId.getGenerator();
-		if ( generator != null && StringHelper.isNotEmpty( generator.getGenerator() ) ) {
+		if ( generator != null && isNotEmpty( generator.getGenerator() ) ) {
 			collectionIdAnn.generator( generator.getGenerator() );
+		}
+
+		if ( StringHelper.isNotEmpty( jaxbCollectionId.getTarget() ) ) {
+			final SimpleTypeInterpretation simpleTypeInterpretation = SimpleTypeInterpretation.interpret(
+					jaxbCollectionId.getTarget()
+			);
+			assert simpleTypeInterpretation != null;
+
+			final CollectionIdJavaClassAnnotation annotationUsage = (CollectionIdJavaClassAnnotation) memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.COLLECTION_ID_JAVA_CLASS,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			annotationUsage.idType( simpleTypeInterpretation.getJavaType() );
+		}
+		else {
+			// this will likely lead to an error later.
+			// should we throw an exception here?
 		}
 	}
 
@@ -510,7 +496,7 @@ public class XmlAnnotationHelper {
 			generatedValueAnn.strategy( jaxbGeneratedValue.getStrategy() );
 		}
 
-		if ( StringHelper.isNotEmpty( jaxbGeneratedValue.getGenerator() ) ) {
+		if ( isNotEmpty( jaxbGeneratedValue.getGenerator() ) ) {
 			generatedValueAnn.generator( jaxbGeneratedValue.getGenerator() );
 		}
 	}
@@ -528,7 +514,7 @@ public class XmlAnnotationHelper {
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
-		if ( StringHelper.isNotEmpty( jaxbGenerator.getName() ) ) {
+		if ( isNotEmpty( jaxbGenerator.getName() ) ) {
 			sequenceAnn.name( jaxbGenerator.getName() );
 		}
 
@@ -536,11 +522,11 @@ public class XmlAnnotationHelper {
 			sequenceAnn.sequenceName( jaxbGenerator.getSequenceName() );
 		}
 
-		if ( StringHelper.isNotEmpty( jaxbGenerator.getCatalog() ) ) {
+		if ( isNotEmpty( jaxbGenerator.getCatalog() ) ) {
 			sequenceAnn.catalog( jaxbGenerator.getCatalog() );
 		}
 
-		if ( StringHelper.isNotEmpty( jaxbGenerator.getSchema() ) ) {
+		if ( isNotEmpty( jaxbGenerator.getSchema() ) ) {
 			sequenceAnn.schema( jaxbGenerator.getSchema() );
 		}
 
@@ -552,7 +538,7 @@ public class XmlAnnotationHelper {
 			sequenceAnn.allocationSize( jaxbGenerator.getAllocationSize() );
 		}
 
-		if ( StringHelper.isNotEmpty( jaxbGenerator.getOptions() ) ) {
+		if ( isNotEmpty( jaxbGenerator.getOptions() ) ) {
 			sequenceAnn.options( jaxbGenerator.getOptions() );
 		}
 	}
@@ -601,7 +587,7 @@ public class XmlAnnotationHelper {
 		generatorAnn.strategy( jaxbGenerator.getClazz() );
 
 		final List<JaxbConfigurationParameterImpl> jaxbParameters = jaxbGenerator.getParameters();
-		if ( CollectionHelper.isEmpty( jaxbParameters ) ) {
+		if ( isEmpty( jaxbParameters ) ) {
 			generatorAnn.parameters( NO_PARAMETERS );
 		}
 		else {
@@ -621,11 +607,12 @@ public class XmlAnnotationHelper {
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		final List<JaxbAttributeOverrideImpl> jaxbMapKeyOverrides = pluralAttribute.getMapKeyAttributeOverrides();
-		final List<JaxbAttributeOverrideImpl> jaxbElementOverrides = pluralAttribute instanceof JaxbElementCollectionImpl
-				? ( (JaxbElementCollectionImpl) pluralAttribute ).getAttributeOverrides()
-				: emptyList();
+		final List<JaxbAttributeOverrideImpl> jaxbElementOverrides =
+				pluralAttribute instanceof JaxbElementCollectionImpl elementCollection
+						? elementCollection.getAttributeOverrides()
+						: emptyList();
 
-		if ( CollectionHelper.isEmpty( jaxbMapKeyOverrides ) && CollectionHelper.isEmpty( jaxbElementOverrides ) ) {
+		if ( isEmpty( jaxbMapKeyOverrides ) && isEmpty( jaxbElementOverrides ) ) {
 			return;
 		}
 
@@ -659,7 +646,7 @@ public class XmlAnnotationHelper {
 			}
 		}
 		else {
-			assert CollectionHelper.isEmpty( jaxbMapKeyOverrides );
+			assert isEmpty( jaxbMapKeyOverrides );
 			for ( int i = 0; i < jaxbElementOverrides.size(); i++ ) {
 				overrideUsages[i] = createAttributeOverrideUsage(
 						jaxbElementOverrides.get(i),
@@ -676,7 +663,7 @@ public class XmlAnnotationHelper {
 			String namePrefix,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
 
 		final AttributeOverrideJpaAnnotation overrideUsage = ATTRIBUTE_OVERRIDE.createUsage( modelBuildingContext );
 
@@ -701,7 +688,7 @@ public class XmlAnnotationHelper {
 			MutableAnnotationTarget target,
 			String namePrefix,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbOverrides ) ) {
+		if ( isEmpty( jaxbOverrides ) ) {
 			return;
 		}
 
@@ -728,7 +715,7 @@ public class XmlAnnotationHelper {
 			List<JaxbAssociationOverrideImpl> jaxbOverrides,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbOverrides ) ) {
+		if ( isEmpty( jaxbOverrides ) ) {
 			return;
 		}
 
@@ -798,7 +785,7 @@ public class XmlAnnotationHelper {
 			String namePrefix,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbConverts ) ) {
+		if ( isEmpty( jaxbConverts ) ) {
 			return;
 		}
 
@@ -839,10 +826,10 @@ public class XmlAnnotationHelper {
 			ConvertJpaAnnotation convert,
 			String namePrefix,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( StringHelper.isNotEmpty( jaxbConvert.getConverter() ) ) {
+		if ( isNotEmpty( jaxbConvert.getConverter() ) ) {
 			convert.converter( xmlDocumentContext.resolveJavaType( jaxbConvert.getConverter() ).toJavaClass() );
 		}
-		if ( StringHelper.isNotEmpty( jaxbConvert.getAttributeName() ) ) {
+		if ( isNotEmpty( jaxbConvert.getAttributeName() ) ) {
 			convert.attributeName( prefixIfNotAlready( jaxbConvert.getAttributeName(), namePrefix ) );
 		}
 		if ( jaxbConvert.isDisableConversion() != null ) {
@@ -858,16 +845,16 @@ public class XmlAnnotationHelper {
 			final XmlDocument.Defaults defaults = xmlDocumentContext.getXmlDocument().getDefaults();
 			final String catalog = defaults.getCatalog();
 			final String schema = defaults.getSchema();
-			if ( StringHelper.isNotEmpty( catalog ) || StringHelper.isNotEmpty( schema ) ) {
+			if ( isNotEmpty( catalog ) || isNotEmpty( schema ) ) {
 				final TableJpaAnnotation tableAnn = (TableJpaAnnotation) target.applyAnnotationUsage(
 						JpaAnnotations.TABLE,
 						xmlDocumentContext.getModelBuildingContext()
 				);
-				if ( StringHelper.isNotEmpty( catalog ) ) {
+				if ( isNotEmpty( catalog ) ) {
 					tableAnn.catalog( catalog );
 
 				}
-				if ( StringHelper.isNotEmpty( schema ) ) {
+				if ( isNotEmpty( schema ) ) {
 					tableAnn.schema( schema );
 				}
 			}
@@ -882,7 +869,7 @@ public class XmlAnnotationHelper {
 	}
 
 	public static void applyOptionalString(String value, Consumer<String> target) {
-		if ( StringHelper.isNotEmpty( value ) ) {
+		if ( isNotEmpty( value ) ) {
 			target.accept( value );
 		}
 	}
@@ -901,7 +888,7 @@ public class XmlAnnotationHelper {
 		);
 
 		final JaxbCachingImpl jaxbCaching = jaxbNaturalId.getCaching();
-		if ( StringHelper.isNotEmpty( jaxbCaching.getRegion() ) ) {
+		if ( isNotEmpty( jaxbCaching.getRegion() ) ) {
 			naturalIdCacheUsage.region( jaxbCaching.getRegion() );
 		}
 	}
@@ -948,7 +935,7 @@ public class XmlAnnotationHelper {
 	}
 
 	public static ClassDetails resolveJavaType(String packageName, String name, ClassDetailsRegistry classDetailsRegistry) {
-		if ( StringHelper.isEmpty( name ) ) {
+		if ( isEmpty( name ) ) {
 			name = Object.class.getName();
 		}
 		else if ( byte.class.getName().equals( name )
@@ -996,6 +983,39 @@ public class XmlAnnotationHelper {
 		else if ( UUID.class.getSimpleName().equalsIgnoreCase( name ) ) {
 			name = Character.class.getName();
 		}
+		else if ( URL.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = URL.class.getName();
+		}
+		else if ( Blob.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = Blob.class.getName();
+		}
+		else if ( Clob.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = Clob.class.getName();
+		}
+		else if ( NClob.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = NClob.class.getName();
+		}
+		else if ( Instant.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = Instant.class.getName();
+		}
+		else if ( LocalDate.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = LocalDate.class.getName();
+		}
+		else if ( LocalTime.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = LocalTime.class.getName();
+		}
+		else if ( LocalDateTime.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = LocalDateTime.class.getName();
+		}
+		else if ( ZonedDateTime.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = ZonedDateTime.class.getName();
+		}
+		else if ( OffsetTime.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = OffsetTime.class.getName();
+		}
+		else if ( OffsetDateTime.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = OffsetDateTime.class.getName();
+		}
 		else {
 			name = StringHelper.qualifyConditionallyIfNot( packageName, name );
 		}
@@ -1013,17 +1033,14 @@ public class XmlAnnotationHelper {
 		else if ( jaxbBasicMapping.getJavaType() != null ) {
 			applyJavaTypeDescriptor( jaxbBasicMapping.getJavaType(), memberDetails, xmlDocumentContext );
 		}
-		else if ( StringHelper.isNotEmpty( jaxbBasicMapping.getTarget() ) ) {
-			applyTargetClass( jaxbBasicMapping.getTarget(), memberDetails, xmlDocumentContext );
-		}
 
-		if ( StringHelper.isNotEmpty( jaxbBasicMapping.getJdbcType() ) ) {
+		if ( isNotEmpty( jaxbBasicMapping.getJdbcType() ) ) {
 			applyJdbcTypeDescriptor( jaxbBasicMapping.getJdbcType(), memberDetails, xmlDocumentContext );
 		}
 		else if ( jaxbBasicMapping.getJdbcTypeCode() != null ) {
 			applyJdbcTypeCode( jaxbBasicMapping.getJdbcTypeCode(), memberDetails, xmlDocumentContext );
 		}
-		else if ( StringHelper.isNotEmpty( jaxbBasicMapping.getJdbcTypeName() ) ) {
+		else if ( isNotEmpty( jaxbBasicMapping.getJdbcTypeName() ) ) {
 			applyJdbcTypeCode(
 					resolveJdbcTypeName( jaxbBasicMapping.getJdbcTypeName() ),
 					memberDetails,
@@ -1094,7 +1111,7 @@ public class XmlAnnotationHelper {
 			List<JaxbFilterImpl> jaxbFilters,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbFilters ) ) {
+		if ( isEmpty( jaxbFilters ) ) {
 			return;
 		}
 
@@ -1118,7 +1135,7 @@ public class XmlAnnotationHelper {
 			List<JaxbFilterImpl> jaxbFilters,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbFilters ) ) {
+		if ( isEmpty( jaxbFilters ) ) {
 			return;
 		}
 
@@ -1143,7 +1160,7 @@ public class XmlAnnotationHelper {
 			String sqlRestriction,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( StringHelper.isEmpty( sqlRestriction ) ) {
+		if ( isEmpty( sqlRestriction ) ) {
 			return;
 		}
 
@@ -1158,7 +1175,7 @@ public class XmlAnnotationHelper {
 			String sqlRestriction,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( StringHelper.isEmpty( sqlRestriction ) ) {
+		if ( isEmpty( sqlRestriction ) ) {
 			return;
 		}
 		final SQLJoinTableRestrictionAnnotation sqlRestrictionAnn = (SQLJoinTableRestrictionAnnotation) target.applyAnnotationUsage(
@@ -1195,7 +1212,7 @@ public class XmlAnnotationHelper {
 		annotation.sql( jaxbCustomSql.getValue() );
 		annotation.callable( jaxbCustomSql.isCallable() );
 
-		if ( StringHelper.isNotEmpty( jaxbCustomSql.getTable() ) ) {
+		if ( isNotEmpty( jaxbCustomSql.getTable() ) ) {
 			annotation.table( jaxbCustomSql.getTable() );
 		}
 
@@ -1217,7 +1234,7 @@ public class XmlAnnotationHelper {
 			JaxbIdClassImpl jaxbIdClass,
 			MutableClassDetails target,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbIdClass == null || StringHelper.isEmpty( jaxbIdClass.getClazz() ) ) {
+		if ( jaxbIdClass == null || isEmpty( jaxbIdClass.getClazz() ) ) {
 			return;
 		}
 
@@ -1236,7 +1253,7 @@ public class XmlAnnotationHelper {
 			JaxbEntityOrMappedSuperclass jaxbClass,
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
 
 		if ( jaxbClass.getExcludeDefaultListeners() != null ) {
 			classDetails.applyAnnotationUsage( EXCLUDE_DEFAULT_LISTENERS, modelBuildingContext );
@@ -1325,7 +1342,8 @@ public class XmlAnnotationHelper {
 			JpaEventListenerStyle callbackType,
 			ClassDetails classDetails) {
 		for ( MethodDetails method : classDetails.getMethods() ) {
-			if ( method.getName().equals( name ) && JpaEventListener.matchesSignature( callbackType, method ) ) {
+			if ( method.getName().equals( name )
+					&& JpaEventListener.matchesSignature( callbackType, method ) ) {
 				return (MutableMemberDetails) method;
 			}
 		}
@@ -1344,14 +1362,14 @@ public class XmlAnnotationHelper {
 				HibernateAnnotations.ROW_ID,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		if ( StringHelper.isNotEmpty( rowId ) ) {
+		if ( isNotEmpty( rowId ) ) {
 			rowIdAnn.value( rowId );
 		}
 	}
 
 	private static String prefixIfNotAlready(String value, String prefix) {
-		if ( StringHelper.isNotEmpty( prefix ) ) {
-			final String previous = StringHelper.unqualify( value );
+		if ( isNotEmpty( prefix ) ) {
+			final String previous = unqualify( value );
 			if ( !previous.equalsIgnoreCase( prefix ) ) {
 				return StringHelper.qualify( prefix, value );
 			}
@@ -1363,7 +1381,7 @@ public class XmlAnnotationHelper {
 			String discriminatorValue,
 			MutableClassDetails target,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( StringHelper.isEmpty( discriminatorValue ) ) {
+		if ( isEmpty( discriminatorValue ) ) {
 			return;
 		}
 
@@ -1408,7 +1426,7 @@ public class XmlAnnotationHelper {
 		if ( jaxbDiscriminatorFormula == null ) {
 			return;
 		}
-		if ( StringHelper.isEmpty( jaxbDiscriminatorFormula.getFragment() ) ) {
+		if ( isEmpty( jaxbDiscriminatorFormula.getFragment() ) ) {
 			return;
 		}
 
@@ -1464,10 +1482,10 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		if ( StringHelper.isNotEmpty( jaxbNode.getSchema() ) ) {
+		if ( isNotEmpty( jaxbNode.getSchema() ) ) {
 			annotationUsage.schema( jaxbNode.getSchema() );
 		}
-		else if ( StringHelper.isNotEmpty( documentSchema( xmlDocumentContext ) ) ) {
+		else if ( isNotEmpty( documentSchema( xmlDocumentContext ) ) ) {
 			annotationUsage.schema( documentSchema( xmlDocumentContext ) );
 		}
 	}
@@ -1500,10 +1518,10 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		if ( StringHelper.isNotEmpty( jaxbNode.getCatalog() ) ) {
+		if ( isNotEmpty( jaxbNode.getCatalog() ) ) {
 			annotationUsage.catalog( jaxbNode.getCatalog() );
 		}
-		else if ( StringHelper.isNotEmpty( documentCatalog( xmlDocumentContext ) ) ) {
+		else if ( isNotEmpty( documentCatalog( xmlDocumentContext ) ) ) {
 			annotationUsage.catalog( documentCatalog( xmlDocumentContext ) );
 		}
 	}
@@ -1577,7 +1595,7 @@ public class XmlAnnotationHelper {
 	public static CheckConstraint[] collectCheckConstraints(
 			List<JaxbCheckConstraintImpl> jaxbChecks,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbChecks ) ) {
+		if ( isEmpty( jaxbChecks ) ) {
 			return NO_CHECK_CONSTRAINTS;
 		}
 
@@ -1602,8 +1620,8 @@ public class XmlAnnotationHelper {
 
 	public static UniqueConstraint[] collectUniqueConstraints(
 			List<JaxbUniqueConstraintImpl> jaxbUniqueConstraints,
-			SourceModelBuildingContext modelContext) {
-		if ( CollectionHelper.isEmpty( jaxbUniqueConstraints ) ) {
+			ModelsContext modelContext) {
+		if ( isEmpty( jaxbUniqueConstraints ) ) {
 			return NO_UNIQUE_CONSTRAINTS;
 		}
 
@@ -1629,8 +1647,8 @@ public class XmlAnnotationHelper {
 
 	public static Index[] collectIndexes(
 			List<JaxbIndexImpl> jaxbIndexes,
-			SourceModelBuildingContext sourceModelContext) {
-		if ( CollectionHelper.isEmpty( jaxbIndexes ) ) {
+			ModelsContext sourceModelContext) {
+		if ( isEmpty( jaxbIndexes ) ) {
 			return NO_INDICES;
 		}
 
@@ -1656,11 +1674,11 @@ public class XmlAnnotationHelper {
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		List<JaxbPrimaryKeyJoinColumnImpl> jaxbColumns = jaxbEntity.getPrimaryKeyJoinColumns();
-		if ( CollectionHelper.isEmpty( jaxbColumns ) ) {
+		if ( isEmpty( jaxbColumns ) ) {
 			return;
 		}
 
-		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
 		final PrimaryKeyJoinColumnsJpaAnnotation columnsAnn = (PrimaryKeyJoinColumnsJpaAnnotation) classDetails.replaceAnnotationUsage(
 				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN,
 				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMNS,
@@ -1686,5 +1704,33 @@ public class XmlAnnotationHelper {
 				xmlDocumentContext.getModelBuildingContext()
 		);
 		collectionClassification.value( classification );
+	}
+
+	public static void applyVersion(JaxbVersionImpl version, MutableClassDetails mutableClassDetails, AccessType classAccessType, XmlDocumentContext xmlDocumentContext) {
+		if ( version != null ) {
+			final AccessType accessType = coalesce( version.getAccess(), classAccessType );
+			final String versionAttributeName = version.getName();
+
+			final MutableMemberDetails memberDetails = XmlProcessingHelper.getAttributeMember(
+					versionAttributeName,
+					accessType,
+					mutableClassDetails
+			);
+			memberDetails.applyAnnotationUsage(
+					JpaAnnotations.VERSION,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			CommonAttributeProcessing.applyAccess( accessType, memberDetails, xmlDocumentContext );
+			CommonAttributeProcessing.applyAttributeAccessor( version, memberDetails, xmlDocumentContext );
+			XmlAnnotationHelper.applyTemporal( version.getTemporal(), memberDetails, xmlDocumentContext );
+			if ( version.getColumn() != null ) {
+				final ColumnJpaAnnotation columnAnn = (ColumnJpaAnnotation) memberDetails.applyAnnotationUsage(
+						JpaAnnotations.COLUMN,
+						xmlDocumentContext.getModelBuildingContext()
+				);
+				columnAnn.apply( version.getColumn(), xmlDocumentContext );
+				XmlAnnotationHelper.applyColumnTransformation( version.getColumn(), memberDetails, xmlDocumentContext );
+			}
+		}
 	}
 }

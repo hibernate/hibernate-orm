@@ -1,32 +1,24 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.metamodel.EmbeddableType;
-import jakarta.persistence.metamodel.EntityType;
-import jakarta.persistence.metamodel.ManagedType;
 
 import jakarta.persistence.metamodel.Metamodel;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
-import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Extensions to the JPA-defined {@linkplain Metamodel metamodel} of
  * persistent Java types.
+ *
+ * @apiNote This is an incubating API. Its name and package may change.
  *
  * @see MappingMetamodel
  *
@@ -35,17 +27,6 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 @Incubating
 public interface JpaMetamodel extends Metamodel {
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Context
-
-	/**
-	 * todo (6.0) : should we expose JpaMetamodel from TypeConfiguration?
-	 */
-	TypeConfiguration getTypeConfiguration();
-
-	ServiceRegistry getServiceRegistry();
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Extended features
@@ -115,6 +96,9 @@ public interface JpaMetamodel extends Metamodel {
 
 	String qualifyImportableName(String queryName);
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Enumerations and Java constants (useful for interpreting HQL)
+
 	@Nullable Set<String> getEnumTypesForValue(String enumValue);
 
 	EnumJavaType<?> getEnumType(String className);
@@ -137,26 +121,4 @@ public interface JpaMetamodel extends Metamodel {
 	@Override
 	<X> EmbeddableDomainType<X> embeddable(Class<X> cls);
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// JPA defined bulk accessors
-
-	@Override
-	Set<ManagedType<?>> getManagedTypes();
-
-	@Override
-	Set<EntityType<?>> getEntities();
-
-	@Override
-	Set<EmbeddableType<?>> getEmbeddables();
-
-	<T> void addNamedEntityGraph(String graphName, RootGraphImplementor<T> entityGraph);
-
-	<T> RootGraphImplementor<T> findEntityGraphByName(String name);
-
-	<T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass);
-
-	<T> Map<String, EntityGraph<? extends T>> getNamedEntityGraphs(Class<T> entityType);
-
-	JpaCompliance getJpaCompliance();
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.onetoone.bidirectional;
@@ -43,11 +43,7 @@ public class BiDirectionalOneToOneFetchTest {
 
 	@AfterEach
 	public void delete(SessionFactoryScope scope) {
-		scope.inTransaction( s -> {
-			s.createQuery( "delete from EntityA" ).executeUpdate();
-			s.createQuery( "delete from EntityB" ).executeUpdate();
-			s.createQuery( "delete from EntityC" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
@@ -13,13 +13,12 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import org.hibernate.community.dialect.DerbyDialect;
-
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -37,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @DomainModel( annotatedClasses = TruncConvertedDatetimeAttributeTest.TestEntity.class )
 @SessionFactory
-@SkipForDialect( dialectClass = DerbyDialect.class, reason = "Derby doesn't support any form of date truncation" )
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsDateTimeTruncation.class )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17666" )
 public class TruncConvertedDatetimeAttributeTest {
 	private static final Date DATE = new GregorianCalendar( 2017, Calendar.JANUARY, 24 ).getTime();

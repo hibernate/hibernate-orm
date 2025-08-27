@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.internal;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -33,6 +34,7 @@ public class PropertyAccessStrategyBackRefImpl implements PropertyAccessStrategy
 			return "<unknown>";
 		}
 
+		@Serial
 		public Object readResolve() {
 			return UNKNOWN;
 		}
@@ -92,8 +94,7 @@ public class PropertyAccessStrategyBackRefImpl implements PropertyAccessStrategy
 		}
 
 		@Override
-		@SuppressWarnings("rawtypes")
-		public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
+		public Object getForInsert(Object owner, Map<Object, Object> mergeMap, SharedSessionContractImplementor session) {
 			return session.getPersistenceContextInternal().getOwnerId( entityName, propertyName, owner, mergeMap );
 		}
 
@@ -127,7 +128,7 @@ public class PropertyAccessStrategyBackRefImpl implements PropertyAccessStrategy
 		/**
 		 * Singleton access
 		 */
-		public static final SetterImpl INSTANCE = new SetterImpl();
+		public static final Setter INSTANCE = new SetterImpl();
 
 		@Override
 		public void set(Object target, @Nullable Object value) {

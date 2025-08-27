@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.collectionbasictype;
@@ -7,7 +7,7 @@ package org.hibernate.processor.test.collectionbasictype;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertListAttributeTypeInMetaModelFor;
 import static org.hibernate.processor.test.util.TestUtil.assertMapAttributesInMetaModelFor;
@@ -17,11 +17,12 @@ import static org.hibernate.processor.test.util.TestUtil.assertSetAttributeTypeI
 /**
  * @author Chris Cranford
  */
-public class ElementCollectionWithConverterTest extends CompilationTest {
+@CompilationTest
+class ElementCollectionWithConverterTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12581")
 	@WithClasses( { Item.class } )
-	public void testConverterAppliedToElementCollections() {
+	void testConverterAppliedToElementCollections() {
 		assertMetamodelClassGeneratedFor( Item.class );
 
 		// Verify that field roles is a SetAttribute with a generic type of Role.class

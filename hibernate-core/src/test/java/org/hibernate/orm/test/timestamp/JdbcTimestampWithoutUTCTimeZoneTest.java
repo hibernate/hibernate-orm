@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.timestamp;
@@ -62,7 +62,7 @@ public class JdbcTimestampWithoutUTCTimeZoneTest extends BaseSessionFactoryFunct
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true, reason = "https://github.com/cockroachdb/cockroach/issues/3781")
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "https://github.com/cockroachdb/cockroach/issues/3781")
 	public void testTimeZone() {
 		inTransaction( session -> {
 			Person person = new Person();

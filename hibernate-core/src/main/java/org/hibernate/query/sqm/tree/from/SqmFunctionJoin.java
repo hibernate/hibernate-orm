@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.from;
@@ -26,6 +26,8 @@ import org.hibernate.spi.NavigablePath;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
+
+import java.util.Objects;
 
 /**
  * @author Christian Beikov
@@ -225,5 +227,18 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 	@Override
 	public JoinType getJoinType() {
 		return getSqmJoinType().getCorrespondingJpaJoinType();
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmFunctionJoin<?> that
+			&& super.equals( object )
+			&& this.lateral == that.lateral
+			&& Objects.equals( this.function, that.function );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( super.hashCode(), function, lateral );
 	}
 }

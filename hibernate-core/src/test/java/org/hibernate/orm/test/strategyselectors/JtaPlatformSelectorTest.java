@@ -1,25 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.strategyselectors;
 
 import org.hibernate.boot.registry.selector.internal.DefaultJtaPlatformSelector;
 import org.hibernate.engine.transaction.jta.platform.internal.AtomikosJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.BitronixJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.BorlandEnterpriseServerJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.JOTMJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.JOnASJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.JRun4JtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.OC4JJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.OrionJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.ResinJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.SapNetWeaverJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.SunOneJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.WebSphereExtendedJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.internal.GlassFishJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
@@ -49,20 +39,6 @@ public class JtaPlatformSelectorTest {
 
 		testJtaPlatformResolves(
 				strategySelector,
-				BorlandEnterpriseServerJtaPlatform.class,
-				"Borland",
-				"org.hibernate.service.jta.platform.internal.BorlandEnterpriseServerJtaPlatform"
-		);
-
-		testJtaPlatformResolves(
-				strategySelector,
-				BitronixJtaPlatform.class,
-				"Bitronix",
-				"org.hibernate.service.jta.platform.internal.BitronixJtaPlatform"
-		);
-
-		testJtaPlatformResolves(
-				strategySelector,
 				JBossAppServerJtaPlatform.class,
 				"JBossAS",
 				"org.hibernate.service.jta.platform.internal.JBossAppServerJtaPlatform"
@@ -77,41 +53,6 @@ public class JtaPlatformSelectorTest {
 
 		testJtaPlatformResolves(
 				strategySelector,
-				JOnASJtaPlatform.class,
-				"JOnAS",
-				"org.hibernate.service.jta.platform.internal.JOnASJtaPlatform"
-		);
-
-		testJtaPlatformResolves(
-				strategySelector,
-				JOTMJtaPlatform.class,
-				"JOTM",
-				"org.hibernate.service.jta.platform.internal.JOTMJtaPlatform"
-		);
-
-		testJtaPlatformResolves(
-				strategySelector,
-				JRun4JtaPlatform.class,
-				"JRun4",
-				"org.hibernate.service.jta.platform.internal.JRun4JtaPlatform"
-		);
-
-		testJtaPlatformResolves(
-				strategySelector,
-				OC4JJtaPlatform.class,
-				"OC4J",
-				"org.hibernate.service.jta.platform.internal.OC4JJtaPlatform"
-		);
-
-		testJtaPlatformResolves(
-				strategySelector,
-				OrionJtaPlatform.class,
-				"Orion",
-				"org.hibernate.service.jta.platform.internal.OrionJtaPlatform"
-		);
-
-		testJtaPlatformResolves(
-				strategySelector,
 				ResinJtaPlatform.class,
 				"Resin",
 				"org.hibernate.service.jta.platform.internal.ResinJtaPlatform"
@@ -119,15 +60,22 @@ public class JtaPlatformSelectorTest {
 
 		testJtaPlatformResolves(
 				strategySelector,
-				SapNetWeaverJtaPlatform.class,
-				"SapNetWeaver",
-				"org.hibernate.service.jta.platform.internal.SapNetWeaverJtaPlatform"
+				GlassFishJtaPlatform.class,
+				"SunOne",
+				"org.hibernate.service.jta.platform.internal.SunOneJtaPlatform"
 		);
 
 		testJtaPlatformResolves(
 				strategySelector,
-				SunOneJtaPlatform.class,
-				"SunOne",
+				GlassFishJtaPlatform.class,
+				"GlassFish",
+				"org.hibernate.service.jta.platform.internal.SunOneJtaPlatform"
+		);
+
+		testJtaPlatformResolves(
+				strategySelector,
+				GlassFishJtaPlatform.class,
+				"Payara",
 				"org.hibernate.service.jta.platform.internal.SunOneJtaPlatform"
 		);
 
@@ -145,19 +93,6 @@ public class JtaPlatformSelectorTest {
 				"org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform"
 		);
 
-		testJtaPlatformResolves(
-				strategySelector,
-				WebSphereJtaPlatform.class,
-				"WebSphere",
-				"org.hibernate.service.jta.platform.internal.WebSphereJtaPlatform"
-		);
-
-		testJtaPlatformResolves(
-				strategySelector,
-				WebSphereExtendedJtaPlatform.class,
-				"WebSphereExtended",
-				"org.hibernate.service.jta.platform.internal.WebSphereExtendedJtaPlatform"
-		);
 	}
 
 	private static void testJtaPlatformResolves(final DefaultJtaPlatformSelector strategySelector, final Class expectedType, final String shortname, final String longname) {

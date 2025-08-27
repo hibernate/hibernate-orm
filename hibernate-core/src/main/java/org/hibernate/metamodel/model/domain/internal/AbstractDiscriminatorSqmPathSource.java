@@ -1,14 +1,16 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 
 import static jakarta.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRIBUTE;
+import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
 import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
 
 /**
@@ -17,7 +19,7 @@ import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIM
  * @author Steve Ebersole
  */
 public abstract class AbstractDiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
-		implements ReturnableType<D> {
+		implements ReturnableType<D>, SqmDomainType<D> {
 	public AbstractDiscriminatorSqmPathSource(DomainType<D> domainType) {
 		super( DISCRIMINATOR_ROLE_NAME, null, domainType, SINGULAR_ATTRIBUTE );
 	}
@@ -29,7 +31,7 @@ public abstract class AbstractDiscriminatorSqmPathSource<D> extends AbstractSqmP
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
+		return BASIC;
 	}
 
 	@Override
@@ -38,7 +40,7 @@ public abstract class AbstractDiscriminatorSqmPathSource<D> extends AbstractSqmP
 	}
 
 	@Override
-	public DomainType<D> getSqmType() {
+	public SqmDomainType<D> getSqmType() {
 		return this;
 	}
 }

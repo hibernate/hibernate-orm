@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.xml.ejb3;
@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 
+import org.hibernate.boot.jaxb.internal.InputStreamXmlSource;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
@@ -38,7 +39,7 @@ public class PreParsedOrmXmlTest extends BaseCoreFunctionalTestCase {
 		super.addMappings( configuration );
 		try (InputStream xmlStream = Thread.currentThread().getContextClassLoader()
 				.getResourceAsStream( "org/hibernate/orm/test/annotations/xml/ejb3/pre-parsed-orm.xml" )) {
-			Binding<?> parsed = configuration.getXmlMappingBinderAccess().bind( xmlStream );
+			Binding<?> parsed = InputStreamXmlSource.fromStream( xmlStream, configuration.getXmlMappingBinderAccess().getMappingBinder() );
 			configuration.addXmlMapping( parsed );
 		}
 		catch (IOException e) {

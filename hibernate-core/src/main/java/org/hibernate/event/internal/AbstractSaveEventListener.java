@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
@@ -11,14 +11,11 @@ import org.hibernate.NonUniqueObjectException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.EntityIdentityInsertAction;
 import org.hibernate.action.internal.EntityInsertAction;
-import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingAction;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryExtraState;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
@@ -44,7 +41,9 @@ import static org.hibernate.id.IdentifierGeneratorHelper.SHORT_CIRCUIT_INDICATOR
 import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
- * A convenience base class for listeners responding to save events.
+ * A convenience base class for listeners responding to persist or merge events.
+ * <p>
+ * This class contains common functionality for persisting new transient instances.
  *
  * @author Steve Ebersole.
  */
@@ -59,13 +58,13 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 	}
 
 	/**
-	 * Prepares the save call using the given requested id.
+	 * Prepares the persist call using the given requested id.
 	 *
-	 * @param entity The entity to be saved.
-	 * @param requestedId The id to which to associate the entity.
-	 * @param entityName The name of the entity being saved.
-	 * @param context Generally cascade-specific information.
-	 * @param source The session which is the source of this save event.
+	 * @param entity The entity to be persisted
+	 * @param requestedId The id with which to associate the entity
+	 * @param entityName The name of the entity being persisted
+	 * @param context Generally cascade-specific information
+	 * @param source The session which is the source of this event
 	 *
 	 * @return The id used to save the entity.
 	 */
@@ -80,18 +79,18 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 	}
 
 	/**
-	 * Prepares the save call using a newly generated id.
+	 * Prepares the persist call using a newly generated id.
 	 *
-	 * @param entity The entity to be saved
-	 * @param entityName The entity-name for the entity to be saved
-	 * @param context Generally cascade-specific information.
-	 * @param source The session which is the source of this save event.
+	 * @param entity The entity to be persisted
+	 * @param entityName The entity-name for the entity to be persisted
+	 * @param context Generally cascade-specific information
+	 * @param source The session which is the source of this persist event
 	 * @param requiresImmediateIdAccess does the event context require
 	 * access to the identifier immediately after execution of this method
 	 * (if not, post-insert style id generators may be postponed if we are
 	 * outside a transaction).
 	 *
-	 * @return The id used to save the entity; may be null depending on the
+	 * @return The id used to persist the entity; may be null depending on the
 	 *         type of id generator used and the requiresImmediateIdAccess value
 	 */
 	protected Object saveWithGeneratedId(
@@ -100,8 +99,8 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			C context,
 			EventSource source,
 			boolean requiresImmediateIdAccess) {
-		final EntityPersister persister = source.getEntityPersister( entityName, entity );
-		final Generator generator = persister.getGenerator();
+		final var persister = source.getEntityPersister( entityName, entity );
+		final var generator = persister.getGenerator();
 		final boolean generatedOnExecution = generator.generatedOnExecution( entity, source );
 		final boolean generatedBeforeExecution = generator.generatedBeforeExecution( entity, source );
 		final Object generatedId;
@@ -141,10 +140,10 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 	 * Generate an id before execution of the insert statements,
 	 * using the given {@link BeforeExecutionGenerator}.
 	 *
-	 * @param entity The entity instance to be saved
-	 * @param source The session which is the source of this save event.
-	 * @param generator The entity's generator
-	 * @param persister The entity's persister instance.
+	 * @param entity The entity instance to be persisted
+	 * @param source The session which is the source of this persist event
+	 * @param generator The generator for the entity id
+	 * @param persister The persister for the entity
 	 *
 	 * @return The generated id
 	 */
@@ -153,15 +152,16 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			EventSource source,
 			BeforeExecutionGenerator generator,
 			EntityPersister persister) {
-		final Object id = generator.generate( source, entity, null, INSERT );
+		final Object currentValue = generator.allowAssignedIdentifiers() ? persister.getIdentifier( entity ) : null;
+		final Object id = generator.generate( source, entity, currentValue, INSERT );
 		if ( id == null ) {
 			throw new IdentifierGenerationException( "Null id generated for entity '" + persister.getEntityName() + "'" );
 		}
 		else {
-			if  ( LOG.isDebugEnabled() ) {
+			if ( LOG.isTraceEnabled() ) {
 				// TODO: define toString()s for generators
-				LOG.debugf(
-						"Generated identifier: %s, using strategy: %s",
+				LOG.tracef(
+						"Generated identifier [%s] using generator '%s'",
 						persister.getIdentifierType().toLoggableString( id, source.getFactory() ),
 						generator.getClass().getName()
 				);
@@ -171,18 +171,18 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 	}
 
 	/**
-	 * Prepares the save call by checking the session caches for a pre-existing
+	 * Prepares the persist call by checking the session caches for a pre-existing
 	 * entity and performing any lifecycle callbacks.
 	 *
-	 * @param entity The entity to be saved.
-	 * @param id The id by which to save the entity.
-	 * @param persister The entity's persister instance.
+	 * @param entity The entity to be persisted
+	 * @param id The id by which to persist the entity
+	 * @param persister The entity's persister instance
 	 * @param useIdentityColumn Is an identity column being used?
-	 * @param context Generally cascade-specific information.
-	 * @param source The session from which the event originated.
+	 * @param context Generally cascade-specific information
+	 * @param source The session from which the event originated
 	 * @param delayIdentityInserts Should the identity insert be delayed?
 	 *
-	 * @return The id used to save the entity; may be null depending on the
+	 * @return The id used to persist the entity; may be null depending on the
 	 *         type of id generator used and on delayIdentityInserts
 	 */
 	protected Object performSave(
@@ -211,21 +211,16 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 		}
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Saving {0}", infoString( persister, id, source.getFactory() ) );
+			LOG.trace( "Persisting " + infoString( persister, id, source.getFactory() ) );
 		}
 
-		final EntityKey key = useIdentityColumn ? null : entityKey( id, persister, source );
-		if ( invokeSaveLifecycle( entity, persister, source ) ) {
-			return id;
-		}
-		else {
-			return performSaveOrReplicate( entity, key, persister, useIdentityColumn, context, source, delayIdentityInserts );
-		}
+		final var key = useIdentityColumn ? null : entityKey( id, persister, source );
+		return performSaveOrReplicate( entity, key, persister, useIdentityColumn, context, source, delayIdentityInserts );
 	}
 
 	private static EntityKey entityKey(Object id, EntityPersister persister, EventSource source) {
-		final EntityKey key = source.generateEntityKey( id, persister );
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final var key = source.generateEntityKey( id, persister );
+		final var persistenceContext = source.getPersistenceContextInternal();
 		final Object old = persistenceContext.getEntity( key );
 		if ( old != null ) {
 			if ( persistenceContext.getEntry( old ).getStatus() == Status.DELETED ) {
@@ -241,32 +236,19 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 		return key;
 	}
 
-	protected boolean invokeSaveLifecycle(Object entity, EntityPersister persister, EventSource source) {
-		// Sub-insertions should occur before containing insertion so
-		// Try to do the callback now
-		if ( persister.implementsLifecycle() ) {
-			LOG.debug( "Calling onSave()" );
-			if ( ((Lifecycle) entity).onSave( source ) ) {
-				LOG.debug( "Insertion vetoed by onSave()" );
-				return true;
-			}
-		}
-		return false;
-	}
-
 	/**
-	 * Performs all the actual work needed to save an entity (well to get the save moved to
-	 * the execution queue).
+	 * Performs all the actual work needed to persist an entity
+	 * (well to get the persist action moved to the execution queue).
 	 *
-	 * @param entity The entity to be saved
+	 * @param entity The entity to be persisted
 	 * @param key The id to be used for saving the entity (or null, in the case of identity columns)
-	 * @param persister The entity's persister instance.
+	 * @param persister The persister for the entity
 	 * @param useIdentityColumn Should an identity column be used for id generation?
-	 * @param context Generally cascade-specific information.
-	 * @param source The session which is the source of the current event.
+	 * @param context Generally cascade-specific information
+	 * @param source The session which is the source of the current event
 	 * @param delayIdentityInserts Should the identity insert be delayed?
 	 *
-	 * @return The id used to save the entity; may be null depending on the
+	 * @return The id used to persist the entity; may be null depending on the
 	 *         type of id generator used and the requiresImmediateIdAccess value
 	 */
 	protected Object performSaveOrReplicate(
@@ -280,12 +262,12 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 
 		final Object id = key == null ? null : key.getIdentifier();
 
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final var persistenceContext = source.getPersistenceContextInternal();
 
 		// Put a placeholder in entries, so we don't recurse back and try to save() the
 		// same object again. QUESTION: should this be done before onSave() is called?
 		// likewise, should it be done before onUpdate()?
-		final EntityEntry original = persistenceContext.addEntry(
+		final var original = persistenceContext.addEntry(
 				entity,
 				Status.SAVING,
 				null,
@@ -303,7 +285,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 
 		cascadeBeforeSave( source, persister, entity, context );
 
-		final AbstractEntityInsertAction insert = addInsertAction(
+		final var insert = addInsertAction(
 				cloneAndSubstituteValues( entity, persister, context, source, id ),
 				id,
 				entity,
@@ -319,9 +301,9 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 
 		final Object finalId = handleGeneratedId( useIdentityColumn, id, insert );
 
-		final EntityEntry newEntry = persistenceContext.getEntry( entity );
+		final var newEntry = persistenceContext.getEntry( entity );
 		if ( newEntry != original ) {
-			final EntityEntryExtraState extraState = newEntry.getExtraState( EntityEntryExtraState.class );
+			final var extraState = newEntry.getExtraState( EntityEntryExtraState.class );
 			if ( extraState == null ) {
 				newEntry.addExtraState( original.getExtraState( EntityEntryExtraState.class ) );
 			}
@@ -332,8 +314,8 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 
 	private static Object handleGeneratedId(boolean useIdentityColumn, Object id, AbstractEntityInsertAction insert) {
 		if ( useIdentityColumn && insert.isEarlyInsert() ) {
-			if ( insert instanceof EntityIdentityInsertAction ) {
-				final Object generatedId = ((EntityIdentityInsertAction) insert).getGeneratedId();
+			if ( insert instanceof EntityIdentityInsertAction entityIdentityInsertAction ) {
+				final Object generatedId = entityIdentityInsertAction.getGeneratedId();
 				insert.handleNaturalIdPostSaveNotifications( generatedId );
 				return generatedId;
 			}
@@ -381,7 +363,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			EventSource source,
 			boolean delayIdentityInserts) {
 		if ( useIdentityColumn ) {
-			final EntityIdentityInsertAction insert = new EntityIdentityInsertAction(
+			final var insert = new EntityIdentityInsertAction(
 					values,
 					entity,
 					persister,
@@ -393,7 +375,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			return insert;
 		}
 		else {
-			final EntityInsertAction insert = new EntityInsertAction(
+			final var insert = new EntityInsertAction(
 					id,
 					values,
 					entity,
@@ -412,10 +394,10 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 	}
 
 	/**
-	 * After the save, will te version number be incremented
+	 * After the persist, will the version number be incremented
 	 * if the instance is modified?
 	 *
-	 * @return True if the version will be incremented on an entity change after save;
+	 * @return True if the version will be incremented on an entity change after persist;
 	 *         false otherwise.
 	 */
 	protected boolean isVersionIncrementDisabled() {
@@ -428,7 +410,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			Object[] values,
 			Type[] types,
 			EventSource source) {
-		final WrapVisitor visitor = new WrapVisitor( entity, id, source );
+		final var visitor = new WrapVisitor( entity, id, source );
 		// substitutes into values by side effect
 		visitor.processEntityPropertyValues( values, types );
 		return visitor.isSubstitutionRequired();
@@ -469,11 +451,11 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 	}
 
 	/**
-	 * Handles the calls needed to perform pre-save cascades for the given entity.
+	 * Handles the calls needed to perform pre-persist cascades for the given entity.
 	 *
-	 * @param source The session from which the save event originated.
-	 * @param persister The entity's persister instance.
-	 * @param entity The entity to be saved.
+	 * @param source The session from which the persist event originated
+	 * @param persister The persister for the entity
+	 * @param entity The entity to be persisted
 	 * @param context Generally cascade-specific data
 	 */
 	protected void cascadeBeforeSave(
@@ -482,7 +464,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			Object entity,
 			C context) {
 		// cascade-save to many-to-one BEFORE the parent is saved
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final var persistenceContext = source.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
 			Cascade.cascade(
@@ -500,11 +482,11 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 	}
 
 	/**
-	 * Handles calls needed to perform post-save cascades.
+	 * Handles calls needed to perform post-persist cascades.
 	 *
-	 * @param source The session from which the event originated.
-	 * @param persister The entity's persister instance.
-	 * @param entity The entity being saved.
+	 * @param source The session from which the event originated
+	 * @param persister The persister for the entity
+	 * @param entity The entity being persisted
 	 * @param context Generally cascade-specific data
 	 */
 	protected void cascadeAfterSave(
@@ -513,7 +495,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			Object entity,
 			C context) {
 		// cascade-save to collections AFTER the collection owner was saved
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final var persistenceContext = source.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
 			Cascade.cascade(

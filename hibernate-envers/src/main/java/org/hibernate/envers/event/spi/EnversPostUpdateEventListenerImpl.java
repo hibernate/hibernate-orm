@@ -1,9 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.event.spi;
 
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
+import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.synchronization.AuditProcess;
 import org.hibernate.envers.internal.synchronization.work.AuditWorkUnit;
@@ -71,11 +74,29 @@ public class EnversPostUpdateEventListenerImpl extends BaseEnversUpdateEventList
 		final Object[] newDbState = event.getState().clone();
 		if ( event.getOldState() != null ) {
 			final EntityPersister entityPersister = event.getPersister();
+			final Object entity = event.getEntity();
+			final BytecodeEnhancementMetadata instrumentationMetadata = entityPersister.getBytecodeEnhancementMetadata();
+			final LazyAttributeLoadingInterceptor lazyAttributeLoadingInterceptor;
+			if ( instrumentationMetadata.isEnhancedForLazyLoading() ) {
+				lazyAttributeLoadingInterceptor = instrumentationMetadata.extractInterceptor( entity );
+			}
+			else {
+				lazyAttributeLoadingInterceptor = null;
+			}
 			for ( int i = 0; i < entityPersister.getPropertyNames().length; ++i ) {
 				if ( !entityPersister.getPropertyUpdateability()[i] ) {
 					// Assuming that PostUpdateEvent#getOldState() returns database state of the record before modification.
 					// Otherwise, we would have to execute SQL query to be sure of @Column(updatable = false) column value.
 					newDbState[i] = event.getOldState()[i];
+				}
+				// Properties that have not been initialized need to be fetched in order to bind their value in the
+				// AUDIT insert statement.
+				if ( newDbState[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+					assert lazyAttributeLoadingInterceptor != null : "Entity:`" + entityPersister.getEntityName() + "` with uninitialized property:` " + entityPersister.getPropertyNames()[i] + "` hasn't an associated LazyAttributeLoadingInterceptor";
+					event.getOldState()[i] = newDbState[i] = lazyAttributeLoadingInterceptor.fetchAttribute(
+							entity,
+							entityPersister.getPropertyNames()[i]
+					);
 				}
 			}
 		}

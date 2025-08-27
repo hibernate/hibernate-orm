@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -19,6 +19,11 @@ public class ClassJavaType extends AbstractClassJavaType<Class<?>> {
 	@SuppressWarnings({"unchecked", "rawtypes"} )
 	public ClassJavaType() {
 		super( (Class) Class.class );
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Class;
 	}
 
 	@Override

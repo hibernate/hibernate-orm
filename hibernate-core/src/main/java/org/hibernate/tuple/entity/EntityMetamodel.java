@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tuple.entity;
@@ -13,10 +13,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
@@ -57,11 +59,13 @@ import org.hibernate.type.Type;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.util.Collections.singleton;
+import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
 import static org.hibernate.internal.util.ReflectHelper.isFinalClass;
 import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
 import static org.hibernate.internal.util.collections.CollectionHelper.toSmallSet;
+import static org.hibernate.tuple.PropertyFactory.buildIdentifierAttribute;
 
 /**
  * Centralizes metamodel information about an entity.
@@ -101,6 +105,7 @@ public class EntityMetamodel implements Serializable {
 	private final boolean[] propertyInsertability;
 	private final boolean[] propertyNullability;
 	private final boolean[] propertyVersionability;
+	private final OnDeleteAction[] propertyOnDeleteActions;
 	private final CascadeStyle[] cascadeStyles;
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -126,6 +131,8 @@ public class EntityMetamodel implements Serializable {
 
 	private boolean lazy; //not final because proxy factory creation can fail
 	private final boolean hasCascades;
+	private final boolean hasToOnes;
+	private final boolean hasCascadePersist;
 	private final boolean hasCascadeDelete;
 	private final boolean mutable;
 	private final boolean isAbstract;
@@ -149,7 +156,19 @@ public class EntityMetamodel implements Serializable {
 			PersistentClass persistentClass,
 			EntityPersister persister,
 			RuntimeModelCreationContext creationContext) {
-		this.sessionFactory = creationContext.getSessionFactory();
+		this( persistentClass, persister, creationContext,
+				rootName -> buildIdGenerator( rootName, persistentClass, creationContext ) );
+	}
+
+	/*
+	 * Used by Hibernate Reactive to adapt the id generators
+	 */
+	public EntityMetamodel(
+			PersistentClass persistentClass,
+			EntityPersister persister,
+			RuntimeModelCreationContext creationContext,
+			Function<String, Generator> generatorSupplier) {
+		sessionFactory = creationContext.getSessionFactory();
 
 		// Improves performance of EntityKey#equals by avoiding content check in String#equals
 		name = persistentClass.getEntityName().intern();
@@ -160,25 +179,26 @@ public class EntityMetamodel implements Serializable {
 
 		subclassId = persistentClass.getSubclassId();
 
-		final Generator idgenerator = buildIdGenerator( persistentClass, creationContext );
-		identifierAttribute = PropertyFactory.buildIdentifierAttribute( persistentClass, idgenerator );
+		final Generator idgenerator = generatorSupplier.apply( rootName );
+		identifierAttribute = buildIdentifierAttribute( persistentClass, idgenerator );
 
 		versioned = persistentClass.isVersioned();
 
 		final boolean collectionsInDefaultFetchGroupEnabled =
 				creationContext.getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled();
+		final boolean supportsCascadeDelete = creationContext.getDialect().supportsCascadeDelete();
 
 		if ( persistentClass.hasPojoRepresentation() ) {
 			final Component identifierMapperComponent = persistentClass.getIdentifierMapper();
 			final CompositeType nonAggregatedCidMapper;
 			final Set<String> idAttributeNames;
-
 			if ( identifierMapperComponent != null ) {
 				nonAggregatedCidMapper = identifierMapperComponent.getType();
-				idAttributeNames = new HashSet<>( );
+				HashSet<String> tmpSet = new HashSet<>();
 				for ( Property property : identifierMapperComponent.getProperties() ) {
-					idAttributeNames.add( property.getName() );
+					tmpSet.add( property.getName() );
 				}
+				idAttributeNames = toSmallSet( unmodifiableSet( tmpSet ) );
 			}
 			else {
 				nonAggregatedCidMapper = null;
@@ -213,6 +233,7 @@ public class EntityMetamodel implements Serializable {
 		propertyNullability = new boolean[propertySpan];
 		propertyVersionability = new boolean[propertySpan];
 		propertyLaziness = new boolean[propertySpan];
+		propertyOnDeleteActions = new OnDeleteAction[propertySpan];
 		cascadeStyles = new CascadeStyle[propertySpan];
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -227,6 +248,8 @@ public class EntityMetamodel implements Serializable {
 
 		int tempVersionProperty = NO_VERSION_INDX;
 		boolean foundCascade = false;
+		boolean foundToOne = false;
+		boolean foundCascadePersist = false;
 		boolean foundCascadeDelete = false;
 		boolean foundCollection = false;
 		boolean foundOwnedCollection = false;
@@ -264,7 +287,7 @@ public class EntityMetamodel implements Serializable {
 			if ( property.isNaturalIdentifier() ) {
 				verifyNaturalIdProperty( property );
 				naturalIdNumbers.add( i );
-				if ( property.isUpdateable() ) {
+				if ( property.isUpdatable() ) {
 					foundUpdateableNaturalIdProperty = true;
 				}
 			}
@@ -305,7 +328,7 @@ public class EntityMetamodel implements Serializable {
 			nonlazyPropertyUpdateability[i] = attribute.isUpdateable() && !lazy;
 			propertyCheckability[i] = propertyUpdateability[i]
 					|| propertyType.isAssociationType() && ( (AssociationType) propertyType ).isAlwaysDirtyChecked();
-
+			propertyOnDeleteActions[i] = supportsCascadeDelete ? attribute.getOnDeleteAction() : null;
 			cascadeStyles[i] = attribute.getCascadeStyle();
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -363,10 +386,17 @@ public class EntityMetamodel implements Serializable {
 			if ( cascadeStyles[i] != CascadeStyles.NONE ) {
 				foundCascade = true;
 			}
+			if ( cascadeStyles[i].doCascade(CascadingActions.PERSIST)
+					|| cascadeStyles[i].doCascade(CascadingActions.PERSIST_ON_FLUSH) ) {
+				foundCascadePersist = true;
+			}
 			if ( cascadeStyles[i].doCascade(CascadingActions.REMOVE) ) {
 				foundCascadeDelete = true;
 			}
 
+			if ( indicatesToOne( attribute.getType() ) ) {
+				foundToOne = true;
+			}
 			if ( indicatesCollection( attribute.getType() ) ) {
 				foundCollection = true;
 			}
@@ -401,6 +431,8 @@ public class EntityMetamodel implements Serializable {
 		versionGenerator = tempVersionGenerator;
 
 		hasCascades = foundCascade;
+		hasToOnes = foundToOne;
+		hasCascadePersist = foundCascadePersist;
 		hasCascadeDelete = foundCascadeDelete;
 		hasNonIdentifierPropertyNamedId = foundNonIdentifierPropertyNamedId;
 		versionPropertyIndex = tempVersionProperty;
@@ -409,10 +441,10 @@ public class EntityMetamodel implements Serializable {
 			LOG.lazyPropertyFetchingAvailable( name );
 		}
 
-		lazy = persistentClass.isLazy() && (
+		lazy = persistentClass.isLazy()
 				// TODO: this disables laziness even in non-pojo entity modes:
-				!persistentClass.hasPojoRepresentation() || !isFinalClass( persistentClass.getProxyInterface() ) )
-				|| bytecodeEnhancementMetadata.isEnhancedForLazyLoading();
+				&& (!persistentClass.hasPojoRepresentation() || !isFinalClass( persistentClass.getProxyInterface() ) )
+						|| bytecodeEnhancementMetadata.isEnhancedForLazyLoading();
 
 		mutable = persistentClass.isMutable();
 		if ( persistentClass.isAbstract() == null ) {
@@ -438,18 +470,24 @@ public class EntityMetamodel implements Serializable {
 
 		polymorphic = persistentClass.isPolymorphic();
 		inherited = persistentClass.isInherited();
-		superclass = inherited ?
-				persistentClass.getSuperclass().getEntityName() :
-				null;
+		superclass = inherited
+				? persistentClass.getSuperclass().getEntityName()
+				: null;
 		hasSubclasses = persistentClass.hasSubclasses();
 
 		optimisticLockStyle = persistentClass.getOptimisticLockStyle();
-		final boolean isAllOrDirty = optimisticLockStyle.isAllOrDirty();
-		if ( isAllOrDirty && !dynamicUpdate ) {
-			throw new MappingException( "optimistic-lock=all|dirty requires dynamic-update=\"true\": " + name );
-		}
-		if ( versionPropertyIndex != NO_VERSION_INDX && isAllOrDirty ) {
-			throw new MappingException( "version and optimistic-lock=all|dirty are not a valid combination : " + name );
+		//TODO: move these checks into the Binders
+		if ( optimisticLockStyle.isAllOrDirty() ) {
+			if ( !dynamicUpdate ) {
+				throw new MappingException( "Entity '" + name
+											+ "' has 'OptimisticLockType." + optimisticLockStyle
+											+ "' but is not annotated '@DynamicUpdate'" );
+			}
+			if ( versionPropertyIndex != NO_VERSION_INDX ) {
+				throw new MappingException( "Entity '" + name
+											+ "' has 'OptimisticLockType." + optimisticLockStyle
+											+ "' but declares a '@Version' field" );
+			}
 		}
 
 		hasCollections = foundCollection;
@@ -483,7 +521,7 @@ public class EntityMetamodel implements Serializable {
 		return writePropertyValue;
 	}
 
-	private Generator buildIdGenerator(PersistentClass persistentClass, RuntimeModelCreationContext creationContext) {
+	private static Generator buildIdGenerator(String rootName, PersistentClass persistentClass, RuntimeModelCreationContext creationContext) {
 		final Generator existing = creationContext.getGenerators().get( rootName );
 		if ( existing != null ) {
 			return existing;
@@ -507,9 +545,8 @@ public class EntityMetamodel implements Serializable {
 		final Value value = property.getValue();
 		if ( value instanceof ManyToOne toOne ) {
 			if ( toOne.getNotFoundAction() == NotFoundAction.IGNORE ) {
-				throw new MappingException(
-						"Attribute marked as natural-id can not also be a not-found association - "
-								+ propertyName( property )
+				throw new MappingException( "Association '" + propertyName( property )
+											+ "' marked as '@NaturalId' is also annotated '@NotFound(IGNORE)'"
 				);
 			}
 		}
@@ -572,7 +609,7 @@ public class EntityMetamodel implements Serializable {
 	 */
 	public boolean isNaturalIdentifierInsertGenerated() {
 		if ( naturalIdPropertyNumbers.length == 0 ) {
-			throw new IllegalStateException( "entity does not have a natural id: " + name );
+			throw new IllegalStateException( "Entity '" + name + "' does not have a natural id" );
 		}
 		for ( int i = 0; i < naturalIdPropertyNumbers.length; i++ ) {
 			final Generator strategy = generators[ naturalIdPropertyNumbers[i] ];
@@ -603,13 +640,26 @@ public class EntityMetamodel implements Serializable {
 		return subclassEntityNames;
 	}
 
+	private static boolean indicatesToOne(Type type) {
+		if ( type.isEntityType() ) {
+			return true;
+		}
+		else if ( type instanceof CompositeType compositeType ) {
+			for ( Type subtype : compositeType.getSubtypes() ) {
+				if ( indicatesToOne( subtype ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	private static boolean indicatesCollection(Type type) {
 		if ( type instanceof CollectionType ) {
 			return true;
 		}
-		else if ( type.isComponentType() ) {
-			Type[] subtypes = ( (CompositeType) type ).getSubtypes();
-			for ( Type subtype : subtypes ) {
+		else if ( type instanceof CompositeType compositeType ) {
+			for ( Type subtype : compositeType.getSubtypes() ) {
 				if ( indicatesCollection( subtype ) ) {
 					return true;
 				}
@@ -622,8 +672,7 @@ public class EntityMetamodel implements Serializable {
 		if ( type instanceof CollectionType collectionType ) {
 			return !metadata.getCollectionBinding( collectionType.getRole() ).isInverse();
 		}
-		else if ( type.isComponentType() ) {
-			final CompositeType compositeType = (CompositeType) type;
+		else if ( type instanceof CompositeType compositeType ) {
 			for ( Type subtype : compositeType.getSubtypes() ) {
 				if ( indicatesOwnedCollection( subtype, metadata ) ) {
 					return true;
@@ -685,9 +734,9 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	public int getPropertyIndex(String propertyName) {
-		Integer index = getPropertyIndexOrNull(propertyName);
+		final Integer index = getPropertyIndexOrNull( propertyName );
 		if ( index == null ) {
-			throw new HibernateException("Unable to resolve property: " + propertyName);
+			throw new HibernateException( "Unable to resolve property: " + propertyName );
 		}
 		return index;
 	}
@@ -724,8 +773,16 @@ public class EntityMetamodel implements Serializable {
 		return hasCascades;
 	}
 
+	public boolean hasToOnes() {
+		return hasToOnes;
+	}
+
 	public boolean hasCascadeDelete() {
 		return hasCascadeDelete;
+	}
+
+	public boolean hasCascadePersist() {
+		return hasCascadePersist;
 	}
 
 	public boolean isMutable() {
@@ -873,5 +930,9 @@ public class EntityMetamodel implements Serializable {
 
 	public BytecodeEnhancementMetadata getBytecodeEnhancementMetadata() {
 		return bytecodeEnhancementMetadata;
+	}
+
+	public OnDeleteAction[] getPropertyOnDeleteActions() {
+		return propertyOnDeleteActions;
 	}
 }

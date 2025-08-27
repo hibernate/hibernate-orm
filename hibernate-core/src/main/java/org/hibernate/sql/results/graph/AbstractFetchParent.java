@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph;
@@ -70,8 +70,8 @@ public abstract class AbstractFetchParent implements FetchParent {
 
 	@Override
 	public Fetch findFetch(final Fetchable fetchable) {
-		if ( fetchable instanceof EntityVersionMapping ) {
-			return fetches.get( ( (EntityVersionMapping) fetchable ).getVersionAttribute() );
+		if ( fetchable instanceof EntityVersionMapping entityVersionMapping ) {
+			return fetches.get( entityVersionMapping.getVersionAttribute() );
 		}
 		return fetches.get( fetchable );
 	}

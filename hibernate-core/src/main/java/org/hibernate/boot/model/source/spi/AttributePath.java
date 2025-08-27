@@ -1,10 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.spi;
 
-import org.hibernate.internal.util.StringHelper;
+import static org.hibernate.internal.util.StringHelper.split;
 
 /**
  * An attribute path is, generally speaking, the path of attribute names back
@@ -40,14 +40,15 @@ public class AttributePath extends AbstractAttributeKey {
 	}
 
 	public static AttributePath parse(String path) {
-		if ( path == null ) {
+		if ( path != null ) {
+			AttributePath attributePath = new AttributePath();
+			for ( String part : split( ".", path ) ) {
+				attributePath = attributePath.append( part );
+			}
+			return attributePath;
+		}
+		else {
 			return null;
 		}
-
-		AttributePath attributePath = new AttributePath();
-		for ( String part : StringHelper.split( ".", path ) ) {
-			attributePath = attributePath.append( part );
-		}
-		return attributePath;
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
@@ -60,15 +60,17 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 
 	JpaQueryStructure<T> setRestriction(Predicate... restrictions);
 
+	JpaQueryStructure<T> setRestriction(List<Predicate> restrictions);
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Grouping (group-by / having) clause
 
 	List<? extends JpaExpression<?>> getGroupingExpressions();
 
-	JpaQueryStructure<T> setGroupingExpressions(List<? extends JpaExpression<?>> grouping);
+	JpaQueryStructure<T> setGroupingExpressions(List<? extends Expression<?>> grouping);
 
-	JpaQueryStructure<T> setGroupingExpressions(JpaExpression<?>... grouping);
+	JpaQueryStructure<T> setGroupingExpressions(Expression<?>... grouping);
 
 	JpaPredicate getGroupRestriction();
 
@@ -77,6 +79,8 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 	JpaQueryStructure<T> setGroupRestriction(Expression<Boolean> restriction);
 
 	JpaQueryStructure<T> setGroupRestriction(Predicate... restrictions);
+
+	JpaQueryStructure<T> setGroupRestriction(List<Predicate> restrictions);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides

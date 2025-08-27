@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
@@ -133,9 +133,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 	}
 
 	private ResultSetMapping buildResultSetMapping(String registeredName, SessionFactoryImplementor sessionFactory) {
-		return sessionFactory
-				.getFastSessionServices()
-				.getJdbcValuesMappingProducerProvider()
+		return sessionFactory.getJdbcValuesMappingProducerProvider()
 				.buildResultSetMapping( registeredName, false, sessionFactory );
 	}
 

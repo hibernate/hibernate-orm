@@ -1,10 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.entities.onetomany;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
@@ -24,7 +25,7 @@ public class SetRefIngEntity {
 	private String data;
 
 	@Audited
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	private SetRefEdEntity reference;
 
 	public SetRefIngEntity() {

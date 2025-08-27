@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cascade.circle;
@@ -387,14 +387,7 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Transport" );
-					session.createQuery( "delete from Tour" );
-					session.createQuery( "delete from Node" );
-					session.createQuery( "delete from Route" );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	private void checkResults(Route route, boolean isRouteUpdated) {

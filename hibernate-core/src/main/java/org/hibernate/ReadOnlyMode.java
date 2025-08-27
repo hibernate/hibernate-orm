@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
@@ -22,9 +22,10 @@ public enum ReadOnlyMode implements FindOption {
 	/**
 	 * Specifies that an entity should be loaded in read-only mode.
 	 * <p>
-	 * Read-only entities are not dirty-checked and snapshots of
+	 * Read-only entities are not dirty-checked, and snapshots of
 	 * persistent state are not maintained. Read-only entities can
-	 * be modified, but changes are not persisted.
+	 * be modified, but a modification to a field of a read-only
+	 * entity is not made persistent
 	 */
 	READ_ONLY,
 	/**

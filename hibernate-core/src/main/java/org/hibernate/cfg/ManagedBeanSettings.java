@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
@@ -50,8 +50,8 @@ public interface ManagedBeanSettings {
 	 * <p>
 	 * Note that for CDI-based containers setting this is not necessary - simply
 	 * pass the {@link jakarta.enterprise.inject.spi.BeanManager} to use via
-	 * {@link #CDI_BEAN_MANAGER} and optionally specify {@link #DELAY_CDI_ACCESS}.
-	 * This setting useful to integrate non-CDI bean containers such as Spring.
+	 * {@link #JAKARTA_CDI_BEAN_MANAGER} and optionally specify {@link #DELAY_CDI_ACCESS}.
+	 * This setting is useful to integrate non-CDI bean containers such as Spring.
 	 *
 	 * @since 5.3
 	 */

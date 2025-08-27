@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.vector;
@@ -9,6 +9,7 @@ import java.util.List;
 import org.hibernate.annotations.Array;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -32,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @DomainModel(annotatedClasses = OracleByteVectorTest.VectorEntity.class)
 @SessionFactory
-@RequiresDialect(value = OracleDialect.class, matchSubTypes = false, majorVersion = 23, minorVersion = 4)
+@RequiresDialect(value = OracleDialect.class, majorVersion = 23, minorVersion = 4)
 public class OracleByteVectorTest {
 
 	private static final byte[] V1 = new byte[]{ 1, 2, 3 };
@@ -168,6 +169,7 @@ public class OracleByteVectorTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle 23.9 bug")
 	public void testVectorNorm(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			//tag::vector-norm-example[]

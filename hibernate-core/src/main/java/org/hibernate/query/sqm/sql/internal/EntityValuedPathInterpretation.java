@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.sql.internal;
@@ -24,7 +24,7 @@ import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
-import org.hibernate.query.derived.AnonymousTupleEntityValuedModelPart;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleEntityValuedModelPart;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -48,10 +48,14 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
 
 import jakarta.persistence.criteria.Selection;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.query.sqm.internal.SqmUtil.determineAffectedTableName;
 
 public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T>
 		implements SqlTupleContainer, Assignable {
 	private final Expression sqlExpression;
+	private final @Nullable String affectedTableName;
 
 	public static <T> EntityValuedPathInterpretation<T> from(
 			SqmEntityValuedSimplePath<T> sqmPath,
@@ -61,12 +65,10 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				.getFromClauseAccess()
 				.findTableGroup( sqmPath.getNavigablePath() );
 		final EntityValuedModelPart pathMapping = (EntityValuedModelPart) tableGroup.getModelPart();
-		if ( inferredMapping instanceof EntityAssociationMapping ) {
-			final EntityAssociationMapping inferredAssociation = (EntityAssociationMapping) inferredMapping;
-			if ( pathMapping instanceof EntityAssociationMapping && inferredMapping != pathMapping ) {
+		if ( inferredMapping instanceof EntityAssociationMapping inferredAssociation ) {
+			if ( pathMapping instanceof EntityAssociationMapping pathAssociation && inferredMapping != pathMapping ) {
 				// In here, the inferred mapping and the actual path mapping are association mappings,
 				// but for different associations, so we have to check if both associations point to the same target
-				final EntityAssociationMapping pathAssociation = (EntityAssociationMapping) pathMapping;
 				final ModelPart pathTargetPart = pathAssociation.getForeignKeyDescriptor()
 						.getPart( pathAssociation.getSideNature().inverse() );
 				final ModelPart inferredTargetPart = inferredAssociation.getForeignKeyDescriptor()
@@ -158,8 +160,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		final TableGroup resultTableGroup;
 		// For association mappings where the FK optimization i.e. use of the parent table group is allowed,
 		// we try to make use of it and the FK model part if possible based on the inferred mapping
-		if ( mapping instanceof EntityAssociationMapping ) {
-			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) mapping;
+		if ( mapping instanceof EntityAssociationMapping associationMapping ) {
 			final ModelPart keyTargetMatchPart = associationMapping.getForeignKeyDescriptor().getPart(
 					associationMapping.getSideNature()
 			);
@@ -290,10 +291,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		if ( expandToAllColumns ) {
 			// Expand to all columns of the entity mapping type to ensure a correct group / order by expression,
 			// or use only the primary key if the dialect supports functional dependency
-			final Dialect dialect = sqlAstCreationState.getCreationContext()
-					.getSessionFactory()
-					.getJdbcServices()
-					.getDialect();
+			final Dialect dialect = sqlAstCreationState.getCreationContext().getDialect();
 			final EntityMappingType entityMappingType = mapping.getEntityMappingType();
 			final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
 			final List<Expression> expressions = new ArrayList<>( identifierMapping.getJdbcTypeCount() );
@@ -376,8 +374,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 	}
 
 	private static boolean selectionContains(Selection<?> selection, NavigablePath path, NavigablePath tableGroupPath) {
-		if ( selection instanceof SqmPath<?> ) {
-			final SqmPath<?> sqmPath = (SqmPath<?>) selection;
+		if ( selection instanceof SqmPath<?> sqmPath ) {
 			// Expansion is needed if the table group is null, i.e. we're in a top level query where EVPs are always
 			// expanded to all columns, or if the selection is on the same table (lhs) as the group by expression ...
 			return ( tableGroupPath == null || sqmPath.getLhs() != null && sqmPath.getLhs().getNavigablePath().equals( tableGroupPath ) )
@@ -405,7 +402,9 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		final FunctionalDependencyAnalysisSupport analysisSupport = dialect.getFunctionalDependencyAnalysisSupport();
 		if ( analysisSupport.supportsAnalysis() ) {
 			if ( entityMappingType.getSqmMultiTableMutationStrategy() == null ) {
-				return true;
+				// A subquery may be used to render a single-table inheritance subtype, in which case
+				// we cannot use functional dependency analysis unless the dialect supports table groups
+				return analysisSupport.supportsTableGroups() || entityMappingType.getSuperMappingType() == null;
 			}
 			else {
 				return analysisSupport.supportsTableGroups() && ( analysisSupport.supportsConstants() ||
@@ -422,13 +421,31 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			EntityValuedModelPart mapping) {
+		this( sqlExpression, navigablePath, tableGroup, mapping,
+				mapping instanceof ValuedModelPart valuedModelPart
+						? determineAffectedTableName( tableGroup, valuedModelPart )
+						: null );
+	}
+
+	public EntityValuedPathInterpretation(
+			Expression sqlExpression,
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			EntityValuedModelPart mapping,
+			@Nullable String affectedTableName) {
 		super( navigablePath, mapping, tableGroup );
 		this.sqlExpression = sqlExpression;
+		this.affectedTableName = affectedTableName;
 	}
 
 	@Override
 	public Expression getSqlExpression() {
 		return sqlExpression;
+	}
+
+	@Override
+	public @Nullable String getAffectedTableName() {
+		return affectedTableName;
 	}
 
 	@Override

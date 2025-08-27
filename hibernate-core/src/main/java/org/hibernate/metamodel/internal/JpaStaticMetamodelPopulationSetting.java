@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
@@ -7,8 +7,9 @@ package org.hibernate.metamodel.internal;
 import java.util.Locale;
 import java.util.Map;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+
+import static org.hibernate.cfg.MappingSettings.STATIC_METAMODEL_POPULATION;
 
 /**
  * Enumerated setting used to control whether Hibernate looks for and populates
@@ -41,13 +42,14 @@ public enum JpaStaticMetamodelPopulationSetting {
 		};
 	}
 
-	public static JpaStaticMetamodelPopulationSetting determineJpaStaticMetaModelPopulationSetting(Map configurationValues) {
+	public static JpaStaticMetamodelPopulationSetting determineJpaStaticMetaModelPopulationSetting(
+			Map<String, Object> configurationValues) {
 		return parse( determineSetting( configurationValues ) );
 	}
 
-	private static String determineSetting(Map configurationValues) {
+	private static String determineSetting(Map<String, Object> configurationValues) {
 		return ConfigurationHelper.getString(
-				AvailableSettings.STATIC_METAMODEL_POPULATION,
+				STATIC_METAMODEL_POPULATION,
 				configurationValues,
 				"skipUnsupported"
 		);

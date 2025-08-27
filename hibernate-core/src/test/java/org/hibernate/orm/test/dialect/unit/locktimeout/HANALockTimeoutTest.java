@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.unit.locktimeout;
@@ -8,10 +8,12 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
-
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.Test;
 
+import static org.hibernate.Timeouts.NO_WAIT;
+import static org.hibernate.Timeouts.SKIP_LOCKED;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -21,6 +23,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Vlad Mihalcea
  */
+@RequiresDialect(HANADialect.class)
 public class HANALockTimeoutTest extends BaseUnitTestCase {
 
 	private final Dialect dialect = new HANADialect();
@@ -41,27 +44,23 @@ public class HANALockTimeoutTest extends BaseUnitTestCase {
 	public void testLockTimeoutNoAliasNoWait() {
 		assertEquals(
 				" for update nowait",
-				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_READ )
-													.setTimeOut( LockOptions.NO_WAIT ) )
+				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_READ ).setTimeout( NO_WAIT ) )
 		);
 		assertEquals(
 				" for update nowait",
-				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-													.setTimeOut( LockOptions.NO_WAIT ) )
+				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_WRITE ).setTimeout( NO_WAIT ) )
 		);
 	}
 
 	@Test
 	public void testLockTimeoutNoAliasSkipLocked() {
 		assertEquals(
-				" for update",
-				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_READ )
-													.setTimeOut( LockOptions.SKIP_LOCKED ) )
+				" for update ignore locked",
+				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_READ ).setTimeout( SKIP_LOCKED ) )
 		);
 		assertEquals(
-				" for update",
-				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-													.setTimeOut( LockOptions.SKIP_LOCKED ) )
+				" for update ignore locked",
+				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_WRITE ).setTimeout( SKIP_LOCKED ) )
 		);
 	}
 
@@ -70,23 +69,11 @@ public class HANALockTimeoutTest extends BaseUnitTestCase {
 		String alias = "a";
 		assertEquals(
 				" for update of a",
-				dialect.getForUpdateString(
-						alias,
-						new LockOptions( LockMode.PESSIMISTIC_READ ).setAliasSpecificLockMode(
-								alias,
-								LockMode.PESSIMISTIC_READ
-						)
-				)
+				dialect.getForUpdateString( alias, new LockOptions( LockMode.PESSIMISTIC_READ ) )
 		);
 		assertEquals(
 				" for update of a",
-				dialect.getForUpdateString(
-						alias,
-						new LockOptions( LockMode.PESSIMISTIC_WRITE ).setAliasSpecificLockMode(
-								alias,
-								LockMode.PESSIMISTIC_WRITE
-						)
-				)
+				dialect.getForUpdateString( alias, new LockOptions( LockMode.PESSIMISTIC_WRITE ) )
 		);
 	}
 
@@ -97,22 +84,14 @@ public class HANALockTimeoutTest extends BaseUnitTestCase {
 				" for update of a nowait",
 				dialect.getForUpdateString(
 						alias,
-						new LockOptions( LockMode.PESSIMISTIC_READ ).setAliasSpecificLockMode(
-								alias,
-								LockMode.PESSIMISTIC_READ
-						)
-								.setTimeOut( LockOptions.NO_WAIT )
+						new LockOptions( LockMode.PESSIMISTIC_READ ).setTimeout( NO_WAIT )
 				)
 		);
 		assertEquals(
 				" for update of a nowait",
 				dialect.getForUpdateString(
 						alias,
-						new LockOptions( LockMode.PESSIMISTIC_WRITE ).setAliasSpecificLockMode(
-								alias,
-								LockMode.PESSIMISTIC_WRITE
-						)
-								.setTimeOut( LockOptions.NO_WAIT )
+						new LockOptions( LockMode.PESSIMISTIC_WRITE ).setTimeout( NO_WAIT )
 				)
 		);
 	}
@@ -121,25 +100,19 @@ public class HANALockTimeoutTest extends BaseUnitTestCase {
 	public void testLockTimeoutAliasSkipLocked() {
 		String alias = "a";
 		assertEquals(
-				" for update of a",
+				" for update of a ignore locked",
 				dialect.getForUpdateString(
 						alias,
-						new LockOptions( LockMode.PESSIMISTIC_READ ).setAliasSpecificLockMode(
-								alias,
-								LockMode.PESSIMISTIC_READ
-						)
-								.setTimeOut( LockOptions.SKIP_LOCKED )
+						new LockOptions( LockMode.PESSIMISTIC_READ )
+								.setTimeout( SKIP_LOCKED )
 				)
 		);
 		assertEquals(
-				" for update of a",
+				" for update of a ignore locked",
 				dialect.getForUpdateString(
 						alias,
-						new LockOptions( LockMode.PESSIMISTIC_WRITE ).setAliasSpecificLockMode(
-								alias,
-								LockMode.PESSIMISTIC_WRITE
-						)
-								.setTimeOut( LockOptions.SKIP_LOCKED )
+						new LockOptions( LockMode.PESSIMISTIC_WRITE )
+								.setTimeout( SKIP_LOCKED )
 				)
 		);
 	}

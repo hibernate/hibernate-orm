@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect.unit.lockhint;
@@ -10,6 +10,8 @@ import org.hibernate.community.dialect.SQLServerLegacyDialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.orm.test.dialect.unit.lockhint.AbstractLockHintTest;
+
+import static org.hibernate.Timeouts.NO_WAIT;
 
 /**
  * @author Vlad Mihalcea
@@ -27,8 +29,7 @@ public class SQLServer2005LockHintsTest extends AbstractLockHintTest {
 
 	@Override
 	protected LockOptions lockOptions(String aliasToLock) {
-		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE).setTimeOut( LockOptions.NO_WAIT );
-		lockOptions.setAliasSpecificLockMode( aliasToLock, LockMode.PESSIMISTIC_WRITE );
+		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE).setTimeout( NO_WAIT );
 		return lockOptions;
 	}
 }

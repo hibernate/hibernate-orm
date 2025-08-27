@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.relational;
@@ -55,8 +55,8 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 			boolean beforeTables) {
 		this(
 				dialectScopes,
-				extractName( namespace.getPhysicalName().getCatalog() ),
-				extractName( namespace.getPhysicalName().getSchema() ),
+				extractName( namespace.getPhysicalName().catalog() ),
+				extractName( namespace.getPhysicalName().schema() ),
 				createStrings,
 				dropStrings,
 				beforeTables
@@ -83,8 +83,8 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 			Set<String> dialectScopes) {
 		this(
 				dialectScopes,
-				extractName( namespace.getPhysicalName().getCatalog() ),
-				extractName( namespace.getPhysicalName().getSchema() ),
+				extractName( namespace.getPhysicalName().catalog() ),
+				extractName( namespace.getPhysicalName().schema() ),
 				createStrings,
 				dropStrings
 		);

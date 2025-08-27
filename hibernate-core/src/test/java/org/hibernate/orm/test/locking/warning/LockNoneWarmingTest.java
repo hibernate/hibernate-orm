@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.locking.warning;
@@ -16,7 +16,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.query.Query;
@@ -33,6 +32,7 @@ import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
+import static jakarta.persistence.LockModeType.NONE;
 import static org.junit.Assert.assertFalse;
 
 /**
@@ -78,8 +78,7 @@ public class LockNoneWarmingTest extends BaseCoreFunctionalTestCase {
 		try (Session s = openSession();) {
 			final Query query = s.createQuery( "from Item i join i.bids b where name = :name", Object[].class );
 			query.setParameter( "name", "ZZZZ" );
-			query.setLockMode( "i", LockMode.NONE );
-			query.setLockMode( "b", LockMode.NONE );
+			query.setLockMode( NONE );
 			query.list();
 			assertFalse( "Log message was not triggered", triggerable.wasTriggered() );
 		}

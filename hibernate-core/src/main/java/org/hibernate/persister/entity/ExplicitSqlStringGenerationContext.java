@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity;
@@ -38,6 +38,10 @@ public class ExplicitSqlStringGenerationContext implements SqlStringGenerationCo
 				: toIdentifier( factory.getSessionFactoryOptions().getDefaultSchema() );
 	}
 
+	private JdbcEnvironment getJdbcEnvironment() {
+		return factory.getJdbcServices().getJdbcEnvironment();
+	}
+
 	@Override
 	public Dialect getDialect() {
 		return factory.getJdbcServices().getDialect();
@@ -45,7 +49,7 @@ public class ExplicitSqlStringGenerationContext implements SqlStringGenerationCo
 
 	@Override
 	public Identifier toIdentifier(String text) {
-		return factory.getJdbcServices().getJdbcEnvironment().getIdentifierHelper().toIdentifier( text );
+		return getJdbcEnvironment().getIdentifierHelper().toIdentifier( text );
 	}
 
 	@Override
@@ -64,9 +68,8 @@ public class ExplicitSqlStringGenerationContext implements SqlStringGenerationCo
 	}
 
 	private QualifiedObjectNameFormatter nameFormater() {
-		final JdbcEnvironment jdbcEnvironment = factory.getJdbcServices().getJdbcEnvironment();
 		//noinspection deprecation
-		return jdbcEnvironment.getQualifiedObjectNameFormatter();
+		return getJdbcEnvironment().getQualifiedObjectNameFormatter();
 	}
 
 	@Override

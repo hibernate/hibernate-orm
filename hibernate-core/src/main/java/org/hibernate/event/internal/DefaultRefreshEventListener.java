@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
@@ -18,7 +18,6 @@ import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.event.spi.RefreshEvent;
@@ -26,7 +25,6 @@ import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
@@ -58,45 +56,11 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 	 */
 	@Override
 	public void onRefresh(RefreshEvent event, RefreshContext refreshedAlready) {
-		final EventSource source = event.getSession();
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final var source = event.getSession();
+		final var persistenceContext = source.getPersistenceContextInternal();
 		final Object object = event.getObject();
 		if ( persistenceContext.reassociateIfUninitializedProxy( object ) ) {
-			final boolean isTransient = isTransient( event, source, object );
-			// If refreshAlready is not empty then the refresh is the result of a
-			// cascade refresh and the refresh of the parent will take care of initializing the lazy
-			// entity and setting the correct lock on it, this is needed only when the refresh is called directly on a lazy entity
-			if ( refreshedAlready.isEmpty() ) {
-				final LazyInitializer lazyInitializer = extractLazyInitializer( object );
-				final EntityPersister persister;
-				if ( lazyInitializer != null ) {
-					persister = source.getEntityPersister( lazyInitializer.getEntityName(), object );
-				}
-				else if ( !isTransient ) {
-					persister = persistenceContext.getEntry( object ).getPersister();
-				}
-				else {
-					persister = source.getEntityPersister( source.guessEntityName( object ), object );
-				}
-
-				refresh(
-						event,
-						null,
-						source,
-						persister,
-						lazyInitializer,
-						null,
-						persister.getIdentifier( object, event.getSession() ),
-						persistenceContext
-				);
-				if ( lazyInitializer != null ) {
-					refreshedAlready.add( lazyInitializer.getImplementation() );
-				}
-			}
-
-			if ( isTransient ) {
-				source.setReadOnly( object, source.isDefaultReadOnly() );
-			}
+			handleUninitializedProxy( event, refreshedAlready, source, object, persistenceContext );
 		}
 		else {
 			final Object entity = persistenceContext.unproxyAndReassociate( object );
@@ -109,15 +73,64 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		}
 	}
 
+	private static void handleUninitializedProxy(
+			RefreshEvent event,
+			RefreshContext refreshedAlready,
+			EventSource source,
+			Object object,
+			PersistenceContext persistenceContext) {
+		final boolean isTransient = isTransient( event, source, object );
+		// If refreshAlready is nonempty then the refresh is the result of a cascade refresh and the
+		// refresh of the parent will take care of initializing the lazy entity and setting the
+		// correct lock. This is needed only when the refresh is called directly on a lazy entity.
+		if ( refreshedAlready.isEmpty() ) {
+			final var lazyInitializer = extractLazyInitializer( object );
+			final var persister = getPersister( lazyInitializer, source, object, isTransient );
+			refresh(
+					event,
+					null,
+					source,
+					persister,
+					lazyInitializer,
+					null,
+					persister.getIdentifier( object, event.getSession() ),
+					persistenceContext
+			);
+			if ( lazyInitializer != null ) {
+				refreshedAlready.add( lazyInitializer.getImplementation() );
+			}
+		}
+
+		if ( isTransient ) {
+			source.setReadOnly( object, source.isDefaultReadOnly() );
+		}
+	}
+
+	private static EntityPersister getPersister(
+			LazyInitializer lazyInitializer,
+			EventSource source,
+			Object object,
+			boolean isTransient) {
+		if ( lazyInitializer != null ) {
+			return source.getEntityPersister( lazyInitializer.getEntityName(), object );
+		}
+		else if ( isTransient ) {
+			return source.getEntityPersister( source.guessEntityName( object ), object );
+		}
+		else {
+			return source.getPersistenceContextInternal().getEntry( object ).getPersister();
+		}
+	}
+
 	private static boolean isTransient(RefreshEvent event, EventSource source, Object object) {
 		final String entityName = event.getEntityName();
-		return entityName != null ? !source.contains( entityName, object) : !source.contains(object);
+		return entityName == null ? !source.contains( object ) : !source.contains( entityName, object );
 	}
 
 	private static void refresh(RefreshEvent event, RefreshContext refreshedAlready, Object object) {
-		final EventSource source = event.getSession();
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
-		final EntityEntry entry = persistenceContext.getEntry( object );
+		final var source = event.getSession();
+		final var persistenceContext = source.getPersistenceContextInternal();
+		final var entry = persistenceContext.getEntry( object );
 
 		final EntityPersister persister;
 		final Object id;
@@ -130,10 +143,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 						+ "' because it has a null identifier" );
 			}
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev(
-						"Refreshing transient {0}",
-						infoString( persister, id, event.getFactory() )
-				);
+				LOG.trace( "Refreshing transient " + infoString( persister, id, event.getFactory() ) );
 			}
 			if ( persistenceContext.getEntry( source.generateEntityKey( id, persister ) ) != null ) {
 				throw new NonUniqueObjectException( id, persister.getEntityName() );
@@ -141,10 +151,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		}
 		else {
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev(
-						"Refreshing ",
-						infoString( entry.getPersister(), entry.getId(), event.getFactory() )
-				);
+				LOG.trace( "Refreshing " + infoString( entry.getPersister(), entry.getId(), event.getFactory() ) );
 			}
 			if ( !entry.isExistsInDatabase() ) {
 				throw new UnresolvableObjectException(
@@ -185,15 +192,26 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			Object object,
 			EventSource source,
 			EntityPersister persister,
-			LazyInitializer lazyInitializer,
+			LazyInitializer initializer,
 			EntityEntry entry,
 			Object id,
-			PersistenceContext persistenceContext) {
+			PersistenceContext context) {
+		if ( object != null ) {
+			final var instrumentationMetadata = persister.getBytecodeEnhancementMetadata();
+			if ( instrumentationMetadata.isEnhancedForLazyLoading() ) {
+				final var interceptor = instrumentationMetadata.extractInterceptor( object );
+				if ( interceptor != null ) {
+					// The list of initialized lazy fields has to be cleared
+					// before refreshing them from the database.
+					interceptor.clearInitializedLazyFields();
+				}
+			}
+		}
 
-		final Object result = source.getLoadQueryInfluencers().fromInternalFetchProfile(
-				CascadingFetchProfile.REFRESH,
-				() -> doRefresh( event, source, object, entry, persister, lazyInitializer, id, persistenceContext )
-		);
+		final Object result =
+				source.getLoadQueryInfluencers()
+						.fromInternalFetchProfile( CascadingFetchProfile.REFRESH,
+								() -> doRefresh( event, source, object, entry, persister, initializer, id, context ) );
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
 	}
 
@@ -237,7 +255,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			if ( currentLockMode.greaterThan( requestedLockMode ) ) {
 				// the requested lock-mode is less restrictive than the current one
 				//		- pass along the current lock-mode (after accounting for WRITE)
-				lockOptionsToUse = event.getLockOptions().makeCopy();
+				lockOptionsToUse = lockOptionsToUse.makeCopy();
 				if ( currentLockMode == LockMode.WRITE
 						|| currentLockMode == LockMode.PESSIMISTIC_WRITE
 						|| currentLockMode == LockMode.PESSIMISTIC_READ ) {
@@ -268,7 +286,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 		final Object result = persister.load( id, object, lockOptionsToUse, source );
 		if ( result != null ) {
-			// apply `postRefreshLockMode`, if needed
+			// apply postRefreshLockMode, if needed
 			if ( postRefreshLockMode != null ) {
 				// if we get here, there was a previous entry, and we need to reset its lock mode
 				//		- however, the refresh operation actually creates a new entry, so get it
@@ -307,8 +325,9 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 	private static void evictCachedCollections(Type[] types, Object id, EventSource source)
 			throws HibernateException {
-		final SessionFactoryImplementor factory = source.getFactory();
-		final MappingMetamodelImplementor metamodel = factory.getMappingMetamodel();
+		final var factory = source.getFactory();
+		final var actionQueue = source.getActionQueue();
+		final var metamodel = factory.getMappingMetamodel();
 		for ( Type type : types ) {
 			if ( type instanceof CollectionType collectionType ) {
 				final CollectionPersister collectionPersister =
@@ -323,7 +342,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 					);
 					final SoftLock lock = cache.lockItem( source, ck, null );
 					cache.remove( source, ck );
-					source.getActionQueue().registerProcess( (success, session) -> cache.unlockItem( session, ck, lock ) );
+					actionQueue.registerProcess( (success, session) -> cache.unlockItem( session, ck, lock ) );
 				}
 			}
 			else if ( type instanceof ComponentType compositeType ) {

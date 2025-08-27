@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cdi.lifecycle;
@@ -64,7 +64,7 @@ public class ExtendedBeanManagerNotAvailableDuringTypeResolutionTest {
 				"        </id>\n" +
 				"        <property name=\"name\" />\n" +
 				"        <property name=\"myEnum\" >\n" +
-				"            <type name=\"org.hibernate.type.EnumType\">\n" +
+				"            <type name=\"org.hibernate.orm.test.EnumType\">\n" +
 				"                <param name=\"enumClass\">" + MyEnum.class.getName() + "</param>\n" +
 				"            </type>\n" +
 				"        </property>\n" +

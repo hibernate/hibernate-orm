@@ -1,11 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -27,7 +26,9 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.engine.FetchStyle.SUBSELECT;
 
 /**
@@ -73,8 +74,8 @@ public class LoadQueryInfluencers implements Serializable {
 		batchSize = options.getDefaultBatchFetchSize();
 		subselectFetchEnabled = options.isSubselectFetchEnabled();
 		effectiveEntityGraph = new EffectiveEntityGraph();
-		for (FilterDefinition filterDefinition : sessionFactory.getAutoEnabledFilters()) {
-			FilterImpl filter = new FilterImpl( filterDefinition );
+		for ( var filterDefinition : sessionFactory.getAutoEnabledFilters() ) {
+			final var filter = new FilterImpl( filterDefinition );
 			if ( enabledFilters == null ) {
 				enabledFilters = new TreeMap<>();
 			}
@@ -83,7 +84,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public EffectiveEntityGraph applyEntityGraph(@Nullable RootGraphImplementor<?> rootGraph, @Nullable GraphSemantic graphSemantic) {
-		final EffectiveEntityGraph effectiveEntityGraph = getEffectiveEntityGraph();
+		final var effectiveEntityGraph = getEffectiveEntityGraph();
 		if ( graphSemantic != null ) {
 			if ( rootGraph == null ) {
 				throw new IllegalArgumentException( "Graph semantic specified, but no RootGraph was supplied" );
@@ -132,22 +133,6 @@ public class LoadQueryInfluencers implements Serializable {
 		this.enabledCascadingFetchProfile = enabledCascadingFetchProfile;
 	}
 
-	/**
-	 * @deprecated Use {@link #getEnabledCascadingFetchProfile} instead
-	 */
-	@Deprecated( since = "6.0" )
-	public String getInternalFetchProfile() {
-		return getEnabledCascadingFetchProfile().getLegacyName();
-	}
-
-	/**
-	 * @deprecated Use {@link #setEnabledCascadingFetchProfile} instead
-	 */
-	@Deprecated( since = "6.0" )
-	public void setInternalFetchProfile(String internalFetchProfile) {
-		setEnabledCascadingFetchProfile( CascadingFetchProfile.fromLegacyName( internalFetchProfile ) );
-	}
-
 
 	// filter support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -156,13 +141,13 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public Map<String,Filter> getEnabledFilters() {
-		final TreeMap<String, Filter> enabledFilters = this.enabledFilters;
+		final var enabledFilters = this.enabledFilters;
 		if ( enabledFilters == null ) {
-			return Collections.emptyMap();
+			return emptyMap();
 		}
 		else {
 			// First, validate all the enabled filters...
-			for ( Filter filter : enabledFilters.values() ) {
+			for ( var filter : enabledFilters.values() ) {
 				//TODO: this implementation has bad performance
 				filter.validate();
 			}
@@ -175,27 +160,17 @@ public class LoadQueryInfluencers implements Serializable {
 	 * @return an unmodifiable Set of enabled filter names.
 	 */
 	public Set<String> getEnabledFilterNames() {
-		if ( enabledFilters == null ) {
-			return emptySet();
-		}
-		else {
-			return Collections.unmodifiableSet( enabledFilters.keySet() );
-		}
+		return enabledFilters == null ? emptySet() : unmodifiableSet( enabledFilters.keySet() );
 	}
 
 	public @Nullable Filter getEnabledFilter(String filterName) {
-		if ( enabledFilters == null ) {
-			return null;
-		}
-		else {
-			return enabledFilters.get( filterName );
-		}
+		return enabledFilters == null ? null : enabledFilters.get( filterName );
 	}
 
 	public Filter enableFilter(String filterName) {
-		FilterImpl filter = new FilterImpl( sessionFactory.getFilterDefinition( filterName ) );
+		final FilterImpl filter = new FilterImpl( sessionFactory.getFilterDefinition( filterName ) );
 		if ( enabledFilters == null ) {
-			this.enabledFilters = new TreeMap<>();
+			enabledFilters = new TreeMap<>();
 		}
 		enabledFilters.put( filterName, filter );
 		return filter;
@@ -212,7 +187,7 @@ public class LoadQueryInfluencers implements Serializable {
 		if ( enabledFilters == null ) {
 			throw new IllegalArgumentException( "Filter [" + parsed[0] + "] currently not enabled" );
 		}
-		final FilterImpl filter = (FilterImpl) enabledFilters.get( parsed[0] );
+		final var filter = (FilterImpl) enabledFilters.get( parsed[0] );
 		if ( filter == null ) {
 			throw new IllegalArgumentException( "Filter [" + parsed[0] + "] currently not enabled" );
 		}
@@ -220,7 +195,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public static String [] parseFilterParameterName(String filterParameterName) {
-		int dot = filterParameterName.lastIndexOf( '.' );
+		final int dot = filterParameterName.lastIndexOf( '.' );
 		if ( dot <= 0 ) {
 			throw new IllegalArgumentException(
 					"Invalid filter-parameter name format [" + filterParameterName + "]; expecting {filter-name}.{param-name}"
@@ -269,15 +244,12 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	@Internal
-	public @Nullable HashSet<String> adjustFetchProfiles(@Nullable Set<String> disabledFetchProfiles, @Nullable Set<String> enabledFetchProfiles) {
-		final HashSet<String> currentEnabledFetchProfileNames = this.enabledFetchProfileNames;
-		final HashSet<String> oldFetchProfiles;
-		if ( currentEnabledFetchProfileNames == null || currentEnabledFetchProfileNames.isEmpty() ) {
-			oldFetchProfiles = null;
-		}
-		else {
-			oldFetchProfiles = new HashSet<>( currentEnabledFetchProfileNames );
-		}
+	public @Nullable HashSet<String> adjustFetchProfiles(
+			@Nullable Set<String> disabledFetchProfiles, @Nullable Set<String> enabledFetchProfiles) {
+		final var oldFetchProfiles =
+				enabledFetchProfileNames != null && !enabledFetchProfileNames.isEmpty()
+						? new HashSet<>( enabledFetchProfileNames )
+						: null;
 		if ( disabledFetchProfiles != null && enabledFetchProfileNames != null ) {
 			enabledFetchProfileNames.removeAll( disabledFetchProfiles );
 		}
@@ -316,7 +288,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public int effectiveBatchSize(CollectionPersister persister) {
-		int persisterBatchSize = persister.getBatchSize();
+		final int persisterBatchSize = persister.getBatchSize();
 		// persister-specific batch size overrides global setting
 		// (note that due to legacy, -1 means no explicit setting)
 		return persisterBatchSize >= 0 ? persisterBatchSize : batchSize;
@@ -327,7 +299,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public int effectiveBatchSize(EntityPersister persister) {
-		int persisterBatchSize = persister.getBatchSize();
+		final int persisterBatchSize = persister.getBatchSize();
 		// persister-specific batch size overrides global setting
 		// (note that due to legacy, -1 means no explicit setting)
 		return persisterBatchSize >= 0 ? persisterBatchSize : batchSize;
@@ -354,7 +326,9 @@ public class LoadQueryInfluencers implements Serializable {
 	private boolean isSubselectFetchEnabledInProfile(CollectionPersister persister) {
 		if ( hasEnabledFetchProfiles() ) {
 			for ( String profile : getEnabledFetchProfileNames() ) {
-				final FetchProfile fetchProfile = persister.getFactory().getFetchProfile( profile )	;
+				final FetchProfile fetchProfile =
+						persister.getFactory().getSqlTranslationEngine()
+								.getFetchProfile( profile )	;
 				if ( fetchProfile != null ) {
 					final Fetch fetch = fetchProfile.getFetchByRole( persister.getRole() );
 					if ( fetch != null && fetch.getMethod() == SUBSELECT) {
@@ -375,7 +349,7 @@ public class LoadQueryInfluencers implements Serializable {
 	private boolean hasSubselectLoadableCollectionsEnabledInProfile(EntityPersister persister) {
 		if ( hasEnabledFetchProfiles() ) {
 			for ( String profile : getEnabledFetchProfileNames() ) {
-				if ( persister.getFactory().getFetchProfile( profile )
+				if ( persister.getFactory().getSqlTranslationEngine().getFetchProfile( profile )
 						.hasSubselectLoadableCollectionsEnabled( persister ) ) {
 					return true;
 				}

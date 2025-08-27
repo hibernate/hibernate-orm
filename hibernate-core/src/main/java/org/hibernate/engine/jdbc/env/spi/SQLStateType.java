@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.spi;
@@ -27,16 +27,10 @@ public enum SQLStateType {
 
 
 	public static SQLStateType interpretReportedSQLStateType(int sqlStateType) {
-		switch ( sqlStateType ) {
-			case DatabaseMetaData.sqlStateSQL99 : {
-				return SQL99;
-			}
-			case DatabaseMetaData.sqlStateXOpen : {
-				return XOpen;
-			}
-			default : {
-				return UNKNOWN;
-			}
-		}
+		return switch ( sqlStateType ) {
+			case DatabaseMetaData.sqlStateSQL99 -> SQL99;
+			case DatabaseMetaData.sqlStateXOpen -> XOpen;
+			default -> UNKNOWN;
+		};
 	}
 }

@@ -1,11 +1,8 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.collection;
-
-import java.util.Collections;
-import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
@@ -47,7 +44,6 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueParameterList;
-import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.ast.TableInsert;
@@ -59,8 +55,9 @@ import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.type.EntityType;
 
+import java.util.List;
+
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /**
  * A {@link CollectionPersister} for {@linkplain jakarta.persistence.ElementCollection
@@ -146,12 +143,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				&& !isInverse();
 
 		if ( !performUpdates ) {
-			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
-				MODEL_MUTATION_LOGGER.debugf(
-						"Skipping collection row updates - %s",
-						getRolePath()
-				);
-			}
+//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+//				MODEL_MUTATION_LOGGER.tracef(
+//						"Skipping collection row updates - %s",
+//						getRolePath()
+//				);
+//			}
 			return new UpdateRowsCoordinatorNoOp( this );
 		}
 
@@ -160,12 +157,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	private InsertRowsCoordinator buildInsertRowCoordinator() {
 		if ( isInverse() || !isRowInsertEnabled() ) {
-			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
-				MODEL_MUTATION_LOGGER.debugf(
-						"Skipping collection inserts - %s",
-						getRolePath()
-				);
-			}
+//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+//				MODEL_MUTATION_LOGGER.tracef(
+//						"Skipping collection inserts - %s",
+//						getRolePath()
+//				);
+//			}
 			return new InsertRowsCoordinatorNoOp( this );
 		}
 
@@ -174,12 +171,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	private DeleteRowsCoordinator buildDeleteRowCoordinator() {
 		if ( ! needsRemove() ) {
-			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
-				MODEL_MUTATION_LOGGER.debugf(
-						"Skipping collection row deletions - %s",
-						getRolePath()
-				);
-			}
+//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+//				MODEL_MUTATION_LOGGER.tracef(
+//						"Skipping collection row deletions - %s",
+//						getRolePath()
+//				);
+//			}
 			return new DeleteRowsCoordinatorNoOp( this );
 		}
 
@@ -188,12 +185,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	private RemoveCoordinator buildDeleteAllCoordinator() {
 		if ( ! needsRemove() ) {
-			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
-				MODEL_MUTATION_LOGGER.debugf(
-						"Skipping collection removals - %s",
-						getRolePath()
-				);
-			}
+//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+//				MODEL_MUTATION_LOGGER.tracef(
+//						"Skipping collection removals - %s",
+//						getRolePath()
+//				);
+//			}
 			return new RemoveCoordinatorNoOp( this );
 		}
 
@@ -223,26 +220,16 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		applyKeyRestrictions( tableReference, parameterBinders, restrictionBindings );
 
 		final ColumnReference softDeleteColumn = new ColumnReference( tableReference, softDeleteMapping );
-		final ColumnWriteFragment nonDeletedLiteral = new ColumnWriteFragment(
-				softDeleteMapping.getNonDeletedLiteralText(),
-				Collections.emptyList(),
-				softDeleteMapping.getJdbcMapping()
-		);
-		final ColumnWriteFragment deletedLiteral = new ColumnWriteFragment(
-				softDeleteMapping.getDeletedLiteralText(),
-				Collections.emptyList(),
-				softDeleteMapping.getJdbcMapping()
-		);
-		restrictionBindings.add( new ColumnValueBinding( softDeleteColumn, nonDeletedLiteral ) );
-		final List<ColumnValueBinding> valueBindings = List.of( new ColumnValueBinding( softDeleteColumn, deletedLiteral ) );
+		final ColumnValueBinding nonDeletedBinding = softDeleteMapping.createNonDeletedValueBinding( softDeleteColumn );
+		final ColumnValueBinding deletedBinding = softDeleteMapping.createDeletedValueBinding( softDeleteColumn );
 
 		return new TableUpdateStandard(
 				tableReference,
 				this,
 				"soft-delete removal",
-				valueBindings,
+				List.of( deletedBinding ),
 				restrictionBindings,
-				null
+				List.of( nonDeletedBinding )
 		);
 	}
 
@@ -339,7 +326,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 		final SoftDeleteMapping softDeleteMapping = getAttributeMapping().getSoftDeleteMapping();
 		if ( softDeleteMapping != null ) {
-			insertBuilder.addValueColumn( softDeleteMapping );
+			final ColumnReference columnReference = new ColumnReference( insertBuilder.getMutatingTable(), softDeleteMapping );
+			insertBuilder.addValueColumn( softDeleteMapping.createNonDeletedValueBinding( columnReference ) );
 		}
 	}
 
@@ -671,17 +659,11 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			}
 		}
 
-		updateBuilder.addLiteralRestriction(
-				softDeleteMapping.getColumnName(),
-				softDeleteMapping.getNonDeletedLiteralText(),
-				softDeleteMapping.getJdbcMapping()
-		);
-
-		updateBuilder.addValueColumn(
-				softDeleteMapping.getColumnName(),
-				softDeleteMapping.getDeletedLiteralText(),
-				softDeleteMapping.getJdbcMapping()
-		);
+		final ColumnReference softDeleteColumnReference = new ColumnReference( tableReference, softDeleteMapping );
+		// apply the assignment
+		updateBuilder.addValueColumn( softDeleteMapping.createDeletedValueBinding( softDeleteColumnReference ) );
+		// apply the restriction
+		updateBuilder.addNonKeyRestriction( softDeleteMapping.createNonDeletedValueBinding( softDeleteColumnReference ) );
 
 		return updateBuilder.buildMutation();
 	}

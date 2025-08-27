@@ -1,16 +1,17 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
+import java.util.EnumSet;
 import java.util.Locale;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.OnDelete;
@@ -23,13 +24,11 @@ import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.internal.FullNameImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.internal.ShortNameImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
-import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinTable;
 
-import static org.hibernate.boot.model.internal.BinderHelper.getCascadeStrategy;
+import static org.hibernate.boot.model.internal.BinderHelper.aggregateCascadeTypes;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 
@@ -42,11 +41,11 @@ public class AnyBinder {
 			EntityBinder entityBinder,
 			boolean isIdentifierMapper,
 			MetadataBuildingContext context,
-			MemberDetails property,
 			AnnotatedJoinColumns joinColumns) {
+		final var memberDetails = inferredData.getAttributeMember();
 
 		//check validity
-		if ( property.hasDirectAnnotationUsage( Columns.class ) ) {
+		if ( memberDetails.hasDirectAnnotationUsage( Columns.class ) ) {
 			throw new AnnotationException(
 					String.format(
 							Locale.ROOT,
@@ -57,9 +56,9 @@ public class AnyBinder {
 			);
 		}
 
-		final Cascade hibernateCascade = property.getDirectAnnotationUsage( Cascade.class );
-		final OnDelete onDeleteAnn = property.getDirectAnnotationUsage( OnDelete.class );
-		final JoinTable assocTable = propertyHolder.getJoinTable( property );
+		final var hibernateCascade = memberDetails.getDirectAnnotationUsage( Cascade.class );
+		final var onDeleteAnn = memberDetails.getDirectAnnotationUsage( OnDelete.class );
+		final var assocTable = propertyHolder.getJoinTable( memberDetails );
 		if ( assocTable != null ) {
 			final Join join = propertyHolder.addJoin( assocTable, false );
 			for ( AnnotatedJoinColumn joinColumn : joinColumns.getJoinColumns() ) {
@@ -67,7 +66,7 @@ public class AnyBinder {
 			}
 		}
 		bindAny(
-				getCascadeStrategy( null, hibernateCascade, false, context ),
+				aggregateCascadeTypes( null, hibernateCascade, false, context ),
 				//@Any has no cascade attribute
 				joinColumns,
 				onDeleteAnn == null ? null : onDeleteAnn.action(),
@@ -81,7 +80,7 @@ public class AnyBinder {
 	}
 
 	private static void bindAny(
-			String cascadeStrategy,
+			EnumSet<CascadeType> cascadeStrategy,
 			AnnotatedJoinColumns columns,
 			OnDeleteAction onDeleteAction,
 			Nullability nullability,
@@ -90,8 +89,8 @@ public class AnyBinder {
 			EntityBinder entityBinder,
 			boolean isIdentifierMapper,
 			MetadataBuildingContext context) {
-		final MemberDetails property = inferredData.getAttributeMember();
-		final org.hibernate.annotations.Any any = property.getDirectAnnotationUsage( org.hibernate.annotations.Any.class );
+		final var memberDetails = inferredData.getAttributeMember();
+		final var any = memberDetails.getDirectAnnotationUsage( org.hibernate.annotations.Any.class );
 		if ( any == null ) {
 			throw new AssertionFailure( "Missing @Any annotation: " + getPath( propertyHolder, inferredData ) );
 		}
@@ -99,8 +98,8 @@ public class AnyBinder {
 		final boolean lazy = any.fetch() == FetchType.LAZY;
 		final boolean optional = any.optional();
 		final Any value = BinderHelper.buildAnyValue(
-				property.getDirectAnnotationUsage( Column.class ),
-				getOverridableAnnotation( property, Formula.class, context ),
+				memberDetails.getDirectAnnotationUsage( Column.class ),
+				getOverridableAnnotation( memberDetails, Formula.class, context ),
 				columns,
 				inferredData,
 				onDeleteAction,
@@ -112,13 +111,14 @@ public class AnyBinder {
 				context
 		);
 
-		final AnyDiscriminator anyDiscriminator = property.getDirectAnnotationUsage( AnyDiscriminator.class );
-		final AnyDiscriminatorImplicitValues anyDiscriminatorImplicitValues = property.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class );
+		final var anyDiscriminatorImplicitValues =
+				memberDetails.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class );
 		if ( anyDiscriminatorImplicitValues != null ) {
-			value.setImplicitDiscriminatorValueStrategy( resolveImplicitDiscriminatorStrategy( anyDiscriminatorImplicitValues, context ) );
+			value.setImplicitDiscriminatorValueStrategy(
+					resolveImplicitDiscriminatorStrategy( anyDiscriminatorImplicitValues, context ) );
 		}
 
-		final PropertyBinder binder = new PropertyBinder();
+		final var binder = new PropertyBinder();
 		binder.setName( inferredData.getPropertyName() );
 		binder.setValue( value );
 		binder.setLazy( lazy );
@@ -131,7 +131,7 @@ public class AnyBinder {
 		binder.setCascade( cascadeStrategy );
 		binder.setBuildingContext( context );
 		binder.setHolder( propertyHolder );
-		binder.setMemberDetails( property );
+		binder.setMemberDetails( memberDetails );
 		binder.setEntityBinder( entityBinder );
 		Property prop = binder.makeProperty();
 		prop.setOptional( optional && value.isNullable() );
@@ -143,32 +143,25 @@ public class AnyBinder {
 	public static ImplicitDiscriminatorStrategy resolveImplicitDiscriminatorStrategy(
 			AnyDiscriminatorImplicitValues anyDiscriminatorImplicitValues,
 			MetadataBuildingContext context) {
-		final AnyDiscriminatorImplicitValues.Strategy strategy = anyDiscriminatorImplicitValues.value();
-
-		if ( strategy == AnyDiscriminatorImplicitValues.Strategy.FULL_NAME ) {
-			return FullNameImplicitDiscriminatorStrategy.FULL_NAME_STRATEGY;
-		}
-
-		if ( strategy == AnyDiscriminatorImplicitValues.Strategy.SHORT_NAME ) {
-			return ShortNameImplicitDiscriminatorStrategy.SHORT_NAME_STRATEGY;
-		}
-
-		assert strategy == AnyDiscriminatorImplicitValues.Strategy.CUSTOM;
-
-		final Class<? extends ImplicitDiscriminatorStrategy> customStrategy = anyDiscriminatorImplicitValues.implementation();
-
-		if ( ImplicitDiscriminatorStrategy.class.equals( customStrategy ) ) {
-			return null;
-		}
-
-		if ( FullNameImplicitDiscriminatorStrategy.class.equals( customStrategy ) ) {
-			return FullNameImplicitDiscriminatorStrategy.FULL_NAME_STRATEGY;
-		}
-
-		if ( ShortNameImplicitDiscriminatorStrategy.class.equals( customStrategy ) ) {
-			return ShortNameImplicitDiscriminatorStrategy.SHORT_NAME_STRATEGY;
-		}
-
-		return context.getBootstrapContext().getCustomTypeProducer().produceBeanInstance( customStrategy );
+		return switch ( anyDiscriminatorImplicitValues.value() ) {
+			case FULL_NAME -> FullNameImplicitDiscriminatorStrategy.FULL_NAME_STRATEGY;
+			case SHORT_NAME -> ShortNameImplicitDiscriminatorStrategy.SHORT_NAME_STRATEGY;
+			case CUSTOM -> {
+				final var customStrategy = anyDiscriminatorImplicitValues.implementation();
+				if ( ImplicitDiscriminatorStrategy.class.equals( customStrategy ) ) {
+					yield null;
+				}
+				else if ( FullNameImplicitDiscriminatorStrategy.class.equals( customStrategy ) ) {
+					yield FullNameImplicitDiscriminatorStrategy.FULL_NAME_STRATEGY;
+				}
+				else if ( ShortNameImplicitDiscriminatorStrategy.class.equals( customStrategy ) ) {
+					yield ShortNameImplicitDiscriminatorStrategy.SHORT_NAME_STRATEGY;
+				}
+				else {
+					yield context.getBootstrapContext().getCustomTypeProducer()
+							.produceBeanInstance( customStrategy );
+				}
+			}
+		};
 	}
 }

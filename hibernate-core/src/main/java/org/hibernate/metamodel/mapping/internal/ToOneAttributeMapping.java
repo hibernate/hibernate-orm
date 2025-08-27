@@ -1,19 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -40,6 +31,7 @@ import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -107,15 +99,20 @@ import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.internal.domain.CircularBiDirectionalFetchImpl;
 import org.hibernate.sql.results.internal.domain.CircularFetchImpl;
 import org.hibernate.type.ComponentType;
-import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
-import static org.hibernate.boot.model.internal.SoftDeleteHelper.createNonSoftDeletedRestriction;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * @author Steve Ebersole
@@ -176,6 +173,7 @@ public class ToOneAttributeMapping
 	private ForeignKeyDescriptor.Nature sideNature;
 	private String identifyingColumnsTableExpression;
 	private boolean canUseParentTableGroup;
+	private @Nullable EmbeddableValuedModelPart circularFetchModelPart;
 
 	/**
 	 * For Hibernate Reactive
@@ -252,7 +250,7 @@ public class ToOneAttributeMapping
 				stateArrayPosition,
 				fetchableIndex,
 				attributeMetadata,
-				adjustFetchTiming( mappedFetchTiming, bootValue, entityMappingType ),
+				adjustFetchTiming( mappedFetchTiming, bootValue ),
 				mappedFetchStyle,
 				declaringType,
 				propertyAccess
@@ -260,9 +258,9 @@ public class ToOneAttributeMapping
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( name );
 		this.isNullable = bootValue.isNullable();
 		this.isLazy = navigableRole.getParent().getParent() == null
-				&& declaringEntityPersister.getBytecodeEnhancementMetadata()
-				.getLazyAttributesMetadata()
-				.isLazyAttribute( name );
+					&& declaringEntityPersister.getBytecodeEnhancementMetadata()
+							.getLazyAttributesMetadata()
+							.isLazyAttribute( name );
 		this.referencedPropertyName = bootValue.getReferencedPropertyName();
 		this.unwrapProxy = bootValue.isUnwrapProxy();
 		this.entityMappingType = entityMappingType;
@@ -272,17 +270,13 @@ public class ToOneAttributeMapping
 				declaringEntityPersister,
 				navigableRole
 		);
-		if ( bootValue instanceof ManyToOne ) {
-			final ManyToOne manyToOne = (ManyToOne) bootValue;
-			this.notFoundAction = ( (ManyToOne) bootValue ).getNotFoundAction();
-			if ( manyToOne.isLogicalOneToOne() ) {
-				cardinality = Cardinality.LOGICAL_ONE_TO_ONE;
-			}
-			else {
-				cardinality = Cardinality.MANY_TO_ONE;
-			}
-			final PersistentClass entityBinding = manyToOne.getMetadata()
-					.getEntityBinding( manyToOne.getReferencedEntityName() );
+		if ( bootValue instanceof ManyToOne manyToOne ) {
+			this.notFoundAction = manyToOne.getNotFoundAction();
+			cardinality = manyToOne.isLogicalOneToOne()
+					? Cardinality.LOGICAL_ONE_TO_ONE
+					: Cardinality.MANY_TO_ONE;
+			final PersistentClass entityBinding =
+					manyToOne.getMetadata().getEntityBinding( manyToOne.getReferencedEntityName() );
 			if ( referencedPropertyName == null ) {
 				SelectablePath bidirectionalAttributeName = null;
 				final String propertyPath = bootValue.getPropertyName() == null
@@ -330,12 +324,12 @@ public class ToOneAttributeMapping
 				final Property property = entityBinding.getProperty( referencedPropertyName );
 				this.hasJoinTable = cardinality == Cardinality.LOGICAL_ONE_TO_ONE
 						&& property != null
-						&& ( property.getValue() instanceof ManyToOne )
-						&& ( (ManyToOne) property.getValue() ).isLogicalOneToOne();
-				this.bidirectionalAttributePath = property != null && property.getValue()
-						.getType() instanceof EntityType
-						? SelectablePath.parse( referencedPropertyName )
-						: null;
+						&& property.getValue() instanceof ManyToOne manyToOneValue
+						&& manyToOneValue.isLogicalOneToOne();
+				this.bidirectionalAttributePath =
+						property != null && property.getValue().getType() instanceof EntityType
+								? SelectablePath.parse( referencedPropertyName )
+								: null;
 			}
 			if ( bootValue.isNullable() ) {
 				isKeyTableNullable = true;
@@ -368,7 +362,7 @@ public class ToOneAttributeMapping
 					isKeyTableNullable = declaringEntityPersister.isNullableTable( tableIndex );
 				}
 			}
-			isOptional = ( (ManyToOne) bootValue ).isIgnoreNotFound();
+			isOptional = manyToOne.isIgnoreNotFound();
 			isInternalLoadNullable = ( isNullable && bootValue.isForeignKeyEnabled() ) || hasNotFoundAction();
 		}
 		else {
@@ -457,8 +451,7 @@ public class ToOneAttributeMapping
 				propertyType = entityBinding.getIdentifierMapper().getType();
 			}
 			if ( entityBinding.getIdentifierProperty() == null ) {
-				final ComponentType compositeType;
-				if ( propertyType instanceof ComponentType && ( compositeType = (ComponentType) propertyType ).isEmbedded()
+				if ( propertyType instanceof ComponentType compositeType && compositeType.isEmbedded()
 						&& compositeType.getPropertyNames().length == 1 ) {
 					this.targetKeyPropertyName = compositeType.getPropertyNames()[0];
 					addPrefixedPropertyPaths(
@@ -517,8 +510,7 @@ public class ToOneAttributeMapping
 				this.targetKeyPropertyNames = targetKeyPropertyNames;
 			}
 			else {
-				final ComponentType compositeType;
-				if ( propertyType instanceof ComponentType && ( compositeType = (ComponentType) propertyType ).isEmbedded()
+				if ( propertyType instanceof ComponentType compositeType && compositeType.isEmbedded()
 						&& compositeType.getPropertyNames().length == 1 ) {
 					final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
 					this.targetKeyPropertyName = compositeType.getPropertyNames()[0];
@@ -578,21 +570,20 @@ public class ToOneAttributeMapping
 			java.util.Collection<Property> properties) {
 		for ( Property property : properties ) {
 			final Value value = property.getValue();
-			if ( value instanceof Component ) {
+			if ( value instanceof Component component ) {
 				final SelectablePath bidirectionalAttributeName = findBidirectionalOneToManyAttributeName(
 						propertyPath,
 						declaringType,
 						parentSelectablePath == null
 								? SelectablePath.parse( property.getName() )
 								: parentSelectablePath.append( property.getName() ),
-						( (Component) value ).getProperties()
+						component.getProperties()
 				);
 				if ( bidirectionalAttributeName != null ) {
 					return bidirectionalAttributeName;
 				}
 			}
-			if ( value instanceof Collection ) {
-				final Collection collection = (Collection) value;
+			if ( value instanceof Collection collection ) {
 				if ( propertyPath.equals( collection.getMappedByProperty() )
 						&& collection.getElement().getType().getName()
 						.equals( declaringType.getJavaType().getTypeName() ) ) {
@@ -612,28 +603,27 @@ public class ToOneAttributeMapping
 			java.util.Collection<Property> properties) {
 		for ( Property property : properties ) {
 			final Value value = property.getValue();
-			if ( value instanceof Component ) {
+			if ( value instanceof Component component ) {
 				final SelectablePath bidirectionalAttributeName = findBidirectionalOneToOneAttributeName(
 						propertyPath,
 						declaringType,
 						parentSelectablePath == null
 								? SelectablePath.parse( property.getName() )
 								: parentSelectablePath.append( property.getName() ),
-						( (Component) value ).getProperties()
+						component.getProperties()
 				);
 				if ( bidirectionalAttributeName != null ) {
 					return bidirectionalAttributeName;
 				}
 			}
-			else if ( value instanceof OneToOne ) {
-				final OneToOne oneToOne = (OneToOne) value;
-				if (declaringTableGroupProducer.getNavigableRole().getLocalName().equals( oneToOne.getReferencedEntityName() )
-				&& propertyPath.equals( oneToOne.getMappedByProperty() )
-						&& oneToOne.getReferencedEntityName()
-						.equals( declaringType.getJavaType().getTypeName() ) ) {
+			else if ( value instanceof OneToOne oneToOne ) {
+				if ( declaringTableGroupProducer.getNavigableRole().getLocalName()
+								.equals( oneToOne.getReferencedEntityName() )
+						&& propertyPath.equals( oneToOne.getMappedByProperty() )
+						&& oneToOne.getReferencedEntityName().equals( declaringType.getJavaType().getTypeName() ) ) {
 					return parentSelectablePath == null
-									? SelectablePath.parse( property.getName() )
-									: parentSelectablePath.append( property.getName() );
+							? SelectablePath.parse( property.getName() )
+							: parentSelectablePath.append( property.getName() );
 				}
 			}
 		}
@@ -642,14 +632,10 @@ public class ToOneAttributeMapping
 
 	private static FetchTiming adjustFetchTiming(
 			FetchTiming mappedFetchTiming,
-			ToOne bootValue,
-			EntityMappingType entityMappingType) {
-		if ( bootValue instanceof ManyToOne ) {
-			if ( ( (ManyToOne) bootValue ).getNotFoundAction() != null ) {
-				return FetchTiming.IMMEDIATE;
-			}
-		}
-		return mappedFetchTiming;
+			ToOne bootValue) {
+		return bootValue instanceof ManyToOne manyToOne && manyToOne.getNotFoundAction() != null
+				? FetchTiming.IMMEDIATE
+				: mappedFetchTiming;
 	}
 
 	private static TableGroupProducer resolveDeclaringTableGroupProducer(EntityPersister declaringEntityPersister, NavigableRole navigableRole) {
@@ -768,24 +754,17 @@ public class ToOneAttributeMapping
 		if ( prefix != null ) {
 			targetKeyPropertyNames.add( prefix );
 		}
-		if ( type instanceof ComponentType ) {
-			final CompositeType componentType = (CompositeType) type;
+		if ( type instanceof ComponentType componentType ) {
 			final String[] propertyNames = componentType.getPropertyNames();
 			final Type[] componentTypeSubtypes = componentType.getSubtypes();
 			for ( int i = 0, propertyNamesLength = propertyNames.length; i < propertyNamesLength; i++ ) {
-				final String newPrefix;
-				if ( prefix == null ) {
-					newPrefix = propertyNames[i];
-				}
-				else {
-					newPrefix = prefix + "." + propertyNames[i];
-				}
+				final String newPrefix = prefix == null ? propertyNames[i] : prefix + "." + propertyNames[i];
 				addPrefixedPropertyNames( targetKeyPropertyNames, newPrefix, componentTypeSubtypes[i], factory );
 			}
 		}
-		else if ( type instanceof EntityType ) {
-			final EntityType entityType = (EntityType) type;
-			final Type identifierOrUniqueKeyType = entityType.getIdentifierOrUniqueKeyType( factory );
+		else if ( type instanceof EntityType entityType ) {
+			final Type identifierOrUniqueKeyType =
+					entityType.getIdentifierOrUniqueKeyType( factory.getRuntimeMetamodels() );
 			final String propertyName;
 			if ( entityType.isReferenceToPrimaryKey() ) {
 				propertyName = entityType.getAssociatedEntityPersister( factory ).getIdentifierPropertyName();
@@ -846,8 +825,8 @@ public class ToOneAttributeMapping
 			this.sideNature = ForeignKeyDescriptor.Nature.TARGET;
 		}
 		else {
-			this.sideNature = foreignKeyDescriptor.getAssociationKey().getTable().equals(
-					identifyingColumnsTableExpression )
+			this.sideNature = foreignKeyDescriptor.getAssociationKey().table()
+				.equals( identifyingColumnsTableExpression )
 					? ForeignKeyDescriptor.Nature.KEY
 					: ForeignKeyDescriptor.Nature.TARGET;
 		}
@@ -862,6 +841,27 @@ public class ToOneAttributeMapping
 		this.canUseParentTableGroup = ! forceJoin
 				&& sideNature == ForeignKeyDescriptor.Nature.KEY
 				&& declaringTableGroupProducer.containsTableReference( identifyingColumnsTableExpression );
+	}
+
+	public void setupCircularFetchModelPart(MappingModelCreationProcess creationProcess) {
+		if ( sideNature == ForeignKeyDescriptor.Nature.TARGET
+			&& getAssociatedEntityMappingType().getIdentifierMapping() instanceof CompositeIdentifierMapping identifierMapping
+			&& foreignKeyDescriptor.getKeyPart() != identifierMapping ) {
+			// Setup a special embeddable model part for fetching the key object for a circular fetch.
+			// This is needed if the association entity nests the "inverse" toOne association in the embedded id,
+			// because then, the key part of the foreign key is just a simple value instead of the expected embedded id
+			// when doing delayed creation/querying of target entities. See HHH-19687 for details
+			this.circularFetchModelPart = MappingModelCreationHelper.createInverseModelPart(
+					identifierMapping,
+					getDeclaringType(),
+					this,
+					foreignKeyDescriptor.getTargetPart(),
+					creationProcess
+			);
+		}
+		else {
+			this.circularFetchModelPart = null;
+		}
 	}
 
 	public String getIdentifyingColumnsTableExpression() {
@@ -912,6 +912,10 @@ public class ToOneAttributeMapping
 
 	public Cardinality getCardinality() {
 		return cardinality;
+	}
+
+	public boolean hasJoinTable() {
+		return hasJoinTable;
 	}
 
 	@Override
@@ -1043,34 +1047,6 @@ public class ToOneAttributeMapping
 
 				We have a circularity but it is not bidirectional
 			 */
-			final TableGroup parentTableGroup = creationState
-					.getSqlAstCreationState()
-					.getFromClauseAccess()
-					.getTableGroup( fetchParent.getNavigablePath() );
-			final DomainResult<?> foreignKeyDomainResult;
-			assert !creationState.isResolvingCircularFetch();
-			try {
-				creationState.setResolvingCircularFetch( true );
-				if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
-					foreignKeyDomainResult = foreignKeyDescriptor.createKeyDomainResult(
-							fetchablePath,
-							createTableGroupForDelayedFetch( fetchablePath, parentTableGroup, null, creationState ),
-							fetchParent,
-							creationState
-					);
-				}
-				else {
-					foreignKeyDomainResult = foreignKeyDescriptor.createTargetDomainResult(
-							fetchablePath,
-							parentTableGroup,
-							fetchParent,
-							creationState
-					);
-				}
-			}
-			finally {
-				creationState.setResolvingCircularFetch( false );
-			}
 			return new CircularFetchImpl(
 					this,
 					fetchTiming,
@@ -1078,11 +1054,50 @@ public class ToOneAttributeMapping
 					fetchParent,
 					isSelectByUniqueKey( sideNature ),
 					parentNavigablePath,
-					foreignKeyDomainResult,
+					determineCircularKeyResult( fetchParent, fetchablePath, creationState ),
 					creationState
 			);
 		}
 		return null;
+	}
+
+	private DomainResult<?> determineCircularKeyResult(
+			FetchParent fetchParent,
+			NavigablePath fetchablePath,
+			DomainResultCreationState creationState) {
+		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
+		final TableGroup parentTableGroup = fromClauseAccess.getTableGroup( fetchParent.getNavigablePath() );
+		assert !creationState.isResolvingCircularFetch();
+		try {
+			creationState.setResolvingCircularFetch( true );
+			if ( circularFetchModelPart != null ) {
+				return circularFetchModelPart.createDomainResult(
+						fetchablePath,
+						createTableGroupForDelayedFetch( fetchablePath, parentTableGroup, null, creationState ),
+						null,
+						creationState
+				);
+			}
+			else if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
+				return foreignKeyDescriptor.createKeyDomainResult(
+						fetchablePath,
+						createTableGroupForDelayedFetch( fetchablePath, parentTableGroup, null, creationState ),
+						fetchParent,
+						creationState
+				);
+			}
+			else {
+				return foreignKeyDescriptor.createTargetDomainResult(
+						fetchablePath,
+						parentTableGroup,
+						fetchParent,
+						creationState
+				);
+			}
+		}
+		finally {
+			creationState.setResolvingCircularFetch( false );
+		}
 	}
 
 	protected boolean isBidirectionalAttributeName(
@@ -1112,8 +1127,7 @@ public class ToOneAttributeMapping
 				otherSideMappedBy = "biologicalChild"
 
 			 */
-			if ( parentModelPart instanceof ToOneAttributeMapping ) {
-				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) parentModelPart;
+			if ( parentModelPart instanceof ToOneAttributeMapping toOneAttributeMapping ) {
 				if ( toOneAttributeMapping.bidirectionalAttributePath != null ) {
 					return toOneAttributeMapping.isBidirectionalAttributeName(
 							fetchablePath,
@@ -1123,10 +1137,10 @@ public class ToOneAttributeMapping
 					);
 				}
 			}
-			else if ( parentModelPart instanceof PluralAttributeMapping ) {
+			else if ( parentModelPart instanceof PluralAttributeMapping pluralAttributeMapping ) {
 				// The parent must be non-null. If it is null, the root is a CollectionResult
 				return parentNavigablePath.getParent() != null
-						&& ( (PluralAttributeMapping) parentModelPart ).isBidirectionalAttributeName( fetchablePath, this );
+					&& pluralAttributeMapping.isBidirectionalAttributeName( fetchablePath, this );
 			}
 			else if ( parentModelPart instanceof EntityCollectionPart ) {
 				NavigablePath parentOfParent = parentNavigablePath.getParent();
@@ -1134,8 +1148,9 @@ public class ToOneAttributeMapping
 					parentOfParent = parentOfParent.getParent();
 				}
 				// The parent must be non-null. If it is null, the root is a CollectionResult
-				return parentOfParent.getParent() != null && ( (PluralAttributeMapping) creationState.resolveModelPart( parentOfParent ) )
-						.isBidirectionalAttributeName( fetchablePath, this );
+				return parentOfParent.getParent() != null
+					&& ( (PluralAttributeMapping) creationState.resolveModelPart( parentOfParent ) )
+							.isBidirectionalAttributeName( fetchablePath, this );
 			}
 			return false;
 		}
@@ -1257,12 +1272,10 @@ public class ToOneAttributeMapping
 		}
 		else if ( CollectionPart.Nature.fromNameExact( parentNavigablePath.getLocalName() ) != null ) {
 			referencedNavigablePath = getReferencedNavigablePath( creationState, parentNavigablePath.getParent() );
-			hasBidirectionalFetchParent = fetchParent instanceof Fetch
-				&& ( (Fetch) fetchParent ).getFetchParent() instanceof Fetch;
+			hasBidirectionalFetchParent = fetchParent instanceof Fetch fetch && fetch.getFetchParent() instanceof Fetch;
 		}
 		else {
 			referencedNavigablePath = getReferencedNavigablePath( creationState, parentNavigablePath );
-
 			hasBidirectionalFetchParent = fetchParent instanceof Fetch;
 		}
 		// The referencedNavigablePath can be null if this is a collection initialization
@@ -1497,10 +1510,10 @@ public class ToOneAttributeMapping
 				to be sure that the referencedNavigablePath corresponds to leve2Child
 
 		 */
-		while ( !( partMappingType instanceof EntityMappingType )
+		while ( !( partMappingType instanceof EntityMappingType entityMapping )
 				|| ( partMappingType != entityMappingType
 				&& !entityMappingType.getEntityPersister().isSubclassEntityName( partMappingType.getMappedJavaType().getTypeName() )
-				&& !( (EntityMappingType) partMappingType ).getEntityPersister().isSubclassEntityName( entityMappingType.getEntityName() ) ) ) {
+				&& !entityMapping.getEntityPersister().isSubclassEntityName( entityMappingType.getEntityName() ) ) ) {
 			referencedNavigablePath = referencedNavigablePath.getParent();
 			if ( referencedNavigablePath == null ) {
 				return null;
@@ -1553,7 +1566,19 @@ public class ToOneAttributeMapping
 
 		having the left join we don't want to add an extra implicit join that will be translated into an SQL inner join (see HHH-15342)
 		*/
-		if ( fetchTiming == FetchTiming.IMMEDIATE && selected ) {
+
+		final ForeignKeyDescriptor.Nature resolvingKeySideOfForeignKey = creationState.getCurrentlyResolvingForeignKeyPart();
+		final ForeignKeyDescriptor.Nature side;
+		if ( resolvingKeySideOfForeignKey == ForeignKeyDescriptor.Nature.KEY && this.sideNature == ForeignKeyDescriptor.Nature.TARGET ) {
+			// If we are currently resolving the key part of a foreign key we do not want to add joins.
+			// So if the lhs of this association is the target of the FK, we have to use the KEY part to avoid a join
+			side = ForeignKeyDescriptor.Nature.KEY;
+		}
+		else {
+			side = this.sideNature;
+		}
+		if ( fetchTiming == FetchTiming.IMMEDIATE && selected
+			|| !creationState.getSqlAstCreationState().isProcedureOrNativeQuery() && needsJoinFetch( side ) ) {
 			final TableGroup tableGroup = determineTableGroupForFetch(
 					fetchablePath,
 					fetchParent,
@@ -1631,16 +1656,6 @@ public class ToOneAttributeMapping
 
 		 */
 
-		final ForeignKeyDescriptor.Nature resolvingKeySideOfForeignKey = creationState.getCurrentlyResolvingForeignKeyPart();
-		final ForeignKeyDescriptor.Nature side;
-		if ( resolvingKeySideOfForeignKey == ForeignKeyDescriptor.Nature.KEY && this.sideNature == ForeignKeyDescriptor.Nature.TARGET ) {
-			// If we are currently resolving the key part of a foreign key we do not want to add joins.
-			// So if the lhs of this association is the target of the FK, we have to use the KEY part to avoid a join
-			side = ForeignKeyDescriptor.Nature.KEY;
-		}
-		else {
-			side = this.sideNature;
-		}
 		final DomainResult<?> keyResult;
 		if ( side == ForeignKeyDescriptor.Nature.KEY ) {
 			final TableGroup tableGroup = sideNature == ForeignKeyDescriptor.Nature.KEY
@@ -1692,6 +1707,25 @@ public class ToOneAttributeMapping
 		);
 	}
 
+	private boolean needsJoinFetch(ForeignKeyDescriptor.Nature side) {
+		if ( side == ForeignKeyDescriptor.Nature.TARGET ) {
+			// With composite identifier if the target model part doesn't correspond to the identifier of the target entity mapping
+			// we must eagerly fetch with a join (subselect would still cause problems).
+			final EntityIdentifierMapping identifier = entityMappingType.getIdentifierMapping();
+			if ( identifier instanceof BasicEntityIdentifierMappingImpl ) {
+				return false;
+			}
+			final ValuedModelPart targetPart = foreignKeyDescriptor.getTargetPart();
+			if ( identifier != targetPart ) {
+				// If the identifier and the target part of the same class, we can preserve laziness as deferred loading will still work
+				return identifier.getExpressibleJavaType().getJavaTypeClass() != targetPart.getExpressibleJavaType()
+						.getJavaTypeClass();
+			}
+		}
+
+		return false;
+	}
+
 	private boolean isAffectedByEnabledFilters(DomainResultCreationState creationState) {
 		final LoadQueryInfluencers loadQueryInfluencers = creationState.getSqlAstCreationState()
 				.getLoadQueryInfluencers();
@@ -1725,17 +1759,12 @@ public class ToOneAttributeMapping
 			FromClauseAccess fromClauseAccess,
 			DomainResultCreationState creationState) {
 		final FetchableContainer parentEntityType = fetchParent.getReferencedMappingType();
-		final SqlAstJoinType joinType;
-		if ( parentEntityType instanceof JoinedSubclassEntityPersister
-				&& ( (JoinedSubclassEntityPersister) parentEntityType ).findDeclaredAttributeMapping( getPartName() ) == null ) {
-			joinType = getJoinTypeForFetch( fetchablePath, parentTableGroup );
-		}
-		else {
-			joinType = null;
-		}
-		final TableGroup existingTableGroup = fromClauseAccess.findTableGroupForGetOrCreate(
-				fetchablePath
-		);
+		final SqlAstJoinType joinType =
+				parentEntityType instanceof JoinedSubclassEntityPersister joinedSubclassEntityPersister
+					&& joinedSubclassEntityPersister.findDeclaredAttributeMapping( getPartName() ) == null
+						? getJoinTypeForFetch( fetchablePath, parentTableGroup )
+						: null;
+		final TableGroup existingTableGroup = fromClauseAccess.findTableGroupForGetOrCreate( fetchablePath );
 		if ( existingTableGroup != null && existingTableGroup.getModelPart() == this ) {
 			return existingTableGroup;
 		}
@@ -1901,9 +1930,8 @@ public class ToOneAttributeMapping
 		if ( cardinality == Cardinality.LOGICAL_ONE_TO_ONE && bidirectionalAttributePath != null ) {
 			final ModelPart bidirectionalModelPart = entityMappingType.findByPath( bidirectionalAttributePath );
 			// Add the inverse association key side as well to be able to resolve to a CircularFetch
-			if ( bidirectionalModelPart instanceof ToOneAttributeMapping ) {
+			if ( bidirectionalModelPart instanceof ToOneAttributeMapping bidirectionalAttribute ) {
 				assert bidirectionalModelPart.getPartMappingType() == declaringTableGroupProducer;
-				final ToOneAttributeMapping bidirectionalAttribute = (ToOneAttributeMapping) bidirectionalModelPart;
 				final AssociationKey secondKey = bidirectionalAttribute.getForeignKeyDescriptor().getAssociationKey();
 				if ( creationState.registerVisitedAssociationKey( secondKey ) ) {
 					additionalAssociationKey = secondKey;
@@ -2130,9 +2158,8 @@ public class ToOneAttributeMapping
 								navigablePath,
 								getAssociatedEntityMappingType().getSoftDeleteTableDetails().getTableName()
 						);
-						join.applyPredicate( createNonSoftDeletedRestriction(
+						join.applyPredicate( softDeleteMapping.createNonDeletedRestriction(
 								tableReference,
-								softDeleteMapping,
 								creationState.getSqlExpressionResolver()
 						) );
 					}
@@ -2174,9 +2201,10 @@ public class ToOneAttributeMapping
 
 		final SoftDeleteMapping softDeleteMapping = getAssociatedEntityMappingType().getSoftDeleteMapping();
 		final boolean canUseInnerJoin;
-		final SqlAstJoinType currentlyProcessingJoinType = creationState instanceof SqmToSqlAstConverter
-				? ( (SqmToSqlAstConverter) creationState ).getCurrentlyProcessingJoinType()
-				: null;
+		final SqlAstJoinType currentlyProcessingJoinType =
+				creationState instanceof SqmToSqlAstConverter sqmToSqlAstConverter
+						? sqmToSqlAstConverter.getCurrentlyProcessingJoinType()
+						: null;
 		if ( currentlyProcessingJoinType != null && currentlyProcessingJoinType != SqlAstJoinType.INNER ) {
 			// Don't change the join type though, as that has implications for eager initialization of a LazyTableGroup
 			canUseInnerJoin = false;
@@ -2256,9 +2284,8 @@ public class ToOneAttributeMapping
 						navigablePath,
 						getAssociatedEntityMappingType().getSoftDeleteTableDetails().getTableName()
 				);
-				predicateConsumer.accept( createNonSoftDeletedRestriction(
+				predicateConsumer.accept( softDeleteMapping.createNonDeletedRestriction(
 						tableReference,
-						softDeleteMapping,
 						creationState.getSqlExpressionResolver()
 				) );
 			}
@@ -2439,7 +2466,7 @@ public class ToOneAttributeMapping
 			assert getAssociatedEntityMappingType()
 					.getRepresentationStrategy()
 					.getInstantiator()
-					.isInstance( domainValue, session.getSessionFactory() );
+					.isInstance( domainValue );
 			return extractAttributePathValue( domainValue, getAssociatedEntityMappingType(), referencedPropertyName );
 		}
 
@@ -2472,12 +2499,10 @@ public class ToOneAttributeMapping
 			final String pathPart = pathParts[ i ];
 			final AttributeMapping attributeMapping = managedType.findAttributeMapping( pathPart );
 			value = attributeMapping.getValue( value );
-			if ( attributeMapping.getMappedType() instanceof ManagedMappingType ) {
-				managedType = (ManagedMappingType) attributeMapping.getMappedType();
-			}
-			else {
-				managedType = null;
-			}
+			managedType =
+					attributeMapping.getMappedType() instanceof ManagedMappingType managedMappingType
+							? managedMappingType
+							: null;
 		}
 
 		return value;

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
@@ -9,7 +9,7 @@ import java.util.UUID;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.query.sql.spi.NativeQueryImplementor;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -103,7 +103,7 @@ public class H2JsonListTest {
 					.executeUpdate();
 		} );
 		scope.inTransaction( session -> {
-			final NativeQueryImplementor<PathClob> nativeQuery = session.createNativeQuery(
+			final NativeQuery<PathClob> nativeQuery = session.createNativeQuery(
 					"select * from paths_clob where id = 99",
 					PathClob.class
 			);

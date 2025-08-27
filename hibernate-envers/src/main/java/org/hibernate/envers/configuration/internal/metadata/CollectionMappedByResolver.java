@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal.metadata;
@@ -168,7 +168,7 @@ public class CollectionMappedByResolver {
 			referencedClass = oneToManyValue.getAssociatedClass();
 		}
 		else if ( collectionValue.getElement() instanceof ManyToOne ) {
-			// Case for bi-directional relation with @JoinTable on the owning @ManyToOne side.
+			// Case for bidirectional relation with @JoinTable on the owning @ManyToOne side.
 			final ManyToOne manyToOneValue = (ManyToOne) collectionValue.getElement();
 			referencedClass = manyToOneValue.getMetadata().getEntityBinding( manyToOneValue.getReferencedEntityName() );
 		}

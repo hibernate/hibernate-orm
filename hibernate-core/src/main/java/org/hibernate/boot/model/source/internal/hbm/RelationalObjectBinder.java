@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -7,6 +7,7 @@ package org.hibernate.boot.model.source.internal.hbm;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
@@ -80,8 +81,7 @@ public class RelationalObjectBinder {
 			boolean areColumnsNullableByDefault,
 			ColumnNamingDelegate columnNamingDelegate) {
 		for ( RelationalValueSource relationalValueSource : relationalValueSources ) {
-			if ( relationalValueSource instanceof ColumnSource ) {
-				final ColumnSource columnSource = (ColumnSource) relationalValueSource;
+			if ( relationalValueSource instanceof ColumnSource columnSource ) {
 				bindColumn(
 						sourceDocument,
 						columnSource,
@@ -90,9 +90,11 @@ public class RelationalObjectBinder {
 						columnNamingDelegate
 				);
 			}
-			else {
-				final DerivedValueSource formulaSource = (DerivedValueSource) relationalValueSource;
+			else if ( relationalValueSource instanceof DerivedValueSource formulaSource ) {
 				simpleValue.addFormula( new Formula( formulaSource.getExpression() ) );
+			}
+			else {
+				throw new AssertionFailure( "Unrecognized RelationalValueSource" );
 			}
 		}
 	}

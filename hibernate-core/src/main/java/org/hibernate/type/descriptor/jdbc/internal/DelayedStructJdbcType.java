@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc.internal;
@@ -16,21 +16,21 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.EmbeddableAggregateJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
-import org.hibernate.type.descriptor.jdbc.StructJdbcType;
+import org.hibernate.type.descriptor.jdbc.StructuredJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Descriptor for {@link Types#STRUCT STRUCT} handling, which is only a temporary placeholder.
  * During bootstrap, {@link EmbeddableAggregateJavaType} will report {@link DelayedStructJdbcType} as recommended
- * {@link org.hibernate.type.descriptor.jdbc.JdbcType}, because the real {@link StructJdbcType} can only be built later,
+ * {@link org.hibernate.type.descriptor.jdbc.JdbcType}, because the real {@link StructuredJdbcType} can only be built later,
  * as that requires runtime model information in the form of {@link EmbeddableMappingType}.
- * The real {@link StructJdbcType} is built right after {@link EmbeddableMappingType} is created,
+ * The real {@link StructuredJdbcType} is built right after {@link EmbeddableMappingType} is created,
  * which will then cause a rebuild of the respective {@link org.hibernate.type.BasicType} as well as updating
  * the {@link org.hibernate.mapping.BasicValue.Resolution} of the owning attribute.
  *
  * @see EmbeddableAggregateJavaType
  */
-public class DelayedStructJdbcType implements StructJdbcType {
+public class DelayedStructJdbcType implements StructuredJdbcType {
 
 	private final EmbeddableAggregateJavaType<?> embeddableAggregateJavaType;
 	private final String structName;

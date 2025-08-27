@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.namedentity;
@@ -7,7 +7,7 @@ package org.hibernate.processor.test.namedentity;
 import jakarta.persistence.TypedQueryReference;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -17,14 +17,15 @@ import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGen
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
 import static org.hibernate.processor.test.util.TestUtil.getFieldFromMetamodelFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-public class NamedEntityTest extends CompilationTest {
+@CompilationTest
+class NamedEntityTest {
 
 	@Test
 	@WithClasses(Book.class)
-	public void test() {
+	void test() {
 		System.out.println( getMetaModelSourceAsString( Book.class ) );
 
 		assertMetamodelClassGeneratedFor( Book.class );
@@ -33,7 +34,7 @@ public class NamedEntityTest extends CompilationTest {
 		final Field field = getFieldFromMetamodelFor( Book.class, "_findAllBooks_" );
 		assertEquals( TypedQueryReference.class, field.getType() );
 		final Type genericType = field.getGenericType();
-		assertTrue( genericType instanceof ParameterizedType );
+		assertInstanceOf( ParameterizedType.class, genericType );
 		final ParameterizedType parameterizedType = (ParameterizedType) genericType;
 		assertEquals( Book.class, parameterizedType.getActualTypeArguments()[0] );
 	}

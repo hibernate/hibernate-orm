@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.callbacks;
@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Sanne Grinovero
  */
-@SuppressWarnings("unchecked")
 @Jpa(
 		annotatedClasses = {
 				Cat.class,
@@ -33,12 +32,7 @@ public class CallbacksDisabledTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Kitten" ).executeUpdate();
-					entityManager.createQuery( "delete from Cat" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

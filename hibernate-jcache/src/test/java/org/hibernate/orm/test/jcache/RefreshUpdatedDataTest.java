@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jcache;
@@ -92,10 +92,10 @@ public class RefreshUpdatedDataTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true, reason = "does not support nested transactions")
-	@SkipForDialect(dialectClass = DerbyDialect.class, matchSubTypes = true, reason = "Derby does not support nested transactions")
-	@SkipForDialect(dialectClass = SybaseASEDialect.class, matchSubTypes = true)
-	@SkipForDialect(dialectClass = HSQLDialect.class, matchSubTypes = true)
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "does not support nested transactions")
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby does not support nested transactions")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class)
+	@SkipForDialect(dialectClass = HSQLDialect.class)
 	public void testUpdateAndFlushThenRefresh() {
 		final String BEFORE = "before";
 

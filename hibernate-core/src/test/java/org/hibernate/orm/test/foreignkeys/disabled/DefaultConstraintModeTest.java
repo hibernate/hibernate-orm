@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.foreignkeys.disabled;
@@ -52,8 +52,8 @@ public class DefaultConstraintModeTest extends BaseUnitTestCase {
 				.applySetting( Environment.HBM2DDL_DEFAULT_CONSTRAINT_MODE, created ? "CONSTRAINT" : "NO_CONSTRAINT" )
 				.build()) {
 			Metadata metadata = new MetadataSources( ssr ).addAnnotatedClasses( TestEntity.class, ChildEntity.class ).buildMetadata();
-			assertThat( findTable( metadata, "TestEntity" ).getForeignKeys().isEmpty(), is( !created ) );
-			assertThat( findTable( metadata, "ChildEntity" ).getForeignKeys().isEmpty(), is( !created ) );
+			assertThat( findTable( metadata, "TestEntity" ).getForeignKeyCollection().isEmpty(), is( !created ) );
+			assertThat( findTable( metadata, "ChildEntity" ).getForeignKeyCollection().isEmpty(), is( !created ) );
 		}
 	}
 

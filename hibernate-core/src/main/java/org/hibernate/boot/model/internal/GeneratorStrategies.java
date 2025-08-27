@@ -1,12 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
 import jakarta.persistence.GenerationType;
 import org.hibernate.MappingException;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.Generator;
@@ -103,7 +102,8 @@ public class GeneratorStrategies {
 				return GUIDGenerator.class;
 		}
 		final Class<? extends Generator> clazz =
-				idValue.getServiceRegistry().requireService( ClassLoaderService.class )
+				idValue.getBuildingContext().getBootstrapContext()
+						.getClassLoaderService()
 						.classForName( strategy );
 		if ( !Generator.class.isAssignableFrom( clazz ) ) {
 			// in principle, this shouldn't happen, since @GenericGenerator

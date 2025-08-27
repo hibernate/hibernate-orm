@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.xmlmapped;
@@ -9,8 +9,9 @@ import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
 import org.hibernate.processor.test.util.WithProcessorOption;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hibernate.processor.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
@@ -20,6 +21,7 @@ import static org.hibernate.processor.test.util.TestUtil.assertSuperclassRelatio
  * @author Hardy Ferentschik
  */
 // TODO - differentiate needed classes per test better. Right now all test classes are processed for each test (HF)
+@CompilationTest
 @WithClasses({
 		Address.class,
 		Boy.class,
@@ -31,21 +33,21 @@ import static org.hibernate.processor.test.util.TestUtil.assertSuperclassRelatio
 })
 @WithProcessorOption(key = HibernateProcessor.PERSISTENCE_XML_OPTION,
 		value = "org/hibernate/processor/test/xmlmapped/persistence.xml")
-public class XmlMappingTest extends CompilationTest {
+class XmlMappingTest {
 	@Test
-	public void testXmlConfiguredEmbeddedClassGenerated() {
+	void testXmlConfiguredEmbeddedClassGenerated() {
 		assertMetamodelClassGeneratedFor( Address.class );
 	}
 
 	@Test
-	public void testXmlConfiguredMappedSuperclassGenerated() {
+	void testXmlConfiguredMappedSuperclassGenerated() {
 		assertMetamodelClassGeneratedFor( Building.class );
 		assertPresenceOfFieldInMetamodelFor( Building.class, "address", "address field should exist" );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-17")
-	public void testTargetEntityOnOneToOne() {
+	void testTargetEntityOnOneToOne() {
 		assertMetamodelClassGeneratedFor( Boy.class );
 		assertPresenceOfFieldInMetamodelFor( Boy.class, "favoriteSuperhero", "favoriteSuperhero field should exist" );
 		assertAttributeTypeInMetaModelFor(
@@ -55,7 +57,7 @@ public class XmlMappingTest extends CompilationTest {
 
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-17")
-	public void testTargetEntityOnOneToMany() {
+	void testTargetEntityOnOneToMany() {
 		assertMetamodelClassGeneratedFor( Boy.class );
 		assertPresenceOfFieldInMetamodelFor( Boy.class, "knowsHeroes", "knowsHeroes field should exist" );
 		assertAttributeTypeInMetaModelFor(
@@ -65,7 +67,7 @@ public class XmlMappingTest extends CompilationTest {
 
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-17")
-	public void testTargetEntityOnManyToMany() {
+	void testTargetEntityOnManyToMany() {
 		assertMetamodelClassGeneratedFor( Boy.class );
 		assertPresenceOfFieldInMetamodelFor( Boy.class, "savedBy", "savedBy field should exist" );
 		assertAttributeTypeInMetaModelFor(
@@ -74,21 +76,22 @@ public class XmlMappingTest extends CompilationTest {
 	}
 
 	@Test
-	public void testXmlConfiguredElementCollection() {
+	void testXmlConfiguredElementCollection() {
 		assertMetamodelClassGeneratedFor( Boy.class );
 		assertPresenceOfFieldInMetamodelFor( Boy.class, "nickNames", "nickNames field should exist" );
 		assertAttributeTypeInMetaModelFor( Boy.class, "nickNames", String.class, "target class overridden in xml" );
 	}
 
 	@Test
-	public void testClassHierarchy() {
+	void testClassHierarchy() {
 		assertMetamodelClassGeneratedFor( Mammal.class );
 		assertMetamodelClassGeneratedFor( LivingBeing.class );
 		assertSuperclassRelationshipInMetamodel( Mammal.class, LivingBeing.class );
 	}
 
-	@Test(expected = ClassNotFoundException.class)
-	public void testNonExistentMappedClassesGetIgnored() throws Exception {
-		Class.forName( "org.hibernate.processor.test.model.Dummy_" );
+	@Test
+	void testNonExistentMappedClassesGetIgnored() throws Exception {
+		assertThatThrownBy( () -> Class.forName( "org.hibernate.processor.test.model.Dummy_" ))
+				.isInstanceOf( ClassNotFoundException.class );
 	}
 }

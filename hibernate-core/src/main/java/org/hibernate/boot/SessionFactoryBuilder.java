@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot;
@@ -15,6 +15,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -263,7 +264,10 @@ public interface SessionFactoryBuilder {
 	 * to transaction handling.
 	 *
 	 * @see TempTableDdlTransactionHandling
+	 *
+	 * @deprecated This has no effect and will be removed.
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling);
 
 	/**
@@ -380,6 +384,21 @@ public interface SessionFactoryBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#MULTI_TENANT_IDENTIFIER_RESOLVER
 	 */
 	SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> resolver);
+
+	/**
+	 * Specifies a {@link TenantSchemaMapper} that is responsible for
+	 * mapping the current tenant identifier to the name of a database
+	 * schema.
+	 *
+	 * @param mapper The mapping strategy to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#MULTI_TENANT_SCHEMA_MAPPER
+	 *
+	 * @since 7.1
+	 */
+	SessionFactoryBuilder applyTenantSchemaMapper(TenantSchemaMapper<?> mapper);
 
 	/**
 	 * If using the built-in JTA-based
@@ -565,19 +584,6 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyJdbcBatchSize(int size);
 
 	/**
-	 * This setting controls whether versioned entities will be included in JDBC batching.  The reason
-	 * being that some JDBC drivers have a problems returning "accurate" update counts from batch statements.
-	 * This is setting is {@code false} by default.
-	 *
-	 * @param enabled The batch size to use.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#BATCH_VERSIONED_DATA
-	 */
-	SessionFactoryBuilder applyJdbcBatchingForVersionedEntities(boolean enabled);
-
-	/**
 	 * Should scrollable results be supported in queries?  We ask the JDBC driver whether it
 	 * supports scrollable result sets as the default for this setting, but some drivers do not
 	 * accurately report this via DatabaseMetaData.  Also, needed if user is supplying connections
@@ -682,9 +688,12 @@ public interface SessionFactoryBuilder {
 	 * released immediately on close?
 	 * <p>
 	 * The other option is to release them as part of an after transaction callback.
+	 *
+	 * @deprecated since {@value org.hibernate.cfg.AvailableSettings#DISCARD_PC_ON_CLOSE}
+	 *             is deprecated
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	SessionFactoryBuilder enableReleaseResourcesOnCloseEnabled(boolean enable);
-
 
 	/**
 	 * @see JpaCompliance#isJpaQueryComplianceEnabled()

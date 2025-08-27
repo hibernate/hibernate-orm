@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -182,21 +182,9 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 	 * @return {@code true} if a property with that name exists; {@code false} if not
 	 */
 	public boolean isPropertyDefinedInHierarchy(String name) {
-		if ( hasProperty( name ) ) {
-			return true;
-		}
-
-		if ( getSuperMappedSuperclass() != null
-				&& getSuperMappedSuperclass().isPropertyDefinedInHierarchy( name ) ) {
-			return true;
-		}
-
-		if ( getSuperPersistentClass() != null
-				&& getSuperPersistentClass().isPropertyDefinedInHierarchy( name ) ) {
-			return true;
-		}
-
-		return false;
+		return hasProperty( name )
+			|| getSuperMappedSuperclass() != null && getSuperMappedSuperclass().isPropertyDefinedInHierarchy( name )
+			|| getSuperPersistentClass() != null && getSuperPersistentClass().isPropertyDefinedInHierarchy( name );
 	}
 
 	public void prepareForMappingModel() {

@@ -1,14 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.pool.TypePool;
+
+import java.util.Objects;
 
 /**
  * A TypePool suitable for loading user's classes,
@@ -16,11 +15,12 @@ import net.bytebuddy.pool.TypePool;
  */
 public class ModelTypePool extends TypePool.Default implements EnhancerClassLocator {
 
-	private final ConcurrentHashMap<String, Resolution> resolutions = new ConcurrentHashMap<>();
-	private final OverridingClassFileLocator locator;
+	private final EnhancerClassFileLocator locator;
+	private final EnhancerCacheProvider poolCache;
 
-	private ModelTypePool(CacheProvider cacheProvider, OverridingClassFileLocator classFileLocator, CoreTypePool parent) {
+	private ModelTypePool(EnhancerCacheProvider cacheProvider, EnhancerClassFileLocator classFileLocator, CoreTypePool parent) {
 		super( cacheProvider, classFileLocator, ReaderMode.FAST, parent );
+		this.poolCache = cacheProvider;
 		this.locator = classFileLocator;
 	}
 
@@ -60,7 +60,7 @@ public class ModelTypePool extends TypePool.Default implements EnhancerClassLoca
 	 * @return
 	 */
 	public static EnhancerClassLocator buildModelTypePool(ClassFileLocator classFileLocator, CoreTypePool coreTypePool) {
-		return buildModelTypePool( classFileLocator, coreTypePool, new TypePool.CacheProvider.Simple() );
+		return buildModelTypePool( classFileLocator, coreTypePool, new EnhancerCacheProvider() );
 	}
 
 	/**
@@ -70,37 +70,35 @@ public class ModelTypePool extends TypePool.Default implements EnhancerClassLoca
 	 * @param cacheProvider
 	 * @return
 	 */
-	public static EnhancerClassLocator buildModelTypePool(ClassFileLocator classFileLocator, CoreTypePool coreTypePool, CacheProvider cacheProvider) {
+	static EnhancerClassLocator buildModelTypePool(ClassFileLocator classFileLocator, CoreTypePool coreTypePool, EnhancerCacheProvider cacheProvider) {
 		Objects.requireNonNull( classFileLocator );
 		Objects.requireNonNull( coreTypePool );
 		Objects.requireNonNull( cacheProvider );
-		return new ModelTypePool( cacheProvider, new OverridingClassFileLocator( classFileLocator ), coreTypePool );
-	}
-
-	@Override
-	protected Resolution doDescribe(final String name) {
-		final Resolution resolution = resolutions.get( name );
-		if ( resolution != null ) {
-			return resolution;
-		}
-		else {
-			return resolutions.computeIfAbsent( name, super::doDescribe );
-		}
+		return new ModelTypePool( cacheProvider, new EnhancerClassFileLocator( cacheProvider, classFileLocator ), coreTypePool );
 	}
 
 	@Override
 	public void registerClassNameAndBytes(final String className, final byte[] bytes) {
-		locator.put( className, new ClassFileLocator.Resolution.Explicit( Objects.requireNonNull( bytes ) ) );
+		final EnhancerCacheProvider.EnhancementState currentEnhancementState = poolCache.getEnhancementState();
+		if ( currentEnhancementState != null ) {
+			throw new IllegalStateException( "Re-entrant enhancement is not supported: " + className );
+		}
+		final EnhancerCacheProvider.EnhancementState state = new EnhancerCacheProvider.EnhancementState(
+				className,
+				new ClassFileLocator.Resolution.Explicit( Objects.requireNonNull( bytes ) )
+		);
+		// Set the state first because the ClassFileLocator needs this in the doDescribe() call below
+		poolCache.setEnhancementState( state );
+		state.setTypePoolResolution( doDescribe( className ) );
 	}
 
 	@Override
-	public void deregisterClassNameAndBytes(final String className) {
-		locator.remove( className );
+	public void deregisterClassNameAndBytes(String className) {
+		poolCache.removeEnhancementState();
 	}
 
 	@Override
 	public ClassFileLocator asClassFileLocator() {
 		return locator;
 	}
-
 }

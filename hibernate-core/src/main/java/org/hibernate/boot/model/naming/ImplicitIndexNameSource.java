@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.naming;
@@ -7,5 +7,10 @@ package org.hibernate.boot.model.naming;
 /**
  * @author Steve Ebersole
  */
-public interface ImplicitIndexNameSource extends ImplicitConstraintNameSource {
+public non-sealed interface ImplicitIndexNameSource
+		extends ImplicitConstraintNameSource {
+	@Override
+	default Kind kind() {
+		return Kind.INDEX;
+	}
 }

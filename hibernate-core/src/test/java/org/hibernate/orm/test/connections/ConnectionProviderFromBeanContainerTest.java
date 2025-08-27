@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.connections;
@@ -42,17 +42,35 @@ public class ConnectionProviderFromBeanContainerTest extends BaseUnitTestCase {
 					Class<B> beanType,
 					LifecycleOptions lifecycleOptions,
 					BeanInstanceProducer fallbackProducer) {
-				return () -> (B) ( beanType == DummyConnectionProvider.class ?
-						dummyConnectionProvider : fallbackProducer.produceBeanInstance( beanType ) );
-			}
+				return new ContainedBean<>() {
+					@Override
+					public B getBeanInstance() {
+						return (B) (beanType == DummyConnectionProvider.class ?
+								dummyConnectionProvider : fallbackProducer.produceBeanInstance( beanType ) );
+					}
 
+					@Override
+					public Class<B> getBeanClass() {
+						return beanType;
+					}
+				};
+			}
 			@Override
 			public <B> ContainedBean<B> getBean(
 					String name,
 					Class<B> beanType,
 					LifecycleOptions lifecycleOptions,
 					BeanInstanceProducer fallbackProducer) {
-				return () -> (B) fallbackProducer.produceBeanInstance( beanType );
+				return new ContainedBean<>() {
+					@Override
+					public B getBeanInstance() {
+						return fallbackProducer.produceBeanInstance( beanType );
+					}
+					@Override
+					public Class<B> getBeanClass() {
+						return beanType;
+					}
+				};
 			}
 
 			@Override

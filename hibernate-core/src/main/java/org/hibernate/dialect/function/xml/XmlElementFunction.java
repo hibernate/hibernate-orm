@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.xml;
@@ -7,8 +7,9 @@ package org.hibernate.dialect.function.xml;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.dialect.XmlHelper;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.type.descriptor.jdbc.XmlHelper;
+import org.hibernate.metamodel.model.domain.ReturnableType;
+import org.hibernate.type.BindingContext;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
@@ -52,7 +53,7 @@ public class XmlElementFunction extends AbstractSqmSelfRenderingFunctionDescript
 							public void validate(
 									List<? extends SqmTypedNode<?>> arguments,
 									String functionName,
-									TypeConfiguration typeConfiguration) {
+									BindingContext bindingContext) {
 								//noinspection unchecked
 								final String elementName = ( (SqmLiteral<String>) arguments.get( 0 ) ).getLiteralValue();
 								if ( !XmlHelper.isValidXmlName( elementName ) ) {
@@ -152,8 +153,9 @@ public class XmlElementFunction extends AbstractSqmSelfRenderingFunctionDescript
 			final List<Expression> content;
 
 			int index = 1;
-			if ( arguments.size() > index && arguments.get( index ) instanceof XmlAttributes ) {
-				attributes = (XmlAttributes) arguments.get( index );
+			if ( arguments.size() > index
+					&& arguments.get( index ) instanceof XmlAttributes xmlAttributes ) {
+				attributes = xmlAttributes;
 				index++;
 			}
 			else {

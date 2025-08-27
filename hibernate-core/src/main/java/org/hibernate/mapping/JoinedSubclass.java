@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -17,7 +17,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
  *
  * @author Gavin King
  */
-public class JoinedSubclass extends Subclass implements TableOwner {
+public final class JoinedSubclass extends Subclass implements TableOwner {
 	private Table table;
 	private KeyValue key;
 
@@ -25,6 +25,7 @@ public class JoinedSubclass extends Subclass implements TableOwner {
 		super( superclass, metadataBuildingContext );
 	}
 
+	@Override
 	public Table getTable() {
 		return table;
 	}

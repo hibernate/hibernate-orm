@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
@@ -10,15 +10,17 @@ import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.query.results.FetchBuilderBasicValued;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.QueryLogging;
 import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.named.ResultMementoEntity;
-import org.hibernate.query.results.FetchBuilderBasicValued;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultBuilderEntityValued;
 import org.hibernate.query.results.internal.complete.CompleteResultBuilderEntityStandard;
+import org.hibernate.sql.results.graph.Fetchable;
+
+import static org.hibernate.query.QueryLogging.QUERY_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -44,10 +46,7 @@ public class ResultMementoEntityStandard implements ResultMementoEntity, FetchMe
 		this.discriminatorMemento = discriminatorMemento;
 		this.fetchMementoMap = fetchMementoMap;
 
-		QueryLogging.QUERY_LOGGER.debugf(
-				"Created ResultMementoEntityStandard - %s",
-				navigablePath
-		);
+		QUERY_LOGGER.debugf( "Created ResultMementoEntityStandard - %s", navigablePath );
 	}
 
 	@Override
@@ -64,11 +63,11 @@ public class ResultMementoEntityStandard implements ResultMementoEntity, FetchMe
 				? (FetchBuilderBasicValued) discriminatorMemento.resolve( this, querySpaceConsumer, context )
 				: null;
 
-		final HashMap<String, FetchBuilder> fetchBuilderMap = new HashMap<>();
+		final HashMap<Fetchable, FetchBuilder> fetchBuilderMap = new HashMap<>();
 
 		fetchMementoMap.forEach(
 				(attrName, fetchMemento) -> fetchBuilderMap.put(
-						attrName,
+						(Fetchable) entityDescriptor.findByPath( attrName ),
 						fetchMemento.resolve(this, querySpaceConsumer, context )
 				)
 		);

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.basic;
@@ -33,8 +33,7 @@ public class RegisterUserEventListenersTest extends BaseEnversFunctionalTestCase
 	@Test
 	@JiraKey(value = "HHH-7478")
 	public void testTransactionProcessSynchronization() {
-		final EventListenerRegistry registry = sessionFactory().getServiceRegistry()
-				.getService( EventListenerRegistry.class );
+		final EventListenerRegistry registry = sessionFactory().getEventListenerRegistry();
 		final CountingPostInsertTransactionBoundaryListener listener = new CountingPostInsertTransactionBoundaryListener();
 
 		registry.getEventListenerGroup( EventType.POST_INSERT ).appendListener( listener );

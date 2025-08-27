@@ -1,57 +1,45 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.beanvalidation;
 
-import java.math.BigDecimal;
 import jakarta.validation.ConstraintViolationException;
+import org.hibernate.cfg.ValidationSettings;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.boot.beanvalidation.ValidationMode;
-import org.junit.Test;
+import java.math.BigDecimal;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_MODE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Emmanuel Bernard
  */
-public class BeanValidationAutoTest extends BaseCoreFunctionalTestCase {
+@ServiceRegistry(
+		settings = @Setting(name = ValidationSettings.JAKARTA_VALIDATION_MODE, value = "AUTO")
+)
+@DomainModel(annotatedClasses = CupHolder.class)
+@SessionFactory
+class BeanValidationAutoTest {
 	@Test
-	public void testListeners() {
-		CupHolder ch = new CupHolder();
-		ch.setRadius( new BigDecimal( "12" ) );
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		try {
-			s.persist( ch );
-			s.flush();
-			fail( "invalid object should not be persisted" );
-		}
-		catch ( ConstraintViolationException e ) {
-			assertEquals( 1, e.getConstraintViolations().size() );
-		}
-		tx.rollback();
-		s.close();
-	}
-
-	@Override
-	protected void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( JAKARTA_VALIDATION_MODE, ValidationMode.AUTO );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				CupHolder.class
-		};
+	void testListeners(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			CupHolder ch = new CupHolder();
+			ch.setRadius( new BigDecimal( "12" ) );
+			try {
+				s.persist( ch );
+				s.flush();
+				fail( "invalid object should not be persisted" );
+			}
+			catch (ConstraintViolationException e) {
+				assertThat( e.getConstraintViolations() ).hasSize( 1 );
+			}
+		} );
 	}
 }

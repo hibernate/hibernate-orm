@@ -1,36 +1,44 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.internal;
+
+import org.hibernate.boot.MappingNotFoundException;
+import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.jaxb.SourceType;
+import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
-import org.hibernate.boot.MappingNotFoundException;
-import org.hibernate.boot.jaxb.Origin;
-import org.hibernate.boot.jaxb.spi.Binder;
-import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.jaxb.spi.XmlSource;
+import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
 
 /**
+ * Support for processing mapping XML from a {@linkplain File} reference.
+ *
+ * @see MappingBinder
+ *
  * @author Steve Ebersole
  */
-public class FileXmlSource extends XmlSource {
-	private final File file;
+public class FileXmlSource {
+	/**
+	 * Create a mapping {@linkplain Binding binding} from a File reference.
+	 */
+	public static Binding<? extends JaxbBindableMappingDescriptor> fromFile(
+			File file,
+			MappingBinder mappingBinder) {
+		final String filePath = file.getPath();
+		JAXB_LOGGER.tracef( "Reading mappings from file: %s", filePath );
 
-	public FileXmlSource(Origin origin, File file) {
-		super( origin );
-		this.file = file;
-	}
+		final Origin origin = new Origin( SourceType.FILE, filePath );
 
-	@Override
-	public Binding doBind(Binder binder) {
-		return doBind( binder, file, getOrigin() );
-	}
+		if ( !file.exists() ) {
+			throw new MappingNotFoundException( origin );
+		}
 
-	public static Binding doBind(Binder binder, File file, Origin origin) {
 		final FileInputStream fis;
 		try {
 			fis = new FileInputStream( file );
@@ -38,6 +46,7 @@ public class FileXmlSource extends XmlSource {
 		catch ( FileNotFoundException e ) {
 			throw new MappingNotFoundException( e, origin );
 		}
-		return InputStreamXmlSource.doBind( binder, fis, origin, true );
+
+		return InputStreamXmlSource.fromStream( fis, origin, true, mappingBinder );
 	}
 }

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="7.0">
+
+    <package>org.hibernate.orm.test.jpa.xml</package>
+
+    <mapped-superclass class="BaseShop" metadata-complete="true" access="FIELD">
+        <attributes>
+            <id name="id">
+                <column name="id_entity"/>
+                <generated-value strategy="AUTO"/>
+            </id>
+            <version name="version">
+                <column name="version"/>
+            </version>
+        </attributes>
+    </mapped-superclass>
+
+    <entity class="Consumer" name="Consumer" metadata-complete="true">
+        <table name="consumer"/>
+        <attributes>
+            <id name="id">
+                <column name="id_entity"/>
+                <generated-value strategy="AUTO"/>
+            </id>
+            <version name="version">
+                <column name="version"/>
+            </version>
+            <one-to-many name="consumerItems" mapped-by="consumer" fetch="LAZY" optimistic-lock="true">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="ConsumerItem" name="ConsumerInventory" metadata-complete="true">
+        <table name="consumer_item"/>
+        <attributes>
+            <id name="id">
+                <column name="id_entity"/>
+                <generated-value strategy="AUTO"/>
+            </id>
+            <version name="version">
+                <column name="version"/>
+            </version>
+            <many-to-one name="consumer" target-entity="Consumer">
+                <join-column name="consumer_id"/>
+                <cascade>
+                    <cascade-merge/>
+                </cascade>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+    <entity class="Supermarket" name="Supermarket" metadata-complete="true">
+        <attributes>
+            <basic name="name"/>
+        </attributes>
+    </entity>
+
+</entity-mappings>
+
+

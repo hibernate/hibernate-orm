@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.connections;
@@ -15,6 +15,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static org.hibernate.Hibernate.getLobHelper;
 import static org.junit.Assert.assertFalse;
 
 /**
@@ -44,9 +45,9 @@ public class HibernateCreateBlobFailedCase extends BaseCoreFunctionalTestCase {
 	public void testLobCreation() throws SQLException {
 		Session session = sessionFactory().getCurrentSession();
 		session.beginTransaction();
-		Blob blob = session.getLobHelper().createBlob( new byte[] {} );
+		Blob blob = getLobHelper().createBlob( new byte[] {} );
 		blob.free();
-		Clob clob = session.getLobHelper().createClob( "Steve" );
+		Clob clob = getLobHelper().createClob( "Steve" );
 		clob.free();
 		session.getTransaction().commit();
 		assertFalse( session.isOpen() );

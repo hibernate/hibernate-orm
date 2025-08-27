@@ -1,17 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.model.ast.builder;
 
-import java.util.Collections;
-import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.TableMapping;
-import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
@@ -19,12 +16,15 @@ import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateNoSet;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 
+import static java.util.Collections.emptyList;
+
 /**
  * Standard TableUpdateBuilder implementation
  *
  * @author Steve Ebersole
  */
-public class TableUpdateBuilderStandard<O extends MutationOperation> extends AbstractTableUpdateBuilder<O> {
+public class TableUpdateBuilderStandard<O extends MutationOperation>
+		extends AbstractTableUpdateBuilder<O> {
 	private final String whereFragment;
 
 	public TableUpdateBuilderStandard(
@@ -55,45 +55,50 @@ public class TableUpdateBuilderStandard<O extends MutationOperation> extends Abs
 		return whereFragment;
 	}
 
+	//TODO: The unchecked typecasts here are horrible
 	@SuppressWarnings("unchecked")
 	@Override
 	public RestrictedTableMutation<O> buildMutation() {
-		final List<ColumnValueBinding> valueBindings = combine( getValueBindings(), getKeyBindings(), getLobValueBindings() );
+		final var valueBindings = combine( getValueBindings(), getKeyBindings(), getLobValueBindings() );
 		if ( valueBindings.isEmpty() ) {
-			return (RestrictedTableMutation<O>) new TableUpdateNoSet( getMutatingTable(), getMutationTarget() );
+			return (RestrictedTableMutation<O>)
+					new TableUpdateNoSet( getMutatingTable(), getMutationTarget() );
 		}
 
 		if ( getMutatingTable().getTableMapping().getUpdateDetails().getCustomSql() != null ) {
-			return (RestrictedTableMutation<O>) new TableUpdateCustomSql(
-					getMutatingTable(),
-					getMutationTarget(),
-					getSqlComment(),
-					valueBindings,
-					getKeyRestrictionBindings(),
-					getOptimisticLockBindings()
-			);
+			return (RestrictedTableMutation<O>)
+					new TableUpdateCustomSql(
+							getMutatingTable(),
+							getMutationTarget(),
+							getSqlComment(),
+							valueBindings,
+							getKeyRestrictionBindings(),
+							getOptimisticLockBindings()
+					);
 		}
 
 		if ( getMutatingTable().getTableMapping().isOptional() ) {
-			return (RestrictedTableMutation<O>) new OptionalTableUpdate(
-					getMutatingTable(),
-					getMutationTarget(),
-					valueBindings,
-					getKeyRestrictionBindings(),
-					getOptimisticLockBindings()
-			);
+			return (RestrictedTableMutation<O>)
+					new OptionalTableUpdate(
+							getMutatingTable(),
+							getMutationTarget(),
+							valueBindings,
+							getKeyRestrictionBindings(),
+							getOptimisticLockBindings()
+					);
 		}
 
-		return (RestrictedTableMutation<O>) new TableUpdateStandard(
-				getMutatingTable(),
-				getMutationTarget(),
-				getSqlComment(),
-				valueBindings,
-				getKeyRestrictionBindings(),
-				getOptimisticLockBindings(),
-				whereFragment,
-				null,
-				Collections.emptyList()
-		);
+		return (RestrictedTableMutation<O>)
+				new TableUpdateStandard(
+						getMutatingTable(),
+						getMutationTarget(),
+						getSqlComment(),
+						valueBindings,
+						getKeyRestrictionBindings(),
+						getOptimisticLockBindings(),
+						whereFragment,
+						null,
+						emptyList()
+				);
 	}
 }

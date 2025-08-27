@@ -1,8 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.archive.spi;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Models a logical archive, which might be <ul>
@@ -24,4 +26,6 @@ public interface ArchiveDescriptor {
 	 * @param archiveContext The visitation context
 	 */
 	void visitArchive(ArchiveContext archiveContext);
+
+	@Nullable ArchiveEntry findEntry(String path);
 }

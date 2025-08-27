@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.produce.function.internal;
@@ -13,13 +13,14 @@ import org.hibernate.query.sqm.tree.expression.SqmFunction;
 
 import java.util.List;
 
-public abstract class AbstractFunctionArgumentTypeResolver implements FunctionArgumentTypeResolver {
+@FunctionalInterface
+public interface AbstractFunctionArgumentTypeResolver extends FunctionArgumentTypeResolver {
 	@Override
 	@SuppressWarnings("removal")
-	public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(SqmFunction<?> function, int argumentIndex, SqmToSqlAstConverter converter) {
+	default @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(SqmFunction<?> function, int argumentIndex, SqmToSqlAstConverter converter) {
 		return resolveFunctionArgumentType( function.getArguments(), argumentIndex, converter );
 	}
 
 	@Override
-	public abstract @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter);
+	@Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter);
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event;
@@ -9,7 +9,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -36,8 +35,7 @@ public class PreUpdateEventListenerVetoTest extends BaseSessionFactoryFunctional
 
 	@Override
 	protected void sessionFactoryBuilt(SessionFactoryImplementor factory) {
-		factory.getServiceRegistry().requireService( EventListenerRegistry.class )
-				.appendListeners( EventType.PRE_UPDATE, event -> true );
+		factory.getEventListenerRegistry().appendListeners( EventType.PRE_UPDATE, event -> true );
 	}
 
 	@BeforeEach

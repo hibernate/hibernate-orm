@@ -1,26 +1,20 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
-import java.lang.annotation.Annotation;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.TableGenerator;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.IdGeneratorType;
-import org.hibernate.annotations.Parameter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.generator.AnnotationBasedGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
@@ -30,24 +24,29 @@ import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.uuid.UuidGenerator;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
-import org.hibernate.models.spi.SourceModelContext;
-import org.hibernate.resource.beans.container.spi.BeanContainer;
+import org.hibernate.models.spi.ModelsContext;
 
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.TableGenerator;
+import java.lang.annotation.Annotation;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
+import static org.hibernate.boot.model.internal.GeneratorBinder.beanContainer;
+import static org.hibernate.boot.model.internal.GeneratorBinder.instantiateGenerator;
 import static org.hibernate.boot.model.internal.GeneratorParameters.collectBaselineProperties;
 import static org.hibernate.boot.model.internal.GeneratorParameters.fallbackAllocationSize;
 import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
 import static org.hibernate.id.OptimizableGenerator.INCREMENT_PARAM;
+import static org.hibernate.internal.util.StringHelper.qualifier;
 import static org.hibernate.internal.util.config.ConfigurationHelper.setIfNotEmpty;
 
 /**
@@ -59,15 +58,17 @@ public class GeneratorAnnotationHelper {
 	public static <A extends Annotation> A findLocalizedMatch(
 			AnnotationDescriptor<A> generatorAnnotationType,
 			MemberDetails idMember,
-			Function<A,String> nameExtractor,
-			String matchName,
+			ClassDetails entityType,
+			@Nullable Function<A,String> nameExtractor,
+			@Nullable String matchName,
 			MetadataBuildingContext context) {
-		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		final var modelsContext = context.getBootstrapContext().getModelsContext();
 
 		A possibleMatch = null;
 
 		// first we look on the member
-		for ( A generatorAnnotation : idMember.getRepeatedAnnotationUsages( generatorAnnotationType, sourceModelContext ) ) {
+		for ( A generatorAnnotation:
+				idMember.getRepeatedAnnotationUsages( generatorAnnotationType, modelsContext ) ) {
 			if ( nameExtractor != null ) {
 				final String registrationName = nameExtractor.apply( generatorAnnotation );
 				if ( registrationName.isEmpty() ) {
@@ -84,18 +85,36 @@ public class GeneratorAnnotationHelper {
 			}
 		}
 
-		// next, on the class
-		for ( A generatorAnnotation : idMember.getDeclaringType().getRepeatedAnnotationUsages( generatorAnnotationType, sourceModelContext ) ) {
+		// next, on the entity class
+		for ( A generatorAnnotation :
+				entityType.getRepeatedAnnotationUsages( generatorAnnotationType, modelsContext ) ) {
 			if ( nameExtractor != null ) {
 				final String registrationName = nameExtractor.apply( generatorAnnotation );
 				if ( registrationName.isEmpty() ) {
 					if ( possibleMatch == null ) {
 						possibleMatch = generatorAnnotation;
 					}
-					continue;
 				}
+				else if ( registrationName.equals( matchName ) ) {
+					return generatorAnnotation;
+				}
+			}
+			else {
+				return generatorAnnotation;
+			}
+		}
 
-				if ( registrationName.equals( matchName ) ) {
+		// next, on the declaring class
+		for ( A generatorAnnotation:
+				idMember.getDeclaringType().getRepeatedAnnotationUsages( generatorAnnotationType, modelsContext ) ) {
+			if ( nameExtractor != null ) {
+				final String registrationName = nameExtractor.apply( generatorAnnotation );
+				if ( registrationName.isEmpty() ) {
+					if ( possibleMatch == null ) {
+						possibleMatch = generatorAnnotation;
+					}
+				}
+				else if ( registrationName.equals( matchName ) ) {
 					return generatorAnnotation;
 				}
 			}
@@ -105,20 +124,18 @@ public class GeneratorAnnotationHelper {
 		}
 
 		// lastly, on the package
-		final ClassDetails packageInfo = locatePackageInfoDetails( idMember.getDeclaringType(), context );
-		if ( packageInfo !=
-					null ) {
-			for ( A generatorAnnotation : packageInfo.getRepeatedAnnotationUsages( generatorAnnotationType, sourceModelContext ) ) {
+		final var packageInfo = locatePackageInfoDetails( idMember.getDeclaringType(), context );
+		if ( packageInfo != null ) {
+			for ( A generatorAnnotation:
+					packageInfo.getRepeatedAnnotationUsages( generatorAnnotationType, modelsContext ) ) {
 				if ( nameExtractor != null ) {
 					final String registrationName = nameExtractor.apply( generatorAnnotation );
 					if ( registrationName.isEmpty() ) {
 						if ( possibleMatch == null ) {
 							possibleMatch = generatorAnnotation;
 						}
-						continue;
 					}
-
-					if ( registrationName.equals( matchName ) ) {
+					else if ( registrationName.equals( matchName ) ) {
 						return generatorAnnotation;
 					}
 				}
@@ -132,15 +149,15 @@ public class GeneratorAnnotationHelper {
 	}
 
 	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, MetadataBuildingContext buildingContext) {
-		return locatePackageInfoDetails( classDetails, buildingContext.getMetadataCollector().getSourceModelBuildingContext() );
+		return locatePackageInfoDetails( classDetails, buildingContext.getBootstrapContext().getModelsContext() );
 	}
 
-	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, SourceModelContext modelContext) {
+	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, ModelsContext modelContext) {
 		return locatePackageInfoDetails( classDetails, modelContext.getClassDetailsRegistry() );
 	}
 
 	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, ClassDetailsRegistry classDetailsRegistry) {
-		final String packageInfoFqn = StringHelper.qualifier( classDetails.getName() ) + ".package-info";
+		final String packageInfoFqn = qualifier( classDetails.getName() ) + ".package-info";
 		try {
 			return classDetailsRegistry.resolveClassDetails( packageInfoFqn );
 		}
@@ -156,14 +173,11 @@ public class GeneratorAnnotationHelper {
 			SimpleValue idValue,
 			MemberDetails idMember,
 			MetadataBuildingContext buildingContext) {
-		idValue.setCustomIdGeneratorCreator( (creationContext) -> {
-			final BeanContainer beanContainer = GeneratorBinder.beanContainer( buildingContext );
-			final SequenceStyleGenerator identifierGenerator = GeneratorBinder.instantiateGenerator(
-					beanContainer,
-					SequenceStyleGenerator.class
-			);
+		idValue.setCustomIdGeneratorCreator( creationContext -> {
+			final var sequenceStyleGenerator =
+					instantiateGenerator( beanContainer( buildingContext ), SequenceStyleGenerator.class );
 			prepareForUse(
-					identifierGenerator,
+					sequenceStyleGenerator,
 					generatorAnnotation,
 					idMember,
 					properties -> {
@@ -178,28 +192,26 @@ public class GeneratorAnnotationHelper {
 					},
 					generatorAnnotation == null
 							? null
-							: (a, properties) -> SequenceStyleGenerator.applyConfiguration( generatorAnnotation, properties::put ),
+							: (a, properties) ->
+									SequenceStyleGenerator.applyConfiguration( generatorAnnotation, properties::put ),
 					creationContext
 			);
-			return identifierGenerator;
+			return sequenceStyleGenerator;
 		} );
 	}
 
 	public static void handleTableGenerator(
 			String nameFromGeneratedValue,
 			TableGenerator generatorAnnotation,
-			PersistentClass entityMapping,
 			SimpleValue idValue,
 			MemberDetails idMember,
 			MetadataBuildingContext buildingContext) {
-		idValue.setCustomIdGeneratorCreator( (creationContext) -> {
-			final BeanContainer beanContainer = GeneratorBinder.beanContainer( buildingContext );
-			final org.hibernate.id.enhanced.TableGenerator identifierGenerator = GeneratorBinder.instantiateGenerator(
-					beanContainer,
-					org.hibernate.id.enhanced.TableGenerator.class
-			);
-			GeneratorAnnotationHelper.prepareForUse(
-					identifierGenerator,
+		idValue.setCustomIdGeneratorCreator( creationContext -> {
+			final var tableGenerator =
+					instantiateGenerator( beanContainer( buildingContext ),
+							org.hibernate.id.enhanced.TableGenerator.class );
+			prepareForUse(
+					tableGenerator,
 					generatorAnnotation,
 					idMember,
 					properties -> {
@@ -223,7 +235,7 @@ public class GeneratorAnnotationHelper {
 							),
 					creationContext
 			);
-			return identifierGenerator;
+			return tableGenerator;
 		} );
 	}
 
@@ -232,14 +244,12 @@ public class GeneratorAnnotationHelper {
 			SimpleValue idValue,
 			MemberDetails idMember,
 			MetadataBuildingContext buildingContext) {
-		final IdGeneratorType markerAnnotation = generatorAnnotation.annotationType().getAnnotation( IdGeneratorType.class );
-		idValue.setCustomIdGeneratorCreator( (creationContext) -> {
-			final BeanContainer beanContainer = GeneratorBinder.beanContainer( buildingContext );
-			final Generator identifierGenerator = GeneratorBinder.instantiateGenerator(
-					beanContainer,
-					markerAnnotation.value()
-			);
-			GeneratorAnnotationHelper.prepareForUse(
+		final var markerAnnotation =
+				generatorAnnotation.annotationType().getAnnotation( IdGeneratorType.class );
+		idValue.setCustomIdGeneratorCreator( creationContext -> {
+			final Generator identifierGenerator =
+					instantiateGenerator( beanContainer( buildingContext ), markerAnnotation.value() );
+			prepareForUse(
 					identifierGenerator,
 					generatorAnnotation,
 					idMember,
@@ -270,21 +280,22 @@ public class GeneratorAnnotationHelper {
 			GeneratorCreationContext creationContext) {
 		if ( generator instanceof AnnotationBasedGenerator ) {
 			@SuppressWarnings("unchecked")
-			final AnnotationBasedGenerator<A> generation = (AnnotationBasedGenerator<A>) generator;
+			final var generation = (AnnotationBasedGenerator<A>) generator;
 			generation.initialize( annotation, idMember.toJavaMember(), creationContext );
 		}
 		if ( generator instanceof Configurable configurable ) {
-			final Properties properties = new Properties();
+			final var properties = new Properties();
 			if ( configBaseline != null ) {
 				configBaseline.accept( properties );
 			}
 			collectBaselineProperties(
 					creationContext.getProperty() != null
-							? (SimpleValue) creationContext.getProperty().getValue()
-							: (SimpleValue) creationContext.getPersistentClass().getIdentifierProperty().getValue(),
+							? creationContext.getProperty().getValue()
+							: creationContext.getPersistentClass().getIdentifierProperty().getValue(),
 					creationContext.getDatabase().getDialect(),
 					creationContext.getRootClass(),
-					properties::setProperty
+					properties::setProperty,
+					creationContext.getServiceRegistry().requireService( ConfigurationService.class )
 			);
 			if ( configExtractor != null ) {
 				configExtractor.accept( annotation, properties );
@@ -302,19 +313,21 @@ public class GeneratorAnnotationHelper {
 	public static void handleUuidStrategy(
 			SimpleValue idValue,
 			MemberDetails idMember,
+			ClassDetails entityClass,
 			MetadataBuildingContext context) {
-		final org.hibernate.annotations.UuidGenerator generatorConfig = findLocalizedMatch(
+		final var generatorConfig = findLocalizedMatch(
 				HibernateAnnotations.UUID_GENERATOR,
 				idMember,
+				entityClass,
 				null,
 				null,
 				context
 		);
-		idValue.setCustomIdGeneratorCreator( (creationContext) -> new UuidGenerator( generatorConfig, idMember ) );
+		idValue.setCustomIdGeneratorCreator( creationContext -> new UuidGenerator( generatorConfig, idMember ) );
 	}
 
 	public static void handleIdentityStrategy(SimpleValue idValue) {
-		idValue.setCustomIdGeneratorCreator( (creationContext) -> new IdentityGenerator() );
+		idValue.setCustomIdGeneratorCreator( creationContext -> new IdentityGenerator() );
 		idValue.setColumnToIdentity();
 	}
 
@@ -338,22 +351,22 @@ public class GeneratorAnnotationHelper {
 		}
 
 		GeneratorBinder.createGeneratorFrom(
-				new IdentifierGeneratorDefinition( generatorName, determineStrategyName( generatorConfig ), configuration ),
+				new IdentifierGeneratorDefinition( generatorName,
+						determineStrategyName( generatorConfig ), configuration ),
 				idValue,
 				context
 		);
 	}
 
 	private static String determineStrategyName(GenericGenerator generatorConfig) {
-		final Class<? extends Generator> type = generatorConfig.type();
-		if ( !Objects.equals( type, Generator.class ) ) {
-			return type.getName();
-		}
-		return generatorConfig.strategy();
+		final var generatorClass = generatorConfig.type();
+		return Generator.class.equals( generatorClass )
+				? generatorConfig.strategy()
+				: generatorClass.getName();
 	}
 
 	private static void applyAnnotationParameters(GenericGenerator generatorConfig, Map<String, String> configuration) {
-		for ( Parameter parameter : generatorConfig.parameters() ) {
+		for ( var parameter : generatorConfig.parameters() ) {
 			configuration.put( parameter.name(), parameter.value() );
 		}
 	}

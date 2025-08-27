@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.javatime;
@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 
 import org.hibernate.cfg.MappingSettings;
@@ -17,6 +18,7 @@ import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
@@ -29,6 +31,7 @@ import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -50,7 +53,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.adjustToPrecision;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("JUnitMalformedDeclaration")
 @ServiceRegistry(
 		settings = @Setting(name = MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "true")
 )
@@ -171,8 +173,8 @@ public class GlobalJavaTimeJdbcTypeTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle drivers truncate fractional seconds from the LocalTime", matchSubTypes = true)
-	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA time type does not support fractional seconds", matchSubTypes = true)
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle drivers truncate fractional seconds from the LocalTime")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA time type does not support fractional seconds")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase drivers truncate fractional seconds from the LocalTime")
 	void testLocalTime(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
@@ -203,11 +205,26 @@ public class GlobalJavaTimeJdbcTypeTests {
 		} );
 	}
 
+	@Test
+	@RequiresDialect(value = PostgreSQLDialect.class)
+	void testArray(SessionFactoryScope scope) {
+		final var offsetDateTime = OffsetDateTime.parse("1977-07-24T12:34:56+02:00");
+		scope.inTransaction( session -> {
+			final var nativeQuery = session.createNativeQuery(
+					"WITH data AS (SELECT unnest(?) AS id, unnest(?) AS offset_date_time)"
+					+ " INSERT INTO EntityWithJavaTimeValues (id, theOffsetDateTime) SELECT * FROM data"
+			);
+			nativeQuery.setParameter( 1, new int[] { 1 } );
+			nativeQuery.setParameter( 2, new OffsetDateTime[] { offsetDateTime } );
+			assertThat( nativeQuery.executeUpdate() ).isEqualTo( 1 );
+			final var found = session.find( EntityWithJavaTimeValues.class, 1 );
+			assertThat( found.theOffsetDateTime.toInstant() ).isEqualTo( offsetDateTime.toInstant() );
+		} );
+	}
+
 	@AfterEach
 	void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete EntityWithJavaTimeValues" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name="EntityWithJavaTimeValues")
@@ -216,6 +233,8 @@ public class GlobalJavaTimeJdbcTypeTests {
 		@Id
 		private Integer id;
 		private String name;
+
+		private OffsetDateTime theOffsetDateTime;
 
 		private Instant theInstant;
 

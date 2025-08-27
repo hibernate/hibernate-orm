@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.function.array;
@@ -66,10 +66,8 @@ public class ArrayConstructorInSelectClauseTest {
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createMutationQuery( "delete from Book" ).executeUpdate();
-					session.createMutationQuery( "delete from Author" ).executeUpdate();
-					var dialect = session.getDialect();
-					if ( dialect instanceof OracleDialect ) {
+					scope.getSessionFactory().getSchemaManager().truncate();
+					if ( session.getDialect() instanceof OracleDialect ) {
 						session.createNativeQuery( "drop type LongArray" ).executeUpdate();
 					}
 				}

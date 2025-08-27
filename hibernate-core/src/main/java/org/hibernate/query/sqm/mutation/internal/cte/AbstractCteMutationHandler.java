@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.cte;
@@ -14,17 +14,21 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.MutableObject;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
-import org.hibernate.query.sqm.mutation.spi.AbstractMutationHandler;
+import org.hibernate.query.sqm.mutation.internal.AbstractMutationHandler;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -52,6 +56,7 @@ import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
@@ -67,59 +72,43 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 
 	public static final String CTE_TABLE_IDENTIFIER = "id";
 
-	private final CteTable cteTable;
 	private final DomainParameterXref domainParameterXref;
-	private final CteMutationStrategy strategy;
+	private final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref;
+	private final Map<SqmParameter<?>, MappingModelExpressible<?>> resolvedParameterMappingModelTypes;
+
+	private final JdbcOperationQuerySelect select;
 
 	public AbstractCteMutationHandler(
 			CteTable cteTable,
 			SqmDeleteOrUpdateStatement<?> sqmStatement,
 			DomainParameterXref domainParameterXref,
 			CteMutationStrategy strategy,
-			SessionFactoryImplementor sessionFactory) {
+			SessionFactoryImplementor sessionFactory,
+			DomainQueryExecutionContext context,
+			MutableObject<JdbcParameterBindings> firstJdbcParameterBindingsConsumer) {
 		super( sqmStatement, sessionFactory );
-		this.cteTable = cteTable;
-		this.domainParameterXref = domainParameterXref;
 
-		this.strategy = strategy;
-	}
-
-	public CteTable getCteTable() {
-		return cteTable;
-	}
-
-	public DomainParameterXref getDomainParameterXref() {
-		return domainParameterXref;
-	}
-
-	public CteMutationStrategy getStrategy() {
-		return strategy;
-	}
-
-	@Override
-	public int execute(DomainQueryExecutionContext executionContext) {
-		final SqmDeleteOrUpdateStatement<?> sqmMutationStatement = getSqmDeleteOrUpdateStatement();
-		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
+		final SessionFactoryImplementor factory = context.getSession().getFactory();
 		final EntityMappingType entityDescriptor = getEntityDescriptor();
 		final String explicitDmlTargetAlias;
 		// We need an alias because we try to acquire a WRITE lock for these rows in the CTE
-		if ( sqmMutationStatement.getTarget().getExplicitAlias() == null ) {
+		if ( sqmStatement.getTarget().getExplicitAlias() == null ) {
 			explicitDmlTargetAlias = "dml_target";
 		}
 		else {
-			explicitDmlTargetAlias = sqmMutationStatement.getTarget().getExplicitAlias();
+			explicitDmlTargetAlias = sqmStatement.getTarget().getExplicitAlias();
 		}
 
 		final MultiTableSqmMutationConverter sqmConverter = new MultiTableSqmMutationConverter(
 				entityDescriptor,
-				sqmMutationStatement,
-				sqmMutationStatement.getTarget(),
+				sqmStatement,
+				sqmStatement.getTarget(),
 				explicitDmlTargetAlias,
 				domainParameterXref,
-				executionContext.getQueryOptions(),
-				executionContext.getSession().getLoadQueryInfluencers(),
-				executionContext.getQueryParameterBindings(),
-				factory
+				context.getQueryOptions(),
+				context.getSession().getLoadQueryInfluencers(),
+				context.getQueryParameterBindings(),
+				factory.getSqlTranslationEngine()
 		);
 		final Map<SqmParameter<?>, List<JdbcParameter>> parameterResolutions;
 		if ( domainParameterXref.getSqmParameterCount() == 0 ) {
@@ -129,18 +118,18 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 			parameterResolutions = new IdentityHashMap<>();
 		}
 
-		final Predicate restriction = sqmConverter.visitWhereClause( sqmMutationStatement.getWhereClause() );
+		final Predicate restriction = sqmConverter.visitWhereClause( sqmStatement.getWhereClause() );
 		sqmConverter.pruneTableGroupJoins();
 
 		final CteStatement idSelectCte = new CteStatement(
-				getCteTable(),
+				cteTable,
 				MatchingIdSelectionHelper.generateMatchingIdSelectStatement(
 						entityDescriptor,
-						sqmMutationStatement,
+						sqmStatement,
 						true,
 						restriction,
 						sqmConverter,
-						executionContext
+						context
 				),
 				// The id-select cte will be reused multiple times
 				CteMaterialization.MATERIALIZED
@@ -177,26 +166,60 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		statement.addCteStatement( idSelectCte );
 		addDmlCtes( statement, idSelectCte, sqmConverter, parameterResolutions, factory );
 
+		this.domainParameterXref = domainParameterXref;
+		this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref( domainParameterXref, sqmConverter );
+		this.resolvedParameterMappingModelTypes = sqmConverter.getSqmParameterMappingModelExpressibleResolutions();
+
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
-				executionContext.getQueryParameterBindings(),
+				context.getQueryParameterBindings(),
 				domainParameterXref,
-				SqmUtil.generateJdbcParamsXref( domainParameterXref, sqmConverter ),
+				jdbcParamsXref,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-						return (MappingModelExpressible<T>) sqmConverter.getSqmParameterMappingModelExpressibleResolutions().get( parameter );
+						return (MappingModelExpressible<T>) resolvedParameterMappingModelTypes.get( parameter );
 					}
 				},
-				executionContext.getSession()
+				context.getSession()
 		);
+
+		this.select = translator.translate( jdbcParameterBindings, context.getQueryOptions() );
+		firstJdbcParameterBindingsConsumer.set( jdbcParameterBindings );
+	}
+
+	@Override
+	public JdbcParameterBindings createJdbcParameterBindings(DomainQueryExecutionContext context) {
+		return SqmUtil.createJdbcParameterBindings(
+				context.getQueryParameterBindings(),
+				domainParameterXref,
+				jdbcParamsXref,
+				new SqmParameterMappingModelResolutionAccess() {
+					@Override @SuppressWarnings("unchecked")
+					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
+						return (MappingModelExpressible<T>) resolvedParameterMappingModelTypes.get( parameter );
+					}
+				},
+				context.getSession()
+		);
+	}
+
+	@Override
+	public boolean dependsOnParameterBindings() {
+		return select.dependsOnParameterBindings();
+	}
+
+	@Override
+	public boolean isCompatibleWith(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions) {
+		return select.isCompatibleWith( jdbcParameterBindings, queryOptions );
+	}
+
+	@Override
+	public int execute(JdbcParameterBindings jdbcParameterBindings, DomainQueryExecutionContext executionContext) {
 		final LockOptions lockOptions = executionContext.getQueryOptions().getLockOptions();
-		final LockMode lockMode = lockOptions.getAliasSpecificLockMode( explicitDmlTargetAlias );
 		// Acquire a WRITE lock for the rows that are about to be modified
-		lockOptions.setAliasSpecificLockMode( explicitDmlTargetAlias, LockMode.WRITE );
-		final JdbcOperationQuerySelect select = translator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
-		lockOptions.setAliasSpecificLockMode( explicitDmlTargetAlias, lockMode );
+		lockOptions.setLockMode( LockMode.WRITE );
 		executionContext.getSession().autoFlushIfRequired( select.getAffectedTableNames() );
-		List<Object> list = jdbcServices.getJdbcSelectExecutor().list(
+		List<Object> list = executionContext.getSession().getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 				select,
 				jdbcParameterBindings,
 				SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext ),
@@ -208,18 +231,23 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		return ( (Number) list.get( 0 ) ).intValue();
 	}
 
+	// For Hibernate Reactive
+	protected JdbcOperationQuerySelect getSelect() {
+		return select;
+	}
+
 	/**
 	 * Used by Hibernate Reactive
 	 */
 	protected Expression createCountStar(
 			SessionFactoryImplementor factory,
 			MultiTableSqmMutationConverter sqmConverter) {
-		final SqmExpression<?> arg = new SqmStar( factory.getNodeBuilder() );
-		return factory.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "count" ).generateSqmExpression(
-				arg,
-				null,
-				factory.getQueryEngine()
-		).convertToSqlAst( sqmConverter );
+		final QueryEngine queryEngine = factory.getQueryEngine();
+		final SqmExpression<?> arg = new SqmStar( queryEngine.getCriteriaBuilder() );
+		return queryEngine.getSqmFunctionRegistry()
+				.findFunctionDescriptor( "count" )
+				.generateSqmExpression( arg, null, queryEngine )
+				.convertToSqlAst( sqmConverter );
 	}
 
 	protected Predicate createIdSubQueryPredicate(

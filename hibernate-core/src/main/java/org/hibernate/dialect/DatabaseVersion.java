@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -206,6 +206,56 @@ public interface DatabaseVersion {
 		return major > otherMajor
 				|| ( major == otherMajor && minor > otherMinor )
 				|| ( major == otherMajor && minor == otherMinor && micro >= otherMicro );
+	}
+
+	/**
+	 * {@link #isSame} or {@link #isBefore}
+	 */
+	default boolean isSameOrBefore(DatabaseVersion other) {
+		return isSameOrBefore( other.getDatabaseMajorVersion(), other.getDatabaseMinorVersion() );
+	}
+
+	/**
+	 * {@link #isSame} or {@link #isBefore}
+	 */
+	default boolean isSameOrBefore(Integer otherMajor, Integer otherMinor) {
+		return isSameOrBefore(
+				(int) otherMajor,
+				otherMinor == null ? NO_VERSION : otherMinor
+		);
+	}
+
+	/**
+	 * {@link #isSame} or {@link #isBefore}
+	 */
+	default boolean isSameOrBefore(int otherMajor) {
+		final int major = getDatabaseMajorVersion();
+
+		return major <= otherMajor;
+	}
+
+	/**
+	 * {@link #isSame} or {@link #isBefore}
+	 */
+	default boolean isSameOrBefore(int otherMajor, int otherMinor) {
+		final int major = getDatabaseMajorVersion();
+		final int minor = getDatabaseMinorVersion();
+
+		return major < otherMajor
+			|| ( major == otherMajor && minor <= otherMinor );
+	}
+
+	/**
+	 * {@link #isSame} or {@link #isBefore}
+	 */
+	default boolean isSameOrBefore(int otherMajor, int otherMinor, int otherMicro) {
+		final int major = getDatabaseMajorVersion();
+		final int minor = getDatabaseMinorVersion();
+		final int micro = getDatabaseMicroVersion();
+
+		return major < otherMajor
+			|| ( major == otherMajor && minor < otherMinor )
+			|| ( major == otherMajor && minor == otherMinor && micro <= otherMicro );
 	}
 
 	/**

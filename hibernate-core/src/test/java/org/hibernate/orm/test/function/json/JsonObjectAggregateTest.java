@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.function.json;
@@ -10,6 +10,7 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -21,6 +22,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -56,7 +58,8 @@ public class JsonObjectAggregateTest {
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA has no way to throw an error on duplicate json object keys.")
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 has no way to throw an error on duplicate json object keys.")
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB has no way to throw an error on duplicate json object keys.")
-	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 15, matchSubTypes = true, reason = "CockroachDB has no way to throw an error on duplicate json object keys.")
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 15, versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "Before version 16, PostgreSQL didn't support the unique keys clause.")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class, majorVersion = 15, versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "Before version 16, PostgresPlus didn't support the unique keys clause.")
 	public void testUniqueKeys(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-objectagg-unique-keys-example[]

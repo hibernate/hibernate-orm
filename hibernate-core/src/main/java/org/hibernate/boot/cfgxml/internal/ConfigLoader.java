@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.cfgxml.internal;
@@ -130,10 +130,7 @@ public class ConfigLoader {
 				stream.close();
 			}
 			catch (IOException e) {
-				log.debug(
-						String.format( "Unable to close properties file [%s] stream", resourceName ),
-						e
-				);
+				log.debug( "Unable to close properties file stream [" + resourceName + "]", e );
 			}
 		}
 	}
@@ -157,10 +154,7 @@ public class ConfigLoader {
 					stream.close();
 				}
 				catch (IOException e) {
-					log.debug(
-							String.format( "Unable to close properties file [%s] stream", file.getAbsolutePath() ),
-							e
-					);
+					log.debug( "Unable to close properties file stream [" + file.getAbsolutePath() + "]", e );
 				}
 			}
 		}

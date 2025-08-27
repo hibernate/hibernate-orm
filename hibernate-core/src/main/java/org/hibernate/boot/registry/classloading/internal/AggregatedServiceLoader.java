@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry.classloading.internal;
@@ -116,7 +116,7 @@ abstract class AggregatedServiceLoader<S> {
 			Set<S> result = new LinkedHashSet<>();
 
 			// Always try the aggregated class loader first
-			Iterator<ServiceLoader.Provider<S>> providerIterator = aggregatedClassLoaderServiceLoader.stream().iterator();
+			var providerIterator = aggregatedClassLoaderServiceLoader.stream().iterator();
 			while ( providerIterator.hasNext() ) {
 				ServiceLoader.Provider<S> provider = providerIterator.next();
 				collectServiceIfNotDuplicate( result, alreadyEncountered, provider );
@@ -130,15 +130,14 @@ abstract class AggregatedServiceLoader<S> {
 				providerIterator = delegate.stream().iterator();
 				/*
 				 * Note that advancing the stream itself can lead to (arguably) "legitimate" errors,
-				 * where we fail to load the service,
-				 * but only because individual classloader has its own definition of the service contract class,
-				 * which is different from ours.
+				 * where we fail to load the service, but only because each individual classloader
+				 * has its own definition of the service contract class, which is different from ours.
 				 * In that case (still arguably), the error should be ignored.
-				 * That's why we wrap the call to hasNext in a method that catches an logs errors.
+				 * That's why we wrap the call to hasNext in a method that catches and logs errors.
 				 * See https://hibernate.atlassian.net/browse/HHH-13551.
 				 */
 				while ( hasNextIgnoringServiceConfigurationError( providerIterator ) ) {
-					ServiceLoader.Provider<S> provider = providerIterator.next();
+					final ServiceLoader.Provider<S> provider = providerIterator.next();
 					collectServiceIfNotDuplicate( result, alreadyEncountered, provider );
 				}
 			}
@@ -152,7 +151,7 @@ abstract class AggregatedServiceLoader<S> {
 					return iterator.hasNext();
 				}
 				catch (ServiceConfigurationError e) {
-					log.ignoringServiceConfigurationError( serviceContract, e );
+					log.ignoringServiceConfigurationError( serviceContract.getName(), e );
 				}
 			}
 		}

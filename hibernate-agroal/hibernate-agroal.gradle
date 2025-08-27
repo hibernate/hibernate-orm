@@ -1,18 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
+
+plugins {
+    id "local.publishing-java-module"
+    id "local.publishing-group-relocation"
+}
 
 description = 'Integration for Agroal as a ConnectionProvider for Hibernate ORM'
 
-apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
-
 dependencies {
     implementation project( ':hibernate-core' )
+
+    // NOTE: technically `agroal-pool` pulls in `agroal-api`, but for documentation sake...
     implementation libs.agroal
+    implementation libs.agroalPool
 
     testImplementation project( ':hibernate-testing' )
-    testRuntimeOnly libs.agroalPool
 }

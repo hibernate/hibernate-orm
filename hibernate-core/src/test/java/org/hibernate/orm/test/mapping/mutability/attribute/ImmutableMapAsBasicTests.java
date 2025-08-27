@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.mutability.attribute;
@@ -64,7 +64,7 @@ public class ImmutableMapAsBasicTests {
 				.getEntityDescriptor( TestEntity.class );
 
 		final Property property = persistentClass.getProperty( "data" );
-		assertThat( property.isUpdateable() ).isFalse();
+		assertThat( property.isUpdatable() ).isFalse();
 
 		final BasicValue value = (BasicValue) property.getValue();
 		final BasicValue.Resolution<?> resolution = value.resolve();
@@ -180,9 +180,7 @@ public class ImmutableMapAsBasicTests {
 
 	@AfterEach
 	void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete TestEntity" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "TestEntity" )

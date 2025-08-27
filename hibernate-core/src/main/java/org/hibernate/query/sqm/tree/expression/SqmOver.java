@@ -1,17 +1,19 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.query.common.FrameExclusion;
 import org.hibernate.query.common.FrameKind;
 import org.hibernate.query.common.FrameMode;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -86,7 +88,7 @@ public class SqmOver<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public @Nullable SqmExpressible<T> getNodeType() {
+	public @Nullable SqmBindableType<T> getNodeType() {
 		return expression.getNodeType();
 	}
 
@@ -96,10 +98,22 @@ public class SqmOver<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		expression.appendHqlString( sb );
-		sb.append( " over (" );
-		window.appendHqlString( sb );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		expression.appendHqlString( hql, context );
+		hql.append( " over (" );
+		window.appendHqlString( hql, context );
+		hql.append( ')' );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmOver<?> sqmOver
+			&& Objects.equals( expression, sqmOver.expression )
+			&& Objects.equals( window, sqmOver.window );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( expression, window );
 	}
 }

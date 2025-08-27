@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.EntityResult;
 
@@ -22,7 +22,7 @@ public class EntityResultJpaAnnotation implements EntityResult {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public EntityResultJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public EntityResultJpaAnnotation(ModelsContext modelContext) {
 		this.lockMode = jakarta.persistence.LockModeType.OPTIMISTIC;
 		this.fields = new jakarta.persistence.FieldResult[0];
 		this.discriminatorColumn = "";
@@ -31,7 +31,7 @@ public class EntityResultJpaAnnotation implements EntityResult {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public EntityResultJpaAnnotation(EntityResult annotation, SourceModelBuildingContext modelContext) {
+	public EntityResultJpaAnnotation(EntityResult annotation, ModelsContext modelContext) {
 		this.entityClass = annotation.entityClass();
 		this.lockMode = annotation.lockMode();
 		this.fields = annotation.fields();
@@ -41,7 +41,7 @@ public class EntityResultJpaAnnotation implements EntityResult {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public EntityResultJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public EntityResultJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.entityClass = (Class<?>) attributeValues.get( "entityClass" );
 		this.lockMode = (jakarta.persistence.LockModeType) attributeValues.get( "lockMode" );
 		this.fields = (jakarta.persistence.FieldResult[]) attributeValues.get( "fields" );

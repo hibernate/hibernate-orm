@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.collection.spi;
@@ -358,6 +358,32 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 		}
 
 		return deletes.iterator();
+	}
+
+	@Override
+	public boolean hasDeletes(CollectionPersister persister) {
+		final Type elementType = persister.getElementType();
+		final java.util.Map<?,?> sn = (java.util.Map<?,?>) getSnapshot();
+
+		Iterator<?> itr = sn.keySet().iterator();
+		while ( itr.hasNext() ) {
+			if ( !set.contains( itr.next() ) ) {
+				// the element has been removed from the set
+				return true;
+			}
+		}
+
+		itr = set.iterator();
+		while ( itr.hasNext() ) {
+			final Object test = itr.next();
+			final Object oldValue = sn.get( test );
+			if ( oldValue!=null && elementType.isDirty( test, oldValue, getSession() ) ) {
+				// the element has changed
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	@Override

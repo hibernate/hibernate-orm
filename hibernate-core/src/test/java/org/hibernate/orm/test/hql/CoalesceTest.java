@@ -1,134 +1,86 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hql;
 
-import java.util.List;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.TypedQuery;
-
-
+import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertThat;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Johannes Buehler
  */
 @JiraKey( value = "HHH-10463")
-public class CoalesceTest extends BaseCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = org.hibernate.testing.orm.domain.gambit.EntityOfBasics.class)
+@SessionFactory
+@SkipForDialect(dialectClass = InformixDialect.class,
+		reason = "Informix does not allow JDBC parameters as arguments to the COALESCE function (not even with a cast)")
+public class CoalesceTest {
+	final String QRY_STR = "from EntityOfBasics e where e.theString = coalesce(:p , e.theString)";
 
-	private Person person;
+	@Test
+	public void testCoalesce(SessionFactoryScope sessions) {
+		sessions.inTransaction( (session) -> {
+			final List<EntityOfBasics> resultList = session.createQuery( QRY_STR, EntityOfBasics.class )
+					.setParameter("p", "a string")
+					.getResultList();
+			assertThat( resultList ).hasSize( 1 );
+		} );
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Person.class
-		};
-	}
-
-	@Before
-	public void setUp() {
-		doInHibernate( this::sessionFactory, session -> {
-			person = new Person();
-			person.setName("Johannes");
-			person.setSurname("Buehler");
-			session.persist(person);
+		sessions.inTransaction( (session) -> {
+			final List<EntityOfBasics> resultList = session.createQuery( QRY_STR, EntityOfBasics.class )
+					.setParameter("p", "$^&@#")
+					.getResultList();
+			assertThat( resultList ).hasSize( 0 );
 		} );
 	}
 
 	@Test
-	public void HHH_10463_TestCoalesce() {
-		doInHibernate( this::sessionFactory, session -> {
-			TypedQuery<Person> query = session.createQuery( "from Person p where p.name = coalesce(:name , p.name) ", Person.class );
-			query.setParameter("name", "Johannes");
-			List<Person> resultList = query.getResultList();
-			assertThat(resultList, hasItem(person));
-		} );
-
-	}
-
-	@Test
-	public void HHH_10463_NullInCoalesce() {
-		doInHibernate( this::sessionFactory, session -> {
-			TypedQuery<Person> query = session.createQuery( "from Person p where p.name = coalesce(:name, p.name) ", Person.class );
-			query.setParameter("name", null);
-			List<Person> resultList = query.getResultList();
-			assertThat(resultList, hasItem(person));
+	public void testCoalesceWithNull(SessionFactoryScope sessions) {
+		sessions.inTransaction( (session) -> {
+			final List<EntityOfBasics> resultList = session.createQuery( QRY_STR, EntityOfBasics.class )
+					.setParameter("p", null)
+					.getResultList();
+			assertThat( resultList ).hasSize( 1 );
 		} );
 	}
 
 	@Test
-	public void HHH_10463_NullInCoalesce_PostgreSQL_Workaround() {
-		doInHibernate( this::sessionFactory, session -> {
-			TypedQuery<Person> query = session.createQuery( "from Person p where p.name = coalesce(cast( :name as string) , p.name) ", Person.class );
-			query.setParameter("name", null);
-			List<Person> resultList = query.getResultList();
-			assertThat(resultList, hasItem(person));
+	public void testCoalesceWithCast(SessionFactoryScope sessions) {
+		final String qryStr = "from EntityOfBasics e where e.theString = coalesce(cast(:p as string) , e.theString)";
+		sessions.inTransaction( (session) -> {
+			final List<EntityOfBasics> resultList = session.createQuery( qryStr, EntityOfBasics.class )
+					.setParameter("p", null)
+					.getResultList();
+			assertThat( resultList ).hasSize( 1 );
 		} );
 	}
 
-	@Entity(name = "Person")
-	public static class Person {
+	@BeforeEach
+	public void createTestData(SessionFactoryScope sessions) {
+		sessions.inTransaction( (session) -> {
+			final EntityOfBasics entity = new EntityOfBasics( 1 );
+			entity.setTheString( "a string" );
+			entity.setTheField( "another string" );
+			session.persist( entity );
+		} );
+	}
 
-		@Id
-		@GeneratedValue
-		private Integer id;
-
-		@Column
-		private String name;
-
-		@Column
-		private String surname;
-
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
-
-		public String getSurname() {
-			return surname;
-		}
-
-		public void setSurname(String surname) {
-			this.surname = surname;
-		}
-
-		public Integer getId() {
-			return id;
-		}
-
-		public void setId(Integer id) {
-			this.id = id;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (!(o instanceof Person )) return false;
-
-			Person person = (Person) o;
-
-			return id != null ? id.equals(person.id) : person.id == null;
-
-		}
-
-		@Override
-		public int hashCode() {
-			return id != null ? id.hashCode() : 0;
-		}
+	@AfterEach
+	void dropTestData(SessionFactoryScope sessions) {
+		sessions.dropData();
 	}
 
 }

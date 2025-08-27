@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.xml.internal;
@@ -46,7 +46,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.MutableClassDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.ConstructorResult;
@@ -73,7 +73,7 @@ public class QueryProcessing {
 			return;
 		}
 
-		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
 		List<NamedQueryAnnotation> namedHqlQueryList = null;
 		List<NamedQueryJpaAnnotation> namedJpqlQueryList = null;
 
@@ -134,7 +134,7 @@ public class QueryProcessing {
 		}
 
 		final QueryHint[] hints = new QueryHint[jaxbHints.size()];
-		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
 		for ( int i = 0; i < jaxbHints.size(); i++ ) {
 			final QueryHintJpaAnnotation queryHintUsage = JpaAnnotations.QUERY_HINT.createUsage( modelBuildingContext );
 			hints[i] = queryHintUsage;
@@ -154,7 +154,7 @@ public class QueryProcessing {
 			return;
 		}
 
-		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
 		List<NamedNativeQueryAnnotation> namedQueryList = null;
 		List<NamedNativeQueryJpaAnnotation> namedJpaQueryList = null;
 
@@ -215,7 +215,7 @@ public class QueryProcessing {
 			return NO_COLUMN_RESULTS;
 		}
 
-		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
 		final ColumnResult[] columnResults = new ColumnResult[jaxbColumnResultList.size()];
 		for ( int i = 0; i < jaxbColumnResultList.size(); i++ ) {
 			final ColumnResultJpaAnnotation columnResult = JpaAnnotations.COLUMN_RESULT.createUsage( modelBuildingContext );
@@ -238,7 +238,7 @@ public class QueryProcessing {
 			return NO_CONSTRUCTOR_RESULTS;
 		}
 
-		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
 		final ConstructorResult[] constructorResults = new ConstructorResult[jaxbConstructorResultList.size()];
 		for ( int i = 0; i < jaxbConstructorResultList.size(); i++ ) {
 			final ConstructorResultJpaAnnotation constructorResult = JpaAnnotations.CONSTRUCTOR_RESULT.createUsage( modelBuildingContext );
@@ -267,7 +267,7 @@ public class QueryProcessing {
 			return NO_ENTITY_RESULTS;
 		}
 
-		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
 		final EntityResult[] entityResults = new EntityResult[jaxbEntityResults.size()];
 		for ( int i = 0; i < jaxbEntityResults.size(); i++ ) {
 			final EntityResultJpaAnnotation entityResult = JpaAnnotations.ENTITY_RESULT.createUsage( modelBuildingContext );
@@ -300,7 +300,7 @@ public class QueryProcessing {
 			return null;
 		}
 
-		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
 		final FieldResult[] fieldResults = new FieldResult[jaxbFieldResults.size()];
 		for ( int i = 0; i < jaxbFieldResults.size(); i++ ) {
 			final FieldResultJpaAnnotation fieldResult = JpaAnnotations.FIELD_RESULT.createUsage( modelBuildingContext );
@@ -322,7 +322,7 @@ public class QueryProcessing {
 			return;
 		}
 
-		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
 		final NamedStoredProcedureQueriesJpaAnnotation namedQueriesUsage = (NamedStoredProcedureQueriesJpaAnnotation) classDetails.replaceAnnotationUsage(
 				NAMED_STORED_PROCEDURE_QUERY,
 				JpaAnnotations.NAMED_STORED_PROCEDURE_QUERIES,
@@ -349,10 +349,10 @@ public class QueryProcessing {
 			return NO_PARAMS;
 		}
 
-		final SourceModelBuildingContext sourceModelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext ModelsContext = xmlDocumentContext.getModelBuildingContext();
 		final StoredProcedureParameter[] result = new StoredProcedureParameter[jaxbParameters.size()];
 		for ( int i = 0; i < jaxbParameters.size(); i++ ) {
-			final StoredProcedureParameterJpaAnnotation param = JpaAnnotations.STORED_PROCEDURE_PARAMETER.createUsage( sourceModelBuildingContext );
+			final StoredProcedureParameterJpaAnnotation param = JpaAnnotations.STORED_PROCEDURE_PARAMETER.createUsage( ModelsContext );
 			result[i] = param;
 
 			final JaxbStoredProcedureParameterImpl jaxbParam = jaxbParameters.get( i );

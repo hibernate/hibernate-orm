@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.ast;
@@ -153,13 +153,27 @@ public class ParameterMarkerStrategyTests {
 		} );
 	}
 
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-19632" )
+	public void testQueryParamReuse(SessionFactoryScope scope) {
+		final String queryString = "select e from EntityOfBasics e where e.id = :id and e.id = :id";
+
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction( (session) -> {
+			session.createSelectionQuery( queryString, EntityOfBasics.class ).setParameter( "id", 1 ).list();
+		} );
+
+		assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+		final String sql = statementInspector.getSqlQueries().get( 0 );
+		assertThat( sql ).contains( "?1" );
+		assertThat( sql ).doesNotContain( "?2" );
+	}
+
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete EntityOfBasics" ).executeUpdate();
-			session.createMutationQuery( "delete EntityWithFilters" ).executeUpdate();
-			session.createMutationQuery( "delete EntityWithVersion" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	public static class ParameterMarkerStrategyImpl implements ParameterMarkerStrategy {

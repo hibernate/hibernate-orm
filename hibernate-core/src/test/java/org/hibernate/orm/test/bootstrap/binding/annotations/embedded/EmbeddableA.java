@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.binding.annotations.embedded;
@@ -20,6 +20,7 @@ public class EmbeddableA {
 	@AttributeOverrides({@AttributeOverride(name = "embedAttrB" , column = @Column(table = "TableB"))})
 	private EmbeddableB embedB;
 
+	@Column(table = "TableB")
 	private String embedAttrA;
 
 	public EmbeddableB getEmbedB() {

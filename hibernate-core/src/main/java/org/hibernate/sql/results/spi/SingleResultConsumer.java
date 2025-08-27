@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.spi;
@@ -44,7 +44,10 @@ public class SingleResultConsumer<T> implements ResultsConsumer<T, T> {
 		persistenceContext.getLoadContexts().register( jdbcValuesSourceProcessingState );
 		try {
 			rowReader.startLoading( rowProcessingState );
-			rowProcessingState.next();
+			final boolean hadResult = rowProcessingState.next();
+			if ( !hadResult ) {
+				throw new NoRowException( "SQL query returned no results" );
+			}
 			final T result = rowReader.readRow( rowProcessingState );
 			rowProcessingState.finishRowProcessing( true );
 			rowReader.finishUp( rowProcessingState );

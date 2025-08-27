@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.relational;
@@ -19,7 +19,7 @@ import org.hibernate.Incubating;
  * {@link jakarta.persistence.SchemaManager}, which it now inherits,
  * with a minor change to the naming of its operations. It is retained
  * for backward compatibility and as a place to define additional
- * functionality in the future.
+ * functionality such as {@link #populate} and {@link #forSchema}.
  *
  * @since 6.2
  * @author Gavin King
@@ -27,7 +27,10 @@ import org.hibernate.Incubating;
 @Incubating
 public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	/**
-	 * Export database objects mapped by Hibernate entities.
+	 * Export database objects mapped by Hibernate entities, and then
+	 * import initial data from {@code /import.sql} and any other configured
+	 * {@linkplain org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
+	 * load script}.
 	 * <p>
 	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaCreator}.
 	 *
@@ -62,14 +65,57 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	void validateMappedObjects();
 
 	/**
-	 * Truncate the database tables mapped by Hibernate entities, and
-	 * then re-import initial data from any configured
+	 * Truncate the database tables mapped by Hibernate entities, and then
+	 * reimport initial data from {@code /import.sql} and any other configured
 	 * {@linkplain org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
 	 * load script}.
 	 * <p>
 	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaTruncator}.
+	 * <p>
+	 * This operation does not affect the {@linkplain org.hibernate.Cache second-level cache}.
+	 * Therefore, after calling {@code truncate()}, it might be necessary to also call
+	 * {@link org.hibernate.Cache#evictAllRegions} to clean up data held in the second-level
+	 * cache.
 	 *
 	 * @apiNote This operation is a synonym for {@link #truncate}.
 	 */
 	void truncateMappedObjects();
+
+	/**
+	 * Populate the database by executing {@code /import.sql} and any other configured
+	 * {@linkplain org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
+	 * load script}.
+	 * <p>
+	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaPopulator}.
+	 *
+	 * @since 7.0
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
+	 */
+	@Incubating
+	void populate();
+
+	/**
+	 * Obtain an instance which targets the given schema.
+	 * <p>
+	 * This is especially useful when using multiple schemas, for example, in
+	 * {@linkplain org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_SCHEMA_MAPPER
+	 * schema-based multitenancy}.
+	 *
+	 * @param schemaName The name of the schema to target
+	 *
+	 * @since 7.1
+	 */
+	@Incubating
+	SchemaManager forSchema(String schemaName);
+
+	/**
+	 * Obtain an instance which targets the given catalog.
+	 *
+	 * @param catalogName The name of the catalog to target
+	 *
+	 * @since 7.1
+	 */
+	@Incubating
+	SchemaManager forCatalog(String catalogName);
 }

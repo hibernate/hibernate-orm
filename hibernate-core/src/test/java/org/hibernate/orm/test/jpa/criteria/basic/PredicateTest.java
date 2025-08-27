@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria.basic;
@@ -12,6 +12,7 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.orm.test.jpa.metamodel.AbstractMetamodelSpecificTest;
@@ -241,6 +242,8 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 	@JiraKey( "HHH-10603" )
 	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 12,
 			reason = "Oracle12cDialect uses blob to store byte arrays and it's not possible to compare blobs with simple equality operators.")
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Blobs are not allowed in this expression")
 	public void testByteArray() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

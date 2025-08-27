@@ -1,15 +1,17 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.graphs;
 
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.MapKey;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -33,11 +35,12 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Root;
 
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.PluralAttribute;
 import org.hibernate.Hibernate;
 import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
@@ -55,7 +58,8 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {
 				Foo.class, Bar.class, Baz.class, Author.class, Book.class, Prize.class, Company.class,
-				Employee.class, Manager.class, Location.class, AnimalOwner.class, Animal.class, Dog.class, Cat.class
+				Employee.class, Manager.class, Location.class, AnimalOwner.class, Animal.class, Dog.class, Cat.class,
+				Kennel.class
 		};
 	}
 
@@ -167,7 +171,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		assertTrue( Hibernate.isInitialized( result.bar ) );
 		assertTrue( Hibernate.isInitialized( result.bar.getFoos()) );
 		assertTrue( Hibernate.isInitialized( result.baz ) );
-		// sanity check -- ensure the only bi-directional fetch was the one identified by the graph
+		// sanity check -- ensure the only bidirectional fetch was the one identified by the graph
 		assertFalse( Hibernate.isInitialized( result.baz.getFoos()) );
 
 		em.getTransaction().commit();
@@ -216,7 +220,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 		assertTrue( Hibernate.isInitialized( result ) );
 		assertTrue( Hibernate.isInitialized( result.employees ) );
-		assertEquals( result.employees.size(), 2 );
+		assertEquals( 2, result.employees.size() );
 		for (Employee resultEmployee : result.employees) {
 			assertTrue( Hibernate.isInitialized( resultEmployee.managers ) );
 			assertTrue( Hibernate.isInitialized( resultEmployee.friends ) );
@@ -256,9 +260,9 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 		assertTrue( Hibernate.isInitialized( result ) );
 		assertTrue( Hibernate.isInitialized( result.friends ) );
-		assertEquals( result.friends.size(), 1 );
+		assertEquals( 1, result.friends.size() );
 		assertTrue( Hibernate.isInitialized( result.managers) );
-		assertEquals( result.managers.size(), 1 );
+		assertEquals( 1, result.managers.size() );
 
 		em.getTransaction().commit();
 		em.close();
@@ -266,7 +270,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-9735")
-	public void loadIsMemeberQueriedCollection() {
+	public void loadIsMemberQueriedCollection() {
 
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -484,6 +488,161 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
+	public void testTreatedSubgraph() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Kennel kennel = new Kennel();
+		em.persist( kennel );
+		Dog dog = new Dog();
+		dog.kennel = kennel;
+		em.persist( dog );
+		em.flush();
+		em.clear();
+
+		EntityGraph<Dog> graph = em.createEntityGraph( Dog.class );
+		graph.addAttributeNode( "kennel" );
+		Dog doggie = em.find( graph, dog.id );
+		assertTrue( Hibernate.isInitialized( doggie.kennel ) );
+
+		em.clear();
+
+		EntityGraph<Animal> withKennel = em.createEntityGraph( Animal.class );
+		withKennel.addTreatedSubgraph( Dog.class ).addAttributeNode( "kennel" );
+		Animal animal = em.find( withKennel, doggie.id );
+		assertTrue( Hibernate.isInitialized( ( (Dog) animal ).kennel ) );
+
+		em.clear();
+
+		EntityGraph<Animal> withoutKennel = em.createEntityGraph( Animal.class );
+		animal = em.find( withoutKennel, doggie.id );
+		assertFalse( Hibernate.isInitialized( ( (Dog) animal ).kennel ) );
+
+		em.getTransaction().rollback();
+		em.close();
+	}
+
+	@Test
+	public void testElementSubgraph() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Bar bar = new Bar();
+		Foo foo = new Foo();
+		Baz baz = new Baz();
+		foo.baz = baz;
+		foo.bar = bar;
+		bar.foos.add( foo );
+		baz.foos.add( foo );
+		em.persist( bar );
+		em.persist( baz );
+		em.persist( foo );
+		em.flush();
+		em.clear();
+
+		EntityGraph<Bar> graph = em.createEntityGraph( Bar.class );
+		Subgraph<Foo> subgraph = graph.addElementSubgraph( "foos", Foo.class );
+		subgraph.addAttributeNode( "baz" );
+		Bar b = em.find( graph, bar.id );
+		assertTrue( Hibernate.isInitialized( b.foos ) );
+		assertTrue( Hibernate.isInitialized( b.foos.iterator().next().baz ) );
+
+		em.getTransaction().rollback();
+		em.close();
+	}
+
+	@Test
+	public void testTreatedElementSubgraph() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		AnimalOwner animalOwner = new AnimalOwner();
+		Dog dog = new Dog();
+		Cat cat = new Cat();
+		Kennel kennel = new Kennel();
+		dog.kennel = kennel;
+		animalOwner.animals.add( dog );
+		animalOwner.animals.add( cat );
+		em.persist( animalOwner );
+		em.persist( kennel );
+		em.persist( dog );
+		em.persist( cat );
+		em.flush();
+		em.clear();
+
+		PluralAttribute<? super AnimalOwner, ?, Animal> animalsAttribute =
+				(PluralAttribute<? super AnimalOwner, ?, Animal>)
+						em.getEntityManagerFactory().getMetamodel()
+								.entity( AnimalOwner.class )
+								.getAttribute( "animals" );
+
+		EntityGraph<AnimalOwner> graph = em.createEntityGraph( AnimalOwner.class );
+		Subgraph<Animal> subgraph = graph.addElementSubgraph( animalsAttribute );
+		AnimalOwner owner = em.find( graph, animalOwner.id );
+		assertTrue( Hibernate.isInitialized( owner.animals ) );
+		assertEquals( 2, owner.animals.size() );
+		owner.animals.forEach( animal -> {
+			if (animal instanceof Dog d ) {
+				assertFalse( Hibernate.isInitialized( d.kennel ) );
+			}
+		} );
+
+		em.clear();
+
+		graph = em.createEntityGraph( AnimalOwner.class );
+		subgraph = graph.addElementSubgraph( animalsAttribute );
+		Subgraph<Dog> treated = graph.addTreatedElementSubgraph( animalsAttribute, Dog.class );
+		treated.addAttributeNode( "kennel" );
+		owner = em.find( graph, animalOwner.id );
+		assertTrue( Hibernate.isInitialized( owner.animals ) );
+		assertEquals( 2, owner.animals.size() );
+		owner.animals.forEach( animal -> {
+			if (animal instanceof Dog d ) {
+				assertTrue( Hibernate.isInitialized( d.kennel ) );
+			}
+		} );
+
+		em.getTransaction().rollback();
+		em.close();
+	}
+
+	@Test
+	public void testTreatedElementSubgraph2() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		AnimalOwner animalOwner = new AnimalOwner();
+		Dog dog = new Dog();
+		Cat cat = new Cat();
+		Kennel kennel = new Kennel();
+		dog.kennel = kennel;
+		animalOwner.animals.add( dog );
+		animalOwner.animals.add( cat );
+		em.persist( animalOwner );
+		em.persist( kennel );
+		em.persist( dog );
+		em.persist( cat );
+		em.flush();
+		em.clear();
+
+		Attribute<? super Dog, Kennel> kennelAttribute =
+				(Attribute<? super Dog, Kennel>)
+						em.getEntityManagerFactory().getMetamodel()
+								.entity( Dog.class )
+								.getAttribute( "kennel" );
+
+		EntityGraph<Animal> graph = em.createEntityGraph( Animal.class );
+		Animal animal = em.find( graph, dog.id );
+		assertFalse( Hibernate.isInitialized( ((Dog) animal).kennel ) );
+
+		em.clear();
+
+		graph = em.createEntityGraph( Animal.class );
+		graph.addTreatedSubgraph( Dog.class ).addAttributeNode( kennelAttribute );
+		animal = em.find( graph, dog.id );
+		assertTrue( Hibernate.isInitialized( ((Dog) animal).kennel ) );
+
+		em.getTransaction().rollback();
+		em.close();
+	}
+
 	@Entity(name = "Foo")
 	@Table(name = "foo")
 	public static class Foo {
@@ -508,7 +667,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		public Integer id;
 
 		@OneToMany(mappedBy = "bar")
-		public Set<Foo> foos = new HashSet<Foo>();
+		public Set<Foo> foos = new HashSet<>();
 
 		public Set<Foo> getFoos() {
 			return foos;
@@ -524,7 +683,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		public Integer id;
 
 		@OneToMany(mappedBy = "baz")
-		public Set<Foo> foos = new HashSet<Foo>();
+		public Set<Foo> foos = new HashSet<>();
 
 		public Set<Foo> getFoos() {
 			return foos;
@@ -602,6 +761,9 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 		@ManyToOne(fetch = FetchType.LAZY)
 		public Animal animal;
+
+		@ManyToMany
+		public Set<Animal> animals = new HashSet<>();
 	}
 
 	@Entity(name = "Animal")
@@ -620,6 +782,9 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 		public Integer numberOfLegs;
 
+		@ManyToOne(fetch = FetchType.LAZY)
+		Kennel kennel;
+
 		public Dog() {
 			dtype = "DOG";
 		}
@@ -634,5 +799,11 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		public Cat() {
 			dtype = "CAT";
 		}
+	}
+
+	@Entity(name = "Kennel")
+	public static class Kennel {
+		@Id @GeneratedValue
+		UUID uuid;
 	}
 }

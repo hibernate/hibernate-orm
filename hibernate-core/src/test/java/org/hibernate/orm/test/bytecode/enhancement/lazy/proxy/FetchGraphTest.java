@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
@@ -519,10 +519,9 @@ public class FetchGraphTest {
 		final StatisticsImplementor stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
-		assert scope.getSessionFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
+		assert scope.getSessionFactory().getMappingMetamodel()
 				.getEntityDescriptor( RoleEntity.class )
-				.getInstrumentationMetadata()
+				.getBytecodeEnhancementMetadata()
 				.isEnhancedForLazyLoading();
 
 		scope.inTransaction(
@@ -789,27 +788,7 @@ public class FetchGraphTest {
 
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from E" ).executeUpdate();
-					session.createQuery( "delete from D" ).executeUpdate();
-					session.createQuery( "delete from C" ).executeUpdate();
-					session.createQuery( "delete from B" ).executeUpdate();
-					session.createQuery( "delete from A" ).executeUpdate();
-					session.createQuery( "delete from G" ).executeUpdate();
-
-					session.createQuery( "delete from Activity" ).executeUpdate();
-					session.createQuery( "delete from Instruction" ).executeUpdate();
-					session.createQuery( "delete from WebApplication" ).executeUpdate();
-
-					session.createQuery( "delete from SpecializedEntity" ).executeUpdate();
-					session.createQuery( "delete from RoleEntity" ).executeUpdate();
-					session.createQuery( "delete from MoreSpecializedKey" ).executeUpdate();
-					session.createQuery( "delete from SpecializedKey" ).executeUpdate();
-					session.createQuery( "delete from GenericKey" ).executeUpdate();
-					session.createQuery( "delete from AbstractKey" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@MappedSuperclass

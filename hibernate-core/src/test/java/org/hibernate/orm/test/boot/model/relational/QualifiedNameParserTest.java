@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.model.relational;
@@ -38,7 +38,7 @@ public class QualifiedNameParserTest {
 	@Test
 	public void testStringSplittingWithCatalogAndSchema() {
 		QualifiedNameParser.NameParts nameParts = PARSER.parse(
-				"schema.catalog.MyEntity",
+				"catalog.schema.MyEntity",
 				DEFAULT_CATALOG,
 				DEFAULT_SCHEMA
 		);

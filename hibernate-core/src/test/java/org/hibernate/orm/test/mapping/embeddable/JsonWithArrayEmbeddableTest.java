@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.embeddable;
@@ -55,7 +55,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
 )
 // Don't reorder columns in the types here to avoid the need to rewrite the test
-@ServiceRegistry(settings = @Setting(name = AvailableSettings.COLUMN_ORDERING_STRATEGY, value = "legacy"))
+@ServiceRegistry(settings = {
+		@Setting(name = AvailableSettings.COLUMN_ORDERING_STRATEGY, value = "legacy")
+})
 @DomainModel(annotatedClasses = JsonWithArrayEmbeddableTest.JsonHolder.class)
 @SessionFactory
 public class JsonWithArrayEmbeddableTest {
@@ -72,11 +74,7 @@ public class JsonWithArrayEmbeddableTest {
 
 	@AfterEach
 	protected void cleanupTest(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from JsonHolder h" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

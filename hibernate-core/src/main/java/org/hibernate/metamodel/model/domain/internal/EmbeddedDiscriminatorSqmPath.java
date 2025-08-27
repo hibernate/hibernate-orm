@@ -1,10 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.metamodel.model.domain.DiscriminatorSqmPath;
+import org.hibernate.query.sqm.DiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -14,6 +14,8 @@ import org.hibernate.query.sqm.tree.domain.AbstractSqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.spi.NavigablePath;
 
+import java.util.Objects;
+
 /**
  * {@link SqmPath} specialization for an embeddable discriminator
  *
@@ -22,12 +24,11 @@ import org.hibernate.spi.NavigablePath;
 public class EmbeddedDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements DiscriminatorSqmPath<T> {
 	private final EmbeddableDomainType<T> embeddableDomainType;
 
-	@SuppressWarnings( { "rawtypes", "unchecked" } )
 	protected EmbeddedDiscriminatorSqmPath(
 			NavigablePath navigablePath,
-			SqmPathSource referencedPathSource,
+			SqmPathSource<T> referencedPathSource,
 			SqmPath<?> lhs,
-			EmbeddableDomainType embeddableDomainType,
+			EmbeddableDomainType<T> embeddableDomainType,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 		this.embeddableDomainType = embeddableDomainType;
@@ -39,7 +40,8 @@ public class EmbeddedDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implemen
 
 	@Override
 	public EmbeddedDiscriminatorSqmPathSource<T> getExpressible() {
-		return (EmbeddedDiscriminatorSqmPathSource<T>) getNodeType();
+//		return (EmbeddedDiscriminatorSqmPathSource<T>) getNodeType();
+		return (EmbeddedDiscriminatorSqmPathSource<T>) getReferencedPathSource();
 	}
 
 	@Override
@@ -58,5 +60,16 @@ public class EmbeddedDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implemen
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitDiscriminatorPath( this );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof EmbeddedDiscriminatorSqmPath<?> that
+			&& Objects.equals( this.getLhs(), that.getLhs() );
+	}
+
+	@Override
+	public int hashCode() {
+		return getLhs().hashCode();
 	}
 }

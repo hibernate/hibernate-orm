@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
@@ -25,12 +25,13 @@ import org.hibernate.Incubating;
 public interface ResultListTransformer<T> {
 	/**
 	 * Here we have an opportunity to perform transformation on the
-	 * query result as a whole.  This might be useful to convert from
+	 * query result as a whole. This might be useful to convert from
 	 * one collection type to another or to remove duplicates from the
 	 * result, etc.
 	 *
-	 * @param resultList The result list as would otherwise be returned from
-	 * the Query without the intervention of this ResultListTransformer
+	 * @param resultList The result list as would otherwise be returned
+	 *                   by the {@code Query} without the intervention
+	 *                   of this {@code ResultListTransformer}
 	 *
 	 * @return The transformed result.
 	 */

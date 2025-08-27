@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
@@ -12,8 +12,6 @@ import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
@@ -50,8 +48,8 @@ public class DefaultReplicateEventListener
 	 */
 	@Override
 	public void onReplicate(ReplicateEvent event) {
-		final EventSource source = event.getSession();
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final var source = event.getSession();
+		final var persistenceContext = source.getPersistenceContextInternal();
 		if ( persistenceContext.reassociateIfUninitializedProxy( event.getObject() ) ) {
 			LOG.trace( "Uninitialized proxy passed to replicate()" );
 		}
@@ -68,8 +66,8 @@ public class DefaultReplicateEventListener
 	}
 
 	private void doReplicate(ReplicateEvent event, EventSource source, Object entity) {
-		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity);
-		final ReplicationMode replicationMode = event.getReplicationMode();
+		final var persister = source.getEntityPersister( event.getEntityName(), entity);
+		final var replicationMode = event.getReplicationMode();
 
 		// get the id from the object - we accept almost anything at all,
 		// except null (that is, even ids which look like they're unsaved)
@@ -85,8 +83,7 @@ public class DefaultReplicateEventListener
 
 		if ( oldVersion != null ) {
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev("Found existing row for {0}",
-						infoString( persister, id, event.getFactory() ) );
+				LOG.trace( "Found existing row for " + infoString( persister, id, event.getFactory() ) );
 			}
 			// If the entity has no version, getCurrentVersion() just returns
 			// a meaningless value to indicate that the row exists (HHH-2378)
@@ -98,7 +95,7 @@ public class DefaultReplicateEventListener
 				performReplication( entity, id, realOldVersion, persister, replicationMode, source );
 			}
 			else if ( LOG.isTraceEnabled() ) {
-				// do nothing (don't even re-associate object!)
+				// do nothing (don't even reassociate entity!)
 				LOG.trace( "No need to replicate" );
 			}
 
@@ -107,11 +104,11 @@ public class DefaultReplicateEventListener
 		else {
 			// no existing row - execute a SQL INSERT
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "No existing row, replicating new instance {0}",
-						infoString( persister, id, event.getFactory() ) );
+				LOG.trace( "No existing row, replicating new instance "
+							+ infoString( persister, id, event.getFactory() ) );
 			}
 			final boolean regenerate = persister.isIdentifierAssignedByInsert(); // prefer re-generation of identity!
-			final EntityKey key = regenerate ? null : source.generateEntityKey( id, persister );
+			final var key = regenerate ? null : source.generateEntityKey( id, persister );
 			performSaveOrReplicate( entity, key, persister, regenerate, replicationMode, source, false );
 		}
 	}
@@ -129,7 +126,7 @@ public class DefaultReplicateEventListener
 			Type[] types,
 			EventSource source) {
 		//TODO: we use two visitors here, inefficient!
-		OnReplicateVisitor visitor = new OnReplicateVisitor( source, id, entity, false );
+		final var visitor = new OnReplicateVisitor( source, id, entity, false );
 		visitor.processEntityPropertyValues( values, types );
 		return super.visitCollectionsBeforeSave( entity, id, values, types, source );
 	}
@@ -158,8 +155,7 @@ public class DefaultReplicateEventListener
 			EventSource source) throws HibernateException {
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Replicating changes to {0}",
-					infoString( persister, id, source.getFactory() ) );
+			LOG.trace( "Replicating changes to " + infoString( persister, id, source.getFactory() ) );
 		}
 
 		new OnReplicateVisitor( source, id, entity, true ).process( entity, persister );
@@ -184,7 +180,7 @@ public class DefaultReplicateEventListener
 			EntityPersister persister,
 			ReplicationMode replicationMode,
 			EventSource source) {
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final var persistenceContext = source.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
 			Cascade.cascade(

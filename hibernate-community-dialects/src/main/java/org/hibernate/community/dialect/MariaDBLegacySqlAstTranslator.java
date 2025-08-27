@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.MySQLSqlAstTranslator;
+import org.hibernate.dialect.sql.ast.MySQLSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -46,11 +46,11 @@ import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
  */
 public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	private MariaDBLegacyDialect dialect;
+	private final MariaDBLegacyDialect dialect;
 
-	public MariaDBLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+	public MariaDBLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, MariaDBLegacyDialect dialect) {
 		super( sessionFactory, statement );
-		this.dialect = (MariaDBLegacyDialect)super.getDialect();
+		this.dialect = dialect;
 	}
 
 	@Override
@@ -138,11 +138,6 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 	}
 
 	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
 	protected JdbcOperationQueryInsert translateInsert(InsertSelectStatement sqlAst) {
 		visitInsertStatement( sqlAst );
 
@@ -183,16 +178,6 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 	}
 
 	@Override
-	protected boolean supportsWithClause() {
-		return dialect.getVersion().isSameOrAfter( 10, 2 );
-	}
-
-	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		return false;
-	}
-
-	@Override
 	protected void renderExpressionAsClauseItem(Expression expression) {
 		expression.accept( this );
 	}
@@ -225,19 +210,9 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 		}
 	}
 
-	@Override
-	protected String getForShare(int timeoutMillis) {
-		return " lock in share mode";
-	}
-
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart && supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
-	}
-
-	@Override
-	protected boolean supportsSimpleQueryGrouping() {
-		return dialect.getVersion().isSameOrAfter( 10, 4 );
 	}
 
 	@Override
@@ -245,13 +220,7 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 		// Intersect emulation requires nested correlation when no simple query grouping is possible
 		// and the query has an offset/fetch clause, so we have to disable the emulation in this case,
 		// because nested correlation is not supported though
-		return supportsSimpleQueryGrouping() || !queryPart.hasOffsetOrFetchClause();
-	}
-
-	@Override
-	protected boolean supportsNestedSubqueryCorrelation() {
-		// It seems it doesn't support it
-		return false;
+		return getDialect().supportsSimpleQueryGrouping() || !queryPart.hasOffsetOrFetchClause();
 	}
 
 	@Override
@@ -398,29 +367,8 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntaxInSet() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsIntersect() {
-		return dialect.getVersion().isSameOrAfter( 10, 3 );
-	}
-
-	@Override
-	protected boolean supportsDistinctFromPredicate() {
-		// It supports a proprietary operator
-		return true;
-	}
-
-	@Override
 	public MariaDBLegacyDialect getDialect() {
-		return this.dialect;
+		return dialect;
 	}
 
 	private boolean supportsWindowFunctions() {
@@ -445,5 +393,14 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 		appendSql( " like concat('%',replace(replace(replace(" );
 		needle.accept( this );
 		appendSql( ",'~','~~'),'?','~?'),'%','~%'),'%') escape '~'" );
+	}
+
+	@Override
+	protected void appendAssignmentColumn(ColumnReference column) {
+		column.appendColumnForWrite(
+				this,
+				getAffectedTableNames().size() > 1 && !(getStatement() instanceof InsertSelectStatement)
+						? determineColumnReferenceQualifier( column )
+						: null );
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
@@ -43,13 +43,13 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.loader.LoaderLogging.LOADER_LOGGER;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * @author Steve Ebersole
  */
 class DatabaseSnapshotExecutor {
-	private static final Logger log = Logger.getLogger( DatabaseSnapshotExecutor.class );
 
 	private final EntityMappingType entityDescriptor;
 
@@ -70,11 +70,11 @@ class DatabaseSnapshotExecutor {
 				rootQuerySpec,
 				sqlAliasBaseManager,
 				new FromClauseIndex( null ),
-				LockOptions.NONE,
+				new LockOptions(),
 				(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
 				true,
 				new LoadQueryInfluencers( sessionFactory ),
-				sessionFactory
+				sessionFactory.getSqlTranslationEngine()
 		);
 
 		final NavigablePath rootPath = new NavigablePath( entityDescriptor.getEntityName() );
@@ -154,8 +154,9 @@ class DatabaseSnapshotExecutor {
 	}
 
 	Object[] loadDatabaseSnapshot(Object id, SharedSessionContractImplementor session) {
-		if ( log.isTraceEnabled() ) {
-			log.tracef( "Getting current persistent state for `%s#%s`", entityDescriptor.getEntityName(), id );
+		if ( LOADER_LOGGER.isTraceEnabled() ) {
+			LOADER_LOGGER.trace( "Retrieving snapshot of current persistent state for "
+					+ infoString( entityDescriptor, id ) );
 		}
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.archive.scan.internal;
@@ -53,23 +53,22 @@ public class ScanResultCollector {
 		discoveredClasses.add( classDescriptor );
 	}
 
-	@SuppressWarnings("SimplifiableIfStatement")
 	protected boolean isListedOrDetectable(String name, boolean rootUrl) {
-		// IMPL NOTE : protect the calls to getExplicitlyListedClassNames unless needed,
+		// IMPL NOTE: protect the calls to getExplicitlyListedClassNames unless needed,
 		// since it can take time with lots of listed classes.
 		if ( rootUrl ) {
 			// The entry comes from the root url.  Allow it if either:
 			//		1) we are allowed to discover classes/packages in the root url
 			//		2) the entry was explicitly listed
 			return options.canDetectUnlistedClassesInRoot()
-					|| environment.getExplicitlyListedClassNames().contains( name );
+				|| environment.getExplicitlyListedClassNames().contains( name );
 		}
 		else {
 			// The entry comes from a non-root url.  Allow it if either:
 			//		1) we are allowed to discover classes/packages in non-root urls
 			//		2) the entry was explicitly listed
 			return options.canDetectUnlistedClassesInNonRoot()
-					|| environment.getExplicitlyListedClassNames().contains( name );
+				|| environment.getExplicitlyListedClassNames().contains( name );
 		}
 	}
 
@@ -88,7 +87,6 @@ public class ScanResultCollector {
 		}
 	}
 
-	@SuppressWarnings("SimplifiableIfStatement")
 	private boolean acceptAsMappingFile(MappingFileDescriptor mappingFileDescriptor, boolean rootUrl) {
 		if ( mappingFileDescriptor.getName().endsWith( "hbm.xml" ) ) {
 			return options.canDetectHibernateMappingFiles();

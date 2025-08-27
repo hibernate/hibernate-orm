@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.spi;
@@ -19,32 +19,38 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Steve Ebersole
  */
 public enum BuiltInPropertyAccessStrategies {
-	BASIC( "property", PropertyAccessStrategyBasicImpl.INSTANCE ),
-	FIELD( "field", PropertyAccessStrategyFieldImpl.INSTANCE ),
-	MIXED( "mixed", PropertyAccessStrategyMixedImpl.INSTANCE ),
-	MAP( "map", PropertyAccessStrategyMapImpl.INSTANCE ),
-	EMBEDDED( "embedded", PropertyAccessStrategyEmbeddedImpl.INSTANCE ),
-	NOOP( "noop", PropertyAccessStrategyNoopImpl.INSTANCE );
-
-	private final String externalName;
-	private final PropertyAccessStrategy strategy;
-
-	BuiltInPropertyAccessStrategies(String externalName, PropertyAccessStrategy strategy) {
-		this.externalName = externalName;
-		this.strategy = strategy;
-	}
+	BASIC,
+	FIELD,
+	MIXED,
+	MAP,
+	EMBEDDED,
+	NOOP;
 
 	public String getExternalName() {
-		return externalName;
+		return switch ( this ) {
+			case BASIC -> "property";
+			case FIELD -> "field";
+			case MIXED -> "mixed";
+			case MAP -> "map";
+			case EMBEDDED -> "embedded";
+			case NOOP -> "noop";
+		};
 	}
 
 	public PropertyAccessStrategy getStrategy() {
-		return strategy;
+		return switch ( this ) {
+			case BASIC -> PropertyAccessStrategyBasicImpl.INSTANCE;
+			case FIELD -> PropertyAccessStrategyFieldImpl.INSTANCE;
+			case MIXED -> PropertyAccessStrategyMixedImpl.INSTANCE;
+			case MAP -> PropertyAccessStrategyMapImpl.INSTANCE;
+			case EMBEDDED -> PropertyAccessStrategyEmbeddedImpl.INSTANCE;
+			case NOOP -> PropertyAccessStrategyNoopImpl.INSTANCE;
+		};
 	}
 
 	public static @Nullable BuiltInPropertyAccessStrategies interpret(String name) {
-		for ( BuiltInPropertyAccessStrategies strategy : values() ) {
-			if ( strategy.externalName.equals( name ) ) {
+		for ( var strategy : values() ) {
+			if ( strategy.getExternalName().equals( name ) ) {
 				return strategy;
 			}
 		}

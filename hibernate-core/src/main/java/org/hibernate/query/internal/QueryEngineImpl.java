@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
@@ -8,16 +8,17 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.query.BindingContext;
+import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.type.BindingContext;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.internal.StandardHqlTranslator;
-import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryEngineOptions;
@@ -35,11 +36,12 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import static java.util.Comparator.comparingInt;
+import static org.hibernate.cfg.QuerySettings.QUERY_PLAN_CACHE_ENABLED;
+import static org.hibernate.cfg.QuerySettings.QUERY_PLAN_CACHE_MAX_SIZE;
 
 /**
  * Aggregation and encapsulation of the components Hibernate uses
@@ -51,103 +53,54 @@ public class QueryEngineImpl implements QueryEngine {
 
 	private static final Logger LOG_HQL_FUNCTIONS = CoreLogging.logger("org.hibernate.HQL_FUNCTIONS");
 
-	public static QueryEngineImpl from(
-			MetadataImplementor metadata,
-			QueryEngineOptions options,
-			SqmCreationContext sqmCreationContext,
-			ServiceRegistryImplementor serviceRegistry,
-			Map<String,Object> properties,
-			String name) {
-		final Dialect dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
-		return new QueryEngineImpl(
-				metadata.getTypeConfiguration(),
-				resolveHqlTranslator( options, dialect, sqmCreationContext, new SqmCreationOptionsStandard( options ) ),
-				resolveSqmTranslatorFactory( options, dialect ),
-				createFunctionRegistry( serviceRegistry, metadata, options, dialect ),
-				metadata.buildNamedQueryRepository(),
-				buildInterpretationCache( serviceRegistry, properties ),
-				serviceRegistry.getService(NativeQueryInterpreter.class),
-				sqmCreationContext,
-				options,
-				options.getUuid(),
-				name
-		);
-	}
-
-	private static SqmFunctionRegistry createFunctionRegistry(
-			ServiceRegistry serviceRegistry,
-			MetadataImplementor metadata,
-			QueryEngineOptions queryEngineOptions,
-			Dialect dialect) {
-		final SqmFunctionRegistry sqmFunctionRegistry = metadata.getFunctionRegistry();
-
-		queryEngineOptions.getCustomSqlFunctionMap().forEach( sqmFunctionRegistry::register );
-
-		final SqmFunctionRegistry customSqmFunctionRegistry = queryEngineOptions.getCustomSqmFunctionRegistry();
-		if ( customSqmFunctionRegistry != null ) {
-			customSqmFunctionRegistry.overlay( sqmFunctionRegistry );
-		}
-
-		//TODO: probably better to turn this back into an anonymous class
-		final FunctionContributions functionContributions =
-				new FunctionContributionsImpl( serviceRegistry, metadata.getTypeConfiguration(), sqmFunctionRegistry );
-		for ( FunctionContributor contributor : sortedFunctionContributors( serviceRegistry ) ) {
-			contributor.contributeFunctions( functionContributions );
-		}
-
-		dialect.initializeFunctionRegistry( functionContributions );
-
-		if ( LOG_HQL_FUNCTIONS.isDebugEnabled() ) {
-			sqmFunctionRegistry.getFunctionsByName()
-					.forEach( entry -> LOG_HQL_FUNCTIONS.debug( entry.getValue().getSignature( entry.getKey() ) ) );
-		}
-
-		return sqmFunctionRegistry;
-	}
-
 	private final TypeConfiguration typeConfiguration;
 	private final NamedObjectRepository namedObjectRepository;
 	private final NativeQueryInterpreter nativeQueryInterpreter;
+	private final BindingContext bindingContext;
+	private final ClassLoaderService classLoaderService;
 	private final QueryInterpretationCache interpretationCache;
-	private final NodeBuilder criteriaBuilder;
+	private final NodeBuilder nodeBuilder;
 	private final HqlTranslator hqlTranslator;
 	private final SqmTranslatorFactory sqmTranslatorFactory;
 	private final SqmFunctionRegistry sqmFunctionRegistry;
+	private final Dialect dialect;
 
-	private QueryEngineImpl(
-			TypeConfiguration typeConfiguration,
-			HqlTranslator hqlTranslator,
-			SqmTranslatorFactory sqmTranslatorFactory,
-			SqmFunctionRegistry functionRegistry,
-			NamedObjectRepository namedObjectRepository,
-			QueryInterpretationCache interpretationCache,
-			NativeQueryInterpreter nativeQueryInterpreter,
-			BindingContext context,
+	public QueryEngineImpl(
+			MetadataImplementor metadata,
 			QueryEngineOptions options,
-			String uuid, String name) {
-		this.typeConfiguration = typeConfiguration;
-		this.sqmFunctionRegistry = functionRegistry;
-		this.sqmTranslatorFactory = sqmTranslatorFactory;
-		this.hqlTranslator = hqlTranslator;
-		this.namedObjectRepository = namedObjectRepository;
-		this.interpretationCache = interpretationCache;
-		this.nativeQueryInterpreter = nativeQueryInterpreter;
-		this.criteriaBuilder = createCriteriaBuilder( context, options, uuid, name );
+			BindingContext context,
+			ServiceRegistryImplementor serviceRegistry,
+			Map<String,Object> properties,
+			String name) {
+		this.dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
+		this.bindingContext = context;
+		this.typeConfiguration = metadata.getTypeConfiguration();
+		this.sqmFunctionRegistry = createFunctionRegistry( serviceRegistry, metadata, options, dialect );
+		this.sqmTranslatorFactory = resolveSqmTranslatorFactory( options, dialect );
+		this.namedObjectRepository = metadata.buildNamedQueryRepository();
+		this.interpretationCache = buildInterpretationCache( serviceRegistry, properties );
+		this.nativeQueryInterpreter = serviceRegistry.getService( NativeQueryInterpreter.class );
+		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		// here we have something nasty: we need to pass a reference to the current object to
+		// create the NodeBuilder, but then we need the NodeBuilder to create the HqlTranslator
+		// and that's only because we're using the NodeBuilder as the SqmCreationContext
+		this.nodeBuilder = createCriteriaBuilder( context, this, options, options.getUuid(), name );
+		this.hqlTranslator = resolveHqlTranslator( options, dialect, nodeBuilder );
 	}
 
-	private SqmCriteriaNodeBuilder createCriteriaBuilder(
-			BindingContext context, QueryEngineOptions options,
+	private static SqmCriteriaNodeBuilder createCriteriaBuilder(
+			BindingContext context, QueryEngine engine, QueryEngineOptions options,
 			String uuid, String name) {
-		return new SqmCriteriaNodeBuilder( uuid, name, this, options, context );
+		return new SqmCriteriaNodeBuilder( uuid, name, engine, options, context );
 	}
 
 	private static HqlTranslator resolveHqlTranslator(
-			QueryEngineOptions runtimeOptions,
+			QueryEngineOptions options,
 			Dialect dialect,
-			SqmCreationContext sqmCreationContext,
-			SqmCreationOptions sqmCreationOptions) {
-		if ( runtimeOptions.getCustomHqlTranslator() != null ) {
-			return runtimeOptions.getCustomHqlTranslator();
+			SqmCreationContext sqmCreationContext) {
+		final var sqmCreationOptions = new SqmCreationOptionsStandard( options );
+		if ( options.getCustomHqlTranslator() != null ) {
+			return options.getCustomHqlTranslator();
 		}
 		else if ( dialect.getHqlTranslator() != null ) {
 			return dialect.getHqlTranslator();
@@ -171,8 +124,43 @@ public class QueryEngineImpl implements QueryEngine {
 		}
 	}
 
+	private static SqmFunctionRegistry createFunctionRegistry(
+			ServiceRegistry serviceRegistry,
+			MetadataImplementor metadata,
+			QueryEngineOptions queryEngineOptions,
+			Dialect dialect) {
+		final var sqmFunctionRegistry = metadata.getFunctionRegistry();
+
+		queryEngineOptions.getCustomSqlFunctionMap().forEach( sqmFunctionRegistry::register );
+
+		final var customSqmFunctionRegistry = queryEngineOptions.getCustomSqmFunctionRegistry();
+		if ( customSqmFunctionRegistry != null ) {
+			customSqmFunctionRegistry.overlay( sqmFunctionRegistry );
+		}
+
+		//TODO: probably better to turn this back into an anonymous class
+		final FunctionContributions functionContributions =
+				new FunctionContributionsImpl( serviceRegistry, metadata.getTypeConfiguration(), sqmFunctionRegistry );
+		for ( var contributor : sortedFunctionContributors( serviceRegistry ) ) {
+			contributor.contributeFunctions( functionContributions );
+		}
+
+		dialect.initializeFunctionRegistry( functionContributions );
+
+		if ( LOG_HQL_FUNCTIONS.isDebugEnabled() ) {
+			var list = new StringBuilder("Available HQL Functions:\n");
+			sqmFunctionRegistry.getFunctionsByName()
+					.forEach( entry -> list.append('\t')
+											.append( entry.getValue().getSignature( entry.getKey() ) )
+											.append('\n') );
+			LOG_HQL_FUNCTIONS.debug( list.toString() );
+		}
+
+		return sqmFunctionRegistry;
+	}
+
 	private static List<FunctionContributor> sortedFunctionContributors(ServiceRegistry serviceRegistry) {
-		final Collection<FunctionContributor> functionContributors =
+		final var functionContributors =
 				serviceRegistry.requireService(ClassLoaderService.class)
 						.loadJavaServices(FunctionContributor.class);
 		final List<FunctionContributor> contributors = new ArrayList<>( functionContributors );
@@ -183,31 +171,40 @@ public class QueryEngineImpl implements QueryEngine {
 		return contributors;
 	}
 
-	private static QueryInterpretationCache buildInterpretationCache(
+	public static QueryInterpretationCache buildInterpretationCache(
 			ServiceRegistry serviceRegistry, Map<String, Object> properties) {
-		final boolean explicitUseCache = ConfigurationHelper.getBoolean(
-				AvailableSettings.QUERY_PLAN_CACHE_ENABLED,
+		final boolean useCache = ConfigurationHelper.getBoolean(
+				QUERY_PLAN_CACHE_ENABLED,
 				properties,
 				// enabled by default
 				true
 		);
 
 		final Integer explicitMaxPlanSize = ConfigurationHelper.getInteger(
-				AvailableSettings.QUERY_PLAN_CACHE_MAX_SIZE,
+				QUERY_PLAN_CACHE_MAX_SIZE,
 				properties
 		);
 
-		if ( explicitUseCache || explicitMaxPlanSize != null && explicitMaxPlanSize > 0 ) {
-			final int size = explicitMaxPlanSize != null
-					? explicitMaxPlanSize
-					: QueryEngine.DEFAULT_QUERY_PLAN_MAX_COUNT;
+		//Let's avoid some confusion and check settings consistency:
+		final int appliedMaxPlanSize =
+				explicitMaxPlanSize == null
+						? QueryEngine.DEFAULT_QUERY_PLAN_MAX_COUNT
+						: explicitMaxPlanSize;
+		if ( !useCache && explicitMaxPlanSize != null && appliedMaxPlanSize > 0 ) {
+			throw new ConfigurationException( "Inconsistent configuration: '" + QUERY_PLAN_CACHE_MAX_SIZE
+												+ "' can only be set to a greater than zero value when '"
+												+ QUERY_PLAN_CACHE_ENABLED + "' is enabled" );
+		}
 
-			return new QueryInterpretationCacheStandardImpl( size, serviceRegistry );
+		if ( appliedMaxPlanSize < 0 ) {
+			throw new ConfigurationException( "Inconsistent configuration: '" + QUERY_PLAN_CACHE_MAX_SIZE
+												+ "' can't be set to a negative value. To disable the query plan cache set '"
+												+ QUERY_PLAN_CACHE_ENABLED + "' to 'false'" );
 		}
-		else {
-			// disabled
-			return new QueryInterpretationCacheDisabledImpl( serviceRegistry );
-		}
+
+		return useCache
+				? new QueryInterpretationCacheStandardImpl( appliedMaxPlanSize, serviceRegistry )
+				: new QueryInterpretationCacheDisabledImpl( serviceRegistry ); // disabled
 	}
 
 	@Override
@@ -227,7 +224,12 @@ public class QueryEngineImpl implements QueryEngine {
 
 	@Override
 	public NodeBuilder getCriteriaBuilder() {
-		return criteriaBuilder;
+		return nodeBuilder;
+	}
+
+	@Override
+	public ClassLoaderService getClassLoaderService() {
+		return classLoaderService;
 	}
 
 	@Override
@@ -253,6 +255,21 @@ public class QueryEngineImpl implements QueryEngine {
 	@Override
 	public SqmFunctionRegistry getSqmFunctionRegistry() {
 		return sqmFunctionRegistry;
+	}
+
+	@Override
+	public JpaMetamodel getJpaMetamodel() {
+		return bindingContext.getJpaMetamodel();
+	}
+
+	@Override
+	public MappingMetamodel getMappingMetamodel() {
+		return bindingContext.getMappingMetamodel();
+	}
+
+	@Override
+	public Dialect getDialect() {
+		return dialect;
 	}
 
 	@Override

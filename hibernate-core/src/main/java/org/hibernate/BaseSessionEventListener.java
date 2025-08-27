@@ -1,101 +1,18 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 /**
- * A no-op implementation of SessionEventListener.  Intended as a convenient base class for developing
- * SessionEventListener implementations.
+ * A noop implementation of {@link SessionEventListener}.
+ * Intended as a convenient base class for developing
+ * {@code SessionEventListener} implementations.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Just implement {@link SessionEventListener} directly.
  */
+@Deprecated(since = "7", forRemoval = true)
 public class BaseSessionEventListener implements SessionEventListener {
-	@Override
-	public void transactionCompletion(boolean successful) {
-	}
-
-	@Override
-	public void jdbcConnectionAcquisitionStart() {
-	}
-
-	@Override
-	public void jdbcConnectionAcquisitionEnd() {
-	}
-
-	@Override
-	public void jdbcConnectionReleaseStart() {
-	}
-
-	@Override
-	public void jdbcConnectionReleaseEnd() {
-	}
-
-	@Override
-	public void jdbcPrepareStatementStart() {
-	}
-
-	@Override
-	public void jdbcPrepareStatementEnd() {
-	}
-
-	@Override
-	public void jdbcExecuteStatementStart() {
-	}
-
-	@Override
-	public void jdbcExecuteStatementEnd() {
-	}
-
-	@Override
-	public void jdbcExecuteBatchStart() {
-	}
-
-	@Override
-	public void jdbcExecuteBatchEnd() {
-	}
-
-	@Override
-	public void cachePutStart() {
-	}
-
-	@Override
-	public void cachePutEnd() {
-	}
-
-	@Override
-	public void cacheGetStart() {
-	}
-
-	@Override
-	public void cacheGetEnd(boolean hit) {
-	}
-
-	@Override
-	public void flushStart() {
-	}
-
-	@Override
-	public void flushEnd(int numberOfEntities, int numberOfCollections) {
-	}
-
-	@Override
-	public void partialFlushStart() {
-	}
-
-	@Override
-	public void partialFlushEnd(int numberOfEntities, int numberOfCollections) {
-	}
-
-	@Override
-	public void dirtyCalculationStart() {
-	}
-
-	@Override
-	public void dirtyCalculationEnd(boolean dirty) {
-	}
-
-	@Override
-	public void end() {
-	}
 }

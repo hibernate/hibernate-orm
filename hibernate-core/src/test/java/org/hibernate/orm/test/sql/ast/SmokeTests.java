@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.ast;
@@ -9,9 +9,9 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.orm.test.mapping.SmokeTests.Gender;
 import org.hibernate.orm.test.mapping.SmokeTests.SimpleEntity;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.sqm.internal.QuerySqmImpl;
+import org.hibernate.query.sqm.internal.SqmQueryImpl;
 import org.hibernate.query.sqm.sql.SqmTranslation;
 import org.hibernate.query.sqm.sql.internal.StandardSqmTranslator;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -106,17 +106,17 @@ public class SmokeTests {
 	public void testConvertedHqlInterpretation(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<Gender> query = session.createQuery( "select e.gender from SimpleEntity e", Gender.class );
+					final Query<Gender> query = session.createQuery( "select e.gender from SimpleEntity e", Gender.class );
 					final SqmQueryImplementor<Gender> hqlQuery = (SqmQueryImplementor<Gender>) query;
 					final SqmSelectStatement<Gender> sqmStatement = (SqmSelectStatement<Gender>) hqlQuery.getSqmStatement();
 
 					final StandardSqmTranslator<SelectStatement> sqmConverter = new StandardSqmTranslator<>(
 							sqmStatement,
 							hqlQuery.getQueryOptions(),
-							( (QuerySqmImpl<?>) hqlQuery ).getDomainParameterXref(),
-							query.getParameterBindings(),
+							( (SqmQueryImpl<?>) hqlQuery ).getDomainParameterXref(),
+							hqlQuery.getParameterBindings(),
 							session.getLoadQueryInfluencers(),
-							scope.getSessionFactory(),
+							scope.getSessionFactory().getSqlTranslationEngine(),
 							true
 					);
 
@@ -195,7 +195,7 @@ public class SmokeTests {
 	public void testBadQueryResultType(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<SimpleEntity> query = session.createQuery( "select e from SimpleEntity e", SimpleEntity.class );
+					final Query<SimpleEntity> query = session.createQuery( "select e from SimpleEntity e", SimpleEntity.class );
 					query.list();
 				}
 		);

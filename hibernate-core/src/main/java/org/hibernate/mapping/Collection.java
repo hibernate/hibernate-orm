@@ -1,11 +1,32 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
+import org.hibernate.FetchMode;
+import org.hibernate.MappingException;
+import org.hibernate.annotations.CacheLayout;
+import org.hibernate.annotations.SoftDeleteType;
+import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
+import org.hibernate.collection.spi.CollectionSemantics;
+import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
+import org.hibernate.internal.FilterConfiguration;
+import org.hibernate.internal.util.PropertiesHelper;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.jdbc.Expectation;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.CustomCollectionType;
+import org.hibernate.type.MappingContext;
+import org.hibernate.type.Type;
+import org.hibernate.usertype.UserCollectionType;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -13,36 +34,22 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Supplier;
 
-import org.hibernate.FetchMode;
-import org.hibernate.MappingException;
-import org.hibernate.annotations.CacheLayout;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
-import org.hibernate.collection.spi.CollectionSemantics;
-import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.internal.FilterConfiguration;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jdbc.Expectation;
-import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.CustomCollectionType;
-import org.hibernate.type.Type;
-import org.hibernate.type.MappingContext;
-import org.hibernate.usertype.UserCollectionType;
-
-import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_ARRAY;
+import static java.util.Collections.emptyList;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationConstructor;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_ARRAY;
+import static org.hibernate.mapping.MappingHelper.classForName;
+import static org.hibernate.mapping.MappingHelper.createUserTypeBean;
 
 /**
  * A mapping model object representing a collection. Subclasses specialize to particular kinds of collection.
  *
  * @author Gavin King
  */
-public abstract class Collection implements Fetchable, Value, Filterable, SoftDeletable {
+public abstract sealed class Collection
+		implements Fetchable, Value, Filterable, SoftDeletable
+		permits Set, Bag,
+				IndexedCollection, // List, Map
+				IdentifierCollection { // IdentifierBag only built-in implementation
 
 	public static final String DEFAULT_ELEMENT_COLUMN_NAME = "elt";
 	public static final String DEFAULT_KEY_COLUMN_NAME = "id";
@@ -100,6 +107,7 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 	private ExecuteUpdateResultCheckStyle deleteAllCheckStyle;
 
 	private Column softDeleteColumn;
+	private SoftDeleteType softDeleteStrategy;
 
 	private String loaderName;
 
@@ -189,10 +197,6 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		return getBuildingContext().getMetadataCollector();
 	}
 
-//	public TypeConfiguration getTypeConfiguration() {
-//		return getBuildingContext().getBootstrapContext().getTypeConfiguration();
-//	}
-
 	@Override
 	public ServiceRegistry getServiceRegistry() {
 		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();
@@ -228,11 +232,11 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 
 	public Comparator<?> getComparator() {
 		if ( comparator == null && comparatorClassName != null ) {
+			@SuppressWarnings("rawtypes")
+			final Class<? extends Comparator> clazz =
+					classForName( Comparator.class, comparatorClassName, getBuildingContext().getBootstrapContext() );
 			try {
-				final ClassLoaderService classLoaderService = getMetadata().getMetadataBuildingOptions()
-						.getServiceRegistry()
-						.requireService( ClassLoaderService.class );
-				setComparator( (Comparator<?>) classLoaderService.classForName( comparatorClassName ).getConstructor().newInstance() );
+				comparator = clazz.getConstructor().newInstance();
 			}
 			catch (Exception e) {
 				throw new MappingException(
@@ -258,7 +262,7 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		return role;
 	}
 
-	public abstract CollectionType getDefaultCollectionType() throws MappingException;
+	public abstract CollectionType getDefaultCollectionType();
 
 	public boolean isPrimitiveArray() {
 		return false;
@@ -375,14 +379,6 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		this.fetchMode = fetchMode;
 	}
 
-	/**
-	 * @deprecated use {@link #validate(MappingContext)}
-	 */
-	@Deprecated(since = "7.0")
-	public void validate(Mapping mapping) throws MappingException {
-		validate( (MappingContext) mapping);
-	}
-
 	public void validate(MappingContext mappingContext) throws MappingException {
 		assert getKey() != null : "Collection key not bound : " + getRole();
 		assert getElement() != null : "Collection element not bound : " + getRole();
@@ -424,12 +420,12 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 
 	@Override
 	public List<Selectable> getSelectables() {
-		return Collections.emptyList();
+		return emptyList();
 	}
 
 	@Override
 	public List<Column> getColumns() {
-		return Collections.emptyList();
+		return emptyList();
 	}
 
 	@Override
@@ -446,7 +442,6 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		if ( cachedCollectionSemantics == null ) {
 			cachedCollectionSemantics = resolveCollectionSemantics();
 		}
-
 		return cachedCollectionSemantics;
 	}
 
@@ -464,30 +459,29 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 	}
 
 	private CollectionType resolveCollectionType() {
-		final CollectionType collectionType;
 		if ( cachedCollectionType != null ) {
-			collectionType = cachedCollectionType;
+			return cachedCollectionType;
 		}
 		else if ( customTypeBeanResolver != null ) {
-			collectionType = new CustomCollectionType(
-					customTypeBeanResolver.get(),
-					role,
-					referencedPropertyName
-			);
+			return new CustomCollectionType( customTypeBeanResolver.get(), role, referencedPropertyName );
 		}
 		else if ( typeName == null ) {
-			collectionType = getDefaultCollectionType();
+			return getDefaultCollectionType();
 		}
 		else {
-			collectionType = MappingHelper.customCollection(
-					typeName,
-					typeParameters,
-					role,
-					referencedPropertyName,
-					getMetadata()
-			);
+			return new CustomCollectionType( userTypeBean(), role, referencedPropertyName );
 		}
-		return collectionType;
+	}
+
+	private ManagedBean<? extends UserCollectionType> userTypeBean() {
+		final BootstrapContext bootstrapContext = getBuildingContext().getBootstrapContext();
+		return createUserTypeBean(
+				role,
+				classForName( UserCollectionType.class, typeName, bootstrapContext ),
+				PropertiesHelper.map( typeParameters ),
+				bootstrapContext,
+				getMetadata().getMetadataBuildingOptions().isAllowExtensionsInCdi()
+		);
 	}
 
 	public CollectionType getCollectionType() {
@@ -542,21 +536,28 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 
 	public boolean isSame(Collection other) {
 		return this == other || isSame( key, other.key )
-				&& isSame( element, other.element )
-				&& Objects.equals( collectionTable, other.collectionTable )
-				&& Objects.equals( where, other.where )
-				&& Objects.equals( manyToManyWhere, other.manyToManyWhere )
-				&& Objects.equals( referencedPropertyName, other.referencedPropertyName )
-				&& Objects.equals( mappedByProperty, other.mappedByProperty )
-				&& Objects.equals( typeName, other.typeName )
-				&& Objects.equals( typeParameters, other.typeParameters );
+			&& isSame( element, other.element )
+			&& Objects.equals( collectionTable, other.collectionTable )
+			&& Objects.equals( where, other.where )
+			&& Objects.equals( manyToManyWhere, other.manyToManyWhere )
+			&& Objects.equals( referencedPropertyName, other.referencedPropertyName )
+			&& Objects.equals( mappedByProperty, other.mappedByProperty )
+			&& Objects.equals( typeName, other.typeName )
+			&& Objects.equals( typeParameters, other.typeParameters );
 	}
 
 	private void createForeignKeys() throws MappingException {
 		// if ( !isInverse() ) { // for inverse collections, let the "other end" handle it
+		final String entityName = getOwner().getEntityName();
 		if ( referencedPropertyName == null ) {
 			getElement().createForeignKey();
-			key.createForeignKeyOfEntity( getOwner().getEntityName() );
+			key.createForeignKeyOfEntity( entityName );
+		}
+		else {
+			final Property property = owner.getProperty( referencedPropertyName );
+			assert property != null;
+			key.createForeignKeyOfEntity( entityName,
+					property.getValue().getConstraintColumns() );
 		}
 		// }
 	}
@@ -760,23 +761,19 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		this.typeName = typeName;
 	}
 
+	@Deprecated(since = "7.0", forRemoval = true)
 	public Properties getTypeParameters() {
 		return typeParameters;
 	}
 
+	@Deprecated(since = "7.0", forRemoval = true)
 	public void setTypeParameters(Properties parameterMap) {
 		this.typeParameters = parameterMap;
 	}
 
-	@SuppressWarnings("rawtypes")
-	public void setTypeParameters(java.util.Map typeParameters) {
-		if ( typeParameters instanceof Properties properties ) {
-			this.typeParameters = properties;
-		}
-		else {
-			this.typeParameters = new Properties();
-			this.typeParameters.putAll( typeParameters );
-		}
+	public void setTypeParameters(java.util.Map<String,String> typeParameters) {
+		this.typeParameters = new Properties();
+		this.typeParameters.putAll( typeParameters );
 	}
 
 	@Override
@@ -854,8 +851,14 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 	}
 
 	@Override
-	public void enableSoftDelete(Column indicatorColumn) {
+	public void enableSoftDelete(Column indicatorColumn, SoftDeleteType strategy) {
 		this.softDeleteColumn = indicatorColumn;
+		this.softDeleteStrategy = strategy;
+	}
+
+	@Override
+	public SoftDeleteType getSoftDeleteStrategy() {
+		return softDeleteStrategy;
 	}
 
 	@Override
@@ -893,5 +896,10 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 
 	public void setDeleteAllExpectation(Supplier<? extends Expectation> deleteAllExpectation) {
 		this.deleteAllExpectation = deleteAllExpectation;
+	}
+
+	@Override
+	public boolean isPartitionKey() {
+		return false;
 	}
 }

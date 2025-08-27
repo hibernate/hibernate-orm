@@ -1,17 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria;
 
-import java.util.Date;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 
 /**
  * Animal
@@ -24,7 +21,6 @@ public class Animal {
 	private Animal mother;
 	private Animal father;
 	private String name;
-	private Date born;
 
 	public String getName() {
 		return name;
@@ -59,14 +55,5 @@ public class Animal {
 
 	public void setFather(Animal father) {
 		this.father = father;
-	}
-
-	@Temporal(TemporalType.TIMESTAMP)
-	public Date getBorn() {
-		return born;
-	}
-
-	public void setBorn(Date born) {
-		this.born = born;
 	}
 }

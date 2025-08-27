@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.xml.ejb3;
@@ -18,12 +18,12 @@ import org.hibernate.boot.models.xml.spi.XmlProcessingResult;
 import org.hibernate.boot.models.xml.spi.XmlProcessor;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.models.internal.BasicModelBuildingContextImpl;
+import org.hibernate.models.internal.BasicModelsContextImpl;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.MethodDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -77,7 +77,7 @@ public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 		throw new IllegalStateException( "Unable to locate persistent attribute : " + fieldName );
 	}
 
-	private SourceModelBuildingContext sourceModelContext;
+	private ModelsContext sourceModelContext;
 
 	protected ClassDetails getClassDetails(Class<?> entityClass, String xmlResourceName) {
 		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder().addLoadedClasses( entityClass )
@@ -89,8 +89,9 @@ public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 				persistenceUnitMetadata
 		);
 
-		final SourceModelBuildingContext modelBuildingContext = new BasicModelBuildingContextImpl(
+		final ModelsContext modelBuildingContext = new BasicModelsContextImpl(
 				SIMPLE_CLASS_LOADING,
+				false,
 				(contributions, inFlightContext) -> {
 					OrmAnnotationHelper.forEachOrmAnnotation( contributions::registerAnnotation );
 				}
@@ -102,7 +103,6 @@ public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 		);
 
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
-				true,
 				globalRegistrations,
 				modelBuildingContext
 		);
@@ -115,13 +115,14 @@ public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 
 		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml(
 				xmlPreProcessingResult,
-				modelCategorizationCollector,
+				persistenceUnitMetadata,
+				modelCategorizationCollector::apply,
 				modelBuildingContext,
 				bootstrapContext,
 				rootMappingDefaults
 		);
 
-		xmlProcessingResult.apply( persistenceUnitMetadata );
+		xmlProcessingResult.apply();
 
 		return modelBuildingContext.getClassDetailsRegistry().resolveClassDetails( entityClass.getName() );
 	}

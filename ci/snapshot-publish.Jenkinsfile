@@ -10,12 +10,20 @@ if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
   	return
 }
 
+def checkoutReleaseScripts() {
+    dir('.release/scripts') {
+        checkout scmGit(branches: [[name: '*/main']], extensions: [],
+                userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com',
+                                     url: 'https://github.com/hibernate/hibernate-release-scripts.git']])
+    }
+}
+
 pipeline {
     agent {
-        label 'Fedora'
+        label 'Release'
     }
     tools {
-        jdk 'OpenJDK 17 Latest'
+        jdk 'OpenJDK 21 Latest'
     }
     options {
   		rateLimitBuilds(throttle: [count: 1, durationName: 'hour', userBoost: true])
@@ -30,28 +38,29 @@ pipeline {
 		}
 		stage('Publish') {
 			steps {
-				withCredentials([
-					usernamePassword(credentialsId: 'ossrh.sonatype.org', usernameVariable: 'hibernatePublishUsername', passwordVariable: 'hibernatePublishPassword'),
-					usernamePassword(credentialsId: 'plugins.gradle.org', usernameVariable: 'hibernatePluginPortalUsername', passwordVariable: 'hibernatePluginPortalPassword'),
-					string(credentialsId: 'ge.hibernate.org-access-key', variable: 'DEVELOCITY_ACCESS_KEY'),
-					string(credentialsId: 'release.gpg.passphrase', variable: 'SIGNING_PASS'),
-					file(credentialsId: 'release.gpg.private-key', variable: 'SIGNING_KEYRING')
-				]) {
-					withEnv([
-							"DISABLE_REMOTE_GRADLE_CACHE=true"
-					]) {
-						sh '''./gradlew clean publish \
-							-PhibernatePublishUsername=$hibernatePublishUsername \
-							-PhibernatePublishPassword=$hibernatePublishPassword \
-							-Pgradle.publish.key=$hibernatePluginPortalUsername \
-							-Pgradle.publish.secret=$hibernatePluginPortalPassword \
-							--no-scan \
-							--no-build-cache \
-							-DsigningPassword=$SIGNING_PASS \
-							-DsigningKeyFile=$SIGNING_KEYRING \
-						'''
-					}
-				}
+                script {
+                    withCredentials([
+                            // https://github.com/gradle-nexus/publish-plugin#publishing-to-maven-central-via-sonatype-ossrh
+                            // https://docs.gradle.org/current/samples/sample_publishing_credentials.html#:~:text=via%20environment%20variables
+                            usernamePassword(credentialsId: 'central.sonatype.com', passwordVariable: 'ORG_GRADLE_PROJECT_snapshotsPassword', usernameVariable: 'ORG_GRADLE_PROJECT_snapshotsUsername'),
+                            string(credentialsId: 'Hibernate-CI.github.com', variable: 'JRELEASER_GITHUB_TOKEN'),
+                            // https://docs.gradle.org/current/userguide/publishing_gradle_plugins.html#account_setup
+                            usernamePassword(credentialsId: 'gradle-plugin-portal-api-key', passwordVariable: 'GRADLE_PUBLISH_SECRET', usernameVariable: 'GRADLE_PUBLISH_KEY'),
+                            gitUsernamePassword(credentialsId: 'username-and-token.Hibernate-CI.github.com', gitToolName: 'Default')
+                    ]) {
+                        withEnv([
+                                "DISABLE_REMOTE_GRADLE_CACHE=true"
+                        ]) {
+                            checkoutReleaseScripts()
+                            def version = sh(
+                                    script: ".release/scripts/determine-current-version.sh orm",
+                                    returnStdout: true
+                            ).trim()
+                            echo "Current version: '${version}'"
+                            sh "bash -xe .release/scripts/snapshot-deploy.sh orm ${version}"
+                        }
+                    }
+                }
 			}
         }
     }

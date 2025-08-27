@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
@@ -7,7 +7,6 @@ package org.hibernate.type;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -118,14 +117,6 @@ public class MetaType extends AbstractType {
 
 	public String toXMLString(Object value, SessionFactoryImplementor factory) throws HibernateException {
 		return (String) value; //value is the entity name
-	}
-
-	/**
-	 * @deprecated use {@link #fromXMLString(String, MappingContext)}
-	 */
-	@Deprecated(since = "7.0")
-	public Object fromXMLString(String xml, Mapping factory) throws HibernateException {
-		return fromXMLString( xml, (MappingContext) factory );
 	}
 
 	public Object fromXMLString(String xml, MappingContext mappingContext) throws HibernateException {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 
 /**
  * API extension to the JPA {@link Expression} contract
@@ -53,17 +52,17 @@ public interface JpaExpression<T> extends JpaSelection<T>, Expression<T> {
 	JpaPredicate in(Expression<Collection<?>> values);
 
 	@Override
-	Predicate equalTo(Expression<?> value);
+	JpaPredicate equalTo(Expression<?> value);
 
 	@Override
-	Predicate equalTo(Object value);
+	JpaPredicate equalTo(Object value);
 
 	@Override
 	<X> JpaExpression<X> cast(Class<X> type);
 
 	@Override
-	Predicate notEqualTo(Expression<?> value);
+	JpaPredicate notEqualTo(Expression<?> value);
 
 	@Override
-	Predicate notEqualTo(Object value);
+	JpaPredicate notEqualTo(Object value);
 }

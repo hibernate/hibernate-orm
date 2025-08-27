@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * A {@link ArgumentsValidator} that validates the array type is compatible with the element type.
  */
-public class GenerateSeriesArgumentTypeResolver extends AbstractFunctionArgumentTypeResolver {
+public class GenerateSeriesArgumentTypeResolver implements AbstractFunctionArgumentTypeResolver {
 
 	private final BasicType<Duration> durationType;
 

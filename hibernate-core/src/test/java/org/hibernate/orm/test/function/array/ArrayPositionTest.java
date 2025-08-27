@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.function.array;
@@ -49,9 +49,7 @@ public class ArrayPositionTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( em -> {
-			em.createMutationQuery( "delete from EntityWithArrays" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -79,6 +77,18 @@ public class ArrayPositionTest {
 	public void testPositionNull(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_position(e.theArray, null) = 2", EntityWithArrays.class )
+					.getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( 2L, results.get( 0 ).getId() );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19490")
+	public void testPositionParam(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_position(e.theArray, ?1) = 1", EntityWithArrays.class )
+					.setParameter( 1, "abc" )
 					.getResultList();
 			assertEquals( 1, results.size() );
 			assertEquals( 2L, results.get( 0 ).getId() );

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.insert;
@@ -62,9 +62,11 @@ public abstract class AbstractReturningDelegate extends AbstractGeneratedValuesM
 
 	@Override
 	public final GeneratedValues performInsertReturning(String sql, SharedSessionContractImplementor session, Binder binder) {
+		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
+
 		try {
 			// prepare and execute the insert
-			PreparedStatement insert = prepareStatement( sql, session );
+			final var insert = prepareStatement( sql, session );
 			try {
 				binder.bindValues( insert );
 				return executeAndExtractReturning( sql, insert, session );

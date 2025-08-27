@@ -1,14 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
-import org.hibernate.boot.model.internal.SoftDeleteHelper;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -18,7 +14,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.Generator;
 import org.hibernate.internal.util.IndexedConsumer;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.List;
 import org.hibernate.mapping.Map;
@@ -71,12 +66,12 @@ import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetc
 import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.SelectEagerCollectionFetch;
 
-import org.jboss.logging.Logger;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
-import static org.hibernate.boot.model.internal.SoftDeleteHelper.createNonSoftDeletedRestriction;
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
+import static org.hibernate.internal.util.StringHelper.subStringNullIfEmpty;
 
 /**
  * @author Steve Ebersole
@@ -84,7 +79,6 @@ import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDele
 public class PluralAttributeMappingImpl
 		extends AbstractAttributeMapping
 		implements PluralAttributeMapping, FetchProfileAffectee, FetchOptions {
-	private static final Logger log = Logger.getLogger( PluralAttributeMappingImpl.class );
 
 	/**
 	 * Allows callback after creation of the attribute mapping.
@@ -100,8 +94,7 @@ public class PluralAttributeMappingImpl
 		void injectAttributeMapping(PluralAttributeMapping attributeMapping);
 	}
 
-	@SuppressWarnings("rawtypes")
-	private final CollectionMappingType collectionMappingType;
+	private final CollectionMappingType<?> collectionMappingType;
 	private final String referencedPropertyName;
 	private final String mapKeyPropertyName;
 
@@ -154,31 +147,15 @@ public class PluralAttributeMappingImpl
 		this.collectionDescriptor = collectionDescriptor;
 		this.referencedPropertyName = bootDescriptor.getReferencedPropertyName();
 
-		if ( bootDescriptor instanceof Map ) {
-			this.mapKeyPropertyName = ( (Map) bootDescriptor ).getMapKeyPropertyName();
-		}
-		else {
-			this.mapKeyPropertyName = null;
-		}
+		this.mapKeyPropertyName = bootDescriptor instanceof Map map ? map.getMapKeyPropertyName() : null;
 
-		this.bidirectionalAttributeName = StringHelper.subStringNullIfEmpty( bootDescriptor.getMappedByProperty(), '.');
+		this.bidirectionalAttributeName = subStringNullIfEmpty( bootDescriptor.getMappedByProperty(), '.');
 
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( attributeName );
 
-		if ( bootDescriptor.isOneToMany() ) {
-			separateCollectionTable = null;
-		}
-		else {
-			separateCollectionTable = collectionDescriptor.getTableName();
-		}
+		separateCollectionTable = bootDescriptor.isOneToMany() ? null : collectionDescriptor.getTableName();
 
-		final int baseIndex;
-		if ( bootDescriptor instanceof List ) {
-			baseIndex = ( (List) bootDescriptor ).getBaseIndex();
-		}
-		else {
-			baseIndex = -1;
-		}
+		final int baseIndex = bootDescriptor instanceof List list ? list.getBaseIndex() : -1;
 
 		indexMetadata = new IndexMetadata() {
 			@Override
@@ -197,7 +174,7 @@ public class PluralAttributeMappingImpl
 			}
 		};
 
-		softDeleteMapping = resolveSoftDeleteMapping( this, bootDescriptor, getSeparateCollectionTable(), creationProcess.getCreationContext().getDialect() );
+		softDeleteMapping = resolveSoftDeleteMapping( this, bootDescriptor, getSeparateCollectionTable(), creationProcess );
 
 		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
 	}
@@ -234,16 +211,16 @@ public class PluralAttributeMappingImpl
 			CollectionPart indexDescriptor,
 			CollectionPersister collectionDescriptor,
 			PluralAttributeMapping mapping) {
-		if ( collectionDescriptor instanceof Aware ) {
-			( (Aware) collectionDescriptor ).injectAttributeMapping( mapping );
+		if ( collectionDescriptor instanceof Aware aware ) {
+			aware.injectAttributeMapping( mapping );
 		}
 
-		if ( elementDescriptor instanceof Aware ) {
-			( (Aware) elementDescriptor ).injectAttributeMapping( mapping );
+		if ( elementDescriptor instanceof Aware aware ) {
+			aware.injectAttributeMapping( mapping );
 		}
 
-		if ( indexDescriptor instanceof Aware ) {
-			( (Aware) indexDescriptor ).injectAttributeMapping( mapping );
+		if ( indexDescriptor instanceof Aware aware ) {
+			aware.injectAttributeMapping( mapping );
 		}
 	}
 
@@ -257,10 +234,11 @@ public class PluralAttributeMappingImpl
 		return fetchablePath.getLocalName().endsWith( bidirectionalAttributeName );
 	}
 
-	@SuppressWarnings("unused")
 	public void finishInitialization(
+			@SuppressWarnings("unused")
 			Property bootProperty,
 			Collection bootDescriptor,
+			@SuppressWarnings("unused")
 			MappingModelCreationProcess creationProcess) {
 		final boolean hasOrder = bootDescriptor.getOrderBy() != null;
 		final boolean hasManyToManyOrder = bootDescriptor.getManyToManyOrdering() != null;
@@ -269,13 +247,6 @@ public class PluralAttributeMappingImpl
 			final TranslationContext context = collectionDescriptor::getFactory;
 
 			if ( hasOrder ) {
-				if ( log.isDebugEnabled() ) {
-					log.debugf(
-							"Translating order-by fragment [%s] for collection role : %s",
-							bootDescriptor.getOrderBy(),
-							collectionDescriptor.getRole()
-					);
-				}
 				orderByFragment = OrderByFragmentTranslator.translate(
 						bootDescriptor.getOrderBy(),
 						this,
@@ -284,13 +255,6 @@ public class PluralAttributeMappingImpl
 			}
 
 			if ( hasManyToManyOrder ) {
-				if ( log.isDebugEnabled() ) {
-					log.debugf(
-							"Translating many-to-many order-by fragment [%s] for collection role : %s",
-							bootDescriptor.getOrderBy(),
-							collectionDescriptor.getRole()
-					);
-				}
 				manyToManyOrderByFragment = OrderByFragmentTranslator.translate(
 						bootDescriptor.getManyToManyOrdering(),
 						this,
@@ -306,8 +270,7 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	@SuppressWarnings("rawtypes")
-	public CollectionMappingType getMappedType() {
+	public CollectionMappingType<?> getMappedType() {
 		return collectionMappingType;
 	}
 
@@ -404,34 +367,33 @@ public class PluralAttributeMappingImpl
 
 	@Override
 	public void applySoftDeleteRestrictions(TableGroup tableGroup, PredicateConsumer predicateConsumer) {
-		if ( !hasSoftDelete() ) {
-			// short-circuit
-			return;
-		}
+		if ( hasSoftDelete() ) {
+			final var descriptor = getCollectionDescriptor();
+			if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
+				// see if the associated entity has soft-delete defined
+				final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
+				final var associatedEntityDescriptor = elementDescriptor.getAssociatedEntityMappingType();
+				final var softDeleteMapping = associatedEntityDescriptor.getSoftDeleteMapping();
+				if ( softDeleteMapping != null ) {
+					final String primaryTableName =
+							associatedEntityDescriptor.getSoftDeleteTableDetails().getTableName();
+					final TableReference primaryTableReference =
+							tableGroup.resolveTableReference( primaryTableName );
+					final Predicate softDeleteRestriction =
+							softDeleteMapping.createNonDeletedRestriction( primaryTableReference );
+					predicateConsumer.applyPredicate( softDeleteRestriction );
+				}
+			}
 
-		if ( getCollectionDescriptor().isOneToMany()
-				|| getCollectionDescriptor().isManyToMany() ) {
-			// see if the associated entity has soft-delete defined
-			final EntityCollectionPart elementDescriptor = (EntityCollectionPart) getElementDescriptor();
-			final EntityMappingType associatedEntityDescriptor = elementDescriptor.getAssociatedEntityMappingType();
-			final SoftDeleteMapping softDeleteMapping = associatedEntityDescriptor.getSoftDeleteMapping();
+			// apply the collection's soft-delete mapping, if one
+			final var softDeleteMapping = getSoftDeleteMapping();
 			if ( softDeleteMapping != null ) {
-				final Predicate softDeleteRestriction = SoftDeleteHelper.createNonSoftDeletedRestriction(
-						tableGroup.resolveTableReference( associatedEntityDescriptor.getSoftDeleteTableDetails().getTableName() ),
-						softDeleteMapping
-				);
+				final TableReference primaryTableReference =
+						tableGroup.resolveTableReference( getSoftDeleteTableDetails().getTableName() );
+				final Predicate softDeleteRestriction =
+						softDeleteMapping.createNonDeletedRestriction( primaryTableReference );
 				predicateConsumer.applyPredicate( softDeleteRestriction );
 			}
-		}
-
-		// apply the collection's soft-delete mapping, if one
-		final SoftDeleteMapping softDeleteMapping = getSoftDeleteMapping();
-		if ( softDeleteMapping != null ) {
-			final Predicate softDeleteRestriction = SoftDeleteHelper.createNonSoftDeletedRestriction(
-					tableGroup.resolveTableReference( getSoftDeleteTableDetails().getTableName() ),
-					softDeleteMapping
-			);
-			predicateConsumer.applyPredicate( softDeleteRestriction );
 		}
 	}
 
@@ -441,9 +403,9 @@ public class PluralAttributeMappingImpl
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final TableGroup collectionTableGroup = creationState.getSqlAstCreationState()
-				.getFromClauseAccess()
-				.getTableGroup( navigablePath );
+		final TableGroup collectionTableGroup =
+				creationState.getSqlAstCreationState().getFromClauseAccess()
+						.getTableGroup( navigablePath );
 
 		assert collectionTableGroup != null;
 
@@ -463,7 +425,7 @@ public class PluralAttributeMappingImpl
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
 
 		final boolean added = creationState.registerVisitedAssociationKey( fkDescriptor.getAssociationKey() );
 
@@ -762,20 +724,11 @@ public class PluralAttributeMappingImpl
 		// NOTE : this needs to be done lazily because the associated entity mapping (if one)
 		// does not know its SoftDeleteMapping yet when this is created
 		if ( hasSoftDelete == null ) {
-			if ( softDeleteMapping != null ) {
-				hasSoftDelete = true;
-			}
-			else {
-				if ( getElementDescriptor() instanceof EntityCollectionPart ) {
-					final EntityMappingType associatedEntityMapping = ( (EntityCollectionPart) getElementDescriptor() ).getAssociatedEntityMappingType();
-					hasSoftDelete = associatedEntityMapping.getSoftDeleteMapping() != null;
-				}
-				else {
-					hasSoftDelete = false;
-				}
-			}
+			hasSoftDelete =
+					softDeleteMapping != null
+						|| getElementDescriptor() instanceof EntityCollectionPart collectionPart
+								&& collectionPart.getAssociatedEntityMappingType().getSoftDeleteMapping() != null;
 		}
-
 		return hasSoftDelete;
 	}
 
@@ -783,32 +736,27 @@ public class PluralAttributeMappingImpl
 			Consumer<Predicate> predicateConsumer,
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
-		if ( !hasSoftDelete() ) {
-			// short circuit
-			return;
-		}
+		if ( hasSoftDelete() ) {
+			if ( getElementDescriptor() instanceof EntityCollectionPart entityCollectionPart ) {
+				final EntityMappingType entityMappingType = entityCollectionPart.getAssociatedEntityMappingType();
+				final SoftDeleteMapping softDeleteMapping = entityMappingType.getSoftDeleteMapping();
+				if ( softDeleteMapping != null ) {
+					final TableDetails softDeleteTable = entityMappingType.getSoftDeleteTableDetails();
+					predicateConsumer.accept( softDeleteMapping.createNonDeletedRestriction(
+							tableGroup.resolveTableReference( softDeleteTable.getTableName() ),
+							creationState.getSqlExpressionResolver()
+					) );
+				}
+			}
 
-		if ( getElementDescriptor() instanceof EntityCollectionPart ) {
-			final EntityMappingType entityMappingType = ( (EntityCollectionPart) getElementDescriptor() ).getAssociatedEntityMappingType();
-			final SoftDeleteMapping softDeleteMapping = entityMappingType.getSoftDeleteMapping();
+			final SoftDeleteMapping softDeleteMapping = getSoftDeleteMapping();
 			if ( softDeleteMapping != null ) {
-				final TableDetails softDeleteTable = entityMappingType.getSoftDeleteTableDetails();
-				predicateConsumer.accept( createNonSoftDeletedRestriction(
+				final TableDetails softDeleteTable = getSoftDeleteTableDetails();
+				predicateConsumer.accept( softDeleteMapping.createNonDeletedRestriction(
 						tableGroup.resolveTableReference( softDeleteTable.getTableName() ),
-						softDeleteMapping,
 						creationState.getSqlExpressionResolver()
 				) );
 			}
-		}
-
-		final SoftDeleteMapping softDeleteMapping = getSoftDeleteMapping();
-		if ( softDeleteMapping != null ) {
-			final TableDetails softDeleteTable = getSoftDeleteTableDetails();
-			predicateConsumer.accept( createNonSoftDeletedRestriction(
-					tableGroup.resolveTableReference( softDeleteTable.getTableName() ),
-					softDeleteMapping,
-					creationState.getSqlExpressionResolver()
-			) );
 		}
 	}
 
@@ -941,8 +889,8 @@ public class PluralAttributeMappingImpl
 				|| isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers(), creationState.applyOnlyLoadByKeyFilters() )
 				|| collectionDescriptor.hasWhereRestrictions() );
 
-		if ( indexDescriptor instanceof TableGroupJoinProducer ) {
-			final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) indexDescriptor ).createTableGroupJoin(
+		if ( indexDescriptor instanceof TableGroupJoinProducer tableGroupJoinProducer ) {
+			final TableGroupJoin tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
 					navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
 					tableGroup,
 					null,
@@ -1001,8 +949,8 @@ public class PluralAttributeMappingImpl
 				|| isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers(), creationState.applyOnlyLoadByKeyFilters() )
 				|| collectionDescriptor.hasWhereRestrictions() );
 
-		if ( elementDescriptor instanceof TableGroupJoinProducer ) {
-			final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) elementDescriptor ).createTableGroupJoin(
+		if ( elementDescriptor instanceof TableGroupJoinProducer tableGroupJoinProducer ) {
+			final TableGroupJoin tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
 					navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
 					tableGroup,
 					null,
@@ -1015,8 +963,8 @@ public class PluralAttributeMappingImpl
 			tableGroup.registerElementTableGroup( tableGroupJoin, nestedJoin );
 		}
 
-		if ( indexDescriptor instanceof TableGroupJoinProducer ) {
-			final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) indexDescriptor ).createTableGroupJoin(
+		if ( indexDescriptor instanceof TableGroupJoinProducer tableGroupJoinProducer ) {
+			final TableGroupJoin tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
 					navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
 					tableGroup,
 					null,
@@ -1082,8 +1030,8 @@ public class PluralAttributeMappingImpl
 
 	@Override
 	public void registerAffectingFetchProfile(String fetchProfileName) {
-		if ( collectionDescriptor instanceof FetchProfileAffectee ) {
-			( (FetchProfileAffectee) collectionDescriptor ).registerAffectingFetchProfile( fetchProfileName);
+		if ( collectionDescriptor instanceof FetchProfileAffectee affectee ) {
+			affectee.registerAffectingFetchProfile( fetchProfileName);
 		}
 	}
 
@@ -1099,22 +1047,19 @@ public class PluralAttributeMappingImpl
 
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
-		if ( elementDescriptor instanceof ModelPartContainer ) {
-			final ModelPart subPart = ( (ModelPartContainer) elementDescriptor ).findSubPart( name, null );
+		if ( elementDescriptor instanceof ModelPartContainer modelPartContainer ) {
+			final ModelPart subPart = modelPartContainer.findSubPart( name, null );
 			if ( subPart != null ) {
 				return subPart;
 			}
 		}
 		final CollectionPart.Nature nature = CollectionPart.Nature.fromName( name );
 		if ( nature != null ) {
-			switch ( nature ) {
-				case ELEMENT:
-					return elementDescriptor;
-				case INDEX:
-					return indexDescriptor;
-				case ID:
-					return identifierDescriptor;
-			}
+			return switch ( nature ) {
+				case ELEMENT -> elementDescriptor;
+				case INDEX -> indexDescriptor;
+				case ID -> identifierDescriptor;
+			};
 		}
 
 		return null;

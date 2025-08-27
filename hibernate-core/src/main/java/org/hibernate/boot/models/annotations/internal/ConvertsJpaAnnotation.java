@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.Converts;
 
@@ -23,13 +23,13 @@ public class ConvertsJpaAnnotation implements Converts, RepeatableContainer<jaka
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public ConvertsJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public ConvertsJpaAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public ConvertsJpaAnnotation(Converts annotation, SourceModelBuildingContext modelContext) {
+	public ConvertsJpaAnnotation(Converts annotation, ModelsContext modelContext) {
 		this.value = extractJdkValue(
 				annotation,
 				JpaAnnotations.CONVERTS,
@@ -41,7 +41,7 @@ public class ConvertsJpaAnnotation implements Converts, RepeatableContainer<jaka
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public ConvertsJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public ConvertsJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.value = (jakarta.persistence.Convert[]) attributeValues.get( "value" );
 	}
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.proxy.pojo;
@@ -121,7 +121,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 		}
 		final SharedSessionContractImplementor session = getSession();
 		if ( session == null ) {
-			throw new LazyInitializationException( "could not retrieve real entity class [" + getEntityName() + "#" + getIdentifier() + "] - no Session" );
+			throw new LazyInitializationException( "could not retrieve real entity class [" + getEntityName() + "#" + getInternalIdentifier() + "] - no Session" );
 		}
 		final SessionFactoryImplementor factory = session.getFactory();
 		final EntityPersister entityDescriptor = factory.getMappingMetamodel().getEntityDescriptor( getEntityName() );

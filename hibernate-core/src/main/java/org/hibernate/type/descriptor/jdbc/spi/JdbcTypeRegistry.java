@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc.spi;
@@ -15,7 +15,6 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
@@ -25,9 +24,9 @@ import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcTypeBaseline;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.jboss.logging.Logger;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.type.descriptor.JdbcTypeNameMapper.isStandardTypeCode;
 
 /**
  * A registry mapping {@link org.hibernate.type.SqlTypes JDBC type codes}
@@ -39,7 +38,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @since 5.3
  */
 public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serializable {
-	private static final Logger log = Logger.getLogger( JdbcTypeRegistry.class );
+//	private static final Logger log = Logger.getLogger( JdbcTypeRegistry.class );
 
 	private final TypeConfiguration typeConfiguration;
 	private final ConcurrentHashMap<Integer, JdbcType> descriptorMap = new ConcurrentHashMap<>();
@@ -68,17 +67,17 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 	@Override
 	public void addDescriptor(JdbcType jdbcType) {
 		final JdbcType previous = descriptorMap.put( jdbcType.getDefaultSqlTypeCode(), jdbcType );
-		if ( previous != null && previous != jdbcType ) {
-			log.debugf( "addDescriptor(%s) replaced previous registration(%s)", jdbcType, previous );
-		}
+//		if ( previous != null && previous != jdbcType ) {
+//			log.tracef( "addDescriptor(%s) replaced previous registration(%s)", jdbcType, previous );
+//		}
 	}
 
 	@Override
 	public void addDescriptor(int typeCode, JdbcType jdbcType) {
 		final JdbcType previous = descriptorMap.put( typeCode, jdbcType );
-		if ( previous != null && previous != jdbcType ) {
-			log.debugf( "addDescriptor(%d, %s) replaced previous registration(%s)", typeCode, jdbcType, previous );
-		}
+//		if ( previous != null && previous != jdbcType ) {
+//			log.tracef( "addDescriptor(%d, %s) replaced previous registration(%s)", typeCode, jdbcType, previous );
+//		}
 	}
 
 	public void addDescriptorIfAbsent(JdbcType jdbcType) {
@@ -94,20 +93,32 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 	}
 
 	public JdbcType getDescriptor(int jdbcTypeCode) {
-		JdbcType descriptor = descriptorMap.get( jdbcTypeCode );
+		final JdbcType descriptor = descriptorMap.get( jdbcTypeCode );
 		if ( descriptor != null ) {
 			return descriptor;
 		}
+		else {
+//			if ( isStandardTypeCode( jdbcTypeCode ) ) {
+//				log.debugf( "A standard JDBC type code [%s] was not defined in SqlTypeDescriptorRegistry",
+//						jdbcTypeCode );
+//			}
 
-		if ( JdbcTypeNameMapper.isStandardTypeCode( jdbcTypeCode ) ) {
-			log.debugf(
-					"A standard JDBC type code [%s] was not defined in SqlTypeDescriptorRegistry",
-					jdbcTypeCode
-			);
+			// see if the typecode is part of a known type family...
+			final JdbcType potentialAlternateDescriptor = getFamilyDescriptor( jdbcTypeCode );
+			if ( potentialAlternateDescriptor != null ) {
+				return potentialAlternateDescriptor;
+			}
+			else {
+				// finally, create a new descriptor mapping to getObject/setObject for this type code...
+				final ObjectJdbcType fallBackDescriptor = new ObjectJdbcType( jdbcTypeCode );
+				addDescriptor( fallBackDescriptor );
+				return fallBackDescriptor;
+			}
 		}
+	}
 
-		// see if the typecode is part of a known type family...
-		JdbcTypeFamilyInformation.Family family =
+	private JdbcType getFamilyDescriptor(int jdbcTypeCode) {
+		final JdbcTypeFamilyInformation.Family family =
 				JdbcTypeFamilyInformation.INSTANCE.locateJdbcTypeFamilyByTypeCode( jdbcTypeCode );
 		if ( family != null ) {
 			for ( int potentialAlternateTypeCode : family.getTypeCodes() ) {
@@ -117,28 +128,21 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 						// todo (6.0) : add a SqlTypeDescriptor#canBeAssignedFrom method ?
 						return potentialAlternateDescriptor;
 					}
-
-					if ( JdbcTypeNameMapper.isStandardTypeCode( potentialAlternateTypeCode ) ) {
-						log.debugf(
-								"A standard JDBC type code [%s] was not defined in SqlTypeDescriptorRegistry",
-								potentialAlternateTypeCode
-						);
-					}
+//					if ( isStandardTypeCode( potentialAlternateTypeCode ) ) {
+//						log.debugf( "A standard JDBC type code [%s] was not defined in SqlTypeDescriptorRegistry",
+//								potentialAlternateTypeCode );
+//					}
 				}
 			}
 		}
-
-		// finally, create a new descriptor mapping to getObject/setObject for this type code...
-		final ObjectJdbcType fallBackDescriptor = new ObjectJdbcType( jdbcTypeCode );
-		addDescriptor( fallBackDescriptor );
-		return fallBackDescriptor;
+		return null;
 	}
 
 	public AggregateJdbcType resolveAggregateDescriptor(
 			int jdbcTypeCode,
 			String typeName,
 			EmbeddableMappingType embeddableMappingType,
-			RuntimeModelCreationContext creationContext) {
+			RuntimeModelCreationContext context) {
 		final String registrationKey;
 		if ( typeName != null ) {
 			registrationKey = typeName.toLowerCase( Locale.ROOT );
@@ -151,20 +155,33 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 					// which are prefixed with the aggregateMapping.
 					// Since the columnExpression is used as key for mutation parameters, this is important.
 					// We could get rid of this if ColumnValueParameter drops the ColumnReference
-					return aggregateJdbcType.resolveAggregateJdbcType(
-							embeddableMappingType,
-							typeName,
-							creationContext
-					);
+					return aggregateJdbcType.resolveAggregateJdbcType( embeddableMappingType, typeName, context );
 				}
-				return aggregateJdbcType;
+				else {
+					return aggregateJdbcType;
+				}
 			}
 		}
 		else {
 			registrationKey = null;
 		}
+		return resolveAggregateDescriptor( jdbcTypeCode, typeName, embeddableMappingType, context, registrationKey );
+	}
+
+	private AggregateJdbcType resolveAggregateDescriptor(
+			int jdbcTypeCode,
+			String typeName,
+			EmbeddableMappingType embeddableMappingType,
+			RuntimeModelCreationContext context,
+			String registrationKey) {
 		final JdbcType descriptor = getDescriptor( jdbcTypeCode );
-		if ( !(descriptor instanceof AggregateJdbcType aggregateJdbcType) ) {
+		if ( descriptor instanceof AggregateJdbcType aggregateJdbcType ) {
+			final AggregateJdbcType resolvedJdbcType =
+					aggregateJdbcType.resolveAggregateJdbcType( embeddableMappingType, typeName, context );
+			cacheAggregateJdbcType( registrationKey, resolvedJdbcType );
+			return resolvedJdbcType;
+		}
+		else {
 			throw new IllegalArgumentException(
 					String.format(
 							"Tried to resolve the JdbcType [%s] as AggregateJdbcType but it does not implement that interface!",
@@ -172,18 +189,18 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 					)
 			);
 		}
-		final AggregateJdbcType resolvedJdbcType = aggregateJdbcType.resolveAggregateJdbcType(
-				embeddableMappingType,
-				typeName,
-				creationContext
-		);
+	}
+
+	private void cacheAggregateJdbcType(String registrationKey, AggregateJdbcType resolvedJdbcType) {
 		if ( registrationKey != null ) {
 			aggregateDescriptorMap.put( registrationKey, resolvedJdbcType );
 			if ( resolvedJdbcType instanceof SqlTypedJdbcType sqlTypedJdbcType ) {
-				sqlTypedDescriptorMap.put( sqlTypedJdbcType.getSqlTypeName().toLowerCase( Locale.ROOT ), sqlTypedJdbcType );
+				sqlTypedDescriptorMap.put(
+						sqlTypedJdbcType.getSqlTypeName().toLowerCase( Locale.ROOT ),
+						sqlTypedJdbcType
+				);
 			}
 		}
-		return resolvedJdbcType;
 	}
 
 	public AggregateJdbcType findAggregateDescriptor(String typeName) {
@@ -220,53 +237,75 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 			int jdbcTypeConstructorCode,
 			Object elementType,
 			@Nullable ColumnTypeInformation columnTypeInformation) {
-		final TypeConstructedJdbcTypeKey key = new TypeConstructedJdbcTypeKey(
-				jdbcTypeConstructorCode,
-				elementType,
-				columnTypeInformation
-		);
+		final TypeConstructedJdbcTypeKey key =
+				columnTypeInformation == null
+						? new TypeConstructedJdbcTypeKey( jdbcTypeConstructorCode, elementType )
+						: new TypeConstructedJdbcTypeKey( jdbcTypeConstructorCode, elementType, columnTypeInformation );
 		final JdbcType descriptor = typeConstructorDescriptorMap.get( key );
 		if ( descriptor != null ) {
 			return descriptor;
 		}
-		final JdbcTypeConstructor jdbcTypeConstructor = getConstructor( jdbcTypeConstructorCode );
-		if ( jdbcTypeConstructor != null ) {
-			final JdbcType jdbcType;
-			if ( elementType instanceof BasicType<?> ) {
-				jdbcType = jdbcTypeConstructor.resolveType(
-						typeConfiguration,
-						typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect(),
-						(BasicType<?>) elementType,
-						columnTypeInformation
-				);
+		else {
+			final JdbcTypeConstructor jdbcTypeConstructor = getConstructor( jdbcTypeConstructorCode );
+			if ( jdbcTypeConstructor != null ) {
+				final JdbcType jdbcType = jdbcElementType( elementType, columnTypeInformation, jdbcTypeConstructor );
+				final JdbcType existingType = typeConstructorDescriptorMap.putIfAbsent( key, jdbcType );
+				if ( existingType != null ) {
+					return existingType;
+				}
+				else {
+					if ( jdbcType instanceof SqlTypedJdbcType sqlTypedJdbcType ) {
+						sqlTypedDescriptorMap.put(
+								sqlTypedJdbcType.getSqlTypeName().toLowerCase( Locale.ROOT ),
+								sqlTypedJdbcType
+						);
+					}
+					return jdbcType;
+				}
 			}
 			else {
-				jdbcType = jdbcTypeConstructor.resolveType(
-						typeConfiguration,
-						typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect(),
-						(JdbcType) elementType,
-						columnTypeInformation
-				);
+				return getDescriptor( jdbcTypeConstructorCode );
 			}
-			final JdbcType existingType = typeConstructorDescriptorMap.putIfAbsent( key, jdbcType );
-			if ( existingType != null ) {
-				return existingType;
-			}
-			if ( jdbcType instanceof SqlTypedJdbcType ) {
-				final SqlTypedJdbcType sqlTypedJdbcType = (SqlTypedJdbcType) jdbcType;
-				sqlTypedDescriptorMap.put( sqlTypedJdbcType.getSqlTypeName().toLowerCase( Locale.ROOT ), sqlTypedJdbcType );
-			}
-			return jdbcType;
+		}
+	}
+
+	private JdbcType jdbcElementType(
+			Object elementType,
+			ColumnTypeInformation columnTypeInformation,
+			JdbcTypeConstructor jdbcTypeConstructor) {
+		final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
+		if ( elementType instanceof BasicType<?> basicType ) {
+			return jdbcTypeConstructor.resolveType(
+					typeConfiguration,
+					dialect,
+					basicType,
+					columnTypeInformation
+			);
 		}
 		else {
-			return getDescriptor( jdbcTypeConstructorCode );
+			return jdbcTypeConstructor.resolveType(
+					typeConfiguration,
+					dialect,
+					(JdbcType) elementType,
+					columnTypeInformation
+			);
 		}
 	}
 
 	public boolean hasRegisteredDescriptor(int jdbcTypeCode) {
 		return descriptorMap.containsKey( jdbcTypeCode )
-			|| JdbcTypeNameMapper.isStandardTypeCode( jdbcTypeCode )
-			|| JdbcTypeFamilyInformation.INSTANCE.locateJdbcTypeFamilyByTypeCode( jdbcTypeCode ) != null;
+			|| isStandardTypeCode( jdbcTypeCode )
+			|| JdbcTypeFamilyInformation.INSTANCE.locateJdbcTypeFamilyByTypeCode( jdbcTypeCode ) != null
+			|| locateConstructedJdbcType( jdbcTypeCode );
+	}
+
+	private boolean locateConstructedJdbcType(int jdbcTypeCode) {
+		for ( TypeConstructedJdbcTypeKey key : typeConstructorDescriptorMap.keySet() ) {
+			if ( key.typeCode() == jdbcTypeCode ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public JdbcTypeConstructor getConstructor(int jdbcTypeCode) {
@@ -289,35 +328,39 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 		addTypeConstructorIfAbsent( jdbcTypeConstructor.getDefaultSqlTypeCode(), jdbcTypeConstructor );
 	}
 
-	private static final class TypeConstructedJdbcTypeKey {
-		private final int typeConstructorTypeCode;
-		private final Object jdbcTypeOrBasicType;
-		private final Boolean nullable;
-		private final int typeCode;
-		private final @Nullable String typeName;
-		private final int columnSize;
-		private final int decimalDigits;
+	private record TypeConstructedJdbcTypeKey(
+			int typeConstructorTypeCode,
+			int typeCode,
+			@Nullable Boolean nullable,
+			@Nullable String typeName,
+			int columnSize,
+			int decimalDigits,
+			Object jdbcTypeOrBasicType) {
 
-		public TypeConstructedJdbcTypeKey(
+		private TypeConstructedJdbcTypeKey(
+				int typeConstructorTypeCode,
+				Object jdbcTypeOrBasicType) {
+			this( typeConstructorTypeCode,
+					Types.OTHER,
+					null,
+					null,
+					0,
+					0,
+					jdbcTypeOrBasicType );
+		}
+
+		private TypeConstructedJdbcTypeKey(
 				int typeConstructorTypeCode,
 				Object jdbcTypeOrBasicType,
-				@Nullable ColumnTypeInformation columnTypeInformation) {
-			this.typeConstructorTypeCode = typeConstructorTypeCode;
-			this.jdbcTypeOrBasicType = jdbcTypeOrBasicType;
-			if ( columnTypeInformation == null ) {
-				this.nullable = null;
-				this.typeCode = Types.OTHER;
-				this.typeName = null;
-				this.columnSize = 0;
-				this.decimalDigits = 0;
-			}
-			else {
-				this.nullable = columnTypeInformation.getNullable();
-				this.typeCode = columnTypeInformation.getTypeCode();
-				this.typeName = columnTypeInformation.getTypeName();
-				this.columnSize = columnTypeInformation.getColumnSize();
-				this.decimalDigits = columnTypeInformation.getDecimalDigits();
-			}
+				ColumnTypeInformation columnTypeInformation) {
+			this( typeConstructorTypeCode,
+					columnTypeInformation.getTypeCode(),
+					columnTypeInformation.getNullable(),
+					columnTypeInformation.getTypeName(),
+					columnTypeInformation.getColumnSize(),
+					columnTypeInformation.getDecimalDigits(),
+					jdbcTypeOrBasicType
+			);
 		}
 
 		@Override
@@ -325,40 +368,25 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 			if ( this == o ) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if ( !(o instanceof TypeConstructedJdbcTypeKey that) ) {
 				return false;
 			}
-
-			TypeConstructedJdbcTypeKey that = (TypeConstructedJdbcTypeKey) o;
-
-			if ( typeConstructorTypeCode != that.typeConstructorTypeCode ) {
-				return false;
-			}
-			if ( typeCode != that.typeCode ) {
-				return false;
-			}
-			if ( columnSize != that.columnSize ) {
-				return false;
-			}
-			if ( decimalDigits != that.decimalDigits ) {
-				return false;
-			}
-			if ( !jdbcTypeOrBasicType.equals( that.jdbcTypeOrBasicType ) ) {
-				return false;
-			}
-			if ( nullable != that.nullable ) {
-				return false;
-			}
-			return Objects.equals( typeName, that.typeName );
+			return typeConstructorTypeCode == that.typeConstructorTypeCode
+				&& typeCode == that.typeCode
+				&& columnSize == that.columnSize
+				&& decimalDigits == that.decimalDigits
+				&& Objects.equals( nullable, that.nullable )
+				&& Objects.equals( typeName, that.typeName )
+				&& jdbcTypeOrBasicType.equals( that.jdbcTypeOrBasicType );
 		}
 
 		@Override
 		public int hashCode() {
 			int result = typeConstructorTypeCode;
 			result = 31 * result + jdbcTypeOrBasicType.hashCode();
-			result = 31 * result + ( nullable != null ? nullable.hashCode() : 0 );
+			result = 31 * result + (nullable == null ? 0 : nullable.hashCode());
 			result = 31 * result + typeCode;
-			result = 31 * result + ( typeName != null ? typeName.hashCode() : 0 );
+			result = 31 * result + (typeName == null ? 0 : typeName.hashCode());
 			result = 31 * result + columnSize;
 			result = 31 * result + decimalDigits;
 			return result;

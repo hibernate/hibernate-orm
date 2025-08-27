@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -10,7 +10,7 @@ import java.util.Map;
 import org.hibernate.annotations.Columns;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.AnnotationDescriptor;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -24,20 +24,20 @@ public class ColumnsAnnotation implements Columns {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public ColumnsAnnotation(SourceModelBuildingContext modelContext) {
+	public ColumnsAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public ColumnsAnnotation(Columns annotation, SourceModelBuildingContext modelContext) {
+	public ColumnsAnnotation(Columns annotation, ModelsContext modelContext) {
 		this.columns = extractJdkValue( annotation, HibernateAnnotations.COLUMNS, "columns", modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public ColumnsAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public ColumnsAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.columns = (jakarta.persistence.Column[]) attributeValues.get( "columns" );
 	}
 

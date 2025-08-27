@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure.internal;
@@ -10,14 +10,15 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
-import org.hibernate.query.BindableType;
-import org.hibernate.query.OutputableType;
-import org.hibernate.sql.exec.internal.JdbcCallFunctionReturnImpl;
+import org.hibernate.type.BindableType;
+import org.hibernate.type.OutputableType;
+import org.hibernate.sql.exec.internal.JdbcCallFunctionReturnImpl.RefCurserJdbcCallFunctionReturnImpl;
+import org.hibernate.sql.exec.internal.JdbcCallFunctionReturnImpl.RegularJdbcCallFunctionReturnImpl;
 import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
 import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
 import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.ParameterMode;
@@ -26,6 +27,7 @@ import jakarta.persistence.ParameterMode;
  * @author Steve Ebersole
  */
 public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
+
 	private final ProcedureCallImplementor<T> procedureCall;
 	private final int sqlTypeCode;
 
@@ -44,37 +46,36 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 
 	@Override
 	public JdbcCallFunctionReturn toJdbcFunctionReturn(SharedSessionContractImplementor persistenceContext) {
-		final OutputableType<T> ormType;
-		final JdbcCallRefCursorExtractorImpl refCursorExtractor;
-		final JdbcCallParameterExtractorImpl<T> parameterExtractor;
-
 		if ( getJdbcTypeCode() == Types.REF_CURSOR ) {
-			refCursorExtractor = new JdbcCallRefCursorExtractorImpl( 1 );
-			ormType = null;
-			parameterExtractor = null;
+			return new RefCurserJdbcCallFunctionReturnImpl( new JdbcCallRefCursorExtractorImpl( 1 ) );
 		}
 		else {
-			if ( this.ormType != null ) {
-				ormType = this.ormType;
-			}
-			else {
-				final TypeConfiguration typeConfiguration = persistenceContext.getFactory().getTypeConfiguration();
-				final JdbcType sqlTypeDescriptor = typeConfiguration.getJdbcTypeRegistry().getDescriptor(
-						getJdbcTypeCode()
-				);
-				final JavaType<?> javaTypeMapping = sqlTypeDescriptor.getJdbcRecommendedJavaTypeMapping(
-						null,
-						null,
-						typeConfiguration
-				);
-				//noinspection unchecked
-				ormType = (OutputableType<T>) typeConfiguration.standardBasicTypeForJavaType( javaTypeMapping.getJavaTypeClass() );
-			}
-			parameterExtractor = new JdbcCallParameterExtractorImpl<>( procedureCall.getProcedureName(), null, 1, ormType );
-			refCursorExtractor = null;
+			return new RegularJdbcCallFunctionReturnImpl(
+					getOrmType( persistenceContext ),
+					new JdbcCallParameterExtractorImpl<T>(
+							procedureCall.getProcedureName(),
+							null,
+							1,
+							getOrmType( persistenceContext )
+					)
+			);
 		}
+	}
 
-		return new JdbcCallFunctionReturnImpl( ormType, parameterExtractor, refCursorExtractor );
+	private OutputableType<T> getOrmType(SharedSessionContractImplementor persistenceContext) {
+		if ( ormType != null ) {
+			return ormType;
+		}
+		else {
+			final TypeConfiguration typeConfiguration = persistenceContext.getFactory().getTypeConfiguration();
+			final JavaType<?> javaType =
+					typeConfiguration.getJdbcTypeRegistry().getDescriptor( getJdbcTypeCode() )
+							.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
+			final BasicType<?> basicType =
+					typeConfiguration.standardBasicTypeForJavaType( javaType.getJavaTypeClass() );
+			//noinspection unchecked
+			return (OutputableType<T>) basicType;
+		}
 	}
 
 	@Override
@@ -103,7 +104,7 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 	}
 
 	@Override
-	public Class getParameterType() {
+	public Class<T> getParameterType() {
 		throw new UnsupportedOperationException();
 	}
 
@@ -113,7 +114,7 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 	}
 
 	@Override
-	public void applyAnticipatedType(BindableType type) {
+	public void applyAnticipatedType(BindableType<?> type) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -124,13 +125,8 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 
 	@Override
 	public NamedCallableQueryMemento.ParameterMemento toMemento() {
-		return session -> {
-			if ( ormType != null ) {
-				return new FunctionReturnImpl<>( procedureCall, ormType );
-			}
-			else {
-				return new FunctionReturnImpl<>( procedureCall, sqlTypeCode );
-			}
-		};
+		return session -> ormType != null
+				? new FunctionReturnImpl<T>( procedureCall, ormType )
+				: new FunctionReturnImpl<T>( procedureCall, sqlTypeCode );
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -7,26 +7,29 @@ package org.hibernate.dialect;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.TransactSQLStrFunction;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
+import org.hibernate.dialect.temptable.TransactSQLLocalTemporaryTableStrategy;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
-import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
-import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -37,7 +40,18 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
 
-import static org.hibernate.type.SqlTypes.*;
+import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
+import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.DATE;
+import static org.hibernate.type.SqlTypes.INTEGER;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.TIME;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TINYINT;
 
 /**
  * An abstract base class for Sybase and MS SQL Server dialects.
@@ -110,9 +124,10 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
+		super.initializeFunctionRegistry( functionContributions );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
+
 		functionFactory.cot();
 		functionFactory.ln_log();
 		functionFactory.log_loglog();
@@ -184,13 +199,14 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getForUpdateString() {
-		return "";
+	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
+		// T-SQL uses table-based lock hints and thus does not support FOR UPDATE clause
+		return NON_CLAUSE_STRATEGY;
 	}
 
 	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.TABLE;
+	public String getForUpdateString() {
+		return "";
 	}
 
 	@Override
@@ -199,36 +215,38 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
+	public String applyLocksToSql(String sql, LockOptions lockOptions, Map<String, String[]> keyColumnNameMap) {
+		if ( lockOptions.getLockMode() == LockMode.NONE || keyColumnNameMap == null ) {
+			return sql;
+		}
+
 		// TODO:  merge additional lock options support in Dialect.applyLocksToSql
 		final StringBuilder buffer = new StringBuilder( sql );
-		for ( Map.Entry<String, LockMode> entry: aliasedLockOptions.getAliasSpecificLocks() ) {
-			final LockMode lockMode = entry.getValue();
-			if ( lockMode.greaterThan( LockMode.READ ) ) {
-				final String alias = entry.getKey();
-				int start = -1;
-				int end = -1;
-				if ( sql.endsWith( " " + alias ) ) {
-					start = ( buffer.length() - alias.length() );
-					end = start + alias.length();
+		keyColumnNameMap.forEach( (tableAlias, keyColumnNames) -> {
+			int start = -1;
+			int end = -1;
+			if ( sql.endsWith( " " + tableAlias ) ) {
+				start = ( buffer.length() - tableAlias.length() );
+				end = start + tableAlias.length();
+			}
+			else {
+				int position = buffer.indexOf( " " + tableAlias + " " );
+				if ( position <= -1 ) {
+					position = buffer.indexOf( " " + tableAlias + "," );
 				}
-				else {
-					int position = buffer.indexOf( " " + alias + " " );
-					if ( position <= -1 ) {
-						position = buffer.indexOf( " " + alias + "," );
-					}
-					if ( position > -1 ) {
-						start = position + 1;
-						end = start + alias.length();
-					}
-				}
-
-				if ( start > -1 ) {
-					final String lockHint = appendLockHint( aliasedLockOptions, alias );
-					buffer.replace( start, end, lockHint );
+				if ( position > -1 ) {
+					start = position + 1;
+					end = start + tableAlias.length();
 				}
 			}
-		}
+
+			if ( start > -1 ) {
+				final String lockHint = appendLockHint( lockOptions, tableAlias );
+				buffer.replace( start, end, lockHint );
+			}
+
+		} );
+
 		return buffer.toString();
 	}
 
@@ -278,32 +296,21 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 
 	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType entityDescriptor,
+			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						entityDescriptor,
-						basename -> '#' + TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new LocalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
-			EntityMappingType entityDescriptor,
+			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						entityDescriptor,
-						name -> '#' + TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new LocalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+	}
+
+	@Override
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return TransactSQLLocalTemporaryTableStrategy.INSTANCE;
 	}
 
 	@Override
@@ -313,18 +320,17 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 
 	@Override
 	public String getTemporaryTableCreateCommand() {
-		return "create table";
+		return TransactSQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateCommand();
 	}
 
 	@Override
 	public AfterUseAction getTemporaryTableAfterUseAction() {
-		// sql-server, at least needed this dropped after use; strange!
-		return AfterUseAction.DROP;
+		return TransactSQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableAfterUseAction();
 	}
 
 	@Override
 	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return BeforeUseAction.CREATE;
+		return TransactSQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableBeforeUseAction();
 	}
 
 	@Override

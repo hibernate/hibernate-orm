@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat;
@@ -10,13 +10,21 @@ import java.util.Map;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Exposes statistics collected from all sessions belonging to a
- * particular {@link org.hibernate.SessionFactory}.
+ * Exposes statistics collected from all sessions belonging to a given
+ * {@link org.hibernate.SessionFactory}.
+ * <ul>
+ * <li>Collection of statistics is enabled if the configuration property
+ *     {@value org.hibernate.cfg.AvailableSettings#GENERATE_STATISTICS}
+ *     is set to {@code true}.
+ * <li>Alternatively, statistics collection may be enabled or disabled
+ *     at runtime by calling {@link #setStatisticsEnabled(boolean)}.
+ * </ul>
  * <p>
- * Collection of statistics is enabled if the configuration property
- * {@value org.hibernate.cfg.AvailableSettings#GENERATE_STATISTICS} is
- * set to {@code true}. It may be dynamically enabled or disabled at
- * runtime by calling {@link #setStatisticsEnabled(boolean)}.
+ * A custom statistics collector may be supplied by implementing the
+ * {@link org.hibernate.stat.spi.StatisticsImplementor} SPI, and
+ * supplying a {@link org.hibernate.stat.spi.StatisticsFactory} via
+ * the configuration setting
+ * {@value org.hibernate.cfg.StatisticsSettings#STATS_BUILDER}.
  *
  * @author Emmanuel Bernard
  */
@@ -147,6 +155,11 @@ public interface Statistics {
 	 * The global number of entity updates.
 	 */
 	long getEntityUpdateCount();
+
+	/**
+	 * The global number of entity upserts.
+	 */
+	long getEntityUpsertCount();
 
 	/**
 	 * The global number of executed queries.

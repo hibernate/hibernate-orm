@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.basic;
@@ -7,9 +7,9 @@ package org.hibernate.orm.test.envers.integration.basic;
 import java.util.List;
 import jakarta.persistence.EntityManager;
 
+import org.hibernate.Session;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.entities.IntTestEntity;
-import org.hibernate.internal.SessionImpl;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
@@ -45,7 +45,8 @@ public class TransactionRollbackBehaviour extends BaseEnversJPAFunctionalTestCas
 		EntityManager entityManager = getEntityManager();
 		try {
 			if ( autoClear != null ) {
-				entityManager.unwrap( SessionImpl.class ).setAutoClear( autoClear );
+				entityManager = entityManager.unwrap( Session.class )
+						.sessionWithOptions().autoClear( autoClear ).openSession();
 			}
 
 			// persist and rollback

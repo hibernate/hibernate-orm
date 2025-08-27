@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -53,7 +53,7 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 			// a typical table that corresponds to an entity type
 			keyColumns = table.getPrimaryKey().getColumns();
 		}
-		else if ( !table.getForeignKeys().isEmpty() ) {
+		else if ( !table.getForeignKeyCollection().isEmpty() ) {
 			// a table with no PK's but has FK's; often corresponds to element collection properties
 			keyColumns = table.getColumns();
 		}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
@@ -7,6 +7,9 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.Incubating;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
+
+import java.util.Objects;
 
 /**
  * A named expression. Used when the name of the expression matters
@@ -54,9 +57,21 @@ public class SqmNamedExpression<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		expression.appendHqlString( sb );
-		sb.append( " as " );
-		sb.append( name );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		expression.appendHqlString( hql, context );
+		hql.append( " as " );
+		hql.append( name );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmNamedExpression<?> that
+			&& Objects.equals( this.name, that.name )
+			&& Objects.equals( this.expression, that.expression );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( expression, name );
 	}
 }

@@ -1,21 +1,18 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
-import java.util.List;
-import java.util.function.Consumer;
-
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.sql.ast.SybaseASESqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -28,19 +25,15 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
 import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
-import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -48,7 +41,10 @@ import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
-import static org.hibernate.dialect.SybaseASESqlAstTranslator.isLob;
+import java.util.List;
+import java.util.function.Consumer;
+
+import static org.hibernate.dialect.sql.ast.SybaseASESqlAstTranslator.isLob;
 
 /**
  * A SQL AST translator for Sybase ASE.
@@ -109,11 +105,6 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
 	protected void renderFromClauseAfterUpdateSet(UpdateStatement statement) {
 		if ( statement.getFromClause().getRoots().isEmpty() ) {
 			appendSql( " from " );
@@ -132,11 +123,6 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
 			}
 		}
-	}
-
-	@Override
-	protected boolean supportsWithClause() {
-		return false;
 	}
 
 	// Sybase ASE does not allow CASE expressions where all result arms contain plain parameters.
@@ -220,68 +206,18 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	private void renderLockHint(LockMode lockMode) {
-		final int effectiveLockTimeout = getEffectiveLockTimeout( lockMode );
-		switch ( lockMode ) {
-			case PESSIMISTIC_READ:
-			case PESSIMISTIC_WRITE:
-			case WRITE: {
-				switch ( effectiveLockTimeout ) {
-					case LockOptions.SKIP_LOCKED:
-						appendSql( " holdlock readpast" );
-						break;
-					default:
-						appendSql( " holdlock" );
-						break;
-				}
-				break;
-			}
-			case UPGRADE_SKIPLOCKED: {
-				appendSql( " holdlock readpast" );
-				break;
-			}
-			case UPGRADE_NOWAIT: {
-				appendSql( " holdlock" );
-				break;
-			}
-		}
-	}
-
-	@Override
-	protected void renderTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
-		appendSql( WHITESPACE );
-		if ( tableGroupJoin.getJoinType() != SqlAstJoinType.CROSS ) {
-			// No support for cross joins, so we emulate it with an inner join and always true on condition
-			appendSql( tableGroupJoin.getJoinType().getText() );
-		}
-		appendSql( "join " );
-
-		final Predicate predicate;
-		if ( tableGroupJoin.getPredicate() == null ) {
-			predicate = new BooleanExpressionPredicate( new QueryLiteral<>( true, getBooleanType() ) );
-		}
-		else {
-			predicate = tableGroupJoin.getPredicate();
-		}
-		if ( predicate != null && !predicate.isEmpty() ) {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
-		}
-		else {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
-		}
+		append( SybaseASESqlAstTranslator.determineLockHint( lockMode, getEffectiveLockTimeout( lockMode ) ) );
 	}
 
 	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
+			Locking.FollowOn followOnStrategy) {
+		if ( followOnStrategy == Locking.FollowOn.FORCE ) {
+			return LockStrategy.FOLLOW_ON;
+		}
 		// No need for follow on locking
 		return LockStrategy.CLAUSE;
-	}
-
-	@Override
-	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		// Sybase ASE does not really support the FOR UPDATE clause
 	}
 
 	@Override
@@ -393,7 +329,7 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 			}
 		}
 		// I think intersect is only supported in 16.0 SP3
-		if ( getDialect().isAnsiNullOn() ) {
+		if ( ( (SybaseASELegacyDialect) getDialect() ).isAnsiNullOn() ) {
 			if ( isLob ) {
 				switch ( operator ) {
 					case DISTINCT_FROM:
@@ -423,7 +359,7 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 						break;
 				}
 			}
-			if ( supportsDistinctFromPredicate() ) {
+			if ( getDialect().supportsDistinctFromPredicate() ) {
 				renderComparisonEmulateIntersect( lhs, operator, rhs );
 			}
 			else {
@@ -482,7 +418,7 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				}
 			}
 			else {
-				if ( supportsDistinctFromPredicate() ) {
+				if ( getDialect().supportsDistinctFromPredicate() ) {
 					renderComparisonEmulateIntersect( lhs, operator, rhs );
 				}
 				else {
@@ -490,12 +426,6 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				}
 			}
 		}
-	}
-
-	@Override
-	protected boolean supportsIntersect() {
-		// At least the version that
-		return false;
 	}
 
 	@Override
@@ -570,21 +500,6 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	@Override
 	protected boolean needsMaxRows() {
 		return !supportsTopClause();
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
 	}
 
 	private boolean supportsTopClause() {

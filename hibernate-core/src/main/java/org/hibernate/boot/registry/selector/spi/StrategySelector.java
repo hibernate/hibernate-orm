@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry.selector.spi;
@@ -10,6 +10,7 @@ import java.util.concurrent.Callable;
 import org.hibernate.service.Service;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.service.spi.Stoppable;
 
 /**
  * Service which acts as a registry for named strategy implementations.
@@ -33,29 +34,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Steve Ebersole
  */
-public interface StrategySelector extends Service {
-	/**
-	 * Registers a named implementor of a particular strategy contract.
-	 *
-	 * @param strategy The strategy contract.
-	 * @param name The registration name
-	 * @param implementation The implementation Class
-	 * @param <T> The type of the strategy.  Used to make sure that the strategy and implementation are type
-	 * compatible.
-	 */
-	<T> void registerStrategyImplementor(Class<T> strategy, String name, Class<? extends T> implementation);
-
-	/**
-	 * Un-registers a named implementor of a particular strategy contract.  Un-registers all named registrations
-	 * for the given strategy contract naming the given class.
-	 *
-	 * @param strategy The strategy contract.
-	 * @param implementation The implementation Class
-	 * @param <T> The type of the strategy.  Used to make sure that the strategy and implementation are type
-	 * compatible.
-	 */
-	<T> void unRegisterStrategyImplementor(Class<T> strategy, Class<? extends T> implementation);
-
+public interface StrategySelector extends Service, Stoppable {
 	/**
 	 * Locate the named strategy implementation.
 	 *
@@ -149,4 +128,32 @@ public interface StrategySelector extends Service {
 	 * @return The implementors.  Should never return {@code null}
 	 */
 	<T> Collection<Class<? extends T>> getRegisteredStrategyImplementors(Class<T> strategy);
+
+	/**
+	 * Registers a named implementor of a particular strategy contract.
+	 *
+	 * @param strategy The strategy contract.
+	 * @param name The registration name
+	 * @param implementation The implementation class
+	 *
+	 * @param <T> The strategy type.
+	 *
+	 * @deprecated Use {@linkplain NamedStrategyContributor} instead
+	 */
+	@Deprecated( since = "7.0", forRemoval = true )
+	<T> void registerStrategyImplementor(Class<T> strategy, String name, Class<? extends T> implementation);
+
+	/**
+	 * Un-registers a named implementor of a particular strategy contract.  Un-registers all named registrations
+	 * for the given strategy contract naming the given class.
+	 *
+	 * @param strategy The strategy contract.
+	 * @param implementation The implementation class
+	 *
+	 * @param <T> The strategy type.
+	 *
+	 * @deprecated Use {@linkplain NamedStrategyContributor} instead
+	 */
+	@Deprecated( since = "7.0", forRemoval = true )
+	<T> void unRegisterStrategyImplementor(Class<T> strategy, Class<? extends T> implementation);
 }

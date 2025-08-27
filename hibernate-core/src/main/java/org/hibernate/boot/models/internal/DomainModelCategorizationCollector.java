@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.internal;
@@ -16,7 +16,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadataImpl;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,20 +29,16 @@ import java.util.Set;
  * @author Steve Ebersole
  */
 public class DomainModelCategorizationCollector {
-	private final boolean areIdGeneratorsGlobal;
-
 	private final GlobalRegistrationsImpl globalRegistrations;
-	private final SourceModelBuildingContext modelsContext;
+	private final ModelsContext modelsContext;
 
 	private final Set<ClassDetails> rootEntities = new HashSet<>();
 	private final Map<String,ClassDetails> mappedSuperclasses = new HashMap<>();
 	private final Map<String,ClassDetails> embeddables = new HashMap<>();
 
 	public DomainModelCategorizationCollector(
-			boolean areIdGeneratorsGlobal,
 			GlobalRegistrations globalRegistrations,
-			SourceModelBuildingContext modelsContext) {
-		this.areIdGeneratorsGlobal = areIdGeneratorsGlobal;
+			ModelsContext modelsContext) {
 		this.globalRegistrations = (GlobalRegistrationsImpl) globalRegistrations;
 		this.modelsContext = modelsContext;
 	}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.archive.scan.internal;
@@ -12,7 +12,8 @@ import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class MappingFileDescriptorImpl implements MappingFileDescriptor, Serializable {
+public final class MappingFileDescriptorImpl
+		implements MappingFileDescriptor, Serializable {
 	private final String name;
 	private final InputStreamAccess streamAccess;
 
@@ -31,26 +32,10 @@ public class MappingFileDescriptorImpl implements MappingFileDescriptor, Seriali
 		return streamAccess;
 	}
 
-//	@Override
-//	public boolean equals(Object o) {
-//		if ( this == o ) {
-//			return true;
-//		}
-//		if ( o == null || getClass() != o.getClass() ) {
-//			return false;
-//		}
-//
-//		MappingFileDescriptorImpl that = (MappingFileDescriptorImpl) o;
-//
-//		return name.equals( that.name )
-//				&& streamAccess.getStreamName().equals( that.streamAccess.getStreamName() );
-//
-//	}
-//
-//	@Override
-//	public int hashCode() {
-//		int result = name.hashCode();
-//		result = 31 * result + streamAccess.getStreamName().hashCode();
-//		return result;
-//	}
+	@Override
+	public String toString() {
+		return "MappingFileDescriptorImpl["
+				+ "name=" + name + ", "
+				+ "streamAccess=" + streamAccess + ']';
+	}
 }

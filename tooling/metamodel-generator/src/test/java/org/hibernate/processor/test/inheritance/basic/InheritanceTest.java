@@ -1,12 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.inheritance.basic;
 
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
@@ -16,7 +16,8 @@ import static org.hibernate.processor.test.util.TestUtil.assertSuperclassRelatio
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
-public class InheritanceTest extends CompilationTest {
+@CompilationTest
+class InheritanceTest {
 	@Test
 	@WithClasses({
 			AbstractEntity.class,
@@ -27,7 +28,7 @@ public class InheritanceTest extends CompilationTest {
 			Person.class,
 			User.class
 	})
-	public void testInheritance() throws Exception {
+	void testInheritance() throws Exception {
 
 		// entity inheritance
 		assertSuperclassRelationshipInMetamodel( Customer.class, User.class );

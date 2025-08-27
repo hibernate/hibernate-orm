@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.generated;
@@ -9,8 +9,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import org.hibernate.HibernateError;
 import org.hibernate.annotations.CurrentTimestamp;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -76,6 +78,8 @@ public class GeneratedNoOpUpdateTest {
 			inspector.assertNoUpdate();
 			assertThat( pizza.getLastUpdated() ).isEqualTo( updatedTime );
 		} );
+
+		waitALittle( scope );
 
 		scope.inTransaction( session -> {
 			final Pizza pizza = session.find( Pizza.class, 1L );
@@ -176,5 +180,18 @@ public class GeneratedNoOpUpdateTest {
 			this.pizza = pizza;
 		}
 
+	}
+
+	private static void waitALittle(SessionFactoryScope scope) {
+		boolean waitLonger =
+				// informix clock has low resolution on Mac
+				scope.getSessionFactory().getJdbcServices().getDialect()
+						instanceof InformixDialect;
+		try {
+			Thread.sleep( waitLonger ? 1_200 : 2 );
+		}
+		catch (InterruptedException e) {
+			throw new HibernateError( "Unexpected wakeup from test sleep" );
+		}
 	}
 }

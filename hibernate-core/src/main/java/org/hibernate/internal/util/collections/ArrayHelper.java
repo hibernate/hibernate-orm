@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util.collections;
@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.type.Type;
 
 public final class ArrayHelper {
@@ -59,6 +60,7 @@ public final class ArrayHelper {
 	}
 
 	@SuppressWarnings("unchecked")
+	@AllowReflection
 	public static <T> T[] filledArray(T value, Class<T> valueJavaType, int size) {
 		final T[] array = (T[]) Array.newInstance( valueJavaType, size );
 		Arrays.fill( array, value );
@@ -202,10 +204,20 @@ public final class ArrayHelper {
 	}
 
 	@SuppressWarnings("unchecked")
+	@AllowReflection
 	public static <T> T[] join(T[] x, T... y) {
 		T[] result = (T[]) Array.newInstance( x.getClass().getComponentType(), x.length + y.length );
 		System.arraycopy( x, 0, result, 0, x.length );
 		System.arraycopy( y, 0, result, x.length, y.length );
+		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	@AllowReflection
+	public static <T> T[] add(T[] x, T y) {
+		T[] result = (T[]) Array.newInstance( x.getClass().getComponentType(), x.length + 1 );
+		System.arraycopy( x, 0, result, 0, x.length );
+		result[x.length] = y;
 		return result;
 	}
 
@@ -431,12 +443,50 @@ public final class ArrayHelper {
 		return i;
 	}
 
+	/**
+	 * Reverse the elements of the incoming array
+	 *
+	 * @return New array with all elements in reversed order
+	 */
 	public static String[] reverse(String[] source) {
 		final int length = source.length;
 		final String[] destination = new String[length];
 		for ( int i = 0; i < length; i++ ) {
-			final int x = length - i - 1;
-			destination[x] = source[i];
+			destination[length - i - 1] = source[i];
+		}
+		return destination;
+	}
+
+	/**
+	 * Reverse the first n elements of the incoming array
+	 *
+	 * @return New array with the first n elements in reversed order
+	 */
+	public static String[] reverseFirst(String[] objects, int n) {
+		final int length = objects.length;
+		final String[] destination = new String[length];
+		for ( int i = 0; i < n; i++ ) {
+			destination[i] = objects[n - i - 1];
+		}
+		for ( int i = n; i < length; i++ ) {
+			destination[i] = objects[i];
+		}
+		return destination;
+	}
+
+	/**
+	 * Reverse the first n elements of the incoming array
+	 *
+	 * @return New array with the first n elements in reversed order
+	 */
+	public static String[][] reverseFirst(String[][] objects, int n) {
+		final int length = objects.length;
+		final String[][] destination = new String[length][];
+		for ( int i = 0; i < n; i++ ) {
+			destination[i] = objects[n - i - 1];
+		}
+		for ( int i = n; i < length; i++ ) {
+			destination[i] = objects[i];
 		}
 		return destination;
 	}
@@ -448,8 +498,8 @@ public final class ArrayHelper {
 	}
 
 	public static Object[] toObjectArray(Object array) {
-		if ( array instanceof Object[] ) {
-			return ( Object[] ) array;
+		if ( array instanceof Object[] objects ) {
+			return objects;
 		}
 		final int arrayLength = Array.getLength( array );
 		final Object[] outputArray = new Object[ arrayLength ];
@@ -481,8 +531,17 @@ public final class ArrayHelper {
 		}
 	}
 
+	/**
+	 * @deprecated Use {@link Array#newInstance(Class, int)} instead.
+	 */
+	@Deprecated
 	@SuppressWarnings("unchecked")
+	@AllowReflection
 	public static <T> T[] newInstance(Class<T> elementType, int length) {
 		return (T[]) Array.newInstance( elementType, length );
+	}
+
+	public static <T> int size(T[] array) {
+		return array == null ? 0 : array.length;
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.actionqueue;
@@ -30,12 +30,7 @@ public class CustomBeforeCompletionTest extends BaseCoreFunctionalTestCase {
 	public void success() {
 		inSession( session -> {
 			AtomicBoolean called = new AtomicBoolean( false );
-			session.getActionQueue().registerProcess( new BeforeTransactionCompletionProcess() {
-				@Override
-				public void doBeforeTransactionCompletion(SessionImplementor session) {
-					called.set( true );
-				}
-			} );
+			session.getActionQueue().registerProcess( s -> called.set( true ) );
 			Assert.assertFalse( called.get() );
 			inTransaction( session, theSession -> {
 				theSession.persist( new SimpleEntity( "jack" ) );

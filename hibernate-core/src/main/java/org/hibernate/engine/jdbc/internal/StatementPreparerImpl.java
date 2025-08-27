@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.internal;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,14 +16,16 @@ import org.hibernate.ScrollMode;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
 
 /**
  * Standard implementation of {@link StatementPreparer}.
@@ -70,19 +73,25 @@ class StatementPreparerImpl implements StatementPreparer {
 			return statement;
 		}
 		catch ( SQLException e ) {
-			throw sqlExceptionHelper().convert( e, "could not create statement" );
+			throw sqlExceptionHelper().convert( e, "Could not create statement" );
 		}
 	}
 
 	@Override
 	public PreparedStatement prepareStatement(String sql) {
-		return buildPreparedStatementPreparationTemplate( sql, false ).prepareStatement();
+		return prepareStatement( sql, false );
 	}
 
 	@Override
 	public PreparedStatement prepareStatement(String sql, final boolean isCallable) {
 		jdbcCoordinator.executeBatch();
 		return buildPreparedStatementPreparationTemplate( sql, isCallable ).prepareStatement();
+	}
+
+	@Override
+	public CallableStatement prepareCallableStatement(String sql) {
+		jdbcCoordinator.executeBatch();
+		return (CallableStatement) prepareStatement( sql, true );
 	}
 
 	private StatementPreparationTemplate buildPreparedStatementPreparationTemplate(String sql, final boolean isCallable) {
@@ -132,9 +141,9 @@ class StatementPreparerImpl implements StatementPreparer {
 			boolean isCallable,
 			@Nullable ScrollMode scrollMode) {
 		final int resultSetType;
-		if ( scrollMode != null && !scrollMode.equals( ScrollMode.FORWARD_ONLY ) ) {
-			if ( ! settings().isScrollableResultSetsEnabled() ) {
-				throw new AssertionFailure("scrollable result sets are not enabled");
+		if ( scrollMode != null && scrollMode != ScrollMode.FORWARD_ONLY ) {
+			if ( !settings().isScrollableResultSetsEnabled() ) {
+				throw new AssertionFailure( "Scrollable result sets are not enabled" );
 			}
 			resultSetType = scrollMode.toResultSetType();
 		}
@@ -171,22 +180,22 @@ class StatementPreparerImpl implements StatementPreparer {
 				final PreparedStatement preparedStatement;
 				final JdbcSessionOwner jdbcSessionOwner = jdbcCoordinator.getJdbcSessionOwner();
 				final JdbcEventHandler observer = jdbcSessionOwner.getJdbcSessionContext().getEventHandler();
-				final EventManager eventManager = jdbcSessionOwner.getEventManager();
-				final HibernateMonitoringEvent jdbcPreparedStatementCreation = eventManager.beginJdbcPreparedStatementCreationEvent();
+				final EventMonitor eventMonitor = jdbcSessionOwner.getEventMonitor();
+				final DiagnosticEvent jdbcPreparedStatementCreation = eventMonitor.beginJdbcPreparedStatementCreationEvent();
 				try {
 					observer.jdbcPrepareStatementStart();
 					preparedStatement = doPrepare();
 					setStatementTimeout( preparedStatement );
 				}
 				finally {
-					eventManager.completeJdbcPreparedStatementCreationEvent( jdbcPreparedStatementCreation, sql );
+					eventMonitor.completeJdbcPreparedStatementCreationEvent( jdbcPreparedStatementCreation, sql );
 					observer.jdbcPrepareStatementEnd();
 				}
 				postProcess( preparedStatement );
 				return preparedStatement;
 			}
 			catch ( SQLException e ) {
-				throw sqlExceptionHelper().convert( e, "could not prepare statement", sql );
+				throw sqlExceptionHelper().convert( e, "Could not prepare statement", sql );
 			}
 		}
 
@@ -217,8 +226,21 @@ class StatementPreparerImpl implements StatementPreparer {
 	}
 
 	private void setStatementFetchSize(PreparedStatement statement) throws SQLException {
-		if ( settings().getFetchSizeOrNull() != null ) {
-			statement.setFetchSize( settings().getFetchSizeOrNull() );
+		final Integer fetchSize = settings().getFetchSizeOrNull();
+		if ( fetchSize != null ) {
+			JDBC_MESSAGE_LOGGER.settingFetchSize( fetchSize );
+			statement.setFetchSize( fetchSize );
+		}
+		else {
+			if ( JDBC_MESSAGE_LOGGER.isDebugEnabled() ) {
+				final int defaultFetchSize = statement.getFetchSize();
+				if ( defaultFetchSize > 0 && defaultFetchSize < 100 ) {
+					JDBC_MESSAGE_LOGGER.lowFetchSize( defaultFetchSize );
+				}
+			}
+			else if ( JDBC_MESSAGE_LOGGER.isTraceEnabled() ) {
+				JDBC_MESSAGE_LOGGER.fetchSize( statement.getFetchSize() );
+			}
 		}
 	}
 

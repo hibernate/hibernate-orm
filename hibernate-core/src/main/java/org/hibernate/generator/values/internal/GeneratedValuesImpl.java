@@ -1,18 +1,19 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.generator.values.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.generator.values.GeneratedValues;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
+
+import static java.util.Collections.emptyList;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
  * Standard implementation for {@link GeneratedValues} using {@link IdentityHashMap}.
@@ -38,8 +39,8 @@ public class GeneratedValuesImpl implements GeneratedValues {
 
 	@Override
 	public List<Object> getGeneratedValues(List<? extends ModelPart> modelParts) {
-		if ( CollectionHelper.isEmpty( modelParts ) ) {
-			return Collections.emptyList();
+		if ( isEmpty( modelParts ) ) {
+			return emptyList();
 		}
 
 		final List<Object> generatedValues = new ArrayList<>( modelParts.size() );

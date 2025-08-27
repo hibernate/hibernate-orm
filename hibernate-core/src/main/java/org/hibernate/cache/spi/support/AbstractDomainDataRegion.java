@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.support;
@@ -25,13 +25,13 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 
-import org.jboss.logging.Logger;
+
+import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractDomainDataRegion extends AbstractRegion implements DomainDataRegion {
-	private static final Logger log = Logger.getLogger( AbstractDomainDataRegion.class );
 
 	private final SessionFactoryImplementor sessionFactory;
 	private final CacheKeysFactory effectiveKeysFactory;
@@ -67,7 +67,8 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 	protected void completeInstantiation(
 			DomainDataRegionConfig regionConfig,
 			DomainDataRegionBuildingContext buildingContext) {
-		log.tracef( "DomainDataRegion created [%s]; key-factory = %s", regionConfig.getRegionName(), effectiveKeysFactory );
+		L2CACHE_LOGGER.tracef( "DomainDataRegion created [%s]; key-factory = %s",
+				regionConfig.getRegionName(), effectiveKeysFactory );
 
 		this.entityDataAccessMap = generateEntityDataAccessMap( regionConfig );
 		this.naturalIdDataAccessMap = generateNaturalIdDataAccessMap( regionConfig );
@@ -87,7 +88,7 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 	public EntityDataAccess getEntityDataAccess(NavigableRole rootEntityRole) {
 		final EntityDataAccess access = entityDataAccessMap.get( rootEntityRole );
 		if ( access == null ) {
-			throw new IllegalArgumentException( "Caching was not configured for entity : " + rootEntityRole.getFullPath() );
+			throw new IllegalArgumentException( "Caching was not configured for entity: " + rootEntityRole.getFullPath() );
 		}
 		return access;
 	}
@@ -97,7 +98,7 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 	public NaturalIdDataAccess getNaturalIdDataAccess(NavigableRole rootEntityRole) {
 		final NaturalIdDataAccess access = naturalIdDataAccessMap.get( rootEntityRole );
 		if ( access == null ) {
-			throw new IllegalArgumentException( "Caching was not configured for entity natural-id : " + rootEntityRole.getFullPath() );
+			throw new IllegalArgumentException( "Caching was not configured for entity natural id: " + rootEntityRole.getFullPath() );
 		}
 		return access;
 	}
@@ -106,7 +107,7 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 	public CollectionDataAccess getCollectionDataAccess(NavigableRole collectionRole) {
 		final CollectionDataAccess access = collectionDataAccessMap.get( collectionRole );
 		if ( access == null ) {
-			throw new IllegalArgumentException( "Caching was not configured for collection : " + collectionRole.getFullPath() );
+			throw new IllegalArgumentException( "Caching was not configured for collection: " + collectionRole.getFullPath() );
 		}
 		return access;
 	}
@@ -200,20 +201,20 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 	}
 
 	protected void releaseDataAccess(EntityDataAccess cacheAccess) {
-		if ( cacheAccess instanceof Destructible ) {
-			( (Destructible) cacheAccess ).destroy();
+		if ( cacheAccess instanceof Destructible destructible ) {
+			destructible.destroy();
 		}
 	}
 
 	protected void releaseDataAccess(NaturalIdDataAccess cacheAccess) {
-		if ( cacheAccess instanceof Destructible ) {
-			( (Destructible) cacheAccess ).destroy();
+		if ( cacheAccess instanceof Destructible destructible ) {
+			destructible.destroy();
 		}
 	}
 
 	protected void releaseDataAccess(CollectionDataAccess cacheAccess) {
-		if ( cacheAccess instanceof Destructible ) {
-			( (Destructible) cacheAccess ).destroy();
+		if ( cacheAccess instanceof Destructible destructible ) {
+			destructible.destroy();
 		}
 	}
 

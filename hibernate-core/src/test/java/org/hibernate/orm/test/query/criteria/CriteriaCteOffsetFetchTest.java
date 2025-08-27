@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.criteria;
@@ -7,16 +7,18 @@ package org.hibernate.orm.test.query.criteria;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaRoot;
-import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -38,6 +40,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DomainModel( annotatedClasses = CriteriaCteOffsetFetchTest.Product.class )
 @SessionFactory
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17769" )
+@SkipForDialect(dialectClass = InformixDialect.class,
+		reason = "skip with CTEs seems to be broken")
 public class CriteriaCteOffsetFetchTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
@@ -52,7 +56,7 @@ public class CriteriaCteOffsetFetchTest {
 
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createMutationQuery( "delete from Product" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -113,7 +117,7 @@ public class CriteriaCteOffsetFetchTest {
 				}
 			}
 
-			final QueryImplementor<Product> query = session.createQuery( cq );
+			final Query<Product> query = session.createQuery( cq );
 			if ( queryOptions ) {
 				if ( firstResult != null ) {
 					query.setFirstResult( firstResult );

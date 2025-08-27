@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.collection.mutation;
@@ -59,8 +59,8 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 			operationGroup = createOperationGroup();
 		}
 
-		if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
-			MODEL_MUTATION_LOGGER.debugf(
+		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+			MODEL_MUTATION_LOGGER.tracef(
 					"Deleting removed collection rows - %s : %s",
 					mutationTarget.getRolePath(),
 					key
@@ -80,7 +80,7 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 
 			final Iterator<?> deletes = collection.getDeletes( collectionDescriptor, !deleteByIndex );
 			if ( !deletes.hasNext() ) {
-				MODEL_MUTATION_LOGGER.debug( "No rows to delete" );
+				MODEL_MUTATION_LOGGER.trace( "No rows to delete" );
 				return;
 			}
 
@@ -105,7 +105,8 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 				deletionCount++;
 			}
 
-			MODEL_MUTATION_LOGGER.debugf( "Done deleting `%s` collection rows : %s", deletionCount, mutationTarget.getRolePath() );
+			MODEL_MUTATION_LOGGER.tracef( "Done deleting %s collection rows : %s",
+					deletionCount, mutationTarget.getRolePath() );
 		}
 		finally {
 			mutationExecutor.release();

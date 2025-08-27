@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.model.ast.builder;
@@ -88,9 +88,10 @@ public class ColumnValueBindingBuilder {
 			ParameterUsage parameterUsage,
 			Consumer<Object> parameterConsumer) {
 		final JdbcType jdbcType = jdbcMapping.getJdbcType();
-		final EmbeddableMappingType aggregateMappingType = jdbcType instanceof AggregateJdbcType
-				? ( (AggregateJdbcType) jdbcType ).getEmbeddableMappingType()
-				: null;
+		final EmbeddableMappingType aggregateMappingType =
+				jdbcType instanceof AggregateJdbcType aggregateJdbcType
+						? aggregateJdbcType.getEmbeddableMappingType()
+						: null;
 		if ( aggregateMappingType != null && !aggregateMappingType.shouldBindAggregateMapping() ) {
 			final ColumnValueParameterList parameters = new ColumnValueParameterList(
 					mutatingTableReference,

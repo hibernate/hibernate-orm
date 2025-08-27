@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.mutability.attribute;
@@ -50,13 +50,13 @@ public class EntityAttributeMutabilityTest {
 
 		// `@Immutable`
 		final Property managerProperty = persistentClass.getProperty( "manager" );
-		assertThat( managerProperty.isUpdateable() ).isFalse();
+		assertThat( managerProperty.isUpdatable() ).isFalse();
 		final AttributeMapping managerAttribute = entityDescriptor.findAttributeMapping( "manager" );
 		assertThat( managerAttribute.getExposedMutabilityPlan().isMutable() ).isFalse();
 
 		// `@Mutability(Immutability.class)` - no effect
 		final Property manager2Property = persistentClass.getProperty( "manager2" );
-		assertThat( manager2Property.isUpdateable() ).isTrue();
+		assertThat( manager2Property.isUpdatable() ).isTrue();
 		final AttributeMapping manager2Attribute = entityDescriptor.findAttributeMapping( "manager2" );
 		assertThat( manager2Attribute.getExposedMutabilityPlan().isMutable() ).isTrue();
 	}

@@ -1,33 +1,28 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.event.internal;
 
-import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.models.spi.JpaEventListener;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.jpa.event.spi.CallbackType;
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MethodDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.property.access.spi.Getter;
-
-import org.jboss.logging.Logger;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -36,26 +31,25 @@ import jakarta.persistence.ExcludeSuperclassListeners;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PersistenceException;
 
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
+
 /**
  * Resolves JPA callback definitions
  *
  * @author Steve Ebersole
  */
 public final class CallbackDefinitionResolver {
-	private static final Logger log = Logger.getLogger( CallbackDefinitionResolver.class );
 
-	public static List<CallbackDefinition> resolveEntityCallbacks(
-			MetadataBuildingContext metadataBuildingContext,
+	private static List<CallbackDefinition> resolveEntityCallbacks(
+			InFlightMetadataCollector metadataCollector,
 			ClassDetails entityClass,
 			CallbackType callbackType) {
-		final InFlightMetadataCollector metadataCollector = metadataBuildingContext.getMetadataCollector();
-		final GlobalRegistrations globalRegistrations = metadataCollector.getGlobalRegistrations();
-		final List<JpaEventListener> globalListenerRegistrations = globalRegistrations.getEntityListenerRegistrations();
-		final SourceModelBuildingContext sourceModelContext = metadataCollector.getSourceModelBuildingContext();
+		final ModelsContext modelsContext = metadataCollector.getBootstrapContext().getModelsContext();
 
-		List<CallbackDefinition> callbackDefinitions = new ArrayList<>();
-		List<String> callbacksMethodNames = new ArrayList<>();
-		List<ClassDetails> orderedListeners = new ArrayList<>();
+		final List<CallbackDefinition> callbackDefinitions = new ArrayList<>();
+		final List<String> callbacksMethodNames = new ArrayList<>();
+		final List<ClassDetails> orderedListeners = new ArrayList<>();
 
 		ClassDetails currentClazz = entityClass;
 		boolean stopListeners = false;
@@ -65,46 +59,36 @@ public final class CallbackDefinitionResolver {
 			CallbackDefinition callbackDefinition = null;
 			final List<MethodDetails> methodsDetailsList = currentClazz.getMethods();
 			for ( MethodDetails methodDetails : methodsDetailsList ) {
-				if ( !methodDetails.hasDirectAnnotationUsage( callbackType.getCallbackAnnotation() ) ) {
-					continue;
-				}
-				if ( callbacksMethodNames.contains( methodDetails.getName() ) ) {
-					continue;
+				if ( methodDetails.hasDirectAnnotationUsage( callbackType.getCallbackAnnotation() )
+						&& !callbacksMethodNames.contains( methodDetails.getName() ) ) {
+					//overridden method, remove the superclass overridden method
+					if ( callbackDefinition == null ) {
+						final Method javaMethod = (Method) methodDetails.toJavaMember();
+						callbackDefinition = new EntityCallback.Definition( javaMethod, callbackType );
+						final Class<?> returnType = javaMethod.getReturnType();
+						final Class<?>[] args = javaMethod.getParameterTypes();
+						if ( returnType != Void.TYPE || args.length != 0 ) {
+							throw new RuntimeException(
+									"Callback methods annotated on the bean class must return void and take no arguments: "
+									+ callbackType.getCallbackAnnotation().getName() + " - " + methodDetails
+							);
+						}
+						ReflectHelper.ensureAccessibility( javaMethod );
+						callbackDefinitions.add( 0, callbackDefinition ); //superclass first
+						callbacksMethodNames.add( 0, methodDetails.getName() );
+					}
+					else {
+						throw new PersistenceException(
+								"You can only annotate one callback method with "
+								+ callbackType.getCallbackAnnotation()
+										.getName() + " in bean class: " + entityClass.getName()
+						);
+					}
 				}
 
-				//overridden method, remove the superclass overridden method
-				if ( callbackDefinition == null ) {
-					final Method javaMethod = (Method) methodDetails.toJavaMember();
-					callbackDefinition = new EntityCallback.Definition( javaMethod, callbackType );
-					Class<?> returnType = javaMethod.getReturnType();
-					Class<?>[] args = javaMethod.getParameterTypes();
-					if ( returnType != Void.TYPE || args.length != 0 ) {
-						throw new RuntimeException(
-								"Callback methods annotated on the bean class must return void and take no arguments: "
-										+ callbackType.getCallbackAnnotation().getName() + " - " + methodDetails
-						);
-					}
-					ReflectHelper.ensureAccessibility( javaMethod );
-					if ( log.isDebugEnabled() ) {
-						log.debugf(
-								"Adding %s as %s callback for entity %s",
-								methodDetails.getName(),
-								callbackType.getCallbackAnnotation().getSimpleName(),
-								entityClass.getName()
-						);
-					}
-					callbackDefinitions.add( 0, callbackDefinition ); //superclass first
-					callbacksMethodNames.add( 0, methodDetails.getName() );
-				}
-				else {
-					throw new PersistenceException(
-							"You can only annotate one callback method with "
-									+ callbackType.getCallbackAnnotation().getName() + " in bean class: " + entityClass.getName()
-					);
-				}
 			}
 			if ( !stopListeners ) {
-				applyListeners( currentClazz, orderedListeners, sourceModelContext );
+				applyListeners( currentClazz, orderedListeners, modelsContext );
 				stopListeners = currentClazz.hasDirectAnnotationUsage( ExcludeSuperclassListeners.class );
 				stopDefaultListeners = currentClazz.hasDirectAnnotationUsage( ExcludeDefaultListeners.class );
 			}
@@ -114,14 +98,15 @@ public final class CallbackDefinitionResolver {
 			}
 			while ( currentClazz != null
 					&& !( currentClazz.hasDirectAnnotationUsage( Entity.class )
-					|| currentClazz.hasDirectAnnotationUsage( MappedSuperclass.class ) )
-					);
+						|| currentClazz.hasDirectAnnotationUsage( MappedSuperclass.class ) ) );
 		}
 		while ( currentClazz != null );
 
 		//handle default listeners
 		if ( !stopDefaultListeners ) {
-			if ( CollectionHelper.isNotEmpty( globalListenerRegistrations ) ) {
+			final List<JpaEventListener> globalListenerRegistrations =
+					metadataCollector.getGlobalRegistrations().getEntityListenerRegistrations();
+			if ( isNotEmpty( globalListenerRegistrations ) ) {
 				int defaultListenerSize = globalListenerRegistrations.size();
 				for ( int i = defaultListenerSize - 1; i >= 0; i-- ) {
 					orderedListeners.add( globalListenerRegistrations.get( i ).getCallbackClass() );
@@ -134,15 +119,11 @@ public final class CallbackDefinitionResolver {
 			if ( listenerClassDetails != null ) {
 				for ( MethodDetails methodDetails : listenerClassDetails.getMethods() ) {
 					if ( methodDetails.hasDirectAnnotationUsage( callbackType.getCallbackAnnotation() ) ) {
-						final String methodName = methodDetails.getName();
 						//overridden method, remove the superclass overridden method
 						if ( callbackDefinition == null ) {
 							final Method method = (Method) methodDetails.toJavaMember();
-							callbackDefinition = new ListenerCallback.Definition(
-									listenerClassDetails.toJavaClass(),
-									method,
-									callbackType
-							);
+							final Class<?> listenerClass = listenerClassDetails.toJavaClass();
+							callbackDefinition = new ListenerCallback.Definition( listenerClass, method, callbackType );
 
 							final Class<?> returnType = method.getReturnType();
 							final Class<?>[] args = method.getParameterTypes();
@@ -153,14 +134,6 @@ public final class CallbackDefinitionResolver {
 								);
 							}
 							ReflectHelper.ensureAccessibility( method );
-							if ( log.isDebugEnabled() ) {
-								log.debugf(
-										"Adding %s as %s callback for entity %s",
-										methodName,
-										callbackType.getCallbackAnnotation().getSimpleName(),
-										entityClass.getName()
-									);
-							}
 							callbackDefinitions.add( 0, callbackDefinition ); // listeners first
 						}
 						else {
@@ -178,70 +151,66 @@ public final class CallbackDefinitionResolver {
 		return callbackDefinitions;
 	}
 
-	public static List<CallbackDefinition> resolveEmbeddableCallbacks(
-			MetadataBuildingContext metadataBuildingContext,
+	/**
+	 * @deprecated See discussion in {@link EmbeddableCallback}.
+	 */
+	@Deprecated(since = "7")
+	private static List<CallbackDefinition> resolveEmbeddableCallbacks(
+			InFlightMetadataCollector metadataCollector,
 			Class<?> entityClass,
 			Property embeddableProperty,
 			CallbackType callbackType) {
-		final SourceModelBuildingContext hibernateModelsContext = metadataBuildingContext.getMetadataCollector().getSourceModelBuildingContext();
-		final ClassDetailsRegistry classDetailsRegistry = hibernateModelsContext.getClassDetailsRegistry();
 
+		final ModelsContext modelsContext = metadataCollector.getBootstrapContext().getModelsContext();
 		final Class<?> embeddableClass = embeddableProperty.getType().getReturnedClass();
-		final ClassDetails embeddableClassDetails = classDetailsRegistry.getClassDetails( embeddableClass.getName() );
+		final ClassDetails embeddableClassDetails = modelsContext.getClassDetailsRegistry().getClassDetails( embeddableClass.getName() );
 
 		final Getter embeddableGetter = embeddableProperty.getGetter( entityClass );
 		final List<CallbackDefinition> callbackDefinitions = new ArrayList<>();
 		final List<String> callbacksMethodNames = new ArrayList<>();
-		ClassDetails currentClazz = embeddableClassDetails;
+		ClassDetails currentClass = embeddableClassDetails;
 		do {
 			CallbackDefinition callbackDefinition = null;
-			final List<MethodDetails> methodsDetailsList = currentClazz.getMethods();
+			final List<MethodDetails> methodsDetailsList = currentClass.getMethods();
 			for ( MethodDetails methodDetails : methodsDetailsList ) {
-				if ( !methodDetails.hasDirectAnnotationUsage( callbackType.getCallbackAnnotation() ) ) {
-					continue;
-				}
+				if ( methodDetails.hasDirectAnnotationUsage( callbackType.getCallbackAnnotation() ) ) {
+					final Method method = methodDetails.toJavaMember();
+					final String methodName = method.getName();
+					final String callbackName = callbackType.getCallbackAnnotation().getName();
+					final String currentClassName = currentClass.getName();
 
-				final Method method = (Method) methodDetails.toJavaMember();
-				final String methodName = method.getName();
+					DEPRECATION_LOGGER.embeddableLifecycleCallback( callbackName, currentClassName );
 
-				if ( callbacksMethodNames.contains( methodName ) ) {
-					throw new PersistenceException(
-							"You can only annotate one callback method with "
-									+ callbackType.getCallbackAnnotation().getName() + " in bean class: " + currentClazz.getName()
-					);
-				}
-
-				//overridden method, remove the superclass overridden method
-				if ( callbackDefinition == null ) {
-					callbackDefinition = new EmbeddableCallback.Definition( embeddableGetter, method, callbackType );
-					Class<?> returnType = method.getReturnType();
-					Class<?>[] args = method.getParameterTypes();
-					if ( returnType != Void.TYPE || args.length != 0 ) {
-						throw new RuntimeException(
-								"Callback methods annotated on the bean class must return void and take no arguments: "
-										+ callbackType.getCallbackAnnotation().getName() + " - " + methodDetails
-						);
+					if ( callbacksMethodNames.contains( methodName ) ) {
+						throw new PersistenceException( "Multiple callback methods annotated '@" + callbackName
+														+ "' in bean class '" + currentClassName + "'" );
 					}
-					ReflectHelper.ensureAccessibility( method );
-					if ( log.isDebugEnabled() ) {
-						log.debugf(
-								"Adding %s as %s callback for entity %s",
-								methodName,
-								callbackType.getCallbackAnnotation().getSimpleName(),
-								currentClazz.getName()
-						);
+
+					//overridden method, remove the superclass overridden method
+					if ( callbackDefinition == null ) {
+						callbackDefinition = new EmbeddableCallback.Definition( embeddableGetter, method, callbackType );
+						final Class<?> returnType = method.getReturnType();
+						final Class<?>[] args = method.getParameterTypes();
+						if ( returnType != Void.TYPE || args.length != 0 ) {
+							throw new RuntimeException(
+									"Callback methods annotated on the bean class must return void and take no arguments: "
+									+ callbackName + " - " + methodDetails
+							);
+						}
+						ReflectHelper.ensureAccessibility( method );
+						callbackDefinitions.add( 0, callbackDefinition ); //superclass first
+						callbacksMethodNames.add( 0, methodName );
 					}
-					callbackDefinitions.add( 0, callbackDefinition ); //superclass first
-					callbacksMethodNames.add( 0, methodName );
 				}
+
 			}
 
 			do {
-				currentClazz = currentClazz.getSuperClass();
+				currentClass = currentClass.getSuperClass();
 			}
-			while ( currentClazz != null && !currentClazz.hasDirectAnnotationUsage( MappedSuperclass.class ) );
+			while ( currentClass != null && !currentClass.hasDirectAnnotationUsage( MappedSuperclass.class ) );
 		}
-		while ( currentClazz != null );
+		while ( currentClass != null );
 
 		return callbackDefinitions;
 	}
@@ -251,7 +220,7 @@ public final class CallbackDefinitionResolver {
 	static {
 		//check whether reading annotations of annotations is useful or not
 		useAnnotationAnnotatedByListener = false;
-		Target target = EntityListeners.class.getAnnotation( Target.class );
+		final var target = EntityListeners.class.getAnnotation( Target.class );
 		if ( target != null ) {
 			for ( ElementType type : target.value() ) {
 				if ( type.equals( ElementType.ANNOTATION_TYPE ) ) {
@@ -265,31 +234,62 @@ public final class CallbackDefinitionResolver {
 	private static void applyListeners(
 			ClassDetails currentClazz,
 			List<ClassDetails> listOfListeners,
-			SourceModelBuildingContext sourceModelContext) {
-		final ClassDetailsRegistry classDetailsRegistry = sourceModelContext.getClassDetailsRegistry();
+			ModelsContext sourceModelContext) {
+		final var classDetailsRegistry = sourceModelContext.getClassDetailsRegistry();
 
-		final EntityListeners entityListeners = currentClazz.getDirectAnnotationUsage( EntityListeners.class );
+		final var entityListeners = currentClazz.getDirectAnnotationUsage( EntityListeners.class );
 		if ( entityListeners != null ) {
-			final Class<?>[] listeners = entityListeners.value();
-			int size = listeners.length;
+			final var listenerClasses = entityListeners.value();
+			int size = listenerClasses.length;
 			for ( int index = size - 1; index >= 0; index-- ) {
-				listOfListeners.add( classDetailsRegistry.resolveClassDetails( listeners[index].getName() ) );
+				listOfListeners.add( classDetailsRegistry.resolveClassDetails( listenerClasses[index].getName() ) );
 			}
 		}
 
 		if ( useAnnotationAnnotatedByListener ) {
-			final List<? extends Annotation> metaAnnotatedUsageList = currentClazz.getMetaAnnotated( EntityListeners.class, sourceModelContext );
-			for ( Annotation metaAnnotatedUsage : metaAnnotatedUsageList ) {
-				final AnnotationDescriptor<? extends Annotation> descriptor = sourceModelContext.getAnnotationDescriptorRegistry()
-						.getDescriptor( metaAnnotatedUsage.getClass() );
-				final EntityListeners metaAnnotatedListeners = descriptor.getDirectAnnotationUsage( EntityListeners.class );
-				final Class<?>[] listeners = metaAnnotatedListeners.value();
-				for ( int index = listeners.length - 1; index >= 0; index-- ) {
-					listOfListeners.add(
-							sourceModelContext.getClassDetailsRegistry().resolveClassDetails( listeners[index].getName() )
-					);
+			for ( var metaAnnotatedUsage : currentClazz.getMetaAnnotated( EntityListeners.class, sourceModelContext ) ) {
+				final var descriptor =
+						sourceModelContext.getAnnotationDescriptorRegistry()
+								.getDescriptor( metaAnnotatedUsage.getClass() );
+				final var listenerClasses = descriptor.getDirectAnnotationUsage( EntityListeners.class ).value();
+				for ( int index = listenerClasses.length - 1; index >= 0; index-- ) {
+					listOfListeners.add( classDetailsRegistry.resolveClassDetails( listenerClasses[index].getName() ) );
 				}
 			}
 		}
+	}
+
+	/**
+	 * See {@link JpaEventListener} for a better (?) alternative
+	 */
+	public static void resolveLifecycleCallbacks(
+			ClassDetails entityClass,
+			PersistentClass persistentClass,
+			InFlightMetadataCollector collector) {
+		for ( CallbackType callbackType : CallbackType.values() ) {
+			persistentClass.addCallbackDefinitions( resolveEntityCallbacks( collector, entityClass, callbackType ) );
+		}
+
+		// Note: @Embeddable classes are not supposed to have entity callbacks according to
+		//       the JPA specification, and it doesn't even really make sense to allow them
+		//       to, since they don't have a well-defined "lifecycle", but unfortunately this
+		//       code was added by HHH-12326
+		collector.addSecondPass( persistentClasses -> {
+			for ( Property property : persistentClass.getDeclaredProperties() ) {
+			if ( property.getValue() instanceof Component component
+					// embedded components don't have their own class, so no need to check callbacks (see HHH-19671)
+					&& !component.isEmbedded() ) {
+					try {
+						final Class<?> mappedClass = persistentClass.getMappedClass();
+						for ( CallbackType type : CallbackType.values() ) {
+							property.addCallbackDefinitions( resolveEmbeddableCallbacks( collector, mappedClass, property, type ) );
+						}
+					}
+					catch (ClassLoadingException ignore) {
+						// a dynamic embeddable... cannot define listener methods
+					}
+				}
+			}
+		} );
 	}
 }

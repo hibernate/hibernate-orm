@@ -1,22 +1,21 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
-
-import java.util.Map;
 
 import org.hibernate.Length;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.community.dialect.identity.SybaseAnywhereIdentityColumnSupport;
 import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.TransactSQLLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -27,6 +26,8 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+
+import java.util.Map;
 
 import static org.hibernate.type.SqlTypes.DATE;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
@@ -43,6 +44,7 @@ import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
  * (Tested on ASA 8.x)
  */
 public class SybaseAnywhereDialect extends SybaseDialect {
+	private final LockingSupport lockingSupport;
 
 	public SybaseAnywhereDialect() {
 		this( DatabaseVersion.make( 8 ) );
@@ -50,10 +52,12 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 
 	public SybaseAnywhereDialect(DialectResolutionInfo info) {
 		super(info);
+		lockingSupport = TransactSQLLockingSupport.forSybaseAnywhere( getVersion() );
 	}
 
 	public SybaseAnywhereDialect(DatabaseVersion version) {
 		super(version);
+		lockingSupport = TransactSQLLockingSupport.forSybaseAnywhere( getVersion() );
 	}
 
 	@Override
@@ -176,8 +180,8 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	}
 
 	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return getVersion().isSameOrAfter( 10 ) ? RowLockStrategy.COLUMN : RowLockStrategy.TABLE;
+	public LockingSupport getLockingSupport() {
+		return lockingSupport;
 	}
 
 	@Override

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.hbm.transform;
@@ -166,7 +166,6 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
-import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -180,7 +179,6 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.CustomType;
@@ -202,6 +200,8 @@ import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 
 import static org.hibernate.boot.jaxb.hbm.transform.HbmTransformationLogging.TRANSFORMATION_LOGGER;
+import static org.hibernate.internal.util.StringHelper.isBlank;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
@@ -224,18 +224,17 @@ public class HbmXmlTransformer {
 	public static List<Binding<JaxbEntityMappingsImpl>> transform(
 			List<Binding<JaxbHbmHibernateMapping>> hbmXmlBindings,
 			MetadataImplementor bootModel,
-			ServiceRegistry serviceRegistry,
 			UnsupportedFeatureHandling unsupportedFeatureHandling) {
 		// perform a first pass over the hbm.xml bindings building much of the transformation-state
-		final TransformationState transformationState = new TransformationState();
-		final List<Binding<JaxbEntityMappingsImpl>> transformations = XmlPreprocessor.preprocessHbmXml( hbmXmlBindings, transformationState );
+		final var transformationState = new TransformationState();
+		final var transformations = XmlPreprocessor.preprocessHbmXml( hbmXmlBindings, transformationState );
 
 		// build and perform a pass over the boot model building the rest of the transformation-state
 		BootModelPreprocessor.preprocessBooModel( bootModel, transformationState );
 
 		// now we are ready to fully build the mapping.xml transformations
 		for ( int i = 0; i < hbmXmlBindings.size(); i++ ) {
-			final HbmXmlTransformer hbmXmlTransformer = new HbmXmlTransformer(
+			final var hbmXmlTransformer = new HbmXmlTransformer(
 					hbmXmlBindings.get( i ),
 					transformations.get( i ),
 					transformationState,
@@ -274,8 +273,8 @@ public class HbmXmlTransformer {
 
 
 	private void performTransformation() {
-		final JaxbHbmHibernateMapping hbmXmlRoot = hbmXmlBinding.getRoot();
-		final JaxbEntityMappingsImpl mappingXmlRoot = mappingXmlBinding.getRoot();
+		final var hbmXmlRoot = hbmXmlBinding.getRoot();
+		final var mappingXmlRoot = mappingXmlBinding.getRoot();
 
 		TransformationHelper.transfer( hbmXmlRoot::getPackage, mappingXmlRoot::setPackage );
 		TransformationHelper.transfer( hbmXmlRoot::getCatalog, mappingXmlRoot::setCatalog );
@@ -294,53 +293,53 @@ public class HbmXmlTransformer {
 
 		hbmXmlRoot.getClazz().forEach( (hbmEntity) -> {
 			final String entityName = TransformationHelper.determineEntityName( hbmEntity, hbmXmlRoot );
-			final JaxbEntityImpl mappingEntity = transformationState.getMappingEntityByName().get( entityName );
-			final EntityTypeInfo bootEntityInfo = transformationState.getEntityInfoByName().get( entityName );
+			final var mappingEntity = transformationState.getMappingEntityByName().get( entityName );
+			final var bootEntityInfo = transformationState.getEntityInfoByName().get( entityName );
 			assert mappingEntity != null : "Unable to locate JaxbEntityImpl for " + entityName;
-			assert  bootEntityInfo != null : "Unable to locate EntityTypeInfo for " + entityName;
+			assert bootEntityInfo != null : "Unable to locate EntityTypeInfo for " + entityName;
 
 			transferRootEntity( hbmEntity, mappingEntity, bootEntityInfo );
 		} );
 
 		hbmXmlRoot.getSubclass().forEach( (hbmSubclass) -> {
 			final String entityName = TransformationHelper.determineEntityName( hbmSubclass, hbmXmlRoot );
-			final JaxbEntityImpl mappingEntity = transformationState.getMappingEntityByName().get( entityName );
-			final EntityTypeInfo bootEntityInfo = transformationState.getEntityInfoByName().get( entityName );
+			final var mappingEntity = transformationState.getMappingEntityByName().get( entityName );
+			final var bootEntityInfo = transformationState.getEntityInfoByName().get( entityName );
 			assert mappingEntity != null : "Unable to locate JaxbEntityImpl for " + entityName;
-			assert  bootEntityInfo != null : "Unable to locate EntityTypeInfo for " + entityName;
+			assert bootEntityInfo != null : "Unable to locate EntityTypeInfo for " + entityName;
 
 			transferDiscriminatorSubclass( hbmSubclass, mappingEntity, bootEntityInfo );
 
 			final String rootEntityName = bootEntityInfo.getPersistentClass().getRootClass().getEntityName();
-			final JaxbEntityImpl rootMappingEntity = transformationState.getMappingEntityByName().get( rootEntityName );
+			final var rootMappingEntity = transformationState.getMappingEntityByName().get( rootEntityName );
 			defineInheritance( rootMappingEntity, InheritanceType.SINGLE_TABLE );
 		} );
 
 		hbmXmlRoot.getJoinedSubclass().forEach( (hbmSubclass) -> {
 			final String entityName = TransformationHelper.determineEntityName( hbmSubclass, hbmXmlRoot );
-			final JaxbEntityImpl mappingEntity = transformationState.getMappingEntityByName().get( entityName );
-			final EntityTypeInfo bootEntityInfo = transformationState.getEntityInfoByName().get( entityName );
+			final var mappingEntity = transformationState.getMappingEntityByName().get( entityName );
+			final var bootEntityInfo = transformationState.getEntityInfoByName().get( entityName );
 			assert mappingEntity != null : "Unable to locate JaxbEntityImpl for " + entityName;
-			assert  bootEntityInfo != null : "Unable to locate EntityTypeInfo for " + entityName;
+			assert bootEntityInfo != null : "Unable to locate EntityTypeInfo for " + entityName;
 
 			transferJoinedSubclass( hbmSubclass, mappingEntity, bootEntityInfo );
 
 			final String rootEntityName = bootEntityInfo.getPersistentClass().getRootClass().getEntityName();
-			final JaxbEntityImpl rootMappingEntity = transformationState.getMappingEntityByName().get( rootEntityName );
+			final var rootMappingEntity = transformationState.getMappingEntityByName().get( rootEntityName );
 			defineInheritance( rootMappingEntity, InheritanceType.JOINED );
 		} );
 
 		hbmXmlRoot.getUnionSubclass().forEach( (hbmSubclass) -> {
 			final String entityName = TransformationHelper.determineEntityName( hbmSubclass, hbmXmlRoot );
-			final JaxbEntityImpl mappingEntity = transformationState.getMappingEntityByName().get( entityName );
-			final EntityTypeInfo bootEntityInfo = transformationState.getEntityInfoByName().get( entityName );
+			final var mappingEntity = transformationState.getMappingEntityByName().get( entityName );
+			final var bootEntityInfo = transformationState.getEntityInfoByName().get( entityName );
 			assert mappingEntity != null : "Unable to locate JaxbEntityImpl for " + entityName;
-			assert  bootEntityInfo != null : "Unable to locate EntityTypeInfo for " + entityName;
+			assert bootEntityInfo != null : "Unable to locate EntityTypeInfo for " + entityName;
 
 			transferUnionSubclass( hbmSubclass, mappingEntity, bootEntityInfo );
 
 			final String rootEntityName = bootEntityInfo.getPersistentClass().getRootClass().getEntityName();
-			final JaxbEntityImpl rootMappingEntity = transformationState.getMappingEntityByName().get( rootEntityName );
+			final var rootMappingEntity = transformationState.getMappingEntityByName().get( rootEntityName );
 			defineInheritance( rootMappingEntity, InheritanceType.TABLE_PER_CLASS );
 		} );
 
@@ -351,10 +350,10 @@ public class HbmXmlTransformer {
 
 	private static void dumpTransformed(Origin origin, JaxbEntityMappingsImpl ormRoot) {
 		try {
-			JAXBContext ctx = JAXBContext.newInstance( JaxbEntityMappingsImpl.class );
-			Marshaller marshaller = ctx.createMarshaller();
+			var ctx = JAXBContext.newInstance( JaxbEntityMappingsImpl.class );
+			var marshaller = ctx.createMarshaller();
 			marshaller.setProperty( Marshaller.JAXB_FORMATTED_OUTPUT, true );
-			final StringWriter stringWriter = new StringWriter();
+			final var stringWriter = new StringWriter();
 			marshaller.marshal( ormRoot, stringWriter );
 			TRANSFORMATION_LOGGER.debugf( "Transformed hbm.xml (%s):\n%s", origin, stringWriter.toString() );
 		}
@@ -375,8 +374,8 @@ public class HbmXmlTransformer {
 
 		applyTable( entityInfo.getPersistentClass(), mappingEntity );
 
-		for ( JaxbHbmSynchronizeType hbmSync : hbmClass.getSynchronize() ) {
-			final JaxbSynchronizedTableImpl sync = new JaxbSynchronizedTableImpl();
+		for ( var hbmSync : hbmClass.getSynchronize() ) {
+			final var sync = new JaxbSynchronizedTableImpl();
 			sync.setTable( hbmSync.getTable() );
 			mappingEntity.getSynchronizeTables().add( sync );
 		}
@@ -421,55 +420,57 @@ public class HbmXmlTransformer {
 			transformEntityCaching( hbmClass, mappingEntity );
 		}
 
-		for ( JaxbHbmNamedQueryType hbmQuery : hbmClass.getQuery() ) {
-			mappingEntity.getNamedQueries().add( transformNamedQuery( hbmQuery, mappingEntity.getName() + "." + hbmQuery.getName() ) );
+		for ( var hbmQuery : hbmClass.getQuery() ) {
+			final String name = mappingEntity.getName() + "." + hbmQuery.getName();
+			mappingEntity.getNamedQueries().add( transformNamedQuery( hbmQuery, name ) );
 		}
 
-		for ( JaxbHbmNamedNativeQueryType hbmQuery : hbmClass.getSqlQuery() ) {
-			mappingEntity.getNamedNativeQueries().add(
-					transformNamedNativeQuery( hbmQuery, mappingEntity.getName() + "." + hbmQuery.getName() )
-			);
+		for ( var hbmQuery : hbmClass.getSqlQuery() ) {
+			final String name = mappingEntity.getName() + "." + hbmQuery.getName();
+			mappingEntity.getNamedNativeQueries().add( transformNamedNativeQuery( hbmQuery, name ) );
 		}
 
-		for ( JaxbHbmFilterType hbmFilter : hbmClass.getFilter()) {
-			mappingEntity.getFilters().add( convert( hbmFilter ) );
+		final var filters = mappingEntity.getFilters();
+		for ( var hbmFilter : hbmClass.getFilter()) {
+			filters.add( convert( hbmFilter ) );
 		}
 
-		for ( JaxbHbmFetchProfileType hbmFetchProfile : hbmClass.getFetchProfile() ) {
-			mappingEntity.getFetchProfiles().add( transferFetchProfile( hbmFetchProfile ) );
+		final var fetchProfiles = mappingEntity.getFetchProfiles();
+		for ( var hbmFetchProfile : hbmClass.getFetchProfile() ) {
+			fetchProfiles.add( transferFetchProfile( hbmFetchProfile ) );
 		}
 
-		for ( JaxbHbmDiscriminatorSubclassEntityType hbmSubclass : hbmClass.getSubclass() ) {
+		for ( var hbmSubclass : hbmClass.getSubclass() ) {
 			final String subclassEntityName = TransformationHelper.determineEntityName( hbmSubclass, hbmXmlBinding.getRoot() );
-			final JaxbEntityImpl mappingSubclassEntity = transformationState.getMappingEntityByName().get( subclassEntityName );
-			final EntityTypeInfo subclassEntityInfo = transformationState.getEntityInfoByName().get( subclassEntityName );
+			final var mappingSubclassEntity = transformationState.getMappingEntityByName().get( subclassEntityName );
+			final var subclassEntityInfo = transformationState.getEntityInfoByName().get( subclassEntityName );
 			transferDiscriminatorSubclass( hbmSubclass, mappingSubclassEntity, subclassEntityInfo );
 			defineInheritance( mappingEntity, InheritanceType.SINGLE_TABLE );
 		}
 
-		for ( JaxbHbmJoinedSubclassEntityType hbmSubclass : hbmClass.getJoinedSubclass() ) {
+		for ( var hbmSubclass : hbmClass.getJoinedSubclass() ) {
 			final String subclassEntityName = TransformationHelper.determineEntityName( hbmSubclass, hbmXmlBinding.getRoot() );
-			final JaxbEntityImpl mappingSubclassEntity = transformationState.getMappingEntityByName().get( subclassEntityName );
-			final EntityTypeInfo subclassEntityInfo = transformationState.getEntityInfoByName().get( subclassEntityName );
+			final var mappingSubclassEntity = transformationState.getMappingEntityByName().get( subclassEntityName );
+			final var subclassEntityInfo = transformationState.getEntityInfoByName().get( subclassEntityName );
 			transferJoinedSubclass( hbmSubclass, mappingSubclassEntity, subclassEntityInfo );
 			defineInheritance( mappingEntity, InheritanceType.TABLE_PER_CLASS );
 		}
 
-		for (JaxbHbmUnionSubclassEntityType hbmSubclass : hbmClass.getUnionSubclass() ) {
+		for ( var hbmSubclass : hbmClass.getUnionSubclass() ) {
 			final String subclassEntityName = TransformationHelper.determineEntityName( hbmSubclass, hbmXmlBinding.getRoot() );
-			final JaxbEntityImpl mappingSubclassEntity = transformationState.getMappingEntityByName().get( subclassEntityName );
-			final EntityTypeInfo subclassEntityInfo = transformationState.getEntityInfoByName().get( subclassEntityName );
+			final var mappingSubclassEntity = transformationState.getMappingEntityByName().get( subclassEntityName );
+			final var subclassEntityInfo = transformationState.getEntityInfoByName().get( subclassEntityName );
 			transferUnionSubclass( hbmSubclass, mappingSubclassEntity, subclassEntityInfo );
 			defineInheritance( mappingEntity, InheritanceType.JOINED );
 		}
 
-		for ( JaxbHbmNamedQueryType hbmQuery : hbmClass.getQuery() ) {
+		for ( var hbmQuery : hbmClass.getQuery() ) {
 			// Tests implied this was the case...
 			final String name = hbmClass.getName() + "." + hbmQuery.getName();
 			mappingXmlBinding.getRoot().getNamedQueries().add( transformNamedQuery( hbmQuery, name ) );
 		}
 
-		for ( JaxbHbmNamedNativeQueryType hbmQuery : hbmClass.getSqlQuery() ) {
+		for ( var hbmQuery : hbmClass.getSqlQuery() ) {
 			// Tests implied this was the case...
 			final String name = hbmClass.getName() + "." + hbmQuery.getName();
 			mappingXmlBinding.getRoot().getNamedNativeQueries().add( transformNamedNativeQuery( hbmQuery, name ) );
@@ -502,10 +503,10 @@ public class HbmXmlTransformer {
 		transferBaseEntityAttributes( hbmSubclass, subclassEntity, subclassEntityInfo );
 
 		if ( !hbmSubclass.getSubclass().isEmpty() ) {
-			for ( JaxbHbmDiscriminatorSubclassEntityType nestedHbmSubclass : hbmSubclass.getSubclass() ) {
+			for ( var nestedHbmSubclass : hbmSubclass.getSubclass() ) {
 				final String nestedSubclassEntityName = TransformationHelper.determineEntityName( nestedHbmSubclass, hbmXmlBinding.getRoot() );
-				final JaxbEntityImpl nestedSubclassSubclassEntity = transformationState.getMappingEntityByName().get( nestedSubclassEntityName );
-				final EntityTypeInfo nestedSubclassInfo = transformationState.getEntityInfoByName().get( nestedSubclassEntityName );
+				final var nestedSubclassSubclassEntity = transformationState.getMappingEntityByName().get( nestedSubclassEntityName );
+				final var nestedSubclassInfo = transformationState.getEntityInfoByName().get( nestedSubclassEntityName );
 				transferDiscriminatorSubclass( nestedHbmSubclass, nestedSubclassSubclassEntity, nestedSubclassInfo );
 			}
 		}
@@ -522,9 +523,9 @@ public class HbmXmlTransformer {
 
 		applyTable( subclassEntityInfo.getPersistentClass(), subclassEntity );
 
-		final JaxbHbmKeyType key = hbmSubclass.getKey();
+		final var key = hbmSubclass.getKey();
 		if ( key != null ) {
-			final JaxbPrimaryKeyJoinColumnImpl joinColumn = new JaxbPrimaryKeyJoinColumnImpl();
+			final var joinColumn = new JaxbPrimaryKeyJoinColumnImpl();
 			// todo (7.0) : formula and multiple columns
 			joinColumn.setName( key.getColumnAttribute() );
 			subclassEntity.getPrimaryKeyJoinColumns().add( joinColumn );
@@ -532,10 +533,10 @@ public class HbmXmlTransformer {
 		}
 
 		if ( !hbmSubclass.getJoinedSubclass().isEmpty() ) {
-			for ( JaxbHbmJoinedSubclassEntityType nestedHbmSubclass : hbmSubclass.getJoinedSubclass() ) {
+			for ( var nestedHbmSubclass : hbmSubclass.getJoinedSubclass() ) {
 				final String nestedSubclassEntityName = TransformationHelper.determineEntityName( nestedHbmSubclass, hbmXmlBinding.getRoot() );
-				final JaxbEntityImpl nestedSubclassSubclassEntity = transformationState.getMappingEntityByName().get( nestedSubclassEntityName );
-				final EntityTypeInfo nestedSubclassInfo = transformationState.getEntityInfoByName().get( nestedSubclassEntityName );
+				final var nestedSubclassSubclassEntity = transformationState.getMappingEntityByName().get( nestedSubclassEntityName );
+				final var nestedSubclassInfo = transformationState.getEntityInfoByName().get( nestedSubclassEntityName );
 				transferJoinedSubclass( nestedHbmSubclass, nestedSubclassSubclassEntity, nestedSubclassInfo );
 			}
 		}
@@ -554,10 +555,10 @@ public class HbmXmlTransformer {
 		applyTable( subclassEntityInfo.getPersistentClass(), subclassEntity );
 
 		if ( !hbmSubclass.getUnionSubclass().isEmpty() ) {
-			for ( JaxbHbmUnionSubclassEntityType nestedHbmSubclass : hbmSubclass.getUnionSubclass() ) {
+			for ( var nestedHbmSubclass : hbmSubclass.getUnionSubclass() ) {
 				final String nestedSubclassEntityName = TransformationHelper.determineEntityName( nestedHbmSubclass, hbmXmlBinding.getRoot() );
-				final JaxbEntityImpl nestedSubclassSubclassEntity = transformationState.getMappingEntityByName().get( nestedSubclassEntityName );
-				final EntityTypeInfo nestedSubclassInfo = transformationState.getEntityInfoByName().get( nestedSubclassEntityName );
+				final var nestedSubclassSubclassEntity = transformationState.getMappingEntityByName().get( nestedSubclassEntityName );
+				final var nestedSubclassInfo = transformationState.getEntityInfoByName().get( nestedSubclassEntityName );
 				transferUnionSubclass( nestedHbmSubclass, nestedSubclassSubclassEntity, nestedSubclassInfo );
 			}
 		}
@@ -569,7 +570,7 @@ public class HbmXmlTransformer {
 			EntityTypeInfo bootEntityInfo) {
 		mappingEntity.setMetadataComplete( true );
 
-		final PersistentClass persistentClass = bootEntityInfo.getPersistentClass();
+		final var persistentClass = bootEntityInfo.getPersistentClass();
 		if ( persistentClass.getSuperclass() != null ) {
 			mappingEntity.setExtends( persistentClass.getSuperclass().getEntityName() );
 		}
@@ -618,23 +619,21 @@ public class HbmXmlTransformer {
 				jaxbBasicMapping.setJdbcType( standardBasicType.getJdbcType().getClass().getName() );
 			}
 		}
-		else if ( type instanceof CustomType<?> customType ) {
+		else if ( type instanceof CustomType<?> ) {
 			if ( isNotEmpty( hbmTypeAttribute ) ) {
-				final JaxbUserTypeImpl typeNode = interpretBasicType(
+				jaxbBasicMapping.setType( interpretBasicType(
 						hbmTypeAttribute,
 						null,
 						transformationState.getTypeDefMap().get( hbmTypeAttribute )
-				);
-				jaxbBasicMapping.setType( typeNode );
+				) );
 			}
 
 			if ( hbmType != null ) {
-				final JaxbUserTypeImpl typeNode = interpretBasicType(
+				jaxbBasicMapping.setType( interpretBasicType(
 						hbmType.getName(),
 						hbmType,
 						transformationState.getTypeDefMap().get( hbmType.getName() )
-				);
-				jaxbBasicMapping.setType( typeNode );
+				) );
 			}
 		}
 		else if ( type instanceof ConvertedBasicType<?> convertedType ) {
@@ -658,7 +657,7 @@ public class HbmXmlTransformer {
 			jaxbEntity.setTableExpression( table.getViewQuery() );
 		}
 		else {
-			final JaxbTableImpl jaxbTable = new JaxbTableImpl();
+			final var jaxbTable = new JaxbTableImpl();
 			jaxbEntity.setTable( jaxbTable );
 			jaxbTable.setName( table.getName() );
 			jaxbTable.setComment( table.getComment() );
@@ -670,8 +669,8 @@ public class HbmXmlTransformer {
 		jaxbTableMapping.setCatalog( table.getCatalog() );
 		jaxbTableMapping.setSchema( table.getSchema() );
 
-		for ( CheckConstraint check : table.getChecks() ) {
-			final JaxbCheckConstraintImpl jaxbCheckConstraint = new JaxbCheckConstraintImpl();
+		for ( var check : table.getChecks() ) {
+			final var jaxbCheckConstraint = new JaxbCheckConstraintImpl();
 			jaxbTableMapping.getCheckConstraints().add( jaxbCheckConstraint );
 			jaxbCheckConstraint.setName( check.getName() );
 			jaxbCheckConstraint.setConstraint( check.getConstraint() );
@@ -714,15 +713,15 @@ public class HbmXmlTransformer {
 
 			boolean foundCondition = false;
 			for ( Object content : hbmFilterDef.getContent() ) {
-				if ( content instanceof String ) {
-					final String condition = ( (String) content ).trim();
-					if ( !StringHelper.isEmpty( condition ) ) {
+				if ( content instanceof String string ) {
+					if ( !isBlank( string ) ) {
 						foundCondition = true;
-						filterDef.setDefaultCondition( condition );
+						filterDef.setDefaultCondition( string.trim() );
 					}
 				}
 				else {
-					final JaxbHbmFilterParameterType hbmFilterParam = ( (JAXBElement<JaxbHbmFilterParameterType>) content ).getValue();
+					final JaxbHbmFilterParameterType hbmFilterParam =
+							( (JAXBElement<JaxbHbmFilterParameterType>) content ).getValue();
 					final JaxbFilterDefImpl.JaxbFilterParamImpl param = new JaxbFilterDefImpl.JaxbFilterParamImpl();
 					filterDef.getFilterParams().add( param );
 					param.setName( hbmFilterParam.getParameterName() );
@@ -777,21 +776,13 @@ public class HbmXmlTransformer {
 		mapping.setDescription( "SQL ResultSet mapping - " + resultMappingName );
 
 		for ( Serializable hbmReturn : hbmResultSet.getValueMappingSources() ) {
-			if ( hbmReturn instanceof JaxbHbmNativeQueryReturnType ) {
-				mapping.getEntityResult().add(
-						transferEntityReturnElement(
-								resultMappingName,
-								(JaxbHbmNativeQueryReturnType) hbmReturn
-						)
-				);
+			if ( hbmReturn instanceof JaxbHbmNativeQueryReturnType returnType ) {
+				mapping.getEntityResult()
+						.add( transferEntityReturnElement( resultMappingName, returnType ) );
 			}
-			else if ( hbmReturn instanceof JaxbHbmNativeQueryScalarReturnType ) {
-				mapping.getColumnResult().add(
-						transferScalarReturnElement(
-								resultMappingName,
-								(JaxbHbmNativeQueryScalarReturnType) hbmReturn
-						)
-				);
+			else if ( hbmReturn instanceof JaxbHbmNativeQueryScalarReturnType scalarReturnType) {
+				mapping.getColumnResult()
+						.add( transferScalarReturnElement( resultMappingName, scalarReturnType ) );
 			}
 			else if ( hbmReturn instanceof JaxbHbmNativeQueryJoinReturnType ) {
 				handleUnsupportedContent(
@@ -833,7 +824,7 @@ public class HbmXmlTransformer {
 		for ( JaxbHbmNativeQueryPropertyReturnType propertyReturn : hbmReturn.getReturnProperty() ) {
 			final JaxbFieldResultImpl field = new JaxbFieldResultImpl();
 			final List<String> columns = new ArrayList<>();
-			if ( !StringHelper.isEmpty( propertyReturn.getColumn() ) ) {
+			if ( !isEmpty( propertyReturn.getColumn() ) ) {
 				columns.add( propertyReturn.getColumn() );
 			}
 
@@ -978,15 +969,15 @@ public class HbmXmlTransformer {
 				qryString = qryString.trim();
 				query.setQuery( qryString );
 			}
-			else if ( content instanceof JAXBElement ) {
-				final Object element = ( (JAXBElement<?>) content ).getValue();
+			else if ( content instanceof JAXBElement<?> contentElement ) {
+				final Object element = contentElement.getValue();
 				if ( element instanceof JaxbHbmQueryParamType hbmQueryParam ) {
 					final JaxbQueryParamTypeImpl queryParam = new JaxbQueryParamTypeImpl();
 					queryParam.setName( hbmQueryParam.getName() );
 					queryParam.setType( hbmQueryParam.getType() );
 					query.getQueryParam().add( queryParam );
 				}
-				else if ( element instanceof JaxbHbmNativeQueryScalarReturnType ) {
+				else if ( element instanceof JaxbHbmNativeQueryScalarReturnType scalarReturnType ) {
 					if ( implicitResultSetMapping == null ) {
 						implicitResultSetMapping = new JaxbSqlResultSetMappingImpl();
 						implicitResultSetMapping.setName( implicitResultSetMappingName );
@@ -999,14 +990,10 @@ public class HbmXmlTransformer {
 						);
 						mappingXmlBinding.getRoot().getSqlResultSetMappings().add( implicitResultSetMapping );
 					}
-					implicitResultSetMapping.getColumnResult().add(
-							transferScalarReturnElement(
-									implicitResultSetMappingName,
-									(JaxbHbmNativeQueryScalarReturnType) element
-							)
-					);
+					implicitResultSetMapping.getColumnResult()
+							.add( transferScalarReturnElement( implicitResultSetMappingName, scalarReturnType ) );
 				}
-				else if ( element instanceof JaxbHbmNativeQueryReturnType ) {
+				else if ( element instanceof JaxbHbmNativeQueryReturnType returnType ) {
 					if ( implicitResultSetMapping == null ) {
 						implicitResultSetMapping = new JaxbSqlResultSetMappingImpl();
 						implicitResultSetMapping.setName( implicitResultSetMappingName );
@@ -1019,12 +1006,8 @@ public class HbmXmlTransformer {
 						);
 						mappingXmlBinding.getRoot().getSqlResultSetMappings().add( implicitResultSetMapping );
 					}
-					implicitResultSetMapping.getEntityResult().add(
-							transferEntityReturnElement(
-									implicitResultSetMappingName,
-									(JaxbHbmNativeQueryReturnType) element
-							)
-					);
+					implicitResultSetMapping.getEntityResult()
+							.add( transferEntityReturnElement( implicitResultSetMappingName, returnType ) );
 				}
 				else if ( element instanceof JaxbHbmNativeQueryCollectionLoadReturnType ) {
 					handleUnsupportedContent(
@@ -1181,8 +1164,8 @@ public class HbmXmlTransformer {
 		}
 		else if ( !source.getColumnOrFormula().isEmpty() ) {
 			for ( Serializable columnOrFormula : source.getColumnOrFormula() ) {
-				if ( columnOrFormula instanceof String ) {
-					target.addFormula( (String) columnOrFormula );
+				if ( columnOrFormula instanceof String string ) {
+					target.addFormula( string );
 				}
 				else {
 					final JaxbHbmColumnType hbmColumn = (JaxbHbmColumnType) columnOrFormula;
@@ -1385,8 +1368,8 @@ public class HbmXmlTransformer {
 				// where the `name` could then be used for `@PropertyRef`
 				handleUnsupported( "<properties/> mappings not supported for transformation [name=%s]", hbmProperties.getName() );
 			}
-			else if ( hbmAttributeMapping instanceof JaxbHbmDynamicComponentType ) {
-				final String name = ( (JaxbHbmDynamicComponentType) hbmAttributeMapping ).getName();
+			else if ( hbmAttributeMapping instanceof JaxbHbmDynamicComponentType dynamicComponentType) {
+				final String name = dynamicComponentType.getName();
 				handleUnsupported(
 						"<dynamic-component/> mappings not supported for transformation [name=%s]",
 						name
@@ -1569,7 +1552,7 @@ public class HbmXmlTransformer {
 					}
 
 					@Override
-					public Boolean isUpdateable() {
+					public Boolean isUpdatable() {
 						return hbmProp.isUpdate();
 					}
 				},
@@ -1914,7 +1897,7 @@ public class HbmXmlTransformer {
 			}
 			target.setOrderBy( map.getOrderBy() );
 
-			transferMapKey( (JaxbHbmMapType) source, target );
+			transferMapKey( map, target );
 			target.setClassification( LimitedCollectionClassification.MAP );
 		}
 		else if ( source instanceof JaxbHbmIdBagCollectionType ) {
@@ -1924,26 +1907,26 @@ public class HbmXmlTransformer {
 		else if ( source instanceof JaxbHbmBagCollectionType ) {
 			target.setClassification( LimitedCollectionClassification.BAG );
 		}
-		else if ( source instanceof JaxbHbmListType ) {
+		else if ( source instanceof JaxbHbmListType listType ) {
 			transferListIndex(
-					( (JaxbHbmListType) source ).getIndex(),
-					( (JaxbHbmListType) source ).getListIndex(),
+					listType.getIndex(),
+					listType.getListIndex(),
 					target
 			);
 			target.setClassification( LimitedCollectionClassification.LIST );
 		}
-		else if ( source instanceof JaxbHbmArrayType ) {
+		else if ( source instanceof JaxbHbmArrayType arrayType ) {
 			transferListIndex(
-					( (JaxbHbmArrayType) source ).getIndex(),
-					( (JaxbHbmArrayType) source ).getListIndex(),
+					arrayType.getIndex(),
+					arrayType.getListIndex(),
 					target
 			);
 			target.setClassification( LimitedCollectionClassification.LIST );
 		}
-		else if ( source instanceof JaxbHbmPrimitiveArrayType ) {
+		else if ( source instanceof JaxbHbmPrimitiveArrayType primitiveArrayType ) {
 			transferListIndex(
-					( (JaxbHbmPrimitiveArrayType) source ).getIndex(),
-					( (JaxbHbmPrimitiveArrayType) source ).getListIndex(),
+					primitiveArrayType.getIndex(),
+					primitiveArrayType.getListIndex(),
 					target
 			);
 			target.setClassification( LimitedCollectionClassification.LIST );
@@ -1951,10 +1934,10 @@ public class HbmXmlTransformer {
 	}
 
 	private FetchType convert(JaxbHbmLazyWithExtraEnum lazy) {
-		if ( lazy == null || lazy == JaxbHbmLazyWithExtraEnum.TRUE ) {
-			return FetchType.LAZY;
-		}
-		return FetchType.EAGER;
+		return lazy == null
+			|| lazy == JaxbHbmLazyWithExtraEnum.TRUE
+				? FetchType.LAZY
+				: FetchType.EAGER;
 	}
 
 	private void transferListIndex(
@@ -1997,7 +1980,7 @@ public class HbmXmlTransformer {
 			target.setMapKeyColumn( mapKey );
 		}
 		else if ( source.getMapKey() != null ) {
-			if ( ! StringHelper.isEmpty( source.getMapKey().getFormulaAttribute() ) ) {
+			if ( ! isEmpty( source.getMapKey().getFormulaAttribute() ) ) {
 				handleUnsupported(
 						"Transformation of formula attribute within map-keys is not supported - `%s`",
 						origin()
@@ -2812,7 +2795,7 @@ public class HbmXmlTransformer {
 					}
 
 					@Override
-					public Boolean isUpdateable() {
+					public Boolean isUpdatable() {
 						return true;
 					}
 				},
@@ -2895,7 +2878,7 @@ public class HbmXmlTransformer {
 	}
 
 	private JaxbForeignKeyImpl transformForeignKey(String hbmForeignKeyName) {
-		if ( StringHelper.isEmpty( hbmForeignKeyName ) ) {
+		if ( isEmpty( hbmForeignKeyName ) ) {
 			return null;
 		}
 
@@ -2933,7 +2916,7 @@ public class HbmXmlTransformer {
 						keyPropertyInfo
 				) );
 			}
-			else if ( hbmIdProperty instanceof JaxbHbmCompositeKeyManyToOneType hbmKeyManyToOne ) {
+			else if ( hbmIdProperty instanceof JaxbHbmCompositeKeyManyToOneType ) {
 				handleUnsupported( "Transformation of <key-many-to-one/> not supported" );
 			}
 			else {
@@ -3042,7 +3025,7 @@ public class HbmXmlTransformer {
 					}
 
 					@Override
-					public Boolean isUpdateable() {
+					public Boolean isUpdatable() {
 						return true;
 					}
 				},
@@ -3329,8 +3312,8 @@ public class HbmXmlTransformer {
 		filter.setCondition( hbmFilter.getCondition() );
 
 		for ( Serializable content : hbmFilter.getContent() ) {
-			if ( content instanceof String ) {
-				filter.setCondition( (String) content );
+			if ( content instanceof String string ) {
+				filter.setCondition( string );
 			}
 			else {
 				final JaxbHbmFilterAliasMappingType hbmAliasMapping = (JaxbHbmFilterAliasMappingType) content;

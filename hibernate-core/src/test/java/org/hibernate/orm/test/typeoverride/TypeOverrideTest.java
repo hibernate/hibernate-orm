@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.typeoverride;
@@ -7,6 +7,7 @@ package org.hibernate.orm.test.typeoverride;
 import java.sql.Types;
 
 import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
@@ -14,7 +15,6 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
-import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
@@ -53,11 +53,17 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 		// A few dialects explicitly override BlobTypeDescriptor.DEFAULT
 		if ( CockroachDialect.class.isInstance( dialect ) ) {
 			assertSame(
-					VarbinaryJdbcType.INSTANCE,
+					BlobJdbcType.MATERIALIZED,
 					jdbcTypeRegistry.getDescriptor( Types.BLOB )
 			);
 		}
 		else if ( PostgreSQLDialect.class.isInstance( dialect ) ) {
+			assertSame(
+					BlobJdbcType.BLOB_BINDING,
+					jdbcTypeRegistry.getDescriptor( Types.BLOB )
+			);
+		}
+		else if ( GaussDBDialect.class.isInstance( dialect ) ) {
 			assertSame(
 					BlobJdbcType.BLOB_BINDING,
 					jdbcTypeRegistry.getDescriptor( Types.BLOB )
@@ -85,10 +91,7 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 
 	@AfterEach
 	public void tearDown() {
-		inTransaction(
-				session ->
-						session.createQuery( "delete from Entity" ).executeUpdate()
-		);
+		sessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

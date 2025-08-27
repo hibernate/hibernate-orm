@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -47,12 +47,12 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 			Column columnOverride,
 			String defaultColumnName,
 			MetadataBuildingContext context) {
-		final AnnotatedColumns parent = new AnnotatedColumns();
+		final var parent = new AnnotatedColumns();
 		parent.setBuildingContext( context );
-		final AnnotatedDiscriminatorColumn column = new AnnotatedDiscriminatorColumn( defaultColumnName );
+		final var column = new AnnotatedDiscriminatorColumn( defaultColumnName );
 		final DiscriminatorType discriminatorType;
 		if ( discriminatorFormula != null ) {
-			final DiscriminatorType type = discriminatorFormula.discriminatorType();
+			final var type = discriminatorFormula.discriminatorType();
 			if ( type == DiscriminatorType.STRING ) {
 				discriminatorType = discriminatorColumn == null ? type : discriminatorColumn.discriminatorType();
 			}
@@ -65,10 +65,10 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 		else if ( discriminatorColumn != null ) {
 			discriminatorType = discriminatorColumn.discriminatorType();
 			column.setImplicit( false );
-			if ( !discriminatorColumn.columnDefinition().isEmpty() ) {
+			if ( !discriminatorColumn.columnDefinition().isBlank() ) {
 				column.setSqlType( discriminatorColumn.columnDefinition() );
 			}
-			if ( !discriminatorColumn.name().isEmpty() ) {
+			if ( !discriminatorColumn.name().isBlank() ) {
 				column.setLogicalColumnName( discriminatorColumn.name() );
 			}
 			column.setNullable( false );
@@ -82,7 +82,7 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 			column.setLogicalColumnName( columnOverride.name() );
 
 			final String columnDefinition = columnOverride.columnDefinition();
-			if ( !columnDefinition.isEmpty() ) {
+			if ( !columnDefinition.isBlank() ) {
 				column.setSqlType( columnDefinition );
 			}
 		}

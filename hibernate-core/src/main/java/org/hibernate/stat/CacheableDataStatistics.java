@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat;
@@ -36,4 +36,10 @@ public interface CacheableDataStatistics extends Serializable {
 	 * configured cache region since the last Statistics clearing
 	 */
 	long getCacheMissCount();
+
+	/**
+	 * The number of evictions from the configured cache region since
+	 * the last Statistics clearing
+	 */
+	long getCacheRemoveCount();
 }

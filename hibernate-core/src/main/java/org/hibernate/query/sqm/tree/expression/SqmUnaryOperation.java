@@ -1,13 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
 /**
@@ -22,7 +23,7 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 				operation,
 				operand,
 				operand.nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType(
-						operand.getNodeType().getRelationalJavaType().getJavaType()
+						operand.getExpressible().getRelationalJavaType().getJavaType()
 				)
 		);
 	}
@@ -30,7 +31,7 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 	public SqmUnaryOperation(
 			UnaryArithmeticOperator operation,
 			SqmExpression<T> operand,
-			SqmExpressible<T> inherentType) {
+			SqmBindableType<T> inherentType) {
 		super( inherentType, operand.nodeBuilder() );
 		this.operation = operation;
 		this.operand = operand;
@@ -69,11 +70,11 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 
 	@Override
 	public String asLoggableText() {
-		return ( operation == UnaryArithmeticOperator.UNARY_MINUS ? '-' : '+' ) + operand.asLoggableText();
+		return operation.getOperatorChar() + operand.asLoggableText();
 	}
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( operation == UnaryArithmeticOperator.UNARY_MINUS ? '-' : '+' );
-		operand.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( operation.getOperatorChar() );
+		operand.appendHqlString( hql, context );
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.lob;
@@ -14,6 +14,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
+import static org.hibernate.Hibernate.getLobHelper;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -43,7 +44,7 @@ public class LobMergeTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 
 		LobHolder entity = new LobHolder();
-		entity.setBlobLocator( s.getLobHelper().createBlob( original ) );
+		entity.setBlobLocator( getLobHelper().createBlob( original ) );
 		s.persist( entity );
 		s.getTransaction().commit();
 		s.close();
@@ -51,7 +52,7 @@ public class LobMergeTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		// entity still detached...
-		entity.setBlobLocator( s.getLobHelper().createBlob( updated ) );
+		entity.setBlobLocator( getLobHelper().createBlob( updated ) );
 		entity = (LobHolder) s.merge( entity );
 		s.getTransaction().commit();
 		s.close();
@@ -78,7 +79,7 @@ public class LobMergeTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 
 		LobHolder entity = new LobHolder();
-		entity.setClobLocator( s.getLobHelper().createClob( original ) );
+		entity.setClobLocator( getLobHelper().createClob( original ) );
 		s.persist( entity );
 		s.getTransaction().commit();
 		s.close();
@@ -86,7 +87,7 @@ public class LobMergeTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		// entity still detached...
-		entity.setClobLocator( s.getLobHelper().createClob( updated ) );
+		entity.setClobLocator( getLobHelper().createClob( updated ) );
 		entity = (LobHolder) s.merge( entity );
 		s.flush();
 		s.getTransaction().commit();

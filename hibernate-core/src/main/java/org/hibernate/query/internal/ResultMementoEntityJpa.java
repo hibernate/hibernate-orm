@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
@@ -23,6 +23,7 @@ import org.hibernate.query.results.internal.complete.CompleteResultBuilderEntity
 import org.hibernate.query.results.internal.complete.DelayedFetchBuilderBasicPart;
 import org.hibernate.query.results.internal.implicit.ImplicitFetchBuilderBasic;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.results.graph.Fetchable;
 
 /**
  * @author Steve Ebersole
@@ -70,13 +71,13 @@ public class ResultMementoEntityJpa implements ResultMementoEntity, FetchMemento
 			}
 		}
 
-		final HashMap<String, FetchBuilder> explicitFetchBuilderMap = new HashMap<>();
+		final HashMap<Fetchable, FetchBuilder> explicitFetchBuilderMap = new HashMap<>();
 
 		// If there are no explicit fetches, we don't register DELAYED builders to get implicit fetching of all basic fetchables
 		if ( !explicitFetchMementoMap.isEmpty() ) {
 			explicitFetchMementoMap.forEach(
 					(relativePath, fetchMemento) -> explicitFetchBuilderMap.put(
-							relativePath,
+							(Fetchable) entityDescriptor.findByPath( relativePath ),
 							fetchMemento.resolve( this, querySpaceConsumer, context )
 					)
 			);
@@ -87,13 +88,13 @@ public class ResultMementoEntityJpa implements ResultMementoEntity, FetchMemento
 					attributeMapping -> {
 						final BasicValuedModelPart basicPart = attributeMapping.asBasicValuedModelPart();
 						if ( basicPart != null ) {
-							final Function<String, FetchBuilder> fetchBuilderCreator = k -> new DelayedFetchBuilderBasicPart(
-									navigablePath.append( k ),
+							final Function<Fetchable, FetchBuilder> fetchBuilderCreator = k -> new DelayedFetchBuilderBasicPart(
+									navigablePath.append( k.getFetchableName() ),
 									basicPart,
 									isEnhancedForLazyLoading
 							);
 							explicitFetchBuilderMap.computeIfAbsent(
-									attributeMapping.getFetchableName(),
+									attributeMapping,
 									fetchBuilderCreator
 							);
 						}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.uuid;
@@ -9,8 +9,10 @@ import java.util.UUID;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
- * Represents a specific algorithm for producing UUID values.  Used in
- * conjunction with {@linkplain UuidGenerator} and
+ * Represents a specific algorithm for producing UUID values.
+ * <p>
+ * Used in conjunction with {@link UuidGenerator} and
+ * {@link org.hibernate.annotations.UuidGenerator @UuidGenerator}.
  *
  * @author Steve Ebersole
  */

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.mapping.spi;
@@ -10,6 +10,6 @@ package org.hibernate.boot.jaxb.mapping.spi;
  * @author Steve Ebersole
  */
 public interface JaxbLockableAttribute extends JaxbPersistentAttribute {
-	boolean isOptimisticLock();
+	Boolean isOptimisticLock();
 	void setOptimisticLock(Boolean value);
 }

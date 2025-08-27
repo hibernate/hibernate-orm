@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -106,11 +106,6 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
-	protected boolean supportsWithClause() {
-		return false;
-	}
-
-	@Override
 	protected void renderExpressionAsClauseItem(Expression expression) {
 		expression.accept( this );
 	}
@@ -180,16 +175,6 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
-	protected String getForShare(int timeoutMillis) {
-		return " for read only";
-	}
-
-	@Override
-	protected String getForUpdateWithClause() {
-		return " with rs";
-	}
-
-	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		// Derby only supports the OFFSET and FETCH clause with ROWS
 		assertRowsOnlyFetchClauseType( queryPart );
@@ -249,8 +234,7 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 		if ( expression instanceof Literal ) {
 			appendSql( "'0'" );
 		}
-		else if ( expression instanceof Summarization ) {
-			Summarization summarization = (Summarization) expression;
+		else if ( expression instanceof Summarization summarization ) {
 			appendSql( summarization.getKind().sqlText() );
 			appendSql( OPEN_PARENTHESIS );
 			renderCommaSeparated( summarization.getGroupings() );
@@ -284,21 +268,6 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
 	protected boolean needsRowsToSkip() {
 		return !supportsOffsetFetchClause();
 	}
@@ -315,11 +284,6 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	private boolean supportsOffsetFetchClause() {
 		// Before version 10.5 Derby didn't support OFFSET and FETCH
 		return true;
-	}
-
-	@Override
-	protected boolean supportsJoinInMutationStatementSubquery() {
-		return false;
 	}
 
 	@Override

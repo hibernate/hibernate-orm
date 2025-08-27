@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.immutable;
@@ -14,10 +14,12 @@ import org.hibernate.Hibernate;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
@@ -1033,6 +1035,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = InformixDialect.class, reason = "Maximum output rowsize (32767) exceeded")
 	public void testImmutableCollectionWithMerge() {
 		Contract contract = new Contract( null, "gavin", "phone" );
 		ContractVariation contractVariation1 = new ContractVariation( 1, contract );

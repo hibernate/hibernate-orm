@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -62,12 +62,6 @@ class IdentifierSourceAggregatedCompositeImpl implements IdentifierSourceAggrega
 	@Override
 	public List<MapsIdSource> getMapsIdSources() {
 		return Collections.emptyList();
-	}
-
-	@Override
-	public IdentifierGeneratorDefinition getIndividualAttributeIdGenerator(String identifierAttributeName) {
-		// for now, return null.  this is that stupid specj bs
-		return null;
 	}
 
 	@Override

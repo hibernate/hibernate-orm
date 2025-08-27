@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.internal;
@@ -11,7 +11,7 @@ import java.sql.Connection;
  *
  * @author Steve Ebersole
  */
-interface ConnectionCreator {
+public interface ConnectionCreator {
 	/**
 	 * Obtain the URL to which this creator connects.  Intended just for informational (logging) purposes.
 	 *

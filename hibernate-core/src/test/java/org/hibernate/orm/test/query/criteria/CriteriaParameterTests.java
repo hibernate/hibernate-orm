@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.criteria;
@@ -14,8 +14,8 @@ import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 
+import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -36,7 +36,7 @@ public class CriteriaParameterTests {
 					final Root<BasicEntity> root = criteria.from( BasicEntity.class );
 					criteria.where( criteriaBuilder.equal( root.get( "data" ), parameter ) );
 
-					final QueryImplementor<BasicEntity> query = session.createQuery( criteria );
+					final Query<BasicEntity> query = session.createQuery( criteria );
 					query.setParameter( parameter, "fe" );
 					query.list();
 				}
@@ -54,7 +54,7 @@ public class CriteriaParameterTests {
 					Path<?> property = root.get( "data" );
 					criteria.where( property.in( parameter ) );
 
-					final QueryImplementor<BasicEntity> query = session.createQuery( criteria );
+					final Query<BasicEntity> query = session.createQuery( criteria );
 
 					List<String> parameterValue = new ArrayList<>();
 					parameterValue.add( "fe" );
@@ -82,7 +82,7 @@ public class CriteriaParameterTests {
 
 					criteria.where( inPredicate );
 
-					final QueryImplementor<BasicEntity> query = session.createQuery( criteria );
+					final Query<BasicEntity> query = session.createQuery( criteria );
 
 					query.list();
 				}
@@ -105,7 +105,7 @@ public class CriteriaParameterTests {
 
 					criteria.where( inPredicate );
 
-					final QueryImplementor<BasicEntity> query = session.createQuery( criteria );
+					final Query<BasicEntity> query = session.createQuery( criteria );
 					query.setParameter( p1, "fe" );
 					query.setParameter( p2, "fi" );
 					query.list();
@@ -126,7 +126,7 @@ public class CriteriaParameterTests {
 
 					criteria.where( inPredicate );
 
-					final QueryImplementor<BasicEntity> query = session.createQuery( criteria );
+					final Query<BasicEntity> query = session.createQuery( criteria );
 					query.setParameter( parameter, "fe" );
 					query.list();
 				}
@@ -137,7 +137,7 @@ public class CriteriaParameterTests {
 	public void testMultiValuedParameterBaseline3HQL(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor query = session.createQuery( "from BasicEntity where data in (:p)" );
+					final Query query = session.createQuery( "from BasicEntity where data in (:p)" );
 					query.setParameter( "p", "fe" );
 					query.list();
 				}
@@ -158,7 +158,7 @@ public class CriteriaParameterTests {
 
 					criteria.where( inPredicate );
 
-					final QueryImplementor<BasicEntity> query = session.createQuery( criteria );
+					final Query<BasicEntity> query = session.createQuery( criteria );
 					query.setParameter( parameter, Arrays.asList( "fe", "fi", "fo", "fum" ) );
 					query.list();
 				}

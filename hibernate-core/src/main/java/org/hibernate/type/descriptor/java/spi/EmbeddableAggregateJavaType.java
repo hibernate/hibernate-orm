@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java.spi;
@@ -94,6 +94,9 @@ public class EmbeddableAggregateJavaType<T> extends AbstractClassJavaType<T> {
 
 	@Override
 	public <X> T wrap(X value, WrapperOptions options) {
+		if ( value == null ) {
+			return null;
+		}
 		if ( getJavaTypeClass().isInstance( value ) ) {
 			//noinspection unchecked
 			return (T) value;

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.internal;
@@ -34,9 +34,9 @@ public class FallbackBeanInstanceProducer implements BeanInstanceProducer {
 
 	@Override
 	public <B> B produceBeanInstance(Class<B> beanType) {
-		log.tracef( "Creating ManagedBean(%s) using direct instantiation", beanType.getName() );
+		log.tracef( "Creating ManagedBean [%s] using direct instantiation", beanType.getName() );
 		try {
-			Constructor<B> constructor = beanType.getDeclaredConstructor();
+			final Constructor<B> constructor = beanType.getDeclaredConstructor();
 			constructor.setAccessible( true );
 			return constructor.newInstance();
 		}

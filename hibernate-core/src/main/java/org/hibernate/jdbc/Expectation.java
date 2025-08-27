@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jdbc;
@@ -147,6 +147,7 @@ public interface Expectation {
 	 * @since 6.5
 	 */
 	class None implements Expectation {
+		public static final None INSTANCE = new None();
 		@Override
 		public void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition, String sql) {
 			// nothing to do
@@ -180,7 +181,7 @@ public interface Expectation {
 
 	/**
 	 * Essentially identical to {@link RowCount} except that the row count
-	 * is obtained via an output parameter of a {@link CallableStatement
+	 * is obtained via an output parameter of a {@linkplain CallableStatement
 	 * stored procedure}.
 	 * <p>
 	 * Statement batching is disabled when {@code OutParameter} is used.

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
@@ -44,69 +44,52 @@ public class PluralAttributePath extends AbstractDomainPath {
 	}
 
 	@Override
-	public DomainPath resolvePathPart(
+	public SequencePart resolvePathPart(
 			String name,
 			String identifier,
 			boolean isTerminal,
 			TranslationContext translationContext) {
 		final ModelPart subPart = pluralAttributeMapping.findSubPart( name, null );
-
 		if ( subPart != null ) {
-			if ( subPart instanceof CollectionPart ) {
-				return new CollectionPartPath( this, (CollectionPart) subPart );
+			if ( subPart instanceof CollectionPart collectionPart ) {
+				return new CollectionPartPath( this, collectionPart );
 			}
-			if ( subPart instanceof EmbeddableValuedModelPart ) {
+			else if ( subPart instanceof EmbeddableValuedModelPart ) {
 				return new DomainPathContinuation( navigablePath.append( name ), this, subPart );
 			}
-			if ( subPart instanceof ToOneAttributeMapping ) {
-				return new FkDomainPathContinuation(
-						navigablePath.append( name ),
-						this,
-						(ToOneAttributeMapping) subPart
-				);
+			else if ( subPart instanceof ToOneAttributeMapping toOneMapping ) {
+				return new FkDomainPathContinuation( navigablePath.append( name ), this, toOneMapping );
 			}
-
-			// leaf case:
-			final CollectionPartPath elementPath = new CollectionPartPath(
-					this,
-					pluralAttributeMapping.getElementDescriptor()
-			);
-
-			return (DomainPath) elementPath.resolvePathPart( name, identifier, isTerminal, translationContext);
+			else {
+				// leaf case:
+				return new CollectionPartPath( this, pluralAttributeMapping.getElementDescriptor() )
+						.resolvePathPart( name, identifier, isTerminal, translationContext );
+			}
 		}
 
 		// the above checks for explicit element or index descriptor references
 		// 		try also as an implicit element or index sub-part reference...
 
-		if ( pluralAttributeMapping.getElementDescriptor() instanceof EmbeddableValuedModelPart ) {
-			final EmbeddableValuedModelPart elementDescriptor = (EmbeddableValuedModelPart) pluralAttributeMapping.getElementDescriptor();
+		if ( pluralAttributeMapping.getElementDescriptor() instanceof EmbeddableValuedModelPart elementDescriptor ) {
 			final ModelPart elementSubPart = elementDescriptor.findSubPart( name, null );
 			if ( elementSubPart != null ) {
-				// create the CollectionSubPath to use as the `lhs` for the element sub-path
-				final CollectionPartPath elementPath = new CollectionPartPath(
-						this,
-						(CollectionPart) elementDescriptor
-				);
-
 				return new DomainPathContinuation(
-						elementPath.getNavigablePath().append( name ),
+						// create the CollectionSubPath to use as the `lhs` for the element sub-path
+						new CollectionPartPath( this, (CollectionPart) elementDescriptor )
+								.getNavigablePath().append( name ),
 						this,
 						elementSubPart
 				);
 			}
 		}
 
-		if ( pluralAttributeMapping.getIndexDescriptor() instanceof EmbeddableValuedModelPart ) {
-			final EmbeddableValuedModelPart indexDescriptor = (EmbeddableValuedModelPart) pluralAttributeMapping.getIndexDescriptor();
+		if ( pluralAttributeMapping.getIndexDescriptor() instanceof EmbeddableValuedModelPart indexDescriptor ) {
 			final ModelPart indexSubPart = indexDescriptor.findSubPart( name, null );
 			if ( indexSubPart != null ) {
-				// create the CollectionSubPath to use as the `lhs` for the element sub-path
-				final CollectionPartPath indexPath = new CollectionPartPath(
-						this,
-						(CollectionPart) indexDescriptor
-				);
 				return new DomainPathContinuation(
-						indexPath.getNavigablePath().append( name ),
+						// create the CollectionSubPath to use as the `lhs` for the element sub-path
+						new CollectionPartPath( this, (CollectionPart) indexDescriptor )
+								.getNavigablePath().append( name ),
 						this,
 						indexSubPart
 				);

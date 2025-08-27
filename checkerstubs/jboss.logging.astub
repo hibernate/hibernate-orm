@@ -10,4 +10,5 @@ public interface BasicLogger {
 
 public interface Logger {
     void tracev(String format, @Nullable Object param1);
+    void tracef(String format, @Nullable Object param1);
 }

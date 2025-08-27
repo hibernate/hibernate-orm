@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.relational;
@@ -56,21 +56,16 @@ public class Namespace {
 		this.physicalNamingStrategy = physicalNamingStrategy;
 		this.jdbcEnvironment = jdbcEnvironment;
 		this.name = name;
+		this.physicalName = physicalName( name, physicalNamingStrategy, jdbcEnvironment );
 
-		this.physicalName = new Name(
-				physicalNamingStrategy
-						.toPhysicalCatalogName( name.getCatalog(), jdbcEnvironment ),
-				physicalNamingStrategy
-						.toPhysicalSchemaName( name.getSchema(), jdbcEnvironment )
+		log.tracef( "Created database namespace [logicalName=%s, physicalName=%s]", name, physicalName );
+	}
+
+	private static Name physicalName(Name name, PhysicalNamingStrategy physicalNaming, JdbcEnvironment environment) {
+		return new Name(
+				physicalNaming.toPhysicalCatalogName( name.catalog(), environment ),
+				physicalNaming.toPhysicalSchemaName( name.schema(), environment )
 		);
-
-		if ( log.isDebugEnabled() ) {
-			log.debugf(
-					"Created database namespace [logicalName=%s, physicalName=%s]",
-					name.toString(),
-					physicalName.toString()
-			);
-		}
 	}
 
 	public Name getName() {
@@ -122,12 +117,13 @@ public class Namespace {
 		if ( existing != null ) {
 			return existing;
 		}
-
-		final Identifier physicalTableName = physicalNamingStrategy.toPhysicalTableName( logicalTableName, jdbcEnvironment );
-		final Table table = creator.apply( physicalTableName );
-		tables.put( logicalTableName, table );
-
-		return table;
+		else {
+			final Identifier physicalTableName =
+					physicalNamingStrategy.toPhysicalTableName( logicalTableName, jdbcEnvironment );
+			final Table table = creator.apply( physicalTableName );
+			tables.put( logicalTableName, table );
+			return table;
+		}
 	}
 
 	public DenormalizedTable createDenormalizedTable(Identifier logicalTableName, Function<Identifier,DenormalizedTable> creator) {
@@ -135,12 +131,13 @@ public class Namespace {
 		if ( existing != null ) {
 			return (DenormalizedTable) existing;
 		}
-
-		final Identifier physicalTableName = physicalNamingStrategy.toPhysicalTableName( logicalTableName, jdbcEnvironment );
-		final DenormalizedTable table = creator.apply( physicalTableName );
-		tables.put( logicalTableName, table );
-
-		return table;
+		else {
+			final Identifier physicalTableName =
+					physicalNamingStrategy.toPhysicalTableName( logicalTableName, jdbcEnvironment );
+			final DenormalizedTable table = creator.apply( physicalTableName );
+			tables.put( logicalTableName, table );
+			return table;
+		}
 	}
 
 	public Sequence locateSequence(Identifier name) {
@@ -162,7 +159,6 @@ public class Namespace {
 		final Identifier physicalName = physicalNamingStrategy.toPhysicalSequenceName( logicalName, jdbcEnvironment );
 		final Sequence sequence = creator.apply( physicalName );
 		sequences.put( logicalName, sequence );
-
 		return sequence;
 	}
 
@@ -178,18 +174,18 @@ public class Namespace {
 		for ( var entry : udts.entrySet() ) {
 			final var dependencies = new HashSet<Identifier>();
 			final UserDefinedType udt = entry.getValue();
-			if ( udt instanceof UserDefinedObjectType ) {
-				for ( Column udtColumn : ( (UserDefinedObjectType) udt ).getColumns() ) {
+			if ( udt instanceof UserDefinedObjectType userDefinedTypes ) {
+				for ( Column udtColumn : userDefinedTypes.getColumns() ) {
 					final Type udtColumnType = udtColumn.getValue().getType();
-					if ( udtColumnType instanceof BasicType<?> ) {
-						final JdbcType jdbcType = ( (BasicType<?>) udtColumnType ).getJdbcType();
-						if ( jdbcType instanceof SqlTypedJdbcType ) {
-							dependencies.add( Identifier.toIdentifier( ( (SqlTypedJdbcType) jdbcType ).getSqlTypeName() ) );
+					if ( udtColumnType instanceof BasicType<?> basicType ) {
+						final JdbcType jdbcType = basicType.getJdbcType();
+						if ( jdbcType instanceof SqlTypedJdbcType sqlTypedJdbcType ) {
+							dependencies.add( Identifier.toIdentifier( sqlTypedJdbcType.getSqlTypeName() ) );
 						}
-						else if ( jdbcType instanceof ArrayJdbcType ) {
-							final JdbcType elementJdbcType = ( (ArrayJdbcType) jdbcType ).getElementJdbcType();
-							if ( elementJdbcType instanceof SqlTypedJdbcType ) {
-								dependencies.add( Identifier.toIdentifier( ( (SqlTypedJdbcType) elementJdbcType ).getSqlTypeName() ) );
+						else if ( jdbcType instanceof ArrayJdbcType arrayJdbcType ) {
+							final JdbcType elementJdbcType = arrayJdbcType.getElementJdbcType();
+							if ( elementJdbcType instanceof SqlTypedJdbcType sqlTypedJdbcType ) {
+								dependencies.add( Identifier.toIdentifier( sqlTypedJdbcType.getSqlTypeName() ) );
 							}
 						}
 					}
@@ -203,8 +199,8 @@ public class Namespace {
 					udtDependencies.put( entry.getKey(), dependencies );
 				}
 			}
-			else if ( udt instanceof UserDefinedArrayType ) {
-				final Identifier elementTypeName = Identifier.toIdentifier( ( (UserDefinedArrayType) udt ).getElementTypeName() );
+			else if ( udt instanceof UserDefinedArrayType userDefinedTypes ) {
+				final Identifier elementTypeName = Identifier.toIdentifier( userDefinedTypes.getElementTypeName() );
 				if ( udts.get( elementTypeName ) instanceof UserDefinedObjectType ) {
 					dependencies.add( elementTypeName );
 					udtDependencies.put( entry.getKey(), dependencies );
@@ -275,12 +271,13 @@ public class Namespace {
 		if ( existing != null ) {
 			return (UserDefinedObjectType) existing;
 		}
-
-		final Identifier physicalTableName = physicalNamingStrategy.toPhysicalTypeName( logicalTypeName, jdbcEnvironment );
-		final UserDefinedObjectType type = creator.apply( physicalTableName );
-		udts.put( logicalTypeName, type );
-
-		return type;
+		else {
+			final Identifier physicalTableName =
+					physicalNamingStrategy.toPhysicalTypeName( logicalTypeName, jdbcEnvironment );
+			final UserDefinedObjectType type = creator.apply( physicalTableName );
+			udts.put( logicalTypeName, type );
+			return type;
+		}
 	}
 	/**
 	 * Creates a mapping UDT instance.
@@ -295,12 +292,13 @@ public class Namespace {
 		if ( existing != null ) {
 			return (UserDefinedArrayType) existing;
 		}
-
-		final Identifier physicalTableName = physicalNamingStrategy.toPhysicalTypeName( logicalTypeName, jdbcEnvironment );
-		final UserDefinedArrayType type = creator.apply( physicalTableName );
-		udts.put( logicalTypeName, type );
-
-		return type;
+		else {
+			final Identifier physicalTableName =
+					physicalNamingStrategy.toPhysicalTypeName( logicalTypeName, jdbcEnvironment );
+			final UserDefinedArrayType type = creator.apply( physicalTableName );
+			udts.put( logicalTypeName, type );
+			return type;
+		}
 	}
 
 	@Override
@@ -309,15 +307,13 @@ public class Namespace {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		if ( !(object instanceof Namespace that) ) {
 			return false;
 		}
-
-		final Namespace that = (Namespace) o;
 		return Objects.equals( this.name, that.name );
 	}
 
@@ -330,81 +326,40 @@ public class Namespace {
 		return sequences.values();
 	}
 
-	public static class Name implements Comparable<Name> {
-		private final Identifier catalog;
-		private final Identifier schema;
+	public record Name(Identifier catalog, Identifier schema) implements Comparable<Name> {
 
-		public Name(Identifier catalog, Identifier schema) {
-			this.schema = schema;
-			this.catalog = catalog;
-		}
-
+		@Deprecated(since = "7")
 		public Identifier getCatalog() {
 			return catalog;
 		}
 
+		@Deprecated(since = "7")
 		public Identifier getSchema() {
 			return schema;
 		}
 
 		@Override
-		public String toString() {
-			return "Name" + "{catalog=" + catalog + ", schema=" + schema + '}';
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if ( this == o ) {
-				return true;
-			}
-			if ( o == null || getClass() != o.getClass() ) {
-				return false;
-			}
-
-			final Name that = (Name) o;
-
-			return Objects.equals( this.catalog, that.catalog )
-				&& Objects.equals( this.schema, that.schema );
-		}
-
-		@Override
-		public int hashCode() {
-			int result = catalog != null ? catalog.hashCode() : 0;
-			result = 31 * result + (schema != null ? schema.hashCode() : 0);
-			return result;
-		}
-
-		@Override
 		public int compareTo(Name that) {
-			// per Comparable, the incoming Name cannot be null.  However, its catalog/schema might be
-			// so we need to account for that.
-			int catalogCheck = ComparableHelper.compare( this.getCatalog(), that.getCatalog() );
-			if ( catalogCheck != 0 ) {
-				return catalogCheck;
-			}
-
-			return ComparableHelper.compare( this.getSchema(), that.getSchema() );
+			// per Comparable, the incoming Name cannot be null.
+			// However, its catalog/schema might be so we need to account for that.
+			final int catalogCheck = compare( this.catalog(), that.catalog() );
+			return catalogCheck != 0 ? catalogCheck : compare( this.schema(), that.schema() );
 		}
-	}
 
-	public static class ComparableHelper {
-		public static <T extends Comparable<T>> int compare(T first, T second) {
-			if ( first == null ) {
-				if ( second == null ) {
-					return 0;
-				}
-				else {
-					return 1;
-				}
+		private static int compare(Identifier first, Identifier second) {
+			if ( first == null && second == null ) {
+				return 0;
+			}
+			else if ( first == null ) {
+				return 1;
+			}
+			else if ( second == null ) {
+				return -1;
 			}
 			else {
-				if ( second == null ) {
-					return -1;
-				}
-				else {
-					return first.compareTo( second );
-				}
+				return first.compareTo( second );
 			}
 		}
 	}
+
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.idprops;
@@ -46,10 +46,7 @@ public class IdPropertyInSubclassIdInMappedSuperclassTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete from Genius" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -75,7 +72,7 @@ public class IdPropertyInSubclassIdInMappedSuperclassTest {
 
 			assertEquals(
 					2,
-					session.createQuery( "from Human h where h.id = :id", Human.class )
+					session.createQuery( "from Genius g where g.id = :id", Human.class )
 							.setParameter( "id", 1L )
 							.list()
 							.size()
@@ -83,6 +80,14 @@ public class IdPropertyInSubclassIdInMappedSuperclassTest {
 
 			assertEquals(
 					1,
+					session.createQuery( "from Human h where h.id = :id", Human.class )
+							.setParameter( "id", 1L )
+							.list()
+							.size()
+			);
+
+			assertEquals(
+					0,
 					session.createQuery( "from Human h where h.id is null", Human.class )
 							.list()
 							.size()

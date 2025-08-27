@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry.internal;
@@ -217,9 +217,8 @@ public class BootstrapServiceRegistryImpl
 		destroy( integratorServiceBinding );
 
 		if ( childRegistries != null ) {
-			for(ServiceRegistry serviceRegistry : childRegistries) {
-				if(serviceRegistry instanceof ServiceRegistryImplementor) {
-					ServiceRegistryImplementor serviceRegistryImplementor = (ServiceRegistryImplementor) serviceRegistry;
+			for ( ServiceRegistry serviceRegistry : childRegistries ) {
+				if ( serviceRegistry instanceof ServiceRegistryImplementor serviceRegistryImplementor ) {
 					serviceRegistryImplementor.destroy();
 				}
 			}
@@ -241,33 +240,33 @@ public class BootstrapServiceRegistryImpl
 
 	@Override
 	public <R extends Service> R initiateService(ServiceInitiator<R> serviceInitiator) {
-		throw new ServiceException( "Boot-strap registry should only contain provided services" );
+		throw new ServiceException( "Bootstrap registry should only contain provided services" );
 	}
 
 	@Override
 	public <R extends Service> void configureService(ServiceBinding<R> binding) {
-		throw new ServiceException( "Boot-strap registry should only contain provided services" );
+		throw new ServiceException( "Bootstrap registry should only contain provided services" );
 	}
 
 	@Override
 	public <R extends Service> void injectDependencies(ServiceBinding<R> binding) {
-		throw new ServiceException( "Boot-strap registry should only contain provided services" );
+		throw new ServiceException( "Bootstrap registry should only contain provided services" );
 	}
 
 	@Override
 	public <R extends Service> void startService(ServiceBinding<R> binding) {
-		throw new ServiceException( "Boot-strap registry should only contain provided services" );
+		throw new ServiceException( "Bootstrap registry should only contain provided services" );
 	}
 
 	@Override
 	public synchronized <R extends Service> void stopService(ServiceBinding<R> binding) {
 		final Service service = binding.getService();
-		if ( service instanceof Stoppable ) {
+		if ( service instanceof Stoppable stoppable ) {
 			try {
-				( (Stoppable) service ).stop();
+				stoppable.stop();
 			}
 			catch ( Exception e ) {
-				LOG.unableToStopService( service.getClass(), e );
+				LOG.unableToStopService( binding.getServiceRole().getName(), e );
 			}
 		}
 	}
@@ -293,17 +292,11 @@ public class BootstrapServiceRegistryImpl
 		childRegistries.remove( child );
 		if ( childRegistries.isEmpty() ) {
 			if ( autoCloseRegistry ) {
-				LOG.debug(
-						"Implicitly destroying Boot-strap registry on de-registration " +
-								"of all child ServiceRegistries"
-				);
+				LOG.trace( "Automatically destroying bootstrap registry after deregistration of every child ServiceRegistry" );
 				destroy();
 			}
 			else {
-				LOG.debug(
-						"Skipping implicitly destroying Boot-strap registry on de-registration " +
-								"of all child ServiceRegistries"
-				);
+				LOG.trace( "Skipping destroying bootstrap registry after deregistration of every child ServiceRegistry" );
 			}
 		}
 	}

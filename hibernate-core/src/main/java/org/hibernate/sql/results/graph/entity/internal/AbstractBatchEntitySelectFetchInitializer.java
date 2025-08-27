@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.entity.internal;
@@ -148,7 +148,8 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			data.setInstance( instance );
 			if ( concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
 					&& isPersistentAttributeInterceptable( instance )
-					&& getAttributeInterceptor( instance ) instanceof EnhancementAsProxyLazinessInterceptor enhancementInterceptor ) {
+					&& getAttributeInterceptor( instance )
+							instanceof EnhancementAsProxyLazinessInterceptor enhancementInterceptor ) {
 				if ( enhancementInterceptor.isInitialized() ) {
 					data.setState( State.INITIALIZED );
 				}
@@ -169,13 +170,13 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 		}
 		else if ( lazyInitializer.isUninitialized() ) {
 			data.setState( State.RESOLVED );
-			data.entityIdentifier = lazyInitializer.getIdentifier();
+			data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 		}
 		else {
 			// Entity is initialized
 			data.setState( State.INITIALIZED );
 			if ( keyIsEager ) {
-				data.entityIdentifier = lazyInitializer.getIdentifier();
+				data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 			}
 			data.setInstance( lazyInitializer.getImplementation() );
 		}
@@ -239,7 +240,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 		else {
 			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( instance );
 			if ( lazyInitializer != null && lazyInitializer.isUninitialized() ) {
-				data.entityKey = new EntityKey( lazyInitializer.getIdentifier(), concreteDescriptor );
+				data.entityKey = new EntityKey( lazyInitializer.getInternalIdentifier(), concreteDescriptor );
 				registerToBatchFetchQueue( data );
 			}
 			data.setState( State.INITIALIZED );

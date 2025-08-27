@@ -640,8 +640,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return getJpaMetamodel().findEntityGraphsByJavaType( entityClass );
 	}
 
-	// todo : (5.2) review synchronizationType, persistenceContextType, transactionType usage
-
 	@Override
 	public Session createEntityManager() {
 		validateNotClosed();
@@ -1106,6 +1104,13 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return null;
 	}
 
+	private Object resolveTenantIdentifier() {
+		final var resolver = getCurrentTenantIdentifierResolver();
+		return resolver != null
+				? resolver.resolveCurrentTenantIdentifier()
+				: null;
+	}
+
 	public static class SessionBuilderImpl implements SessionBuilderImplementor, SessionCreationOptions {
 		private static final Logger log = CoreLogging.logger( SessionBuilderImpl.class );
 
@@ -1148,14 +1153,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			identifierRollback = options.isIdentifierRollbackEnabled();
 			cacheMode = options.getInitialSessionCacheMode();
 
-			final var currentTenantIdentifierResolver =
-					sessionFactory.getCurrentTenantIdentifierResolver();
-			if ( currentTenantIdentifierResolver != null ) {
-				tenantIdentifier = currentTenantIdentifierResolver.resolveCurrentTenantIdentifier();
-			}
+			tenantIdentifier = sessionFactory.resolveTenantIdentifier();
 			jdbcTimeZone = options.getJdbcTimeZone();
 		}
-
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// SessionCreationOptions
@@ -1405,11 +1405,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			final var options = sessionFactory.getSessionFactoryOptions();
 			statementInspector = options.getStatementInspector();
 			cacheMode = options.getInitialSessionCacheMode();
-
-			final var tenantIdentifierResolver = sessionFactory.getCurrentTenantIdentifierResolver();
-			if ( tenantIdentifierResolver != null ) {
-				tenantIdentifier = tenantIdentifierResolver.resolveCurrentTenantIdentifier();
-			}
+			tenantIdentifier = sessionFactory.resolveTenantIdentifier();
 		}
 
 		@Override

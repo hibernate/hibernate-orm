@@ -34,6 +34,18 @@ public interface StatelessSessionBuilder {
 	StatelessSessionBuilder connection(Connection connection);
 
 	/**
+	 * Specifies the connection handling modes for the session.
+	 * <p>
+	 * Note that if {@link ConnectionAcquisitionMode#IMMEDIATELY} is specified,
+	 * then the release mode must be {@link ConnectionReleaseMode#ON_CLOSE}.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @since 7.2
+	 */
+	StatelessSessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode);
+
+	/**
 	 * Define the tenant identifier to be associated with the opened session.
 	 *
 	 * @param tenantIdentifier The tenant identifier.

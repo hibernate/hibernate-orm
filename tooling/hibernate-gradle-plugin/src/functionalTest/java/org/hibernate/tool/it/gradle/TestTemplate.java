@@ -21,4 +21,8 @@ public class TestTemplate {
     protected File getDatabaseFile() { return databaseFile; }
     protected void setDatabaseFile(File f) { databaseFile = f; }
 
+    protected String constructH2DatabaseDependencyLine() {
+        return "    implementation 'com.h2database:h2:" + System.getenv("H2_VERSION") + "'";
+    }
+
 }

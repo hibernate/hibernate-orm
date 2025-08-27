@@ -154,8 +154,4 @@ public class UseGenerics extends TestTemplate {
 				+ System.getenv("HIBERNATE_TOOLS_VERSION") + "'";
 	}
 	
-	private String constructH2DatabaseDependencyLine() {
-		return "    implementation 'com.h2database:h2:" + System.getenv("H2_VERSION") + "'";
-	}
-
 }

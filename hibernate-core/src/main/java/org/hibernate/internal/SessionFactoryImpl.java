@@ -1396,6 +1396,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		private final SessionFactoryImpl sessionFactory;
 		private StatementInspector statementInspector;
 		private Connection connection;
+		private PhysicalConnectionHandlingMode connectionHandlingMode;
 		private Object tenantIdentifier;
 		private boolean readOnly;
 		private CacheMode cacheMode;
@@ -1406,6 +1407,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			statementInspector = options.getStatementInspector();
 			cacheMode = options.getInitialSessionCacheMode();
 			tenantIdentifier = sessionFactory.resolveTenantIdentifier();
+			connectionHandlingMode = options.getPhysicalConnectionHandlingMode();
 		}
 
 		@Override
@@ -1416,6 +1418,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		public StatelessSessionBuilder connection(Connection connection) {
 			this.connection = connection;
+			return this;
+		}
+
+		@Override
+		public StatelessSessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode) {
+			this.connectionHandlingMode = PhysicalConnectionHandlingMode.interpret( acquisitionMode, releaseMode);
 			return this;
 		}
 
@@ -1509,7 +1517,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		@Override
 		public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
-			return sessionFactory.getSessionFactoryOptions().getPhysicalConnectionHandlingMode();
+			return connectionHandlingMode;
 		}
 
 		@Override

@@ -159,8 +159,4 @@ public class NoGenerics extends TestTemplate {
 		gradleBuildFileContents.insert(pos + 1, hibernateToolsExtension.toString());
 	}
 	
-	private String constructJdbcConnectionString() {
-		return "jdbc:h2:" + getProjectDir().getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
-	}
-	
 }

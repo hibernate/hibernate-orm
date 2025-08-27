@@ -30,4 +30,8 @@ public class TestTemplate {
                 + System.getenv("HIBERNATE_TOOLS_VERSION") + "'";
     }
 
+    protected String constructJdbcConnectionString() {
+        return "jdbc:h2:" + getProjectDir().getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
+    }
+
 }

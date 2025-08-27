@@ -141,8 +141,4 @@ public class TutorialTest extends TestTemplate {
 		gradleBuildFileContents.insert(pos, constructH2DatabaseDependencyLine() + "\n");		
 	}
 	
-	private String constructJdbcConnectionString() {
-		return "jdbc:h2:" + getProjectDir().getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
-	}
-	
 }

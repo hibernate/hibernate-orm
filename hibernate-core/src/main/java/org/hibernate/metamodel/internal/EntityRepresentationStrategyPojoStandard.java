@@ -7,7 +7,8 @@
 package org.hibernate.metamodel.internal;
 
 import java.lang.reflect.Method;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -72,6 +73,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 	private final String identifierPropertyName;
 	private final PropertyAccess identifierPropertyAccess;
+	private final BytecodeProvider.PropertyInfo[] propertyInfos;
 	private final Map<String, PropertyAccess> propertyAccessMap;
 	private final EmbeddableRepresentationStrategyPojo mapsIdRepresentationStrategy;
 
@@ -139,8 +141,9 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			identifierPropertyAccess = makePropertyAccess( identifierProperty );
 		}
 
-		final BytecodeProvider bytecodeProvider = creationContext.getBootstrapContext().getServiceRegistry().getService( BytecodeProvider.class );
+		this.strategySelector = creationContext.getServiceRegistry().getService( StrategySelector.class );
 
+		final BytecodeProvider bytecodeProvider = creationContext.getBootstrapContext().getServiceRegistry().requireService( BytecodeProvider.class );
 		final EntityMetamodel entityMetamodel = runtimeDescriptor.getEntityMetamodel();
 		ProxyFactory proxyFactory = null;
 		if ( proxyJtd != null && entityMetamodel.isLazy() ) {
@@ -151,16 +154,29 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		}
 		this.proxyFactory = proxyFactory;
 
-		// resolveReflectionOptimizer may lead to a makePropertyAccess call which requires strategySelector
-		this.strategySelector = creationContext.getServiceRegistry().getService( StrategySelector.class );
-		final Map<String, PropertyAccess> propertyAccessMap = new LinkedHashMap<>();
-		for ( Property property : bootDescriptor.getPropertyClosure() ) {
-			propertyAccessMap.put( property.getName(), makePropertyAccess( property ) );
-		}
-		this.propertyAccessMap = propertyAccessMap;
-		this.reflectionOptimizer = resolveReflectionOptimizer( bytecodeProvider );
+		propertyInfos = buildPropertyInfos( bootDescriptor );
+		propertyAccessMap = buildPropertyAccessMap( propertyInfos );
+		reflectionOptimizer = resolveReflectionOptimizer( bytecodeProvider );
 
-		this.instantiator = determineInstantiator( bootDescriptor, entityMetamodel );
+		this.instantiator = determineInstantiator( bootDescriptor, runtimeDescriptor.getEntityMetamodel() );
+	}
+
+	private Map<String, PropertyAccess> buildPropertyAccessMap(BytecodeProvider.PropertyInfo[] propertyInfos) {
+		final Map<String, PropertyAccess> map = new HashMap<>( propertyInfos.length );
+		for ( BytecodeProvider.PropertyInfo propertyInfo : propertyInfos ) {
+			map.put( propertyInfo.propertyName(), propertyInfo.propertyAccess() );
+		}
+		return map;
+	}
+
+	private BytecodeProvider.PropertyInfo[] buildPropertyInfos(PersistentClass bootDescriptor) {
+		final List<Property> properties = bootDescriptor.getPropertyClosure();
+		final BytecodeProvider.PropertyInfo[] propertyInfos = new BytecodeProvider.PropertyInfo[properties.size()];
+		for ( int i = 0; i < properties.size(); i++ ) {
+			final Property property = properties.get( i );
+			propertyInfos[i] = new BytecodeProvider.PropertyInfo( property.getName(), makePropertyAccess( property ) );
+		}
+		return propertyInfos;
 	}
 
 	private EntityInstantiator determineInstantiator(PersistentClass bootDescriptor, EntityMetamodel entityMetamodel) {
@@ -292,12 +308,13 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		}
 		return bytecodeProvider.getReflectionOptimizer(
 				mappedJtd.getJavaTypeClass(),
-				propertyAccessMap
+				propertyInfos
 		);
 	}
 
 	private PropertyAccess makePropertyAccess(Property bootAttributeDescriptor) {
-		PropertyAccessStrategy strategy = bootAttributeDescriptor.getPropertyAccessStrategy( mappedJtd.getJavaTypeClass() );
+		final Class<?> mappedClass = bootAttributeDescriptor.getPersistentClass().getMappedClass();
+		PropertyAccessStrategy strategy = bootAttributeDescriptor.getPropertyAccessStrategy( mappedClass );
 
 		if ( strategy == null ) {
 			final String propertyAccessorName = bootAttributeDescriptor.getPropertyAccessorName();
@@ -336,7 +353,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			);
 		}
 
-		return strategy.buildPropertyAccess( mappedJtd.getJavaTypeClass(), bootAttributeDescriptor.getName(), true );
+		return strategy.buildPropertyAccess( mappedClass, bootAttributeDescriptor.getName(), true );
 	}
 
 	@Override

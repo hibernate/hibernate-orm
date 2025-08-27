@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.internal;
 
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -179,19 +179,17 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 			return null;
 		}
 
-		final Map<String, PropertyAccess> propertyAccessMap = new LinkedHashMap<>();
+		final List<Property> properties = bootDescriptor.getProperties();
+			final BytecodeProvider.PropertyInfo[] propertyInfos = new BytecodeProvider.PropertyInfo[properties.size()];
 
-		int i = 0;
-		for ( Property property : bootDescriptor.getProperties() ) {
-			propertyAccessMap.put( property.getName(), getPropertyAccesses()[i] );
-			i++;
+		for ( int i = 0; i < properties.size(); i++ ) {
+		final Property property = properties.get( i );
+			propertyInfos[i] = new BytecodeProvider.PropertyInfo( property.getName(), getPropertyAccesses()[i] );
 		}
-		final BytecodeProvider bytecodeProvider = creationContext.getServiceRegistry().getService( BytecodeProvider.class );
 
-		return bytecodeProvider.getReflectionOptimizer(
-				bootDescriptor.getComponentClass(),
-				propertyAccessMap
-		);
+		return creationContext.getServiceRegistry()
+				.requireService( BytecodeProvider.class )
+				.getReflectionOptimizer( bootDescriptor.getComponentClass(), propertyInfos );
 	}
 
 	@Override

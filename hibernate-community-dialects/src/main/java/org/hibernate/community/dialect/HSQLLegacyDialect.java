@@ -292,6 +292,7 @@ public class HSQLLegacyDialect extends Dialect {
 				functionContributions.getTypeConfiguration(),
 				SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER
 		) );
+		functionFactory.regexpLike_hsql();
 	}
 
 	/**

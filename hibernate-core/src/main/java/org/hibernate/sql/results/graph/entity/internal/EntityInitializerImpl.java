@@ -1118,6 +1118,10 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 				else if ( data.entityHolder.getEntityInitializer() != this ) {
 					data.setState( State.INITIALIZED );
 				}
+				else if ( data.shallowCached ) {
+					// For shallow cached entities, only the id is available, so ensure we load the data immediately
+					data.setInstance( data.entityInstanceForNotify = resolveEntityInstance( data ) );
+				}
 			}
 			else if ( ( entityFromExecutionContext = getEntityFromExecutionContext( data ) ) != null ) {
 				// This is the entity to refresh, so don't set the state to initialized
@@ -1231,7 +1235,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			return resolved;
 		}
 		else {
-			if ( rowProcessingState.isQueryCacheHit() && entityDescriptor.useShallowQueryCacheLayout() ) {
+			if ( data.shallowCached ) {
 				// We must load the entity this way, because the query cache entry contains only the primary key
 				data.setState( State.INITIALIZED );
 				final SharedSessionContractImplementor session = rowProcessingState.getSession();

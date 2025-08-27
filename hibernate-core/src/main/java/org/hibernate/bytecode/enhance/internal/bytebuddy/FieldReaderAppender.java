@@ -8,7 +8,6 @@ import java.util.Objects;
 
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 
 import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.description.field.FieldDescription;
@@ -29,18 +28,21 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 
 	protected final FieldDescription.InDefinedShape persistentFieldAsDefined;
 
-	private FieldReaderAppender(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField) {
+	protected final EnhancerImplConstants constants;
+
+	private FieldReaderAppender(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField, EnhancerImplConstants constants) {
 		this.managedCtClass = managedCtClass;
 		this.persistentField = persistentField;
 		this.persistentFieldAsDefined = persistentField.asDefined();
+		this.constants = constants;
 	}
 
-	static ByteCodeAppender of(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField) {
+	static ByteCodeAppender of(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField, EnhancerImplConstants constants) {
 		if ( !persistentField.isVisibleTo( managedCtClass ) ) {
-			return new MethodDispatching( managedCtClass, persistentField );
+			return new MethodDispatching( managedCtClass, persistentField, constants );
 		}
 		else {
-			return new FieldWriting( managedCtClass, persistentField );
+			return new FieldWriting( managedCtClass, persistentField, constants );
 		}
 	}
 
@@ -63,7 +65,7 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 					Opcodes.INVOKEVIRTUAL,
 					managedCtClass.getInternalName(),
 					EnhancerConstants.INTERCEPTOR_GETTER_NAME,
-					Type.getMethodDescriptor( Type.getType( PersistentAttributeInterceptor.class ) ),
+					constants.methodDescriptor_getInterceptor,
 					false
 			);
 			Label skip = new Label();
@@ -76,7 +78,7 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 					Opcodes.INVOKEVIRTUAL,
 					managedCtClass.getInternalName(),
 					EnhancerConstants.INTERCEPTOR_GETTER_NAME,
-					Type.getMethodDescriptor( Type.getType( PersistentAttributeInterceptor.class ) ),
+					constants.methodDescriptor_getInterceptor,
 					false
 			);
 			// .readXXX( self, fieldName, field );
@@ -87,7 +89,7 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 			fieldRead( methodVisitor );
 			methodVisitor.visitMethodInsn(
 					Opcodes.INVOKEINTERFACE,
-					Type.getInternalName( PersistentAttributeInterceptor.class ),
+					constants.internalName_PersistentAttributeInterceptor,
 					"read" + EnhancerImpl.capitalize( dispatcherType.getSimpleName() ),
 					Type.getMethodDescriptor(
 							Type.getType( dispatcherType.getDescriptor() ),
@@ -127,8 +129,8 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 
 	private static class FieldWriting extends FieldReaderAppender {
 
-		private FieldWriting(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField) {
-			super( managedCtClass, persistentField );
+		private FieldWriting(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField, EnhancerImplConstants constants) {
+			super( managedCtClass, persistentField, constants );
 		}
 
 		@Override
@@ -154,8 +156,8 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 
 	private static class MethodDispatching extends FieldReaderAppender {
 
-		private MethodDispatching(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField) {
-			super( managedCtClass, persistentField );
+		private MethodDispatching(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField, EnhancerImplConstants constants) {
+			super( managedCtClass, persistentField, constants );
 		}
 
 		@Override

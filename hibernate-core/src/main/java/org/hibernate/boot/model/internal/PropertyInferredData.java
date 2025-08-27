@@ -16,7 +16,6 @@ import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
@@ -66,7 +65,7 @@ public class PropertyInferredData implements PropertyData {
 
 		AccessType jpaAccessType = AccessType.DEFAULT;
 
-		Access access = propertyMember.getDirectAnnotationUsage( Access.class );
+		final var access = propertyMember.getDirectAnnotationUsage( Access.class );
 		if ( access != null ) {
 			jpaAccessType = AccessType.getAccessStrategy( access.value() );
 		}
@@ -84,11 +83,11 @@ public class PropertyInferredData implements PropertyData {
 
 	@Override
 	public TypeDetails getPropertyType() throws MappingException {
-		final org.hibernate.boot.internal.Target targetAnnotation = propertyMember.getDirectAnnotationUsage( org.hibernate.boot.internal.Target.class );
-		final ModelsContext sourceModelContext = buildingContext.getBootstrapContext().getModelsContext();
+		final var sourceModelContext = buildingContext.getBootstrapContext().getModelsContext();
+		final var targetAnnotation = propertyMember.getDirectAnnotationUsage( org.hibernate.boot.internal.Target.class );
 		if ( targetAnnotation != null ) {
 			final String targetName = targetAnnotation.value();
-			final ClassDetails classDetails = ModelsHelper.resolveClassDetails(
+			final var classDetails = ModelsHelper.resolveClassDetails(
 					targetName,
 					sourceModelContext.getClassDetailsRegistry(),
 					() -> new DynamicClassDetails( targetName, sourceModelContext )
@@ -96,7 +95,7 @@ public class PropertyInferredData implements PropertyData {
 			return new ClassTypeDetailsImpl( classDetails, Kind.CLASS );
 		}
 
-		final TargetEmbeddable targetEmbeddable = getTargetEmbeddableAnnotation( propertyMember );
+		final var targetEmbeddable = getTargetEmbeddableAnnotation( propertyMember );
 		if ( targetEmbeddable != null ) {
 			return resolveTargetEmbeddableAnnotation( targetEmbeddable, sourceModelContext );
 		}
@@ -106,7 +105,7 @@ public class PropertyInferredData implements PropertyData {
 
 	private static TargetEmbeddable getTargetEmbeddableAnnotation(MemberDetails memberDetails) {
 		// first we look for the annotation on the member itself
-		final TargetEmbeddable memberAnnotation = memberDetails.getDirectAnnotationUsage( TargetEmbeddable.class );
+		final var memberAnnotation = memberDetails.getDirectAnnotationUsage( TargetEmbeddable.class );
 		if ( memberAnnotation != null ) {
 			// this should only be allowed for embedded or collections-of-embeddables.
 			// 		NOTE: this is tricky to check for collections-of-embeddables as it
@@ -137,18 +136,19 @@ public class PropertyInferredData implements PropertyData {
 	private static ClassTypeDetailsImpl resolveTargetEmbeddableAnnotation(
 			TargetEmbeddable targetEmbeddable,
 			ModelsContext sourceModelContext) {
-		final ClassDetailsRegistry classDetailsRegistry = sourceModelContext.getClassDetailsRegistry();
-		final ClassDetails targetClassDetails = classDetailsRegistry.resolveClassDetails( targetEmbeddable.value().getName() );
+		final var targetClassDetails =
+				sourceModelContext.getClassDetailsRegistry()
+						.resolveClassDetails( targetEmbeddable.value().getName() );
 		return new ClassTypeDetailsImpl( targetClassDetails, Kind.CLASS );
 	}
 
 	@Override
 	public TypeDetails getClassOrElementType() throws MappingException {
-		final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
-		final org.hibernate.boot.internal.Target annotationUsage = propertyMember.getDirectAnnotationUsage( org.hibernate.boot.internal.Target.class );
+		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		final var annotationUsage = propertyMember.getDirectAnnotationUsage( org.hibernate.boot.internal.Target.class );
 		if ( annotationUsage != null ) {
 			final String targetName = annotationUsage.value();
-			final ClassDetails classDetails = ModelsHelper.resolveClassDetails(
+			final var classDetails = ModelsHelper.resolveClassDetails(
 					targetName,
 					modelsContext.getClassDetailsRegistry(),
 					() -> new DynamicClassDetails( targetName, modelsContext )
@@ -156,7 +156,7 @@ public class PropertyInferredData implements PropertyData {
 			return new ClassTypeDetailsImpl( classDetails, Kind.CLASS );
 		}
 
-		final TargetEmbeddable targetEmbeddable = getTargetEmbeddableAnnotation(propertyMember);
+		final var targetEmbeddable = getTargetEmbeddableAnnotation(propertyMember);
 		if ( targetEmbeddable != null ) {
 			return resolveTargetEmbeddableAnnotation( targetEmbeddable, modelsContext );
 		}
@@ -166,22 +166,22 @@ public class PropertyInferredData implements PropertyData {
 
 	@Override
 	public ClassDetails getClassOrPluralElement() throws MappingException {
-		final org.hibernate.boot.internal.Target xmlTarget = propertyMember.getDirectAnnotationUsage( org.hibernate.boot.internal.Target.class );
+		final var xmlTarget = propertyMember.getDirectAnnotationUsage( org.hibernate.boot.internal.Target.class );
 		if ( xmlTarget != null ) {
-			return buildingContext.getMetadataCollector().getClassDetailsRegistry().getClassDetails( xmlTarget.value() );
+			return buildingContext.getMetadataCollector().getClassDetailsRegistry()
+					.getClassDetails( xmlTarget.value() );
 		}
 
-		final TargetEmbeddable targetEmbeddable = getTargetEmbeddableAnnotation(propertyMember);
+		final var targetEmbeddable = getTargetEmbeddableAnnotation( propertyMember );
 		if ( targetEmbeddable != null ) {
 			final String targetName = targetEmbeddable.value().getName();
-			return buildingContext.getMetadataCollector().getClassDetailsRegistry().getClassDetails( targetName );
+			return buildingContext.getMetadataCollector().getClassDetailsRegistry()
+					.getClassDetails( targetName );
 		}
 
-		if ( propertyMember.isPlural() ) {
-			return propertyMember.getElementType().determineRawClass();
-		}
-
-		return propertyMember.getAssociatedType().determineRawClass();
+		return propertyMember.isPlural()
+				? propertyMember.getElementType().determineRawClass()
+				: propertyMember.getAssociatedType().determineRawClass();
 	}
 
 	@Override
@@ -203,6 +203,5 @@ public class PropertyInferredData implements PropertyData {
 	public ClassDetails getDeclaringClass() {
 		return declaringClass;
 	}
-
 
 }

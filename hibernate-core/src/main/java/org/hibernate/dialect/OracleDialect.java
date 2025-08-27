@@ -434,6 +434,7 @@ public class OracleDialect extends Dialect {
 				"extract",
 				new OracleExtractFunction( this, typeConfiguration )
 		);
+		functionFactory.regexpLike_predicateFunction();
 	}
 
 	/**

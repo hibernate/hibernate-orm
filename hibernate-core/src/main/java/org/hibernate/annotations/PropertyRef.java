@@ -18,40 +18,40 @@ import jakarta.persistence.OneToMany;
  * Allows to specify the target of a foreign-key using a "target attribute" as opposed to
  * join column(s).  E.g.
  * <pre>
- *     {@code @Entity}
+ *     &#64;Entity
  *     class Employee {
- *         {@code @Id}
+ *         &#64;Id
  *         Integer id;
- *         {@code @Column(name="ssn") }
+ *         &#64;Column(name="ssn")
  *         String socialSecurityNumber;
  *     }
- *     {@code @Entity}
+ *     &#64;Entity
  *     class TaxDetails {
- *         {@code @Id Integer id;}
- *         {@code @OneToOne}
- *         {@code @PropertyRef("socialSecurityNumber")}
+ *         &#64;Id Integer id;
+ *         &#64;OneToOne
+ *         &#64;PropertyRef("socialSecurityNumber")
  *         Employee employee;
  *     }
  * </pre>
  * Generally more useful with composite keys:
  * <pre>
- *     {@code @Embeddable}
+ *     &#64;Embeddable
  *     class Name {
  *         String first;
  *         String last;
  *     }
- *     {@code @Entity}
+ *     &#64;Entity
  *     class Employee {
- *         {@code @Id}
+ *         &#64;Id
  *         Integer id;
- *         {@code @Embedded}
+ *         &#64;Embedded
  *         Name name;
  *     }
- *     {@code @Entity}
+ *     &#64;Entity
  *     class TaxDetails {
- *         {@code @Id Integer id;}
- *         {@code @OneToOne}
- *         {@code @PropertyRef("name")}
+ *         &#64;Id Integer id;
+ *         &#64;OneToOne
+ *         &#64;PropertyRef("name")
  *         Employee employee;
  *     }
  * </pre>

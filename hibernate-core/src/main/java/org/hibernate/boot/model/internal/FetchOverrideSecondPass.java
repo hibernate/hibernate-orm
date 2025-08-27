@@ -32,18 +32,16 @@ public class FetchOverrideSecondPass implements SecondPass {
 
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
-		final Class<?> entityClassDetails = fetch.entity();
+		final var collector = buildingContext.getMetadataCollector();
+		final Class<?> entityClass = fetch.entity();
 		final String attributeName = fetch.association();
-
 		// throws MappingException in case the property does not exist
-		buildingContext.getMetadataCollector()
-				.getEntityBinding( entityClassDetails.getName() )
+		collector.getEntityBinding( entityClass.getName() )
 				.getProperty( attributeName );
-
-		final FetchProfile profile = buildingContext.getMetadataCollector().getFetchProfile( fetchProfileName );
+		final var profile = collector.getFetchProfile( fetchProfileName );
 		// we already know that the FetchProfile exists and is good to use
 		profile.addFetch( new FetchProfile.Fetch(
-				entityClassDetails.getName(),
+				entityClass.getName(),
 				attributeName,
 				fetch.mode(),
 				fetch.fetch()

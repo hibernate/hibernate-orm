@@ -31,12 +31,14 @@ class ByteBuddyEnhancementContext {
 	private static final ElementMatcher.Junction<MethodDescription> IS_GETTER = isGetter();
 
 	private final EnhancementContext enhancementContext;
+	private final EnhancerImplConstants constants;
 
 	private final ConcurrentHashMap<TypeDescription, Map<String, MethodDescription>> getterByTypeMap = new ConcurrentHashMap<>();
 	private final ConcurrentHashMap<String, Object> locksMap = new ConcurrentHashMap<>();
 
-	ByteBuddyEnhancementContext(final EnhancementContext enhancementContext) {
+	ByteBuddyEnhancementContext(final EnhancementContext enhancementContext, EnhancerImplConstants enhancerConstants) {
 		this.enhancementContext = Objects.requireNonNull( enhancementContext );
+		this.constants = enhancerConstants;
 	}
 
 	public boolean isEntityClass(TypeDescription classDescriptor) {
@@ -122,7 +124,8 @@ class ByteBuddyEnhancementContext {
 			final EnhancerImpl.AnnotatedFieldDescription[] enhancedFields = PersistentAttributeTransformer.collectPersistentFields(
 							managedCtClass,
 							this,
-							typePool
+							typePool,
+							constants
 					)
 					.getEnhancedFields();
 			for ( EnhancerImpl.AnnotatedFieldDescription enhancedField : enhancedFields ) {

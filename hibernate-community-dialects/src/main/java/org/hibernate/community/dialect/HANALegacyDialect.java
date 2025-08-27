@@ -529,6 +529,8 @@ public class HANALegacyDialect extends Dialect {
 
 //			functionFactory.xmlextract();
 		}
+
+		functionFactory.regexpLike_like_regexp();
 	}
 
 	/**

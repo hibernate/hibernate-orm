@@ -78,6 +78,7 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 			functionFactory.listagg( null );
 			functionFactory.inverseDistributionOrderedSetAggregates();
 			functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+			functionFactory.regexpLike();
 		}
 	}
 

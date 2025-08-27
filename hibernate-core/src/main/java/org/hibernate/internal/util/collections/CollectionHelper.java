@@ -4,6 +4,8 @@
  */
 package org.hibernate.internal.util.collections;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -258,27 +260,27 @@ public final class CollectionHelper {
 		}
 	}
 
-	public static boolean isEmpty(Collection<?> collection) {
+	public static boolean isEmpty(@Nullable Collection<?> collection) {
 		return collection == null || collection.isEmpty();
 	}
 
-	public static boolean isEmpty(Map<?,?> map) {
+	public static boolean isEmpty(@Nullable Map<?,?> map) {
 		return map == null || map.isEmpty();
 	}
 
-	public static boolean isNotEmpty(Collection<?> collection) {
+	public static boolean isNotEmpty(@Nullable Collection<?> collection) {
 		return !isEmpty( collection );
 	}
 
-	public static boolean isNotEmpty(Map<?,?> map) {
+	public static boolean isNotEmpty(@Nullable Map<?,?> map) {
 		return !isEmpty( map );
 	}
 
-	public static boolean isEmpty(Object[] objects) {
+	public static boolean isEmpty(@Nullable Object[] objects) {
 		return objects == null || objects.length == 0;
 	}
 
-	public static boolean isNotEmpty(Object[] objects) {
+	public static boolean isNotEmpty(@Nullable Object[] objects) {
 		return objects != null && objects.length > 0;
 	}
 
@@ -309,7 +311,7 @@ public final class CollectionHelper {
 			return properties;
 		}
 		else {
-			final Properties properties = new Properties();
+			final var properties = new Properties();
 			if ( isNotEmpty( map ) ) {
 				properties.putAll( map );
 			}

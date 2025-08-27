@@ -62,7 +62,7 @@ public class IndexColumn extends AnnotatedColumn {
 			Map<String,Join> secondaryTables,
 			IndexColumn column,
 			MetadataBuildingContext context) {
-		final AnnotatedColumns parent = new AnnotatedColumns();
+		final var parent = new AnnotatedColumns();
 		parent.setPropertyHolder( propertyHolder );
 		parent.setJoins( secondaryTables );
 		parent.setBuildingContext( context );

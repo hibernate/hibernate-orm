@@ -12,18 +12,17 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IdentifierBag;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Table;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.UserCollectionType;
 
 import jakarta.persistence.Column;
 
+import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.COLLECTION_ID;
 import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
 import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
 
@@ -50,7 +49,7 @@ public class IdBagBinder extends BagBinder {
 	protected boolean bindStarToManySecondPass(Map<String, PersistentClass> persistentClasses) {
 		boolean result = super.bindStarToManySecondPass( persistentClasses );
 
-		final CollectionId collectionIdAnn = property.getDirectAnnotationUsage( CollectionId.class );
+		final var collectionIdAnn = property.getDirectAnnotationUsage( CollectionId.class );
 		if ( collectionIdAnn == null ) {
 			throw new MappingException( "idbag mapping missing '@CollectionId' annotation" );
 		}
@@ -67,7 +66,7 @@ public class IdBagBinder extends BagBinder {
 				"id"
 		);
 
-		final AnnotatedColumns idColumns = AnnotatedColumn.buildColumnsFromAnnotations(
+		final var idColumns = AnnotatedColumn.buildColumnsFromAnnotations(
 				new Column[]{collectionIdAnn.column()},
 //				null,
 				null,
@@ -78,79 +77,58 @@ public class IdBagBinder extends BagBinder {
 				buildingContext
 		);
 
-		//we need to make sure all id columns must be not-null.
-		for ( AnnotatedColumn idColumn : idColumns.getColumns() ) {
+		// we need to make sure all id columns must be not-null.
+		for ( var idColumn : idColumns.getColumns() ) {
 			idColumn.setNullable( false );
 		}
 
-		final BasicValueBinder valueBinder =
-				new BasicValueBinder( BasicValueBinder.Kind.COLLECTION_ID, buildingContext );
-
-		final Table table = collection.getCollectionTable();
-		valueBinder.setTable( table );
-		valueBinder.setColumns( idColumns );
-
-		valueBinder.setType(
-				property,
-				getElementType(),
-				null,
-				null
-		);
-
-		final BasicValue id = valueBinder.make();
+		final var idValueBinder = new BasicValueBinder( COLLECTION_ID, buildingContext );
+		idValueBinder.setTable( collection.getCollectionTable() );
+		idValueBinder.setColumns( idColumns );
+		idValueBinder.setType( property, getElementType() );
+		final BasicValue id = idValueBinder.make();
 		( (IdentifierCollection) collection ).setIdentifier( id );
 
-		final String namedGenerator = collectionIdAnn.generator();
-
-		switch (namedGenerator) {
-			case "identity": {
-				throw new MappingException("IDENTITY generation not supported for @CollectionId");
-			}
-			case "assigned": {
-				throw new MappingException("Assigned generation not supported for @CollectionId");
-			}
-			case "native": {
-				throw new MappingException("Native generation not supported for @CollectionId");
-			}
-		}
-
-		final String generatorName;
-		final String generatorType;
-
-		if ( "sequence".equals( namedGenerator ) ) {
-			generatorType = namedGenerator;
-			generatorName = "";
-		}
-		else if ( "increment".equals( namedGenerator ) ) {
-			generatorType = namedGenerator;
-			generatorName = "";
-		}
-		else {
-			generatorType = namedGenerator;
-			generatorName = namedGenerator;
-		}
-
+		final String generator = collectionIdAnn.generator();
+		checkLegalCollectionIdStrategy( generator );
 		if ( isGlobalGeneratorNameGlobal( buildingContext ) ) {
-			SecondPass secondPass = new IdBagIdGeneratorResolverSecondPass(
-					(IdentifierBag) collection,
-					id,
-					property,
-					generatorType,
-					generatorName,
-					getBuildingContext()
-			);
-			buildingContext.getMetadataCollector().addSecondPass( secondPass );
+			buildingContext.getMetadataCollector()
+					.addSecondPass( new IdBagIdGeneratorResolverSecondPass(
+							id,
+							property,
+							generator,
+							generatorName( generator ),
+							getBuildingContext()
+					) );
 		}
 		else {
 			makeIdGenerator(
 					id,
 					property,
-					generatorType,
-					generatorName,
+					generator,
+					generatorName( generator ),
 					getBuildingContext(),
 					localGenerators
 			);
 		}
 		return result;
+	}
+
+	private static String generatorName(String generator) {
+		return switch ( generator ) {
+			case "sequence", "increment" -> "";
+			default -> generator;
+		};
+	}
+
+	private static void checkLegalCollectionIdStrategy(String namedGenerator) {
+		switch ( namedGenerator ) {
+			case "identity":
+				throw new MappingException("IDENTITY generation not supported for @CollectionId");
+			case "assigned":
+				throw new MappingException("Assigned generation not supported for @CollectionId");
+			case "native":
+				throw new MappingException("Native generation not supported for @CollectionId");
+		}
 	}
 }

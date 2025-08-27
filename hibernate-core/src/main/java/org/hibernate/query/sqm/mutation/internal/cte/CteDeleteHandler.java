@@ -77,7 +77,9 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 		SqmMutationStrategyHelper.visitCollectionTables(
 				(EntityMappingType) mutatingTableGroup.getModelPart(),
 				pluralAttribute -> {
-					if ( pluralAttribute.getSeparateCollectionTable() != null ) {
+					// Skip deleting rows in collection tables if cascade delete is enabled
+					if ( pluralAttribute.getSeparateCollectionTable() != null
+						&& !pluralAttribute.getCollectionDescriptor().isCascadeDeleteEnabled() ) {
 						// Ensure that the FK target columns are available
 						final boolean useFkTarget = !pluralAttribute.getKeyDescriptor()
 								.getTargetPart().isEntityIdentifierMapping();

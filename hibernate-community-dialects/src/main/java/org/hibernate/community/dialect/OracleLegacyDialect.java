@@ -375,6 +375,7 @@ public class OracleLegacyDialect extends Dialect {
 
 		functionFactory.unnest_oracle();
 		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
+		functionFactory.regexpLike_predicateFunction();
 	}
 
 	/**

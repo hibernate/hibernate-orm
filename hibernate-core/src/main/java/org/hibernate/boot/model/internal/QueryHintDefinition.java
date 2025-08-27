@@ -43,7 +43,7 @@ public class QueryHintDefinition {
 		}
 		else {
 			final Map<String, Object> hintsMap = mapOfSize( hints.length );
-			for ( QueryHint hint : hints ) {
+			for ( var hint : hints ) {
 				hintsMap.put( hint.name(), hint.value() );
 			}
 			this.hintsMap = hintsMap;
@@ -138,8 +138,7 @@ public class QueryHintDefinition {
 	}
 
 	public LockMode getLockMode(String query) {
-		String hitName = HibernateHints.HINT_NATIVE_LOCK_MODE;
-		String value =(String) hintsMap.get( hitName );
+		final var value = (String) hintsMap.get( HibernateHints.HINT_NATIVE_LOCK_MODE );
 		if ( value == null ) {
 			return null;
 		}
@@ -147,16 +146,13 @@ public class QueryHintDefinition {
 			return LockMode.fromExternalForm( value );
 		}
 		catch ( MappingException e ) {
-			throw new AnnotationException( "Unknown LockMode in hint: " + query + ":" + hitName, e );
+			throw new AnnotationException( "Unknown LockMode in hint: " + query
+											+ ":" + HibernateHints.HINT_NATIVE_LOCK_MODE, e );
 		}
 	}
 
 	public LockOptions determineLockOptions(NamedQuery namedQueryAnnotation) {
-		final LockModeType lockModeType = namedQueryAnnotation.lockMode();
-		final Integer lockTimeoutHint = specLockTimeout();
-		final Locking.FollowOn followOnStrategy = followOnStrategy();
-
-		return determineLockOptions( lockModeType, lockTimeoutHint, followOnStrategy );
+		return determineLockOptions( namedQueryAnnotation.lockMode(), specLockTimeout(), followOnStrategy() );
 	}
 
 	private Integer specLockTimeout() {
@@ -174,25 +170,27 @@ public class QueryHintDefinition {
 			if ( strategyValue instanceof Locking.FollowOn strategy ) {
 				return strategy;
 			}
-			// assume it is a FollowOn name
-			return Locking.FollowOn.valueOf( strategyValue.toString() );
+			else {
+				// assume it is a FollowOn name
+				return Locking.FollowOn.valueOf( strategyValue.toString() );
+			}
 		}
-
-		final Boolean lockingValue = getBooleanWrapper( HibernateHints.HINT_FOLLOW_ON_LOCKING );
-		return Locking.FollowOn.fromLegacyValue( lockingValue );
+		else {
+			final Boolean lockingValue = getBooleanWrapper( HibernateHints.HINT_FOLLOW_ON_LOCKING );
+			return Locking.FollowOn.fromLegacyValue( lockingValue );
+		}
 	}
 
 	private LockOptions determineLockOptions(
 			LockModeType lockModeType,
 			Integer lockTimeoutHint,
 			Locking.FollowOn followOnStrategy) {
-		LockOptions lockOptions = new LockOptions()
+		final var lockOptions = new LockOptions()
 				.setLockMode( LockModeConverter.convertToLockMode( lockModeType ) )
 				.setFollowOnStrategy( followOnStrategy );
 		if ( lockTimeoutHint != null ) {
 			lockOptions.setTimeout( Timeouts.interpretMilliSeconds( lockTimeoutHint ) );
 		}
-
 		return lockOptions;
 	}
 }

@@ -533,6 +533,7 @@ public class HANADialect extends Dialect {
 		functionFactory.hex( "bintohex(?1)" );
 		functionFactory.sha( "hash_sha256(to_binary(?1))" );
 		functionFactory.md5( "hash_md5(to_binary(?1))" );
+		functionFactory.regexpLike_like_regexp();
 	}
 
 	/**

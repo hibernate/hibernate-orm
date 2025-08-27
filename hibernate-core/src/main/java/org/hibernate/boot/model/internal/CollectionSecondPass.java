@@ -13,7 +13,6 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
@@ -62,8 +61,8 @@ public abstract class CollectionSecondPass implements SecondPass {
 	abstract public void secondPass(Map<String, PersistentClass> persistentClasses) throws MappingException;
 
 	private static String columns(Value val) {
-		final StringBuilder columns = new StringBuilder();
-		for ( Selectable selectable : val.getSelectables() ) {
+		final var columns = new StringBuilder();
+		for ( var selectable : val.getSelectables() ) {
 			if ( !columns.isEmpty() ) {
 				columns.append( ", " );
 			}

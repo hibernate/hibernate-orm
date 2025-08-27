@@ -382,6 +382,8 @@ public class H2Dialect extends Dialect {
 		functionFactory.hex( "rawtohex(?1)" );
 		functionFactory.sha( "hash('SHA-256', ?1)" );
 		functionFactory.md5( "hash('MD5', ?1)" );
+
+		functionFactory.regexpLike();
 	}
 
 	/**

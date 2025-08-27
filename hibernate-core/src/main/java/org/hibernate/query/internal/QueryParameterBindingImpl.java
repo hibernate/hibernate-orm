@@ -19,7 +19,6 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.QueryParameterBindingValidator;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.expression.NullSqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
@@ -254,9 +253,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	private JavaType<? super T> determineJavaType(BindableType<? super T> bindType) {
-		final SqmExpressible<? super T> sqmExpressible = getCriteriaBuilder().resolveExpressible( bindType );
-		assert sqmExpressible != null;
-		return sqmExpressible.getExpressibleJavaType();
+		return getCriteriaBuilder().resolveExpressible( bindType ).getExpressibleJavaType();
 	}
 
 	@Override
@@ -338,9 +335,8 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			return null;
 		}
 		else {
-			final SqmExpressible<? super T> sqmExpressible = getCriteriaBuilder().resolveExpressible( parameterType );
-			assert sqmExpressible != null;
-			return sqmExpressible.getExpressibleJavaType().coerce( value, this );
+			return getCriteriaBuilder().resolveExpressible( parameterType )
+					.getExpressibleJavaType().coerce( value, this );
 		}
 	}
 

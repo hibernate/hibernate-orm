@@ -16,6 +16,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.community.dialect.function.InformixRegexpLikeFunction;
 import org.hibernate.community.dialect.identity.InformixIdentityColumnSupport;
 import org.hibernate.community.dialect.pagination.FirstLimitHandler;
 import org.hibernate.community.dialect.pagination.SkipFirstLimitHandler;
@@ -38,6 +39,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -111,6 +113,7 @@ import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers.impliedOrInvariant;
@@ -411,11 +414,7 @@ public class InformixDialect extends Dialect {
 		functionContributions.getFunctionRegistry().register( "trim",
 				new TrimFunction( this, typeConfiguration, SqlAstNodeRenderingMode.NO_UNTYPED ) );
 
-		//TODO: emulate support for the 'i' flag argument
-		functionRegistry.namedDescriptorBuilder( "regexp_like", "regex_match"  )
-				.setParameterTypes( STRING, STRING )
-				.setInvariantType( booleanBasicType )
-				.register();
+		functionRegistry.register( "regexp_like", new InformixRegexpLikeFunction( typeConfiguration ) );
 	}
 
 	@Override
@@ -608,9 +607,20 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTableCheck() {
-		// multi-column check constraints are created using 'alter table'
+	public boolean supportsNamedColumnCheck() {
+		// It seems the constraint name is ignored on column level
 		return false;
+	}
+
+	@Override
+	public String getCheckConstraintString(CheckConstraint checkConstraint) {
+		final String constraintName = checkConstraint.getName();
+		final String constraint = " check (" + checkConstraint.getConstraint() + ")";
+		final String constraintWithName =
+				isBlank( constraintName )
+						? constraint
+						: constraint + " constraint " + constraintName;
+		return appendCheckConstraintOptions( checkConstraint, constraintWithName );
 	}
 
 	@Override

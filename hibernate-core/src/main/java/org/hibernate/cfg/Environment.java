@@ -5,7 +5,6 @@
 package org.hibernate.cfg;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
 import java.util.Properties;
 
@@ -13,10 +12,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.Version;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ConfigHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.internal.util.ConfigHelper.getResourceAsStream;
+import static org.hibernate.internal.util.config.ConfigurationHelper.maskOut;
 
 /**
  * Provides access to configuration properties passed in {@link Properties} objects.
@@ -141,21 +141,18 @@ public final class Environment implements AvailableSettings {
 		GLOBAL_PROPERTIES = new Properties();
 
 		try {
-			InputStream stream = ConfigHelper.getResourceAsStream( "/hibernate.properties" );
-			try {
-				GLOBAL_PROPERTIES.load(stream);
-				LOG.propertiesLoaded( ConfigurationHelper.maskOut( GLOBAL_PROPERTIES, PASS ) );
-			}
-			catch (Exception e) {
-				LOG.unableToLoadProperties();
-			}
-			finally {
-				try{
-					stream.close();
+			try (var stream = getResourceAsStream("/hibernate.properties")) {
+				try {
+					GLOBAL_PROPERTIES.load(stream);
+					LOG.propertiesLoaded( maskOut( GLOBAL_PROPERTIES,
+							PASS, JAKARTA_JDBC_PASSWORD, JPA_JDBC_PASSWORD ) );
 				}
-				catch (IOException ioe){
-					LOG.unableToCloseStreamError( ioe );
+				catch (Exception e) {
+					LOG.unableToLoadProperties();
 				}
+			}
+			catch (IOException ioe) {
+				LOG.unableToCloseStreamError( ioe );
 			}
 		}
 		catch (HibernateException he) {
@@ -163,8 +160,9 @@ public final class Environment implements AvailableSettings {
 		}
 
 		try {
-			final Properties systemProperties = System.getProperties();
-			// Must be thread-safe in case an application changes System properties during Hibernate initialization.
+			final var systemProperties = System.getProperties();
+			// Must be thread-safe in case an application changes
+			// System properties during Hibernate initialization.
 			// See HHH-8383.
 			synchronized (systemProperties) {
 				GLOBAL_PROPERTIES.putAll(systemProperties);
@@ -187,7 +185,7 @@ public final class Environment implements AvailableSettings {
 	 * with all additional properties specified in {@code hibernate.properties}.
 	 */
 	public static Properties getProperties() {
-		final Properties copy = new Properties();
+		final var copy = new Properties();
 		copy.putAll(GLOBAL_PROPERTIES);
 		return copy;
 	}

@@ -127,6 +127,7 @@ public class GaussDBFunctionRegistry {
 		arraySet_gaussdb();
 		arrayFill_gaussdb();
 		jsonObject_gaussdb();
+		functionFactory.regexpLike();
 	}
 
 	public void array_gaussdb() {

@@ -53,7 +53,7 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 
 	@Override
 	public <R> SelectQueryPlan<R> resolveSelectQueryPlan(Key key, Supplier<SelectQueryPlan<R>> creator) {
-		final StatisticsImplementor statistics = getStatistics();
+		final var statistics = getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
 			statistics.queryPlanCacheMiss( key.getQueryString() );
 		}
@@ -62,7 +62,7 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 
 	@Override
 	public <K extends Key, R> SelectQueryPlan<R> resolveSelectQueryPlan(K key, Function<K, SelectQueryPlan<R>> creator) {
-		final StatisticsImplementor statistics = getStatistics();
+		final var statistics = getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
 			statistics.queryPlanCacheMiss( key.getQueryString() );
 		}
@@ -81,11 +81,11 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 	@Override
 	public <R> HqlInterpretation<R> resolveHqlInterpretation(
 			String queryString, Class<R> expectedResultType, HqlTranslator translator) {
-		final StatisticsImplementor statistics = getStatistics();
+		final var statistics = getStatistics();
 		final boolean stats = statistics.isStatisticsEnabled();
 		final long startTime = stats ? System.nanoTime() : 0L;
 
-		final SqmStatement<R> sqmStatement = translator.translate( queryString, expectedResultType );
+		final var sqmStatement = translator.translate( queryString, expectedResultType );
 
 		final DomainParameterXref domainParameterXref;
 		final ParameterMetadataImplementor parameterMetadata;
@@ -122,7 +122,6 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 
 			@Override
 			public void validateResultType(Class<?> resultType) {
-				assert sqmStatement instanceof SqmSelectStatement<?>;
 				( (SqmSelectStatement<R>) sqmStatement ).validateResultType( resultType );
 			}
 		};

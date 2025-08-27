@@ -172,6 +172,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public Object insert(String entityName, Object entity) {
 		checkOpen();
+		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id;
 		final Object[] state = persister.getValues( entity );
@@ -311,6 +312,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void delete(String entityName, Object entity) {
 		checkOpen();
+		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
 		final Object version = persister.getVersion( entity );
@@ -388,6 +390,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void update(String entityName, Object entity) {
 		checkOpen();
+		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
 		final Object[] state = persister.getValues( entity );
@@ -474,6 +477,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void upsert(String entityName, Object entity) {
 		checkOpen();
+		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id = idToUpsert( entity, persister );
 		final Object[] state = persister.getValues( entity );

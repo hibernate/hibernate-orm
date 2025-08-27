@@ -479,7 +479,7 @@ public class SessionImpl
 		}
 		else {
 			log.trace( "Automatically flushing session" );
-			doFlush();
+			fireFlush();
 		}
 	}
 
@@ -679,6 +679,7 @@ public class SessionImpl
 	private void firePersist(final PersistEvent event) {
 		Throwable originalException = null;
 		try {
+			checkNotReadOnly();
 			checkTransactionSynchStatus();
 			checkNoUnresolvedActionsBeforeOperation();
 
@@ -785,6 +786,7 @@ public class SessionImpl
 
 	private Object fireMerge(MergeEvent event) {
 		try {
+			checkNotReadOnly();
 			checkTransactionSynchStatus();
 			checkNoUnresolvedActionsBeforeOperation();
 			eventListenerGroups.eventListenerGroup_MERGE
@@ -880,6 +882,7 @@ public class SessionImpl
 
 	private void fireDelete(final DeleteEvent event) {
 		try {
+			checkNotReadOnly();
 			pulseTransactionCoordinator();
 			eventListenerGroups.eventListenerGroup_DELETE
 					.fireEventOnEachListener( event, DeleteEventListener::onDelete );
@@ -1423,22 +1426,24 @@ public class SessionImpl
 	@Override
 	public void flush() {
 		checkOpen();
-		doFlush();
+		fireFlush();
 	}
 
-	private void doFlush() {
-		try {
-			pulseTransactionCoordinator();
-			checkTransactionNeededForUpdateOperation();
-			if ( persistenceContext.getCascadeLevel() > 0 ) {
-				throw new HibernateException( "Flush during cascade is dangerous" );
+	private void fireFlush() {
+		if ( !isReadOnly() ) {
+			try {
+				pulseTransactionCoordinator();
+				checkTransactionNeededForUpdateOperation();
+				if ( persistenceContext.getCascadeLevel() > 0 ) {
+					throw new HibernateException( "Flush during cascade is dangerous" );
+				}
+				eventListenerGroups.eventListenerGroup_FLUSH
+						.fireEventOnEachListener( new FlushEvent( this ), FlushEventListener::onFlush );
+				delayedAfterCompletion();
 			}
-			eventListenerGroups.eventListenerGroup_FLUSH
-					.fireEventOnEachListener( new FlushEvent( this ), FlushEventListener::onFlush );
-			delayedAfterCompletion();
-		}
-		catch ( RuntimeException e ) {
-			throw getExceptionConverter().convert( e );
+			catch (RuntimeException e) {
+				throw getExceptionConverter().convert( e );
+			}
 		}
 	}
 
@@ -1484,7 +1489,7 @@ public class SessionImpl
 			);
 		}
 		checkOpenOrWaitingForAutoClose();
-		doFlush();
+		fireFlush();
 	}
 
 	@Override @Deprecated

@@ -25,4 +25,9 @@ public class TestTemplate {
         return "    implementation 'com.h2database:h2:" + System.getenv("H2_VERSION") + "'";
     }
 
+    protected String constructHibernateToolsPluginLine() {
+        return "    id 'org.hibernate.tool.hibernate-tools-gradle' version '"
+                + System.getenv("HIBERNATE_TOOLS_VERSION") + "'";
+    }
+
 }

@@ -149,9 +149,4 @@ public class UseGenerics extends TestTemplate {
 		return "jdbc:h2:" + getProjectDir().getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
 	}
 	
-	private String constructHibernateToolsPluginLine() {
-		return "    id 'org.hibernate.tool.hibernate-tools-gradle' version '"
-				+ System.getenv("HIBERNATE_TOOLS_VERSION") + "'";
-	}
-	
 }

@@ -298,6 +298,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return readOnly;
 	}
 
+	void checkNotReadOnly() {
+		if ( isReadOnly() ) {
+			throw new IllegalStateException( "Session is in read-only mode" );
+		}
+	}
+
 	private static SessionEventListenerManager createSessionEventsManager(
 			SessionFactoryOptions factoryOptions, SessionCreationOptions options) {
 		final var customListeners = options.getCustomSessionEventListener();
@@ -1403,7 +1409,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			throw new IllegalArgumentException( "No named stored procedure call with given name '" + name + "'" );
 		}
 		@SuppressWarnings("UnnecessaryLocalVariable")
-		final ProcedureCall procedureCall = memento.makeProcedureCall( this );
+		final var procedureCall = memento.makeProcedureCall( this );
 //		procedureCall.setComment( "Named stored procedure call [" + name + "]" );
 		return procedureCall;
 	}

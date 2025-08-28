@@ -42,7 +42,7 @@ import static org.hibernate.generator.internal.CurrentTimestampGeneration.getCur
 public class SourceGeneration implements BeforeExecutionGenerator {
 
 	private final JavaType<?> propertyType;
-	private final CurrentTimestampGeneration.CurrentTimestampGeneratorDelegate valueGenerator;
+	private final CurrentTimestampGeneration.GeneratorDelegate valueGenerator;
 
 	public SourceGeneration(Source annotation, Member member, GeneratorCreationContext context) {
 		this( annotation.value(), context.getProperty().getType().getReturnedClass(), context );

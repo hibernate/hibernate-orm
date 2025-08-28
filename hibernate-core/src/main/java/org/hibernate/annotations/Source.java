@@ -47,8 +47,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @ValueGenerationType(generatedBy = SourceGeneration.class)
 public @interface Source {
 	/**
-	 * The source of timestamps. By default, the {@linkplain
-	 * SourceType#VM virtual machine} is the source.
+	 * The source of timestamps. By default, the
+	 * {@linkplain SourceType#VM virtual machine}
+	 * is the source.
 	 */
 	SourceType value() default SourceType.VM;
 }

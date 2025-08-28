@@ -71,7 +71,7 @@ public class GeneratedValueBasicResultBuilder implements ResultBuilder {
 
 	private SqlSelection sqlSelection(
 			JdbcValuesMetadata jdbcResultsMetadata, DomainResultCreationState domainResultCreationState) {
-		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
+		final var creationStateImpl = impl( domainResultCreationState );
 		return sqlSelection( jdbcResultsMetadata, creationStateImpl, tableReference( creationStateImpl ) );
 	}
 

@@ -6,7 +6,6 @@ package org.hibernate.generator;
 
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.insert.GetGeneratedKeysDelegate;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.id.insert.InsertReturningDelegate;
@@ -116,8 +115,8 @@ public interface OnExecutionGenerator extends Generator {
 	 */
 	@Incubating
 	default InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister persister) {
-		final SessionFactoryImplementor factory = persister.getFactory();
-		final Dialect dialect = factory.getJdbcServices().getDialect();
+		final var factory = persister.getFactory();
+		final var dialect = factory.getJdbcServices().getDialect();
 		if ( dialect.supportsInsertReturningGeneratedKeys()
 				&& factory.getSessionFactoryOptions().isGetGeneratedKeysEnabled() ) {
 			return new GetGeneratedKeysDelegate( persister, false, INSERT );

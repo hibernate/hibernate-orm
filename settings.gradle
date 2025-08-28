@@ -182,7 +182,7 @@ dependencyResolutionManagement {
             def shrinkwrapVersion = version "shrinkwrap", "1.2.6"
             def shrinkwrapDescriptorsVersion = version "shrinkwrapDescriptors", "2.0.0"
             def weldVersion = version "weld", "6.0.3.Final"
-            def wildFlyTxnClientVersion = version "wildFlyTxnClient", "2.0.0.Final"
+            def wildFlyTxnClientVersion = version "wildFlyTxnClient", "3.0.5.Final"
 
             def jfrUnitVersion = version "jfrUnit", "1.0.0.Alpha2"
 
@@ -212,7 +212,7 @@ dependencyResolutionManagement {
 
             library( "jbossJta", "org.jboss.narayana.jta", "narayana-jta" ).versionRef( jbossJtaVersion )
             library( "jbossTxSpi", "org.jboss", "jboss-transaction-spi" ).versionRef( jbossTxSpiVersion )
-            library( "wildFlyTxnClient", "org.wildfly.transaction", "wildfly-transaction-client-jakarta" ).versionRef( wildFlyTxnClientVersion )
+            library( "wildFlyTxnClient", "org.wildfly.transaction", "wildfly-transaction-client" ).versionRef( wildFlyTxnClientVersion )
 
             library( "weld", "org.jboss.weld.se", "weld-se-shaded" ).versionRef( weldVersion )
 

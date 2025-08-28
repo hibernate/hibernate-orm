@@ -131,12 +131,6 @@ public class NoGenerics extends TestTemplate {
 		assertTrue(generatedItemJavaFileContents.contains("public class Item "));
 	}
 	
-	private void addHibernateToolsPluginLine(StringBuffer gradleBuildFileContents) {
-		int pos = gradleBuildFileContents.indexOf("plugins {");
-		pos = gradleBuildFileContents.indexOf("}", pos);
-		gradleBuildFileContents.insert(pos, constructHibernateToolsPluginLine() + "\n");		
-	}
-	
 	private void addHibernateToolsExtension(StringBuffer gradleBuildFileContents) {
 		int pos = gradleBuildFileContents.indexOf("dependencies {");
 		pos = gradleBuildFileContents.indexOf("}", pos);

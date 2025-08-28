@@ -130,10 +130,4 @@ public class JpaDefaultTest extends TestTemplate {
 		assertTrue(generatedPersonJavaFileContents.contains("public class Person "));
 	}
 	
-	private void addHibernateToolsPluginLine(StringBuffer gradleBuildFileContents) {
-		int pos = gradleBuildFileContents.indexOf("plugins {");
-		pos = gradleBuildFileContents.indexOf("}", pos);
-		gradleBuildFileContents.insert(pos, constructHibernateToolsPluginLine() + "\n");		
-	}
-	
 }

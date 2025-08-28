@@ -44,4 +44,10 @@ public class TestTemplate {
         gradleBuildFileContents.insert(pos, constructH2DatabaseDependencyLine() + "\n");
     }
 
+    protected void addHibernateToolsPluginLine(StringBuffer gradleBuildFileContents) {
+        int pos = gradleBuildFileContents.indexOf("plugins {");
+        pos = gradleBuildFileContents.indexOf("}", pos);
+        gradleBuildFileContents.insert(pos, constructHibernateToolsPluginLine() + "\n");
+    }
+
 }

@@ -62,30 +62,7 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 		catch (ClassLoadingException ignore) {
 		}
 
-
-		// JBoss ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// If we get here, we've already checked that WildFlyStandAloneJtaPlatform cannot be used,
-		//  so JBossStandAloneJtaPlatform is strictly equivalent to NarayanaJtaPlatform.
-		// TODO HHH-19743 remove this block because of ^?
-		try {
-			classLoaderService.classForName( JBossStandAloneJtaPlatform.JBOSS_TM_CLASS_NAME );
-			classLoaderService.classForName( JBossStandAloneJtaPlatform.JBOSS_UT_CLASS_NAME );
-
-			// we know that the JBoss TS classes are available
-			// if neither of these look-ups resulted in an error (no such class), then JBossTM is available on
-			// the classpath
-			//
-			// todo : we cannot really distinguish between the need for JBossStandAloneJtaPlatform versus JBossApServerJtaPlatform
-			// but discussions with David led to the JtaPlatformProvider solution above, so inside JBoss AS we
-			// should be relying on that
-			return new JBossStandAloneJtaPlatform();
-		}
-		catch (ClassLoadingException ignore) {
-		}
-
 		// Narayana ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// TODO HHH-19743 this is effectively dead code as long as we have JBossStandadloneJtaPlatform above this code,
-		//  since both rely on the same class name checks.
 		try {
 			classLoaderService.classForName( NarayanaJtaPlatform.TM_CLASS_NAME );
 			classLoaderService.classForName( NarayanaJtaPlatform.UT_CLASS_NAME );

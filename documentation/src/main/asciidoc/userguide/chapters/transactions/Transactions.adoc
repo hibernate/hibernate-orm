@@ -81,6 +81,7 @@ Hibernate provides many implementations of the `JtaPlatform` contract, all with 
 `Atomikos`:: `JtaPlatform` for Atomikos.
 `GlassFish`, `Payara`:: `JtaPlatform` for GlassFish or Payara.
 `Resin`:: `JtaPlatform` for the Resin Application Server.
+`Narayana`:: `JtaPlatform` for Arjuna/Narayana when used outside the WildFly Application Server.
 `Weblogic`:: `JtaPlatform` for the Weblogic Application Server.
 `WebSphere`, `WebSphereLiberty`:: `JtaPlatform` for newer versions of the WebSphere Application Server.
 `WildFlyStandAlone`:: `JtaPlatform` for WildFly Transaction Client when used outside the WildFly Application Server.

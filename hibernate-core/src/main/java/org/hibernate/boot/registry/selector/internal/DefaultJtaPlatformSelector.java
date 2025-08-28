@@ -9,6 +9,7 @@ import java.util.Objects;
 import org.hibernate.engine.transaction.jta.platform.internal.AtomikosJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.internal.NarayanaJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.ResinJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.GlassFishJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform;
@@ -36,6 +37,7 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 				case "Atomikos" -> AtomikosJtaPlatform.class;
 				case "Resin" -> ResinJtaPlatform.class;
 				case "GlassFish", "Payara", "SunOne" -> GlassFishJtaPlatform.class;
+				case "Narayana" -> NarayanaJtaPlatform.class;
 				case "WildFlyStandAlone" -> WildFlyStandAloneJtaPlatform.class;
 				default -> null;
 			};
@@ -59,6 +61,9 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 			case "org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform" -> {
 				return JBossStandAloneJtaPlatform.class;
 			}
+			case "org.hibernate.engine.transaction.jta.platform.internal.NarayanaJtaPlatform" -> {
+				return NarayanaJtaPlatform.class;
+			}
 			case "org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform" -> {
 				return WebSphereLibertyJtaPlatform.class;
 			}
@@ -74,8 +79,8 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 
 		//All these follow the same pattern, allowing us to use recursion into the main method:
 		if ( name.startsWith( LEGACY_PREFIX ) && name.endsWith( LEGACY_POSTFIX ) ) {
-			final String cleanName = name.substring( LEGACY_PREFIX.length(), name.length() - LEGACY_POSTFIX.length() );
-			return defaultJtaPlatformSelector.resolve( cleanName );
+			final String shortName = name.substring( LEGACY_PREFIX.length(), name.length() - LEGACY_POSTFIX.length() );
+			return defaultJtaPlatformSelector.resolve( shortName );
 		}
 		return null;
 	}

@@ -3461,14 +3461,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected UpdateCoordinator buildMergeCoordinator() {
-		// we only have updates to issue for entities with one or more singular attributes
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			if ( attributeMappings.get( i ) instanceof SingularAttributeMapping ) {
-				return new MergeCoordinator( this, factory );
-			}
-		}
-		// otherwise, nothing to update
-		return new UpdateCoordinatorNoOp( this );
+		return new MergeCoordinator( this, factory );
 	}
 
 	protected DeleteCoordinator buildDeleteCoordinator() {

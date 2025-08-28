@@ -600,7 +600,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
-	private UpdateValuesAnalysisImpl analyzeUpdateValues(
+	protected UpdateValuesAnalysisImpl analyzeUpdateValues(
 			Object entity,
 			Object[] values,
 			Object oldVersion,
@@ -1018,7 +1018,10 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	private boolean resultCheck(
-			Object id, PreparedStatementDetails statementDetails, int affectedRowCount, int batchPosition) {
+			Object id,
+			PreparedStatementDetails statementDetails,
+			int affectedRowCount,
+			int batchPosition) {
 		return identifiedResultsCheck(
 				statementDetails,
 				affectedRowCount,

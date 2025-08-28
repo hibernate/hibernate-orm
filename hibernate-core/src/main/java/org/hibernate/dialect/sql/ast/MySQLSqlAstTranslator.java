@@ -449,7 +449,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransl
 	}
 
 	@Override
-	protected void renderUpdatevalue(ColumnValueBinding columnValueBinding) {
+	protected void renderUpdateValue(ColumnValueBinding columnValueBinding) {
 		renderAlias();
 		appendSql( "." );
 		appendSql( columnValueBinding.getColumnReference().getColumnExpression() );

@@ -137,12 +137,6 @@ public class NoGenerics extends TestTemplate {
 		gradleBuildFileContents.insert(pos, constructHibernateToolsPluginLine() + "\n");		
 	}
 	
-	private void addH2DatabaseDependencyLine(StringBuffer gradleBuildFileContents) {
-		int pos = gradleBuildFileContents.indexOf("dependencies {");
-		pos = gradleBuildFileContents.indexOf("}", pos);
-		gradleBuildFileContents.insert(pos, constructH2DatabaseDependencyLine() + "\n");		
-	}
-	
 	private void addHibernateToolsExtension(StringBuffer gradleBuildFileContents) {
 		int pos = gradleBuildFileContents.indexOf("dependencies {");
 		pos = gradleBuildFileContents.indexOf("}", pos);

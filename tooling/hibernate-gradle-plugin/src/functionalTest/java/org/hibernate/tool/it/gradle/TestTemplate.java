@@ -38,4 +38,10 @@ public class TestTemplate {
         return "jdbc:h2:" + getProjectDir().getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
     }
 
+    protected void addH2DatabaseDependencyLine(StringBuffer gradleBuildFileContents) {
+        int pos = gradleBuildFileContents.indexOf("dependencies {");
+        pos = gradleBuildFileContents.indexOf("}", pos);
+        gradleBuildFileContents.insert(pos, constructH2DatabaseDependencyLine() + "\n");
+    }
+
 }

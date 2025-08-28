@@ -7,9 +7,9 @@ package org.hibernate.exception.spi;
 import java.sql.SQLException;
 import java.util.function.Function;
 
-import org.hibernate.internal.util.NullnessUtil;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
 
 /**
  * Extracts a violated database constraint name from an error message
@@ -27,23 +27,18 @@ public class TemplatedViolatedConstraintNameExtractor implements ViolatedConstra
 	}
 
 	@Override
-	public @Nullable String extractConstraintName(SQLException sqle) {
+	public @Nullable String extractConstraintName(SQLException exception) {
 		try {
-			String constraintName = null;
-
-			// handle nested exceptions
-			do {
-				constraintName = extractConstraintName.apply(sqle);
-				if (sqle.getNextException() == null
-						|| sqle.getNextException() == sqle) {
-					break;
+			while (true) {
+				final String constraintName = extractConstraintName.apply( exception );
+				final SQLException chained = exception.getNextException();
+				if ( constraintName != null
+						|| chained == null
+						|| chained == exception ) {
+					return constraintName;
 				}
-				else {
-					sqle = NullnessUtil.castNonNull( sqle.getNextException() );
-				}
-			} while (constraintName == null);
-
-			return constraintName;
+				exception = chained;
+			}
 		}
 		catch (NumberFormatException nfe) {
 			return null;
@@ -60,18 +55,15 @@ public class TemplatedViolatedConstraintNameExtractor implements ViolatedConstra
 	 * @return The found constraint name, or null.
 	 */
 	public static @Nullable String extractUsingTemplate(String templateStart, String templateEnd, String message) {
-		int templateStartPosition = message.indexOf( templateStart );
+		final int templateStartPosition = message.indexOf( templateStart );
 		if ( templateStartPosition < 0 ) {
 			return null;
 		}
-
-		int start = templateStartPosition + templateStart.length();
-		int end = templateEnd.equals("\n") ? -1 : message.indexOf( templateEnd, start );
-		if ( end < 0 ) {
-			end = message.length();
+		else {
+			final int start = templateStartPosition + templateStart.length();
+			final int end = templateEnd.equals( "\n" ) ? -1 : message.indexOf( templateEnd, start );
+			return end < 0 ? message.substring( start ) : message.substring( start, end );
 		}
-
-		return message.substring( start, end );
 	}
 
 }

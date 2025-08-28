@@ -657,19 +657,21 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	}
 
 	private void throwLazyInitializationException(String message) {
-		throwLazyInitializationException( role, message);
-	}
-
-	private static void throwLazyInitializationException(String role, String message) {
-		throw new LazyInitializationException(
-				String.format( "Cannot lazily initialize collection%s (%s)",
-						role == null ? "" : " of role '" + role + "'", message )
-		);
+		final var error = new StringBuilder( "Cannot lazily initialize collection" );
+		if ( role != null ) {
+			error.append( " of role '" ).append( role ).append( "'" );
+		}
+		if ( key != null ) {
+			error.append( " with key '" ).append( key ).append( "'" );
+		}
+		error.append( " (" ).append( message ).append( ")" );
+		throw new LazyInitializationException( error.toString() );
 	}
 
 	public static void checkPersister(PersistentCollection<?> collection, CollectionPersister persister) {
 		if ( !collection.wasInitialized() && persister == null ) {
-			throwLazyInitializationException( null, "collection is being removed" );
+			throw new LazyInitializationException( "Cannot lazily initialize collection"
+													+ " (collection is being removed)" );
 		}
 	}
 

@@ -35,7 +35,6 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
-import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
@@ -188,7 +187,7 @@ public class GeneratedValuesHelper {
 			EntityPersister persister,
 			boolean supportsArbitraryValues,
 			List<? extends ModelPart> generatedProperties) {
-		final NavigablePath parentNavigablePath = new NavigablePath( persister.getEntityName() );
+		final var parentNavigablePath = new NavigablePath( persister.getEntityName() );
 		// This is just a mock table group needed to correctly resolve expressions
 		final TableGroup tableGroup = new TableGroupImpl(
 				parentNavigablePath,
@@ -313,7 +312,7 @@ public class GeneratedValuesHelper {
 
 	public static boolean noCustomSql(EntityPersister persister, EventType timing) {
 		final var identifierTable = persister.getIdentifierTableMapping();
-		final TableMapping.MutationDetails mutationDetails =
+		final var mutationDetails =
 				timing == EventType.INSERT
 						? identifierTable.getInsertDetails()
 						: identifierTable.getUpdateDetails();

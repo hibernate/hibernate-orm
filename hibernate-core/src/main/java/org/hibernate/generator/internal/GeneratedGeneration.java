@@ -10,7 +10,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.OnExecutionGenerator;
-import org.hibernate.persister.entity.EntityPersister;
 
 import java.util.EnumSet;
 
@@ -75,7 +74,7 @@ public class GeneratedGeneration implements OnExecutionGenerator {
 	public boolean generatedOnExecution(Object entity, SharedSessionContractImplementor session) {
 		if ( writable ) {
 			// When this is the identifier generator and writable is true, allow pre-assigned identifiers
-			final EntityPersister entityPersister = session.getEntityPersister( null, entity );
+			final var entityPersister = session.getEntityPersister( null, entity );
 			return entityPersister.getGenerator() != this
 				|| entityPersister.getIdentifier( entity, session ) == null;
 		}

@@ -1,0 +1,24 @@
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
+
+@Entity
+public class Bar {
+
+    private String foo;
+
+    @ManyToOne
+    private Baz baz;
+
+    public String getFoo() {
+        return foo;
+    }
+
+    public void setFoo(String f) {
+        foo = f;
+    }
+
+    public Baz getBaz() { return baz; }
+
+    public void setBaz(Baz baz) { this.baz = baz; }
+
+}

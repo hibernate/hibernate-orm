@@ -11,7 +11,7 @@ import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 /**
  * DDL type for vector types.
  *
- * @since 7.1
+ * @since 7.2
  */
 public class VectorDdlType extends DdlTypeImpl {
 

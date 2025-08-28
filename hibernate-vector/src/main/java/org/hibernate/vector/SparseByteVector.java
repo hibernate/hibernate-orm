@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * {@link java.util.List} implementation for a sparse byte vector.
  *
- * @since 7.1
+ * @since 7.2
  */
 public class SparseByteVector extends AbstractSparseVector<Byte> {
 

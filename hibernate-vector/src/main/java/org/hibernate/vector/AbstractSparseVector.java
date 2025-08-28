@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * Base class for sparse vectors.
  *
- * @since 7.1
+ * @since 7.2
  */
 public abstract class AbstractSparseVector<E> extends AbstractList<E> {
 

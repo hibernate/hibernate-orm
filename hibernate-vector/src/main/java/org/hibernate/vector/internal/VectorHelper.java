@@ -13,7 +13,7 @@ import java.util.BitSet;
 /**
  * Helper for vector related functionality.
  *
- * @since 7.1
+ * @since 7.2
  */
 public class VectorHelper {
 

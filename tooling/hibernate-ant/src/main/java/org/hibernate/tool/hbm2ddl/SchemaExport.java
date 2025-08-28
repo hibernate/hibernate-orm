@@ -390,6 +390,8 @@ public class SchemaExport {
 		StandardServiceRegistry serviceRegistry = buildStandardServiceRegistry( commandLineArgs );
 		try {
 			final MetadataImplementor metadata = buildMetadata( commandLineArgs, serviceRegistry );
+			metadata.orderColumns( false );
+			metadata.validate();
 
 			new SchemaExport()
 					.setHaltOnError( commandLineArgs.halt )

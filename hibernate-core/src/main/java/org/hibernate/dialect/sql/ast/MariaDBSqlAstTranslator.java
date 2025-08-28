@@ -416,7 +416,7 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 				salary = values(salary)
 	*/
 	@Override
-	protected void renderUpdatevalue(ColumnValueBinding columnValueBinding) {
+	protected void renderUpdateValue(ColumnValueBinding columnValueBinding) {
 		appendSql( "values(" );
 		appendSql( columnValueBinding.getColumnReference().getColumnExpression() );
 		appendSql( ")" );

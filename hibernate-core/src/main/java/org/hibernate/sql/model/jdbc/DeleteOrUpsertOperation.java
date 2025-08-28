@@ -41,8 +41,6 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 
 	private final OptionalTableUpdate optionalTableUpdate;
 
-	private final Expectation expectation = getExpectation();
-
 	public DeleteOrUpsertOperation(
 			EntityMutationTarget mutationTarget,
 			EntityTableMapping tableMapping,
@@ -233,6 +231,6 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 	}
 
 	protected Expectation getExpectation() {
-		return new Expectation.RowCount();
+		return upsertOperation.getExpectation();
 	}
 }

@@ -12,6 +12,7 @@ import org.hibernate.engine.transaction.jta.platform.internal.ResinJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.GlassFishJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.internal.WildFlyStandAloneJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 
 import org.junit.jupiter.api.Test;
@@ -91,6 +92,13 @@ public class JtaPlatformSelectorTest {
 				WebSphereLibertyJtaPlatform.class,
 				"WebSphereLiberty",
 				"org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform"
+		);
+
+		testJtaPlatformResolves(
+				strategySelector,
+				WildFlyStandAloneJtaPlatform.class,
+				"WildFlyStandAlone",
+				"org.hibernate.engine.transaction.jta.platform.internal.WildFlyStandAloneJtaPlatform"
 		);
 
 	}

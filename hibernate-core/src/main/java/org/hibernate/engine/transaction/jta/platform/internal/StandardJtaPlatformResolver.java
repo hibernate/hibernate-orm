@@ -64,6 +64,8 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 
 
 		// JBoss ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// If we get here, we've already checked that WildFlyStandAloneJtaPlatform cannot be used,
+		//  so JBossStandAloneJtaPlatform's fallback to WildFlyStandAloneJtaPlatform is pointless.
 		try {
 			classLoaderService.classForName( JBossStandAloneJtaPlatform.JBOSS_TM_CLASS_NAME );
 			classLoaderService.classForName( JBossStandAloneJtaPlatform.JBOSS_UT_CLASS_NAME );

@@ -83,6 +83,7 @@ Hibernate provides many implementations of the `JtaPlatform` contract, all with 
 `Resin`:: `JtaPlatform` for the Resin Application Server.
 `Weblogic`:: `JtaPlatform` for the Weblogic Application Server.
 `WebSphere`, `WebSphereLiberty`:: `JtaPlatform` for newer versions of the WebSphere Application Server.
+`WildFlyStandAlone`:: `JtaPlatform` for WildFly Transaction Client when used outside the WildFly Application Server.
 
 [[transactions-api]]
 === Hibernate Transaction API

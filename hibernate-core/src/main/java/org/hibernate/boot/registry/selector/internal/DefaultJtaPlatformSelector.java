@@ -13,6 +13,7 @@ import org.hibernate.engine.transaction.jta.platform.internal.ResinJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.GlassFishJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.internal.WildFlyStandAloneJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 
 public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatform> {
@@ -35,6 +36,7 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 				case "Atomikos" -> AtomikosJtaPlatform.class;
 				case "Resin" -> ResinJtaPlatform.class;
 				case "GlassFish", "Payara", "SunOne" -> GlassFishJtaPlatform.class;
+				case "WildFlyStandAlone" -> WildFlyStandAloneJtaPlatform.class;
 				default -> null;
 			};
 		}
@@ -59,6 +61,9 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 			}
 			case "org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform" -> {
 				return WebSphereLibertyJtaPlatform.class;
+			}
+			case "org.hibernate.engine.transaction.jta.platform.internal.WildFlyStandAloneJtaPlatform" -> {
+				return WildFlyStandAloneJtaPlatform.class;
 			}
 		}
 

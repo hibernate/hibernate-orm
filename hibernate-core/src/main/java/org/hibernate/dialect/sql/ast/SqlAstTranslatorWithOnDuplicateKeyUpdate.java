@@ -5,8 +5,9 @@
 package org.hibernate.dialect.sql.ast;
 
 
-import org.hibernate.dialect.MySQLDeleteOrUpsertOperation;
+import org.hibernate.StaleStateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.sql.ast.spi.SqlAstTranslatorWithUpsert;
 import org.hibernate.sql.ast.tree.Statement;
@@ -14,8 +15,10 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.sql.model.jdbc.DeleteOrUpsertOperation;
 import org.hibernate.sql.model.jdbc.UpsertOperation;
 
+import java.sql.PreparedStatement;
 import java.util.List;
 
 /**
@@ -37,15 +40,29 @@ public class SqlAstTranslatorWithOnDuplicateKeyUpdate<T extends JdbcOperation> e
 				optionalTableUpdate.getMutatingTable().getTableMapping(),
 				optionalTableUpdate.getMutationTarget(),
 				getSql(),
+				new MySQLRowCountExpectation(),
 				getParameterBinders()
 		);
 
-		return new MySQLDeleteOrUpsertOperation(
+		return new DeleteOrUpsertOperation(
 				optionalTableUpdate.getMutationTarget(),
 				(EntityTableMapping) optionalTableUpdate.getMutatingTable().getTableMapping(),
 				upsertOperation,
 				optionalTableUpdate
 		);
+	}
+
+	private static class MySQLRowCountExpectation implements Expectation {
+		@Override
+		public final void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition, String sql) {
+			if ( rowCount > 2 ) {
+				throw new StaleStateException(
+						"Unexpected row count"
+						+ " (the expected row count for an ON DUPLICATE KEY UPDATE statement should be either 0, 1 or 2 )"
+						+ " [" + sql + "]"
+				);
+			}
+		}
 	}
 
 	@Override
@@ -56,34 +73,39 @@ public class SqlAstTranslatorWithOnDuplicateKeyUpdate<T extends JdbcOperation> e
 	}
 
 	protected void renderInsertInto(OptionalTableUpdate optionalTableUpdate) {
-		appendSql( "insert into " );
+		if ( optionalTableUpdate.getValueBindings().isEmpty() ) {
+			appendSql( "insert ignore into " );
+		}
+		else {
+			appendSql( "insert into " );
+		}
 		appendSql( optionalTableUpdate.getMutatingTable().getTableName() );
-		appendSql( " (" );
+		appendSql( " " );
 
 		final List<ColumnValueBinding> keyBindings = optionalTableUpdate.getKeyBindings();
+		char separator = '(';
 		for ( ColumnValueBinding keyBinding : keyBindings ) {
+			appendSql( separator );
 			appendSql( keyBinding.getColumnReference().getColumnExpression() );
-			appendSql( ',' );
+			separator = ',';
 		}
 
 		optionalTableUpdate.forEachValueBinding( (columnPosition, columnValueBinding) -> {
-				appendSql( columnValueBinding.getColumnReference().getColumnExpression() );
-			if ( columnPosition != optionalTableUpdate.getValueBindings().size() - 1  ) {
-				appendSql( ',' );
-			}
+			appendSql( ',' );
+			appendSql( columnValueBinding.getColumnReference().getColumnExpression() );
 		} );
 
-		appendSql( ") values (" );
+		appendSql( ") values " );
 
+		separator = '(';
 		for ( ColumnValueBinding keyBinding : keyBindings ) {
+			appendSql( separator );
 			keyBinding.getValueExpression().accept( this );
-			appendSql( ',' );
+			separator = ',';
 		}
 
 		optionalTableUpdate.forEachValueBinding( (columnPosition, columnValueBinding) -> {
-			if ( columnPosition > 0 ) {
-				appendSql( ',' );
-			}
+			appendSql( ',' );
 			columnValueBinding.getValueExpression().accept( this );
 		} );
 		appendSql(") ");
@@ -94,19 +116,29 @@ public class SqlAstTranslatorWithOnDuplicateKeyUpdate<T extends JdbcOperation> e
 	}
 
 	protected void renderOnDuplicateKeyUpdate(OptionalTableUpdate optionalTableUpdate) {
-		appendSql( "on duplicate key update " );
-		optionalTableUpdate.forEachValueBinding( (columnPosition, columnValueBinding) -> {
-			final String columnName = columnValueBinding.getColumnReference().getColumnExpression();
-			if ( columnPosition > 0 ) {
-				appendSql( ',' );
-			}
-			appendSql( columnName );
-			append( " = " );
-			renderUpdatevalue( columnValueBinding );
-		} );
+		if  ( !optionalTableUpdate.getValueBindings().isEmpty() ) {
+			appendSql( "on duplicate key update " );
+			optionalTableUpdate.forEachValueBinding( (columnPosition, columnValueBinding) -> {
+				final String columnName = columnValueBinding.getColumnReference().getColumnExpression();
+				if ( columnPosition > 0 ) {
+					appendSql( ',' );
+				}
+				appendSql( columnName );
+				append( " = " );
+				renderUpdatevalue( columnValueBinding );
+			} );
+		}
 	}
 
+	/**
+	 * @deprecated Use {@link #renderUpdateValue(ColumnValueBinding)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	protected void renderUpdatevalue(ColumnValueBinding columnValueBinding) {
+		renderUpdateValue( columnValueBinding );
+	}
+
+	protected void renderUpdateValue(ColumnValueBinding columnValueBinding) {
 	}
 
 }

@@ -9,6 +9,8 @@ dependencies {
     implementation project( ':hibernate-core' )
     implementation libs.micrometer
 
+    compileOnly libs.checkerFramework
+
     testImplementation project( ':hibernate-testing' )
 
     testAnnotationProcessor project( ':hibernate-processor' )

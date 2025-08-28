@@ -5,7 +5,7 @@
 package org.hibernate.processor.util;
 
 import jakarta.persistence.AccessType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Encapsulates the access type information for a single class.

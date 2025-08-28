@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.Set;
 
 import static java.lang.Character.toUpperCase;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.type.TypeKind.VOID;
@@ -400,7 +401,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			if ( methodTypeParameters.contains( value ) ) {
 				return value;
 			}
-			return annotationMetaEntity.importType( resolveTypeName( element, method.getEnclosingElement(), value ) );
+			return annotationMetaEntity.importType( resolveTypeName( element, requireNonNull( method.getEnclosingElement() ), value ) );
 		}
 		else if ( type instanceof WildcardType wildcardType ) {
 			return "?"

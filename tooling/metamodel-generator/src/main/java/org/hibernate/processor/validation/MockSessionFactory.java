@@ -5,7 +5,7 @@
 package org.hibernate.processor.validation;
 
 import jakarta.persistence.metamodel.Bindable;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.MappingException;

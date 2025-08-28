@@ -5,7 +5,7 @@
 package org.hibernate.processor.util;
 
 import jakarta.persistence.AccessType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.MetaModelGenerationException;
 import org.hibernate.processor.model.Metamodel;
@@ -163,7 +163,7 @@ public final class TypeUtils {
 		}
 	}
 
-	public static @Nullable TypeMirror extractClosestRealType(TypeMirror type, Context context, Set<TypeVariable> beingVisited) {
+	public static @Nullable TypeMirror extractClosestRealType(@Nullable TypeMirror type, Context context, Set<TypeVariable> beingVisited) {
 		if ( type == null ) {
 			return null;
 		}
@@ -722,7 +722,7 @@ public final class TypeUtils {
 				+ "." + (jakartaDataStyle ? '_' + simpleName : simpleName + '_');
 	}
 
-	private static String qualifiedName(Element enclosingElement, boolean jakartaDataStyle) {
+	private static String qualifiedName(@Nullable Element enclosingElement, boolean jakartaDataStyle) {
 		if ( enclosingElement instanceof TypeElement typeElement ) {
 			return getGeneratedClassFullyQualifiedName( typeElement, jakartaDataStyle );
 		}

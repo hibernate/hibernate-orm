@@ -338,6 +338,59 @@ Within a given session, our data is automatically filtered so that only rows tag
 Native SQL queries are _not_ automatically filtered by tenant id; you'll have to do that part yourself.
 ====
 
+[[read-only-replicas]]
+=== Read-only replicas
+
+A similar but distinct problem is accessing data held in a read-only replica of the main production database.
+One way to handle this problem is to simply instantiate two instances of `SessionFactory`:
+
+- read-only transactions use a `SessionFactory` configured to access the read-only replica, while
+- other transactions use the `SessionFactory` configured to read from and write to the main database.
+
+[CAUTION]
+====
+The second-level cache doesn't play well with replication, and so a `SessionFactory` with access to a read-only replica should be configured with the second-level cache disabled.
+====
+
+Alternatively, Hibernate 7.2 introduces experimental support for accessing replicas via a single instance of `SessionFactory`.
+A `Session` which accesses a read-only replica must be created in a special read-only mode:
+
+[source,java]
+----
+Session readOnlySession =
+        factory.withOptions()
+                .readOnly(true)
+                .initialCacheMode(CacheMode.IGNORE)
+                .openSession();
+----
+
+There are now two possibilities.
+
+- Some JDBC drivers (MySQL) are able to automatically direct read-only sessions to the read-only replica.
+  In this case, there's no more work to do, since Hibernate will automatically call `Connection.setReadOnly(true)` to signal to the JDBC driver that the read-only replica may be used.
+
+- Other drivers (Postgres, Oracle) don't feature any special support for read-only replicas, and in this case we need to supply our own custom link:{doc-javadoc-url}/org/hibernate/engine/jdbc/connections/spi/ConnectionProvider.html[`ConnectionProvider`] or link:{doc-javadoc-url}/org/hibernate/engine/jdbc/connections/spi/MultiTenantConnectionProvider.html[`MultiTenantConnectionProvider`] and implement link:{doc-javadoc-url}/org/hibernate/engine/jdbc/connections/spi/ConnectionProvider.html#getReadOnlyConnection()[`getReadOnlyConnection()`] to return a connection to the read-only replica.
+
+Notice that we created the read-only session with link:{doc-javadoc-url}/org/hibernate/CacheMode.html#IGNORE[`CacheMode.IGNORE`], indicating that access to the read-only replica should <<second-level-cache-management,bypass the second-level cache>>.
+There's two different phenomena we need to consider here:
+
+1. A read-only replica might contain stale data which has already been updated or deleted from the main database and invalidated in the second-level cache.
+A read-only session might read this stale data and recache it, exposing the stale data to subsequent sessions.
+Use of `CacheMode.GET` in a read-only session prevents this phenomenon.
+
+2. A session might read data which has not yet been replicated from the main database and add it to the second-level cache.
+If a read-only session reads this data from the cache, it might fail to resolve references to other data which has not yet been replicated.
+Use of `CacheMode.PUT` in a read-only session prevents this phenomenon.
+
+Use of `CacheMode.IGNORE` in a read-only session prevents both phenomena.
+
+[CAUTION]
+====
+The first issue is objectively more serious than the second, and the second issue can often be avoided by careful programming by someone _who really understands what they're doing_.
+We do not, therefore, require the use of `CacheMode.IGNORE`, but we strongly encourage the use of _at least_ `CacheMode.GET` in every read-only session.
+====
+
+
 [[custom-sql]]
 === Using custom-written SQL
 

@@ -6,6 +6,7 @@ package org.hibernate.internal.log;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
+import java.util.List;
 
 import org.hibernate.Internal;
 import org.hibernate.boot.jaxb.SourceType;
@@ -226,4 +227,11 @@ public interface DeprecationLogger extends BasicLogger {
 			value = "Encountered deprecated hint [%s], use [%s] instead"
 	)
 	void deprecatedHint(String deprecatedHint, String replacementHint);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000038,
+			value = "Encountered deprecated value for JtaPlatform setting [%s]: [%s]; use a non-deprecated value among %s instead"
+	)
+	void logDeprecatedJtaPlatformSetting(String settingName, String deprecatedValue, List<String> replacements);
 }

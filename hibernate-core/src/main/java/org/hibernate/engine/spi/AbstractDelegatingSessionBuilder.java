@@ -13,9 +13,9 @@ import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
-import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionEventListener;
+import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
@@ -26,137 +26,143 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  * @author Gunnar Morling
  * @author Guillaume Smet
  */
-public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder {
+public abstract class AbstractDelegatingSessionBuilder implements SessionBuilderImplementor {
 
-	private final SessionBuilder delegate;
+	private final SessionBuilderImplementor delegate;
 
 	public AbstractDelegatingSessionBuilder(SessionBuilder delegate) {
-		this.delegate = delegate;
+		this.delegate = (SessionBuilderImplementor) delegate;
 	}
 
 	protected SessionBuilder getThis() {
 		return this;
 	}
 
-	protected SessionBuilder delegate() {
+	protected SessionBuilderImplementor delegate() {
 		return delegate;
 	}
 
 	@Override
-	public Session openSession() {
+	public SessionImplementor openSession() {
 		return delegate.openSession();
 	}
 
 	@Override
-	public SessionBuilder interceptor(Interceptor interceptor) {
+	public SessionBuilderImplementor interceptor(Interceptor interceptor) {
 		delegate.interceptor( interceptor );
 		return this;
 	}
 
 	@Override
-	public SessionBuilder noInterceptor() {
+	public SessionBuilderImplementor noInterceptor() {
 		delegate.noInterceptor();
 		return this;
 	}
 
 	@Override @Deprecated
-	public SessionBuilder statementInspector(StatementInspector statementInspector) {
+	public SessionBuilderImplementor statementInspector(StatementInspector statementInspector) {
 		delegate.statementInspector( statementInspector );
 		return this;
 	}
 
 	@Override
-	public SessionBuilder statementInspector(UnaryOperator<String> operator) {
+	public SessionBuilderImplementor statementInspector(UnaryOperator<String> operator) {
 		delegate.statementInspector( operator );
 		return this;
 	}
 
 	@Override
-	public SessionBuilder connection(Connection connection) {
+	public SessionBuilderImplementor noStatementInspector() {
+		delegate.noStatementInspector();
+		return this;
+	}
+
+	@Override
+	public SessionBuilderImplementor connection(Connection connection) {
 		delegate.connection( connection );
 		return this;
 	}
 
 	@Override
-	public SessionBuilder autoJoinTransactions(boolean autoJoinTransactions) {
+	public SessionBuilderImplementor autoJoinTransactions(boolean autoJoinTransactions) {
 		delegate.autoJoinTransactions( autoJoinTransactions );
 		return this;
 	}
 
 	@Override
-	public SessionBuilder autoClose(boolean autoClose) {
+	public SessionBuilderImplementor autoClose(boolean autoClose) {
 		delegate.autoClose( autoClose );
 		return this;
 	}
 
 	@Override @Deprecated(forRemoval = true)
-	public SessionBuilder tenantIdentifier(String tenantIdentifier) {
+	public SessionBuilderImplementor tenantIdentifier(String tenantIdentifier) {
 		delegate.tenantIdentifier( tenantIdentifier );
 		return this;
 	}
 
 	@Override
-	public SessionBuilder tenantIdentifier(Object tenantIdentifier) {
+	public SessionBuilderImplementor tenantIdentifier(Object tenantIdentifier) {
 		delegate.tenantIdentifier( tenantIdentifier );
 		return this;
 	}
 
 	@Override
-	public SessionBuilder readOnly(boolean readOnly) {
+	public SessionBuilderImplementor readOnly(boolean readOnly) {
 		delegate.readOnly( readOnly );
 		return this;
 	}
 
 	@Override
-	public SessionBuilder initialCacheMode(CacheMode cacheMode) {
+	public SessionBuilderImplementor initialCacheMode(CacheMode cacheMode) {
 		delegate.initialCacheMode( cacheMode );
 		return this;
 	}
 
 	@Override
-	public SessionBuilder eventListeners(SessionEventListener... listeners) {
+	public SessionBuilderImplementor eventListeners(SessionEventListener... listeners) {
 		delegate.eventListeners( listeners );
 		return this;
 	}
 
 	@Override
-	public SessionBuilder clearEventListeners() {
+	public SessionBuilderImplementor clearEventListeners() {
 		delegate.clearEventListeners();
 		return this;
 	}
 
 	@Override
-	public SessionBuilder jdbcTimeZone(TimeZone timeZone) {
+	public SessionBuilderImplementor jdbcTimeZone(TimeZone timeZone) {
 		delegate.jdbcTimeZone(timeZone);
 		return this;
 	}
 
 	@Override @Deprecated
-	public SessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode) {
+	public SessionBuilderImplementor connectionHandlingMode(PhysicalConnectionHandlingMode mode) {
 		delegate.connectionHandlingMode( mode );
 		return this;
 	}
 
 	@Override
-	public SessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode) {
+	public SessionBuilderImplementor connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode) {
 		delegate.connectionHandling( acquisitionMode, releaseMode );
 		return this;
 	}
 
 	@Override
-	public SessionBuilder autoClear(boolean autoClear) {
+	public SessionBuilderImplementor autoClear(boolean autoClear) {
 		delegate.autoClear( autoClear );
 		return this;
 	}
 
 	@Override
-	public SessionBuilder flushMode(FlushMode flushMode) {
+	public SessionBuilderImplementor flushMode(FlushMode flushMode) {
 		delegate.flushMode( flushMode );
 		return this;
 	}
 
 	@Override
-	public SessionBuilder identifierRollback(boolean identifierRollback) {
+	public SessionBuilderImplementor identifierRollback(boolean identifierRollback) {
 		delegate.identifierRollback( identifierRollback );
 		return this;
 	}

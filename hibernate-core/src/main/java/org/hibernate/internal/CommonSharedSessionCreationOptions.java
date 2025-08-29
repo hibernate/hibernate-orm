@@ -4,6 +4,7 @@
  */
 package org.hibernate.internal;
 
+import org.hibernate.CacheMode;
 import org.hibernate.Interceptor;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -12,6 +13,8 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 /**
  * Creation options for shared {@linkplain org.hibernate.engine.spi.SessionImplementor stateful}
  * and {@linkplain org.hibernate.engine.spi.StatelessSessionImplementor stateless} sessions.
+ *
+ * @implNote At the moment this is only used in the creation of {@linkplain org.hibernate.engine.spi.StatelessSessionImplementor stateless} sessions.
  *
  * @author Steve Ebersole
  */
@@ -22,6 +25,10 @@ public interface CommonSharedSessionCreationOptions {
 	StatementInspector getStatementInspector();
 
 	Object getTenantIdentifierValue();
+
+	boolean isReadOnly();
+
+	CacheMode getInitialCacheMode();
 
 	boolean isTransactionCoordinatorShared();
 	TransactionCoordinator getTransactionCoordinator();

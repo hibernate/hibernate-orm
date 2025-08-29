@@ -8,6 +8,7 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.PersistenceException;
 import jakarta.transaction.SystemException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -23,6 +24,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.creation.internal.SessionCreationOptions;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -71,7 +73,6 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import java.sql.Connection;
@@ -147,7 +148,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	 * Form used when creating a "shared" stateless session.
 	 */
 	public StatelessSessionImpl(SessionFactoryImplementor factory, CommonSharedSessionCreationOptions options) {
-		super( (SessionFactoryImpl) factory, wrapOptions( (SessionFactoryImpl) factory, options ) );
+		super(
+				(SessionFactoryImpl) factory,
+				CommonSharedSessionCreationOptionsWrapper.wrapOptions( (SessionFactoryImpl) factory, options )
+		);
 		connectionProvided = false;
 		transactionCompletionCallbacks = new TransactionCompletionCallbacksImpl( this );
 		temporaryPersistenceContext = createPersistenceContext( this );
@@ -157,10 +161,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		// a nonzero batch size forces use of write-behind
 		// therefore ignore the value of hibernate.jdbc.batch_size
 		setJdbcBatchSize( 0 );
-	}
-
-	private static SessionCreationOptions wrapOptions(SessionFactoryImpl factory, CommonSharedSessionCreationOptions options) {
-		return new CommonSharedSessionCreationOptionsWrapper( factory, options );
 	}
 
 	@Override
@@ -1516,97 +1516,109 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 	}
 
-	private static class CommonSharedSessionCreationOptionsWrapper implements SessionCreationOptions {
-		private final SessionFactoryImplementor factory;
-		private final CommonSharedSessionCreationOptions options;
+	/**
+	 * Wraps a CommonSharedSessionCreationOptions as a SessionCreationOptions to pass
+	 * to AbstractSharedSessionContract during construction.
+	 *
+	 * @param factory The SessionFactory
+	 * @param options The CommonSharedSessionCreationOptions being wrapped.
+	 */
+	private record CommonSharedSessionCreationOptionsWrapper(
+			SessionFactoryImplementor factory,
+			CommonSharedSessionCreationOptions options)
+			implements SessionCreationOptions {
 
-		public CommonSharedSessionCreationOptionsWrapper(SessionFactoryImplementor factory, CommonSharedSessionCreationOptions options) {
-			this.factory = factory;
-			this.options = options;
+		private static SessionCreationOptions wrapOptions(SessionFactoryImpl factory, CommonSharedSessionCreationOptions options) {
+			return new CommonSharedSessionCreationOptionsWrapper( factory, options );
 		}
 
 		@Override
-		public Interceptor getInterceptor() {
-			return options.getInterceptor();
-		}
+			public Interceptor getInterceptor() {
+				return options.getInterceptor();
+			}
 
-		@Override
-		public StatementInspector getStatementInspector() {
-			return options.getStatementInspector();
-		}
+			@Override
+			public StatementInspector getStatementInspector() {
+				return options.getStatementInspector();
+			}
 
-		@Override
-		public Object getTenantIdentifierValue() {
-			return options.getTenantIdentifierValue();
-		}
+			@Override
+			public Object getTenantIdentifierValue() {
+				return options.getTenantIdentifierValue();
+			}
 
-		@Override
-		public boolean shouldAutoJoinTransactions() {
-			return true;
-		}
+			@Override
+			public boolean isReadOnly() {
+				return options.isReadOnly();
+			}
 
-		@Override
-		public FlushMode getInitialSessionFlushMode() {
-			return FlushMode.ALWAYS;
-		}
+			@Override
+			public CacheMode getInitialCacheMode() {
+				return options.getInitialCacheMode();
+			}
 
-		@Override
-		public boolean isSubselectFetchEnabled() {
-			return false;
-		}
+			@Override
+			public boolean shouldAutoJoinTransactions() {
+				return true;
+			}
 
-		@Override
-		public int getDefaultBatchFetchSize() {
-			return -1;
-		}
+			@Override
+			public FlushMode getInitialSessionFlushMode() {
+				return FlushMode.ALWAYS;
+			}
 
-		@Override
-		public boolean shouldAutoClose() {
-			return false;
-		}
+			@Override
+			public boolean isSubselectFetchEnabled() {
+				return false;
+			}
 
-		@Override
-		public boolean shouldAutoClear() {
-			return false;
-		}
+			@Override
+			public int getDefaultBatchFetchSize() {
+				return -1;
+			}
 
-		@Override
-		public Connection getConnection() {
-			return null;
-		}
+			@Override
+			public boolean shouldAutoClose() {
+				return false;
+			}
 
-		@Override
-		public boolean isIdentifierRollbackEnabled() {
-			// identifier rollback not yet implemented for StatelessSessions
-			return false;
-		}
+			@Override
+			public boolean shouldAutoClear() {
+				return false;
+			}
 
-		@Override
-		public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
-			return factory.getSessionFactoryOptions().getPhysicalConnectionHandlingMode();
-		}
+			@Override
+			public Connection getConnection() {
+				return null;
+			}
 
-		@Override
-		public String getTenantIdentifier() {
-			final Object tenantIdentifier = getTenantIdentifierValue();
-			return tenantIdentifier == null
-					? null
-					: factory.getTenantIdentifierJavaType().toString( tenantIdentifier );
-		}
+			@Override
+			public boolean isIdentifierRollbackEnabled() {
+				// identifier rollback not yet implemented for StatelessSessions
+				return false;
+			}
 
-		@Override
-		public TimeZone getJdbcTimeZone() {
-			return factory.getSessionFactoryOptions().getJdbcTimeZone();
-		}
+			@Override
+			public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
+				return factory.getSessionFactoryOptions().getPhysicalConnectionHandlingMode();
+			}
 
-		@Override
-		public List<SessionEventListener> getCustomSessionEventListener() {
-			return null;
-		}
+			@Override
+			public String getTenantIdentifier() {
+				final Object tenantIdentifier = getTenantIdentifierValue();
+				return tenantIdentifier == null
+						? null
+						: factory.getTenantIdentifierJavaType().toString( tenantIdentifier );
+			}
 
-		@Override
-		public ExceptionMapper getExceptionMapper() {
-			return null;
+			@Override
+			public TimeZone getJdbcTimeZone() {
+				return factory.getSessionFactoryOptions().getJdbcTimeZone();
+			}
+
+			@Override
+			public List<SessionEventListener> getCustomSessionEventListener() {
+				return null;
+			}
 		}
-	}
 }

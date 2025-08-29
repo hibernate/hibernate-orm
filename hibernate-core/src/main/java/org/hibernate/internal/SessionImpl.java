@@ -25,9 +25,11 @@ import jakarta.persistence.metamodel.Metamodel;
 import org.hibernate.*;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.creation.internal.SessionCreationOptions;
+import org.hibernate.engine.creation.internal.SharedSessionBuilderImpl;
+import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.internal.PersistenceContexts;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityEntry;
@@ -63,8 +65,6 @@ import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownSqlResultSetMappingException;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
-import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
-import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionObserver;
@@ -78,15 +78,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serial;
 import java.io.Serializable;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
-import java.util.function.UnaryOperator;
 
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
@@ -2025,251 +2022,6 @@ public class SessionImpl
 		}
 
 		super.afterTransactionCompletion( successful, delayed );
-	}
-
-	private static class SharedSessionBuilderImpl
-			extends SessionFactoryImpl.SessionBuilderImpl
-			implements SharedSessionBuilder, SharedSessionCreationOptions {
-		private final SessionImpl session;
-		private boolean shareTransactionContext;
-		private boolean tenantIdChanged;
-		private boolean readOnlyChanged;
-
-		private SharedSessionBuilderImpl(SessionImpl session) {
-			super( (SessionFactoryImpl) session.getFactory() );
-			this.session = session;
-			super.tenantIdentifier( session.getTenantIdentifierValue() );
-			super.identifierRollback( session.isIdentifierRollbackEnabled() );
-		}
-
-		@Override
-		public SessionImpl openSession() {
-			if ( session.getSessionFactoryOptions().isMultiTenancyEnabled() ) {
-				if ( shareTransactionContext ) {
-					if ( tenantIdChanged ) {
-						throw new SessionException(
-								"Cannot redefine the tenant identifier on a child session if the connection is reused" );
-					}
-					if ( readOnlyChanged ) {
-						throw new SessionException(
-								"Cannot redefine the read-only mode on a child session if the connection is reused" );
-					}
-				}
-			}
-			return super.openSession();
-		}
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// SharedSessionBuilder
-
-
-		@Override @Deprecated(forRemoval = true)
-		public SharedSessionBuilderImpl tenantIdentifier(String tenantIdentifier) {
-			super.tenantIdentifier( tenantIdentifier );
-			tenantIdChanged = true;
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl tenantIdentifier(Object tenantIdentifier) {
-			super.tenantIdentifier( tenantIdentifier );
-			tenantIdChanged = true;
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl readOnly(boolean readOnly) {
-			super.readOnly( readOnly );
-			readOnlyChanged = true;
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl initialCacheMode(CacheMode cacheMode) {
-			super.initialCacheMode( cacheMode );
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl interceptor() {
-			super.interceptor( session.getInterceptor() );
-			return this;
-		}
-
-		@Override
-		public CommonSharedSessionBuilderOptions statementInspector() {
-			return statementInspector( session.getJdbcSessionContext().getStatementInspector() );
-		}
-
-		@Override
-		public CommonSharedSessionBuilderOptions noStatementInspector() {
-			statementInspector( StatementInspector.NONE );
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl interceptor(Interceptor interceptor) {
-			super.interceptor( interceptor );
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl noInterceptor() {
-			super.noInterceptor();
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl connection() {
-			this.shareTransactionContext = true;
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl connection(Connection connection) {
-			super.connection( connection );
-			return this;
-		}
-
-		private PhysicalConnectionHandlingMode getConnectionHandlingMode() {
-			return session.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode();
-		}
-
-		@Override
-		@Deprecated(since = "6.0")
-		public SharedSessionBuilderImpl connectionReleaseMode() {
-			final PhysicalConnectionHandlingMode handlingMode =
-					PhysicalConnectionHandlingMode.interpret( ConnectionAcquisitionMode.AS_NEEDED,
-							getConnectionHandlingMode().getReleaseMode() );
-			connectionHandlingMode( handlingMode );
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl connectionHandlingMode() {
-			connectionHandlingMode( getConnectionHandlingMode() );
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl autoJoinTransactions() {
-			super.autoJoinTransactions( session.shouldAutoJoinTransaction() );
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl autoJoinTransactions(boolean autoJoinTransactions) {
-			super.autoJoinTransactions( autoJoinTransactions );
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl autoClose(boolean autoClose) {
-			super.autoClose( autoClose );
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl flushMode() {
-			flushMode( session.getHibernateFlushMode() );
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl autoClose() {
-			autoClose( session.isAutoCloseSessionEnabled() );
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl identifierRollback(boolean identifierRollback) {
-			super.identifierRollback( identifierRollback );
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl jdbcTimeZone(TimeZone timeZone) {
-			super.jdbcTimeZone(timeZone);
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl clearEventListeners() {
-			super.clearEventListeners();
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl flushMode(FlushMode flushMode) {
-			super.flushMode(flushMode);
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl autoClear(boolean autoClear) {
-			super.autoClear(autoClear);
-			return this;
-		}
-
-		@Override @Deprecated
-		public SharedSessionBuilderImpl statementInspector(StatementInspector statementInspector) {
-			super.statementInspector(statementInspector);
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl statementInspector(UnaryOperator<String> operator) {
-			super.statementInspector(operator);
-			return this;
-		}
-
-		@Override @Deprecated
-		public SharedSessionBuilderImpl connectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
-			super.connectionHandlingMode(connectionHandlingMode);
-			return this;
-		}
-
-		@Override @Deprecated
-		public SharedSessionBuilderImpl connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode) {
-			super.connectionHandling(acquisitionMode, releaseMode);
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl eventListeners(SessionEventListener... listeners) {
-			super.eventListeners(listeners);
-			return this;
-		}
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// SharedSessionCreationOptions
-
-		@Override
-		public boolean isTransactionCoordinatorShared() {
-			return shareTransactionContext;
-		}
-
-		@Override
-		public TransactionCoordinator getTransactionCoordinator() {
-			return shareTransactionContext ? session.getTransactionCoordinator() : null;
-		}
-
-		@Override
-		public JdbcCoordinator getJdbcCoordinator() {
-			return shareTransactionContext ? session.getJdbcCoordinator() : null;
-		}
-
-		@Override
-		public Transaction getTransaction() {
-			return shareTransactionContext ? session.getCurrentTransaction() : null;
-		}
-
-		@Override
-		public TransactionCompletionCallbacksImpl getTransactionCompletionCallbacks() {
-			return shareTransactionContext
-					? session.getActionQueue().getTransactionCompletionCallbacks()
-					: null;
-		}
 	}
 
 	@Override

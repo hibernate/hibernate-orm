@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.internal;
+package org.hibernate.engine.creation.internal;
 
 import org.hibernate.Transaction;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;

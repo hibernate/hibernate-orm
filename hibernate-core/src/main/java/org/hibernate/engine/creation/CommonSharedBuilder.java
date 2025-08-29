@@ -2,7 +2,13 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate;
+package org.hibernate.engine.creation;
+
+import org.hibernate.CacheMode;
+import org.hibernate.Incubating;
+import org.hibernate.Interceptor;
+import org.hibernate.Session;
+import org.hibernate.StatelessSession;
 
 import java.util.function.UnaryOperator;
 
@@ -10,45 +16,54 @@ import java.util.function.UnaryOperator;
  * Common options for builders of {@linkplain Session} and {@linkplain StatelessSession}
  * which share state from an underlying {@linkplain Session} or {@linkplain StatelessSession}.
  *
+ * @since 7.2
+ *
  * @author Steve Ebersole
  */
-public interface CommonSharedSessionBuilderOptions extends CommonSessionBuilderOptions {
+@Incubating
+public interface CommonSharedBuilder extends CommonBuilder {
 
 	/**
 	 * Signifies that the connection from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	CommonSharedSessionBuilderOptions connection();
+	CommonSharedBuilder connection();
 
 	/**
 	 * Signifies the interceptor from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	CommonSharedSessionBuilderOptions interceptor();
+	CommonSharedBuilder interceptor();
 
 	/**
 	 * Signifies that the SQL {@linkplain org.hibernate.resource.jdbc.spi.StatementInspector statement inspector}
 	 * from the original session should be used.
 	 */
-	CommonSharedSessionBuilderOptions statementInspector();
+	CommonSharedBuilder statementInspector();
 
 	/**
 	 * Signifies that no SQL {@linkplain org.hibernate.resource.jdbc.spi.StatementInspector statement inspector}
 	 * should be used.
 	 */
-	CommonSharedSessionBuilderOptions noStatementInspector();
+	CommonSharedBuilder noStatementInspector();
 
 	@Override
-	CommonSharedSessionBuilderOptions interceptor(Interceptor interceptor);
+	CommonSharedBuilder interceptor(Interceptor interceptor);
 
 	@Override
-	CommonSharedSessionBuilderOptions noInterceptor();
+	CommonSharedBuilder noInterceptor();
 
 	@Override
-	CommonSharedSessionBuilderOptions statementInspector(UnaryOperator<String> operator);
+	CommonSharedBuilder statementInspector(UnaryOperator<String> operator);
 
 	@Override
-	CommonSharedSessionBuilderOptions tenantIdentifier(Object tenantIdentifier);
+	CommonSharedBuilder readOnly(boolean readOnly);
+
+	@Override
+	CommonSharedBuilder initialCacheMode(CacheMode cacheMode);
+
+	@Override
+	CommonSharedBuilder tenantIdentifier(Object tenantIdentifier);
 }

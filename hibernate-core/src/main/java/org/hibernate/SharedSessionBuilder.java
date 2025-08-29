@@ -4,6 +4,7 @@
  */
 package org.hibernate;
 
+import org.hibernate.engine.creation.CommonSharedBuilder;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
@@ -18,7 +19,7 @@ import java.util.function.UnaryOperator;
  *
  * @see Session#sessionWithOptions()
  */
-public interface SharedSessionBuilder extends SessionBuilder, CommonSharedSessionBuilderOptions {
+public interface SharedSessionBuilder extends SessionBuilder, CommonSharedBuilder {
 
 	@Override
 	SharedSessionBuilder connection();

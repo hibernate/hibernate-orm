@@ -2,39 +2,49 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.internal;
+package org.hibernate.engine.creation.internal;
 
+import org.hibernate.CacheMode;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionException;
 import org.hibernate.SharedStatelessSessionBuilder;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
+import org.hibernate.internal.CommonSharedSessionCreationOptions;
+import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.internal.StatelessSessionImpl;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 import java.util.Objects;
-import java.util.function.UnaryOperator;
 
 /**
+ * Builder for shared {@linkplain StatelessSessionImplementor stateless} sessions.
+ * Exposes the builder state via its {@linkplain CommonSharedSessionCreationOptions} implementation
+ * for use when creating the shared stateless session.
+ *
  * @author Steve Ebersole
  */
 public class SharedStatelessSessionBuilderImpl
+		extends AbstractCommonBuilder<SharedStatelessSessionBuilder>
 		implements SharedStatelessSessionBuilder, CommonSharedSessionCreationOptions {
 
-	private final SharedSessionContractImplementor original;
-
-	private Interceptor interceptor;
-	private StatementInspector statementInspector;
-	private Object tenantIdentifier;
-	private boolean shareTransactionContext;
+	protected final SharedSessionContractImplementor original;
+	protected boolean shareTransactionContext;
 
 	public SharedStatelessSessionBuilderImpl(SharedSessionContractImplementor original) {
+		super( (SessionFactoryImpl) original.getSessionFactory() );
 		this.original = original;
 
 		this.tenantIdentifier = original.getTenantIdentifierValue();
 		this.interceptor = original.getSessionFactory().getSessionFactoryOptions().getInterceptor();
 		this.statementInspector = original.getSessionFactory().getSessionFactoryOptions().getStatementInspector();
+	}
+
+	@Override
+	protected SharedStatelessSessionBuilder getThis() {
+		return this;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -66,38 +76,8 @@ public class SharedStatelessSessionBuilderImpl
 	}
 
 	@Override
-	public SharedStatelessSessionBuilder interceptor(Interceptor interceptor) {
-		this.interceptor = interceptor;
-		return this;
-	}
-
-	@Override
-	public SharedStatelessSessionBuilder noInterceptor() {
-		interceptor = EmptyInterceptor.INSTANCE;
-		return this;
-	}
-
-	@Override
-	public SharedStatelessSessionBuilder statementInspector(UnaryOperator<String> operator) {
-		this.statementInspector = operator::apply;
-		return this;
-	}
-
-	@Override
 	public SharedStatelessSessionBuilder statementInspector() {
 		this.statementInspector = original.getJdbcSessionContext().getStatementInspector();
-		return this;
-	}
-
-	@Override
-	public SharedStatelessSessionBuilder noStatementInspector() {
-		this.statementInspector = StatementInspector.NONE;
-		return this;
-	}
-
-	@Override
-	public SharedStatelessSessionBuilder tenantIdentifier(Object tenantIdentifier) {
-		this.tenantIdentifier = tenantIdentifier;
 		return this;
 	}
 
@@ -117,7 +97,17 @@ public class SharedStatelessSessionBuilderImpl
 
 	@Override
 	public Object getTenantIdentifierValue() {
-		return null;
+		return tenantIdentifier;
+	}
+
+	@Override
+	public boolean isReadOnly() {
+		return readOnly;
+	}
+
+	@Override
+	public CacheMode getInitialCacheMode() {
+		return cacheMode;
 	}
 
 	@Override

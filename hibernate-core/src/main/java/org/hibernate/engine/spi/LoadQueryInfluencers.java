@@ -19,7 +19,7 @@ import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.FilterImpl;
-import org.hibernate.internal.SessionCreationOptions;
+import org.hibernate.engine.creation.internal.SessionCreationOptions;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;

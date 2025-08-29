@@ -4,6 +4,8 @@
  */
 package org.hibernate;
 
+import org.hibernate.engine.creation.CommonSharedBuilder;
+
 import java.util.function.UnaryOperator;
 
 /**
@@ -19,7 +21,7 @@ import java.util.function.UnaryOperator;
  * @author Steve Ebersole
  */
 @Incubating
-public interface SharedStatelessSessionBuilder extends CommonSharedSessionBuilderOptions {
+public interface SharedStatelessSessionBuilder extends CommonSharedBuilder {
 	/**
 	 * Open the stateless session.
 	 */
@@ -47,4 +49,10 @@ public interface SharedStatelessSessionBuilder extends CommonSharedSessionBuilde
 
 	@Override
 	SharedStatelessSessionBuilder tenantIdentifier(Object tenantIdentifier);
+
+	@Override
+	SharedStatelessSessionBuilder readOnly(boolean readOnly);
+
+	@Override
+	SharedStatelessSessionBuilder initialCacheMode(CacheMode cacheMode);
 }

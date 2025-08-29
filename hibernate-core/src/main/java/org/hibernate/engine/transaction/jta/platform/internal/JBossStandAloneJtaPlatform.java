@@ -16,7 +16,9 @@ import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
+ * @deprecated Use {@link WildFlyStandAloneJtaPlatform} or {@link NarayanaJtaPlatform} instead.
  */
+@Deprecated
 public class JBossStandAloneJtaPlatform extends AbstractJtaPlatform {
 
 	public static final String JBOSS_TM_CLASS_NAME = "com.arjuna.ats.jta.TransactionManager";

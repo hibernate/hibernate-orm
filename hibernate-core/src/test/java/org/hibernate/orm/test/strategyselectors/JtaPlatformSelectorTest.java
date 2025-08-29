@@ -8,10 +8,12 @@ import org.hibernate.boot.registry.selector.internal.DefaultJtaPlatformSelector;
 import org.hibernate.engine.transaction.jta.platform.internal.AtomikosJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.internal.NarayanaJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.ResinJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.GlassFishJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.internal.WildFlyStandAloneJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 
 import org.junit.jupiter.api.Test;
@@ -93,6 +95,19 @@ public class JtaPlatformSelectorTest {
 				"org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform"
 		);
 
+		testJtaPlatformResolves(
+				strategySelector,
+				WildFlyStandAloneJtaPlatform.class,
+				"WildFlyStandAlone",
+				"org.hibernate.engine.transaction.jta.platform.internal.WildFlyStandAloneJtaPlatform"
+		);
+
+		testJtaPlatformResolves(
+				strategySelector,
+				NarayanaJtaPlatform.class,
+				"Narayana",
+				"org.hibernate.engine.transaction.jta.platform.internal.NarayanaJtaPlatform"
+		);
 	}
 
 	private static void testJtaPlatformResolves(final DefaultJtaPlatformSelector strategySelector, final Class expectedType, final String shortname, final String longname) {

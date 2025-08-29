@@ -233,7 +233,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			);
 			final SoftLock lock = cache.lockItem( source, ck, previousVersion );
 			cache.remove( source, ck );
-			source.getActionQueue().registerProcess( (success, session) -> cache.unlockItem( session, ck, lock ) );
+			source.getActionQueue().registerCallback( (success, session) -> cache.unlockItem( session, ck, lock ) );
 		}
 	}
 
@@ -342,7 +342,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 					);
 					final SoftLock lock = cache.lockItem( source, ck, null );
 					cache.remove( source, ck );
-					actionQueue.registerProcess( (success, session) -> cache.unlockItem( session, ck, lock ) );
+					actionQueue.registerCallback( (success, session) -> cache.unlockItem( session, ck, lock ) );
 				}
 			}
 			else if ( type instanceof ComponentType compositeType ) {

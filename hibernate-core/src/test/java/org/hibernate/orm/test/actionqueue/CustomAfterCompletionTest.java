@@ -30,7 +30,7 @@ public class CustomAfterCompletionTest extends BaseCoreFunctionalTestCase {
 	public void success() {
 		inSession( session -> {
 			AtomicBoolean called = new AtomicBoolean( false );
-			session.getActionQueue().registerProcess( new AfterTransactionCompletionProcess() {
+			session.getActionQueue().registerCallback( new AfterTransactionCompletionProcess() {
 				@Override
 				public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
 					called.set( true );
@@ -56,7 +56,7 @@ public class CustomAfterCompletionTest extends BaseCoreFunctionalTestCase {
 	public void failure() {
 		try {
 			inSession( session -> {
-				session.getActionQueue().registerProcess( new AfterTransactionCompletionProcess() {
+				session.getActionQueue().registerCallback( new AfterTransactionCompletionProcess() {
 					@Override
 					public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
 						throw new RuntimeException( "My exception" );

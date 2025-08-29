@@ -4,16 +4,11 @@
  */
 package org.hibernate.envers.internal.entities.mapper;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
@@ -22,6 +17,11 @@ import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.property.access.spi.SetterFieldImpl;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * TODO: diff
@@ -51,7 +51,7 @@ public class SinglePropertyMapper extends AbstractPropertyMapper implements Simp
 
 	@Override
 	public boolean mapToMapFromEntity(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
@@ -67,7 +67,7 @@ public class SinglePropertyMapper extends AbstractPropertyMapper implements Simp
 
 	@Override
 	public void mapModifiedFlagsToMapFromEntity(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
@@ -152,7 +152,7 @@ public class SinglePropertyMapper extends AbstractPropertyMapper implements Simp
 
 	@Override
 	public List<PersistentCollectionChangeData> mapCollectionChanges(
-			SessionImplementor sessionImplementor,
+			SharedSessionContractImplementor sessionImplementor,
 			String referencingPropertyName,
 			PersistentCollection newColl,
 			Serializable oldColl,

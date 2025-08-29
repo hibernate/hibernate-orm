@@ -4,8 +4,7 @@
  */
 package org.hibernate.envers.internal.synchronization;
 
-import org.hibernate.Session;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.internal.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.internal.synchronization.work.PersistentCollectionChangeWorkUnit;
@@ -18,9 +17,9 @@ import org.hibernate.envers.internal.tools.EntityTools;
  */
 public class EntityChangeNotifier {
 	private final RevisionInfoGenerator revisionInfoGenerator;
-	private final SessionImplementor sessionImplementor;
+	private final SharedSessionContractImplementor sessionImplementor;
 
-	public EntityChangeNotifier(RevisionInfoGenerator revisionInfoGenerator, SessionImplementor sessionImplementor) {
+	public EntityChangeNotifier(RevisionInfoGenerator revisionInfoGenerator, SharedSessionContractImplementor sessionImplementor) {
 		this.revisionInfoGenerator = revisionInfoGenerator;
 		this.sessionImplementor = sessionImplementor;
 	}
@@ -34,7 +33,7 @@ public class EntityChangeNotifier {
 	 * @param currentRevisionData Revision log entity.
 	 * @param vwu Performed work unit.
 	 */
-	public void entityChanged(Session session, Object currentRevisionData, AuditWorkUnit vwu) {
+	public void entityChanged(SharedSessionContractImplementor session, Object currentRevisionData, AuditWorkUnit vwu) {
 		Object entityId = vwu.getEntityId();
 		if ( entityId instanceof PersistentCollectionChangeWorkUnit.PersistentCollectionChangeWorkUnitId ) {
 			// Notify about a change in collection owner entity.

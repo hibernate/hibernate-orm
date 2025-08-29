@@ -40,6 +40,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactory;
 import org.hibernate.SharedSessionBuilder;
+import org.hibernate.SharedStatelessSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.Transaction;
 import org.hibernate.UnknownProfileException;
@@ -542,6 +543,11 @@ public class SessionLazyDelegator implements Session {
 	@Deprecated
 	public Query createQuery(CriteriaUpdate updateQuery) {
 		return this.lazySession.get().createQuery( updateQuery );
+	}
+
+	@Override
+	public SharedStatelessSessionBuilder statelessWithOptions() {
+		return this.lazySession.get().statelessWithOptions();
 	}
 
 	@Override

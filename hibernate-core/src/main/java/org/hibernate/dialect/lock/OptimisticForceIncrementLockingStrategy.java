@@ -45,7 +45,7 @@ public class OptimisticForceIncrementLockingStrategy implements LockingStrategy 
 		}
 //		final EntityEntry entry = session.getPersistenceContextInternal().getEntry( object );
 		// Register the EntityIncrementVersionProcess action to run just prior to transaction commit.
-		session.getActionQueue().registerProcess( new EntityIncrementVersionProcess( object ) );
+		session.getActionQueue().registerCallback( new EntityIncrementVersionProcess( object ) );
 	}
 
 	protected LockMode getLockMode() {

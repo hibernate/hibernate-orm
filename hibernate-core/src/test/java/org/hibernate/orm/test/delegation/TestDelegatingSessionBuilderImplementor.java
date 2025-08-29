@@ -5,7 +5,7 @@
 package org.hibernate.orm.test.delegation;
 
 import org.hibernate.engine.spi.AbstractDelegatingSessionBuilderImplementor;
-import org.hibernate.engine.spi.SessionBuilderImplementor;
+import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
 
 /**
  * If this class does not compile anymore due to unimplemented methods, you should probably add the corresponding

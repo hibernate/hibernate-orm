@@ -6,14 +6,14 @@ package org.hibernate.envers.internal.entities.mapper;
 
 import java.util.Map;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public interface ExtendedPropertyMapper extends PropertyMapper, CompositeMapperBuilder {
 	boolean map(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			String[] propertyNames,
 			Object[] newState,

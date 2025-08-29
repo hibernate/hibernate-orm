@@ -11,7 +11,7 @@ import org.hibernate.persister.entity.EntityPersister;
  *
  * @author Gavin King
  */
-public class PreLoadEvent extends AbstractEvent {
+public class PreLoadEvent extends AbstractSessionEvent {
 	private Object entity;
 	private Object[] state;
 	private Object id;

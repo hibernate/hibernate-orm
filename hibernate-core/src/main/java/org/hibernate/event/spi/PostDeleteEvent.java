@@ -4,6 +4,7 @@
  */
 package org.hibernate.event.spi;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -19,7 +20,7 @@ public class PostDeleteEvent extends AbstractPostDatabaseOperationEvent {
 			Object id,
 			Object[] deletedState,
 			EntityPersister persister,
-			EventSource source) {
+			SharedSessionContractImplementor source) {
 		super( source, entity, id, persister );
 		this.deletedState = deletedState;
 	}

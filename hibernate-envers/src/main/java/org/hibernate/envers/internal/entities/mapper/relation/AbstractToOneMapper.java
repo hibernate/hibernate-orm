@@ -4,12 +4,8 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
 import org.hibernate.envers.internal.entities.PropertyData;
@@ -18,6 +14,10 @@ import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeD
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.service.ServiceRegistry;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Base class for property mappers that manage to-one relation.
@@ -36,7 +36,7 @@ public abstract class AbstractToOneMapper extends AbstractPropertyMapper {
 
 	@Override
 	public boolean mapToMapFromEntity(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
@@ -68,7 +68,7 @@ public abstract class AbstractToOneMapper extends AbstractPropertyMapper {
 
 	@Override
 	public List<PersistentCollectionChangeData> mapCollectionChanges(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			String referencingPropertyName,
 			PersistentCollection newColl,
 			Serializable oldColl,

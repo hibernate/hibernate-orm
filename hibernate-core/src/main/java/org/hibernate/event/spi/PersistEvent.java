@@ -11,7 +11,7 @@ package org.hibernate.event.spi;
  *
  * @see org.hibernate.Session#persist
  */
-public class PersistEvent extends AbstractEvent {
+public class PersistEvent extends AbstractSessionEvent {
 
 	private Object object;
 	private String entityName;

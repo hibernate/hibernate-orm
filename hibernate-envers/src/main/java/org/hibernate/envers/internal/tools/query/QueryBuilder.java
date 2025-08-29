@@ -14,8 +14,8 @@ import java.util.Map;
 import jakarta.persistence.criteria.JoinType;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.Configuration;
@@ -400,7 +400,7 @@ public class QueryBuilder {
 		return orderList;
 	}
 
-	public Query toQuery(Session session) {
+	public Query toQuery(SharedSessionContractImplementor session) {
 		final StringBuilder querySb = new StringBuilder();
 		final Map<String, Object> queryParamValues = new HashMap<>();
 

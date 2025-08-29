@@ -6,7 +6,7 @@
 /**
  * This package defines a framework which models events occurring
  * within a stateful Hibernate {@link org.hibernate.Session}. An
- * {@linkplain org.hibernate.event.spi.AbstractEvent event}
+ * {@linkplain org.hibernate.event.spi.AbstractSessionEvent event}
  * represents a request by the session API for some work to be
  * performed, and an event listener must respond to the event and
  * do that work, usually by scheduling some sort of

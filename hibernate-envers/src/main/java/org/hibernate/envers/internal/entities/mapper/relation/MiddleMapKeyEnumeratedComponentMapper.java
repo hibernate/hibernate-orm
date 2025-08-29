@@ -6,7 +6,7 @@ package org.hibernate.envers.internal.entities.mapper.relation;
 
 import java.util.Map;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleComponentMapper;
 import org.hibernate.envers.internal.tools.query.Parameters;
@@ -34,7 +34,7 @@ public class MiddleMapKeyEnumeratedComponentMapper implements MiddleComponentMap
 
 	@Override
 	public void mapToMapFromObject(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> idData,
 			Map<String, Object> data,
 			Object obj) {

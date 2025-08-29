@@ -329,28 +329,20 @@ public interface Cache extends jakarta.persistence.Cache {
 	void evictRegion(String regionName);
 
 	/**
-	 * {@inheritDoc}
+	 * Evict all cached entity data.
 	 *
 	 * @apiNote This operation only affects cached data for entities, in keeping
 	 * with the intent of the JPA specification, which only defines caching for
 	 * entity data. To evict all data from every cache region, including cached
-	 * collections, natural-id mappings, and cached query results, use
+	 * collections, natural id mappings, and cached query results, use
 	 * {@link #evictAllRegions()} instead.
 	 */
 	@Override
-	default void evictAll() {
-		// Evict only the "JPA cache", which is purely defined as the entity regions.
-		evictEntityData();
-	}
+	void evictAll();
 
 	/**
-	 * Evict all cached data from every cache region.
+	 * Evict all cached data from every cache region, including cached
+	 * collections, natural id mappings, and cached query results.
 	 */
-	default void evictAllRegions() {
-		evictEntityData();
-		evictNaturalIdData();
-		evictCollectionData();
-		evictDefaultQueryRegion();
-		evictQueryRegions();
-	}
+	void evictAllRegions();
 }

@@ -12,13 +12,10 @@ import org.hibernate.boot.registry.selector.spi.StrategyCreator;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.service.spi.ServiceException;
 
-import org.jboss.logging.Logger;
-
 /**
  * @author Steve Ebersole
  */
 public class StrategyCreatorRegionFactoryImpl implements StrategyCreator<RegionFactory> {
-	private static final Logger log = Logger.getLogger( StrategyCreatorRegionFactoryImpl.class );
 
 	private final Properties properties;
 
@@ -31,12 +28,12 @@ public class StrategyCreatorRegionFactoryImpl implements StrategyCreator<RegionF
 		assert RegionFactory.class.isAssignableFrom( strategyClass );
 
 		// first look for a constructor accepting Properties
-		final RegionFactory regionFactoryWithProperties = instantiateWithProperties( strategyClass, Properties.class );
+		final var regionFactoryWithProperties = instantiateWithProperties( strategyClass, Properties.class );
 		if ( regionFactoryWithProperties != null ) {
 			return regionFactoryWithProperties;
 		}
 		// next try Map
-		final RegionFactory regionFactoryWithMap = instantiateWithProperties( strategyClass, Map.class );
+		final var regionFactoryWithMap = instantiateWithProperties( strategyClass, Map.class );
 		if ( regionFactoryWithMap != null ) {
 			return regionFactoryWithMap;
 		}
@@ -54,7 +51,6 @@ public class StrategyCreatorRegionFactoryImpl implements StrategyCreator<RegionF
 			return strategyClass.getConstructor( propertiesClass ).newInstance( properties );
 		}
 		catch ( NoSuchMethodException e ) {
-			log.debugf( "RegionFactory impl [%s] did not provide constructor accepting Properties", strategyClass.getName() );
 			return null;
 		}
 		catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {

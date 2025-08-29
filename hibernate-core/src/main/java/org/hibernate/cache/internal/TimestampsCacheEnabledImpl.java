@@ -6,14 +6,9 @@ package org.hibernate.cache.internal;
 
 import java.util.Collection;
 
-import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.cache.spi.TimestampsRegion;
-import org.hibernate.engine.spi.SessionEventListenerManager;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.monitor.spi.EventMonitor;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
@@ -42,21 +37,21 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 	public void preInvalidate(
 			String[] spaces,
 			SharedSessionContractImplementor session) {
-		final SessionFactoryImplementor factory = session.getFactory();
-		final RegionFactory regionFactory = factory.getCache().getRegionFactory();
-		final StatisticsImplementor statistics = factory.getStatistics();
+		final var factory = session.getFactory();
+		final var regionFactory = factory.getCache().getRegionFactory();
+		final var statistics = factory.getStatistics();
 		final boolean stats = statistics.isStatisticsEnabled();
 
 		final Long timestamp = regionFactory.nextTimestamp() + regionFactory.getTimeout();
 
-		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
-		final EventMonitor eventMonitor = session.getEventMonitor();
+		final var eventListenerManager = session.getEventListenerManager();
+		final var eventMonitor = session.getEventMonitor();
 		final boolean traceEnabled = L2CACHE_LOGGER.isTraceEnabled();
 		for ( String space : spaces ) {
 			if ( traceEnabled ) {
 				L2CACHE_LOGGER.preInvalidatingSpace( space, timestamp );
 			}
-			final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
+			final var cachePutEvent = eventMonitor.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
 
@@ -85,21 +80,21 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 	public void invalidate(
 			String[] spaces,
 			SharedSessionContractImplementor session) {
-		final SessionFactoryImplementor factory = session.getFactory();
-		final StatisticsImplementor statistics = factory.getStatistics();
+		final var factory = session.getFactory();
+		final var statistics = factory.getStatistics();
 		final boolean stats = statistics.isStatisticsEnabled();
 
 		final Long timestamp = factory.getCache().getRegionFactory().nextTimestamp();
 
-		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
-		final EventMonitor eventMonitor = session.getEventMonitor();
+		final var eventListenerManager = session.getEventListenerManager();
+		final var eventMonitor = session.getEventMonitor();
 		final boolean traceEnabled = L2CACHE_LOGGER.isTraceEnabled();
 		for ( String space : spaces ) {
 			if ( traceEnabled ) {
 				L2CACHE_LOGGER.invalidatingSpace( space, timestamp );
 			}
 
-			final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
+			final var cachePutEvent = eventMonitor.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
 				timestampsRegion.putIntoCache( space, timestamp, session );
@@ -126,7 +121,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 			String[] spaces,
 			Long timestamp,
 			SharedSessionContractImplementor session) {
-		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		final var statistics = session.getFactory().getStatistics();
 		for ( String space : spaces ) {
 			if ( isSpaceOutOfDate( space, timestamp, session, statistics ) ) {
 				return false;
@@ -163,7 +158,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 			Collection<String> spaces,
 			Long timestamp,
 			SharedSessionContractImplementor session) {
-		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		final var statistics = session.getFactory().getStatistics();
 		for ( String space : spaces ) {
 			if ( isSpaceOutOfDate( space, timestamp, session, statistics ) ) {
 				return false;
@@ -174,17 +169,18 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 
 	private Long getLastUpdateTimestampForSpace(String space, SharedSessionContractImplementor session) {
 		boolean found = false;
-		final EventMonitor eventMonitor = session.getEventMonitor();
-		final DiagnosticEvent cacheGetEvent = eventMonitor.beginCacheGetEvent();
+		final var eventMonitor = session.getEventMonitor();
+		final var eventListenerManager = session.getEventListenerManager();
+		final var cacheGetEvent = eventMonitor.beginCacheGetEvent();
 		try {
-			session.getEventListenerManager().cacheGetStart();
+			eventListenerManager.cacheGetStart();
 			final Long timestamp = (Long) timestampsRegion.getFromCache( space, session );
 			found = timestamp != null;
 			return timestamp;
 		}
 		finally {
 			eventMonitor.completeCacheGetEvent( cacheGetEvent, session, timestampsRegion, found );
-			session.getEventListenerManager().cacheGetEnd( found );
+			eventListenerManager.cacheGetEnd( found );
 		}
 	}
 

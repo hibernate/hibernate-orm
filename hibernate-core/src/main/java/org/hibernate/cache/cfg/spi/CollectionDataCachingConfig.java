@@ -16,5 +16,5 @@ public interface CollectionDataCachingConfig extends DomainDataCachingConfig {
 	/**
 	 * The comparator to be used with the owning entity's version (if it has one).
 	 */
-	Comparator getOwnerVersionComparator();
+	Comparator<?> getOwnerVersionComparator();
 }

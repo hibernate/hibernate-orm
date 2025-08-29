@@ -7,6 +7,7 @@ package org.hibernate.cache.internal;
 import java.util.Collections;
 import java.util.Set;
 
+import jakarta.persistence.PersistenceException;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cache.spi.QueryResultsCache;
@@ -61,13 +62,11 @@ public class DisabledCaching implements CacheImplementor {
 	@Override
 	public void evictEntityData(Class<?> entityClass, Object identifier) {
 		// nothing to do
-
 	}
 
 	@Override
 	public void evictEntityData(String entityName, Object identifier) {
 		// nothing to do
-
 	}
 
 	@Override
@@ -145,6 +144,17 @@ public class DisabledCaching implements CacheImplementor {
 		// nothing to do
 	}
 
+
+	@Override
+	public void evictAll() {
+		// nothing to do
+	}
+
+	@Override
+	public void evictAllRegions() {
+		// nothing to do
+	}
+
 	@Override
 	public Region getRegion(String fullRegionName) {
 		return null;
@@ -201,17 +211,22 @@ public class DisabledCaching implements CacheImplementor {
 
 	@Override
 	public void evict(Class cls, Object primaryKey) {
-
+		// nothing to do
 	}
 
 	@Override
 	public void evict(Class cls) {
-
+		// nothing to do
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T unwrap(Class<T> cls) {
-		return (T) this;
+	public <T> T unwrap(Class<T> type) {
+		if ( type.isAssignableFrom( DisabledCaching.class ) ) {
+			return (T) this;
+		}
+		else {
+			throw new PersistenceException( "Hibernate cannot unwrap Cache as '" + type.getName() + "'" );
+		}
 	}
 }

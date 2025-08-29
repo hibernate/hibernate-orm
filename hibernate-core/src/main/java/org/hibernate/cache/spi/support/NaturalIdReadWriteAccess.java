@@ -44,8 +44,8 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 	}
 
 	@Override
-	protected Comparator getVersionComparator() {
-		// natural-id has no comparator
+	protected Comparator<?> getVersionComparator() {
+		// natural id has no comparator
 		return null;
 	}
 
@@ -62,6 +62,10 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 		return keysFactory.getNaturalIdValues( cacheKey );
 	}
 
+	private void put(SharedSessionContractImplementor session, Object key, Object value) {
+		getStorageAccess().putIntoCache( key, new Item( value, null, nextTimestamp() ), session );
+	}
+
 	@Override
 	public boolean insert(SharedSessionContractImplementor session, Object key, Object value) {
 		return false;
@@ -71,13 +75,9 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value) {
 		try {
 			writeLock().lock();
-			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
+			final var item = (Lockable) getStorageAccess().getFromCache( key, session );
 			if ( item == null ) {
-				getStorageAccess().putIntoCache(
-						key,
-						new Item( value, null, getRegion().getRegionFactory().nextTimestamp() ),
-						session
-				);
+				put( session, key, value );
 				return true;
 			}
 			else {
@@ -98,25 +98,20 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 	public boolean afterUpdate(SharedSessionContractImplementor session, Object key, Object value, SoftLock lock) {
 		try {
 			writeLock().lock();
-			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
-
+			final var item = (Lockable) getStorageAccess().getFromCache( key, session );
 			if ( item != null && item.isUnlockable( lock ) ) {
-				SoftLockImpl lockItem = (SoftLockImpl) item;
+				final var lockItem = (SoftLockImpl) item;
 				if ( lockItem.wasLockedConcurrently() ) {
 					decrementLock( session, key, lockItem );
 					return false;
 				}
 				else {
-					getStorageAccess().putIntoCache(
-							key,
-							new Item( value, null, getRegion().getRegionFactory().nextTimestamp() ),
-							session
-					);
+					put( session, key, value );
 					return true;
 				}
 			}
 			else {
-				handleLockExpiry( session, key, item );
+				handleLockExpiry( session, key );
 				return false;
 			}
 		}

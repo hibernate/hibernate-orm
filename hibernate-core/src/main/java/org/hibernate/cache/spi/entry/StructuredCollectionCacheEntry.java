@@ -23,14 +23,14 @@ public class StructuredCollectionCacheEntry implements CacheEntryStructure {
 
 	@Override
 	public Object structure(Object item) {
-		final CollectionCacheEntry entry = (CollectionCacheEntry) item;
+		final var entry = (CollectionCacheEntry) item;
 		return Arrays.asList( entry.getState() );
 	}
 
 	@Override
 	public Object destructure(Object structured, SessionFactoryImplementor factory) {
-		final List list = (List) structured;
-		return new CollectionCacheEntry( list.toArray( new Serializable[list.size()] ) );
+		final var list = (List<?>) structured;
+		return new CollectionCacheEntry( list.toArray( Serializable[]::new ) );
 	}
 
 	private StructuredCollectionCacheEntry() {

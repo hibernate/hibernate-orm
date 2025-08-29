@@ -27,20 +27,10 @@ public class UseGenerics extends TestTemplate {
 						"   primary key (ID), foreign key (OWNER_ID) references PERSON(ID))"
 		});
 		createProject();
-		executeGenerateJavaTask();
+		executeGradleCommand("generateJava");
 		verifyProject();
 	}
 
-	private void executeGenerateJavaTask() throws Exception {
-		GradleRunner gradleRunner = GradleRunner.create();
-		gradleRunner.forwardOutput();
-		gradleRunner.withProjectDir(getProjectDir());
-		gradleRunner.withPluginClasspath();
-		gradleRunner.withArguments("generateJava");
-		BuildResult buildResult = gradleRunner.build();
-		assertTrue(buildResult.getOutput().contains("BUILD SUCCESSFUL"));
-	}
-	
 	private void verifyProject() throws Exception {
 		File generatedOutputFolder = new File(getProjectDir(), "app/generated-sources");
 		assertTrue(generatedOutputFolder.exists());

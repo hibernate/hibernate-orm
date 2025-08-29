@@ -27,18 +27,8 @@ public class TutorialTest extends TestTemplate {
 				"insert into PERSON values (1, 'foo')"
 		});
 		createProject();
-		executeGenerateJavaTask();
+		executeGradleCommand("generateJava");
 		verifyProject();
-	}
-	
-	private void executeGenerateJavaTask() throws Exception {
-		GradleRunner gradleRunner = GradleRunner.create();
-		gradleRunner.forwardOutput();
-		gradleRunner.withProjectDir(getProjectDir());
-		gradleRunner.withPluginClasspath();
-		gradleRunner.withArguments("generateJava");
-		BuildResult buildResult = gradleRunner.build();
-		assertTrue(buildResult.getOutput().contains("BUILD SUCCESSFUL"));
 	}
 	
 	private void verifyProject() {

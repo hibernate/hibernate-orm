@@ -17,8 +17,8 @@ import org.gradle.testkit.runner.GradleRunner;
 
 public class TestTemplate {
 
-    protected static final List<String> GRADLE_INIT_PROJECT_ARGUMENTS = List.of(
-            "init", "--type", "java-application", "--dsl", "groovy", "--test-framework", "junit-jupiter", "--java-version", "17");
+    protected static final String[] GRADLE_INIT_PROJECT_ARGUMENTS = new String[] {
+            "init", "--type", "java-application", "--dsl", "groovy", "--test-framework", "junit-jupiter", "--java-version", "17"};
 
     @TempDir
     private File projectDir;
@@ -39,6 +39,16 @@ public class TestTemplate {
     protected String[] getDatabaseCreationScript() { return databaseCreationScript; }
     protected void setDatabaseCreationScript(String[] script) { databaseCreationScript = script; }
 
+    protected void executeGradleCommand(String ... gradleCommandLine) {
+        GradleRunner runner = GradleRunner.create();
+        runner.withArguments(gradleCommandLine);
+        runner.forwardOutput();
+        runner.withPluginClasspath();
+        runner.withProjectDir(getProjectDir());
+        BuildResult buildResult = runner.build();
+        assertTrue(buildResult.getOutput().contains("BUILD SUCCESSFUL"));
+    }
+
     protected void createProject() throws Exception {
         initGradleProject();
         editGradleBuildFile();
@@ -48,12 +58,7 @@ public class TestTemplate {
     }
 
     protected void initGradleProject() throws Exception {
-        GradleRunner runner = GradleRunner.create();
-        runner.withArguments(GRADLE_INIT_PROJECT_ARGUMENTS);
-        runner.forwardOutput();
-        runner.withProjectDir(getProjectDir());
-        BuildResult buildResult = runner.build();
-        assertTrue(buildResult.getOutput().contains("BUILD SUCCESSFUL"));
+        executeGradleCommand(GRADLE_INIT_PROJECT_ARGUMENTS);
         setGradlePropertiesFile(new File(getProjectDir(), "gradle.properties"));
         assertTrue(getGradlePropertiesFile().exists());
         assertTrue(getGradlePropertiesFile().isFile());

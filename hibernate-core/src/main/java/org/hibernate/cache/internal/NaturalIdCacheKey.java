@@ -40,8 +40,7 @@ public class NaturalIdCacheKey implements Serializable {
 			EntityPersister persister,
 			String entityName,
 			SharedSessionContractImplementor session) {
-		final NaturalIdCacheKeyBuilder builder =
-				new NaturalIdCacheKeyBuilder( entityName, session.getTenantIdentifier(), persister );
+		final var builder = new NaturalIdCacheKeyBuilder( entityName, session.getTenantIdentifier(), persister );
 		addTenantIdToCacheKey( session, builder );
 		persister.getNaturalIdMapping().addToCacheKey( builder, naturalIdValues, session );
 		return builder.build();
@@ -82,20 +81,22 @@ public class NaturalIdCacheKey implements Serializable {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( o == null ) {
+	public boolean equals(Object object) {
+		if ( object == null ) {
 			return false;
 		}
-		if ( this == o ) {
+		else if ( this == object ) {
 			return true;
 		}
-		if ( hashCode != o.hashCode() || !(o instanceof NaturalIdCacheKey other) ) {
+		else if ( this.hashCode != object.hashCode() || !(object instanceof NaturalIdCacheKey that) ) {
 			//hashCode is part of this check since it is pre-calculated and hash must match for equals to be true
 			return false;
 		}
-		return Objects.equals( entityName, other.entityName )
-			&& Objects.equals( tenantId, other.tenantId )
-			&& Objects.deepEquals( this.naturalIdValues, other.naturalIdValues );
+		else {
+			return Objects.equals( this.entityName, that.entityName )
+				&& Objects.equals( this.tenantId, that.tenantId )
+				&& Objects.deepEquals( this.naturalIdValues, that.naturalIdValues );
+		}
 	}
 
 	@Override
@@ -104,7 +105,7 @@ public class NaturalIdCacheKey implements Serializable {
 		// are not simply based on a single value like primary keys.
 		// The only sane way to differentiate the keys is to include
 		// the disassembled values in the string.
-		final StringBuilder string =
+		final var string =
 				new StringBuilder().append( entityName )
 						.append( "##NaturalId[" );
 		if ( naturalIdValues instanceof Object[] values ) {

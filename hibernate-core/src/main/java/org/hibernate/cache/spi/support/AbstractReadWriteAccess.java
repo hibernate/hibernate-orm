@@ -4,6 +4,7 @@
  */
 package org.hibernate.cache.spi.support;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Locale;
@@ -13,7 +14,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hibernate.cache.spi.DomainDataRegion;
-import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -37,7 +37,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		super( domainDataRegion, storageAccess );
 	}
 
-	protected abstract Comparator getVersionComparator();
+	protected abstract Comparator<?> getVersionComparator();
 
 	protected UUID uuid() {
 		return uuid;
@@ -68,8 +68,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		}
 		try {
 			readLock.lock();
-			final Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
-
+			final var item = (Lockable) getStorageAccess().getFromCache( key, session );
 			if ( item == null ) {
 				if ( traceEnabled ) {
 					L2CACHE_LOGGER.tracef( "Cache miss: region = '%s', key = '%s'",
@@ -78,8 +77,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 				return null;
 			}
 
-			final boolean readable = item.isReadable( session.getCacheTransactionSynchronization().getCachingTimestamp() );
-			if ( readable ) {
+			if ( isReadable( session, item ) ) {
 				if ( traceEnabled ) {
 					L2CACHE_LOGGER.tracef( "Cache hit: region = '%s', key = '%s'",
 							getRegion().getName(), key );
@@ -99,6 +97,10 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		}
 	}
 
+	private static boolean isReadable(SharedSessionContractImplementor session, Lockable item) {
+		return item.isReadable( session.getCacheTransactionSynchronization().getCachingTimestamp() );
+	}
+
 	@Override
 	public boolean putFromLoad(
 			SharedSessionContractImplementor session,
@@ -112,10 +114,8 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 						getRegion().getName(), getAccessType(), key, value );
 			}
 			writeLock.lock();
-			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
-
-			boolean writable = item == null || item.isWriteable( session.getCacheTransactionSynchronization().getCachingTimestamp(), version, getVersionComparator() );
-			if ( writable ) {
+			final var item = (Lockable) getStorageAccess().getFromCache( key, session );
+			if ( isWritable( session, version, item ) ) {
 				getStorageAccess().putIntoCache(
 						key,
 						new Item( value, version, session.getCacheTransactionSynchronization().getCachingTimestamp() ),
@@ -141,6 +141,12 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		}
 	}
 
+	private boolean isWritable(SharedSessionContractImplementor session, Object version, Lockable item) {
+		return item == null
+			|| item.isWriteable( session.getCacheTransactionSynchronization().getCachingTimestamp(),
+									version, getVersionComparator() );
+	}
+
 	protected abstract AccessedDataClassification getAccessedDataClassification();
 
 	@Override
@@ -157,23 +163,25 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 	public SoftLock lockItem(SharedSessionContractImplementor session, Object key, Object version) {
 		try {
 			writeLock.lock();
-
-			long timeout = getRegion().getRegionFactory().nextTimestamp() + getRegion().getRegionFactory().getTimeout();
+			final long timeout = nextTimestamp() + getTimeout();
 			if ( L2CACHE_LOGGER.isTraceEnabled() ) {
 				L2CACHE_LOGGER.tracef( "Locking cache item [region='%s' (%s)] : '%s' (timeout=%s, version=%s)",
 						getRegion().getName(), getAccessType(), key, timeout, version );
 			}
-
-			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
-			final SoftLockImpl lock = ( item == null )
-					? new SoftLockImpl( timeout, uuid, nextLockId(), version )
-					: item.lock( timeout, uuid, nextLockId() );
+			final var item = (Lockable) getStorageAccess().getFromCache( key, session );
+			final var lock = lock( item, version, timeout );
 			getStorageAccess().putIntoCache( key, lock, session );
 			return lock;
 		}
 		finally {
 			writeLock.unlock();
 		}
+	}
+
+	private SoftLockImpl lock(Lockable item, Object version, long timeout) {
+		return item == null
+				? new SoftLockImpl( timeout, uuid, nextLockId(), version )
+				: item.lock( timeout, uuid, nextLockId() );
 	}
 
 	@Override
@@ -184,13 +192,12 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 						getRegion().getName(), getAccessType(), key );
 			}
 			writeLock.lock();
-			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
-
+			final var item = (Lockable) getStorageAccess().getFromCache( key, session );
 			if ( item != null && item.isUnlockable( lock ) ) {
 				decrementLock( session, key, (SoftLockImpl) item );
 			}
 			else {
-				handleLockExpiry( session, key, item );
+				handleLockExpiry( session, key );
 			}
 		}
 		finally {
@@ -198,21 +205,28 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		}
 	}
 
+	long getTimeout() {
+		return getRegion().getRegionFactory().getTimeout();
+	}
+
+	long nextTimestamp() {
+		return getRegion().getRegionFactory().nextTimestamp();
+	}
+
 	protected void decrementLock(SharedSessionContractImplementor session, Object key, SoftLockImpl lock) {
-		lock.unlock( getRegion().getRegionFactory().nextTimestamp() );
+		lock.unlock( nextTimestamp() );
 		getStorageAccess().putIntoCache( key, lock, session );
 	}
 
-	protected void handleLockExpiry(SharedSessionContractImplementor session, Object key, Lockable lock) {
+	protected void handleLockExpiry(SharedSessionContractImplementor session, Object key) {
 		L2CACHE_LOGGER.softLockedCacheExpired( getRegion().getName(), key );
 		L2CACHE_LOGGER.tracef( "Cached entry expired: %s", key );
-		final RegionFactory regionFactory = getRegion().getRegionFactory();
-
-		// create new lock that times out immediately
-		long ts = regionFactory.nextTimestamp() + regionFactory.getTimeout();
-		SoftLockImpl newLock = new SoftLockImpl( ts, uuid, nextLockId.getAndIncrement(), null );
-		//newLock.unlock( ts );
-		newLock.unlock( ts - regionFactory.getTimeout() );
+		final var regionFactory = getRegion().getRegionFactory();
+		// create a new lock that times out immediately
+		long timestamp = regionFactory.nextTimestamp() + regionFactory.getTimeout();
+		final var newLock = new SoftLockImpl( timestamp, uuid, nextLockId.getAndIncrement(), null );
+		//newLock.unlock( timestamp );
+		newLock.unlock( timestamp - regionFactory.getTimeout() );
 		getStorageAccess().putIntoCache( key, newLock, session );
 	}
 
@@ -271,6 +285,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 	 * Wrapper type representing unlocked items.
 	 */
 	public final static class Item implements Serializable, Lockable {
+		@Serial
 		private static final long serialVersionUID = 1L;
 		private final Object value;
 		private final Object version;
@@ -345,6 +360,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 	 */
 	public static class SoftLockImpl implements Serializable, Lockable, SoftLock {
 
+		@Serial
 		private static final long serialVersionUID = 2L;
 
 		private final UUID sourceUuid;
@@ -414,11 +430,11 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		}
 
 		@Override
-		public boolean equals(Object o) {
-			if ( o == this ) {
+		public boolean equals(Object other) {
+			if ( other == this ) {
 				return true;
 			}
-			else if ( o instanceof SoftLockImpl that ) {
+			else if ( other instanceof SoftLockImpl that ) {
 				return this.lockId == that.lockId
 					&& this.sourceUuid.equals( that.sourceUuid );
 			}

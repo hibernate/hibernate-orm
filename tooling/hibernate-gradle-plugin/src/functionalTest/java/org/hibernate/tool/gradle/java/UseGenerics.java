@@ -58,20 +58,6 @@ public class UseGenerics extends TestTemplate {
 		assertTrue(getDatabaseFile().isFile());
 	}
 	
-	private void createHibernatePropertiesFile() throws Exception {
-		File hibernatePropertiesFile = new File(getProjectDir(), "app/src/main/resources/hibernate.properties");
-		StringBuffer hibernatePropertiesFileContents = new StringBuffer();	
-		hibernatePropertiesFileContents
-			.append("hibernate.connection.driver_class=org.h2.Driver\n")
-			.append("hibernate.connection.url=" + constructJdbcConnectionString() + "\n")
-			.append("hibernate.connection.username=\n")
-			.append("hibernate.connection.password=\n")
-			.append("hibernate.default_catalog=TEST\n")
-			.append("hibernate.default_schema=PUBLIC\n");
-		Files.writeString(hibernatePropertiesFile.toPath(), hibernatePropertiesFileContents.toString());
-		assertTrue(hibernatePropertiesFile.exists());
-	}
-	
 	private void executeGenerateJavaTask() throws Exception {
 		GradleRunner gradleRunner = GradleRunner.create();
 		gradleRunner.forwardOutput();

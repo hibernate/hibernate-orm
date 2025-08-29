@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.List;
 
 import org.junit.jupiter.api.io.TempDir;
@@ -51,6 +52,15 @@ public class TestTemplate {
         assertFalse(getDatabaseFile().exists());
     }
 
+    protected void editGradleBuildFile() throws Exception {
+        StringBuffer gradleBuildFileContents = new StringBuffer(
+                new String(Files.readAllBytes(getGradleBuildFile().toPath())));
+        addHibernateToolsPluginLine(gradleBuildFileContents);
+        addH2DatabaseDependencyLine(gradleBuildFileContents);
+        addHibernateToolsExtension(gradleBuildFileContents);
+        Files.writeString(getGradleBuildFile().toPath(), gradleBuildFileContents.toString());
+    }
+
     protected String constructH2DatabaseDependencyLine() {
         return "    implementation 'com.h2database:h2:" + System.getenv("H2_VERSION") + "'";
     }
@@ -74,6 +84,10 @@ public class TestTemplate {
         int pos = gradleBuildFileContents.indexOf("plugins {");
         pos = gradleBuildFileContents.indexOf("}", pos);
         gradleBuildFileContents.insert(pos, constructHibernateToolsPluginLine() + "\n");
+    }
+
+    protected void addHibernateToolsExtension(StringBuffer gradleBuildFileContents) {
+
     }
 
 }

@@ -41,15 +41,6 @@ public class NoAnnotationsTest extends TestTemplate {
 		assertEquals("foo", resultSet.getString(2));
 	}
 	
-	private void editGradleBuildFile() throws Exception {
-		StringBuffer gradleBuildFileContents = new StringBuffer(
-				new String(Files.readAllBytes(getGradleBuildFile().toPath())));
-		addHibernateToolsPluginLine(gradleBuildFileContents);
-		addH2DatabaseDependencyLine(gradleBuildFileContents);
-		addHibernateToolsExtension(gradleBuildFileContents);
-		Files.writeString(getGradleBuildFile().toPath(), gradleBuildFileContents.toString());
-	}
-	
 	private void editGradlePropertiesFile() throws Exception {
 		// The Hibernate Tools Gradle plugin does not support the configuration cache.
 		// As this is enabled by default when initializing a new Gradle project, the setting needs to be commented out
@@ -111,7 +102,7 @@ public class NoAnnotationsTest extends TestTemplate {
 		assertTrue(generatedPersonJavaFileContents.contains("public class Person "));
 	}
 	
-	private void addHibernateToolsExtension(StringBuffer gradleBuildFileContents) {
+	protected void addHibernateToolsExtension(StringBuffer gradleBuildFileContents) {
 		int pos = gradleBuildFileContents.indexOf("dependencies {");
 		pos = gradleBuildFileContents.indexOf("}", pos);
 		StringBuffer hibernateToolsExtension = new StringBuffer();

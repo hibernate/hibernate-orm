@@ -31,14 +31,6 @@ public class UseGenerics extends TestTemplate {
 		verifyProject();
 	}
 	
-	private void editGradleBuildFile() throws Exception {
-		StringBuffer gradleBuildFileContents = new StringBuffer(
-				new String(Files.readAllBytes(getGradleBuildFile().toPath())));
-		addHibernateToolsPluginLine(gradleBuildFileContents);
-		addH2DatabaseDependencyLine(gradleBuildFileContents);
-		Files.writeString(getGradleBuildFile().toPath(), gradleBuildFileContents.toString());
-	}
-	
 	private void editGradlePropertiesFile() throws Exception {
 		// The Hibernate Tools Gradle plugin does not support the configuration cache.
 		// As this is enabled by default when initializing a new Gradle project, the setting needs to be commented out

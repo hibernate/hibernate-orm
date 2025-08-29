@@ -31,26 +31,6 @@ public class NoGenerics extends TestTemplate {
 		verifyProject();
 	}
 	
-	private void createGradleProject() throws Exception {
-		GradleRunner runner = GradleRunner.create();
-		runner.withArguments(GRADLE_INIT_PROJECT_ARGUMENTS);
-		runner.forwardOutput();
-		runner.withProjectDir(getProjectDir());
-		BuildResult buildResult = runner.build();
-		assertTrue(buildResult.getOutput().contains("BUILD SUCCESSFUL"));
-		setGradlePropertiesFile(new File(getProjectDir(), "gradle.properties"));
-		assertTrue(getGradlePropertiesFile().exists());
-		assertTrue(getGradlePropertiesFile().isFile());
-		File appDir = new File(getProjectDir(), "app");
-		assertTrue(appDir.exists());
-		assertTrue(appDir.isDirectory());
-		setGradleBuildFile(new File(appDir, "build.gradle"));
-		assertTrue(getGradleBuildFile().exists());
-		assertTrue(getGradleBuildFile().isFile());
-		setDatabaseFile(new File(getProjectDir(), "database/test.mv.db"));
-		assertFalse(getDatabaseFile().exists());
-	}
-	
 	private void editGradleBuildFile() throws Exception {
 		StringBuffer gradleBuildFileContents = new StringBuffer(
 				new String(Files.readAllBytes(getGradleBuildFile().toPath())));

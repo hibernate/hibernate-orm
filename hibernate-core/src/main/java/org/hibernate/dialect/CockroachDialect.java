@@ -1006,6 +1006,11 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsInsertReturning() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsWindowFunctions() {
 		return true;
 	}

@@ -41,17 +41,6 @@ public class TutorialTest extends TestTemplate {
 		assertEquals("foo", resultSet.getString(2));
 	}
 	
-	private void editGradlePropertiesFile() throws Exception {
-		// The Hibernate Tools Gradle plugin does not support the configuration cache.
-		// As this is enabled by default when initializing a new Gradle project, the setting needs to be commented out
-		// in the gradle.properties file.
-		StringBuffer gradlePropertiesFileContents = new StringBuffer(
-				new String(Files.readAllBytes(getGradlePropertiesFile().toPath())));
-		int pos = gradlePropertiesFileContents.indexOf("org.gradle.configuration-cache=true");
-		gradlePropertiesFileContents.insert(pos, "#");
-		Files.writeString(getGradlePropertiesFile().toPath(), gradlePropertiesFileContents.toString());
-	}
-	
 	private void createDatabase() throws Exception {
 		String CREATE_PERSON_TABLE = "create table PERSON (ID int not null, NAME varchar(20), primary key (ID))";
 		Connection connection = DriverManager.getConnection(constructJdbcConnectionString());

@@ -61,6 +61,17 @@ public class TestTemplate {
         Files.writeString(getGradleBuildFile().toPath(), gradleBuildFileContents.toString());
     }
 
+    protected void editGradlePropertiesFile() throws Exception {
+        // The Hibernate Tools Gradle plugin does not support the configuration cache.
+        // As this is enabled by default when initializing a new Gradle project, the setting needs to be commented out
+        // in the gradle.properties file.
+        StringBuffer gradlePropertiesFileContents = new StringBuffer(
+                new String(Files.readAllBytes(getGradlePropertiesFile().toPath())));
+        int pos = gradlePropertiesFileContents.indexOf("org.gradle.configuration-cache=true");
+        gradlePropertiesFileContents.insert(pos, "#");
+        Files.writeString(getGradlePropertiesFile().toPath(), gradlePropertiesFileContents.toString());
+    }
+
     protected void createHibernatePropertiesFile() throws Exception {
         File hibernatePropertiesFile = new File(getProjectDir(), "app/src/main/resources/hibernate.properties");
         StringBuffer hibernatePropertiesFileContents = new StringBuffer();
@@ -100,8 +111,6 @@ public class TestTemplate {
         gradleBuildFileContents.insert(pos, constructHibernateToolsPluginLine() + "\n");
     }
 
-    protected void addHibernateToolsExtension(StringBuffer gradleBuildFileContents) {
-
-    }
+    protected void addHibernateToolsExtension(StringBuffer gradleBuildFileContents) {}
 
 }

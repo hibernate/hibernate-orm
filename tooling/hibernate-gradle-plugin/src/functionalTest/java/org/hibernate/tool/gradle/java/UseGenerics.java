@@ -26,12 +26,7 @@ public class UseGenerics extends TestTemplate {
 				"create table ITEM (ID int not null,  NAME varchar(20), OWNER_ID int not null, " +
 						"   primary key (ID), foreign key (OWNER_ID) references PERSON(ID))"
 		});
-		assertTrue(getProjectDir().exists());
-		createGradleProject();
-		editGradleBuildFile();
-		editGradlePropertiesFile();
-		createDatabase();
-		createHibernatePropertiesFile();
+		createProject();
 		executeGenerateJavaTask();
 		verifyProject();
 	}

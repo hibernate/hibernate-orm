@@ -26,12 +26,7 @@ public class TutorialTest extends TestTemplate {
 				"create table PERSON (ID int not null, NAME varchar(20), primary key (ID))",
 				"insert into PERSON values (1, 'foo')"
 		});
-		assertTrue(getProjectDir().exists());
-		createGradleProject();
-		editGradleBuildFile();
-		editGradlePropertiesFile();
-		createDatabase();
-		createHibernatePropertiesFile();
+		createProject();
 		executeGenerateJavaTask();
 		verifyProject();
 	}

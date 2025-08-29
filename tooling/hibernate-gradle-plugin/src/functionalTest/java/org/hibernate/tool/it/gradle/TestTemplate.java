@@ -39,7 +39,15 @@ public class TestTemplate {
     protected String[] getDatabaseCreationScript() { return databaseCreationScript; }
     protected void setDatabaseCreationScript(String[] script) { databaseCreationScript = script; }
 
-    protected void createGradleProject() throws Exception {
+    protected void createProject() throws Exception {
+        initGradleProject();
+        editGradleBuildFile();
+        editGradlePropertiesFile();
+        createDatabase();
+        createHibernatePropertiesFile();
+    }
+
+    protected void initGradleProject() throws Exception {
         GradleRunner runner = GradleRunner.create();
         runner.withArguments(GRADLE_INIT_PROJECT_ARGUMENTS);
         runner.forwardOutput();

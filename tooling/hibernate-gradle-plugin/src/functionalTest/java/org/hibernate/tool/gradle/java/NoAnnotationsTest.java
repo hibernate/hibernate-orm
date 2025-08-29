@@ -22,35 +22,18 @@ public class NoAnnotationsTest extends TestTemplate {
 	
 	@Test
 	public void testTutorial() throws Exception {
+		setDatabaseCreationScript(new String[] {
+				"create table PERSON (ID int not null, NAME varchar(20), primary key (ID))",
+				"insert into PERSON values (1, 'foo')"
+		});
 		assertTrue(getProjectDir().exists());
 		createGradleProject();
 		editGradleBuildFile();
 		editGradlePropertiesFile();
 		createDatabase();
 		createHibernatePropertiesFile();
-		verifyDatabase();
 		executeGenerateJavaTask();
 		verifyProject();
-	}
-	
-	private void verifyDatabase() throws Exception {
-		Connection connection = DriverManager.getConnection(constructJdbcConnectionString());
-		ResultSet resultSet = connection.createStatement().executeQuery("select * from PERSON");
-		assertTrue(resultSet.next());
-		assertEquals(1, resultSet.getInt(1));
-		assertEquals("foo", resultSet.getString(2));
-	}
-	
-	private void createDatabase() throws Exception {
-		String CREATE_PERSON_TABLE = "create table PERSON (ID int not null, NAME varchar(20), primary key (ID))";
-		Connection connection = DriverManager.getConnection(constructJdbcConnectionString());
-		Statement statement = connection.createStatement();
-		statement.execute(CREATE_PERSON_TABLE);
-		statement.execute("insert into PERSON values (1, 'foo')");
-		statement.close();
-		connection.close();	
-		assertTrue(getDatabaseFile().exists());
-		assertTrue(getDatabaseFile().isFile());
 	}
 	
 	private void executeGenerateJavaTask() throws Exception {

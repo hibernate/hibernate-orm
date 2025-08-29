@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
 import java.util.List;
 
 import org.junit.jupiter.api.io.TempDir;
@@ -24,6 +27,8 @@ public class TestTemplate {
     private File gradleBuildFile;
     private File databaseFile;
 
+    private String[] databaseCreationScript;
+
     protected File getProjectDir() { return projectDir; }
     protected File getGradlePropertiesFile() { return gradlePropertiesFile; }
     protected void setGradlePropertiesFile(File f) { this.gradlePropertiesFile = f; }
@@ -31,6 +36,8 @@ public class TestTemplate {
     protected void setGradleBuildFile(File f) { gradleBuildFile = f; }
     protected File getDatabaseFile() { return databaseFile; }
     protected void setDatabaseFile(File f) { databaseFile = f; }
+    protected String[] getDatabaseCreationScript() { return databaseCreationScript; }
+    protected void setDatabaseCreationScript(String[] script) { databaseCreationScript = script; }
 
     protected void createGradleProject() throws Exception {
         GradleRunner runner = GradleRunner.create();
@@ -84,6 +91,18 @@ public class TestTemplate {
                 .append("hibernate.default_schema=PUBLIC\n");
         Files.writeString(hibernatePropertiesFile.toPath(), hibernatePropertiesFileContents.toString());
         assertTrue(hibernatePropertiesFile.exists());
+    }
+
+    protected void createDatabase() throws Exception {
+        Connection connection = DriverManager.getConnection(constructJdbcConnectionString());
+        Statement statement = connection.createStatement();
+        for (String sql : getDatabaseCreationScript()) {
+            statement.execute(sql);
+        }
+        statement.close();
+        connection.close();
+        assertTrue(getDatabaseFile().exists());
+        assertTrue(getDatabaseFile().isFile());
     }
 
     protected String constructH2DatabaseDependencyLine() {

@@ -5,8 +5,9 @@
 package org.hibernate.metamodel.internal;
 
 import java.lang.reflect.Method;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -59,6 +60,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 	private final String identifierPropertyName;
 	private final PropertyAccess identifierPropertyAccess;
+	private final BytecodeProvider.PropertyInfo[] propertyInfos;
 	private final Map<String, PropertyAccess> propertyAccessMap;
 	private final EmbeddableRepresentationStrategyPojo mapsIdRepresentationStrategy;
 
@@ -119,7 +121,8 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 				creationContext
 		);
 
-		propertyAccessMap = buildPropertyAccessMap( bootDescriptor );
+		propertyInfos = buildPropertyInfos( bootDescriptor );
+		propertyAccessMap = buildPropertyAccessMap( propertyInfos );
 		reflectionOptimizer = resolveReflectionOptimizer( bytecodeProvider );
 
 		instantiator = determineInstantiator( bootDescriptor, runtimeDescriptor.getEntityMetamodel() );
@@ -155,12 +158,22 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		}
 	}
 
-	private Map<String, PropertyAccess> buildPropertyAccessMap(PersistentClass bootDescriptor) {
-		final Map<String, PropertyAccess> propertyAccessMap = new LinkedHashMap<>();
-		for ( Property property : bootDescriptor.getPropertyClosure() ) {
-			propertyAccessMap.put( property.getName(), makePropertyAccess( property ) );
+	private Map<String, PropertyAccess> buildPropertyAccessMap(BytecodeProvider.PropertyInfo[] propertyInfos) {
+		final Map<String, PropertyAccess> map = new HashMap<>( propertyInfos.length );
+		for ( BytecodeProvider.PropertyInfo propertyInfo : propertyInfos ) {
+			map.put( propertyInfo.propertyName(), propertyInfo.propertyAccess() );
 		}
-		return propertyAccessMap;
+		return map;
+	}
+
+	private BytecodeProvider.PropertyInfo[] buildPropertyInfos(PersistentClass bootDescriptor) {
+		final List<Property> properties = bootDescriptor.getPropertyClosure();
+		final BytecodeProvider.PropertyInfo[] propertyInfos = new BytecodeProvider.PropertyInfo[properties.size()];
+		for ( int i = 0; i < properties.size(); i++ ) {
+			final Property property = properties.get( i );
+			propertyInfos[i] = new BytecodeProvider.PropertyInfo( property.getName(), makePropertyAccess( property ) );
+		}
+		return propertyInfos;
 	}
 
 	private EntityInstantiator determineInstantiator(PersistentClass bootDescriptor, EntityMetamodel entityMetamodel) {
@@ -303,11 +316,11 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	}
 
 	private ReflectionOptimizer resolveReflectionOptimizer(BytecodeProvider bytecodeProvider) {
-		return bytecodeProvider.getReflectionOptimizer( mappedJtd.getJavaTypeClass(), propertyAccessMap );
+		return bytecodeProvider.getReflectionOptimizer( mappedJtd.getJavaTypeClass(), propertyInfos );
 	}
 
 	private PropertyAccess makePropertyAccess(Property bootAttributeDescriptor) {
-		final Class<?> mappedClass = mappedJtd.getJavaTypeClass();
+		final Class<?> mappedClass = bootAttributeDescriptor.getPersistentClass().getMappedClass();
 		final String descriptorName = bootAttributeDescriptor.getName();
 		final var strategy = propertyAccessStrategy( bootAttributeDescriptor, mappedClass, strategySelector );
 		if ( strategy == null ) {

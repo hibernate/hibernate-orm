@@ -6,6 +6,8 @@ package org.hibernate.orm.test.stateless;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -18,9 +20,15 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SessionFactory(useCollectingStatementInspector = true)
-@DomainModel(annotatedClasses = UpsertTest.Record.class)
+@DomainModel(annotatedClasses = {
+		UpsertTest.Record.class,
+		UpsertTest.IdOnly.class,
+		UpsertTest.IdOnlyIntermediate.class,
+		UpsertTest.IdOnlySubtype.class
+})
 public class UpsertTest {
 	@Test void test(SessionFactoryScope scope) {
 		scope.getSessionFactory().getSchemaManager().truncate();
@@ -96,6 +104,40 @@ public class UpsertTest {
 		scope.inStatelessTransaction(s-> assertDoesNotThrow(() -> s.upsert(new Record(123L,null, null))) );
 	}
 
+	@Test void testIdOnly(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
+
+		scope.inStatelessTransaction(s-> {
+			s.upsert(new IdOnly(123L));
+		});
+		scope.inStatelessTransaction(s-> {
+			assertNotNull(s.get( IdOnly.class,123L));
+		});
+		scope.inStatelessTransaction(s-> {
+			s.upsert(new IdOnly(123L));
+		});
+		scope.inStatelessTransaction(s-> {
+			assertNotNull(s.get( IdOnly.class,123L));
+		});
+	}
+
+	@Test void testIdOnlySubtype(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
+
+		scope.inStatelessTransaction(s-> {
+			s.upsert(new IdOnlySubtype(123L));
+		});
+		scope.inStatelessTransaction(s-> {
+			assertNotNull(s.get( IdOnlySubtype.class,123L));
+		});
+		scope.inStatelessTransaction(s-> {
+			s.upsert(new IdOnlySubtype(123L));
+		});
+		scope.inStatelessTransaction(s-> {
+			assertNotNull(s.get( IdOnlySubtype.class,123L));
+		});
+	}
+
 	@Entity(name = "Record")
 	static class Record {
 		@Id Long id;
@@ -114,6 +156,41 @@ public class UpsertTest {
 		}
 
 		Record() {
+		}
+	}
+
+	@Entity(name = "IdOnly")
+	@Inheritance(strategy = InheritanceType.JOINED)
+	static class IdOnly {
+		@Id Long id;
+
+		IdOnly(Long id) {
+			this.id = id;
+		}
+
+		IdOnly() {
+		}
+	}
+
+	@Entity(name = "IdOnlyIntermediate")
+	static class IdOnlyIntermediate extends IdOnly {
+		IdOnlyIntermediate(Long id) {
+			super( id );
+		}
+
+		IdOnlyIntermediate() {
+		}
+	}
+
+	@Entity(name = "IdOnlySubtype")
+	static class IdOnlySubtype extends IdOnlyIntermediate {
+		String name;
+
+		IdOnlySubtype(Long id) {
+			super( id );
+		}
+
+		IdOnlySubtype() {
 		}
 	}
 }

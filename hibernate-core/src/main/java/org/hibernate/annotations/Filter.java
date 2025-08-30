@@ -33,6 +33,16 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * }
  * </pre>
  * <p>
+ * Similarly, the filter could be applied to a one-to-many association
+ * like this:
+ * <pre>
+ * &#64;OneToMany(mappedBy = "provider")
+ * &#64;Filter(name = "Current",
+ *         deduceAliasInjectionPoints = false,
+ *         condition = "{alias}.year = extract(year from current_date)")
+ * List&lt;Course&gt; courses;
+ * </pre>
+ * <p>
  * If an entity or collection has no {@code @Filter} annotation
  * with the name of a given filter, it is not affected by that
  * filter.

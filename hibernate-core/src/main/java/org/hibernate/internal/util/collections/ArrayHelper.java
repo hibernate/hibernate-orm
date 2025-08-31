@@ -4,21 +4,13 @@
  */
 package org.hibernate.internal.util.collections;
 
-import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.function.Consumer;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.type.Type;
 
@@ -66,7 +58,6 @@ public final class ArrayHelper {
 
 	@SuppressWarnings("unchecked")
 	@AllowReflection
-	@Deprecated(forRemoval = true, since = "7.3")
 	public static <T> T[] filledArray(T value, Class<T> valueJavaType, int size) {
 		final T[] array = (T[]) Array.newInstance( valueJavaType, size );
 		Arrays.fill( array, value );
@@ -80,34 +71,6 @@ public final class ArrayHelper {
 			result[i] = objects[i].toString();
 		}
 		return result;
-	}
-
-	@Deprecated(forRemoval = true, since = "7.3")
-	public static String[] fillArray(String value, int length) {
-		final var result = new String[length];
-		Arrays.fill( result, value );
-		return result;
-	}
-
-	@Deprecated(forRemoval = true, since = "7.3")
-	public static int[] fillArray(int value, int length) {
-		final var result = new int[length];
-		Arrays.fill( result, value );
-		return result;
-	}
-
-	@Deprecated(forRemoval = true, since = "7.3")
-	public static LockMode[] fillArray(LockMode lockMode, int length) {
-		final var array = new LockMode[length];
-		Arrays.fill( array, lockMode );
-		return array;
-	}
-
-	@Deprecated(forRemoval = true, since = "7.3")
-	public static LockOptions[] fillArray(LockOptions lockOptions, int length) {
-		final var array = new LockOptions[length];
-		Arrays.fill( array, lockOptions );
-		return array;
 	}
 
 	public static String[] toStringArray(Collection<String> coll) {
@@ -150,24 +113,6 @@ public final class ArrayHelper {
 		return arr;
 	}
 
-	@Deprecated(forRemoval = true, since = "7.2")
-	public static Object[] typecast(Object[] array, Object[] to) {
-		return asList( array ).toArray( to );
-	}
-
-	//Arrays.asList doesn't do primitive arrays
-//	public static List toList(Object array) {
-//		if ( array instanceof Object[] ) {
-//			return Arrays.asList( (Object[]) array ); //faster?
-//		}
-//		int size = Array.getLength( array );
-//		ArrayList<Object> list = new ArrayList<>( size );
-//		for ( int i = 0; i < size; i++ ) {
-//			list.add( Array.get( array, i ) );
-//		}
-//		return list;
-//	}
-
 	public static String[] slice(String[] strings, int begin, int length) {
 		final var result = new String[length];
 		System.arraycopy( strings, begin, result, 0, length );
@@ -178,14 +123,6 @@ public final class ArrayHelper {
 		final var result = new Object[length];
 		System.arraycopy( objects, begin, result, 0, length );
 		return result;
-	}
-
-	public static <T> List<T> toList(Iterator<T> iter) {
-		final List<T> list = new ArrayList<>();
-		while ( iter.hasNext() ) {
-			list.add( iter.next() );
-		}
-		return list;
 	}
 
 	public static String[] join(String[] x, String[] y) {
@@ -318,155 +255,6 @@ public final class ArrayHelper {
 	public static final Type[] EMPTY_TYPE_ARRAY = {};
 	public static final byte[] EMPTY_BYTE_ARRAY = {};
 
-	/**
-	 * Calculate the batch partitions needed to handle the {@code mappedBatchSize}.
-	 *
-	 * @param mappedBatchSize The {@link org.hibernate.annotations.BatchSize batch-size}.
-	 *        Internally this is capped at {@code 256}
-	 *
-	 * @implNote The max batch size is capped at {@code 256}
-	 *
-	 * @return The upper bound for the partitions
-	 *
-	 * @deprecated No longer used
-	 */
-	@Deprecated(forRemoval = true, since = "7.2")
-	public static int[] calculateBatchPartitions(int mappedBatchSize) {
-		final SortedSet<Integer> partitionSizes = new TreeSet<>( Integer::compareTo );
-		int batchSize = Math.min( mappedBatchSize, 256 );
-		while ( batchSize > 1 ) {
-			partitionSizes.add( batchSize );
-			batchSize = calculateNextBatchPartitionLimit( batchSize );
-		}
-		return toIntArray( partitionSizes );
-	}
-
-	@Deprecated(forRemoval = true, since = "7.2")
-	private static int calculateNextBatchPartitionLimit(int batchSize) {
-		if ( batchSize <= 10 ) {
-			return batchSize - 1; //allow 9,8,7,6,5,4,3,2,1
-		}
-		else if ( batchSize / 2 < 10 ) {
-			return 10;
-		}
-		else {
-			return batchSize / 2;
-		}
-	}
-
-	@Deprecated(forRemoval = true, since = "7.2")
-	public static int[] getBatchSizes(int maxBatchSize) {
-		int batchSize = maxBatchSize;
-		int n = 1;
-		while ( batchSize > 1 ) {
-			batchSize = getNextBatchSize( batchSize );
-			n++;
-		}
-		final int[] result = new int[n];
-		batchSize = maxBatchSize;
-		for ( int i = 0; i < n; i++ ) {
-			result[i] = batchSize;
-			batchSize = getNextBatchSize( batchSize );
-		}
-		return result;
-	}
-
-	@Deprecated(forRemoval = true, since = "7.2")
-	private static int getNextBatchSize(int batchSize) {
-		if ( batchSize <= 10 ) {
-			return batchSize - 1; //allow 9,8,7,6,5,4,3,2,1
-		}
-		else if ( batchSize / 2 < 10 ) {
-			return 10;
-		}
-		else {
-			return batchSize / 2;
-		}
-	}
-
-	@Deprecated(forRemoval = true, since = "7.2")
-	private static final int SEED = 23;
-	@Deprecated(forRemoval = true, since = "7.2")
-	private static final int PRIME_NUMBER = 37;
-
-	/**
-	 * calculate the array hash (only the first level)
-	 */
-	@Deprecated(forRemoval = true, since = "7.2")
-	public static int hash(Object[] array) {
-		int seed = SEED;
-		for ( Object element : array ) {
-			seed = hash( seed, element == null ? 0 : element.hashCode() );
-		}
-		return seed;
-	}
-
-	/**
-	 * calculate the array hash (only the first level)
-	 */
-	@Deprecated(forRemoval = true, since = "7.2")
-	public static int hash(char[] array) {
-		int seed = SEED;
-		for ( char anArray : array ) {
-			seed = hash( seed, anArray );
-		}
-		return seed;
-	}
-
-	/**
-	 * calculate the array hash (only the first level)
-	 */
-	@Deprecated(forRemoval = true, since = "7.2")
-	public static int hash(byte[] bytes) {
-		int seed = SEED;
-		for ( byte aByte : bytes ) {
-			seed = hash( seed, aByte );
-		}
-		return seed;
-	}
-
-	@Deprecated(forRemoval = true, since = "7.2")
-	private static int hash(int seed, int i) {
-		return PRIME_NUMBER * seed + i;
-	}
-
-	@Deprecated(forRemoval = true, since = "7.2")
-	public static Serializable[] extractNonNull(Serializable[] array) {
-		final int nonNullCount = countNonNull( array );
-		final var result = new Serializable[nonNullCount];
-		int i = 0;
-		for ( Serializable element : array ) {
-			if ( element != null ) {
-				result[i++] = element;
-			}
-		}
-		if ( i != nonNullCount ) {
-			throw new HibernateException( "Number of non-null elements varied between iterations" );
-		}
-		return result;
-	}
-
-	@Deprecated(forRemoval = true, since = "7.2")
-	public static int countNonNull(Serializable[] array) {
-		int i = 0;
-		for ( Serializable element : array ) {
-			if ( element != null ) {
-				i++;
-			}
-		}
-		return i;
-	}
-
-	@Deprecated(forRemoval = true, since = "7.2")
-	public static int countNonNull(Object[] array) {
-		int i = 0;
-		for ( Object element : array ) {
-			if ( element != null ) {
-				i++;
-			}
-		}
-		return i;
-	}
 
 	/**
 	 * Reverse the elements of the incoming array
@@ -544,6 +332,10 @@ public final class ArrayHelper {
 		return array == null || array.length == 0;
 	}
 
+	public static <T> int size(T[] array) {
+		return array == null ? 0 : array.length;
+	}
+
 	public static <T> void forEach(T[] array, Consumer<T> consumer) {
 		if ( array != null ) {
 			//noinspection ForLoopReplaceableByForEach
@@ -556,14 +348,10 @@ public final class ArrayHelper {
 	/**
 	 * @deprecated Use {@link Array#newInstance(Class, int)} instead.
 	 */
-	@Deprecated(forRemoval = true, since = "7")
+	@Deprecated
 	@SuppressWarnings("unchecked")
 	@AllowReflection
 	public static <T> T[] newInstance(Class<T> elementType, int length) {
 		return (T[]) Array.newInstance( elementType, length );
-	}
-
-	public static <T> int size(T[] array) {
-		return array == null ? 0 : array.length;
 	}
 }

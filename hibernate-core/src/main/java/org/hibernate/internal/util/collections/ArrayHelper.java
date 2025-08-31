@@ -15,11 +15,16 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Consumer;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.type.Type;
+
+import static java.lang.reflect.Array.get;
+import static java.lang.reflect.Array.getLength;
+import static java.util.Arrays.asList;
 
 public final class ArrayHelper {
 
@@ -37,12 +42,12 @@ public final class ArrayHelper {
 	}
 
 	public static boolean contains(int[] array, int value) {
+		//noinspection ForLoopReplaceableByForEach
 		for ( int i = 0; i < array.length; i++ ) {
 			if ( array[i] == value ) {
 				return true;
 			}
 		}
-
 		return false;
 	}
 
@@ -61,6 +66,7 @@ public final class ArrayHelper {
 
 	@SuppressWarnings("unchecked")
 	@AllowReflection
+	@Deprecated(forRemoval = true, since = "7.3")
 	public static <T> T[] filledArray(T value, Class<T> valueJavaType, int size) {
 		final T[] array = (T[]) Array.newInstance( valueJavaType, size );
 		Arrays.fill( array, value );
@@ -76,26 +82,30 @@ public final class ArrayHelper {
 		return result;
 	}
 
+	@Deprecated(forRemoval = true, since = "7.3")
 	public static String[] fillArray(String value, int length) {
-		String[] result = new String[length];
+		final var result = new String[length];
 		Arrays.fill( result, value );
 		return result;
 	}
 
+	@Deprecated(forRemoval = true, since = "7.3")
 	public static int[] fillArray(int value, int length) {
-		int[] result = new int[length];
+		final var result = new int[length];
 		Arrays.fill( result, value );
 		return result;
 	}
 
+	@Deprecated(forRemoval = true, since = "7.3")
 	public static LockMode[] fillArray(LockMode lockMode, int length) {
-		LockMode[] array = new LockMode[length];
+		final var array = new LockMode[length];
 		Arrays.fill( array, lockMode );
 		return array;
 	}
 
+	@Deprecated(forRemoval = true, since = "7.3")
 	public static LockOptions[] fillArray(LockOptions lockOptions, int length) {
-		LockOptions[] array = new LockOptions[length];
+		final var array = new LockOptions[length];
 		Arrays.fill( array, lockOptions );
 		return array;
 	}
@@ -121,8 +131,8 @@ public final class ArrayHelper {
 	}
 
 	public static int[] toIntArray(Collection<Integer> coll) {
-		Iterator<Integer> iter = coll.iterator();
-		int[] arr = new int[coll.size()];
+		final var iter = coll.iterator();
+		final int[] arr = new int[coll.size()];
 		int i = 0;
 		while ( iter.hasNext() ) {
 			arr[i++] = iter.next();
@@ -131,8 +141,8 @@ public final class ArrayHelper {
 	}
 
 	public static boolean[] toBooleanArray(Collection<Boolean> coll) {
-		Iterator<Boolean> iter = coll.iterator();
-		boolean[] arr = new boolean[coll.size()];
+		final var iter = coll.iterator();
+		final boolean[] arr = new boolean[coll.size()];
 		int i = 0;
 		while ( iter.hasNext() ) {
 			arr[i++] = iter.next();
@@ -140,8 +150,9 @@ public final class ArrayHelper {
 		return arr;
 	}
 
+	@Deprecated(forRemoval = true, since = "7.2")
 	public static Object[] typecast(Object[] array, Object[] to) {
-		return Arrays.asList( array ).toArray( to );
+		return asList( array ).toArray( to );
 	}
 
 	//Arrays.asList doesn't do primitive arrays
@@ -158,19 +169,19 @@ public final class ArrayHelper {
 //	}
 
 	public static String[] slice(String[] strings, int begin, int length) {
-		String[] result = new String[length];
+		final var result = new String[length];
 		System.arraycopy( strings, begin, result, 0, length );
 		return result;
 	}
 
 	public static Object[] slice(Object[] objects, int begin, int length) {
-		Object[] result = new Object[length];
+		final var result = new Object[length];
 		System.arraycopy( objects, begin, result, 0, length );
 		return result;
 	}
 
 	public static <T> List<T> toList(Iterator<T> iter) {
-		List<T> list = new ArrayList<>();
+		final List<T> list = new ArrayList<>();
 		while ( iter.hasNext() ) {
 			list.add( iter.next() );
 		}
@@ -178,14 +189,14 @@ public final class ArrayHelper {
 	}
 
 	public static String[] join(String[] x, String[] y) {
-		String[] result = new String[x.length + y.length];
+		final var result = new String[x.length + y.length];
 		System.arraycopy( x, 0, result, 0, x.length );
 		System.arraycopy( y, 0, result, x.length, y.length );
 		return result;
 	}
 
 	public static String[] join(String[] x, String[] y, boolean[] use) {
-		String[] result = new String[x.length + countTrue( use )];
+		final var result = new String[x.length + countTrue( use )];
 		System.arraycopy( x, 0, result, 0, x.length );
 		int k = x.length;
 		for ( int i = 0; i < y.length; i++ ) {
@@ -197,7 +208,7 @@ public final class ArrayHelper {
 	}
 
 	public static int[] join(int[] x, int[] y) {
-		int[] result = new int[x.length + y.length];
+		final var result = new int[x.length + y.length];
 		System.arraycopy( x, 0, result, 0, x.length );
 		System.arraycopy( y, 0, result, x.length, y.length );
 		return result;
@@ -206,7 +217,7 @@ public final class ArrayHelper {
 	@SuppressWarnings("unchecked")
 	@AllowReflection
 	public static <T> T[] join(T[] x, T... y) {
-		T[] result = (T[]) Array.newInstance( x.getClass().getComponentType(), x.length + y.length );
+		final T[] result = (T[]) Array.newInstance( x.getClass().getComponentType(), x.length + y.length );
 		System.arraycopy( x, 0, result, 0, x.length );
 		System.arraycopy( y, 0, result, x.length, y.length );
 		return result;
@@ -215,7 +226,7 @@ public final class ArrayHelper {
 	@SuppressWarnings("unchecked")
 	@AllowReflection
 	public static <T> T[] add(T[] x, T y) {
-		T[] result = (T[]) Array.newInstance( x.getClass().getComponentType(), x.length + 1 );
+		final T[] result = (T[]) Array.newInstance( x.getClass().getComponentType(), x.length + 1 );
 		System.arraycopy( x, 0, result, 0, x.length );
 		result[x.length] = y;
 		return result;
@@ -228,21 +239,21 @@ public final class ArrayHelper {
 	}
 
 	public static String toString(Object[] array) {
-		StringBuilder sb = new StringBuilder();
-		sb.append( "[" );
+		final var string = new StringBuilder();
+		string.append( "[" );
 		for ( int i = 0; i < array.length; i++ ) {
-			sb.append( array[i] );
+			string.append( array[i] );
 			if ( i < array.length - 1 ) {
-				sb.append( "," );
+				string.append( "," );
 			}
 		}
-		sb.append( "]" );
-		return sb.toString();
+		string.append( "]" );
+		return string.toString();
 	}
 
 	public static boolean isAllNegative(int[] array) {
-		for ( int anArray : array ) {
-			if ( anArray >= 0 ) {
+		for ( int element : array ) {
+			if ( element >= 0 ) {
 				return false;
 			}
 		}
@@ -250,8 +261,8 @@ public final class ArrayHelper {
 	}
 
 	public static boolean isAllTrue(boolean... array) {
-		for ( boolean anArray : array ) {
-			if ( !anArray ) {
+		for ( boolean element : array ) {
+			if ( !element ) {
 				return false;
 			}
 		}
@@ -260,8 +271,8 @@ public final class ArrayHelper {
 
 	public static int countTrue(boolean... array) {
 		int result = 0;
-		for ( boolean anArray : array ) {
-			if ( anArray ) {
+		for ( boolean element : array ) {
+			if ( element ) {
 				result++;
 			}
 		}
@@ -269,8 +280,8 @@ public final class ArrayHelper {
 	}
 
 	public static boolean isAllFalse(boolean... array) {
-		for ( boolean anArray : array ) {
-			if ( anArray ) {
+		for ( boolean element : array ) {
+			if ( element ) {
 				return false;
 			}
 		}
@@ -287,7 +298,7 @@ public final class ArrayHelper {
 	}
 
 	public static boolean[] negate(boolean[] valueNullness) {
-		boolean[] result = new boolean[valueNullness.length];
+		final var result = new boolean[valueNullness.length];
 		for (int i = 0; i < valueNullness.length; i++) {
 			result[i] = !valueNullness[i];
 		}
@@ -296,13 +307,13 @@ public final class ArrayHelper {
 
 
 	public static <T> void addAll(Collection<T> collection, T[] array) {
-		collection.addAll( Arrays.asList( array ) );
+		collection.addAll( asList( array ) );
 	}
 
 	public static final String[] EMPTY_STRING_ARRAY = {};
 	public static final int[] EMPTY_INT_ARRAY = {};
 	public static final boolean[] EMPTY_BOOLEAN_ARRAY = {};
-	public static final Class[] EMPTY_CLASS_ARRAY = {};
+	public static final Class<?>[] EMPTY_CLASS_ARRAY = {};
 	public static final Object[] EMPTY_OBJECT_ARRAY = {};
 	public static final Type[] EMPTY_TYPE_ARRAY = {};
 	public static final byte[] EMPTY_BYTE_ARRAY = {};
@@ -310,13 +321,16 @@ public final class ArrayHelper {
 	/**
 	 * Calculate the batch partitions needed to handle the {@code mappedBatchSize}.
 	 *
-	 * @param mappedBatchSize The {@link org.hibernate.annotations.BatchSize batch-size}.  Internally
-	 * this is capped at {@code 256}
+	 * @param mappedBatchSize The {@link org.hibernate.annotations.BatchSize batch-size}.
+	 *        Internally this is capped at {@code 256}
 	 *
 	 * @implNote The max batch size is capped at {@code 256}
 	 *
 	 * @return The upper bound for the partitions
+	 *
+	 * @deprecated No longer used
 	 */
+	@Deprecated(forRemoval = true, since = "7.2")
 	public static int[] calculateBatchPartitions(int mappedBatchSize) {
 		final SortedSet<Integer> partitionSizes = new TreeSet<>( Integer::compareTo );
 		int batchSize = Math.min( mappedBatchSize, 256 );
@@ -324,10 +338,10 @@ public final class ArrayHelper {
 			partitionSizes.add( batchSize );
 			batchSize = calculateNextBatchPartitionLimit( batchSize );
 		}
-
-		return ArrayHelper.toIntArray( partitionSizes );
+		return toIntArray( partitionSizes );
 	}
 
+	@Deprecated(forRemoval = true, since = "7.2")
 	private static int calculateNextBatchPartitionLimit(int batchSize) {
 		if ( batchSize <= 10 ) {
 			return batchSize - 1; //allow 9,8,7,6,5,4,3,2,1
@@ -340,6 +354,7 @@ public final class ArrayHelper {
 		}
 	}
 
+	@Deprecated(forRemoval = true, since = "7.2")
 	public static int[] getBatchSizes(int maxBatchSize) {
 		int batchSize = maxBatchSize;
 		int n = 1;
@@ -347,7 +362,7 @@ public final class ArrayHelper {
 			batchSize = getNextBatchSize( batchSize );
 			n++;
 		}
-		int[] result = new int[n];
+		final int[] result = new int[n];
 		batchSize = maxBatchSize;
 		for ( int i = 0; i < n; i++ ) {
 			result[i] = batchSize;
@@ -356,6 +371,7 @@ public final class ArrayHelper {
 		return result;
 	}
 
+	@Deprecated(forRemoval = true, since = "7.2")
 	private static int getNextBatchSize(int batchSize) {
 		if ( batchSize <= 10 ) {
 			return batchSize - 1; //allow 9,8,7,6,5,4,3,2,1
@@ -368,16 +384,19 @@ public final class ArrayHelper {
 		}
 	}
 
+	@Deprecated(forRemoval = true, since = "7.2")
 	private static final int SEED = 23;
+	@Deprecated(forRemoval = true, since = "7.2")
 	private static final int PRIME_NUMBER = 37;
 
 	/**
 	 * calculate the array hash (only the first level)
 	 */
+	@Deprecated(forRemoval = true, since = "7.2")
 	public static int hash(Object[] array) {
 		int seed = SEED;
-		for ( Object anArray : array ) {
-			seed = hash( seed, anArray == null ? 0 : anArray.hashCode() );
+		for ( Object element : array ) {
+			seed = hash( seed, element == null ? 0 : element.hashCode() );
 		}
 		return seed;
 	}
@@ -385,6 +404,7 @@ public final class ArrayHelper {
 	/**
 	 * calculate the array hash (only the first level)
 	 */
+	@Deprecated(forRemoval = true, since = "7.2")
 	public static int hash(char[] array) {
 		int seed = SEED;
 		for ( char anArray : array ) {
@@ -396,6 +416,7 @@ public final class ArrayHelper {
 	/**
 	 * calculate the array hash (only the first level)
 	 */
+	@Deprecated(forRemoval = true, since = "7.2")
 	public static int hash(byte[] bytes) {
 		int seed = SEED;
 		for ( byte aByte : bytes ) {
@@ -404,13 +425,15 @@ public final class ArrayHelper {
 		return seed;
 	}
 
+	@Deprecated(forRemoval = true, since = "7.2")
 	private static int hash(int seed, int i) {
 		return PRIME_NUMBER * seed + i;
 	}
 
+	@Deprecated(forRemoval = true, since = "7.2")
 	public static Serializable[] extractNonNull(Serializable[] array) {
 		final int nonNullCount = countNonNull( array );
-		final Serializable[] result = new Serializable[nonNullCount];
+		final var result = new Serializable[nonNullCount];
 		int i = 0;
 		for ( Serializable element : array ) {
 			if ( element != null ) {
@@ -423,6 +446,7 @@ public final class ArrayHelper {
 		return result;
 	}
 
+	@Deprecated(forRemoval = true, since = "7.2")
 	public static int countNonNull(Serializable[] array) {
 		int i = 0;
 		for ( Serializable element : array ) {
@@ -433,6 +457,7 @@ public final class ArrayHelper {
 		return i;
 	}
 
+	@Deprecated(forRemoval = true, since = "7.2")
 	public static int countNonNull(Object[] array) {
 		int i = 0;
 		for ( Object element : array ) {
@@ -450,7 +475,7 @@ public final class ArrayHelper {
 	 */
 	public static String[] reverse(String[] source) {
 		final int length = source.length;
-		final String[] destination = new String[length];
+		final var destination = new String[length];
 		for ( int i = 0; i < length; i++ ) {
 			destination[length - i - 1] = source[i];
 		}
@@ -464,7 +489,7 @@ public final class ArrayHelper {
 	 */
 	public static String[] reverseFirst(String[] objects, int n) {
 		final int length = objects.length;
-		final String[] destination = new String[length];
+		final var destination = new String[length];
 		for ( int i = 0; i < n; i++ ) {
 			destination[i] = objects[n - i - 1];
 		}
@@ -481,7 +506,7 @@ public final class ArrayHelper {
 	 */
 	public static String[][] reverseFirst(String[][] objects, int n) {
 		final int length = objects.length;
-		final String[][] destination = new String[length][];
+		final var destination = new String[length][];
 		for ( int i = 0; i < n; i++ ) {
 			destination[i] = objects[n - i - 1];
 		}
@@ -492,7 +517,7 @@ public final class ArrayHelper {
 	}
 
 	public static int[] trim(int[] from, int length) {
-		int[] trimmed = new int[length];
+		final var trimmed = new int[length];
 		System.arraycopy( from, 0, trimmed, 0, length );
 		return trimmed;
 	}
@@ -501,19 +526,18 @@ public final class ArrayHelper {
 		if ( array instanceof Object[] objects ) {
 			return objects;
 		}
-		final int arrayLength = Array.getLength( array );
-		final Object[] outputArray = new Object[ arrayLength ];
-		for ( int i = 0; i < arrayLength; ++i ) {
-			outputArray[ i ] = Array.get( array, i );
+		else {
+			final int arrayLength = getLength( array );
+			final var result = new Object[arrayLength];
+			for ( int i = 0; i < arrayLength; ++i ) {
+				result[i] = get( array, i );
+			}
+			return result;
 		}
-		return outputArray;
 	}
 
 	public static <T> List<T> toExpandableList(T[] values) {
-		if ( values == null ) {
-			return new ArrayList<>();
-		}
-		return Arrays.asList( values );
+		return values == null ? new ArrayList<>() : asList( values );
 	}
 
 	public static boolean isEmpty(Object[] array) {
@@ -521,20 +545,18 @@ public final class ArrayHelper {
 	}
 
 	public static <T> void forEach(T[] array, Consumer<T> consumer) {
-		if ( array == null ) {
-			return;
-		}
-
-		//noinspection ForLoopReplaceableByForEach
-		for ( int i = 0; i < array.length; i++ ) {
-			consumer.accept( array[ i ] );
+		if ( array != null ) {
+			//noinspection ForLoopReplaceableByForEach
+			for ( int i = 0; i < array.length; i++ ) {
+				consumer.accept( array[i] );
+			}
 		}
 	}
 
 	/**
 	 * @deprecated Use {@link Array#newInstance(Class, int)} instead.
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true, since = "7")
 	@SuppressWarnings("unchecked")
 	@AllowReflection
 	public static <T> T[] newInstance(Class<T> elementType, int length) {

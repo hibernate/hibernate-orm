@@ -3902,7 +3902,8 @@ Even the identification variable of an entity with a sortable identifier type ma
 [NOTE]
 ====
 The JPQL specification requires that every sorted item in the `order by` clause also occur in the `select` clause.
-HQL does not enforce this restriction, but applications desiring database portability should be aware that some databases _do_.
+HQL does not enforce this restriction, but if you desire cross-database portability, you should be aware that some databases _do_.
+And even databases which don't usually enforce this restriction do enforce it for `distinct` queries.
 
 Therefore, you might wish to avoid the use of complex expressions in the sort list.
 ====

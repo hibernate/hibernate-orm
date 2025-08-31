@@ -163,8 +163,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		final var session = getSession();
 		if ( isCachePutEnabled( persister, session ) ) {
 			final var factory = session.getFactory();
-			final var cacheEntry = persister.buildCacheEntry( getInstance(), getState(), version, session );
-			this.cacheEntry = persister.getCacheEntryStructure().structure( cacheEntry );
+			cacheEntry = buildStructuredCacheEntry();
 			final var cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey( getId(), persister, factory, session.getTenantIdentifier() );
 			final boolean put = cacheInsert( persister, ck );
@@ -177,6 +176,12 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 				);
 			}
 		}
+	}
+
+	private Object buildStructuredCacheEntry() {
+		final var persister = getPersister();
+		final var cacheEntry = persister.buildCacheEntry( getInstance(), getState(), version, getSession() );
+		return persister.getCacheEntryStructure().structure( cacheEntry );
 	}
 
 	protected boolean cacheInsert(EntityPersister persister, Object ck) {

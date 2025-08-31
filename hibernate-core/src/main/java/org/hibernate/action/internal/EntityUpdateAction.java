@@ -41,7 +41,6 @@ public class EntityUpdateAction extends EntityAction {
 	private final boolean hasDirtyCollection;
 	private final Object rowId;
 
-	private final NaturalIdMapping naturalIdMapping;
 	private final Object previousNaturalIdValues;
 
 	private Object nextVersion;
@@ -83,22 +82,22 @@ public class EntityUpdateAction extends EntityAction {
 		this.hasDirtyCollection = hasDirtyCollection;
 		this.rowId = rowId;
 
-		naturalIdMapping = persister.getNaturalIdMapping();
-		if ( naturalIdMapping == null ) {
-			previousNaturalIdValues = null;
-		}
-		else {
-			previousNaturalIdValues =
-					previousState == null
-							? session.getPersistenceContextInternal().getNaturalIdSnapshot( id, persister )
-							: naturalIdMapping.extractNaturalIdFromEntityState( previousState );
-			session.getPersistenceContextInternal().getNaturalIdResolutions().manageLocalResolution(
-					id,
-					naturalIdMapping.extractNaturalIdFromEntityState( state ),
-					persister,
-					CachedNaturalIdValueSource.UPDATE
-			);
-		}
+		final var naturalIdMapping = persister.getNaturalIdMapping();
+		this.previousNaturalIdValues =
+				naturalIdMapping == null
+						? null
+						: determinePreviousNaturalIdValues( persister, naturalIdMapping, id, previousState, session );
+	}
+
+	private static Object determinePreviousNaturalIdValues(
+			EntityPersister persister,
+			NaturalIdMapping naturalIdMapping,
+			Object id,
+			Object[] previousState,
+			SharedSessionContractImplementor session) {
+		return previousState == null
+				? session.getPersistenceContextInternal().getNaturalIdSnapshot( id, persister )
+				: naturalIdMapping.extractNaturalIdFromEntityState( previousState );
 	}
 
 	protected Object[] getState() {
@@ -121,7 +120,7 @@ public class EntityUpdateAction extends EntityAction {
 	}
 
 	protected NaturalIdMapping getNaturalIdMapping() {
-		return naturalIdMapping;
+		return getPersister().getNaturalIdMapping();
 	}
 
 	protected Object getPreviousNaturalIdValues() {
@@ -145,8 +144,12 @@ public class EntityUpdateAction extends EntityAction {
 		if ( !preUpdate() ) {
 			final var persister = getPersister();
 			final var session = getSession();
+			final var persistenceContext = session.getPersistenceContextInternal();
 			final Object id = getId();
 			final Object instance = getInstance();
+
+			handleNaturalIdLocalResolutions( id, persister, persistenceContext );
+
 			final Object previousVersion = getPreviousVersion();
 			final Object ck = lockCacheItem( previousVersion );
 			final var eventMonitor = session.getEventMonitor();
@@ -170,15 +173,14 @@ public class EntityUpdateAction extends EntityAction {
 			finally {
 				eventMonitor.completeEntityUpdateEvent( event, id, persister.getEntityName(), success, session );
 			}
-			final var persistenceContext = session.getPersistenceContextInternal();
-			final var entry = persistenceContext.getEntry( instance );
+			final var entry = session.getPersistenceContextInternal().getEntry( instance );
 			if ( entry == null ) {
 				throw new AssertionFailure( "possible non thread safe access to session" );
 			}
 			handleGeneratedProperties( entry, generatedValues );
 			handleDeleted( entry );
 			updateCacheItem( previousVersion, ck, entry );
-			handleNaturalIdResolutions( persister, persistenceContext, id );
+			handleNaturalIdSharedResolutions( id, persister, persistenceContext );
 			postUpdate();
 
 			final var statistics = session.getFactory().getStatistics();
@@ -188,7 +190,20 @@ public class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	protected void handleNaturalIdResolutions(EntityPersister persister, PersistenceContext context, Object id) {
+	private void handleNaturalIdLocalResolutions(Object id, EntityPersister persister, PersistenceContext context) {
+		final var naturalIdMapping = persister.getNaturalIdMapping();
+		if ( naturalIdMapping != null) {
+			context.getNaturalIdResolutions().manageLocalResolution(
+					id,
+					naturalIdMapping.extractNaturalIdFromEntityState( state ),
+					persister,
+					CachedNaturalIdValueSource.UPDATE
+			);
+		}
+	}
+
+	protected void handleNaturalIdSharedResolutions(Object id, EntityPersister persister, PersistenceContext context) {
+		final var naturalIdMapping = persister.getNaturalIdMapping();
 		if ( naturalIdMapping != null ) {
 			context.getNaturalIdResolutions().manageSharedResolution(
 					id,
@@ -209,8 +224,7 @@ public class EntityUpdateAction extends EntityAction {
 			}
 			else if ( session.getCacheMode().isPutEnabled() ) {
 				//TODO: inefficient if that cache is just going to ignore the updated state!
-				final var cacheEntry = persister.buildCacheEntry( getInstance(), state, nextVersion, getSession() );
-				this.cacheEntry = persister.getCacheEntryStructure().structure( cacheEntry );
+				cacheEntry = buildStructuredCacheEntry();
 				final boolean put = updateCache( persister, previousVersion, ck );
 
 				final var statistics = session.getFactory().getStatistics();
@@ -222,6 +236,12 @@ public class EntityUpdateAction extends EntityAction {
 				}
 			}
 		}
+	}
+
+	private Object buildStructuredCacheEntry() {
+		final var persister = getPersister();
+		final var cacheEntry = persister.buildCacheEntry( getInstance(), state, nextVersion, getSession() );
+		return persister.getCacheEntryStructure().structure( cacheEntry );
 	}
 
 	private static boolean isCacheInvalidationRequired(

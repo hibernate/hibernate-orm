@@ -7,6 +7,7 @@ package org.hibernate.action.internal;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCommitDeleteEventListener;
@@ -106,7 +107,7 @@ public class EntityDeleteAction extends EntityAction {
 
 		final boolean veto = isInstanceLoaded() && preDelete();
 
-		handleNaturalIdResolutions( persister, session );
+		handleNaturalIdLocalResolutions( persister, session.getPersistenceContextInternal() );
 
 		final Object ck = lockCacheItem();
 
@@ -137,10 +138,10 @@ public class EntityDeleteAction extends EntityAction {
 		}
 	}
 
-	private void handleNaturalIdResolutions(EntityPersister persister, EventSource session) {
+	private void handleNaturalIdLocalResolutions(EntityPersister persister, PersistenceContext context) {
 		final var naturalIdMapping = persister.getNaturalIdMapping();
 		if ( naturalIdMapping != null ) {
-			naturalIdValues = session.getPersistenceContextInternal().getNaturalIdResolutions()
+			naturalIdValues = context.getNaturalIdResolutions()
 					.removeLocalResolution(
 							getId(),
 							naturalIdMapping.extractNaturalIdFromEntityState( state ),

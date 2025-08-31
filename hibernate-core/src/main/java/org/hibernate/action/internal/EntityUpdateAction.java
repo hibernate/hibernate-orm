@@ -12,6 +12,7 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.monitor.spi.EventMonitor;
@@ -82,13 +83,15 @@ public class EntityUpdateAction extends EntityAction {
 		this.hasDirtyCollection = hasDirtyCollection;
 		this.rowId = rowId;
 
-		this.naturalIdMapping = persister.getNaturalIdMapping();
+		naturalIdMapping = persister.getNaturalIdMapping();
 		if ( naturalIdMapping == null ) {
 			previousNaturalIdValues = null;
 		}
 		else {
 			previousNaturalIdValues =
-					determinePreviousNaturalIdValues( persister, naturalIdMapping, id, previousState, session );
+					previousState == null
+							? session.getPersistenceContextInternal().getNaturalIdSnapshot( id, persister )
+							: naturalIdMapping.extractNaturalIdFromEntityState( previousState );
 			session.getPersistenceContextInternal().getNaturalIdResolutions().manageLocalResolution(
 					id,
 					naturalIdMapping.extractNaturalIdFromEntityState( state ),
@@ -96,17 +99,6 @@ public class EntityUpdateAction extends EntityAction {
 					CachedNaturalIdValueSource.UPDATE
 			);
 		}
-	}
-
-	private static Object determinePreviousNaturalIdValues(
-			EntityPersister persister,
-			NaturalIdMapping naturalIdMapping,
-			Object id,
-			Object[] previousState,
-			SharedSessionContractImplementor session) {
-		return previousState == null
-				? session.getPersistenceContextInternal().getNaturalIdSnapshot( id, persister )
-				: naturalIdMapping.extractNaturalIdFromEntityState( previousState );
 	}
 
 	protected Object[] getState() {
@@ -178,14 +170,15 @@ public class EntityUpdateAction extends EntityAction {
 			finally {
 				eventMonitor.completeEntityUpdateEvent( event, id, persister.getEntityName(), success, session );
 			}
-			final var entry = session.getPersistenceContextInternal().getEntry( instance );
+			final var persistenceContext = session.getPersistenceContextInternal();
+			final var entry = persistenceContext.getEntry( instance );
 			if ( entry == null ) {
 				throw new AssertionFailure( "possible non thread safe access to session" );
 			}
 			handleGeneratedProperties( entry, generatedValues );
 			handleDeleted( entry );
 			updateCacheItem( previousVersion, ck, entry );
-			handleNaturalIdResolutions( persister, session, id );
+			handleNaturalIdResolutions( persister, persistenceContext, id );
 			postUpdate();
 
 			final var statistics = session.getFactory().getStatistics();
@@ -195,9 +188,9 @@ public class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	protected void handleNaturalIdResolutions(EntityPersister persister, SharedSessionContractImplementor session, Object id) {
+	protected void handleNaturalIdResolutions(EntityPersister persister, PersistenceContext context, Object id) {
 		if ( naturalIdMapping != null ) {
-			session.getPersistenceContextInternal().getNaturalIdResolutions().manageSharedResolution(
+			context.getNaturalIdResolutions().manageSharedResolution(
 					id,
 					naturalIdMapping.extractNaturalIdFromEntityState( state ),
 					previousNaturalIdValues,
@@ -216,8 +209,8 @@ public class EntityUpdateAction extends EntityAction {
 			}
 			else if ( session.getCacheMode().isPutEnabled() ) {
 				//TODO: inefficient if that cache is just going to ignore the updated state!
-				final var ce = persister.buildCacheEntry( getInstance(), state, nextVersion, getSession() );
-				cacheEntry = persister.getCacheEntryStructure().structure( ce );
+				final var cacheEntry = persister.buildCacheEntry( getInstance(), state, nextVersion, getSession() );
+				this.cacheEntry = persister.getCacheEntryStructure().structure( cacheEntry );
 				final boolean put = updateCache( persister, previousVersion, ck );
 
 				final var statistics = session.getFactory().getStatistics();
@@ -279,9 +272,9 @@ public class EntityUpdateAction extends EntityAction {
 			final boolean isImpliedOptimisticLocking = !entityMetamodel.isVersioned()
 					&& entityMetamodel.getOptimisticLockStyle().isAllOrDirty();
 			if ( isImpliedOptimisticLocking && entry.getLoadedState() != null ) {
-				// The entity will be deleted and because we are going to create a delete statement
+				// The entity will be deleted, and because we are going to create a delete statement
 				// that uses all the state values in the where clause, the entry state needs to be
-				// updated otherwise the statement execution will not delete any row (see HHH-15218).
+				// updated. Otherwise, the statement execution will not delete any row (see HHH-15218).
 				entry.postUpdate( getInstance(), state, nextVersion );
 			}
 		}

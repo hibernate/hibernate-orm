@@ -106,15 +106,7 @@ public class EntityDeleteAction extends EntityAction {
 
 		final boolean veto = isInstanceLoaded() && preDelete();
 
-		final var naturalIdMapping = persister.getNaturalIdMapping();
-		if ( naturalIdMapping != null ) {
-			naturalIdValues = session.getPersistenceContextInternal().getNaturalIdResolutions()
-					.removeLocalResolution(
-							getId(),
-							naturalIdMapping.extractNaturalIdFromEntityState( state ),
-							persister
-					);
-		}
+		handleNaturalIdResolutions( persister, session );
 
 		final Object ck = lockCacheItem();
 
@@ -142,6 +134,18 @@ public class EntityDeleteAction extends EntityAction {
 		final var statistics = session.getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() && !veto ) {
 			statistics.deleteEntity( persister.getEntityName() );
+		}
+	}
+
+	private void handleNaturalIdResolutions(EntityPersister persister, EventSource session) {
+		final var naturalIdMapping = persister.getNaturalIdMapping();
+		if ( naturalIdMapping != null ) {
+			naturalIdValues = session.getPersistenceContextInternal().getNaturalIdResolutions()
+					.removeLocalResolution(
+							getId(),
+							naturalIdMapping.extractNaturalIdFromEntityState( state ),
+							persister
+					);
 		}
 	}
 
@@ -176,7 +180,7 @@ public class EntityDeleteAction extends EntityAction {
 		persistenceContext.removeEntityHolder( key );
 		removeCacheItem( ck );
 		persistenceContext.getNaturalIdResolutions()
-				.removeSharedResolution( id, naturalIdValues, persister, true);
+				.removeSharedResolution( id, naturalIdValues, persister, true );
 		postDelete();
 	}
 

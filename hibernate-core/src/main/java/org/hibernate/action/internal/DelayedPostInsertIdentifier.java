@@ -45,11 +45,11 @@ public class DelayedPostInsertIdentifier
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		else if ( !(o  instanceof DelayedPostInsertIdentifier that) ) {
+		else if ( !(object  instanceof DelayedPostInsertIdentifier that) ) {
 			return false;
 		}
 		else {

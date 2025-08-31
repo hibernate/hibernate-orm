@@ -3,6 +3,18 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.28.Final (August 31, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/35057
+
+** Bug
+    * [HHH-19740] - Collection table deletion for table per class subclass entity fails with UnknownTableReferenceException
+    * [HHH-19738] - JDBC password logged when specified via jakarta.persistence.jdbc.password
+    * [HHH-19734] - Cache hit of bytecode enhanced proxy with shallow query cache layout fails
+    * [HHH-19648] - Recursive @Embeddable mapping leads to stack overflow
+
+
 Changes in 6.6.27.Final (August 24, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

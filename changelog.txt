@@ -3,6 +3,15 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.44.Final (August 31, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/35056
+
+** Bug
+    * [HHH-19740] - Collection table deletion for table per class subclass entity fails with UnknownTableReferenceException
+
+
 Changes in 6.2.43.Final (August 24, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

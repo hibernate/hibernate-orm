@@ -7,7 +7,6 @@ package org.hibernate.action.internal;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.ComparableExecutable;
@@ -69,11 +68,11 @@ public abstract class CollectionAction implements ComparableExecutable {
 
 	@Override
 	public final void beforeExecutions() throws CacheException {
-		// we need to obtain the lock before any actions are executed, since this may be an inverse="true"
+		// We need to obtain the lock before any actions are executed, since this may be an inverse="true"
 		// bidirectional association, and it is one of the earlier entity actions which actually updates
-		// the database (this action is responsible for second-level cache invalidation only)
+		// the database. This action is responsible for second-level cache invalidation only.
 		if ( persister.hasCache() ) {
-			final CollectionDataAccess cache = persister.getCacheAccessStrategy();
+			final var cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
 					key,
 					persister,
@@ -108,16 +107,9 @@ public abstract class CollectionAction implements ComparableExecutable {
 	}
 
 	protected final Object getKey() {
-		Object finalKey = key;
-		if ( key instanceof DelayedPostInsertIdentifier ) {
-			// need to look it up from the persistence-context
-			finalKey = session.getPersistenceContextInternal().getEntry( collection.getOwner() ).getId();
-//			if ( finalKey == key ) {
-				// we may be screwed here since the collection action is about to execute
-				// and we do not know the final owner key value
-//			}
-		}
-		return finalKey;
+		return key instanceof DelayedPostInsertIdentifier
+				? session.getPersistenceContextInternal().getEntry( collection.getOwner() ).getId()
+				: key;
 	}
 
 	@Override
@@ -177,7 +169,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 
 		@Override
 		public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-			final CollectionDataAccess cache = persister.getCacheAccessStrategy();
+			final var cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
 					key,
 					persister,

@@ -163,8 +163,8 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		final var session = getSession();
 		if ( isCachePutEnabled( persister, session ) ) {
 			final var factory = session.getFactory();
-			final var ce = persister.buildCacheEntry( getInstance(), getState(), version, session );
-			cacheEntry = persister.getCacheEntryStructure().structure( ce );
+			final var cacheEntry = persister.buildCacheEntry( getInstance(), getState(), version, session );
+			this.cacheEntry = persister.getCacheEntryStructure().structure( cacheEntry );
 			final var cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey( getId(), persister, factory, session.getTenantIdentifier() );
 			final boolean put = cacheInsert( persister, ck );

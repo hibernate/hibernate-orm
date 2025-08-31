@@ -348,8 +348,8 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	public boolean containsCollection(String role, Object ownerIdentifier) {
-		final CollectionPersister persister = getCollectionDescriptor( role );
-		final CollectionDataAccess cacheAccess = persister.getCacheAccessStrategy();
+		final var persister = getCollectionDescriptor( role );
+		final var cacheAccess = persister.getCacheAccessStrategy();
 		if ( cacheAccess != null ) {
 			final Object cacheKey =
 					cacheAccess.generateCacheKey( ownerIdentifier, persister, sessionFactory, null );

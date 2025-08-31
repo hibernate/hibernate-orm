@@ -2,11 +2,11 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.internal;
+package org.hibernate.engine.creation.internal;
 
 import org.hibernate.Transaction;
+import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 /**
@@ -23,5 +23,5 @@ public interface SharedSessionCreationOptions extends SessionCreationOptions {
 	TransactionCoordinator getTransactionCoordinator();
 	JdbcCoordinator getJdbcCoordinator();
 	Transaction getTransaction();
-	ActionQueue.TransactionCompletionProcesses getTransactionCompletionProcesses();
+	TransactionCompletionCallbacksImpl getTransactionCompletionCallbacks();
 }

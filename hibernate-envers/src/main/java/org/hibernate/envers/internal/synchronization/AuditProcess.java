@@ -10,9 +10,10 @@ import java.util.Map;
 import java.util.Queue;
 
 import org.hibernate.FlushMode;
-import org.hibernate.Session;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.internal.synchronization.work.AuditWorkUnit;
@@ -28,16 +29,18 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 	private static final Logger log = Logger.getLogger( AuditProcess.class );
 
 	private final RevisionInfoGenerator revisionInfoGenerator;
-	private final SessionImplementor session;
+	private final SharedSessionContractImplementor session;
 
 	private final LinkedList<AuditWorkUnit> workUnits;
 	private final Queue<AuditWorkUnit> undoQueue;
 	private final Map<Pair<String, Object>, AuditWorkUnit> usedIds;
 	private final Map<Pair<String, Object>, Object[]> entityStateCache;
 	private final EntityChangeNotifier entityChangeNotifier;
-	private Object revisionData;
 
-	public AuditProcess(RevisionInfoGenerator revisionInfoGenerator, SessionImplementor session) {
+	private Object revisionData;
+	private boolean revisionDataSaved;
+
+	public AuditProcess(RevisionInfoGenerator revisionInfoGenerator, SharedSessionContractImplementor session) {
 		this.revisionInfoGenerator = revisionInfoGenerator;
 		this.session = session;
 
@@ -108,40 +111,31 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 		}
 	}
 
-	private void executeInSession(Session session) {
-		// Making sure the revision data is persisted.
-		final Object currentRevisionData = getCurrentRevisionData( session, true );
-
-		AuditWorkUnit vwu;
-
-		// First undoing any performed work units
-		while ( (vwu = undoQueue.poll()) != null ) {
-			vwu.undo( session );
-		}
-
-		while ( (vwu = workUnits.poll()) != null ) {
-			vwu.perform( session, revisionData );
-			entityChangeNotifier.entityChanged( session, currentRevisionData, vwu );
-		}
-	}
-
-	public Object getCurrentRevisionData(Session session, boolean persist) {
+	public Object getCurrentRevisionData(SharedSessionContractImplementor session, boolean persist) {
 		// Generating the revision data if not yet generated
 		if ( revisionData == null ) {
 			revisionData = revisionInfoGenerator.generate();
 		}
 
 		// Saving the revision data, if not yet saved and persist is true
-		if ( !session.contains( revisionData ) && persist ) {
-			revisionInfoGenerator.saveRevisionData( session, revisionData );
+		if ( session instanceof SessionImplementor statefulSession ) {
+			if ( persist && !statefulSession.contains( revisionData ) ) {
+				revisionInfoGenerator.saveRevisionData( session, revisionData );
+			}
+		}
+		else if ( session instanceof StatelessSessionImplementor statelessSession ) {
+			if ( persist && !revisionDataSaved ) {
+				revisionInfoGenerator.saveRevisionData( session, revisionData );
+				revisionDataSaved = true;
+			}
 		}
 
 		return revisionData;
 	}
 
 	@Override
-	public void doBeforeTransactionCompletion(SessionImplementor session) {
-		if ( workUnits.size() == 0 && undoQueue.size() == 0 ) {
+	public void doBeforeTransactionCompletion(SharedSessionContractImplementor session) {
+		if ( workUnits.isEmpty() && undoQueue.isEmpty() ) {
 			return;
 		}
 
@@ -150,30 +144,71 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 			return;
 		}
 
-		// see: http://www.jboss.com/index.html?module=bb&op=viewtopic&p=4178431
-		if ( FlushMode.MANUAL.equals( session.getHibernateFlushMode() ) || session.isClosed() ) {
-			Session temporarySession = null;
-			try {
-				temporarySession = session.sessionWithOptions()
+		if ( session instanceof StatelessSessionImplementor statelessSession ) {
+			if ( statelessSession.isClosed() ) {
+				try (StatelessSessionImplementor temporarySession = (StatelessSessionImplementor) statelessSession.statelessWithOptions()
 						.connection()
-						.autoClose( false )
-						.connectionHandlingMode( PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION )
 						.noInterceptor()
-						.openSession();
+						.open()) {
+					executeInStatelessSession( temporarySession );
+				}
+			}
+			else {
+				executeInStatelessSession( statelessSession );
+			}
+		}
+		else if ( FlushMode.MANUAL.equals( session.getHibernateFlushMode() ) || session.isClosed() ) {
+			assert session instanceof SessionImplementor;
+			final SessionImplementor statefulSession = (SessionImplementor) session;
+			try (SessionImplementor temporarySession = (SessionImplementor) statefulSession.sessionWithOptions()
+					.connection()
+					.autoClose( false )
+					.connectionHandlingMode( PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION )
+					.noInterceptor()
+					.openSession()) {
 				executeInSession( temporarySession );
 				temporarySession.flush();
 			}
-			finally {
-				if ( temporarySession != null ) {
-					temporarySession.close();
-				}
-			}
 		}
 		else {
-			executeInSession( session );
+			executeInSession( (SessionImplementor) session );
 
 			// Explicitly flushing the session, as the auto-flush may have already happened.
 			session.flush();
+		}
+	}
+
+	private void executeInSession(SessionImplementor statefulSession) {
+		// Making sure the revision data is persisted.
+		final Object currentRevisionData = getCurrentRevisionData( statefulSession, true );
+
+		AuditWorkUnit vwu;
+
+		// First undoing any performed work units
+		while ( (vwu = undoQueue.poll()) != null ) {
+			vwu.undo( statefulSession );
+		}
+
+		while ( (vwu = workUnits.poll()) != null ) {
+			vwu.perform( statefulSession, revisionData );
+			entityChangeNotifier.entityChanged( statefulSession, currentRevisionData, vwu );
+		}
+	}
+
+	private void executeInStatelessSession(StatelessSessionImplementor statelessSession) {
+		// Making sure the revision data is persisted.
+		final Object currentRevisionData = getCurrentRevisionData( statelessSession, true );
+
+		AuditWorkUnit vwu;
+
+		// First undoing any performed work units
+		while ( (vwu = undoQueue.poll()) != null ) {
+			vwu.undo( statelessSession );
+		}
+
+		while ( (vwu = workUnits.poll()) != null ) {
+			vwu.perform( statelessSession, revisionData );
+			entityChangeNotifier.entityChanged( statelessSession, currentRevisionData, vwu );
 		}
 	}
 }

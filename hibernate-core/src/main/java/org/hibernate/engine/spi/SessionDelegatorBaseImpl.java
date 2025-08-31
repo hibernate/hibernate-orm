@@ -36,10 +36,10 @@ import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.ReplicationMode;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SharedSessionBuilder;
+import org.hibernate.SharedStatelessSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.Transaction;
 import org.hibernate.UnknownProfileException;
-import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -109,6 +109,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public <T> T execute(Callback<T> callback) {
 		return delegate.execute( callback );
+	}
+
+	@Override
+	public SharedStatelessSessionBuilder statelessWithOptions() {
+		return delegate.statelessWithOptions();
 	}
 
 	@Override
@@ -1156,8 +1161,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void registerProcess(AfterTransactionCompletionProcess process) {
-		delegate.registerProcess( process );
+	public TransactionCompletionCallbacks getTransactionCompletionCallbacks() {
+		return delegate.getTransactionCompletionCallbacks();
 	}
 
 	@Override

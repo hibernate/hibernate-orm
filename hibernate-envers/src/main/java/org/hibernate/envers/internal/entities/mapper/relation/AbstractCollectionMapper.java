@@ -16,7 +16,7 @@ import java.util.Set;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.Configuration;
@@ -77,7 +77,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 	 * @param changed The changed collection element to map.
 	 */
 	protected abstract void mapToMapFromObject(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> idData,
 			Map<String, Object> data,
 			Object changed);
@@ -99,7 +99,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 	}
 
 	protected void addCollectionChanges(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			List<PersistentCollectionChangeData> collectionChanges,
 			Set<Object> changed,
 			RevisionType revisionType,
@@ -130,7 +130,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 	@Override
 	@SuppressWarnings("unchecked")
 	public List<PersistentCollectionChangeData> mapCollectionChanges(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			String referencingPropertyName,
 			PersistentCollection newColl,
 			Serializable oldColl,
@@ -145,7 +145,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 
 	@Override
 	public boolean mapToMapFromEntity(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
@@ -155,7 +155,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 
 	@Override
 	public void mapModifiedFlagsToMapFromEntity(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
@@ -221,7 +221,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 			boolean removed);
 
 	protected CollectionPersister resolveCollectionPersister(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			PersistentCollection collection) {
 		// First attempt to resolve the persister from the collection entry
 		if ( collection != null ) {
@@ -324,7 +324,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 	 * @return the persistent collection changes.
 	 */
 	protected abstract List<PersistentCollectionChangeData> mapCollectionChanges(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			PersistentCollection newColl,
 			Serializable oldColl,
 			Object id);

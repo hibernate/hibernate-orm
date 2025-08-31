@@ -16,7 +16,6 @@ import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.StatelessSession;
-import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.event.spi.EventSource;
@@ -248,6 +247,14 @@ public interface SharedSessionContractImplementor
 	Transaction accessTransaction();
 
 	/**
+	 * Access to register callbacks for transaction completion processing.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	TransactionCompletionCallbacks getTransactionCompletionCallbacks();
+
+	/**
 	 * Instantiate an {@link EntityKey} with the given id and for the
 	 * entity represented by the given {@link EntityPersister}.
 	 *
@@ -410,6 +417,16 @@ public interface SharedSessionContractImplementor
 	}
 
 	/**
+	 * Whether the session {@linkplain StatelessSessionImplementor stateless}, as opposed tp
+	 * {@linkplain SessionImplementor stateful}.
+	 *
+	 * @apiNote Essentially, whether casting this session to {@linkplain StatelessSessionImplementor} will succeed.
+	 */
+	default boolean isStateless() {
+		return false;
+	}
+
+	/**
 	 * Called after each operation on a {@link org.hibernate.ScrollableResults},
 	 * providing an opportunity for a stateless session to clear its
 	 * temporary persistence context. For a stateful session, this method
@@ -550,15 +567,6 @@ public interface SharedSessionContractImplementor
 	 * Cascade the lock operation to the given child entity.
 	 */
 	void lock(String entityName, Object child, LockOptions lockOptions);
-
-	/**
-	 * Registers the given process for execution after transaction completion.
-	 *
-	 * @param process The process to register
-	 * @since 7.0
-	 */
-	@Incubating
-	void registerProcess(AfterTransactionCompletionProcess process);
 
 	/**
 	 * Attempts to load the entity from the second-level cache.

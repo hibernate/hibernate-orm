@@ -4,20 +4,19 @@
  */
 package org.hibernate.envers.internal.synchronization.work;
 
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.CollectionEntry;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.configuration.Configuration;
+import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.hibernate.Session;
-import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CollectionEntry;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.boot.internal.EnversService;
-import org.hibernate.envers.configuration.Configuration;
-import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -28,7 +27,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 	private final String referencingPropertyName;
 
 	public PersistentCollectionChangeWorkUnit(
-			SessionImplementor sessionImplementor,
+			SharedSessionContractImplementor sessionImplementor,
 			String entityName,
 			EnversService enversService,
 			PersistentCollection collection,
@@ -51,7 +50,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 	}
 
 	public PersistentCollectionChangeWorkUnit(
-			SessionImplementor sessionImplementor,
+			SharedSessionContractImplementor sessionImplementor,
 			String entityName,
 			EnversService enversService,
 			Object id,
@@ -75,7 +74,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void perform(Session session, Object revisionData) {
+	public void perform(SharedSessionContractImplementor session, Object revisionData) {
 		final Configuration configuration = enversService.getConfig();
 
 		for ( PersistentCollectionChangeData persistentCollectionChangeData : collectionChanges ) {
@@ -87,7 +86,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 					session,
 					getEntityName(),
 					referencingPropertyName,
-					enversService,
+					enversService.getConfig(),
 					persistentCollectionChangeData,
 					revisionData
 			);

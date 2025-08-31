@@ -6,7 +6,7 @@ package org.hibernate.envers.event.spi;
 
 import java.util.Set;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.RelationDescription;
@@ -45,7 +45,7 @@ public abstract class BaseEnversEventListener implements EnversListener {
 			String entityName,
 			Object[] newState,
 			Object[] oldState,
-			SessionImplementor session) {
+			SharedSessionContractImplementor session) {
 		// Checking if this is enabled in configuration ...
 		if ( !enversService.getConfig().isGenerateRevisionsForCollections() ) {
 			return;
@@ -84,8 +84,11 @@ public abstract class BaseEnversEventListener implements EnversListener {
 	}
 
 	private void addCollectionChangeWorkUnit(
-			AuditProcess auditProcess, SessionImplementor session,
-			String fromEntityName, RelationDescription relDesc, Object value) {
+			AuditProcess auditProcess,
+			SharedSessionContractImplementor session,
+			String fromEntityName,
+			RelationDescription relDesc,
+			Object value) {
 		// relDesc.getToEntityName() doesn't always return the entity name of the value - in case
 		// of subclasses, this will be root class, no the actual class. So it can't be used here.
 		String toEntityName;
@@ -128,9 +131,9 @@ public abstract class BaseEnversEventListener implements EnversListener {
 		);
 	}
 
-	protected void checkIfTransactionInProgress(SessionImplementor session) {
+	protected void checkIfTransactionInProgress(SharedSessionContractImplementor session) {
 		if ( !session.isTransactionInProgress() ) {
-			// Historical data would not be flushed to audit tables if outside of active transaction
+			// Historical data would not be flushed to audit tables if we are outside an active transaction
 			// (AuditProcess#doBeforeTransactionCompletion(SessionImplementor) not executed).
 			throw new AuditException( "Unable to create revision because of non-active transaction" );
 		}

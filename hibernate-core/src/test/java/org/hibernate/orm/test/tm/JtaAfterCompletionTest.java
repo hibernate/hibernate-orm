@@ -77,8 +77,8 @@ public class JtaAfterCompletionTest extends BaseSessionFactoryFunctionalTest {
 			// The after tracks whether it is invoked since this test is to guarantee it is called
 			final SessionImplementor sessionImplementor = (SessionImplementor) session;
 			final ActionQueue actionQueue = sessionImplementor.getActionQueue();
-			actionQueue.registerProcess( new AfterCallbackCompletionHandler() );
-			actionQueue.registerProcess( new BeforeCallbackCompletionHandler() );
+			actionQueue.registerCallback( new AfterCallbackCompletionHandler() );
+			actionQueue.registerCallback( new BeforeCallbackCompletionHandler() );
 
 			TestingJtaPlatformImpl.transactionManager().commit();
 		}
@@ -104,7 +104,7 @@ public class JtaAfterCompletionTest extends BaseSessionFactoryFunctionalTest {
 
 	public static class BeforeCallbackCompletionHandler implements BeforeTransactionCompletionProcess {
 		@Override
-		public void doBeforeTransactionCompletion(SessionImplementor session) {
+		public void doBeforeTransactionCompletion(SharedSessionContractImplementor session) {
 			try {
 				// Wait for the transaction to be rolled back by the Reaper thread.
 				final Transaction transaction = TestingJtaPlatformImpl.transactionManager().getTransaction();

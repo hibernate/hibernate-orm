@@ -4,7 +4,7 @@
  */
 package org.hibernate.envers.internal.revisioninfo;
 
-import org.hibernate.Session;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
 
 /**
@@ -16,7 +16,7 @@ public interface RevisionInfoGenerator {
 	 */
 	void setRevisionInfoNumberReader(RevisionInfoNumberReader revisionInfoNumberReader);
 
-	void saveRevisionData(Session session, Object revisionData);
+	void saveRevisionData(SharedSessionContractImplementor session, Object revisionData);
 
 	Object generate();
 

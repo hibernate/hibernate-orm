@@ -4,12 +4,14 @@
  */
 package org.hibernate.envers.strategy.internal;
 
-import org.hibernate.Session;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.synchronization.SessionCacheCleaner;
+import org.hibernate.envers.internal.tools.OrmTools;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.strategy.AuditStrategy;
@@ -35,26 +37,35 @@ public class DefaultAuditStrategy implements AuditStrategy {
 
 	@Override
 	public void perform(
-			Session session,
+			SharedSessionContractImplementor session,
 			String entityName,
 			Configuration configuration,
 			Object id,
 			Object data,
 			Object revision) {
-		session.persist( configuration.getAuditEntityName( entityName ), data );
-		sessionCacheCleaner.scheduleAuditDataRemoval( session, data );
+		OrmTools.saveData( configuration.getAuditEntityName( entityName ), data, session );
+		if ( session instanceof SessionImplementor statefulSession ) {
+			sessionCacheCleaner.scheduleAuditDataRemoval( statefulSession, data );
+		}
 	}
 
 	@Override
 	public void performCollectionChange(
-			Session session,
+			SharedSessionContractImplementor session,
 			String entityName,
 			String propertyName,
 			Configuration configuration,
 			PersistentCollectionChangeData persistentCollectionChangeData,
 			Object revision) {
-		session.persist( persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData() );
-		sessionCacheCleaner.scheduleAuditDataRemoval( session, persistentCollectionChangeData.getData() );
+		OrmTools.saveData(
+				persistentCollectionChangeData.getEntityName(),
+				persistentCollectionChangeData.getData(),
+				session
+		);
+
+		if ( session instanceof SessionImplementor statefulSession ) {
+			sessionCacheCleaner.scheduleAuditDataRemoval( statefulSession, persistentCollectionChangeData.getData() );
+		}
 	}
 
 	/**

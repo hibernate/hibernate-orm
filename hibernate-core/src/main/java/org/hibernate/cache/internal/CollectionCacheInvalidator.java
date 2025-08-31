@@ -4,7 +4,6 @@
  */
 package org.hibernate.cache.internal;
 
-
 import org.hibernate.HibernateException;
 import org.hibernate.action.internal.CollectionAction;
 import org.hibernate.boot.Metadata;
@@ -23,7 +22,6 @@ import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-
 import org.jboss.logging.Logger;
 
 import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
@@ -59,7 +57,9 @@ public class CollectionCacheInvalidator
 
 	@Override
 	public void onPostInsert(PostInsertEvent event) {
-		evictCache( event.getEntity(), event.getPersister(), event.getSession(), null );
+		if ( event.getSession() instanceof EventSource eventSource ) {
+			evictCache( event.getEntity(), event.getPersister(), eventSource, null );
+		}
 	}
 
 	@Override
@@ -69,12 +69,16 @@ public class CollectionCacheInvalidator
 
 	@Override
 	public void onPostDelete(PostDeleteEvent event) {
-		evictCache( event.getEntity(), event.getPersister(), event.getSession(), null );
+		if ( event.getSession() instanceof EventSource eventSource ) {
+			evictCache( event.getEntity(), event.getPersister(), eventSource, null );
+		}
 	}
 
 	@Override
 	public void onPostUpdate(PostUpdateEvent event) {
-		evictCache( event.getEntity(), event.getPersister(), event.getSession(), event.getOldState() );
+		if ( event.getSession() instanceof EventSource eventSource ) {
+			evictCache( event.getEntity(), event.getPersister(), eventSource, event.getOldState() );
+		}
 	}
 
 	private void integrate(SessionFactoryImplementor sessionFactory) {
@@ -124,7 +128,7 @@ public class CollectionCacheInvalidator
 				final var cacheAccessStrategy = collectionPersister.getCacheAccessStrategy();
 				final var softLock = cacheAccessStrategy.lockRegion();
 				session.getActionQueue()
-						.registerProcess( (success, s) -> cacheAccessStrategy.unlockRegion( softLock ) );
+						.registerCallback( (success, s) -> cacheAccessStrategy.unlockRegion( softLock ) );
 			}
 		}
 	}
@@ -182,7 +186,7 @@ public class CollectionCacheInvalidator
 		final var evictCacheAction =
 				new CollectionEvictCacheAction( collectionPersister, null, id, session );
 		evictCacheAction.execute();
-		session.getActionQueue().registerProcess( evictCacheAction.getAfterTransactionCompletionProcess() );
+		session.getActionQueue().registerCallback( evictCacheAction.getAfterTransactionCompletionProcess() );
 	}
 
 	//execute the same process as invalidation with collection operations

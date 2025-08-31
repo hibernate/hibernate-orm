@@ -6,11 +6,11 @@ package org.hibernate.envers.internal.synchronization.work;
 
 import java.util.Map;
 
-import org.hibernate.Session;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
 
 /**
- * TODO: refactor constructors into factory methods
+ * Captures specific auditable mutation events.
  *
  * @author Adam Warski (adam at warski dot org)
  */
@@ -30,9 +30,9 @@ public interface AuditWorkUnit extends WorkUnitMergeVisitor, WorkUnitMergeDispat
 	 * @param revisionData The current revision data, which will be used to populate the work unit with the correct
 	 * revision relation.
 	 */
-	void perform(Session session, Object revisionData);
+	void perform(SharedSessionContractImplementor session, Object revisionData);
 
-	void undo(Session session);
+	void undo(SharedSessionContractImplementor session);
 
 	/**
 	 * @param revisionData The current revision data, which will be used to populate the work unit with the correct

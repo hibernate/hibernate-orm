@@ -43,7 +43,7 @@ public class OptimisticLockingStrategy implements LockingStrategy {
 			throw new HibernateException( "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
 		// Register the EntityVerifyVersionProcess action to run just prior to transaction commit.
-		session.getActionQueue().registerProcess( new EntityVerifyVersionProcess( object ) );
+		session.getActionQueue().registerCallback( new EntityVerifyVersionProcess( object ) );
 	}
 
 	protected LockMode getLockMode() {

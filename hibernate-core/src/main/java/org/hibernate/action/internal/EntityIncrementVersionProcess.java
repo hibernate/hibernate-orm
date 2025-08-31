@@ -5,7 +5,7 @@
 package org.hibernate.action.internal;
 
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.OptimisticLockHelper;
 
 /**
@@ -33,9 +33,9 @@ public class EntityIncrementVersionProcess implements BeforeTransactionCompletio
 	 * @param session The session on which the transaction is preparing to complete.
 	 */
 	@Override
-	public void doBeforeTransactionCompletion(SessionImplementor session) {
+	public void doBeforeTransactionCompletion(SharedSessionContractImplementor session) {
 		final var entry = session.getPersistenceContext().getEntry( object );
-		// Don't increment version for an entity that is not in the PersistenceContext;
+		// Don't increment the version for an entity that is not in the PersistenceContext;
 		if ( entry != null ) {
 			OptimisticLockHelper.forceVersionIncrement( object, entry, session.asEventSource() );
 		}

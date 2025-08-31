@@ -4,17 +4,17 @@
  */
 package org.hibernate.envers.internal.entities.mapper;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A mapper which maps from a parent mapper and a "main" one, but adds only to the "main". The "main" mapper
@@ -35,7 +35,7 @@ public class SubclassPropertyMapper extends AbstractPropertyMapper implements Ex
 
 	@Override
 	public boolean map(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			String[] propertyNames,
 			Object[] newState,
@@ -48,7 +48,7 @@ public class SubclassPropertyMapper extends AbstractPropertyMapper implements Ex
 
 	@Override
 	public boolean mapToMapFromEntity(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
@@ -60,7 +60,7 @@ public class SubclassPropertyMapper extends AbstractPropertyMapper implements Ex
 
 	@Override
 	public void mapModifiedFlagsToMapFromEntity(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
@@ -98,9 +98,11 @@ public class SubclassPropertyMapper extends AbstractPropertyMapper implements Ex
 
 	@Override
 	public List<PersistentCollectionChangeData> mapCollectionChanges(
-			SessionImplementor session, String referencingPropertyName,
+			SharedSessionContractImplementor session,
+			String referencingPropertyName,
 			PersistentCollection newColl,
-			Serializable oldColl, Object id) {
+			Serializable oldColl,
+			Object id) {
 		final List<PersistentCollectionChangeData> parentCollectionChanges = parentMapper.mapCollectionChanges(
 				session,
 				referencingPropertyName,

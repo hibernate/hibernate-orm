@@ -4,13 +4,8 @@
  */
 package org.hibernate.envers.internal.entities.mapper;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
@@ -19,6 +14,11 @@ import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.Setter;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -69,7 +69,7 @@ public class ComponentPropertyMapper extends AbstractPropertyMapper implements C
 
 	@Override
 	public boolean mapToMapFromEntity(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
@@ -78,7 +78,7 @@ public class ComponentPropertyMapper extends AbstractPropertyMapper implements C
 
 	@Override
 	public void mapModifiedFlagsToMapFromEntity(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
@@ -251,9 +251,11 @@ public class ComponentPropertyMapper extends AbstractPropertyMapper implements C
 
 	@Override
 	public List<PersistentCollectionChangeData> mapCollectionChanges(
-			SessionImplementor session, String referencingPropertyName,
+			SharedSessionContractImplementor session,
+			String referencingPropertyName,
 			PersistentCollection newColl,
-			Serializable oldColl, Object id) {
+			Serializable oldColl,
+			Object id) {
 		return delegate.mapCollectionChanges( session, referencingPropertyName, newColl, oldColl, id );
 	}
 

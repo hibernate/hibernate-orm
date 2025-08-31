@@ -4,6 +4,7 @@
  */
 package org.hibernate.resource.jdbc.spi;
 
+
 import java.io.Serializable;
 
 /**
@@ -30,6 +31,8 @@ import java.io.Serializable;
  * @author Steve Ebersole
  */
 public interface StatementInspector extends Serializable {
+	StatementInspector NONE = sql -> sql;
+
 	/**
 	 * Inspect the given SQL command, possibly returning a different
 	 * SQL command to be used instead. A {@code null} return value is

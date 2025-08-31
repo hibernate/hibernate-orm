@@ -17,6 +17,7 @@ import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.synchronization.AuditProcess;
 import org.hibernate.envers.internal.synchronization.AuditProcessManager;
@@ -80,7 +81,7 @@ public class JtaTransactionAfterCallbackTest extends BaseEnversJPAFunctionalTest
 			// Register before completion callback
 			// The before causes this thread to wait until the Reaper thread aborts our transaction
 			final SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
-			session.getActionQueue().registerProcess( new BeforeCallbackCompletionHandler() );
+			session.getTransactionCompletionCallbacks().registerCallback( new BeforeCallbackCompletionHandler() );
 
 			TestingJtaPlatformImpl.transactionManager().commit();
 		}
@@ -106,7 +107,7 @@ public class JtaTransactionAfterCallbackTest extends BaseEnversJPAFunctionalTest
 
 	public static class BeforeCallbackCompletionHandler implements BeforeTransactionCompletionProcess {
 		@Override
-		public void doBeforeTransactionCompletion(SessionImplementor session) {
+		public void doBeforeTransactionCompletion(SharedSessionContractImplementor session) {
 			try {
 				// Wait for the transaction to be rolled back by the Reaper thread.
 				final Transaction transaction = TestingJtaPlatformImpl.transactionManager().getTransaction();

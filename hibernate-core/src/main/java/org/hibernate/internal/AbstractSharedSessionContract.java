@@ -20,6 +20,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
+import org.hibernate.SharedStatelessSessionBuilder;
 import org.hibernate.Transaction;
 import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.binder.internal.TenantIdBinder;
@@ -27,6 +28,9 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.creation.internal.SessionCreationOptions;
+import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
+import org.hibernate.engine.creation.internal.SharedStatelessSessionBuilderImpl;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -230,6 +234,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	final SessionFactoryOptions getSessionFactoryOptions() {
 		return factoryOptions;
+	}
+
+	@Override
+	public SharedStatelessSessionBuilder statelessWithOptions() {
+		return new SharedStatelessSessionBuilderImpl( this );
 	}
 
 	private static boolean isTransactionCoordinatorShared(SessionCreationOptions options) {
@@ -676,7 +685,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	protected Transaction getCurrentTransaction() {
+	public Transaction getCurrentTransaction() {
 		return currentHibernateTransaction;
 	}
 

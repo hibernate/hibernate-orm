@@ -11,8 +11,8 @@ import jakarta.persistence.Id;
 
 import org.hibernate.HibernateException;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
-import org.hibernate.engine.spi.SessionImplementor;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
@@ -30,7 +30,7 @@ public class CustomBeforeCompletionTest extends BaseCoreFunctionalTestCase {
 	public void success() {
 		inSession( session -> {
 			AtomicBoolean called = new AtomicBoolean( false );
-			session.getActionQueue().registerProcess( s -> called.set( true ) );
+			session.getActionQueue().registerCallback( s -> called.set( true ) );
 			Assert.assertFalse( called.get() );
 			inTransaction( session, theSession -> {
 				theSession.persist( new SimpleEntity( "jack" ) );
@@ -51,9 +51,9 @@ public class CustomBeforeCompletionTest extends BaseCoreFunctionalTestCase {
 	public void failure() {
 		try {
 			inSession( session -> {
-				session.getActionQueue().registerProcess( new BeforeTransactionCompletionProcess() {
+				session.getActionQueue().registerCallback( new BeforeTransactionCompletionProcess() {
 					@Override
-					public void doBeforeTransactionCompletion(SessionImplementor session) {
+					public void doBeforeTransactionCompletion(SharedSessionContractImplementor session) {
 						throw new RuntimeException( "My exception" );
 					}
 				} );

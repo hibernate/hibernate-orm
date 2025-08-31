@@ -18,8 +18,8 @@ import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.SharedStatelessSessionBuilder;
 import org.hibernate.Transaction;
-import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -73,6 +73,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	 */
 	protected SharedSessionContract delegate() {
 		return delegate;
+	}
+
+	@Override
+	public SharedStatelessSessionBuilder statelessWithOptions() {
+		return delegate.statelessWithOptions();
 	}
 
 	@Override
@@ -412,6 +417,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
+	public TransactionCompletionCallbacks getTransactionCompletionCallbacks() {
+		return delegate.getTransactionCompletionCallbacks();
+	}
+
+	@Override
 	public EntityKey generateEntityKey(Object id, EntityPersister persister) {
 		return delegate.generateEntityKey( id, persister );
 	}
@@ -685,11 +695,6 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public void lock(String entityName, Object child, LockOptions lockOptions) {
 		delegate.lock( entityName, child, lockOptions );
-	}
-
-	@Override
-	public void registerProcess(AfterTransactionCompletionProcess process) {
-		delegate.registerProcess( process );
 	}
 
 	@Override

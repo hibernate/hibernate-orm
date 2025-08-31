@@ -450,15 +450,16 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 			else {
 				setStatus( MANAGED );
 				loadedState = persister.getValues( entity );
+				final var context = getPersistenceContext();
 				TypeHelper.deepCopy(
 						loadedState,
 						persister.getPropertyTypes(),
 						persister.getPropertyCheckability(),
 						loadedState,
-						getPersistenceContext().getSession()
+						context.getSession()
 				);
 				if ( persister.hasNaturalIdentifier() ) {
-					getPersistenceContext().getNaturalIdResolutions().manageLocalResolution(
+					context.getNaturalIdResolutions().manageLocalResolution(
 							id,
 							persister.getNaturalIdMapping().extractNaturalIdFromEntityState( loadedState ),
 							persister,

@@ -8,11 +8,9 @@ import org.hibernate.CacheMode;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
@@ -24,12 +22,12 @@ public final class OptimisticLockHelper {
 	}
 
 	public static void forceVersionIncrement(Object object, EntityEntry entry, SharedSessionContractImplementor session) {
-		final EntityPersister persister = entry.getPersister();
+		final var persister = entry.getPersister();
 		final Object previousVersion = entry.getVersion();
 		SoftLock lock = null;
 		final Object cacheKey;
 		if ( persister.canWriteToCache() ) {
-			final EntityDataAccess cache = persister.getCacheAccessStrategy();
+			final var cache = persister.getCacheAccessStrategy();
 			cacheKey = cache.generateCacheKey(
 					entry.getId(),
 					persister,
@@ -70,8 +68,8 @@ public final class OptimisticLockHelper {
 		}
 		else if ( session.getCacheMode().isPutEnabled() ) {
 			//TODO: inefficient if that cache is just going to ignore the updated state!
-			final CacheEntry ce = persister.buildCacheEntry( entity, entry.getLoadedState(), nextVersion, session );
-			final Object cacheEntry = persister.getCacheEntryStructure().structure( ce );
+			final Object cacheEntry =
+					buildStructuredCacheEntry( entity, nextVersion, entry.getLoadedState(), persister, session );
 			final boolean put = updateCache( persister, cacheEntry, previousVersion, nextVersion, ck, session );
 
 			final var statistics = session.getFactory().getStatistics();
@@ -86,10 +84,26 @@ public final class OptimisticLockHelper {
 		return null;
 	}
 
-	private static boolean updateCache(EntityPersister persister, Object cacheEntry, Object previousVersion, Object nextVersion, Object ck, SharedSessionContractImplementor session) {
-		final EventMonitor eventMonitor = session.getEventMonitor();
-		final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
-		final EntityDataAccess cacheAccessStrategy = persister.getCacheAccessStrategy();
+	private static Object buildStructuredCacheEntry(
+			Object entity,
+			Object nextVersion,
+			Object[] state,
+			EntityPersister persister,
+			SharedSessionContractImplementor session) {
+		final var cacheEntry = persister.buildCacheEntry( entity, state, nextVersion, session );
+		return persister.getCacheEntryStructure().structure( cacheEntry );
+	}
+
+	private static boolean updateCache(
+			EntityPersister persister,
+			Object cacheEntry,
+			Object previousVersion,
+			Object nextVersion,
+			Object ck,
+			SharedSessionContractImplementor session) {
+		final var eventMonitor = session.getEventMonitor();
+		final var cachePutEvent = eventMonitor.beginCachePutEvent();
+		final var cacheAccessStrategy = persister.getCacheAccessStrategy();
 		final var eventListenerManager = session.getEventListenerManager();
 		boolean update = false;
 		try {
@@ -138,7 +152,7 @@ public final class OptimisticLockHelper {
 
 		@Override
 		public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-			final EntityDataAccess cache = persister.getCacheAccessStrategy();
+			final var cache = persister.getCacheAccessStrategy();
 			if ( cacheUpdateRequired( success, persister, session ) ) {
 				cacheAfterUpdate( cache, cacheKey, session );
 			}
@@ -155,8 +169,8 @@ public final class OptimisticLockHelper {
 
 		protected void cacheAfterUpdate(EntityDataAccess cache, Object ck, SharedSessionContractImplementor session) {
 			final var eventListenerManager = session.getEventListenerManager();
-			final EventMonitor eventMonitor = session.getEventMonitor();
-			final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
+			final var eventMonitor = session.getEventMonitor();
+			final var cachePutEvent = eventMonitor.beginCachePutEvent();
 			boolean put = false;
 			try {
 				eventListenerManager.cachePutStart();

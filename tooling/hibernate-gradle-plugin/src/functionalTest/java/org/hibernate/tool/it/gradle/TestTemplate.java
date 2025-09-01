@@ -29,6 +29,7 @@ public class TestTemplate {
 
     private String[] databaseCreationScript;
     private String hibernateToolsExtensionSection;
+    private String gradleCommandToExecute;
 
     protected File getProjectDir() { return projectDir; }
     protected File getGradlePropertiesFile() { return gradlePropertiesFile; }
@@ -41,6 +42,8 @@ public class TestTemplate {
     protected void setDatabaseCreationScript(String[] script) { databaseCreationScript = script; }
     protected String getHibernateToolsExtensionSection() { return hibernateToolsExtensionSection; }
     protected void setHibernateToolsExtensionSection(String s) { hibernateToolsExtensionSection = s; }
+    protected String getGradleCommandToExecute() { return gradleCommandToExecute; }
+    protected void setGradleCommandToExecute(String command) { gradleCommandToExecute = command; }
 
     protected void executeGradleCommand(String ... gradleCommandLine) {
         GradleRunner runner = GradleRunner.create();
@@ -58,6 +61,11 @@ public class TestTemplate {
         editGradlePropertiesFile();
         createDatabase();
         createHibernatePropertiesFile();
+    }
+
+    protected void createProjectAndExecuteGradleCommand() throws Exception {
+        createProject();
+        executeGradleCommand(getGradleCommandToExecute());
     }
 
     protected void initGradleProject() throws Exception {

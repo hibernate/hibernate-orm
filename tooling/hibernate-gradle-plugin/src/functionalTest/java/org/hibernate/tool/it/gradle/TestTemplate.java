@@ -28,6 +28,7 @@ public class TestTemplate {
     private File databaseFile;
 
     private String[] databaseCreationScript;
+    private String hibernateToolsExtensionSection;
 
     protected File getProjectDir() { return projectDir; }
     protected File getGradlePropertiesFile() { return gradlePropertiesFile; }
@@ -38,6 +39,8 @@ public class TestTemplate {
     protected void setDatabaseFile(File f) { databaseFile = f; }
     protected String[] getDatabaseCreationScript() { return databaseCreationScript; }
     protected void setDatabaseCreationScript(String[] script) { databaseCreationScript = script; }
+    protected String getHibernateToolsExtensionSection() { return hibernateToolsExtensionSection; }
+    protected void setHibernateToolsExtensionSection(String s) { hibernateToolsExtensionSection = s; }
 
     protected void executeGradleCommand(String ... gradleCommandLine) {
         GradleRunner runner = GradleRunner.create();
@@ -143,6 +146,14 @@ public class TestTemplate {
         gradleBuildFileContents.insert(pos, constructHibernateToolsPluginLine() + "\n");
     }
 
-    protected void addHibernateToolsExtension(StringBuffer gradleBuildFileContents) {}
-
+    protected void addHibernateToolsExtension(StringBuffer gradleBuildFileContents) {
+        String extension = getHibernateToolsExtensionSection();
+        if (extension != null) {
+            int pos = gradleBuildFileContents.indexOf("dependencies {");
+            pos = gradleBuildFileContents.indexOf("}", pos);
+            gradleBuildFileContents.insert(pos + 1, "\n\n" + extension);
+        }
+    }
 }
+
+

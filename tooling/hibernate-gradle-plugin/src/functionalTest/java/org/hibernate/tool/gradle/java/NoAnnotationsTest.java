@@ -26,6 +26,11 @@ public class NoAnnotationsTest extends TestTemplate {
 				"create table PERSON (ID int not null, NAME varchar(20), primary key (ID))",
 				"insert into PERSON values (1, 'foo')"
 		});
+		setHibernateToolsExtensionSection(
+				"hibernateTools { \n" +
+				"  generateAnnotations=false \n" +
+				"}"
+		);
 		createProject();
 		executeGradleCommand("generateJava");
 		verifyProject();
@@ -43,19 +48,6 @@ public class NoAnnotationsTest extends TestTemplate {
 				Files.readAllBytes(generatedPersonJavaFile.toPath()));
 		assertFalse(generatedPersonJavaFileContents.contains("import jakarta.persistence.Entity;"));
 		assertTrue(generatedPersonJavaFileContents.contains("public class Person "));
-	}
-	
-	protected void addHibernateToolsExtension(StringBuffer gradleBuildFileContents) {
-		int pos = gradleBuildFileContents.indexOf("dependencies {");
-		pos = gradleBuildFileContents.indexOf("}", pos);
-		StringBuffer hibernateToolsExtension = new StringBuffer();
-		hibernateToolsExtension
-			.append("\n")
-			.append("\n")
-			.append("hibernateTools { \n")
-			.append("  generateAnnotations=false \n")
-			.append("}");
-		gradleBuildFileContents.insert(pos + 1, hibernateToolsExtension.toString());
 	}
 	
 }

@@ -26,6 +26,11 @@ public class NoGenerics extends TestTemplate {
 				"create table ITEM (ID int not null,  NAME varchar(20), OWNER_ID int not null, " +
 						"   primary key (ID), foreign key (OWNER_ID) references PERSON(ID))"
 		});
+		setHibernateToolsExtensionSection(
+				"hibernateTools { \n" +
+				"  useGenerics=false \n" +
+				"}"
+		);
 		createProject();
 		executeGradleCommand("generateJava");
 		verifyProject();
@@ -49,19 +54,6 @@ public class NoGenerics extends TestTemplate {
 		String generatedItemJavaFileContents = new String(
 				Files.readAllBytes(generatedItemJavaFile.toPath()));
 		assertTrue(generatedItemJavaFileContents.contains("public class Item "));
-	}
-	
-	protected void addHibernateToolsExtension(StringBuffer gradleBuildFileContents) {
-		int pos = gradleBuildFileContents.indexOf("dependencies {");
-		pos = gradleBuildFileContents.indexOf("}", pos);
-		StringBuffer hibernateToolsExtension = new StringBuffer();
-		hibernateToolsExtension
-			.append("\n")
-			.append("\n")
-			.append("hibernateTools { \n")
-			.append("  useGenerics=false \n")
-			.append("}");
-		gradleBuildFileContents.insert(pos + 1, hibernateToolsExtension.toString());
 	}
 	
 }

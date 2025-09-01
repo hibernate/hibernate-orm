@@ -65,6 +65,7 @@ import org.hibernate.type.descriptor.jdbc.BooleanJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.internal.BasicTypeImpl;
+import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.DynamicParameterizedType;
@@ -849,7 +850,8 @@ public class BasicValue extends SimpleValue
 //			return EnumeratedValueResolution.fromName( name, stdIndicators, context );
 //		}
 
-		if ( name.startsWith( BasicTypeImpl.EXTERNALIZED_PREFIX ) ) {
+		if ( name.startsWith( BasicTypeImpl.EXTERNALIZED_PREFIX )
+			|| name.startsWith( ConvertedBasicTypeImpl.EXTERNALIZED_PREFIX ) ) {
 			return getNamedBasicTypeResolution(
 					bootstrapContext.resolveAdHocBasicType( name ),
 					explicitMutabilityPlanAccess,

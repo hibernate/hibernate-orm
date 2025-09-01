@@ -319,7 +319,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		if ( !firePreDelete(entity, id, persister) ) {
 			getInterceptor().onDelete( entity, id, persister.getPropertyNames(), persister.getPropertyTypes() );
 			removeCollections( entity, id, persister );
-			final Object ck = lockCacheItem( id, version, persister );
+			final Object cacheKey = lockCacheItem( id, version, persister );
 			final var eventMonitor = getEventMonitor();
 			final var event = eventMonitor.beginEntityDeleteEvent();
 			boolean success = false;
@@ -330,7 +330,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			finally {
 				eventMonitor.completeEntityDeleteEvent( event, id, persister.getEntityName(), success, this );
 			}
-			removeCacheItem( ck, persister );
+			removeCacheItem( cacheKey, persister );
 			firePostDelete( entity, id, persister );
 			final var statistics = getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
@@ -406,7 +406,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		if ( !firePreUpdate(entity, id, state, persister) ) {
 			getInterceptor().onUpdate( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
-			final Object ck = lockCacheItem( id, oldVersion, persister );
+			final Object cacheKey = lockCacheItem( id, oldVersion, persister );
 			final var eventMonitor = getEventMonitor();
 			final var event = eventMonitor.beginEntityUpdateEvent();
 			boolean success = false;
@@ -417,7 +417,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			finally {
 				eventMonitor.completeEntityUpdateEvent( event, id, persister.getEntityName(), success, this );
 			}
-			removeCacheItem( ck, persister );
+			removeCacheItem( cacheKey, persister );
 			removeAndRecreateCollections( entity, id, persister );
 			firePostUpdate( entity, id, state, persister );
 			final var statistics = getStatistics();
@@ -484,7 +484,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		if ( !firePreUpsert(entity, id, state, persister) ) {
 			getInterceptor().onUpsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
 			final Object oldVersion = versionToUpsert( entity, persister, state );
-			final Object ck = lockCacheItem( id, oldVersion, persister );
+			final Object cacheKey = lockCacheItem( id, oldVersion, persister );
 			final var eventMonitor = getEventMonitor();
 			final var event = eventMonitor.beginEntityUpsertEvent();
 			boolean success = false;
@@ -495,7 +495,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			finally {
 				eventMonitor.completeEntityUpsertEvent( event, id, persister.getEntityName(), success, this );
 			}
-			removeCacheItem( ck, persister );
+			removeCacheItem( cacheKey, persister );
 			final var statistics = getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.upsertEntity( persister.getEntityName() );
@@ -688,7 +688,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		persister.visitAttributeMappings( attribute -> {
 			if ( attribute.isPluralAttributeMapping() ) {
 				final var descriptor = attribute.asPluralAttributeMapping().getCollectionDescriptor();
-				final Object ck = lockCacheItem( key, descriptor );
+				final Object cacheKey = lockCacheItem( key, descriptor );
 				if ( !descriptor.isInverse() ) {
 					final Object value = attribute.getPropertyAccess().getGetter().get(entity);
 					final PersistentCollection<?> collection;
@@ -706,7 +706,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					}
 					action.accept( descriptor, collection );
 				}
-				removeCacheItem( ck, descriptor );
+				removeCacheItem( cacheKey, descriptor );
 			}
 		} );
 	}
@@ -915,13 +915,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		if ( persister.canWriteToCache() ) {
 			final var cacheAccess = persister.getCacheAccessStrategy();
 			if ( cacheAccess != null ) {
-				final Object ck = cacheAccess.generateCacheKey(
+				final Object cacheKey = cacheAccess.generateCacheKey(
 						id,
 						persister,
 						getFactory(),
 						getTenantIdentifier()
 				);
-				cacheAccess.evict( ck );
+				cacheAccess.evict( cacheKey );
 			}
 		}
 
@@ -1362,48 +1362,48 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	protected Object lockCacheItem(Object id, Object previousVersion, EntityPersister persister) {
 		if ( persister.canWriteToCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey(
+			final Object cacheKey = cache.generateCacheKey(
 					id,
 					persister,
 					getFactory(),
 					getTenantIdentifier()
 			);
-			final SoftLock lock = cache.lockItem( this, ck, previousVersion );
-			afterCompletions.add( (success, session) -> cache.unlockItem( session, ck, lock ) );
-			return ck;
+			final SoftLock lock = cache.lockItem( this, cacheKey, previousVersion );
+			afterCompletions.add( (success, session) -> cache.unlockItem( session, cacheKey, lock ) );
+			return cacheKey;
 		}
 		else {
 			return null;
 		}
 	}
 
-	protected void removeCacheItem(Object ck, EntityPersister persister) {
+	protected void removeCacheItem(Object cacheKey, EntityPersister persister) {
 		if ( persister.canWriteToCache() ) {
-			persister.getCacheAccessStrategy().remove( this, ck );
+			persister.getCacheAccessStrategy().remove( this, cacheKey );
 		}
 	}
 
 	protected Object lockCacheItem(Object key, CollectionPersister persister) {
 		if ( persister.hasCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey(
+			final Object cacheKey = cache.generateCacheKey(
 					key,
 					persister,
 					getFactory(),
 					getTenantIdentifier()
 			);
-			final SoftLock lock = cache.lockItem( this, ck, null );
-			afterCompletions.add( (success, session) -> cache.unlockItem( this, ck, lock ) );
-			return ck;
+			final SoftLock lock = cache.lockItem( this, cacheKey, null );
+			afterCompletions.add( (success, session) -> cache.unlockItem( this, cacheKey, lock ) );
+			return cacheKey;
 		}
 		else {
 			return null;
 		}
 	}
 
-	protected void removeCacheItem(Object ck, CollectionPersister persister) {
+	protected void removeCacheItem(Object cacheKey, CollectionPersister persister) {
 		if ( persister.hasCache() ) {
-			persister.getCacheAccessStrategy().remove( this, ck );
+			persister.getCacheAccessStrategy().remove( this, cacheKey );
 		}
 	}
 

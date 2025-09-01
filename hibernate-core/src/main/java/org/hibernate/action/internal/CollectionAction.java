@@ -73,13 +73,13 @@ public abstract class CollectionAction implements ComparableExecutable {
 		// the database. This action is responsible for second-level cache invalidation only.
 		if ( persister.hasCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey(
+			final Object cacheKey = cache.generateCacheKey(
 					key,
 					persister,
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
-			final SoftLock lock = cache.lockItem( session, ck, null );
+			final SoftLock lock = cache.lockItem( session, cacheKey, null );
 			// the old behavior used key as opposed to getKey()
 			afterTransactionProcess = new CacheCleanupProcess( key, persister, lock );
 		}
@@ -129,13 +129,13 @@ public abstract class CollectionAction implements ComparableExecutable {
 	protected final void evict() throws CacheException {
 		if ( persister.hasCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey(
+			final Object cacheKey = cache.generateCacheKey(
 					key,
 					persister,
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
-			cache.remove( session, ck);
+			cache.remove( session, cacheKey);
 		}
 	}
 
@@ -170,13 +170,13 @@ public abstract class CollectionAction implements ComparableExecutable {
 		@Override
 		public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
 			final var cache = persister.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey(
+			final Object cacheKey = cache.generateCacheKey(
 					key,
 					persister,
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
-			cache.unlockItem( session, ck, lock );
+			cache.unlockItem( session, cacheKey, lock );
 		}
 	}
 

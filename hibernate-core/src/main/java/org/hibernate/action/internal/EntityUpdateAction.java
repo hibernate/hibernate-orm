@@ -151,7 +151,7 @@ public class EntityUpdateAction extends EntityAction {
 			handleNaturalIdLocalResolutions( id, persister, persistenceContext );
 
 			final Object previousVersion = getPreviousVersion();
-			final Object ck = lockCacheItem( previousVersion );
+			final Object cacheKey = lockCacheItem( previousVersion );
 			final var eventMonitor = session.getEventMonitor();
 			final var event = eventMonitor.beginEntityUpdateEvent();
 			boolean success = false;
@@ -179,7 +179,7 @@ public class EntityUpdateAction extends EntityAction {
 			}
 			handleGeneratedProperties( entry, generatedValues );
 			handleDeleted( entry );
-			updateCacheItem( previousVersion, ck, entry );
+			updateCacheItem( previousVersion, cacheKey, entry );
 			handleNaturalIdSharedResolutions( id, persister, persistenceContext );
 			postUpdate();
 
@@ -215,17 +215,17 @@ public class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	protected void updateCacheItem(Object previousVersion, Object ck, EntityEntry entry) {
+	protected void updateCacheItem(Object previousVersion, Object cacheKey, EntityEntry entry) {
 		final var persister = getPersister();
 		if ( persister.canWriteToCache() ) {
 			final var session = getSession();
 			if ( isCacheInvalidationRequired( persister, session ) || entry.getStatus() != Status.MANAGED ) {
-				persister.getCacheAccessStrategy().remove( session, ck );
+				persister.getCacheAccessStrategy().remove( session, cacheKey );
 			}
 			else if ( session.getCacheMode().isPutEnabled() ) {
 				//TODO: inefficient if that cache is just going to ignore the updated state!
 				cacheEntry = buildStructuredCacheEntry();
-				final boolean put = updateCache( persister, previousVersion, ck );
+				final boolean put = updateCache( persister, previousVersion, cacheKey );
 
 				final var statistics = session.getFactory().getStatistics();
 				if ( put && statistics.isStatisticsEnabled() ) {
@@ -318,21 +318,21 @@ public class EntityUpdateAction extends EntityAction {
 		if ( persister.canWriteToCache() ) {
 			final var session = getSession();
 			final var cache = persister.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey(
+			final Object cacheKey = cache.generateCacheKey(
 					getId(),
 					persister,
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
-			lock = cache.lockItem( session, ck, previousVersion );
-			return ck;
+			lock = cache.lockItem( session, cacheKey, previousVersion );
+			return cacheKey;
 		}
 		else {
 			return null;
 		}
 	}
 
-	protected boolean updateCache(EntityPersister persister, Object previousVersion, Object ck) {
+	protected boolean updateCache(EntityPersister persister, Object previousVersion, Object cacheKey) {
 		final var session = getSession();
 		final var eventMonitor = session.getEventMonitor();
 		final var cachePutEvent = eventMonitor.beginCachePutEvent();
@@ -341,7 +341,7 @@ public class EntityUpdateAction extends EntityAction {
 		boolean update = false;
 		try {
 			eventListenerManager.cachePutStart();
-			update = cacheAccessStrategy.update( session, ck, cacheEntry, nextVersion, previousVersion );
+			update = cacheAccessStrategy.update( session, cacheKey, cacheEntry, nextVersion, previousVersion );
 			return update;
 		}
 		finally {
@@ -420,7 +420,7 @@ public class EntityUpdateAction extends EntityAction {
 		if ( persister.canWriteToCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
 			final var factory = session.getFactory();
-			final Object ck = cache.generateCacheKey(
+			final Object cacheKey = cache.generateCacheKey(
 					getId(),
 					persister,
 					factory,
@@ -428,10 +428,10 @@ public class EntityUpdateAction extends EntityAction {
 
 			);
 			if ( cacheUpdateRequired( success, persister, session ) ) {
-				cacheAfterUpdate( cache, ck, session);
+				cacheAfterUpdate( cache, cacheKey, session);
 			}
 			else {
-				cache.unlockItem( session, ck, lock );
+				cache.unlockItem( session, cacheKey, lock );
 			}
 		}
 	}
@@ -443,14 +443,14 @@ public class EntityUpdateAction extends EntityAction {
 			&& session.getCacheMode().isPutEnabled();
 	}
 
-	protected void cacheAfterUpdate(EntityDataAccess cache, Object ck, SharedSessionContractImplementor session) {
+	protected void cacheAfterUpdate(EntityDataAccess cache, Object cacheKey, SharedSessionContractImplementor session) {
 		final var eventListenerManager = session.getEventListenerManager();
 		final var eventMonitor = session.getEventMonitor();
 		final var cachePutEvent = eventMonitor.beginCachePutEvent();
 		boolean put = false;
 		try {
 			eventListenerManager.cachePutStart();
-			put = cache.afterUpdate( session, ck, cacheEntry, nextVersion, previousVersion, lock );
+			put = cache.afterUpdate( session, cacheKey, cacheEntry, nextVersion, previousVersion, lock );
 		}
 		finally {
 			final var persister = getPersister();

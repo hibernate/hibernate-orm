@@ -8,7 +8,6 @@ import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
-import java.util.List;
 
 import org.junit.jupiter.api.io.TempDir;
 

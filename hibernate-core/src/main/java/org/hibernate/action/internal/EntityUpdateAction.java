@@ -27,6 +27,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.type.TypeHelper;
 
+import static org.hibernate.cache.spi.entry.CacheEntryHelper.buildStructuredCacheEntry;
 import static org.hibernate.engine.internal.Versioning.getVersion;
 
 /**
@@ -224,7 +225,7 @@ public class EntityUpdateAction extends EntityAction {
 			}
 			else if ( session.getCacheMode().isPutEnabled() ) {
 				//TODO: inefficient if that cache is just going to ignore the updated state!
-				cacheEntry = buildStructuredCacheEntry();
+				cacheEntry = buildStructuredCacheEntry( getInstance(), nextVersion, state, persister, session );
 				final boolean put = updateCache( persister, previousVersion, cacheKey );
 
 				final var statistics = session.getFactory().getStatistics();
@@ -236,12 +237,6 @@ public class EntityUpdateAction extends EntityAction {
 				}
 			}
 		}
-	}
-
-	private Object buildStructuredCacheEntry() {
-		final var persister = getPersister();
-		final var cacheEntry = persister.buildCacheEntry( getInstance(), state, nextVersion, getSession() );
-		return persister.getCacheEntryStructure().structure( cacheEntry );
 	}
 
 	private static boolean isCacheInvalidationRequired(
@@ -471,7 +466,6 @@ public class EntityUpdateAction extends EntityAction {
 			}
 			eventListenerManager.cachePutEnd();
 		}
-
 	}
 
 }

@@ -597,14 +597,12 @@ public abstract class AbstractEntityPersister
 			for ( int k = 0; k < selectables.size(); k++ ) {
 				final var selectable = selectables.get(k);
 				colAliases[k] = selectable.getAlias( dialect, propertyValue.getTable() );
-				if ( selectable.isFormula() ) {
+				if ( selectable instanceof Formula formula ) {
 					foundFormula = true;
-					final var formula = (Formula) selectable;
 					formula.setFormula( substituteBrackets( formula.getFormula() ) );
 					formulaTemplates[k] = selectable.getTemplate( dialect, typeConfiguration );
 				}
-				else {
-					final var column = (Column) selectable;
+				else if ( selectable instanceof Column column ) {
 					colNames[k] = column.getQuotedName( dialect );
 				}
 			}
@@ -655,9 +653,9 @@ public abstract class AbstractEntityPersister
 
 		if ( persistentClass.hasSubclasses() ) {
 			for ( var selectable : persistentClass.getIdentifier().getSelectables() ) {
-				if ( !selectable.isFormula() ) {
+				if ( selectable instanceof Column column ) {
 					// Identifier columns are always shared between subclasses
-					sharedColumnNames.add( ( (Column) selectable ).getQuotedName( dialect ) );
+					sharedColumnNames.add( column.getQuotedName( dialect ) );
 				}
 			}
 		}
@@ -674,7 +672,7 @@ public abstract class AbstractEntityPersister
 			final var selectables = prop.getSelectables();
 			for ( int i = 0; i < selectables.size(); i++ ) {
 				final var selectable = selectables.get(i);
-				if ( selectable.isFormula() ) {
+				if ( selectable instanceof Formula ) {
 					final String template = selectable.getTemplate( dialect, typeConfiguration );
 					forms[i] = template;
 					final String formulaAlias = selectable.getAlias( dialect );
@@ -682,15 +680,13 @@ public abstract class AbstractEntityPersister
 						formulaAliases.add( formulaAlias );
 					}
 				}
-				else {
-					final var column = (Column) selectable;
+				else if ( selectable instanceof Column column ) {
 					final String colName = column.getQuotedName(dialect);
 					cols[i] = colName;
 					final String columnAlias = selectable.getAlias( dialect, prop.getValue().getTable() );
 					if ( prop.isSelectable() && !aliases.contains( columnAlias ) ) {
 						aliases.add( columnAlias );
 					}
-
 					readers[i] = column.getReadExpr( dialect );
 					readerTemplates[i] = column.getTemplate( dialect, typeConfiguration );
 					if ( thisClassProperties.contains( prop )

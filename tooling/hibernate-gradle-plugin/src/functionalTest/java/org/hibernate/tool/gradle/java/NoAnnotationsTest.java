@@ -21,7 +21,7 @@ import org.hibernate.tool.it.gradle.TestTemplate;
 public class NoAnnotationsTest extends TestTemplate {
 	
 	@Test
-	public void testTutorial() throws Exception {
+	public void testNoAnnotations() throws Exception {
 		setDatabaseCreationScript(new String[] {
 				"create table PERSON (ID int not null, NAME varchar(20), primary key (ID))",
 				"insert into PERSON values (1, 'foo')"
@@ -33,10 +33,6 @@ public class NoAnnotationsTest extends TestTemplate {
 		);
 		createProject();
 		executeGradleCommand("generateJava");
-		verifyProject();
-	}
-	
-	private void verifyProject() throws Exception {
 		File generatedOutputFolder = new File(getProjectDir(), "app/generated-sources");
 		assertTrue(generatedOutputFolder.exists());
 		assertTrue(generatedOutputFolder.isDirectory());

@@ -154,6 +154,7 @@ public class TestTemplate {
             gradleBuildFileContents.insert(pos + 1, "\n\n" + extension);
         }
     }
+
 }
 
 

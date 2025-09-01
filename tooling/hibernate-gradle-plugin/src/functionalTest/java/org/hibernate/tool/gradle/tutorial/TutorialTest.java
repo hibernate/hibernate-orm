@@ -28,10 +28,6 @@ public class TutorialTest extends TestTemplate {
 		});
 		createProject();
 		executeGradleCommand("generateJava");
-		verifyProject();
-	}
-	
-	private void verifyProject() {
 		File generatedOutputFolder = new File(getProjectDir(), "app/generated-sources");
 		assertTrue(generatedOutputFolder.exists());
 		assertTrue(generatedOutputFolder.isDirectory());

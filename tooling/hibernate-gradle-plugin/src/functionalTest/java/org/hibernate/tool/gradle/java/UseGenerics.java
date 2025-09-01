@@ -20,7 +20,7 @@ import org.hibernate.tool.it.gradle.TestTemplate;
 public class UseGenerics extends TestTemplate {
 	
 	@Test
-	public void testTutorial() throws Exception {
+	public void testUseGenerics() throws Exception {
 		setDatabaseCreationScript(new String[] {
 				"create table PERSON (ID int not null,  NAME varchar(20), primary key (ID))",
 				"create table ITEM (ID int not null,  NAME varchar(20), OWNER_ID int not null, " +
@@ -28,10 +28,6 @@ public class UseGenerics extends TestTemplate {
 		});
 		createProject();
 		executeGradleCommand("generateJava");
-		verifyProject();
-	}
-
-	private void verifyProject() throws Exception {
 		File generatedOutputFolder = new File(getProjectDir(), "app/generated-sources");
 		assertTrue(generatedOutputFolder.exists());
 		assertTrue(generatedOutputFolder.isDirectory());
@@ -50,5 +46,5 @@ public class UseGenerics extends TestTemplate {
 				Files.readAllBytes(generatedItemJavaFile.toPath()));
 		assertTrue(generatedItemJavaFileContents.contains("public class Item "));
 	}
-	
+
 }

@@ -78,7 +78,6 @@ import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.LockModeEnumMap;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.loader.ast.internal.EntityConcreteTypeLoader;
@@ -270,7 +269,9 @@ import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.qualifyConditionally;
 import static org.hibernate.internal.util.StringHelper.root;
 import static org.hibernate.internal.util.StringHelper.unqualify;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
 import static org.hibernate.internal.util.collections.ArrayHelper.contains;
+import static org.hibernate.internal.util.collections.ArrayHelper.indexOf;
 import static org.hibernate.internal.util.collections.ArrayHelper.isAllTrue;
 import static org.hibernate.internal.util.collections.ArrayHelper.to2DStringArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
@@ -2308,7 +2309,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private int getSubclassPropertyIndex(String propertyName) {
-		return ArrayHelper.indexOf( subclassPropertyNameClosure, propertyName );
+		return indexOf( subclassPropertyNameClosure, propertyName );
 	}
 
 	public String[] getPropertyColumnNames(int i) {
@@ -2371,7 +2372,7 @@ public abstract class AbstractEntityPersister
 	@Override
 	public int[] resolveAttributeIndexes(String[] attributeNames) {
 		if ( attributeNames == null || attributeNames.length == 0 ) {
-			return ArrayHelper.EMPTY_INT_ARRAY;
+			return EMPTY_INT_ARRAY;
 		}
 		final List<Integer> fields = new ArrayList<>( attributeNames.length );
 
@@ -2417,7 +2418,7 @@ public abstract class AbstractEntityPersister
 						: attributeNames.length + mutablePropertiesIndexes.cardinality();
 		final List<Integer> fields = new ArrayList<>( estimatedSize );
 		if ( estimatedSize == 0 ) {
-			return ArrayHelper.EMPTY_INT_ARRAY;
+			return EMPTY_INT_ARRAY;
 		}
 		if ( !mutablePropertiesIndexes.isEmpty() ) {
 			// We have to check the state for "mutable" properties as dirty tracking isn't aware of mutable types

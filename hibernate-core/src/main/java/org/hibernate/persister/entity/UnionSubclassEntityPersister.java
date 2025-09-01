@@ -7,11 +7,8 @@ package org.hibernate.persister.entity;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -24,7 +21,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.boot.Metadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
@@ -35,16 +31,12 @@ import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Subclass;
-import org.hibernate.mapping.Table;
-import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -58,6 +50,8 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 
+import static java.util.Collections.addAll;
+import static java.util.Collections.unmodifiableList;
 import static org.hibernate.internal.util.collections.ArrayHelper.to2DStringArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
 import static org.hibernate.jdbc.Expectations.createExpectation;
@@ -100,7 +94,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		validateGenerator();
 
-		final Dialect dialect = creationContext.getDialect();
+		final var dialect = creationContext.getDialect();
 
 		// TABLE
 
@@ -132,7 +126,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		// SUBCLASSES
 		subclassByDiscriminatorValue.put( persistentClass.getSubclassId(), persistentClass.getEntityName() );
 		if ( persistentClass.isPolymorphic() ) {
-			for ( Subclass subclass : persistentClass.getSubclasses() ) {
+			for ( var subclass : persistentClass.getSubclasses() ) {
 				subclassByDiscriminatorValue.put( subclass.getSubclassId(), subclass.getEntityName() );
 			}
 		}
@@ -141,32 +135,32 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		//TODO: I'm not sure, but perhaps we should exclude
 		//      abstract denormalized tables?
 
-		int spacesSize = 1 + persistentClass.getSynchronizedTables().size();
+		final int spacesSize = 1 + persistentClass.getSynchronizedTables().size();
 		spaces = new String[spacesSize];
 		spaces[0] = tableName;
-		Iterator<String> iter = persistentClass.getSynchronizedTables().iterator();
+		final var iter = persistentClass.getSynchronizedTables().iterator();
 		for ( int i = 1; i < spacesSize; i++ ) {
 			spaces[i] = iter.next();
 		}
 
-		HashSet<String> subclassTables = new HashSet<>();
-		for ( Table table : persistentClass.getSubclassTableClosure() ) {
+		final HashSet<String> subclassTables = new HashSet<>();
+		for ( var table : persistentClass.getSubclassTableClosure() ) {
 			subclassTables.add( determineTableName( table ) );
 		}
 		subclassSpaces = toStringArray( subclassTables );
 
-		subquery = generateSubquery( persistentClass, creationContext.getMetadata() );
+		subquery = generateSubquery( persistentClass );
 		final List<String> tableExpressions = new ArrayList<>( subclassSpaces.length * 2 );
-		Collections.addAll( tableExpressions, subclassSpaces );
+		addAll( tableExpressions, subclassSpaces );
 		tableExpressions.add( subquery );
-		PersistentClass parentPersistentClass = persistentClass.getSuperclass();
+		var parentPersistentClass = persistentClass.getSuperclass();
 		while ( parentPersistentClass != null ) {
-			tableExpressions.add( generateSubquery( parentPersistentClass, creationContext.getMetadata() ) );
+			tableExpressions.add( generateSubquery( parentPersistentClass ) );
 			parentPersistentClass = parentPersistentClass.getSuperclass();
 		}
-		for ( PersistentClass subPersistentClass : persistentClass.getSubclassClosure() ) {
-			if ( subPersistentClass.hasSubclasses() ) {
-				tableExpressions.add( generateSubquery( subPersistentClass, creationContext.getMetadata() ) );
+		for ( var subclassPersistentClass : persistentClass.getSubclassClosure() ) {
+			if ( subclassPersistentClass.hasSubclasses() ) {
+				tableExpressions.add( generateSubquery( subclassPersistentClass ) );
 			}
 		}
 		subclassTableExpressions = toStringArray( tableExpressions );
@@ -175,7 +169,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			final int idColumnSpan = getIdentifierColumnSpan();
 			final ArrayList<String> tableNames = new ArrayList<>();
 			final ArrayList<String[]> keyColumns = new ArrayList<>();
-			for ( Table table : persistentClass.getSubclassTableClosure() ) {
+			for ( var table : persistentClass.getSubclassTableClosure() ) {
 				if ( !table.isAbstractUnionTable() ) {
 					tableNames.add( determineTableName( table ) );
 					final String[] key = new String[idColumnSpan];
@@ -221,13 +215,16 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	public UnionTableReference createPrimaryTableReference(
 			SqlAliasBase sqlAliasBase,
 			SqlAstCreationState creationState) {
-		sqlAliasBase = SqlAliasBase.from(
-				sqlAliasBase,
-				null,
-				this,
-				creationState.getSqlAliasBaseGenerator()
+		return new UnionTableReference(
+				getTableName(),
+				subclassTableExpressions,
+				SqlAliasBase.from(
+						sqlAliasBase,
+						null,
+						this,
+						creationState.getSqlAliasBaseGenerator()
+				).generateNewAlias()
 		);
-		return new UnionTableReference( getTableName(), subclassTableExpressions, sqlAliasBase.generateNewAlias() );
 	}
 
 	@Override
@@ -358,7 +355,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public void pruneForSubclasses(TableGroup tableGroup, Map<String, EntityNameUse> entityNameUses) {
-		final NamedTableReference tableReference = (NamedTableReference) tableGroup.getTableReference( getRootTableName() );
+		final var tableReference = (NamedTableReference) tableGroup.getTableReference( getRootTableName() );
 		if ( tableReference == null ) {
 			throw new UnknownTableReferenceException( getRootTableName(), "Couldn't find table reference" );
 		}
@@ -411,67 +408,62 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return new int[getPropertySpan()];
 	}
 
-	protected String generateSubquery(PersistentClass model, Metadata mapping) {
-
-		final Dialect dialect = getFactory().getJdbcServices().getDialect();
-
+	protected String generateSubquery(PersistentClass model) {
+		final var factory = getFactory();
+		final var sqlStringGenerationContext = factory.getSqlStringGenerationContext();
 		if ( !model.hasSubclasses() ) {
-			return model.getTable().getQualifiedName( getFactory().getSqlStringGenerationContext() );
+			return model.getTable().getQualifiedName( sqlStringGenerationContext );
 		}
-
-		final Set<Column> columns = new LinkedHashSet<>();
-		for ( Table table : model.getSubclassTableClosure() ) {
-			if ( !table.isAbstractUnionTable() ) {
-				columns.addAll( table.getColumns() );
-			}
-		}
-
-		final StringBuilder subquery = new StringBuilder()
-				.append( "(" );
-
-		final List<PersistentClass> classes = new JoinedList<>(
-				List.of( model ),
-				Collections.unmodifiableList( model.getSubclasses() )
-		);
-
-		for ( PersistentClass clazz : classes ) {
-			Table table = clazz.getTable();
-			if ( !table.isAbstractUnionTable() ) {
-				//TODO: move to .sql package!!
-				if ( subquery.length() > 1 ) {
-					subquery.append( " union " );
-					if ( dialect.supportsUnionAll() ) {
-						subquery.append( "all " );
-					}
+		else {
+			final Set<Column> columns = new LinkedHashSet<>();
+			for ( var table : model.getSubclassTableClosure() ) {
+				if ( !table.isAbstractUnionTable() ) {
+					columns.addAll( table.getColumns() );
 				}
-				subquery.append( "select " );
-				for ( Column col : columns ) {
-					if ( !table.containsColumn( col ) ) {
-						subquery.append( getSelectClauseNullString( col, dialect ) )
-								.append(" as ");
-					}
-					subquery.append( col.getQuotedName( dialect ) )
-							.append(", ");
-				}
-				subquery.append( clazz.getSubclassId() )
-						.append( " as clazz_ from " )
-						.append( table.getQualifiedName( getFactory().getSqlStringGenerationContext() ) );
 			}
+			final var dialect = factory.getJdbcServices().getDialect();
+			final var subquery = new StringBuilder().append( "(" );
+			final var classes =
+					new JoinedList<>( List.of( model ),
+							unmodifiableList( model.getSubclasses() ) );
+			for ( var persistentClass : classes ) {
+				final var table = persistentClass.getTable();
+				if ( !table.isAbstractUnionTable() ) {
+					//TODO: move to .sql package!!
+					if ( subquery.length() > 1 ) {
+						subquery.append( " union " );
+						if ( dialect.supportsUnionAll() ) {
+							subquery.append( "all " );
+						}
+					}
+					subquery.append( "select " );
+					for ( var column : columns ) {
+						if ( !table.containsColumn( column ) ) {
+							subquery.append( getSelectClauseNullString( column, dialect ) )
+									.append( " as " );
+						}
+						subquery.append( column.getQuotedName( dialect ) )
+								.append( ", " );
+					}
+					subquery.append( persistentClass.getSubclassId() )
+							.append( " as clazz_ from " )
+							.append( table.getQualifiedName( sqlStringGenerationContext ) );
+				}
+			}
+			return subquery.append( ")" ).toString();
 		}
-
-		return subquery.append( ")" ).toString();
 	}
 
-	private String getSelectClauseNullString(Column col, Dialect dialect) {
+	private String getSelectClauseNullString(Column column, Dialect dialect) {
 		return dialect.getSelectClauseNullString(
 				new SqlTypedMappingImpl(
-						col.getTypeName(),
-						col.getLength(),
-						col.getArrayLength(),
-						col.getPrecision(),
-						col.getScale(),
-						col.getTemporalPrecision(),
-						col.getType()
+						column.getTypeName(),
+						column.getLength(),
+						column.getArrayLength(),
+						column.getPrecision(),
+						column.getScale(),
+						column.getTemporalPrecision(),
+						column.getType()
 				),
 				getFactory().getTypeConfiguration()
 		);
@@ -482,15 +474,15 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			return getTableName();
 		}
 
-		final Dialect dialect = getFactory().getJdbcServices().getDialect();
-		final MappingMetamodelImplementor metamodel = getFactory().getMappingMetamodel();
+		final var factory = getFactory();
+		final var dialect = factory.getJdbcServices().getDialect();
+		final var metamodel = factory.getMappingMetamodel();
 		// Collect all selectables of every entity subtype and group by selection expression as well as table name
 		final LinkedHashMap<String, Map<String, SelectableMapping>> selectables = new LinkedHashMap<>();
 		final Set<String> tablesToUnion = new HashSet<>( entityNameUses.size() );
 		// Check if there are filter uses and if so, we know the set of tables to union already
-		for ( Map.Entry<String, EntityNameUse> entry : entityNameUses.entrySet() ) {
-			final UnionSubclassEntityPersister persister =
-					(UnionSubclassEntityPersister) metamodel.getEntityDescriptor( entry.getKey() );
+		for ( var entry : entityNameUses.entrySet() ) {
+			final var persister = (UnionSubclassEntityPersister) metamodel.getEntityDescriptor( entry.getKey() );
 			if ( entry.getValue().getKind() == EntityNameUse.UseKind.FILTER && !persister.isAbstract() ) {
 				tablesToUnion.add( persister.getRootTableName() );
 			}
@@ -500,11 +492,10 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		if ( tablesToUnion.isEmpty() ) {
 			// If there are no filter uses, we try to find the most specific treat uses and union all their subclass tables
-			for ( Map.Entry<String, EntityNameUse> entry : entityNameUses.entrySet() ) {
+			for ( var entry : entityNameUses.entrySet() ) {
 				if ( entry.getValue().getKind() == EntityNameUse.UseKind.TREAT ) {
 					// Collect all the real (non-abstract) table names
-					final UnionSubclassEntityPersister persister =
-							(UnionSubclassEntityPersister) metamodel.getEntityDescriptor( entry.getKey() );
+					final var persister = (UnionSubclassEntityPersister) metamodel.getEntityDescriptor( entry.getKey() );
 					tablesToUnion.addAll( Arrays.asList( persister.getConstraintOrderedTableNameClosure() ) );
 				}
 			}
@@ -514,77 +505,70 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			}
 		}
 
-		// Create a union sub-query for the table names, like generateSubquery(PersistentClass model, Mapping mapping)
-		final StringBuilder buf = new StringBuilder( subquery.length() ).append( "(" );
-
-		final Collection<EntityMappingType> subMappingTypes = getSubMappingTypes();
-		final ArrayList<EntityMappingType> subMappingTypesAndThis = new ArrayList<>( subMappingTypes.size() + 1 );
+		// Create a union subquery for the table names,
+		// like generateSubquery(PersistentClass model)
+		final var unionSubquery = new StringBuilder( subquery.length() ).append( "(" );
+		final var typeConfiguration = factory.getTypeConfiguration();
+		final var subMappingTypes = getSubMappingTypes();
+		final ArrayList<EntityMappingType> subMappingTypesAndThis =
+				new ArrayList<>( subMappingTypes.size() + 1 );
 		subMappingTypesAndThis.add( this );
 		subMappingTypesAndThis.addAll( subMappingTypes );
-		for ( EntityMappingType mappingType : subMappingTypesAndThis ) {
-			final EntityPersister persister = (EntityPersister) mappingType;
-			final String subclassTableName;
-			if ( mappingType.hasSubclasses() ) {
-				subclassTableName = persister.getRootTableName();
-			}
-			else {
-				subclassTableName = persister.getTableName();
-			}
+		for ( var mappingType : subMappingTypesAndThis ) {
+			final var persister = (EntityPersister) mappingType;
+			final String subclassTableName =
+					mappingType.hasSubclasses()
+							? persister.getRootTableName()
+							: persister.getTableName();
 			if ( tablesToUnion.contains( subclassTableName ) ) {
-				if ( buf.length() > 1 ) {
-					buf.append(" union ");
+				if ( unionSubquery.length() > 1 ) {
+					unionSubquery.append(" union ");
 					if ( dialect.supportsUnionAll() ) {
-						buf.append("all ");
+						unionSubquery.append("all ");
 					}
 				}
-				buf.append( "select " );
-				for ( Map<String, SelectableMapping> selectableMappings : selectables.values() ) {
-					SelectableMapping selectableMapping = selectableMappings.get( subclassTableName );
+				unionSubquery.append( "select " );
+				for ( var selectableMappings : selectables.values() ) {
+					var selectableMapping = selectableMappings.get( subclassTableName );
 					if ( selectableMapping == null ) {
 						// If there is no selectable mapping for a table name, we render a null expression
 						selectableMapping = selectableMappings.values().iterator().next();
-						buf.append( dialect.getSelectClauseNullString( selectableMapping, getFactory().getTypeConfiguration() ) )
+						unionSubquery.append( dialect.getSelectClauseNullString( selectableMapping, typeConfiguration ) )
 								.append( " as " );
 					}
 					if ( selectableMapping.isFormula() ) {
-						buf.append( selectableMapping.getSelectableName() );
+						unionSubquery.append( selectableMapping.getSelectableName() );
 					}
 					else {
-						buf.append( selectableMapping.getSelectionExpression() );
+						unionSubquery.append( selectableMapping.getSelectionExpression() );
 					}
-					buf.append( ", " );
+					unionSubquery.append( ", " );
 				}
-				buf.append( persister.getDiscriminatorSQLValue() )
+				unionSubquery.append( persister.getDiscriminatorSQLValue() )
 						.append( " as clazz_ from " )
 						.append( subclassTableName );
 			}
 		}
-		return buf.append( ")" ).toString();
+		return unionSubquery.append( ")" ).toString();
 	}
 
 	private void collectSelectableOwners(LinkedHashMap<String, Map<String, SelectableMapping>> selectables) {
 		if ( !isAbstract() ) {
 			final SelectableConsumer selectableConsumer = (i, selectable) -> {
-				Map<String, SelectableMapping> selectableMapping = selectables.computeIfAbsent(
+				var selectableMapping = selectables.computeIfAbsent(
 						selectable.getSelectionExpression(),
 						k -> new HashMap<>()
 				);
-				final String subclassTableName;
-				if ( hasSubclasses() ) {
-					subclassTableName = getRootTableName();
-				}
-				else {
-					subclassTableName = getTableName();
-				}
+				final String subclassTableName = hasSubclasses() ? getRootTableName() : getTableName();
 				selectableMapping.put( subclassTableName, selectable );
 			};
 			getIdentifierMapping().forEachSelectable( selectableConsumer );
-			if ( getVersionMapping() != null ) {
-				getVersionMapping().forEachSelectable( selectableConsumer );
+			final var versionMapping = getVersionMapping();
+			if ( versionMapping != null ) {
+				versionMapping.forEachSelectable( selectableConsumer );
 			}
-			final AttributeMappingsList attributeMappings = getAttributeMappings();
-			final int size = attributeMappings.size();
-			for ( int i = 0; i < size; i++ ) {
+			final var attributeMappings = getAttributeMappings();
+			for ( int i = 0, size = attributeMappings.size(); i < size; i++ ) {
 				attributeMappings.get( i ).forEachSelectable( selectableConsumer );
 			}
 		}

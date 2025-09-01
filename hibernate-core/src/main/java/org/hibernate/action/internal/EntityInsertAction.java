@@ -22,6 +22,8 @@ import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
 
+import static org.hibernate.cache.spi.entry.CacheEntryHelper.buildStructuredCacheEntry;
+
 /**
  * The action for performing an entity insertion, for entities not defined to use {@code IDENTITY} generation.
  *
@@ -163,7 +165,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		final var session = getSession();
 		if ( isCachePutEnabled( persister, session ) ) {
 			final var factory = session.getFactory();
-			cacheEntry = buildStructuredCacheEntry();
+			cacheEntry = buildStructuredCacheEntry( getInstance(), version, getState(), persister, session );
 			final var cache = persister.getCacheAccessStrategy();
 			final Object cacheKey = cache.generateCacheKey( getId(), persister, factory, session.getTenantIdentifier() );
 			final boolean put = cacheInsert( persister, cacheKey );
@@ -176,12 +178,6 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 				);
 			}
 		}
-	}
-
-	private Object buildStructuredCacheEntry() {
-		final var persister = getPersister();
-		final var cacheEntry = persister.buildCacheEntry( getInstance(), getState(), version, getSession() );
-		return persister.getCacheEntryStructure().structure( cacheEntry );
 	}
 
 	protected boolean cacheInsert(EntityPersister persister, Object cacheKey) {

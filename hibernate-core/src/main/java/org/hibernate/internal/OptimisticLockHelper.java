@@ -15,6 +15,8 @@ import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
 
+import static org.hibernate.cache.spi.entry.CacheEntryHelper.buildStructuredCacheEntry;
+
 public final class OptimisticLockHelper {
 
 	private OptimisticLockHelper() {
@@ -89,16 +91,6 @@ public final class OptimisticLockHelper {
 			return cacheEntry;
 		}
 		return null;
-	}
-
-	private static Object buildStructuredCacheEntry(
-			Object entity,
-			Object nextVersion,
-			Object[] state,
-			EntityPersister persister,
-			SharedSessionContractImplementor session) {
-		final var cacheEntry = persister.buildCacheEntry( entity, state, nextVersion, session );
-		return persister.getCacheEntryStructure().structure( cacheEntry );
 	}
 
 	private static boolean updateCache(

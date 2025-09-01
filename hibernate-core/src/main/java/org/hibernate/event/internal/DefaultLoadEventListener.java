@@ -461,20 +461,20 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		final var cache = persister.getCacheAccessStrategy();
 
 		final SoftLock lock;
-		final Object ck;
+		final Object cacheKey;
 		final boolean canWriteToCache = persister.canWriteToCache();
 		if ( canWriteToCache ) {
-			ck = cache.generateCacheKey(
+			cacheKey = cache.generateCacheKey(
 					event.getEntityId(),
 					persister,
 					event.getFactory(),
 					source.getTenantIdentifier()
 			);
-			lock = cache.lockItem( source, ck, null );
+			lock = cache.lockItem( source, cacheKey, null );
 		}
 		else {
 			lock = null;
-			ck = null;
+			cacheKey = null;
 		}
 
 		final Object entity;
@@ -483,7 +483,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		}
 		finally {
 			if ( canWriteToCache ) {
-				cache.unlockItem( source, ck, lock );
+				cache.unlockItem( source, cacheKey, lock );
 			}
 		}
 

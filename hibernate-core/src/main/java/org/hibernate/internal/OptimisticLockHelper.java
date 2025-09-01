@@ -62,15 +62,22 @@ public final class OptimisticLockHelper {
 		}
 	}
 
-	private static Object updateCacheItem(Object entity, Object previousVersion, Object nextVersion, Object ck, EntityEntry entry, EntityPersister persister, SharedSessionContractImplementor session) {
+	private static Object updateCacheItem(
+			Object entity,
+			Object previousVersion,
+			Object nextVersion,
+			Object cacheKey,
+			EntityEntry entry,
+			EntityPersister persister,
+			SharedSessionContractImplementor session) {
 		if ( isCacheInvalidationRequired( persister, session ) || entry.getStatus() != Status.MANAGED ) {
-			persister.getCacheAccessStrategy().remove( session, ck );
+			persister.getCacheAccessStrategy().remove( session, cacheKey );
 		}
 		else if ( session.getCacheMode().isPutEnabled() ) {
 			//TODO: inefficient if that cache is just going to ignore the updated state!
 			final Object cacheEntry =
 					buildStructuredCacheEntry( entity, nextVersion, entry.getLoadedState(), persister, session );
-			final boolean put = updateCache( persister, cacheEntry, previousVersion, nextVersion, ck, session );
+			final boolean put = updateCache( persister, cacheEntry, previousVersion, nextVersion, cacheKey, session );
 
 			final var statistics = session.getFactory().getStatistics();
 			if ( put && statistics.isStatisticsEnabled() ) {
@@ -99,7 +106,7 @@ public final class OptimisticLockHelper {
 			Object cacheEntry,
 			Object previousVersion,
 			Object nextVersion,
-			Object ck,
+			Object cacheKey,
 			SharedSessionContractImplementor session) {
 		final var eventMonitor = session.getEventMonitor();
 		final var cachePutEvent = eventMonitor.beginCachePutEvent();
@@ -108,7 +115,7 @@ public final class OptimisticLockHelper {
 		boolean update = false;
 		try {
 			eventListenerManager.cachePutStart();
-			update = cacheAccessStrategy.update( session, ck, cacheEntry, nextVersion, previousVersion );
+			update = cacheAccessStrategy.update( session, cacheKey, cacheEntry, nextVersion, previousVersion );
 			return update;
 		}
 		finally {
@@ -141,7 +148,13 @@ public final class OptimisticLockHelper {
 		private final SoftLock lock;
 		private final Object cacheEntry;
 
-		private CacheCleanupProcess(Object cacheKey, EntityPersister persister, Object previousVersion, Object nextVersion, SoftLock lock, Object cacheEntry) {
+		private CacheCleanupProcess(
+				Object cacheKey,
+				EntityPersister persister,
+				Object previousVersion,
+				Object nextVersion,
+				SoftLock lock,
+				Object cacheEntry) {
 			this.cacheKey = cacheKey;
 			this.persister = persister;
 			this.previousVersion = previousVersion;
@@ -167,14 +180,14 @@ public final class OptimisticLockHelper {
 				&& session.getCacheMode().isPutEnabled();
 		}
 
-		protected void cacheAfterUpdate(EntityDataAccess cache, Object ck, SharedSessionContractImplementor session) {
+		protected void cacheAfterUpdate(EntityDataAccess cache, Object cacheKey, SharedSessionContractImplementor session) {
 			final var eventListenerManager = session.getEventListenerManager();
 			final var eventMonitor = session.getEventMonitor();
 			final var cachePutEvent = eventMonitor.beginCachePutEvent();
 			boolean put = false;
 			try {
 				eventListenerManager.cachePutStart();
-				put = cache.afterUpdate( session, ck, cacheEntry, nextVersion, previousVersion, lock );
+				put = cache.afterUpdate( session, cacheKey, cacheEntry, nextVersion, previousVersion, lock );
 			}
 			finally {
 				eventMonitor.completeCachePutEvent(

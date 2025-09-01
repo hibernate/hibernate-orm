@@ -3970,10 +3970,11 @@ public abstract class AbstractEntityPersister
 
 		// check to see if it is in the second-level cache
 		if ( session.getCacheMode().isGetEnabled() && canReadFromCache() ) {
-			final EntityDataAccess cache = getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey( id, this, session.getFactory(), session.getTenantIdentifier() );
-			final Object ce = CacheHelper.fromSharedCache( session, ck, this, getCacheAccessStrategy() );
-			if ( ce != null ) {
+			final var cache = getCacheAccessStrategy();
+			final Object cacheKey =
+					cache.generateCacheKey( id, this, session.getFactory(), session.getTenantIdentifier() );
+			final Object cacheEntry = CacheHelper.fromSharedCache( session, cacheKey, this, getCacheAccessStrategy() );
+			if ( cacheEntry != null ) {
 				return false;
 			}
 		}

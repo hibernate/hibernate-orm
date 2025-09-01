@@ -4823,26 +4823,27 @@ public abstract class AbstractEntityPersister
 		final NonIdentifierAttribute[] properties = entityMetamodel.getProperties();
 		final AttributeMappingsMap.Builder mappingsBuilder = AttributeMappingsMap.builder();
 		int fetchableIndex = getFetchableIndexOffset();
-		for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
-			final NonIdentifierAttribute runtimeAttributeDefinition = properties[i];
-			final String attributeName = runtimeAttributeDefinition.getName();
-			final Property bootProperty = bootEntityDescriptor.getProperty( attributeName );
-			if ( superMappingType == null
-					|| superMappingType.findAttributeMapping( bootProperty.getName() ) == null ) {
-				mappingsBuilder.put(
-						attributeName,
-						generateNonIdAttributeMapping(
-								runtimeAttributeDefinition,
-								bootProperty,
-								stateArrayPosition++,
-								fetchableIndex++,
-								creationProcess
-						)
-				);
-			}
-			declaredAttributeMappings = mappingsBuilder.build();
-			// otherwise, it's defined on the supertype, skip it here
+		// For every property that is "owned" by this persistent class, create a declared attribute mapping
+		final List<Property> bootProperties = bootEntityDescriptor.getProperties();
+		// EntityMetamodel uses getPropertyClosure(), which includes the properties of the super type,
+		// so use that property span as offset when indexing into the EntityMetamodel NonIdentifierAttribute[]
+		final int superclassPropertiesOffset = superMappingType == null ? 0
+				: superMappingType.getEntityPersister().getEntityMetamodel().getPropertySpan();
+		for ( int i = 0; i < bootProperties.size(); i++ ) {
+			final Property bootProperty = bootProperties.get( i );
+			assert properties[superclassPropertiesOffset + i].getName().equals( bootProperty.getName() );
+			mappingsBuilder.put(
+					bootProperty.getName(),
+					generateNonIdAttributeMapping(
+							properties[superclassPropertiesOffset + i],
+							bootProperty,
+							stateArrayPosition++,
+							fetchableIndex++,
+							creationProcess
+					)
+			);
 		}
+		declaredAttributeMappings = mappingsBuilder.build();
 	}
 
 	private static BeforeExecutionGenerator createVersionGenerator

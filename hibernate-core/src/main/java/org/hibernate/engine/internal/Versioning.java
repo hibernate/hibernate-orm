@@ -67,7 +67,7 @@ public final class Versioning {
 			Object[] fields,
 			EntityPersister persister,
 			SharedSessionContractImplementor session) {
-		final int versionProperty = persister.getVersionProperty();
+		final int versionProperty = persister.getVersionPropertyIndex();
 		final Object initialVersion = fields[versionProperty];
 		if ( isNullInitialVersion( initialVersion ) ) {
 			fields[versionProperty] = persister.getVersionGenerator().generate( session, entity, initialVersion, INSERT );
@@ -150,7 +150,7 @@ public final class Versioning {
 	 */
 	public static void setVersion(Object[] fields, Object version, EntityPersister persister) {
 		if ( persister.isVersioned() ) {
-			fields[ persister.getVersionProperty() ] = version;
+			fields[ persister.getVersionPropertyIndex() ] = version;
 		}
 	}
 
@@ -162,7 +162,7 @@ public final class Versioning {
 	 * @return The extracted optimistic locking value
 	 */
 	public static Object getVersion(Object[] fields, EntityPersister persister) {
-		return persister.isVersioned() ? fields[persister.getVersionProperty()] : null;
+		return persister.isVersioned() ? fields[persister.getVersionPropertyIndex()] : null;
 	}
 
 	/**

@@ -234,7 +234,7 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 	}
 
 	@Override
-	public int getVersionProperty() {
+	public int getVersionPropertyIndex() {
 		return 0;
 	}
 

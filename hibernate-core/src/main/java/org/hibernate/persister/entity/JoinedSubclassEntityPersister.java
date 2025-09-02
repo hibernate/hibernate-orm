@@ -963,7 +963,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 		else {
 			if ( getTableName().equals( getVersionedTableName() ) ) {
-				final String versionPropertyName = getPropertyNames()[getVersionProperty()];
+				final String versionPropertyName = getPropertyNames()[this.getVersionPropertyIndex()];
 				return creationProcess.processSubPart(
 						versionPropertyName,
 						(role, process) -> generateVersionMapping(

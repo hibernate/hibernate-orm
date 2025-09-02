@@ -519,7 +519,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				}
 				// this is a nonsense but avoids setting version restriction
 				// parameter to null later on deep in the guts
-				return state[persister.getVersionProperty()];
+				return state[persister.getVersionPropertyIndex()];
 			}
 			else {
 				final Object newVersion = incrementVersion( entity, oldVersion, persister, this );

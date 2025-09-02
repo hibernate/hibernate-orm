@@ -287,7 +287,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 
 		if ( persister.isVersioned() ) {
 			version = nextVersion;
-			persister.setValue( entity, persister.getVersionProperty(), nextVersion );
+			persister.setValue( entity, persister.getVersionPropertyIndex(), nextVersion );
 		}
 
 		processIfSelfDirtinessTracker( entity, EntityEntryImpl::clearDirtyAttributes );
@@ -421,7 +421,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	@Override
 	public void forceLocked(Object entity, Object nextVersion) {
 		version = nextVersion;
-		final int versionProperty = persister.getVersionProperty();
+		final int versionProperty = persister.getVersionPropertyIndex();
 		loadedState[versionProperty] = version;
 		setLockMode( PESSIMISTIC_FORCE_INCREMENT );
 		persister.setValue( entity, versionProperty, nextVersion );

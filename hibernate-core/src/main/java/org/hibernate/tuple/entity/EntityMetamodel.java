@@ -154,9 +154,8 @@ public class EntityMetamodel implements Serializable {
 
 	public EntityMetamodel(
 			PersistentClass persistentClass,
-			EntityPersister persister,
 			RuntimeModelCreationContext creationContext) {
-		this( persistentClass, persister, creationContext,
+		this( persistentClass, creationContext,
 				rootName -> buildIdGenerator( rootName, persistentClass, creationContext ) );
 	}
 
@@ -165,7 +164,6 @@ public class EntityMetamodel implements Serializable {
 	 */
 	public EntityMetamodel(
 			PersistentClass persistentClass,
-			EntityPersister persister,
 			RuntimeModelCreationContext creationContext,
 			Function<String, Generator> generatorSupplier) {
 		sessionFactory = creationContext.getSessionFactory();
@@ -265,7 +263,7 @@ public class EntityMetamodel implements Serializable {
 			if ( property == persistentClass.getVersion() ) {
 				tempVersionProperty = i;
 				attribute = PropertyFactory.buildVersionProperty(
-						persister,
+						(EntityPersister) this,
 						sessionFactory,
 						i,
 						property,
@@ -274,7 +272,7 @@ public class EntityMetamodel implements Serializable {
 			}
 			else {
 				attribute = PropertyFactory.buildEntityBasedAttribute(
-						persister,
+						(EntityPersister) this,
 						sessionFactory,
 						i,
 						property,

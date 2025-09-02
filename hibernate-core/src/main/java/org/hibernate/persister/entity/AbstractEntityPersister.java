@@ -303,6 +303,7 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
 @Internal
 @SuppressWarnings("deprecation")
 public abstract class AbstractEntityPersister
+		extends EntityMetamodel
 		implements EntityPersister, InFlightEntityMappingType, EntityMutationTarget, LazyPropertyInitializer,
 				FetchProfileAffectee, Joinable {
 
@@ -451,7 +452,9 @@ public abstract class AbstractEntityPersister
 			final PersistentClass persistentClass,
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			final RuntimeModelCreationContext creationContext) throws HibernateException {
+			final RuntimeModelCreationContext creationContext)
+				throws HibernateException {
+		super( persistentClass, creationContext );
 		jpaEntityName = persistentClass.getJpaEntityName();
 
 		//set it here, but don't call it, since it's still uninitialized!
@@ -478,11 +481,10 @@ public abstract class AbstractEntityPersister
 			isLazyPropertiesCacheable = true;
 		}
 
-		entityMetamodel = creationContext.createEntityMetamodel( persistentClass, this );
-
-		entityEntryFactory = entityMetamodel.isMutable()
-				? MutableEntityEntryFactory.INSTANCE
-				: ImmutableEntityEntryFactory.INSTANCE;
+		entityEntryFactory =
+				isMutable()
+						? MutableEntityEntryFactory.INSTANCE
+						: ImmutableEntityEntryFactory.INSTANCE;
 
 		// Handle any filters applied to the class level
 		if ( isNotEmpty( persistentClass.getFilters() ) ) {
@@ -507,7 +509,7 @@ public abstract class AbstractEntityPersister
 		accessOptimizer = accessOptimizer( representationStrategy );
 
 		concreteProxy =
-				entityMetamodel.isPolymorphic()
+				isPolymorphic()
 					&& ( getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() || hasProxy() )
 					&& persistentClass.isConcreteProxy();
 
@@ -569,7 +571,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		// PROPERTIES
-		final int hydrateSpan = entityMetamodel.getPropertySpan();
+		final int hydrateSpan = getPropertySpan();
 		propertyColumnAliases = new String[hydrateSpan][];
 		propertyColumnNames = new String[hydrateSpan][];
 		propertyColumnFormulaTemplates = new String[hydrateSpan][];
@@ -613,7 +615,7 @@ public abstract class AbstractEntityPersister
 
 			final boolean lazy = !EnhancementHelper.includeInBaseFetchGroup(
 					property,
-					entityMetamodel.isInstrumented(),
+					isInstrumented(),
 					entityName -> {
 						final var entityBinding =
 								creationContext.getMetadata()
@@ -716,7 +718,7 @@ public abstract class AbstractEntityPersister
 
 		subclassPropertyFetchModeClosure = new FetchMode[joinedFetchesList.size()];
 		int j = 0;
-		for (FetchMode fetchMode : joinedFetchesList) {
+		for ( var fetchMode : joinedFetchesList) {
 			subclassPropertyFetchModeClosure[j++] = fetchMode;
 		}
 
@@ -888,7 +890,7 @@ public abstract class AbstractEntityPersister
 			return false;
 		}
 		// for now, limit this to just entities that:
-		else if ( entityMetamodel.isMutable() ) {
+		else if ( isMutable() ) {
 			// 1) are immutable
 			return false;
 		}
@@ -984,7 +986,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean isSubclassEntityName(String entityName) {
-		return entityMetamodel.getSubclassEntityNames().contains( entityName );
+		return getSubclassEntityNames().contains( entityName );
 	}
 
 	@Override
@@ -1069,7 +1071,7 @@ public abstract class AbstractEntityPersister
 			// versioned entities
 			return false;
 		}
-		else if ( entityMetamodel.isDynamicUpdate() ) {
+		else if ( isDynamicUpdate() ) {
 			// if the unversioned entity has dynamic updates
 			// there is a risk of concurrent updates
 			return true;
@@ -1123,7 +1125,7 @@ public abstract class AbstractEntityPersister
 			return NoopCacheEntryHelper.INSTANCE;
 		}
 		else if ( canUseReferenceCacheEntries() ) {
-			entityMetamodel.setLazy( false );
+			setLazy( false );
 			// todo : do we also need to unset proxy factory?
 			return new ReferenceCacheEntryHelper( this );
 		}
@@ -1548,7 +1550,7 @@ public abstract class AbstractEntityPersister
 		else {
 			return collection;
 		}
-	};
+	}
 
 	public @Nullable static Object getCollectionKey(
 			CollectionPersister persister,
@@ -2013,7 +2015,7 @@ public abstract class AbstractEntityPersister
 		// NOTE: this assumes something about how propertySelectFragment is implemented by the subclass!
 		// toUnquotedAliasStrings( getDiscriminatorColumnName() ) before - now tried
 		// to remove that unquoting and missing aliases
-		return entityMetamodel.hasSubclasses()
+		return hasSubclasses()
 				? new Alias( suffix ).toAliasString( getDiscriminatorAlias() )
 				: null;
 	}
@@ -2411,7 +2413,7 @@ public abstract class AbstractEntityPersister
 			final Object[] previousState,
 			final String[] attributeNames,
 			final SessionImplementor session) {
-		final BitSet mutablePropertiesIndexes = entityMetamodel.getMutablePropertiesIndexes();
+		final BitSet mutablePropertiesIndexes = getMutablePropertiesIndexes();
 		final int estimatedSize =
 				attributeNames == null
 						? 0
@@ -2422,8 +2424,8 @@ public abstract class AbstractEntityPersister
 		}
 		if ( !mutablePropertiesIndexes.isEmpty() ) {
 			// We have to check the state for "mutable" properties as dirty tracking isn't aware of mutable types
-			final Type[] propertyTypes = entityMetamodel.getPropertyTypes();
-			final boolean[] propertyCheckability = entityMetamodel.getPropertyCheckability();
+			final Type[] propertyTypes = getPropertyTypes();
+			final boolean[] propertyCheckability = getPropertyCheckability();
 			for ( int i = mutablePropertiesIndexes.nextSetBit(0); i >= 0;
 					i = mutablePropertiesIndexes.nextSetBit(i + 1) ) {
 				// This is kindly borrowed from org.hibernate.type.TypeHelper.findDirty
@@ -2434,7 +2436,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( attributeNames.length != 0 ) {
-			final boolean[] propertyUpdateability = entityMetamodel.getPropertyUpdateability();
+			final boolean[] propertyUpdateability = getPropertyUpdateability();
 			if ( superMappingType == null ) {
 				/*
 						Sort attribute names so that we can traverse mappings efficiently
@@ -2484,7 +2486,7 @@ public abstract class AbstractEntityPersister
 			}
 			else {
 				for ( String attributeName : attributeNames ) {
-					final Integer index = entityMetamodel.getPropertyIndexOrNull( attributeName );
+					final Integer index = getPropertyIndexOrNull( attributeName );
 					if ( index != null && propertyUpdateability[index] && !fields.contains( index ) ) {
 						fields.add( index );
 					}
@@ -2562,11 +2564,6 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	@Override
-	public int getPropertyIndex(String propertyName) {
-		return entityMetamodel.getPropertyIndex( propertyName );
-	}
-
 	private void initOrdinaryPropertyPaths(Metadata mapping) throws MappingException {
 		for ( int i = 0; i < getSubclassPropertyNameClosure().length; i++ ) {
 			propertyMapping.initPropertyPaths(
@@ -2589,13 +2586,13 @@ public abstract class AbstractEntityPersister
 					getIdentifierColumnReaders(), getIdentifierColumnReaderTemplates(), null, mapping
 			);
 		}
-		if ( entityMetamodel.getIdentifierProperty().isEmbedded() ) {
+		if ( getIdentifierProperty().isEmbedded() ) {
 			propertyMapping.initPropertyPaths(
 					null, getIdentifierType(), getIdentifierColumnNames(),
 					getIdentifierColumnReaders(), getIdentifierColumnReaderTemplates(), null, mapping
 			);
 		}
-		if ( !entityMetamodel.hasNonIdentifierPropertyNamedId() ) {
+		if ( !hasNonIdentifierPropertyNamedId() ) {
 			propertyMapping.initPropertyPaths(
 					ENTITY_ID, getIdentifierType(), getIdentifierColumnNames(),
 					getIdentifierColumnReaders(), getIdentifierColumnReaderTemplates(), null, mapping
@@ -2619,7 +2616,7 @@ public abstract class AbstractEntityPersister
 		initOrdinaryPropertyPaths( mapping );
 		initOrdinaryPropertyPaths( mapping ); //do two passes, for collection property-ref!
 		initIdentifierPropertyPaths( mapping );
-		if ( entityMetamodel.isPolymorphic() ) {
+		if ( isPolymorphic() ) {
 			initDiscriminatorPropertyPath( mapping );
 		}
 	}
@@ -3366,8 +3363,8 @@ public abstract class AbstractEntityPersister
 						deleteExpectations[ relativePosition ],
 						customDeleteSql,
 						deleteCallable[ relativePosition ],
-						entityMetamodel.isDynamicUpdate(),
-						entityMetamodel.isDynamicInsert()
+						isDynamicUpdate(),
+						isDynamicInsert()
 				);
 
 				tableBuilderMap.put( tableExpression, tableMappingBuilder );
@@ -3670,7 +3667,7 @@ public abstract class AbstractEntityPersister
 	public int[] findDirty(Object[] currentState, Object[] previousState, Object entity, SharedSessionContractImplementor session)
 			throws HibernateException {
 		final int[] props = DirtyHelper.findDirty(
-				entityMetamodel.getDirtyCheckablePropertyTypes(),
+				getDirtyCheckablePropertyTypes(),
 				currentState,
 				previousState,
 				propertyColumnUpdateable,
@@ -3700,7 +3697,7 @@ public abstract class AbstractEntityPersister
 	public int[] findModified(Object[] old, Object[] current, Object entity, SharedSessionContractImplementor session)
 			throws HibernateException {
 		final int[] modified = DirtyHelper.findModified(
-				entityMetamodel.getProperties(),
+				getProperties(),
 				current,
 				old,
 				propertyColumnUpdateable,
@@ -3746,7 +3743,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public EntityMetamodel getEntityMetamodel() {
-		return entityMetamodel;
+		return this;
 	}
 
 	@Override
@@ -3793,7 +3790,7 @@ public abstract class AbstractEntityPersister
 	// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	@Override
 	public final String getEntityName() {
-		return entityMetamodel.getName();
+		return getName();
 	}
 
 	@Override
@@ -3802,64 +3799,19 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public boolean isInherited() {
-		return entityMetamodel.isInherited();
-	}
-
-	@Override
-	public boolean hasCascades() {
-		return entityMetamodel.hasCascades();
-	}
-
-	@Override
-	public boolean hasToOnes() {
-		return entityMetamodel.hasToOnes();
-	}
-
-	@Override
-	public boolean hasCascadePersist() {
-		return entityMetamodel.hasCascadePersist();
-	}
-
-	@Override
-	public boolean hasCascadeDelete() {
-		return entityMetamodel.hasCascadeDelete();
-	}
-
-	@Override
-	public boolean hasOwnedCollections() {
-		return entityMetamodel.hasOwnedCollections();
-	}
-
-	@Override
 	public boolean hasIdentifierProperty() {
-		return !entityMetamodel.getIdentifierProperty().isVirtual();
+		return !getIdentifierProperty().isVirtual();
 	}
 
 	@Override
 	public BasicType<?> getVersionType() {
-		final var versionProperty = entityMetamodel.getVersionProperty();
+		final var versionProperty = getVersionProperty();
 		return versionProperty == null ? null : (BasicType<?>) versionProperty.getType();
 	}
 
 	@Override
-	public int getVersionProperty() {
-		return entityMetamodel.getVersionPropertyIndex();
-	}
-
-	@Override
-	public boolean isVersioned() {
-		return entityMetamodel.isVersioned();
-	}
-
-	@Override
 	public boolean isIdentifierAssignedByInsert() {
-		return entityMetamodel.getIdentifierProperty().isIdentifierAssignedByInsert();
-	}
-
-	@Override
-	public boolean hasLazyProperties() {
-		return entityMetamodel.hasLazyProperties();
+		return getIdentifierProperty().isIdentifierAssignedByInsert();
 	}
 
 	@Override
@@ -3970,45 +3922,20 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public boolean hasCollections() {
-		return entityMetamodel.hasCollections();
-	}
-
-	@Override
-	public boolean hasMutableProperties() {
-		return entityMetamodel.hasMutableProperties();
-	}
-
-	@Override
-	public boolean isMutable() {
-		return entityMetamodel.isMutable();
-	}
-
-	@Override
-	public boolean isAbstract() {
-		return entityMetamodel.isAbstract();
-	}
-
-	@Override
-	public boolean hasSubclasses() {
-		return entityMetamodel.hasSubclasses();
-	}
-
-	@Override
 	public boolean hasProxy() {
 		// skip proxy instantiation if entity is bytecode enhanced
-		return entityMetamodel.isLazy()
+		return isLazy()
 			&& !getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 	}
 
 	@Override @Deprecated
 	public IdentifierGenerator getIdentifierGenerator() throws HibernateException {
-		return entityMetamodel.getIdentifierProperty().getIdentifierGenerator();
+		return getIdentifierProperty().getIdentifierGenerator();
 	}
 
 	@Override
 	public Generator getGenerator() {
-		return entityMetamodel.getIdentifierProperty().getGenerator();
+		return getIdentifierProperty().getGenerator();
 	}
 
 	@Override
@@ -4018,17 +3945,12 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public String getRootEntityName() {
-		return entityMetamodel.getRootName();
+		return getRootName();
 	}
 
 	@Override
 	public String getMappedSuperclass() {
-		return entityMetamodel.getSuperclass();
-	}
-
-	@Override
-	public boolean isExplicitPolymorphism() {
-		return entityMetamodel.isExplicitPolymorphism();
+		return getSuperclass();
 	}
 
 	@Override
@@ -4071,11 +3993,11 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean isSelectBeforeUpdateRequired() {
-		return entityMetamodel.isSelectBeforeUpdate();
+		return isSelectBeforeUpdate();
 	}
 
 	public final OptimisticLockStyle optimisticLockStyle() {
-		return entityMetamodel.getOptimisticLockStyle();
+		return getOptimisticLockStyle();
 	}
 
 	@Override
@@ -4086,7 +4008,7 @@ public abstract class AbstractEntityPersister
 	@Override
 	public String toString() {
 		return unqualify( getClass().getName() )
-				+ '(' + entityMetamodel.getName() + ')';
+				+ '(' + getName() + ')';
 	}
 
 	@Override
@@ -4096,12 +4018,12 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean hasInsertGeneratedProperties() {
-		return entityMetamodel.hasInsertGeneratedValues();
+		return hasInsertGeneratedValues();
 	}
 
 	@Override
 	public boolean hasUpdateGeneratedProperties() {
-		return entityMetamodel.hasUpdateGeneratedValues();
+		return hasUpdateGeneratedValues();
 	}
 
 	@Override
@@ -4111,7 +4033,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private Generator versionPropertyGenerator() {
-		return getEntityMetamodel().getGenerators()[ getVersionProperty() ];
+		return getEntityMetamodel().getGenerators()[ this.getVersionPropertyIndex() ];
 	}
 
 	public boolean isVersionGeneratedOnExecution() {
@@ -4143,53 +4065,13 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public String[] getPropertyNames() {
-		return entityMetamodel.getPropertyNames();
-	}
-
-	@Override
-	public Type[] getPropertyTypes() {
-		return entityMetamodel.getPropertyTypes();
-	}
-
-	@Override
-	public boolean[] getPropertyLaziness() {
-		return entityMetamodel.getPropertyLaziness();
-	}
-
-	@Override
-	public boolean[] getPropertyUpdateability() {
-		return entityMetamodel.getPropertyUpdateability();
-	}
-
-	@Override
-	public boolean[] getPropertyCheckability() {
-		return entityMetamodel.getPropertyCheckability();
-	}
-
-	@Override
 	public boolean[] getNonLazyPropertyUpdateability() {
-		return entityMetamodel.getNonlazyPropertyUpdateability();
-	}
-
-	@Override
-	public boolean[] getPropertyInsertability() {
-		return entityMetamodel.getPropertyInsertability();
-	}
-
-	@Override
-	public boolean[] getPropertyNullability() {
-		return entityMetamodel.getPropertyNullability();
-	}
-
-	@Override
-	public boolean[] getPropertyVersionability() {
-		return entityMetamodel.getPropertyVersionability();
+		return getNonlazyPropertyUpdateability();
 	}
 
 	@Override
 	public CascadeStyle[] getPropertyCascadeStyles() {
-		return entityMetamodel.getCascadeStyles();
+		return getCascadeStyles();
 	}
 
 	@Override
@@ -4417,10 +4299,6 @@ public abstract class AbstractEntityPersister
 		return false;
 	}
 
-	public int getPropertySpan() {
-		return entityMetamodel.getPropertySpan();
-	}
-
 	@Override
 	public Object[] getPropertyValuesToInsert(
 			Object entity,
@@ -4517,12 +4395,12 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public String getIdentifierPropertyName() {
-		return entityMetamodel.getIdentifierProperty().getName();
+		return getIdentifierProperty().getName();
 	}
 
 	@Override
 	public Type getIdentifierType() {
-		return entityMetamodel.getIdentifierProperty().getType();
+		return getIdentifierProperty().getType();
 	}
 
 	@Override
@@ -4533,11 +4411,6 @@ public abstract class AbstractEntityPersister
 	@Override
 	public boolean hasCollectionNotReferencingPK() {
 		return hasCollectionNotReferencingPK;
-	}
-
-	@Override
-	public int[] getNaturalIdentifierProperties() {
-		return entityMetamodel.getNaturalIdentifierProperties();
 	}
 
 	protected void verifyHasNaturalId() {
@@ -4587,11 +4460,6 @@ public abstract class AbstractEntityPersister
 		return getNaturalIdLoader().resolveNaturalIdToId( naturalIdValues, session );
 	}
 
-	@Override
-	public boolean hasNaturalIdentifier() {
-		return entityMetamodel.hasNaturalIdentifier();
-	}
-
 	public static int getTableId(String tableName, String[] tables) {
 		for ( int j = 0; j < tables.length; j++ ) {
 			if ( tableName.equalsIgnoreCase( tables[j] ) ) {
@@ -4609,11 +4477,6 @@ public abstract class AbstractEntityPersister
 	@Override @Deprecated(forRemoval = true)
 	public BytecodeEnhancementMetadata getInstrumentationMetadata() {
 		return getBytecodeEnhancementMetadata();
-	}
-
-	@Override
-	public final BytecodeEnhancementMetadata getBytecodeEnhancementMetadata() {
-		return entityMetamodel.getBytecodeEnhancementMetadata();
 	}
 
 	@Override
@@ -4775,7 +4638,7 @@ public abstract class AbstractEntityPersister
 				creationProcess.getCreationContext().getBootModel()
 						.getEntityBinding( getEntityName() );
 		initializeSpecialAttributeMappings( creationProcess, persistentClass );
-		versionGenerator = createVersionGenerator( entityMetamodel, versionMapping );
+		versionGenerator = createVersionGenerator( this, versionMapping );
 		buildDeclaredAttributeMappings( creationProcess, persistentClass );
 		getAttributeMappings();
 		initializeNaturalIdMapping( creationProcess, persistentClass );
@@ -4808,11 +4671,11 @@ public abstract class AbstractEntityPersister
 
 	private void buildDeclaredAttributeMappings
 			(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
-		final var properties = entityMetamodel.getProperties();
+		final var properties = getProperties();
 		final var mappingsBuilder = AttributeMappingsMap.builder();
 		int stateArrayPosition = getStateArrayInitialPosition( creationProcess );
 		int fetchableIndex = getFetchableIndexOffset();
-		for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
+		for ( int i = 0; i < getPropertySpan(); i++ ) {
 			final var runtimeAttributeDefinition = properties[i];
 			final String attributeName = runtimeAttributeDefinition.getName();
 			final var bootProperty = bootEntityDescriptor.getProperty( attributeName );
@@ -4963,11 +4826,11 @@ public abstract class AbstractEntityPersister
 		//noinspection AssertWithSideEffects
 		assert bootEntityDescriptor.hasNaturalId();
 
-		final int[] naturalIdAttributeIndexes = entityMetamodel.getNaturalIdentifierProperties();
+		final int[] naturalIdAttributeIndexes = getNaturalIdentifierProperties();
 		assert naturalIdAttributeIndexes.length > 0;
 
 		if ( naturalIdAttributeIndexes.length == 1 ) {
-			final String propertyName = entityMetamodel.getPropertyNames()[ naturalIdAttributeIndexes[ 0 ] ];
+			final String propertyName = getPropertyNames()[ naturalIdAttributeIndexes[ 0 ] ];
 			final var attributeMapping = (SingularAttributeMapping) findAttributeMapping( propertyName );
 			return new SimpleNaturalIdMapping( attributeMapping, this, creationProcess );
 		}
@@ -5120,7 +4983,7 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			return creationProcess.processSubPart(
-					getPropertyNames()[getVersionProperty()],
+					getPropertyNames()[this.getVersionPropertyIndex()],
 					(role, process) -> generateVersionMapping(
 							this,
 							templateInstanceCreator,
@@ -5354,7 +5217,7 @@ public abstract class AbstractEntityPersister
 		final var propertyAccess = getRepresentationStrategy().resolvePropertyAccess( bootProperty );
 
 		final var value = bootProperty.getValue();
-		if ( propertyIndex == getVersionProperty() ) {
+		if ( propertyIndex == this.getVersionPropertyIndex() ) {
 			final Column column = value.getColumns().get( 0 );
 			return buildBasicAttributeMapping(
 					attrName,
@@ -5893,7 +5756,7 @@ public abstract class AbstractEntityPersister
 	private boolean isIdentifierReference(String name) {
 		return EntityIdentifierMapping.ID_ROLE_NAME.equals( name )
 			|| hasIdentifierProperty() && getIdentifierPropertyName().equals( name )
-			|| !entityMetamodel.hasNonIdentifierPropertyNamedId() && "id".equals( name );
+			|| !hasNonIdentifierPropertyNamedId() && "id".equals( name );
 	}
 
 	@Override
@@ -6101,8 +5964,6 @@ public abstract class AbstractEntityPersister
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	@Deprecated private final EntityMetamodel entityMetamodel;
-
 	@Deprecated private final String[] subclassColumnAliasClosure;
 	@Deprecated private final String[] subclassFormulaAliasClosure;
 	@Deprecated private final Map<String,String[]> subclassPropertyAliases = new HashMap<>();
@@ -6150,7 +6011,7 @@ public abstract class AbstractEntityPersister
 		internalInitSubclassPropertyAliasesMap( null, model.getSubclassPropertyClosure() );
 
 		// aliases for identifier ( alias.id ); skip if the entity defines a non-id property named 'id'
-		if ( !entityMetamodel.hasNonIdentifierPropertyNamedId() ) {
+		if ( !hasNonIdentifierPropertyNamedId() ) {
 			subclassPropertyAliases.put( ENTITY_ID, getIdentifierAliases() );
 		}
 
@@ -6166,7 +6027,7 @@ public abstract class AbstractEntityPersister
 			final String[] idAliases = getIdentifierAliases();
 
 			for ( int i = 0; i < idPropertyNames.length; i++ ) {
-				if ( entityMetamodel.hasNonIdentifierPropertyNamedId() ) {
+				if ( hasNonIdentifierPropertyNamedId() ) {
 					subclassPropertyAliases.put(
 							ENTITY_ID + "." + idPropertyNames[i],
 							new String[] {idAliases[i]}
@@ -6186,7 +6047,7 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
-		if ( entityMetamodel.isPolymorphic() ) {
+		if ( isPolymorphic() ) {
 			subclassPropertyAliases.put( ENTITY_CLASS, new String[] {getDiscriminatorAlias()} );
 		}
 

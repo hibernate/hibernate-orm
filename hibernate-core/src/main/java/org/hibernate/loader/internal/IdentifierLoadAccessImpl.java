@@ -208,8 +208,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 				}
 			}
 			else {
-				final var enhancementMetadata =
-						entityPersister.getEntityMetamodel().getBytecodeEnhancementMetadata();
+				final var enhancementMetadata = entityPersister.getBytecodeEnhancementMetadata();
 				if ( enhancementMetadata.isEnhancedForLazyLoading()
 						&& enhancementMetadata.extractLazyInterceptor( result )
 								instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor ) {

@@ -33,7 +33,7 @@ public abstract class AbstractCompositeIdAndNaturalIdTest {
 		assertThat( shortCodeMetadata.isNullable(), is( false ) );
 
 		final EntityPersister rootEntityPersister = accountMapping.getRootEntityDescriptor().getEntityPersister();
-		final int shortCodeLegacyPropertyIndex = rootEntityPersister.getEntityMetamodel().getPropertyIndex( "shortCode" );
+		final int shortCodeLegacyPropertyIndex = rootEntityPersister.getPropertyIndex( "shortCode" );
 		assertThat( shortCodeLegacyPropertyIndex, is ( 0 ) );
 		assertThat( rootEntityPersister.getPropertyNullability()[ shortCodeLegacyPropertyIndex ], is( false ) );
 	}

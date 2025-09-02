@@ -345,7 +345,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			throw new LazyInitializationException( "Could not retrieve real entity name ["
 					+ entityName + "#" + id + "] - no session" );
 		}
-		if ( getEntityDescriptor().getEntityMetamodel().hasSubclasses() ) {
+		if ( getEntityDescriptor().hasSubclasses() ) {
 			initialize();
 			return session.getFactory().bestGuessEntityName( target );
 		}

@@ -23,7 +23,7 @@ public class NaturalIdHelper {
 			throw new IdentifierGenerationException( "Entity '" + persister.getEntityName()
 					+ "' has no '@NaturalId' property" );
 		}
-		if ( persister.getEntityMetamodel().isNaturalIdentifierInsertGenerated() ) {
+		if ( persister.isNaturalIdentifierInsertGenerated() ) {
 			throw new IdentifierGenerationException( "Entity '" + persister.getEntityName()
 					+ "' has a '@NaturalId' property which is also defined as insert-generated" );
 		}

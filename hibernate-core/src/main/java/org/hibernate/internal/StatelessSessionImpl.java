@@ -1013,8 +1013,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 			// first, check to see if we can use "bytecode proxies"
 
-			final var entityMetamodel = persister.getEntityMetamodel();
-			final var enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
+			final var enhancementMetadata = persister.getBytecodeEnhancementMetadata();
 			if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
 				// if the entity defines a HibernateProxy factory, see if there is an
 				// existing proxy associated with the PC - and if so, use it
@@ -1031,14 +1030,14 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					}
 
 					// specialized handling for entities with subclasses with a HibernateProxy factory
-					if ( entityMetamodel.hasSubclasses() ) {
+					if ( persister.hasSubclasses() ) {
 						// entities with subclasses that define a ProxyFactory can create a HibernateProxy.
 						LOG.trace( "Creating a HibernateProxy for to-one association with subclasses to honor laziness" );
 						return createProxy( entityKey );
 					}
 					return enhancementMetadata.createEnhancedProxy( entityKey, false, this );
 				}
-				else if ( !entityMetamodel.hasSubclasses() ) {
+				else if ( !persister.hasSubclasses() ) {
 					return enhancementMetadata.createEnhancedProxy( entityKey, false, this );
 				}
 				// If we get here, then the entity class has subclasses and there is no HibernateProxy factory.

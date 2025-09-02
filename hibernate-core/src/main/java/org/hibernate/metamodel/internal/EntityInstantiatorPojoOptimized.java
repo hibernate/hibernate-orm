@@ -6,7 +6,7 @@ package org.hibernate.metamodel.internal;
 
 import org.hibernate.bytecode.spi.ReflectionOptimizer.InstantiationOptimizer;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.tuple.entity.EntityMetamodel;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -19,11 +19,11 @@ public class EntityInstantiatorPojoOptimized extends AbstractEntityInstantiatorP
 	private final InstantiationOptimizer instantiationOptimizer;
 
 	public EntityInstantiatorPojoOptimized(
-			EntityMetamodel entityMetamodel,
+			EntityPersister persister,
 			PersistentClass persistentClass,
 			JavaType<?> javaType,
 			InstantiationOptimizer instantiationOptimizer) {
-		super( entityMetamodel, persistentClass, javaType );
+		super( persister, persistentClass, javaType );
 		this.instantiationOptimizer = instantiationOptimizer;
 	}
 

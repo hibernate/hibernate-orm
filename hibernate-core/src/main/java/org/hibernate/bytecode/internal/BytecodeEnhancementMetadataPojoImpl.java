@@ -187,8 +187,7 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 		}
 
 		// inject the interceptor
-		persister.getEntityMetamodel()
-				.getBytecodeEnhancementMetadata()
+		persister.getBytecodeEnhancementMetadata()
 				.injectEnhancedEntityAsProxyInterceptor( entity, entityKey, session );
 
 		return entity;

@@ -298,7 +298,7 @@ public class GeneratedValuesHelper {
 		}
 		else if ( timing == EventType.INSERT
 					&& persister.getNaturalIdentifierProperties() != null
-					&& !persister.getEntityMetamodel().isNaturalIdentifierInsertGenerated() ) {
+					&& !persister.isNaturalIdentifierInsertGenerated() ) {
 			return new UniqueKeySelectingDelegate( persister, getNaturalIdPropertyNames( persister ), timing );
 		}
 		return null;

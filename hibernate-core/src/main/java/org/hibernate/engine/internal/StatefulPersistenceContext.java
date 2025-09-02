@@ -348,7 +348,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 			return cachedValue;
 		}
 		// check to see if the natural id is mutable/immutable
-		else if ( persister.getEntityMetamodel().hasImmutableNaturalId() ) {
+		else if ( persister.hasImmutableNaturalId() ) {
 			// an immutable natural-id is not retrieved during a normal database-snapshot operation...
 			final Object naturalIdFromDb = persister.getNaturalIdentifierSnapshot( id, session );
 			naturalIdResolutions.cacheResolutionFromLoad( id, naturalIdFromDb, persister );

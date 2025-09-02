@@ -3110,7 +3110,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else {
 			persister = creationContext.getMappingMetamodel().findEntityDescriptor( treatTargetTypeName );
-			if ( persister == null || !persister.getEntityMetamodel().isPolymorphic() ) {
+			if ( persister == null || !persister.isPolymorphic() ) {
 				return;
 			}
 		}
@@ -5433,7 +5433,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private Predicate createTreatTypeRestriction(SqmPath<?> lhs, EntityDomainType<?> treatTarget) {
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( treatTarget.getHibernateEntityName() );
-		if ( entityDescriptor.getEntityMetamodel().isPolymorphic() && lhs.getNodeType() != treatTarget ) {
+		if ( entityDescriptor.isPolymorphic() && lhs.getNodeType() != treatTarget ) {
 			final Set<String> subclassEntityNames = entityDescriptor.getSubclassEntityNames();
 			return createTreatTypeRestriction( lhs, subclassEntityNames );
 		}

@@ -13,7 +13,6 @@ import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.tuple.entity.EntityMetamodel;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -100,17 +99,16 @@ public class ImmutableEntityNaturalIdTest {
 				entityPersister.hasNaturalIdentifier(),
 				is( true )
 		);
-		final EntityMetamodel entityMetamodel = entityPersister.getEntityMetamodel();
 		assertThat(
 				"Wrong number of attributes",
-				entityMetamodel.getNaturalIdentifierProperties().length,
+				entityPersister.getNaturalIdentifierProperties().length,
 				is( 3 )
 		);
 
 		// nullability is not specified, so they should be nullable by annotations-specific default
-		assertTrue( entityPersister.getPropertyNullability()[ entityMetamodel.getPropertyIndex( "address" )] );
-		assertTrue( entityPersister.getPropertyNullability()[ entityMetamodel.getPropertyIndex( "city" )] );
-		assertTrue( entityPersister.getPropertyNullability()[ entityMetamodel.getPropertyIndex( "state" )] );
+		assertTrue( entityPersister.getPropertyNullability()[ entityPersister.getPropertyIndex( "address" )] );
+		assertTrue( entityPersister.getPropertyNullability()[ entityPersister.getPropertyIndex( "city" )] );
+		assertTrue( entityPersister.getPropertyNullability()[ entityPersister.getPropertyIndex( "state" )] );
 
 	}
 

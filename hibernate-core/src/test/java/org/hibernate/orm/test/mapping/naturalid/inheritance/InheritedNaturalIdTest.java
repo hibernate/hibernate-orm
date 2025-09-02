@@ -48,7 +48,7 @@ public class InheritedNaturalIdTest {
 		assertThat( uidMetadata.isNullable(), is( true ) );
 
 		final EntityPersister rootEntityPersister = userMapping.getEntityPersister();
-		final int uidLegacyPropertyIndex = rootEntityPersister.getEntityMetamodel().getPropertyIndex( "uid" );
+		final int uidLegacyPropertyIndex = rootEntityPersister.getPropertyIndex( "uid" );
 		assertThat( uidLegacyPropertyIndex, is ( 0 ) );
 		assertThat( rootEntityPersister.getPropertyNullability()[ uidLegacyPropertyIndex ], is( true ) );
 	}

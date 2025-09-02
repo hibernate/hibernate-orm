@@ -53,7 +53,6 @@ import org.hibernate.sql.model.ast.builder.TableUpdateBuilderSkipped;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
-import org.hibernate.tuple.entity.EntityMetamodel;
 
 import static org.hibernate.engine.OptimisticLockStyle.DIRTY;
 import static org.hibernate.engine.internal.Versioning.isVersionIncrementRequired;
@@ -198,7 +197,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		final boolean[] attributeUpdateability;
 		boolean forceDynamicUpdate;
-		if ( entityPersister().getEntityMetamodel().isDynamicUpdate() && dirtyAttributeIndexes != null ) {
+		if ( entityPersister().isDynamicUpdate() && dirtyAttributeIndexes != null ) {
 			attributeUpdateability = getPropertiesToUpdate( dirtyAttributeIndexes, hasDirtyCollection );
 			forceDynamicUpdate = true;
 		}
@@ -441,9 +440,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	private boolean hasUpdateGeneratedValues() {
-		final var entityMetamodel = entityPersister().getEntityMetamodel();
-		return entityMetamodel.hasUpdateGeneratedValues()
-			|| entityMetamodel.hasPreUpdateGeneratedValues();
+		final var entityMetamodel = entityPersister();
+		return entityMetamodel.hasUpdateGeneratedProperties()
+			|| entityMetamodel.hasPreUpdateGeneratedProperties();
 	}
 
 	private static boolean isValueGenerated(Generator generator) {
@@ -542,8 +541,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object object,
 			Object[] newValues,
 			SharedSessionContractImplementor session) {
-		final EntityMetamodel entityMetamodel = entityPersister().getEntityMetamodel();
-		if ( !entityMetamodel.hasPreUpdateGeneratedValues() ) {
+		final EntityPersister entityMetamodel = entityPersister();
+		if ( !entityMetamodel.hasPreUpdateGeneratedProperties() ) {
 			return EMPTY_INT_ARRAY;
 		}
 
@@ -909,7 +908,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				&& entityPersister().getVersionMapping().getVersionAttribute() == attributeMapping) {
 			return true;
 		}
-		else if ( entityPersister().getEntityMetamodel().isDynamicUpdate() && dirtinessChecker != null ) {
+		else if ( entityPersister().isDynamicUpdate() && dirtinessChecker != null ) {
 			return attributeAnalysis.includeInSet()
 				&& dirtinessChecker.isDirty( attributeIndex, attributeMapping ).isDirty();
 		}
@@ -1242,7 +1241,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			tableUpdateBuilder.addValueColumn( versionMapping.getVersionAttribute() );
 		}
 		else {
-			final boolean includeInSet = !entityPersister().getEntityMetamodel().isDynamicUpdate()
+			final boolean includeInSet = !entityPersister().isDynamicUpdate()
 					|| dirtinessChecker == null
 					|| dirtinessChecker.isDirty( attributeIndex, attributeMapping ).isDirty();
 			if ( includeInSet ) {
@@ -1327,7 +1326,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 						tablesNeedingDynamicUpdate.add( tableMapping );
 					}
 					else if ( dirtyAttributeIndexes != null ) {
-						if ( entityPersister().getEntityMetamodel().isDynamicUpdate()
+						if ( entityPersister().isDynamicUpdate()
 								|| entityPersister().optimisticLockStyle() == DIRTY ) {
 							tablesNeedingDynamicUpdate.add( tableMapping );
 						}

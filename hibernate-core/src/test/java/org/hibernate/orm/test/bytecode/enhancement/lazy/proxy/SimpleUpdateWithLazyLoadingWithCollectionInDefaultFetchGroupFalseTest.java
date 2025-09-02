@@ -118,7 +118,7 @@ public class SimpleUpdateWithLazyLoadingWithCollectionInDefaultFetchGroupFalseTe
 				.getMappingMetamodel()
 				.getEntityDescriptor( Child.class.getName() );
 
-		final int relativesAttributeIndex = childPersister.getEntityMetamodel().getPropertyIndex( "relatives" );
+		final int relativesAttributeIndex = childPersister.getPropertyIndex( "relatives" );
 
 		scope.inTransaction(
 				session -> {

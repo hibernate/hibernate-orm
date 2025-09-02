@@ -95,16 +95,12 @@ public abstract sealed class Collection
 
 	private String customSQLInsert;
 	private boolean customInsertCallable;
-	private ExecuteUpdateResultCheckStyle insertCheckStyle;
 	private String customSQLUpdate;
 	private boolean customUpdateCallable;
-	private ExecuteUpdateResultCheckStyle updateCheckStyle;
 	private String customSQLDelete;
 	private boolean customDeleteCallable;
-	private ExecuteUpdateResultCheckStyle deleteCheckStyle;
 	private String customSQLDeleteAll;
 	private boolean customDeleteAllCallable;
-	private ExecuteUpdateResultCheckStyle deleteAllCheckStyle;
 
 	private Column softDeleteColumn;
 	private SoftDeleteType softDeleteStrategy;
@@ -171,16 +167,12 @@ public abstract sealed class Collection
 		this.synchronizedTables.addAll( original.synchronizedTables );
 		this.customSQLInsert = original.customSQLInsert;
 		this.customInsertCallable = original.customInsertCallable;
-		this.insertCheckStyle = original.insertCheckStyle;
 		this.customSQLUpdate = original.customSQLUpdate;
 		this.customUpdateCallable = original.customUpdateCallable;
-		this.updateCheckStyle = original.updateCheckStyle;
 		this.customSQLDelete = original.customSQLDelete;
 		this.customDeleteCallable = original.customDeleteCallable;
-		this.deleteCheckStyle = original.deleteCheckStyle;
 		this.customSQLDeleteAll = original.customSQLDeleteAll;
 		this.customDeleteAllCallable = original.customDeleteAllCallable;
-		this.deleteAllCheckStyle = original.deleteAllCheckStyle;
 		this.insertExpectation = original.insertExpectation;
 		this.updateExpectation = original.updateExpectation;
 		this.deleteExpectation = original.deleteExpectation;
@@ -602,7 +594,6 @@ public abstract sealed class Collection
 	public void setCustomSQLInsert(String customSQLInsert, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLInsert = customSQLInsert;
 		this.customInsertCallable = callable;
-		this.insertCheckStyle = checkStyle;
 		this.insertExpectation = expectationConstructor( checkStyle );
 	}
 
@@ -617,7 +608,6 @@ public abstract sealed class Collection
 	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLUpdate = customSQLUpdate;
 		this.customUpdateCallable = callable;
-		this.updateCheckStyle = checkStyle;
 		this.updateExpectation = expectationConstructor( checkStyle );
 	}
 
@@ -632,7 +622,6 @@ public abstract sealed class Collection
 	public void setCustomSQLDelete(String customSQLDelete, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLDelete = customSQLDelete;
 		this.customDeleteCallable = callable;
-		this.deleteCheckStyle = checkStyle;
 		this.deleteExpectation = expectationConstructor( checkStyle );
 	}
 
@@ -650,7 +639,6 @@ public abstract sealed class Collection
 			ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLDeleteAll = customSQLDeleteAll;
 		this.customDeleteAllCallable = callable;
-		this.deleteAllCheckStyle = checkStyle;
 		this.deleteAllExpectation = expectationConstructor( checkStyle );
 	}
 
@@ -660,10 +648,6 @@ public abstract sealed class Collection
 
 	public boolean isCustomDeleteAllCallable() {
 		return customDeleteAllCallable;
-	}
-
-	public ExecuteUpdateResultCheckStyle getCustomSQLDeleteAllCheckStyle() {
-		return deleteAllCheckStyle;
 	}
 
 	@Override

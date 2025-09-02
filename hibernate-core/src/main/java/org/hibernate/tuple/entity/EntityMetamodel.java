@@ -83,7 +83,7 @@ public class EntityMetamodel implements Serializable {
 
 	private final String name;
 	private final String rootName;
-	private EntityType entityType;
+	private final EntityType entityType;
 
 	private final int subclassId;
 	private final IdentifierProperty identifierAttribute;
@@ -174,6 +174,8 @@ public class EntityMetamodel implements Serializable {
 		name.hashCode();
 		//noinspection ResultOfMethodCallIgnored
 		rootName.hashCode();
+
+		entityType = new ManyToOneType( name, creationContext.getTypeConfiguration() );
 
 		subclassId = persistentClass.getSubclassId();
 
@@ -755,9 +757,6 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	public EntityType getEntityType() {
-		if ( entityType == null ) {
-			entityType = new ManyToOneType( name, getSessionFactory().getTypeConfiguration() );
-		}
 		return entityType;
 	}
 

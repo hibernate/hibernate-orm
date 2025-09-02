@@ -117,15 +117,18 @@ public class TestTemplate {
     }
 
     protected void createDatabase() throws Exception {
-        Connection connection = DriverManager.getConnection(constructJdbcConnectionString());
-        Statement statement = connection.createStatement();
-        for (String sql : getDatabaseCreationScript()) {
-            statement.execute(sql);
+        String[] sqls = getDatabaseCreationScript();
+        if ((sqls != null) && (sqls.length > 0)) {
+            Connection connection = DriverManager.getConnection(constructJdbcConnectionString());
+            Statement statement = connection.createStatement();
+            for (String sql : sqls) {
+                statement.execute(sql);
+            }
+            statement.close();
+            connection.close();
+            assertTrue(getDatabaseFile().exists());
+            assertTrue(getDatabaseFile().isFile());
         }
-        statement.close();
-        connection.close();
-        assertTrue(getDatabaseFile().exists());
-        assertTrue(getDatabaseFile().isFile());
     }
 
     protected String constructH2DatabaseDependencyLine() {

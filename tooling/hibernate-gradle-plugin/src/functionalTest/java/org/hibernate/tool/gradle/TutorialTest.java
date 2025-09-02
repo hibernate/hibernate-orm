@@ -14,7 +14,7 @@ public class TutorialTest extends TestTemplate {
 
 	@BeforeEach
 	public void beforeEach() {
-		setGradleCommandToExecute("generateJava");
+		setGradleTaskToPerform("generateJava");
 		setDatabaseCreationScript(new String[] {
 				"create table PERSON (ID int not null, NAME varchar(20), primary key (ID))"
 		});

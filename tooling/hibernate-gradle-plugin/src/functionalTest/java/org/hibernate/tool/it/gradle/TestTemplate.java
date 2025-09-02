@@ -28,7 +28,8 @@ public class TestTemplate {
 
     private String[] databaseCreationScript;
     private String hibernateToolsExtensionSection;
-    private String gradleCommandToExecute;
+    private String gradleTaskToPerform;
+    private BuildResult buildResult;
 
     protected File getProjectDir() { return projectDir; }
     protected File getGradlePropertiesFile() { return gradlePropertiesFile; }
@@ -41,8 +42,9 @@ public class TestTemplate {
     protected void setDatabaseCreationScript(String[] script) { databaseCreationScript = script; }
     protected String getHibernateToolsExtensionSection() { return hibernateToolsExtensionSection; }
     protected void setHibernateToolsExtensionSection(String s) { hibernateToolsExtensionSection = s; }
-    protected String getGradleCommandToExecute() { return gradleCommandToExecute; }
-    protected void setGradleCommandToExecute(String command) { gradleCommandToExecute = command; }
+    protected String getGradleTaskToPerform() { return gradleTaskToPerform; }
+    protected void setGradleTaskToPerform(String command) { gradleTaskToPerform = command; }
+    protected BuildResult getBuildResult() { return buildResult; }
 
     protected void executeGradleCommand(String ... gradleCommandLine) {
         GradleRunner runner = GradleRunner.create();
@@ -50,7 +52,7 @@ public class TestTemplate {
         runner.forwardOutput();
         runner.withPluginClasspath();
         runner.withProjectDir(getProjectDir());
-        BuildResult buildResult = runner.build();
+        buildResult = runner.build();
         assertTrue(buildResult.getOutput().contains("BUILD SUCCESSFUL"));
     }
 
@@ -64,7 +66,7 @@ public class TestTemplate {
 
     protected void createProjectAndExecuteGradleCommand() throws Exception {
         createProject();
-        executeGradleCommand(getGradleCommandToExecute());
+        executeGradleCommand(getGradleTaskToPerform());
     }
 
     protected void initGradleProject() throws Exception {

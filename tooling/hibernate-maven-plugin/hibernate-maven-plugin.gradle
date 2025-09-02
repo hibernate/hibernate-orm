@@ -38,7 +38,8 @@ dependencies {
     intTestRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     intTestRuntimeOnly 'ch.qos.logback:logback-classic:1.5.18'
     intTestRuntimeOnly 'org.apache.maven:maven-compat:3.9.11'
-
+    intTestRuntimeOnly 'org.apache.maven.resolver:maven-resolver-transport-http:1.9.24'
+    intTestRuntimeOnly 'org.apache.maven.resolver:maven-resolver-connector-basic:1.9.24'
 }
 
 def releasePrepareTask = tasks.register("releasePrepare") {

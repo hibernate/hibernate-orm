@@ -52,7 +52,7 @@ public abstract class AbstractSingularAttributeMapping
 
 	@Override
 	public Generator getGenerator() {
-		return findContainingEntityMapping().getEntityPersister().getEntityMetamodel().getGenerators()[getStateArrayPosition()];
+		return findContainingEntityMapping().getEntityPersister().getGenerators()[getStateArrayPosition()];
 	}
 
 }

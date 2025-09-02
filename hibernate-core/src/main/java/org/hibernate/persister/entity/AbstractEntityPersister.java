@@ -738,7 +738,7 @@ public abstract class AbstractEntityPersister
 		final List<String> sqlValues = new ArrayList<>();
 
 		if ( persistentClass.isPolymorphic() && persistentClass.getDiscriminator() != null ) {
-			if ( !getEntityMetamodel().isAbstract() ) {
+			if ( !isAbstract() ) {
 				values.add( DiscriminatorHelper.getDiscriminatorValue( persistentClass ) );
 				sqlValues.add( DiscriminatorHelper.getDiscriminatorSQLValue( persistentClass, dialect ) );
 			}
@@ -4027,13 +4027,23 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public boolean hasPreInsertGeneratedProperties() {
+		return hasPreInsertGeneratedValues();
+	}
+
+	@Override
+	public boolean hasPreUpdateGeneratedProperties() {
+		return hasPreUpdateGeneratedValues();
+	}
+
+	@Override
 	public boolean isVersionPropertyGenerated() {
 		return isVersioned()
 			&& ( isVersionGeneratedOnExecution() || isVersionGeneratedBeforeExecution() );
 	}
 
 	private Generator versionPropertyGenerator() {
-		return getEntityMetamodel().getGenerators()[ this.getVersionPropertyIndex() ];
+		return getGenerators()[ this.getVersionPropertyIndex() ];
 	}
 
 	public boolean isVersionGeneratedOnExecution() {
@@ -4778,9 +4788,9 @@ public abstract class AbstractEntityPersister
 				// because calling `subMappingType.getNumberOfDeclaredAttributeMappings()` at this point
 				// may produce wrong results because subMappingType might not have completed prepareMappingModel yet
 				final int propertySpan =
-						subMappingType.getEntityPersister().getEntityMetamodel().getPropertySpan();
+						subMappingType.getEntityPersister().getPropertySpan();
 				final int superPropertySpan =
-						subMappingType.getSuperMappingType().getEntityPersister().getEntityMetamodel().getPropertySpan();
+						subMappingType.getSuperMappingType().getEntityPersister().getPropertySpan();
 				final int numberOfDeclaredAttributeMappings = propertySpan - superPropertySpan;
 				offset += numberOfDeclaredAttributeMappings;
 			}

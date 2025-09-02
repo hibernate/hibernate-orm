@@ -18,6 +18,7 @@ import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -212,7 +213,30 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 *@return The metamodel
 	 */
+	@Deprecated(since = "7.2", forRemoval = true)
 	EntityMetamodel getEntityMetamodel();
+
+	boolean isPolymorphic();
+
+	boolean isDynamicUpdate();
+
+	boolean isDynamicInsert();
+
+	OnDeleteAction[] getPropertyOnDeleteActions();
+
+	Generator[] getGenerators();
+
+	boolean hasImmutableNaturalId();
+
+	boolean isNaturalIdentifierInsertGenerated();
+
+	boolean isLazy();
+
+	int getPropertySpan();
+
+	boolean hasPreInsertGeneratedProperties();
+
+	boolean hasPreUpdateGeneratedProperties();
 
 	/**
 	 * Called from {@link EnhancementAsProxyLazinessInterceptor} to trigger load of

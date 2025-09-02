@@ -148,14 +148,14 @@ public interface EntityMappingType
 	 * Whether this entity is defined as abstract using the Java {@code abstract} keyword
 	 */
 	default boolean isAbstract() {
-		return getEntityPersister().getEntityMetamodel().isAbstract();
+		return getEntityPersister().isAbstract();
 	}
 
 	/**
 	 * Whether this entity mapping has any subtype mappings
 	 */
 	default boolean hasSubclasses() {
-		return getEntityPersister().getEntityMetamodel().hasSubclasses();
+		return getEntityPersister().hasSubclasses();
 	}
 
 	/**
@@ -221,11 +221,11 @@ public interface EntityMappingType
 	 * inheritance hierarchy
 	 */
 	default int getSubclassId() {
-		return getEntityPersister().getEntityMetamodel().getSubclassId();
+		return getEntityPersister().getSubclassId();
 	}
 
 	default Set<String> getSubclassEntityNames() {
-		return getEntityPersister().getEntityMetamodel().getSubclassEntityNames();
+		return getEntityPersister().getSubclassEntityNames();
 	}
 
 	/**

@@ -1198,4 +1198,14 @@ public 	class CustomPersister extends EntityMetamodel implements EntityPersister
 	public boolean managesColumns(String[] columnNames) {
 		return false;
 	}
+
+	@Override
+	public boolean hasPreInsertGeneratedProperties() {
+		return false;
+	}
+
+	@Override
+	public boolean hasPreUpdateGeneratedProperties() {
+		return false;
+	}
 }

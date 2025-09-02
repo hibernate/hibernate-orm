@@ -125,7 +125,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 		}
 		final SessionFactoryImplementor factory = session.getFactory();
 		final EntityPersister entityDescriptor = factory.getMappingMetamodel().getEntityDescriptor( getEntityName() );
-		if ( entityDescriptor.getEntityMetamodel().hasSubclasses() ) {
+		if ( entityDescriptor.hasSubclasses() ) {
 			return getImplementation().getClass();
 		}
 		return persistentClass;

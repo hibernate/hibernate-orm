@@ -355,8 +355,8 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractInterceptor i
 			// versioned, we need to fetch the current version.
 			this.initializeBeforeWrite =
 					!inLineDirtyChecking
-					|| !persister.getEntityMetamodel().isDynamicUpdate()
-					|| persister.isVersioned();
+						|| !persister.isDynamicUpdate()
+						|| persister.isVersioned();
 		}
 	}
 }

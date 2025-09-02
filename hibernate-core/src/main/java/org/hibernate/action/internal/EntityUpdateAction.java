@@ -283,9 +283,9 @@ public class EntityUpdateAction extends EntityAction {
 	 */
 	protected void handleDeleted(EntityEntry entry) {
 		if ( entry.getStatus() == Status.DELETED ) {
-			final var entityMetamodel = getPersister().getEntityMetamodel();
+			final var entityMetamodel = getPersister();
 			final boolean isImpliedOptimisticLocking = !entityMetamodel.isVersioned()
-					&& entityMetamodel.getOptimisticLockStyle().isAllOrDirty();
+					&& entityMetamodel.optimisticLockStyle().isAllOrDirty();
 			if ( isImpliedOptimisticLocking && entry.getLoadedState() != null ) {
 				// The entity will be deleted, and because we are going to create a delete statement
 				// that uses all the state values in the where clause, the entry state needs to be

@@ -41,7 +41,20 @@ dependencies {
 
     implementation libs.hibernateModels
     implementation libs.jandex
-    implementation testLibs.wildFlyTxnClient
+    implementation(libs.logging)
+    // See https://hibernate.atlassian.net/browse/HHH-19743
+    // While this dependency isn't explicitly used, removing it will lead to using JBossStandAloneJtaPlatform
+    // by default in tests, which will apparently lead to leaks detected by HibernateClassLoaderLeaksTest,
+    // which will fail.
+    // JBossStandAloneJtaPlatform is old and likely wouldn't work with Jakarta EE anyway,
+    // so I won't try to fix it, but we might want to remove it in the next minor,
+    // and then we can remove the dependency below.
+    implementation(testLibs.wildFlyTxnClient) {
+        // WildFly Elytron includes a whole copy of JBoss Logging, Jackson with its original package,
+        // not even shaded, which causes lots of problems.
+        // Since we don't need WildFly Elytron in our tests, we'll just exclude it.
+        exclude group: 'org.wildfly.security', module: 'wildfly-elytron'
+    }
     implementation testLibs.junit5Engine
     implementation testLibs.junit5Launcher
 

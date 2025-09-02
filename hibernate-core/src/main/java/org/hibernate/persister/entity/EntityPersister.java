@@ -496,7 +496,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @return The type of the version property; or -66, if not versioned.
 	 */
-	int getVersionProperty();
+	int getVersionPropertyIndex();
 
 	/**
 	 * Determine whether this entity defines a natural identifier.

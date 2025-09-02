@@ -375,7 +375,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public int getVersionProperty() {
+		public int getVersionPropertyIndex() {
 			return 0;
 		}
 

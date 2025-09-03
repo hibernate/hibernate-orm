@@ -2,21 +2,22 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.sql.exec.internal;
+package org.hibernate.sql.ops.internal;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.DatabaseOperation;
-import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.sql.exec.spi.PostAction;
-import org.hibernate.sql.exec.spi.PreAction;
-import org.hibernate.sql.exec.spi.SecondaryAction;
 import org.hibernate.sql.exec.spi.StatementAccess;
+import org.hibernate.sql.ops.spi.DatabaseOperation;
+import org.hibernate.sql.ops.spi.PostAction;
+import org.hibernate.sql.ops.spi.PreAction;
+import org.hibernate.sql.ops.spi.PrimaryOperation;
+import org.hibernate.sql.ops.spi.SecondaryAction;
 
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Abstract support for DatabaseOperation implementations, mainly
@@ -25,19 +26,35 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractDatabaseOperation<P extends JdbcOperation>
+public abstract class AbstractDatabaseOperation<P extends PrimaryOperation>
 		implements DatabaseOperation<P> {
+	private final P primaryOperation;
+
 	protected final PreAction[] preActions;
 	protected final PostAction[] postActions;
 
 	@SuppressWarnings("unused")
-	public AbstractDatabaseOperation() {
-		this( null, null );
+	public AbstractDatabaseOperation(P primaryOperation) {
+		this( primaryOperation, null, null );
 	}
 
-	public AbstractDatabaseOperation(PreAction[] preActions, PostAction[] postActions) {
+	public AbstractDatabaseOperation(
+			P primaryOperation,
+			PreAction[] preActions,
+			PostAction[] postActions) {
+		this.primaryOperation = primaryOperation;
 		this.preActions = preActions;
 		this.postActions = postActions;
+	}
+
+	@Override
+	public P getPrimaryOperation() {
+		return primaryOperation;
+	}
+
+	@Override
+	public Set<String> getAffectedTableNames() {
+		return primaryOperation.getAffectedTableNames();
 	}
 
 	protected void performPreActions(

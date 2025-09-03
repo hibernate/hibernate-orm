@@ -4,9 +4,6 @@
  */
 package org.hibernate.orm.test.sql.exec.spi;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import jakarta.persistence.Timeout;
 import org.hibernate.ScrollMode;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
@@ -31,9 +28,9 @@ import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.internal.DatabaseOperationSelectImpl;
-import org.hibernate.sql.exec.spi.PostAction;
-import org.hibernate.sql.exec.spi.PreAction;
+import org.hibernate.sql.ops.internal.DatabaseOperationSelectImpl;
+import org.hibernate.sql.ops.spi.PostAction;
+import org.hibernate.sql.ops.spi.PreAction;
 import org.hibernate.sql.exec.spi.StatementAccess;
 import org.hibernate.sql.results.spi.SingleResultConsumer;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -56,7 +53,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(annotatedClasses = DatabaseOperationSmokeTest.Person.class)
+@DomainModel(annotatedClasses = Person.class)
 @SessionFactory
 public class DatabaseOperationSmokeTest {
 	@BeforeEach
@@ -287,22 +284,6 @@ public class DatabaseOperationSmokeTest {
 	private record PersonQuery(
 			JdbcOperationQuerySelect jdbcOperation,
 			JdbcParameterBindings jdbcParameterBindings) {
-	}
-
-	@Entity(name="Person")
-	@Table(name="persons")
-	public static class Person {
-		@Id
-		private Integer id;
-		private String name;
-
-		public Person() {
-		}
-
-		public Person(Integer id, String name) {
-			this.id = id;
-			this.name = name;
-		}
 	}
 
 	private static class SingleIdExecutionContext extends BaseExecutionContext {

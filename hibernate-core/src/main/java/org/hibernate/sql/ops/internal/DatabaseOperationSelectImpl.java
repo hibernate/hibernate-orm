@@ -2,24 +2,24 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.sql.exec.internal;
+package org.hibernate.sql.ops.internal;
 
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
-import org.hibernate.sql.exec.spi.DatabaseOperationSelect;
+import org.hibernate.sql.exec.internal.StatementAccessImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
-import org.hibernate.sql.exec.spi.PostAction;
-import org.hibernate.sql.exec.spi.PreAction;
+import org.hibernate.sql.ops.spi.DatabaseOperationSelect;
+import org.hibernate.sql.ops.spi.PostAction;
+import org.hibernate.sql.ops.spi.PreAction;
 import org.hibernate.sql.results.spi.ResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
 
 import java.sql.Connection;
-import java.util.Set;
 
 /**
  * Standard DatabaseOperationSelect implementation.
@@ -29,7 +29,6 @@ import java.util.Set;
 public class DatabaseOperationSelectImpl
 		extends AbstractDatabaseOperation<JdbcOperationQuerySelect>
 		implements DatabaseOperationSelect {
-	private final JdbcOperationQuerySelect primaryOperation;
 
 	public DatabaseOperationSelectImpl(JdbcOperationQuerySelect primaryOperation) {
 		this( null, null, primaryOperation );
@@ -39,18 +38,7 @@ public class DatabaseOperationSelectImpl
 			PreAction[] preActions,
 			PostAction[] postActions,
 			JdbcOperationQuerySelect primaryOperation) {
-		super( preActions, postActions );
-		this.primaryOperation = primaryOperation;
-	}
-
-	@Override
-	public JdbcOperationQuerySelect getPrimaryOperation() {
-		return primaryOperation;
-	}
-
-	@Override
-	public Set<String> getAffectedTableNames() {
-		return primaryOperation.getAffectedTableNames();
+		super( primaryOperation, preActions, postActions );
 	}
 
 	@Override
@@ -116,7 +104,7 @@ public class DatabaseOperationSelectImpl
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 		final JdbcSelectExecutor jdbcSelectExecutor = jdbcServices.getJdbcSelectExecutor();
 		return jdbcSelectExecutor.executeQuery(
-				primaryOperation,
+				getPrimaryOperation(),
 				jdbcParameterBindings,
 				executionContext,
 				rowTransformer,

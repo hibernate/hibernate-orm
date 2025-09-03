@@ -72,8 +72,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		}
 		if ( !(entryId instanceof DelayedPostInsertIdentifier) ) {
 			final Object currentId = persister.getIdentifier( object, session );
-			// Small optimisation: always try to avoid getIdentifierType().isEqual(..) when possible.
-			// (However it's not safe to invoke the equals() method as it might trigger side effects.)
+			// Small optimization: always try to avoid getIdentifierType().isEqual(..) when possible.
+			// (However, it's not safe to invoke the equals() method as it might trigger side effects.)
 			if ( entryId != currentId
 						&& !entry.getStatus().isDeletedOrGone()
 						&& !persister.getIdentifierType().isEqual( entryId, currentId, session.getFactory() ) ) {

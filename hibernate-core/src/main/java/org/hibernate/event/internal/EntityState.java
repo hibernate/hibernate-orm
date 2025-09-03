@@ -36,7 +36,6 @@ public enum EntityState {
 			Boolean assumedUnsaved) {
 
 		if ( entry != null ) { // the object is persistent
-
 			//the entity is associated with the session, so check its status
 			if ( entry.getStatus() != Status.DELETED ) {
 				// do nothing for persistent instances

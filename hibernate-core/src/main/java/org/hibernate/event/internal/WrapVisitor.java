@@ -29,6 +29,7 @@ import static org.hibernate.persister.entity.AbstractEntityPersister.getCollecti
  */
 public class WrapVisitor extends ProxyVisitor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( WrapVisitor.class );
+
 	protected Object entity;
 	protected Object id;
 
@@ -90,8 +91,7 @@ public class WrapVisitor extends ProxyVisitor {
 					if ( attributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 						return null;
 					}
-					else if ( attributeInterceptor != null ) {
-						final var lazyLoadingInterceptor = (LazyAttributeLoadingInterceptor) attributeInterceptor;
+					else if ( attributeInterceptor instanceof LazyAttributeLoadingInterceptor lazyLoadingInterceptor ) {
 						if ( lazyLoadingInterceptor.isAttributeLoaded( persister.getAttributeMapping().getAttributeName() ) ) {
 							final var entry = persistenceContext.getEntry( entity );
 							if ( entry.isExistsInDatabase() ) {
@@ -140,7 +140,7 @@ public class WrapVisitor extends ProxyVisitor {
 			final Type[] types = componentType.getSubtypes();
 			boolean substituteComponent = false;
 			for ( int i = 0; i < types.length; i++ ) {
-				Object result = processValue( values[i], types[i] );
+				final Object result = processValue( values[i], types[i] );
 				if ( result != null ) {
 					values[i] = result;
 					substituteComponent = true;

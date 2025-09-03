@@ -10,7 +10,6 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
@@ -63,7 +62,6 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 		else {
 			super.processComponent( component, componentType );
 		}
-
 		return null;
 	}
 
@@ -95,7 +93,7 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 * @return The value from the owner that identifies the grouping into the collection
 	 */
 	final Object extractCollectionKeyFromOwner(CollectionPersister role) {
-		final CollectionType collectionType = role.getCollectionType();
+		final var collectionType = role.getCollectionType();
 		if ( collectionType.useLHSPrimaryKey() ) {
 			return ownerIdentifier;
 		}

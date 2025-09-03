@@ -28,6 +28,7 @@ import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 
 import org.jboss.logging.Logger;
 
+import static java.lang.System.arraycopy;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
@@ -239,7 +240,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 			listenersWrite = createListenerArrayForWrite( size + 1 );
 
 			// first copy the existing listeners
-			System.arraycopy( listenersRead, 0, listenersWrite, 0, size );
+			arraycopy( listenersRead, 0, listenersWrite, 0, size );
 
 			// and then put the new one after them
 			listenersWrite[size] = listener;
@@ -279,7 +280,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 			listenersWrite[0] = listener;
 
 			// and copy the rest after it
-			System.arraycopy( listenersRead, 0, listenersWrite, 1, size );
+			arraycopy( listenersRead, 0, listenersWrite, 1, size );
 		}
 		setListeners( listenersWrite );
 	}
@@ -293,7 +294,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 		int size = listenersRead.length;
 
 		final T[] listenersWrite = createListenerArrayForWrite( size );
-		System.arraycopy( listenersRead, 0, listenersWrite, 0, size );
+		arraycopy( listenersRead, 0, listenersWrite, 0, size );
 
 		final boolean traceEnabled = log.isTraceEnabled();
 

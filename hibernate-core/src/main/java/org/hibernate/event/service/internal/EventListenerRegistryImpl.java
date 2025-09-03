@@ -6,7 +6,6 @@ package org.hibernate.event.service.internal;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -41,6 +40,7 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 
+import static java.util.Comparator.comparing;
 import static org.hibernate.event.spi.EventType.AUTO_FLUSH;
 import static org.hibernate.event.spi.EventType.CLEAR;
 import static org.hibernate.event.spi.EventType.DELETE;
@@ -108,8 +108,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 
 	@Override
 	public void addDuplicationStrategy(DuplicationStrategy strategy) {
-		//noinspection rawtypes
-		for ( EventListenerGroup group : eventListeners ) {
+		for ( var group : eventListeners ) {
 			if ( group != null ) {
 				group.addDuplicationStrategy( strategy );
 			}
@@ -126,7 +125,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 	@AllowReflection // Possible array types are registered in org.hibernate.graalvm.internal.StaticClassLists.typesNeedingArrayCopy
 	private <T> T[] resolveListenerInstances(EventType<T> type, Class<? extends T>... listenerClasses) {
 		@SuppressWarnings("unchecked")
-		T[] listeners = (T[]) Array.newInstance( type.baseListenerInterface(), listenerClasses.length );
+		final T[] listeners = (T[]) Array.newInstance( type.baseListenerInterface(), listenerClasses.length );
 		for ( int i = 0; i < listenerClasses.length; i++ ) {
 			listeners[i] = resolveListenerInstance( listenerClasses[i] );
 		}
@@ -135,12 +134,15 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 
 	private <T> T resolveListenerInstance(Class<T> listenerClass) {
 		@SuppressWarnings("unchecked")
-		T listenerInstance = (T) listenerClassToInstanceMap.get( listenerClass );
+		final T listenerInstance = (T) listenerClassToInstanceMap.get( listenerClass );
 		if ( listenerInstance == null ) {
-			listenerInstance = instantiateListener( listenerClass );
-			listenerClassToInstanceMap.put( listenerClass, listenerInstance );
+			T newListenerInstance = instantiateListener( listenerClass );
+			listenerClassToInstanceMap.put( listenerClass, newListenerInstance );
+			return newListenerInstance;
 		}
-		return listenerInstance;
+		else {
+			return listenerInstance;
+		}
 	}
 
 	private <T> T instantiateListener(Class<T> listenerClass) {
@@ -159,7 +161,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 	@Override
 	@SafeVarargs
 	public final <T> void setListeners(EventType<T> type, T... listeners) {
-		final EventListenerGroup<T> registeredListeners = getEventListenerGroup( type );
+		final var registeredListeners = getEventListenerGroup( type );
 		registeredListeners.clear();
 		if ( listeners != null ) {
 			for ( T listener : listeners ) {
@@ -200,9 +202,8 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 		private final CallbackRegistry callbackRegistry;
 		private final boolean jpaBootstrap;
 
-		private final Map<EventType<?>,EventListenerGroup<?>> listenerGroupMap = new TreeMap<>(
-				Comparator.comparing( EventType::ordinal )
-		);
+		private final Map<EventType<?>,EventListenerGroup<?>> listenerGroupMap =
+				new TreeMap<>( comparing( EventType::ordinal ) );
 
 		public Builder(CallbackRegistry callbackRegistry, boolean jpaBootstrap) {
 			this.callbackRegistry = callbackRegistry;
@@ -322,29 +323,22 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 			prepareListeners(
 					type,
 					defaultListener,
-					t -> {
-						if ( type == EventType.POST_COMMIT_DELETE
-								|| type == EventType.POST_COMMIT_INSERT
-								|| type == EventType.POST_COMMIT_UPDATE ) {
-							return new PostCommitEventListenerGroupImpl<>( type, callbackRegistry, jpaBootstrap );
-						}
-						else {
-							return new EventListenerGroupImpl<>( type, callbackRegistry, jpaBootstrap );
-						}
-					}
+					t -> type == EventType.POST_COMMIT_DELETE
+					||   type == EventType.POST_COMMIT_INSERT
+					||   type == EventType.POST_COMMIT_UPDATE
+							? new PostCommitEventListenerGroupImpl<>( type, callbackRegistry, jpaBootstrap )
+							: new EventListenerGroupImpl<>( type, callbackRegistry, jpaBootstrap )
 			);
 		}
 
-		public <T> void prepareListeners(
+		<T> void prepareListeners(
 				EventType<T> type,
 				T defaultListener,
 				Function<EventType<T>,EventListenerGroupImpl<T>> groupCreator) {
-			final EventListenerGroupImpl<T> listenerGroup = groupCreator.apply( type );
-
+			final var listenerGroup = groupCreator.apply( type );
 			if ( defaultListener != null ) {
 				listenerGroup.appendListener( defaultListener );
 			}
-
 			listenerGroupMap.put( type, listenerGroup );
 		}
 
@@ -355,24 +349,19 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 
 		public EventListenerRegistry buildRegistry(Map<String, EventType<?>> registeredEventTypes) {
 			// validate contiguity of the event-type ordinals and build the EventListenerGroups array
-
-			final ArrayList<EventType<?>> eventTypeList = new ArrayList<>( registeredEventTypes.values() );
-			eventTypeList.sort( Comparator.comparing( EventType::ordinal ) );
-
-			final EventListenerGroup<?>[] eventListeners = new EventListenerGroup[ eventTypeList.size() ];
-
+			final ArrayList<EventType<?>> eventTypeList =
+					new ArrayList<>( registeredEventTypes.values() );
+			eventTypeList.sort( comparing( EventType::ordinal ) );
+			final EventListenerGroup<?>[] eventListeners =
+					new EventListenerGroup[ eventTypeList.size() ];
 			int previous = -1;
 			for ( int i = 0; i < eventTypeList.size(); i++ ) {
-				final EventType<?> eventType = eventTypeList.get( i );
-
+				final var eventType = eventTypeList.get( i );
 				assert i == eventType.ordinal();
 				assert i - 1 == previous;
-
 				eventListeners[i] = listenerGroupMap.get( eventType );
-
 				previous = i;
 			}
-
 			return new EventListenerRegistryImpl( eventListeners );
 		}
 	}

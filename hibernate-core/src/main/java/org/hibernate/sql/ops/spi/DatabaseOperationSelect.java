@@ -2,9 +2,12 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.sql.exec.spi;
+package org.hibernate.sql.ops.spi;
 
 import org.hibernate.Incubating;
+import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor.StatementCreator;
 import org.hibernate.sql.results.spi.ResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
@@ -17,7 +20,7 @@ import java.sql.PreparedStatement;
  * @author Steve Ebersole
  */
 @Incubating
-public interface DatabaseOperationSelect extends DatabaseOperation<JdbcOperationQuerySelect> {
+public interface DatabaseOperationSelect extends DatabaseOperation<JdbcOperationQuerySelect > {
 	/**
 	 * Execute the underlying statements and return the result(s).
 	 *

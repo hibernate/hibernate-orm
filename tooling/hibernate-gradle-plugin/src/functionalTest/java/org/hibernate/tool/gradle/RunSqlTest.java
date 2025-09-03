@@ -27,11 +27,6 @@ import org.junit.jupiter.api.Test;
 
 class RunSqlTest extends TestTemplate {
 
-    private static final String HIBERNATE_TOOLS_EXTENSION_SECTION =
-    		"hibernateTools {\n" +
-    		"  sqlToRun = 'create table foo (id int not null primary key, baz varchar(256))'\n" +
-    		"}\n";
-
 	@BeforeEach
 	public void beforeEach() {
 		setGradleTaskToPerform("runSql");
@@ -39,7 +34,11 @@ class RunSqlTest extends TestTemplate {
 
 	@Test
     void testRunSql() throws Exception {
-		setHibernateToolsExtensionSection(HIBERNATE_TOOLS_EXTENSION_SECTION);
+		setHibernateToolsExtensionSection(
+				"hibernateTools {\n" +
+				"  sqlToRun = 'create table foo (id int not null primary key, baz varchar(256))'\n" +
+				"}\n"
+		);
 		assertNull(getDatabaseFile());
     	createProjectAndExecuteGradleCommand();
 		assertTrue(getBuildResult().getOutput().contains("Running SQL: create table foo (id int not null primary key, baz varchar(256))"));

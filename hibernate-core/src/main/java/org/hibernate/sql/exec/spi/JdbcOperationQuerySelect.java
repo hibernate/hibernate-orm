@@ -12,6 +12,7 @@ import java.util.Set;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ops.spi.PrimaryOperation;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -20,7 +21,9 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
-public class JdbcOperationQuerySelect extends AbstractJdbcOperationQuery {
+public class JdbcOperationQuerySelect
+		extends AbstractJdbcOperationQuery
+		implements PrimaryOperation {
 	private final JdbcValuesMappingProducer jdbcValuesMappingProducer;
 	private final int rowsToSkip;
 	private final int maxRows;

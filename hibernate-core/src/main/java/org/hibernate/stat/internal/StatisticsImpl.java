@@ -736,11 +736,10 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		boolean isLongestQuery;
 		//noinspection StatementWithEmptyBody
 		for ( long old = queryExecutionMaxTime.get();
-				( isLongestQuery = time > old ) && ( ! queryExecutionMaxTime.compareAndSet( old, time ) );
+				( isLongestQuery = time > old ) && !queryExecutionMaxTime.compareAndSet( old, time );
 				old = queryExecutionMaxTime.get() ) {
 			// nothing to do here given the odd loop structure...
 		}
-
 		if ( isLongestQuery ) {
 			queryExecutionMaxTimeQueryString = hql;
 		}
@@ -1018,17 +1017,14 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	private CacheRegionStatisticsImpl instantiateCacheRegionStatistics(final String regionName) {
 		final Region region = cache.getRegion( regionName );
-
 		if ( region == null ) {
 			throw new IllegalArgumentException( "Unknown cache region : " + regionName );
 		}
-
 		if ( region instanceof QueryResultsRegion ) {
 			throw new IllegalArgumentException(
 					"Region name [" + regionName + "] referred to a query result region, not a domain data region"
 			);
 		}
-
 		return new CacheRegionStatisticsImpl( region );
 	}
 
@@ -1038,18 +1034,14 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	private @Nullable CacheRegionStatisticsImpl createCacheRegionStatistics(final String regionName) {
 		Region region = cache.getRegion( regionName );
-
 		if ( region == null ) {
-
 			if ( !queryCacheEnabled ) {
 				return null;
 			}
-
 			// this is the pre-5.3 behavior.  and since this is a pre-5.3 method it should behave consistently
 			// NOTE that this method is deprecated
 			region = cache.getQueryResultsCache( regionName ).getRegion();
 		}
-
 		return new CacheRegionStatisticsImpl( region );
 	}
 

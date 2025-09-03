@@ -93,16 +93,15 @@ public class CacheRegionStatisticsImpl implements CacheRegionStatistics, Seriali
 
 	@Override
 	public String toString() {
-		String buf = "CacheRegionStatistics" +
-				"[region=" + region.getName() +
-				",hitCount=" + this.hitCount +
-				",missCount=" + this.missCount +
-				",putCount=" + this.putCount +
-				",removeCount=" + this.removeCount +
-				",elementCountInMemory=" + this.getElementCountInMemory() +
-				",elementCountOnDisk=" + this.getElementCountOnDisk() +
-				",sizeInMemory=" + this.getSizeInMemory() +
-				']';
-		return buf;
+		return "CacheRegionStatistics"
+			+ "[region=" + region.getName()
+			+ ",hitCount=" + hitCount
+			+ ",missCount=" + missCount
+			+ ",putCount=" + putCount
+			+ ",removeCount=" + removeCount
+			+ ",elementCountInMemory=" + getElementCountInMemory()
+			+ ",elementCountOnDisk=" + getElementCountOnDisk()
+			+ ",sizeInMemory=" + getSizeInMemory()
+			+ ']';
 	}
 }

@@ -75,7 +75,7 @@ public class CollectionStatisticsImpl extends AbstractCacheableDataStatistics im
 	}
 
 	public String toString() {
-		final StringBuilder buffer = new StringBuilder()
+		final var text = new StringBuilder()
 				.append( "CollectionStatistics" )
 				.append( "[collectionRole=" ).append( collectionRole )
 				.append( ",loadCount=" ).append( this.loadCount )
@@ -83,7 +83,7 @@ public class CollectionStatisticsImpl extends AbstractCacheableDataStatistics im
 				.append( ",recreateCount=" ).append( this.recreateCount )
 				.append( ",removeCount=" ).append( this.removeCount )
 				.append( ",updateCount=" ).append( this.updateCount );
-		appendCacheStats( buffer );
-		return buffer.append(']').toString();
+		appendCacheStats( text );
+		return text.append(']').toString();
 	}
 }

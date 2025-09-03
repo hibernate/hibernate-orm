@@ -29,7 +29,8 @@ import static org.hibernate.cfg.AvailableSettings.MERGE_ENTITY_COPY_OBSERVER;
 public class EntityCopyObserverFactoryInitiator implements StandardServiceInitiator<EntityCopyObserverFactory> {
 
 	public static final EntityCopyObserverFactoryInitiator INSTANCE = new EntityCopyObserverFactoryInitiator();
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityCopyObserverFactoryInitiator.class );
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( EntityCopyObserverFactoryInitiator.class );
 
 	@Override
 	public EntityCopyObserverFactory initiateService(final Map<String, Object> configurationValues, final ServiceRegistryImplementor registry) {
@@ -39,19 +40,19 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 		}
 		else if ( value.equals( EntityCopyNotAllowedObserver.SHORT_NAME )
 				|| value.equals( EntityCopyNotAllowedObserver.class.getName() ) ) {
-			LOG.tracef( "Configured EntityCopyObserver strategy: %s",
+			log.tracef( "Configured EntityCopyObserver strategy: %s",
 					EntityCopyNotAllowedObserver.SHORT_NAME );
 			return EntityCopyNotAllowedObserver.FACTORY_OF_SELF;
 		}
 		else if ( value.equals( EntityCopyAllowedObserver.SHORT_NAME )
 				|| value.equals( EntityCopyAllowedObserver.class.getName() ) ) {
-			LOG.tracef( "Configured EntityCopyObserver strategy: %s",
+			log.tracef( "Configured EntityCopyObserver strategy: %s",
 					EntityCopyAllowedObserver.SHORT_NAME );
 			return EntityCopyAllowedObserver.FACTORY_OF_SELF;
 		}
 		else if ( value.equals( EntityCopyAllowedLoggedObserver.SHORT_NAME )
 				|| value.equals( EntityCopyAllowedLoggedObserver.class.getName() ) ) {
-			LOG.tracef( "Configured EntityCopyObserver strategy: %s",
+			log.tracef( "Configured EntityCopyObserver strategy: %s",
 					EntityCopyAllowedLoggedObserver.SHORT_NAME );
 			return EntityCopyAllowedLoggedObserver.FACTORY_OF_SELF;
 		}
@@ -64,7 +65,7 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 					registry.requireService( StrategySelector.class )
 							.resolveStrategy( EntityCopyObserver.class, value );
 			final var observerType = exampleInstance.getClass();
-			LOG.tracef( "Configured EntityCopyObserver is a custom implementation of type '%s'",
+			log.tracef( "Configured EntityCopyObserver is a custom implementation of type '%s'",
 					observerType.getName() );
 			return new EntityCopyObserverFactoryFromClass( observerType );
 		}

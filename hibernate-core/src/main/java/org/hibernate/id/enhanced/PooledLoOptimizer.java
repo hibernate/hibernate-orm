@@ -27,7 +27,8 @@ import java.util.concurrent.locks.ReentrantLock;
  * @see PooledOptimizer
  */
 public class PooledLoOptimizer extends AbstractOptimizer {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+
+	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			PooledLoOptimizer.class.getName()
@@ -53,7 +54,7 @@ public class PooledLoOptimizer extends AbstractOptimizer {
 		if ( incrementSize < 1 ) {
 			throw new HibernateException( "increment size cannot be less than 1" );
 		}
-		LOG.creatingPooledLoOptimizer( incrementSize, returnClass.getName() );
+		log.creatingPooledLoOptimizer( incrementSize, returnClass.getName() );
 	}
 
 	@Override

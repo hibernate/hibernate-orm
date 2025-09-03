@@ -41,7 +41,8 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  * @author Gail Badner
  */
 public class UnresolvedEntityInsertActions {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UnresolvedEntityInsertActions.class );
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( UnresolvedEntityInsertActions.class );
 
 	private static final int INIT_SIZE = 5;
 
@@ -63,8 +64,8 @@ public class UnresolvedEntityInsertActions {
 					"Attempt to add an unresolved insert action that has no non-nullable transient entities."
 			);
 		}
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
+		if ( log.isTraceEnabled() ) {
+			log.tracev(
 					"Adding insert with non-nullable, transient entities; insert=[{0}], dependencies=[{1}]",
 					insert,
 					dependencies.toLoggableString( insert.getSession() )
@@ -96,7 +97,7 @@ public class UnresolvedEntityInsertActions {
 	 */
 	public void checkNoUnresolvedActionsAfterOperation() throws PropertyValueException {
 		if ( isEmpty() ) {
-			LOG.trace( "No entity insert actions have non-nullable, transient entity dependencies." );
+			log.trace( "No entity insert actions have non-nullable, transient entity dependencies." );
 		}
 		else {
 			final var firstDependentAction = dependenciesByAction.keySet().iterator().next();
@@ -142,7 +143,7 @@ public class UnresolvedEntityInsertActions {
 				}
 			}
 
-			LOG.cannotResolveNonNullableTransientDependencies(
+			log.cannotResolveNonNullableTransientDependencies(
 					transientEntityString,
 					dependentEntityStrings,
 					nonNullableTransientPropertyPaths
@@ -186,13 +187,13 @@ public class UnresolvedEntityInsertActions {
 			throw new IllegalArgumentException( "EntityEntry did not have status MANAGED or READ_ONLY: " + entityEntry );
 		}
 
-		final boolean traceEnabled = LOG.isTraceEnabled();
+		final boolean traceEnabled = log.isTraceEnabled();
 		// Find out if there are any unresolved insertions that are waiting for the
 		// specified entity to be resolved.
 		final var dependentActions = dependentActionsByTransientEntity.remove( managedEntity );
 		if ( dependentActions == null ) {
 			if ( traceEnabled ) {
-				LOG.tracev(
+				log.tracev(
 						"No unresolved entity inserts that depended on [{0}]",
 						infoString( entityEntry.getEntityName(), entityEntry.getId() )
 				);
@@ -202,7 +203,7 @@ public class UnresolvedEntityInsertActions {
 		else {
 			final Set<AbstractEntityInsertAction> resolvedActions = new IdentitySet<>();
 			if ( traceEnabled  ) {
-				LOG.tracev(
+				log.tracev(
 						"Unresolved inserts before resolving [{0}]: [{1}]",
 						infoString( entityEntry.getEntityName(), entityEntry.getId() ),
 						toString()
@@ -210,7 +211,7 @@ public class UnresolvedEntityInsertActions {
 			}
 			for ( var dependentAction : dependentActions ) {
 				if ( traceEnabled ) {
-					LOG.tracev(
+					log.tracev(
 							"Resolving insert [{0}] dependency on [{1}]",
 							infoString( dependentAction.getEntityName(), dependentAction.getId() ),
 							infoString( entityEntry.getEntityName(), entityEntry.getId() )
@@ -220,7 +221,7 @@ public class UnresolvedEntityInsertActions {
 				dependencies.resolveNonNullableTransientEntity( managedEntity );
 				if ( dependencies.isEmpty() ) {
 					if ( traceEnabled ) {
-						LOG.tracev(
+						log.tracev(
 								"Resolving insert [{0}] (only depended on [{1}])",
 								dependentAction,
 								infoString( entityEntry.getEntityName(), entityEntry.getId() )
@@ -232,7 +233,7 @@ public class UnresolvedEntityInsertActions {
 				}
 			}
 			if ( traceEnabled  ) {
-				LOG.tracev(
+				log.tracev(
 						"Unresolved inserts after resolving [{0}]: [{1}]",
 						infoString( entityEntry.getEntityName(), entityEntry.getId() ),
 						toString()
@@ -273,7 +274,7 @@ public class UnresolvedEntityInsertActions {
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		final int queueSize = dependenciesByAction.size();
-		LOG.tracev( "Starting serialization of [{0}] unresolved insert entries", queueSize );
+		log.tracev( "Starting serialization of [{0}] unresolved insert entries", queueSize );
 		oos.writeInt( queueSize );
 		for ( AbstractEntityInsertAction unresolvedAction : dependenciesByAction.keySet() ) {
 			oos.writeObject( unresolvedAction );
@@ -297,7 +298,7 @@ public class UnresolvedEntityInsertActions {
 		final var rtn = new UnresolvedEntityInsertActions();
 
 		final int queueSize = ois.readInt();
-		LOG.tracev( "Starting deserialization of [{0}] unresolved insert entries", queueSize );
+		log.tracev( "Starting deserialization of [{0}] unresolved insert entries", queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			final var unresolvedAction = (AbstractEntityInsertAction) ois.readObject();
 			unresolvedAction.afterDeserialize( session );

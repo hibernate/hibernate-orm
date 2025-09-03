@@ -33,7 +33,8 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 final class JndiServiceImpl implements JndiService {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+
+	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			JndiServiceImpl.class.getName()
@@ -149,7 +150,7 @@ final class JndiServiceImpl implements JndiService {
 			initialContext.close();
 		}
 		catch ( NamingException e ) {
-			LOG.unableToCloseInitialContext(e.toString());
+			log.unableToCloseInitialContext(e.toString());
 		}
 	}
 
@@ -167,7 +168,7 @@ final class JndiServiceImpl implements JndiService {
 
 	private void bind(Name name, Object value, Context context) {
 		try {
-			LOG.tracef( "Binding: %s", name );
+			log.tracef( "Binding: %s", name );
 			context.rebind( name, value );
 		}
 		catch ( Exception initialException ) {
@@ -185,7 +186,7 @@ final class JndiServiceImpl implements JndiService {
 
 				Context intermediateContext = null;
 				try {
-					LOG.tracef( "Intermediate lookup: %s", intermediateContextName );
+					log.tracef( "Intermediate lookup: %s", intermediateContextName );
 					intermediateContext = (Context) intermediateContextBase.lookup( intermediateContextName );
 				}
 				catch ( NameNotFoundException handledBelow ) {
@@ -196,10 +197,10 @@ final class JndiServiceImpl implements JndiService {
 				}
 
 				if ( intermediateContext != null ) {
-					LOG.tracef( "Found intermediate context: %s", intermediateContextName );
+					log.tracef( "Found intermediate context: %s", intermediateContextName );
 				}
 				else {
-					LOG.tracef( "Creating subcontext: %s", intermediateContextName );
+					log.tracef( "Creating subcontext: %s", intermediateContextName );
 					try {
 						intermediateContext = intermediateContextBase.createSubcontext( intermediateContextName );
 					}
@@ -210,7 +211,7 @@ final class JndiServiceImpl implements JndiService {
 				intermediateContextBase = intermediateContext;
 				name = name.getSuffix( 1 );
 			}
-			LOG.tracef( "Binding: %s", name );
+			log.tracef( "Binding: %s", name );
 			try {
 				intermediateContextBase.rebind( name, value );
 			}
@@ -218,7 +219,7 @@ final class JndiServiceImpl implements JndiService {
 				throw new JndiException( "Error performing intermediate bind [" + name + "]", e );
 			}
 		}
-		LOG.tracef( "Bound name: %s", name );
+		log.tracef( "Bound name: %s", name );
 	}
 
 	@Override

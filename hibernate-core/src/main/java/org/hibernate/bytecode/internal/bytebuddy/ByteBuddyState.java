@@ -56,7 +56,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  */
 public final class ByteBuddyState {
 
-	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyState.class );
+	private static final CoreMessageLogger log = messageLogger( ByteBuddyState.class );
 
 	private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
 
@@ -278,7 +278,7 @@ public final class ByteBuddyState {
 				unloadedClass.saveIn( new File( System.getProperty( "java.io.tmpdir" ) + "/bytebuddy/" ) );
 			}
 			catch (IOException e) {
-				LOG.warn( "Unable to save generated class %1$s", unloadedClass.getTypeDescription().getName(), e );
+				log.warn( "Unable to save generated class %1$s", unloadedClass.getTypeDescription().getName(), e );
 			}
 		}
 		return unloadedClass;

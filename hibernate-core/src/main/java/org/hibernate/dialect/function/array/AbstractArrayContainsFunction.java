@@ -20,7 +20,7 @@ import java.lang.invoke.MethodHandles;
  */
 public abstract class AbstractArrayContainsFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	protected static final DeprecationLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), DeprecationLogger.class, AbstractArrayContainsFunction.class.getName() );
+	protected static final DeprecationLogger log = Logger.getMessageLogger( MethodHandles.lookup(), DeprecationLogger.class, AbstractArrayContainsFunction.class.getName() );
 
 	protected final boolean nullable;
 

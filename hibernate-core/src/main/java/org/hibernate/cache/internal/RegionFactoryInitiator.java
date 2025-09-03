@@ -29,7 +29,8 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getBooleanW
  * @author Brett Meyer
  */
 public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFactory> {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( RegionFactoryInitiator.class );
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( RegionFactoryInitiator.class );
 
 	/**
 	 * Singleton access
@@ -45,10 +46,10 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 	public RegionFactory initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final var regionFactory = resolveRegionFactory( configurationValues, registry );
 		if ( regionFactory instanceof NoCachingRegionFactory ) {
-			LOG.noRegionFactory();
+			log.noRegionFactory();
 		}
 		else {
-			LOG.regionFactory( regionFactory.getClass().getTypeName() );
+			log.regionFactory( regionFactory.getClass().getTypeName() );
 		}
 		return regionFactory;
 	}
@@ -114,7 +115,7 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 			return registeredFactory;
 		}
 		else {
-			LOG.debugf(
+			log.debugf(
 					"Cannot default RegionFactory based on registered strategies as `%s` RegionFactory strategies were registered",
 					implementors
 			);

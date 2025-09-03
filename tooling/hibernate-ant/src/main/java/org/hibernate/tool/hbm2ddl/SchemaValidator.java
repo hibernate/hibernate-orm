@@ -41,14 +41,14 @@ import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
  * @author Christoph Sturm
  */
 public class SchemaValidator {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SchemaValidator.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( SchemaValidator.class );
 
 	public void validate(Metadata metadata) {
 		validate( metadata, ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry() );
 	}
 
 	public void validate(Metadata metadata, ServiceRegistry serviceRegistry) {
-		LOG.runningSchemaValidator();
+		log.runningSchemaValidator();
 
 		Map<String, Object> config =
 				new HashMap<>( serviceRegistry.requireService( ConfigurationService.class ).getSettings() );
@@ -77,7 +77,7 @@ public class SchemaValidator {
 			}
 		}
 		catch (Exception e) {
-			LOG.unableToRunSchemaUpdate( e );
+			log.unableToRunSchemaUpdate( e );
 		}
 	}
 

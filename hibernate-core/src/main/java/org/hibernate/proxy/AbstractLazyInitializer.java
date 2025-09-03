@@ -26,7 +26,7 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public abstract class AbstractLazyInitializer implements LazyInitializer {
 
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractLazyInitializer.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractLazyInitializer.class );
 
 	private final String entityName;
 	private Object id;
@@ -120,7 +120,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			}
 			else if ( isConnectedToSession() ) {
 				//TODO: perhaps this should be some other RuntimeException...
-				LOG.attemptToAssociateProxyWithTwoOpenSessions( entityName, id );
+				log.attemptToAssociateProxyWithTwoOpenSessions( entityName, id );
 				throw new HibernateException( "Illegally attempted to associate proxy ["
 						+ entityName + "#" + id + "] with two open sessions" );
 			}
@@ -238,12 +238,12 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 						session.close();
 					}
 					catch (Exception e) {
-						LOG.warn( "Unable to close temporary session used to load lazy proxy associated to no session" );
+						log.warn( "Unable to close temporary session used to load lazy proxy associated to no session" );
 					}
 				}
 			}
 			catch (Exception e) {
-				LOG.error( "Initialization failure [" + entityName + "#" + id + "]", e );
+				log.error( "Initialization failure [" + entityName + "#" + id + "]", e );
 				throw new LazyInitializationException( e.getMessage() );
 			}
 		}

@@ -55,7 +55,8 @@ import net.bytebuddy.jar.asm.Opcodes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class BytecodeProviderImpl implements BytecodeProvider {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BytecodeProviderImpl.class );
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( BytecodeProviderImpl.class );
 
 	private static final String INSTANTIATOR_PROXY_NAMING_SUFFIX = "$HibernateInstantiator";
 	private static final String OPTIMIZER_PROXY_NAMING_SUFFIX = "HibernateAccessOptimizer";
@@ -147,7 +148,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			findAccessors( clazz, getterNames, setterNames, types, getters, setters );
 		}
 		catch (InvalidPropertyAccessorException ex) {
-			LOG.unableToGenerateReflectionOptimizer( clazz.getName(), ex.getMessage() );
+			log.unableToGenerateReflectionOptimizer( clazz.getName(), ex.getMessage() );
 			return null;
 		}
 
@@ -209,7 +210,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			findAccessors( clazz, propertyAccessMap, getters, setters );
 		}
 		catch (InvalidPropertyAccessorException ex) {
-			LOG.unableToGenerateReflectionOptimizer( clazz.getName(), ex.getMessage() );
+			log.unableToGenerateReflectionOptimizer( clazz.getName(), ex.getMessage() );
 			return null;
 		}
 

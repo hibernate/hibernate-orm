@@ -75,7 +75,8 @@ import static org.hibernate.tuple.PropertyFactory.buildVersionProperty;
  */
 @Deprecated( since = "6", forRemoval = true )
 public class EntityMetamodel implements Serializable {
-	private static final CoreMessageLogger LOG = messageLogger( EntityMetamodel.class );
+
+	private static final CoreMessageLogger log = messageLogger( EntityMetamodel.class );
 
 	public static final int NO_VERSION_INDX = -66;
 
@@ -398,7 +399,7 @@ public class EntityMetamodel implements Serializable {
 		versionPropertyIndex = tempVersionProperty;
 		hasLazyProperties = hasLazy;
 		if ( hasLazyProperties ) {
-			LOG.lazyPropertyFetchingAvailable( name );
+			log.lazyPropertyFetchingAvailable( name );
 		}
 
 		lazy = isLazy( persistentClass, bytecodeEnhancementMetadata );
@@ -467,7 +468,7 @@ public class EntityMetamodel implements Serializable {
 			if ( !isAbstract
 					&& persistentClass.hasPojoRepresentation()
 					&& isAbstractClass( persistentClass.getMappedClass() ) ) {
-				LOG.entityMappedAsNonAbstract( persistentClass.getEntityName() );
+				log.entityMappedAsNonAbstract( persistentClass.getEntityName() );
 			}
 			return isAbstract;
 		}

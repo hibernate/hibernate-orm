@@ -34,7 +34,8 @@ import org.jboss.logging.Logger;
  * @since 3.2
  */
 public class UpdateLockingStrategy implements LockingStrategy {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+
+	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			UpdateLockingStrategy.class.getName()
@@ -58,7 +59,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 			throw new HibernateException( "[" + lockMode + "] not valid for update statement" );
 		}
 		if ( !lockable.isVersioned() ) {
-			LOG.writeLocksNotSupported( lockable.getEntityName() );
+			log.writeLocksNotSupported( lockable.getEntityName() );
 			this.sql = null;
 		}
 		else {

@@ -59,7 +59,8 @@ import org.jboss.logging.Logger;
  * @author Sanne Grinovero
  */
 public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+
+	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			ThreadLocalSessionContext.class.getName()
@@ -194,7 +195,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 
 	private static void terminateOrphanedSession(Session orphan) {
 		if ( orphan != null ) {
-			LOG.alreadySessionBound();
+			log.alreadySessionBound();
 			try {
 				final Transaction orphanTransaction = orphan.getTransaction();
 				if ( orphanTransaction != null && orphanTransaction.getStatus() == TransactionStatus.ACTIVE ) {
@@ -202,7 +203,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 						orphanTransaction.rollback();
 					}
 					catch( Throwable t ) {
-						LOG.debug( "Unable to rollback transaction for orphaned session", t );
+						log.debug( "Unable to rollback transaction for orphaned session", t );
 					}
 				}
 			}
@@ -211,7 +212,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 					orphan.close();
 				}
 				catch( Throwable t ) {
-					LOG.debug( "Unable to close orphaned session", t );
+					log.debug( "Unable to close orphaned session", t );
 				}
 			}
 
@@ -310,7 +311,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 						|| "isOpen".equals( methodName )
 						|| "getListeners".equals( methodName ) ) {
 					// allow these to go through the real session no matter what
-					LOG.tracef( "Allowing invocation [%s] to proceed to real session", methodName );
+					log.tracef( "Allowing invocation [%s] to proceed to real session", methodName );
 				}
 				else if ( !realSession.isOpen() ) {
 					// essentially, if the real session is closed allow any
@@ -318,7 +319,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 					// will complain by throwing an appropriate exception;
 					// NOTE that allowing close() above has the same basic effect,
 					//   but we capture that there simply to doAfterTransactionCompletion the unbind...
-					LOG.tracef( "Allowing invocation [%s] to proceed to real (closed) session", methodName );
+					log.tracef( "Allowing invocation [%s] to proceed to real (closed) session", methodName );
 				}
 				else if ( realSession.getTransaction().getStatus() != TransactionStatus.ACTIVE ) {
 					// limit the methods available if no transaction is active
@@ -331,14 +332,14 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 							|| "getSessionFactory".equals( methodName )
 							|| "getJdbcCoordinator".equals( methodName )
 							|| "getTenantIdentifier".equals( methodName ) ) {
-						LOG.tracef( "Allowing invocation [%s] to proceed to real (non-transacted) session", methodName );
+						log.tracef( "Allowing invocation [%s] to proceed to real (non-transacted) session", methodName );
 					}
 					else {
 						throw new HibernateException( "Calling method '" + methodName + "' is not valid without an active transaction (Current status: "
 								+ realSession.getTransaction().getStatus() + ")" );
 					}
 				}
-				LOG.tracef( "Allowing proxy invocation [%s] to proceed to real session", methodName );
+				log.tracef( "Allowing proxy invocation [%s] to proceed to real session", methodName );
 				return method.invoke( realSession, args );
 			}
 			catch ( InvocationTargetException e ) {

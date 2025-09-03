@@ -22,7 +22,8 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * @author Steve Ebersole
  */
 public final class JdbcTypeNameMapper {
-	private static final CoreMessageLogger LOG = messageLogger( JdbcTypeNameMapper.class );
+
+	private static final CoreMessageLogger log = messageLogger( JdbcTypeNameMapper.class );
 
 	private static final Map<Integer, String> JDBC_TYPE_MAP = buildJdbcTypeMap( Types.class );
 	private static final Map<Integer, String> SQL_TYPE_MAP = buildJdbcTypeMap( SqlTypes.class );
@@ -35,7 +36,7 @@ public final class JdbcTypeNameMapper {
 				final int code = field.getInt( null );
 				final String old = map.put( code, field.getName() );
 				if ( old != null ) {
-					LOG.JavaSqlTypesMappedSameCodeMultipleTimes( code, old, field.getName() );
+					log.JavaSqlTypesMappedSameCodeMultipleTimes( code, old, field.getName() );
 				}
 			}
 			catch ( IllegalAccessException e ) {

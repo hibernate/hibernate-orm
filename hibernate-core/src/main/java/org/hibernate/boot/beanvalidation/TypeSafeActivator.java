@@ -73,7 +73,7 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  */
 class TypeSafeActivator {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, TypeSafeActivator.class.getName() );
+	private static final CoreMessageLogger log = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, TypeSafeActivator.class.getName() );
 
 	/**
 	 * Used to validate a supplied ValidatorFactory instance as being castable to ValidatorFactory.
@@ -106,7 +106,7 @@ class TypeSafeActivator {
 				if ( e.getCause() != null && e.getCause() instanceof NoProviderFoundException ) {
 					// all good, we are looking at the ValidationMode.AUTO, and there are no providers available.
 					// Hence, we just don't enable the Jakarta Validation integration:
-					LOG.debug( "Unable to acquire Jakarta Validation ValidatorFactory, skipping activation" );
+					log.debug( "Unable to acquire Jakarta Validation ValidatorFactory, skipping activation" );
 					return;
 				}
 				else {
@@ -174,7 +174,7 @@ class TypeSafeActivator {
 				|| modes.contains( ValidationMode.AUTO );
 		}
 		else {
-			LOG.debug( "Skipping application of relational constraints from legacy Hibernate Validator" );
+			log.debug( "Skipping application of relational constraints from legacy Hibernate Validator" );
 			return false;
 		}
 	}
@@ -220,7 +220,7 @@ class TypeSafeActivator {
 					);
 				}
 				catch (Exception e) {
-					LOG.unableToApplyConstraints( className, e );
+					log.unableToApplyConstraints( className, e );
 				}
 			}
 		}
@@ -369,7 +369,7 @@ class TypeSafeActivator {
 						return result != null && "OR".equals( result.toString() );
 					}
 					catch ( NoSuchMethodException | IllegalAccessException | InvocationTargetException ex ) {
-						LOG.debug( "ConstraintComposition type could not be determined. Assuming AND", ex );
+						log.debug( "ConstraintComposition type could not be determined. Assuming AND", ex );
 						return false;
 					}
 				}
@@ -433,7 +433,7 @@ class TypeSafeActivator {
 						column.setNullable( false );
 					}
 					else {
-						LOG.debugf(
+						log.debugf(
 								"@NotNull was applied to attribute [%s] which is defined (at least partially) " +
 										"by formula(s); formula portions will be skipped",
 								property.getName()

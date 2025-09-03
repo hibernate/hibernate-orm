@@ -21,7 +21,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Gavin King
  */
 public class VersionValue implements UnsavedValueStrategy {
-	private static final Logger LOG = CoreLogging.logger( VersionValue.class );
+
+	private static final Logger log = CoreLogging.logger( VersionValue.class );
 
 	private final @Nullable Object value;
 	/**
@@ -31,7 +32,7 @@ public class VersionValue implements UnsavedValueStrategy {
 	public static final VersionValue NULL = new VersionValue() {
 		@Override
 		public Boolean isUnsaved(@Nullable Object version) {
-			LOG.trace( "Version unsaved-value strategy NULL" );
+			log.trace( "Version unsaved-value strategy NULL" );
 			return version == null;
 		}
 
@@ -53,7 +54,7 @@ public class VersionValue implements UnsavedValueStrategy {
 	public static final VersionValue UNDEFINED = new VersionValue() {
 		@Override
 		public @Nullable Boolean isUnsaved(@Nullable Object version) {
-			LOG.trace( "Version unsaved-value strategy UNDEFINED" );
+			log.trace( "Version unsaved-value strategy UNDEFINED" );
 			return version == null ? Boolean.TRUE : null;
 		}
 
@@ -76,7 +77,7 @@ public class VersionValue implements UnsavedValueStrategy {
 
 		@Override
 		public Boolean isUnsaved(@Nullable Object version) throws MappingException {
-			LOG.trace( "Version unsaved-value strategy NEGATIVE" );
+			log.trace( "Version unsaved-value strategy NEGATIVE" );
 			if ( version == null ) {
 				return Boolean.TRUE;
 			}
@@ -115,7 +116,7 @@ public class VersionValue implements UnsavedValueStrategy {
 
 	@Override
 	public @Nullable Boolean isUnsaved(@Nullable Object version) throws MappingException {
-		LOG.tracef( "Version unsaved-value: %s", value );
+		log.tracef( "Version unsaved-value: %s", value );
 		return version == null || version.equals( value );
 	}
 

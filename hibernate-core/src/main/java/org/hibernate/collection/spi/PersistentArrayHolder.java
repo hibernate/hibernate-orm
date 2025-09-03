@@ -37,7 +37,8 @@ import org.hibernate.type.Type;
 @Incubating
 @AllowReflection // We need the ability to create arrays of the same type as in the model.
 public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PersistentArrayHolder.class );
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( PersistentArrayHolder.class );
 
 	protected Object array;
 
@@ -79,7 +80,7 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 				Array.set( result, i, persister.getElementType().deepCopy( elt, persister.getFactory() ) );
 			}
 			catch (IllegalArgumentException iae) {
-				LOG.invalidArrayElementType( iae.getMessage() );
+				log.invalidArrayElementType( iae.getMessage() );
 				throw new HibernateException( "Array element type error", iae );
 			}
 		}

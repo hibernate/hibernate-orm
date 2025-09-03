@@ -44,7 +44,8 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class JTASessionContext extends AbstractCurrentSessionContext {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+
+	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			JTASessionContext.class.getName()
@@ -104,7 +105,7 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 					currentSession.close();
 				}
 				catch ( Throwable e ) {
-					LOG.debug( "Unable to release generated current-session on failed synchronization registration", e );
+					log.debug( "Unable to release generated current-session on failed synchronization registration", e );
 				}
 				throw new HibernateException( "Unable to register cleanup Synchronization with TransactionManager" );
 			}

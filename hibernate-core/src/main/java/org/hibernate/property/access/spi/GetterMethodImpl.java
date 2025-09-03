@@ -29,7 +29,8 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  */
 @Internal
 public class GetterMethodImpl implements Getter {
-	private static final CoreMessageLogger LOG = messageLogger( GetterMethodImpl.class );
+
+	private static final CoreMessageLogger log = messageLogger( GetterMethodImpl.class );
 
 	private final Class<?> containerClass;
 	private final String propertyName;
@@ -71,7 +72,7 @@ public class GetterMethodImpl implements Getter {
 			//cannot occur
 		}
 		catch (IllegalArgumentException iae) {
-			LOG.illegalPropertyGetterArgument( containerClass.getName(), propertyName );
+			log.illegalPropertyGetterArgument( containerClass.getName(), propertyName );
 			throw new PropertyAccessException(
 					iae,
 					"IllegalArgumentException occurred calling",

@@ -35,7 +35,8 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
  * @author Gavin King
  */
 public class FilterDefBinder {
-	private static final CoreMessageLogger LOG = messageLogger( FilterDefBinder.class );
+
+	private static final CoreMessageLogger log = messageLogger( FilterDefBinder.class );
 
 	public static void bindFilterDefs(AnnotationTarget annotatedElement, MetadataBuildingContext context) {
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
@@ -93,8 +94,8 @@ public class FilterDefBinder {
 				parameterResolvers
 		);
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Binding filter definition: " + filterDefinition.getFilterName() );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Binding filter definition: " + filterDefinition.getFilterName() );
 		}
 		context.getMetadataCollector().addFilterDefinition( filterDefinition );
 	}

@@ -24,7 +24,7 @@ import org.hibernate.type.EntityType;
  */
 public final class FetchOptionsHelper {
 
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( FetchOptionsHelper.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( FetchOptionsHelper.class );
 
 	private FetchOptionsHelper() {
 	}
@@ -101,7 +101,7 @@ public final class FetchOptionsHelper {
 		switch ( style ) {
 			case JOIN: {
 				if ( lazy ) {
-					LOG.fetchModeJoinWithLazyWarning( role );
+					log.fetchModeJoinWithLazyWarning( role );
 					return FetchTiming.DELAYED;
 				}
 				return FetchTiming.IMMEDIATE;

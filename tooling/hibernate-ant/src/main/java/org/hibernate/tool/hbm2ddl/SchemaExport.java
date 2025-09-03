@@ -57,7 +57,7 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
  * @author Steve Ebersole
  */
 public class SchemaExport {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SchemaExport.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( SchemaExport.class );
 
 	public enum Type {
 		CREATE( Action.CREATE ),
@@ -242,18 +242,18 @@ public class SchemaExport {
 
 	public void execute(EnumSet<TargetType> targetTypes, Action action, Metadata metadata, ServiceRegistry serviceRegistry) {
 		if ( action == Action.NONE ) {
-			LOG.debug( "Skipping SchemaExport as Action.NONE was passed" );
+			log.debug( "Skipping SchemaExport as Action.NONE was passed" );
 			return;
 		}
 
 		if ( targetTypes.isEmpty() ) {
-			LOG.debug( "Skipping SchemaExport as no targets were specified" );
+			log.debug( "Skipping SchemaExport as no targets were specified" );
 			return;
 		}
 
 		exceptions.clear();
 
-		LOG.runningHbm2ddlSchemaExport();
+		log.runningHbm2ddlSchemaExport();
 
 		final TargetDescriptor targetDescriptor = buildTargetDescriptor(
 				targetTypes,
@@ -382,7 +382,7 @@ public class SchemaExport {
 			execute( commandLineArgs );
 		}
 		catch (Exception e) {
-			LOG.unableToCreateSchema( e );
+			log.unableToCreateSchema( e );
 		}
 	}
 
@@ -595,7 +595,7 @@ public class SchemaExport {
 			}
 			else {
 				if ( drop || create ) {
-					LOG.warn( "--drop or --create was used; prefer --action=none|create|drop|drop-and-create instead" );
+					log.warn( "--drop or --create was used; prefer --action=none|create|drop|drop-and-create instead" );
 				}
 				parsedArgs.action = Action.parseCommandLineOption( actionText );
 			}
@@ -605,7 +605,7 @@ public class SchemaExport {
 			}
 			else {
 				if ( !script || !export ) {
-					LOG.warn( "--text or --quiet was used; prefer --target=none|(stdout|database|script)*" );
+					log.warn( "--text or --quiet was used; prefer --target=none|(stdout|database|script)*" );
 				}
 				parsedArgs.targetTypes = TargetTypeHelper.parseCommandLineOptions( targetText );
 			}

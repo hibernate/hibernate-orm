@@ -66,7 +66,8 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
  * @since 5.0
  */
 public class MetadataSources implements Serializable {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( MetadataSources.class );
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( MetadataSources.class );
 
 	private final ServiceRegistry serviceRegistry;
 	private final ClassLoaderService classLoaderService;
@@ -106,8 +107,8 @@ public class MetadataSources implements Serializable {
 	public MetadataSources(ServiceRegistry serviceRegistry, XmlMappingBinderAccess xmlMappingBinderAccess) {
 		// service registry really should be either BootstrapServiceRegistry or StandardServiceRegistry type...
 		if ( !isExpectedServiceRegistryType( serviceRegistry ) ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf(
+			if ( log.isDebugEnabled() ) {
+				log.debugf(
 						"Unexpected ServiceRegistry type [%s] encountered during building of MetadataSources; may cause " +
 								"problems later attempting to construct MetadataBuilder",
 						serviceRegistry.getClass().getName()

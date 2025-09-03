@@ -28,7 +28,8 @@ import static org.hibernate.persister.entity.AbstractEntityPersister.getCollecti
  * @author Gavin King
  */
 public class WrapVisitor extends ProxyVisitor {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( WrapVisitor.class );
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( WrapVisitor.class );
 
 	protected Object entity;
 	protected Object id;
@@ -116,8 +117,8 @@ public class WrapVisitor extends ProxyVisitor {
 
 				final var persistentCollection = collectionType.wrap( session, collection );
 				persistenceContext.addNewCollection( persister, persistentCollection );
-				if ( LOG.isTraceEnabled() ) {
-					LOG.trace( "Wrapped collection in role: " + collectionType.getRole() );
+				if ( log.isTraceEnabled() ) {
+					log.trace( "Wrapped collection in role: " + collectionType.getRole() );
 				}
 				return persistentCollection; //Force a substitution!
 			}

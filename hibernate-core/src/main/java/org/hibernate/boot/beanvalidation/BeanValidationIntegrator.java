@@ -28,7 +28,8 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class BeanValidationIntegrator implements Integrator {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+
+	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			BeanValidationIntegrator.class.getName()
@@ -98,7 +99,7 @@ public class BeanValidationIntegrator implements Integrator {
 		}
 		final Set<ValidationMode> modes = ValidationMode.getModes( modeSetting );
 		if ( modes.size() > 1 ) {
-			LOG.multipleValidationModes( ValidationMode.loggable( modes ) );
+			log.multipleValidationModes( ValidationMode.loggable( modes ) );
 		}
 		if ( modes.size() == 1 && modes.contains( ValidationMode.NONE ) ) {
 			// we have nothing to do; just return

@@ -9,8 +9,6 @@ import org.hibernate.Incubating;
 /**
  * Defines transformation of a raw row in the domain query result row.
  *
- * E.g. a query might select multiple
- *
  * @see org.hibernate.query.TupleTransformer
  *
  * @author Steve Ebersole

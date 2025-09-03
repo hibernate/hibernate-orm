@@ -185,7 +185,7 @@ import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation.mapIns
  */
 public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SqmCriteriaNodeBuilder.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( SqmCriteriaNodeBuilder.class );
 
 	private final String uuid;
 	private final String name;
@@ -3083,14 +3083,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	 */
 	@Serial
 	private Object readResolve() throws InvalidObjectException {
-		LOG.trace( "Resolving serialized SqmCriteriaNodeBuilder" );
+		log.trace( "Resolving serialized SqmCriteriaNodeBuilder" );
 		return locateSessionFactoryOnDeserialization( uuid, name ).getCriteriaBuilder();
 	}
 
 	private static SessionFactory locateSessionFactoryOnDeserialization(String uuid, String name) throws InvalidObjectException{
 		final SessionFactory uuidResult = SessionFactoryRegistry.INSTANCE.getSessionFactory( uuid );
 		if ( uuidResult != null ) {
-			LOG.tracef( "Resolved SessionFactory by UUID [%s]", uuid );
+			log.tracef( "Resolved SessionFactory by UUID [%s]", uuid );
 			return uuidResult;
 		}
 
@@ -3099,7 +3099,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		if ( name != null ) {
 			final SessionFactory namedResult = SessionFactoryRegistry.INSTANCE.getNamedSessionFactory( name );
 			if ( namedResult != null ) {
-				LOG.tracef( "Resolved SessionFactory by name [%s]", name );
+				log.tracef( "Resolved SessionFactory by name [%s]", name );
 				return namedResult;
 			}
 		}

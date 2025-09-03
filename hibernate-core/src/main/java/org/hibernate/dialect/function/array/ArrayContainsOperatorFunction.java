@@ -37,7 +37,7 @@ public class ArrayContainsOperatorFunction extends ArrayContainsUnnestFunction {
 		final JdbcMappingContainer needleTypeContainer = needleExpression.getExpressionType();
 		final JdbcMapping needleType = needleTypeContainer == null ? null : needleTypeContainer.getSingleJdbcMapping();
 		if ( needleType == null || needleType instanceof BasicPluralType<?, ?> ) {
-			LOG.deprecatedArrayContainsWithArray();
+			log.deprecatedArrayContainsWithArray();
 			if ( nullable ) {
 				super.render( sqlAppender, sqlAstArguments, returnType, walker );
 			}

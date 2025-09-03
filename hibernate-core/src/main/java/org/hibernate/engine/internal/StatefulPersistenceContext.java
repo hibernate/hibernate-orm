@@ -88,7 +88,8 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Sanne Grinovero
  */
 class StatefulPersistenceContext implements PersistenceContext {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+
+	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			StatefulPersistenceContext.class.getName()
@@ -724,7 +725,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	public void reassociateProxy(Object value, Object id) throws MappingException {
 		final var lazyInitializer = extractLazyInitializer( value );
 		if ( lazyInitializer != null ) {
-			LOG.tracef( "Setting proxy identifier: %s", id );
+			log.tracef( "Setting proxy identifier: %s", id );
 			lazyInitializer.setIdentifier( id );
 			reassociateProxy( lazyInitializer, asHibernateProxy( value ) );
 		}
@@ -814,7 +815,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 		final boolean alreadyNarrow = concreteProxyClass.isInstance( proxy );
 
 		if ( !alreadyNarrow ) {
-			LOG.narrowingProxy( concreteProxyClass );
+			log.narrowingProxy( concreteProxyClass );
 
 			// If an impl is passed, there is really no point in creating a proxy.
 			// It would just be extra processing.  Just return the impl
@@ -1513,7 +1514,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 								collectionPersister,
 								unmergedInstance
 						);
-						LOG.tracef(
+						log.tracef(
 								"Detached object being merged (corresponding with a managed entity) has a collection that [%s] the detached child",
 								( found ? "contains" : "does not contain" )
 						);
@@ -1544,7 +1545,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 								collectionPersister,
 								mergeMap.get( proxy )
 						);
-						LOG.debugf(
+						log.debugf(
 								"Detached proxy being merged has a collection that [%s] the managed child",
 								(found ? "contains" : "does not contain")
 						);
@@ -1556,7 +1557,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 									collectionPersister,
 									mergeMap.get( proxy )
 							);
-							LOG.debugf(
+							log.debugf(
 									"Detached proxy being merged has a collection that [%s] the detached child being merged",
 									(found ? "contains" : "does not contain")
 							);
@@ -1598,7 +1599,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 		final var cp = metamodel.getCollectionDescriptor( entity + '.' + property );
 
 		//Extracted as we're logging within two hot loops
-		final boolean debugEnabled = LOG.isDebugEnabled();
+		final boolean debugEnabled = log.isDebugEnabled();
 
 		// try cache lookup first
 		final Object parent = getParentsByChild( childEntity );
@@ -1613,7 +1614,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 					if ( unMergedInstance != null && unMergedChild != null ) {
 						index = getIndexInParent( property, unMergedChild, persister, cp, unMergedInstance );
 						if ( debugEnabled ) {
-							LOG.debugf(
+							log.debugf(
 									"A detached object being merged (corresponding to a parent in parentsByChild) has an indexed collection that [%s] the detached child being merged. ",
 									( index != null ? "contains" : "does not contain" )
 							);
@@ -1643,7 +1644,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 					if ( unMergedInstance != null && unMergedChild!=null ) {
 						index = getIndexInParent( property, unMergedChild, persister, cp, unMergedInstance );
 						if ( debugEnabled ) {
-							LOG.debugf(
+							log.debugf(
 									"A detached object being merged (corresponding to a managed entity) has an indexed collection that [%s] the detached child being merged. ",
 									(index != null ? "contains" : "does not contain" )
 							);
@@ -1801,7 +1802,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	 * @throws IOException serialization errors.
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		LOG.trace( "Serializing persistence context" );
+		log.trace( "Serializing persistence context" );
 
 		oos.writeBoolean( defaultReadOnly );
 		oos.writeBoolean( hasNonReadOnlyEntities );
@@ -1883,8 +1884,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 		}
 		else {
 			oos.writeInt( collection.size() );
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Starting serialization of [" + collection.size() + "] " + keysName + " entries" );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "Starting serialization of [" + collection.size() + "] " + keysName + " entries" );
 			}
 			for ( E entry : collection ) {
 				serializer.serialize( entry, oos );
@@ -1906,7 +1907,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	public static StatefulPersistenceContext deserialize(
 			ObjectInputStream ois,
 			SessionImplementor session) throws IOException, ClassNotFoundException {
-		LOG.trace( "Deserializing persistence context" );
+		log.trace( "Deserializing persistence context" );
 		final var rtn = new StatefulPersistenceContext( session );
 		final var sfi = session.getFactory();
 
@@ -1921,9 +1922,9 @@ class StatefulPersistenceContext implements PersistenceContext {
 			rtn.hasNonReadOnlyEntities = ois.readBoolean();
 
 			int count = ois.readInt();
-			final boolean traceEnabled = LOG.isTraceEnabled();
+			final boolean traceEnabled = log.isTraceEnabled();
 			if ( traceEnabled ) {
-				LOG.trace( "Starting deserialization of [" + count + "] entitiesByUniqueKey entries" );
+				log.trace( "Starting deserialization of [" + count + "] entitiesByUniqueKey entries" );
 			}
 			if ( count != 0 ) {
 				rtn.entitiesByUniqueKey = mapOfSize(Math.max(count, INIT_COLL_SIZE));
@@ -1934,7 +1935,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 			count = ois.readInt();
 			if ( traceEnabled ) {
-				LOG.trace( "Starting deserialization of [" + count + "] entitySnapshotsByKey entries" );
+				log.trace( "Starting deserialization of [" + count + "] entitySnapshotsByKey entries" );
 			}
 			rtn.entitySnapshotsByKey = mapOfSize(Math.max(count, INIT_COLL_SIZE));
 			for ( int i = 0; i < count; i++ ) {
@@ -1945,7 +1946,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 			count = ois.readInt();
 			if ( traceEnabled ) {
-				LOG.trace( "Starting deserialization of [" + count + "] entitiesByKey entries" );
+				log.trace( "Starting deserialization of [" + count + "] entitiesByKey entries" );
 			}
 			rtn.entitiesByKey = mapOfSize(Math.max(count, INIT_COLL_SIZE));
 			final var metamodel = sfi.getMappingMetamodel();
@@ -1966,7 +1967,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 					else {
 						// otherwise, the proxy was pruned during the serialization process
 						if ( traceEnabled ) {
-							LOG.trace( "Encountered pruned proxy" );
+							log.trace( "Encountered pruned proxy" );
 						}
 					}
 				}
@@ -1976,7 +1977,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 			count = ois.readInt();
 			if ( traceEnabled ) {
-				LOG.trace( "Starting deserialization of [" + count + "] collectionsByKey entries" );
+				log.trace( "Starting deserialization of [" + count + "] collectionsByKey entries" );
 			}
 			rtn.collectionsByKey = mapOfSize(Math.max(count, INIT_COLL_SIZE));
 			for ( int i = 0; i < count; i++ ) {
@@ -1988,7 +1989,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 			count = ois.readInt();
 			if ( traceEnabled ) {
-				LOG.trace( "Starting deserialization of [" + count + "] collectionEntries entries" );
+				log.trace( "Starting deserialization of [" + count + "] collectionEntries entries" );
 			}
 			for ( int i = 0; i < count; i++ ) {
 				final var pc = (PersistentCollection<?>) ois.readObject();
@@ -1999,7 +2000,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 			count = ois.readInt();
 			if ( traceEnabled ) {
-				LOG.trace( "Starting deserialization of [" + count + "] arrayHolders entries" );
+				log.trace( "Starting deserialization of [" + count + "] arrayHolders entries" );
 			}
 			if ( count != 0 ) {
 				rtn.arrayHolders = new IdentityHashMap<>(Math.max(count, INIT_COLL_SIZE));
@@ -2010,7 +2011,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 			count = ois.readInt();
 			if ( traceEnabled ) {
-				LOG.trace( "Starting deserialization of [" + count + "] nullifiableEntityKey entries" );
+				log.trace( "Starting deserialization of [" + count + "] nullifiableEntityKey entries" );
 			}
 			rtn.nullifiableEntityKeys = new HashSet<>();
 			for ( int i = 0; i < count; i++ ) {
@@ -2018,8 +2019,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 			}
 			count = ois.readInt();
 
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Starting deserialization of [" + count + "] deletedUnloadedEntityKeys entries" );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "Starting deserialization of [" + count + "] deletedUnloadedEntityKeys entries" );
 			}
 			rtn.deletedUnloadedEntityKeys = new HashSet<>();
 			for ( int i = 0; i < count; i++ ) {

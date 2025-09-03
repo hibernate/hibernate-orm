@@ -26,7 +26,8 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
  * @author Gavin King
  */
 public final class Collections {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Collections.class );
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( Collections.class );
 
 	/**
 	 * record the fact that this collection was dereferenced
@@ -48,9 +49,9 @@ public final class Collections {
 		final var entry = persistenceContext.getCollectionEntry( coll );
 		final var loadedPersister = entry.getLoadedPersister();
 
-		if ( loadedPersister != null && LOG.isTraceEnabled() ) {
-			LOG.trace("Collection dereferenced: "
-					+ collectionInfoString( loadedPersister, coll, entry.getLoadedKey(), session ) );
+		if ( loadedPersister != null && log.isTraceEnabled() ) {
+			log.trace( "Collection dereferenced: "
+					   + collectionInfoString( loadedPersister, coll, entry.getLoadedKey(), session ) );
 		}
 
 		// do a check
@@ -113,9 +114,9 @@ public final class Collections {
 				session.getPersistenceContextInternal()
 						.getCollectionEntry( coll );
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Found collection with unloaded owner: " +
-					collectionInfoString( entry.getLoadedPersister(), coll, entry.getLoadedKey(), session ) );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Found collection with unloaded owner: " +
+					   collectionInfoString( entry.getLoadedPersister(), coll, entry.getLoadedKey(), session ) );
 		}
 
 		entry.setCurrentPersister( entry.getLoadedPersister() );
@@ -164,9 +165,9 @@ public final class Collections {
 		if ( isBytecodeEnhanced && !collection.wasInitialized() ) {
 			// the class of the collection owner is enhanced for lazy loading and we found an un-initialized PersistentCollection
 			// 		- skip it
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Skipping uninitialized bytecode-lazy collection: "
-						+ collectionInfoString( persister, collection, entry.getCurrentKey(), session ) );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "Skipping uninitialized bytecode-lazy collection: "
+						   + collectionInfoString( persister, collection, entry.getCurrentKey(), session ) );
 			}
 			entry.setReached( true );
 			entry.setProcessed( true );
@@ -182,9 +183,9 @@ public final class Collections {
 
 		entry.setReached( true );
 
-		if ( LOG.isTraceEnabled() ) {
+		if ( log.isTraceEnabled() ) {
 			if ( collection.wasInitialized() ) {
-				LOG.tracef(
+				log.tracef(
 						"Collection found: %s, was: %s (initialized)",
 						collectionInfoString(
 								persister,
@@ -201,7 +202,7 @@ public final class Collections {
 				);
 			}
 			else {
-				LOG.tracef(
+				log.tracef(
 						"Collection found: %s, was: %s (uninitialized)",
 						collectionInfoString(
 								persister,
@@ -268,7 +269,7 @@ public final class Collections {
 					// we will need to remove the old entries
 					entry.setDoremove( true );
 					if ( entry.isDorecreate() ) {
-						LOG.trace( "Forcing collection initialization" );
+						log.trace( "Forcing collection initialization" );
 						collection.forceInitialization();
 					}
 				}

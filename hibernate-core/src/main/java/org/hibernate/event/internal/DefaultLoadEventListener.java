@@ -41,7 +41,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  */
 public class DefaultLoadEventListener implements LoadEventListener {
 
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultLoadEventListener.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( DefaultLoadEventListener.class );
 
 	/**
 	 * Handle the given load event.
@@ -103,7 +103,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			}
 		}
 		catch (HibernateException e) {
-			LOG.unableToLoadCommand( e );
+			log.unableToLoadCommand( e );
 			throw e;
 		}
 	}
@@ -217,8 +217,8 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	 * @return The result of the proxy/load operation.
 	 */
 	private Object proxyOrLoad(LoadEvent event, EntityPersister persister, EntityKey keyToLoad, LoadType options) {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Loading entity: " + infoString( persister, event.getEntityId(), persister.getFactory() ) );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Loading entity: " + infoString( persister, event.getEntityId(), persister.getFactory() ) );
 		}
 		if ( hasBytecodeProxy( persister, options ) ) {
 			return loadWithBytecodeProxy( event, persister, keyToLoad, options );
@@ -297,9 +297,9 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			// existing proxy associated with the PC - and if so, use it
 			final Object proxy = holder == null ? null : holder.getProxy();
 			if ( proxy != null ) {
-				LOG.trace( "Entity proxy found in session cache" );
-				if ( LOG.isDebugEnabled() && extractLazyInitializer( proxy ).isUnwrap() ) {
-					LOG.debug( "Ignoring NO_PROXY to honor laziness" );
+				log.trace( "Entity proxy found in session cache" );
+				if ( log.isDebugEnabled() && extractLazyInitializer( proxy ).isUnwrap() ) {
+					log.debug( "Ignoring NO_PROXY to honor laziness" );
 				}
 				return persistenceContext.narrowProxy( proxy, persister, keyToLoad, null );
 			}
@@ -357,8 +357,8 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	 * @return The created/existing proxy
 	 */
 	private Object narrowedProxy(LoadEvent event, EntityPersister persister, EntityKey keyToLoad, LoadType options, Object proxy) {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Entity proxy found in session cache" );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Entity proxy found in session cache" );
 		}
 		final var li = extractLazyInitializer( proxy );
 		if ( li.isUnwrap() ) {
@@ -416,16 +416,16 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		final Object existing = holder == null ? null : holder.getEntity();
 		if ( existing != null ) {
 			// return existing object or initialized proxy (unless deleted)
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Entity found in session cache" );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "Entity found in session cache" );
 			}
 			return options.isCheckDeleted()
 				&& wasDeleted( event.getSession().getPersistenceContextInternal(), existing )
 					? null : existing;
 		}
 		else {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Creating new proxy for entity" );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "Creating new proxy for entity" );
 			}
 			return createProxy( event, persister, keyToLoad );
 		}
@@ -506,9 +506,9 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	 */
 	private Object doLoad(LoadEvent event, EntityPersister persister, EntityKey keyToLoad, LoadType options) {
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Attempting to resolve: "
-						+ infoString( persister, event.getEntityId(), event.getFactory() ) );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Attempting to resolve: "
+					   + infoString( persister, event.getEntityId(), event.getFactory() ) );
 		}
 
 		final var session = event.getSession();
@@ -562,9 +562,9 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			return loadFromDatasource( event, persister );
 		}
 		else {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Resolved entity in second-level cache: "
-							+ infoString( persister, event.getEntityId(), event.getFactory() ) );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "Resolved entity in second-level cache: "
+						   + infoString( persister, event.getEntityId(), event.getFactory() ) );
 			}
 			return entity;
 		}
@@ -580,9 +580,9 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	 * @return The object loaded from the datasource, or null if not found.
 	 */
 	protected Object loadFromDatasource(final LoadEvent event, final EntityPersister persister) {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Entity not resolved in any cache, loading from datastore: "
-						+ infoString( persister, event.getEntityId(), event.getFactory() ) );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Entity not resolved in any cache, loading from datastore: "
+					   + infoString( persister, event.getEntityId(), event.getFactory() ) );
 		}
 
 		final Object entity = persister.load(

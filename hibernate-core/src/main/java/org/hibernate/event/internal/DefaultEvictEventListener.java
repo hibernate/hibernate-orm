@@ -29,7 +29,8 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Steve Ebersole
  */
 public class DefaultEvictEventListener implements EvictEventListener {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultEvictEventListener.class );
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( DefaultEvictEventListener.class );
 
 	/**
 	 * Handle the given evict event.
@@ -105,8 +106,8 @@ public class DefaultEvictEventListener implements EvictEventListener {
 			final EntityPersister persister,
 			final EventSource session)
 			throws HibernateException {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Evicting " + infoString( persister ) );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Evicting " + infoString( persister ) );
 		}
 
 		final var persistenceContext = session.getPersistenceContextInternal();

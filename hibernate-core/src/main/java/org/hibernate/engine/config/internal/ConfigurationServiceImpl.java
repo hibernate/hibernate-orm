@@ -26,7 +26,8 @@ import org.checkerframework.checker.nullness.qual.PolyNull;
  * @author Steve Ebersole
  */
 public class ConfigurationServiceImpl implements ConfigurationService, ServiceRegistryAwareService {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+
+	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			ConfigurationServiceImpl.class.getName()
@@ -92,7 +93,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 						.classForName( candidate.toString() );
 			}
 			catch ( ClassLoadingException e ) {
-				LOG.debugf( "Unable to locate %s implementation class %s", expected.getName(), candidate.toString() );
+				log.debugf( "Unable to locate %s implementation class %s", expected.getName(), candidate.toString() );
 				target = null;
 			}
 		}
@@ -101,7 +102,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 				return target.newInstance();
 			}
 			catch ( Exception e ) {
-				LOG.debugf(
+				log.debugf(
 						"Unable to instantiate %s class %s", expected.getName(),
 						target.getName()
 				);

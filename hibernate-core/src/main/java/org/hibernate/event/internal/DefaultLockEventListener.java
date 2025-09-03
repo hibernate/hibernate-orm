@@ -36,7 +36,7 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  */
 public class DefaultLockEventListener implements LockEventListener {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			DefaultLockEventListener.class.getName()
@@ -59,7 +59,7 @@ public class DefaultLockEventListener implements LockEventListener {
 			throw new HibernateException( "Invalid lock mode for lock()" );
 		}
 		if ( lockMode == LockMode.UPGRADE_SKIPLOCKED ) {
-			LOG.explicitSkipLockedLockCombo();
+			log.explicitSkipLockedLockCombo();
 		}
 
 		final var source = event.getSession();
@@ -115,8 +115,8 @@ public class DefaultLockEventListener implements LockEventListener {
 	 */
 	protected final EntityEntry reassociate(AbstractEvent event, Object object, Object id, EntityPersister persister) {
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Reassociating transient instance: " + infoString( persister, id, event.getFactory() ) );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Reassociating transient instance: " + infoString( persister, id, event.getFactory() ) );
 		}
 
 		final var source = event.getSession();

@@ -24,7 +24,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  */
 public abstract class CollectionSecondPass implements SecondPass {
 
-	private static final CoreMessageLogger LOG = messageLogger( CollectionSecondPass.class);
+	private static final CoreMessageLogger log = messageLogger( CollectionSecondPass.class);
 
 	private final Collection collection;
 
@@ -35,14 +35,14 @@ public abstract class CollectionSecondPass implements SecondPass {
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses)
 			throws MappingException {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Second pass for collection: " + collection.getRole() );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Second pass for collection: " + collection.getRole() );
 		}
 
 		secondPass( persistentClasses );
 		collection.createAllKeys();
 
-		if ( LOG.isTraceEnabled() ) {
+		if ( log.isTraceEnabled() ) {
 			String msg = "Mapped collection key: " + columns( collection.getKey() );
 			if ( collection.isIndexed() ) {
 				msg += ", index: " + columns( ( (IndexedCollection) collection ).getIndex() );
@@ -54,7 +54,7 @@ public abstract class CollectionSecondPass implements SecondPass {
 			else {
 				msg += ", element: " + columns( collection.getElement() );
 			}
-			LOG.trace( msg );
+			log.trace( msg );
 		}
 	}
 

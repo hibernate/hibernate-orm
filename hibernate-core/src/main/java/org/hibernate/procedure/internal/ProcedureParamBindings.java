@@ -26,7 +26,8 @@ import jakarta.persistence.ParameterMode;
  * @author Steve Ebersole
  */
 public class ProcedureParamBindings implements QueryParameterBindings {
-	private static final Logger LOG = Logger.getLogger( QueryParameterBindings.class );
+
+	private static final Logger log = Logger.getLogger( QueryParameterBindings.class );
 
 	private final ProcedureParameterMetadataImpl parameterMetadata;
 	private final SessionFactoryImplementor sessionFactory;
@@ -104,11 +105,11 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 			if ( !getBinding( procParam ).isBound() ) {
 				// depending on "pass nulls" this might be OK - for now, just log a warning
 				if ( procParam.getPosition() != null ) {
-					LOG.debugf( "Procedure parameter at position %s is not bound", procParam.getPosition() );
+					log.debugf( "Procedure parameter at position %s is not bound", procParam.getPosition() );
 
 				}
 				else {
-					LOG.debugf( "Procedure parameter %s is not bound", procParam.getName() );
+					log.debugf( "Procedure parameter %s is not bound", procParam.getName() );
 				}
 			}
 		}

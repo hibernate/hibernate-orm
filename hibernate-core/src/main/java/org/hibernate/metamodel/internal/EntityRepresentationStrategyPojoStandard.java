@@ -44,7 +44,8 @@ import static org.hibernate.metamodel.internal.PropertyAccessHelper.propertyAcce
  * @author Steve Ebersole
  */
 public class EntityRepresentationStrategyPojoStandard implements EntityRepresentationStrategy {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityRepresentationStrategyPojoStandard.class );
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( EntityRepresentationStrategyPojoStandard.class );
 
 	private final JavaType<?> mappedJtd;
 	private final JavaType<?> proxyJtd;
@@ -208,7 +209,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			}
 		}
 		catch (HibernateException he) {
-			LOG.unableToCreateProxyFactory( clazz.getName(), he );
+			log.unableToCreateProxyFactory( clazz.getName(), he );
 			return null;
 		}
 
@@ -295,7 +296,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			);
 		}
 		catch (HibernateException he) {
-			LOG.unableToCreateProxyFactory( entityName, he );
+			log.unableToCreateProxyFactory( entityName, he );
 			return null;
 		}
 		return proxyFactory;

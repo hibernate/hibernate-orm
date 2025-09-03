@@ -27,7 +27,8 @@ import java.util.Map;
  * @see PooledOptimizer
  */
 public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+
+	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			PooledLoOptimizer.class.getName()
@@ -47,7 +48,7 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 		if ( incrementSize < 1 ) {
 			throw new HibernateException( "increment size cannot be less than 1" );
 		}
-		LOG.creatingPooledLoOptimizer( incrementSize, returnClass.getName() );
+		log.creatingPooledLoOptimizer( incrementSize, returnClass.getName() );
 	}
 
 	@Override

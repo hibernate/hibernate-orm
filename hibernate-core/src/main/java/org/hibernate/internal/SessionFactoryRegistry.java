@@ -30,7 +30,7 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  * @author Steve Ebersole
  */
 public class SessionFactoryRegistry {
-	private static final SessionFactoryRegistryMessageLogger LOG = SessionFactoryRegistryMessageLogger.INSTANCE;
+	private static final SessionFactoryRegistryMessageLogger log = SessionFactoryRegistryMessageLogger.INSTANCE;
 
 	/**
 	 * Singleton access
@@ -48,7 +48,7 @@ public class SessionFactoryRegistry {
 	private final ConcurrentHashMap<String, String> nameUuidXref = new ConcurrentHashMap<>();
 
 	private SessionFactoryRegistry() {
-		LOG.tracef( "Initializing SessionFactoryRegistry @%s", hashCode() );
+		log.tracef( "Initializing SessionFactoryRegistry @%s", hashCode() );
 	}
 
 	/**
@@ -70,14 +70,14 @@ public class SessionFactoryRegistry {
 			throw new IllegalArgumentException( "SessionFactory UUID cannot be null" );
 		}
 
-		LOG.registeringSessionFactory( uuid, name == null ? "<unnamed>" : name );
+		log.registeringSessionFactory( uuid, name == null ? "<unnamed>" : name );
 		sessionFactoryMap.put( uuid, instance );
 		if ( name != null ) {
 			nameUuidXref.put( name, uuid );
 		}
 
 		if ( jndiName == null ) {
-			LOG.notBindingSessionFactory();
+			log.notBindingSessionFactory();
 			return;
 		}
 
@@ -86,21 +86,21 @@ public class SessionFactoryRegistry {
 
 	private void bindToJndi(String jndiName, SessionFactoryImplementor instance, JndiService jndiService) {
 		try {
-			LOG.attemptingToBindFactoryToJndi( jndiName );
+			log.attemptingToBindFactoryToJndi( jndiName );
 			jndiService.bind( jndiName, instance );
-			LOG.factoryBoundToJndiName( jndiName );
+			log.factoryBoundToJndiName( jndiName );
 			try {
 				jndiService.addListener( jndiName, listener );
 			}
 			catch (Exception e) {
-				LOG.couldNotBindJndiListener();
+				log.couldNotBindJndiListener();
 			}
 		}
 		catch (JndiNameException e) {
-			LOG.invalidJndiName( jndiName, e );
+			log.invalidJndiName( jndiName, e );
 		}
 		catch (JndiException e) {
-			LOG.unableToBindFactoryToJndi( e );
+			log.unableToBindFactoryToJndi( e );
 		}
 	}
 
@@ -123,15 +123,15 @@ public class SessionFactoryRegistry {
 
 		if ( jndiName != null ) {
 			try {
-				LOG.attemptingToUnbindFactoryFromJndi( jndiName );
+				log.attemptingToUnbindFactoryFromJndi( jndiName );
 				jndiService.unbind( jndiName );
-				LOG.factoryUnboundFromJndiName( jndiName );
+				log.factoryUnboundFromJndiName( jndiName );
 			}
 			catch (JndiNameException e) {
-				LOG.invalidJndiName( jndiName, e );
+				log.invalidJndiName( jndiName, e );
 			}
 			catch (JndiException e) {
-				LOG.unableToUnbindFactoryFromJndi( e );
+				log.unableToUnbindFactoryFromJndi( e );
 			}
 		}
 
@@ -146,18 +146,18 @@ public class SessionFactoryRegistry {
 	 * @return The SessionFactory
 	 */
 	public SessionFactoryImplementor getNamedSessionFactory(String name) {
-		LOG.tracef( "Lookup: name=%s", name );
+		log.tracef( "Lookup: name=%s", name );
 		final String uuid = nameUuidXref.get( name );
 		// protect against NPE -- see HHH-8428
 		return uuid == null ? null : getSessionFactory( uuid );
 	}
 
 	public SessionFactoryImplementor getSessionFactory(String uuid) {
-		LOG.tracef( "Lookup: uid=%s", uuid );
+		log.tracef( "Lookup: uid=%s", uuid );
 		final SessionFactoryImplementor sessionFactory = sessionFactoryMap.get( uuid );
-		if ( sessionFactory == null && LOG.isDebugEnabled() ) {
-			LOG.debugf( "Not found: %s", uuid );
-			LOG.debug( sessionFactoryMap.toString() );
+		if ( sessionFactory == null && log.isDebugEnabled() ) {
+			log.debugf( "Not found: %s", uuid );
+			log.debug( sessionFactoryMap.toString() );
 		}
 		return sessionFactory;
 	}
@@ -196,15 +196,15 @@ public class SessionFactoryRegistry {
 	private final NamespaceChangeListener listener = new NamespaceChangeListener() {
 		@Override
 		public void objectAdded(NamingEvent evt) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.factoryBoundToJndi( evt.getNewBinding().getName() );
+			if ( log.isDebugEnabled() ) {
+				log.factoryBoundToJndi( evt.getNewBinding().getName() );
 			}
 		}
 
 		@Override
 		public void objectRemoved(NamingEvent evt) {
 			final String jndiName = evt.getOldBinding().getName();
-			LOG.factoryUnboundFromName( jndiName );
+			log.factoryUnboundFromName( jndiName );
 
 			final String uuid = nameUuidXref.remove( jndiName );
 			//noinspection StatementWithEmptyBody
@@ -220,23 +220,23 @@ public class SessionFactoryRegistry {
 		public void objectRenamed(NamingEvent evt) {
 			final String oldJndiName = evt.getOldBinding().getName();
 			final String newJndiName = evt.getNewBinding().getName();
-			LOG.factoryJndiRename( oldJndiName, newJndiName );
+			log.factoryJndiRename( oldJndiName, newJndiName );
 			final String uuid = nameUuidXref.remove( oldJndiName );
 			nameUuidXref.put( newJndiName, uuid );
 		}
 
 		@Override
 		public void namingExceptionThrown(NamingExceptionEvent evt) {
-			LOG.namingExceptionAccessingFactory( evt.getException() );
+			log.namingExceptionAccessingFactory( evt.getException() );
 		}
 	};
 
 	public static class ObjectFactoryImpl implements ObjectFactory {
 		@Override
 		public Object getObjectInstance(Object reference, Name name, Context nameCtx, Hashtable<?, ?> environment) {
-			LOG.tracef( "JNDI lookup: %s", name );
+			log.tracef( "JNDI lookup: %s", name );
 			final String uuid = (String) ( (Reference) reference ).get( 0 ).getContent();
-			LOG.tracef( "Resolved to UUID = %s", uuid );
+			log.tracef( "Resolved to UUID = %s", uuid );
 			return INSTANCE.getSessionFactory( uuid );
 		}
 	}

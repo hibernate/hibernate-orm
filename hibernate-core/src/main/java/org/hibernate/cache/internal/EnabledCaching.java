@@ -49,7 +49,8 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  * @author Gail Badner
  */
 public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildingContext {
-	private static final SecondLevelCacheLogger LOG = SecondLevelCacheLogger.L2CACHE_LOGGER;
+
+	private static final SecondLevelCacheLogger log = SecondLevelCacheLogger.L2CACHE_LOGGER;
 
 	private final SessionFactoryImplementor sessionFactory;
 	private final RegionFactory regionFactory;
@@ -252,7 +253,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 		final var persister = getEntityDescriptor( entityName );
 		final var cacheAccess = persister.getCacheAccessStrategy();
 		if ( cacheAccess != null ) {
-			LOG.evictingEntityCache( infoString( persister, identifier, sessionFactory ) );
+			log.evictingEntityCache( infoString( persister, identifier, sessionFactory ) );
 			final Object cacheKey =
 					cacheAccess.generateCacheKey( identifier, persister, sessionFactory, null );
 			cacheAccess.evict( cacheKey );
@@ -299,7 +300,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	private void evictEntityData(NavigableRole navigableRole, EntityDataAccess cacheAccess) {
 		if ( cacheAccess != null ) {
-			LOG.evictingEntityCacheByRole( navigableRole.getFullPath() );
+			log.evictingEntityCacheByRole( navigableRole.getFullPath() );
 			cacheAccess.evictAll();
 		}
 	}
@@ -336,7 +337,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	private void evictNaturalIdData(NavigableRole rootEntityRole, NaturalIdDataAccess cacheAccess) {
 		if ( cacheAccess != null ) {
-			LOG.evictingNaturalIdCache( rootEntityRole.getFullPath() );
+			log.evictingNaturalIdCache( rootEntityRole.getFullPath() );
 			cacheAccess.evictAll();
 		}
 	}
@@ -365,7 +366,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 		final var persister = getCollectionDescriptor( role );
 		final var cacheAccess = persister.getCacheAccessStrategy();
 		if ( cacheAccess != null ) {
-			LOG.evictingCollectionCache( collectionInfoString( persister, ownerIdentifier, sessionFactory ) );
+			log.evictingCollectionCache( collectionInfoString( persister, ownerIdentifier, sessionFactory ) );
 			final Object cacheKey =
 					cacheAccess.generateCacheKey( ownerIdentifier, persister, sessionFactory, null );
 			cacheAccess.evict( cacheKey );
@@ -384,7 +385,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	private void evictCollectionData(NavigableRole navigableRole, CollectionDataAccess cacheAccess) {
 		if ( cacheAccess != null ) {
-			LOG.evictingCollectionCacheByRole( navigableRole.getFullPath() );
+			log.evictingCollectionCacheByRole( navigableRole.getFullPath() );
 			cacheAccess.evictAll();
 		}
 	}
@@ -419,14 +420,14 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	private void evictQueryResultRegion(QueryResultsCache cache) {
 		if ( cache != null ) {
-			LOG.evictingQueryCacheRegion( cache.getRegion().getName() );
+			log.evictingQueryCacheRegion( cache.getRegion().getName() );
 			cache.clear();
 		}
 	}
 
 	@Override
 	public void evictQueryRegions() {
-		LOG.evictingAllQueryRegions();
+		log.evictingAllQueryRegions();
 		evictQueryResultRegion( defaultQueryResultsCache );
 		for ( QueryResultsCache cache : namedQueryResultsCacheMap.values() ) {
 			evictQueryResultRegion( cache );

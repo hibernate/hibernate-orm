@@ -24,7 +24,7 @@ import org.jboss.logging.Logger;
  */
 @Deprecated
 class DatabaseExporter implements Exporter {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, DatabaseExporter.class.getName() );
+	private static final CoreMessageLogger log = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, DatabaseExporter.class.getName() );
 
 	private final ConnectionHelper connectionHelper;
 	private final SqlExceptionHelper sqlExceptionHelper;
@@ -56,7 +56,7 @@ class DatabaseExporter implements Exporter {
 			}
 		}
 		catch( SQLException e ) {
-			LOG.unableToLogSqlWarnings( e );
+			log.unableToLogSqlWarnings( e );
 		}
 	}
 

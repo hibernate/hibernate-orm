@@ -41,7 +41,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class BootstrapServiceRegistryImpl
 		implements ServiceRegistryImplementor, BootstrapServiceRegistry, ServiceBinding.ServiceLifecycleOwner {
 
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BootstrapServiceRegistryImpl.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( BootstrapServiceRegistryImpl.class );
 
 	private final boolean autoCloseRegistry;
 	private boolean active = true;
@@ -266,7 +266,7 @@ public class BootstrapServiceRegistryImpl
 				stoppable.stop();
 			}
 			catch ( Exception e ) {
-				LOG.unableToStopService( binding.getServiceRole().getName(), e );
+				log.unableToStopService( binding.getServiceRole().getName(), e );
 			}
 		}
 	}
@@ -277,7 +277,7 @@ public class BootstrapServiceRegistryImpl
 			childRegistries = new HashSet<>();
 		}
 		if ( !childRegistries.add( child ) ) {
-			LOG.warnf(
+			log.warnf(
 					"Child ServiceRegistry [%s] was already registered; this will end badly later...",
 					child
 			);
@@ -292,11 +292,11 @@ public class BootstrapServiceRegistryImpl
 		childRegistries.remove( child );
 		if ( childRegistries.isEmpty() ) {
 			if ( autoCloseRegistry ) {
-				LOG.trace( "Automatically destroying bootstrap registry after deregistration of every child ServiceRegistry" );
+				log.trace( "Automatically destroying bootstrap registry after deregistration of every child ServiceRegistry" );
 				destroy();
 			}
 			else {
-				LOG.trace( "Skipping destroying bootstrap registry after deregistration of every child ServiceRegistry" );
+				log.trace( "Skipping destroying bootstrap registry after deregistration of every child ServiceRegistry" );
 			}
 		}
 	}

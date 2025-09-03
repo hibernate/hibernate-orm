@@ -46,7 +46,8 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  * @author Steve Ebersole
  */
 public class CollectionPropertyHolder extends AbstractPropertyHolder {
-	private static final CoreMessageLogger LOG = messageLogger( CollectionPropertyHolder.class );
+
+	private static final CoreMessageLogger log = messageLogger( CollectionPropertyHolder.class );
 
 	private final Collection collection;
 
@@ -183,7 +184,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		final boolean specCompliant = isNotEmpty( attributeName )
 				&& (attributeName.startsWith( "key" ) || attributeName.startsWith( "value" ) );
 		if ( !specCompliant ) {
-			LOG.nonCompliantMapConversion( role );
+			log.nonCompliantMapConversion( role );
 		}
 	}
 

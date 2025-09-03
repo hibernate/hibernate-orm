@@ -21,7 +21,8 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  * @author Steve Ebersole
  */
 public class OptimizerFactory {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+
+	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			OptimizerFactory.class.getName()
@@ -35,7 +36,7 @@ public class OptimizerFactory {
 			optimizerClass = descriptor.getOptimizerClass();
 		}
 		catch ( Throwable ignore ) {
-			LOG.unableToLocateCustomOptimizerClass( descriptor.getExternalName() );
+			log.unableToLocateCustomOptimizerClass( descriptor.getExternalName() );
 			return buildFallbackOptimizer( returnClass, incrementSize );
 		}
 
@@ -44,7 +45,7 @@ public class OptimizerFactory {
 			return ctor.newInstance( returnClass, incrementSize );
 		}
 		catch ( Throwable ignore ) {
-			LOG.unableToInstantiateOptimizer( descriptor.getExternalName() );
+			log.unableToInstantiateOptimizer( descriptor.getExternalName() );
 		}
 
 		return buildFallbackOptimizer( returnClass, incrementSize );

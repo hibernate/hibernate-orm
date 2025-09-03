@@ -46,7 +46,8 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  * @see CascadingAction
  */
 public final class Cascade {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Cascade.class );
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( Cascade.class );
 
 	private Cascade() {
 		// NOP
@@ -82,9 +83,9 @@ public final class Cascade {
 			final Object parent,
 			final T anything) throws HibernateException {
 		if ( action.anythingToCascade( persister ) ) { // performance opt
-			final boolean traceEnabled = LOG.isTraceEnabled();
+			final boolean traceEnabled = log.isTraceEnabled();
 			if ( traceEnabled ) {
-				LOG.tracev( "Processing cascade {0} for: {1}", action, persister.getEntityName() );
+				log.tracev( "Processing cascade {0} for: {1}", action, persister.getEntityName() );
 			}
 			final var bytecodeEnhancement = persister.getBytecodeEnhancementMetadata();
 			final EntityEntry entry;
@@ -194,7 +195,7 @@ public final class Cascade {
 			}
 
 			if ( traceEnabled ) {
-				LOG.tracev( "Done processing cascade {0} for: {1}", action, persister.getEntityName() );
+				log.tracev( "Done processing cascade {0} for: {1}", action, persister.getEntityName() );
 			}
 		}
 	}
@@ -346,8 +347,8 @@ public final class Cascade {
 					if ( valueEntry != null ) {
 						final EntityPersister persister = valueEntry.getPersister();
 						final String entityName = persister.getEntityName();
-						if ( LOG.isTraceEnabled() ) {
-							LOG.tracev(
+						if ( log.isTraceEnabled() ) {
+							log.tracev(
 									"Deleting orphaned entity instance: {0}",
 									infoString( entityName, persister.getIdentifier( loadedValue, eventSource ) )
 							);
@@ -576,9 +577,9 @@ public final class Cascade {
 				&& child != CollectionType.UNFETCHED_COLLECTION;
 
 		if ( reallyDoCascade ) {
-			final boolean traceEnabled = LOG.isTraceEnabled();
+			final boolean traceEnabled = log.isTraceEnabled();
 			if ( traceEnabled ) {
-				LOG.tracev( "Cascade {0} for collection: {1}", action, collectionType.getRole() );
+				log.tracev( "Cascade {0} for collection: {1}", action, collectionType.getRole() );
 			}
 
 			final Iterator<?> iterator = action.getCascadableChildrenIterator( eventSource, collectionType, child );
@@ -601,7 +602,7 @@ public final class Cascade {
 			}
 
 			if ( traceEnabled ) {
-				LOG.tracev( "Done cascade {0} for collection: {1}", action, collectionType.getRole() );
+				log.tracev( "Done cascade {0} for collection: {1}", action, collectionType.getRole() );
 			}
 		}
 
@@ -620,9 +621,9 @@ public final class Cascade {
 				&& !persistentCollection.isNewlyInstantiated();
 
 		if ( deleteOrphans ) {
-			final boolean traceEnabled = LOG.isTraceEnabled();
+			final boolean traceEnabled = log.isTraceEnabled();
 			if ( traceEnabled ) {
-				LOG.tracev( "Deleting orphans for collection: {0}", collectionType.getRole() );
+				log.tracev( "Deleting orphans for collection: {0}", collectionType.getRole() );
 			}
 			// we can do the cast since orphan-delete does not apply to:
 			// 1. newly instantiated collections
@@ -631,7 +632,7 @@ public final class Cascade {
 			deleteOrphans( eventSource, elementEntityName, persistentCollection );
 
 			if ( traceEnabled ) {
-				LOG.tracev( "Done deleting orphans for collection: {0}", collectionType.getRole() );
+				log.tracev( "Done deleting orphans for collection: {0}", collectionType.getRole() );
 			}
 		}
 	}
@@ -652,7 +653,7 @@ public final class Cascade {
 
 		for ( Object orphan : orphans ) {
 			if ( orphan != null ) {
-				LOG.tracev( "Deleting orphaned entity instance: {0}", entityName );
+				log.tracev( "Deleting orphaned entity instance: {0}", entityName );
 				eventSource.delete( entityName, orphan, false, DeleteContext.create() );
 			}
 		}

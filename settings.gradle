@@ -165,7 +165,6 @@ dependencyResolutionManagement {
             library( "inject", "jakarta.inject", "jakarta.inject-api" ).versionRef( injectVersion )
             library( "jaxbApi", "jakarta.xml.bind", "jakarta.xml.bind-api" ).versionRef( jaxbApiVersion )
             library( "jaxb", "org.glassfish.jaxb", "jaxb-runtime" ).versionRef( jaxbRuntimeVersion )
-            library( "xjc", "org.glassfish.jaxb", "jaxb-xjc" ).versionRef( xjcVersion )
         }
         testLibs {
             def junit5Version = version "junit5", "5.13.4"

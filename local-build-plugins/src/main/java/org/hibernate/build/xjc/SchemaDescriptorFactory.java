@@ -23,13 +23,13 @@ import static org.gradle.api.tasks.SourceSet.MAIN_SOURCE_SET_NAME;
  * @author Steve Ebersole
  */
 public class SchemaDescriptorFactory implements NamedDomainObjectFactory<SchemaDescriptor> {
-	private final XjcExtension xjcExtension;
-	private final Task groupingTask;
+	private final Provider<Directory> baseOutputDirectory;
+	private final TaskProvider<Task> groupingTaskRef;
 	private final Project project;
 
-	public SchemaDescriptorFactory(XjcExtension xjcExtension, Task groupingTask, Project project) {
-		this.xjcExtension = xjcExtension;
-		this.groupingTask = groupingTask;
+	public SchemaDescriptorFactory(Provider<Directory> baseOutputDirectory, TaskProvider<Task> groupingTaskRef, Project project) {
+		this.baseOutputDirectory = baseOutputDirectory;
+		this.groupingTaskRef = groupingTaskRef;
 		this.project = project;
 	}
 
@@ -38,7 +38,7 @@ public class SchemaDescriptorFactory implements NamedDomainObjectFactory<SchemaD
 		final SchemaDescriptor schemaDescriptor = new SchemaDescriptor( name, project );
 
 		final String taskName = determineXjcTaskName( schemaDescriptor );
-		final Provider<Directory> taskOutputDirectory = xjcExtension.getOutputDirectory().dir( name );
+		final Provider<Directory> taskOutputDirectory = baseOutputDirectory.map( directory -> directory.dir( name ) );
 
 		// register the XjcTask for the schema
 		final TaskProvider<XjcTask> xjcTaskRef = project.getTasks().register( taskName, XjcTask.class, (task) -> {
@@ -46,24 +46,25 @@ public class SchemaDescriptorFactory implements NamedDomainObjectFactory<SchemaD
 			task.setDescription( "XJC generation for the " + name + " descriptor" );
 
 			// wire up the inputs and outputs
-			task.getXsdFile().set( schemaDescriptor.getXsdFile() );
-			task.getXjcBindingFile().set( schemaDescriptor.getXjcBindingFile() );
-			task.getXjcExtensions().set( schemaDescriptor.___xjcExtensions() );
-			task.getOutputDirectory().set( taskOutputDirectory );
+			task.getSchemaName().convention( name );
+			task.getXsdFile().convention( schemaDescriptor.getXsdFile() );
+			task.getXjcBindingFile().convention( schemaDescriptor.getXjcBindingFile() );
+			task.getXjcPlugins().convention( schemaDescriptor.getXjcPlugins() );
+			task.getOutputDirectory().convention( taskOutputDirectory );
 		} );
 
 		final SourceSetContainer sourceSets = project.getExtensions().getByType( SourceSetContainer.class );
 		final SourceSet mainSourceSet = sourceSets.getByName( MAIN_SOURCE_SET_NAME );
 		mainSourceSet.getJava().srcDir( xjcTaskRef );
 
-		groupingTask.dependsOn( xjcTaskRef );
+		groupingTaskRef.configure( (groupingTask) -> {
+			groupingTask.dependsOn( xjcTaskRef );
+		} );
 
 		return schemaDescriptor;
 	}
 
 	private static String determineXjcTaskName(SchemaDescriptor schemaDescriptor) {
-		assert schemaDescriptor.getName() != null;
-
 		final char initialLetterCap = Character.toUpperCase( schemaDescriptor.getName().charAt( 0 ) );
 		final String rest = schemaDescriptor.getName().substring( 1 );
 

@@ -5,7 +5,7 @@
 package org.hibernate.sql.exec.spi;
 
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
-import org.hibernate.sql.ops.spi.PrimaryOperation;
+import org.hibernate.sql.ops.spi.JdbcMutation;
 
 /**
  * Specialization of JdbcOperation for cases which mutate
@@ -17,6 +17,6 @@ import org.hibernate.sql.ops.spi.PrimaryOperation;
  *
  * @author Steve Ebersole
  */
-public interface JdbcOperationQueryMutation extends JdbcOperationQuery, PrimaryOperation {
+public interface JdbcOperationQueryMutation extends JdbcOperationQuery, JdbcMutation {
 
 }

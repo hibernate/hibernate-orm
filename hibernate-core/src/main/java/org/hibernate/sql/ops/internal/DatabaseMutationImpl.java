@@ -8,7 +8,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.ops.spi.DatabaseOperationMutation;
+import org.hibernate.sql.ops.spi.DatabaseMutation;
 import org.hibernate.sql.ops.spi.PostAction;
 import org.hibernate.sql.ops.spi.PreAction;
 
@@ -17,19 +17,19 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
- * Standard DatabaseOperationMutation implementation.
+ * Standard {@linkplain DatabaseMutation} implementation.
  *
  * @author Steve Ebersole
  */
-public class DatabaseOperationMutationImpl
+public class DatabaseMutationImpl
 		extends AbstractDatabaseOperation<JdbcOperationQueryMutation>
-		implements DatabaseOperationMutation {
+		implements DatabaseMutation<JdbcOperationQueryMutation> {
 
-	public DatabaseOperationMutationImpl(JdbcOperationQueryMutation primaryOperation) {
+	public DatabaseMutationImpl(JdbcOperationQueryMutation primaryOperation) {
 		super( primaryOperation );
 	}
 
-	public DatabaseOperationMutationImpl(JdbcOperationQueryMutation primaryOperation, PreAction[] preActions, PostAction[] postActions) {
+	public DatabaseMutationImpl(JdbcOperationQueryMutation primaryOperation, PreAction[] preActions, PostAction[] postActions) {
 		super( primaryOperation, preActions, postActions );
 	}
 

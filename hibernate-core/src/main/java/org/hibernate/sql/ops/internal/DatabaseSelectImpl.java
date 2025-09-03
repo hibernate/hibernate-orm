@@ -13,7 +13,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
-import org.hibernate.sql.ops.spi.DatabaseOperationSelect;
+import org.hibernate.sql.ops.spi.DatabaseSelect;
 import org.hibernate.sql.ops.spi.PostAction;
 import org.hibernate.sql.ops.spi.PreAction;
 import org.hibernate.sql.results.spi.ResultsConsumer;
@@ -22,19 +22,19 @@ import org.hibernate.sql.results.spi.RowTransformer;
 import java.sql.Connection;
 
 /**
- * Standard DatabaseOperationSelect implementation.
+ * Standard {@linkplain DatabaseSelect} implementation.
  *
  * @author Steve Ebersole
  */
-public class DatabaseOperationSelectImpl
+public class DatabaseSelectImpl
 		extends AbstractDatabaseOperation<JdbcOperationQuerySelect>
-		implements DatabaseOperationSelect {
+		implements DatabaseSelect<JdbcOperationQuerySelect> {
 
-	public DatabaseOperationSelectImpl(JdbcOperationQuerySelect primaryOperation) {
+	public DatabaseSelectImpl(JdbcOperationQuerySelect primaryOperation) {
 		this( null, null, primaryOperation );
 	}
 
-	public DatabaseOperationSelectImpl(
+	public DatabaseSelectImpl(
 			PreAction[] preActions,
 			PostAction[] postActions,
 			JdbcOperationQuerySelect primaryOperation) {
@@ -130,13 +130,13 @@ public class DatabaseOperationSelectImpl
 			return this;
 		}
 
-		public DatabaseOperationSelectImpl build() {
+		public DatabaseSelectImpl build() {
 			if ( preActions == null && postActions == null ) {
-				return new DatabaseOperationSelectImpl( primaryAction );
+				return new DatabaseSelectImpl( primaryAction );
 			}
 			final PreAction[] preActions = toPreActionArray( this.preActions );
 			final PostAction[] postActions = toPostActionArray( this.postActions );
-			return new DatabaseOperationSelectImpl( preActions, postActions, primaryAction );
+			return new DatabaseSelectImpl( preActions, postActions, primaryAction );
 		}
 	}
 }

@@ -4,26 +4,26 @@
  */
 package org.hibernate.sql.exec.spi;
 
+import org.hibernate.query.spi.Limit;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ops.spi.JdbcSelect;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
+import org.hibernate.type.descriptor.java.JavaType;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.query.spi.Limit;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ops.spi.PrimaryOperation;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
-import org.hibernate.type.descriptor.java.JavaType;
-
 /**
- * Executable JDBC command
+ * Executable JDBC command produced from some form of Query.
  *
  * @author Steve Ebersole
  */
 public class JdbcOperationQuerySelect
 		extends AbstractJdbcOperationQuery
-		implements PrimaryOperation {
+		implements JdbcSelect {
 	private final JdbcValuesMappingProducer jdbcValuesMappingProducer;
 	private final int rowsToSkip;
 	private final int maxRows;

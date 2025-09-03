@@ -6,7 +6,6 @@ package org.hibernate.sql.ops.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor.StatementCreator;
 import org.hibernate.sql.results.spi.ResultsConsumer;
@@ -15,12 +14,12 @@ import org.hibernate.sql.results.spi.RowTransformer;
 import java.sql.PreparedStatement;
 
 /**
- * {@linkplain DatabaseOperation} whose primary operation is a {@linkplain JdbcOperationQuerySelect selection}.
+ * {@linkplain DatabaseOperation} whose primary operation is a {@linkplain JdbcSelect selection}.
  *
  * @author Steve Ebersole
  */
 @Incubating
-public interface DatabaseOperationSelect extends DatabaseOperation<JdbcOperationQuerySelect > {
+public interface DatabaseSelect<S extends JdbcSelect> extends DatabaseOperation<S > {
 	/**
 	 * Execute the underlying statements and return the result(s).
 	 *

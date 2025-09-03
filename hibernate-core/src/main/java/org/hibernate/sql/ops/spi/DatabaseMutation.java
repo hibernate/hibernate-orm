@@ -6,7 +6,6 @@ package org.hibernate.sql.ops.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 import java.sql.PreparedStatement;
@@ -14,12 +13,12 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
- * {@linkplain DatabaseOperation} whose primary operation is a mutation.
+ * {@linkplain DatabaseOperation} whose primary operation is a {@linkplain JdbcMutation mutation}.
  *
  * @author Steve Ebersole
  */
 @Incubating
-public interface DatabaseOperationMutation extends DatabaseOperation<JdbcOperationQueryMutation> {
+public interface DatabaseMutation<M extends JdbcMutation> extends DatabaseOperation<M> {
 	/**
 	 * Perform the execution.
 	 *

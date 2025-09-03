@@ -1289,8 +1289,8 @@ public class ActionQueue {
 			}
 			while ( lastScheduleSize != scheduledEntityNames.size() );
 			if ( !insertInfosByEntityName.isEmpty() ) {
-				log.warn( "The batch containing " + insertions.size() + " statements could not be sorted. " +
-						  "This might indicate a circular entity relationship.");
+				log.warn( "The batch containing " + insertions.size() + " statements could not be sorted. "
+						+ "This might indicate a circular entity relationship.");
 			}
 			insertions.clear();
 			for ( InsertInfo insertInfo : insertInfos ) {

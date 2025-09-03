@@ -4,7 +4,6 @@
  */
 package org.hibernate.boot.beanvalidation;
 
-import java.lang.invoke.MethodHandles;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -24,11 +23,10 @@ import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.event.spi.PreUpsertEvent;
 import org.hibernate.event.spi.PreUpsertEventListener;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.persister.entity.EntityPersister;
-
-import org.jboss.logging.Logger;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -49,11 +47,7 @@ public class BeanValidationEventListener
 		implements PreInsertEventListener, PreUpdateEventListener, PreDeleteEventListener, PreUpsertEventListener, PreCollectionUpdateEventListener,
 		SessionFactoryObserver {
 
-	private static final CoreMessageLogger log = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			BeanValidationEventListener.class.getName()
-	);
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( BeanValidationEventListener.class );
 
 	private final HibernateTraversableResolver traversableResolver;
 	private final Validator validator;

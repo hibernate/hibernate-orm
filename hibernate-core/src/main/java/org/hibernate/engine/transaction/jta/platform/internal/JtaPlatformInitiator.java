@@ -4,7 +4,6 @@
  */
 package org.hibernate.engine.transaction.jta.platform.internal;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Map;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
@@ -12,10 +11,10 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformResolver;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
-import org.jboss.logging.Logger;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -27,7 +26,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class JtaPlatformInitiator implements StandardServiceInitiator<JtaPlatform> {
 	public static final JtaPlatformInitiator INSTANCE = new JtaPlatformInitiator();
 
-	private static final CoreMessageLogger log = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, JtaPlatformInitiator.class.getName() );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( JtaPlatformInitiator.class );
 
 	@Override
 	public Class<JtaPlatform> getServiceInitiated() {

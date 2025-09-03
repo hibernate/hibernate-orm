@@ -4,7 +4,6 @@
  */
 package org.hibernate.dialect.lock;
 
-import java.lang.invoke.MethodHandles;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -15,13 +14,13 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.jboss.logging.Logger;
 
 /**
  * A pessimistic locking strategy where a lock is obtained via
@@ -37,11 +36,7 @@ import org.jboss.logging.Logger;
  */
 public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 
-	private static final CoreMessageLogger log = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			PessimisticReadUpdateLockingStrategy.class.getName()
-	);
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( PessimisticReadUpdateLockingStrategy.class );
 
 	private final EntityPersister lockable;
 	private final LockMode lockMode;

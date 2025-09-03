@@ -4,18 +4,17 @@
  */
 package org.hibernate.engine.config.internal;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.Map;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
-import org.jboss.logging.Logger;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.PolyNull;
@@ -27,11 +26,7 @@ import org.checkerframework.checker.nullness.qual.PolyNull;
  */
 public class ConfigurationServiceImpl implements ConfigurationService, ServiceRegistryAwareService {
 
-	private static final CoreMessageLogger log = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			ConfigurationServiceImpl.class.getName()
-	);
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( ConfigurationServiceImpl.class );
 
 	private final Map<String, Object> settings;
 	private ServiceRegistryImplementor serviceRegistry;

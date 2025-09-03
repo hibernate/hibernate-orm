@@ -7,6 +7,7 @@ package org.hibernate.stat.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
@@ -14,11 +15,9 @@ import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
 import org.hibernate.stat.spi.StatisticsFactory;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.jboss.logging.Logger;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.lang.invoke.MethodHandles;
 
 import static org.hibernate.cfg.StatisticsSettings.STATS_BUILDER;
 
@@ -27,7 +26,7 @@ import static org.hibernate.cfg.StatisticsSettings.STATS_BUILDER;
  */
 public class StatisticsInitiator implements SessionFactoryServiceInitiator<StatisticsImplementor> {
 
-	private static final CoreMessageLogger log = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, StatisticsInitiator.class.getName() );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( StatisticsInitiator.class );
 
 	public static final StatisticsInitiator INSTANCE = new StatisticsInitiator();
 

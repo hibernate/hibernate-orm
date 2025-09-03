@@ -101,7 +101,7 @@ public class GeneratedValuesHelper {
 
 		if ( log.isDebugEnabled() ) {
 			log.debug( "Extracted generated values for entity "
-					   + infoString( persister ) + ": " + ArrayHelper.toString( results ) );
+						+ infoString( persister ) + ": " + ArrayHelper.toString( results ) );
 		}
 
 		for ( int i = 0; i < results.length; i++ ) {

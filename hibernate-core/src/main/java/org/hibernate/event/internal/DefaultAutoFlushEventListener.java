@@ -9,11 +9,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
-import org.jboss.logging.Logger;
 
-import java.lang.invoke.MethodHandles;
 
 /**
  * Defines the default flush event listeners used by hibernate for
@@ -23,11 +22,7 @@ import java.lang.invoke.MethodHandles;
  */
 public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener implements AutoFlushEventListener {
 
-	private static final CoreMessageLogger log = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			DefaultAutoFlushEventListener.class.getName()
-	);
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( DefaultAutoFlushEventListener.class );
 
 	/**
 	 * Handle the given auto-flush event.

@@ -35,7 +35,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface JtaLogging extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".jta";
 
-	JtaLogging JTA_LOGGER = Logger.getMessageLogger(MethodHandles.lookup(), JtaLogging.class, LOGGER_NAME);
+	JtaLogging JTA_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), JtaLogging.class, LOGGER_NAME );
 
 	int NAMESPACE = 90007000;
 

@@ -4,7 +4,6 @@
  */
 package org.hibernate.boot.beanvalidation;
 
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Set;
@@ -16,11 +15,10 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
-
-import org.jboss.logging.Logger;
 
 /**
  * In {@link Integrator} for Bean Validation.
@@ -29,11 +27,7 @@ import org.jboss.logging.Logger;
  */
 public class BeanValidationIntegrator implements Integrator {
 
-	private static final CoreMessageLogger log = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			BeanValidationIntegrator.class.getName()
-	);
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( BeanValidationIntegrator.class );
 
 	public static final String APPLY_CONSTRAINTS = "hibernate.validator.apply_to_ddl";
 

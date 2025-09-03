@@ -1144,15 +1144,15 @@ public abstract class CollectionBinder {
 			if ( oneToMany ) {
 				if ( property.hasDirectAnnotationUsage( MapKeyColumn.class ) ) {
 					log.warn( "Association '"
-							  + qualify( propertyHolder.getPath(), propertyName )
-							  + "' is 'mappedBy' another entity and should not specify a '@MapKeyColumn'"
-							  + " (use '@MapKey' instead)" );
+								+ qualify( propertyHolder.getPath(), propertyName )
+								+ "' is 'mappedBy' another entity and should not specify a '@MapKeyColumn'"
+								+ " (use '@MapKey' instead)" );
 				}
 				if ( property.hasDirectAnnotationUsage( OrderColumn.class ) ) {
 					log.warn( "Association '"
-							  + qualify( propertyHolder.getPath(), propertyName )
-							  + "' is 'mappedBy' another entity and should not specify an '@OrderColumn'"
-							  + " (use '@OrderBy' instead)" );
+								+ qualify( propertyHolder.getPath(), propertyName )
+								+ "' is 'mappedBy' another entity and should not specify an '@OrderColumn'"
+								+ " (use '@OrderBy' instead)" );
 				}
 			}
 			else {

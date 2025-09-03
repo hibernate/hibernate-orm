@@ -78,7 +78,7 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 			throws HibernateException {
 		if ( log.isTraceEnabled() ) {
 			log.trace( "Collection dereferenced while transient "
-					   + collectionInfoString( role, ownerIdentifier, source.getFactory() ) );
+						+ collectionInfoString( role, ownerIdentifier, source.getFactory() ) );
 		}
 		source.getActionQueue().addAction( new CollectionRemoveAction( owner, role, collectionKey, false, source ) );
 	}

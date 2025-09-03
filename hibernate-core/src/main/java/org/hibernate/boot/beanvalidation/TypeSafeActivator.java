@@ -7,7 +7,6 @@ package org.hibernate.boot.beanvalidation;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,6 +35,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
@@ -46,7 +46,6 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SingleTableSubclass;
 
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
-import org.jboss.logging.Logger;
 
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
@@ -73,7 +72,7 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  */
 class TypeSafeActivator {
 
-	private static final CoreMessageLogger log = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, TypeSafeActivator.class.getName() );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( TypeSafeActivator.class );
 
 	/**
 	 * Used to validate a supplied ValidatorFactory instance as being castable to ValidatorFactory.

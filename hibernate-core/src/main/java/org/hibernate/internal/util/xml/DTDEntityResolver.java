@@ -6,12 +6,11 @@ package org.hibernate.internal.util.xml;
 
 import java.io.InputStream;
 import java.io.Serializable;
-import java.lang.invoke.MethodHandles;
 
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ConfigHelper;
 
-import org.jboss.logging.Logger;
 
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
@@ -43,11 +42,7 @@ import org.xml.sax.InputSource;
 @Deprecated
 public class DTDEntityResolver implements EntityResolver, Serializable {
 
-	private static final CoreMessageLogger log = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			DTDEntityResolver.class.getName()
-	);
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( DTDEntityResolver.class );
 
 	private static final String HIBERNATE_NAMESPACE = "http://www.hibernate.org/dtd/";
 	private static final String OLD_HIBERNATE_NAMESPACE = "http://hibernate.sourceforge.net/";

@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.jpa.query;
 
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Lob;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -17,8 +19,12 @@ import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.EntityType;
 
+
 @Jpa(
-		annotatedClasses = CriteriaUpdateWithParametersTest.Person.class
+		annotatedClasses = {
+				CriteriaUpdateWithParametersTest.Person.class,
+				CriteriaUpdateWithParametersTest.Process.class
+		}
 )
 public class CriteriaUpdateWithParametersTest {
 
@@ -76,6 +82,19 @@ public class CriteriaUpdateWithParametersTest {
 		);
 	}
 
+	@Test
+	public void testCriteriaUpdate3(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+			CriteriaUpdate<Process> createCriteriaUpdate = criteriaBuilder.createCriteriaUpdate(
+					Process.class );
+			Root<Process> root = createCriteriaUpdate.from( Process.class );
+			createCriteriaUpdate.set( root.get( "name" ), (Object) null );
+			createCriteriaUpdate.set( root.get( "payload" ), (Object) null );
+			em.createQuery( createCriteriaUpdate ).executeUpdate();
+		} );
+	}
+
 	@Entity(name = "Person")
 	public static class Person {
 
@@ -100,5 +119,21 @@ public class CriteriaUpdateWithParametersTest {
 		public Integer getAge() {
 			return age;
 		}
+	}
+
+	@Entity
+	public static class Process {
+
+		@Id
+		@GeneratedValue
+		private Long id;
+
+		// All attributes below are necessary to reproduce the issue
+
+		private String name;
+
+		@Lob
+		private byte[] payload;
+
 	}
 }

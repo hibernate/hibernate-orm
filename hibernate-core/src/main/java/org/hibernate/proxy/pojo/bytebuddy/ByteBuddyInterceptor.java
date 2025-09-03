@@ -16,7 +16,10 @@ import org.hibernate.type.CompositeType;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.ReflectHelper.isPublic;
 
-public class ByteBuddyInterceptor extends BasicLazyInitializer implements ProxyConfiguration.Interceptor {
+public class ByteBuddyInterceptor
+		extends BasicLazyInitializer
+		implements ProxyConfiguration.Interceptor {
+
 	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyInterceptor.class );
 
 	private final Class<?>[] interfaces;

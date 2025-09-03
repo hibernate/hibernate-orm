@@ -28,10 +28,10 @@ import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.ops.internal.DatabaseOperationSelectImpl;
+import org.hibernate.sql.exec.spi.StatementAccess;
+import org.hibernate.sql.ops.internal.DatabaseSelectImpl;
 import org.hibernate.sql.ops.spi.PostAction;
 import org.hibernate.sql.ops.spi.PreAction;
-import org.hibernate.sql.exec.spi.StatementAccess;
 import org.hibernate.sql.results.spi.SingleResultConsumer;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -50,12 +50,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 
 /**
+ * Smoke tests for {@linkplain org.hibernate.sql.ops.spi.DatabaseSelect}.
+ *
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = Person.class)
 @SessionFactory
-public class DatabaseOperationSmokeTest {
+public class DatabaseSelectSmokeTests {
 	@BeforeEach
 	void createTestData(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
@@ -77,7 +79,7 @@ public class DatabaseOperationSmokeTest {
 		final JdbcOperationQuerySelect jdbcOperation = personQuery.jdbcOperation();
 		final JdbcParameterBindings jdbcParameterBindings = personQuery.jdbcParameterBindings();
 
-		final DatabaseOperationSelectImpl databaseOperation = new DatabaseOperationSelectImpl( jdbcOperation );
+		final DatabaseSelectImpl databaseOperation = new DatabaseSelectImpl( jdbcOperation );
 
 		factoryScope.inTransaction( (session) -> {
 			final Person person = databaseOperation.execute(
@@ -117,7 +119,7 @@ public class DatabaseOperationSmokeTest {
 
 		final LockTimeoutHandler lockTimeoutHandler = new LockTimeoutHandler( Timeout.seconds( 2 ), lockTimeoutStrategy );
 
-		final DatabaseOperationSelectImpl databaseOperation = DatabaseOperationSelectImpl.builder( jdbcOperation )
+		final DatabaseSelectImpl databaseOperation = DatabaseSelectImpl.builder( jdbcOperation )
 				.addSecondaryActionPair( lockTimeoutHandler )
 				.build();
 
@@ -172,7 +174,7 @@ public class DatabaseOperationSmokeTest {
 			);
 
 
-			final DatabaseOperationSelectImpl.Builder operationBuilder = DatabaseOperationSelectImpl
+			final DatabaseSelectImpl.Builder operationBuilder = DatabaseSelectImpl
 					.builder( jdbcOperation )
 					.appendPostAction( loadedValueCollector );
 
@@ -185,7 +187,7 @@ public class DatabaseOperationSmokeTest {
 				operationBuilder.addSecondaryActionPair( lockTimeoutHandler, lockTimeoutHandler );
 			}
 
-			final DatabaseOperationSelectImpl databaseOperation = operationBuilder.build();
+			final DatabaseSelectImpl databaseOperation = operationBuilder.build();
 			final Person person = databaseOperation.execute(
 					Person.class,
 					1,

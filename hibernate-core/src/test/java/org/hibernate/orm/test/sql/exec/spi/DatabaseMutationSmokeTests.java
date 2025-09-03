@@ -19,7 +19,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.ops.internal.DatabaseOperationMutationImpl;
+import org.hibernate.sql.ops.internal.DatabaseMutationImpl;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -35,12 +35,14 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
+ * Smoke tests for {@linkplain org.hibernate.sql.ops.spi.DatabaseMutation}.
+ *
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = Person.class)
 @SessionFactory(useCollectingStatementInspector = true)
-public class DatabaseMutationTests {
+public class DatabaseMutationSmokeTests {
 	@BeforeEach
 	void createTestData(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
@@ -81,7 +83,7 @@ public class DatabaseMutationTests {
 		paramBindings.addBinding( idParam, new JdbcParameterBindingImpl( idColumn.getJdbcMapping(), 2 ) );
 		paramBinders.add( idParam );
 
-		final DatabaseOperationMutationImpl databaseOp = new DatabaseOperationMutationImpl(
+		final DatabaseMutationImpl databaseOp = new DatabaseMutationImpl(
 				new JdbcOperationQueryInsertImpl(
 						sql,
 						paramBinders,
@@ -134,7 +136,7 @@ public class DatabaseMutationTests {
 		paramBinders.add( idParam );
 
 
-		final DatabaseOperationMutationImpl databaseOp = new DatabaseOperationMutationImpl(
+		final DatabaseMutationImpl databaseOp = new DatabaseMutationImpl(
 				new JdbcOperationQueryUpdate(
 						sql,
 						paramBinders,
@@ -180,7 +182,7 @@ public class DatabaseMutationTests {
 		paramBinders.add( idParam );
 
 
-		final DatabaseOperationMutationImpl databaseOp = new DatabaseOperationMutationImpl(
+		final DatabaseMutationImpl databaseOp = new DatabaseMutationImpl(
 				new JdbcOperationQueryUpdate(
 						sql,
 						paramBinders,

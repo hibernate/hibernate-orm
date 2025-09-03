@@ -106,7 +106,7 @@ public class DefaultReplicateEventListener
 			// no existing row - execute a SQL INSERT
 			if ( log.isTraceEnabled() ) {
 				log.trace( "No existing row, replicating new instance "
-						   + infoString( persister, id, event.getFactory() ) );
+							+ infoString( persister, id, event.getFactory() ) );
 			}
 			final boolean regenerate = persister.isIdentifierAssignedByInsert(); // prefer re-generation of identity!
 			final var key = regenerate ? null : source.generateEntityKey( id, persister );

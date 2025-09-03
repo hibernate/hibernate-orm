@@ -56,7 +56,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 		final String entityName = session.getEntityName( managedEntity );
 		if ( log.isTraceEnabled() ) {
 			log.trace( "More than one representation of the same persistent entity being merged for: "
-					   + infoString( entityName, session.getIdentifier( managedEntity ) ) );
+						+ infoString( entityName, session.getIdentifier( managedEntity ) ) );
 		}
 		Set<Object> detachedEntitiesForManaged = null;
 		if ( managedToMergeEntitiesXref == null ) {

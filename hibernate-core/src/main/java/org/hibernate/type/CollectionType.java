@@ -5,7 +5,6 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.lang.invoke.MethodHandles;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -31,6 +30,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.metamodel.CollectionClassification;
@@ -41,7 +41,6 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 
-import org.jboss.logging.Logger;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -59,7 +58,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  */
 public abstract class CollectionType extends AbstractType implements AssociationType {
 
-	private static final CoreMessageLogger log = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, CollectionType.class.getName() );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( CollectionType.class );
 
 	@Internal
 	public static final Object UNFETCHED_COLLECTION = new MarkerObject( "UNFETCHED COLLECTION" );
@@ -833,7 +832,7 @@ public abstract class CollectionType extends AbstractType implements Association
 		}
 		if ( log.isTraceEnabled() ) {
 			log.trace( "Created collection wrapper: "
-					   + collectionInfoString( persister, collection, key, session ) );
+						+ collectionInfoString( persister, collection, key, session ) );
 		}
 		return collection;
 	}

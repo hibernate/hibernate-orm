@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
-import java.lang.invoke.MethodHandles;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -18,9 +17,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
-import org.jboss.logging.Logger;
 
 /**
  * A helper for dealing with {@code BLOB} and {@code CLOB} data
@@ -35,11 +34,7 @@ public final class DataHelper {
 	/** The size of the buffer we will use to deserialize larger streams */
 	private static final int BUFFER_SIZE = 1024 * 4;
 
-	private static final CoreMessageLogger log = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			DataHelper.class.getName()
-	);
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( DataHelper.class );
 
 	/**
 	 * Extract the contents of the given reader/stream as a string.

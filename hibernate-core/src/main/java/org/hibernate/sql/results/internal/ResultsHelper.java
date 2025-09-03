@@ -74,7 +74,7 @@ public class ResultsHelper {
 
 		if ( log.isTraceEnabled() ) {
 			log.trace( "Collection fully initialized: "
-					   + collectionInfoString( collectionDescriptor, collection, key, session ) );
+						+ collectionInfoString( collectionDescriptor, collection, key, session ) );
 		}
 
 		// todo (6.0) : there is other logic still needing to be implemented here.  caching, etc
@@ -138,7 +138,7 @@ public class ResultsHelper {
 
 		if ( log.isTraceEnabled() ) {
 			log.trace( "Caching collection: "
-					   + collectionInfoString( collectionDescriptor, collection, key, session ) );
+						+ collectionInfoString( collectionDescriptor, collection, key, session ) );
 		}
 
 		if ( session.getLoadQueryInfluencers().hasEnabledFilters()

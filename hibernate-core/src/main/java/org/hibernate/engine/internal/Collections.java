@@ -51,7 +51,7 @@ public final class Collections {
 
 		if ( loadedPersister != null && log.isTraceEnabled() ) {
 			log.trace( "Collection dereferenced: "
-					   + collectionInfoString( loadedPersister, coll, entry.getLoadedKey(), session ) );
+					+ collectionInfoString( loadedPersister, coll, entry.getLoadedKey(), session ) );
 		}
 
 		// do a check
@@ -116,7 +116,7 @@ public final class Collections {
 
 		if ( log.isTraceEnabled() ) {
 			log.trace( "Found collection with unloaded owner: " +
-					   collectionInfoString( entry.getLoadedPersister(), coll, entry.getLoadedKey(), session ) );
+					collectionInfoString( entry.getLoadedPersister(), coll, entry.getLoadedKey(), session ) );
 		}
 
 		entry.setCurrentPersister( entry.getLoadedPersister() );
@@ -167,7 +167,7 @@ public final class Collections {
 			// 		- skip it
 			if ( log.isTraceEnabled() ) {
 				log.trace( "Skipping uninitialized bytecode-lazy collection: "
-						   + collectionInfoString( persister, collection, entry.getCurrentKey(), session ) );
+						+ collectionInfoString( persister, collection, entry.getCurrentKey(), session ) );
 			}
 			entry.setReached( true );
 			entry.setProcessed( true );

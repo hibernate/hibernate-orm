@@ -4,7 +4,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -28,12 +27,12 @@ import org.hibernate.event.spi.FlushEntityEvent;
 import org.hibernate.event.spi.FlushEntityEventListener;
 import org.hibernate.event.spi.FlushEvent;
 import org.hibernate.event.spi.PersistContext;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.EntityPrinter;
 import org.hibernate.internal.util.collections.InstanceIdentityMap;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.jboss.logging.Logger;
 
 import static org.hibernate.engine.internal.Collections.processUnreachableCollection;
 import static org.hibernate.engine.internal.Collections.skipRemoval;
@@ -45,11 +44,7 @@ import static org.hibernate.engine.internal.Collections.skipRemoval;
  */
 public abstract class AbstractFlushingEventListener {
 
-	private static final CoreMessageLogger log = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			AbstractFlushingEventListener.class.getName()
-	);
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractFlushingEventListener.class );
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Pre-flushing section

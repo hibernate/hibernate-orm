@@ -96,8 +96,7 @@ public final class EventListenerGroups {
 	public EventListenerGroups(ServiceRegistry serviceRegistry) {
 		Objects.requireNonNull( serviceRegistry );
 
-		final EventListenerRegistry eventListenerRegistry =
-				serviceRegistry.requireService( EventListenerRegistry.class );
+		final var eventListenerRegistry = serviceRegistry.requireService( EventListenerRegistry.class );
 
 		// Pre-compute all iterators on Event listeners:
 

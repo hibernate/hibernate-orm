@@ -22,7 +22,6 @@ import org.hibernate.UnresolvableObjectException;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.EntityKey;
@@ -1367,7 +1366,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					getFactory(),
 					getTenantIdentifier()
 			);
-			final SoftLock lock = cache.lockItem( this, cacheKey, previousVersion );
+			final var lock = cache.lockItem( this, cacheKey, previousVersion );
 			afterCompletions.add( (success, session) -> cache.unlockItem( session, cacheKey, lock ) );
 			return cacheKey;
 		}
@@ -1391,7 +1390,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					getFactory(),
 					getTenantIdentifier()
 			);
-			final SoftLock lock = cache.lockItem( this, cacheKey, null );
+			final var lock = cache.lockItem( this, cacheKey, null );
 			afterCompletions.add( (success, session) -> cache.unlockItem( this, cacheKey, lock ) );
 			return cacheKey;
 		}

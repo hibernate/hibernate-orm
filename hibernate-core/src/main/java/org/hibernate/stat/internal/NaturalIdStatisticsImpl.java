@@ -30,15 +30,14 @@ public class NaturalIdStatisticsImpl extends AbstractCacheableDataStatistics imp
 	private final Lock writeLock;
 
 	NaturalIdStatisticsImpl(EntityPersister rootEntityDescriptor) {
-		super(
-				() -> rootEntityDescriptor.getNaturalIdCacheAccessStrategy() != null
-						? rootEntityDescriptor.getNaturalIdCacheAccessStrategy().getRegion()
-						: null
-		);
-		this.rootEntityName = rootEntityDescriptor.getRootEntityName();
+		super( () -> {
+			final var cache = rootEntityDescriptor.getNaturalIdCacheAccessStrategy();
+			return cache != null ? cache.getRegion() : null;
+		} );
+		rootEntityName = rootEntityDescriptor.getRootEntityName();
 		final ReadWriteLock lock = new ReentrantReadWriteLock();
-		this.readLock = lock.readLock();
-		this.writeLock = lock.writeLock();
+		readLock = lock.readLock();
+		writeLock = lock.writeLock();
 	}
 
 	/**
@@ -46,7 +45,7 @@ public class NaturalIdStatisticsImpl extends AbstractCacheableDataStatistics imp
 	 */
 	@Override
 	public long getExecutionCount() {
-		return this.executionCount.get();
+		return executionCount.get();
 	}
 
 	/**
@@ -57,16 +56,16 @@ public class NaturalIdStatisticsImpl extends AbstractCacheableDataStatistics imp
 		// We write lock here to be sure that we always calculate the average time
 		// with all updates from the executed applied: executionCount and totalExecutionTime
 		// both used in the calculation
-		this.writeLock.lock();
+		writeLock.lock();
 		try {
 			long avgExecutionTime = 0;
 			if ( this.executionCount.get() > 0 ) {
-				avgExecutionTime = this.totalExecutionTime.get() / this.executionCount.get();
+				avgExecutionTime = totalExecutionTime.get() / executionCount.get();
 			}
 			return avgExecutionTime;
 		}
 		finally {
-			this.writeLock.unlock();
+			writeLock.unlock();
 		}
 	}
 
@@ -75,7 +74,7 @@ public class NaturalIdStatisticsImpl extends AbstractCacheableDataStatistics imp
 	 */
 	@Override
 	public long getExecutionMaxTime() {
-		return this.executionMaxTime.get();
+		return executionMaxTime.get();
 	}
 
 	/**
@@ -83,39 +82,43 @@ public class NaturalIdStatisticsImpl extends AbstractCacheableDataStatistics imp
 	 */
 	@Override
 	public long getExecutionMinTime() {
-		return this.executionMinTime.get();
+		return executionMinTime.get();
 	}
 
 	void queryExecuted(long time) {
 		// read lock is enough, concurrent updates are supported by the underlying type AtomicLong
 		// this only guards executed(long, long) to be called, when another thread is executing getExecutionAvgTime()
-		this.readLock.lock();
+		readLock.lock();
 		try {
-			// Less chances for a context switch
+			// Less chance for a context switch
 			//noinspection StatementWithEmptyBody
-			for ( long old = this.executionMinTime.get(); time < old && !this.executionMinTime.compareAndSet( old, time ); old = this.executionMinTime.get() ) {
+			for ( long old = executionMinTime.get();
+				time < old && !executionMinTime.compareAndSet( old, time );
+				old = executionMinTime.get() ) {
 			}
 			//noinspection StatementWithEmptyBody
-			for ( long old = this.executionMaxTime.get(); time > old && !this.executionMaxTime.compareAndSet( old, time ); old = this.executionMaxTime.get() ) {
+			for ( long old = executionMaxTime.get();
+				time > old && !executionMaxTime.compareAndSet( old, time );
+				old = executionMaxTime.get() ) {
 			}
-			this.executionCount.getAndIncrement();
-			this.totalExecutionTime.addAndGet( time );
+			executionCount.getAndIncrement();
+			totalExecutionTime.addAndGet( time );
 		}
 		finally {
-			this.readLock.unlock();
+			readLock.unlock();
 		}
 	}
 
 	@Override
 	public String toString() {
-		final StringBuilder buf = new StringBuilder()
+		final var text = new StringBuilder()
 				.append( "NaturalIdCacheStatistics" )
 				.append( "[rootEntityName=" ).append( rootEntityName )
 				.append( ",executionCount=" ).append( this.executionCount )
 				.append( ",executionAvgTime=" ).append( this.getExecutionAvgTime() )
 				.append( ",executionMinTime=" ).append( this.executionMinTime )
 				.append( ",executionMaxTime=" ).append( this.executionMaxTime );
-		appendCacheStats( buf );
-		return buf.append( ']' ).toString();
+		appendCacheStats( text );
+		return text.append( ']' ).toString();
 	}
 }

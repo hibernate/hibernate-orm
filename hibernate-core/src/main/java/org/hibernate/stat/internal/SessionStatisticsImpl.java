@@ -38,10 +38,10 @@ public class SessionStatisticsImpl implements SessionStatistics {
 	}
 
 	public String toString() {
-		return "SessionStatistics[" +
-				"entity count=" + getEntityCount() +
-				",collection count=" + getCollectionCount() +
-				']';
+		return "SessionStatistics["
+			+ "entity count=" + getEntityCount()
+			+ ",collection count=" + getCollectionCount()
+			+ ']';
 	}
 
 }

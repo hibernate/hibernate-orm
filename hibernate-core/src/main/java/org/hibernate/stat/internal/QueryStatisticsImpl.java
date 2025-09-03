@@ -207,17 +207,17 @@ public class QueryStatisticsImpl implements QueryStatistics {
 
 	public String toString() {
 		return "QueryStatistics"
-				+ "[query=" + query
-				+ ",cacheHitCount=" + this.cacheHitCount
-				+ ",cacheMissCount=" + this.cacheMissCount
-				+ ",cachePutCount=" + this.cachePutCount
-				+ ",planCacheHitCount=" + this.planCacheHitCount
-				+ ",planCacheMissCount=" + this.planCacheMissCount
-				+ ",executionCount=" + this.executionCount
-				+ ",executionRowCount=" + this.executionRowCount
-				+ ",executionAvgTime=" + this.getExecutionAvgTime()
-				+ ",executionMaxTime=" + this.executionMaxTime
-				+ ",executionMinTime=" + this.executionMinTime
-				+ ']';
+			+ "[query=" + query
+			+ ",cacheHitCount=" + cacheHitCount
+			+ ",cacheMissCount=" + cacheMissCount
+			+ ",cachePutCount=" + cachePutCount
+			+ ",planCacheHitCount=" + planCacheHitCount
+			+ ",planCacheMissCount=" + planCacheMissCount
+			+ ",executionCount=" + executionCount
+			+ ",executionRowCount=" + executionRowCount
+			+ ",executionAvgTime=" + getExecutionAvgTime()
+			+ ",executionMaxTime=" + executionMaxTime
+			+ ",executionMinTime=" + executionMinTime
+			+ ']';
 	}
 }

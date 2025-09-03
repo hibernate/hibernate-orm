@@ -114,17 +114,13 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 		NullnessUtil.castNonNull( cacheRemoveCount ).increment();
 	}
 
-	protected void appendCacheStats(StringBuilder buf) {
-		buf.append( ",cacheRegion=" ).append( cacheRegionName );
-
-		if ( cacheRegionName == null ) {
-			return;
+	protected void appendCacheStats(StringBuilder text) {
+		text.append( ",cacheRegion=" ).append( cacheRegionName );
+		if ( cacheRegionName != null ) {
+			text.append( ",cacheHitCount=" ).append( getCacheHitCount() )
+					.append( ",cacheMissCount=" ).append( getCacheMissCount() )
+					.append( ",cachePutCount=" ).append( getCachePutCount() )
+					.append( ",cacheRemoveCount=" ).append( getCacheRemoveCount() );
 		}
-
-		buf.append( ",cacheHitCount=" ).append( getCacheHitCount() )
-				.append( ",cacheMissCount=" ).append( getCacheMissCount() )
-				.append( ",cachePutCount=" ).append( getCachePutCount() )
-				.append( ",cacheRemoveCount=" ).append( getCacheRemoveCount() );
-
 	}
 }

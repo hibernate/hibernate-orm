@@ -4,7 +4,6 @@
  */
 package org.hibernate.engine.jdbc.env.internal;
 
-import java.lang.invoke.MethodHandles;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -32,6 +31,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.event.monitor.internal.EmptyEventMonitor;
 import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.jdbc.AbstractReturningWork;
@@ -47,7 +47,6 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.jboss.logging.Logger;
 
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
 
@@ -80,11 +79,8 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
  * @author Steve Ebersole
  */
 public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEnvironment> {
-	private static final CoreMessageLogger log = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			JdbcEnvironmentInitiator.class.getName()
-	);
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( JdbcEnvironmentInitiator.class );
 
 	public static final JdbcEnvironmentInitiator INSTANCE = new JdbcEnvironmentInitiator();
 

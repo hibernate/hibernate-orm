@@ -134,7 +134,7 @@ import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.
 public class EntityBinder {
 
 	private static final CoreMessageLogger log = messageLogger( EntityBinder.class );
-	
+
 	private static final String NATURAL_ID_CACHE_SUFFIX = "##NaturalId";
 
 	private final MetadataBuildingContext context;
@@ -1030,7 +1030,7 @@ public class EntityBinder {
 			if ( ignore ) {
 				if ( log.isTraceEnabled() ) {
 					log.trace( "Ignoring explicit @DiscriminatorColumn annotation on: "
-							   + annotatedClass.getName() );
+							+ annotatedClass.getName() );
 				}
 			}
 			return !ignore;
@@ -1040,7 +1040,7 @@ public class EntityBinder {
 			if ( createImplicit ) {
 				if ( log.isTraceEnabled() ) {
 					log.trace( "Inferring implicit @DiscriminatorColumn using defaults for: "
-							   + annotatedClass.getName() );
+								+ annotatedClass.getName() );
 				}
 			}
 			return createImplicit;

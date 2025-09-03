@@ -4,23 +4,23 @@
  */
 package org.hibernate.jpa.internal.util;
 
-import java.lang.invoke.MethodHandles;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
-import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
 public final class LogHelper {
-	private static final CoreMessageLogger log = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, LogHelper.class.getName() );
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( LogHelper.class );
 
 	private LogHelper() {
 	}

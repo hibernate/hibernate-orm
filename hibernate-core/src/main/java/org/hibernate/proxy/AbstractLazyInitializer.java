@@ -93,7 +93,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	private boolean isInitializeProxyWhenAccessingIdentifier() {
 		return session != null
 			&& getSessionFactoryOptions().getJpaCompliance()
-					   .isJpaProxyComplianceEnabled();
+					.isJpaProxyComplianceEnabled();
 	}
 
 	@Override

@@ -45,7 +45,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 			final Object loadedKey = ce.getLoadedKey();
 			if ( log.isTraceEnabled() ) {
 				log.trace( "Initializing collection "
-						   + collectionInfoString( loadedPersister, collection, loadedKey, source ) );
+							+ collectionInfoString( loadedPersister, collection, loadedKey, source ) );
 			}
 
 			final boolean foundInCache = initializeFromCache( loadedKey, loadedPersister, collection, source );

@@ -656,7 +656,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				dirtyPropertyNames[i] = allPropertyNames[dirtyProperties[i]];
 			}
 			log.trace( "Found dirty properties [" + infoString( persister.getEntityName(), entry.getId() )
-					   + "] : " + Arrays.toString( dirtyPropertyNames ) );
+						+ "] : " + Arrays.toString( dirtyPropertyNames ) );
 		}
 	}
 

@@ -4,7 +4,6 @@
  */
 package org.hibernate.engine.jndi.internal;
 
-import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Hashtable;
@@ -22,10 +21,10 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jndi.JndiException;
 import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.jndi.spi.JndiService;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.NullnessUtil;
 
-import org.jboss.logging.Logger;
 
 /**
  * Standard implementation of JNDI services.
@@ -34,11 +33,7 @@ import org.jboss.logging.Logger;
  */
 final class JndiServiceImpl implements JndiService {
 
-	private static final CoreMessageLogger log = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			JndiServiceImpl.class.getName()
-	);
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( JndiServiceImpl.class );
 
 	private final Hashtable<String,Object> initialContextSettings;
 

@@ -4,7 +4,6 @@
  */
 package org.hibernate.context.internal;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import jakarta.transaction.Synchronization;
@@ -18,10 +17,10 @@ import org.hibernate.context.spi.AbstractCurrentSessionContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
-import org.jboss.logging.Logger;
 
 /**
  * An implementation of {@link org.hibernate.context.spi.CurrentSessionContext} which scopes the notion
@@ -45,11 +44,7 @@ import org.jboss.logging.Logger;
  */
 public class JTASessionContext extends AbstractCurrentSessionContext {
 
-	private static final CoreMessageLogger log = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			JTASessionContext.class.getName()
-	);
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( JTASessionContext.class );
 
 	private transient final Map<Object, Session> currentSessionMap = new ConcurrentHashMap<>();
 

@@ -4,15 +4,14 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
-import java.lang.invoke.MethodHandles;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedHashSet;
 
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
-import org.jboss.logging.Logger;
 
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
@@ -27,11 +26,7 @@ import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_A
 @Deprecated(since = "7.0", forRemoval = true)
 public class TypeInfo {
 
-	private static final CoreMessageLogger log = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			TypeInfo.class.getName()
-	);
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( TypeInfo.class );
 
 	private final String typeName;
 	private final int jdbcTypeCode;

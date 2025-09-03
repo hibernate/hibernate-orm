@@ -508,7 +508,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 
 		if ( log.isTraceEnabled() ) {
 			log.trace( "Attempting to resolve: "
-					   + infoString( persister, event.getEntityId(), event.getFactory() ) );
+						+ infoString( persister, event.getEntityId(), event.getFactory() ) );
 		}
 
 		final var session = event.getSession();
@@ -564,7 +564,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		else {
 			if ( log.isTraceEnabled() ) {
 				log.trace( "Resolved entity in second-level cache: "
-						   + infoString( persister, event.getEntityId(), event.getFactory() ) );
+							+ infoString( persister, event.getEntityId(), event.getFactory() ) );
 			}
 			return entity;
 		}
@@ -582,7 +582,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	protected Object loadFromDatasource(final LoadEvent event, final EntityPersister persister) {
 		if ( log.isTraceEnabled() ) {
 			log.trace( "Entity not resolved in any cache, loading from datastore: "
-					   + infoString( persister, event.getEntityId(), event.getFactory() ) );
+						+ infoString( persister, event.getEntityId(), event.getFactory() ) );
 		}
 
 		final Object entity = persister.load(

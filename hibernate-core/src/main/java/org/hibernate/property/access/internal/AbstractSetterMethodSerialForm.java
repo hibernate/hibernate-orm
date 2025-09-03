@@ -53,7 +53,7 @@ public abstract class AbstractSetterMethodSerialForm implements Serializable {
 
 	protected Method resolveMethod() {
 		try {
-			final Method method = declaringClass.getDeclaredMethod( methodName, argumentType );
+			final var method = declaringClass.getDeclaredMethod( methodName, argumentType );
 			ReflectHelper.ensureAccessibility( method );
 			return method;
 		}

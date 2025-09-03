@@ -4,6 +4,7 @@
  */
 package org.hibernate.proxy.map;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
@@ -17,6 +18,7 @@ import org.hibernate.proxy.LazyInitializer;
  *
  * @author Gavin King
  */
+@SuppressWarnings("rawtypes")
 public class MapProxy implements HibernateProxy, Map, Serializable {
 
 	private final MapLazyInitializer li;
@@ -57,23 +59,23 @@ public class MapProxy implements HibernateProxy, Map, Serializable {
 		return li.getMap().containsValue(value);
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public Collection values() {
+	@Override
+	public Collection<?> values() {
 		return li.getMap().values();
 	}
 
 	@Override @SuppressWarnings("unchecked")
-	public void putAll(Map t) {
-		li.getMap().putAll(t);
+	public void putAll(Map map) {
+		li.getMap().putAll(map);
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public Set entrySet() {
+	@Override
+	public Set<?> entrySet() {
 		return li.getMap().entrySet();
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public Set keySet() {
+	@Override
+	public Set<?> keySet() {
 		return li.getMap().keySet();
 	}
 
@@ -92,6 +94,7 @@ public class MapProxy implements HibernateProxy, Map, Serializable {
 		return li.getMap().put(key, value);
 	}
 
+	@Serial
 	@Override
 	public Object writeReplace() {
 		/*
@@ -116,7 +119,9 @@ public class MapProxy implements HibernateProxy, Map, Serializable {
 		return new SerializableMapProxy(
 				li.getEntityName(),
 				li.getInternalIdentifier(),
-				( li.isReadOnlySettingAvailable() ? Boolean.valueOf( li.isReadOnly() ) : li.isReadOnlyBeforeAttachedToSession() ),
+				li.isReadOnlySettingAvailable()
+						? Boolean.valueOf( li.isReadOnly() )
+						: li.isReadOnlyBeforeAttachedToSession(),
 				li.getSessionFactoryUuid(),
 				li.getSessionFactoryName(),
 				li.isAllowLoadOutsideTransaction()

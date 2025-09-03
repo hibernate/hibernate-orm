@@ -35,10 +35,10 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
+import static java.lang.reflect.Modifier.isFinal;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptableType;
 import static org.hibernate.internal.util.ReflectHelper.getMethod;
 import static org.hibernate.metamodel.internal.PropertyAccessHelper.propertyAccessStrategy;
-import static org.hibernate.proxy.pojo.ProxyFactoryHelper.validateGetterSetterMethodProxyability;
 
 /**
  * @author Steve Ebersole
@@ -373,6 +373,19 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			else {
 				return null;
 			}
+		}
+	}
+
+	private static void validateGetterSetterMethodProxyability(String getterOrSetter, Method method ) {
+		if ( method != null && isFinal( method.getModifiers() ) ) {
+			throw new HibernateException(
+					String.format(
+							"%s methods of lazy classes cannot be final: %s#%s",
+							getterOrSetter,
+							method.getDeclaringClass().getName(),
+							method.getName()
+					)
+			);
 		}
 	}
 }

@@ -13,7 +13,6 @@ import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.ProxyConfiguration;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.type.CompositeType;
 
@@ -52,7 +51,6 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 		this.setIdentifierMethod = setIdentifierMethod;
 		this.componentIdType = componentIdType;
 		this.overridesEquals = ReflectHelper.overridesEquals( persistentClass );
-
 		this.proxyClass = byteBuddyProxyHelper.buildProxy( persistentClass, this.interfaces );
 	}
 
@@ -64,7 +62,7 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 	public HibernateProxy getProxy(
 			Object id,
 			SharedSessionContractImplementor session) throws HibernateException {
-		final ByteBuddyInterceptor interceptor = new ByteBuddyInterceptor(
+		final var interceptor = new ByteBuddyInterceptor(
 				entityName,
 				persistentClass,
 				interfaces,
@@ -76,8 +74,8 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 				overridesEquals
 		);
 
-		final HibernateProxy instance = getHibernateProxy();
-		final ProxyConfiguration proxyConfiguration = instance.asProxyConfiguration();
+		final var instance = getHibernateProxy();
+		final var proxyConfiguration = instance.asProxyConfiguration();
 		if ( proxyConfiguration == null ) {
 			throw new HibernateException( "Produced proxy does not correctly implement ProxyConfiguration" );
 		}
@@ -86,8 +84,8 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 	}
 
 	private HibernateProxy getHibernateProxy() {
-		final PrimeAmongSecondarySupertypes internal = getHibernateProxyInternal();
-		final HibernateProxy hibernateProxy = internal.asHibernateProxy();
+		final var internal = getHibernateProxyInternal();
+		final var hibernateProxy = internal.asHibernateProxy();
 		if ( hibernateProxy == null ) {
 			throw new HibernateException( "Produced proxy does not correctly implement HibernateProxy" );
 		}

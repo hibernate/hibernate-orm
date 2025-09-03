@@ -95,10 +95,16 @@ public class GradleParallelTestingResolver {
 	 * @return an integer between 1 and {@link #GRADLE_MAXIMUM_PARALLEL_FORKS} system property (inclusive)
 	 */
 	private static int getRunningID() {
-		// enable parallelization of up to GRADLE_MAXIMUM_PARALLEL_FORKS
-		final Integer maxParallelForks = Integer.valueOf( System.getProperty( GRADLE_MAXIMUM_PARALLEL_FORKS, "1" ) );
-		// Note that the worker ids are strictly monotonic
-		final Integer worker = Integer.valueOf( System.getProperty( GRADLE_WORKER_ID, "1" ) );
-		return (worker % maxParallelForks) + 1;
+		try {
+			// enable parallelization of up to GRADLE_MAXIMUM_PARALLEL_FORKS
+			final Integer maxParallelForks = Integer.valueOf(
+					System.getProperty( GRADLE_MAXIMUM_PARALLEL_FORKS, "1" ) );
+			// Note that the worker ids are strictly monotonic
+			final Integer worker = Integer.valueOf( System.getProperty( GRADLE_WORKER_ID, "1" ) );
+			return (worker % maxParallelForks) + 1;
+		}
+		catch(NumberFormatException nfe) {
+			return 1;
+		}
 	}
 }

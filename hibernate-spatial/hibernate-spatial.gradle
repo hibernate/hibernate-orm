@@ -48,6 +48,7 @@ tasks.test {
 			   'mysql_ci',
 			   'oracle',
 			   'oracle_ci',
+			   'oracle_test_pilot_database',
 			   'oracle_xe_ci',
 			   'mssql',
 			   'mssql_ci'

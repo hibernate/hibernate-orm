@@ -10,9 +10,6 @@ import org.hibernate.LazyInitializationException;
 import org.hibernate.SessionException;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -146,7 +143,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			return null;
 		}
 		else {
-			final EntityPersister entityDescriptor =
+			final var entityDescriptor =
 					session.getFactory().getMappingMetamodel()
 							.getEntityDescriptor( entityName );
 			return session.generateEntityKey( id, entityDescriptor );
@@ -205,9 +202,9 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 						+ entityName + "#" + id + "] - no session" );
 			}
 			try {
-				final SessionFactoryImplementor factory =
-						SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
-				final SessionImplementor session = factory.openSession();
+				final var session =
+						SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid )
+								.openSession();
 				session.getPersistenceContext().setDefaultReadOnly( true );
 				session.setHibernateFlushMode( FlushMode.MANUAL );
 
@@ -265,8 +262,8 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 */
 	public final void initializeWithoutLoadIfPossible() {
 		if ( !initialized && session != null && session.isOpenOrWaitingForAutoClose() ) {
-			final EntityPersister entityDescriptor = getMappingMetamodel().getEntityDescriptor( getEntityName() );
-			final EntityKey key = session.generateEntityKey( getInternalIdentifier(), entityDescriptor );
+			final var entityDescriptor = getMappingMetamodel().getEntityDescriptor( getEntityName() );
+			final var key = session.generateEntityKey( getInternalIdentifier(), entityDescriptor );
 			final Object entity = session.getPersistenceContextInternal().getEntity( key );
 			if ( entity != null ) {
 				setImplementation( entity );
@@ -314,7 +311,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	}
 
 	private Object getProxyOrNull() {
-		final EntityKey entityKey = generateEntityKeyOrNull( getInternalIdentifier(), session, getEntityName() );
+		final var entityKey = generateEntityKeyOrNull( getInternalIdentifier(), session, getEntityName() );
 		if ( entityKey != null && session != null && session.isOpenOrWaitingForAutoClose() ) {
 			return session.getPersistenceContextInternal().getProxy( entityKey );
 		}
@@ -335,7 +332,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	@Override
 	public final Object getImplementation(SharedSessionContractImplementor session) throws HibernateException {
-		final EntityKey entityKey = generateEntityKeyOrNull( getInternalIdentifier(), session, getEntityName() );
+		final var entityKey = generateEntityKeyOrNull( getInternalIdentifier(), session, getEntityName() );
 		return entityKey == null ? null : session.getPersistenceContext().getEntity( entityKey );
 	}
 
@@ -394,16 +391,17 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		errorIfReadOnlySettingNotAvailable();
 		// only update if readOnly is different from current setting
 		if ( this.readOnly != readOnly ) {
-			final EntityPersister entityDescriptor = getEntityDescriptor();
-			if ( !entityDescriptor.isMutable() && !readOnly ) {
+			if ( !getEntityDescriptor().isMutable() && !readOnly ) {
 				throw new IllegalStateException( "Cannot make proxy [" + entityName + "#" + id + "] for immutable entity modifiable" );
 			}
 			this.readOnly = readOnly;
 			if ( initialized ) {
-				EntityKey key = generateEntityKeyOrNull( getInternalIdentifier(), session, getEntityName() );
-				final PersistenceContext persistenceContext = session.getPersistenceContext();
-				if ( key != null && persistenceContext.containsEntity( key ) ) {
-					persistenceContext.setReadOnly( target, readOnly );
+				final var key = generateEntityKeyOrNull( getInternalIdentifier(), session, getEntityName() );
+				if ( key != null ) {
+					final var persistenceContext = session.getPersistenceContext();
+					if ( persistenceContext.containsEntity( key ) ) {
+						persistenceContext.setReadOnly( target, readOnly );
+					}
 				}
 			}
 		}
@@ -497,7 +495,6 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			);
 		}
 		this.readOnlyBeforeAttachedToSession = readOnlyBeforeAttachedToSession;
-
 		this.sessionFactoryUuid = sessionFactoryUuid;
 		this.sessionFactoryName = sessionFactoryName;
 		this.allowLoadOutsideTransaction = allowLoadOutsideTransaction;

@@ -6,6 +6,8 @@ package org.hibernate.proxy.map;
 
 import org.hibernate.proxy.AbstractSerializableProxy;
 
+import java.io.Serial;
+
 public final class SerializableMapProxy extends AbstractSerializableProxy {
 
 	public SerializableMapProxy(
@@ -18,8 +20,9 @@ public final class SerializableMapProxy extends AbstractSerializableProxy {
 		super( entityName, id, readOnly, sessionFactoryUuid, sessionFactoryName, allowLoadOutsideTransaction );
 	}
 
+	@Serial
 	private Object readResolve() {
-		MapLazyInitializer initializer = new MapLazyInitializer( getEntityName(), getId(), null );
+		final var initializer = new MapLazyInitializer( getEntityName(), getId(), null );
 		afterDeserialization( initializer );
 		return new MapProxy( initializer );
 	}

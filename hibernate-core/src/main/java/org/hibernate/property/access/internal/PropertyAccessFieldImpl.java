@@ -4,15 +4,15 @@
  */
 package org.hibernate.property.access.internal;
 
-import java.lang.reflect.Field;
 
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.GetterFieldImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.property.access.spi.SetterFieldImpl;
+
+import static org.hibernate.internal.util.ReflectHelper.findField;
 
 /**
  * @author Steve Ebersole
@@ -29,7 +29,7 @@ public class PropertyAccessFieldImpl implements PropertyAccess {
 			final String propertyName) {
 		this.strategy = strategy;
 
-		final Field field = ReflectHelper.findField( containerJavaType, propertyName );
+		final var field = findField( containerJavaType, propertyName );
 		getter = new GetterFieldImpl( containerJavaType, propertyName, field );
 		setter = new SetterFieldImpl( containerJavaType, propertyName, field );
 	}

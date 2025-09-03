@@ -40,8 +40,8 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 		final Object configValue =
 				context.getServiceRegistry().requireService( ConfigurationService.class )
 						.getSettings().get( STATS_BUILDER );
-		final StatisticsFactory statisticsFactory = statisticsFactory( configValue, context.getServiceRegistry() );
-		final StatisticsImplementor statistics = statisticsFactory.buildStatistics( context.getSessionFactory() );
+		final var statisticsFactory = statisticsFactory( configValue, context.getServiceRegistry() );
+		final var statistics = statisticsFactory.buildStatistics( context.getSessionFactory() );
 		final boolean enabled = context.getSessionFactoryOptions().isStatisticsEnabled();
 		log.statisticsInitialized();
 		statistics.setStatisticsEnabled( enabled );
@@ -58,7 +58,7 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 		}
 		else {
 			// assume it names the factory class
-			final ClassLoaderService classLoaderService = registry.requireService( ClassLoaderService.class );
+			final var classLoaderService = registry.requireService( ClassLoaderService.class );
 			try {
 				return (StatisticsFactory) classLoaderService.classForName( configValue.toString() ).newInstance();
 			}

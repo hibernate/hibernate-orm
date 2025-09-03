@@ -105,7 +105,6 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 		else {
 			return getTarget();
 		}
-
 	}
 
 	@Override
@@ -118,16 +117,12 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 		if ( !isUninitialized() ) {
 			return getImplementation().getClass();
 		}
+		else if ( getSession() == null ) {
+			throw new LazyInitializationException( "could not retrieve real entity class ["
+							+ getEntityName() + "#" + getInternalIdentifier() + "] - no Session" );
+		}
 		else {
-			final var session = getSession();
-			if ( session == null ) {
-				throw new LazyInitializationException( "could not retrieve real entity class ["
-								+ getEntityName() + "#" + getInternalIdentifier() + "] - no Session" );
-			}
-			final var entityDescriptor =
-					session.getFactory().getMappingMetamodel()
-							.getEntityDescriptor( getEntityName() );
-			return entityDescriptor.hasSubclasses()
+			return getEntityDescriptor().hasSubclasses()
 					? getImplementation().getClass()
 					: persistentClass;
 		}

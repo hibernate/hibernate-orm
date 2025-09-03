@@ -31,17 +31,13 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 
 	public DirtyCollectionSearchVisitor(Object entity, EventSource session, boolean[] propertyVersionability) {
 		super( session );
-		final EnhancementAsProxyLazinessInterceptor interceptor;
-		if ( isPersistentAttributeInterceptable( entity )
-				&& asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor()
-						instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor ) {
-			interceptor = lazinessInterceptor;
-		}
-		else {
-			interceptor = null;
-		}
-		this.interceptor = interceptor;
 		this.propertyVersionability = propertyVersionability;
+		this.interceptor =
+				isPersistentAttributeInterceptable( entity )
+					&& asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor()
+							instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor
+						? lazinessInterceptor
+						: null;
 	}
 
 	public boolean wasDirtyCollectionFound() {

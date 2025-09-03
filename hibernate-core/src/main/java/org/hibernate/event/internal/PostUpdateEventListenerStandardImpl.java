@@ -32,7 +32,7 @@ public class PostUpdateEventListenerStandardImpl implements PostUpdateEventListe
 	private void handlePostUpdate(Object entity, EventSource source) {
 		// mimic the preUpdate filter
 		if ( source == null // it must be a StatelessSession
-				|| source.getPersistenceContextInternal().getEntry(entity).getStatus() != Status.DELETED ) {
+				|| source.getPersistenceContextInternal().getEntry( entity ).getStatus() != Status.DELETED ) {
 			callbackRegistry.postUpdate(entity);
 		}
 	}

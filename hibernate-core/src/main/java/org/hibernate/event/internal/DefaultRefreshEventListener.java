@@ -6,7 +6,6 @@ package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.UnresolvableObjectException;
@@ -244,7 +243,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			Object id,
 			PersistenceContext persistenceContext) {
 		// Handle the requested lock-mode (if one) in relation to the entry's (if one) current lock-mode
-		LockOptions lockOptionsToUse = event.getLockOptions();
+		var lockOptionsToUse = event.getLockOptions();
 		final LockMode requestedLockMode = lockOptionsToUse.getLockMode();
 		final LockMode postRefreshLockMode;
 		if ( entry != null ) {
@@ -289,7 +288,6 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				//		- however, the refresh operation actually creates a new entry, so get it
 				persistenceContext.getEntry( result ).setLockMode( postRefreshLockMode );
 			}
-
 			source.setReadOnly( result, isReadOnly( entry, persister, lazyInitializer, source ) );
 		}
 		return result;
@@ -337,7 +335,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 						factory,
 						source.getTenantIdentifier()
 					);
-					final SoftLock lock = cache.lockItem( source, cacheKey, null );
+					final var lock = cache.lockItem( source, cacheKey, null );
 					cache.remove( source, cacheKey );
 					actionQueue.registerProcess( (success, session) -> cache.unlockItem( session, cacheKey, lock ) );
 				}

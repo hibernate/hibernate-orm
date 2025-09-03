@@ -28,28 +28,26 @@ public class FlushVisitor extends AbstractVisitor {
 	}
 
 	Object processCollection(Object collection, CollectionType type) throws HibernateException {
-		if ( collection == CollectionType.UNFETCHED_COLLECTION ) {
-			return null;
-		}
-		else if ( collection != null ) {
+		if ( collection != null && collection != CollectionType.UNFETCHED_COLLECTION ) {
 			final var session = getSession();
-			final PersistentCollection<?> persistentCollection;
-			if ( type.hasHolder() ) {
-				persistentCollection = session.getPersistenceContextInternal().getCollectionHolder( collection );
+			final var persistentCollection = persistentCollection( collection, type, session );
+			if ( persistentCollection != null ) {
+				processReachableCollection( persistentCollection, type, owner, session );
 			}
-			else if ( collection == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-				final Object keyOfOwner = type.getKeyOfOwner( owner, session );
-				persistentCollection = (PersistentCollection<?>)
-						type.getCollection( keyOfOwner, session, owner, Boolean.FALSE );
-			}
-			else if ( collection instanceof PersistentCollection<?> wrapper ) {
-				persistentCollection = wrapper;
-			}
-			else {
-				return null;
-			}
-			processReachableCollection( persistentCollection, type, owner, session );
-			return null;
+		}
+		return null;
+	}
+
+	private PersistentCollection<?> persistentCollection(Object collection, CollectionType type, EventSource session) {
+		if ( type.hasHolder() ) {
+			return session.getPersistenceContextInternal().getCollectionHolder( collection );
+		}
+		else if ( collection == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+			final Object keyOfOwner = type.getKeyOfOwner( owner, session );
+			return (PersistentCollection<?>) type.getCollection( keyOfOwner, session, owner, Boolean.FALSE );
+		}
+		else if ( collection instanceof PersistentCollection<?> wrapper ) {
+			return wrapper;
 		}
 		else {
 			return null;

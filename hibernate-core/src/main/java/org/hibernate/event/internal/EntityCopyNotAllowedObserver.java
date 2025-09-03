@@ -8,7 +8,8 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.event.spi.EntityCopyObserver;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.pretty.MessageHelper;
+
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * @author Gail Badner
@@ -33,10 +34,9 @@ public final class EntityCopyNotAllowedObserver implements EntityCopyObserver {
 		if ( mergeEntity1 == managedEntity && mergeEntity2 == managedEntity) {
 			throw new AssertionFailure( "entity1 and entity2 are the same as managedEntity; must be different." );
 		}
-		final String managedEntityString = 	MessageHelper.infoString(
-				session.getEntityName( managedEntity ),
-				session.getIdentifier( managedEntity )
-		);
+		final String managedEntityString =
+				infoString( session.getEntityName( managedEntity ),
+						session.getIdentifier( managedEntity ) );
 		throw new IllegalStateException(
 				"Multiple representations of the same entity " + managedEntityString + " are being merged. " +
 						getManagedOrDetachedEntityString( managedEntity, mergeEntity1 ) + "; " +

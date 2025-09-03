@@ -40,6 +40,7 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
+import static java.util.Arrays.fill;
 import static org.hibernate.engine.internal.Collections.skipRemoval;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
@@ -372,7 +373,6 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			LOG.trace( "Deleting " + infoString( persister, entityEntry.getId(), session.getFactory() ) );
 		}
 
-		final var persistenceContext = session.getPersistenceContextInternal();
 		final Object version = entityEntry.getVersion();
 
 		final Object[] currentState =
@@ -390,6 +390,8 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 				persister.getPropertyNames(),
 				persister.getPropertyTypes()
 		);
+
+		final var persistenceContext = session.getPersistenceContextInternal();
 
 		// before any callbacks, etc., so subdeletions see that this deletion happened first
 		persistenceContext.setEntryStatus( entityEntry, Status.DELETED );
@@ -452,7 +454,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		final Object[] deletedState = new Object[types.length];
 		if ( !persister.hasCollections() || !persister.hasUninitializedLazyProperties( parent ) ) {
 			final boolean[] copyability = new boolean[types.length];
-			java.util.Arrays.fill( copyability, true );
+			fill( copyability, true );
 			TypeHelper.deepCopy( currentState, types, copyability, deletedState, eventSource );
 			return deletedState;
 		}

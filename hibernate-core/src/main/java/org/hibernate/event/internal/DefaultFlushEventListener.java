@@ -27,16 +27,16 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 		if ( persistenceContext.getNumberOfManagedEntities() > 0
 				|| persistenceContext.getCollectionEntriesSize() > 0 ) {
 			final var flushEvent = eventMonitor.beginFlushEvent();
+			final var eventListenerManager = source.getEventListenerManager();
 			try {
-				source.getEventListenerManager().flushStart();
-
+				eventListenerManager.flushStart();
 				flushEverythingToExecutions( event );
 				performExecutions( source );
 				postFlush( source );
 			}
 			finally {
 				eventMonitor.completeFlushEvent( flushEvent, event );
-				source.getEventListenerManager().flushEnd(
+				eventListenerManager.flushEnd(
 						event.getNumberOfEntitiesProcessed(),
 						event.getNumberOfCollectionsProcessed()
 				);

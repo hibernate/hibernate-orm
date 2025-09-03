@@ -63,7 +63,8 @@ import static org.hibernate.mapping.MetadataSource.ANNOTATIONS;
  * @author Hardy Ferentschik
  */
 public final class AnnotationBinder {
-	private static final CoreMessageLogger LOG = messageLogger( AnnotationBinder.class );
+
+	private static final CoreMessageLogger log = messageLogger( AnnotationBinder.class );
 
 	private AnnotationBinder() {}
 
@@ -79,8 +80,8 @@ public final class AnnotationBinder {
 			final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 			interpretSequenceGenerator( generatorRegistration.configuration(), definitionBuilder );
 			final IdentifierGeneratorDefinition idGenDef = definitionBuilder.build();
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Adding global sequence generator with name: " + name );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "Adding global sequence generator with name: " + name );
 			}
 			metadataCollector.addDefaultIdentifierGenerator( idGenDef );
 		} );
@@ -89,8 +90,8 @@ public final class AnnotationBinder {
 			final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 			interpretTableGenerator( generatorRegistration.configuration(), definitionBuilder );
 			final IdentifierGeneratorDefinition idGenDef = definitionBuilder.build();
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Adding global table generator with name: " + name );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "Adding global table generator with name: " + name );
 			}
 			metadataCollector.addDefaultIdentifierGenerator( idGenDef );
 		} );

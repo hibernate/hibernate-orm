@@ -18,8 +18,6 @@ import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -60,7 +58,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		}
 )
 public class MultipleSessionCollectionWarningTest {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractPersistentCollection.class );
 
 	@Test
 	@JiraKey(value = "HHH-9518")

@@ -42,9 +42,8 @@ import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
  * @author Steve Ebersole
  */
 public class DeferredResultSetAccess extends AbstractResultSetAccess {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger(
-			DeferredResultSetAccess.class
-	);
+	
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( DeferredResultSetAccess.class );
 
 	private final JdbcOperationQuerySelect jdbcSelect;
 	private final JdbcParameterBindings jdbcParameterBindings;
@@ -137,7 +136,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		final LockMode lockMode = determineFollowOnLockMode( lockOptions );
 		if ( lockMode != LockMode.UPGRADE_SKIPLOCKED ) {
 			if ( lockOptions.getLockMode() != LockMode.NONE ) {
-				LOG.usingFollowOnLocking();
+				log.usingFollowOnLocking();
 			}
 
 			final LockOptions lockOptionsToUse = new LockOptions(
@@ -266,7 +265,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 
 		final SharedSessionContractImplementor session = executionContext.getSession();
 		try {
-			LOG.tracef( "Executing query to retrieve ResultSet: %s", finalSql );
+			log.tracef( "Executing query to retrieve ResultSet: %s", finalSql );
 			// prepare the query
 			preparedStatement = statementCreator.createStatement( executionContext, finalSql );
 

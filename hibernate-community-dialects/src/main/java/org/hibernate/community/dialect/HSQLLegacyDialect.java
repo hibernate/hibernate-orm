@@ -99,11 +99,13 @@ import static org.hibernate.type.SqlTypes.NUMERIC;
  * @author Fred Toussi
  */
 public class HSQLLegacyDialect extends Dialect {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+
+	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			org.hibernate.community.dialect.HSQLLegacyDialect.class.getName()
 	);
+
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate( this );
 	private final HSQLIdentityColumnSupport identityColumnSupport;
 
@@ -760,7 +762,7 @@ public class HSQLLegacyDialect extends Dialect {
 		public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session)
 				throws StaleObjectStateException, JDBCException {
 			if ( getLockMode().greaterThan( LockMode.READ ) ) {
-				LOG.hsqldbSupportsOnlyReadCommittedIsolation();
+				log.hsqldbSupportsOnlyReadCommittedIsolation();
 			}
 			super.lock( id, version, object, timeout, session );
 		}

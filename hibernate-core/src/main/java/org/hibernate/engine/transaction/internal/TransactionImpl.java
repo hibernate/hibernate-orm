@@ -24,7 +24,8 @@ import static org.hibernate.resource.transaction.spi.TransactionCoordinator.Tran
  * @author Steve Ebersole
  */
 public class TransactionImpl implements TransactionImplementor {
-	private static final Logger LOG = CoreLogging.logger( TransactionImpl.class );
+
+	private static final Logger log = CoreLogging.logger( TransactionImpl.class );
 
 	private final TransactionCoordinator transactionCoordinator;
 	private final boolean jpaCompliance;
@@ -45,11 +46,11 @@ public class TransactionImpl implements TransactionImplementor {
 			this.transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
 		}
 		else {
-			LOG.debug( "TransactionImpl created on closed Session/EntityManager" );
+			log.debug( "TransactionImpl created on closed Session/EntityManager" );
 		}
 
-		if ( LOG.isDebugEnabled() && jpaCompliance ) {
-			LOG.debugf( "TransactionImpl created in JPA compliant mode" );
+		if ( log.isDebugEnabled() && jpaCompliance ) {
+			log.debugf( "TransactionImpl created in JPA compliant mode" );
 		}
 	}
 
@@ -72,7 +73,7 @@ public class TransactionImpl implements TransactionImplementor {
 			}
 		}
 		else {
-			LOG.debug( "Beginning transaction" );
+			log.debug( "Beginning transaction" );
 			transactionDriverControl.begin();
 		}
 	}
@@ -85,7 +86,7 @@ public class TransactionImpl implements TransactionImplementor {
 			throw new IllegalStateException( "Transaction not successfully started" );
 		}
 		else {
-			LOG.debug( "Committing transaction" );
+			log.debug( "Committing transaction" );
 			try {
 				internalGetTransactionDriverControl().commit();
 			}
@@ -114,13 +115,13 @@ public class TransactionImpl implements TransactionImplementor {
 		final TransactionStatus status = getStatus();
 		if ( status == TransactionStatus.ROLLED_BACK || status == TransactionStatus.NOT_ACTIVE ) {
 			// allow rollback() on completed transaction as noop
-			LOG.debug( "rollback() called on an inactive transaction" );
+			log.debug( "rollback() called on an inactive transaction" );
 		}
 		else if ( !status.canRollback() ) {
 			throw new TransactionException( "Cannot roll back transaction in current status [" + status.name() + "]" );
 		}
 		else if ( status != TransactionStatus.FAILED_COMMIT || allowFailedCommitToPhysicallyRollback() ) {
-			LOG.debug( "Rolling back transaction" );
+			log.debug( "Rolling back transaction" );
 			internalGetTransactionDriverControl().rollback();
 		}
 	}
@@ -196,7 +197,7 @@ public class TransactionImpl implements TransactionImplementor {
 			else {
 				// JpaCompliance disables the check, so this method
 				// is equivalent our native markRollbackOnly()
-				LOG.debug( "setRollbackOnly() called on a inactive transaction" );
+				log.debug( "setRollbackOnly() called on a inactive transaction" );
 			}
 		}
 		else {

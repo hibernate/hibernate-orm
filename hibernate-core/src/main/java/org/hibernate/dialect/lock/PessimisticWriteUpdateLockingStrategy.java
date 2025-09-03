@@ -36,7 +36,8 @@ import org.jboss.logging.Logger;
  * @since 3.5
  */
 public class PessimisticWriteUpdateLockingStrategy implements LockingStrategy {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+
+	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			PessimisticWriteUpdateLockingStrategy.class.getName()
@@ -59,7 +60,7 @@ public class PessimisticWriteUpdateLockingStrategy implements LockingStrategy {
 			throw new HibernateException( "[" + lockMode + "] not valid for update statement" );
 		}
 		if ( !lockable.isVersioned() ) {
-			LOG.writeLocksNotSupported( lockable.getEntityName() );
+			log.writeLocksNotSupported( lockable.getEntityName() );
 			this.sql = null;
 		}
 		else {

@@ -55,7 +55,8 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 public class DefaultMergeEventListener
 		extends AbstractSaveEventListener<MergeContext>
 		implements MergeEventListener {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultMergeEventListener.class );
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( DefaultMergeEventListener.class );
 
 	@Override
 	protected Map<Object,Object> getMergeMap(MergeContext context) {
@@ -99,7 +100,7 @@ public class DefaultMergeEventListener
 			final var lazyInitializer = extractLazyInitializer( original );
 			if ( lazyInitializer != null ) {
 				if ( lazyInitializer.isUninitialized() ) {
-					LOG.trace( "Ignoring uninitialized proxy" );
+					log.trace( "Ignoring uninitialized proxy" );
 					event.setResult( source.getReference( lazyInitializer.getEntityName(), lazyInitializer.getInternalIdentifier() ) );
 				}
 				else {
@@ -109,7 +110,7 @@ public class DefaultMergeEventListener
 			else if ( isPersistentAttributeInterceptable( original ) ) {
 				if ( asPersistentAttributeInterceptable( original ).$$_hibernate_getInterceptor()
 						instanceof EnhancementAsProxyLazinessInterceptor proxyInterceptor ) {
-					LOG.trace( "Ignoring uninitialized enhanced proxy" );
+					log.trace( "Ignoring uninitialized enhanced proxy" );
 					event.setResult( source.byId( proxyInterceptor.getEntityName() )
 							.getReference( proxyInterceptor.getIdentifier() ) );
 				}
@@ -125,12 +126,12 @@ public class DefaultMergeEventListener
 
 	private void doMerge(MergeEvent event, MergeContext copiedAlready, Object entity) {
 		if ( copiedAlready.containsKey( entity ) && copiedAlready.isOperatedOn( entity ) ) {
-			LOG.trace( "Already in merge process" );
+			log.trace( "Already in merge process" );
 			event.setResult( entity );
 		}
 		else {
 			if ( copiedAlready.containsKey( entity ) ) {
-				LOG.trace( "Already in copyCache; setting in merge process" );
+				log.trace( "Already in copyCache; setting in merge process" );
 				copiedAlready.setOperatedOn( entity, true );
 			}
 			event.setEntity( entity );
@@ -255,7 +256,7 @@ public class DefaultMergeEventListener
 	}
 
 	protected void entityIsPersistent(MergeEvent event, MergeContext copyCache) {
-		LOG.trace( "Ignoring persistent instance" );
+		log.trace( "Ignoring persistent instance" );
 		//TODO: check that entry.getIdentifier().equals(requestedId)
 		final Object entity = event.getEntity();
 		final var source = event.getSession();
@@ -267,7 +268,7 @@ public class DefaultMergeEventListener
 	}
 
 	protected void entityIsTransient(MergeEvent event, Object id, MergeContext copyCache) {
-		LOG.trace( "Merging transient instance" );
+		log.trace( "Merging transient instance" );
 
 		final Object entity = event.getEntity();
 		final var session = event.getSession();
@@ -394,7 +395,7 @@ public class DefaultMergeEventListener
 	}
 
 	protected void entityIsDetached(MergeEvent event, Object copiedId, Object originalId, MergeContext copyCache) {
-		LOG.trace( "Merging detached instance" );
+		log.trace( "Merging detached instance" );
 
 		final Object entity = event.getEntity();
 		final var session = event.getSession();
@@ -416,7 +417,7 @@ public class DefaultMergeEventListener
 								() -> session.get( entityName, clonedIdentifier ) );
 
 		if ( result == null ) {
-			LOG.trace( "Detached instance not found in database" );
+			log.trace( "Detached instance not found in database" );
 			// we got here because we assumed that an instance
 			// with an assigned id and no version was detached
 			// when it was really transient (or deleted)

@@ -31,7 +31,8 @@ import static org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionD
  * @author Steve Ebersole
  */
 public class PatternRenderer {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PatternRenderer.class );
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( PatternRenderer.class );
 
 	private final String[] chunks;
 	private final int[] paramIndexes;
@@ -187,7 +188,7 @@ public class PatternRenderer {
 			SqlAstTranslator<?> translator) {
 		final int numberOfArguments = args.size();
 		if ( numberOfArguments < maxParamIndex ) {
-			LOG.missingArguments( maxParamIndex, numberOfArguments );
+			log.missingArguments( maxParamIndex, numberOfArguments );
 		}
 
 		final boolean caseWrapper = filter != null && !filterClauseSupported( translator );

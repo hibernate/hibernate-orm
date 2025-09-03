@@ -23,7 +23,11 @@ import java.lang.invoke.MethodHandles;
  */
 public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener implements AutoFlushEventListener {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, DefaultAutoFlushEventListener.class.getName() );
+	private static final CoreMessageLogger log = Logger.getMessageLogger(
+			MethodHandles.lookup(),
+			CoreMessageLogger.class,
+			DefaultAutoFlushEventListener.class.getName()
+	);
 
 	/**
 	 * Handle the given auto-flush event.
@@ -51,7 +55,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 				final int oldSize = actionQueue.numberOfCollectionRemovals();
 				flushEverythingToExecutions( event, persistenceContext, session );
 				if ( flushIsReallyNeeded( event, source ) ) {
-					LOG.trace( "Need to execute flush" );
+					log.trace( "Need to execute flush" );
 					event.setFlushRequired( true );
 
 					// note: performExecutions() clears all collectionXxxxtion
@@ -71,7 +75,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 					}
 				}
 				else {
-					LOG.trace( "No need to execute flush" );
+					log.trace( "No need to execute flush" );
 					event.setFlushRequired( false );
 					actionQueue.clearFromFlushNeededCheck( oldSize );
 				}

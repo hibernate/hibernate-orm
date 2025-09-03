@@ -20,7 +20,6 @@ import static org.hibernate.generator.EventType.UPDATE;
  * @author Gavin King
  */
 public final class Versioning {
-	private static final VersionLogger LOG = VersionLogger.INSTANCE;
 
 	/**
 	 * Private constructor disallowing instantiation.
@@ -45,7 +44,7 @@ public final class Versioning {
 				versionMapping.getScale(),
 				session
 		);
-		LOG.seed( seed );
+		VersionLogger.INSTANCE.seed( seed );
 		return seed;
 	}
 
@@ -74,7 +73,7 @@ public final class Versioning {
 			return true;
 		}
 		else {
-			LOG.initial( initialVersion );
+			VersionLogger.INSTANCE.initial( initialVersion );
 			return false;
 		}
 	}
@@ -137,7 +136,7 @@ public final class Versioning {
 				versionMapping.getScale(),
 				session
 		);
-		LOG.incrementing( version, next );
+		VersionLogger.INSTANCE.incrementing( version, next );
 		return next;
 	}
 

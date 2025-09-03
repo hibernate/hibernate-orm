@@ -67,7 +67,8 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Anton Marsden
  */
 public class ActionQueue {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ActionQueue.class );
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( ActionQueue.class );
 
 	private final SessionImplementor session;
 
@@ -251,7 +252,7 @@ public class ActionQueue {
 	 * @param action The action representing the entity insertion
 	 */
 	public void addAction(EntityInsertAction action) {
-		LOG.tracev( "Adding an EntityInsertAction for [{0}] object", action.getEntityName() );
+		log.tracev( "Adding an EntityInsertAction for [{0}] object", action.getEntityName() );
 		addInsertAction( action );
 	}
 
@@ -259,17 +260,17 @@ public class ActionQueue {
 		if ( insert.isEarlyInsert() ) {
 			// For early inserts, must execute inserts before finding non-nullable transient entities.
 			// TODO: find out why this is necessary
-			LOG.tracev( "Executing inserts before finding non-nullable transient entities for early insert: [{0}]", insert );
+			log.tracev( "Executing inserts before finding non-nullable transient entities for early insert: [{0}]", insert );
 			executeInserts();
 		}
 		final NonNullableTransientDependencies nonNullableTransientDependencies = insert.findNonNullableTransientEntities();
 		if ( nonNullableTransientDependencies == null ) {
-			LOG.tracev( "Adding insert with no non-nullable, transient entities: [{0}]", insert );
+			log.tracev( "Adding insert with no non-nullable, transient entities: [{0}]", insert );
 			addResolvedEntityInsertAction( insert );
 		}
 		else {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Adding insert with non-nullable, transient entities; insert=[{0}], dependencies=[{1}]", insert,
+			if ( log.isTraceEnabled() ) {
+				log.tracev( "Adding insert with non-nullable, transient entities; insert=[{0}], dependencies=[{1}]", insert,
 							nonNullableTransientDependencies.toLoggableString( insert.getSession() ) );
 			}
 			if ( unresolvedInsertions == null ) {
@@ -281,13 +282,13 @@ public class ActionQueue {
 
 	private void addResolvedEntityInsertAction(AbstractEntityInsertAction insert) {
 		if ( insert.isEarlyInsert() ) {
-			LOG.trace( "Executing insertions before resolved early-insert" );
+			log.trace( "Executing insertions before resolved early-insert" );
 			executeInserts();
-			LOG.trace( "Executing identity-insert immediately" );
+			log.trace( "Executing identity-insert immediately" );
 			execute( insert );
 		}
 		else {
-			LOG.trace( "Adding resolved non-early insert action." );
+			log.trace( "Adding resolved non-early insert action." );
 			OrderedActions.EntityInsertAction.ensureInitialized( this );
 			insertions.add( insert );
 		}
@@ -314,7 +315,7 @@ public class ActionQueue {
 	 * @param action The action representing the entity insertion
 	 */
 	public void addAction(EntityIdentityInsertAction action) {
-		LOG.tracev( "Adding an EntityIdentityInsertAction for [{0}] object", action.getEntityName() );
+		log.tracev( "Adding an EntityIdentityInsertAction for [{0}] object", action.getEntityName() );
 		addInsertAction( action );
 	}
 
@@ -603,7 +604,7 @@ public class ActionQueue {
 		else {
 			for ( var actionSpace : queue.getQuerySpaces() ) {
 				if ( tableSpaces.contains( actionSpace ) ) {
-					LOG.tracef( "Changes must be flushed to space: %s", actionSpace );
+					log.tracef( "Changes must be flushed to space: %s", actionSpace );
 					return true;
 				}
 			}
@@ -615,7 +616,7 @@ public class ActionQueue {
 		for ( var action : actions.getDependentEntityInsertActions() ) {
 			for ( var space : action.getPropertySpaces() ) {
 				if ( tableSpaces.contains( space ) ) {
-					LOG.tracef( "Changes must be flushed to space: %s", space );
+					log.tracef( "Changes must be flushed to space: %s", space );
 					return true;
 				}
 			}
@@ -916,7 +917,7 @@ public class ActionQueue {
 	 * @throws IOException Indicates an error writing to the stream
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		LOG.trace( "Serializing action-queue" );
+		log.trace( "Serializing action-queue" );
 		if ( unresolvedInsertions == null ) {
 			unresolvedInsertions = new UnresolvedEntityInsertActions();
 		}
@@ -945,9 +946,9 @@ public class ActionQueue {
 	 */
 	public static ActionQueue deserialize(ObjectInputStream ois, EventSource session)
 			throws IOException, ClassNotFoundException {
-		final boolean traceEnabled = LOG.isTraceEnabled();
+		final boolean traceEnabled = log.isTraceEnabled();
 		if ( traceEnabled ) {
-			LOG.trace( "Deserializing action-queue" );
+			log.trace( "Deserializing action-queue" );
 		}
 		final var actionQueue = new ActionQueue( session );
 		actionQueue.unresolvedInsertions = UnresolvedEntityInsertActions.deserialize( ois, session );
@@ -962,7 +963,7 @@ public class ActionQueue {
 				}
 				queue.readExternal( ois );
 				if ( traceEnabled ) {
-					LOG.tracev( "Deserialized [{0}] entries", queue.size() );
+					log.tracev( "Deserialized [{0}] entries", queue.size() );
 				}
 				queue.afterDeserialize( session );
 			}
@@ -1039,7 +1040,7 @@ public class ActionQueue {
 					process.doAfterTransactionCompletion( success, session );
 				}
 				catch (CacheException ce) {
-					LOG.unableToReleaseCacheLock( ce );
+					log.unableToReleaseCacheLock( ce );
 					// continue loop
 				}
 				catch (Exception e) {
@@ -1288,8 +1289,8 @@ public class ActionQueue {
 			}
 			while ( lastScheduleSize != scheduledEntityNames.size() );
 			if ( !insertInfosByEntityName.isEmpty() ) {
-				LOG.warn("The batch containing " + insertions.size() + " statements could not be sorted. " +
-					"This might indicate a circular entity relationship.");
+				log.warn( "The batch containing " + insertions.size() + " statements could not be sorted. " +
+						  "This might indicate a circular entity relationship.");
 			}
 			insertions.clear();
 			for ( InsertInfo insertInfo : insertInfos ) {

@@ -21,7 +21,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Gavin King
  */
 public class IdentifierValue implements UnsavedValueStrategy {
-	private static final Logger LOG = CoreLogging.logger( IdentifierValue.class );
+
+	private static final Logger log = CoreLogging.logger( IdentifierValue.class );
 
 	private final @Nullable Object value;
 
@@ -31,7 +32,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	public static final IdentifierValue ANY = new IdentifierValue() {
 		@Override
 		public Boolean isUnsaved(Object id) {
-			LOG.trace( "ID unsaved-value strategy ANY" );
+			log.trace( "ID unsaved-value strategy ANY" );
 			return Boolean.TRUE;
 		}
 
@@ -52,7 +53,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	public static final IdentifierValue NONE = new IdentifierValue() {
 		@Override
 		public Boolean isUnsaved(Object id) {
-			LOG.trace( "ID unsaved-value strategy NONE" );
+			log.trace( "ID unsaved-value strategy NONE" );
 			return Boolean.FALSE;
 		}
 
@@ -74,7 +75,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	public static final IdentifierValue NULL = new IdentifierValue() {
 		@Override
 		public Boolean isUnsaved(@Nullable Object id) {
-			LOG.trace( "ID unsaved-value strategy NULL" );
+			log.trace( "ID unsaved-value strategy NULL" );
 			return id == null;
 		}
 
@@ -95,7 +96,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	public static final IdentifierValue UNDEFINED = new IdentifierValue() {
 		@Override
 		public @Nullable Boolean isUnsaved(Object id) {
-			LOG.trace( "ID unsaved-value strategy UNDEFINED" );
+			log.trace( "ID unsaved-value strategy UNDEFINED" );
 			return null;
 		}
 
@@ -127,7 +128,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 */
 	@Override
 	public @Nullable Boolean isUnsaved(@Nullable Object id) {
-		LOG.tracef( "ID unsaved-value: %s", value );
+		log.tracef( "ID unsaved-value: %s", value );
 		return id == null || id.equals( value );
 	}
 

@@ -26,7 +26,6 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.IntervalType;
@@ -41,9 +40,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.jboss.logging.Logger;
 
-import java.lang.invoke.MethodHandles;
 import java.sql.Types;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
@@ -79,11 +76,6 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
  * @author Ploski and Hanson
  */
 public class RDMSOS2200Dialect extends Dialect {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			RDMSOS2200Dialect.class.getName()
-	);
 
 	/**
 	 * Constructs a RDMSOS2200Dialect

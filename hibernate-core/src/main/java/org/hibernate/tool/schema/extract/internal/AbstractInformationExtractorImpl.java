@@ -48,7 +48,8 @@ import static org.hibernate.internal.util.StringHelper.splitTrimmingTokens;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 public abstract class AbstractInformationExtractorImpl implements InformationExtractor {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractInformationExtractorImpl.class );
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractInformationExtractorImpl.class );
 
 	private final String[] tableTypes;
 
@@ -304,7 +305,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 							final String catalogName = catalog == null ? "" : catalog.getCanonicalName();
 							final String schemaName = schema == null ? "" : schema.getCanonicalName();
 
-							LOG.debugf(
+							log.debugf(
 									"Multiple schemas found with that name [%s.%s]",
 									catalogName,
 									schemaName
@@ -801,7 +802,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 							tableName.isQuoted() );
 			if ( tableName.equals( identifier ) ) {
 				if ( found ) {
-					LOG.multipleTablesFound( tableName.render() );
+					log.multipleTablesFound( tableName.render() );
 					throw new SchemaExtractionException(
 							String.format(
 									Locale.ENGLISH,
@@ -820,7 +821,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			}
 		}
 		if ( !found ) {
-			LOG.tableNotFound( tableName.render() );
+			log.tableNotFound( tableName.render() );
 		}
 		return tableInformation;
 	}
@@ -1069,7 +1070,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 										tableInformation.getColumn( columnIdentifier );
 								if ( columnInformation == null ) {
 									// See HHH-10191: this may happen when dealing with Oracle/PostgreSQL function indexes
-									LOG.logCannotLocateIndexColumnInformation(
+									log.logCannotLocateIndexColumnInformation(
 											columnIdentifier.getText(),
 											indexIdentifier.getText()
 									);

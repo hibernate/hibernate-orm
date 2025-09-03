@@ -29,7 +29,8 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
  * @author Gavin King
  */
 public final class CollectionEntry implements Serializable {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( CollectionEntry.class );
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( CollectionEntry.class );
 
 	//ATTRIBUTES MAINTAINED BETWEEN FLUSH CYCLES
 
@@ -185,8 +186,8 @@ public final class CollectionEntry implements Serializable {
 
 		dirty( collection );
 
-		if ( LOG.isTraceEnabled() && collection.isDirty() && loadedPersister != null ) {
-			LOG.trace( "Collection dirty: " + collectionInfoString( loadedPersister.getRole(), getLoadedKey() ) );
+		if ( log.isTraceEnabled() && collection.isDirty() && loadedPersister != null ) {
+			log.trace( "Collection dirty: " + collectionInfoString( loadedPersister.getRole(), getLoadedKey() ) );
 		}
 
 		setReached( false );
@@ -266,7 +267,7 @@ public final class CollectionEntry implements Serializable {
 	 * @param storedSnapshot the new stored snapshot
 	 */
 	public void resetStoredSnapshot(PersistentCollection<?> collection, Serializable storedSnapshot) {
-		LOG.tracef("Reset storedSnapshot to %s for %s", storedSnapshot, this);
+		log.tracef("Reset storedSnapshot to %s for %s", storedSnapshot, this);
 
 		if ( !fromMerge ) {
 			snapshot = storedSnapshot;

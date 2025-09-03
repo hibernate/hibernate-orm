@@ -23,7 +23,8 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Steve Ebersole
  */
 public class DialectResolverSet implements DialectResolver {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DialectResolverSet.class );
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( DialectResolverSet.class );
 
 	private final List<DialectResolver> resolvers;
 
@@ -52,7 +53,7 @@ public class DialectResolverSet implements DialectResolver {
 				throw e;
 			}
 			catch ( Exception e ) {
-				LOG.exceptionInSubResolver( e.getMessage() );
+				log.exceptionInSubResolver( e.getMessage() );
 			}
 		}
 

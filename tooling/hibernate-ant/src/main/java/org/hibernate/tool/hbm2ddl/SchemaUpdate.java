@@ -47,7 +47,7 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
  * @author Steve Ebersole
  */
 public class SchemaUpdate {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SchemaUpdate.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( SchemaUpdate.class );
 
 	private final List<Exception> exceptions = new ArrayList<>();
 
@@ -64,12 +64,12 @@ public class SchemaUpdate {
 
 	public void execute(EnumSet<TargetType> targetTypes, Metadata metadata, ServiceRegistry serviceRegistry) {
 		if ( targetTypes.isEmpty() ) {
-			LOG.debug( "Skipping SchemaExport as no targets were specified" );
+			log.debug( "Skipping SchemaExport as no targets were specified" );
 			return;
 		}
 
 		exceptions.clear();
-		LOG.runningHbm2ddlSchemaUpdate();
+		log.runningHbm2ddlSchemaUpdate();
 
 		Map<String,Object> config =
 				new HashMap<>( serviceRegistry.requireService( ConfigurationService.class ).getSettings() );
@@ -164,7 +164,7 @@ public class SchemaUpdate {
 			}
 		}
 		catch (Exception e) {
-			LOG.unableToRunSchemaUpdate( e );
+			log.unableToRunSchemaUpdate( e );
 		}
 	}
 
@@ -290,7 +290,7 @@ public class SchemaUpdate {
 			}
 			else {
 				if ( !script || !doUpdate ) {
-					LOG.warn( "--text or --quiet was used; prefer --target=none|(stdout|database|script)*" );
+					log.warn( "--text or --quiet was used; prefer --target=none|(stdout|database|script)*" );
 				}
 				parsedArgs.targetTypes = TargetTypeHelper.parseCommandLineOptions( targetText );
 			}

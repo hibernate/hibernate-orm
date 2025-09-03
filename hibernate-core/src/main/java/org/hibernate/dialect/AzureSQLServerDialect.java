@@ -8,7 +8,10 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 
 /**
  * A {@linkplain Dialect SQL dialect} for Azure SQL Server.
+ *
+ * @deprecated Use {@link SQLServerDialect} instead.
  */
+@Deprecated(forRemoval = true)
 public class AzureSQLServerDialect extends SQLServerDialect {
 
 	public AzureSQLServerDialect() {

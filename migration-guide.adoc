@@ -40,6 +40,10 @@ See the link:{releaseSeriesBase}#whats-new[website] for the list of new features
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#api[API].
 
+* `org.hibernate.dialect.AzureSQLServerDialect` was deprecated. Use `org.hibernate.dialect.SQLServerDialect` instead.
+  If you set `hibernate.boot.allow_jdbc_metadata_access=false` for offline startup,
+  remember to also set the targeted database version through `jakarta.persistence.database-product-version`;
+  this would be 16.0 for SQL Server 2022 or 17.0 for SQL Server 2025.
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // SPI changes

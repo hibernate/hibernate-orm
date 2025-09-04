@@ -10,6 +10,10 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.JdbcBindingLogging;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -19,10 +23,17 @@ import org.hibernate.testing.orm.junit.MessageKeyInspection;
 import org.hibernate.testing.orm.junit.MessageKeyWatcher;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -134,6 +145,45 @@ public class OrdinalEnumTypeTest {
 		);
 	}
 
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-19276" )
+	public void testNoEnumMemoryLeak(SessionFactoryScope scope) {
+		final List<HairColor> colors = List.of(HairColor.BLACK, HairColor.BROWN);
+
+		final TypeConfiguration typeConfiguration = scope.getSessionFactory().getTypeConfiguration();
+		final TestingBasicTypeRegistry basicTypeRegistry = new TestingBasicTypeRegistry( typeConfiguration.getBasicTypeRegistry() );
+		final Map<JdbcType, Map<JavaType<?>, BasicType<?>>> registryValues = basicTypeRegistry.getRegistryValues();
+		final Map<JavaType<?>, BasicType<?>> enumJavaTypeValues = registryValues.get( typeConfiguration.getJdbcTypeRegistry().findDescriptor( SqlTypes.TINYINT ) );
+
+		checkEnumTypeRegistryValues( enumJavaTypeValues );
+
+		// Basically, multiple runs of this should not result in the creation of additional
+		// EnumJavaTypes (or BasicTypes for that matter), as was the case before the fix for HHH-19276
+		for (int counter = 1; counter <= 10; counter++ ) {
+			scope.inTransaction(
+					session -> session.createNativeQuery(
+							"SELECT * FROM Person WHERE hairColor in (:colors)",
+							Person.class
+					)
+					.setParameter( "colors", colors )
+					.list()
+			);
+		}
+
+		checkEnumTypeRegistryValues( enumJavaTypeValues );
+	}
+
+	private void checkEnumTypeRegistryValues(Map<JavaType<?>, BasicType<?>> values) {
+		assertEquals( 2, values.size() );
+		boolean genderAccountedFor = false;
+		boolean hairColorAccountedFor = false;
+		for (JavaType<?> type : values.keySet()) {
+			genderAccountedFor = genderAccountedFor || type.getTypeName().equals( "org.hibernate.orm.test.mapping.converted.enums.Gender" );
+			hairColorAccountedFor = hairColorAccountedFor || type.getTypeName().equals( "org.hibernate.orm.test.mapping.converted.enums.HairColor" );
+		}
+		assertTrue( genderAccountedFor && hairColorAccountedFor );
+	}
+
 	@Entity(name = "Person")
 	public static class Person {
 
@@ -187,6 +237,17 @@ public class OrdinalEnumTypeTest {
 
 		public void setOriginalHairColor(HairColor originalHairColor) {
 			this.originalHairColor = originalHairColor;
+		}
+	}
+
+	private static final class TestingBasicTypeRegistry extends BasicTypeRegistry {
+		private TestingBasicTypeRegistry(BasicTypeRegistry basicTypeRegistry){
+			super(basicTypeRegistry);
+		}
+
+		@Override
+		protected Map<JdbcType, Map<JavaType<?>, BasicType<?>>> getRegistryValues() {
+			return super.getRegistryValues();
 		}
 	}
 }

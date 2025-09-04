@@ -51,7 +51,7 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 
 	@Override
 	public Object structure(Object item) {
-		final CacheEntry entry = (CacheEntry) item;
+		final var entry = (CacheEntry) item;
 		final String[] names = persister.getPropertyNames();
 		final Map<String,Object> map = new HashMap<>( names.length + 3, 1f );
 		map.put( SUBCLASS_KEY, entry.getSubclass() );

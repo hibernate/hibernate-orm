@@ -32,7 +32,7 @@ public interface EntityDataCachingConfig extends DomainDataCachingConfig {
 	 * version.  If the entity is not versioned, then this method
 	 * returns {@code null}.
 	 */
-	Supplier<Comparator> getVersionComparatorAccess();
+	Supplier<Comparator<?>> getVersionComparatorAccess();
 
 	/**
 	 * The list of specific subclasses of the root that are actually

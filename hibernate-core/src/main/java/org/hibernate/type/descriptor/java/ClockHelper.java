@@ -33,16 +33,13 @@ public class ClockHelper {
 	}
 
 	public static Clock forPrecision(Integer precision, SharedSessionContractImplementor session, int maxPrecision) {
-		final int resolvedPrecision;
-		if ( precision == null ) {
-			resolvedPrecision = session.getJdbcServices().getDialect().getDefaultTimestampPrecision();
-		}
-		else {
-			resolvedPrecision = precision;
-		}
-		final Clock baseClock = (Clock) session.getFactory()
-				.getProperties()
-				.get( CurrentTimestampGeneration.CLOCK_SETTING_NAME );
+		final int resolvedPrecision =
+				precision == null
+						? session.getJdbcServices().getDialect().getDefaultTimestampPrecision()
+						: precision;
+		final var baseClock = (Clock)
+				session.getFactory().getProperties()
+						.get( CurrentTimestampGeneration.CLOCK_SETTING_NAME );
 		return forPrecision( baseClock, resolvedPrecision, maxPrecision );
 	}
 
@@ -51,28 +48,18 @@ public class ClockHelper {
 	}
 
 	public static Clock forPrecision(@Nullable Clock baseClock, int resolvedPrecision, int maxPrecision) {
-		switch ( Math.min( resolvedPrecision, maxPrecision ) ) {
-			case 0:
-				return baseClock == null ? TICK_0 : Clock.tick( baseClock, Duration.ofNanos( 1000000000L ) );
-			case 1:
-				return baseClock == null ? TICK_1 : Clock.tick( baseClock, Duration.ofNanos( 100000000L ) );
-			case 2:
-				return baseClock == null ? TICK_2 : Clock.tick( baseClock, Duration.ofNanos( 10000000L ) );
-			case 3:
-				return baseClock == null ? TICK_3 : Clock.tick( baseClock, Duration.ofNanos( 1000000L ) );
-			case 4:
-				return baseClock == null ? TICK_4 : Clock.tick( baseClock, Duration.ofNanos( 100000L ) );
-			case 5:
-				return baseClock == null ? TICK_5 : Clock.tick( baseClock, Duration.ofNanos( 10000L ) );
-			case 6:
-				return baseClock == null ? TICK_6 : Clock.tick( baseClock, Duration.ofNanos( 1000L ) );
-			case 7:
-				return baseClock == null ? TICK_7 : Clock.tick( baseClock, Duration.ofNanos( 100L ) );
-			case 8:
-				return baseClock == null ? TICK_8 : Clock.tick( baseClock, Duration.ofNanos( 10L ) );
-			case 9:
-				return baseClock == null ? TICK_9 : baseClock;
-		}
-		throw new IllegalArgumentException( "Illegal precision: " + resolvedPrecision );
+		return switch ( Math.min( resolvedPrecision, maxPrecision ) ) {
+			case 0 -> baseClock == null ? TICK_0 : Clock.tick( baseClock, Duration.ofNanos( 1000000000L ) );
+			case 1 -> baseClock == null ? TICK_1 : Clock.tick( baseClock, Duration.ofNanos( 100000000L ) );
+			case 2 -> baseClock == null ? TICK_2 : Clock.tick( baseClock, Duration.ofNanos( 10000000L ) );
+			case 3 -> baseClock == null ? TICK_3 : Clock.tick( baseClock, Duration.ofNanos( 1000000L ) );
+			case 4 -> baseClock == null ? TICK_4 : Clock.tick( baseClock, Duration.ofNanos( 100000L ) );
+			case 5 -> baseClock == null ? TICK_5 : Clock.tick( baseClock, Duration.ofNanos( 10000L ) );
+			case 6 -> baseClock == null ? TICK_6 : Clock.tick( baseClock, Duration.ofNanos( 1000L ) );
+			case 7 -> baseClock == null ? TICK_7 : Clock.tick( baseClock, Duration.ofNanos( 100L ) );
+			case 8 -> baseClock == null ? TICK_8 : Clock.tick( baseClock, Duration.ofNanos( 10L ) );
+			case 9 -> baseClock == null ? TICK_9 : baseClock;
+			default -> throw new IllegalArgumentException( "Illegal precision: " + resolvedPrecision );
+		};
 	}
 }

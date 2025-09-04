@@ -17,21 +17,12 @@ public class RegionNameQualifier {
 
 	public String qualify(String regionName, SessionFactoryOptions options) {
 		final String prefix = options.getCacheRegionPrefix();
-		if ( prefix == null ) {
-			return regionName;
-		}
-
-		return qualify( prefix, regionName );
+		return prefix == null ? regionName : qualify( prefix, regionName );
 	}
 
 	public String qualify(String prefix, String regionName) {
-		if ( regionName.startsWith( prefix + '.' ) ) {
-			return regionName;
-		}
-
-		return prefix + '.' + regionName;
+		return regionName.startsWith( prefix + '.' ) ? regionName : prefix + '.' + regionName;
 	}
-
 
 	public boolean isQualified(String regionName, SessionFactoryOptions options) {
 		return isQualified( options.getCacheRegionPrefix(), regionName );

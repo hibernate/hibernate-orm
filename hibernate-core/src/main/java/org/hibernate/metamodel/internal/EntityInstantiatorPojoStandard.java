@@ -12,7 +12,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterc
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.tuple.entity.EntityMetamodel;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
@@ -31,23 +31,23 @@ public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPo
 	private final Constructor<?> constructor;
 
 	public EntityInstantiatorPojoStandard(
-			EntityMetamodel entityMetamodel,
+			EntityPersister persister,
 			PersistentClass persistentClass,
 			JavaType<?> javaType) {
-		super( entityMetamodel, persistentClass, javaType );
+		super( persister, persistentClass, javaType );
 		proxyInterface = persistentClass.getProxyInterface();
 		constructor = isAbstract() ? null : resolveConstructor( getMappedPojoClass() );
 		applyBytecodeInterception = isPersistentAttributeInterceptableType( persistentClass.getMappedClass() );
 		if ( applyBytecodeInterception ) {
-			this.loadingInterceptorState = new LazyAttributeLoadingInterceptor.EntityRelatedState(
-					entityMetamodel.getName(),
-					entityMetamodel.getBytecodeEnhancementMetadata()
+			loadingInterceptorState = new LazyAttributeLoadingInterceptor.EntityRelatedState(
+					persister.getEntityName(),
+					persister.getBytecodeEnhancementMetadata()
 							.getLazyAttributesMetadata()
 							.getLazyAttributeNames()
 			);
 		}
 		else {
-			this.loadingInterceptorState = null;
+			loadingInterceptorState = null;
 		}
 	}
 

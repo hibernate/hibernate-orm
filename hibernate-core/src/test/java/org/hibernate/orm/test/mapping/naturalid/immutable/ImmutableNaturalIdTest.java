@@ -56,7 +56,7 @@ public class ImmutableNaturalIdTest {
 		assertFalse( userNameMapping.getAttributeMetadata().isNullable() );
 
 		final EntityPersister persister = entityMappingType.getEntityPersister();
-		final int propertyIndex = persister.getEntityMetamodel().getPropertyIndex( "userName" );
+		final int propertyIndex = persister.getPropertyIndex( "userName" );
 		// nullability is not specified, so it should be non-nullable by hbm-specific default
 		assertFalse( persister.getPropertyNullability()[propertyIndex] );
 	}

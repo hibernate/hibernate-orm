@@ -21,7 +21,6 @@ public class MapLazyInitializer extends AbstractLazyInitializer implements Seria
 		super( entityName, id, session );
 	}
 
-	@SuppressWarnings("rawtypes")
 	public Map getMap() {
 		return (Map) getImplementation();
 	}

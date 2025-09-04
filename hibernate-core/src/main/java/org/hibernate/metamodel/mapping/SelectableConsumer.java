@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
 
@@ -116,40 +118,47 @@ public interface SelectableConsumer {
 		}
 
 		@Override
-		public Long getLength() {
+		public @Nullable Long getLength() {
 			// we could probably use the details from `base`, but
 			// this method should really never be called on this object
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public Integer getPrecision() {
+		public @Nullable Integer getArrayLength() {
+			// we could probably use the details from `base`, but
+			// this method should really never be called on this object
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public @Nullable Integer getPrecision() {
 			// we could probably use the details from `base`, but
 			// this method should really never be called on this object
 			return null;
 		}
 
 		@Override
-		public Integer getScale() {
+		public @Nullable Integer getScale() {
 			// we could probably use the details from `base`, but
 			// this method should really never be called on this object
 			return null;
 		}
 
 		@Override
-		public Integer getTemporalPrecision() {
+		public @Nullable Integer getTemporalPrecision() {
 			// we could probably use the details from `base`, but
 			// this method should really never be called on this object
 			return null;
 		}
 
 		@Override
-		public String getCustomReadExpression() {
+		public @Nullable String getCustomReadExpression() {
 			return null;
 		}
 
 		@Override
-		public String getCustomWriteExpression() {
+		public @Nullable String getCustomWriteExpression() {
 			return null;
 		}
 	}
@@ -179,37 +188,42 @@ public interface SelectableConsumer {
 			}
 
 			@Override
-			public String getCustomReadExpression() {
+			public @Nullable String getCustomReadExpression() {
 				return null;
 			}
 
 			@Override
-			public String getCustomWriteExpression() {
+			public @Nullable String getCustomWriteExpression() {
 				return null;
 			}
 
 			@Override
-			public String getColumnDefinition() {
+			public @Nullable String getColumnDefinition() {
 				return null;
 			}
 
 			@Override
-			public Long getLength() {
+			public @Nullable Long getLength() {
 				return null;
 			}
 
 			@Override
-			public Integer getPrecision() {
+			public @Nullable Integer getArrayLength() {
 				return null;
 			}
 
 			@Override
-			public Integer getScale() {
+			public @Nullable Integer getPrecision() {
 				return null;
 			}
 
 			@Override
-			public Integer getTemporalPrecision() {
+			public @Nullable Integer getScale() {
+				return null;
+			}
+
+			@Override
+			public @Nullable Integer getTemporalPrecision() {
 				return null;
 			}
 

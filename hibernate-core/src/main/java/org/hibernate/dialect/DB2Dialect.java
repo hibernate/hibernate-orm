@@ -6,6 +6,7 @@ package org.hibernate.dialect;
 
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -113,7 +114,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import static java.lang.Integer.parseInt;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -147,6 +151,8 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
 public class DB2Dialect extends Dialect {
 
 	final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 11, 1 );
+
+	private static final Pattern DB2_VERSION_PATTERN = Pattern.compile( "(?:ARI|DSN|QSQ|SQL)(\\d\\d)(\\d\\d)(\\d)\\d?" );
 	private static final int BIND_PARAMETERS_NUMBER_LIMIT = 32_767;
 
 	private static final String FOR_READ_ONLY_SQL = " for read only with rs";
@@ -175,13 +181,49 @@ public class DB2Dialect extends Dialect {
 	}
 
 	public DB2Dialect(DialectResolutionInfo info) {
-		this( info.makeCopyOrDefault( MINIMUM_VERSION ) );
+		this( determinFullDatabaseVersion( info ) );
 		registerKeywords( info );
 	}
 
 	public DB2Dialect(DatabaseVersion version) {
 		super( version );
 		lockingSupport = buildLockingSupport();
+	}
+
+	@Override
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		return determinFullDatabaseVersion( info );
+	}
+
+	public static DatabaseVersion determinFullDatabaseVersion(DialectResolutionInfo info) {
+		String versionString = null;
+		final DatabaseMetaData databaseMetadata = info.getDatabaseMetadata();
+		if ( databaseMetadata != null ) {
+			try {
+				versionString = databaseMetadata.getDatabaseProductVersion();
+			}
+			catch (SQLException ex) {
+				// Ignore
+			}
+		}
+		final DatabaseVersion databaseVersion = versionString == null ? null : parseVersion( versionString );
+		return databaseVersion != null ? databaseVersion : info.makeCopyOrDefault( MINIMUM_VERSION );
+	}
+
+	public static @Nullable DatabaseVersion parseVersion(String versionString) {
+		if ( versionString.length() != 9 ) {
+			// The default format
+			return null;
+		}
+		DatabaseVersion databaseVersion = null;
+		final Matcher matcher = DB2_VERSION_PATTERN.matcher( versionString );
+		if ( matcher.find() ) {
+			int majorVersion = parseInt( matcher.group( 1 ) );
+			int minorVersion = parseInt( matcher.group( 2 ) );
+			int microVersion = parseInt( matcher.group( 3 ) );
+			databaseVersion = new SimpleDatabaseVersion( majorVersion, minorVersion, microVersion );
+		}
+		return databaseVersion;
 	}
 
 	protected LockingSupport buildLockingSupport() {

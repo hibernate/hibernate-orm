@@ -11,3 +11,42 @@ Describes the new features and capabilities added to Hibernate ORM in {version}.
 
 IMPORTANT: If migrating from earlier versions, be sure to also check out the link:{migrationGuide}[Migration Guide] for discussion of impactful changes.
 
+[[vector-module-enhancements]]
+== Hibernate-Vector module enhancements
+
+Support for binary, float16 and sparse vectors were added.
+
+====
+[source, java, indent=0]
+----
+@Entity
+public class MyEntity {
+	@Id
+	UUID id;
+	@JdbcTypeCode(SqlTypes.VECTOR_BINARY)
+	@Array(length = 24) // Refers to the bit count
+	byte[] binaryVector;
+	@JdbcTypeCode(SqlTypes.VECTOR_FLOAT16)
+	@Array(length = 3)
+	float[] float16Vector;
+	@Array(length = 3)
+	SparseFloatVector sparseFloat32Vector;
+}
+----
+====
+
+The Hibernate Vector module currently ships with 3 sparse vector types:
+
+* `SparseByteVector`
+* `SparseFloatVector`
+* `SparseDoubleVector`
+
+In addition to accessing the sparse indices and values, they also implement the `List` interface to provide access
+as if it were a dense vector.
+
+Also, support for vectors in the following databases was added:
+
+* https://dev.mysql.com/doc/refman/9.4/en/vector-functions.html[MySQL 9.0+]
+* https://www.ibm.com/docs/en/db2/12.1.0?topic=list-vector-values[DB2 12.1+]
+* https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-vector-engine-guide/sap-hana-cloud-sap-hana-database-vector-engine-guide[SAP HANA Cloud QRC 4/2024+]
+* https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type?view=sql-server-ver17[SQL Server 2025+]

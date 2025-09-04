@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorMapping;
@@ -31,11 +32,12 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 	private final String columnFormula;
 	private final boolean isPhysical;
 	private final boolean isUpdateable;
-	private final String columnDefinition;
-	private final String customReadExpression;
-	private final Long length;
-	private final Integer precision;
-	private final Integer scale;
+	private final @Nullable String columnDefinition;
+	private final @Nullable String customReadExpression;
+	private final @Nullable Long length;
+	private final @Nullable Integer arrayLength;
+	private final @Nullable Integer precision;
+	private final @Nullable Integer scale;
 
 	public ExplicitColumnDiscriminatorMappingImpl(
 			ManagedMappingType mappingType,
@@ -51,6 +53,38 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 			Integer precision,
 			Integer scale,
 			DiscriminatorType<?> discriminatorType) {
+		this(
+				mappingType,
+				name,
+				tableExpression,
+				columnExpression,
+				isFormula,
+				isPhysical,
+				isUpdateable,
+				columnDefinition,
+				customReadExpression,
+				length,
+				null,
+				precision,
+				scale,
+				discriminatorType );
+	}
+
+	public ExplicitColumnDiscriminatorMappingImpl(
+			ManagedMappingType mappingType,
+			String name,
+			String tableExpression,
+			String columnExpression,
+			boolean isFormula,
+			boolean isPhysical,
+			boolean isUpdateable,
+			@Nullable String columnDefinition,
+			@Nullable String customReadExpression,
+			@Nullable Long length,
+			@Nullable Integer arrayLength,
+			@Nullable Integer precision,
+			@Nullable Integer scale,
+			DiscriminatorType<?> discriminatorType) {
 		//noinspection unchecked
 		super( mappingType, (DiscriminatorType<Object>) discriminatorType, (BasicType<Object>) discriminatorType.getUnderlyingJdbcMapping() );
 		this.name = name;
@@ -59,6 +93,7 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 		this.columnDefinition = columnDefinition;
 		this.customReadExpression = customReadExpression;
 		this.length = length;
+		this.arrayLength = arrayLength;
 		this.precision = precision;
 		this.scale = scale;
 		if ( isFormula ) {
@@ -118,37 +153,42 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 	}
 
 	@Override
-	public String getCustomReadExpression() {
+	public @Nullable String getCustomReadExpression() {
 		return customReadExpression;
 	}
 
 	@Override
-	public String getCustomWriteExpression() {
+	public @Nullable String getCustomWriteExpression() {
 		return null;
 	}
 
 	@Override
-	public String getColumnDefinition() {
+	public @Nullable String getColumnDefinition() {
 		return columnDefinition;
 	}
 
 	@Override
-	public Long getLength() {
+	public @Nullable Long getLength() {
 		return length;
 	}
 
 	@Override
-	public Integer getPrecision() {
+	public @Nullable Integer getArrayLength() {
+		return arrayLength;
+	}
+
+	@Override
+	public @Nullable Integer getPrecision() {
 		return precision;
 	}
 
 	@Override
-	public Integer getScale() {
+	public @Nullable Integer getScale() {
 		return scale;
 	}
 
 	@Override
-	public Integer getTemporalPrecision() {
+	public @Nullable Integer getTemporalPrecision() {
 		return null;
 	}
 

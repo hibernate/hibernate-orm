@@ -6,12 +6,9 @@ package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.UnresolvableObjectException;
-import org.hibernate.cache.spi.access.CollectionDataAccess;
-import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
@@ -25,7 +22,6 @@ import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
-import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
@@ -224,16 +220,16 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				// multiple actions queued during the same flush
 				previousVersion = persister.getVersion( object );
 			}
-			final EntityDataAccess cache = persister.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey(
+			final var cache = persister.getCacheAccessStrategy();
+			final Object cacheKey = cache.generateCacheKey(
 					id,
 					persister,
 					source.getFactory(),
 					source.getTenantIdentifier()
 			);
-			final SoftLock lock = cache.lockItem( source, ck, previousVersion );
-			cache.remove( source, ck );
-			source.getActionQueue().registerProcess( (success, session) -> cache.unlockItem( session, ck, lock ) );
+			final SoftLock lock = cache.lockItem( source, cacheKey, previousVersion );
+			cache.remove( source, cacheKey );
+			source.getActionQueue().registerProcess( (success, session) -> cache.unlockItem( session, cacheKey, lock ) );
 		}
 	}
 
@@ -247,7 +243,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			Object id,
 			PersistenceContext persistenceContext) {
 		// Handle the requested lock-mode (if one) in relation to the entry's (if one) current lock-mode
-		LockOptions lockOptionsToUse = event.getLockOptions();
+		var lockOptionsToUse = event.getLockOptions();
 		final LockMode requestedLockMode = lockOptionsToUse.getLockMode();
 		final LockMode postRefreshLockMode;
 		if ( entry != null ) {
@@ -292,7 +288,6 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				//		- however, the refresh operation actually creates a new entry, so get it
 				persistenceContext.getEntry( result ).setLockMode( postRefreshLockMode );
 			}
-
 			source.setReadOnly( result, isReadOnly( entry, persister, lazyInitializer, source ) );
 		}
 		return result;
@@ -330,19 +325,19 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		final var metamodel = factory.getMappingMetamodel();
 		for ( Type type : types ) {
 			if ( type instanceof CollectionType collectionType ) {
-				final CollectionPersister collectionPersister =
+				final var collectionPersister =
 						metamodel.getCollectionDescriptor( collectionType.getRole() );
 				if ( collectionPersister.hasCache() ) {
-					final CollectionDataAccess cache = collectionPersister.getCacheAccessStrategy();
-					final Object ck = cache.generateCacheKey(
+					final var cache = collectionPersister.getCacheAccessStrategy();
+					final Object cacheKey = cache.generateCacheKey(
 						id,
 						collectionPersister,
 						factory,
 						source.getTenantIdentifier()
 					);
-					final SoftLock lock = cache.lockItem( source, ck, null );
-					cache.remove( source, ck );
-					actionQueue.registerProcess( (success, session) -> cache.unlockItem( session, ck, lock ) );
+					final var lock = cache.lockItem( source, cacheKey, null );
+					cache.remove( source, cacheKey );
+					actionQueue.registerProcess( (success, session) -> cache.unlockItem( session, cacheKey, lock ) );
 				}
 			}
 			else if ( type instanceof ComponentType compositeType ) {

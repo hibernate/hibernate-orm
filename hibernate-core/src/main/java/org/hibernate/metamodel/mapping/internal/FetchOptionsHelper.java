@@ -122,12 +122,12 @@ public final class FetchOptionsHelper {
 			return false;
 		}
 		else if ( type instanceof EntityType ) {
-			final EntityPersister entityPersister = (EntityPersister) type.getAssociatedJoinable( sessionFactory );
-			return entityPersister.getEntityMetamodel().isLazy();
+			final var entityPersister = (EntityPersister) type.getAssociatedJoinable( sessionFactory );
+			return entityPersister.isLazy();
 		}
 		else {
-			final CollectionPersister cp = ( (CollectionPersister) type.getAssociatedJoinable( sessionFactory ) );
-			return cp.isLazy() || cp.isExtraLazy();
+			final var collectionPersister = (CollectionPersister) type.getAssociatedJoinable( sessionFactory );
+			return collectionPersister.isLazy() || collectionPersister.isExtraLazy();
 		}
 	}
 

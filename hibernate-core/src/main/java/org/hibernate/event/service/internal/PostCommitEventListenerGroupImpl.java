@@ -24,7 +24,7 @@ import org.hibernate.jpa.event.spi.CallbackRegistry;
 class PostCommitEventListenerGroupImpl<T> extends EventListenerGroupImpl<T> {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( PostCommitEventListenerGroupImpl.class );
 
-	private final Class extendedListenerContract;
+	private final Class<?> extendedListenerContract;
 
 	public PostCommitEventListenerGroupImpl(
 			EventType<T> eventType,
@@ -33,13 +33,13 @@ class PostCommitEventListenerGroupImpl<T> extends EventListenerGroupImpl<T> {
 		super( eventType, callbackRegistry, isJpaBootstrap );
 
 		if ( eventType == EventType.POST_COMMIT_DELETE ) {
-			this.extendedListenerContract = PostCommitDeleteEventListener.class;
+			extendedListenerContract = PostCommitDeleteEventListener.class;
 		}
 		else if ( eventType == EventType.POST_COMMIT_INSERT ) {
-			this.extendedListenerContract = PostCommitInsertEventListener.class;
+			extendedListenerContract = PostCommitInsertEventListener.class;
 		}
 		else if ( eventType == EventType.POST_COMMIT_UPDATE ) {
-			this.extendedListenerContract = PostCommitUpdateEventListener.class;
+			extendedListenerContract = PostCommitUpdateEventListener.class;
 		}
 		else {
 			throw new IllegalStateException( "Unexpected usage of PostCommitEventListenerGroupImpl" );

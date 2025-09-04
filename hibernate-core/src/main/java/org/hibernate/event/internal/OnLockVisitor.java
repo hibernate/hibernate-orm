@@ -41,26 +41,26 @@ public class OnLockVisitor extends ReattachVisitor {
 				if ( isOwnerUnchanged( persister, extractCollectionKeyFromOwner( persister ), persistentCollection ) ) {
 					// a "detached" collection that originally belonged to the same entity
 					if ( persistentCollection.isDirty() ) {
-						throw new HibernateException( "re-associated object has dirty collection" );
+						throw new HibernateException( "reassociated object has dirty collection" );
 					}
 					reattachCollection( persistentCollection, type );
 				}
 				else {
 					// a "detached" collection that belonged to a different entity
-					throw new HibernateException( "re-associated object has dirty collection reference" );
+					throw new HibernateException( "reassociated object has dirty collection reference" );
 				}
 			}
 			else {
 				// a collection loaded in the current session
-				// can not possibly be the collection belonging
+				// cannot possibly be the collection belonging
 				// to the entity passed to update()
-				throw new HibernateException( "re-associated object has dirty collection reference" );
+				throw new HibernateException( "reassociated object has dirty collection reference" );
 			}
 		}
 		else {
 			// brand new collection
 			//TODO: or an array!! we can't lock objects with arrays now??
-			throw new HibernateException( "re-associated object has dirty collection reference (or an array)" );
+			throw new HibernateException( "reassociated object has dirty collection reference (or an array)" );
 		}
 		return null;
 	}

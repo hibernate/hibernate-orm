@@ -12,10 +12,27 @@ The Hibernate ORM Vector module contains support for mathematical vector types a
 This is useful for AI/ML topics like vector similarity search and Retrieval-Augmented Generation (RAG).
 The module comes with support for a special `vector` data type that essentially represents an array of bytes, floats, or doubles.
 
-So far, both the PostgreSQL extension `pgvector` and the Oracle database 23ai+ `AI Vector Search` feature are supported, but in theory,
-the vector specific functions could be implemented to work with every database that supports arrays.
+Currently, the following databases are supported:
 
-For further details, refer to the https://github.com/pgvector/pgvector#querying[pgvector documentation] or the https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/overview-node.html[AI Vector Search documentation].
+* PostgreSQL 13+ through the https://github.com/pgvector/pgvector#querying[`pgvector` extension]
+* https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/overview-node.html[Oracle database 23ai+]
+* https://mariadb.com/docs/server/reference/sql-structure/vectors/vector-overview[MariaDB 11.7+]
+* https://dev.mysql.com/doc/refman/9.4/en/vector-functions.html[MySQL 9.0+]
+* https://www.cockroachlabs.com/docs/stable/vector[CockroachDB 24.2+]
+* https://www.ibm.com/docs/en/db2/12.1.0?topic=list-vector-values[DB2 12.1+]
+* https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-vector-engine-guide/sap-hana-cloud-sap-hana-database-vector-engine-guide[SAP HANA Cloud QRC 4/2024+]
+* https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type?view=sql-server-ver17[SQL Server 2025+]
+
+In theory, the vector-specific functions could be implemented to work with every database that supports arrays.
+Since the performance strongly depends on the existence of a vector index and the search is potentially probabilistic,
+no emulation has been implemented yet.
+
+[WARNING]
+====
+Per the https://dev.mysql.com/doc/refman/9.4/en/vector-functions.html#function_distance[MySQL documentation],
+the various vector distance functions for MySQL only work on MySQL cloud offerings like
+https://dev.mysql.com/doc/heatwave/en/mys-hw-about-heatwave.html[HeatWave MySQL on OCI].
+====
 
 [[vector-module-setup]]
 === Setup
@@ -42,22 +59,32 @@ so no further configuration is necessary to make the features available.
 [[vector-module-usage]]
 ==== Usage
 
-Annotate a persistent attribute with `@JdbcTypeCode(SqlTypes.VECTOR)` and specify the vector length with `@Array(length = ...)`.
+Annotate a persistent attribute with one of the various vector type codes `@JdbcTypeCode` and specify the vector length with `@Array(length = ...)`.
+Possible vector type codes and the compatible Java types are:
+
+* `@JdbcTypeCode(SqlTypes.VECTOR_BINARY)` for `byte[]`
+* `@JdbcTypeCode(SqlTypes.VECTOR_INT8)` for `byte[]`
+* `@JdbcTypeCode(SqlTypes.VECTOR_FLOAT16)` for `float[]`
+* `@JdbcTypeCode(SqlTypes.VECTOR_FLOAT32)` for `float[]`
+* `@JdbcTypeCode(SqlTypes.VECTOR_FLOAT64)` for `double[]`
+* `@JdbcTypeCode(SqlTypes.VECTOR)` for `float[]`
+
+Hibernate ORM also provides support for sparse vectors through dedicated Java types:
+
+* `@JdbcTypeCode(SqlTypes.SPARSE_VECTOR_INT8)` for `SparseByteVector`
+* `@JdbcTypeCode(SqlTypes.SPARSE_VECTOR_FLOAT32)` for `SparseFloatVector`
+* `@JdbcTypeCode(SqlTypes.SPARSE_VECTOR_FLOAT64)` for `SparseDoubleVector`
 
 [WARNING]
 ====
-As Oracle AI Vector Search supports different types of elements (to ensure better performance and compatibility with embedding models), you can also use:
-
-- `@JdbcTypeCode(SqlTypes.VECTOR_INT8)` for `byte[]`
-- `@JdbcTypeCode(SqlTypes.VECTOR_FLOAT32)` for `float[]`
-- `@JdbcTypeCode(SqlTypes.VECTOR_FLOAT64)` for `double[]`.
+Vector data type support depends on native support of the underlying database.
 ====
 
 [[vector-module-usage-example]]
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-vector}/PGVectorTest.java[tags=usage-example]
+include::{example-dir-vector}/FloatVectorTest.java[tags=usage-example]
 ----
 ====
 
@@ -72,27 +99,39 @@ Expressions of the vector type can be used with various vector functions.
 |===
 | Function | Purpose
 
-| `cosine_distance()` | Computes the https://en.wikipedia.org/wiki/Cosine_similarity[cosine distance] between two vectors. Maps to the `<``=``>` operator for `pgvector` and maps to the `vector_distance(v1, v2, COSINE)` function for `Oracle AI Vector Search`.
+| `cosine_distance()` | Computes the https://en.wikipedia.org/wiki/Cosine_similarity[cosine distance] between two vectors.
 
-| `euclidean_distance()` | Computes the https://en.wikipedia.org/wiki/Euclidean_distance[euclidean distance] between two vectors. Maps to the `<``-``>` operator for `pgvector` and maps to the
-`vector_distance(v1, v2, EUCLIDEAN)` function for `Oracle AI Vector Search`.
+| `euclidean_distance()` | Computes the https://en.wikipedia.org/wiki/Euclidean_distance[euclidean distance] between two vectors.
 
-| `l2_distance()` | Alias for `euclidean_distance()`
+| `euclidean_squared_distance()` | Computes the https://en.wikipedia.org/wiki/Euclidean_distance#Squared_Euclidean_distance[squared euclidean distance] between two vectors.
 
-| `taxicab_distance()` | Computes the https://en.wikipedia.org/wiki/Taxicab_geometry[taxicab distance] between two vectors. Maps to `vector_distance(v1, v2, MANHATTAN)` function for `Oracle AI Vector Search`.
+| `l2_distance()` | Alias for `euclidean_distance()`.
 
-| `l1_distance()` | Alias for `taxicab_distance()`
+| `l2_squared_distance()` | Alias for `euclidean_squared_distance()`.
 
-| `hamming_distance()` | Computes the https://en.wikipedia.org/wiki/Hamming_distance[hamming distance] between two vectors. Maps to `vector_distance(v1, v2, HAMMING)` function for `Oracle AI Vector Search`.
+| `taxicab_distance()` | Computes the https://en.wikipedia.org/wiki/Taxicab_geometry[taxicab distance] between two vectors.
 
-| `inner_product()` | Computes the https://en.wikipedia.org/wiki/Inner_product_space[inner product] between two vectors
+| `l1_distance()` | Alias for `taxicab_distance()`.
 
-| `negative_inner_product()` | Computes the negative inner product. Maps to the `<``#``>` operator for `pgvector` and maps to the
-`vector_distance(v1, v2, DOT)` function for `Oracle AI Vector Search`.
+| `hamming_distance()` | Computes the https://en.wikipedia.org/wiki/Hamming_distance[hamming distance] between two vectors.
 
-| `vector_dims()` | Determines the dimensions of a vector
+| `jaccard_distance()` | Computes the https://en.wikipedia.org/wiki/Jaccard_index[jaccard distance] between two vectors.
 
-| `vector_norm()` | Computes the https://en.wikipedia.org/wiki/Euclidean_space#Euclidean_norm[Euclidean norm] of a vector
+| `inner_product()` | Computes the https://en.wikipedia.org/wiki/Inner_product_space[inner product] between two vectors.
+
+| `negative_inner_product()` | Computes the negative inner product.
+
+| `vector_dims()` | Determines the dimensions of a vector.
+
+| `vector_norm()` | Computes the https://en.wikipedia.org/wiki/Euclidean_space#Euclidean_norm[Euclidean norm] of a vector.
+
+| `l2_norm()` | Alias for `vector_norm()`.
+
+| `l2_normalize()` | Normalizes each component of a vector by dividing it with the https://en.wikipedia.org/wiki/Euclidean_space#Euclidean_norm[Euclidean norm] of the vector.
+
+| `binary_quantize()` | Reduces a vector of size N to a binary vector with N bits, using 0 for values \<= 0 and 1 for values > 0.
+
+| `subvector()` | Creates a subvector from a given vector, a 1-based start index and a count.
 |===
 
 In addition to these special vector functions, it is also possible to use vectors with the following builtin `pgvector` operators:
@@ -113,7 +152,7 @@ which is `1 - inner_product( v1, v2 ) / ( vector_norm( v1 ) * vector_norm( v2 ) 
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-vector}/PGVectorTest.java[tags=cosine-distance-example]
+include::{example-dir-vector}/FloatVectorTest.java[tags=cosine-distance-example]
 ----
 ====
 
@@ -128,7 +167,22 @@ The `l2_distance()` function is an alias.
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-vector}/PGVectorTest.java[tags=euclidean-distance-example]
+include::{example-dir-vector}/FloatVectorTest.java[tags=euclidean-distance-example]
+----
+====
+
+[[vector-module-functions-euclidean-squared-distance]]
+===== `euclidean_squared_distance()` and `l2_squared_distance()`
+
+Computes the https://en.wikipedia.org/wiki/Euclidean_distance#Squared_Euclidean_distance[squared euclidean distance] between two vectors,
+which is `sum( (v1_i - v2_i)^2 )`, just like the regular `euclidean_distance`, but without the `sqrt`.
+The `l2_squared_distance()` function is an alias.
+
+[[vector-module-functions-euclidean-squared-distance-example]]
+====
+[source, java, indent=0]
+----
+include::{example-dir-vector}/FloatVectorTest.java[tags=euclidean-squared-distance-example]
 ----
 ====
 
@@ -136,14 +190,44 @@ include::{example-dir-vector}/PGVectorTest.java[tags=euclidean-distance-example]
 ===== `taxicab_distance()` and `l1_distance()`
 
 Computes the https://en.wikipedia.org/wiki/Taxicab_geometry[taxicab distance] between two vectors,
-which is `vector_norm(v1) - vector_norm(v2)`.
+which is `vector_norm(v1) - vector_norm(v2)`. Maps to the `<``+``>` pgvector operator.
 The `l1_distance()` function is an alias.
 
 [[vector-module-functions-taxicab-distance-example]]
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-vector}/PGVectorTest.java[tags=taxicab-distance-example]
+include::{example-dir-vector}/FloatVectorTest.java[tags=taxicab-distance-example]
+----
+====
+
+[[vector-module-functions-hamming-distance]]
+===== `hamming_distance()`
+
+Computes the https://en.wikipedia.org/wiki/Hamming_distance[hamming distance] between two binary vectors,
+which is `bit_count(v1 ^ v2)` i.e. the amount of bits where two vectors differ.
+Maps to the `<``~``>` operator for `pgvector`.
+
+[[vector-module-functions-taxicab-distance-example]]
+====
+[source, java, indent=0]
+----
+include::{example-dir-vector}/BinaryVectorTest.java[tags=hamming-distance-example]
+----
+====
+
+[[vector-module-functions-jaccard-distance]]
+===== `jaccard_distance()`
+
+Computes the https://en.wikipedia.org/wiki/Jaccard_index[jaccard distance] between two binary vectors,
+which is `1 - bit_count(v1 & v2) / bit_count(v1 | v2)`.
+Maps to the `<``%``>` operator for `pgvector`.
+
+[[vector-module-functions-taxicab-distance-example]]
+====
+[source, java, indent=0]
+----
+include::{example-dir-vector}/BinaryVectorTest.java[tags=jaccard-distance-example]
 ----
 ====
 
@@ -158,7 +242,7 @@ and the `inner_product()` function as well, but multiplies the result time `-1`.
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-vector}/PGVectorTest.java[tags=inner-product-example]
+include::{example-dir-vector}/FloatVectorTest.java[tags=inner-product-example]
 ----
 ====
 
@@ -171,24 +255,63 @@ Determines the dimensions of a vector.
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-vector}/PGVectorTest.java[tags=vector-dims-example]
+include::{example-dir-vector}/FloatVectorTest.java[tags=vector-dims-example]
 ----
 ====
 
 [[vector-module-functions-vector-norm]]
-===== `vector_norm()`
+===== `vector_norm()` and `l2_norm()`
 
 Computes the https://en.wikipedia.org/wiki/Euclidean_space#Euclidean_norm[Euclidean norm] of a vector,
 which is `sqrt( sum( v_i^2 ) )`.
+The `l2_norm()` function is an alias.
 
 [[vector-module-functions-vector-norm-example]]
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-vector}/PGVectorTest.java[tags=vector-norm-example]
+include::{example-dir-vector}/FloatVectorTest.java[tags=vector-norm-example]
 ----
 ====
 
+[[vector-module-functions-l2-normalize]]
+===== `l2_normalize()`
+
+Normalizes each component of a vector by dividing it with the https://en.wikipedia.org/wiki/Euclidean_space#Euclidean_norm[Euclidean norm] of the vector.
+
+[[vector-module-functions-l2-normalize-example]]
+====
+[source, java, indent=0]
+----
+include::{example-dir-vector}/FloatVectorTest.java[tags=l2-normalize-example]
+----
+====
+
+[[vector-module-functions-binary-quantize]]
+===== `binary_quantize()`
+
+Reduces a vector of size N to a binary vector with N bits, using 0 for values <= 0 and 1 for values > 0.
+
+[[vector-module-functions-binary-quantize-example]]
+====
+[source, java, indent=0]
+----
+include::{example-dir-vector}/FloatVectorTest.java[tags=binary-quantize-example]
+----
+====
+
+[[vector-module-functions-subvector]]
+===== `subvector()`
+
+Creates a subvector from a given vector, a 1-based start index and a count.
+
+[[vector-module-functions-subvector-example]]
+====
+[source, java, indent=0]
+----
+include::{example-dir-vector}/FloatVectorTest.java[tags=subvector-example]
+----
+====
 
 
 

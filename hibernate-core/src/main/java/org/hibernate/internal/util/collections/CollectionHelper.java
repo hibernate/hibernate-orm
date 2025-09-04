@@ -8,7 +8,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -21,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.addAll;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
@@ -290,15 +290,17 @@ public final class CollectionHelper {
 		return list;
 	}
 
+	@SafeVarargs
 	public static <T> List<T> listOf(T... values) {
 		final List<T> list = new ArrayList<>( values.length );
-		Collections.addAll( list, values );
+		addAll( list, values );
 		return list;
 	}
 
+	@SafeVarargs
 	public static <T> Set<T> setOf(T... values) {
 		final HashSet<T> set = new HashSet<>( determineProperSizing( values.length ) );
-		Collections.addAll( set, values );
+		addAll( set, values );
 		return set;
 	}
 

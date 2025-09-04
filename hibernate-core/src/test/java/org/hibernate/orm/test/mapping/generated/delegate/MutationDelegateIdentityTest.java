@@ -139,7 +139,7 @@ public class MutationDelegateIdentityTest {
 			assertThat( entity.getUpdateDate() ).isNotNull();
 
 			inspector.assertIsSelect( 0 );
-			assertThat( inspector.getSqlQueries().get( 0 ) ).contains( "update" );
+			assertThat( inspector.getSqlQueries().get( 1 ) ).contains( "update " );
 			inspector.assertExecutedCount(
 					delegate != null && delegate.supportsArbitraryValues() ? 2 : 3
 			);
@@ -188,7 +188,7 @@ public class MutationDelegateIdentityTest {
 
 			assertThat( entity.getUpdateDate() ).isNotNull();
 
-			assertThat( inspector.getSqlQueries().get( 0 ) ).contains( "update" );
+			assertThat( inspector.getSqlQueries().get( 0 ) ).contains( "update " );
 			inspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "id_column", shouldHaveRowId ? 0 : 1 );
 		} );
 		scope.inSession( session -> assertThat( session.find(

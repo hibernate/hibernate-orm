@@ -25,7 +25,7 @@ public class JdbcLiteralFormatterNumericData<T> extends BasicJdbcLiteralFormatte
 	}
 
 	@Override
-	public void appendJdbcLiteral(SqlAppender appender, Object value, Dialect dialect, WrapperOptions wrapperOptions) {
+	public void appendJdbcLiteral(SqlAppender appender, T value, Dialect dialect, WrapperOptions wrapperOptions) {
 		appender.appendSql( unwrap( value, unwrapJavaType, wrapperOptions ).toString() );
 	}
 }

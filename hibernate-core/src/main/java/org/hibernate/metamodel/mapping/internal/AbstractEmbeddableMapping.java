@@ -332,6 +332,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				final SelectablePath selectablePath;
 				final String columnDefinition;
 				final Long length;
+				final Integer arrayLength;
 				final Integer precision;
 				final Integer scale;
 				final Integer temporalPrecision;
@@ -340,6 +341,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				if ( selectable instanceof Column column ) {
 					columnDefinition = column.getSqlType();
 					length = column.getLength();
+					arrayLength = column.getArrayLength();
 					precision = column.getPrecision();
 					scale = column.getScale();
 					temporalPrecision = column.getTemporalPrecision();
@@ -351,6 +353,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				else {
 					columnDefinition = null;
 					length = null;
+					arrayLength = null;
 					precision = null;
 					scale = null;
 					temporalPrecision = null;
@@ -372,9 +375,14 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						selectablePath,
 						selectable.isFormula(),
 						selectable.getCustomReadExpression(),
-						selectable.getWriteExpr( basicValue.getResolution().getJdbcMapping(), dialect ),
+						selectable.getWriteExpr(
+								basicValue.getResolution().getJdbcMapping(),
+								dialect,
+								creationProcess.getCreationContext().getBootModel()
+						),
 						columnDefinition,
 						length,
+						arrayLength,
 						precision,
 						scale,
 						temporalPrecision,

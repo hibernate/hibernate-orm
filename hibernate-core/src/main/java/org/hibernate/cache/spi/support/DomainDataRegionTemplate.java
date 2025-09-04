@@ -15,7 +15,6 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 
 
 import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
@@ -64,8 +63,8 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 
 	@Override
 	public EntityDataAccess generateEntityAccess(EntityDataCachingConfig entityAccessConfig) {
-		final NavigableRole namedEntityRole = entityAccessConfig.getNavigableRole();
-		final AccessType accessType = entityAccessConfig.getAccessType();
+		final var namedEntityRole = entityAccessConfig.getNavigableRole();
+		final var accessType = entityAccessConfig.getAccessType();
 
 		L2CACHE_LOGGER.tracef( "Generating entity cache access [%s] : %s",
 				accessType.getExternalName(), namedEntityRole );
@@ -110,13 +109,14 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 	}
 
 	private UnsupportedOperationException generateTransactionalNotSupportedException() {
-		return new UnsupportedOperationException( "Cache provider [" + getRegionFactory() + "] does not support `" + AccessType.TRANSACTIONAL.getExternalName() + "` access" );
+		return new UnsupportedOperationException( "Cache provider [" + getRegionFactory() + "] does not support `"
+													+ AccessType.TRANSACTIONAL.getExternalName() + "` access" );
 	}
 
 	@Override
 	public NaturalIdDataAccess generateNaturalIdAccess(NaturalIdDataCachingConfig accessConfig) {
-		final NavigableRole namedEntityRole = accessConfig.getNavigableRole();
-		final AccessType accessType = accessConfig.getAccessType();
+		final var namedEntityRole = accessConfig.getNavigableRole();
+		final var accessType = accessConfig.getAccessType();
 
 		L2CACHE_LOGGER.tracef( "Generating entity natural-id access [%s] : %s",
 				accessType.getExternalName(), namedEntityRole );
@@ -162,7 +162,7 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 
 	@Override
 	public CollectionDataAccess generateCollectionAccess(CollectionDataCachingConfig accessConfig) {
-		final NavigableRole namedCollectionRole = accessConfig.getNavigableRole();
+		final var namedCollectionRole = accessConfig.getNavigableRole();
 
 		if ( L2CACHE_LOGGER.isTraceEnabled() ) {
 			L2CACHE_LOGGER.trace( "Generating collection cache access: " + namedCollectionRole );

@@ -145,7 +145,7 @@ public class BasicListTest {
 		scope.inSession( em -> {
 			final Dialect dialect = em.getDialect();
 			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
-			final String param = integerListType.getJdbcType().wrapWriteExpression( ":data", dialect );
+			final String param = integerListType.getJdbcType().wrapWriteExpression( ":data", null, dialect );
 			Query<TableWithIntegerList> tq = em.createNativeQuery(
 						"SELECT * FROM table_with_integer_list t WHERE the_list " + op + " " + param,
 					TableWithIntegerList.class

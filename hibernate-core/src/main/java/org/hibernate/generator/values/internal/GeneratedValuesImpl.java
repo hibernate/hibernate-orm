@@ -44,7 +44,7 @@ public class GeneratedValuesImpl implements GeneratedValues {
 		}
 
 		final List<Object> generatedValues = new ArrayList<>( modelParts.size() );
-		for ( ModelPart modelPart : modelParts ) {
+		for ( var modelPart : modelParts ) {
 			assert generatedValuesMap.containsKey( modelPart );
 			generatedValues.add( generatedValuesMap.get( modelPart ) );
 		}

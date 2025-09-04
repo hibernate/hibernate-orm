@@ -563,7 +563,8 @@ Even the identification variable of an entity with a sortable identifier type ma
 [NOTE]
 ====
 The JPQL specification requires that every sorted item in the `order by` clause also occur in the `select` clause.
-HQL does not enforce this restriction, but applications desiring database portability should be aware that some databases _do_.
+HQL does not enforce this restriction, but if you desire cross-database portability, you should be aware that some databases _do_.
+And even databases which don't usually enforce this restriction do enforce it for `distinct` queries.
 
 Therefore, you might wish to avoid the use of complex expressions in the sort list.
 ====
@@ -614,6 +615,12 @@ having year(order.dateTime) > 2000
    and sum(quantity) > 0
 order by yearlyTotalSold desc, year desc
 ----
+
+[TIP]
+====
+If a query doesn't explicitly specify `nulls first` or `nulls last`, then, by default, the precedence of null values depends on the database.
+To obtain platform-independent behavior for queries which don't specify `nulls first` or `nulls last`, set the configuration property `hibernate.order_by.default_null_ordering` to `first` or `last`.
+====
 
 Queries with an ordered result list may have limits or pagination.
 

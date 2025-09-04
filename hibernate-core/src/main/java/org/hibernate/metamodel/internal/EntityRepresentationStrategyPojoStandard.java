@@ -35,10 +35,10 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
+import static java.lang.reflect.Modifier.isFinal;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptableType;
 import static org.hibernate.internal.util.ReflectHelper.getMethod;
 import static org.hibernate.metamodel.internal.PropertyAccessHelper.propertyAccessStrategy;
-import static org.hibernate.proxy.pojo.ProxyFactoryHelper.validateGetterSetterMethodProxyability;
 
 /**
  * @author Steve Ebersole
@@ -122,7 +122,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		propertyAccessMap = buildPropertyAccessMap( bootDescriptor );
 		reflectionOptimizer = resolveReflectionOptimizer( bytecodeProvider );
 
-		instantiator = determineInstantiator( bootDescriptor, runtimeDescriptor.getEntityMetamodel() );
+		instantiator = determineInstantiator( bootDescriptor, runtimeDescriptor );
 	}
 
 	private ProxyFactory resolveProxyFactory(
@@ -141,11 +141,10 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			return null;
 		}
 		else {
-			final var entityMetamodel = entityPersister.getEntityMetamodel();
-			if ( proxyJavaType != null && entityMetamodel.isLazy() ) {
+			if ( proxyJavaType != null && entityPersister.isLazy() ) {
 				final var proxyFactory = createProxyFactory( bootDescriptor, bytecodeProvider, creationContext );
 				if ( proxyFactory == null ) {
-					entityMetamodel.setLazy( false );
+					((EntityMetamodel) entityPersister).setLazy( false );
 				}
 				return proxyFactory;
 			}
@@ -163,17 +162,17 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		return propertyAccessMap;
 	}
 
-	private EntityInstantiator determineInstantiator(PersistentClass bootDescriptor, EntityMetamodel entityMetamodel) {
+	private EntityInstantiator determineInstantiator(PersistentClass bootDescriptor, EntityPersister persister) {
 		if ( reflectionOptimizer != null && reflectionOptimizer.getInstantiationOptimizer() != null ) {
 			return new EntityInstantiatorPojoOptimized(
-					entityMetamodel,
+					persister,
 					bootDescriptor,
 					mappedJtd,
 					reflectionOptimizer.getInstantiationOptimizer()
 			);
 		}
 		else {
-			return new EntityInstantiatorPojoStandard( entityMetamodel, bootDescriptor, mappedJtd );
+			return new EntityInstantiatorPojoStandard( persister, bootDescriptor, mappedJtd );
 		}
 	}
 
@@ -374,6 +373,19 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			else {
 				return null;
 			}
+		}
+	}
+
+	private static void validateGetterSetterMethodProxyability(String getterOrSetter, Method method ) {
+		if ( method != null && isFinal( method.getModifiers() ) ) {
+			throw new HibernateException(
+					String.format(
+							"%s methods of lazy classes cannot be final: %s#%s",
+							getterOrSetter,
+							method.getDeclaringClass().getName(),
+							method.getName()
+					)
+			);
 		}
 	}
 }

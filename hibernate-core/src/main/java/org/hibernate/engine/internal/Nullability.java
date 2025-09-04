@@ -105,7 +105,7 @@ public final class Nullability {
 			final boolean[] nullability = persister.getPropertyNullability();
 			final boolean[] checkability = getCheckability( persister );
 			final Type[] propertyTypes = persister.getPropertyTypes();
-			final Generator[] generators = persister.getEntityMetamodel().getGenerators();
+			final Generator[] generators = persister.getGenerators();
 			for ( int i = 0; i < values.length; i++ ) {
 				if ( checkability[i]
 						&& !unfetched( values[i] )

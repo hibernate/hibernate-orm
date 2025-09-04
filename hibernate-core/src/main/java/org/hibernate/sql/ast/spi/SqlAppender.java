@@ -46,6 +46,14 @@ public interface SqlAppender extends Appendable {
 		appendSql( String.valueOf( value ) );
 	}
 
+	default void appendSql(double value) {
+		appendSql( String.valueOf( value ) );
+	}
+
+	default void appendSql(float value) {
+		appendSql( String.valueOf( value ) );
+	}
+
 	default void appendDoubleQuoteEscapedString(String value) {
 		final StringBuilder sb = new StringBuilder( value.length() + 2 );
 		QuotingHelper.appendDoubleQuoteEscapedString( sb, value );

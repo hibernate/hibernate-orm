@@ -5,6 +5,7 @@
 package org.hibernate.event.internal;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -15,7 +16,6 @@ import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
-import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
@@ -143,15 +143,15 @@ public abstract class AbstractFlushingEventListener {
 		// processed, so that all entities which will be persisted are
 		// persistent when we do the check (I wonder if we could move this
 		// into Nullability, instead of abusing the Cascade infrastructure)
-		for ( var me : persistenceContext.reentrantSafeEntityEntries() ) {
-			final var entry = me.getValue();
+		for ( var entryEntry : persistenceContext.reentrantSafeEntityEntries() ) {
+			final var entry = entryEntry.getValue();
 			if ( checkable( entry ) ) {
 				Cascade.cascade(
 						CascadingActions.CHECK_ON_FLUSH,
 						CascadePoint.BEFORE_FLUSH,
 						session,
 						entry.getPersister(),
-						me.getKey(),
+						entryEntry.getKey(),
 						null
 				);
 			}
@@ -159,14 +159,14 @@ public abstract class AbstractFlushingEventListener {
 	}
 
 	private static boolean flushable(EntityEntry entry) {
-		final Status status = entry.getStatus();
+		final var status = entry.getStatus();
 		return status == Status.MANAGED
 			|| status == Status.SAVING
 			|| status == Status.READ_ONLY; // debatable, see HHH-19398
 	}
 
 	private static boolean checkable(EntityEntry entry) {
-		final Status status = entry.getStatus();
+		final var status = entry.getStatus();
 		return status == Status.MANAGED
 			|| status == Status.SAVING;
 	}
@@ -228,7 +228,7 @@ public abstract class AbstractFlushingEventListener {
 		for ( var me : entityEntries ) {
 			// Update the status of the object and if necessary, schedule an update
 			final var entry = me.getValue();
-			final Status status = entry.getStatus();
+			final var status = entry.getStatus();
 			if ( status != Status.LOADING && status != Status.GONE ) {
 				entityEvent = createOrReuseEventInstance( entityEvent, source, me.getKey(), entry );
 				entityEvent.setInstanceGenerationId( ++eventGenerationId );
@@ -270,22 +270,7 @@ public abstract class AbstractFlushingEventListener {
 			throws HibernateException {
 		LOG.trace( "Processing unreferenced collections" );
 		final var collectionEntries = persistenceContext.getCollectionEntries();
-		final int count;
-		if ( collectionEntries == null ) {
-			count = 0;
-		}
-		else {
-			count = collectionEntries.size();
-			final var identityMap =
-					(InstanceIdentityMap<PersistentCollection<?>, CollectionEntry>)
-							collectionEntries;
-			for ( var me : identityMap.toArray() ) {
-				final var ce = me.getValue();
-				if ( !ce.isReached() && !ce.isIgnore() ) {
-					processUnreachableCollection( me.getKey(), session );
-				}
-			}
-		}
+		final int count = processUnreachableCollections( session, collectionEntries );
 
 		// Schedule updates to collections:
 
@@ -293,51 +278,54 @@ public abstract class AbstractFlushingEventListener {
 		final var actionQueue = session.getActionQueue();
 		final var interceptor = session.getInterceptor();
 		persistenceContext.forEachCollectionEntry(
-				(coll, ce) -> {
-					if ( ce.isDorecreate() ) {
-						interceptor.onCollectionRecreate( coll, ce.getCurrentKey() );
+				(collection, collectionEntry) -> {
+					if ( collectionEntry.isDorecreate() ) {
+						final var currentKey = collectionEntry.getCurrentKey();
+						interceptor.onCollectionRecreate( collection, currentKey );
 						actionQueue.addAction(
 								new CollectionRecreateAction(
-										coll,
-										ce.getCurrentPersister(),
-										ce.getCurrentKey(),
+										collection,
+										collectionEntry.getCurrentPersister(),
+										currentKey,
 										session
 								)
 						);
 					}
-					if ( ce.isDoremove() ) {
-						interceptor.onCollectionRemove( coll, ce.getLoadedKey() );
-						if ( !skipRemoval( session, ce.getLoadedPersister(), ce.getLoadedKey() ) ) {
+					if ( collectionEntry.isDoremove() ) {
+						final var loadedKey = collectionEntry.getLoadedKey();
+						interceptor.onCollectionRemove( collection, loadedKey );
+						if ( !skipRemoval( session, collectionEntry.getLoadedPersister(), loadedKey ) ) {
 							actionQueue.addAction(
 									new CollectionRemoveAction(
-											coll,
-											ce.getLoadedPersister(),
-											ce.getLoadedKey(),
-											ce.isSnapshotEmpty( coll ),
+											collection,
+											collectionEntry.getLoadedPersister(),
+											loadedKey,
+											collectionEntry.isSnapshotEmpty( collection ),
 											session
 									)
 							);
 						}
 					}
-					if ( ce.isDoupdate() ) {
-						interceptor.onCollectionUpdate( coll, ce.getLoadedKey() );
+					if ( collectionEntry.isDoupdate() ) {
+						final var loadedKey = collectionEntry.getLoadedKey();
+						interceptor.onCollectionUpdate( collection, loadedKey );
 						actionQueue.addAction(
 								new CollectionUpdateAction(
-										coll,
-										ce.getLoadedPersister(),
-										ce.getLoadedKey(),
-										ce.isSnapshotEmpty( coll ),
+										collection,
+										collectionEntry.getLoadedPersister(),
+										loadedKey,
+										collectionEntry.isSnapshotEmpty( collection ),
 										session
 								)
 						);
 					}
 					// todo : I'm not sure the !wasInitialized part should really be part of this check
-					if ( !coll.wasInitialized() && coll.hasQueuedOperations() ) {
+					if ( !collection.wasInitialized() && collection.hasQueuedOperations() ) {
 						actionQueue.addAction(
 								new QueuedOperationCollectionAction(
-										coll,
-										ce.getLoadedPersister(),
-										ce.getLoadedKey(),
+										collection,
+										collectionEntry.getLoadedPersister(),
+										collectionEntry.getLoadedKey(),
 										session
 								)
 						);
@@ -347,6 +335,27 @@ public abstract class AbstractFlushingEventListener {
 		actionQueue.sortCollectionActions();
 
 		return count;
+	}
+
+	private static int processUnreachableCollections(
+			EventSource session,
+			Map<PersistentCollection<?>, CollectionEntry> collectionEntries) {
+		if ( collectionEntries == null ) {
+			return 0;
+		}
+		else {
+			final int count = collectionEntries.size();
+			final var identityMap =
+					(InstanceIdentityMap<PersistentCollection<?>, CollectionEntry>)
+							collectionEntries;
+			for ( var entry : identityMap.toArray() ) {
+				final var collectionEntry = entry.getValue();
+				if ( !collectionEntry.isReached() && !collectionEntry.isIgnore() ) {
+					processUnreachableCollection( entry.getKey(), session );
+				}
+			}
+			return count;
+		}
 	}
 
 	/**
@@ -375,7 +384,7 @@ public abstract class AbstractFlushingEventListener {
 			persistenceContext.setFlushing( true );
 			// we need to lock the collection caches before executing entity inserts/updates
 			// in order to account for bidirectional associations
-			final ActionQueue actionQueue = session.getActionQueue();
+			final var actionQueue = session.getActionQueue();
 			actionQueue.prepareActions();
 			actionQueue.executeActions();
 		}
@@ -410,18 +419,18 @@ public abstract class AbstractFlushingEventListener {
 		persistenceContext.forEachCollectionEntry(
 				(persistentCollection, collectionEntry) -> {
 					collectionEntry.postFlush( persistentCollection );
-					final Object key;
-					if ( collectionEntry.getLoadedPersister() == null || ( key = collectionEntry.getLoadedKey() ) == null ) {
+					final var loadedPersister = collectionEntry.getLoadedPersister();
+					final Object key = collectionEntry.getLoadedKey();
+					if ( loadedPersister != null && key != null ) {
+						//otherwise recreate the mapping between the collection and its key
+						final var collectionKey = new CollectionKey( loadedPersister, key );
+						persistenceContext.addCollectionByKey( collectionKey, persistentCollection );
+					}
+					else {
 						//if the collection is dereferenced, unset its session reference and remove from the session cache
 						//iter.remove(); //does not work, since the entrySet is not backed by the set
 						persistentCollection.unsetSession( session );
 						persistenceContext.removeCollectionEntry( persistentCollection );
-					}
-					else {
-						//otherwise recreate the mapping between the collection and its key
-						final CollectionKey collectionKey =
-								new CollectionKey( collectionEntry.getLoadedPersister(), key );
-						persistenceContext.addCollectionByKey( collectionKey, persistentCollection );
 					}
 				},
 				true
@@ -429,7 +438,8 @@ public abstract class AbstractFlushingEventListener {
 	}
 
 	protected void postPostFlush(SessionImplementor session) {
-		session.getInterceptor().postFlush( session.getPersistenceContextInternal().managedEntitiesIterator() );
+		session.getInterceptor()
+				.postFlush( session.getPersistenceContextInternal().managedEntitiesIterator() );
 	}
 
 }

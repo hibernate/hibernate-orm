@@ -12,6 +12,7 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.sequence.LegacyDB2SequenceSupport;
 import org.hibernate.community.dialect.temptable.DB2LegacyLocalTemporaryTableStrategy;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DB2GetObjectExtractor;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
@@ -183,13 +184,18 @@ public class DB2LegacyDialect extends Dialect {
 	}
 
 	public DB2LegacyDialect(DialectResolutionInfo info) {
-		super( info );
+		this( DB2Dialect.determinFullDatabaseVersion( info ) );
 		lockingSupport = buildLockingSupport();
 	}
 
 	public DB2LegacyDialect(DatabaseVersion version) {
 		super( version );
 		lockingSupport = buildLockingSupport();
+	}
+
+	@Override
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		return DB2Dialect.determinFullDatabaseVersion( info );
 	}
 
 	protected LockingSupport buildLockingSupport() {

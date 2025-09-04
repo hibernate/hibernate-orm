@@ -27,13 +27,13 @@ import static org.junit.Assert.assertTrue;
 public class ServiceContributorTest extends BaseUnitTestCase {
 	@Test
 	public void overrideCachingInitiator() {
-		StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder();
+		var ssrb = ServiceRegistryUtil.serviceRegistryBuilder();
 		ssrb.clearSettings();
 
-		final MyRegionFactoryInitiator initiator = new MyRegionFactoryInitiator();
+		final var initiator = new MyRegionFactoryInitiator();
 		ssrb.addInitiator( initiator );
 
-		final ServiceRegistryImplementor registry = (ServiceRegistryImplementor) ssrb.build();
+		final var registry = (ServiceRegistryImplementor) ssrb.build();
 		try {
 			final RegionFactory regionFactory = registry.getService( RegionFactory.class );
 			assertTrue( initiator.called );
@@ -45,13 +45,13 @@ public class ServiceContributorTest extends BaseUnitTestCase {
 	}
 	@Test
 	public void overrideCachingInitiatorExplicitSet() {
-		StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder();
+		var ssrb = ServiceRegistryUtil.serviceRegistryBuilder();
 
-		final MyRegionFactoryInitiator initiator = new MyRegionFactoryInitiator();
+		final var initiator = new MyRegionFactoryInitiator();
 		ssrb.addInitiator( initiator );
 		ssrb.applySetting( AvailableSettings.CACHE_REGION_FACTORY, new MyRegionFactory() );
 
-		final ServiceRegistryImplementor registry = (ServiceRegistryImplementor) ssrb.build();
+		final var registry = (ServiceRegistryImplementor) ssrb.build();
 		try {
 			registry.getService( RegionFactory.class );
 			assertFalse( initiator.called );
@@ -61,12 +61,12 @@ public class ServiceContributorTest extends BaseUnitTestCase {
 		}
 	}
 
-	class MyRegionFactoryInitiator extends RegionFactoryInitiator {
+	static class MyRegionFactoryInitiator extends RegionFactoryInitiator {
 		private boolean called = false;
 
 		@Override
 		protected RegionFactory getFallback(
-				Map configurationValues,
+				Map<?,?> configurationValues,
 				ServiceRegistryImplementor registry) {
 			called = true;
 			return new MyRegionFactory();
@@ -81,7 +81,7 @@ public class ServiceContributorTest extends BaseUnitTestCase {
 //			}
 	}
 
-	class MyRegionFactory extends CachingRegionFactory {
+	static class MyRegionFactory extends CachingRegionFactory {
 	}
 
 }

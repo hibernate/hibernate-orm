@@ -4,19 +4,14 @@
  */
 package org.hibernate.cache.internal;
 
-import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.action.internal.CollectionAction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cache.spi.access.CollectionDataAccess;
-import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostDeleteEvent;
@@ -26,7 +21,6 @@ import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -84,25 +78,20 @@ public class CollectionCacheInvalidator
 	}
 
 	private void integrate(SessionFactoryImplementor sessionFactory) {
-		final SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
-		if ( !sessionFactoryOptions.isAutoEvictCollectionCache() ) {
-			// feature is disabled
-			return;
+		final var options = sessionFactory.getSessionFactoryOptions();
+		if ( options.isSecondLevelCacheEnabled()
+				&& options.isAutoEvictCollectionCache() ) {
+			final var eventListenerRegistry = sessionFactory.getEventListenerRegistry();
+			eventListenerRegistry.appendListeners( EventType.POST_INSERT, this );
+			eventListenerRegistry.appendListeners( EventType.POST_DELETE, this );
+			eventListenerRegistry.appendListeners( EventType.POST_UPDATE, this );
 		}
-		if ( !sessionFactoryOptions.isSecondLevelCacheEnabled() ) {
-			// Nothing to do, if caching is disabled
-			return;
-		}
-		final EventListenerRegistry eventListenerRegistry = sessionFactory.getEventListenerRegistry();
-		eventListenerRegistry.appendListeners( EventType.POST_INSERT, this );
-		eventListenerRegistry.appendListeners( EventType.POST_DELETE, this );
-		eventListenerRegistry.appendListeners( EventType.POST_UPDATE, this );
 	}
 
 	private void evictCache(Object entity, EntityPersister persister, EventSource session, Object[] oldState) {
 		try {
-			final MappingMetamodelImplementor metamodel = persister.getFactory().getMappingMetamodel();
-			final Set<String> roles = metamodel.getCollectionRolesByEntityParticipant( persister.getEntityName() );
+			final var metamodel = persister.getFactory().getMappingMetamodel();
+			final var roles = metamodel.getCollectionRolesByEntityParticipant( persister.getEntityName() );
 			if ( !isEmpty( roles ) ) {
 				for ( String role : roles ) {
 					evictCollection( entity, persister, oldState, metamodel.getCollectionDescriptor( role ), session );
@@ -132,8 +121,8 @@ public class CollectionCacheInvalidator
 				if ( L2CACHE_LOGGER.isTraceEnabled() ) {
 					L2CACHE_LOGGER.autoEvictingCollectionCacheByRole( collectionPersister.getRole() );
 				}
-				final CollectionDataAccess cacheAccessStrategy = collectionPersister.getCacheAccessStrategy();
-				final SoftLock softLock = cacheAccessStrategy.lockRegion();
+				final var cacheAccessStrategy = collectionPersister.getCacheAccessStrategy();
+				final var softLock = cacheAccessStrategy.lockRegion();
 				session.getActionQueue()
 						.registerProcess( (success, s) -> cacheAccessStrategy.unlockRegion( softLock ) );
 			}
@@ -190,7 +179,7 @@ public class CollectionCacheInvalidator
 			L2CACHE_LOGGER.autoEvictingCollectionCache(
 					collectionInfoString( collectionPersister, id, collectionPersister.getFactory() ) );
 		}
-		final CollectionEvictCacheAction evictCacheAction =
+		final var evictCacheAction =
 				new CollectionEvictCacheAction( collectionPersister, null, id, session );
 		evictCacheAction.execute();
 		session.getActionQueue().registerProcess( evictCacheAction.getAfterTransactionCompletionProcess() );

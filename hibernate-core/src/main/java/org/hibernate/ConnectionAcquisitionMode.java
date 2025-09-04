@@ -31,7 +31,8 @@ public enum ConnectionAcquisitionMode {
 	AS_NEEDED;
 
 	public static ConnectionAcquisitionMode interpret(String value) {
-		return "immediate".equalsIgnoreCase( value ) || "immediately".equalsIgnoreCase( value )
+		return "immediate".equalsIgnoreCase( value )
+			|| "immediately".equalsIgnoreCase( value )
 				? IMMEDIATELY
 				: AS_NEEDED;
 	}
@@ -47,6 +48,5 @@ public enum ConnectionAcquisitionMode {
 			final String value = setting.toString();
 			return isEmpty( value ) ? null : interpret( value );
 		}
-
 	}
 }

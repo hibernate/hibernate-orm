@@ -8,7 +8,8 @@ import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
  * Structured CacheEntry format for persistent Maps.
@@ -22,13 +23,11 @@ public class StructuredMapCacheEntry implements CacheEntryStructure {
 	public static final StructuredMapCacheEntry INSTANCE = new StructuredMapCacheEntry();
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Object structure(Object item) {
-		final CollectionCacheEntry entry = (CollectionCacheEntry) item;
+		final var entry = (CollectionCacheEntry) item;
 		final Serializable[] state = entry.getState();
-		final Map map = CollectionHelper.mapOfSize( state.length );
-		int i = 0;
-		while ( i < state.length ) {
+		final Map<Serializable,Serializable> map = mapOfSize( state.length );
+		for ( int i = 0; i < state.length; ) {
 			map.put( state[i++], state[i++] );
 		}
 		return map;
@@ -36,10 +35,10 @@ public class StructuredMapCacheEntry implements CacheEntryStructure {
 
 	@Override
 	public Object destructure(Object structured, SessionFactoryImplementor factory) {
-		final Map<?,?> map = (Map<?,?>) structured;
+		final var map = (Map<?,?>) structured;
 		final Serializable[] state = new Serializable[ map.size()*2 ];
 		int i = 0;
-		for ( Map.Entry me : map.entrySet() ) {
+		for ( var me : map.entrySet() ) {
 			state[i++] = (Serializable) me.getKey();
 			state[i++] = (Serializable) me.getValue();
 		}

@@ -37,17 +37,7 @@ public class NaturalIdNonStrictReadWriteAccess extends AbstractNaturalIdDataAcce
 	}
 
 	@Override
-	public void remove(SharedSessionContractImplementor session, Object key) {
-		getStorageAccess().removeFromCache( key, session );
-	}
-
-	@Override
 	public boolean insert(SharedSessionContractImplementor session, Object key, Object value) {
-		return false;
-	}
-
-	@Override
-	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value) {
 		return false;
 	}
 

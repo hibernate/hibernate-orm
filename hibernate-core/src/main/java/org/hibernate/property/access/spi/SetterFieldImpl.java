@@ -13,12 +13,11 @@ import java.util.Locale;
 import org.hibernate.Internal;
 import org.hibernate.PropertyAccessException;
 import org.hibernate.property.access.internal.AbstractFieldSerialForm;
-import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.LazyInitializer;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.internal.util.ReflectHelper.setterMethodOrNull;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Field-based implementation of Setter
@@ -57,7 +56,7 @@ public class SetterFieldImpl implements Setter {
 			field.set( target, value );
 		}
 		catch (Exception e) {
-			if (value == null && field.getType().isPrimitive()) {
+			if ( value == null && field.getType().isPrimitive() ) {
 				throw new PropertyAccessException(
 						e,
 						String.format(
@@ -72,29 +71,31 @@ public class SetterFieldImpl implements Setter {
 				);
 			}
 			else {
-				final String valueType;
-				final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( value );
-				if ( lazyInitializer != null ) {
-					valueType = lazyInitializer.getEntityName();
-				}
-				else if ( value != null ) {
-					valueType = value.getClass().getTypeName();
-				}
-				else {
-					valueType = "<unknown>";
-				}
 				throw new PropertyAccessException(
 						e,
 						String.format(
 								Locale.ROOT,
 								"Could not set value of type [%s]",
-								valueType
+								typeName( value )
 						),
 						true,
 						containerClass,
 						propertyName
 				);
 			}
+		}
+	}
+
+	private static String typeName(@Nullable Object value) {
+		final var lazyInitializer = extractLazyInitializer( value );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getEntityName();
+		}
+		else if ( value != null ) {
+			return value.getClass().getTypeName();
+		}
+		else {
+			return "<unknown>";
 		}
 	}
 

@@ -237,7 +237,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			if ( resultBuilders.size() == 1 && domainResults.size()  == 1 && domainResults.get( 0 ) instanceof EntityResult entityResult ) {
 				// Special case for result set mappings that just fetch a single polymorphic entity
 				final EntityPersister persister = entityResult.getReferencedMappingContainer().getEntityPersister();
-				final boolean polymorphic = persister.getEntityMetamodel().isPolymorphic();
+				final boolean polymorphic = persister.isPolymorphic();
 				// We only need to check for duplicate aliases if we have join fetches,
 				// otherwise we assume that even if there are duplicate aliases, the values are equivalent.
 				// If we don't do that, there is no way to fetch joined inheritance entities

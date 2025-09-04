@@ -49,6 +49,16 @@ public class StringBuilderSqlAppender implements SqlAppender {
 	}
 
 	@Override
+	public void appendSql(double value) {
+		sb.append( value );
+	}
+
+	@Override
+	public void appendSql(float value) {
+		sb.append( value );
+	}
+
+	@Override
 	public Appendable append(CharSequence csq) {
 		sb.append( csq );
 		return this;

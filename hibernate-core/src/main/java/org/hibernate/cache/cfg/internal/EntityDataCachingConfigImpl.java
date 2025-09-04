@@ -20,14 +20,14 @@ public class EntityDataCachingConfigImpl
 		extends AbstractDomainDataCachingConfig
 		implements EntityDataCachingConfig {
 	private final NavigableRole navigableRole;
-	private final Supplier<Comparator> versionComparatorAccess;
+	private final Supplier<Comparator<?>> versionComparatorAccess;
 	private final boolean isEntityMutable;
 
 	private final Set<NavigableRole> cachedTypes = new HashSet<>();
 
 	public EntityDataCachingConfigImpl(
 			NavigableRole rootEntityName,
-			Supplier<Comparator> versionComparatorAccess,
+			Supplier<Comparator<?>> versionComparatorAccess,
 			boolean isEntityMutable,
 			AccessType accessType) {
 		super( accessType );
@@ -37,7 +37,7 @@ public class EntityDataCachingConfigImpl
 	}
 
 	@Override
-	public Supplier<Comparator> getVersionComparatorAccess() {
+	public Supplier<Comparator<?>> getVersionComparatorAccess() {
 		return versionComparatorAccess;
 	}
 

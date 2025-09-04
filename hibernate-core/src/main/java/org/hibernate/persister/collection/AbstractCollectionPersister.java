@@ -27,11 +27,9 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
@@ -55,18 +53,12 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.IndexedCollection;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.DiscriminatorMapping;
-import org.hibernate.metamodel.mapping.DiscriminatorValueDetails;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
@@ -92,24 +84,20 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.AliasedExpression;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.TableMapping.MutationDetails;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.ColumnValueParameterList;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.model.ast.MutatingTableReference;
@@ -125,15 +113,13 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.hibernate.type.spi.TypeConfiguration;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -258,41 +244,36 @@ public abstract class AbstractCollectionPersister
 	public AbstractCollectionPersister(
 			Collection collectionBootDescriptor,
 			@Nullable CollectionDataAccess cacheAccessStrategy,
-			RuntimeModelCreationContext creationContext) throws MappingException, CacheException {
-		this.collectionBootDescriptor = collectionBootDescriptor;
+			RuntimeModelCreationContext creationContext)
+					throws MappingException, CacheException {
+		factory = creationContext.getSessionFactory();
 
-		this.factory = creationContext.getSessionFactory();
-		this.collectionSemantics = creationContext.getBootstrapContext()
-				.getMetadataBuildingOptions()
-				.getPersistentCollectionRepresentationResolver()
-				.resolveRepresentation( collectionBootDescriptor );
+		this.collectionBootDescriptor = collectionBootDescriptor;
+		this.collectionSemantics =
+				creationContext.getBootstrapContext().getMetadataBuildingOptions()
+						.getPersistentCollectionRepresentationResolver()
+						.resolveRepresentation( collectionBootDescriptor );
+
 
 		this.cacheAccessStrategy = cacheAccessStrategy;
-		if ( creationContext.getSessionFactoryOptions().isStructuredCacheEntriesEnabled() ) {
-			cacheEntryStructure = collectionBootDescriptor.isMap()
-					? StructuredMapCacheEntry.INSTANCE
-					: StructuredCollectionCacheEntry.INSTANCE;
-		}
-		else {
-			cacheEntryStructure = UnstructuredCacheEntry.INSTANCE;
-		}
-		useShallowQueryCacheLayout = shouldUseShallowCacheLayout(
-				collectionBootDescriptor.getQueryCacheLayout(),
-				creationContext.getSessionFactoryOptions()
-		);
+		cacheEntryStructure = cacheEntryStructure( collectionBootDescriptor, creationContext );
+		useShallowQueryCacheLayout =
+				shouldUseShallowCacheLayout( collectionBootDescriptor.getQueryCacheLayout(),
+						creationContext.getSessionFactoryOptions() );
 
 		dialect = creationContext.getDialect();
 		sqlExceptionHelper = creationContext.getJdbcServices().getSqlExceptionHelper();
 		collectionType = collectionBootDescriptor.getCollectionType();
 		navigableRole = new NavigableRole( collectionBootDescriptor.getRole() );
-		ownerPersister = creationContext.getDomainModel()
-				.getEntityDescriptor( collectionBootDescriptor.getOwnerEntityName() );
+		ownerPersister =
+				creationContext.getDomainModel()
+						.getEntityDescriptor( collectionBootDescriptor.getOwnerEntityName() );
 		queryLoaderName = collectionBootDescriptor.getLoaderName();
 		isMutable = collectionBootDescriptor.isMutable();
 		mappedByProperty = collectionBootDescriptor.getMappedByProperty();
 
-		final Value elementBootDescriptor = collectionBootDescriptor.getElement();
-		final Table table = collectionBootDescriptor.getCollectionTable();
+		final var elementBootDescriptor = collectionBootDescriptor.getElement();
+		final var table = collectionBootDescriptor.getCollectionTable();
 
 		elementType = elementBootDescriptor.getType();
 		// isSet = collectionBinding.isSet();
@@ -311,20 +292,20 @@ public abstract class AbstractCollectionPersister
 
 		hasOrphanDelete = collectionBootDescriptor.hasOrphanDelete();
 
-		batchSize = collectionBootDescriptor.getBatchSize() < 0
-				? factory.getSessionFactoryOptions().getDefaultBatchFetchSize()
-				: collectionBootDescriptor.getBatchSize();
+		batchSize = batchSize( collectionBootDescriptor, creationContext );
 
 		isVersioned = collectionBootDescriptor.isOptimisticLocked();
 
 		// KEY
 
-		keyType = collectionBootDescriptor.getKey().getType();
-		final int keySpan = collectionBootDescriptor.getKey().getColumnSpan();
+		final var key = collectionBootDescriptor.getKey();
+
+		keyType = key.getType();
+		final int keySpan = key.getColumnSpan();
 		keyColumnNames = new String[keySpan];
 		keyColumnAliases = new String[keySpan];
 		int k = 0;
-		for ( Selectable selectable: collectionBootDescriptor.getKey().getSelectables() ) {
+		for ( var selectable: key.getSelectables() ) {
 			// NativeSQL: collect key column and auto-aliases
 			keyColumnAliases[k] = selectable.getAlias( dialect, table );
 			if ( selectable instanceof Column column ) {
@@ -349,10 +330,10 @@ public abstract class AbstractCollectionPersister
 			elementPersister = null;
 		}
 		// Defer this after the element persister was determined,
-		// because it is needed in OneToManyPersister.getTableName()
+		// because it's needed in OneToManyPersister.getTableName()
 		spaces[0] = getTableName();
 
-		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
+		final var typeConfiguration = creationContext.getTypeConfiguration();
 
 		final int elementSpan = elementBootDescriptor.getColumnSpan();
 		elementColumnAliases = new String[elementSpan];
@@ -366,24 +347,23 @@ public abstract class AbstractCollectionPersister
 		elementColumnIsGettable = new boolean[elementSpan];
 		boolean isPureFormula = true;
 		final boolean oneToMany = collectionBootDescriptor.isOneToMany();
-		boolean[] columnInsertability = null;
-		if ( !oneToMany ) {
-			columnInsertability = elementBootDescriptor.getColumnInsertability();
-		}
+		final boolean[] columnInsertability = oneToMany ? null : elementBootDescriptor.getColumnInsertability();
 		int j = 0;
-		for ( Selectable selectable: elementBootDescriptor.getSelectables() ) {
+		for ( var selectable: elementBootDescriptor.getSelectables() ) {
 			elementColumnAliases[j] = selectable.getAlias( dialect, table );
-			if ( selectable.isFormula() ) {
-				Formula form = (Formula) selectable;
-				elementFormulaTemplates[j] = form.getTemplate( dialect, typeConfiguration );
-				elementFormulas[j] = form.getFormula();
+			if ( selectable instanceof Formula formula ) {
+				elementFormulaTemplates[j] = formula.getTemplate( dialect, typeConfiguration );
+				elementFormulas[j] = formula.getFormula();
 			}
-			else {
-				final Column col = (Column) selectable;
-				elementColumnNames[j] = col.getQuotedName( dialect );
-				elementColumnWriters[j] = col.getWriteExpr( elementBootDescriptor.getSelectableType( factory.getRuntimeMetamodels(), j ), dialect );
-				elementColumnReaders[j] = col.getReadExpr( dialect );
-				elementColumnReaderTemplates[j] = col.getTemplate( dialect, typeConfiguration );
+			else if ( selectable instanceof Column column ) {
+				elementColumnNames[j] = column.getQuotedName( dialect );
+				elementColumnWriters[j] = column.getWriteExpr(
+						elementBootDescriptor.getSelectableType( factory.getRuntimeMetamodels(), j ),
+						dialect,
+						creationContext.getBootModel()
+				);
+				elementColumnReaders[j] = column.getReadExpr( dialect );
+				elementColumnReaderTemplates[j] = column.getTemplate( dialect, typeConfiguration );
 				elementColumnIsGettable[j] = true;
 				if ( elementType instanceof ComponentType || elementType instanceof AnyType ) {
 					// Implements desired behavior specifically for @ElementCollection mappings.
@@ -417,15 +397,14 @@ public abstract class AbstractCollectionPersister
 			indexColumnAliases = new String[indexSpan];
 			int i = 0;
 			boolean hasFormula = false;
-			for ( Selectable selectable: index.getSelectables() ) {
+			for ( var selectable: index.getSelectables() ) {
 				indexColumnAliases[i] = selectable.getAlias( dialect );
-				if ( selectable.isFormula() ) {
-					final Formula indexForm = (Formula) selectable;
-					indexFormulaTemplates[i] = indexForm.getTemplate( dialect, typeConfiguration );
-					indexFormulas[i] = indexForm.getFormula();
+				if ( selectable instanceof Formula indexFormula ) {
+					indexFormulaTemplates[i] = indexFormula.getTemplate( dialect, typeConfiguration );
+					indexFormulas[i] = indexFormula.getFormula();
 					hasFormula = true;
 				}
-				else {
+				else if ( selectable instanceof Column indexColumn ) {
 					if ( indexedCollection.hasMapKeyProperty() ) {
 						// If the Map key is set via @MapKey, it should not be written
 						// since it is a reference to a field of the associated entity.
@@ -435,8 +414,7 @@ public abstract class AbstractCollectionPersister
 						indexColumnUpdatability[i] = false;
 						hasFormula = true; // this is incorrect, but needed for some reason
 					}
-					final Column indexCol = (Column) selectable;
-					indexColumnNames[i] = indexCol.getQuotedName( dialect );
+					indexColumnNames[i] = indexColumn.getQuotedName( dialect );
 					indexColumnIsGettable[i] = true;
 					indexColumnIsSettable[i] = indexColumnInsertability[i] || indexColumnUpdatability[i];
 				}
@@ -461,12 +439,12 @@ public abstract class AbstractCollectionPersister
 				throw new MappingException( "one-to-many collections with identifiers are not supported" );
 			}
 			//noinspection ConstantConditions
-			final IdentifierCollection idColl = (IdentifierCollection) collectionBootDescriptor;
-			identifierType = idColl.getIdentifier().getType();
-			final Column col = idColl.getIdentifier().getColumns().get(0);
-			identifierColumnName = col.getQuotedName( dialect );
-			identifierColumnAlias = col.getAlias( dialect );
-			identifierGenerator = createGenerator( creationContext, idColl );
+			final var idCollection = (IdentifierCollection) collectionBootDescriptor;
+			identifierType = idCollection.getIdentifier().getType();
+			final var idColumn = idCollection.getIdentifier().getColumns().get(0);
+			identifierColumnName = idColumn.getQuotedName( dialect );
+			identifierColumnAlias = idColumn.getAlias( dialect );
+			identifierGenerator = createGenerator( creationContext, idCollection );
 		}
 		else {
 			identifierType = null;
@@ -480,7 +458,7 @@ public abstract class AbstractCollectionPersister
 
 		isInverse = collectionBootDescriptor.isInverse();
 
-		keyIsUpdateable = collectionBootDescriptor.getKey().isUpdateable();
+		keyIsUpdateable = key.isUpdateable();
 
 		elementClass =
 				collectionBootDescriptor instanceof Array arrayDescriptor
@@ -492,33 +470,17 @@ public abstract class AbstractCollectionPersister
 		hasManyToManyOrder = collectionBootDescriptor.getManyToManyOrdering() != null;
 
 		// Handle any filters applied to this collectionBinding
-		if ( collectionBootDescriptor.getFilters().isEmpty() ) {
-			filterHelper = null;
-		}
-		else {
-			final Map<String, String> entityNameByTableNameMap;
-			if ( elementPersister == null ) {
-				entityNameByTableNameMap = null;
-			}
-			else {
-				entityNameByTableNameMap = AbstractEntityPersister.getEntityNameByTableNameMap(
-						creationContext.getBootModel().getEntityBinding( elementPersister.getEntityName() ),
-						factory.getSqlStringGenerationContext()
-				);
-			}
-			filterHelper = new FilterHelper( collectionBootDescriptor.getFilters(), entityNameByTableNameMap, factory );
-		}
-
+		filterHelper = filterHelper( collectionBootDescriptor, elementPersister, creationContext );
 		// Handle any filters applied to this collectionBinding for many-to-many
-		manyToManyFilterHelper = collectionBootDescriptor.getManyToManyFilters().isEmpty() ? null
-				: new FilterHelper( collectionBootDescriptor.getManyToManyFilters(), factory );
+		manyToManyFilterHelper = manyToManyFilterHelper( collectionBootDescriptor, creationContext );
 
-		if ( isEmpty( collectionBootDescriptor.getManyToManyWhere() ) ) {
+		final String manyToManyWhere = collectionBootDescriptor.getManyToManyWhere();
+		if ( isEmpty( manyToManyWhere ) ) {
 			manyToManyWhereString = null;
 			manyToManyWhereTemplate = null;
 		}
 		else {
-			manyToManyWhereString = "( " + collectionBootDescriptor.getManyToManyWhere() + ")";
+			manyToManyWhereString = "( " + manyToManyWhere + ")";
 			manyToManyWhereTemplate =
 					renderWhereStringTemplate( manyToManyWhereString, creationContext.getDialect(), typeConfiguration );
 		}
@@ -536,15 +498,60 @@ public abstract class AbstractCollectionPersister
 
 		tableMapping = buildCollectionTableMapping( collectionBootDescriptor, getTableName(), getCollectionSpaces() );
 
-		cascadeDeleteEnabled = collectionBootDescriptor.getKey().isCascadeDeleteEnabled()
+		cascadeDeleteEnabled =
+				key.isCascadeDeleteEnabled()
 				&& creationContext.getDialect().supportsCascadeDelete();
+	}
+
+	private FilterHelper manyToManyFilterHelper(Collection collection, RuntimeModelCreationContext context) {
+		return collection.getManyToManyFilters().isEmpty()
+				? null
+				: new FilterHelper( collection.getManyToManyFilters(), context.getSessionFactory() );
+	}
+
+	private FilterHelper filterHelper(
+			Collection collection, EntityPersister elementPersister, RuntimeModelCreationContext context) {
+		if ( collection.getFilters().isEmpty() ) {
+			return null;
+		}
+		else {
+			final var entityNameByTableNameMap =
+					elementPersister == null
+							? null
+							: AbstractEntityPersister.getEntityNameByTableNameMap(
+									context.getBootModel().getEntityBinding( elementPersister.getEntityName() ),
+									context.getSessionFactory().getSqlStringGenerationContext()
+							);
+			return new FilterHelper( collection.getFilters(), entityNameByTableNameMap, factory );
+		}
+	}
+
+	private static int batchSize(Collection collection, RuntimeModelCreationContext context) {
+		return collection.getBatchSize() < 0
+				? context.getSessionFactoryOptions().getDefaultBatchFetchSize()
+				: collection.getBatchSize();
+	}
+
+	private static CacheEntryStructure cacheEntryStructure(Collection collection, RuntimeModelCreationContext context) {
+		if ( context.getSessionFactoryOptions().isStructuredCacheEntriesEnabled() ) {
+			return collection.isMap()
+							? StructuredMapCacheEntry.INSTANCE
+							: StructuredCollectionCacheEntry.INSTANCE;
+		}
+		else {
+			return UnstructuredCacheEntry.INSTANCE;
+		}
+	}
+
+	SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+		return getFactory().getJdbcServices().getDialect().getSqlAstTranslatorFactory();
 	}
 
 	@Override
 	public void prepareMappingModel(MappingModelCreationProcess creationProcess) {
 		if ( mappedByProperty != null && elementType instanceof EntityType entityType ) {
 			final String entityName = entityType.getAssociatedEntityName();
-			final PersistentClass persistentClass =
+			final var persistentClass =
 					creationProcess.getCreationContext().getBootModel()
 							.getEntityBinding( entityName );
 			if ( persistentClass.getRecursiveProperty( mappedByProperty ).getValue() instanceof Any ) {
@@ -553,8 +560,12 @@ public abstract class AbstractCollectionPersister
 				creationProcess.registerInitializationCallback(
 						"Where-fragment handling for ANY inverse mapping : " + navigableRole,
 						() -> {
-							final EntityPersister entityPersister = creationProcess.getEntityPersister( entityName );
-							delayedWhereFragmentProcessing( entityPersister, mappedByProperty, collectionBootDescriptor, creationProcess );
+							delayedWhereFragmentProcessing(
+									creationProcess.getEntityPersister( entityName ),
+									mappedByProperty,
+									collectionBootDescriptor,
+									creationProcess
+							);
 							buildStaticWhereFragmentSensitiveSql();
 							collectionBootDescriptor = null;
 							return true;
@@ -567,8 +578,9 @@ public abstract class AbstractCollectionPersister
 		if ( isNotEmpty( collectionBootDescriptor.getWhere() ) ) {
 			hasWhere = true;
 			sqlWhereString = "(" + collectionBootDescriptor.getWhere() + ")";
-			sqlWhereStringTemplate = renderWhereStringTemplate( sqlWhereString, dialect,
-					creationProcess.getCreationContext().getTypeConfiguration() );
+			sqlWhereStringTemplate =
+					renderWhereStringTemplate( sqlWhereString, dialect,
+							creationProcess.getCreationContext().getTypeConfiguration() );
 		}
 		buildStaticWhereFragmentSensitiveSql();
 		collectionBootDescriptor = null;
@@ -580,14 +592,14 @@ public abstract class AbstractCollectionPersister
 			Collection collectionBootDescriptor,
 			MappingModelCreationProcess creationProcess) {
 
-		final AttributeMapping mappedByAttribute = resolveMappedBy( entityPersister, mappedByProperty );
-		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
 		final String where;
-		if ( mappedByAttribute instanceof DiscriminatedAssociationAttributeMapping anyMapping ) {
-			final DiscriminatorMapping discriminatorMapping = anyMapping.getDiscriminatorMapping();
-			final DiscriminatorValueDetails discriminatorValueDetails =
+		if ( resolveMappedBy( entityPersister, mappedByProperty )
+					instanceof DiscriminatedAssociationAttributeMapping anyMapping ) {
+			final var discriminatorMapping = anyMapping.getDiscriminatorMapping();
+			final var discriminatorValueDetails =
 					discriminatorMapping.getValueConverter()
 							.getDetailsForEntityName( ownerPersister.getEntityName() );
+			final var creationContext = creationProcess.getCreationContext();
 			//noinspection unchecked
 			final String discriminatorLiteral =
 					discriminatorMapping.getUnderlyingJdbcMapping()
@@ -606,8 +618,9 @@ public abstract class AbstractCollectionPersister
 		if ( isNotEmpty( where ) ) {
 			hasWhere = true;
 			sqlWhereString = "(" + where + ")";
-			sqlWhereStringTemplate = renderWhereStringTemplate( sqlWhereString, dialect,
-					creationContext.getTypeConfiguration() );
+			sqlWhereStringTemplate =
+					renderWhereStringTemplate( sqlWhereString, dialect,
+							creationProcess.getCreationContext().getTypeConfiguration() );
 		}
 	}
 
@@ -622,32 +635,31 @@ public abstract class AbstractCollectionPersister
 	}
 
 	private static AttributeMapping resolveMappedBy(EntityPersister entityPersister, String mappedByProperty) {
-		final StringTokenizer propertyPathParts = new StringTokenizer( mappedByProperty, ".", false );
-		assert propertyPathParts.countTokens() > 0;
-
-		if ( propertyPathParts.countTokens() == 1 ) {
+		final var propertyPathParts = new StringTokenizer( mappedByProperty, ".", false );
+		final int tokenCount = propertyPathParts.countTokens();
+		assert tokenCount > 0;
+		if ( tokenCount == 1 ) {
 			return entityPersister.findAttributeMapping( propertyPathParts.nextToken() );
 		}
-
-		ManagedMappingType source = entityPersister;
-		while ( propertyPathParts.hasMoreTokens() ) {
-			final String partName = propertyPathParts.nextToken();
-			final AttributeMapping namedPart = source.findAttributeMapping( partName );
-			if ( !propertyPathParts.hasMoreTokens() ) {
-				return namedPart;
+		else {
+			ManagedMappingType source = entityPersister;
+			while ( propertyPathParts.hasMoreTokens() ) {
+				final String partName = propertyPathParts.nextToken();
+				final var namedPart = source.findAttributeMapping( partName );
+				if ( !propertyPathParts.hasMoreTokens() ) {
+					return namedPart;
+				}
+				source = (ManagedMappingType) namedPart.getPartMappingType();
 			}
-
-			source = (ManagedMappingType) namedPart.getPartMappingType();
+			throw new MappingException(
+					String.format(
+							Locale.ROOT,
+							"Unable to resolve mapped-by path : (%s) %s",
+							entityPersister.getEntityName(),
+							mappedByProperty
+					)
+			);
 		}
-
-		throw new MappingException(
-				String.format(
-						Locale.ROOT,
-						"Unable to resolve mapped-by path : (%s) %s",
-						entityPersister.getEntityName(),
-						mappedByProperty
-				)
-		);
 	}
 
 	private BeforeExecutionGenerator createGenerator(RuntimeModelCreationContext context, IdentifierCollection collection) {
@@ -661,7 +673,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	private boolean shouldUseShallowCacheLayout(CacheLayout collectionQueryCacheLayout, SessionFactoryOptions options) {
-		final CacheLayout queryCacheLayout =
+		final var queryCacheLayout =
 				collectionQueryCacheLayout == null
 						? options.getQueryCacheLayout()
 						: collectionQueryCacheLayout;
@@ -700,7 +712,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	private NamedQueryMemento<?> getNamedQueryMemento(MetadataImplementor bootModel) {
-		final NamedQueryMemento<?> memento =
+		final var memento =
 				factory.getQueryEngine().getNamedObjectRepository()
 						.resolve( factory, bootModel, queryLoaderName );
 		if ( memento == null ) {
@@ -714,19 +726,21 @@ public abstract class AbstractCollectionPersister
 		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 			MODEL_MUTATION_LOGGER.tracef( "Static SQL for collection: %s", getRole() );
 
-			final JdbcMutationOperation insertRowOperation = getRowMutationOperations().getInsertRowOperation();
+			final var rowMutationOperations = getRowMutationOperations();
+
+			final var insertRowOperation = rowMutationOperations.getInsertRowOperation();
 			final String insertRowSql = insertRowOperation != null ? insertRowOperation.getSqlString() : null;
 			if ( insertRowSql != null ) {
 				MODEL_MUTATION_LOGGER.tracef( " Row insert: %s", insertRowSql );
 			}
 
-			final JdbcMutationOperation updateRowOperation = getRowMutationOperations().getUpdateRowOperation();
+			final var updateRowOperation = rowMutationOperations.getUpdateRowOperation();
 			final String updateRowSql = updateRowOperation != null ? updateRowOperation.getSqlString() : null;
 			if ( updateRowSql != null ) {
 				MODEL_MUTATION_LOGGER.tracef( " Row update: %s", updateRowSql );
 			}
 
-			final JdbcMutationOperation deleteRowOperation = getRowMutationOperations().getDeleteRowOperation();
+			final var deleteRowOperation = rowMutationOperations.getDeleteRowOperation();
 			final String deleteRowSql = deleteRowOperation != null ? deleteRowOperation.getSqlString() : null;
 			if ( deleteRowSql != null ) {
 				MODEL_MUTATION_LOGGER.tracef( " Row delete: %s", deleteRowSql );
@@ -774,9 +788,9 @@ public abstract class AbstractCollectionPersister
 			return getCollectionLoader();
 		}
 		else {
-			final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
+			final var influencers = session.getLoadQueryInfluencers();
 			if ( influencers.effectiveSubselectFetchEnabled( this ) ) {
-				final CollectionLoader subSelectLoader = resolveSubSelectLoader( key, session );
+				final var subSelectLoader = resolveSubSelectLoader( key, session );
 				if ( subSelectLoader != null ) {
 					return subSelectLoader;
 				}
@@ -788,8 +802,8 @@ public abstract class AbstractCollectionPersister
 	}
 
 	private CollectionLoader resolveSubSelectLoader(Object key, SharedSessionContractImplementor session) {
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final SubselectFetch subselect =
+		final var persistenceContext = session.getPersistenceContextInternal();
+		final var subselect =
 				persistenceContext.getBatchFetchQueue()
 						.getSubselect( session.generateEntityKey( key, getOwnerEntityPersister() ) );
 		if ( subselect == null ) {
@@ -916,9 +930,9 @@ public abstract class AbstractCollectionPersister
 	 */
 	@Override
 	public String selectFragment(String alias, String columnSuffix) {
-		final PluralAttributeMapping attributeMapping = getAttributeMapping();
-		final QuerySpec rootQuerySpec = new QuerySpec( true );
-		final LoaderSqlAstCreationState sqlAstCreationState = new LoaderSqlAstCreationState(
+		final var attributeMapping = getAttributeMapping();
+		final var rootQuerySpec = new QuerySpec( true );
+		final var sqlAstCreationState = new LoaderSqlAstCreationState(
 				rootQuerySpec,
 				new SqlAliasBaseManager(),
 				new SimpleFromClauseAccessImpl(),
@@ -929,8 +943,8 @@ public abstract class AbstractCollectionPersister
 				factory.getSqlTranslationEngine()
 		);
 
-		final NavigablePath entityPath = new NavigablePath( attributeMapping.getRootPathName() );
-		final TableGroup rootTableGroup = attributeMapping.createRootTableGroup(
+		final var entityPath = new NavigablePath( attributeMapping.getRootPathName() );
+		final var rootTableGroup = attributeMapping.createRootTableGroup(
 				true,
 				entityPath,
 				null,
@@ -945,15 +959,15 @@ public abstract class AbstractCollectionPersister
 		attributeMapping.createDomainResult( entityPath, rootTableGroup, null, sqlAstCreationState );
 
 		// Wrap expressions with aliases
-		final SelectClause selectClause = rootQuerySpec.getSelectClause();
-		final java.util.List<SqlSelection> sqlSelections = selectClause.getSqlSelections();
+		final var sqlSelections = rootQuerySpec.getSelectClause().getSqlSelections();
 		int i = 0;
 		for ( String keyAlias : keyColumnAliases ) {
 			sqlSelections.set(
 					i,
 					new SqlSelectionImpl(
 							i,
-							new AliasedExpression( sqlSelections.get( i ).getExpression(), keyAlias + columnSuffix )
+							new AliasedExpression( sqlSelections.get( i ).getExpression(),
+									keyAlias + columnSuffix )
 					)
 			);
 			i++;
@@ -965,7 +979,8 @@ public abstract class AbstractCollectionPersister
 						i,
 						new SqlSelectionImpl(
 								i,
-								new AliasedExpression( sqlSelections.get( i ).getExpression(), indexAlias + columnSuffix )
+								new AliasedExpression( sqlSelections.get( i ).getExpression(),
+										indexAlias + columnSuffix )
 						)
 				);
 				i++;
@@ -976,25 +991,27 @@ public abstract class AbstractCollectionPersister
 					i,
 					new SqlSelectionImpl(
 							i,
-							new AliasedExpression( sqlSelections.get( i ).getExpression(), identifierColumnAlias + columnSuffix )
+							new AliasedExpression( sqlSelections.get( i ).getExpression(),
+									identifierColumnAlias + columnSuffix )
 					)
 			);
 			i++;
 		}
 
 		for ( int columnIndex = 0; i < sqlSelections.size(); i++, columnIndex++ ) {
-			final SqlSelection sqlSelection = sqlSelections.get( i );
+			final var sqlSelection = sqlSelections.get( i );
 			sqlSelections.set(
 					i,
 					new SqlSelectionImpl(
 							sqlSelection.getValuesArrayPosition(),
-							new AliasedExpression( sqlSelection.getExpression(), elementColumnAliases[columnIndex] + columnSuffix )
+							new AliasedExpression( sqlSelection.getExpression(),
+									elementColumnAliases[columnIndex] + columnSuffix )
 					)
 			);
 		}
 
 		final String sql =
-				getFactory().getJdbcServices().getDialect().getSqlAstTranslatorFactory()
+				getSqlAstTranslatorFactory()
 						.buildSelectTranslator( getFactory(), new SelectStatement( rootQuerySpec ) )
 						.translate( null, QueryOptions.NONE )
 						.getSqlString();
@@ -1005,9 +1022,9 @@ public abstract class AbstractCollectionPersister
 	}
 
 	protected String generateSelectSizeString(boolean isIntegerIndexed) {
-		String selectValue = isIntegerIndexed ?
-				"max(" + getIndexColumnNames()[0] + ") + 1" : // lists, arrays
-				"count(" + getElementColumnNames()[0] + ")"; // sets, maps, bags
+		final String selectValue = isIntegerIndexed
+				? "max(" + getIndexColumnNames()[0] + ") + 1"  // lists, arrays
+				: "count(" + getElementColumnNames()[0] + ")"; // sets, maps, bags
 		return new SimpleSelect( getFactory() )
 				.setTableName( getTableName() )
 				.addRestriction( getKeyColumnNames() )
@@ -1020,14 +1037,16 @@ public abstract class AbstractCollectionPersister
 		if ( !hasIndex() ) {
 			return null;
 		}
-		return new SimpleSelect( getFactory() )
-				.setTableName( getTableName() )
-				.addRestriction( getKeyColumnNames() )
-				.addRestriction( getIndexColumnNames() )
-				.addRestriction( indexFormulas )
-				.addWhereToken( sqlWhereString )
-				.addColumn( "1" )
-				.toStatementString();
+		else {
+			return new SimpleSelect( getFactory() )
+					.setTableName( getTableName() )
+					.addRestriction( getKeyColumnNames() )
+					.addRestriction( getIndexColumnNames() )
+					.addRestriction( indexFormulas )
+					.addWhereToken( sqlWhereString )
+					.addColumn( "1" )
+					.toStatementString();
+		}
 	}
 
 
@@ -1160,34 +1179,30 @@ public abstract class AbstractCollectionPersister
 		return hasWhere || manyToManyWhereTemplate != null;
 	}
 
+	private static String aliasForWhereRestriction(TableReference tableReference, boolean useQualifier) {
+		if ( tableReference == null ) {
+			return null;
+		}
+		else if ( useQualifier && tableReference.getIdentificationVariable() != null ) {
+			return tableReference.getIdentificationVariable();
+		}
+		else {
+			return tableReference.getTableId();
+		}
+	}
+
 	@Override
 	public void applyWhereRestrictions(
 			Consumer<Predicate> predicateConsumer,
 			TableGroup tableGroup,
 			boolean useQualifier,
 			SqlAstCreationState creationState) {
-		final TableReference tableReference;
-		if ( isManyToMany() ) {
-			tableReference = tableGroup.getPrimaryTableReference();
-		}
-		else if ( elementPersister != null ) {
-			tableReference = tableGroup.getTableReference( tableGroup.getNavigablePath(), elementPersister.getTableName() );
-		}
-		else {
-			tableReference = tableGroup.getTableReference( tableGroup.getNavigablePath(), qualifiedTableName );
-		}
-
-		final String alias;
-		if ( tableReference == null ) {
-			alias = null;
-		}
-		else if ( useQualifier && tableReference.getIdentificationVariable() != null ) {
-			alias = tableReference.getIdentificationVariable();
-		}
-		else {
-			alias = tableReference.getTableId();
-		}
-
+		final var tableReference =
+				isManyToMany()
+						? tableGroup.getPrimaryTableReference()
+						: tableGroup.getTableReference( tableGroup.getNavigablePath(),
+								elementPersister != null ? elementPersister.getTableName() : qualifiedTableName );
+		final String alias = aliasForWhereRestriction( tableReference, useQualifier );
 		applyWhereFragments( predicateConsumer, alias, tableGroup, creationState );
 	}
 
@@ -1203,16 +1218,12 @@ public abstract class AbstractCollectionPersister
 	 * Applies all defined {@link org.hibernate.annotations.SQLRestriction}
 	 */
 	private static void applyWhereFragments(Consumer<Predicate> predicateConsumer, String alias, String template) {
-		if ( template == null ) {
-			return;
+		if ( template != null ) {
+			final String fragment = replace( template, Template.TEMPLATE, alias );
+			if ( !isEmpty( fragment ) ) {
+				predicateConsumer.accept( new SqlFragmentPredicate( fragment ) );
+			}
 		}
-
-		final String fragment = replace( template, Template.TEMPLATE, alias );
-		if ( isEmpty( fragment ) ) {
-			return;
-		}
-
-		predicateConsumer.accept( new SqlFragmentPredicate( fragment ) );
 	}
 
 	@Override
@@ -1246,50 +1257,32 @@ public abstract class AbstractCollectionPersister
 			Map<String, Filter> enabledFilters,
 			Set<String> treatAsDeclarations,
 			SqlAstCreationState creationState) {
-		if ( manyToManyFilterHelper == null && manyToManyWhereTemplate == null ) {
-			return;
-		}
-
-
-		if ( manyToManyFilterHelper != null ) {
-			final FilterAliasGenerator aliasGenerator = elementPersister.getFilterAliasGenerator( tableGroup );
-			manyToManyFilterHelper.applyEnabledFilters(
-					predicateConsumer,
-					aliasGenerator,
-					enabledFilters,
-					false,
-					tableGroup,
-					creationState
-			);
-		}
-
-		if ( manyToManyWhereString != null ) {
-			final TableReference tableReference = tableGroup.resolveTableReference( elementPersister.getTableName() );
-
-			final String alias;
-			if ( tableReference == null ) {
-				alias = null;
+		if ( manyToManyFilterHelper != null || manyToManyWhereTemplate != null ) {
+			if ( manyToManyFilterHelper != null ) {
+				manyToManyFilterHelper.applyEnabledFilters(
+						predicateConsumer,
+						elementPersister.getFilterAliasGenerator( tableGroup ),
+						enabledFilters,
+						false,
+						tableGroup,
+						creationState
+				);
 			}
-			else if ( useQualifier && tableReference.getIdentificationVariable() != null ) {
-				alias = tableReference.getIdentificationVariable();
+			if ( manyToManyWhereString != null ) {
+				final var tableReference = tableGroup.resolveTableReference( elementPersister.getTableName() );
+				final String alias = aliasForWhereRestriction( tableReference, useQualifier );
+				applyWhereFragments( predicateConsumer, alias, manyToManyWhereTemplate );
 			}
-			else {
-				alias = tableReference.getTableId();
-			}
-
-			applyWhereFragments( predicateConsumer, alias, manyToManyWhereTemplate );
 		}
 	}
 
 	@Override
 	public String getManyToManyFilterFragment(TableGroup tableGroup, Map<String, Filter> enabledFilters) {
-		final StringBuilder fragment = new StringBuilder();
-
+		final var fragment = new StringBuilder();
 		if ( manyToManyFilterHelper != null ) {
 			manyToManyFilterHelper.render( fragment,
 					elementPersister.getFilterAliasGenerator( tableGroup ), enabledFilters );
 		}
-
 		if ( manyToManyWhereString != null ) {
 			if ( !fragment.isEmpty() ) {
 				fragment.append( " and " );
@@ -1299,7 +1292,6 @@ public abstract class AbstractCollectionPersister
 					tableGroup.resolveTableReference( elementPersister.getTableName() )
 							.getIdentificationVariable() ) );
 		}
-
 		return fragment.toString();
 	}
 
@@ -1378,7 +1370,7 @@ public abstract class AbstractCollectionPersister
 		}
 		else {
 			final String[] result = new String[rawAliases.length];
-			final Alias alias = new Alias( suffix );
+			final var alias = new Alias( suffix );
 			for ( int i = 0; i < rawAliases.length; i++ ) {
 				result[i] = alias.toUnquotedAliasString( rawAliases[i] );
 			}
@@ -1388,7 +1380,6 @@ public abstract class AbstractCollectionPersister
 
 	// TODO: formulas ?
 	public void initCollectionPropertyMap() {
-
 		initCollectionPropertyMap( "key", keyType, keyColumnAliases );
 		initCollectionPropertyMap( "element", elementType, elementColumnAliases );
 		if ( hasIndex() ) {
@@ -1400,39 +1391,38 @@ public abstract class AbstractCollectionPersister
 	}
 
 	private void initCollectionPropertyMap(String aliasName, Type type, String[] columnAliases) {
-
 		collectionPropertyColumnAliases.put( aliasName, columnAliases );
 
 		//TODO: this code is almost certainly obsolete and can be removed
 		if ( type instanceof ComponentType || type instanceof AnyType ) {
-			CompositeType ct = (CompositeType) type;
-			String[] propertyNames = ct.getPropertyNames();
+			var compositeType = (CompositeType) type;
+			final String[] propertyNames = compositeType.getPropertyNames();
 			for ( int i = 0; i < propertyNames.length; i++ ) {
-				String name = propertyNames[i];
+				final String name = propertyNames[i];
 				collectionPropertyColumnAliases.put( aliasName + "." + name, new String[] {columnAliases[i]} );
 			}
 		}
-
 	}
 
 	@Override
 	public int getSize(Object key, SharedSessionContractImplementor session) {
 		try {
-			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-			final PreparedStatement st = jdbcCoordinator.getStatementPreparer().prepareStatement( sqlSelectSizeString );
+			final var jdbcCoordinator = session.getJdbcCoordinator();
+			final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sqlSelectSizeString );
+			final var resourceRegistry = jdbcCoordinator.getLogicalConnection().getResourceRegistry();
 			try {
-				getKeyType().nullSafeSet( st, key, 1, session );
-				ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st, sqlSelectSizeString );
+				getKeyType().nullSafeSet( statement, key, 1, session );
+				final var resultSet = jdbcCoordinator.getResultSetReturn().extract( statement, sqlSelectSizeString );
 				try {
 					final int baseIndex = Math.max( attributeMapping.getIndexMetadata().getListIndexBase(), 0 );
-					return rs.next() ? rs.getInt( 1 ) - baseIndex : 0;
+					return resultSet.next() ? resultSet.getInt( 1 ) - baseIndex : 0;
 				}
 				finally {
-					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( rs, st );
+					resourceRegistry.release( resultSet, statement );
 				}
 			}
 			finally {
-				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( st );
+				resourceRegistry.release( statement );
 				jdbcCoordinator.afterStatementExecution();
 			}
 		}
@@ -1458,24 +1448,25 @@ public abstract class AbstractCollectionPersister
 
 	private boolean exists(Object key, Object indexOrElement, Type indexOrElementType, String sql, SharedSessionContractImplementor session) {
 		try {
-			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-			final PreparedStatement st = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
+			final var jdbcCoordinator = session.getJdbcCoordinator();
+			final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
+			final var resourceRegistry = jdbcCoordinator.getLogicalConnection().getResourceRegistry();
 			try {
-				getKeyType().nullSafeSet( st, key, 1, session );
-				indexOrElementType.nullSafeSet( st, indexOrElement, keyColumnNames.length + 1, session );
-				final ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st, sql );
+				getKeyType().nullSafeSet( statement, key, 1, session );
+				indexOrElementType.nullSafeSet( statement, indexOrElement, keyColumnNames.length + 1, session );
+				final var resultSet = jdbcCoordinator.getResultSetReturn().extract( statement, sql );
 				try {
-					return rs.next();
+					return resultSet.next();
 				}
 				finally {
-					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( rs, st );
+					resourceRegistry.release( resultSet, statement );
 				}
 			}
 			catch ( TransientObjectException e ) {
 				return false;
 			}
 			finally {
-				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( st );
+				resourceRegistry.release( statement );
 				jdbcCoordinator.afterStatementExecution();
 			}
 		}
@@ -1491,7 +1482,7 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public Object getElementByIndex(Object key, Object index, SharedSessionContractImplementor session, Object owner) {
-		final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
+		final var influencers = session.getLoadQueryInfluencers();
 		if ( isAffectedByFilters( new HashSet<>(), attributeMapping.getElementDescriptor(), influencers, true ) ) {
 			return new CollectionElementLoaderByIndex( attributeMapping, influencers, factory )
 					.load( key, index, session );
@@ -1572,10 +1563,10 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 		if ( influencers.hasEnabledFilters() ) {
-			final Map<String, Filter> enabledFilters = influencers.getEnabledFilters();
+			final var enabledFilters = influencers.getEnabledFilters();
 			return filterHelper != null && filterHelper.isAffectedBy( enabledFilters )
-					|| manyToManyFilterHelper != null && manyToManyFilterHelper.isAffectedBy( enabledFilters )
-					|| isKeyOrElementAffectedByFilters( new HashSet<>(), influencers, onlyApplyForLoadByKeyFilters);
+				|| manyToManyFilterHelper != null && manyToManyFilterHelper.isAffectedBy( enabledFilters )
+				|| isKeyOrElementAffectedByFilters( new HashSet<>(), influencers, onlyApplyForLoadByKeyFilters);
 		}
 		else {
 			return false;
@@ -1588,10 +1579,10 @@ public abstract class AbstractCollectionPersister
 			LoadQueryInfluencers influencers,
 			boolean onlyApplyForLoadByKeyFilters) {
 		if ( influencers.hasEnabledFilters() ) {
-			final Map<String, Filter> enabledFilters = influencers.getEnabledFilters();
+			final var enabledFilters = influencers.getEnabledFilters();
 			return filterHelper != null && filterHelper.isAffectedBy( enabledFilters )
-					|| manyToManyFilterHelper != null && manyToManyFilterHelper.isAffectedBy( enabledFilters )
-					|| isKeyOrElementAffectedByFilters( visitedTypes, influencers, onlyApplyForLoadByKeyFilters);
+				|| manyToManyFilterHelper != null && manyToManyFilterHelper.isAffectedBy( enabledFilters )
+				|| isKeyOrElementAffectedByFilters( visitedTypes, influencers, onlyApplyForLoadByKeyFilters);
 		}
 		else {
 			return false;
@@ -1603,7 +1594,7 @@ public abstract class AbstractCollectionPersister
 			LoadQueryInfluencers influencers,
 			boolean onlyApplyForLoadByKey) {
 		return isAffectedByFilters( visitedTypes, attributeMapping.getIndexDescriptor(), influencers, onlyApplyForLoadByKey )
-				|| isAffectedByFilters( visitedTypes, attributeMapping.getElementDescriptor(), influencers, onlyApplyForLoadByKey );
+			|| isAffectedByFilters( visitedTypes, attributeMapping.getElementDescriptor(), influencers, onlyApplyForLoadByKey );
 	}
 
 	private boolean isAffectedByFilters(
@@ -1616,8 +1607,8 @@ public abstract class AbstractCollectionPersister
 					.isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey );
 		}
 		else if ( collectionPart instanceof EmbeddedCollectionPart embeddedCollectionPart ) {
-			final EmbeddableMappingType type = embeddedCollectionPart.getEmbeddableTypeDescriptor();
-			return type.isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey );
+			return embeddedCollectionPart.getEmbeddableTypeDescriptor()
+					.isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey );
 		}
 		else {
 			return false;
@@ -1719,14 +1710,12 @@ public abstract class AbstractCollectionPersister
 	}
 
 	private JdbcDeleteMutation buildCustomSqlDeleteAllOperation(MutatingTableReference tableReference) {
-		final PluralAttributeMapping attributeMapping = getAttributeMapping();
-		final ForeignKeyDescriptor keyDescriptor = attributeMapping.getKeyDescriptor();
-
-		final ColumnValueParameterList parameterBinders =
+		final var attributeMapping = getAttributeMapping();
+		final var keyDescriptor = attributeMapping.getKeyDescriptor();
+		final var parameterBinders =
 				new ColumnValueParameterList( tableReference, ParameterUsage.RESTRICT, keyDescriptor.getJdbcTypeCount() );
 		keyDescriptor.getKeyPart().forEachSelectable( parameterBinders );
-
-		final TableMapping tableMapping = tableReference.getTableMapping();
+		final var tableMapping = tableReference.getTableMapping();
 		return new JdbcDeleteMutation(
 				tableMapping,
 				this,
@@ -1738,23 +1727,20 @@ public abstract class AbstractCollectionPersister
 	}
 
 	private JdbcMutationOperation buildGeneratedDeleteAllOperation(MutatingTableReference tableReference) {
-		return getFactory().getJdbcServices().getDialect().getSqlAstTranslatorFactory()
+		return getSqlAstTranslatorFactory()
 				.buildModelMutationTranslator( generateDeleteAllAst( tableReference ), getFactory() )
 				.translate( null, MutationQueryOptions.INSTANCE );
 	}
 
 	public RestrictedTableMutation<JdbcMutationOperation> generateDeleteAllAst(MutatingTableReference tableReference) {
 		assert getAttributeMapping() != null;
-
-		final ForeignKeyDescriptor fkDescriptor = getAttributeMapping().getKeyDescriptor();
-		assert fkDescriptor != null;
-
-		final int keyColumnCount = fkDescriptor.getJdbcTypeCount();
-		final ColumnValueParameterList parameterBinders =
+		final var foreignKeyDescriptor = getAttributeMapping().getKeyDescriptor();
+		assert foreignKeyDescriptor != null;
+		final int keyColumnCount = foreignKeyDescriptor.getJdbcTypeCount();
+		final var parameterBinders =
 				new ColumnValueParameterList( tableReference, ParameterUsage.RESTRICT, keyColumnCount );
-		final java.util.List<ColumnValueBinding> restrictionBindings = arrayList( keyColumnCount );
-		applyKeyRestrictions( tableReference, parameterBinders, restrictionBindings );
-
+		final List<ColumnValueBinding> restrictionBindings = arrayList( keyColumnCount );
+		applyKeyRestrictions( parameterBinders, restrictionBindings );
 		//noinspection unchecked,rawtypes
 		return (RestrictedTableMutation) new TableDeleteStandard(
 				tableReference,
@@ -1768,16 +1754,13 @@ public abstract class AbstractCollectionPersister
 	}
 
 	protected void applyKeyRestrictions(
-			MutatingTableReference tableReference,
 			ColumnValueParameterList parameterList,
-			java.util.List<ColumnValueBinding> restrictionBindings) {
-
-		final ForeignKeyDescriptor fkDescriptor = getAttributeMapping().getKeyDescriptor();
-		assert fkDescriptor != null;
-
-		fkDescriptor.getKeyPart().forEachSelectable( parameterList );
-		for ( ColumnValueParameter columnValueParameter : parameterList ) {
-			final ColumnReference columnReference = columnValueParameter.getColumnReference();
+			List<ColumnValueBinding> restrictionBindings) {
+		final var foreignKeyDescriptor = getAttributeMapping().getKeyDescriptor();
+		assert foreignKeyDescriptor != null;
+		foreignKeyDescriptor.getKeyPart().forEachSelectable( parameterList );
+		for ( var columnValueParameter : parameterList ) {
+			final var columnReference = columnValueParameter.getColumnReference();
 			restrictionBindings.add(
 					new ColumnValueBinding(
 							columnReference,

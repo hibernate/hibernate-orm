@@ -38,7 +38,6 @@ public class EnhancedSetterMethodImpl extends SetterMethodImpl {
 	@Override
 	public void set(Object target, @Nullable Object value) {
 		super.set( target, value );
-
 		handleEnhancedInjection( target, value, enhancementState, propertyName );
 	}
 

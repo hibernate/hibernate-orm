@@ -22,7 +22,6 @@ import org.hibernate.UnresolvableObjectException;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.EntityKey;
@@ -172,6 +171,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public Object insert(String entityName, Object entity) {
 		checkOpen();
+		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id;
 		final Object[] state = persister.getValues( entity );
@@ -311,13 +311,14 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void delete(String entityName, Object entity) {
 		checkOpen();
+		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
 		final Object version = persister.getVersion( entity );
 		if ( !firePreDelete(entity, id, persister) ) {
 			getInterceptor().onDelete( entity, id, persister.getPropertyNames(), persister.getPropertyTypes() );
 			removeCollections( entity, id, persister );
-			final Object ck = lockCacheItem( id, version, persister );
+			final Object cacheKey = lockCacheItem( id, version, persister );
 			final var eventMonitor = getEventMonitor();
 			final var event = eventMonitor.beginEntityDeleteEvent();
 			boolean success = false;
@@ -328,7 +329,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			finally {
 				eventMonitor.completeEntityDeleteEvent( event, id, persister.getEntityName(), success, this );
 			}
-			removeCacheItem( ck, persister );
+			removeCacheItem( cacheKey, persister );
 			firePostDelete( entity, id, persister );
 			final var statistics = getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
@@ -388,6 +389,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void update(String entityName, Object entity) {
 		checkOpen();
+		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
 		final Object[] state = persister.getValues( entity );
@@ -403,7 +405,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		if ( !firePreUpdate(entity, id, state, persister) ) {
 			getInterceptor().onUpdate( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
-			final Object ck = lockCacheItem( id, oldVersion, persister );
+			final Object cacheKey = lockCacheItem( id, oldVersion, persister );
 			final var eventMonitor = getEventMonitor();
 			final var event = eventMonitor.beginEntityUpdateEvent();
 			boolean success = false;
@@ -414,7 +416,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			finally {
 				eventMonitor.completeEntityUpdateEvent( event, id, persister.getEntityName(), success, this );
 			}
-			removeCacheItem( ck, persister );
+			removeCacheItem( cacheKey, persister );
 			removeAndRecreateCollections( entity, id, persister );
 			firePostUpdate( entity, id, state, persister );
 			final var statistics = getStatistics();
@@ -474,13 +476,14 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void upsert(String entityName, Object entity) {
 		checkOpen();
+		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id = idToUpsert( entity, persister );
 		final Object[] state = persister.getValues( entity );
 		if ( !firePreUpsert(entity, id, state, persister) ) {
 			getInterceptor().onUpsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
 			final Object oldVersion = versionToUpsert( entity, persister, state );
-			final Object ck = lockCacheItem( id, oldVersion, persister );
+			final Object cacheKey = lockCacheItem( id, oldVersion, persister );
 			final var eventMonitor = getEventMonitor();
 			final var event = eventMonitor.beginEntityUpsertEvent();
 			boolean success = false;
@@ -491,7 +494,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			finally {
 				eventMonitor.completeEntityUpsertEvent( event, id, persister.getEntityName(), success, this );
 			}
-			removeCacheItem( ck, persister );
+			removeCacheItem( cacheKey, persister );
 			final var statistics = getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.upsertEntity( persister.getEntityName() );
@@ -515,7 +518,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				}
 				// this is a nonsense but avoids setting version restriction
 				// parameter to null later on deep in the guts
-				return state[persister.getVersionProperty()];
+				return state[persister.getVersionPropertyIndex()];
 			}
 			else {
 				final Object newVersion = incrementVersion( entity, oldVersion, persister, this );
@@ -677,14 +680,14 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	// collections ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	// Hibernate Reactive overrides this
+	// Hibernate Reactive calls this
 	protected void forEachOwnedCollection(
 			Object entity, Object key,
 			EntityPersister persister, BiConsumer<CollectionPersister, PersistentCollection<?>> action) {
 		persister.visitAttributeMappings( attribute -> {
 			if ( attribute.isPluralAttributeMapping() ) {
 				final var descriptor = attribute.asPluralAttributeMapping().getCollectionDescriptor();
-				final Object ck = lockCacheItem( key, descriptor );
+				final Object cacheKey = lockCacheItem( key, descriptor );
 				if ( !descriptor.isInverse() ) {
 					final Object value = attribute.getPropertyAccess().getGetter().get(entity);
 					final PersistentCollection<?> collection;
@@ -698,11 +701,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 						collection =
 								value == null
 										? instantiateEmpty( key, descriptor )
-										: wrap( descriptor, value );
+										: wrap( descriptor, value, entity );
 					}
 					action.accept( descriptor, collection );
 				}
-				removeCacheItem( ck, descriptor );
+				removeCacheItem( cacheKey, descriptor );
 			}
 		} );
 	}
@@ -712,12 +715,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return descriptor.getCollectionSemantics().instantiateWrapper(key, descriptor, this);
 	}
 
-	//TODO: is this the right way to do this?
-	// Hibernate Reactive calls this
 	@SuppressWarnings({"rawtypes", "unchecked"})
-	protected PersistentCollection<?> wrap(CollectionPersister descriptor, Object collection) {
+	protected PersistentCollection<?> wrap(CollectionPersister descriptor, Object collection, Object owner) {
 		final CollectionSemantics collectionSemantics = descriptor.getCollectionSemantics();
-		return collectionSemantics.wrap(collection, descriptor, this);
+		var wrapped = collectionSemantics.wrap( collection, descriptor, this );
+		wrapped.setOwner( owner );
+		return wrapped;
 	}
 
 	// loading ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -911,13 +914,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		if ( persister.canWriteToCache() ) {
 			final var cacheAccess = persister.getCacheAccessStrategy();
 			if ( cacheAccess != null ) {
-				final Object ck = cacheAccess.generateCacheKey(
+				final Object cacheKey = cacheAccess.generateCacheKey(
 						id,
 						persister,
 						getFactory(),
 						getTenantIdentifier()
 				);
-				cacheAccess.evict( ck );
+				cacheAccess.evict( cacheKey );
 			}
 		}
 
@@ -1009,8 +1012,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 			// first, check to see if we can use "bytecode proxies"
 
-			final var entityMetamodel = persister.getEntityMetamodel();
-			final var enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
+			final var enhancementMetadata = persister.getBytecodeEnhancementMetadata();
 			if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
 				// if the entity defines a HibernateProxy factory, see if there is an
 				// existing proxy associated with the PC - and if so, use it
@@ -1027,14 +1029,14 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					}
 
 					// specialized handling for entities with subclasses with a HibernateProxy factory
-					if ( entityMetamodel.hasSubclasses() ) {
+					if ( persister.hasSubclasses() ) {
 						// entities with subclasses that define a ProxyFactory can create a HibernateProxy.
 						LOG.trace( "Creating a HibernateProxy for to-one association with subclasses to honor laziness" );
 						return createProxy( entityKey );
 					}
 					return enhancementMetadata.createEnhancedProxy( entityKey, false, this );
 				}
-				else if ( !entityMetamodel.hasSubclasses() ) {
+				else if ( !persister.hasSubclasses() ) {
 					return enhancementMetadata.createEnhancedProxy( entityKey, false, this );
 				}
 				// If we get here, then the entity class has subclasses and there is no HibernateProxy factory.
@@ -1358,48 +1360,48 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	protected Object lockCacheItem(Object id, Object previousVersion, EntityPersister persister) {
 		if ( persister.canWriteToCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey(
+			final Object cacheKey = cache.generateCacheKey(
 					id,
 					persister,
 					getFactory(),
 					getTenantIdentifier()
 			);
-			final SoftLock lock = cache.lockItem( this, ck, previousVersion );
-			afterCompletions.add( (success, session) -> cache.unlockItem( session, ck, lock ) );
-			return ck;
+			final var lock = cache.lockItem( this, cacheKey, previousVersion );
+			afterCompletions.add( (success, session) -> cache.unlockItem( session, cacheKey, lock ) );
+			return cacheKey;
 		}
 		else {
 			return null;
 		}
 	}
 
-	protected void removeCacheItem(Object ck, EntityPersister persister) {
+	protected void removeCacheItem(Object cacheKey, EntityPersister persister) {
 		if ( persister.canWriteToCache() ) {
-			persister.getCacheAccessStrategy().remove( this, ck );
+			persister.getCacheAccessStrategy().remove( this, cacheKey );
 		}
 	}
 
 	protected Object lockCacheItem(Object key, CollectionPersister persister) {
 		if ( persister.hasCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey(
+			final Object cacheKey = cache.generateCacheKey(
 					key,
 					persister,
 					getFactory(),
 					getTenantIdentifier()
 			);
-			final SoftLock lock = cache.lockItem( this, ck, null );
-			afterCompletions.add( (success, session) -> cache.unlockItem( this, ck, lock ) );
-			return ck;
+			final var lock = cache.lockItem( this, cacheKey, null );
+			afterCompletions.add( (success, session) -> cache.unlockItem( this, cacheKey, lock ) );
+			return cacheKey;
 		}
 		else {
 			return null;
 		}
 	}
 
-	protected void removeCacheItem(Object ck, CollectionPersister persister) {
+	protected void removeCacheItem(Object cacheKey, CollectionPersister persister) {
 		if ( persister.hasCache() ) {
-			persister.getCacheAccessStrategy().remove( this, ck );
+			persister.getCacheAccessStrategy().remove( this, cacheKey );
 		}
 	}
 

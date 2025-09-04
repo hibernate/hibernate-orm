@@ -26,6 +26,7 @@ import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
 import jakarta.persistence.TypedQuery;
+import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
@@ -639,8 +640,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return getJpaMetamodel().findEntityGraphsByJavaType( entityClass );
 	}
 
-	// todo : (5.2) review synchronizationType, persistenceContextType, transactionType usage
-
 	@Override
 	public Session createEntityManager() {
 		validateNotClosed();
@@ -1105,6 +1104,13 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return null;
 	}
 
+	private Object resolveTenantIdentifier() {
+		final var resolver = getCurrentTenantIdentifierResolver();
+		return resolver != null
+				? resolver.resolveCurrentTenantIdentifier()
+				: null;
+	}
+
 	public static class SessionBuilderImpl implements SessionBuilderImplementor, SessionCreationOptions {
 		private static final Logger log = CoreLogging.logger( SessionBuilderImpl.class );
 
@@ -1118,6 +1124,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		private boolean autoClose;
 		private boolean autoClear;
 		private Object tenantIdentifier;
+		private boolean readOnly;
+		private CacheMode cacheMode;
 		private boolean identifierRollback;
 		private TimeZone jdbcTimeZone;
 		private boolean explicitNoInterceptor;
@@ -1143,15 +1151,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			defaultBatchFetchSize = options.getDefaultBatchFetchSize();
 			subselectFetchEnabled = options.isSubselectFetchEnabled();
 			identifierRollback = options.isIdentifierRollbackEnabled();
+			cacheMode = options.getInitialSessionCacheMode();
 
-			final var currentTenantIdentifierResolver =
-					sessionFactory.getCurrentTenantIdentifierResolver();
-			if ( currentTenantIdentifierResolver != null ) {
-				tenantIdentifier = currentTenantIdentifierResolver.resolveCurrentTenantIdentifier();
-			}
+			tenantIdentifier = sessionFactory.resolveTenantIdentifier();
 			jdbcTimeZone = options.getJdbcTimeZone();
 		}
-
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// SessionCreationOptions
@@ -1226,6 +1230,16 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
+		public boolean isReadOnly() {
+			return readOnly;
+		}
+
+		@Override
+		public CacheMode getInitialCacheMode() {
+			return cacheMode;
+		}
+
+		@Override
 		public boolean isIdentifierRollbackEnabled() {
 			return identifierRollback;
 		}
@@ -1270,7 +1284,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
-		public SessionBuilder statementInspector(UnaryOperator<String> operator) {
+		public SessionBuilderImpl statementInspector(UnaryOperator<String> operator) {
 			this.statementInspector = operator::apply;
 			return this;
 		}
@@ -1288,7 +1302,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
-		public SessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode) {
+		public SessionBuilderImpl connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode) {
 			this.connectionHandlingMode = PhysicalConnectionHandlingMode.interpret( acquisitionMode, releaseMode);
 			return this;
 		}
@@ -1330,7 +1344,19 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
-		public SessionBuilder identifierRollback(boolean identifierRollback) {
+		public SessionBuilderImpl readOnly(boolean readOnly) {
+			this.readOnly = readOnly;
+			return this;
+		}
+
+		@Override
+		public SessionBuilder initialCacheMode(CacheMode cacheMode) {
+			this.cacheMode = cacheMode;
+			return this;
+		}
+
+		@Override
+		public SessionBuilderImpl identifierRollback(boolean identifierRollback) {
 			this.identifierRollback = identifierRollback;
 			return this;
 		}
@@ -1370,16 +1396,18 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		private final SessionFactoryImpl sessionFactory;
 		private StatementInspector statementInspector;
 		private Connection connection;
+		private PhysicalConnectionHandlingMode connectionHandlingMode;
 		private Object tenantIdentifier;
+		private boolean readOnly;
+		private CacheMode cacheMode;
 
 		public StatelessSessionBuilderImpl(SessionFactoryImpl sessionFactory) {
 			this.sessionFactory = sessionFactory;
-			this.statementInspector = sessionFactory.getSessionFactoryOptions().getStatementInspector();
-
-			final var tenantIdentifierResolver = sessionFactory.getCurrentTenantIdentifierResolver();
-			if ( tenantIdentifierResolver != null ) {
-				tenantIdentifier = tenantIdentifierResolver.resolveCurrentTenantIdentifier();
-			}
+			final var options = sessionFactory.getSessionFactoryOptions();
+			statementInspector = options.getStatementInspector();
+			cacheMode = options.getInitialSessionCacheMode();
+			tenantIdentifier = sessionFactory.resolveTenantIdentifier();
+			connectionHandlingMode = options.getPhysicalConnectionHandlingMode();
 		}
 
 		@Override
@@ -1393,6 +1421,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			return this;
 		}
 
+		@Override
+		public StatelessSessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode) {
+			this.connectionHandlingMode = PhysicalConnectionHandlingMode.interpret( acquisitionMode, releaseMode);
+			return this;
+		}
+
 		@Override @Deprecated
 		public StatelessSessionBuilder tenantIdentifier(String tenantIdentifier) {
 			this.tenantIdentifier = tenantIdentifier;
@@ -1402,6 +1436,18 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		public StatelessSessionBuilder tenantIdentifier(Object tenantIdentifier) {
 			this.tenantIdentifier = tenantIdentifier;
+			return this;
+		}
+
+		@Override
+		public StatelessSessionBuilder readOnly(boolean readOnly) {
+			this.readOnly = readOnly;
+			return this;
+		}
+
+		@Override
+		public StatelessSessionBuilder initialCacheMode(CacheMode cacheMode) {
+			this.cacheMode = cacheMode;
 			return this;
 		}
 
@@ -1471,13 +1517,23 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		@Override
 		public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
-			return sessionFactory.getSessionFactoryOptions().getPhysicalConnectionHandlingMode();
+			return connectionHandlingMode;
 		}
 
 		@Override
 		public String getTenantIdentifier() {
 			return tenantIdentifier == null ? null
 					: sessionFactory.getTenantIdentifierJavaType().toString( tenantIdentifier );
+		}
+
+		@Override
+		public boolean isReadOnly() {
+			return readOnly;
+		}
+
+		@Override
+		public CacheMode getInitialCacheMode() {
+			return cacheMode;
 		}
 
 		@Override
@@ -1516,6 +1572,17 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return tenantIdentifierJavaType;
 	}
 
+	boolean connectionProviderHandlesConnectionReadOnly() {
+		return multiTenantConnectionProvider != null
+				? multiTenantConnectionProvider.handlesConnectionReadOnly()
+				: connectionProvider.handlesConnectionReadOnly();
+	}
+
+	boolean connectionProviderHandlesConnectionSchema() {
+		return multiTenantConnectionProvider != null
+				? multiTenantConnectionProvider.handlesConnectionSchema()
+				: connectionProvider.handlesConnectionSchema();
+	}
 
 	// Serialization handling ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

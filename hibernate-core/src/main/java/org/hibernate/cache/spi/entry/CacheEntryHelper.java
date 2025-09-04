@@ -6,15 +6,18 @@ package org.hibernate.cache.spi.entry;
 
 import java.io.Serializable;
 
+import org.hibernate.Internal;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.type.Type;
 
 /**
  * Operations for assembly and disassembly of an array of property values.
  */
-class CacheEntryHelper {
+@Internal
+public class CacheEntryHelper {
 
 	/**
 	 * Apply the {@link Type#disassemble} operation across a series of values.
@@ -27,7 +30,7 @@ class CacheEntryHelper {
 	 *
 	 * @return The disassembled state
 	 */
-	public static Serializable[] disassemble(
+	static Serializable[] disassemble(
 			final Object[] row,
 			final Type[] types,
 			final boolean[] nonCacheable,
@@ -57,7 +60,7 @@ class CacheEntryHelper {
 	 * @param owner The entity "owning" the values
 	 * @return The assembled state
 	 */
-	public static Object[] assemble(
+	static Object[] assemble(
 			final Serializable[] row,
 			final Type[] types,
 			final SharedSessionContractImplementor session,
@@ -79,4 +82,13 @@ class CacheEntryHelper {
 			|| value == PropertyAccessStrategyBackRefImpl.UNKNOWN;
 	}
 
+	public static Object buildStructuredCacheEntry(
+			Object entity,
+			Object version,
+			Object[] state,
+			EntityPersister persister,
+			SharedSessionContractImplementor session) {
+		return persister.getCacheEntryStructure()
+				.structure( persister.buildCacheEntry( entity, state, version, session ) );
+	}
 }

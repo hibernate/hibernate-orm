@@ -5,6 +5,7 @@
 package org.hibernate.cache.spi;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Objects;
@@ -44,9 +45,7 @@ public class QueryKey implements Serializable {
 		//
 		// todo (6.0) : should limited (first/max) results be cacheable?
 		// todo (6.0) : should filtered results be cacheable?
-
 		final Limit limitToUse = limit == null ? Limit.NONE : limit;
-
 		return new QueryKey(
 				sqlQueryString,
 				parameterBindings.generateQueryKeyMemento( session ),
@@ -55,7 +54,6 @@ public class QueryKey implements Serializable {
 				session.getLoadQueryInfluencers().getEnabledFilterNames()
 		);
 	}
-
 
 	private final String sqlQueryString;
 	private final ParameterBindingsMemento parameterBindingsMemento;
@@ -70,12 +68,12 @@ public class QueryKey implements Serializable {
 	private transient int hashCode;
 
 	public QueryKey(
-			String sql,
+			String sqlQueryString,
 			ParameterBindingsMemento parameterBindingsMemento,
 			Integer firstRow,
 			Integer maxRows,
 			Set<String> enabledFilterNames) {
-		this.sqlQueryString = sql;
+		this.sqlQueryString = sqlQueryString;
 		this.parameterBindingsMemento = parameterBindingsMemento;
 		this.firstRow = firstRow;
 		this.maxRows = maxRows;
@@ -91,15 +89,18 @@ public class QueryKey implements Serializable {
 	 * @throws IOException Thrown by normal deserialization
 	 * @throws ClassNotFoundException Thrown by normal deserialization
 	 */
-	private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+	@Serial
+	private void readObject(java.io.ObjectInputStream in)
+			throws IOException, ClassNotFoundException {
 		in.defaultReadObject();
-		this.hashCode = generateHashCode();
+		hashCode = generateHashCode();
 	}
 
 	private int generateHashCode() {
 		int result = 13;
 		result = 37 * result + sqlQueryString.hashCode();
-		// Don't include the firstRow and maxRows in the hash as these values are rarely useful for query caching
+		// Don't include the firstRow and maxRows in the hash
+		// as these values are rarely useful for query caching
 //		result = 37 * result + ( firstRow==null ? 0 : firstRow );
 //		result = 37 * result + ( maxRows==null ? 0 : maxRows );
 		result = 37 * result + parameterBindingsMemento.hashCode();
@@ -108,38 +109,14 @@ public class QueryKey implements Serializable {
 	}
 
 	@Override
-	@SuppressWarnings({"RedundantIfStatement", "EqualsWhichDoesntCheckParameterClass"})
 	public boolean equals(Object other) {
-		// it should never be another type, so skip the instanceof check and just do the cast
-		final QueryKey that;
-
-		try {
-			that = (QueryKey) other;
-		}
-		catch (ClassCastException cce) {
-			// treat this as the exception case
-			return false;
-		}
-
-		if ( ! Objects.equals( sqlQueryString, that.sqlQueryString ) ) {
-			return false;
-		}
-
-		if ( ! Objects.equals( firstRow, that.firstRow )
-				|| ! Objects.equals( maxRows, that.maxRows ) ) {
-			return false;
-		}
-
-		// Set's `#equals` impl does a deep check, so `Objects#equals` is a good check
-		if ( ! Objects.equals( parameterBindingsMemento, that.parameterBindingsMemento ) ) {
-			return false;
-		}
-
-		if ( ! Arrays.equals( enabledFilterNames, that.enabledFilterNames ) ) {
-			return false;
-		}
-
-		return true;
+		return other instanceof QueryKey that
+			&& Objects.equals( this.sqlQueryString, that.sqlQueryString )
+			&& Objects.equals( this.firstRow, that.firstRow )
+			&& Objects.equals( this.maxRows, that.maxRows )
+			// Set's `#equals` impl does a deep check, so `Objects#equals` is a good check
+			&& Objects.equals( this.parameterBindingsMemento, that.parameterBindingsMemento )
+			&& Arrays.equals( this.enabledFilterNames, that.enabledFilterNames );
 	}
 
 	@Override

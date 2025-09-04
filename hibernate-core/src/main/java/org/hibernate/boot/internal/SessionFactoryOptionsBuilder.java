@@ -28,6 +28,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.context.spi.MultiTenancy;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -49,7 +50,6 @@ import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
@@ -74,7 +74,6 @@ import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
-import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -347,22 +346,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		initializeLazyStateOutsideTransactions =
 				configurationService.getSetting( ENABLE_LAZY_LOAD_NO_TRANS, BOOLEAN, false );
 
-		multiTenancyEnabled = JdbcEnvironmentImpl.isMultiTenancyEnabled( serviceRegistry );
-		currentTenantIdentifierResolver =
-				strategySelector.resolveStrategy( CurrentTenantIdentifierResolver.class,
-						settings.get( MULTI_TENANT_IDENTIFIER_RESOLVER ) );
-		if ( currentTenantIdentifierResolver == null ) {
-			currentTenantIdentifierResolver = Helper.getBean(
-				Helper.getBeanContainer( serviceRegistry ),
-				CurrentTenantIdentifierResolver.class,
-				true,
-				false,
-				null
-			);
-		}
-		tenantSchemaMapper =
-				strategySelector.resolveStrategy( TenantSchemaMapper.class,
-						settings.get( MULTI_TENANT_SCHEMA_MAPPER ) );
+		multiTenancyEnabled = MultiTenancy.isMultiTenancyEnabled( serviceRegistry );
+		currentTenantIdentifierResolver = MultiTenancy.getTenantIdentifierResolver( settings, serviceRegistry );
+		tenantSchemaMapper = MultiTenancy.getTenantSchemaMapper( settings, serviceRegistry );
 
 		delayBatchFetchLoaderCreations =
 				configurationService.getSetting( DELAY_ENTITY_LOADER_CREATIONS, BOOLEAN, true );
@@ -416,7 +402,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		preferredSqlTypeCodeForArray = ConfigurationHelper.getPreferredSqlTypeCodeForArray( serviceRegistry );
 		defaultTimeZoneStorageStrategy = context.getMetadataBuildingOptions().getDefaultTimeZoneStorage();
 
-		final RegionFactory regionFactory = serviceRegistry.getService( RegionFactory.class );
+		final var regionFactory = serviceRegistry.getService( RegionFactory.class );
 		if ( !(regionFactory instanceof NoCachingRegionFactory) ) {
 			secondLevelCacheEnabled =
 					configurationService.getSetting( USE_SECOND_LEVEL_CACHE, BOOLEAN, true );

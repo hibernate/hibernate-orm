@@ -22,7 +22,7 @@ public class JdbcLiteralFormatterBoolean<T> extends BasicJdbcLiteralFormatter<T>
 	}
 
 	@Override
-	public void appendJdbcLiteral(SqlAppender appender, Object value, Dialect dialect, WrapperOptions wrapperOptions) {
+	public void appendJdbcLiteral(SqlAppender appender, T value, Dialect dialect, WrapperOptions wrapperOptions) {
 		dialect.appendBooleanValueString( appender, unwrap( value, Boolean.class, wrapperOptions ) );
 	}
 }

@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
+import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.FlushMode;
@@ -97,6 +98,18 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 	@Override
 	public SessionBuilder tenantIdentifier(Object tenantIdentifier) {
 		delegate.tenantIdentifier( tenantIdentifier );
+		return this;
+	}
+
+	@Override
+	public SessionBuilder readOnly(boolean readOnly) {
+		delegate.readOnly( readOnly );
+		return this;
+	}
+
+	@Override
+	public SessionBuilder initialCacheMode(CacheMode cacheMode) {
+		delegate.initialCacheMode( cacheMode );
 		return this;
 	}
 

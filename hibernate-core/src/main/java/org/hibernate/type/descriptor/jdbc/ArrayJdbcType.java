@@ -25,6 +25,7 @@ import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.ByteArrayJavaType;
 import org.hibernate.type.descriptor.java.ByteJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterArray;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
@@ -81,9 +82,9 @@ public class ArrayJdbcType implements JdbcType {
 		}
 	}
 
-	private static JavaType<?> elementJavaType(JavaType<?> javaTypeDescriptor) {
-		if ( javaTypeDescriptor instanceof ByteArrayJavaType ) {
-			// Special handling needed for Byte[], because that would conflict with the VARBINARY mapping
+	protected static JavaType<?> elementJavaType(JavaType<?> javaTypeDescriptor) {
+		if ( javaTypeDescriptor instanceof ByteArrayJavaType || javaTypeDescriptor instanceof PrimitiveByteArrayJavaType ) {
+			// Special handling needed for Byte[] and byte[], because that would conflict with the VARBINARY mapping
 			return ByteJavaType.INSTANCE;
 		}
 		else if ( javaTypeDescriptor instanceof BasicPluralJavaType<?> basicPluralJavaType ) {

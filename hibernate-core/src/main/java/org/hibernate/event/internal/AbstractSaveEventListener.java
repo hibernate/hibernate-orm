@@ -27,7 +27,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.generator.Generator;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
@@ -74,7 +73,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			String entityName,
 			C context,
 			EventSource source) {
-		final EntityPersister persister = source.getEntityPersister( entityName, entity );
+		final var persister = source.getEntityPersister( entityName, entity );
 		return performSave( entity, requestedId, persister, false, context, source, false );
 	}
 
@@ -199,9 +198,9 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 		callbackRegistry.preCreate( entity );
 
 		processIfSelfDirtinessTracker( entity, SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
-		processIfManagedEntity( entity, (managedEntity) -> managedEntity.$$_hibernate_setUseTracker( true ) );
+		processIfManagedEntity( entity, managedEntity -> managedEntity.$$_hibernate_setUseTracker( true ) );
 
-		final Generator generator = persister.getGenerator();
+		final var generator = persister.getGenerator();
 		if ( !generator.generatesOnInsert() || generator instanceof CompositeNestedGeneratedValueGenerator ) {
 			id = persister.getIdentifier( entity, source );
 			if ( id == null ) {

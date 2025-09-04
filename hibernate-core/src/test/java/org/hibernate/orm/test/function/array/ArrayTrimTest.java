@@ -86,8 +86,8 @@ public class ArrayTrimTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 14, versionMatchMode = VersionMatchMode.SAME_OR_NEWER, reason = "The PostgreSQL emulation for version < 14 doesn't throw an error")
-	@SkipForDialect(dialectClass = PostgresPlusDialect.class, majorVersion = 14, versionMatchMode = VersionMatchMode.SAME_OR_NEWER, reason = "The PostgreSQL emulation for version < 14 doesn't throw an error")
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 14, versionMatchMode = VersionMatchMode.OLDER, reason = "The PostgreSQL emulation for version < 14 doesn't throw an error")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class, majorVersion = 14, versionMatchMode = VersionMatchMode.OLDER, reason = "The PostgreSQL emulation for version < 14 doesn't throw an error")
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "The Cockroach emulation doesn't throw an error")
 	public void testTrimOutOfRange(SessionFactoryScope scope) {
 		scope.inSession( em -> {

@@ -37,10 +37,8 @@ import static org.hibernate.engine.internal.EntityEntryImpl.EnumState.LOCK_MODE;
 import static org.hibernate.engine.internal.EntityEntryImpl.EnumState.PREVIOUS_STATUS;
 import static org.hibernate.engine.internal.EntityEntryImpl.EnumState.STATUS;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
-import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptableOrNull;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTracker;
-import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
-import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTracker;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
@@ -52,7 +50,6 @@ import static org.hibernate.engine.spi.Status.READ_ONLY;
 import static org.hibernate.engine.spi.Status.SAVING;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.pretty.MessageHelper.infoString;
-import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * A base implementation of {@link EntityEntry}.
@@ -290,7 +287,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 
 		if ( persister.isVersioned() ) {
 			version = nextVersion;
-			persister.setValue( entity, persister.getVersionProperty(), nextVersion );
+			persister.setValue( entity, persister.getVersionPropertyIndex(), nextVersion );
 		}
 
 		processIfSelfDirtinessTracker( entity, EntityEntryImpl::clearDirtyAttributes );
@@ -385,14 +382,14 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	private boolean isNonDirtyViaCustomStrategy(Object entity) {
-		if ( isPersistentAttributeInterceptable( entity ) ) {
-			if ( asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor()
-					instanceof EnhancementAsProxyLazinessInterceptor ) {
+		final var interceptable = asPersistentAttributeInterceptableOrNull( entity );
+		if ( interceptable != null ) {
+			if ( interceptable.$$_hibernate_getInterceptor() instanceof EnhancementAsProxyLazinessInterceptor interceptor
+				&& !interceptor.isInitialized() ) {
 				// we never have to check an uninitialized proxy
 				return true;
 			}
 		}
-
 		final var session = (SessionImplementor) getPersistenceContext().getSession();
 		final var customEntityDirtinessStrategy = session.getFactory().getCustomEntityDirtinessStrategy();
 		return customEntityDirtinessStrategy.canDirtyCheck( entity, persister, session )
@@ -400,28 +397,16 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	private boolean isNonDirtyViaTracker(Object entity) {
-		final boolean uninitializedProxy;
-		if ( isPersistentAttributeInterceptable( entity ) ) {
-			if ( asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor()
-					instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor ) {
-				return !lazinessInterceptor.hasWrittenFieldNames();
-			}
-			else {
-				uninitializedProxy = false;
+		final var interceptable = asPersistentAttributeInterceptableOrNull( entity );
+		if ( interceptable != null ) {
+			if ( interceptable.$$_hibernate_getInterceptor() instanceof EnhancementAsProxyLazinessInterceptor interceptor ) {
+				return !interceptor.hasWrittenFieldNames();
 			}
 		}
-		else if ( isHibernateProxy( entity ) ) {
-			uninitializedProxy = extractLazyInitializer( entity ).isUninitialized();
-		}
-		else {
-			uninitializedProxy = false;
-		}
-		// we never have to check an uninitialized proxy
-		return uninitializedProxy
-			|| !persister.hasCollections()
-				&& !persister.hasMutableProperties()
-				&& !asSelfDirtinessTracker( entity ).$$_hibernate_hasDirtyAttributes()
-				&& asManagedEntity( entity ).$$_hibernate_useTracker();
+		return !persister.hasCollections()
+			&& !persister.hasMutableProperties()
+			&& asManagedEntity( entity ).$$_hibernate_useTracker()
+			&& !asSelfDirtinessTracker( entity ).$$_hibernate_hasDirtyAttributes();
 	}
 
 	@Override
@@ -436,7 +421,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	@Override
 	public void forceLocked(Object entity, Object nextVersion) {
 		version = nextVersion;
-		final int versionProperty = persister.getVersionProperty();
+		final int versionProperty = persister.getVersionPropertyIndex();
 		loadedState[versionProperty] = version;
 		setLockMode( PESSIMISTIC_FORCE_INCREMENT );
 		persister.setValue( entity, versionProperty, nextVersion );
@@ -465,15 +450,16 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 			else {
 				setStatus( MANAGED );
 				loadedState = persister.getValues( entity );
+				final var context = getPersistenceContext();
 				TypeHelper.deepCopy(
 						loadedState,
 						persister.getPropertyTypes(),
 						persister.getPropertyCheckability(),
 						loadedState,
-						getPersistenceContext().getSession()
+						context.getSession()
 				);
 				if ( persister.hasNaturalIdentifier() ) {
-					getPersistenceContext().getNaturalIdResolutions().manageLocalResolution(
+					context.getNaturalIdResolutions().manageLocalResolution(
 							id,
 							persister.getNaturalIdMapping().extractNaturalIdFromEntityState( loadedState ),
 							persister,

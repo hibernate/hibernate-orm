@@ -7,6 +7,7 @@ package org.hibernate.action.internal;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCommitDeleteEventListener;
@@ -106,17 +107,9 @@ public class EntityDeleteAction extends EntityAction {
 
 		final boolean veto = isInstanceLoaded() && preDelete();
 
-		final var naturalIdMapping = persister.getNaturalIdMapping();
-		if ( naturalIdMapping != null ) {
-			naturalIdValues = session.getPersistenceContextInternal().getNaturalIdResolutions()
-					.removeLocalResolution(
-							getId(),
-							naturalIdMapping.extractNaturalIdFromEntityState( state ),
-							persister
-					);
-		}
+		handleNaturalIdLocalResolutions( persister, session.getPersistenceContextInternal() );
 
-		final Object ck = lockCacheItem();
+		final Object cacheKey = lockCacheItem();
 
 		if ( !isCascadeDeleteEnabled && !veto ) {
 			final var eventMonitor = session.getEventMonitor();
@@ -132,16 +125,28 @@ public class EntityDeleteAction extends EntityAction {
 		}
 
 		if ( isInstanceLoaded() ) {
-			postDeleteLoaded( id, persister, session, instance, ck );
+			postDeleteLoaded( id, persister, session, instance, cacheKey );
 		}
 		else {
 			// we're deleting an unloaded proxy
-			postDeleteUnloaded( id, persister, session, ck );
+			postDeleteUnloaded( id, persister, session, cacheKey );
 		}
 
 		final var statistics = session.getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() && !veto ) {
 			statistics.deleteEntity( persister.getEntityName() );
+		}
+	}
+
+	private void handleNaturalIdLocalResolutions(EntityPersister persister, PersistenceContext context) {
+		final var naturalIdMapping = persister.getNaturalIdMapping();
+		if ( naturalIdMapping != null ) {
+			naturalIdValues = context.getNaturalIdResolutions()
+					.removeLocalResolution(
+							getId(),
+							naturalIdMapping.extractNaturalIdFromEntityState( state ),
+							persister
+					);
 		}
 	}
 
@@ -162,7 +167,7 @@ public class EntityDeleteAction extends EntityAction {
 			EntityPersister persister,
 			SharedSessionContractImplementor session,
 			Object instance,
-			Object ck) {
+			Object cacheKey) {
 		// After actually deleting a row, record the fact that the instance no longer
 		// exists on the database (needed for identity-column key generation), and
 		// remove it from the session cache
@@ -174,20 +179,24 @@ public class EntityDeleteAction extends EntityAction {
 		entry.postDelete();
 		final var key = entry.getEntityKey();
 		persistenceContext.removeEntityHolder( key );
-		removeCacheItem( ck );
+		removeCacheItem( cacheKey );
 		persistenceContext.getNaturalIdResolutions()
-				.removeSharedResolution( id, naturalIdValues, persister, true);
+				.removeSharedResolution( id, naturalIdValues, persister, true );
 		postDelete();
 	}
 
-	protected void postDeleteUnloaded(Object id, EntityPersister persister, SharedSessionContractImplementor session, Object ck) {
+	protected void postDeleteUnloaded(
+			Object id,
+			EntityPersister persister,
+			SharedSessionContractImplementor session,
+			Object cacheKey) {
 		final var persistenceContext = session.getPersistenceContextInternal();
 		final var key = session.generateEntityKey( id, persister );
 		if ( !persistenceContext.containsDeletedUnloadedEntityKey( key ) ) {
 			throw new AssertionFailure( "deleted proxy should be for an unloaded entity: " + key );
 		}
 		persistenceContext.removeProxy( key );
-		removeCacheItem( ck );
+		removeCacheItem( cacheKey );
 	}
 
 	protected boolean preDelete() {
@@ -256,14 +265,14 @@ public class EntityDeleteAction extends EntityAction {
 		if ( persister.canWriteToCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
 			final var session = getSession();
-			final Object ck = cache.generateCacheKey(
+			final Object cacheKey = cache.generateCacheKey(
 					getId(),
 					persister,
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
-			lock = cache.lockItem( session, ck, getCurrentVersion() );
-			return ck;
+			lock = cache.lockItem( session, cacheKey, getCurrentVersion() );
+			return cacheKey;
 		}
 		else {
 			return null;
@@ -275,21 +284,21 @@ public class EntityDeleteAction extends EntityAction {
 		if ( persister.canWriteToCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
 			final var session = getSession();
-			final Object ck = cache.generateCacheKey(
+			final Object cacheKey = cache.generateCacheKey(
 					getId(),
 					persister,
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
-			cache.unlockItem( session, ck, lock );
+			cache.unlockItem( session, cacheKey, lock );
 		}
 	}
 
-	protected void removeCacheItem(Object ck) {
+	protected void removeCacheItem(Object cacheKey) {
 		final var persister = getPersister();
 		if ( persister.canWriteToCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
-			cache.remove( getSession(), ck );
+			cache.remove( getSession(), cacheKey );
 
 			final var statistics = getSession().getFactory().getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {

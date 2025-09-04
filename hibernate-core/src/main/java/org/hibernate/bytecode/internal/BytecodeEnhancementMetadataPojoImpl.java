@@ -91,8 +91,9 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 		this.identifierAttributeNames = identifierAttributeNames;
 		this.enhancedForLazyLoading = enhancedForLazyLoading;
 		this.lazyAttributesMetadata = lazyAttributesMetadata;
-		this.lazyAttributeLoadingInterceptorState = new LazyAttributeLoadingInterceptor.EntityRelatedState(
-				getEntityName(), lazyAttributesMetadata.getLazyAttributeNames() );
+		this.lazyAttributeLoadingInterceptorState =
+				new LazyAttributeLoadingInterceptor.EntityRelatedState( getEntityName(),
+						lazyAttributesMetadata.getLazyAttributeNames() );
 	}
 
 	@Override
@@ -116,7 +117,7 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 			return false;
 		}
 
-		final BytecodeLazyAttributeInterceptor interceptor = extractLazyInterceptor( entity );
+		final var interceptor = extractLazyInterceptor( entity );
 		if ( interceptor instanceof LazyAttributeLoadingInterceptor ) {
 			return interceptor.hasAnyUninitializedAttributes();
 		}
@@ -187,8 +188,7 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 		}
 
 		// inject the interceptor
-		persister.getEntityMetamodel()
-				.getBytecodeEnhancementMetadata()
+		persister.getBytecodeEnhancementMetadata()
 				.injectEnhancedEntityAsProxyInterceptor( entity, entityKey, session );
 
 		return entity;

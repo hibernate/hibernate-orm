@@ -14,7 +14,6 @@ import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 /**
  * Standard support for {@link CollectionDataAccess}
@@ -24,8 +23,7 @@ import org.hibernate.persister.collection.CollectionPersister;
  * @author Steve Ebersole
  */
 public class CollectionReadWriteAccess extends AbstractReadWriteAccess implements CollectionDataAccess {
-	private final NavigableRole collectionRole;
-	private final Comparator versionComparator;
+	private final Comparator<?> versionComparator;
 	private final CacheKeysFactory keysFactory;
 
 	public CollectionReadWriteAccess(
@@ -35,7 +33,6 @@ public class CollectionReadWriteAccess extends AbstractReadWriteAccess implement
 			CollectionDataCachingConfig config) {
 		super( region, storageAccess );
 		this.keysFactory = keysFactory;
-		this.collectionRole = config.getNavigableRole();
 		this.versionComparator = config.getOwnerVersionComparator();
 	}
 
@@ -64,7 +61,7 @@ public class CollectionReadWriteAccess extends AbstractReadWriteAccess implement
 	}
 
 	@Override
-	protected Comparator getVersionComparator() {
+	protected Comparator<?> getVersionComparator() {
 		return versionComparator;
 	}
 

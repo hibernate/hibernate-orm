@@ -20,7 +20,6 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataPojoImpl;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
@@ -35,18 +34,14 @@ import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Subclass;
-import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.NonIdentifierAttribute;
-import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
@@ -60,12 +55,15 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.util.Collections.singleton;
 import static java.util.Collections.unmodifiableSet;
+import static org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper.includeInBaseFetchGroup;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
 import static org.hibernate.internal.util.ReflectHelper.isFinalClass;
 import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
 import static org.hibernate.internal.util.collections.CollectionHelper.toSmallSet;
+import static org.hibernate.tuple.PropertyFactory.buildEntityBasedAttribute;
 import static org.hibernate.tuple.PropertyFactory.buildIdentifierAttribute;
+import static org.hibernate.tuple.PropertyFactory.buildVersionProperty;
 
 /**
  * Centralizes metamodel information about an entity.
@@ -85,7 +83,7 @@ public class EntityMetamodel implements Serializable {
 
 	private final String name;
 	private final String rootName;
-	private EntityType entityType;
+	private final EntityType entityType;
 
 	private final int subclassId;
 	private final IdentifierProperty identifierAttribute;
@@ -154,9 +152,8 @@ public class EntityMetamodel implements Serializable {
 
 	public EntityMetamodel(
 			PersistentClass persistentClass,
-			EntityPersister persister,
 			RuntimeModelCreationContext creationContext) {
-		this( persistentClass, persister, creationContext,
+		this( persistentClass, creationContext,
 				rootName -> buildIdGenerator( rootName, persistentClass, creationContext ) );
 	}
 
@@ -165,7 +162,6 @@ public class EntityMetamodel implements Serializable {
 	 */
 	public EntityMetamodel(
 			PersistentClass persistentClass,
-			EntityPersister persister,
 			RuntimeModelCreationContext creationContext,
 			Function<String, Generator> generatorSupplier) {
 		sessionFactory = creationContext.getSessionFactory();
@@ -174,48 +170,34 @@ public class EntityMetamodel implements Serializable {
 		name = persistentClass.getEntityName().intern();
 		rootName = persistentClass.getRootClass().getEntityName().intern();
 		// Make sure the hashCodes are cached
+		//noinspection ResultOfMethodCallIgnored
 		name.hashCode();
+		//noinspection ResultOfMethodCallIgnored
 		rootName.hashCode();
+
+		entityType = new ManyToOneType( name, creationContext.getTypeConfiguration() );
 
 		subclassId = persistentClass.getSubclassId();
 
-		final Generator idgenerator = generatorSupplier.apply( rootName );
-		identifierAttribute = buildIdentifierAttribute( persistentClass, idgenerator );
+		identifierAttribute =
+				buildIdentifierAttribute(
+						persistentClass,
+						generatorSupplier.apply( rootName )
+				);
 
 		versioned = persistentClass.isVersioned();
 
-		final boolean collectionsInDefaultFetchGroupEnabled =
-				creationContext.getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled();
-		final boolean supportsCascadeDelete = creationContext.getDialect().supportsCascadeDelete();
+		final boolean collectionsInDefaultFetchGroup =
+				creationContext.getSessionFactoryOptions()
+						.isCollectionsInDefaultFetchGroupEnabled();
 
-		if ( persistentClass.hasPojoRepresentation() ) {
-			final Component identifierMapperComponent = persistentClass.getIdentifierMapper();
-			final CompositeType nonAggregatedCidMapper;
-			final Set<String> idAttributeNames;
-			if ( identifierMapperComponent != null ) {
-				nonAggregatedCidMapper = identifierMapperComponent.getType();
-				HashSet<String> tmpSet = new HashSet<>();
-				for ( Property property : identifierMapperComponent.getProperties() ) {
-					tmpSet.add( property.getName() );
-				}
-				idAttributeNames = toSmallSet( unmodifiableSet( tmpSet ) );
-			}
-			else {
-				nonAggregatedCidMapper = null;
-				idAttributeNames = singleton( identifierAttribute.getName() );
-			}
-
-			bytecodeEnhancementMetadata = BytecodeEnhancementMetadataPojoImpl.from(
-					persistentClass,
-					idAttributeNames,
-					nonAggregatedCidMapper,
-					collectionsInDefaultFetchGroupEnabled,
-					creationContext.getMetadata()
-			);
-		}
-		else {
-			bytecodeEnhancementMetadata = new BytecodeEnhancementMetadataNonPojoImpl( persistentClass.getEntityName() );
-		}
+		bytecodeEnhancementMetadata =
+				bytecodeEnhancementMetadata(
+						persistentClass,
+						identifierAttribute,
+						creationContext,
+						collectionsInDefaultFetchGroup
+				);
 
 		boolean hasLazy = false;
 
@@ -246,6 +228,8 @@ public class EntityMetamodel implements Serializable {
 		boolean foundPostUpdateGeneratedValues = false;
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+		final boolean supportsCascadeDelete = creationContext.getDialect().supportsCascadeDelete();
+
 		int tempVersionProperty = NO_VERSION_INDX;
 		boolean foundCascade = false;
 		boolean foundToOne = false;
@@ -258,30 +242,13 @@ public class EntityMetamodel implements Serializable {
 		boolean foundUpdateableNaturalIdProperty = false;
 		BeforeExecutionGenerator tempVersionGenerator = null;
 
-		final List<Property> props = persistentClass.getPropertyClosure();
+		final var props = persistentClass.getPropertyClosure();
 		for ( int i=0; i<props.size(); i++ ) {
-			final Property property = props.get(i);
-			final NonIdentifierAttribute attribute;
+			final var property = props.get(i);
 			if ( property == persistentClass.getVersion() ) {
 				tempVersionProperty = i;
-				attribute = PropertyFactory.buildVersionProperty(
-						persister,
-						sessionFactory,
-						i,
-						property,
-						bytecodeEnhancementMetadata.isEnhancedForLazyLoading()
-				);
 			}
-			else {
-				attribute = PropertyFactory.buildEntityBasedAttribute(
-						persister,
-						sessionFactory,
-						i,
-						property,
-						bytecodeEnhancementMetadata.isEnhancedForLazyLoading(),
-						creationContext
-				);
-			}
+			final var attribute = buildAttribute( persistentClass, creationContext, property, i );
 			properties[i] = attribute;
 
 			if ( property.isNaturalIdentifier() ) {
@@ -297,26 +264,15 @@ public class EntityMetamodel implements Serializable {
 			}
 
 			// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
-					property,
-					bytecodeEnhancementMetadata.isEnhancedForLazyLoading(),
-					(entityName) -> {
-						final MetadataImplementor metadata = creationContext.getMetadata();
-						final PersistentClass entityBinding = metadata.getEntityBinding( entityName );
-						assert entityBinding != null;
-						return entityBinding.hasSubclasses();
-					},
-					collectionsInDefaultFetchGroupEnabled
-			);
 
+			final boolean lazy =
+					isLazy( creationContext, property, collectionsInDefaultFetchGroup, bytecodeEnhancementMetadata );
 			if ( lazy ) {
 				hasLazy = true;
 			}
-
 			propertyLaziness[i] = lazy;
-
 			propertyNames[i] = attribute.getName();
-			final Type propertyType = attribute.getType();
+			final var propertyType = attribute.getType();
 			propertyTypes[i] = propertyType;
 			if ( attribute.isDirtyCheckable() && !( propertyType instanceof OneToOneType ) ) {
 				dirtyCheckablePropertyTypes[i] = propertyType;
@@ -327,14 +283,15 @@ public class EntityMetamodel implements Serializable {
 			propertyVersionability[i] = attribute.isVersionable();
 			nonlazyPropertyUpdateability[i] = attribute.isUpdateable() && !lazy;
 			propertyCheckability[i] = propertyUpdateability[i]
-					|| propertyType.isAssociationType() && ( (AssociationType) propertyType ).isAlwaysDirtyChecked();
+					|| propertyType instanceof AssociationType associationType
+							&& associationType.isAlwaysDirtyChecked();
 			propertyOnDeleteActions[i] = supportsCascadeDelete ? attribute.getOnDeleteAction() : null;
 			cascadeStyles[i] = attribute.getCascadeStyle();
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 			// generated value strategies ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-			final Generator generator = buildGenerator( name, property, creationContext );
+			final var generator = buildGenerator( name, property, creationContext );
 			if ( generator != null ) {
 				final boolean generatedOnExecution = generator.generatedOnExecution();
 				if ( i == tempVersionProperty && !generatedOnExecution ) {
@@ -394,18 +351,21 @@ public class EntityMetamodel implements Serializable {
 				foundCascadeDelete = true;
 			}
 
-			if ( indicatesToOne( attribute.getType() ) ) {
+			if ( indicatesToOne( propertyType ) ) {
 				foundToOne = true;
 			}
-			if ( indicatesCollection( attribute.getType() ) ) {
+			if ( indicatesCollection( propertyType ) ) {
 				foundCollection = true;
 			}
-			if ( indicatesOwnedCollection( attribute.getType(), creationContext.getMetadata() ) ) {
+			if ( indicatesOwnedCollection( propertyType, creationContext.getMetadata() ) ) {
 				foundOwnedCollection = true;
 			}
 
-			// Component types are dirty tracked as well so they are not exactly mutable for the "maybeDirty" check
-			if ( propertyType.isMutable() && propertyCheckability[i] && !( propertyType instanceof ComponentType ) ) {
+			// Component types are dirty-tracked as well, so they
+			// are not exactly mutable for the "maybeDirty" check
+			if ( propertyType.isMutable()
+					&& propertyCheckability[i]
+					&& !( propertyType instanceof ComponentType ) ) {
 				mutableIndexes.set( i );
 			}
 
@@ -441,38 +401,19 @@ public class EntityMetamodel implements Serializable {
 			LOG.lazyPropertyFetchingAvailable( name );
 		}
 
-		lazy = persistentClass.isLazy()
-				// TODO: this disables laziness even in non-pojo entity modes:
-				&& (!persistentClass.hasPojoRepresentation() || !isFinalClass( persistentClass.getProxyInterface() ) )
-						|| bytecodeEnhancementMetadata.isEnhancedForLazyLoading();
+		lazy = isLazy( persistentClass, bytecodeEnhancementMetadata );
 
 		mutable = persistentClass.isMutable();
-		if ( persistentClass.isAbstract() == null ) {
-			// legacy behavior (with no abstract attribute specified)
-			isAbstract = persistentClass.hasPojoRepresentation()
-					&& isAbstractClass( persistentClass.getMappedClass() );
-		}
-		else {
-			isAbstract = persistentClass.isAbstract();
-			if ( !isAbstract
-					&& persistentClass.hasPojoRepresentation()
-					&& isAbstractClass( persistentClass.getMappedClass() ) ) {
-				LOG.entityMappedAsNonAbstract( name );
-			}
-		}
+		isAbstract = isAbstract( persistentClass );
 
 		selectBeforeUpdate = persistentClass.hasSelectBeforeUpdate();
 
-		dynamicUpdate = persistentClass.useDynamicUpdate()
-				|| ( getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
-					&& getBytecodeEnhancementMetadata().getLazyAttributesMetadata().getFetchGroupNames().size() > 1 );
+		dynamicUpdate = persistentClass.useDynamicUpdate() || hasMultipleFetchGroups( bytecodeEnhancementMetadata );
 		dynamicInsert = persistentClass.useDynamicInsert();
 
 		polymorphic = persistentClass.isPolymorphic();
 		inherited = persistentClass.isInherited();
-		superclass = inherited
-				? persistentClass.getSuperclass().getEntityName()
-				: null;
+		superclass = inherited ? persistentClass.getSuperclass().getEntityName() : null;
 		hasSubclasses = persistentClass.hasSubclasses();
 
 		optimisticLockStyle = persistentClass.getOptimisticLockStyle();
@@ -494,13 +435,7 @@ public class EntityMetamodel implements Serializable {
 		hasOwnedCollections = foundOwnedCollection;
 		mutablePropertiesIndexes = mutableIndexes;
 
-		// Need deterministic ordering
-		final Set<String> subclassEntityNamesLocal = new LinkedHashSet<>();
-		subclassEntityNamesLocal.add( name );
-		for ( Subclass subclass : persistentClass.getSubclasses() ) {
-			subclassEntityNamesLocal.add( subclass.getEntityName() );
-		}
-		subclassEntityNames = toSmallSet( subclassEntityNamesLocal );
+		subclassEntityNames = collectSubclassEntityNames( persistentClass );
 
 //		HashMap<Class<?>, String> entityNameByInheritanceClassMapLocal = new HashMap<>();
 //		if ( persistentClass.hasPojoRepresentation() ) {
@@ -510,6 +445,124 @@ public class EntityMetamodel implements Serializable {
 //			}
 //		}
 //		entityNameByInheritanceClassMap = toSmallMap( entityNameByInheritanceClassMapLocal );
+	}
+
+	private Set<String> collectSubclassEntityNames(PersistentClass persistentClass) {
+		final Set<String> entityNames = new LinkedHashSet<>(); // Need deterministic ordering
+		entityNames.add( name );
+		for ( var subclass : persistentClass.getSubclasses() ) {
+			entityNames.add( subclass.getEntityName() );
+		}
+		return toSmallSet( entityNames );
+	}
+
+	private static boolean isAbstract(PersistentClass persistentClass) {
+		final Boolean isAbstract = persistentClass.isAbstract();
+		if ( isAbstract == null ) {
+			// legacy behavior (with no abstract attribute specified)
+			return persistentClass.hasPojoRepresentation()
+				&& isAbstractClass( persistentClass.getMappedClass() );
+		}
+		else {
+			if ( !isAbstract
+					&& persistentClass.hasPojoRepresentation()
+					&& isAbstractClass( persistentClass.getMappedClass() ) ) {
+				LOG.entityMappedAsNonAbstract( persistentClass.getEntityName() );
+			}
+			return isAbstract;
+		}
+	}
+
+	//TODO: move this down to AbstractEntityPersister
+	private NonIdentifierAttribute buildAttribute(
+			PersistentClass persistentClass,
+			RuntimeModelCreationContext creationContext,
+			Property property,
+			int index) {
+		if ( property == persistentClass.getVersion() ) {
+			return buildVersionProperty(
+					(EntityPersister) this,
+					sessionFactory,
+					index,
+					property,
+					bytecodeEnhancementMetadata.isEnhancedForLazyLoading()
+			);
+		}
+		else {
+			return buildEntityBasedAttribute(
+					(EntityPersister) this,
+					sessionFactory,
+					index,
+					property,
+					bytecodeEnhancementMetadata.isEnhancedForLazyLoading(),
+					creationContext
+			);
+		}
+	}
+
+	private boolean isLazy(PersistentClass persistentClass, BytecodeEnhancementMetadata enhancementMetadata) {
+		return persistentClass.isLazy()
+				// TODO: this disables laziness even in non-pojo entity modes:
+				&& ( !persistentClass.hasPojoRepresentation() || !isFinalClass( persistentClass.getProxyInterface() ) )
+			|| enhancementMetadata.isEnhancedForLazyLoading();
+	}
+
+	private boolean hasMultipleFetchGroups(BytecodeEnhancementMetadata enhancementMetadata) {
+		return enhancementMetadata.isEnhancedForLazyLoading()
+			&& enhancementMetadata.getLazyAttributesMetadata().getFetchGroupNames().size() > 1;
+	}
+
+	private static boolean isLazy(
+			RuntimeModelCreationContext creationContext,
+			Property property,
+			boolean collectionsInDefaultFetchGroupEnabled,
+			BytecodeEnhancementMetadata enhancementMetadata) {
+		return !includeInBaseFetchGroup(
+				property,
+				enhancementMetadata.isEnhancedForLazyLoading(),
+				entityName -> {
+					final var entityBinding =
+							creationContext.getMetadata().getEntityBinding( entityName );
+					assert entityBinding != null;
+					return entityBinding.hasSubclasses();
+				},
+				collectionsInDefaultFetchGroupEnabled
+		);
+	}
+
+	private static BytecodeEnhancementMetadata bytecodeEnhancementMetadata(
+			PersistentClass persistentClass,
+			IdentifierProperty identifierAttribute,
+			RuntimeModelCreationContext creationContext,
+			boolean collectionsInDefaultFetchGroupEnabled) {
+		if ( persistentClass.hasPojoRepresentation() ) {
+			final var identifierMapperComponent = persistentClass.getIdentifierMapper();
+			final CompositeType nonAggregatedCidMapper;
+			final Set<String> idAttributeNames;
+			if ( identifierMapperComponent != null ) {
+				nonAggregatedCidMapper = identifierMapperComponent.getType();
+				final HashSet<String> propertyNames = new HashSet<>();
+				for ( var property : identifierMapperComponent.getProperties() ) {
+					propertyNames.add( property.getName() );
+				}
+				idAttributeNames = toSmallSet( unmodifiableSet( propertyNames ) );
+			}
+			else {
+				nonAggregatedCidMapper = null;
+				idAttributeNames = singleton( identifierAttribute.getName() );
+			}
+
+			return BytecodeEnhancementMetadataPojoImpl.from(
+					persistentClass,
+					idAttributeNames,
+					nonAggregatedCidMapper,
+					collectionsInDefaultFetchGroupEnabled,
+					creationContext.getMetadata()
+			);
+		}
+		else {
+			return new BytecodeEnhancementMetadataNonPojoImpl( persistentClass.getEntityName() );
+		}
 	}
 
 	private static boolean writePropertyValue(OnExecutionGenerator generator) {
@@ -522,12 +575,12 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	private static Generator buildIdGenerator(String rootName, PersistentClass persistentClass, RuntimeModelCreationContext creationContext) {
-		final Generator existing = creationContext.getGenerators().get( rootName );
+		final var existing = creationContext.getGenerators().get( rootName );
 		if ( existing != null ) {
 			return existing;
 		}
 		else {
-			final Generator idgenerator =
+			final var idGenerator =
 					persistentClass.getIdentifier()
 							// returns the cached Generator if it was already created
 							.createGenerator(
@@ -536,13 +589,13 @@ public class EntityMetamodel implements Serializable {
 									persistentClass.getIdentifierProperty(),
 									creationContext.getGeneratorSettings()
 							);
-			creationContext.getGenerators().put( rootName, idgenerator );
-			return idgenerator;
+			creationContext.getGenerators().put( rootName, idGenerator );
+			return idGenerator;
 		}
 	}
 
 	private void verifyNaturalIdProperty(Property property) {
-		final Value value = property.getValue();
+		final var value = property.getValue();
 		if ( value instanceof ManyToOne toOne ) {
 			if ( toOne.getNotFoundAction() == NotFoundAction.IGNORE ) {
 				throw new MappingException( "Association '" + propertyName( property )
@@ -551,7 +604,7 @@ public class EntityMetamodel implements Serializable {
 			}
 		}
 		else if ( value instanceof Component component ) {
-			for ( Property componentProperty : component.getProperties() ) {
+			for ( var componentProperty : component.getProperties() ) {
 				verifyNaturalIdProperty( componentProperty );
 			}
 		}
@@ -565,17 +618,17 @@ public class EntityMetamodel implements Serializable {
 			final String entityName,
 			final Property mappingProperty,
 			final RuntimeModelCreationContext context) {
-		final GeneratorCreator generatorCreator = mappingProperty.getValueGeneratorCreator();
+		final var generatorCreator = mappingProperty.getValueGeneratorCreator();
 		if ( generatorCreator != null ) {
-			final Generator generator = mappingProperty.createGenerator( context );
+			final var generator = mappingProperty.createGenerator( context );
 			if ( generator.generatesSometimes() ) {
 				return generator;
 			}
 		}
 		if ( mappingProperty.getValue() instanceof Component component ) {
-			final CompositeGeneratorBuilder builder =
+			final var builder =
 					new CompositeGeneratorBuilder( entityName, mappingProperty, context.getDialect() );
-			for ( Property property : component.getProperties() ) {
+			for ( var property : component.getProperties() ) {
 				builder.add( property.createGenerator( context ) );
 			}
 			return builder.build();
@@ -594,7 +647,7 @@ public class EntityMetamodel implements Serializable {
 	private void mapPropertyToIndex(Property property, int i) {
 		propertyIndexes.put( property.getName(), i );
 		if ( property.getValue() instanceof Component composite ) {
-			for ( Property subproperty : composite.getProperties() ) {
+			for ( var subproperty : composite.getProperties() ) {
 				propertyIndexes.put(
 						property.getName() + '.' + subproperty.getName(),
 						i
@@ -611,9 +664,11 @@ public class EntityMetamodel implements Serializable {
 		if ( naturalIdPropertyNumbers.length == 0 ) {
 			throw new IllegalStateException( "Entity '" + name + "' does not have a natural id" );
 		}
-		for ( int i = 0; i < naturalIdPropertyNumbers.length; i++ ) {
-			final Generator strategy = generators[ naturalIdPropertyNumbers[i] ];
-			if ( strategy != null && strategy.generatesOnInsert() && strategy.generatedOnExecution() ) {
+		for ( int naturalIdPropertyNumber : naturalIdPropertyNumbers ) {
+			final var strategy = generators[naturalIdPropertyNumber];
+			if ( strategy != null
+					&& strategy.generatesOnInsert()
+					&& strategy.generatedOnExecution() ) {
 				return true;
 			}
 		}
@@ -645,7 +700,7 @@ public class EntityMetamodel implements Serializable {
 			return true;
 		}
 		else if ( type instanceof CompositeType compositeType ) {
-			for ( Type subtype : compositeType.getSubtypes() ) {
+			for ( var subtype : compositeType.getSubtypes() ) {
 				if ( indicatesToOne( subtype ) ) {
 					return true;
 				}
@@ -659,7 +714,7 @@ public class EntityMetamodel implements Serializable {
 			return true;
 		}
 		else if ( type instanceof CompositeType compositeType ) {
-			for ( Type subtype : compositeType.getSubtypes() ) {
+			for ( var subtype : compositeType.getSubtypes() ) {
 				if ( indicatesCollection( subtype ) ) {
 					return true;
 				}
@@ -673,7 +728,7 @@ public class EntityMetamodel implements Serializable {
 			return !metadata.getCollectionBinding( collectionType.getRole() ).isInverse();
 		}
 		else if ( type instanceof CompositeType compositeType ) {
-			for ( Type subtype : compositeType.getSubtypes() ) {
+			for ( var subtype : compositeType.getSubtypes() ) {
 				if ( indicatesOwnedCollection( subtype, metadata ) ) {
 					return true;
 				}
@@ -702,9 +757,6 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	public EntityType getEntityType() {
-		if ( entityType == null ) {
-			entityType = new ManyToOneType( name, getSessionFactory().getTypeConfiguration() );
-		}
 		return entityType;
 	}
 
@@ -721,12 +773,9 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	public VersionProperty getVersionProperty() {
-		if ( NO_VERSION_INDX == versionPropertyIndex ) {
-			return null;
-		}
-		else {
-			return ( VersionProperty ) properties[ versionPropertyIndex ];
-		}
+		return NO_VERSION_INDX == versionPropertyIndex
+				? null
+				: (VersionProperty) properties[versionPropertyIndex];
 	}
 
 	public NonIdentifierAttribute[] getProperties() {

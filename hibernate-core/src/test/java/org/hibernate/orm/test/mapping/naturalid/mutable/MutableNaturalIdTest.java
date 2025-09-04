@@ -16,7 +16,6 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.tuple.entity.EntityMetamodel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -51,11 +50,10 @@ public class MutableNaturalIdTest {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final EntityMappingType entityMappingType = sessionFactory.getRuntimeMetamodels().getEntityMappingType( User.class );
 		final EntityPersister persister = entityMappingType.getEntityPersister();
-		final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
 
 		// nullability is not specified, so it should be non-nullable by hbm-specific default
-		assertFalse( persister.getPropertyNullability()[entityMetamodel.getPropertyIndex( "name" )] );
-		assertFalse( persister.getPropertyNullability()[entityMetamodel.getPropertyIndex( "org" )] );
+		assertFalse( persister.getPropertyNullability()[persister.getPropertyIndex( "name" )] );
+		assertFalse( persister.getPropertyNullability()[persister.getPropertyIndex( "org" )] );
 	}
 
 	@AfterEach

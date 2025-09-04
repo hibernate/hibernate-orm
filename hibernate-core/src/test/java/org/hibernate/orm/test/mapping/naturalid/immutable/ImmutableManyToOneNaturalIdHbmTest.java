@@ -13,7 +13,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.tuple.entity.EntityMetamodel;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -71,9 +70,8 @@ public class ImmutableManyToOneNaturalIdHbmTest {
 		final EntityMappingType childMapping = runtimeMetamodels.getEntityMappingType( Child.class.getName() );
 
 		final EntityPersister persister = childMapping.getEntityPersister();
-		final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
-		final int nameIndex = entityMetamodel.getPropertyIndex( "name" );
-		final int parentIndex = entityMetamodel.getPropertyIndex( "parent" );
+		final int nameIndex = persister.getPropertyIndex( "name" );
+		final int parentIndex = persister.getPropertyIndex( "parent" );
 
 		// checking alphabetic sort in relation to EntityPersister/EntityMetamodel
 		assertThat( nameIndex, lessThan( parentIndex ) );

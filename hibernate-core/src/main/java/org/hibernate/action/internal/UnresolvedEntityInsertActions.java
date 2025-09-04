@@ -226,7 +226,7 @@ public class UnresolvedEntityInsertActions {
 								infoString( entityEntry.getEntityName(), entityEntry.getId() )
 						);
 					}
-					// dependentAction only depended on managedEntity..
+					// dependentAction only depended on managedEntity
 					dependenciesByAction.remove( dependentAction );
 					resolvedActions.add( dependentAction );
 				}
@@ -252,18 +252,18 @@ public class UnresolvedEntityInsertActions {
 
 	@Override
 	public String toString() {
-		final var sb = new StringBuilder( getClass().getSimpleName() ).append( '[' );
+		final var representation = new StringBuilder( getClass().getSimpleName() ).append( '[' );
 		for ( var entry : dependenciesByAction.entrySet() ) {
 			final AbstractEntityInsertAction insert = entry.getKey();
 			final NonNullableTransientDependencies dependencies = entry.getValue();
-			sb.append( "[insert=" )
+			representation.append( "[insert=" )
 					.append( insert )
 					.append( " dependencies=[" )
 					.append( dependencies.toLoggableString( insert.getSession() ) )
 					.append( "]" );
 		}
-		sb.append( ']');
-		return sb.toString();
+		representation.append( ']');
+		return representation.toString();
 	}
 
 	/**

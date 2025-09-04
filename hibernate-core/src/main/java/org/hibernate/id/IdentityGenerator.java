@@ -74,7 +74,7 @@ public class IdentityGenerator
 			return dialect.getIdentityColumnSupport().buildGetGeneratedKeysDelegate( persister );
 		}
 		else if ( persister.getNaturalIdentifierProperties() != null
-				&& !persister.getEntityMetamodel().isNaturalIdentifierInsertGenerated() ) {
+				&& !persister.isNaturalIdentifierInsertGenerated() ) {
 			return new UniqueKeySelectingDelegate( persister, getNaturalIdPropertyNames( persister ), INSERT );
 		}
 		else {

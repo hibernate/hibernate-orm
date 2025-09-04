@@ -4,8 +4,6 @@
  */
 package org.hibernate.cache.spi.support;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 import org.hibernate.cache.CacheException;
@@ -22,11 +20,13 @@ import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
  * @author Steve Ebersole
@@ -48,12 +48,12 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 //		super( regionFactory.qualify( regionConfig.getRegionName() ), regionFactory );
 		super( regionConfig.getRegionName(), regionFactory );
 
-		this.sessionFactory = buildingContext.getSessionFactory();
+		sessionFactory = buildingContext.getSessionFactory();
 
 		if ( defaultKeysFactory == null ) {
 			defaultKeysFactory = DefaultCacheKeysFactory.INSTANCE;
 		}
-		this.effectiveKeysFactory = buildingContext.getEnforcedCacheKeysFactory() != null
+		effectiveKeysFactory = buildingContext.getEnforcedCacheKeysFactory() != null
 				? buildingContext.getEnforcedCacheKeysFactory()
 				: defaultKeysFactory;
 	}
@@ -70,9 +70,9 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 		L2CACHE_LOGGER.tracef( "DomainDataRegion created [%s]; key-factory = %s",
 				regionConfig.getRegionName(), effectiveKeysFactory );
 
-		this.entityDataAccessMap = generateEntityDataAccessMap( regionConfig );
-		this.naturalIdDataAccessMap = generateNaturalIdDataAccessMap( regionConfig );
-		this.collectionDataAccessMap = generateCollectionDataAccessMap( regionConfig );
+		entityDataAccessMap = generateEntityDataAccessMap( regionConfig );
+		naturalIdDataAccessMap = generateNaturalIdDataAccessMap( regionConfig );
+		collectionDataAccessMap = generateCollectionDataAccessMap( regionConfig );
 
 	}
 
@@ -86,7 +86,7 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 
 	@Override
 	public EntityDataAccess getEntityDataAccess(NavigableRole rootEntityRole) {
-		final EntityDataAccess access = entityDataAccessMap.get( rootEntityRole );
+		final var access = entityDataAccessMap.get( rootEntityRole );
 		if ( access == null ) {
 			throw new IllegalArgumentException( "Caching was not configured for entity: " + rootEntityRole.getFullPath() );
 		}
@@ -96,7 +96,7 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 
 	@Override
 	public NaturalIdDataAccess getNaturalIdDataAccess(NavigableRole rootEntityRole) {
-		final NaturalIdDataAccess access = naturalIdDataAccessMap.get( rootEntityRole );
+		final var access = naturalIdDataAccessMap.get( rootEntityRole );
 		if ( access == null ) {
 			throw new IllegalArgumentException( "Caching was not configured for entity natural id: " + rootEntityRole.getFullPath() );
 		}
@@ -105,7 +105,7 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 
 	@Override
 	public CollectionDataAccess getCollectionDataAccess(NavigableRole collectionRole) {
-		final CollectionDataAccess access = collectionDataAccessMap.get( collectionRole );
+		final var access = collectionDataAccessMap.get( collectionRole );
 		if ( access == null ) {
 			throw new IllegalArgumentException( "Caching was not configured for collection: " + collectionRole.getFullPath() );
 		}
@@ -121,68 +121,57 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 
 	private Map<NavigableRole, EntityDataAccess> generateEntityDataAccessMap(
 			DomainDataRegionConfig regionConfig) {
-		final List<EntityDataCachingConfig> entityCaching = regionConfig.getEntityCaching();
+		final var entityCaching = regionConfig.getEntityCaching();
 		if ( entityCaching.isEmpty() ) {
-			return Collections.emptyMap();
+			return emptyMap();
 		}
 
-		final Map<NavigableRole, EntityDataAccess> accessMap = CollectionHelper.mapOfSize( entityCaching.size() );
-		for ( EntityDataCachingConfig entityAccessConfig : entityCaching ) {
-			accessMap.put(
-					entityAccessConfig.getNavigableRole(),
-					generateEntityAccess( entityAccessConfig )
-			);
+		final Map<NavigableRole, EntityDataAccess> accessMap = mapOfSize( entityCaching.size() );
+		for ( var entityAccessConfig : entityCaching ) {
+			accessMap.put( entityAccessConfig.getNavigableRole(),
+					generateEntityAccess( entityAccessConfig ) );
 		}
-
-		return Collections.unmodifiableMap( accessMap );
+		return unmodifiableMap( accessMap );
 	}
 
 	private Map<NavigableRole, NaturalIdDataAccess> generateNaturalIdDataAccessMap(DomainDataRegionConfig regionConfig) {
-		final List<NaturalIdDataCachingConfig> naturalIdCaching = regionConfig.getNaturalIdCaching();
+		final var naturalIdCaching = regionConfig.getNaturalIdCaching();
 		if ( naturalIdCaching.isEmpty() ) {
-			return Collections.emptyMap();
+			return emptyMap();
 		}
 
-		final Map<NavigableRole, NaturalIdDataAccess> accessMap = CollectionHelper.mapOfSize( naturalIdCaching.size() );
-		for ( NaturalIdDataCachingConfig naturalIdAccessConfig : naturalIdCaching ) {
-			accessMap.put(
-					naturalIdAccessConfig.getNavigableRole(),
-					generateNaturalIdAccess( naturalIdAccessConfig )
-			);
+		final Map<NavigableRole, NaturalIdDataAccess> accessMap = mapOfSize( naturalIdCaching.size() );
+		for ( var naturalIdAccessConfig : naturalIdCaching ) {
+			accessMap.put( naturalIdAccessConfig.getNavigableRole(),
+					generateNaturalIdAccess( naturalIdAccessConfig ) );
 		}
-
-		return Collections.unmodifiableMap( accessMap );
+		return unmodifiableMap( accessMap );
 	}
 
 	private Map<NavigableRole, CollectionDataAccess> generateCollectionDataAccessMap(
 			DomainDataRegionConfig regionConfig) {
-		final List<CollectionDataCachingConfig> collectionCaching = regionConfig.getCollectionCaching();
+		final var collectionCaching = regionConfig.getCollectionCaching();
 		if ( collectionCaching.isEmpty() ) {
-			return Collections.emptyMap();
+			return emptyMap();
 		}
 
-		final Map<NavigableRole, CollectionDataAccess> accessMap = CollectionHelper.mapOfSize( collectionCaching.size() );
-		for ( CollectionDataCachingConfig cachingConfig : collectionCaching ) {
-			accessMap.put(
-					cachingConfig.getNavigableRole(),
-					generateCollectionAccess( cachingConfig )
-			);
+		final Map<NavigableRole, CollectionDataAccess> accessMap = mapOfSize( collectionCaching.size() );
+		for ( var cachingConfig : collectionCaching ) {
+			accessMap.put( cachingConfig.getNavigableRole(),
+					generateCollectionAccess( cachingConfig ) );
 		}
-
-		return Collections.unmodifiableMap( accessMap );
+		return unmodifiableMap( accessMap );
 	}
 
 	@Override
 	public void clear() {
-		for ( EntityDataAccess cacheAccess : entityDataAccessMap.values() ) {
+		for ( var cacheAccess : entityDataAccessMap.values() ) {
 			cacheAccess.evictAll();
 		}
-
-		for ( NaturalIdDataAccess cacheAccess : naturalIdDataAccessMap.values() ) {
+		for ( var cacheAccess : naturalIdDataAccessMap.values() ) {
 			cacheAccess.evictAll();
 		}
-
-		for ( CollectionDataAccess cacheAccess : collectionDataAccessMap.values() ) {
+		for ( var cacheAccess : collectionDataAccessMap.values() ) {
 			cacheAccess.evictAll();
 		}
 	}
@@ -220,15 +209,13 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 
 	@Override
 	public void destroy() throws CacheException {
-		for ( EntityDataAccess cacheAccess : entityDataAccessMap.values() ) {
+		for ( var cacheAccess : entityDataAccessMap.values() ) {
 			releaseDataAccess( cacheAccess );
 		}
-
-		for ( NaturalIdDataAccess cacheAccess : naturalIdDataAccessMap.values() ) {
+		for ( var cacheAccess : naturalIdDataAccessMap.values() ) {
 			releaseDataAccess( cacheAccess );
 		}
-
-		for ( CollectionDataAccess cacheAccess : collectionDataAccessMap.values() ) {
+		for ( var cacheAccess : collectionDataAccessMap.values() ) {
 			releaseDataAccess( cacheAccess );
 		}
 	}

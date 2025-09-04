@@ -18,9 +18,14 @@ import java.util.Set;
 
 import org.hibernate.action.spi.Executable;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.util.collections.CollectionHelper;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static java.util.Collections.addAll;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableList;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 
 /**
  * A list of {@link Executable executeble actions}. Responsible for
@@ -119,17 +124,17 @@ public class ExecutableList<E extends ComparableExecutable>
 	 */
 	public Set<Serializable> getQuerySpaces() {
 		if ( querySpaces == null ) {
-			for ( ComparableExecutable e : executables ) {
-				Serializable[] propertySpaces = e.getPropertySpaces();
+			for ( var executable : executables ) {
+				final var propertySpaces = executable.getPropertySpaces();
 				if ( propertySpaces != null && propertySpaces.length > 0 ) {
 					if( querySpaces == null ) {
 						querySpaces = new HashSet<>();
 					}
-					Collections.addAll( querySpaces, propertySpaces );
+					addAll( querySpaces, propertySpaces );
 				}
 			}
 			if ( querySpaces == null ) {
-				return Collections.emptySet();
+				return emptySet();
 			}
 		}
 		return querySpaces;
@@ -150,20 +155,18 @@ public class ExecutableList<E extends ComparableExecutable>
 	 * @return the entry that was removed
 	 */
 	public ComparableExecutable remove(int index) {
-		// removals are generally safe with regard to sorting...
-
-		final ComparableExecutable e = executables.remove( index );
-
-		// If the executable being removed defined query spaces we need to recalculate the overall query spaces for
-		// this list.  The problem is that we don't know how many other executable instances in the list also
-		// contributed those query spaces as well.
+		// removals are generally safe with regard to sorting
+		final var executable = executables.remove( index );
+		// If the executable being removed defined query spaces we need to recalculate the overall
+		// query spaces for this list. The problem is that we don't know how many other executable
+		// instances in the list also contributed those query spaces as well.
 		//
-		// An alternative here is to use a "multiset" which is a specialized set that keeps a reference count
-		// associated to each entry.  But that is likely overkill here.
-		if ( e.getPropertySpaces() != null && e.getPropertySpaces().length > 0 ) {
+		// An alternative here is to use a "multiset" which is a specialized set that keeps a
+		// reference count associated with each entry. But that is likely overkill here.
+		if ( isNotEmpty( executable.getPropertySpaces() ) ) {
 			querySpaces = null;
 		}
-		return e;
+		return executable;
 	}
 
 	/**
@@ -182,9 +185,10 @@ public class ExecutableList<E extends ComparableExecutable>
 	 */
 	public void removeLastN(int n) {
 		if ( n > 0 ) {
-			int size = executables.size();
-			for ( ComparableExecutable e : executables.subList( size - n, size ) ) {
-				if ( e.getPropertySpaces() != null && e.getPropertySpaces().length > 0 ) {
+			final int size = executables.size();
+			for ( var executable : executables.subList( size - n, size ) ) {
+				final var propertySpaces = executable.getPropertySpaces();
+				if ( isNotEmpty( propertySpaces ) ) {
 					// querySpaces could now be incorrect
 					querySpaces = null;
 					break;
@@ -202,34 +206,37 @@ public class ExecutableList<E extends ComparableExecutable>
 	 * @return true if the object was added to the list
 	 */
 	public boolean add(E executable) {
-		final ComparableExecutable previousLast = sorter != null || executables.isEmpty() ? null : executables.get( executables.size() - 1 );
-		boolean added = executables.add( executable );
-
+		final var previousLast =
+				sorter != null || executables.isEmpty()
+						? null
+						: executables.get( executables.size() - 1 );
+		final boolean added = executables.add( executable );
 		if ( !added ) {
 			return false;
 		}
-
-		// if it was sorted before the addition, then check if the addition invalidated the sorting
-		if ( sorted ) {
-			if ( sorter != null ) {
-				// we don't have intrinsic insight into the sorter's algorithm, so invalidate sorting
-				sorted = false;
-			}
-			else {
-				// otherwise, we added to the end of the list.  So check the comparison between the incoming
-				// executable and the one previously at the end of the list using the Comparable contract
-				if ( previousLast != null && previousLast.compareTo( executable ) > 0 ) {
+		else {
+			// if it was sorted before the addition, then check if the addition invalidated the sorting
+			if ( sorted ) {
+				if ( sorter != null ) {
+					// we don't have intrinsic insight into the sorter's algorithm, so invalidate sorting
 					sorted = false;
 				}
+				else {
+					// otherwise, we added to the end of the list.  So check the comparison between the incoming
+					// executable and the one previously at the end of the list using the Comparable contract
+					if ( previousLast != null && previousLast.compareTo( executable ) > 0 ) {
+						sorted = false;
+					}
+				}
 			}
-		}
 
-		Serializable[] querySpaces = executable.getPropertySpaces();
-		if ( this.querySpaces != null && querySpaces != null ) {
-			Collections.addAll( this.querySpaces, querySpaces );
-		}
+			final var addedQuerySpaces = executable.getPropertySpaces();
+			if ( querySpaces != null && addedQuerySpaces != null ) {
+				addAll( querySpaces, addedQuerySpaces );
+			}
 
-		return true;
+			return true;
+		}
 	}
 
 	/**
@@ -272,7 +279,7 @@ public class ExecutableList<E extends ComparableExecutable>
 	 */
 	@Override
 	public Iterator<E> iterator() {
-		return Collections.unmodifiableList( executables ).iterator();
+		return unmodifiableList( executables ).iterator();
 	}
 
 	/**
@@ -294,10 +301,10 @@ public class ExecutableList<E extends ComparableExecutable>
 			oos.writeInt( -1 );
 		}
 		else {
-			final Set<Serializable> qs = querySpaces;
+			final Set<Serializable> spaces = querySpaces;
 			oos.writeInt( querySpaces.size() );
 			// these are always String, why we treat them as Serializable instead is beyond me...
-			for ( Serializable querySpace : qs ) {
+			for ( var querySpace : spaces ) {
 				oos.writeUTF( querySpace.toString() );
 			}
 		}
@@ -329,7 +336,7 @@ public class ExecutableList<E extends ComparableExecutable>
 		}
 		else {
 			// The line below is for CF nullness checking purposes.
-			final Set<Serializable> querySpaces = CollectionHelper.setOfSize( numberOfQuerySpaces );
+			final Set<Serializable> querySpaces = setOfSize( numberOfQuerySpaces );
 			for ( int i = 0; i < numberOfQuerySpaces; i++ ) {
 				querySpaces.add( in.readUTF() );
 			}
@@ -344,13 +351,12 @@ public class ExecutableList<E extends ComparableExecutable>
 	 * @param session The session with which to associate the {@code Executable}s
 	 */
 	public void afterDeserialize(EventSource session) {
-		for ( ComparableExecutable e : executables ) {
-			e.afterDeserialize( session );
+		for ( var executable : executables ) {
+			executable.afterDeserialize( session );
 		}
 	}
 
 	public String toString() {
 		return "ExecutableList{size=" + executables.size() + "}";
 	}
-
 }

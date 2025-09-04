@@ -192,7 +192,7 @@ public class SessionImpl
 
 		final var sessionOpenEvent = getEventMonitor().beginSessionOpenEvent();
 		try {
-			persistenceContext = createPersistenceContext();
+			persistenceContext = createPersistenceContext( options );
 			actionQueue = createActionQueue();
 			eventListenerGroups = factory.getEventListenerGroups();
 
@@ -252,8 +252,10 @@ public class SessionImpl
 				: ConfigurationHelper.getFlushMode( getSessionProperty( HINT_FLUSH_MODE ), FlushMode.AUTO );
 	}
 
-	protected PersistenceContext createPersistenceContext() {
-		return PersistenceContexts.createPersistenceContext( this );
+	protected PersistenceContext createPersistenceContext(SessionCreationOptions options) {
+		final var persistenceContext = PersistenceContexts.createPersistenceContext( this );
+		persistenceContext.setDefaultReadOnly( options.isReadOnly() );
+		return persistenceContext;
 	}
 
 	protected ActionQueue createActionQueue() {
@@ -477,7 +479,7 @@ public class SessionImpl
 		}
 		else {
 			log.trace( "Automatically flushing session" );
-			doFlush();
+			fireFlush();
 		}
 	}
 
@@ -677,6 +679,7 @@ public class SessionImpl
 	private void firePersist(final PersistEvent event) {
 		Throwable originalException = null;
 		try {
+			checkNotReadOnly();
 			checkTransactionSynchStatus();
 			checkNoUnresolvedActionsBeforeOperation();
 
@@ -783,6 +786,7 @@ public class SessionImpl
 
 	private Object fireMerge(MergeEvent event) {
 		try {
+			checkNotReadOnly();
 			checkTransactionSynchStatus();
 			checkNoUnresolvedActionsBeforeOperation();
 			eventListenerGroups.eventListenerGroup_MERGE
@@ -878,6 +882,7 @@ public class SessionImpl
 
 	private void fireDelete(final DeleteEvent event) {
 		try {
+			checkNotReadOnly();
 			pulseTransactionCoordinator();
 			eventListenerGroups.eventListenerGroup_DELETE
 					.fireEventOnEachListener( event, DeleteEventListener::onDelete );
@@ -1421,22 +1426,24 @@ public class SessionImpl
 	@Override
 	public void flush() {
 		checkOpen();
-		doFlush();
+		fireFlush();
 	}
 
-	private void doFlush() {
-		try {
-			pulseTransactionCoordinator();
-			checkTransactionNeededForUpdateOperation();
-			if ( persistenceContext.getCascadeLevel() > 0 ) {
-				throw new HibernateException( "Flush during cascade is dangerous" );
+	private void fireFlush() {
+		if ( !isReadOnly() ) {
+			try {
+				pulseTransactionCoordinator();
+				checkTransactionNeededForUpdateOperation();
+				if ( persistenceContext.getCascadeLevel() > 0 ) {
+					throw new HibernateException( "Flush during cascade is dangerous" );
+				}
+				eventListenerGroups.eventListenerGroup_FLUSH
+						.fireEventOnEachListener( new FlushEvent( this ), FlushEventListener::onFlush );
+				delayedAfterCompletion();
 			}
-			eventListenerGroups.eventListenerGroup_FLUSH
-					.fireEventOnEachListener( new FlushEvent( this ), FlushEventListener::onFlush );
-			delayedAfterCompletion();
-		}
-		catch ( RuntimeException e ) {
-			throw getExceptionConverter().convert( e );
+			catch (RuntimeException e) {
+				throw getExceptionConverter().convert( e );
+			}
 		}
 	}
 
@@ -1482,7 +1489,7 @@ public class SessionImpl
 			);
 		}
 		checkOpenOrWaitingForAutoClose();
-		doFlush();
+		fireFlush();
 	}
 
 	@Override @Deprecated
@@ -1901,6 +1908,9 @@ public class SessionImpl
 
 	@Override
 	public void setDefaultReadOnly(boolean defaultReadOnly) {
+		if ( !defaultReadOnly && isReadOnly() ) {
+			throw new SessionException( "Session was created in read-only mode" );
+		}
 		persistenceContext.setDefaultReadOnly( defaultReadOnly );
 	}
 
@@ -2029,6 +2039,7 @@ public class SessionImpl
 		private final SessionImpl session;
 		private boolean shareTransactionContext;
 		private boolean tenantIdChanged;
+		private boolean readOnlyChanged;
 
 		private SharedSessionBuilderImpl(SessionImpl session) {
 			super( (SessionFactoryImpl) session.getFactory() );
@@ -2040,8 +2051,15 @@ public class SessionImpl
 		@Override
 		public SessionImpl openSession() {
 			if ( session.getSessionFactoryOptions().isMultiTenancyEnabled() ) {
-				if ( tenantIdChanged && shareTransactionContext ) {
-					throw new SessionException( "Cannot redefine the tenant identifier on a child session if the connection is reused" );
+				if ( shareTransactionContext ) {
+					if ( tenantIdChanged ) {
+						throw new SessionException(
+								"Cannot redefine the tenant identifier on a child session if the connection is reused" );
+					}
+					if ( readOnlyChanged ) {
+						throw new SessionException(
+								"Cannot redefine the read-only mode on a child session if the connection is reused" );
+					}
 				}
 			}
 			return super.openSession();
@@ -2062,6 +2080,19 @@ public class SessionImpl
 		public SharedSessionBuilderImpl tenantIdentifier(Object tenantIdentifier) {
 			super.tenantIdentifier( tenantIdentifier );
 			tenantIdChanged = true;
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl readOnly(boolean readOnly) {
+			super.readOnly( readOnly );
+			readOnlyChanged = true;
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl initialCacheMode(CacheMode cacheMode) {
+			super.initialCacheMode( cacheMode );
 			return this;
 		}
 
@@ -2182,7 +2213,7 @@ public class SessionImpl
 		}
 
 		@Override
-		public SessionBuilder statementInspector(UnaryOperator<String> operator) {
+		public SharedSessionBuilderImpl statementInspector(UnaryOperator<String> operator) {
 			super.statementInspector(operator);
 			return this;
 		}

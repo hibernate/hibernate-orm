@@ -206,8 +206,15 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 
 	@Override
 	public boolean equals(Object other) {
-		return other instanceof SqmFunction<?> that
-			&& Objects.equals( this.functionName, that.functionName )
+		if ( this == other ) {
+			return true;
+		}
+		if ( other == null || getClass() != other.getClass() ) {
+			return false;
+		}
+
+		final SqmFunction<?> that = (SqmFunction<?>) other;
+		return Objects.equals( this.functionName, that.functionName )
 			&& Objects.equals( this.arguments, that.arguments );
 	}
 

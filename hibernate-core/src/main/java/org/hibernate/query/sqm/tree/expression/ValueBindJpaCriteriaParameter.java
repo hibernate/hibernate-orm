@@ -10,7 +10,6 @@ import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
-import java.util.Objects;
 
 
 /**
@@ -55,33 +54,17 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 	}
 
 	@Override
-	// TODO: fix this
 	public int compareTo(SqmParameter<T> parameter) {
-		return this == parameter ? 0 : 1;
+		return Integer.compare( hashCode(), parameter.hashCode() );
 	}
-
-	// this is not really a parameter, it's really a literal value
-	// so use value equality based on its value
 
 	@Override
 	public boolean equals(Object object) {
-		return object instanceof ValueBindJpaCriteriaParameter<?> that
-			&& Objects.equals( this.value, that.value );
-//			&& getJavaTypeDescriptor().areEqual( this.value, (T) that.value );
+		return this == object;
 	}
 
 	@Override
 	public int hashCode() {
-		return value == null ? 0 : value.hashCode(); // getJavaTypeDescriptor().extractHashCode( value );
+		return super.hashCode();
 	}
-
-//	@Override
-//	public boolean equals(Object object) {
-//		return this == object;
-//	}
-//
-//	@Override
-//	public int hashCode() {
-//		return System.identityHashCode( this );
-//	}
 }

@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.function;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -122,5 +123,25 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 			filter.appendHqlString( hql, context );
 			hql.append( ')' );
 		}
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		if ( !super.equals( o ) ) {
+			return false;
+		}
+
+		SelfRenderingSqmAggregateFunction<?> that = (SelfRenderingSqmAggregateFunction<?>) o;
+		return Objects.equals( filter, that.filter );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + Objects.hashCode( filter );
+		return result;
 	}
 }

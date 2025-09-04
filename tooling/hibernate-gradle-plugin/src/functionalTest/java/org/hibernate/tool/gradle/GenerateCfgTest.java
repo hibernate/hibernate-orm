@@ -20,36 +20,32 @@ package org.hibernate.tool.gradle;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 
-import org.gradle.testkit.runner.BuildResult;
-import org.hibernate.tool.gradle.test.func.utils.FuncTestConstants;
-import org.hibernate.tool.gradle.test.func.utils.FuncTestTemplate;
+import org.hibernate.tool.it.gradle.TestTemplate;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class GenerateCfgTest extends FuncTestTemplate implements FuncTestConstants {
+class GenerateCfgTest extends TestTemplate {
 
-    @Test 
-    void testGenerateCfg() throws IOException {
-    	performTask("generateCfg", true);
-    }
-    
-    @Override
-    public void verifyBuild(BuildResult buildResult) {
-    	try {
-	        File generatedSourcesFolder = new File(projectDir, "generated-sources");
-	        assertTrue(buildResult.getOutput().contains("Starting CFG export to directory: " + generatedSourcesFolder.getCanonicalPath()));
-	        assertTrue(generatedSourcesFolder.exists());
-	        assertTrue(generatedSourcesFolder.isDirectory());
-	        File cfgFile = new File(generatedSourcesFolder, "hibernate.cfg.xml");
-	        assertTrue(cfgFile.exists());
-	        assertTrue(cfgFile.isFile());
-	        String cfgContents = Files.readString(cfgFile.toPath());
-	        assertTrue(cfgContents.contains("<mapping resource=\"Foo.hbm.xml\"/>"));
-    	} catch (Exception e) {
-    		throw new RuntimeException(e);
-    	}
-    }
+	@BeforeEach
+	public void beforeEach() {
+		setGradleTaskToPerform("generateCfg");
+		setDatabaseCreationScript(new String[] {
+				"create table FOO (ID int not null, BAR varchar(20), primary key (ID))"
+		});
+	}
 
- }
+	@Test
+	void testGenerateCfg() throws Exception {
+		createProjectAndExecuteGradleCommand();
+		File generatedSourcesFolder = new File(getProjectDir(), "app/generated-sources");
+		assertTrue(getBuildResult().getOutput().contains("Starting CFG export to directory: "));
+		File cfgFile = new File(generatedSourcesFolder, "hibernate.cfg.xml");
+		assertTrue(cfgFile.exists());
+		assertTrue(cfgFile.isFile());
+		String cfgContents = Files.readString(cfgFile.toPath());
+		assertTrue(cfgContents.contains("<mapping resource=\"Foo.hbm.xml\"/>"));
+	}
+
+}

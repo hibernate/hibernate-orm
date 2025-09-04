@@ -22,42 +22,35 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.File;
 import java.io.IOException;
 
-import org.gradle.testkit.runner.BuildResult;
-import org.hibernate.tool.gradle.test.func.utils.FuncTestConstants;
-import org.hibernate.tool.gradle.test.func.utils.FuncTestTemplate;
+import org.hibernate.tool.it.gradle.TestTemplate;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class GenerateHbmTest extends FuncTestTemplate implements FuncTestConstants {
+class GenerateHbmTest extends TestTemplate {
 
-    private static final String BUILD_FILE_HIBERNATE_TOOLS_SECTION = 
-            "hibernateTools {\n" +
-            "  packageName = 'foo.model'\n" +
-            "}\n";
-
-	@Override
-	public String getBuildFileHibernateToolsSection() {
-	    return BUILD_FILE_HIBERNATE_TOOLS_SECTION;
+	@BeforeEach
+	public void beforeEach() {
+		setGradleTaskToPerform("generateHbm");
+		setDatabaseCreationScript(new String[] {
+				"create table FOO (ID int not null, BAR varchar(20), primary key (ID))"
+		});
 	}
 
-    @Test 
-    void testGenerateHbm() throws IOException {
-    	performTask("generateHbm", true);
-    }
-    
-    @Override
-    protected void verifyBuild(BuildResult buildResult) {
-    	try {
-	        File generatedSourcesFolder = new File(projectDir, "generated-sources");
-	        assertTrue(buildResult.getOutput().contains(
-	        		"Starting HBM export to directory: " + generatedSourcesFolder.getCanonicalPath()));
-	        assertTrue(generatedSourcesFolder.exists());
-	        assertTrue(generatedSourcesFolder.isDirectory());
-	        File fooFile = new File(generatedSourcesFolder, "foo/model/Foo.hbm.xml");
-	        assertTrue(fooFile.exists());
-	        assertTrue(fooFile.isFile());
-    	} catch (Exception e) {
-    		throw new RuntimeException(e);
-    	}
+	@Test
+    void testGenerateHbm() throws Exception {
+		setHibernateToolsExtensionSection(
+				"hibernateTools { \n" +
+				"  packageName = 'foo.model'\n" +
+				"}"
+		);
+		createProjectAndExecuteGradleCommand();
+		File generatedSourcesFolder = new File(getProjectDir(), "app/generated-sources");
+		assertTrue(getBuildResult().getOutput().contains("Starting HBM export to directory: "));
+		assertTrue(generatedSourcesFolder.exists());
+		assertTrue(generatedSourcesFolder.isDirectory());
+		File fooFile = new File(generatedSourcesFolder, "foo/model/Foo.hbm.xml");
+		assertTrue(fooFile.exists());
+		assertTrue(fooFile.isFile());
     }
     
   }

@@ -20,7 +20,6 @@ package org.hibernate.tool.gradle;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
-import java.io.IOException;
 
 import org.hibernate.tool.it.gradle.TestTemplate;
 import org.junit.jupiter.api.BeforeEach;

@@ -1898,8 +1898,34 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
-	public SqmExpression<?> visitFunctionExpression(HqlParser.FunctionExpressionContext ctx) {
-		return (SqmExpression<?>) ctx.function().accept( this );
+	public Object visitFunctionExpression(HqlParser.FunctionExpressionContext ctx) {
+		final var slicedFragmentsCtx = ctx.slicedPathAccessFragment();
+		if ( slicedFragmentsCtx != null ) {
+			final List<HqlParser.ExpressionContext> slicedFragments = slicedFragmentsCtx.expression();
+			return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
+					List.of(
+							(SqmTypedNode<?>) visitFunction( ctx.function() ),
+							(SqmTypedNode<?>) slicedFragments.get( 0 ).accept( this ),
+							(SqmTypedNode<?>) slicedFragments.get( 1 ).accept( this )
+					),
+					null,
+					creationContext.getQueryEngine()
+			);
+		}
+		else {
+			final var function = (SqmExpression<?>) visitFunction( ctx.function() );
+			final var indexedPathAccessFragment = ctx.indexedPathAccessFragment();
+			final var pathContinuation = ctx.pathContinuation();
+			if ( indexedPathAccessFragment == null && pathContinuation == null ) {
+				return function;
+			}
+			else {
+				return visitPathContinuation(
+						visitIndexedPathAccessFragment( (SemanticPathPart) function, indexedPathAccessFragment ),
+						pathContinuation
+				);
+			}
+		}
 	}
 
 	@Override
@@ -3061,11 +3087,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
 				+ "' of 'naturalid()' does not resolve to an entity type" );
 	}
-//
-//	@Override
-//	public Object visitToOneFkExpression(HqlParser.ToOneFkExpressionContext ctx) {
-//		return visitToOneFkReference( (HqlParser.ToOneFkReferenceContext) ctx.getChild( 0 ) );
-//	}
 
 	@Override
 	public SqmFkExpression<?> visitToOneFkReference(HqlParser.ToOneFkReferenceContext ctx) {
@@ -5308,33 +5329,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		else if ( ctx.mapKeyNavigablePath() != null ) {
 			return visitMapKeyNavigablePath( ctx.mapKeyNavigablePath() );
-		}
-		else if ( ctx.toOneFkReference() != null ) {
-			return visitToOneFkReference( ctx.toOneFkReference() );
-		}
-		else if ( ctx.function() != null ) {
-			final HqlParser.SlicedPathAccessFragmentContext slicedFragmentsCtx = ctx.slicedPathAccessFragment();
-			if ( slicedFragmentsCtx != null ) {
-				final List<HqlParser.ExpressionContext> slicedFragments = slicedFragmentsCtx.expression();
-				return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
-						List.of(
-								(SqmTypedNode<?>) visitFunction( ctx.function() ),
-								(SqmTypedNode<?>) slicedFragments.get( 0 ).accept( this ),
-								(SqmTypedNode<?>) slicedFragments.get( 1 ).accept( this )
-						),
-						null,
-						creationContext.getQueryEngine()
-				);
-			}
-			else {
-				return visitPathContinuation(
-						visitIndexedPathAccessFragment(
-								(SemanticPathPart) visitFunction( ctx.function() ),
-								ctx.indexedPathAccessFragment()
-						),
-						ctx.pathContinuation()
-				);
-			}
 		}
 		else if ( ctx.simplePath() != null && ctx.indexedPathAccessFragment() != null ) {
 			return visitIndexedPathAccessFragment( visitSimplePath( ctx.simplePath() ), ctx.indexedPathAccessFragment() );

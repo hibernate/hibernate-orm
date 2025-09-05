@@ -7,6 +7,7 @@ package org.hibernate.orm.test.query.dynamic;
 import org.hibernate.query.restriction.Path;
 import org.hibernate.query.specification.ProjectionSpecification;
 import org.hibernate.query.specification.SelectionSpecification;
+import org.hibernate.query.specification.SimpleProjectionSpecification;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.BeforeAll;
@@ -45,6 +46,29 @@ public class ProjectionSpecificationTest {
 			assertEquals( "Gavin", name.in(tuple) );
 			assertEquals( 1, id.in(tuple) );
 			assertNull( otherId.in( tuple ) );
+		});
+	}
+
+	@Test
+	void testSimpleProjection(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var spec = SelectionSpecification.create( BasicEntity.class );
+			var projection = SimpleProjectionSpecification.create( spec, BasicEntity_.name );
+			var name = projection.createQuery( session ).getSingleResult();
+			assertEquals( "Gavin", name );
+		});
+	}
+
+	@Test
+	void testSimpleProjectionPath(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var spec = SelectionSpecification.create( BasicEntity.class );
+			var projection = SimpleProjectionSpecification.create( spec,
+					Path.from( BasicEntity.class)
+							.to( BasicEntity_.other )
+							.to( OtherEntity_.id ) );
+			var id = projection.createQuery( session ).getSingleResult();
+			assertNull( id );
 		});
 	}
 }

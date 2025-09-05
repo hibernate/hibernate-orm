@@ -116,7 +116,7 @@ public class ProjectionSpecificationImpl<T> implements ProjectionSpecification<T
 	}
 
 	@Override
-	public Class<? extends Object[]> getResultType() {
+	public Class<Object[]> getResultType() {
 		return Object[].class;
 	}
 

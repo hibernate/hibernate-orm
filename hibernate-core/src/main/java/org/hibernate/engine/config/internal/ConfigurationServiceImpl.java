@@ -62,11 +62,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 	@Override
 	public <T> @PolyNull T getSetting(String name, Converter<T> converter, @PolyNull T defaultValue) {
 		final Object value = settings.get( name );
-		if ( value == null ) {
-			return defaultValue;
-		}
-
-		return converter.convert( value );
+		return value == null ? defaultValue : converter.convert( value );
 	}
 
 	@Override

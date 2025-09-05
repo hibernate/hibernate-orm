@@ -95,4 +95,18 @@ public class SqmCorrelatedBagJoin<O, T> extends SqmBagJoin<O, T> implements SqmC
 		return correlatedRootJoin;
 	}
 
+	@Override
+	public boolean deepEquals(SqmFrom<?, ?> other) {
+		return super.deepEquals( other )
+			&& other instanceof SqmCorrelatedBagJoin<?, ?> that
+			&& correlationParent.equals( that.correlationParent );
+	}
+
+	@Override
+	public boolean isDeepCompatible(SqmFrom<?, ?> other) {
+		return super.isDeepCompatible( other )
+			&& other instanceof SqmCorrelatedBagJoin<?, ?> that
+			&& correlationParent.isCompatible( that.correlationParent );
+	}
+
 }

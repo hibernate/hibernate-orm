@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -161,15 +162,9 @@ public class SelfRenderingSqmWindowFunction<T> extends SelfRenderingSqmFunction<
 
 	@Override
 	public boolean equals(Object o) {
-		if ( o == null || getClass() != o.getClass() ) {
-			return false;
-		}
-		if ( !super.equals( o ) ) {
-			return false;
-		}
-
-		SelfRenderingSqmWindowFunction<?> that = (SelfRenderingSqmWindowFunction<?>) o;
-		return Objects.equals( filter, that.filter )
+		return super.equals( o )
+			&& o instanceof SelfRenderingSqmWindowFunction<?> that
+			&& Objects.equals( filter, that.filter )
 			&& Objects.equals( respectNulls, that.respectNulls )
 			&& Objects.equals( fromFirst, that.fromFirst );
 	}
@@ -177,6 +172,24 @@ public class SelfRenderingSqmWindowFunction<T> extends SelfRenderingSqmFunction<
 	@Override
 	public int hashCode() {
 		int result = super.hashCode();
+		result = 31 * result + Objects.hashCode( filter );
+		result = 31 * result + Objects.hashCode( respectNulls );
+		result = 31 * result + Objects.hashCode( fromFirst );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object o) {
+		return super.isCompatible( o )
+			&& o instanceof SelfRenderingSqmWindowFunction<?> that
+			&& SqmCacheable.areCompatible( filter, that.filter )
+			&& Objects.equals( respectNulls, that.respectNulls )
+			&& Objects.equals( fromFirst, that.fromFirst );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
 		result = 31 * result + Objects.hashCode( filter );
 		result = 31 * result + Objects.hashCode( respectNulls );
 		result = 31 * result + Objects.hashCode( fromFirst );

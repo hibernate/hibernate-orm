@@ -94,4 +94,18 @@ public class SqmCorrelatedSingularJoin<O, T> extends SqmSingularJoin<O, T> imple
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitCorrelatedSingularJoin( this );
 	}
+
+	@Override
+	public boolean deepEquals(SqmFrom<?, ?> other) {
+		return super.deepEquals( other )
+			&& other instanceof SqmCorrelatedSingularJoin<?, ?> that
+			&& correlationParent.equals( that.correlationParent );
+	}
+
+	@Override
+	public boolean isDeepCompatible(SqmFrom<?, ?> other) {
+		return super.isDeepCompatible( other )
+			&& other instanceof SqmCorrelatedSingularJoin<?, ?> that
+			&& correlationParent.isCompatible( that.correlationParent );
+	}
 }

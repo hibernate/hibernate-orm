@@ -60,7 +60,6 @@ import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
-import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
@@ -217,11 +216,7 @@ public class SqmQueryImpl<R>
 		parameterBindings = parameterMetadata.createBindings( session.getFactory() );
 
 		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
-		for ( var sqmParameter : domainParameterXref.getParameterResolutions().getSqmParameters() ) {
-			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> wrapper ) {
-				bindCriteriaParameter( wrapper );
-			}
-		}
+		bindValueBindCriteriaParameters( domainParameterXref, parameterBindings );
 
 		validateQuery( expectedResultType, sqm, hql );
 

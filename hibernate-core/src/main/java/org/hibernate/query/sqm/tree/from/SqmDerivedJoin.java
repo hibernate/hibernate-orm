@@ -27,7 +27,6 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 
-import java.util.Objects;
 
 /**
  * @author Christian Beikov
@@ -221,15 +220,18 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		return object instanceof SqmDerivedJoin<?> that
-			&& super.equals( object )
-			&& this.lateral == that.lateral
-			&& Objects.equals( this.subQuery, that.subQuery );
+	public boolean deepEquals(SqmFrom<?, ?> object) {
+		return super.deepEquals( object )
+			&& object instanceof SqmDerivedJoin<?> that
+			&& lateral == that.isLateral()
+			&& subQuery.equals( that.subQuery );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( super.hashCode(), subQuery, lateral );
+	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
+		return super.isDeepCompatible( object )
+			&& object instanceof SqmDerivedJoin<?> that
+			&& lateral == that.isLateral()
+			&& subQuery.isCompatible( that.subQuery );
 	}
 }

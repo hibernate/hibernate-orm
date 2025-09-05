@@ -6,7 +6,6 @@ package org.hibernate.query.sqm.tree.insert;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.Incubating;
@@ -176,18 +175,29 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 
 	@Override
 	public boolean equals(Object object) {
-		if ( !(object instanceof SqmInsertSelectStatement<?> that) ) {
-			return false;
-		}
-		return Objects.equals( selectQueryPart, that.selectQueryPart )
-			&& Objects.equals( this.getTarget(), that.getTarget() )
-			&& Objects.equals( this.getInsertionTargetPaths(), that.getInsertionTargetPaths() )
-			&& Objects.equals( this.getConflictClause(), that.getConflictClause() )
-			&& Objects.equals( this.getCteStatements(), that.getCteStatements() );
+		return object instanceof SqmInsertSelectStatement<?> that
+			&& super.equals( that )
+			&& selectQueryPart.equals( that.selectQueryPart );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( selectQueryPart, getTarget(), getInsertionTargetPaths(), getConflictClause(), getCteStatements() );
+		int result = super.hashCode();
+		result = 31 * result + selectQueryPart.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmInsertSelectStatement<?> that
+			&& super.isCompatible( that )
+			&& selectQueryPart.isCompatible( that.selectQueryPart );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + selectQueryPart.cacheHashCode();
+		return result;
 	}
 }

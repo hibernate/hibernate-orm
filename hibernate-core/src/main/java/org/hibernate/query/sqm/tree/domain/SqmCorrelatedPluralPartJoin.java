@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 /**
@@ -67,6 +68,20 @@ public class SqmCorrelatedPluralPartJoin<O, T> extends SqmPluralPartJoin<O, T> i
 	@Override
 	public SqmRoot<O> getCorrelatedRoot() {
 		return correlatedRootJoin;
+	}
+
+	@Override
+	public boolean deepEquals(SqmFrom<?, ?> other) {
+		return super.deepEquals( other )
+			&& other instanceof SqmCorrelatedPluralPartJoin<?, ?> that
+			&& correlationParent.equals( that.correlationParent );
+	}
+
+	@Override
+	public boolean isDeepCompatible(SqmFrom<?, ?> other) {
+		return super.isDeepCompatible( other )
+			&& other instanceof SqmCorrelatedPluralPartJoin<?, ?> that
+			&& correlationParent.isCompatible( that.correlationParent );
 	}
 
 }

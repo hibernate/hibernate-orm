@@ -11,7 +11,6 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
-import java.util.Objects;
 
 /**
  * Entity type expression based on a parameter - `TYPE( :someParam )`
@@ -68,11 +67,22 @@ public class SqmParameterizedEntityType<T> extends AbstractSqmExpression<T> impl
 	@Override
 	public boolean equals(Object object) {
 		return object instanceof SqmParameterizedEntityType<?> that
-			&& Objects.equals( discriminatorSource, that.discriminatorSource );
+			&& discriminatorSource.equals( that.discriminatorSource );
 	}
 
 	@Override
 	public int hashCode() {
 		return discriminatorSource.hashCode();
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmParameterizedEntityType<?> that
+			&& discriminatorSource.isCompatible( that.discriminatorSource );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return discriminatorSource.cacheHashCode();
 	}
 }

@@ -11,6 +11,7 @@ import java.util.Objects;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 import jakarta.persistence.criteria.Expression;
@@ -138,15 +139,29 @@ public class SqmJunctionPredicate extends AbstractSqmPredicate {
 
 	@Override
 	public boolean equals(Object object) {
-		if ( !(object instanceof SqmJunctionPredicate that) ) {
-			return false;
-		}
-		return booleanOperator == that.booleanOperator
+		return object instanceof SqmJunctionPredicate that
+			&& booleanOperator == that.booleanOperator
 			&& Objects.equals( predicates, that.predicates );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( booleanOperator, predicates );
+		int result = booleanOperator.hashCode();
+		result = 31 * result + Objects.hashCode( predicates );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmJunctionPredicate that
+			&& booleanOperator == that.booleanOperator
+			&& SqmCacheable.areCompatible( predicates, that.predicates );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = booleanOperator.hashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( predicates );
+		return result;
 	}
 }

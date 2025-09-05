@@ -107,6 +107,22 @@ public class SqmAnyDiscriminatorValue<T> extends AbstractSqmExpression<T>
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( value.getName(), pathName );
+		int result = value.getName().hashCode();
+		result = 31 * result + pathName.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmAnyDiscriminatorValue<?> that
+			&& Objects.equals( this.value.getName(), that.value.getName() )
+			&& Objects.equals( this.pathName, that.pathName );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = value.getName().hashCode();
+		result = 31 * result + pathName.hashCode();
+		return result;
 	}
 }

@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -127,21 +128,29 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 
 	@Override
 	public boolean equals(Object o) {
-		if ( o == null || getClass() != o.getClass() ) {
-			return false;
-		}
-		if ( !super.equals( o ) ) {
-			return false;
-		}
-
-		SelfRenderingSqmAggregateFunction<?> that = (SelfRenderingSqmAggregateFunction<?>) o;
-		return Objects.equals( filter, that.filter );
+		return super.equals( o )
+			&& o instanceof SelfRenderingSqmAggregateFunction<?> that
+			&& Objects.equals( filter, that.filter );
 	}
 
 	@Override
 	public int hashCode() {
 		int result = super.hashCode();
 		result = 31 * result + Objects.hashCode( filter );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object o) {
+		return super.isCompatible( o )
+			&& o instanceof SelfRenderingSqmAggregateFunction<?> that
+			&& SqmCacheable.areCompatible( filter, that.filter );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( filter );
 		return result;
 	}
 }

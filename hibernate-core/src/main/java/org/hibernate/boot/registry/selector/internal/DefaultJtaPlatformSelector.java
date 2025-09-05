@@ -4,16 +4,21 @@
  */
 package org.hibernate.boot.registry.selector.internal;
 
+import java.util.List;
 import java.util.Objects;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.transaction.jta.platform.internal.AtomikosJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.internal.NarayanaJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.ResinJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.GlassFishJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.internal.WildFlyStandAloneJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.internal.log.DeprecationLogger;
 
 public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatform> {
 
@@ -29,12 +34,18 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 		else {
 			return switch ( name ) {
 				case "JBossAS" -> JBossAppServerJtaPlatform.class;
-				case "JBossTS" -> JBossStandAloneJtaPlatform.class;
+				case "JBossTS" -> {
+					DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedJtaPlatformSetting(
+							AvailableSettings.JTA_PLATFORM, name, List.of( "Narayana", "WildFlyStandadlone" ) );
+					yield JBossStandAloneJtaPlatform.class;
+				}
 				case "Weblogic" -> WeblogicJtaPlatform.class;
 				case "WebSphere", "WebSphereLiberty" -> WebSphereLibertyJtaPlatform.class;
 				case "Atomikos" -> AtomikosJtaPlatform.class;
 				case "Resin" -> ResinJtaPlatform.class;
 				case "GlassFish", "Payara", "SunOne" -> GlassFishJtaPlatform.class;
+				case "Narayana" -> NarayanaJtaPlatform.class;
+				case "WildFlyStandAlone" -> WildFlyStandAloneJtaPlatform.class;
 				default -> null;
 			};
 		}
@@ -55,10 +66,18 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 				return JBossAppServerJtaPlatform.class;
 			}
 			case "org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform" -> {
+				DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedJtaPlatformSetting(
+						AvailableSettings.JTA_PLATFORM, name, List.of( "Narayana", "WildFlyStandadlone" ) );
 				return JBossStandAloneJtaPlatform.class;
+			}
+			case "org.hibernate.engine.transaction.jta.platform.internal.NarayanaJtaPlatform" -> {
+				return NarayanaJtaPlatform.class;
 			}
 			case "org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform" -> {
 				return WebSphereLibertyJtaPlatform.class;
+			}
+			case "org.hibernate.engine.transaction.jta.platform.internal.WildFlyStandAloneJtaPlatform" -> {
+				return WildFlyStandAloneJtaPlatform.class;
 			}
 		}
 
@@ -69,8 +88,8 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 
 		//All these follow the same pattern, allowing us to use recursion into the main method:
 		if ( name.startsWith( LEGACY_PREFIX ) && name.endsWith( LEGACY_POSTFIX ) ) {
-			final String cleanName = name.substring( LEGACY_PREFIX.length(), name.length() - LEGACY_POSTFIX.length() );
-			return defaultJtaPlatformSelector.resolve( cleanName );
+			final String shortName = name.substring( LEGACY_PREFIX.length(), name.length() - LEGACY_POSTFIX.length() );
+			return defaultJtaPlatformSelector.resolve( shortName );
 		}
 		return null;
 	}

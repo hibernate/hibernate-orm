@@ -65,4 +65,14 @@ public class SqmLiteralNull<T> extends SqmLiteral<T> {
 	public int hashCode() {
 		return 1;
 	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
+	}
 }

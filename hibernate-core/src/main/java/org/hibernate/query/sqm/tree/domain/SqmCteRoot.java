@@ -11,6 +11,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.NavigablePath;
 
@@ -103,14 +104,14 @@ public class SqmCteRoot<T> extends SqmRoot<T> implements JpaRoot<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		return object instanceof SqmCteRoot<?> that
-			&& super.equals( object )
-			&& Objects.equals( this.cte, that.cte );
+	public boolean deepEquals(SqmFrom<?, ?> object) {
+		return super.deepEquals( object )
+			&& Objects.equals( cte.getCteTable().getCteName(), ((SqmCteRoot<?>) object).cte.getCteTable().getCteName() );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( super.hashCode(), cte );
+	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
+		return super.isDeepCompatible( object )
+			&& Objects.equals( cte.getCteTable().getCteName(), ((SqmCteRoot<?>) object).cte.getCteTable().getCteName() );
 	}
 }

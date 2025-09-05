@@ -66,6 +66,8 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 
 	private Set<SqmParameter<?>> parameterExpressions;
 	private final Consumer<SqmParameter<?>> consumer;
+	private int criteriaParameterId;
+	private IdentityHashMap<JpaCriteriaParameter<?>, Integer> unnamedParameterIdMap;
 
 	@Override
 	public Object visitPositionalParameterExpression(SqmPositionalParameter<?> expression) {
@@ -88,10 +90,28 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 	 */
 	@Override
 	public SqmJpaCriteriaParameterWrapper<?> visitJpaCriteriaParameter(JpaCriteriaParameter<?> expression) {
+		final int unnamedParameterId;
+		if ( expression.getName() == null ) {
+			if ( unnamedParameterIdMap == null ) {
+				unnamedParameterIdMap = new IdentityHashMap<>();
+			}
+			final var index = unnamedParameterIdMap.get( expression );
+			if ( index == null ) {
+				unnamedParameterIdMap.put( expression, unnamedParameterId = unnamedParameterIdMap.size() );
+			}
+			else {
+				unnamedParameterId = index;
+			}
+		}
+		else {
+			unnamedParameterId = -1;
+		}
 		return visitParameter(
 				new SqmJpaCriteriaParameterWrapper<>(
 						getInferredParameterType( expression ),
 						expression,
+						criteriaParameterId++,
+						unnamedParameterId,
 						expression.nodeBuilder()
 				)
 		);

@@ -10,6 +10,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.NavigablePath;
 
@@ -93,6 +94,20 @@ public class SqmCorrelatedCteJoin<T> extends SqmCteJoin<T> implements SqmCorrela
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitCorrelatedCteJoin( this );
+	}
+
+	@Override
+	public boolean deepEquals(SqmFrom<?, ?> other) {
+		return super.deepEquals( other )
+			&& other instanceof SqmCorrelatedCteJoin<?> that
+			&& correlationParent.equals( that.correlationParent );
+	}
+
+	@Override
+	public boolean isDeepCompatible(SqmFrom<?, ?> other) {
+		return super.isDeepCompatible( other )
+			&& other instanceof SqmCorrelatedCteJoin<?> that
+			&& correlationParent.isCompatible( that.correlationParent );
 	}
 
 }

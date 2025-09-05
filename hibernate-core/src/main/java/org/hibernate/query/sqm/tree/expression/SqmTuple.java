@@ -15,6 +15,7 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
@@ -104,6 +105,17 @@ public class SqmTuple<T>
 	@Override
 	public int hashCode() {
 		return Objects.hashCode( groupedExpressions );
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmTuple<?> that
+			&& SqmCacheable.areCompatible( this.groupedExpressions, that.groupedExpressions );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return SqmCacheable.cacheHashCode( groupedExpressions );
 	}
 
 	@Override

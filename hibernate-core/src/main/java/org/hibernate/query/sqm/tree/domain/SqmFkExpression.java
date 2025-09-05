@@ -16,7 +16,6 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
 
-import java.util.Objects;
 
 /**
  * Reference to the key-side (as opposed to the target-side) of the
@@ -61,18 +60,6 @@ public class SqmFkExpression<T> extends AbstractSqmPath<T> {
 		hql.append( "fk(" );
 		getLhs().appendHqlString( hql, context );
 		hql.append( ')' );
-	}
-
-	@Override
-	public boolean equals(Object object) {
-		return object instanceof SqmFkExpression<?> that
-			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() )
-			&& Objects.equals( this.getLhs(), that.getLhs() );
-	}
-
-	@Override
-	public int hashCode() {
-		return getLhs().hashCode();
 	}
 
 	@Override

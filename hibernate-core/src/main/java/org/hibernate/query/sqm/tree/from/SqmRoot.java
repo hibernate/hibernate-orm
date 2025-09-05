@@ -6,10 +6,13 @@ package org.hibernate.query.sqm.tree.from;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.TreatException;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedFrom;
 import org.hibernate.spi.NavigablePath;
@@ -110,7 +113,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 		return allowJoins;
 	}
 
-	public List<SqmJoin<?, ?>> getOrderedJoins() {
+	public @Nullable List<SqmJoin<?, ?>> getOrderedJoins() {
 		return orderedJoins;
 	}
 
@@ -163,6 +166,17 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 		return walker.visitRootPath( this );
 	}
 
+	@Override
+	public boolean deepEquals(SqmFrom<?, ?> other) {
+		return super.deepEquals( other )
+			&& Objects.equals( getOrderedJoins(), ((SqmRoot<?>) other).getOrderedJoins() );
+	}
+
+	@Override
+	public boolean isDeepCompatible(SqmFrom<?, ?> other) {
+		return super.isDeepCompatible( other )
+			&& SqmCacheable.areCompatible( getOrderedJoins(), ((SqmRoot<?>) other).getOrderedJoins() );
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA

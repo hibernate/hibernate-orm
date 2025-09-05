@@ -66,4 +66,14 @@ public class SqmDurationUnit<T> extends AbstractSqmNode implements SqmTypedNode<
 	public int hashCode() {
 		return unit.hashCode();
 	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
+	}
 }

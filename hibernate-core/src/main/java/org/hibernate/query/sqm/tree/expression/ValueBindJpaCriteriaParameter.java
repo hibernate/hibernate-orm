@@ -54,17 +54,15 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 		SqmLiteral.appendHqlString( hql, getJavaTypeDescriptor(), value );
 	}
 
-	@Override
-	public int compareTo(SqmParameter<T> parameter) {
-		return Integer.compare( hashCode(), parameter.hashCode() );
-	}
+	// For caching purposes, any two ValueBindJpaCriteriaParameter objects are compatible as ensured by the parent impl,
+	// but for equals/hashCode, use equals/hashCode of the underlying value, if available, from the nodes JavaType
 
 	@Override
-	public boolean equals(Object obj) {
-		if ( this == obj ) {
+	public final boolean equals(Object o) {
+		if ( this == o ) {
 			return true;
 		}
-		if ( obj instanceof ValueBindJpaCriteriaParameter<?> that ) {
+		if ( o instanceof ValueBindJpaCriteriaParameter<?> that ) {
 			if ( value == null ) {
 				return that.value == null && Objects.equals( getNodeType(), that.getNodeType() );
 			}

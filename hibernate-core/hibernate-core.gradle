@@ -118,17 +118,17 @@ xjc {
         hbm {
             xsdFile = file( 'src/main/resources/org/hibernate/xsd/mapping/legacy-mapping-4.0.xsd' )
             xjcBindingFile = file( 'src/main/xjb/hbm-mapping-bindings.xjb' )
-            xjcExtensions += ['inheritance', 'simplify']
+            xjcPlugins('inheritance', 'simplify')
         }
         configuration {
             xsdFile = file( 'src/main/resources/org/hibernate/xsd/cfg/configuration-3.2.0.xsd' )
             xjcBindingFile = file( 'src/main/xjb/configuration-bindings.xjb' )
-            xjcExtensions += ['inheritance', 'simplify']
+            xjcPlugins('inheritance', 'simplify')
         }
         mapping {
             xsdFile = file( 'src/main/resources/org/hibernate/xsd/mapping/mapping-7.0.xsd' )
             xjcBindingFile = file( 'src/main/xjb/mapping-bindings.xjb' )
-            xjcExtensions += ['inheritance', 'simplify']
+            xjcPlugins('inheritance', 'simplify')
         }
     }
 }

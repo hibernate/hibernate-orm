@@ -11,11 +11,9 @@ import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
 /**
+ * Describes the XJC processing to apply for a single XSD
+ *
  * @author Steve Ebersole
  */
 public class SchemaDescriptor implements Named {
@@ -24,7 +22,7 @@ public class SchemaDescriptor implements Named {
 
 	private final RegularFileProperty xsdFile;
 	private final RegularFileProperty xjcBindingFile;
-	private final SetProperty<String> xjcExtensions;
+	private final SetProperty<String> xjcPlugins;
 
 	public SchemaDescriptor(String name, Project project) {
 		this.name = name;
@@ -32,7 +30,7 @@ public class SchemaDescriptor implements Named {
 
 		xsdFile = project.getObjects().fileProperty();
 		xjcBindingFile = project.getObjects().fileProperty();
-		xjcExtensions = project.getObjects().setProperty( String.class );
+		xjcPlugins = project.getObjects().setProperty( String.class );
 	}
 
 	@Override
@@ -67,23 +65,11 @@ public class SchemaDescriptor implements Named {
 	}
 
 	@Input
-	public SetProperty<String> ___xjcExtensions() {
-		return xjcExtensions;
+	public SetProperty<String> getXjcPlugins() {
+		return xjcPlugins;
 	}
 
-	public Set<String> getXjcExtensions() {
-		return xjcExtensions.get();
-	}
-
-	public void setXjcExtensions(Set<String> xjcExtensions) {
-		this.xjcExtensions.set( xjcExtensions );
-	}
-
-	public void setXjcExtensions(String... xjcExtensions) {
-		xjcExtensions( xjcExtensions );
-	}
-
-	public void xjcExtensions(String... xjcExtensions) {
-		setXjcExtensions( new HashSet<>( Arrays.asList( xjcExtensions) ) );
+	public void xjcPlugins(String... plugins) {
+		xjcPlugins.addAll( plugins );
 	}
 }

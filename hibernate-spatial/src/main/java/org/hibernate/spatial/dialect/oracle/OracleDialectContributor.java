@@ -26,7 +26,7 @@ public class OracleDialectContributor implements ContributorImplementor {
 
 	public OracleDialectContributor(ServiceRegistry serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
-		final var cfgService = getServiceRegistry().getService( ConfigurationService.class );
+		final var cfgService = getServiceRegistry().requireService( ConfigurationService.class );
 		this.useSTGeometry = cfgService.getSetting(
 				HibernateSpatialConfigurationSettings.ORACLE_OGC_STRICT,
 				StandardConverters.BOOLEAN,
@@ -37,15 +37,14 @@ public class OracleDialectContributor implements ContributorImplementor {
 	@Override
 	public void contributeJdbcTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		HSMessageLogger.SPATIAL_MSG_LOGGER.typeContributions( this.getClass().getCanonicalName() );
-		final ConfigurationService cfgService = getServiceRegistry().getService( ConfigurationService.class );
-		final StrategySelector strategySelector = getServiceRegistry().getService( StrategySelector.class );
-
+		final var cfgService = getServiceRegistry().requireService( ConfigurationService.class );
+		final var strategySelector = getServiceRegistry().requireService( StrategySelector.class );
 
 		final ConnectionFinder connectionFinder = strategySelector.resolveStrategy(
 				ConnectionFinder.class,
 				cfgService.getSetting(
 						HibernateSpatialConfigurationSettings.CONNECTION_FINDER,
-						String.class,
+						StandardConverters.STRING,
 						"org.geolatte.geom.codec.db.oracle.DefaultConnectionFinder"
 				)
 		);

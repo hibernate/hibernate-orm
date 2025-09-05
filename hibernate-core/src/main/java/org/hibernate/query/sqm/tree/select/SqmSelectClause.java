@@ -5,7 +5,6 @@
 package org.hibernate.query.sqm.tree.select;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -16,6 +15,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
@@ -23,7 +24,8 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
  *
  * @author Steve Ebersole
  */
-public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpressionContainer<SqmSelection<?>>, JpaSelection<Object> {
+public class SqmSelectClause extends AbstractSqmNode
+		implements SqmAliasedExpressionContainer<SqmSelection<?>>, JpaSelection<Object> {
 	private boolean distinct;
 	private List<SqmSelection<?>> selections;
 
@@ -64,12 +66,7 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 	}
 
 	public List<SqmSelection<?>> getSelections() {
-		if ( selections == null ) {
-			return Collections.emptyList();
-		}
-		else {
-			return Collections.unmodifiableList( selections );
-		}
+		return selections == null ? emptyList() : unmodifiableList( selections );
 	}
 
 	public void addSelection(SqmSelection<?> selection) {

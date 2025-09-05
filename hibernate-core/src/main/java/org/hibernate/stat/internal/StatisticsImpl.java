@@ -20,7 +20,6 @@ import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -32,7 +31,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.log.StatisticsLogger.STATISTICS_LOGGER;
 
 /**
  * Implementation of {@link Statistics} based on the {@link java.util.concurrent} package.
@@ -41,8 +40,6 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * @author Sanne Grinovero
  */
 public class StatisticsImpl implements StatisticsImplementor, Service {
-
-	private static final CoreMessageLogger LOG = messageLogger( StatisticsImpl.class );
 
 	private final MappingMetamodelImplementor metamodel;
 	private final CacheImplementor cache;
@@ -212,7 +209,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 		resetStart();
 
-		LOG.statisticsReset();
+		STATISTICS_LOGGER.statisticsReset();
 	}
 
 	private void resetStart(@UnknownInitialization StatisticsImpl this) {
@@ -238,10 +235,10 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	public void setStatisticsEnabled(boolean enabled) {
 		isStatisticsEnabled = enabled;
 		if ( enabled ) {
-			LOG.statisticsEnabled();
+			STATISTICS_LOGGER.statisticsEnabled();
 		}
 		else {
-			LOG.statisticsDisabled();
+			STATISTICS_LOGGER.statisticsDisabled();
 		}
 	}
 
@@ -729,8 +726,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	}
 
 	@Override
-	public void queryExecuted(String hql, int rows, long time) {
-		LOG.hql( hql, time, (long) rows );
+	public void queryExecuted(String query, int rows, long time) {
 		queryExecutionCount.increment();
 
 		boolean isLongestQuery;
@@ -741,11 +737,11 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 			// nothing to do here given the odd loop structure...
 		}
 		if ( isLongestQuery ) {
-			queryExecutionMaxTimeQueryString = hql;
+			queryExecutionMaxTimeQueryString = query;
 		}
 
-		if ( hql != null ) {
-			getQueryStatistics( hql ).executed( rows, time );
+		if ( query != null ) {
+			getQueryStatistics( query ).executed( rows, time );
 		}
 	}
 
@@ -911,7 +907,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public void logSummary() {
-		LOG.logStatistics(
+		STATISTICS_LOGGER.logStatistics(
 				startTime.toEpochMilli(),
 				sessionOpenCount.sum(),
 				sessionCloseCount.sum(),

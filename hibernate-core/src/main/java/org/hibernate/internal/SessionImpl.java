@@ -1247,31 +1247,23 @@ public class SessionImpl
 
 	@Override
 	public Object load(LoadType loadType, Object id, String entityName, LockOptions lockOptions, Boolean readOnly) {
-		if ( lockOptions != null ) {
-			// TODO: I doubt that this branch is necessary, and it's probably even wrong
-			final var event = makeLoadEvent( entityName, id, readOnly, lockOptions );
+		boolean success = false;
+		try {
+			final var event =
+					makeLoadEvent( entityName, id, readOnly,
+							lockOptions == null ? LockOptions.NONE : lockOptions );
 			fireLoad( event, loadType );
 			final Object result = event.getResult();
 			releaseLoadEvent( event );
+			if ( !loadType.isAllowNulls() && result == null ) {
+				getSession().getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
+			}
+			success = true;
 			return result;
 		}
-		else {
-			boolean success = false;
-			try {
-				final var event = makeLoadEvent( entityName, id, readOnly, false );
-				fireLoad( event, loadType );
-				final Object result = event.getResult();
-				releaseLoadEvent( event );
-				if ( !loadType.isAllowNulls() && result == null ) {
-					getSession().getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
-				}
-				success = true;
-				return result;
-			}
-			finally {
-				// we might be called from outside transaction
-				afterOperation( success );
-			}
+		finally {
+			// we might be called from outside transaction
+			afterOperation( success );
 		}
 	}
 

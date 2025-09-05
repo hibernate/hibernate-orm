@@ -138,13 +138,15 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 		}
 	}
 
-	@SuppressWarnings( "unchecked" )
 	// Hibernate Reactive overrides this
 	protected T doGetReference(Object id) {
 		final var session = context.getSession();
 		final var concreteType = entityPersister.resolveConcreteProxyTypeForId( id, session );
-		return (T) context.load( LoadEventListener.LOAD, coerceId( id, session.getFactory() ),
-				concreteType.getEntityName(), lockOptions, isReadOnly( session ) );
+		final Object result =
+				context.load( LoadEventListener.LOAD, coerceId( id, session.getFactory() ),
+						concreteType.getEntityName(), lockOptions, isReadOnly( session ) );
+		//noinspection unchecked
+		return (T) result;
 	}
 
 	// Hibernate Reactive might need to call this
@@ -164,20 +166,21 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 		return Optional.ofNullable( perform( () -> doLoad( id ) ) );
 	}
 
-	@SuppressWarnings( "unchecked" )
 	// Hibernate Reactive overrides this
 	protected T doLoad(Object id) {
 		final var session = context.getSession();
 		Object result;
 		try {
-			result = context.load( LoadEventListener.GET, coerceId( id, session.getFactory() ),
-					entityPersister.getEntityName(), lockOptions, isReadOnly( session ) );
+			result =
+					context.load( LoadEventListener.GET, coerceId( id, session.getFactory() ),
+							entityPersister.getEntityName(), lockOptions, isReadOnly( session ) );
 		}
 		catch (ObjectNotFoundException notFoundException) {
-			// if session cache contains proxy for non-existing object
+			// if session cache contains proxy for nonexisting object
 			result = null;
 		}
 		initializeIfNecessary( result );
+		//noinspection unchecked
 		return (T) result;
 	}
 

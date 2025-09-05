@@ -36,7 +36,9 @@ public class ArrayAndElementArgumentValidator extends ArrayArgumentValidator {
 				final var elementArgument = arguments.get( elementIndex );
 				final var expressible = elementArgument.getExpressible();
 				final var elementType = expressible != null ? expressible.getSqmType() : null;
-				if ( expectedElementType != null && elementType != null && expectedElementType != elementType ) {
+				if ( expectedElementType != null && elementType != null
+						&& !expectedElementType.getJavaType()
+							.isAssignableFrom( elementType.getExpressibleJavaType().getJavaTypeClass() ) ) {
 					throw new FunctionArgumentException(
 							String.format(
 									"Parameter %d of function '%s()' has type %s, but argument is of type '%s'",

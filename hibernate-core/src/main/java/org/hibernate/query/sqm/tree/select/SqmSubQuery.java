@@ -7,7 +7,8 @@ package org.hibernate.query.sqm.tree.select;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -580,7 +581,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 
 	@Override
 	public Set<Join<?, ?>> getCorrelatedJoins() {
-		final Set<Join<?, ?>> correlatedJoins = new HashSet<>();
+		final Set<Join<?, ?>> correlatedJoins = Collections.newSetFromMap( new IdentityHashMap<>() );
 		final SqmFromClause fromClause = getQuerySpec().getFromClause();
 		if ( fromClause != null ) {
 			for ( SqmRoot<?> root : fromClause.getRoots() ) {

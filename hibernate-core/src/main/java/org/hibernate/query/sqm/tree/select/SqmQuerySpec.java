@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.select;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -516,7 +517,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			}
 		}
 		else {
-			selectedFromSet = new HashSet<>( selectClause.getSelections().size() );
+			selectedFromSet = Collections.newSetFromMap( new IdentityHashMap<>( selectClause.getSelections().size() ) );
 			for ( SqmSelection<?> selection : selectClause.getSelections() ) {
 				collectSelectedFromSet( selectedFromSet, selection.getSelectableNode() );
 			}

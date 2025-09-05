@@ -699,16 +699,20 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 						collection = persistentCollection;
 					}
 					else {
-						collection =
-								value == null
-										? instantiateEmpty( key, descriptor )
-										: wrap( descriptor, value, entity );
+						collection = wrapOrInstantiateCollection( entity, key, value, descriptor );
 					}
 					action.accept( descriptor, collection );
 				}
 				removeCacheItem( cacheKey, descriptor );
 			}
 		} );
+	}
+
+	private PersistentCollection<?> wrapOrInstantiateCollection(
+			Object entity, Object key, Object value, CollectionPersister descriptor) {
+		return value == null
+				? instantiateEmpty( key, descriptor )
+				: wrap( descriptor, value, entity );
 	}
 
 	// Hibernate Reactive calls this
@@ -1336,17 +1340,19 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public void flushBeforeTransactionCompletion() {
-		final boolean flush;
+		if ( shouldFlushBeforeCompletion() ) {
+			managedFlush();
+		}
+	}
+
+	private boolean shouldFlushBeforeCompletion() {
 		try {
-			flush = !isClosed()
-					&& !isFlushModeNever()
-					&& !JtaStatusHelper.isRollback( getJtaPlatform().getCurrentStatus() );
+			return !isClosed()
+				&& !isFlushModeNever()
+				&& !JtaStatusHelper.isRollback( getJtaPlatform().getCurrentStatus() );
 		}
 		catch ( SystemException se ) {
 			throw new HibernateException( "could not determine transaction status in beforeCompletion()", se );
-		}
-		if ( flush ) {
-			managedFlush();
 		}
 	}
 
@@ -1435,8 +1441,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			return type.cast( this );
 		}
 
-		throw new PersistenceException(
-				"Hibernate cannot unwrap '" + getClass().getName() + "' as '" + type.getName() + "'" );
+		throw new PersistenceException( "Hibernate cannot unwrap '" + getClass().getName()
+										+ "' as '" + type.getName() + "'" );
 	}
 
 	private static final class MultiLoadOptions implements MultiIdLoadOptions {

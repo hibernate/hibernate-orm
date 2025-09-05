@@ -14,8 +14,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
-import org.hibernate.event.monitor.spi.EventMonitor;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.result.Output;
@@ -67,8 +65,8 @@ public class OutputsImpl implements Outputs {
 			executeStartNanos = System.nanoTime();
 		}
 		final var session = context.getSession();
-		final EventMonitor eventMonitor = session.getEventMonitor();
-		final DiagnosticEvent jdbcPreparedStatementExecutionEvent =
+		final var eventMonitor = session.getEventMonitor();
+		final var jdbcPreparedStatementExecutionEvent =
 				eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			final boolean isResultSet = jdbcStatement.execute();

@@ -37,6 +37,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.ResultsConsumer;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -44,6 +45,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.collections.ArrayHelper.indexOf;
 import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
+import static org.hibernate.internal.log.StatisticsLogger.STATISTICS_LOGGER;
 
 /**
  * Standard JdbcSelectExecutor implementation used by Hibernate,
@@ -208,17 +210,25 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		);
 
 		if ( stats ) {
-			final long endTime = System.nanoTime();
-			final long milliseconds =
-					TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
-			statistics.queryExecuted(
-					executionContext.getQueryIdentifier( jdbcSelect.getSqlString() ),
-					getResultSize( result ),
-					milliseconds
-			);
+			logQueryStatistics( jdbcSelect, executionContext, startTime, result, statistics );
 		}
 
 		return result;
+	}
+
+	private void logQueryStatistics(
+			JdbcOperationQuerySelect jdbcSelect,
+			ExecutionContext executionContext,
+			long startTime,
+			Object result,
+			StatisticsImplementor statistics) {
+		final String query = executionContext.getQueryIdentifier( jdbcSelect.getSqlString() );
+		final long endTime = System.nanoTime();
+		final long milliseconds =
+				TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
+		final int rows = getResultSize( result );
+		STATISTICS_LOGGER.queryExecuted( query, milliseconds, (long) rows );
+		statistics.queryExecuted( query, rows, milliseconds );
 	}
 
 	private static <R> RowTransformer<R> getRowTransformer(ExecutionContext executionContext, JdbcValues jdbcValues) {

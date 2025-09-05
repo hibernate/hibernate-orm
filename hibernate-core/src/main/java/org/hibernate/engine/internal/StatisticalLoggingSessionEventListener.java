@@ -5,9 +5,8 @@
 package org.hibernate.engine.internal;
 
 import org.hibernate.SessionEventListener;
-import org.hibernate.internal.CoreMessageLogger;
 
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.engine.internal.SessionMetricsLogger.SESSION_METRICS_LOGGER;
 
 /**
  * Tracks and logs certain session-level metrics.
@@ -15,7 +14,6 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * @author Steve Ebersole
  */
 public class StatisticalLoggingSessionEventListener implements SessionEventListener {
-	private static final CoreMessageLogger LOG = messageLogger( "org.hibernate.session.metrics" );
 
 	/**
 	 * Used by SettingsFactory (in conjunction with stats being enabled) to determine whether to apply this listener
@@ -23,7 +21,7 @@ public class StatisticalLoggingSessionEventListener implements SessionEventListe
 	 * @return {@code true} if logging is enabled for this listener.
 	 */
 	public static boolean isLoggingEnabled() {
-		return LOG.isDebugEnabled();
+		return SESSION_METRICS_LOGGER.isDebugEnabled();
 	}
 
 	// cumulative state ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -276,7 +274,7 @@ public class StatisticalLoggingSessionEventListener implements SessionEventListe
 	@Override
 	public void end() {
 		if ( isLoggingEnabled() ) {
-			LOG.sessionMetrics(
+			SESSION_METRICS_LOGGER.sessionMetrics(
 					jdbcConnectionAcquisitionTime,
 					jdbcConnectionAcquisitionCount,
 					jdbcConnectionReleaseTime,

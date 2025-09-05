@@ -154,10 +154,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Handling transient entity in delete processing", id = 114)
 	void handlingTransientEntity();
 
-	@LogMessage(level = DEBUG)
-	@Message(value = "HQL: %s, time: %sms, rows: %s", id = 117)
-	void hql(String hql, Long valueOf, Long valueOf2);
-
 	@LogMessage(level = WARN)
 	@Message(value = "HSQLDB supports only READ_UNCOMMITTED isolation", id = 118)
 	void hsqldbSupportsOnlyReadCommittedIsolation();
@@ -515,8 +511,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	)
 	void nonCompliantMapConversion(String collectionRole);
 
-	// 458-466 reserved for use by main branch (ORM 5.0.0)
-
 	@LogMessage(level = DEBUG)
 	@Message(value = "Creating pooled optimizer (lo) with [incrementSize=%s; returnClass=%s]", id = 467)
 	void creatingPooledLoOptimizer(int incrementSize, String name);
@@ -690,22 +684,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	void logicalConnectionClosed();
 
 	@LogMessage(level = TRACE)
-	@Message(value = "Statistics initialized", id = 460)
-	void statisticsInitialized();
-
-	@LogMessage(level = TRACE)
-	@Message(value = "Statistics collection enabled", id = 461)
-	void statisticsEnabled();
-
-	@LogMessage(level = TRACE)
-	@Message(value = "Statistics collection disabled", id = 462)
-	void statisticsDisabled();
-
-	@LogMessage(level = TRACE)
-	@Message(value = "Statistics reset", id = 463)
-	void statisticsReset();
-
-	@LogMessage(level = TRACE)
 	@Message(value = "Initializing service: %s", id = 500)
 	void initializingService(String serviceRole);
 
@@ -720,124 +698,4 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Encountered request for service by non-primary service role [%s -> %s]", id = 450)
 	void alternateServiceRole(String requestedRole, String targetRole);
-
-	@LogMessage(level = DEBUG)
-	@Message(
-			id = 401,
-			value = """
-					Logging session metrics:
-						%s ns acquiring %s JDBC connections
-						%s ns releasing %s JDBC connections
-						%s ns preparing %s JDBC statements
-						%s ns executing %s JDBC statements
-						%s ns executing %s JDBC batches
-						%s ns performing %s second-level cache puts
-						%s ns performing %s second-level cache hits
-						%s ns performing %s second-level cache misses
-						%s ns executing %s flushes (flushing a total of %s entities and %s collections)
-						%s ns executing %s pre-partial-flushes
-						%s ns executing %s partial-flushes (flushing a total of %s entities and %s collections)
-					"""
-	)
-	void sessionMetrics(
-			long jdbcConnectionAcquisitionTime,
-			int jdbcConnectionAcquisitionCount,
-			long jdbcConnectionReleaseTime,
-			int jdbcConnectionReleaseCount,
-			long jdbcPrepareStatementTime,
-			int jdbcPrepareStatementCount,
-			long jdbcExecuteStatementTime,
-			int jdbcExecuteStatementCount,
-			long jdbcExecuteBatchTime,
-			int jdbcExecuteBatchCount,
-			long cachePutTime,
-			int cachePutCount,
-			long cacheHitTime,
-			int cacheHitCount,
-			long cacheMissTime,
-			int cacheMissCount,
-			long flushTime,
-			int flushCount,
-			long flushEntityCount,
-			long flushCollectionCount,
-			long prePartialFlushTime,
-			int prePartialFlushCount,
-			long partialFlushTime,
-			int partialFlushCount,
-			long partialFlushEntityCount,
-			long partialFlushCollectionCount);
-
-	@LogMessage(level = INFO)
-	@Message(
-			id = 400,
-			value = """
-					Logging statistics:
-						Start time: %s
-						Sessions opened (closed): %s (%s)
-						Transactions started (successful): %s (%s)
-						Optimistic lock failures: %s
-						Flushes: %s
-						Connections obtained: %s
-						Statements prepared (closed): %s (%s)
-						Second-level cache puts: %s
-						Second-level cache hits (misses): %s (%s)
-						Entities loaded: %s
-						Entities fetched: %s (minimize this)
-						Entities updated, upserted, inserted, deleted: %s, %s, %s, %s
-						Collections loaded: %s
-						Collections fetched: %s (minimize this)
-						Collections updated, removed, recreated: %s, %s, %s
-						Natural id queries executed on database: %s
-						Natural id cache puts: %s
-						Natural id cache hits (misses): %s (%s)
-						Max natural id query execution time: %s ms
-						Queries executed on database: %s
-						Query cache puts: %s
-						Query cache hits (misses): %s (%s)
-						Max query execution time: %s ms
-						Update timestamps cache puts: %s
-						Update timestamps cache hits (misses): %s (%s)
-						Query plan cache hits (misses): %s (%s)
-					"""
-	)
-	void logStatistics(
-			long startTime,
-			long sessionOpenCount,
-			long sessionCloseCount,
-			long transactionCount,
-			long committedTransactionCount,
-			long optimisticFailureCount,
-			long flushCount,
-			long connectCount,
-			long prepareStatementCount,
-			long closeStatementCount,
-			long secondLevelCachePutCount,
-			long secondLevelCacheHitCount,
-			long secondLevelCacheMissCount,
-			long entityLoadCount,
-			long entityFetchCount,
-			long entityUpdateCount,
-			long entityUpsertCount,
-			long entityInsertCount,
-			long entityDeleteCount,
-			long collectionLoadCount,
-			long collectionFetchCount,
-			long collectionUpdateCount,
-			long collectionRemoveCount,
-			long collectionRecreateCount,
-			long naturalIdQueryExecutionCount,
-			long naturalIdCachePutCount,
-			long naturalIdCacheHitCount,
-			long naturalIdCacheMissCount,
-			long naturalIdQueryExecutionMaxTime,
-			long queryExecutionCount,
-			long queryCachePutCount,
-			long queryCacheHitCount,
-			long queryCacheMissCount,
-			long queryExecutionMaxTime,
-			long updateTimestampsCachePutCount,
-			long updateTimestampsCacheHitCount,
-			long updateTimestampsCacheMissCount,
-			long queryPlanCacheHitCount,
-			long queryPlanCacheMissCount);
 }

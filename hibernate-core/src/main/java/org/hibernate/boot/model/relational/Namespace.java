@@ -41,7 +41,7 @@ import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
  * @author Steve Ebersole
  */
 public class Namespace {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( Namespace.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Namespace.class );
 
 	private final PhysicalNamingStrategy physicalNamingStrategy;
 	private final JdbcEnvironment jdbcEnvironment;
@@ -58,7 +58,7 @@ public class Namespace {
 		this.name = name;
 		this.physicalName = physicalName( name, physicalNamingStrategy, jdbcEnvironment );
 
-		log.tracef( "Created database namespace [logicalName=%s, physicalName=%s]", name, physicalName );
+		LOG.tracef( "Created database namespace [logicalName=%s, physicalName=%s]", name, physicalName );
 	}
 
 	private static Name physicalName(Name name, PhysicalNamingStrategy physicalNaming, JdbcEnvironment environment) {
@@ -96,7 +96,7 @@ public class Namespace {
 	public void registerTable(Identifier logicalName, Table table) {
 		final Table previous = tables.put( logicalName, table );
 		if ( previous != null ) {
-			log.debugf(
+			LOG.debugf(
 					"Replacing Table registration(%s) : %s -> %s",
 					logicalName,
 					previous,

@@ -34,7 +34,7 @@ public final class DataHelper {
 	/** The size of the buffer we will use to deserialize larger streams */
 	private static final int BUFFER_SIZE = 1024 * 4;
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( DataHelper.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DataHelper.class );
 
 	/**
 	 * Extract the contents of the given reader/stream as a string.
@@ -79,7 +79,7 @@ public final class DataHelper {
 				reader.close();
 			}
 			catch (IOException e) {
-				log.unableToCloseStream( e );
+				LOG.unableToCloseStream( e );
 			}
 		}
 		return stringBuilder.toString();
@@ -174,13 +174,13 @@ public final class DataHelper {
 				inputStream.close();
 			}
 			catch ( IOException e ) {
-				log.unableToCloseInputStream( e );
+				LOG.unableToCloseInputStream( e );
 			}
 			try {
 				outputStream.close();
 			}
 			catch ( IOException e ) {
-				log.unableToCloseOutputStream( e );
+				LOG.unableToCloseOutputStream( e );
 			}
 		}
 		return outputStream.toByteArray();

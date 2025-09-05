@@ -51,7 +51,7 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
  */
 public final class PersistenceXmlParser {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( PersistenceXmlParser.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PersistenceXmlParser.class );
 
 	/**
 	 * @return A {@link PersistenceXmlParser} using no settings at all.
@@ -161,8 +161,8 @@ public final class PersistenceXmlParser {
 
 	private void parsePersistenceXml(Map<String, PersistenceUnitDescriptor> persistenceUnits,
 			URL xmlUrl, PersistenceUnitTransactionType defaultTransactionType) {
-		if ( log.isTraceEnabled() ) {
-			log.tracef( "Attempting to parse persistence.xml file : %s", xmlUrl.toExternalForm() );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef( "Attempting to parse persistence.xml file : %s", xmlUrl.toExternalForm() );
 		}
 
 		final URL persistenceUnitRootUrl = ArchiveHelper.getJarURLFromURLEntry( xmlUrl, "/META-INF/persistence.xml" );
@@ -174,7 +174,7 @@ public final class PersistenceXmlParser {
 			final JaxbPersistenceUnitImpl jaxbPersistenceUnit = jaxbPersistenceUnits.get( i );
 
 			if ( persistenceUnits.containsKey( jaxbPersistenceUnit.getName() ) ) {
-				log.duplicatedPersistenceUnitName( jaxbPersistenceUnit.getName() );
+				LOG.duplicatedPersistenceUnitName( jaxbPersistenceUnit.getName() );
 				continue;
 			}
 
@@ -195,7 +195,7 @@ public final class PersistenceXmlParser {
 			ParsedPersistenceXmlDescriptor persistenceUnitDescriptor) {
 		final String name = jaxbPersistenceUnit.getName();
 		if ( StringHelper.isNotEmpty( name ) ) {
-			log.tracef( "Persistence unit name from persistence.xml : %s", name );
+			LOG.tracef( "Persistence unit name from persistence.xml : %s", name );
 			persistenceUnitDescriptor.setName( name );
 		}
 

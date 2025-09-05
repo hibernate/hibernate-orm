@@ -42,7 +42,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
  */
 public class BasicTypeRegistry implements Serializable {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( BasicTypeRegistry.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BasicTypeRegistry.class );
 
 	private final TypeConfiguration typeConfiguration;
 
@@ -316,7 +316,7 @@ public class BasicTypeRegistry implements Serializable {
 
 		// explicit registration keys
 		if ( isEmpty( keys ) ) {
-			log.typeDefinedNoRegistrationKeys( type );
+			LOG.typeDefinedNoRegistrationKeys( type );
 		}
 		else {
 			applyRegistrationKeys( type, keys );
@@ -327,7 +327,7 @@ public class BasicTypeRegistry implements Serializable {
 		final var jdbcType = type.getJdbcType();
 		final var existing = registryForJdbcType( jdbcType ).put( type.getMappedJavaType(), type );
 		if ( existing != null ) {
-			log.tracef(
+			LOG.tracef(
 					"BasicTypeRegistry registration overwritten (%s + %s); previous =`%s`",
 					jdbcType.getFriendlyName(),
 					type.getJavaTypeDescriptor(),
@@ -389,7 +389,7 @@ public class BasicTypeRegistry implements Serializable {
 
 		// explicit registration keys
 		if ( registrationKeys == null || registrationKeys.length == 0 ) {
-			log.typeDefinedNoRegistrationKeys( type );
+			LOG.typeDefinedNoRegistrationKeys( type );
 		}
 		else {
 			applyRegistrationKeys( type, registrationKeys );
@@ -412,7 +412,7 @@ public class BasicTypeRegistry implements Serializable {
 
 		// explicit registration keys
 		if ( registrationKeys == null || registrationKeys.length == 0 ) {
-			log.typeDefinedNoRegistrationKeys( type );
+			LOG.typeDefinedNoRegistrationKeys( type );
 		}
 		else {
 			applyRegistrationKeys( type, registrationKeys );
@@ -423,7 +423,7 @@ public class BasicTypeRegistry implements Serializable {
 		final var jdbcType = type.getJdbcType();
 		final var existing = registryForJdbcType( jdbcType ).get( type.getMappedJavaType() );
 		if ( existing != null ) {
-			log.tracef(
+			LOG.tracef(
 					"Skipping registration of BasicType (%s + %s); still priming. existing = %s",
 					jdbcType.getFriendlyName(),
 					type.getJavaTypeDescriptor(),

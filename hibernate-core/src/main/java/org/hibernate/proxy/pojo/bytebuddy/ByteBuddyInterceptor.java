@@ -20,7 +20,7 @@ public class ByteBuddyInterceptor
 		extends BasicLazyInitializer
 		implements ProxyConfiguration.Interceptor {
 
-	private static final CoreMessageLogger log = messageLogger( ByteBuddyInterceptor.class );
+	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyInterceptor.class );
 
 	private final Class<?>[] interfaces;
 
@@ -66,7 +66,7 @@ public class ByteBuddyInterceptor
 						return proxy;
 					}
 					else {
-						log.narrowingProxy( returnValueClass );
+						LOG.narrowingProxy( returnValueClass );
 					}
 				}
 				return returnValue;

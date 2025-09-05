@@ -54,7 +54,7 @@ import static org.hibernate.internal.util.StringHelper.splitAtCommas;
  */
 public class Helper {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( Helper.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Helper.class );
 
 	public static ScriptSourceInput interpretScriptSourceSetting(
 			Object scriptSourceSetting, //Reader or String URL
@@ -65,7 +65,7 @@ public class Helper {
 		}
 		else {
 			final String scriptSourceSettingString = scriptSourceSetting.toString();
-			log.tracef( "Attempting to resolve script source setting: %s", scriptSourceSettingString );
+			LOG.tracef( "Attempting to resolve script source setting: %s", scriptSourceSettingString );
 
 			final String[] paths = splitAtCommas( scriptSourceSettingString );
 			if ( paths.length == 1 ) {
@@ -89,7 +89,7 @@ public class Helper {
 		//		2) relative file path (resource lookup)
 		//		3) absolute file path
 
-		log.trace( "Trying as URL..." );
+		LOG.trace( "Trying as URL..." );
 		// ClassLoaderService.locateResource() first tries the given resource name as url form...
 		final URL url = classLoaderService.locateResource( scriptSourceSettingString );
 		return url != null
@@ -111,14 +111,14 @@ public class Helper {
 		}
 		else {
 			final String scriptTargetSettingString = scriptTargetSetting.toString();
-			log.tracef( "Attempting to resolve script source setting: %s", scriptTargetSettingString );
+			LOG.tracef( "Attempting to resolve script source setting: %s", scriptTargetSettingString );
 
 			// setting could be either:
 			//		1) string URL representation (i.e., "file://...")
 			//		2) relative file path (resource lookup)
 			//		3) absolute file path
 
-			log.trace( "Trying as URL..." );
+			LOG.trace( "Trying as URL..." );
 			// ClassLoaderService.locateResource() first tries the given resource name as url form...
 			final URL url = classLoaderService.locateResource( scriptTargetSettingString );
 			return url != null
@@ -160,7 +160,7 @@ public class Helper {
 			count++;
 		}
 		if ( count > 1 ) {
-			log.multipleSchemaCreationSettingsDefined();
+			LOG.multipleSchemaCreationSettingsDefined();
 		}
 	}
 

@@ -15,10 +15,10 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public interface SqmNode extends JpaCriteriaNode {
-	Logger log = Logger.getLogger( SqmNode.class );
+	Logger LOG = Logger.getLogger( SqmNode.class );
 
 	default String asLoggableText() {
-		log.debugf( "#asLoggableText not defined for %s - using #toString", getClass().getName() );
+		LOG.debugf( "#asLoggableText not defined for %s - using #toString", getClass().getName() );
 		return toString();
 	}
 

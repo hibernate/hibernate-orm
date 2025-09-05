@@ -165,7 +165,7 @@ import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DEL
  * @author Chris Cranford
  */
 public class SessionFactoryImpl implements SessionFactoryImplementor {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( SessionFactoryImpl.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SessionFactoryImpl.class );
 
 	private final String name;
 	private final String jndiName;
@@ -221,7 +221,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			final MetadataImplementor bootMetamodel,
 			final SessionFactoryOptions options,
 			final BootstrapContext bootstrapContext) {
-		log.trace( "Building session factory" );
+		LOG.trace( "Building session factory" );
 		typeConfiguration = bootstrapContext.getTypeConfiguration();
 
 		sessionFactoryOptions = options;
@@ -238,7 +238,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		jdbcServices = serviceRegistry.requireService( JdbcServices.class );
 
 		settings = getMaskedSettings( options, serviceRegistry );
-		log.instantiatingFactory( uuid, settings );
+		LOG.instantiatingFactory( uuid, settings );
 
 		sqlStringGenerationContext = createSqlStringGenerationContext( bootMetamodel, options, jdbcServices );
 
@@ -340,13 +340,13 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				close();
 			}
 			catch (Exception closeException) {
-				log.trace( "Eating error closing factory after failed instantiation" );
+				LOG.trace( "Eating error closing factory after failed instantiation" );
 			}
 			throw e;
 		}
 
-		if ( log.isTraceEnabled() ) {
-			log.trace( "Instantiated factory: " + uuid );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Instantiated factory: " + uuid );
 		}
 	}
 
@@ -762,7 +762,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public Reference getReference() {
 		// from javax.naming.Referenceable
-		log.trace( "Returning a Reference to the factory" );
+		LOG.trace( "Returning a Reference to the factory" );
 		return new Reference(
 				SessionFactoryImpl.class.getName(),
 				new StringRefAddr( "uuid", getUuid() ),
@@ -793,7 +793,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 					throw new IllegalStateException( "EntityManagerFactory is already closed" );
 				}
 
-				log.trace( "Already closed" );
+				LOG.trace( "Already closed" );
 				return;
 			}
 
@@ -801,7 +801,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		try {
-			log.closingFactory( getUuid() );
+			LOG.closingFactory( getUuid() );
 			observer.sessionFactoryClosing( this );
 
 			// NOTE: the null checks below handle cases where close is called
@@ -1037,7 +1037,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 									.newInstance( this );
 				}
 				catch ( Throwable t ) {
-					log.unableToConstructCurrentSessionContext( sessionContextType, t );
+					LOG.unableToConstructCurrentSessionContext( sessionContextType, t );
 					return null;
 				}
 		}
@@ -1112,7 +1112,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	public static class SessionBuilderImpl implements SessionBuilderImplementor, SessionCreationOptions {
-		private static final Logger log = CoreLogging.logger( SessionBuilderImpl.class );
+		private static final Logger LOG = CoreLogging.logger( SessionBuilderImpl.class );
 
 		private final SessionFactoryImpl sessionFactory;
 		private Interceptor interceptor;
@@ -1259,7 +1259,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		@Override
 		public SessionImpl openSession() {
-			log.tracef( "Opening Hibernate Session.  tenant=%s", tenantIdentifier );
+			LOG.tracef( "Opening Hibernate Session.  tenant=%s", tenantIdentifier );
 			return new SessionImpl( sessionFactory, this );
 		}
 
@@ -1595,9 +1595,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	 */
 	@Serial
 	private void writeObject(ObjectOutputStream out) throws IOException {
-		log.serializingFactory( getUuid() );
+		LOG.serializingFactory( getUuid() );
 		out.defaultWriteObject();
-		log.trace( "Serialized factory" );
+		LOG.trace( "Serialized factory" );
 	}
 
 	/**
@@ -1610,9 +1610,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	 */
 	@Serial
 	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-		log.trace( "Deserializing factory" );
+		LOG.trace( "Deserializing factory" );
 		in.defaultReadObject();
-		log.deserializedFactory( getUuid() );
+		LOG.deserializedFactory( getUuid() );
 	}
 
 	/**
@@ -1628,7 +1628,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	 */
 	@Serial
 	private Object readResolve() throws InvalidObjectException {
-		log.trace( "Resolving serialized factory" );
+		LOG.trace( "Resolving serialized factory" );
 		return locateSessionFactoryOnDeserialization( getUuid(), name );
 	}
 
@@ -1636,8 +1636,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			throws InvalidObjectException{
 		final SessionFactory uuidResult = SessionFactoryRegistry.INSTANCE.getSessionFactory( uuid );
 		if ( uuidResult != null ) {
-			if ( log.isTraceEnabled() ) {
-				log.trace( "Resolved factory by UUID: " + uuid );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Resolved factory by UUID: " + uuid );
 			}
 			return uuidResult;
 		}
@@ -1647,8 +1647,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		if ( name != null ) {
 			final SessionFactory namedResult = SessionFactoryRegistry.INSTANCE.getNamedSessionFactory( name );
 			if ( namedResult != null ) {
-				if ( log.isTraceEnabled() ) {
-					log.trace( "Resolved factory by name: " + name );
+				if ( LOG.isTraceEnabled() ) {
+					LOG.trace( "Resolved factory by name: " + name );
 				}
 				return namedResult;
 			}
@@ -1679,7 +1679,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	 * @throws IOException indicates problems reading back serial data stream
 	 */
 	static SessionFactoryImpl deserialize(ObjectInputStream ois) throws IOException {
-		log.trace( "Resolving factory from deserialized session" );
+		LOG.trace( "Resolving factory from deserialized session" );
 		final String uuid = ois.readUTF();
 		boolean isNamed = ois.readBoolean();
 		final String name = isNamed ? ois.readUTF() : null;

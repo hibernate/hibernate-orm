@@ -75,7 +75,7 @@ import java.util.function.Supplier;
 public class TableBasedDeleteHandler
 		extends AbstractMutationHandler
 		implements DeleteHandler {
-	private static final Logger log = Logger.getLogger( TableBasedDeleteHandler.class );
+	private static final Logger LOG = Logger.getLogger( TableBasedDeleteHandler.class );
 
 	private final TemporaryTable idTable;
 	private final TemporaryTableStrategy temporaryTableStrategy;
@@ -595,8 +595,8 @@ public class TableBasedDeleteHandler
 
 	@Override
 	public int execute(JdbcParameterBindings jdbcParameterBindings, DomainQueryExecutionContext context) {
-		if ( log.isTraceEnabled() ) {
-			log.tracef(
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef(
 					"Starting multi-table delete execution - %s",
 					getSqmStatement().getTarget().getModel().getName()
 			);

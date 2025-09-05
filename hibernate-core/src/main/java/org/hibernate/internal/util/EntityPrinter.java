@@ -26,7 +26,7 @@ import org.hibernate.type.Type;
  */
 public final class EntityPrinter {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( EntityPrinter.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityPrinter.class );
 
 	private final SessionFactoryImplementor factory;
 
@@ -99,8 +99,8 @@ public final class EntityPrinter {
 	// Cannot use Map as an argument because it clashes with the previous method (due to type erasure)
 	public void logEntities(Iterable<Map.Entry<EntityKey, EntityHolder>> entitiesByEntityKey)
 			throws HibernateException {
-		if ( log.isDebugEnabled() && entitiesByEntityKey.iterator().hasNext() ) {
-			log.debug( "Listing entities:" );
+		if ( LOG.isDebugEnabled() && entitiesByEntityKey.iterator().hasNext() ) {
+			LOG.debug( "Listing entities:" );
 			int i = 0;
 			for ( Map.Entry<EntityKey, EntityHolder> entityKeyAndEntity : entitiesByEntityKey ) {
 				final EntityHolder holder = entityKeyAndEntity.getValue();
@@ -108,10 +108,10 @@ public final class EntityPrinter {
 					continue;
 				}
 				if ( i++ > 20 ) {
-					log.debug( "More......" );
+					LOG.debug( "More......" );
 					break;
 				}
-				log.debug( toString( entityKeyAndEntity.getKey().getEntityName(), holder.getEntity() ) );
+				LOG.debug( toString( entityKeyAndEntity.getKey().getEntityName(), holder.getEntity() ) );
 			}
 		}
 	}

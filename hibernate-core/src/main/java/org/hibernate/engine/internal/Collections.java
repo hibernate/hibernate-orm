@@ -26,7 +26,7 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
  */
 public final class Collections {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( Collections.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Collections.class );
 
 	/**
 	 * record the fact that this collection was dereferenced
@@ -48,8 +48,8 @@ public final class Collections {
 		final var entry = persistenceContext.getCollectionEntry( collection );
 		final var loadedPersister = entry.getLoadedPersister();
 
-		if ( loadedPersister != null && log.isTraceEnabled() ) {
-			log.trace( "Collection dereferenced: "
+		if ( loadedPersister != null && LOG.isTraceEnabled() ) {
+			LOG.trace( "Collection dereferenced: "
 						+ collectionInfoString( loadedPersister, collection, entry.getLoadedKey(), session ) );
 		}
 
@@ -114,8 +114,8 @@ public final class Collections {
 		final var loadedPersister = entry.getLoadedPersister();
 		final Object loadedKey = entry.getLoadedKey();
 
-		if ( log.isTraceEnabled() ) {
-			log.trace( "Found collection with unloaded owner: "
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Found collection with unloaded owner: "
 						+ collectionInfoString( loadedPersister, collection, loadedKey, session ) );
 		}
 
@@ -163,8 +163,8 @@ public final class Collections {
 		if ( isBytecodeEnhanced && !collection.wasInitialized() ) {
 			// the class of the collection owner is enhanced for lazy loading,
 			// and we found an un-initialized PersistentCollection, so skip it
-			if ( log.isTraceEnabled() ) {
-				log.trace( "Skipping uninitialized bytecode-lazy collection: "
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Skipping uninitialized bytecode-lazy collection: "
 							+ collectionInfoString( persister, collection, collectionEntry.getCurrentKey(), session ) );
 			}
 			collectionEntry.setReached( true );
@@ -188,9 +188,9 @@ public final class Collections {
 			SessionImplementor session,
 			CollectionPersister persister,
 			CollectionEntry collectionEntry) {
-		if ( log.isTraceEnabled() ) {
+		if ( LOG.isTraceEnabled() ) {
 			if ( collection.wasInitialized() ) {
-				log.tracef(
+				LOG.tracef(
 						"Collection found: %s, was: %s (initialized)",
 						collectionInfoString(
 								persister,
@@ -207,7 +207,7 @@ public final class Collections {
 				);
 			}
 			else {
-				log.tracef(
+				LOG.tracef(
 						"Collection found: %s, was: %s (uninitialized)",
 						collectionInfoString(
 								persister,
@@ -271,7 +271,7 @@ public final class Collections {
 					// we will need to remove the old entries
 					collectionEntry.setDoremove( true );
 					if ( collectionEntry.isDorecreate() ) {
-						log.trace( "Forcing collection initialization" );
+						LOG.trace( "Forcing collection initialization" );
 						collection.forceInitialization();
 					}
 				}

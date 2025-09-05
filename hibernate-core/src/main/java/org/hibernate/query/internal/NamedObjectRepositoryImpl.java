@@ -45,7 +45,7 @@ import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
  * @author Steve Ebersole
  */
 public class NamedObjectRepositoryImpl implements NamedObjectRepository {
-	private static final Logger log = Logger.getLogger( NamedObjectRepository.class );
+	private static final Logger LOG = Logger.getLogger( NamedObjectRepository.class );
 
 	private final Map<String, NamedSqmQueryMemento<?>> sqmMementoMap;
 	private final Map<String, NamedNativeQueryMemento<?>> sqlMementoMap;
@@ -313,12 +313,12 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 		final var hqlTranslator = queryEngine.getHqlTranslator();
 
 		// Check named HQL queries
-		log.tracef( "Checking %s named HQL queries", sqmMementoMap.size() );
+		LOG.tracef( "Checking %s named HQL queries", sqmMementoMap.size() );
 		for ( var hqlMemento : sqmMementoMap.values() ) {
 			final String queryString = hqlMemento.getHqlString();
 			final String registrationName = hqlMemento.getRegistrationName();
 			try {
-				log.tracef( "Checking named HQL query: %s", registrationName );
+				LOG.tracef( "Checking named HQL query: %s", registrationName );
 				interpretationCache.resolveHqlInterpretation( queryString, null, hqlTranslator );
 			}
 			catch ( QueryException e ) {
@@ -333,12 +333,12 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 		}
 
 		// Check native-sql queries
-		log.tracef( "Checking %s named SQL queries", sqlMementoMap.size() );
+		LOG.tracef( "Checking %s named SQL queries", sqlMementoMap.size() );
 		for ( var memento : sqlMementoMap.values() ) {
 			memento.validate( queryEngine );
 //			// this will throw an error if there's something wrong.
 //			try {
-//				log.tracef( "Checking named SQL query: %s", memento.getRegistrationName() );
+//				LOG.tracef( "Checking named SQL query: %s", memento.getRegistrationName() );
 //				// TODO : would be really nice to cache the spec on the query-def so as to not have to re-calc the hash;
 //				// currently not doable though because of the resultset-ref stuff...
 //				NativeSQLQuerySpecification spec;

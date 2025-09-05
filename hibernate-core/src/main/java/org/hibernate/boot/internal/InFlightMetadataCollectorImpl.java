@@ -134,7 +134,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize
  */
 public class InFlightMetadataCollectorImpl
 		implements InFlightMetadataCollector, ConverterRegistry, GeneratorSettings {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( InFlightMetadataCollectorImpl.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( InFlightMetadataCollectorImpl.class );
 
 	private final BootstrapContext bootstrapContext;
 	private final MetadataBuildingOptions options;
@@ -639,7 +639,7 @@ public class InFlightMetadataCollectorImpl
 		}
 		final FetchProfile old = fetchProfileMap.put( profile.getName(), profile );
 		if ( old != null ) {
-			log.warn( "Duplicated fetch profile with same name [" + profile.getName() + "] found." );
+			LOG.warn( "Duplicated fetch profile with same name [" + profile.getName() + "] found." );
 		}
 	}
 
@@ -680,7 +680,7 @@ public class InFlightMetadataCollectorImpl
 							+ AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE + " to false " );
 				}
 				else {
-					log.duplicateGeneratorName( old.getName() );
+					LOG.duplicateGeneratorName( old.getName() );
 				}
 			}
 		}
@@ -902,10 +902,10 @@ public class InFlightMetadataCollectorImpl
 		if ( importName == null || className == null ) {
 			throw new IllegalArgumentException( "Import name or entity name is null" );
 		}
-		log.tracev( "Import: {0} -> {1}", importName, className);
+		LOG.tracev( "Import: {0} -> {1}", importName, className);
 		final String old = imports.put( importName, className);
 		if ( old != null ) {
-			log.debugf( "Import name [%s] overrode previous [{%s}]", importName, old );
+			LOG.debugf( "Import name [%s] overrode previous [{%s}]", importName, old );
 		}
 	}
 
@@ -1953,7 +1953,7 @@ public class InFlightMetadataCollectorImpl
 
 	private void processPropertyReferences() {
 		if ( delayedPropertyReferenceHandlers != null ) {
-			log.trace( "Processing association property references" );
+			LOG.trace( "Processing association property references" );
 
 			for ( DelayedPropertyReferenceHandler delayedPropertyReferenceHandler : delayedPropertyReferenceHandlers ) {
 				delayedPropertyReferenceHandler.process( this );
@@ -2107,7 +2107,7 @@ public class InFlightMetadataCollectorImpl
 			// by tools. We want to hold off requiring classes being present until we
 			// try to build the SF. Here, just building the Metadata, it is "ok" for an
 			// exception to occur, the same exception will happen later as we build the SF.
-			log.debug( "Ignoring exception thrown when trying to build IdentifierGenerator as part of Metadata building", e );
+			LOG.debug( "Ignoring exception thrown when trying to build IdentifierGenerator as part of Metadata building", e );
 		}
 	}
 

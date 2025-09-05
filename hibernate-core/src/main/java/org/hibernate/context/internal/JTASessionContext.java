@@ -44,7 +44,7 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
  */
 public class JTASessionContext extends AbstractCurrentSessionContext {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( JTASessionContext.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JTASessionContext.class );
 
 	private transient final Map<Object, Session> currentSessionMap = new ConcurrentHashMap<>();
 
@@ -100,7 +100,7 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 					currentSession.close();
 				}
 				catch ( Throwable e ) {
-					log.debug( "Unable to release generated current-session on failed synchronization registration", e );
+					LOG.debug( "Unable to release generated current-session on failed synchronization registration", e );
 				}
 				throw new HibernateException( "Unable to register cleanup Synchronization with TransactionManager" );
 			}

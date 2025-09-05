@@ -41,7 +41,7 @@ import static org.hibernate.internal.util.StringHelper.join;
  */
 public class CascadingActions {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( CascadingAction.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( CascadingAction.class );
 
 	/**
 	 * Disallow instantiation
@@ -63,7 +63,7 @@ public class CascadingActions {
 				List<String> attributePath,
 				DeleteContext context,
 				boolean isCascadeDeleteEnabled) {
-			log.tracev( "Cascading to delete: {0}", childEntityName );
+			LOG.tracev( "Cascading to delete: {0}", childEntityName );
 			session.delete( childEntityName, child, isCascadeDeleteEnabled, context );
 		}
 
@@ -124,7 +124,7 @@ public class CascadingActions {
 				List<String> attributePath,
 				LockOptions lockOptions,
 				boolean isCascadeDeleteEnabled) {
-			log.tracev( "Cascading to lock: {0}", childEntityName );
+			LOG.tracev( "Cascading to lock: {0}", childEntityName );
 			session.lock( childEntityName, child, lockOptions );
 		}
 
@@ -164,7 +164,7 @@ public class CascadingActions {
 				RefreshContext context,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
-			log.tracev( "Cascading to refresh: {0}", childEntityName );
+			LOG.tracev( "Cascading to refresh: {0}", childEntityName );
 			session.refresh( childEntityName, child, context );
 		}
 
@@ -203,7 +203,7 @@ public class CascadingActions {
 				Void nothing,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
-			log.tracev( "Cascading to evict: {0}", childEntityName );
+			LOG.tracev( "Cascading to evict: {0}", childEntityName );
 			session.evict( child );
 		}
 
@@ -247,7 +247,7 @@ public class CascadingActions {
 				MergeContext context,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
-			log.tracev( "Cascading to merge: {0}", childEntityName );
+			LOG.tracev( "Cascading to merge: {0}", childEntityName );
 			session.merge( childEntityName, child, context );
 		}
 
@@ -287,7 +287,7 @@ public class CascadingActions {
 				PersistContext context,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
-			log.tracev( "Cascading to persist: {0}", childEntityName );
+			LOG.tracev( "Cascading to persist: {0}", childEntityName );
 			session.persist( childEntityName, child, context );
 		}
 
@@ -338,7 +338,7 @@ public class CascadingActions {
 				PersistContext context,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
-			log.tracev( "Cascading to persist on flush: {0}", childEntityName );
+			LOG.tracev( "Cascading to persist on flush: {0}", childEntityName );
 			session.persistOnFlush( childEntityName, child, context );
 		}
 
@@ -543,7 +543,7 @@ public class CascadingActions {
 				ReplicationMode mode,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
-			log.tracev( "Cascading to replicate: {0}", childEntityName );
+			LOG.tracev( "Cascading to replicate: {0}", childEntityName );
 			session.replicate( childEntityName, child, mode );
 		}
 

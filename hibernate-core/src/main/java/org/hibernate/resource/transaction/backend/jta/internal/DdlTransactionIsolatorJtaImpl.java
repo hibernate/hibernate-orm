@@ -23,7 +23,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
-	private static final Logger log = Logger.getLogger( DdlTransactionIsolatorJtaImpl.class );
+	private static final Logger LOG = Logger.getLogger( DdlTransactionIsolatorJtaImpl.class );
 
 	private final JdbcContext jdbcContext;
 
@@ -35,7 +35,7 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 
 		try {
 			final JtaPlatform jtaPlatform = jdbcContext.getServiceRegistry().requireService( JtaPlatform.class );
-			log.tracef( "DdlTransactionIsolatorJtaImpl#prepare: JtaPlatform -> %s", jtaPlatform );
+			LOG.tracef( "DdlTransactionIsolatorJtaImpl#prepare: JtaPlatform -> %s", jtaPlatform );
 
 			final TransactionManager tm = jtaPlatform.retrieveTransactionManager();
 			if ( tm == null ) {
@@ -44,10 +44,10 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 						"base JtaPlatform impl (" + jtaPlatform + ")?"
 				);
 			}
-			log.tracef( "DdlTransactionIsolatorJtaImpl#prepare: TransactionManager -> %s", tm );
+			LOG.tracef( "DdlTransactionIsolatorJtaImpl#prepare: TransactionManager -> %s", tm );
 
 			this.suspendedTransaction = tm.suspend();
-			log.tracef( "DdlTransactionIsolatorJtaImpl#prepare: suspended Transaction -> %s", this.suspendedTransaction );
+			LOG.tracef( "DdlTransactionIsolatorJtaImpl#prepare: suspended Transaction -> %s", this.suspendedTransaction );
 		}
 		catch (SystemException e) {
 			throw new HibernateException( "Unable to suspend current JTA transaction in preparation for DDL execution" );

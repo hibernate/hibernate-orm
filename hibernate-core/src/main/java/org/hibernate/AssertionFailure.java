@@ -14,7 +14,7 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 public class AssertionFailure extends RuntimeException {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( AssertionFailure.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AssertionFailure.class );
 
 	/**
 	 * Creates an instance of AssertionFailure using the given message.
@@ -23,7 +23,7 @@ public class AssertionFailure extends RuntimeException {
 	 */
 	public AssertionFailure(String message) {
 		super( message );
-		log.failed( this );
+		LOG.failed( this );
 	}
 
 	/**
@@ -34,6 +34,6 @@ public class AssertionFailure extends RuntimeException {
 	 */
 	public AssertionFailure(String message, Throwable cause) {
 		super( message, cause );
-		log.failed( cause );
+		LOG.failed( cause );
 	}
 }

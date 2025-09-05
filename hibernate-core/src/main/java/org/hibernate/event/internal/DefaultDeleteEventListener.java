@@ -53,7 +53,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  */
 public class DefaultDeleteEventListener implements DeleteEventListener,	CallbackRegistryConsumer {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( DefaultDeleteEventListener.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultDeleteEventListener.class );
 
 	private CallbackRegistry callbackRegistry;
 
@@ -155,7 +155,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	}
 
 	private void deleteUnmanagedInstance(DeleteEvent event, DeleteContext transientEntities, Object entity) {
-		log.trace( "Deleted entity was not associated with current session" );
+		LOG.trace( "Deleted entity was not associated with current session" );
 		final var source = event.getSession();
 		final var persister = source.getEntityPersister( event.getEntityName(), entity );
 		if ( ForeignKeys.isTransient( persister.getEntityName(), entity, null, source ) ) {
@@ -220,7 +220,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 				return true;
 			}
 			else {
-				log.flushAndEvictOnRemove( key.getEntityName() );
+				LOG.flushAndEvictOnRemove( key.getEntityName() );
 				source.flush();
 				if ( !persister.isVersioned()
 						|| persister.getVersionType()
@@ -244,12 +244,12 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			DeleteContext transientEntities,
 			Object entity,
 			EntityEntry entityEntry) {
-		log.trace( "Deleting a persistent instance" );
+		LOG.trace( "Deleting a persistent instance" );
 		final var source = event.getSession();
 		if ( entityEntry.getStatus().isDeletedOrGone()
 				|| source.getPersistenceContextInternal()
 						.containsDeletedUnloadedEntityKey( entityEntry.getEntityKey() ) ) {
-			log.trace( "Object was already deleted" );
+			LOG.trace( "Object was already deleted" );
 		}
 		else {
 			delete(
@@ -339,13 +339,13 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			Object entity,
 			EntityPersister persister,
 			DeleteContext transientEntities) {
-		log.handlingTransientEntity();
+		LOG.handlingTransientEntity();
 		if ( transientEntities.add( entity ) ) {
 			cascadeBeforeDelete( session, persister, entity, transientEntities );
 			cascadeAfterDelete( session, persister, entity, transientEntities );
 		}
 		else {
-			log.trace( "Already handled transient entity; skipping" );
+			LOG.trace( "Already handled transient entity; skipping" );
 		}
 	}
 
@@ -370,8 +370,8 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			final EntityPersister persister,
 			final DeleteContext transientEntities) {
 
-		if ( log.isTraceEnabled() ) {
-			log.trace( "Deleting " + infoString( persister, entityEntry.getId(), session.getFactory() ) );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Deleting " + infoString( persister, entityEntry.getId(), session.getFactory() ) );
 		}
 
 		final Object version = entityEntry.getVersion();

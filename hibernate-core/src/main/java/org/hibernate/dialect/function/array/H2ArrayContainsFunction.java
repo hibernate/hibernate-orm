@@ -42,7 +42,7 @@ public class H2ArrayContainsFunction extends AbstractArrayContainsFunction {
 		final JdbcMappingContainer needleTypeContainer = needleExpression.getExpressionType();
 		final JdbcMapping needleType = needleTypeContainer == null ? null : needleTypeContainer.getSingleJdbcMapping();
 		if ( needleType == null || needleType instanceof BasicPluralType<?, ?> ) {
-			log.deprecatedArrayContainsWithArray();
+			LOG.deprecatedArrayContainsWithArray();
 			sqlAppender.append( '(' );
 			if ( ArrayHelper.isNullable( haystackExpression ) ) {
 				haystackExpression.accept( walker );

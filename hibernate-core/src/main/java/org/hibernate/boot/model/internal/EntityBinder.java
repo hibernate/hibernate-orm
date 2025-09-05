@@ -133,7 +133,7 @@ import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.
  */
 public class EntityBinder {
 
-	private static final CoreMessageLogger log = messageLogger( EntityBinder.class );
+	private static final CoreMessageLogger LOG = messageLogger( EntityBinder.class );
 
 	private static final String NATURAL_ID_CACHE_SUFFIX = "##NaturalId";
 
@@ -186,8 +186,8 @@ public class EntityBinder {
 			ClassDetails clazzToProcess,
 			Map<ClassDetails, InheritanceState> inheritanceStates,
 			MetadataBuildingContext context) {
-		if ( log.isTraceEnabled() ) {
-			log.trace( "Binding entity with annotated class: " + clazzToProcess.getName() );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Binding entity with annotated class: " + clazzToProcess.getName() );
 		}
 
 		final var collector = context.getMetadataCollector();
@@ -1028,8 +1028,8 @@ public class EntityBinder {
 		if ( discriminatorColumn != null ) {
 			final boolean ignore = buildingOptions.ignoreExplicitDiscriminatorsForJoinedInheritance();
 			if ( ignore ) {
-				if ( log.isTraceEnabled() ) {
-					log.trace( "Ignoring explicit @DiscriminatorColumn annotation on: "
+				if ( LOG.isTraceEnabled() ) {
+					LOG.trace( "Ignoring explicit @DiscriminatorColumn annotation on: "
 								+ annotatedClass.getName() );
 				}
 			}
@@ -1038,8 +1038,8 @@ public class EntityBinder {
 		else {
 			final boolean createImplicit = buildingOptions.createImplicitDiscriminatorsForJoinedInheritance();
 			if ( createImplicit ) {
-				if ( log.isTraceEnabled() ) {
-					log.trace( "Inferring implicit @DiscriminatorColumn using defaults for: "
+				if ( LOG.isTraceEnabled() ) {
+					LOG.trace( "Inferring implicit @DiscriminatorColumn using defaults for: "
 								+ annotatedClass.getName() );
 				}
 			}

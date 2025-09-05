@@ -24,7 +24,7 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
  */
 public class DefaultInitializeCollectionEventListener implements InitializeCollectionEventListener {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( DefaultInitializeCollectionEventListener.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultInitializeCollectionEventListener.class );
 
 	/**
 	 * called by a collection that wants to initialize itself
@@ -43,20 +43,20 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 			final var loadedPersister = ce.getLoadedPersister();
 			checkPersister(collection, loadedPersister);
 			final Object loadedKey = ce.getLoadedKey();
-			if ( log.isTraceEnabled() ) {
-				log.trace( "Initializing collection "
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Initializing collection "
 							+ collectionInfoString( loadedPersister, collection, loadedKey, source ) );
 			}
 
 			final boolean foundInCache = initializeFromCache( loadedKey, loadedPersister, collection, source );
 			if ( foundInCache ) {
-				log.trace( "Collection initialized from cache" );
+				LOG.trace( "Collection initialized from cache" );
 			}
 			else {
-				log.trace( "Collection not cached" );
+				LOG.trace( "Collection not cached" );
 				loadedPersister.initialize( loadedKey, source );
 				handlePotentiallyEmptyCollection( collection, persistenceContext, loadedKey, loadedPersister );
-				log.trace( "Collection initialized" );
+				LOG.trace( "Collection initialized" );
 
 				final var statistics = source.getFactory().getStatistics();
 				if ( statistics.isStatisticsEnabled() ) {
@@ -101,7 +101,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 			SessionImplementor source) {
 		if ( source.getLoadQueryInfluencers().hasEnabledFilters()
 				&& persister.isAffectedByEnabledFilters( source ) ) {
-			log.trace( "Disregarding cached version (if any) of collection due to enabled filters" );
+			LOG.trace( "Disregarding cached version (if any) of collection due to enabled filters" );
 			return false;
 		}
 		else {

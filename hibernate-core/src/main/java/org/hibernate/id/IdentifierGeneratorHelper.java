@@ -47,7 +47,7 @@ import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 @Internal
 public final class IdentifierGeneratorHelper {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( IdentifierGeneratorHelper.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IdentifierGeneratorHelper.class );
 
 	/**
 	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that we should
@@ -177,7 +177,7 @@ public final class IdentifierGeneratorHelper {
 
 		public void bind(PreparedStatement preparedStatement, int position) throws SQLException {
 			// TODO : bind it as 'exact type'?  Not sure if that gains us anything...
-			log.tracef( "binding parameter [%s] - [%s]", position, value );
+			LOG.tracef( "binding parameter [%s] - [%s]", position, value );
 			preparedStatement.setLong( position, value );
 		}
 

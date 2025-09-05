@@ -57,7 +57,7 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
  * @author Steve Ebersole
  */
 public class SchemaManagementToolCoordinator {
-	private static final Logger log = Logger.getLogger( SchemaManagementToolCoordinator.class );
+	private static final Logger LOG = Logger.getLogger( SchemaManagementToolCoordinator.class );
 
 	public static void process(
 			final Metadata metadata,
@@ -68,7 +68,7 @@ public class SchemaManagementToolCoordinator {
 
 		if ( groupings.isEmpty() ) {
 			// no actions specified
-			log.debug( "No schema management actions found" );
+			LOG.debug( "No schema management actions found" );
 			return;
 		}
 
@@ -751,7 +751,7 @@ public class SchemaManagementToolCoordinator {
 				}
 
 				if ( databaseActionToUse == Action.NONE &&  scriptActionToUse == Action.NONE ) {
-					log.debugf( "No schema actions specified for contributor '%s'", contributor );
+					LOG.debugf( "No schema actions specified for contributor '%s'", contributor );
 					continue;
 				}
 

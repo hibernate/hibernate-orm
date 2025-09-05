@@ -22,7 +22,7 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
  * @author Chris Cranford
  */
 public class TypeDefinitionRegistryStandardImpl implements TypeDefinitionRegistry {
-	private static final Logger log = Logger.getLogger( TypeDefinitionRegistryStandardImpl.class );
+	private static final Logger LOG = Logger.getLogger( TypeDefinitionRegistryStandardImpl.class );
 
 	private final TypeDefinitionRegistry parent;
 	private final Map<String, TypeDefinition> typeDefinitionMap = new HashMap<>();
@@ -95,7 +95,7 @@ public class TypeDefinitionRegistryStandardImpl implements TypeDefinitionRegistr
 			final TypeDefinition existing = typeDefinitionMap.put( name, typeDefinition );
 			if ( existing != null && existing != typeDefinition ) {
 				if ( duplicationStrategy == DuplicationStrategy.OVERWRITE ) {
-					log.debugf( "Overwrote existing registration [%s] for type definition.", name );
+					LOG.debugf( "Overwrote existing registration [%s] for type definition.", name );
 				}
 				else {
 					throw new IllegalArgumentException(

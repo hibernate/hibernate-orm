@@ -22,7 +22,7 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
  */
 public abstract class ReattachVisitor extends ProxyVisitor {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( ReattachVisitor.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ReattachVisitor.class );
 
 	private final Object ownerIdentifier;
 	private final Object owner;
@@ -76,8 +76,8 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 */
 	void removeCollection(CollectionPersister role, Object collectionKey, EventSource source)
 			throws HibernateException {
-		if ( log.isTraceEnabled() ) {
-			log.trace( "Collection dereferenced while transient "
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Collection dereferenced while transient "
 						+ collectionInfoString( role, ownerIdentifier, source.getFactory() ) );
 		}
 		source.getActionQueue().addAction( new CollectionRemoveAction( owner, role, collectionKey, false, source ) );

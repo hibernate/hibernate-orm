@@ -631,7 +631,7 @@ public abstract class SimpleValue implements KeyValue {
 //			// if this is a byte[] version/timestamp, then we need to use RowVersionType
 //			// instead of BinaryType (HHH-10413)
 //			// todo (6.0) - although for T/SQL databases we should use its
-//			log.debug( "version is BinaryType; changing to RowVersionType" );
+//			LOG.debug( "version is BinaryType; changing to RowVersionType" );
 //			result = RowVersionType.INSTANCE;
 //		}
 //

@@ -23,7 +23,7 @@ import org.hibernate.tool.schema.spi.ScriptSourceInput;
  */
 public class ScriptSourceInputAggregate implements ScriptSourceInput {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( SchemaCreatorImpl.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SchemaCreatorImpl.class );
 
 	private final AbstractScriptSourceInput[] inputs;
 
@@ -46,7 +46,7 @@ public class ScriptSourceInputAggregate implements ScriptSourceInput {
 			if ( scriptSourceInput.exists() ) {
 				final Reader reader = scriptSourceInput.prepareReader();
 				try {
-					log.executingScript( scriptSourceInput.getScriptDescription() );
+					LOG.executingScript( scriptSourceInput.getScriptDescription() );
 					lists[i] = extractor.apply( reader );
 					size += lists[i].size();
 				}

@@ -50,7 +50,7 @@ import static java.util.Collections.emptyMap;
  * @author Andrea Boriero
  */
 public class BootstrapContextImpl implements BootstrapContext {
-	private static final Logger log = Logger.getLogger( BootstrapContextImpl.class );
+	private static final Logger LOG = Logger.getLogger( BootstrapContextImpl.class );
 
 	private final StandardServiceRegistry serviceRegistry;
 	private final MetadataBuildingOptions metadataBuildingOptions;
@@ -308,40 +308,40 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	void injectJpaTempClassLoader(ClassLoader classLoader) {
-		if ( log.isTraceEnabled() && classLoader != getJpaTempClassLoader() ) {
-			log.tracef( "Injecting JPA temp ClassLoader [%s] into BootstrapContext; was [%s]",
+		if ( LOG.isTraceEnabled() && classLoader != getJpaTempClassLoader() ) {
+			LOG.tracef( "Injecting JPA temp ClassLoader [%s] into BootstrapContext; was [%s]",
 					classLoader, getJpaTempClassLoader() );
 		}
 		this.classLoaderAccess.injectTempClassLoader( classLoader );
 	}
 
 	void injectScanOptions(ScanOptions scanOptions) {
-		if ( log.isTraceEnabled() && scanOptions != this.scanOptions ) {
-			log.tracef( "Injecting ScanOptions [%s] into BootstrapContext; was [%s]",
+		if ( LOG.isTraceEnabled() && scanOptions != this.scanOptions ) {
+			LOG.tracef( "Injecting ScanOptions [%s] into BootstrapContext; was [%s]",
 					scanOptions, this.scanOptions );
 		}
 		this.scanOptions = scanOptions;
 	}
 
 	void injectScanEnvironment(ScanEnvironment scanEnvironment) {
-		if ( log.isTraceEnabled() && scanEnvironment != this.scanEnvironment ) {
-			log.tracef( "Injecting ScanEnvironment [%s] into BootstrapContext; was [%s]",
+		if ( LOG.isTraceEnabled() && scanEnvironment != this.scanEnvironment ) {
+			LOG.tracef( "Injecting ScanEnvironment [%s] into BootstrapContext; was [%s]",
 					scanEnvironment, this.scanEnvironment );
 		}
 		this.scanEnvironment = scanEnvironment;
 	}
 
 	void injectScanner(Scanner scanner) {
-		if ( log.isTraceEnabled() && scanner != this.scannerSetting ) {
-			log.tracef( "Injecting Scanner [%s] into BootstrapContext; was [%s]",
+		if ( LOG.isTraceEnabled() && scanner != this.scannerSetting ) {
+			LOG.tracef( "Injecting Scanner [%s] into BootstrapContext; was [%s]",
 					scanner, scannerSetting );
 		}
 		this.scannerSetting = scanner;
 	}
 
 	void injectArchiveDescriptorFactory(ArchiveDescriptorFactory factory) {
-		if ( log.isTraceEnabled() && factory != archiveDescriptorFactory ) {
-			log.tracef( "Injecting ArchiveDescriptorFactory [%s] into BootstrapContext; was [%s]",
+		if ( LOG.isTraceEnabled() && factory != archiveDescriptorFactory ) {
+			LOG.tracef( "Injecting ArchiveDescriptorFactory [%s] into BootstrapContext; was [%s]",
 					factory, archiveDescriptorFactory );
 		}
 		this.archiveDescriptorFactory = factory;

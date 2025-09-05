@@ -45,7 +45,7 @@ import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
  * @author Steve Ebersole
  */
 public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor> {
-	private static final Logger log = Logger.getLogger( MappingBinder.class );
+	private static final Logger LOG = Logger.getLogger( MappingBinder.class );
 
 	private final XMLEventFactory xmlEventFactory = XMLEventFactory.newInstance();
 
@@ -163,8 +163,8 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 			Origin origin) {
 		final String rootElementLocalName = rootElementStartEvent.getName().getLocalPart();
 		if ( "hibernate-mapping".equals( rootElementLocalName ) ) {
-			if ( log.isTraceEnabled() ) {
-				log.tracef( "Performing JAXB binding of hbm.xml document: %s", origin.toString() );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracef( "Performing JAXB binding of hbm.xml document: %s", origin.toString() );
 			}
 
 			final XMLEventReader hbmReader = new HbmEventReader( staxEventReader, xmlEventFactory );
@@ -181,7 +181,7 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 		else {
 			assert "entity-mappings".equals( rootElementLocalName );
 			try {
-				log.tracef( "Performing JAXB binding of orm.xml document: %s", origin.toString() );
+				LOG.tracef( "Performing JAXB binding of orm.xml document: %s", origin.toString() );
 
 				final XMLEventReader reader = new MappingEventReader( staxEventReader, xmlEventFactory );
 				final JaxbEntityMappingsImpl bindingRoot = jaxb(

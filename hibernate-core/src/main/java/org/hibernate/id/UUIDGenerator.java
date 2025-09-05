@@ -40,7 +40,7 @@ import org.hibernate.type.descriptor.java.UUIDJavaType;
 @Deprecated(since = "6.0")
 public class UUIDGenerator implements IdentifierGenerator {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( UUIDGenerator.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UUIDGenerator.class );
 
 	public static final String UUID_GEN_STRATEGY = "uuid_gen_strategy";
 	public static final String UUID_GEN_STRATEGY_CLASS = "uuid_gen_strategy_class";
@@ -65,11 +65,11 @@ public class UUIDGenerator implements IdentifierGenerator {
 						strategy = (UUIDGenerationStrategy) strategyClass.newInstance();
 					}
 					catch ( Exception e ) {
-						log.unableToInstantiateUuidGenerationStrategy(e);
+						LOG.unableToInstantiateUuidGenerationStrategy(e);
 					}
 				}
 				catch ( ClassLoadingException ignore ) {
-					log.unableToLocateUuidGenerationStrategy( strategyClassName );
+					LOG.unableToLocateUuidGenerationStrategy( strategyClassName );
 				}
 			}
 		}

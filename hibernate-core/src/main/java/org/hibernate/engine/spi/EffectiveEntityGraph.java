@@ -28,7 +28,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Steve Ebersole
  */
 public class EffectiveEntityGraph implements AppliedGraph, Serializable {
-	private static final Logger log = Logger.getLogger( EffectiveEntityGraph.class );
+	private static final Logger LOG = Logger.getLogger( EffectiveEntityGraph.class );
 
 	private final boolean allowOverwrite;
 
@@ -79,7 +79,7 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 			throw new IllegalArgumentException( "Graph semantic cannot be null" );
 		}
 		verifyWriteability();
-		log.tracef( "Setting effective graph state [%s] : %s", semantic.name(), graph );
+		LOG.tracef( "Setting effective graph state [%s] : %s", semantic.name(), graph );
 		this.semantic = semantic;
 		this.graph = graph;
 	}

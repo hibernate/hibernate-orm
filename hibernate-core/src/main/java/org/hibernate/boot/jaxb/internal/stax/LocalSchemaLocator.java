@@ -22,7 +22,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class LocalSchemaLocator {
-	private static final Logger log = Logger.getLogger( LocalSchemaLocator.class );
+	private static final Logger LOG = Logger.getLogger( LocalSchemaLocator.class );
 
 	private LocalSchemaLocator() {
 		// Disallow direct instantiation
@@ -62,7 +62,7 @@ public class LocalSchemaLocator {
 					schemaStream.close();
 				}
 				catch ( IOException e ) {
-					log.debugf( "Problem closing schema stream - %s", e.toString() );
+					LOG.debugf( "Problem closing schema stream - %s", e.toString() );
 				}
 			}
 		}

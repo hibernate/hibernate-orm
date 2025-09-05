@@ -13,7 +13,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class TypeDefinitionBinder {
-	private static final Logger log = Logger.getLogger( TypeDefinitionBinder.class );
+	private static final Logger LOG = Logger.getLogger( TypeDefinitionBinder.class );
 
 	/**
 	 * Handling for a {@code <typedef/>} declaration
@@ -33,8 +33,8 @@ public class TypeDefinitionBinder {
 				ConfigParameterHelper.extractConfigParameters( typeDefinitionBinding )
 		);
 
-		if ( log.isTraceEnabled() ) {
-			log.tracef(
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef(
 					"Processed type-definition : %s -> %s",
 					definition.getName(),
 					definition.getTypeImplementorClass().getName()

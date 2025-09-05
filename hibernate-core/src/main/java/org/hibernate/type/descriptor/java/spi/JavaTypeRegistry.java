@@ -31,7 +31,7 @@ import org.jboss.logging.Logger;
  * @since 5.3
  */
 public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serializable {
-	private static final Logger log = Logger.getLogger( JavaTypeRegistry.class );
+	private static final Logger LOG = Logger.getLogger( JavaTypeRegistry.class );
 
 	private final TypeConfiguration typeConfiguration;
 	private final ConcurrentHashMap<String, JavaType<?>> descriptorsByTypeName = new ConcurrentHashMap<>();
@@ -81,7 +81,7 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 	public void addDescriptor(JavaType<?> descriptor) {
 		final JavaType<?> old = descriptorsByTypeName.put( descriptor.getJavaType().getTypeName(), descriptor );
 		if ( old != null ) {
-			log.debugf(
+			LOG.debugf(
 					"JavaTypeRegistry entry replaced : %s -> %s (was %s)",
 					descriptor.getJavaType(),
 					descriptor,

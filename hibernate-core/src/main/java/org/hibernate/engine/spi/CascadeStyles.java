@@ -17,7 +17,7 @@ import org.jboss.logging.Logger;
  */
 public final class CascadeStyles {
 
-	private static final Logger log = Logger.getLogger( CascadeStyles.class );
+	private static final Logger LOG = Logger.getLogger( CascadeStyles.class );
 
 	/**
 	 * Disallow instantiation
@@ -254,10 +254,10 @@ public final class CascadeStyles {
 	}
 
 	public static void registerCascadeStyle(String name, BaseCascadeStyle cascadeStyle) {
-		log.tracef( "Registering external cascade style [%s : %s]", name, cascadeStyle );
+		LOG.tracef( "Registering external cascade style [%s : %s]", name, cascadeStyle );
 		final CascadeStyle old = STYLES.put( name, cascadeStyle );
 		if ( old != null ) {
-			log.debugf(
+			LOG.debugf(
 					"External cascade style registration [%s : %s] overrode base registration [%s]",
 					name,
 					cascadeStyle,

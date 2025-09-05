@@ -135,7 +135,7 @@ import jakarta.persistence.criteria.Predicate;
  * @author Steve Ebersole
  */
 public class SqmTreePrinter implements SemanticQueryWalker<Object> {
-	private static final Logger log = Logger.getLogger( SqmTreePrinter.class );
+	private static final Logger LOG = Logger.getLogger( SqmTreePrinter.class );
 
 	private static final Logger LOGGER = QueryLogging.subLogger( "sqm.ast" );
 	private static final boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
@@ -199,7 +199,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 			continuation.run();
 		}
 		catch (Exception e) {
-			log.debugf( e, "Error processing stanza {%s}", name );
+			LOG.debugf( e, "Error processing stanza {%s}", name );
 		}
 		finally {
 			if ( indentContinuation ) {
@@ -229,7 +229,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 			continuation.run();
 		}
 		catch (Exception e) {
-			log.debugf( e, "Error processing stanza {%s}", name );
+			LOG.debugf( e, "Error processing stanza {%s}", name );
 		}
 		finally {
 			if ( indentContinuation ) {

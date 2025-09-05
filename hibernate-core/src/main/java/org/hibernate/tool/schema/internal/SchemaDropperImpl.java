@@ -72,7 +72,7 @@ import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabl
  * @author Steve Ebersole
  */
 public class SchemaDropperImpl implements SchemaDropper {
-	private static final Logger log = Logger.getLogger( SchemaDropperImpl.class );
+	private static final Logger LOG = Logger.getLogger( SchemaDropperImpl.class );
 
 	private final HibernateSchemaManagementTool tool;
 	private final SchemaFilter schemaFilter;
@@ -160,7 +160,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 					target.release();
 				}
 				catch (Exception e) {
-					log.debugf( "Problem releasing GenerationTarget [%s]: %s", target, e.getMessage() );
+					LOG.debugf( "Problem releasing GenerationTarget [%s]: %s", target, e.getMessage() );
 				}
 			}
 		}
@@ -597,7 +597,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 	}
 
 	private static class DelayedDropActionImpl implements DelayedDropAction, Serializable {
-		private static final CoreMessageLogger log = CoreLogging.messageLogger( DelayedDropActionImpl.class );
+		private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DelayedDropActionImpl.class );
 
 		private final ArrayList<String> commands;
 		private GenerationTarget target;
@@ -609,7 +609,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 		@Override
 		public void perform(ServiceRegistry serviceRegistry) {
-			log.startingDelayedSchemaDrop();
+			LOG.startingDelayedSchemaDrop();
 
 			final JdbcContext jdbcContext = new JdbcContextDelayedDropImpl( serviceRegistry );
 
@@ -630,8 +630,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 					catch (CommandAcceptanceException e) {
 						// implicitly we do not "halt on error", but we do want to
 						// report the problem
-						log.unsuccessfulSchemaManagementCommand( command );
-						log.debugf( e, "Error performing delayed DROP command [%s]", command );
+						LOG.unsuccessfulSchemaManagementCommand( command );
+						LOG.debugf( e, "Error performing delayed DROP command [%s]", command );
 					}
 				}
 			}

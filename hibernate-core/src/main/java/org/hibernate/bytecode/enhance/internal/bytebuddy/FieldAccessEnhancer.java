@@ -33,7 +33,7 @@ import java.util.Objects;
 
 final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.MethodVisitorWrapper {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( FieldAccessEnhancer.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( FieldAccessEnhancer.class );
 
 	private final TypeDescription managedCtClass;
 
@@ -76,7 +76,7 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 						&& !field.hasAnnotation( Id.class )
 						&& !field.getName().equals( "this$0" ) ) {
 
-					log.tracef(
+					LOG.tracef(
 							"Extended enhancement: Transforming access to field [%s#%s] from method [%s#%s()]",
 							declaredOwnerType.getName(),
 							field.getName(),

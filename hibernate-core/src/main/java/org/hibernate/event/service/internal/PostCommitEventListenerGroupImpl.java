@@ -22,7 +22,7 @@ import org.hibernate.jpa.event.spi.CallbackRegistry;
  * @author Steve Ebersole
  */
 class PostCommitEventListenerGroupImpl<T> extends EventListenerGroupImpl<T> {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( PostCommitEventListenerGroupImpl.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PostCommitEventListenerGroupImpl.class );
 
 	private final Class<?> extendedListenerContract;
 
@@ -54,7 +54,7 @@ class PostCommitEventListenerGroupImpl<T> extends EventListenerGroupImpl<T> {
 
 	private void checkAgainstExtendedContract(T listener) {
 		if ( !extendedListenerContract.isInstance( listener ) ) {
-			log.warnf(
+			LOG.warnf(
 					"Encountered event listener [%s] for post-commit event [%s] "
 							+ "which did not implement the corresponding extended "
 							+ "listener contract [%s]",

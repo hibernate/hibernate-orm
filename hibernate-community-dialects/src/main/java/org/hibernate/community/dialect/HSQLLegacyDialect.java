@@ -100,7 +100,7 @@ import static org.hibernate.type.SqlTypes.NUMERIC;
  */
 public class HSQLLegacyDialect extends Dialect {
 
-	private static final CoreMessageLogger log = Logger.getMessageLogger(
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			org.hibernate.community.dialect.HSQLLegacyDialect.class.getName()
@@ -762,7 +762,7 @@ public class HSQLLegacyDialect extends Dialect {
 		public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session)
 				throws StaleObjectStateException, JDBCException {
 			if ( getLockMode().greaterThan( LockMode.READ ) ) {
-				log.hsqldbSupportsOnlyReadCommittedIsolation();
+				LOG.hsqldbSupportsOnlyReadCommittedIsolation();
 			}
 			super.lock( id, version, object, timeout, session );
 		}

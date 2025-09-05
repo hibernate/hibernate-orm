@@ -80,7 +80,7 @@ import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINA
  */
 @Internal
 public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
-	private static final Logger log = Logger.getLogger( JoinedSubclassEntityPersister.class );
+	private static final Logger LOG = Logger.getLogger( JoinedSubclassEntityPersister.class );
 
 	private static final String IMPLICIT_DISCRIMINATOR_ALIAS = "clazz_";
 
@@ -163,7 +163,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			forceDiscriminator = persistentClass.isForceDiscriminator();
 			final var discriminatorMapping = persistentClass.getDiscriminator();
 			if ( discriminatorMapping != null ) {
-				log.tracef( "Encountered explicit discriminator mapping for joined inheritance" );
+				LOG.tracef( "Encountered explicit discriminator mapping for joined inheritance" );
 				final var selectable = discriminatorMapping.getSelectables().get(0);
 				if ( selectable instanceof Column column ) {
 					explicitDiscriminatorColumnName = column.getQuotedName( dialect );

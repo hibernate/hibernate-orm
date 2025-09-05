@@ -45,7 +45,7 @@ import java.sql.SQLFeatureNotSupportedException;
 public class OracleOsonJdbcType extends OracleJsonJdbcType {
 	public static final OracleOsonJdbcType INSTANCE = new OracleOsonJdbcType( null );
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( OracleOsonJdbcType.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( OracleOsonJdbcType.class );
 
 	static final OracleJsonFactory OSON_JSON_FACTORY = new OracleJsonFactory();
 
@@ -248,7 +248,7 @@ public class OracleOsonJdbcType extends OracleJsonJdbcType {
 							// This may happen if we are fetching data from an existing schema
 							// that uses BLOB for JSON column. In that case we assume bytes are
 							// UTF-8 bytes (i.e not OSON) and we fall back to previous String-based implementation
-							log.invalidJSONColumnType( OracleType.BLOB.getName(), OracleType.JSON.getName() );
+							LOG.invalidJSONColumnType( OracleType.BLOB.getName(), OracleType.JSON.getName() );
 							return fromString( getBytesFromResultSetByIndex( rs, paramIndex ), options );
 						}
 						else {
@@ -273,7 +273,7 @@ public class OracleOsonJdbcType extends OracleJsonJdbcType {
 							// This may happen if we are fetching data from an existing schema
 							// that uses BLOB for JSON column In that case we assume bytes are
 							// UTF-8 bytes (i.e not OSON) and we fall back to previous String-based implementation
-							log.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
+							LOG.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
 							return fromString( getBytesFromStatementByIndex( statement, index ), options );
 						}
 						else {
@@ -299,7 +299,7 @@ public class OracleOsonJdbcType extends OracleJsonJdbcType {
 							// This may happen if we are fetching data from an existing schema
 							// that uses BLOB for JSON column In that case we assume bytes are
 							// UTF-8 bytes (i.e not OSON) and we fall back to previous String-based implementation
-							log.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
+							LOG.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
 							return fromString( getBytesFromStatementByName( statement, name ), options );
 						}
 						else {

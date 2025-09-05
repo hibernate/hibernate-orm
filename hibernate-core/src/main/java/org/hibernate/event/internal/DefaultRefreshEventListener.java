@@ -39,7 +39,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  */
 public class DefaultRefreshEventListener implements RefreshEventListener {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( DefaultRefreshEventListener.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultRefreshEventListener.class );
 
 	@Override
 	public void onRefresh(RefreshEvent event) throws HibernateException {
@@ -65,7 +65,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				refresh( event, refreshedAlready, entity );
 			}
 			else {
-				log.trace( "Already refreshed" );
+				LOG.trace( "Already refreshed" );
 			}
 		}
 	}
@@ -139,16 +139,16 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				throw new TransientObjectException( "Cannot refresh instance of entity '" + persister.getEntityName()
 						+ "' because it has a null identifier" );
 			}
-			if ( log.isTraceEnabled() ) {
-				log.trace( "Refreshing transient " + infoString( persister, id, event.getFactory() ) );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Refreshing transient " + infoString( persister, id, event.getFactory() ) );
 			}
 			if ( persistenceContext.getEntry( source.generateEntityKey( id, persister ) ) != null ) {
 				throw new NonUniqueObjectException( id, persister.getEntityName() );
 			}
 		}
 		else {
-			if ( log.isTraceEnabled() ) {
-				log.trace( "Refreshing " + infoString( entry.getPersister(), entry.getId(), event.getFactory() ) );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Refreshing " + infoString( entry.getPersister(), entry.getId(), event.getFactory() ) );
 			}
 			if ( !entry.isExistsInDatabase() ) {
 				throw new UnresolvableObjectException(

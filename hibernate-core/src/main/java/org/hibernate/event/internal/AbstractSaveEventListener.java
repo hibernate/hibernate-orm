@@ -48,7 +48,7 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  */
 public abstract class AbstractSaveEventListener<C> implements CallbackRegistryConsumer {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractSaveEventListener.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractSaveEventListener.class );
 
 	private CallbackRegistry callbackRegistry;
 
@@ -158,9 +158,9 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			throw new IdentifierGenerationException( "Null id generated for entity '" + persister.getEntityName() + "'" );
 		}
 		else {
-			if ( log.isTraceEnabled() ) {
+			if ( LOG.isTraceEnabled() ) {
 				// TODO: define toString()s for generators
-				log.tracef(
+				LOG.tracef(
 						"Generated identifier [%s] using generator '%s'",
 						persister.getIdentifierType().toLoggableString( id, source.getFactory() ),
 						generator.getClass().getName()
@@ -210,8 +210,8 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			}
 		}
 
-		if ( log.isTraceEnabled() ) {
-			log.trace( "Persisting " + infoString( persister, id, source.getFactory() ) );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Persisting " + infoString( persister, id, source.getFactory() ) );
 		}
 
 		final var key = useIdentityColumn ? null : entityKey( id, persister, source );

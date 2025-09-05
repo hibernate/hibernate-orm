@@ -27,7 +27,7 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  */
 public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( EntityCopyAllowedLoggedObserver.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityCopyAllowedLoggedObserver.class );
 
 	public static final EntityCopyObserverFactory FACTORY_OF_SELF = EntityCopyAllowedLoggedObserver::new;
 
@@ -54,8 +54,8 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 			Object mergeEntity2,
 			EventSource session) {
 		final String entityName = session.getEntityName( managedEntity );
-		if ( log.isTraceEnabled() ) {
-			log.trace( "More than one representation of the same persistent entity being merged for: "
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "More than one representation of the same persistent entity being merged for: "
 						+ infoString( entityName, session.getIdentifier( managedEntity ) ) );
 		}
 		Set<Object> detachedEntitiesForManaged = null;
@@ -111,7 +111,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 		// Log the summary.
 		if ( countsByEntityName != null ) {
 			for ( var entry : countsByEntityName.entrySet() ) {
-				log.debug(
+				LOG.debug(
 						String.format(
 								"Summary: number of %s entities with multiple representations merged: %d",
 								entry.getKey(),
@@ -121,7 +121,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 			}
 		}
 		else {
-			log.debug( "No entity copies merged" );
+			LOG.debug( "No entity copies merged" );
 		}
 
 		if ( managedToMergeEntitiesXref != null ) {
@@ -146,7 +146,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 					sb.append(  getManagedOrDetachedEntityString( managedEntity, mergeEntity ) );
 				}
 				sb.append( "; resulting managed entity: [" ).append( managedEntity ).append( ']' );
-				log.debug( sb.toString());
+				LOG.debug( sb.toString());
 			}
 		}
 	}

@@ -42,7 +42,7 @@ import static org.hibernate.engine.FetchStyle.SUBSELECT;
  */
 public class FetchProfile {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( FetchProfile.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( FetchProfile.class );
 
 	private final String name;
 	private final Map<String,Fetch> fetches = new HashMap<>();
@@ -73,7 +73,7 @@ public class FetchProfile {
 		final Type associationType =
 				association.getOwner().getPropertyType( association.getAssociationPath() );
 		if ( associationType instanceof CollectionType ) {
-			log.tracev( "Handling request to add collection fetch [{0}]", role );
+			LOG.tracev( "Handling request to add collection fetch [{0}]", role );
 
 			// couple of things for which to account in the case of collection
 			// join fetches
@@ -82,7 +82,7 @@ public class FetchProfile {
 				// processed collection join fetches
 				if ( associationType instanceof BagType ) {
 					if ( containsJoinFetchedCollection ) {
-						log.containsJoinFetchedCollection( role );
+						LOG.containsJoinFetchedCollection( role );
 						// EARLY EXIT!!!
 						return;
 					}
@@ -94,7 +94,7 @@ public class FetchProfile {
 				if ( containsJoinFetchedBag ) {
 					// just for safety...
 					if ( bagJoinFetch != null && fetches.remove( bagJoinFetch.getAssociation().getRole() ) != bagJoinFetch ) {
-						log.unableToRemoveBagJoinFetch();
+						LOG.unableToRemoveBagJoinFetch();
 					}
 					bagJoinFetch = null;
 					containsJoinFetchedBag = false;

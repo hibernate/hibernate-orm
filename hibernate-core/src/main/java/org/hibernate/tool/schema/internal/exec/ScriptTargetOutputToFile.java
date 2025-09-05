@@ -22,7 +22,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput implements ScriptTargetOutput {
-	private static final Logger log = CoreLogging.logger( ScriptTargetOutputToFile.class );
+	private static final Logger LOG = CoreLogging.logger( ScriptTargetOutputToFile.class );
 
 	private final File file;
 	private final String charsetName;
@@ -89,7 +89,7 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 		try {
 			if ( ! file.exists() ) {
 				// best effort, since this is very likely not allowed in EE environments
-				log.debug( "Attempting to create non-existent script target file: " + file.getAbsolutePath() );
+				LOG.debug( "Attempting to create non-existent script target file: " + file.getAbsolutePath() );
 				if ( file.getParentFile() != null ) {
 					file.getParentFile().mkdirs();
 				}
@@ -97,7 +97,7 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 			}
 		}
 		catch (Exception e) {
-			log.debug( "Exception calling File#createNewFile: " + e );
+			LOG.debug( "Exception calling File#createNewFile: " + e );
 		}
 		try {
 			return charsetName != null ?

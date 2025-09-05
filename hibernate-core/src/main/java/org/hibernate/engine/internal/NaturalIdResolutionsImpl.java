@@ -36,7 +36,7 @@ import static org.hibernate.engine.internal.NaturalIdLogging.NATURAL_ID_MESSAGE_
 
 public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializable {
 
-	private static final Logger log = Logger.getLogger( NaturalIdResolutionsImpl.class );
+	private static final Logger LOG = Logger.getLogger( NaturalIdResolutionsImpl.class );
 
 	private final StatefulPersistenceContext persistenceContext;
 	private final ConcurrentHashMap<EntityMappingType, EntityResolutions> resolutionsByEntity = new ConcurrentHashMap<>();
@@ -269,8 +269,8 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 
 					break;
 				default:
-					if ( log.isDebugEnabled() ) {
-						log.debug( "Unexpected CachedNaturalIdValueSource [" + source + "]" );
+					if ( LOG.isDebugEnabled() ) {
+						LOG.debug( "Unexpected CachedNaturalIdValueSource [" + source + "]" );
 					}
 			}
 		}

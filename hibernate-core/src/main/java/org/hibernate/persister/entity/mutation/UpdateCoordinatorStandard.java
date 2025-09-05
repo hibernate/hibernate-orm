@@ -72,7 +72,7 @@ import static org.hibernate.internal.util.collections.ArrayHelper.trim;
  */
 public class UpdateCoordinatorStandard extends AbstractMutationCoordinator implements UpdateCoordinator {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( UpdateCoordinatorStandard.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UpdateCoordinatorStandard.class );
 
 	private final MutationOperationGroup staticUpdateGroup;
 	private final BatchKey batchKey;
@@ -656,7 +656,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					// In this case we check for exactly DirtynessStatus.DIRTY so to not log warnings when the user didn't get it wrong:
 					if ( analysis.currentAttributeAnalysis.getDirtynessStatus() == AttributeAnalysis.DirtynessStatus.DIRTY ) {
 						if ( !propertyUpdateability[attributeIndex] ) {
-							log.ignoreImmutablePropertyModification( attributeMapping.getAttributeName(), persister.getEntityName() );
+							LOG.ignoreImmutablePropertyModification( attributeMapping.getAttributeName(), persister.getEntityName() );
 						}
 					}
 				}

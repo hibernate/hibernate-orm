@@ -33,7 +33,7 @@ final class ResultsetsTrackingContainer {
 	// #2. if key_1 is null, then the Map in xref is guaranteed to be empty
 	// #3. The Map in xref is lazily initialized, but when emptied it's not guaranteed to be made null
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( ResourceRegistryStandardImpl.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ResourceRegistryStandardImpl.class );
 
 	private static final ResultSetsSet EMPTY = new ResultSetsSet();
 
@@ -180,7 +180,7 @@ final class ResultsetsTrackingContainer {
 		// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
 		// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
 		if ( existingEntry == null ) {
-			log.trace( "ResultSet statement was not registered (on register)" );
+			LOG.trace( "ResultSet statement was not registered (on register)" );
 		}
 		return true;
 	}

@@ -32,7 +32,7 @@ import jakarta.xml.bind.Unmarshaller;
  * @author Steve Ebersole
  */
 public abstract class AbstractBinder<T> implements Binder<T> {
-	private static final Logger log = Logger.getLogger( AbstractBinder.class );
+	private static final Logger LOG = Logger.getLogger( AbstractBinder.class );
 
 	private final LocalXmlResourceResolver xmlResourceResolver;
 
@@ -53,7 +53,7 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 				eventReader.close();
 			}
 			catch (XMLStreamException e) {
-				log.debug( "Unable to close StAX reader", e );
+				LOG.debug( "Unable to close StAX reader", e );
 			}
 		}
 	}
@@ -98,7 +98,7 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 				eventReader.close();
 			}
 			catch (Exception e) {
-				log.debug( "Unable to close StAX reader", e );
+				LOG.debug( "Unable to close StAX reader", e );
 			}
 		}
 	}

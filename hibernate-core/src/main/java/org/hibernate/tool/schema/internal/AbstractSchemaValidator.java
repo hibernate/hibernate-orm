@@ -39,7 +39,7 @@ import static org.hibernate.tool.schema.internal.ColumnDefinitions.hasMatchingTy
  * @author Steve Ebersole
  */
 public abstract class AbstractSchemaValidator implements SchemaValidator {
-	private static final Logger log = Logger.getLogger( AbstractSchemaValidator.class );
+	private static final Logger LOG = Logger.getLogger( AbstractSchemaValidator.class );
 
 	protected HibernateSchemaManagementTool tool;
 	protected SchemaFilter schemaFilter;
@@ -79,7 +79,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 				databaseInformation.cleanup();
 			}
 			catch (Exception e) {
-				log.debug( "Problem releasing DatabaseInformation: " + e.getMessage() );
+				LOG.debug( "Problem releasing DatabaseInformation: " + e.getMessage() );
 			}
 
 			isolator.release();

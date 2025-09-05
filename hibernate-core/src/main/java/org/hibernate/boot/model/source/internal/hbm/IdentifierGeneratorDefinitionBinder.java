@@ -13,12 +13,12 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class IdentifierGeneratorDefinitionBinder {
-	private static final Logger log = Logger.getLogger( IdentifierGeneratorDefinitionBinder.class );
+	private static final Logger LOG = Logger.getLogger( IdentifierGeneratorDefinitionBinder.class );
 
 	public static void processIdentifierGeneratorDefinition(
 			HbmLocalMetadataBuildingContext context,
 			JaxbHbmIdentifierGeneratorDefinitionType identifierGenerator) {
-		log.tracef( "Processing <identifier-generator/> : %s", identifierGenerator.getName() );
+		LOG.tracef( "Processing <identifier-generator/> : %s", identifierGenerator.getName() );
 
 		context.getMetadataCollector().addIdentifierGenerator(
 				new IdentifierGeneratorDefinition(

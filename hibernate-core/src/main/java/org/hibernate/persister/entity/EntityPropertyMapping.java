@@ -41,7 +41,7 @@ import org.hibernate.type.MappingContext;
 @Remove
 class EntityPropertyMapping {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( EntityPropertyMapping.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityPropertyMapping.class );
 
 	private final Map<String, Type> typesByPropertyPath = new HashMap<>();
 	private final AbstractEntityPersister persister;
@@ -108,8 +108,8 @@ class EntityPropertyMapping {
 	}
 
 	private void logIncompatibleRegistration(String path, Type existingType, Type type) {
-		if ( log.isTraceEnabled() ) {
-			log.tracev(
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev(
 					"Skipped adding attribute [{1}] to base type [{0}] as more than one subtype defined the attribute using incompatible types (strictly speaking the attributes are not inherited); existing type = [{2}], incoming type = [{3}]",
 					getEntityName(),
 					path,

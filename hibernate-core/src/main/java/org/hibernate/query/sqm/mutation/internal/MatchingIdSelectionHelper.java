@@ -63,7 +63,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class MatchingIdSelectionHelper {
-	private static final Logger log = Logger.getLogger( MatchingIdSelectionHelper.class );
+	private static final Logger LOG = Logger.getLogger( MatchingIdSelectionHelper.class );
 
 	/**
 	 * @asciidoc
@@ -82,8 +82,8 @@ public class MatchingIdSelectionHelper {
 			MultiTableSqmMutationConverter sqmConverter,
 			DomainQueryExecutionContext executionContext) {
 		final EntityDomainType<?> entityDomainType = sqmStatement.getTarget().getModel();
-		if ( log.isTraceEnabled() ) {
-			log.tracef(
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef(
 					"Starting generation of entity-id SQM selection - %s",
 					entityDomainType.getHibernateEntityName()
 			);
@@ -185,8 +185,8 @@ public class MatchingIdSelectionHelper {
 //			MultiTableSqmMutationConverter sqmConverter,
 //			SessionFactoryImplementor sessionFactory) {
 //		final EntityDomainType entityDomainType = sqmStatement.getTarget().getModel();
-//		if ( log.isTraceEnabled() ) {
-//			log.tracef(
+//		if ( LOG.isTraceEnabled() ) {
+//			LOG.tracef(
 //					"Starting generation of entity-id SQM selection - %s",
 //					entityDomainType.getHibernateEntityName()
 //			);

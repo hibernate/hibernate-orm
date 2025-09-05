@@ -29,7 +29,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public class EntityRepresentationStrategyMap implements EntityRepresentationStrategy {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( EntityRepresentationStrategyMap.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityRepresentationStrategyMap.class );
 
 	private final JavaType<Map<String,?>> mapJavaType;
 
@@ -63,7 +63,7 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 			return proxyFactory;
 		}
 		catch (HibernateException he) {
-			log.unableToCreateProxyFactory( bootType.getEntityName(), he );
+			LOG.unableToCreateProxyFactory( bootType.getEntityName(), he );
 			return null;
 		}
 	}

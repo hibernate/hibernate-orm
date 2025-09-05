@@ -60,7 +60,7 @@ public interface SqmSetReturningFunctionDescriptor {
 			QueryEngine queryEngine);
 
 	/**
-	 * Used only for pretty-printing the function signature in the log.
+	 * Used only for pretty-printing the function signature in the LOG.
 	 *
 	 * @param name the function name
 	 * @return the signature of the function

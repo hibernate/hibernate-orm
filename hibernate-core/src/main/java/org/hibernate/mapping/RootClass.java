@@ -27,7 +27,7 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
  */
 public final class RootClass extends PersistentClass implements TableOwner, SoftDeletable {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( RootClass.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( RootClass.class );
 
 	private Property identifierProperty;
 	private KeyValue identifier;
@@ -334,10 +334,10 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 			final Class<?> idClass = id.getComponentClass();
 			if ( idClass != null ) {
 				if ( !overridesEquals( idClass ) ) {
-					log.compositeIdClassDoesNotOverrideEquals( idClass.getName() );
+					LOG.compositeIdClassDoesNotOverrideEquals( idClass.getName() );
 				}
 				else if ( !overridesHashCode( idClass ) ) {
-					log.compositeIdClassDoesNotOverrideHashCode( idClass.getName() );
+					LOG.compositeIdClassDoesNotOverrideHashCode( idClass.getName() );
 				}
 			}
 		}

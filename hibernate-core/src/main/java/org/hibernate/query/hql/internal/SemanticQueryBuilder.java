@@ -257,7 +257,7 @@ import static org.hibernate.type.spi.TypeConfiguration.isJdbcTemporalType;
  */
 public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implements SqmCreationState {
 
-	private static final Logger log = Logger.getLogger( SemanticQueryBuilder.class );
+	private static final Logger LOG = Logger.getLogger( SemanticQueryBuilder.class );
 	private static final Set<String> JPA_STANDARD_FUNCTIONS = Set.of(
 			"avg",
 			"max",
@@ -5568,7 +5568,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		// Note: this is a total misuse of the elements() and indices() functions,
 		//       which are supposed to be a shortcut way to write a subquery!
 		//       used this way, they're just a worse way to write value()/index()
-		log.warn("Misuse of HQL elements() or indices() function, use element() or index() instead");
+		LOG.warn("Misuse of HQL elements() or indices() function, use element() or index() instead");
 
 		if ( getCreationOptions().useStrictJpaCompliance() ) {
 			throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );

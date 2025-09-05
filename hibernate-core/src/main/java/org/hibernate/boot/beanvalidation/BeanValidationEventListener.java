@@ -47,7 +47,7 @@ public class BeanValidationEventListener
 		implements PreInsertEventListener, PreUpdateEventListener, PreDeleteEventListener, PreUpsertEventListener, PreCollectionUpdateEventListener,
 		SessionFactoryObserver {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( BeanValidationEventListener.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BeanValidationEventListener.class );
 
 	private final HibernateTraversableResolver traversableResolver;
 	private final Validator validator;
@@ -137,7 +137,7 @@ public class BeanValidationEventListener
 				final Set<ConstraintViolation<?>> propagatedViolations = setOfSize( constraintViolations.size() );
 				final Set<String> classNames = new HashSet<>();
 				for ( ConstraintViolation<?> violation : constraintViolations ) {
-					log.trace( violation );
+					LOG.trace( violation );
 					propagatedViolations.add( violation );
 					classNames.add( violation.getLeafBean().getClass().getName() );
 				}

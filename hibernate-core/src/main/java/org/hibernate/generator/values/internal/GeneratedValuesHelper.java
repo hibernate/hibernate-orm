@@ -61,7 +61,7 @@ import static org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptio
 @Internal
 public class GeneratedValuesHelper {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( IdentifierGeneratorHelper.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IdentifierGeneratorHelper.class );
 
 	/**
 	 * Reads the {@linkplain EntityPersister#getGeneratedProperties(EventType) generated values}
@@ -99,8 +99,8 @@ public class GeneratedValuesHelper {
 		final var generatedValues = new GeneratedValuesImpl( generatedProperties );
 		final var results = readGeneratedValues( resultSet, statement, persister, mappingProducer, session );
 
-		if ( log.isDebugEnabled() ) {
-			log.debug( "Extracted generated values for entity "
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debug( "Extracted generated values for entity "
 						+ infoString( persister ) + ": " + ArrayHelper.toString( results ) );
 		}
 

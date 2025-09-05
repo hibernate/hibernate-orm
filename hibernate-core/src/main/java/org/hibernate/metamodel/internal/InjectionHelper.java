@@ -19,7 +19,7 @@ import static java.lang.Character.isJavaIdentifierPart;
 import static java.lang.reflect.Modifier.isPublic;
 
 public class InjectionHelper {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( MetadataContext.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( MetadataContext.class );
 
 	public static void injectEntityGraph(
 			NamedEntityGraphDefinition definition,
@@ -96,7 +96,7 @@ public class InjectionHelper {
 //								+ "; expected type :  " + attribute.getClass().getName()
 //								+ "; encountered type : " + field.getType().getName()
 //				);
-			log.illegalArgumentOnStaticMetamodelFieldInjection(
+			LOG.illegalArgumentOnStaticMetamodelFieldInjection(
 					metamodelClass.getName(),
 					name,
 					model.getClass().getName(),

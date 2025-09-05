@@ -43,7 +43,7 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 public class CollectionCacheInvalidator
 		implements Integrator, PostInsertEventListener, PostDeleteEventListener, PostUpdateEventListener {
 
-	private static final Logger log = Logger.getLogger( CollectionCacheInvalidator.class.getName() );
+	private static final Logger LOG = Logger.getLogger( CollectionCacheInvalidator.class.getName() );
 
 	/**
 	 * Exposed for use in testing
@@ -104,7 +104,7 @@ public class CollectionCacheInvalidator
 				throw new IllegalStateException( e );
 			}
 			// don't let decaching influence other logic
-			log.error( "", e );
+			LOG.error( "", e );
 		}
 	}
 

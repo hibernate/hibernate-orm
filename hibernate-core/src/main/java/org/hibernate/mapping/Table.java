@@ -45,7 +45,7 @@ import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
  * @author Gavin King
  */
 public class Table implements Serializable, ContributableDatabaseObject {
-	private static final Logger log = Logger.getLogger( Table.class );
+	private static final Logger LOG = Logger.getLogger( Table.class );
 	private static final Column[] EMPTY_COLUMN_ARRAY = new Column[0];
 
 	private final String contributor;
@@ -279,8 +279,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 				for ( Column pkColumn : primaryKey.getColumns() ) {
 					if ( pkColumn.getCanonicalName().equals( column.getCanonicalName() ) ) {
 						column.setNullable( false );
-						if ( log.isTraceEnabled() ) {
-							log.tracef(
+						if ( LOG.isTraceEnabled() ) {
+							LOG.tracef(
 									"Forcing column [%s] to be non-null as it is part of the primary key for table [%s]",
 									column.getCanonicalName(),
 									getNameIdentifier().getCanonicalName()

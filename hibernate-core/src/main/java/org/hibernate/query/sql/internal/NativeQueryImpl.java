@@ -142,7 +142,7 @@ public class NativeQueryImpl<R>
 		extends AbstractQuery<R>
 		implements NativeQueryImplementor<R>, DomainQueryExecutionContext, ResultSetMappingResolutionContext {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( NativeQueryImpl.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( NativeQueryImpl.class );
 
 	private final String sqlString;
 	private final String originalSqlString;
@@ -980,7 +980,7 @@ public class NativeQueryImpl<R>
 			int inExprLimit, int bindValueCount,
 			Dialect dialect, QueryParameterImplementor<?> queryParameter) {
 		if ( inExprLimit > 0 && bindValueCount > inExprLimit ) {
-			log.tooManyInExpressions(
+			LOG.tooManyInExpressions(
 					dialect.getClass().getName(),
 					inExprLimit,
 					queryParameter.getName() == null

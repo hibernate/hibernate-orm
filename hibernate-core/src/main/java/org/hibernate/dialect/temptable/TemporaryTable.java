@@ -63,7 +63,7 @@ public class TemporaryTable implements Exportable, Contributable {
 	public static final String ENTITY_TABLE_IDENTITY_COLUMN = "HTE_IDENTITY";
 	public static final String ENTITY_ROW_NUMBER_COLUMN = "rn_";
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( TemporaryTable.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( TemporaryTable.class );
 
 	private final String contributor;
 	private final String qualifiedTableName;
@@ -388,7 +388,7 @@ public class TemporaryTable implements Exportable, Contributable {
 													.getIdentityColumnString( integerBasicType.getJdbcType().getDdlTypeCode() );
 						}
 						else {
-							log.multiTableInsertNotAvailable( persistentClass.getEntityName() );
+							LOG.multiTableInsertNotAvailable( persistentClass.getEntityName() );
 							rowNumberType = typeConfiguration.getDdlTypeRegistry().getTypeName(
 									integerBasicType.getJdbcType().getDdlTypeCode(),
 									dialect.getSizeStrategy().resolveSize(

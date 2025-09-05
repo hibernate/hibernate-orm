@@ -113,7 +113,7 @@ import static org.hibernate.query.sqm.internal.TypecheckUtil.isNumberArray;
  */
 @Incubating
 public class TypeConfiguration implements SessionFactoryObserver, Serializable {
-//	private static final CoreMessageLogger log = messageLogger( Scope.class );
+//	private static final CoreMessageLogger LOG = messageLogger( Scope.class );
 
 	private final String uuid = generateLocalObjectUuid();
 
@@ -192,7 +192,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * @param metadataBuildingContext a {@link MetadataBuildingContext}
 	 */
 	public void scope(MetadataBuildingContext metadataBuildingContext) {
-//		log.tracef( "Scoping TypeConfiguration [%s] to MetadataBuildingContext [%s]", this, metadataBuildingContext );
+//		LOG.tracef( "Scoping TypeConfiguration [%s] to MetadataBuildingContext [%s]", this, metadataBuildingContext );
 		scope.setMetadataBuildingContext( metadataBuildingContext );
 	}
 
@@ -204,7 +204,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * @param sessionFactory a {@link SessionFactory} that is in a very fragile state
 	 */
 	public void scope(SessionFactoryImplementor sessionFactory) {
-//		log.tracef( "Scoping TypeConfiguration [%s] to SessionFactoryImplementor [%s]", this, sessionFactory );
+//		LOG.tracef( "Scoping TypeConfiguration [%s] to SessionFactoryImplementor [%s]", this, sessionFactory );
 
 		if ( scope.getMetadataBuildingContext() == null ) {
 			throw new IllegalStateException( "MetadataBuildingContext not known" );
@@ -271,13 +271,13 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		// Instead of allowing scope#setSessionFactory to influence this, we use the SessionFactoryObserver callback
 		// to handle this, allowing any SessionFactory constructor code to be able to continue to have access to the
 		// MetadataBuildingContext through TypeConfiguration until this callback is fired.
-//		log.tracef( "Handling #sessionFactoryCreated from [%s] for TypeConfiguration", factory );
+//		LOG.tracef( "Handling #sessionFactoryCreated from [%s] for TypeConfiguration", factory );
 		scope.setMetadataBuildingContext( null );
 	}
 
 	@Override
 	public void sessionFactoryClosed(SessionFactory factory) {
-//		log.tracef( "Handling #sessionFactoryClosed from [%s] for TypeConfiguration", factory );
+//		LOG.tracef( "Handling #sessionFactoryClosed from [%s] for TypeConfiguration", factory );
 		scope.unsetSessionFactory( factory );
 		// todo (6.0) : finish this
 		//		release Database, descriptor Maps, etc... things that are only
@@ -580,7 +580,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		 */
 		private void setSessionFactory(SessionFactoryImplementor factory) {
 			if ( sessionFactory != null ) {
-//				log.scopingTypesToSessionFactoryAfterAlreadyScoped( sessionFactory, factory );
+//				LOG.scopingTypesToSessionFactoryAfterAlreadyScoped( sessionFactory, factory );
 				throw new IllegalStateException( "TypeConfiguration was already scoped to SessionFactory: "
 													+ sessionFactory.getUuid() );
 			}
@@ -606,7 +606,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 
 		private void unsetSessionFactory(SessionFactory factory) {
-//			log.tracef( "Un-scoping TypeConfiguration [%s] from SessionFactory [%s]", this, factory );
+//			LOG.tracef( "Un-scoping TypeConfiguration [%s] from SessionFactory [%s]", this, factory );
 			sessionFactory = null;
 		}
 

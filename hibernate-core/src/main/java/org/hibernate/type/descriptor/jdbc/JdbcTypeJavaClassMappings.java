@@ -45,7 +45,7 @@ import org.jboss.logging.Logger;
 //TODO: Eventually, the plan is to have {@link org.hibernate.dialect.Dialect} and
 //      {@link java.sql.DatabaseMetaData#getTypeInfo()} contribute this information.
 public class JdbcTypeJavaClassMappings {
-	private static final Logger log = Logger.getLogger( JdbcTypeJavaClassMappings.class );
+	private static final Logger LOG = Logger.getLogger( JdbcTypeJavaClassMappings.class );
 
 	public static final JdbcTypeJavaClassMappings INSTANCE = new JdbcTypeJavaClassMappings();
 
@@ -71,7 +71,7 @@ public class JdbcTypeJavaClassMappings {
 		}
 
 		int specialCode = cls.hashCode();
-		log.debug(
+		LOG.debug(
 				"JDBC type code mapping not known for class [" + cls.getName() + "]; using custom code [" + specialCode + "]"
 		);
 		return specialCode;
@@ -88,7 +88,7 @@ public class JdbcTypeJavaClassMappings {
 			return cls;
 		}
 
-		log.debugf(
+		LOG.debugf(
 				"Java Class mapping not known for JDBC type code [%s]; using java.lang.Object",
 				typeCode
 		);

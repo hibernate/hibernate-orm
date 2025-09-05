@@ -21,7 +21,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ScriptSourceInputFromFile extends AbstractScriptSourceInput {
-	private static final Logger log = Logger.getLogger( ScriptSourceInputFromFile.class );
+	private static final Logger LOG = Logger.getLogger( ScriptSourceInputFromFile.class );
 
 	private final File file;
 	private final String charsetName;
@@ -49,7 +49,7 @@ public class ScriptSourceInputFromFile extends AbstractScriptSourceInput {
 
 	private static Reader toReader(File file, String charsetName) {
 		if ( ! file.exists() ) {
-			log.warnf( "Specified schema generation script file [%s] did not exist for reading", file );
+			LOG.warnf( "Specified schema generation script file [%s] did not exist for reading", file );
 			return new Reader() {
 				@Override
 				public int read(char[] cbuf, int off, int len) throws IOException {
@@ -81,7 +81,7 @@ public class ScriptSourceInputFromFile extends AbstractScriptSourceInput {
 			reader.close();
 		}
 		catch (IOException e) {
-			log.warn( "Unable to close file reader for generation script source" );
+			LOG.warn( "Unable to close file reader for generation script source" );
 		}
 	}
 

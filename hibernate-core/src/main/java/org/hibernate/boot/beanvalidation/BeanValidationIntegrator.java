@@ -27,7 +27,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  */
 public class BeanValidationIntegrator implements Integrator {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( BeanValidationIntegrator.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BeanValidationIntegrator.class );
 
 	public static final String APPLY_CONSTRAINTS = "hibernate.validator.apply_to_ddl";
 
@@ -93,7 +93,7 @@ public class BeanValidationIntegrator implements Integrator {
 		}
 		final Set<ValidationMode> modes = ValidationMode.getModes( modeSetting );
 		if ( modes.size() > 1 ) {
-			log.multipleValidationModes( ValidationMode.loggable( modes ) );
+			LOG.multipleValidationModes( ValidationMode.loggable( modes ) );
 		}
 		if ( modes.size() == 1 && modes.contains( ValidationMode.NONE ) ) {
 			// we have nothing to do; just return

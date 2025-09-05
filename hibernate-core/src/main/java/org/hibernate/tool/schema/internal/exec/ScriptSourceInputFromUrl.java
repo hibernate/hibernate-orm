@@ -20,7 +20,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ScriptSourceInputFromUrl extends AbstractScriptSourceInput {
-	private static final Logger log = Logger.getLogger( ScriptSourceInputFromFile.class );
+	private static final Logger LOG = Logger.getLogger( ScriptSourceInputFromFile.class );
 
 	private final URL url;
 	private final String charsetName;
@@ -61,7 +61,7 @@ public class ScriptSourceInputFromUrl extends AbstractScriptSourceInput {
 			reader.close();
 		}
 		catch (IOException e) {
-			log.warn( "Unable to close file reader for generation script source" );
+			LOG.warn( "Unable to close file reader for generation script source" );
 		}
 	}
 

@@ -30,7 +30,7 @@ import java.io.FileOutputStream;
  * @author Steve Ebersole
  */
 public class CacheableFileXmlSource {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( CacheableFileXmlSource.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( CacheableFileXmlSource.class );
 
 	public static Binding<? extends JaxbBindableMappingDescriptor> fromCacheableFile(
 			File xmlFile,
@@ -74,17 +74,17 @@ public class CacheableFileXmlSource {
 					return new Binding<>( readSerFile( serFile ), origin );
 				}
 				catch ( SerializationException e ) {
-					log.unableToDeserializeCache( serFile.getName(), e );
+					LOG.unableToDeserializeCache( serFile.getName(), e );
 				}
 				catch ( FileNotFoundException e ) {
-					log.cachedFileNotFound( serFile.getName(), e );
+					LOG.cachedFileNotFound( serFile.getName(), e );
 				}
 			}
 			else {
-				log.cachedFileObsolete( serFile );
+				LOG.cachedFileObsolete( serFile );
 			}
 
-			log.readingMappingsFromFile( xmlFile.getPath() );
+			LOG.readingMappingsFromFile( xmlFile.getPath() );
 			final Binding<? extends JaxbBindableMappingDescriptor> binding = FileXmlSource.fromFile( xmlFile, binder );
 
 			writeSerFile( binding.getRoot(), xmlFile, serFile );
@@ -125,7 +125,7 @@ public class CacheableFileXmlSource {
 	}
 
 	private static <T extends JaxbBindableMappingDescriptor> T readSerFile(File serFile) throws SerializationException, FileNotFoundException {
-		log.readingCachedMappings( serFile );
+		LOG.readingCachedMappings( serFile );
 		return SerializationHelper.deserialize( new FileInputStream( serFile ) );
 	}
 
@@ -134,17 +134,17 @@ public class CacheableFileXmlSource {
 			File xmlFile,
 			File serFile) {
 		try ( FileOutputStream fos = new FileOutputStream( serFile ) ) {
-			if ( log.isTraceEnabled() ) {
-				log.tracef( "Writing cache file for: %s to: %s", xmlFile.getAbsolutePath(), serFile.getAbsolutePath() );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracef( "Writing cache file for: %s to: %s", xmlFile.getAbsolutePath(), serFile.getAbsolutePath() );
 			}
 			SerializationHelper.serialize( jaxbModel, fos );
 			boolean success = serFile.setLastModified( System.currentTimeMillis() );
 			if ( !success ) {
-				log.warn( "Could not update cacheable hbm.xml bin file timestamp" );
+				LOG.warn( "Could not update cacheable hbm.xml bin file timestamp" );
 			}
 		}
 		catch ( Exception e ) {
-			log.unableToWriteCachedFile( serFile.getAbsolutePath(), e.getMessage() );
+			LOG.unableToWriteCachedFile( serFile.getAbsolutePath(), e.getMessage() );
 		}
 	}
 

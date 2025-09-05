@@ -43,7 +43,7 @@ import net.bytebuddy.utility.OpenedClassReader;
 
 final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDeclaredMethods.MethodVisitorWrapper {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( PersistentAttributeTransformer.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PersistentAttributeTransformer.class );
 
 	private static final Junction<MethodDescription> NOT_HIBERNATE_GENERATED = not( nameStartsWith( "$$_hibernate_" ) );
 	private static final ModifierContributor.ForField REMOVE_PRIVATE_FINAL_MODIFIER = new ModifierContributor.ForField() {
@@ -130,8 +130,8 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		}
 
 		AnnotatedFieldDescription[] orderedFields = enhancementContext.order( persistentFieldList.toArray( new AnnotatedFieldDescription[0] ) );
-		if ( log.isTraceEnabled() ) {
-			log.tracef(
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef(
 					"Persistent fields for entity %s: %s",
 					managedCtClass.getName(),
 					Arrays.toString( orderedFields )
@@ -158,7 +158,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 			return collectInheritPersistentFields( managedCtSuperclass, enhancementContext );
 		}
 
-		log.tracef( "Found @MappedSuperclass %s to collectPersistenceFields", managedCtSuperclass );
+		LOG.tracef( "Found @MappedSuperclass %s to collectPersistenceFields", managedCtSuperclass );
 
 		List<AnnotatedFieldDescription> persistentFieldList = new ArrayList<>();
 

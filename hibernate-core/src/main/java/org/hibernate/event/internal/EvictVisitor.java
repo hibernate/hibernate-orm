@@ -24,7 +24,7 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
  */
 public class EvictVisitor extends AbstractVisitor {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( EvictVisitor.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EvictVisitor.class );
 
 	private final Object owner;
 
@@ -70,8 +70,8 @@ public class EvictVisitor extends AbstractVisitor {
 		final var persister = ce.getLoadedPersister();
 		final Object loadedKey = ce.getLoadedKey();
 
-		if ( log.isTraceEnabled() ) {
-			log.trace( "Evicting collection: " + collectionInfoString( persister, collection, loadedKey, session ) );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Evicting collection: " + collectionInfoString( persister, collection, loadedKey, session ) );
 		}
 
 		if ( persister != null ) {

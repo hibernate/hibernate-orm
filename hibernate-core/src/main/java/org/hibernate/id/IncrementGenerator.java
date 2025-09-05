@@ -48,7 +48,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
  */
 public class IncrementGenerator implements IdentifierGenerator {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( IncrementGenerator.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IncrementGenerator.class );
 
 	/**
 	 * A parameter identifying the column holding the id.
@@ -132,8 +132,8 @@ public class IncrementGenerator implements IdentifierGenerator {
 	private void initializePreviousValueHolder(SharedSessionContractImplementor session) {
 		previousValueHolder = getIntegralDataTypeHolder( returnClass );
 
-		if ( log.isTraceEnabled() ) {
-			log.tracef( "Fetching initial value: %s", sql );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef( "Fetching initial value: %s", sql );
 		}
 		try {
 			final PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
@@ -147,8 +147,8 @@ public class IncrementGenerator implements IdentifierGenerator {
 						previousValueHolder.initialize( 1L );
 					}
 					sql = null;
-					if ( log.isTraceEnabled() ) {
-						log.tracef( "First free id: %s", previousValueHolder.makeValue() );
+					if ( LOG.isTraceEnabled() ) {
+						LOG.tracef( "First free id: %s", previousValueHolder.makeValue() );
 					}
 				}
 				finally {

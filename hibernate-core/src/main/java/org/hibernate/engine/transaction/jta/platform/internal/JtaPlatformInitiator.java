@@ -26,7 +26,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class JtaPlatformInitiator implements StandardServiceInitiator<JtaPlatform> {
 	public static final JtaPlatformInitiator INSTANCE = new JtaPlatformInitiator();
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( JtaPlatformInitiator.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JtaPlatformInitiator.class );
 
 	@Override
 	public Class<JtaPlatform> getServiceInitiated() {
@@ -41,21 +41,21 @@ public class JtaPlatformInitiator implements StandardServiceInitiator<JtaPlatfor
 						.resolveStrategy( JtaPlatform.class, setting );
 
 		if ( platform == null ) {
-			log.trace( "No JtaPlatform was specified, checking resolver" );
+			LOG.trace( "No JtaPlatform was specified, checking resolver" );
 			platform = registry.requireService( JtaPlatformResolver.class )
 					.resolveJtaPlatform( configurationValues, registry );
 		}
 
 		if ( platform == null ) {
-			log.trace( "No JtaPlatform was specified, checking fallback provider" );
+			LOG.trace( "No JtaPlatform was specified, checking fallback provider" );
 			platform = getFallbackProvider( configurationValues, registry );
 		}
 
 		if ( platform == null || platform instanceof NoJtaPlatform ) {
-			log.noJtaPlatform();
+			LOG.noJtaPlatform();
 		}
 		else {
-			log.usingJtaPlatform( platform.getClass().getName() );
+			LOG.usingJtaPlatform( platform.getClass().getName() );
 		}
 		return platform;
 	}

@@ -23,7 +23,7 @@ import static org.hibernate.query.sqm.tree.expression.Compatibility.areAssignmen
  */
 public class InstantiationHelper {
 
-	private static final Logger log = Logger.getLogger( InstantiationHelper.class );
+	private static final Logger LOG = Logger.getLogger( InstantiationHelper.class );
 
 	private InstantiationHelper() {
 		// disallow direct instantiation
@@ -87,8 +87,8 @@ public class InstantiationHelper {
 										.getJavaTypeClass();
 
 				if ( !areAssignmentCompatible( type, argumentType ) ) {
-					if ( log.isDebugEnabled() ) {
-						log.debugf(
+					if ( LOG.isDebugEnabled() ) {
+						LOG.debugf(
 								"Skipping constructor for dynamic-instantiation match due to argument mismatch [%s] : %s -> %s",
 								i,
 								argumentType.getTypeName(),

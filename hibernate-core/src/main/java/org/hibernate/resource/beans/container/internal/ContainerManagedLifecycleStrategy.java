@@ -26,7 +26,7 @@ import org.jboss.logging.Logger;
  * and are not duplicated, in contrast to {@link JpaCompliantLifecycleStrategy}.
  */
 public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy {
-	private static final Logger log = Logger.getLogger( ContainerManagedLifecycleStrategy.class );
+	private static final Logger LOG = Logger.getLogger( ContainerManagedLifecycleStrategy.class );
 
 	public static final ContainerManagedLifecycleStrategy INSTANCE = new ContainerManagedLifecycleStrategy();
 
@@ -99,7 +99,7 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 				throw e;
 			}
 			catch (Exception e) {
-				log.debug( "Error resolving CDI bean - using fallback" );
+				LOG.debug( "Error resolving CDI bean - using fallback" );
 				beanInstance = produceFallbackInstance();
 				instance = null;
 			}
@@ -124,7 +124,7 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 				instance.destroy( beanInstance );
 			}
 			catch (ContextNotActiveException e) {
-				log.debugf(
+				LOG.debugf(
 						"Error destroying managed bean instance [%s] - the context is not active anymore."
 								+ " The instance must have been destroyed already - ignoring.",
 						instance,

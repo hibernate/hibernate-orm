@@ -21,7 +21,7 @@ import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.IMM
  * @author Steve Ebersole
  */
 public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImplementor {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( LogicalConnection.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( LogicalConnection.class );
 
 	private transient Connection providedConnection;
 	private final boolean initiallyAutoCommit;
@@ -54,7 +54,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 
 	@Override
 	public Connection close() {
-		log.closingLogicalConnection();
+		LOG.closingLogicalConnection();
 		getResourceRegistry().releaseResources();
 		try {
 			return providedConnection;
@@ -62,7 +62,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 		finally {
 			providedConnection = null;
 			closed = true;
-			log.logicalConnectionClosed();
+			LOG.logicalConnectionClosed();
 		}
 	}
 
@@ -110,7 +110,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 		}
 		else if ( connection == providedConnection ) {
 			// likely an unmatched reconnect call (no matching disconnect call)
-			log.trace( "Reconnecting the same connection that is already connected; should this connection have been disconnected?" );
+			LOG.trace( "Reconnecting the same connection that is already connected; should this connection have been disconnected?" );
 		}
 		else if ( providedConnection != null ) {
 			throw new IllegalArgumentException(
@@ -118,7 +118,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 			);
 		}
 		providedConnection = connection;
-		log.trace( "Manually reconnected logical connection" );
+		LOG.trace( "Manually reconnected logical connection" );
 	}
 
 	@Override

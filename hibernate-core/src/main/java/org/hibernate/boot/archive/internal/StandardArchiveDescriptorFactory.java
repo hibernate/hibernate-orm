@@ -23,7 +23,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class StandardArchiveDescriptorFactory implements ArchiveDescriptorFactory, JarFileEntryUrlAdjuster {
-	private static final Logger log = Logger.getLogger( StandardArchiveDescriptorFactory.class );
+	private static final Logger LOG = Logger.getLogger( StandardArchiveDescriptorFactory.class );
 
 	/**
 	 * Singleton access
@@ -129,8 +129,8 @@ public class StandardArchiveDescriptorFactory implements ArchiveDescriptorFactor
 			}
 			catch (MalformedURLException e) {
 				// allow to pass through to return the original URL
-				if ( log.isDebugEnabled() ) {
-					log.debugf(
+				if ( LOG.isDebugEnabled() ) {
+					LOG.debugf(
 							e,
 							"Unable to adjust relative <jar-file/> URL [%s] relative to root URL [%s]",
 							filePart,

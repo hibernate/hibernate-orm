@@ -25,7 +25,7 @@ import org.hibernate.tool.schema.spi.ScriptSourceInput;
  * @author Steve Ebersole
  */
 public class GenerationTargetToDatabase implements GenerationTarget {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( GenerationTargetToDatabase.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( GenerationTargetToDatabase.class );
 
 	private final DdlTransactionIsolator ddlTransactionIsolator;
 	private final boolean releaseAfterUse;
@@ -66,7 +66,7 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 	@Override
 	public void beforeScript(ScriptSourceInput scriptSource) {
 		if ( scriptSource.exists() ) {
-			log.executingScript( scriptSource.getScriptDescription() );
+			LOG.executingScript( scriptSource.getScriptDescription() );
 		}
 	}
 
@@ -85,7 +85,7 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 				}
 			}
 			catch( SQLException e ) {
-				log.unableToLogSqlWarnings( e );
+				LOG.unableToLogSqlWarnings( e );
 			}
 		}
 		catch (SQLException e) {

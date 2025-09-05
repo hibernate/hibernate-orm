@@ -60,7 +60,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class StrategySelectorBuilder {
-	private static final Logger log = Logger.getLogger( StrategySelectorBuilder.class );
+	private static final Logger LOG = Logger.getLogger( StrategySelectorBuilder.class );
 
 	private final List<StrategyRegistration<?>> explicitStrategyRegistrations = new ArrayList<>();
 
@@ -87,8 +87,8 @@ public class StrategySelectorBuilder {
 	public <T> void addExplicitStrategyRegistration(StrategyRegistration<T> strategyRegistration) {
 		if ( !strategyRegistration.getStrategyRole().isInterface() ) {
 			// not good form...
-			if ( log.isTraceEnabled() ) {
-				log.tracef( "Registering non-interface strategy : %s", strategyRegistration.getStrategyRole().getName() );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracef( "Registering non-interface strategy : %s", strategyRegistration.getStrategyRole().getName() );
 			}
 		}
 

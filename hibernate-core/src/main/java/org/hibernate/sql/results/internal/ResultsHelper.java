@@ -29,7 +29,7 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
  */
 public class ResultsHelper {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( ResultsHelper.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ResultsHelper.class );
 
 	public static <R> RowReader<R> createRowReader(
 			SessionFactoryImplementor sessionFactory,
@@ -72,8 +72,8 @@ public class ResultsHelper {
 			statistics.loadCollection( collectionDescriptor.getRole() );
 		}
 
-		if ( log.isTraceEnabled() ) {
-			log.trace( "Collection fully initialized: "
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Collection fully initialized: "
 						+ collectionInfoString( collectionDescriptor, collection, key, session ) );
 		}
 
@@ -136,15 +136,15 @@ public class ResultsHelper {
 			Object key) {
 		final var session = persistenceContext.getSession();
 
-		if ( log.isTraceEnabled() ) {
-			log.trace( "Caching collection: "
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Caching collection: "
 						+ collectionInfoString( collectionDescriptor, collection, key, session ) );
 		}
 
 		if ( session.getLoadQueryInfluencers().hasEnabledFilters()
 				&& collectionDescriptor.isAffectedByEnabledFilters( session ) ) {
 			// some filters affecting the collection are enabled on the session, so do not do the put into the cache.
-			log.debug( "Refusing to add to cache due to enabled filters" );
+			LOG.debug( "Refusing to add to cache due to enabled filters" );
 			// todo : add the notion of enabled filters to the cache key to differentiate filtered collections from non-filtered;
 			//      DefaultInitializeCollectionEventHandler.initializeCollectionFromCache() (which makes sure to not read from
 			//      cache with enabled filters).
@@ -157,7 +157,7 @@ public class ResultsHelper {
 			final Object collectionOwner =
 					getCollectionOwner( persistenceContext, collectionDescriptor, collection, key, session );
 			if ( collectionOwner == null ) {
-				log.debug( "Unable to resolve owner of loading collection for second level caching. Refusing to add to cache.");
+				LOG.debug( "Unable to resolve owner of loading collection for second level caching. Refusing to add to cache.");
 				return;
 			}
 			version = persistenceContext.getEntry( collectionOwner ).getVersion();

@@ -69,4 +69,26 @@ public class SqmCorrelatedPluralPartJoin<O, T> extends SqmPluralPartJoin<O, T> i
 		return correlatedRootJoin;
 	}
 
+	@Override
+	public boolean equals(Object other) {
+		return other instanceof SqmCorrelatedPluralPartJoin<?, ?> that
+			&& correlationParent.equals( that.correlationParent );
+	}
+
+	@Override
+	public int hashCode() {
+		return correlationParent.hashCode();
+	}
+
+	@Override
+	public boolean isCompatible(Object other) {
+		return other instanceof SqmCorrelatedPluralPartJoin<?, ?> that
+			&& correlationParent.isCompatible( that.correlationParent );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return correlationParent.cacheHashCode();
+	}
+
 }

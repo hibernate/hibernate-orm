@@ -114,4 +114,25 @@ public class SqmCorrelatedEntityJoin<L,R> extends SqmEntityJoin<L,R> implements 
 		);
 	}
 
+	@Override
+	public boolean equals(Object other) {
+		return other instanceof SqmCorrelatedEntityJoin<?, ?> that
+			&& correlationParent.equals( that.correlationParent );
+	}
+
+	@Override
+	public int hashCode() {
+		return correlationParent.hashCode();
+	}
+
+	@Override
+	public boolean isCompatible(Object other) {
+		return other instanceof SqmCorrelatedEntityJoin<?, ?> that
+				&& correlationParent.isCompatible( that.correlationParent );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return correlationParent.cacheHashCode();
+	}
 }

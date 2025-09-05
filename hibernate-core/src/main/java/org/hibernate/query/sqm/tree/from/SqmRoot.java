@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.from;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.TreatException;
@@ -110,7 +111,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 		return allowJoins;
 	}
 
-	public List<SqmJoin<?, ?>> getOrderedJoins() {
+	public @Nullable List<SqmJoin<?, ?>> getOrderedJoins() {
 		return orderedJoins;
 	}
 

@@ -17,7 +17,6 @@ import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.NavigablePath;
 
-import java.util.Objects;
 
 
 /**
@@ -146,13 +145,29 @@ public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E>
 
 	@Override
 	public boolean equals(Object object) {
-		return object instanceof SqmFunctionRoot<?> that
-			&& super.equals( object )
-			&& Objects.equals( this.function, that.function );
+		return super.equals( object )
+			&& object instanceof SqmFunctionRoot<?> that
+			&& function.equals( that.function );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( super.hashCode(), function );
+		int result = super.hashCode();
+		result = 31 * result + function.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return super.isCompatible( object )
+			&& object instanceof SqmFunctionRoot<?> that
+			&& function.isCompatible( that.function );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + function.cacheHashCode();
+		return result;
 	}
 }

@@ -213,15 +213,4 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 		return treatAs( treatAsType, null );
 	}
 
-	@Override
-	public boolean equals(Object object) {
-		return object instanceof SqmCrossJoin<?>
-			&& super.equals( object );
-	}
-
-	@Override
-	// needed to make static code analyzer happy
-	public int hashCode() {
-		return super.hashCode();
-	}
 }

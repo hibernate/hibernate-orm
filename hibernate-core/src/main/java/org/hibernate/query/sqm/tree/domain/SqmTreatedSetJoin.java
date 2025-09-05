@@ -143,6 +143,16 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 	}
 
 	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
+	}
+
+	@Override
 	public SqmTreatedSetJoin<O, T, S> on(JpaExpression<Boolean> restriction) {
 		return (SqmTreatedSetJoin<O, T, S>) super.on( restriction );
 	}

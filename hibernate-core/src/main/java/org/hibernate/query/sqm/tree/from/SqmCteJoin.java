@@ -160,13 +160,29 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> implements SqmSingularV
 
 	@Override
 	public boolean equals(Object object) {
-		return object instanceof SqmCteJoin<?> that
-			&& super.equals( object )
-			&& Objects.equals( this.cte.getName(), that.cte.getName() );
+		return super.equals( object )
+			&& object instanceof SqmCteJoin<?> that
+			&& Objects.equals( this.cte.getCteTable().getCteName(), that.cte.getCteTable().getCteName() );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( super.hashCode(), cte.getName() );
+		int result = super.hashCode();
+		result = 31 * result + cte.getCteTable().getCteName().hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return super.isCompatible( object )
+			&& object instanceof SqmCteJoin<?> that
+			&& Objects.equals( this.cte.getCteTable().getCteName(), that.cte.getCteTable().getCteName() );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + cte.getCteTable().getCteName().hashCode();
+		return result;
 	}
 }

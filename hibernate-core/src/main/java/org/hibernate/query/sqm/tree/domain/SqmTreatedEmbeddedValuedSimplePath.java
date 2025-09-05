@@ -132,4 +132,14 @@ public class SqmTreatedEmbeddedValuedSimplePath<T, S extends T> extends SqmEmbed
 	public int hashCode() {
 		return Objects.hash( treatTarget.getTypeName(), wrappedPath.getNavigablePath() );
 	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
+	}
 }

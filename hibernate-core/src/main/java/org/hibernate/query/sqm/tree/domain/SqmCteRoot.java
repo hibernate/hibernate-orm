@@ -104,13 +104,29 @@ public class SqmCteRoot<T> extends SqmRoot<T> implements JpaRoot<T> {
 
 	@Override
 	public boolean equals(Object object) {
-		return object instanceof SqmCteRoot<?> that
-			&& super.equals( object )
-			&& Objects.equals( this.cte, that.cte );
+		return super.equals( object )
+			&& object instanceof SqmCteRoot<?> that
+			&& Objects.equals( this.cte.getCteTable().getCteName(), that.cte.getCteTable().getCteName() );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( super.hashCode(), cte );
+		int result = super.hashCode();
+		result = 31 * result + cte.getCteTable().getCteName().hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return super.isCompatible( object )
+			&& object instanceof SqmCteRoot<?> that
+			&& Objects.equals( this.cte.getCteTable().getCteName(), that.cte.getCteTable().getCteName() );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + cte.getCteTable().getCteName().hashCode();
+		return result;
 	}
 }

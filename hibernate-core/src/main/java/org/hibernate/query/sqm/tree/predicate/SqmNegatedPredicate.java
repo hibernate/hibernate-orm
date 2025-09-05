@@ -6,7 +6,6 @@ package org.hibernate.query.sqm.tree.predicate;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -18,19 +17,11 @@ import org.hibernate.query.sqm.tree.SqmRenderContext;
 /**
  * @author Steve Ebersole
  */
-public class SqmNegatedPredicate extends AbstractNegatableSqmPredicate {
+public class SqmNegatedPredicate extends AbstractSqmPredicate {
 	private final SqmPredicate wrappedPredicate;
 
 	public SqmNegatedPredicate(SqmPredicate wrappedPredicate, NodeBuilder nodeBuilder) {
-		super( nodeBuilder );
-		this.wrappedPredicate = wrappedPredicate;
-	}
-
-	public SqmNegatedPredicate(
-			SqmPredicate wrappedPredicate,
-			boolean negated,
-			NodeBuilder nodeBuilder) {
-		super( negated, nodeBuilder );
+		super( nodeBuilder.getBooleanType(), nodeBuilder );
 		this.wrappedPredicate = wrappedPredicate;
 	}
 
@@ -44,7 +35,6 @@ public class SqmNegatedPredicate extends AbstractNegatableSqmPredicate {
 				this,
 				new SqmNegatedPredicate(
 						wrappedPredicate.copy( context ),
-						isNegated(),
 						nodeBuilder()
 				)
 		);
@@ -78,17 +68,32 @@ public class SqmNegatedPredicate extends AbstractNegatableSqmPredicate {
 	@Override
 	public boolean equals(Object object) {
 		return object instanceof SqmNegatedPredicate that
-			&& Objects.equals( wrappedPredicate, that.wrappedPredicate );
+			&& wrappedPredicate.equals( that.wrappedPredicate );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( wrappedPredicate );
+		return wrappedPredicate.hashCode();
 	}
 
 	@Override
-	protected SqmNegatablePredicate createNegatedNode() {
-		return new SqmNegatedPredicate( this, nodeBuilder() );
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmNegatedPredicate that
+			&& wrappedPredicate.isCompatible( that.wrappedPredicate );
 	}
 
+	@Override
+	public int cacheHashCode() {
+		return wrappedPredicate.cacheHashCode();
+	}
+
+	@Override
+	public boolean isNegated() {
+		return true;
+	}
+
+	@Override
+	public SqmPredicate not() {
+		return new SqmNegatedPredicate( this, nodeBuilder() );
+	}
 }

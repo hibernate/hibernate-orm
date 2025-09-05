@@ -120,4 +120,14 @@ public class SqmTreatedEntityJoin<L,R,S extends R> extends SqmEntityJoin<L,S> im
 	public int hashCode() {
 		return Objects.hash( treatTarget.getName(), wrappedPath.getNavigablePath() );
 	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
+	}
 }

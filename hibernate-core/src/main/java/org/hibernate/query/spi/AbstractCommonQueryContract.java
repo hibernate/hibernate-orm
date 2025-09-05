@@ -722,7 +722,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	protected <P> QueryParameterBinding<P> locateBinding(QueryParameterImplementor<P> parameter) {
 		getCheckOpen();
-		return getQueryParameterBindings().getBinding( parameter );
+		return getQueryParameterBindings().getBinding( getQueryParameter( parameter ) );
 	}
 
 	protected <P> QueryParameterBinding<P> locateBinding(String name) {
@@ -735,10 +735,14 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return getQueryParameterBindings().getBinding( position );
 	}
 
+	protected <P> QueryParameterImplementor<P> getQueryParameter(QueryParameterImplementor<P> parameter) {
+		return parameter;
+	}
+
 	public boolean isBound(Parameter<?> param) {
 		getCheckOpen();
 		final var parameter = getParameterMetadata().resolve( param );
-		return parameter != null && getQueryParameterBindings().isBound( parameter );
+		return parameter != null && getQueryParameterBindings().isBound( getQueryParameter( parameter ) );
 	}
 
 	public <T> T getParameterValue(Parameter<T> param) {
@@ -749,7 +753,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			throw new IllegalArgumentException( "The parameter [" + param + "] is not part of this Query" );
 		}
 
-		final var binding = getQueryParameterBindings().getBinding( parameter );
+		final var binding = getQueryParameterBindings().getBinding( getQueryParameter( parameter ) );
 		if ( binding == null || !binding.isBound() ) {
 			throw new IllegalStateException( "Parameter value not yet bound : " + param.toString() );
 		}

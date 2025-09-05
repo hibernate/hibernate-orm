@@ -10,7 +10,6 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 
-import java.util.Objects;
 
 /**
  * @author Steve Ebersole
@@ -68,12 +67,28 @@ public class SqmEmptinessPredicate extends AbstractNegatableSqmPredicate {
 	public boolean equals(Object object) {
 		return object instanceof SqmEmptinessPredicate that
 			&& this.isNegated() == that.isNegated()
-			&& Objects.equals( pluralPath, that.pluralPath );
+			&& pluralPath.equals( that.pluralPath );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( isNegated(), pluralPath );
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + pluralPath.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmEmptinessPredicate that
+			&& this.isNegated() == that.isNegated()
+			&& pluralPath.isCompatible( that.pluralPath );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + pluralPath.cacheHashCode();
+		return result;
 	}
 
 	@Override

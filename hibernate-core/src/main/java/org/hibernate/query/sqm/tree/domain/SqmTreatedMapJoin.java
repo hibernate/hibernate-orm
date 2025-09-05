@@ -181,4 +181,14 @@ public class SqmTreatedMapJoin<L, K, V, S extends V> extends SqmMapJoin<L, K, S>
 	public int hashCode() {
 		return Objects.hash( treatTarget.getTypeName(), wrappedPath.getNavigablePath() );
 	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
+	}
 }

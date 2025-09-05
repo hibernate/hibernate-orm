@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.spi;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -17,6 +18,8 @@ public interface CacheabilityInfluencers {
 	String getQueryString();
 
 	Object getQueryStringCacheKey();
+
+	int @Nullable [] unnamedParameterIndices();
 
 	SqmStatement<?> getSqmStatement();
 

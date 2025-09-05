@@ -19,6 +19,7 @@ import org.hibernate.query.criteria.JpaValues;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
@@ -212,18 +213,29 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 
 	@Override
 	public boolean equals(Object object) {
-		if ( !(object instanceof SqmInsertValuesStatement<?> that) ) {
-			return false;
-		}
-		return Objects.equals( valuesList, that.valuesList )
-			&& Objects.equals( this.getTarget(), that.getTarget() )
-			&& Objects.equals( this.getInsertionTargetPaths(), that.getInsertionTargetPaths() )
-			&& Objects.equals( this.getConflictClause(), that.getConflictClause() )
-			&& Objects.equals( this.getCteStatements(), that.getCteStatements() );
+		return object instanceof SqmInsertValuesStatement<?> that
+			&& super.equals( that )
+			&& Objects.equals( valuesList, that.valuesList );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( valuesList, getTarget(), getInsertionTargetPaths(), getConflictClause(), getCteStatements() );
+		int result = super.hashCode();
+		result = 31 * result + Objects.hashCode( valuesList );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmInsertValuesStatement<?> that
+			&& super.isCompatible( that )
+			&& SqmCacheable.areCompatible( valuesList, that.valuesList );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( valuesList );
+		return result;
 	}
 }

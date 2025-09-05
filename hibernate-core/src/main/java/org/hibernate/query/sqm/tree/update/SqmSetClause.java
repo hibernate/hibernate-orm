@@ -7,7 +7,9 @@ package org.hibernate.query.sqm.tree.update;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -16,7 +18,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 /**
  * @author Steve Ebersole
  */
-public class SqmSetClause {
+public class SqmSetClause implements SqmCacheable {
 	private final List<SqmAssignment<?>> assignments;
 
 	public SqmSetClause() {
@@ -60,5 +62,27 @@ public class SqmSetClause {
 		sqmAssignment.getTargetPath().appendHqlString( sb, context );
 		sb.append( " = " );
 		sqmAssignment.getValue().appendHqlString( sb, context );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmSetClause that
+			&& Objects.equals( assignments, that.assignments );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode( assignments );
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmSetClause that
+			&& SqmCacheable.areCompatible( assignments, that.assignments );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return SqmCacheable.cacheHashCode( assignments );
 	}
 }

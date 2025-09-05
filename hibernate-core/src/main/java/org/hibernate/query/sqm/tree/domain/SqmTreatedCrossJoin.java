@@ -115,6 +115,16 @@ public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin 
 		return Objects.hash( treatTarget.getName(), wrappedPath.getNavigablePath() );
 	}
 
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
+	}
+
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public SqmTreatedCrossJoin treatAs(Class treatJavaType, String alias) {

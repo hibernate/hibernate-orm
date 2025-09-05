@@ -158,4 +158,14 @@ public class SqmTreatedSimplePath<T, S extends T>
 	public int hashCode() {
 		return Objects.hash( treatTarget.getName(), wrappedPath.getNavigablePath() );
 	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
+	}
 }

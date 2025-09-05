@@ -27,6 +27,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmNode;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -710,20 +711,46 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Override
-	public boolean equals(Object other) {
-		return other instanceof SqmQuerySpec<?> that
-			&& super.equals( other )
-			&& Objects.equals( this.fromClause, that.fromClause )
-			&& Objects.equals( this.selectClause, that.selectClause )
-			&& Objects.equals( this.whereClause, that.whereClause )
-			&& Objects.equals( this.groupByClauseExpressions, that.groupByClauseExpressions )
-			&& Objects.equals( this.havingClausePredicate, that.havingClausePredicate );
+	public boolean equals(Object object) {
+		return object instanceof SqmQuerySpec<?> that
+			&& super.equals( object )
+			&& Objects.equals( fromClause, that.fromClause )
+			&& Objects.equals( selectClause, that.selectClause )
+			&& Objects.equals( whereClause, that.whereClause )
+			&& Objects.equals( groupByClauseExpressions, that.groupByClauseExpressions )
+			&& Objects.equals( havingClausePredicate, that.havingClausePredicate );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( super.hashCode(),
-				fromClause, selectClause, whereClause,
-				groupByClauseExpressions, havingClausePredicate );
+		int result = super.hashCode();
+		result = 31 * result + Objects.hashCode( fromClause );
+		result = 31 * result + Objects.hashCode( selectClause );
+		result = 31 * result + Objects.hashCode( whereClause );
+		result = 31 * result + Objects.hashCode( groupByClauseExpressions );
+		result = 31 * result + Objects.hashCode( havingClausePredicate );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmQuerySpec<?> that
+			&& super.isCompatible( object )
+			&& SqmCacheable.areCompatible( fromClause, that.fromClause )
+			&& SqmCacheable.areCompatible( selectClause, that.selectClause )
+			&& SqmCacheable.areCompatible( whereClause, that.whereClause )
+			&& SqmCacheable.areCompatible( groupByClauseExpressions, that.groupByClauseExpressions )
+			&& SqmCacheable.areCompatible( havingClausePredicate, that.havingClausePredicate );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( fromClause );
+		result = 31 * result + SqmCacheable.cacheHashCode( selectClause );
+		result = 31 * result + SqmCacheable.cacheHashCode( whereClause );
+		result = 31 * result + SqmCacheable.cacheHashCode( groupByClauseExpressions );
+		result = 31 * result + SqmCacheable.cacheHashCode( havingClausePredicate );
+		return result;
 	}
 }

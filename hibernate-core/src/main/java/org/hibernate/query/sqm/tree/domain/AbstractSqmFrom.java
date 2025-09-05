@@ -988,4 +988,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		}
 		return prefix + "_" + (++aliasCounter);
 	}
+
+	// No need for equals/hashCode or isCompatible/cacheHashCode, because the base implementation using NavigablePath
+	// is fine for the purpose of matching nodes "syntactically". Deep equality is determined through SqmFromClause
 }

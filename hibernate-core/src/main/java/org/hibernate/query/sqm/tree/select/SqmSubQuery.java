@@ -785,7 +785,23 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( super.hashCode(), alias );
+		int result = super.hashCode();
+		result = 31 * result + Objects.hashCode( alias );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmSubQuery<?> that
+			&& Objects.equals( this.alias, that.alias )
+			&& super.isCompatible( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + Objects.hashCode( alias );
+		return result;
 	}
 
 	@Override

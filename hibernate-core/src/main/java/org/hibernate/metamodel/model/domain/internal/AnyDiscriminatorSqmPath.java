@@ -13,7 +13,6 @@ import org.hibernate.query.sqm.tree.domain.AbstractSqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.spi.NavigablePath;
 
-import java.util.Objects;
 
 public class AnyDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements DiscriminatorSqmPath<T> {
 
@@ -49,15 +48,25 @@ public class AnyDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements Di
 		return (AnyDiscriminatorSqmPathSource<T>) getReferencedPathSource();
 	}
 
-
 	@Override
 	public boolean equals(Object object) {
 		return object instanceof AnyDiscriminatorSqmPath<?> that
-			&& Objects.equals( this.getLhs(), that.getLhs() );
+			&& getLhs().equals( that.getLhs() );
 	}
 
 	@Override
 	public int hashCode() {
 		return getLhs().hashCode();
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof AnyDiscriminatorSqmPath<?> that
+			&& getLhs().isCompatible( that.getLhs() );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return getLhs().cacheHashCode();
 	}
 }

@@ -127,4 +127,14 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>
 	public int hashCode() {
 		return Objects.hash( type, length, precision, scale );
 	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
+	}
 }

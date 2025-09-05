@@ -12,7 +12,6 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
-import java.util.Objects;
 
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.SUBTRACT;
@@ -151,12 +150,31 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 	public boolean equals(Object object) {
 		return object instanceof SqmBinaryArithmetic<?> that
 			&& this.operator == that.operator
-			&& Objects.equals( this.lhsOperand, that.lhsOperand )
-			&& Objects.equals( this.rhsOperand, that.rhsOperand );
+			&& this.lhsOperand.equals( that.lhsOperand )
+			&& this.rhsOperand.equals( that.rhsOperand );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( lhsOperand, rhsOperand, operator );
+		int result = lhsOperand.hashCode();
+		result = 31 * result + operator.hashCode();
+		result = 31 * result + rhsOperand.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmBinaryArithmetic<?> that
+			&& this.operator == that.operator
+			&& this.lhsOperand.isCompatible( that.lhsOperand )
+			&& this.rhsOperand.isCompatible( that.rhsOperand );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = lhsOperand.cacheHashCode();
+		result = 31 * result + operator.hashCode();
+		result = 31 * result + rhsOperand.cacheHashCode();
+		return result;
 	}
 }

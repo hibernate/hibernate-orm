@@ -14,7 +14,6 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
-import java.util.Objects;
 
 /**
  * @author Steve Ebersole
@@ -105,13 +104,28 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 	@Override
 	public boolean equals(Object object) {
 		return object instanceof SqmIndexedCollectionAccessPath<?> that
-			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() )
-			&& Objects.equals( this.getLhs(), that.getLhs() )
-			&& Objects.equals( this.selectorExpression, that.selectorExpression );
+			&& getLhs().equals( that.getLhs() )
+			&& selectorExpression.equals( that.selectorExpression );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( getLhs(), selectorExpression );
+		int result = getLhs().hashCode();
+		result = 31 * result + selectorExpression.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmIndexedCollectionAccessPath<?> that
+			&& getLhs().isCompatible( that.getLhs() )
+			&& selectorExpression.isCompatible( that.selectorExpression );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = getLhs().cacheHashCode();
+		result = 31 * result + selectorExpression.cacheHashCode();
+		return result;
 	}
 }

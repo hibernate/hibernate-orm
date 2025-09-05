@@ -21,7 +21,6 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 
-import java.util.Objects;
 
 /**
  * @author Steve Ebersole
@@ -154,24 +153,6 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 		return super.join( targetEntityClass, joinType );
 	}
 
-	@Override
-	public boolean equals(Object object) {
-		// Note that this implementation of equals() is only used for
-		// and is only correct when comparing use of AbstractSqmJoin
-		// within path expressions. See SqmFromClause.equalsJoins().
-		return object instanceof AbstractSqmJoin
-			&& super.equals( object );
-			// We do not need to include these in the comparison because
-			// this is taken care of in SqmFromClause.equalsJoins(), which
-			// exists because including the onClausePredicate would result
-			// in a circularity when comparing AbstractSqmJoin in path
-			// expressions.
-//			&& this.joinType == that.joinType
-//			&& Objects.equals( this.onClausePredicate, that.onClausePredicate );
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash( super.hashCode(), joinType );
-	}
+	// No need for equals/hashCode or isCompatible/cacheHashCode, because the base implementation using NavigablePath
+	// is fine for the purpose of matching nodes "syntactically". Deep equality is determined through SqmFromClause
 }

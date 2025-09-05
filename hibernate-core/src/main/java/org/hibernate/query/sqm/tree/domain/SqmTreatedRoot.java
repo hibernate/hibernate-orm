@@ -139,4 +139,14 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 	public int hashCode() {
 		return Objects.hash( wrappedPath.getNavigablePath(), treatTarget.getName() );
 	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
+	}
 }

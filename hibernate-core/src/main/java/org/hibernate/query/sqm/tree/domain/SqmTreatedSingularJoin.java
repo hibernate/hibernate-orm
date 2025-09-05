@@ -146,6 +146,16 @@ public class SqmTreatedSingularJoin<O,T, S extends T>
 	}
 
 	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
+	}
+
+	@Override
 	public <S1 extends S> SqmTreatedSingularJoin<O, S, S1> treatAs(Class<S1> treatJavaType) {
 		return (SqmTreatedSingularJoin<O, S, S1>) super.treatAs( treatJavaType );
 	}

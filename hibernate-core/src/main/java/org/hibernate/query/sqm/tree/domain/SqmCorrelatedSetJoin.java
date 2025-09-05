@@ -94,4 +94,26 @@ public class SqmCorrelatedSetJoin<O, T> extends SqmSetJoin<O, T> implements SqmC
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitCorrelatedSetJoin( this );
 	}
+
+	@Override
+	public boolean equals(Object other) {
+		return other instanceof SqmCorrelatedSetJoin<?, ?> that
+			&& correlationParent.equals( that.correlationParent );
+	}
+
+	@Override
+	public int hashCode() {
+		return correlationParent.hashCode();
+	}
+
+	@Override
+	public boolean isCompatible(Object other) {
+		return other instanceof SqmCorrelatedSetJoin<?, ?> that
+			&& correlationParent.isCompatible( that.correlationParent );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return correlationParent.cacheHashCode();
+	}
 }

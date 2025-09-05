@@ -27,7 +27,6 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 
-import java.util.Objects;
 
 /**
  * @author Christian Beikov
@@ -231,14 +230,29 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 
 	@Override
 	public boolean equals(Object object) {
-		return object instanceof SqmFunctionJoin<?> that
-			&& super.equals( object )
-			&& this.lateral == that.lateral
-			&& Objects.equals( this.function, that.function );
+		return super.equals( object )
+			&& object instanceof SqmFunctionJoin<?> that
+			&& function.equals( that.function );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( super.hashCode(), function, lateral );
+		int result = super.hashCode();
+		result = 31 * result + function.cacheHashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return super.isCompatible( object )
+			&& object instanceof SqmFunctionJoin<?> that
+			&& function.isCompatible( that.function );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + function.cacheHashCode();
+		return result;
 	}
 }

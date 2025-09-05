@@ -143,6 +143,16 @@ public class SqmTreatedBagJoin<L, R, S extends R> extends SqmBagJoin<L, S> imple
 	}
 
 	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
+	}
+
+	@Override
 	public SqmTreatedBagJoin<L,R, S> on(JpaExpression<Boolean> restriction) {
 		return (SqmTreatedBagJoin<L, R, S>) super.on( restriction );
 	}

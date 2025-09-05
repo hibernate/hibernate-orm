@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 import jakarta.persistence.criteria.Expression;
@@ -107,7 +108,18 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 
 	@Override
 	public int hashCode() {
-		return arguments.hashCode();
+		return Objects.hashCode( arguments );
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmCoalesce<?> that
+			&& SqmCacheable.areCompatible( this.arguments, that.arguments );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return SqmCacheable.cacheHashCode( arguments );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

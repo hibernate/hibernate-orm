@@ -17,7 +17,6 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.spi.NavigablePath;
 
-import java.util.Objects;
 
 /**
  * @author Christian Beikov
@@ -128,13 +127,29 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 
 	@Override
 	public boolean equals(Object object) {
-		return object instanceof SqmDerivedRoot<?> that
-			&& super.equals( object )
-			&& Objects.equals( this.subQuery, that.subQuery );
+		return super.equals( object )
+			&& object instanceof SqmDerivedRoot<?> that
+			&& subQuery.equals( that.subQuery );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( super.hashCode(), subQuery );
+		int result = super.hashCode();
+		result = 31 * result + subQuery.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return super.isCompatible( object )
+			&& object instanceof SqmDerivedRoot<?> that
+			&& subQuery.isCompatible( that.subQuery );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + subQuery.cacheHashCode();
+		return result;
 	}
 }

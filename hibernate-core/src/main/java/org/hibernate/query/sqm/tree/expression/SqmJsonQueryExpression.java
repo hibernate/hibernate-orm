@@ -291,4 +291,22 @@ public class SqmJsonQueryExpression extends AbstractSqmJsonPathExpression<String
 		}
 		hql.append( ')' );
 	}
+
+	@Override
+	public boolean isCompatible(Object other) {
+		return super.isCompatible( other )
+			&& other instanceof SqmJsonQueryExpression that
+			&& wrapMode == that.wrapMode
+			&& errorBehavior == that.errorBehavior
+			&& emptyBehavior == that.emptyBehavior;
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + wrapMode.hashCode();
+		result = 31 * result + errorBehavior.hashCode();
+		result = 31 * result + emptyBehavior.hashCode();
+		return result;
+	}
 }

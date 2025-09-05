@@ -19,6 +19,7 @@ import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -196,5 +197,21 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 			}
 			hql.append( ')' );
 		}
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof AbstractSqmInsertStatement<?> that
+			&& super.isCompatible( that )
+			&& SqmCacheable.areCompatible( getInsertionTargetPaths(), that.getInsertionTargetPaths() )
+			&& SqmCacheable.areCompatible( getConflictClause(), that.getConflictClause() );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( getInsertionTargetPaths() );
+		result = 31 * result + SqmCacheable.cacheHashCode( getConflictClause() );
+		return result;
 	}
 }

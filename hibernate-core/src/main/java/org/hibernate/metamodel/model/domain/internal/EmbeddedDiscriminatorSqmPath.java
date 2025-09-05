@@ -14,7 +14,6 @@ import org.hibernate.query.sqm.tree.domain.AbstractSqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.spi.NavigablePath;
 
-import java.util.Objects;
 
 /**
  * {@link SqmPath} specialization for an embeddable discriminator
@@ -63,13 +62,13 @@ public class EmbeddedDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implemen
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof EmbeddedDiscriminatorSqmPath<?> that
-			&& Objects.equals( this.getLhs(), that.getLhs() );
+			&& getLhs().isCompatible( that.getLhs() );
 	}
 
 	@Override
-	public int hashCode() {
-		return getLhs().hashCode();
+	public int cacheHashCode() {
+		return getLhs().cacheHashCode();
 	}
 }

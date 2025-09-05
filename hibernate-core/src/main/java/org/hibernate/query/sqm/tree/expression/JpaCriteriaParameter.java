@@ -155,15 +155,24 @@ public class JpaCriteriaParameter<T>
 	// otherwise we must fall back to identity equality
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return this == object
 			|| object instanceof JpaCriteriaParameter<?> that
-				&& this.name != null && that.name != null
 				&& Objects.equals( this.name, that.name );
 	}
 
 	@Override
-	public int hashCode() {
+	public int cacheHashCode() {
 		return name == null ? super.hashCode() : name.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return isCompatible( object );
+	}
+
+	@Override
+	public int hashCode() {
+		return cacheHashCode();
 	}
 }

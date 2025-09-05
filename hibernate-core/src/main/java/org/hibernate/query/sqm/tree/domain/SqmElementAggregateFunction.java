@@ -125,15 +125,16 @@ public class SqmElementAggregateFunction<T> extends AbstractSqmSpecificPluralPar
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmElementAggregateFunction<?> that
 			&& Objects.equals( this.functionName, that.functionName )
-			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() )
-			&& Objects.equals( this.getLhs(), that.getLhs() );
+			&& getLhs().isCompatible( that.getLhs() );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( getLhs(), functionName );
+	public int cacheHashCode() {
+		int result = getLhs().cacheHashCode();
+		result = 31 * result + functionName.hashCode();
+		return result;
 	}
 }

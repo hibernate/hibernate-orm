@@ -17,7 +17,6 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.spi.NavigablePath;
 
-import java.util.Objects;
 
 /**
  * {@link SqmPath} specialization for an entity discriminator
@@ -77,13 +76,13 @@ public class EntityDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof EntityDiscriminatorSqmPath<?> that
-			&& Objects.equals( this.getLhs(), that.getLhs() );
+			&& getLhs().isCompatible( that.getLhs() );
 	}
 
 	@Override
-	public int hashCode() {
-		return getLhs().hashCode();
+	public int cacheHashCode() {
+		return getLhs().cacheHashCode();
 	}
 }

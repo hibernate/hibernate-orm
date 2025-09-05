@@ -19,6 +19,7 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -123,5 +124,19 @@ public abstract class AbstractSqmJsonPathExpression<T> extends SelfRenderingSqmF
 				QuotingHelper.appendDoubleQuoteEscapedString( sb, entry.getKey() );
 			}
 		}
+	}
+
+	@Override
+	public boolean isCompatible(Object other) {
+		return super.isCompatible( other )
+			&& other instanceof AbstractSqmJsonPathExpression<?> that
+			&& SqmCacheable.areCompatible( passingExpressions, that.passingExpressions );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( passingExpressions );
+		return result;
 	}
 }

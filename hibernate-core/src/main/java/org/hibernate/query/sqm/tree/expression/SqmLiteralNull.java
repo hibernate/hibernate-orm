@@ -57,12 +57,12 @@ public class SqmLiteralNull<T> extends SqmLiteral<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmLiteralNull;
 	}
 
 	@Override
-	public int hashCode() {
+	public int cacheHashCode() {
 		return 1;
 	}
 }

@@ -100,4 +100,15 @@ public class SqmCorrelatedDerivedJoin<T> extends SqmDerivedJoin<T> implements Sq
 		return walker.visitCorrelatedDerivedJoin( this );
 	}
 
+	@Override
+	public boolean isCompatible(Object other) {
+		return other instanceof SqmCorrelatedDerivedJoin<?> that
+			&& correlationParent.isCompatible( that.correlationParent );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return correlationParent.cacheHashCode();
+	}
+
 }

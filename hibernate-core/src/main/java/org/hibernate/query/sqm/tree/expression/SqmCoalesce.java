@@ -6,7 +6,6 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaExpression;
@@ -14,6 +13,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 import jakarta.persistence.criteria.Expression;
@@ -100,14 +100,14 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmCoalesce<?> that
-			&& Objects.equals( this.arguments, that.arguments );
+			&& SqmCacheable.areCompatible( this.arguments, that.arguments );
 	}
 
 	@Override
-	public int hashCode() {
-		return arguments.hashCode();
+	public int cacheHashCode() {
+		return SqmCacheable.cacheHashCode( arguments );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

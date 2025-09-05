@@ -29,7 +29,6 @@ import jakarta.persistence.metamodel.Bindable;
 import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.Type;
 
-import java.util.Objects;
 
 import static java.util.Arrays.asList;
 
@@ -164,14 +163,16 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmFunctionPath<?> that
-			&& super.equals( object )
-			&& Objects.equals( function, that.function );
+			&& super.isCompatible( object )
+			&& function.isCompatible( that.function );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( super.hashCode(), function );
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + function.cacheHashCode();
+		return result;
 	}
 }

@@ -11,7 +11,6 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
-import java.util.Objects;
 
 /**
  * Represents the {@code SIZE()} function.
@@ -71,13 +70,13 @@ public class SqmCollectionSize extends AbstractSqmExpression<Integer> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmCollectionSize that
-			&& Objects.equals( this.pluralPath, that.pluralPath );
+			&& this.pluralPath.isCompatible( that.pluralPath );
 	}
 
 	@Override
-	public int hashCode() {
-		return pluralPath.hashCode();
+	public int cacheHashCode() {
+		return pluralPath.cacheHashCode();
 	}
 }

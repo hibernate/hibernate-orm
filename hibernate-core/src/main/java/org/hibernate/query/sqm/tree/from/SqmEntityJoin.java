@@ -230,15 +230,18 @@ public class SqmEntityJoin<L,R>
 		);
 	}
 
+	// todo: the implementations seem unnecessary, because the entity name is part of the navigablePath
 	@Override
-	public boolean equals(Object other) {
-		return other instanceof SqmEntityJoin<?, ?> that
-			&& Objects.equals( this.getEntityName(), that.getEntityName() )
-			&& super.equals( other );
+	public boolean isCompatible(Object other) {
+		return super.isCompatible( other )
+			&& other instanceof SqmEntityJoin<?, ?> that
+			&& Objects.equals( this.getEntityName(), that.getEntityName() );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( super.hashCode(), getEntityName() );
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + getEntityName().hashCode();
+		return result;
 	}
 }

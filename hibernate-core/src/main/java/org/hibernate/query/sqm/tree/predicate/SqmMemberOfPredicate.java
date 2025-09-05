@@ -14,7 +14,6 @@ import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
-import java.util.Objects;
 
 import static org.hibernate.query.sqm.internal.TypecheckUtil.areTypesComparable;
 
@@ -98,16 +97,19 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmMemberOfPredicate that
 			&& this.isNegated() == that.isNegated()
-			&& Objects.equals( leftHandExpression, that.leftHandExpression )
-			&& Objects.equals( pluralPath, that.pluralPath );
+			&& leftHandExpression.isCompatible( that.leftHandExpression )
+			&& pluralPath.isCompatible( that.pluralPath );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( isNegated(), leftHandExpression, pluralPath );
+	public int cacheHashCode() {
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + leftHandExpression.cacheHashCode();
+		result = 31 * result + pluralPath.cacheHashCode();
+		return result;
 	}
 
 	@Override

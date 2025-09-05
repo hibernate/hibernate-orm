@@ -67,14 +67,16 @@ public class SqmDynamicInstantiationArgument<T> implements SqmAliasedNode<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmDynamicInstantiationArgument<?> that
-			&& Objects.equals( selectableNode, that.selectableNode )
+			&& selectableNode.isCompatible( that.selectableNode )
 			&& Objects.equals( alias, that.alias );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( selectableNode, alias );
+	public int cacheHashCode() {
+		int result = selectableNode.cacheHashCode();
+		result = 31 * result + Objects.hashCode( alias );
+		return result;
 	}
 }

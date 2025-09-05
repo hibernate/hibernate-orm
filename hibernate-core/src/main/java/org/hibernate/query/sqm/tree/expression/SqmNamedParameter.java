@@ -90,13 +90,13 @@ public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmNamedParameter<?> that
 			&& Objects.equals( name, that.name );
 	}
 
 	@Override
-	public int hashCode() {
+	public int cacheHashCode() {
 		return name.hashCode();
 	}
 }

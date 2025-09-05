@@ -91,13 +91,13 @@ public class SqmLiteralEmbeddableType<T>
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmLiteralEmbeddableType<?> that
 			&& Objects.equals( embeddableDomainType.getTypeName(), that.embeddableDomainType.getTypeName() );
 	}
 
 	@Override
-	public int hashCode() {
+	public int cacheHashCode() {
 		return embeddableDomainType.getTypeName().hashCode();
 	}
 }

@@ -7,9 +7,10 @@ package org.hibernate.query.sqm.tree.from;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
@@ -26,7 +27,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
  *
  * @author Steve Ebersole
  */
-public class SqmFromClause implements Serializable {
+public class SqmFromClause implements Serializable, SqmCacheable {
 	private List<SqmRoot<?>> domainRoots;
 
 	public SqmFromClause() {
@@ -189,41 +190,55 @@ public class SqmFromClause implements Serializable {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmFromClause that
 			&& this.getNumberOfRoots() == that.getNumberOfRoots()
-			// calling equals() here leads to circularity,
-			// and so we need to flatten out the comparison
-			&& equalRoots( this.getRoots(), that.getRoots() );
+			// The isCompatible() method for SqmFrom does not do a deep check,
+			// so this method must check the full structure now to check compatibility
+			&& compatibleRoots( this.getRoots(), that.getRoots() );
 	}
 
-	// both lists must be the same size
-	private boolean equalRoots(List<SqmRoot<?>> theseRoots, List<SqmRoot<?>> thoseRoots) {
+	private boolean compatibleRoots(List<SqmRoot<?>> theseRoots, List<SqmRoot<?>> thoseRoots) {
 		for ( int i = 0; i < theseRoots.size(); i++ ) {
 			var thisRoot = theseRoots.get( i );
 			var thatRoot = thoseRoots.get( i );
-			if ( !Objects.equals( thisRoot.getEntityName(), thatRoot.getEntityName() )
-				|| !Objects.equals( thisRoot.getExplicitAlias(), thatRoot.getExplicitAlias() )
-				|| !Objects.equals( thisRoot, thatRoot ) // needed for SqmDerivedRoots
-				|| thisRoot.getNumberOfJoins() != thatRoot.getNumberOfJoins()
-				|| !equalsJoins( thisRoot.getSqmJoins(), thatRoot.getSqmJoins() ) ) {
+			if ( !thisRoot.isCompatible( thatRoot )
+				|| !compatibleOrderedJoins( thisRoot.getOrderedJoins(), thatRoot.getOrderedJoins() )
+				|| !compatibleJoins( thisRoot.getSqmJoins(), thatRoot.getSqmJoins() ) ) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	private boolean equalsJoins(List<? extends SqmJoin<?, ?>> theseJoins, List<? extends SqmJoin<?, ?>> thoseJoins) {
+	private boolean compatibleOrderedJoins(@Nullable List<? extends SqmJoin<?, ?>> theseJoins, @Nullable List<? extends SqmJoin<?, ?>> thoseJoins) {
+		if ( theseJoins == null ) {
+			return thoseJoins == null;
+		}
+		else if ( thoseJoins == null || theseJoins.size() != thoseJoins.size() ) {
+			return false;
+		}
 		for ( int i = 0; i < theseJoins.size(); i++ ) {
 			var thisJoin = theseJoins.get( i );
 			var thatJoin = thoseJoins.get( i );
-			if ( !Objects.equals( thisJoin.getNavigablePath(), thatJoin.getNavigablePath() )
-				|| !Objects.equals( thisJoin.getExplicitAlias(), thatJoin.getExplicitAlias() )
-				|| !Objects.equals( thisJoin.getJoinType(), thatJoin.getJoinType() )
-				|| !Objects.equals( thisJoin, thatJoin ) // needed for SqmDerivedRoots
-				|| thisJoin.getNumberOfJoins() != thatJoin.getNumberOfJoins()
-				|| !Objects.equals( thisJoin.getOn(), thatJoin.getOn() )
-				|| !equalsJoins( thisJoin.getSqmJoins(), thatJoin.getSqmJoins() ) ) {
+			if ( !thisJoin.isCompatible( thatJoin )
+				|| !SqmCacheable.areCompatible( thisJoin.getOn(), thatJoin.getOn() ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private boolean compatibleJoins(List<? extends SqmJoin<?, ?>> theseJoins, List<? extends SqmJoin<?, ?>> thoseJoins) {
+		if ( theseJoins.size() != thoseJoins.size() ) {
+			return false;
+		}
+		for ( int i = 0; i < theseJoins.size(); i++ ) {
+			var thisJoin = theseJoins.get( i );
+			var thatJoin = thoseJoins.get( i );
+			if ( !thisJoin.isCompatible( thatJoin )
+				|| !SqmCacheable.areCompatible( thisJoin.getOn(), thatJoin.getOn() )
+				|| !compatibleJoins( thisJoin.getSqmJoins(), thatJoin.getSqmJoins() ) ) {
 				return false;
 			}
 		}
@@ -231,7 +246,7 @@ public class SqmFromClause implements Serializable {
 	}
 
 	@Override
-	public int hashCode() {
+	public int cacheHashCode() {
 		return getNumberOfRoots();
 	}
 }

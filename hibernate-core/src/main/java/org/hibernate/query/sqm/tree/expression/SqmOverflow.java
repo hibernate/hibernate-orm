@@ -4,11 +4,11 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
-
-import java.util.Objects;
 
 /**
  * @author Christian Beikov
@@ -16,7 +16,7 @@ import java.util.Objects;
 public class SqmOverflow<T> extends AbstractSqmExpression<T> {
 
 	private final SqmExpression<T> separatorExpression;
-	private final SqmExpression<T> fillerExpression;
+	private final @Nullable SqmExpression<T> fillerExpression;
 	private final boolean withCount;
 
 	public SqmOverflow(SqmExpression<T> separatorExpression, SqmExpression<T> fillerExpression, boolean withCount) {
@@ -81,15 +81,18 @@ public class SqmOverflow<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmOverflow<?> that
 			&& this.withCount == that.withCount
-			&& Objects.equals( this.separatorExpression, that.separatorExpression )
-			&& Objects.equals( this.fillerExpression, that.fillerExpression );
+			&& this.separatorExpression.isCompatible( that.separatorExpression )
+			&& SqmCacheable.areCompatible( this.fillerExpression, that.fillerExpression );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( separatorExpression, fillerExpression, withCount );
+	public int cacheHashCode() {
+		int result = separatorExpression.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( fillerExpression );
+		result = 31 * result + Boolean.hashCode( withCount );
+		return result;
 	}
 }

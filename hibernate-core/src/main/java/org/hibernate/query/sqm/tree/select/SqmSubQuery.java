@@ -777,15 +777,17 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmSubQuery<?> that
 			&& Objects.equals( this.alias, that.alias )
-			&& super.equals( object );
+			&& super.isCompatible( object );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( super.hashCode(), alias );
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + Objects.hashCode( alias );
+		return result;
 	}
 
 	@Override

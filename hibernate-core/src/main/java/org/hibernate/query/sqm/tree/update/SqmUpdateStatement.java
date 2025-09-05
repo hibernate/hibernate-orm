@@ -7,7 +7,6 @@ package org.hibernate.query.sqm.tree.update;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -23,6 +22,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmRestrictedDmlStatement;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -292,18 +292,18 @@ public class SqmUpdateStatement<T>
 	}
 
 	@Override
-	public boolean equals(Object node) {
-		return node instanceof SqmUpdateStatement<?> that
-			&& super.equals( node )
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmUpdateStatement<?> that
+			&& super.isCompatible( that )
 			&& this.versioned == that.versioned
-			&& Objects.equals( this.setClause, that.setClause )
-			&& Objects.equals( this.getTarget(), that.getTarget() )
-			&& Objects.equals( this.getWhereClause(), that.getWhereClause() )
-			&& Objects.equals( this.getCteStatements(), that.getCteStatements() );
+			&& SqmCacheable.areCompatible( setClause, that.setClause );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( versioned, setClause, getTarget(), getWhereClause(), getCteStatements() );
+	public int cacheHashCode() {
+		int result = getTarget().cacheHashCode();
+		result = 31 * result + Boolean.hashCode( versioned );
+		result = 31 * result + SqmCacheable.cacheHashCode( setClause );
+		return result;
 	}
 }

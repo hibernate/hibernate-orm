@@ -22,6 +22,7 @@ import org.hibernate.query.criteria.JpaSetReturningFunction;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
@@ -440,16 +441,18 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof AbstractSqmSelectQuery<?> that
 			&& Objects.equals( this.resultType, that.resultType ) // for performance!
-			&& Objects.equals( this.sqmQueryPart, that.sqmQueryPart )
-			&& Objects.equals( this.cteStatements, that.cteStatements );
+			&& this.sqmQueryPart.isCompatible( that.sqmQueryPart )
+			&& SqmCacheable.areCompatible( this.cteStatements, that.cteStatements );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( cteStatements, sqmQueryPart );
+	public int cacheHashCode() {
+		int result = SqmCacheable.cacheHashCode( cteStatements );
+		result = 31 * result + sqmQueryPart.cacheHashCode();
+		return result;
 	}
 
 	@SuppressWarnings("unchecked")

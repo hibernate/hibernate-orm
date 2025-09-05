@@ -54,14 +54,14 @@ public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof AsWrapperSqmExpression<?> that
-			&& Objects.equals( this.expression, that.expression )
+			&& this.expression.isCompatible( that.expression )
 			&& Objects.equals( this.getNodeType(), that.getNodeType() );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hashCode( expression );
+	public int cacheHashCode() {
+		return expression.cacheHashCode();
 	}
 }

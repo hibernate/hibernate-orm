@@ -5,13 +5,13 @@
 package org.hibernate.query.sqm.tree.select;
 
 import java.util.List;
-import java.util.Objects;
 
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaQueryPart;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
@@ -204,16 +204,21 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmQueryPart<?> that
-			&& Objects.equals( orderByClause, that.orderByClause )
-			&& Objects.equals( offsetExpression, that.offsetExpression )
-			&& Objects.equals( fetchExpression, that.fetchExpression )
+			&& getClass() == that.getClass()
+			&& SqmCacheable.areCompatible( orderByClause, that.orderByClause )
+			&& SqmCacheable.areCompatible( offsetExpression, that.offsetExpression )
+			&& SqmCacheable.areCompatible( fetchExpression, that.fetchExpression )
 			&& fetchClauseType == that.fetchClauseType;
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( orderByClause, offsetExpression, fetchExpression, fetchClauseType );
+	public int cacheHashCode() {
+		int result = SqmCacheable.cacheHashCode( orderByClause );
+		result = 31 * result + SqmCacheable.cacheHashCode( offsetExpression );
+		result = 31 * result + SqmCacheable.cacheHashCode( fetchExpression );
+		result = 31 * result + fetchClauseType.hashCode();
+		return result;
 	}
 }

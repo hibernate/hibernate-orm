@@ -23,7 +23,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ArchiveHelper {
-	private static final Logger log = Logger.getLogger( ArchiveHelper.class );
+	private static final Logger LOG = Logger.getLogger( ArchiveHelper.class );
 
 	/**
 	 * Get the JAR URL of the JAR containing the given entry.
@@ -91,7 +91,7 @@ public class ArchiveHelper {
 					"Unable to determine JAR Url from " + url + ". Cause: " + e.getMessage()
 			);
 		}
-		log.tracef( "JAR URL from URL Entry: %s >> %s", url, jarUrl );
+		LOG.tracef( "JAR URL from URL Entry: %s >> %s", url, jarUrl );
 		return jarUrl;
 	}
 

@@ -80,7 +80,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
  */
 public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEnvironment> {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( JdbcEnvironmentInitiator.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JdbcEnvironmentInitiator.class );
 
 	public static final JdbcEnvironmentInitiator INSTANCE = new JdbcEnvironmentInitiator();
 
@@ -385,7 +385,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 								);
 							}
 							catch (SQLException e) {
-								log.unableToObtainConnectionMetadata( e );
+								LOG.unableToObtainConnectionMetadata( e );
 							}
 
 							// accessing the JDBC metadata failed
@@ -416,7 +416,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			);
 		}
 		catch ( Exception e ) {
-			log.unableToObtainConnectionToQueryMetadata( e );
+			LOG.unableToObtainConnectionToQueryMetadata( e );
 		}
 		finally {
 			//noinspection resource
@@ -427,7 +427,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 	}
 
 	private static void logDatabaseAndDriver(DatabaseMetaData dbmd) throws SQLException {
-		if ( log.isDebugEnabled() ) {
+		if ( LOG.isDebugEnabled() ) {
 			JDBC_MESSAGE_LOGGER.logDatabaseInfo(
 					dbmd.getDatabaseProductName(),
 					dbmd.getDatabaseProductVersion(),

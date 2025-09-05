@@ -19,7 +19,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ClassLoaderAccessImpl implements ClassLoaderAccess {
-	private static final Logger log = Logger.getLogger( ClassLoaderAccessImpl.class );
+	private static final Logger LOG = Logger.getLogger( ClassLoaderAccessImpl.class );
 
 	private final ClassLoaderService classLoaderService;
 	private ClassLoader jpaTempClassLoader;
@@ -56,14 +56,14 @@ public class ClassLoaderAccessImpl implements ClassLoaderAccess {
 		else {
 			// Could not determine that the given class is safe to load with live ClassLoader
 			if ( jpaTempClassLoader == null ) {
-				log.tracef(
+				LOG.tracef(
 						"No temp ClassLoader provided; using live ClassLoader to load potentially unsafe class: %s",
 						name
 				);
 				return classLoaderService.classForName( name );
 			}
 			else {
-//				log.tracef(
+//				LOG.tracef(
 //						"Temp ClassLoader was provided, so we will use that: %s",
 //						name
 //				);

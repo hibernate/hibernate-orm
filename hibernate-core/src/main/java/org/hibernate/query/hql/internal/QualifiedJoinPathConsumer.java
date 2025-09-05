@@ -37,7 +37,7 @@ import static org.hibernate.query.sqm.internal.SqmUtil.findCompatibleFetchJoin;
  * @author Steve Ebersole
  */
 public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
-	private static final Logger log = Logger.getLogger( QualifiedJoinPathConsumer.class );
+	private static final Logger LOG = Logger.getLogger( QualifiedJoinPathConsumer.class );
 
 	private final SqmCreationState creationState;
 	private final SqmRoot<?> sqmRoot;
@@ -355,7 +355,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 				assert ! ( joinedEntityType instanceof SqmPolymorphicRootDescriptor );
 
 				if ( fetch ) {
-					log.debugf( "Ignoring fetch on entity join: %s(%s)", joinedEntityType.getHibernateEntityName(), alias );
+					LOG.debugf( "Ignoring fetch on entity join: %s(%s)", joinedEntityType.getHibernateEntityName(), alias );
 				}
 
 				join = new SqmEntityJoin<>( joinedEntityType, alias, joinType, sqmRoot );

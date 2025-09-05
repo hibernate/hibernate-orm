@@ -45,7 +45,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public abstract class AbstractServiceRegistryImpl
 		implements ServiceRegistryImplementor, ServiceBinding.ServiceLifecycleOwner {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractServiceRegistryImpl.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractServiceRegistryImpl.class );
 
 	public static final String ALLOW_CRAWLING = "hibernate.service.allow_crawling";
 
@@ -161,14 +161,14 @@ public abstract class AbstractServiceRegistryImpl
 		for ( ServiceBinding<?> binding : serviceBindingMap.values() ) {
 			if ( serviceRole.isAssignableFrom( binding.getServiceRole() ) ) {
 				// we found an alternate...
-				log.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
+				LOG.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
 				registerAlternate( serviceRole, binding.getServiceRole() );
 				return (ServiceBinding<R>) binding;
 			}
 
 			if ( binding.getService() != null && serviceRole.isInstance( binding.getService() ) ) {
 				// we found an alternate...
-				log.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
+				LOG.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
 				registerAlternate( serviceRole, binding.getServiceRole() );
 				return (ServiceBinding<R>) binding;
 			}
@@ -229,8 +229,8 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	private <R extends Service> @Nullable R initializeService(ServiceBinding<R> serviceBinding) {
-		if ( log.isTraceEnabled() ) {
-			log.initializingService( serviceBinding.getServiceRole().getName() );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.initializingService( serviceBinding.getServiceRole().getName() );
 		}
 
 		// PHASE 1: create service
@@ -297,7 +297,7 @@ public abstract class AbstractServiceRegistryImpl
 			}
 		}
 		catch (NullPointerException e) {
-			log.error( "NPE injecting service dependencies: " + service.getClass().getName() );
+			LOG.error( "NPE injecting service dependencies: " + service.getClass().getName() );
 		}
 	}
 
@@ -381,7 +381,7 @@ public abstract class AbstractServiceRegistryImpl
 				stoppable.stop();
 			}
 			catch ( Exception e ) {
-				log.unableToStopService( binding.getServiceRole().getName(), e );
+				LOG.unableToStopService( binding.getServiceRole().getName(), e );
 			}
 		}
 	}
@@ -392,7 +392,7 @@ public abstract class AbstractServiceRegistryImpl
 			childRegistries = new HashSet<>();
 		}
 		if ( !childRegistries.add( child ) ) {
-			log.warnf(
+			LOG.warnf(
 					"Child ServiceRegistry [%s] was already registered; this will end badly later",
 					child
 			);
@@ -407,11 +407,11 @@ public abstract class AbstractServiceRegistryImpl
 		childRegistries.remove( child );
 		if ( childRegistries.isEmpty() ) {
 			if ( autoCloseRegistry ) {
-				log.trace( "Automatically destroying ServiceRegistry after deregistration of every child ServiceRegistry" );
+				LOG.trace( "Automatically destroying ServiceRegistry after deregistration of every child ServiceRegistry" );
 				destroy();
 			}
 			else {
-				log.trace( "Skipping destroying ServiceRegistry after deregistration of every child ServiceRegistry" );
+				LOG.trace( "Skipping destroying ServiceRegistry after deregistration of every child ServiceRegistry" );
 			}
 		}
 	}

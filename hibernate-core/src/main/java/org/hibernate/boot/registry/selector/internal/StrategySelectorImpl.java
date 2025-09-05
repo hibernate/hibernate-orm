@@ -32,7 +32,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class StrategySelectorImpl implements StrategySelector {
-	private static final Logger log = Logger.getLogger( StrategySelectorImpl.class );
+	private static final Logger LOG = Logger.getLogger( StrategySelectorImpl.class );
 
 	private static final StrategyCreator<?> STANDARD_STRATEGY_CREATOR = StrategySelectorImpl::create;
 
@@ -201,9 +201,9 @@ public class StrategySelectorImpl implements StrategySelector {
 
 		for ( String name : names ) {
 			final Class<?> old = namedStrategyImplementorMap.put( name, implementation );
-			if ( log.isTraceEnabled() ) {
+			if ( LOG.isTraceEnabled() ) {
 				if ( old == null ) {
-					log.tracef(
+					LOG.tracef(
 							"Strategy selector for %s: '%s' -> %s",
 							strategy.getSimpleName(),
 							name,
@@ -211,7 +211,7 @@ public class StrategySelectorImpl implements StrategySelector {
 					);
 				}
 				else {
-					log.tracef(
+					LOG.tracef(
 							"Strategy selector for %s: '%s' -> %s (replacing %s)",
 							strategy.getSimpleName(),
 							name,
@@ -226,7 +226,7 @@ public class StrategySelectorImpl implements StrategySelector {
 	private <T> void removeImplementation(Class<T> strategy, Class<? extends T> implementation) {
 		final Map<String,Class<?>> namedStrategyImplementorMap = namedStrategyImplementorByStrategyMap.get( strategy );
 		if ( namedStrategyImplementorMap == null ) {
-			log.debug( "Named strategy map did not exist on call to unregister" );
+			LOG.debug( "Named strategy map did not exist on call to unregister" );
 			return;
 		}
 

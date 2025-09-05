@@ -21,7 +21,7 @@ import org.jboss.logging.Logger;
  */
 public final class ProviderChecker {
 
-	private static final Logger log = Logger.getLogger( ProviderChecker.class );
+	private static final Logger LOG = Logger.getLogger( ProviderChecker.class );
 
 	/**
 	 * Does the descriptor and/or integration request Hibernate as the
@@ -48,7 +48,7 @@ public final class ProviderChecker {
 	 * @return {@code true} if Hibernate should be the provider; {@code false} otherwise.
 	 */
 	public static boolean hibernateProviderNamesContain(String requestedProviderName) {
-		log.tracef(
+		LOG.tracef(
 				"Checking requested PersistenceProvider name [%s] against Hibernate provider names",
 				requestedProviderName
 		);
@@ -69,14 +69,14 @@ public final class ProviderChecker {
 	public static String extractRequestedProviderName(PersistenceUnitDescriptor persistenceUnit, Map integration) {
 		final String integrationProviderName = extractProviderName( integration );
 		if ( integrationProviderName != null ) {
-			log.debugf( "Integration provided explicit PersistenceProvider [%s]", integrationProviderName );
+			LOG.debugf( "Integration provided explicit PersistenceProvider [%s]", integrationProviderName );
 			return integrationProviderName;
 		}
 
 		final String persistenceUnitRequestedProvider = extractProviderName( persistenceUnit );
 		if ( persistenceUnitRequestedProvider != null ) {
-			if ( log.isDebugEnabled() ) {
-				log.debugf(
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debugf(
 						"Persistence-unit [%s] requested PersistenceProvider [%s]",
 						persistenceUnit.getName(),
 						persistenceUnitRequestedProvider
@@ -86,7 +86,7 @@ public final class ProviderChecker {
 		}
 
 		// NOTE: if no provider requested, we assume we are the provider (the calls got to us somehow...)
-		log.debug( "No PersistenceProvider explicitly requested, assuming Hibernate" );
+		LOG.debug( "No PersistenceProvider explicitly requested, assuming Hibernate" );
 		return HibernatePersistenceProvider.class.getName();
 	}
 

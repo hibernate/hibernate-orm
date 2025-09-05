@@ -27,7 +27,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author Steve Ebersole
  */
 public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
-	private static final Logger log = Logger.getLogger( LegacyHiLoAlgorithmOptimizer.class );
+	private static final Logger LOG = Logger.getLogger( LegacyHiLoAlgorithmOptimizer.class );
 
 	private final long initialMaxLo;
 
@@ -51,8 +51,8 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 		if ( incrementSize < 1 ) {
 			throw new HibernateException( "increment size cannot be less than 1" );
 		}
-		if ( log.isTraceEnabled() ) {
-			log.tracev( "Creating hilo optimizer (legacy) with [incrementSize={0}; returnClass={1}]",
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Creating hilo optimizer (legacy) with [incrementSize={0}; returnClass={1}]",
 					incrementSize, returnClass.getName() );
 		}
 		initialMaxLo = incrementSize;

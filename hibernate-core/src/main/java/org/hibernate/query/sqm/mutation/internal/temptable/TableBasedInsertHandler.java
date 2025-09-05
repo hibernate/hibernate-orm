@@ -114,7 +114,7 @@ import static org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelpe
 * @author Christian Beikov
 */
 public class TableBasedInsertHandler extends AbstractMutationHandler implements InsertHandler {
-	private static final Logger log = Logger.getLogger( TableBasedInsertHandler.class );
+	private static final Logger LOG = Logger.getLogger( TableBasedInsertHandler.class );
 
 	private final TemporaryTable entityTable;
 	private final TemporaryTableStrategy temporaryTableStrategy;
@@ -1050,8 +1050,8 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 
 	@Override
 	public int execute(JdbcParameterBindings jdbcParameterBindings, DomainQueryExecutionContext context) {
-		if ( log.isTraceEnabled() ) {
-			log.tracef(
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef(
 					"Starting multi-table insert execution - %s",
 					getSqmStatement().getTarget().getModel().getName()
 			);

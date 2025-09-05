@@ -338,7 +338,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		"^\\s*(select\\b.+?\\bfrom\\b.+?)(\\b(?:natural )?(?:left |right |full )?(?:inner |outer |cross )?join.+?\\b)?(\\bwhere\\b.+?)$",
 			Pattern.CASE_INSENSITIVE);
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( Dialect.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Dialect.class );
 
 	//needed for converting precision from decimal to binary digits
 	protected static final double LOG_BASE2OF10 = log(10)/log(2);
@@ -380,7 +380,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		final DatabaseVersion version = getVersion();
 		final DatabaseVersion minimumVersion = getMinimumSupportedVersion();
 		if ( version != null && version.isBefore( minimumVersion.getMajor(), minimumVersion.getMinor(), minimumVersion.getMicro() ) ) {
-			log.unsupportedDatabaseVersion(
+			LOG.unsupportedDatabaseVersion(
 					getClass().getName(),
 					version.getMajor() + "." + version.getMinor() + "." + version.getMicro(),
 					minimumVersion.getMajor() + "." + minimumVersion.getMinor() + "." + minimumVersion.getMicro()

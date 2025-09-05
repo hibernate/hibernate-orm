@@ -69,7 +69,7 @@ import static org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter.om
 public class TableBasedSoftDeleteHandler
 		extends AbstractMutationHandler
 		implements DeleteHandler {
-	private static final Logger log = Logger.getLogger( TableBasedSoftDeleteHandler.class );
+	private static final Logger LOG = Logger.getLogger( TableBasedSoftDeleteHandler.class );
 
 	private final TemporaryTable idTable;
 	private final TemporaryTableStrategy temporaryTableStrategy;
@@ -416,8 +416,8 @@ public class TableBasedSoftDeleteHandler
 
 	@Override
 	public int execute(JdbcParameterBindings jdbcParameterBindings, DomainQueryExecutionContext context) {
-		if ( log.isTraceEnabled() ) {
-			log.tracef(
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef(
 					"Starting multi-table delete execution - %s",
 					getSqmStatement().getTarget().getModel().getName()
 			);

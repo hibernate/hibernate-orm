@@ -27,7 +27,7 @@ import org.hibernate.jdbc.AbstractWork;
  * @author Steve Ebersole
  */
 public class TemporaryTableHelper {
-	private final static CoreMessageLogger log = CoreLogging.messageLogger( TemporaryTableHelper.class );
+	private final static CoreMessageLogger LOG = CoreLogging.messageLogger( TemporaryTableHelper.class );
 
 	public static final String SESSION_ID_COLUMN_NAME = "hib_sess_id";
 
@@ -72,7 +72,7 @@ public class TemporaryTableHelper {
 					return Boolean.TRUE;
 				}
 				catch (SQLException e) {
-					log.debugf(
+					LOG.debugf(
 							"Unable to create temporary table [%s]; `%s` failed : %s",
 							temporaryTable.getQualifiedTableName(),
 							creationCommand,
@@ -81,7 +81,7 @@ public class TemporaryTableHelper {
 				}
 			}
 			catch( Exception e ) {
-				log.debugf( "Error creating temporary table(s) : %s", e.getMessage() );
+				LOG.debugf( "Error creating temporary table(s) : %s", e.getMessage() );
 			}
 			return Boolean.FALSE;
 		}
@@ -128,7 +128,7 @@ public class TemporaryTableHelper {
 					jdbcServices.getSqlExceptionHelper().handleAndClearWarnings( statement, WARNING_HANDLER );
 				}
 				catch (SQLException e) {
-					log.debugf(
+					LOG.debugf(
 							"Unable to drop temporary table [%s]; `%s` failed : %s",
 							temporaryTable.getQualifiedTableName(),
 							dropCommand,
@@ -137,7 +137,7 @@ public class TemporaryTableHelper {
 				}
 			}
 			catch( Exception e ) {
-				log.debugf( "Error dropping temporary table(s) : %s", e.getMessage() );
+				LOG.debugf( "Error dropping temporary table(s) : %s", e.getMessage() );
 			}
 		}
 	}
@@ -163,7 +163,7 @@ public class TemporaryTableHelper {
 			jdbcCoordinator.getResultSetReturn().executeUpdate( preparedStatement, sql );
 		}
 		catch( Throwable t ) {
-			log.unableToCleanupTemporaryIdTable(t);
+			LOG.unableToCleanupTemporaryIdTable(t);
 		}
 		finally {
 			if ( preparedStatement != null ) {
@@ -186,17 +186,17 @@ public class TemporaryTableHelper {
 	private static final SqlExceptionHelper.WarningHandler WARNING_HANDLER =
 			new SqlExceptionHelper.WarningHandlerLoggingSupport() {
 				public boolean doProcess() {
-					return log.isDebugEnabled();
+					return LOG.isDebugEnabled();
 				}
 
 				public void prepare(SQLWarning warning) {
-					log.warningsCreatingTempTable( warning );
+					LOG.warningsCreatingTempTable( warning );
 				}
 
 				@Override
 				protected void logWarning(String description, String message) {
-					log.debug( description );
-					log.debug( message );
+					LOG.debug( description );
+					LOG.debug( message );
 				}
 			};
 

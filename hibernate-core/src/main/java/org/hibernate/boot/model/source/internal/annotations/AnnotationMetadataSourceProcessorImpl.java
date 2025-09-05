@@ -38,7 +38,7 @@ import jakarta.persistence.MappedSuperclass;
  * @author Steve Ebersole
  */
 public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProcessor {
-	private static final Logger log = Logger.getLogger( AnnotationMetadataSourceProcessorImpl.class );
+	private static final Logger LOG = Logger.getLogger( AnnotationMetadataSourceProcessorImpl.class );
 
 	// NOTE : we de-categorize the classes into a single collection (xClasses) here to work with the
 	// 		existing "binder" infrastructure.
@@ -189,7 +189,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 		for ( ClassDetails clazz : orderedClasses ) {
 			if ( processedEntityNames.contains( clazz.getName() ) ) {
-				log.debugf( "Skipping annotated class processing of entity [%s], as it has already been processed", clazz );
+				LOG.debugf( "Skipping annotated class processing of entity [%s], as it has already been processed", clazz );
 			}
 			else {
 				if ( !clazz.getName().endsWith( ".package-info" ) ) {
@@ -215,7 +215,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	}
 
 	private void insertMappedSuperclasses(LinkedHashSet<ClassDetails> original, LinkedHashSet<ClassDetails> copy) {
-		final boolean traceEnabled = log.isTraceEnabled();
+		final boolean traceEnabled = LOG.isTraceEnabled();
 
 		for ( ClassDetails clazz : original ) {
 			if ( clazz.isInterface() ) {
@@ -226,7 +226,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 			if ( clazz.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
 				if ( traceEnabled ) {
-					log.tracef(
+					LOG.tracef(
 							"Skipping explicit MappedSuperclass %s, the class will be discovered analyzing the implementing class",
 							clazz
 					);

@@ -24,7 +24,7 @@ import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
  */
 public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPojo {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( EntityInstantiatorPojoStandard.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityInstantiatorPojoStandard.class );
 
 	private final Class<?> proxyInterface;
 	private final boolean applyBytecodeInterception;
@@ -57,7 +57,7 @@ public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPo
 			return getDefaultConstructor( mappedPojoClass);
 		}
 		catch ( PropertyNotFoundException e ) {
-			log.noDefaultConstructor( mappedPojoClass.getName() );
+			LOG.noDefaultConstructor( mappedPojoClass.getName() );
 			return null;
 		}
 	}

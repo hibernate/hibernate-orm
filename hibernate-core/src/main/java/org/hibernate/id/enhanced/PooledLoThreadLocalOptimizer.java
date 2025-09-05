@@ -27,7 +27,7 @@ import java.util.Map;
  */
 public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( PooledLoOptimizer.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PooledLoOptimizer.class );
 
 	private final ThreadLocal<GenerationState> singleTenantState = ThreadLocal.withInitial( GenerationState::new );
 	private final ThreadLocal<Map<String, GenerationState>> multiTenantStates = ThreadLocal.withInitial( HashMap::new );
@@ -43,7 +43,7 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 		if ( incrementSize < 1 ) {
 			throw new HibernateException( "increment size cannot be less than 1" );
 		}
-		log.creatingPooledLoOptimizer( incrementSize, returnClass.getName() );
+		LOG.creatingPooledLoOptimizer( incrementSize, returnClass.getName() );
 	}
 
 	@Override

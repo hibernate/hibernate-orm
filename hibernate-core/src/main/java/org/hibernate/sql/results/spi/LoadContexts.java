@@ -21,7 +21,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
  * @author Steve Ebersole
  */
 public class LoadContexts {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( LoadContexts.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( LoadContexts.class );
 
 	private final PersistenceContext persistenceContext;
 	private final StandardStack<JdbcValuesSourceProcessingState> jdbcValuesSourceProcessingStateStack = new StandardStack<>();
@@ -66,7 +66,7 @@ public class LoadContexts {
 	 */
 	public void cleanup() {
 		if ( ! jdbcValuesSourceProcessingStateStack.isEmpty() ) {
-			log.debug( "LoadContexts still contained JdbcValuesSourceProcessingState registrations on cleanup" );
+			LOG.debug( "LoadContexts still contained JdbcValuesSourceProcessingState registrations on cleanup" );
 		}
 		jdbcValuesSourceProcessingStateStack.clear();
 	}

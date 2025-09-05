@@ -131,7 +131,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  * @author Jürgen Kreitler
  */
 public class H2LegacyDialect extends Dialect {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( H2LegacyDialect.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( H2LegacyDialect.class );
 
 	private final LimitHandler limitHandler;
 
@@ -161,7 +161,7 @@ public class H2LegacyDialect extends Dialect {
 				: LimitOffsetLimitHandler.OFFSET_ONLY_INSTANCE;
 
 		if ( version.isBefore( 1, 2, 139 ) ) {
-			log.unsupportedMultiTableBulkHqlJpaql( version.getMajor(), version.getMinor(), version.getMicro() );
+			LOG.unsupportedMultiTableBulkHqlJpaql( version.getMajor(), version.getMinor(), version.getMicro() );
 		}
 
 //		supportsTuplesInSubqueries = version.isSameOrAfter( 1, 4, 198 );

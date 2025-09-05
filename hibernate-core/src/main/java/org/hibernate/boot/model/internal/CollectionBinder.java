@@ -131,7 +131,7 @@ import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.
  */
 public abstract class CollectionBinder {
 
-	private static final CoreMessageLogger log = messageLogger( CollectionBinder.class );
+	private static final CoreMessageLogger LOG = messageLogger( CollectionBinder.class );
 
 	private static final List<Class<?>> INFERRED_CLASS_PRIORITY = List.of(
 			List.class,
@@ -1060,8 +1060,8 @@ public abstract class CollectionBinder {
 	private void bind() {
 		collection = createCollection( propertyHolder.getPersistentClass() );
 		final String role = qualify( propertyHolder.getPath(), propertyName );
-		if ( log.isTraceEnabled() ) {
-			log.trace( "Binding collection role: " + role );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Binding collection role: " + role );
 		}
 		collection.setRole( role );
 		collection.setMappedByProperty( mappedBy );
@@ -1143,13 +1143,13 @@ public abstract class CollectionBinder {
 			}
 			if ( oneToMany ) {
 				if ( property.hasDirectAnnotationUsage( MapKeyColumn.class ) ) {
-					log.warn( "Association '"
+					LOG.warn( "Association '"
 								+ qualify( propertyHolder.getPath(), propertyName )
 								+ "' is 'mappedBy' another entity and should not specify a '@MapKeyColumn'"
 								+ " (use '@MapKey' instead)" );
 				}
 				if ( property.hasDirectAnnotationUsage( OrderColumn.class ) ) {
-					log.warn( "Association '"
+					LOG.warn( "Association '"
 								+ qualify( propertyHolder.getPath(), propertyName )
 								+ "' is 'mappedBy' another entity and should not specify an '@OrderColumn'"
 								+ " (use '@OrderBy' instead)" );
@@ -2772,8 +2772,8 @@ public abstract class CollectionBinder {
 	}
 
 	private void logOneToManySecondPass() {
-		if ( log.isTraceEnabled() ) {
-			log.trace( "Binding one-to-many association through foreign key: " + safeCollectionRole() );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Binding one-to-many association through foreign key: " + safeCollectionRole() );
 		}
 	}
 
@@ -2781,18 +2781,18 @@ public abstract class CollectionBinder {
 			boolean isOneToMany,
 			boolean isCollectionOfEntities,
 			boolean isManyToAny) {
-		if ( log.isTraceEnabled() ) {
+		if ( LOG.isTraceEnabled() ) {
 			if ( isCollectionOfEntities && isOneToMany ) {
-				log.trace( "Binding one-to-many association through association table: " + safeCollectionRole() );
+				LOG.trace( "Binding one-to-many association through association table: " + safeCollectionRole() );
 			}
 			else if ( isCollectionOfEntities ) {
-				log.trace( "Binding many-to-many association through association table: " + safeCollectionRole() );
+				LOG.trace( "Binding many-to-many association through association table: " + safeCollectionRole() );
 			}
 			else if ( isManyToAny ) {
-				log.trace( "Binding many-to-any: " + safeCollectionRole() );
+				LOG.trace( "Binding many-to-any: " + safeCollectionRole() );
 			}
 			else {
-				log.trace( "Binding element collection to collection table: " + safeCollectionRole() );
+				LOG.trace( "Binding element collection to collection table: " + safeCollectionRole() );
 			}
 		}
 	}

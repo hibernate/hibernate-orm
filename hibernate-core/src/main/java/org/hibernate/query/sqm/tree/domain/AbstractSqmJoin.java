@@ -53,8 +53,8 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 
 	@Override
 	public void setJoinPredicate(SqmPredicate predicate) {
-		if ( log.isTraceEnabled() ) {
-			log.tracef(
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef(
 					"Setting join predicate [%s] (was [%s])",
 					predicate.toString(),
 					this.onClausePredicate == null ? "<null>" : this.onClausePredicate.toString()

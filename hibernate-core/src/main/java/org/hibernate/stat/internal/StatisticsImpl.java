@@ -42,7 +42,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  */
 public class StatisticsImpl implements StatisticsImplementor, Service {
 
-	private static final CoreMessageLogger log = messageLogger( StatisticsImpl.class );
+	private static final CoreMessageLogger LOG = messageLogger( StatisticsImpl.class );
 
 	private final MappingMetamodelImplementor metamodel;
 	private final CacheImplementor cache;
@@ -212,7 +212,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 		resetStart();
 
-		log.statisticsReset();
+		LOG.statisticsReset();
 	}
 
 	private void resetStart(@UnknownInitialization StatisticsImpl this) {
@@ -238,10 +238,10 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	public void setStatisticsEnabled(boolean enabled) {
 		isStatisticsEnabled = enabled;
 		if ( enabled ) {
-			log.statisticsEnabled();
+			LOG.statisticsEnabled();
 		}
 		else {
-			log.statisticsDisabled();
+			LOG.statisticsDisabled();
 		}
 	}
 
@@ -730,7 +730,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public void queryExecuted(String hql, int rows, long time) {
-		log.hql( hql, time, (long) rows );
+		LOG.hql( hql, time, (long) rows );
 		queryExecutionCount.increment();
 
 		boolean isLongestQuery;
@@ -911,7 +911,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public void logSummary() {
-		log.logStatistics(
+		LOG.logStatistics(
 				startTime.toEpochMilli(),
 				sessionOpenCount.sum(),
 				sessionCloseCount.sum(),

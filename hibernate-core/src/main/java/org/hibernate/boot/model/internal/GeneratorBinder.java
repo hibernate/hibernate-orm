@@ -78,7 +78,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.combineUn
  */
 public class GeneratorBinder {
 
-	private static final CoreMessageLogger log = messageLogger( GeneratorBinder.class );
+	private static final CoreMessageLogger LOG = messageLogger( GeneratorBinder.class );
 
 	public static final String ASSIGNED_GENERATOR_NAME = "assigned";
 	public static final GeneratorCreator ASSIGNED_IDENTIFIER_GENERATOR_CREATOR =
@@ -299,8 +299,8 @@ public class GeneratorBinder {
 		definitionBuilder.setStrategy( strategy );
 		definitionBuilder.addParams( extractParameterMap( generatorAnnotation.parameters() ) );
 
-		if ( log.isTraceEnabled() ) {
-			log.tracev( "Added generator with name: {0}, strategy: {0}",
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Added generator with name: {0}, strategy: {0}",
 					definitionBuilder.getName(), definitionBuilder.getStrategy() );
 		}
 		return definitionBuilder.build();
@@ -309,8 +309,8 @@ public class GeneratorBinder {
 	private static IdentifierGeneratorDefinition buildSequenceIdGenerator(SequenceGenerator generatorAnnotation) {
 		final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 		interpretSequenceGenerator( generatorAnnotation, definitionBuilder );
-		if ( log.isTraceEnabled() ) {
-			log.tracev( "Added sequence generator with name: {0}", definitionBuilder.getName() );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Added sequence generator with name: {0}", definitionBuilder.getName() );
 		}
 		return definitionBuilder.build();
 	}
@@ -318,8 +318,8 @@ public class GeneratorBinder {
 	private static IdentifierGeneratorDefinition buildTableIdGenerator(TableGenerator generatorAnnotation) {
 		final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 		interpretTableGenerator( generatorAnnotation, definitionBuilder );
-		if ( log.isTraceEnabled() ) {
-			log.tracev( "Added sequence generator with name: {0}", definitionBuilder.getName() );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Added sequence generator with name: {0}", definitionBuilder.getName() );
 		}
 		return definitionBuilder.build();
 	}

@@ -25,7 +25,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 @Internal
 public class SetterMethodImpl implements Setter {
 
-	private static final CoreMessageLogger log = messageLogger( SetterMethodImpl.class );
+	private static final CoreMessageLogger LOG = messageLogger( SetterMethodImpl.class );
 
 	private final Class<?> containerClass;
 	private final String propertyName;
@@ -101,8 +101,8 @@ public class SetterMethodImpl implements Setter {
 			}
 			else {
 				final var expectedType = setterMethod.getParameterTypes()[0];
-				log.illegalPropertySetterArgument( containerClass.getName(), propertyName );
-				log.expectedType( expectedType.getName(), value == null ? null : value.getClass().getName() );
+				LOG.illegalPropertySetterArgument( containerClass.getName(), propertyName );
+				LOG.expectedType( expectedType.getName(), value == null ? null : value.getClass().getName() );
 				throw new PropertySetterAccessException(
 						iae,
 						containerClass,

@@ -19,7 +19,7 @@ import org.jboss.logging.Logger;
  */
 public final class NationalizedTypeMappings {
 
-	private static final Logger log = Logger.getLogger( NationalizedTypeMappings.class );
+	private static final Logger LOG = Logger.getLogger( NationalizedTypeMappings.class );
 
 	private NationalizedTypeMappings() {
 	}
@@ -31,8 +31,8 @@ public final class NationalizedTypeMappings {
 			case Types.LONGVARCHAR: return Types.LONGNVARCHAR;
 			case Types.VARCHAR: return Types.NVARCHAR;
 			default:
-				if ( log.isDebugEnabled() ) {
-					log.debug( "Unable to locate nationalized jdbc-code equivalent for given jdbc code : " + jdbcCode );
+				if ( LOG.isDebugEnabled() ) {
+					LOG.debug( "Unable to locate nationalized jdbc-code equivalent for given jdbc code : " + jdbcCode );
 				}
 				return jdbcCode;
 		}

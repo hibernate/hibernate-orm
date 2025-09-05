@@ -45,7 +45,7 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public class JaxbCfgProcessor {
-	private static final Logger log = Logger.getLogger( JaxbCfgProcessor.class );
+	private static final Logger LOG = Logger.getLogger( JaxbCfgProcessor.class );
 
 	public static final String HIBERNATE_CONFIGURATION_URI = "http://www.hibernate.org/xsd/orm/cfg";
 
@@ -110,7 +110,7 @@ public class JaxbCfgProcessor {
 
 		if ( !isNamespaced( event.asStartElement() ) ) {
 			// if the elements are not namespaced, wrap the reader in a reader which will namespace them as pulled.
-			log.debug( "cfg.xml document did not define namespaces; wrapping in custom event reader to introduce namespace information" );
+			LOG.debug( "cfg.xml document did not define namespaces; wrapping in custom event reader to introduce namespace information" );
 			staxEventReader = new NamespaceAddingEventReader( staxEventReader, HIBERNATE_CONFIGURATION_URI );
 		}
 
@@ -169,7 +169,7 @@ public class JaxbCfgProcessor {
 					schemaStream.close();
 				}
 				catch ( IOException e ) {
-					log.debugf( "Problem closing schema stream [%s]", e.toString() );
+					LOG.debugf( "Problem closing schema stream [%s]", e.toString() );
 				}
 			}
 		}

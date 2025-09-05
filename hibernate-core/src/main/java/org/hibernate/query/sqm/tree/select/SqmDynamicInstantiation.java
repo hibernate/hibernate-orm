@@ -45,7 +45,7 @@ public class SqmDynamicInstantiation<T>
 		SqmAliasedExpressionContainer<SqmDynamicInstantiationArgument<?>>,
 		JpaCompoundSelection<T> {
 
-	private static final Logger log = Logger.getLogger( SqmDynamicInstantiation.class );
+	private static final Logger LOG = Logger.getLogger( SqmDynamicInstantiation.class );
 
 	public static <R> SqmDynamicInstantiation<R> forClassInstantiation(
 			JavaType<R> targetJavaType,
@@ -229,8 +229,8 @@ public class SqmDynamicInstantiation<T>
 	public void addArgument(SqmDynamicInstantiationArgument<?> argument) {
 		if ( instantiationTarget.getNature() == LIST ) {
 			// really should not have an alias...
-			if ( argument.getAlias() != null && log.isDebugEnabled() ) {
-				log.debugf(
+			if ( argument.getAlias() != null && LOG.isDebugEnabled() ) {
+				LOG.debugf(
 						"Argument [%s] for dynamic List instantiation declared an 'injection alias' [%s] " +
 								"but such aliases are ignored for dynamic List instantiations",
 						argument.getSelectableNode().asLoggableText(),
@@ -241,7 +241,7 @@ public class SqmDynamicInstantiation<T>
 		else if ( instantiationTarget.getNature() == MAP ) {
 			// must(?) have an alias...
 			if ( argument.getAlias() == null ) {
-				log.warnf(
+				LOG.warnf(
 						"Argument [%s] for dynamic Map instantiation did not declare an 'injection alias' [%s] " +
 								"but such aliases are needed for dynamic Map instantiations; " +
 								"will likely cause problems later translating sqm",

@@ -22,7 +22,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class FallbackBeanInstanceProducer implements BeanInstanceProducer {
-	private static final Logger log = Logger.getLogger( FallbackBeanInstanceProducer.class );
+	private static final Logger LOG = Logger.getLogger( FallbackBeanInstanceProducer.class );
 
 	/**
 	 * Singleton access
@@ -34,7 +34,7 @@ public class FallbackBeanInstanceProducer implements BeanInstanceProducer {
 
 	@Override
 	public <B> B produceBeanInstance(Class<B> beanType) {
-		log.tracef( "Creating ManagedBean [%s] using direct instantiation", beanType.getName() );
+		LOG.tracef( "Creating ManagedBean [%s] using direct instantiation", beanType.getName() );
 		try {
 			final Constructor<B> constructor = beanType.getDeclaredConstructor();
 			constructor.setAccessible( true );

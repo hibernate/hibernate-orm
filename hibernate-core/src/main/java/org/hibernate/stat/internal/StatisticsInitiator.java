@@ -26,7 +26,7 @@ import static org.hibernate.cfg.StatisticsSettings.STATS_BUILDER;
  */
 public class StatisticsInitiator implements SessionFactoryServiceInitiator<StatisticsImplementor> {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( StatisticsInitiator.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( StatisticsInitiator.class );
 
 	public static final StatisticsInitiator INSTANCE = new StatisticsInitiator();
 
@@ -43,7 +43,7 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 		final var statisticsFactory = statisticsFactory( configValue, context.getServiceRegistry() );
 		final var statistics = statisticsFactory.buildStatistics( context.getSessionFactory() );
 		final boolean enabled = context.getSessionFactoryOptions().isStatisticsEnabled();
-		log.statisticsInitialized();
+		LOG.statisticsInitialized();
 		statistics.setStatisticsEnabled( enabled );
 		return statistics;
 	}

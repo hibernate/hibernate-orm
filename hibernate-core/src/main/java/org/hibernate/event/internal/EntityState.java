@@ -16,7 +16,7 @@ import static org.hibernate.event.internal.EventUtil.getLoggableName;
 public enum EntityState {
 	PERSISTENT, TRANSIENT, DETACHED, DELETED;
 
-	static final CoreMessageLogger log = CoreLogging.messageLogger( EntityState.class );
+	static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityState.class );
 
 	/**
 	 * Determine whether the entity is persistent, detached, or transient
@@ -39,14 +39,14 @@ public enum EntityState {
 			//the entity is associated with the session, so check its status
 			if ( entry.getStatus() != Status.DELETED ) {
 				// do nothing for persistent instances
-				if ( log.isTraceEnabled() ) {
-					log.trace( "Persistent instance of: " + getLoggableName( entityName, entity ) );
+				if ( LOG.isTraceEnabled() ) {
+					LOG.trace( "Persistent instance of: " + getLoggableName( entityName, entity ) );
 				}
 				return PERSISTENT;
 			}
 			// ie. e.status==DELETED
-			if ( log.isTraceEnabled() ) {
-				log.trace( "Deleted instance of: " + getLoggableName( entityName, entity ) );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Deleted instance of: " + getLoggableName( entityName, entity ) );
 			}
 			return DELETED;
 		}
@@ -56,13 +56,13 @@ public enum EntityState {
 		// try interceptor and unsaved-value
 
 		if ( ForeignKeys.isTransient( entityName, entity, assumedUnsaved, source ) ) {
-			if ( log.isTraceEnabled() ) {
-				log.trace( "Transient instance of: " + getLoggableName( entityName, entity ) );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Transient instance of: " + getLoggableName( entityName, entity ) );
 			}
 			return TRANSIENT;
 		}
-		if ( log.isTraceEnabled() ) {
-			log.trace( "Detached instance of: " + getLoggableName( entityName, entity ) );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Detached instance of: " + getLoggableName( entityName, entity ) );
 		}
 
 		final var persistenceContext = source.getPersistenceContextInternal();

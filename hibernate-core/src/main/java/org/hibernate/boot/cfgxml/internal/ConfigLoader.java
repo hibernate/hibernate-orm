@@ -28,7 +28,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ConfigLoader {
-	private static final Logger log = Logger.getLogger( ConfigLoader.class );
+	private static final Logger LOG = Logger.getLogger( ConfigLoader.class );
 
 	private final BootstrapServiceRegistry bootstrapServiceRegistry;
 
@@ -64,7 +64,7 @@ public class ConfigLoader {
 				stream.close();
 			}
 			catch (IOException e) {
-				log.debug( "Unable to close cfg.xml resource stream", e );
+				LOG.debug( "Unable to close cfg.xml resource stream", e );
 			}
 		}
 	}
@@ -101,7 +101,7 @@ public class ConfigLoader {
 					stream.close();
 				}
 				catch (IOException e) {
-					log.debug( "Unable to close cfg.xml URL stream", e );
+					LOG.debug( "Unable to close cfg.xml URL stream", e );
 				}
 			}
 		}
@@ -130,7 +130,7 @@ public class ConfigLoader {
 				stream.close();
 			}
 			catch (IOException e) {
-				log.debug( "Unable to close properties file stream [" + resourceName + "]", e );
+				LOG.debug( "Unable to close properties file stream [" + resourceName + "]", e );
 			}
 		}
 	}
@@ -154,7 +154,7 @@ public class ConfigLoader {
 					stream.close();
 				}
 				catch (IOException e) {
-					log.debug( "Unable to close properties file stream [" + file.getAbsolutePath() + "]", e );
+					LOG.debug( "Unable to close properties file stream [" + file.getAbsolutePath() + "]", e );
 				}
 			}
 		}

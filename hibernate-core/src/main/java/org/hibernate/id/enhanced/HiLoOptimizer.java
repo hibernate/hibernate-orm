@@ -59,7 +59,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author Steve Ebersole
  */
 public class HiLoOptimizer extends AbstractOptimizer {
-	private static final Logger log = Logger.getLogger( HiLoOptimizer.class );
+	private static final Logger LOG = Logger.getLogger( HiLoOptimizer.class );
 
 	private static class GenerationState {
 		private IntegralDataTypeHolder lastSourceValue;
@@ -79,8 +79,8 @@ public class HiLoOptimizer extends AbstractOptimizer {
 		if ( incrementSize < 1 ) {
 			throw new HibernateException( "increment size cannot be less than 1" );
 		}
-		if ( log.isTraceEnabled() ) {
-			log.tracev( "Creating hilo optimizer with [incrementSize={0}; returnClass={1}]",
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Creating hilo optimizer with [incrementSize={0}; returnClass={1}]",
 					incrementSize, returnClass.getName() );
 		}
 	}

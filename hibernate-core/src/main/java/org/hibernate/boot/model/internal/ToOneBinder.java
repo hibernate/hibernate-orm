@@ -65,7 +65,7 @@ import static org.hibernate.internal.util.StringHelper.qualify;
  */
 public class ToOneBinder {
 
-	private static final CoreMessageLogger log = messageLogger( ToOneBinder.class );
+	private static final CoreMessageLogger LOG = messageLogger( ToOneBinder.class );
 
 	static void bindManyToOne(
 			PropertyHolder propertyHolder,
@@ -234,7 +234,7 @@ public class ToOneBinder {
 		final var notFound = property.getDirectAnnotationUsage( NotFound.class );
 		final NotFoundAction notFoundAction = notFound == null ? null : notFound.action();
 		if ( notFoundAction != null && fetchType == LAZY ) {
-			log.ignoreNotFoundWithFetchTypeLazy( propertyHolder.getEntityName(), property.getName() );
+			LOG.ignoreNotFoundWithFetchTypeLazy( propertyHolder.getEntityName(), property.getName() );
 		}
 		return notFoundAction;
 	}

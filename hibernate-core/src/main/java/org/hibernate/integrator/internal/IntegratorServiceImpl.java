@@ -19,7 +19,7 @@ import org.jboss.logging.Logger;
  */
 public class IntegratorServiceImpl implements IntegratorService {
 
-	private static final Logger log = Logger.getLogger( IntegratorServiceImpl.class );
+	private static final Logger LOG = Logger.getLogger( IntegratorServiceImpl.class );
 
 	private final LinkedHashSet<Integrator> integrators = new LinkedHashSet<>();
 
@@ -46,8 +46,8 @@ public class IntegratorServiceImpl implements IntegratorService {
 	}
 
 	private void addIntegrator(Integrator integrator) {
-		if ( log.isDebugEnabled() ) {
-			log.debugf( "Adding Integrator [%s]", integrator.getClass().getName() );
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Adding Integrator [%s]", integrator.getClass().getName() );
 		}
 		integrators.add( integrator );
 	}

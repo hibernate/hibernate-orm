@@ -40,7 +40,7 @@ import net.bytebuddy.jar.asm.Type;
 
 final class BiDirectionalAssociationHandler implements Implementation {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( BiDirectionalAssociationHandler.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BiDirectionalAssociationHandler.class );
 
 	static Implementation wrap(
 			TypeDescription managedCtClass,
@@ -64,8 +64,8 @@ final class BiDirectionalAssociationHandler implements Implementation {
 			bidirectionalAttributeName = mappedBy;
 		}
 		if ( bidirectionalAttributeName == null || bidirectionalAttributeName.isEmpty() ) {
-			if ( log.isInfoEnabled() ) {
-				log.infof(
+			if ( LOG.isInfoEnabled() ) {
+				LOG.infof(
 						"Bidirectional association not managed for field [%s#%s]: Could not find target field in [%s]",
 						managedCtClass.getName(),
 						persistentField.getName(),
@@ -120,8 +120,8 @@ final class BiDirectionalAssociationHandler implements Implementation {
 		if ( persistentField.hasAnnotation( ManyToMany.class ) ) {
 
 			if ( persistentField.getType().asErasure().isAssignableTo( Map.class ) || targetType.isAssignableTo( Map.class ) ) {
-				if ( log.isInfoEnabled() ) {
-					log.infof(
+				if ( LOG.isInfoEnabled() ) {
+					LOG.infof(
 							"Bidirectional association not managed for field [%s#%s]: @ManyToMany in java.util.Map attribute not supported ",
 							managedCtClass.getName(),
 							persistentField.getName()
@@ -167,8 +167,8 @@ final class BiDirectionalAssociationHandler implements Implementation {
 			}
 
 			if ( targetClass == null ) {
-				if ( log.isInfoEnabled() ) {
-					log.infof(
+				if ( LOG.isInfoEnabled() ) {
+					LOG.infof(
 							"Bidirectional association not managed for field [%s#%s]: Could not find target type",
 							managedCtClass.getName(),
 							persistentField.getName()
@@ -253,8 +253,8 @@ final class BiDirectionalAssociationHandler implements Implementation {
 			if ( context.isPersistentField( annotatedF )
 					&& target.getName().equals( getMappedBy( annotatedF, entityType( annotatedF.getType() ), context ) )
 					&& target.getDeclaringType().asErasure().isAssignableTo( entityType( annotatedF.getType() ) ) ) {
-				if ( log.isTraceEnabled() ) {
-					log.tracef(
+				if ( LOG.isTraceEnabled() ) {
+					LOG.tracef(
 							"mappedBy association for field [%s#%s] is [%s#%s]",
 							target.getDeclaringType().asErasure().getName(),
 							target.getName(),

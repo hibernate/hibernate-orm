@@ -65,7 +65,7 @@ import static org.hibernate.tool.schema.internal.SchemaDropperImpl.dropUserDefin
  * @author Steve Ebersole
  */
 public abstract class AbstractSchemaMigrator implements SchemaMigrator {
-	private static final Logger log = Logger.getLogger( IndividuallySchemaMigratorImpl.class );
+	private static final Logger LOG = Logger.getLogger( IndividuallySchemaMigratorImpl.class );
 
 	protected HibernateSchemaManagementTool tool;
 	protected SchemaFilter schemaFilter;
@@ -122,7 +122,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 								target.release();
 							}
 							catch (Exception e) {
-								log.debugf( "Problem releasing GenerationTarget [%s]: %s", target, e.getMessage() );
+								LOG.debugf( "Problem releasing GenerationTarget [%s]: %s", target, e.getMessage() );
 							}
 						}
 					}
@@ -132,7 +132,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 						databaseInformation.cleanup();
 					}
 					catch (Exception e) {
-						log.debug( "Problem releasing DatabaseInformation: " + e.getMessage() );
+						LOG.debug( "Problem releasing DatabaseInformation: " + e.getMessage() );
 					}
 				}
 			}

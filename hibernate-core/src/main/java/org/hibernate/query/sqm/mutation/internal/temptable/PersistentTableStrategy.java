@@ -31,7 +31,7 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  * @author Steve Ebersole
  */
 public abstract class PersistentTableStrategy {
-	private static final Logger log = Logger.getLogger( PersistentTableStrategy.class );
+	private static final Logger LOG = Logger.getLogger( PersistentTableStrategy.class );
 
 	public static final String SHORT_NAME = "persistent";
 
@@ -88,7 +88,7 @@ public abstract class PersistentTableStrategy {
 			return;
 		}
 
-		log.debugf( "Creating persistent ID table : %s", getTemporaryTable().getTableExpression() );
+		LOG.debugf( "Creating persistent ID table : %s", getTemporaryTable().getTableExpression() );
 
 		final TemporaryTableHelper.TemporaryTableCreationWork temporaryTableCreationWork = new TemporaryTableHelper.TemporaryTableCreationWork(
 				getTemporaryTable(),
@@ -100,11 +100,11 @@ public abstract class PersistentTableStrategy {
 		}
 		catch (UnsupportedOperationException e) {
 			// assume this comes from org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl
-			log.debug( "Unable to obtain JDBC connection; assuming ID tables already exist or wont be needed" );
+			LOG.debug( "Unable to obtain JDBC connection; assuming ID tables already exist or wont be needed" );
 			return;
 		}
 		catch (SQLException e) {
-			log.error( "Unable obtain JDBC Connection", e );
+			LOG.error( "Unable obtain JDBC Connection", e );
 			return;
 		}
 
@@ -136,7 +136,7 @@ public abstract class PersistentTableStrategy {
 		dropIdTables = false;
 
 		final TemporaryTable temporaryTable = getTemporaryTable();
-		log.tracef( "Dropping persistent ID table: %s", temporaryTable.getTableExpression() );
+		LOG.tracef( "Dropping persistent ID table: %s", temporaryTable.getTableExpression() );
 
 		final TemporaryTableHelper.TemporaryTableDropWork temporaryTableDropWork =
 				new TemporaryTableHelper.TemporaryTableDropWork( temporaryTable, sessionFactory );
@@ -146,11 +146,11 @@ public abstract class PersistentTableStrategy {
 		}
 		catch (UnsupportedOperationException e) {
 			// assume this comes from org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl
-			log.debugf( "Unable to obtain JDBC connection; unable to drop persistent ID table : %s", temporaryTable.getTableExpression() );
+			LOG.debugf( "Unable to obtain JDBC connection; unable to drop persistent ID table : %s", temporaryTable.getTableExpression() );
 			return;
 		}
 		catch (SQLException e) {
-			log.error( "Unable obtain JDBC Connection", e );
+			LOG.error( "Unable obtain JDBC Connection", e );
 			return;
 		}
 

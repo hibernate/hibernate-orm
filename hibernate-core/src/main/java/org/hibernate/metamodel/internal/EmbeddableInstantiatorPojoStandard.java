@@ -21,7 +21,7 @@ import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
  */
 public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator implements StandardEmbeddableInstantiator {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( EmbeddableInstantiatorPojoStandard.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EmbeddableInstantiatorPojoStandard.class );
 
 	private final Supplier<EmbeddableMappingType> embeddableMappingAccess;
 	private final Constructor<?> constructor;
@@ -37,7 +37,7 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 			return getDefaultConstructor( mappedPojoClass );
 		}
 		catch ( PropertyNotFoundException e ) {
-			log.noDefaultConstructor( mappedPojoClass.getName() );
+			LOG.noDefaultConstructor( mappedPojoClass.getName() );
 			return null;
 		}
 	}

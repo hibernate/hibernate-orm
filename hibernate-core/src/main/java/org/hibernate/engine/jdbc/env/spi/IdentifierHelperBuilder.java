@@ -26,7 +26,7 @@ import static org.hibernate.internal.util.StringHelper.splitAtCommas;
  * @author Steve Ebersole
  */
 public class IdentifierHelperBuilder {
-	private static final Logger log = Logger.getLogger( IdentifierHelperBuilder.class );
+	private static final Logger LOG = Logger.getLogger( IdentifierHelperBuilder.class );
 
 	private final JdbcEnvironment jdbcEnvironment;
 
@@ -77,12 +77,12 @@ public class IdentifierHelperBuilder {
 			);
 
 			if ( unquotedAffirmatives == 0 ) {
-				log.trace( "JDBC driver metadata reported database stores unquoted identifiers in neither upper, lower nor mixed case" );
+				LOG.trace( "JDBC driver metadata reported database stores unquoted identifiers in neither upper, lower nor mixed case" );
 			}
 			else {
 				// NOTE: still "dodgy" if more than one is true
 				if ( unquotedAffirmatives > 1 ) {
-					log.trace( "JDBC driver metadata reported database stores unquoted identifiers in more than one case" );
+					LOG.trace( "JDBC driver metadata reported database stores unquoted identifiers in more than one case" );
 				}
 
 				if ( metaData.storesUpperCaseIdentifiers() ) {
@@ -103,12 +103,12 @@ public class IdentifierHelperBuilder {
 			);
 
 			if ( quotedAffirmatives == 0 ) {
-				log.trace( "JDBC driver metadata reported database stores quoted identifiers in neither upper, lower nor mixed case" );
+				LOG.trace( "JDBC driver metadata reported database stores quoted identifiers in neither upper, lower nor mixed case" );
 			}
 			else {
 				// NOTE: still "dodgy" if more than one is true
 				if ( quotedAffirmatives > 1 ) {
-					log.trace( "JDBC driver metadata reported database stores quoted identifiers in more than one case" );
+					LOG.trace( "JDBC driver metadata reported database stores quoted identifiers in more than one case" );
 				}
 
 				if ( metaData.storesMixedCaseQuotedIdentifiers() ) {
@@ -202,7 +202,7 @@ public class IdentifierHelperBuilder {
 
 	public IdentifierHelper build() {
 		if ( unquotedCaseStrategy == quotedCaseStrategy ) {
-			log.debugf(
+			LOG.debugf(
 					"IdentifierCaseStrategy for both quoted and unquoted identifiers was set " +
 							"to the same strategy [%s]; that will likely lead to problems in schema update " +
 							"and validation if using quoted identifiers",

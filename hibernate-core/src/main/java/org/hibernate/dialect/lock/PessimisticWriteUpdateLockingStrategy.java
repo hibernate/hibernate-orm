@@ -36,7 +36,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  */
 public class PessimisticWriteUpdateLockingStrategy implements LockingStrategy {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( PessimisticWriteUpdateLockingStrategy.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PessimisticWriteUpdateLockingStrategy.class );
 
 	private final EntityPersister lockable;
 	private final LockMode lockMode;
@@ -55,7 +55,7 @@ public class PessimisticWriteUpdateLockingStrategy implements LockingStrategy {
 			throw new HibernateException( "[" + lockMode + "] not valid for update statement" );
 		}
 		if ( !lockable.isVersioned() ) {
-			log.writeLocksNotSupported( lockable.getEntityName() );
+			LOG.writeLocksNotSupported( lockable.getEntityName() );
 			this.sql = null;
 		}
 		else {

@@ -55,7 +55,7 @@ import static org.hibernate.internal.util.StringHelper.nullIfBlank;
  */
 public class ConnectionProviderInitiator implements StandardServiceInitiator<ConnectionProvider> {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( ConnectionProviderInitiator.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ConnectionProviderInitiator.class );
 
 	/**
 	 * Singleton access
@@ -100,7 +100,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 				return provider;
 			}
 			else if ( explicitSetting instanceof Class<?> providerClass ) {
-				log.instantiatingExplicitConnectionProvider( providerClass.getName() );
+				LOG.instantiatingExplicitConnectionProvider( providerClass.getName() );
 				return instantiateExplicitConnectionProvider( connectionProviderClass( providerClass ), beanContainer );
 			}
 			else {
@@ -126,7 +126,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 
 	private ConnectionProvider instantiateNamedConnectionProvider(
 			String providerName, StrategySelector strategySelector, BeanContainer beanContainer) {
-		log.instantiatingExplicitConnectionProvider( providerName );
+		LOG.instantiatingExplicitConnectionProvider( providerName );
 		final var providerClass = strategySelector.selectStrategyImplementor( ConnectionProvider.class, providerName );
 		try {
 			return instantiateExplicitConnectionProvider( providerClass, beanContainer );
@@ -181,7 +181,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	}
 
 	private ConnectionProvider noAppropriateConnectionProvider() {
-		log.noAppropriateConnectionProvider();
+		LOG.noAppropriateConnectionProvider();
 		return new UserSuppliedConnectionProviderImpl();
 	}
 
@@ -225,7 +225,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return selector.selectStrategyImplementor( ConnectionProvider.class, strategy ).getConstructor().newInstance();
 		}
 		catch ( Exception e ) {
-			log.providerClassNotFound(strategy);
+			LOG.providerClassNotFound(strategy);
 			return null;
 		}
 	}

@@ -59,7 +59,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
  */
 public class GeneratorParameters {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( GeneratorBinder.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( GeneratorBinder.class );
 
 	/**
 	 * Collect the parameters which should be passed to
@@ -253,7 +253,7 @@ public class GeneratorParameters {
 
 		// TODO : implement unique-constraint support
 		if ( isNotEmpty( tableGeneratorAnnotation.uniqueConstraints() ) ) {
-			log.ignoringTableGeneratorConstraints( tableGeneratorAnnotation.name() );
+			LOG.ignoringTableGeneratorConstraints( tableGeneratorAnnotation.name() );
 		}
 	}
 

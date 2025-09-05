@@ -57,7 +57,7 @@ import static org.hibernate.resource.transaction.spi.TransactionStatus.ROLLING_B
  */
 public abstract class AbstractPersistentCollection<E> implements Serializable, PersistentCollection<E> {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractPersistentCollection.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractPersistentCollection.class );
 
 	private transient SharedSessionContractImplementor session;
 	private boolean isTempSession = false;
@@ -298,7 +298,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 					tempSession.close();
 				}
 				catch (Exception e) {
-					log.unableToCloseTemporarySession();
+					LOG.unableToCloseTemporarySession();
 				}
 			}
 			else {
@@ -706,7 +706,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 				if ( allowLoadOutsideTransaction
 						&& !initialized
 						&& session.getLoadQueryInfluencers().hasEnabledFilters() ) {
-					log.enabledFiltersWhenDetachFromSession( collectionInfoString( getRole(), getKey() ) );
+					LOG.enabledFiltersWhenDetachFromSession( collectionInfoString( getRole(), getKey() ) );
 				}
 				session = null;
 			}
@@ -714,7 +714,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		}
 		else {
 			if ( session != null ) {
-				log.logCannotUnsetUnexpectedSessionInCollection( unexpectedSessionStateMessage( currentSession ) );
+				LOG.logCannotUnsetUnexpectedSessionInCollection( unexpectedSessionStateMessage( currentSession ) );
 			}
 			return false;
 		}
@@ -724,20 +724,20 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		try {
 			if ( wasTransactionRolledBack() ) {
 				// It was due to a rollback.
-				if ( log.isDebugEnabled()) {
-					log.queuedOperationWhenDetachFromSessionOnRollback( collectionInfoString( getRole(), getKey() ) );
+				if ( LOG.isDebugEnabled()) {
+					LOG.queuedOperationWhenDetachFromSessionOnRollback( collectionInfoString( getRole(), getKey() ) );
 				}
 			}
 			else {
 				// We don't know why the collection is being detached.
 				// Just log the info.
-				log.queuedOperationWhenDetachFromSession( collectionInfoString( getRole(), getKey() ) );
+				LOG.queuedOperationWhenDetachFromSession( collectionInfoString( getRole(), getKey() ) );
 			}
 		}
 		catch (Exception e) {
 			// We don't know why the collection is being detached.
 			// Just log the info.
-			log.queuedOperationWhenDetachFromSession( collectionInfoString( getRole(), getKey() ) );
+			LOG.queuedOperationWhenDetachFromSession( collectionInfoString( getRole(), getKey() ) );
 		}
 	}
 
@@ -772,11 +772,11 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 				);
 			}
 			else {
-				log.logUnexpectedSessionInCollectionNotConnected( message );
+				LOG.logUnexpectedSessionInCollectionNotConnected( message );
 			}
 		}
 		if ( hasQueuedOperations() ) {
-			log.queuedOperationWhenAttachToSession( collectionInfoString( getRole(), getKey() ) );
+			LOG.queuedOperationWhenAttachToSession( collectionInfoString( getRole(), getKey() ) );
 		}
 		this.session = session;
 		return true;
@@ -808,7 +808,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			}
 		}
 		// only include the collection contents if debug logging
-		if ( log.isDebugEnabled() ) {
+		if ( LOG.isDebugEnabled() ) {
 			final String collectionContents = wasInitialized() ? toString() : "<uninitialized>";
 			message.append( "\nCollection contents: [" ).append( collectionContents ).append( "]" );
 		}

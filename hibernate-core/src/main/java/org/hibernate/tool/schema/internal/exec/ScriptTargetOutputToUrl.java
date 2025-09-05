@@ -22,7 +22,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ScriptTargetOutputToUrl extends AbstractScriptTargetOutput implements ScriptTargetOutput {
-	private static final Logger log = CoreLogging.logger( ScriptTargetOutputToUrl.class );
+	private static final Logger LOG = CoreLogging.logger( ScriptTargetOutputToUrl.class );
 
 	private final URL url;
 	private final String charsetName;
@@ -80,7 +80,7 @@ public class ScriptTargetOutputToUrl extends AbstractScriptTargetOutput implemen
 
 
 	private static Writer toWriter( URL url, String charsetName, boolean append ) {
-		log.debug( "Attempting to resolve writer for URL: " + url );
+		LOG.debug( "Attempting to resolve writer for URL: " + url );
 		// technically only "strings corresponding to file URLs" are supported, which I take to mean URLs whose
 		// protocol is "file"
 		try {

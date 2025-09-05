@@ -33,7 +33,7 @@ public class OracleArrayContainsFunction extends AbstractArrayContainsFunction {
 		final JdbcMappingContainer needleTypeContainer = needleExpression.getExpressionType();
 		final JdbcMapping needleType = needleTypeContainer == null ? null : needleTypeContainer.getSingleJdbcMapping();
 		if ( needleType == null || needleType instanceof BasicPluralType<?, ?> ) {
-			log.deprecatedArrayContainsWithArray();
+			LOG.deprecatedArrayContainsWithArray();
 			if ( nullable ) {
 				final String arrayTypeName = DdlTypeHelper.getTypeName(
 						haystackExpression.getExpressionType(),

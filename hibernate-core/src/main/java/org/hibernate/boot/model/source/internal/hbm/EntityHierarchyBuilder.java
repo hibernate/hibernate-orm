@@ -39,7 +39,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class EntityHierarchyBuilder {
-	private static final Logger log = Logger.getLogger( EntityHierarchyBuilder.class );
+	private static final Logger LOG = Logger.getLogger( EntityHierarchyBuilder.class );
 
 	private final List<EntityHierarchySourceImpl> entityHierarchyList = new ArrayList<>();
 
@@ -58,10 +58,10 @@ public class EntityHierarchyBuilder {
 	 */
 	public List<EntityHierarchySourceImpl> buildHierarchies() throws HibernateException {
 		if ( toBeLinkedQueue != null && !toBeLinkedQueue.isEmpty() ) {
-			if ( log.isDebugEnabled() ) {
+			if ( LOG.isDebugEnabled() ) {
 				for ( var waitingListEntry : toBeLinkedQueue.entrySet() ) {
 					for ( ExtendsQueueEntry waitingEntry : waitingListEntry.getValue() ) {
-						log.debugf(
+						LOG.debugf(
 								"Entity supertype named as extends [%s] for subclass [%s:%s] not found",
 								waitingListEntry.getKey(),
 								waitingEntry.sourceMappingDocument.getOrigin(),
@@ -84,7 +84,7 @@ public class EntityHierarchyBuilder {
 	 * @param mappingDocument The {@code hbm.xml} document to index
 	 */
 	public void indexMappingDocument(MappingDocument mappingDocument) {
-		log.tracef( "Indexing mapping document [%s] for purpose of building entity hierarchy ordering", mappingDocument.getOrigin() );
+		LOG.tracef( "Indexing mapping document [%s] for purpose of building entity hierarchy ordering", mappingDocument.getOrigin() );
 		final JaxbHbmHibernateMapping mappingBinding = mappingDocument.getDocumentRoot();
 
 		// iterate all root class definitions at the hibernate-mapping level

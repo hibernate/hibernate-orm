@@ -63,7 +63,7 @@ import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabl
  * @author Steve Ebersole
  */
 public class SchemaCreatorImpl extends AbstractSchemaPopulator implements SchemaCreator {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( SchemaCreatorImpl.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SchemaCreatorImpl.class );
 
 	private final HibernateSchemaManagementTool tool;
 	private final SchemaFilter schemaFilter;
@@ -135,7 +135,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 					target.release();
 				}
 				catch (Exception e) {
-					log.debugf( "Problem releasing GenerationTarget [%s]: %s", target, e.getMessage() );
+					LOG.debugf( "Problem releasing GenerationTarget [%s]: %s", target, e.getMessage() );
 				}
 			}
 		}

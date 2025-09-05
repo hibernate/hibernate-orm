@@ -24,7 +24,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class DynamicInstantiation<T> implements DomainResultProducer {
-	private static final Logger log = Logger.getLogger( DynamicInstantiation.class );
+	private static final Logger LOG = Logger.getLogger( DynamicInstantiation.class );
 
 	private final DynamicInstantiationNature nature;
 	private final JavaType<T> targetJavaType;
@@ -58,8 +58,8 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 
 		if ( List.class.equals( getTargetJavaType().getJavaTypeClass() ) ) {
 			// really should not have an alias...
-			if ( alias != null && log.isDebugEnabled() ) {
-				log.debugf(
+			if ( alias != null && LOG.isDebugEnabled() ) {
+				LOG.debugf(
 						"Argument [%s] for dynamic List instantiation declared an 'injection alias' [%s] " +
 								"but such aliases are ignored for dynamic List instantiations",
 						argumentResultProducer.toString(),
@@ -122,8 +122,8 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 //			AssemblerCreationState creationState) {
 //
 //		if ( dynamicInstantiation.getNature() == DynamicInstantiationNature.LIST ) {
-//			if ( log.isDebugEnabled() && areAnyArgumentsAliased ) {
-//				log.debug( "One or more arguments for List dynamic instantiation (`new list(...)`) specified an alias; ignoring" );
+//			if ( LOG.isDebugEnabled() && areAnyArgumentsAliased ) {
+//				LOG.debug( "One or more arguments for List dynamic instantiation (`new list(...)`) specified an alias; ignoring" );
 //			}
 //			return new DynamicInstantiationListAssemblerImpl(
 //					(JavaType<List>) dynamicInstantiation.getTargetJavaType(),
@@ -164,7 +164,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 //							argumentReader.getAssembledJavaType()
 //					);
 //					if ( !assignmentCompatible ) {
-//						log.debugf(
+//						LOG.debugf(
 //								"Skipping constructor for dynamic-instantiation match due to argument mismatch [%s] : %s -> %s",
 //								i,
 //								constructor.getParameterTypes()[i].getName(),
@@ -182,7 +182,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 //				);
 //			}
 //
-//			log.debugf(
+//			LOG.debugf(
 //					"Could not locate appropriate constructor for dynamic instantiation of [%s]; attempting bean-injection instantiation",
 //					dynamicInstantiation.getTargetJavaType().getJavaType().getName()
 //			);

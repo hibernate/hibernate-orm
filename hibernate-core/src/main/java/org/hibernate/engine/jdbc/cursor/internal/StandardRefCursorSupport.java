@@ -22,7 +22,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class StandardRefCursorSupport implements RefCursorSupport {
-	private static final Logger log = Logger.getLogger( StandardRefCursorSupport.class );
+	private static final Logger LOG = Logger.getLogger( StandardRefCursorSupport.class );
 
 	private final JdbcServices jdbcServices;
 
@@ -92,7 +92,7 @@ public class StandardRefCursorSupport implements RefCursorSupport {
 		}
 		catch (Exception throwable) {
 			//If the driver is not compatible with the Java 8 contract, the method might not exit.
-			log.debug( "Unexpected error trying to gauge level of JDBC REF_CURSOR support: " + throwable.getMessage() );
+			LOG.debug( "Unexpected error trying to gauge level of JDBC REF_CURSOR support: " + throwable.getMessage() );
 			return false;
 		}
 	}

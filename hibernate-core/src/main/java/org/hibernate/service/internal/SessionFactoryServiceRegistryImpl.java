@@ -30,7 +30,7 @@ public class SessionFactoryServiceRegistryImpl
 		extends AbstractServiceRegistryImpl
 		implements SessionFactoryServiceRegistry, SessionFactoryServiceInitiatorContext {
 
-	private static final Logger log = Logger.getLogger( SessionFactoryServiceRegistryImpl.class );
+	private static final Logger LOG = Logger.getLogger( SessionFactoryServiceRegistryImpl.class );
 
 	private final SessionFactoryOptions sessionFactoryOptions;
 	private final SessionFactoryImplementor sessionFactory;
@@ -100,7 +100,7 @@ public class SessionFactoryServiceRegistryImpl
 	@Override
 	public <R extends Service> @Nullable R getService(Class<R> serviceRole) {
 		if ( serviceRole.equals( EventListenerRegistry.class ) ) {
-			log.debug(
+			LOG.debug(
 					"EventListenerRegistry access via ServiceRegistry is deprecated - "
 						+ "use 'sessionFactory.getEventEngine().getListenerRegistry()' instead"
 			);

@@ -90,7 +90,7 @@ import static org.hibernate.mapping.MappingHelper.injectParameters;
  */
 public class BasicValue extends SimpleValue
 		implements JdbcTypeIndicators, Resolvable, JpaAttributeConverterCreationContext {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( BasicValue.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BasicValue.class );
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// incoming "configuration" values
@@ -290,7 +290,7 @@ public class BasicValue extends SimpleValue
 
 //		final Selectable column = getColumn();
 //		if ( column == incomingColumn || column.getText().equals( incomingColumn.getText() ) ) {
-//			log.debugf( "Skipping column re-registration: %s.%s", getTable().getName(), column.getText() );
+//			LOG.debugf( "Skipping column re-registration: %s.%s", getTable().getName(), column.getText() );
 //		}
 //		else {
 //			throw new IllegalStateException(
@@ -638,7 +638,7 @@ public class BasicValue extends SimpleValue
 			final MetadataBuildingContext context = getBuildingContext();
 			final TypeDefinition autoAppliedTypeDef = context.getTypeDefinitionRegistry().resolveAutoApplied( castType );
 			if ( autoAppliedTypeDef != null ) {
-				log.trace( "BasicValue resolution matched auto-applied type definition" );
+				LOG.trace( "BasicValue resolution matched auto-applied type definition" );
 				return autoAppliedTypeDef.resolve( getTypeParameters(), null, context, this );
 			}
 		}
@@ -905,7 +905,7 @@ public class BasicValue extends SimpleValue
 		}
 		catch (ClassLoadingException e) {
 			// allow the exception below to trigger
-			log.debugf( "Could not resolve type-name [%s] as Java type : %s", name, e );
+			LOG.debugf( "Could not resolve type-name [%s] as Java type : %s", name, e );
 		}
 
 		throw new MappingException( "Could not resolve named type : " + name );

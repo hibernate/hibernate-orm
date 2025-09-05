@@ -32,7 +32,7 @@ import java.util.Set;
  * the JPA 2.2 spec.
  */
 public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
-	private static final Logger log = Logger.getLogger( JpaCompliantLifecycleStrategy.class );
+	private static final Logger LOG = Logger.getLogger( JpaCompliantLifecycleStrategy.class );
 
 	public static final JpaCompliantLifecycleStrategy INSTANCE = new JpaCompliantLifecycleStrategy();
 
@@ -141,7 +141,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 				throw e;
 			}
 			catch (Exception e) {
-				log.debugf( "Error resolving CDI bean [%s] - using fallback", beanType.getName() );
+				LOG.debugf( "Error resolving CDI bean [%s] - using fallback", beanType.getName() );
 				beanInstance = fallbackProducer.produceBeanInstance( beanType );
 
 				try {
@@ -255,7 +255,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 				beanInstance = bean.create( creationalContext );
 			}
 			catch (Exception e) {
-				log.debugf( "Error resolving CDI bean [%s] - using fallback", beanName );
+				LOG.debugf( "Error resolving CDI bean [%s] - using fallback", beanName );
 				beanInstance = fallbackProducer.produceBeanInstance( beanName, beanType );
 
 				try {

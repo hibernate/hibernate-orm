@@ -38,7 +38,7 @@ import static org.hibernate.type.descriptor.JdbcTypeNameMapper.isStandardTypeCod
  * @since 5.3
  */
 public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serializable {
-//	private static final Logger log = Logger.getLogger( JdbcTypeRegistry.class );
+//	private static final Logger LOG = Logger.getLogger( JdbcTypeRegistry.class );
 
 	private final TypeConfiguration typeConfiguration;
 	private final ConcurrentHashMap<Integer, JdbcType> descriptorMap = new ConcurrentHashMap<>();
@@ -68,7 +68,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 	public void addDescriptor(JdbcType jdbcType) {
 		final JdbcType previous = descriptorMap.put( jdbcType.getDefaultSqlTypeCode(), jdbcType );
 //		if ( previous != null && previous != jdbcType ) {
-//			log.tracef( "addDescriptor(%s) replaced previous registration(%s)", jdbcType, previous );
+//			LOG.tracef( "addDescriptor(%s) replaced previous registration(%s)", jdbcType, previous );
 //		}
 	}
 
@@ -76,7 +76,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 	public void addDescriptor(int typeCode, JdbcType jdbcType) {
 		final JdbcType previous = descriptorMap.put( typeCode, jdbcType );
 //		if ( previous != null && previous != jdbcType ) {
-//			log.tracef( "addDescriptor(%d, %s) replaced previous registration(%s)", typeCode, jdbcType, previous );
+//			LOG.tracef( "addDescriptor(%d, %s) replaced previous registration(%s)", typeCode, jdbcType, previous );
 //		}
 	}
 
@@ -99,7 +99,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 		}
 		else {
 //			if ( isStandardTypeCode( jdbcTypeCode ) ) {
-//				log.debugf( "A standard JDBC type code [%s] was not defined in SqlTypeDescriptorRegistry",
+//				LOG.debugf( "A standard JDBC type code [%s] was not defined in SqlTypeDescriptorRegistry",
 //						jdbcTypeCode );
 //			}
 
@@ -129,7 +129,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 						return potentialAlternateDescriptor;
 					}
 //					if ( isStandardTypeCode( potentialAlternateTypeCode ) ) {
-//						log.debugf( "A standard JDBC type code [%s] was not defined in SqlTypeDescriptorRegistry",
+//						LOG.debugf( "A standard JDBC type code [%s] was not defined in SqlTypeDescriptorRegistry",
 //								potentialAlternateTypeCode );
 //					}
 				}

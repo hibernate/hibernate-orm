@@ -82,7 +82,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize
  */
 public class EmbeddableBinder {
 
-	private static final CoreMessageLogger log = messageLogger( EmbeddableBinder.class );
+	private static final CoreMessageLogger LOG = messageLogger( EmbeddableBinder.class );
 
 	static PropertyBinder createCompositeBinder(
 			PropertyHolder propertyHolder,
@@ -441,8 +441,8 @@ public class EmbeddableBinder {
 		);
 
 		final String subpath = getPath( propertyHolder, inferredData );
-		if ( log.isTraceEnabled() ) {
-			log.trace( "Binding embeddable with path: " + subpath );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Binding embeddable with path: " + subpath );
 		}
 		final var subholder = buildPropertyHolder(
 				embeddable,

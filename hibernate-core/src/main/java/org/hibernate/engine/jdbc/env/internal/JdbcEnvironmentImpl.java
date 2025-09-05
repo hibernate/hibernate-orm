@@ -42,7 +42,7 @@ import static org.hibernate.engine.jdbc.env.internal.LobCreatorBuilderImpl.makeL
  * @author Steve Ebersole
  */
 public class JdbcEnvironmentImpl implements JdbcEnvironment {
-	private static final Logger log = Logger.getLogger( JdbcEnvironmentImpl.class );
+	private static final Logger LOG = Logger.getLogger( JdbcEnvironmentImpl.class );
 
 	private final Dialect dialect;
 
@@ -120,7 +120,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 		catch (SQLException sqle) {
 			// should never ever happen
-			log.debug( "There was a problem accessing DatabaseMetaData in building the JdbcEnvironment", sqle );
+			LOG.debug( "There was a problem accessing DatabaseMetaData in building the JdbcEnvironment", sqle );
 		}
 		return builder.build();
 	}
@@ -210,7 +210,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 		catch (SQLException sqle) {
 			// should never ever happen
-			log.debug( "There was a problem accessing DatabaseMetaData in building the JdbcEnvironment", sqle );
+			LOG.debug( "There was a problem accessing DatabaseMetaData in building the JdbcEnvironment", sqle );
 		}
 		return identifierHelperBuilder.build();
 	}
@@ -311,7 +311,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 		catch (SQLException sqle) {
 			// should never ever happen
-			log.debug( "There was a problem accessing DatabaseMetaData in building the JdbcEnvironment", sqle );
+			LOG.debug( "There was a problem accessing DatabaseMetaData in building the JdbcEnvironment", sqle );
 		}
 		return builder.build();
 	}

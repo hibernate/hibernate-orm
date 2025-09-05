@@ -132,7 +132,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.maskOut;
 @Internal
 public final class Environment implements AvailableSettings {
 
-	private static final CoreMessageLogger log = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, Environment.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, Environment.class.getName());
 
 	private static final Properties GLOBAL_PROPERTIES;
 
@@ -145,19 +145,19 @@ public final class Environment implements AvailableSettings {
 			try (var stream = getResourceAsStream("/hibernate.properties")) {
 				try {
 					GLOBAL_PROPERTIES.load(stream);
-					log.propertiesLoaded( maskOut( GLOBAL_PROPERTIES,
+					LOG.propertiesLoaded( maskOut( GLOBAL_PROPERTIES,
 							PASS, JAKARTA_JDBC_PASSWORD, JPA_JDBC_PASSWORD ) );
 				}
 				catch (Exception e) {
-					log.unableToLoadProperties();
+					LOG.unableToLoadProperties();
 				}
 			}
 			catch (IOException ioe) {
-				log.unableToCloseStreamError( ioe );
+				LOG.unableToCloseStreamError( ioe );
 			}
 		}
 		catch (HibernateException he) {
-			log.propertiesNotFound();
+			LOG.propertiesNotFound();
 		}
 
 		try {
@@ -170,7 +170,7 @@ public final class Environment implements AvailableSettings {
 			}
 		}
 		catch (SecurityException se) {
-			log.unableToCopySystemProperties();
+			LOG.unableToCopySystemProperties();
 		}
 	}
 

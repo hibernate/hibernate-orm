@@ -38,7 +38,7 @@ import static org.hibernate.internal.util.StringHelper.join;
  * @author Steve Ebersole
  */
 public class AttributeConverterManager implements ConverterAutoApplyHandler {
-	private static final Logger log = Logger.getLogger( AttributeConverterManager.class );
+	private static final Logger LOG = Logger.getLogger( AttributeConverterManager.class );
 
 	private Map<Class<?>, ConverterDescriptor<?,?>> attributeConverterDescriptorsByClass;
 	private Map<Class<?>, RegisteredConversion> registeredConversionsByDomainType;
@@ -48,8 +48,8 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 	}
 
 	public void addConverter(ConverterDescriptor<?,?> descriptor) {
-		if ( log.isTraceEnabled() ) {
-			log.tracef( "Registering AttributeConverter '%s'",
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef( "Registering AttributeConverter '%s'",
 					descriptor.getAttributeConverterClass().getName() );
 		}
 
@@ -58,8 +58,8 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 			final RegisteredConversion registeredConversion = registeredConversionsByDomainType.get( domainType );
 			if ( registeredConversion != null ) {
 				// we can skip registering the converter, the RegisteredConversion will always take precedence
-				if ( log.isDebugEnabled() ) {
-					log.debugf( "Skipping registration of discovered AttributeConverter '%s' for auto-apply",
+				if ( LOG.isDebugEnabled() ) {
+					LOG.debugf( "Skipping registration of discovered AttributeConverter '%s' for auto-apply",
 							descriptor.getAttributeConverterClass().getName() );
 				}
 				return;
@@ -102,8 +102,8 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 						+ conversion.getConverterType().getName() + "'" );
 			}
 			else {
-				if ( log.isDebugEnabled() ) {
-					log.debugf( "Skipping duplicate '@ConverterRegistration' for '%s'",
+				if ( LOG.isDebugEnabled() ) {
+					LOG.debugf( "Skipping duplicate '@ConverterRegistration' for '%s'",
 							conversion.getConverterType().getName() );
 				}
 			}
@@ -113,8 +113,8 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 		// if so, remove it.  The conversion being registered will always take precedence
 		if ( attributeConverterDescriptorsByClass != null ) {
 			final var removed = attributeConverterDescriptorsByClass.remove( conversion.getConverterType() );
-			if ( removed != null && log.isDebugEnabled() ) {
-				log.debugf( "Removed potentially auto-applicable converter '%s' due to @ConverterRegistration",
+			if ( removed != null && LOG.isDebugEnabled() ) {
+				LOG.debugf( "Removed potentially auto-applicable converter '%s' due to @ConverterRegistration",
 						removed.getAttributeConverterClass().getName() );
 			}
 		}
@@ -227,8 +227,8 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 			ConverterDescriptor<?,?>> matcher) {
 		final List<ConverterDescriptor<?,?>> matches = new ArrayList<>();
 		for ( ConverterDescriptor<?,?> descriptor : converterDescriptors() ) {
-			if ( log.isTraceEnabled() ) {
-				log.tracef(
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracef(
 						"Checking auto-apply AttributeConverter [%s] (domain-type=%s) for match against %s : %s.%s (type=%s)",
 						descriptor.getAttributeConverterClass().getName(),
 						descriptor.getDomainValueResolvedType().getSignature(),

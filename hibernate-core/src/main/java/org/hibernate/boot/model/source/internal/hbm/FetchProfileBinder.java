@@ -17,7 +17,7 @@ import static jakarta.persistence.FetchType.EAGER;
  * @author Steve Ebersole
  */
 public class FetchProfileBinder {
-	private static final Logger log = Logger.getLogger( FetchProfileBinder.class );
+	private static final Logger LOG = Logger.getLogger( FetchProfileBinder.class );
 
 	/**
 	 * Handling for a {@code <fetch-profile/>} declaration.
@@ -50,7 +50,7 @@ public class FetchProfileBinder {
 			String containingEntityName) {
 		FetchProfile profile = context.getMetadataCollector().getFetchProfile( fetchProfileBinding.getName() );
 		if ( profile == null ) {
-			log.tracef( "Creating FetchProfile: %s", fetchProfileBinding.getName() );
+			LOG.tracef( "Creating FetchProfile: %s", fetchProfileBinding.getName() );
 			profile = new FetchProfile( fetchProfileBinding.getName(), MetadataSource.HBM );
 			context.getMetadataCollector().addFetchProfile( profile );
 		}

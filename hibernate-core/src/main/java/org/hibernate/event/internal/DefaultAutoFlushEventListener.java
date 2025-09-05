@@ -22,7 +22,7 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener implements AutoFlushEventListener {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( DefaultAutoFlushEventListener.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultAutoFlushEventListener.class );
 
 	/**
 	 * Handle the given auto-flush event.
@@ -50,7 +50,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 				final int oldSize = actionQueue.numberOfCollectionRemovals();
 				flushEverythingToExecutions( event, persistenceContext, session );
 				if ( flushIsReallyNeeded( event, source ) ) {
-					log.trace( "Need to execute flush" );
+					LOG.trace( "Need to execute flush" );
 					event.setFlushRequired( true );
 
 					// note: performExecutions() clears all collectionXxxxtion
@@ -70,7 +70,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 					}
 				}
 				else {
-					log.trace( "No need to execute flush" );
+					LOG.trace( "No need to execute flush" );
 					event.setFlushRequired( false );
 					actionQueue.clearFromFlushNeededCheck( oldSize );
 				}

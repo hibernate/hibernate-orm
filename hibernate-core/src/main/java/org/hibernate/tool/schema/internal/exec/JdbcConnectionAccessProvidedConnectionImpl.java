@@ -21,7 +21,7 @@ import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
  * @author Steve Ebersole
  */
 public class JdbcConnectionAccessProvidedConnectionImpl implements JdbcConnectionAccess {
-	private static final Logger log = Logger.getLogger( JdbcConnectionAccessProvidedConnectionImpl.class );
+	private static final Logger LOG = Logger.getLogger( JdbcConnectionAccessProvidedConnectionImpl.class );
 
 	private final Connection jdbcConnection;
 	private final boolean wasInitiallyAutoCommit;
@@ -52,7 +52,7 @@ public class JdbcConnectionAccessProvidedConnectionImpl implements JdbcConnectio
 			wasInitiallyAutoCommit = false;
 		}
 
-		log.tracef( "wasInitiallyAutoCommit=%s", wasInitiallyAutoCommit );
+		LOG.tracef( "wasInitiallyAutoCommit=%s", wasInitiallyAutoCommit );
 		this.wasInitiallyAutoCommit = wasInitiallyAutoCommit;
 	}
 

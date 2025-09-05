@@ -401,10 +401,10 @@ public abstract class AbstractIdentifiableType<J>
 		}
 	}
 
-	private static final Logger log = Logger.getLogger( AbstractIdentifiableType.class );
+	private static final Logger LOG = Logger.getLogger( AbstractIdentifiableType.class );
 
 	private SqmPathSource<?> interpretIdDescriptor() {
-		log.tracef( "Interpreting domain-model identifier descriptor" );
+		LOG.tracef( "Interpreting domain-model identifier descriptor" );
 
 		final var superType = getSuperType();
 		if ( superType != null ) {

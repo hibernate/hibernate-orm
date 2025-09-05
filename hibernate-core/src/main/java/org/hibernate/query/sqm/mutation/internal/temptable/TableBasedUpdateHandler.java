@@ -85,7 +85,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize
 public class TableBasedUpdateHandler
 		extends AbstractMutationHandler
 		implements UpdateHandler {
-	private static final Logger log = Logger.getLogger( TableBasedUpdateHandler.class );
+	private static final Logger LOG = Logger.getLogger( TableBasedUpdateHandler.class );
 
 	private final TemporaryTable idTable;
 	private final TemporaryTableStrategy temporaryTableStrategy;
@@ -625,8 +625,8 @@ public class TableBasedUpdateHandler
 
 	@Override
 	public int execute(JdbcParameterBindings jdbcParameterBindings, DomainQueryExecutionContext context) {
-		if ( log.isTraceEnabled() ) {
-			log.tracef(
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef(
 					"Starting multi-table update execution - %s",
 					getSqmStatement().getTarget().getModel().getName()
 			);

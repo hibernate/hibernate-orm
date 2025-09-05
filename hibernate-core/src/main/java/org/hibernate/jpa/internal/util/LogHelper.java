@@ -20,14 +20,14 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
  */
 public final class LogHelper {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( LogHelper.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( LogHelper.class );
 
 	private LogHelper() {
 	}
 
 	public static void logPersistenceUnitInformation(PersistenceUnitDescriptor descriptor) {
-		if ( ! log.isDebugEnabled() ) {
-			log.processingPersistenceUnitInfoName( descriptor.getName() );
+		if ( ! LOG.isDebugEnabled() ) {
+			LOG.processingPersistenceUnitInfoName( descriptor.getName() );
 			return;
 		}
 
@@ -98,6 +98,6 @@ public final class LogHelper {
 		}
 		sb.append( "]" );
 
-		log.debug( sb.toString() );
+		LOG.debug( sb.toString() );
 	}
 }

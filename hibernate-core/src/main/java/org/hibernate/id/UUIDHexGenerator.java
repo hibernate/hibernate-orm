@@ -31,7 +31,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 @Deprecated(since = "6")
 public class UUIDHexGenerator extends AbstractUUIDGenerator {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( UUIDHexGenerator.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UUIDHexGenerator.class );
 
 	/**
 	 * The configuration parameter specifying the separator to use.
@@ -45,7 +45,7 @@ public class UUIDHexGenerator extends AbstractUUIDGenerator {
 	public UUIDHexGenerator() {
 		if ( !WARNED ) {
 			WARNED = true;
-			log.usingUuidHexGenerator( this.getClass().getName(), UUIDGenerator.class.getName() );
+			LOG.usingUuidHexGenerator( this.getClass().getName(), UUIDGenerator.class.getName() );
 		}
 	}
 

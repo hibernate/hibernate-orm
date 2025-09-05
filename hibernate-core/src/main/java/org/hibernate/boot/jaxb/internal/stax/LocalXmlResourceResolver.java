@@ -22,7 +22,7 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
  * @author Steve Ebersole
  */
 public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
-	private static final Logger log = Logger.getLogger( LocalXmlResourceResolver.class );
+	private static final Logger LOG = Logger.getLogger( LocalXmlResourceResolver.class );
 
 	public static final String CLASSPATH_EXTENSION_URL_BASE = "classpath://";
 
@@ -34,10 +34,10 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 
 	@Override
 	public Object resolveEntity(String publicID, String systemID, String baseURI, String namespace) throws XMLStreamException {
-		log.tracef( "In resolveEntity(%s, %s, %s, %s)", publicID, systemID, baseURI, namespace );
+		LOG.tracef( "In resolveEntity(%s, %s, %s, %s)", publicID, systemID, baseURI, namespace );
 
 		if ( namespace != null ) {
-			log.tracef( "Interpreting namespace: %s", namespace );
+			LOG.tracef( "Interpreting namespace: %s", namespace );
 			if ( MappingXsdSupport.latestDescriptor().getNamespaceUri().matches( namespace ) ) {
 				return openUrlStream( MappingXsdSupport.latestDescriptor() );
 			}
@@ -84,7 +84,7 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 		}
 
 		if ( publicID != null || systemID != null ) {
-			log.tracef( "Checking public/system identifiers `%s`/`%s` as DTD references", publicID, systemID );
+			LOG.tracef( "Checking public/system identifiers `%s`/`%s` as DTD references", publicID, systemID );
 
 			if ( MAPPING_DTD.matches( publicID, systemID ) ) {
 				return openUrlStream( MAPPING_DTD.localSchemaUrl );
@@ -116,15 +116,15 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 		if ( systemID != null ) {
 			// technically, "classpath://..." identifiers should only be declared as SYSTEM identifiers
 			if ( systemID.startsWith( CLASSPATH_EXTENSION_URL_BASE ) ) {
-				log.tracef( "Recognized 'classpath:' identifier; attempting to resolve on classpath [%s]", systemID );
+				LOG.tracef( "Recognized 'classpath:' identifier; attempting to resolve on classpath [%s]", systemID );
 				final String path = systemID.substring( CLASSPATH_EXTENSION_URL_BASE.length() );
 				// todo : for this to truly work consistently, we need access to ClassLoaderService
 				final InputStream stream = resolveInLocalNamespace( path );
 				if ( stream == null ) {
-					log.tracef( "Unable to resolve [%s] on classpath", systemID );
+					LOG.tracef( "Unable to resolve [%s] on classpath", systemID );
 				}
 				else {
-					log.tracef( "Resolved [%s] on classpath", systemID );
+					LOG.tracef( "Resolved [%s] on classpath", systemID );
 				}
 				return stream;
 			}

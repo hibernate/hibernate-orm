@@ -69,7 +69,7 @@ import static org.hibernate.bytecode.enhance.internal.bytebuddy.FeatureMismatchE
 import static org.hibernate.bytecode.enhance.internal.bytebuddy.FeatureMismatchException.Feature.DIRTY_CHECK;
 
 public class EnhancerImpl implements Enhancer {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( Enhancer.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Enhancer.class );
 
 	protected final ByteBuddyEnhancementContext enhancementContext;
 	private final ByteBuddyState byteBuddyState;
@@ -172,19 +172,19 @@ public class EnhancerImpl implements Enhancer {
 				verifyReEnhancement( managedCtClass, infoAnnotation.load(), enhancementContext );
 			}
 			// verification succeeded (or not done) - we can simply skip the enhancement
-			log.tracef( "Skipping enhancement of [%s]: it's already annotated with @EnhancementInfo", managedCtClass.getName() );
+			LOG.tracef( "Skipping enhancement of [%s]: it's already annotated with @EnhancementInfo", managedCtClass.getName() );
 			return null;
 		}
 
 		// can't effectively enhance interfaces
 		if ( managedCtClass.isInterface() ) {
-			log.tracef( "Skipping enhancement of [%s]: it's an interface", managedCtClass.getName() );
+			LOG.tracef( "Skipping enhancement of [%s]: it's an interface", managedCtClass.getName() );
 			return null;
 		}
 
 		// can't effectively enhance records
 		if ( managedCtClass.isRecord() ) {
-			log.tracef( "Skipping enhancement of [%s]: it's a record", managedCtClass.getName() );
+			LOG.tracef( "Skipping enhancement of [%s]: it's a record", managedCtClass.getName() );
 			return null;
 		}
 
@@ -194,7 +194,7 @@ public class EnhancerImpl implements Enhancer {
 				return null;
 			}
 
-			log.tracef( "Enhancing [%s] as Entity", managedCtClass.getName() );
+			LOG.tracef( "Enhancing [%s] as Entity", managedCtClass.getName() );
 			DynamicType.Builder<?> builder = builderSupplier.get();
 			builder = builder
 					.implement( constants.INTERFACES_for_ManagedEntity )
@@ -374,7 +374,7 @@ public class EnhancerImpl implements Enhancer {
 				return null;
 			}
 
-			log.tracef( "Enhancing [%s] as Composite", managedCtClass.getName() );
+			LOG.tracef( "Enhancing [%s] as Composite", managedCtClass.getName() );
 
 			DynamicType.Builder<?> builder = builderSupplier.get();
 			builder = builder.implement( constants.INTERFACES_for_ManagedComposite );
@@ -412,18 +412,18 @@ public class EnhancerImpl implements Enhancer {
 				return null;
 			}
 
-			log.tracef( "Enhancing [%s] as MappedSuperclass", managedCtClass.getName() );
+			LOG.tracef( "Enhancing [%s] as MappedSuperclass", managedCtClass.getName() );
 
 			DynamicType.Builder<?> builder = builderSupplier.get();
 			builder = builder.implement( constants.INTERFACES_for_ManagedMappedSuperclass );
 			return createTransformer( managedCtClass ).applyTo( builder );
 		}
 		else if ( enhancementContext.doExtendedEnhancement() ) {
-			log.tracef( "Extended enhancement of [%s]", managedCtClass.getName() );
+			LOG.tracef( "Extended enhancement of [%s]", managedCtClass.getName() );
 			return createTransformer( managedCtClass ).applyExtended( builderSupplier.get() );
 		}
 		else {
-			log.tracef( "Skipping enhancement of [%s]: not entity or composite", managedCtClass.getName() );
+			LOG.tracef( "Skipping enhancement of [%s]: not entity or composite", managedCtClass.getName() );
 			return null;
 		}
 	}
@@ -436,7 +436,7 @@ public class EnhancerImpl implements Enhancer {
 		final String enhancementVersion = existingInfo.version();
 		if ( "ignore".equals( enhancementVersion ) ) {
 			// for testing
-			log.debugf( "Skipping re-enhancement version check for %s due to `ignore`", managedCtClass.getName() );
+			LOG.debugf( "Skipping re-enhancement version check for %s due to `ignore`", managedCtClass.getName() );
 		}
 		else if ( !Version.getVersionString().equals( enhancementVersion ) ) {
 			throw new VersionMismatchException( managedCtClass, enhancementVersion, Version.getVersionString() );
@@ -607,7 +607,7 @@ public class EnhancerImpl implements Enhancer {
 				// We shouldn't even be in this method if using LEGACY, see top of this method.
 				return switch ( strategy ) {
 					case SKIP -> {
-						log.debugf(
+						LOG.debugf(
 								"Skipping enhancement of [%s] because no field named [%s] could be found for property accessor method [%s]."
 								+ " To fix this, make sure all property accessor methods have a matching field.",
 								managedCtClass.getName(),
@@ -666,7 +666,7 @@ public class EnhancerImpl implements Enhancer {
 	private DynamicType.Builder<?> addInterceptorHandling(DynamicType.Builder<?> builder, TypeDescription managedCtClass) {
 		// interceptor handling is only needed if class has lazy-loadable attributes
 		if ( enhancementContext.hasLazyLoadableAttributes( managedCtClass ) ) {
-			log.tracef( "Weaving in PersistentAttributeInterceptable implementation on [%s]", managedCtClass.getName() );
+			LOG.tracef( "Weaving in PersistentAttributeInterceptable implementation on [%s]", managedCtClass.getName() );
 
 			builder = builder.implement( constants.INTERFACES_for_PersistentAttributeInterceptable );
 

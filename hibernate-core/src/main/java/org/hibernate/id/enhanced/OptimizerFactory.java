@@ -21,7 +21,7 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  */
 public class OptimizerFactory {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( OptimizerFactory.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( OptimizerFactory.class );
 
 	private static final Class<?>[] CTOR_SIG = new Class[] { Class.class, int.class };
 
@@ -31,7 +31,7 @@ public class OptimizerFactory {
 			optimizerClass = descriptor.getOptimizerClass();
 		}
 		catch ( Throwable ignore ) {
-			log.unableToLocateCustomOptimizerClass( descriptor.getExternalName() );
+			LOG.unableToLocateCustomOptimizerClass( descriptor.getExternalName() );
 			return buildFallbackOptimizer( returnClass, incrementSize );
 		}
 
@@ -40,7 +40,7 @@ public class OptimizerFactory {
 			return ctor.newInstance( returnClass, incrementSize );
 		}
 		catch ( Throwable ignore ) {
-			log.unableToInstantiateOptimizer( descriptor.getExternalName() );
+			LOG.unableToInstantiateOptimizer( descriptor.getExternalName() );
 		}
 
 		return buildFallbackOptimizer( returnClass, incrementSize );

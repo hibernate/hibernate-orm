@@ -131,7 +131,7 @@ import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsSelectStatement;
  * @author Steve Ebersole
  */
 public abstract class AbstractSharedSessionContract implements SharedSessionContractImplementor {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( SessionImpl.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SessionImpl.class );
 
 	private transient SessionFactoryImpl factory;
 	private transient SessionFactoryOptions factoryOptions;
@@ -256,11 +256,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	private void logInconsistentOptions(SharedSessionCreationOptions sharedOptions) {
 		if ( sharedOptions.shouldAutoJoinTransactions() ) {
-			log.debug( "Session creation specified 'autoJoinTransactions', which is invalid in conjunction " +
+			LOG.debug( "Session creation specified 'autoJoinTransactions', which is invalid in conjunction " +
 							"with sharing JDBC connection between sessions; ignoring" );
 		}
 		if ( sharedOptions.getPhysicalConnectionHandlingMode() != connectionHandlingMode ) {
-			log.debug( "Session creation specified 'PhysicalConnectionHandlingMode' which is invalid in conjunction " +
+			LOG.debug( "Session creation specified 'PhysicalConnectionHandlingMode' which is invalid in conjunction " +
 							"with sharing JDBC connection between sessions; ignoring" );
 		}
 	}
@@ -334,7 +334,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			getInterceptor().beforeTransactionCompletion( getTransactionIfAccessible() );
 		}
 		catch (Throwable t) {
-			log.exceptionInBeforeTransactionCompletionInterceptor( t );
+			LOG.exceptionInBeforeTransactionCompletionInterceptor( t );
 		}
 	}
 
@@ -350,7 +350,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			getInterceptor().afterTransactionCompletion( getTransactionIfAccessible() );
 		}
 		catch (Throwable t) {
-			log.exceptionInAfterTransactionCompletionInterceptor( t );
+			LOG.exceptionInAfterTransactionCompletionInterceptor( t );
 		}
 	}
 
@@ -1658,8 +1658,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Serial
 	private void writeObject(ObjectOutputStream oos) throws IOException {
-		if ( log.isTraceEnabled() ) {
-			log.trace( "Serializing " + getClass().getSimpleName() + " [" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Serializing " + getClass().getSimpleName() + " [" );
 		}
 
 
@@ -1693,8 +1693,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Serial
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException, SQLException {
-		if ( log.isTraceEnabled() ) {
-			log.trace( "Deserializing " + getClass().getSimpleName() );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Deserializing " + getClass().getSimpleName() );
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -44,7 +44,7 @@ import static org.hibernate.engine.internal.Collections.skipRemoval;
  */
 public abstract class AbstractFlushingEventListener {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractFlushingEventListener.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractFlushingEventListener.class );
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Pre-flushing section
@@ -59,7 +59,7 @@ public abstract class AbstractFlushingEventListener {
 	 * @throws HibernateException Error flushing caches to execution queues.
 	 */
 	protected void flushEverythingToExecutions(FlushEvent event) throws HibernateException {
-		log.trace( "Flushing session" );
+		LOG.trace( "Flushing session" );
 		final var session = event.getSession();
 		final var persistenceContext = session.getPersistenceContextInternal();
 		preFlush( session, persistenceContext );
@@ -94,18 +94,18 @@ public abstract class AbstractFlushingEventListener {
 	}
 
 	protected void logFlushResults(FlushEvent event) {
-		if ( log.isDebugEnabled() ) {
+		if ( LOG.isDebugEnabled() ) {
 			final var session = event.getSession();
 			final var persistenceContext = session.getPersistenceContextInternal();
 			final var actionQueue = session.getActionQueue();
-			log.debugf(
+			LOG.debugf(
 					"Flushed: %s insertions, %s updates, %s deletions to %s objects",
 					actionQueue.numberOfInsertions(),
 					actionQueue.numberOfUpdates(),
 					actionQueue.numberOfDeletions(),
 					persistenceContext.getNumberOfManagedEntities()
 			);
-			log.debugf(
+			LOG.debugf(
 					"Flushed: %s (re)creations, %s updates, %s removals to %s collections",
 					actionQueue.numberOfCollectionCreations(),
 					actionQueue.numberOfCollectionUpdates(),
@@ -124,7 +124,7 @@ public abstract class AbstractFlushingEventListener {
 	 */
 	private void prepareEntityFlushes(EventSource session, PersistenceContext persistenceContext)
 			throws HibernateException {
-		log.trace( "Processing flush-time cascades" );
+		LOG.trace( "Processing flush-time cascades" );
 		final var context = PersistContext.create();
 		// safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
 		for ( var me : persistenceContext.reentrantSafeEntityEntries() ) {
@@ -188,7 +188,7 @@ public abstract class AbstractFlushingEventListener {
 	private void prepareCollectionFlushes(PersistenceContext persistenceContext) throws HibernateException {
 		// Initialize dirty flags for arrays + collections with composite elements
 		// and reset reached, doupdate, etc.
-		log.trace( "Dirty checking collections" );
+		LOG.trace( "Dirty checking collections" );
 		final var collectionEntries = persistenceContext.getCollectionEntries();
 		if ( collectionEntries != null ) {
 			final var identityMap =
@@ -209,7 +209,7 @@ public abstract class AbstractFlushingEventListener {
 	 */
 	private int flushEntities(final FlushEvent event, final PersistenceContext persistenceContext)
 			throws HibernateException {
-		log.trace( "Flushing entities and processing referenced collections" );
+		LOG.trace( "Flushing entities and processing referenced collections" );
 
 		final var source = event.getSession();
 		final var flushListeners =
@@ -267,13 +267,13 @@ public abstract class AbstractFlushingEventListener {
 	 */
 	private int flushCollections(final EventSource session, final PersistenceContext persistenceContext)
 			throws HibernateException {
-		log.trace( "Processing unreferenced collections" );
+		LOG.trace( "Processing unreferenced collections" );
 		final var collectionEntries = persistenceContext.getCollectionEntries();
 		final int count = processUnreachableCollections( session, collectionEntries );
 
 		// Schedule updates to collections:
 
-		log.trace( "Scheduling collection removes/(re)creates/updates" );
+		LOG.trace( "Scheduling collection removes/(re)creates/updates" );
 		final var actionQueue = session.getActionQueue();
 		final var interceptor = session.getInterceptor();
 		persistenceContext.forEachCollectionEntry(
@@ -370,7 +370,7 @@ public abstract class AbstractFlushingEventListener {
 	 * @param session The session being flushed
 	 */
 	protected void performExecutions(EventSource session) {
-		log.trace( "Executing flush" );
+		LOG.trace( "Executing flush" );
 
 		// IMPL NOTE : here we alter the flushing flag of the persistence context to allow
 		//		during-flush callbacks more leniency in regards to initializing proxies and
@@ -406,7 +406,7 @@ public abstract class AbstractFlushingEventListener {
 	 * </ol>
 	 */
 	protected void postFlush(SessionImplementor session) throws HibernateException {
-		log.trace( "Post flush" );
+		LOG.trace( "Post flush" );
 
 		final var persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.clearCollectionsByKey();

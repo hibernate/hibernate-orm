@@ -25,7 +25,7 @@ import static java.sql.Statement.SUCCESS_NO_INFO;
  */
 public class Expectations {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( Expectations.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Expectations.class );
 
 	static final SqlExceptionHelper sqlExceptionHelper = new SqlExceptionHelper( false );
 
@@ -70,7 +70,7 @@ public class Expectations {
 			case EXECUTE_FAILED:
 				throw new BatchFailedException( "Batch update failed: " + batchPosition );
 			case SUCCESS_NO_INFO:
-				log.debugf( "Success of batch update unknown: %s", batchPosition );
+				LOG.debugf( "Success of batch update unknown: %s", batchPosition );
 				break;
 			default:
 				if ( expectedRowCount > rowCount ) {

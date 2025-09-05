@@ -39,7 +39,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize
  */
 public class BatchFetchQueue {
 
-	private static final Logger log = CoreLogging.logger( BatchFetchQueue.class );
+	private static final Logger LOG = CoreLogging.logger( BatchFetchQueue.class );
 
 	private final PersistenceContext context;
 
@@ -110,8 +110,8 @@ public class BatchFetchQueue {
 		}
 
 		final var previous = subselectsByEntityKey.put( key, subquery );
-		if ( previous != null && log.isDebugEnabled() ) {
-			log.debugf(
+		if ( previous != null && LOG.isDebugEnabled() ) {
+			LOG.debugf(
 					"SubselectFetch previously registered with BatchFetchQueue for `%s#s`",
 					key.getEntityName(),
 					key.getIdentifier()

@@ -67,7 +67,7 @@ import static org.hibernate.metamodel.internal.InjectionHelper.injectTypedQueryR
  * @author Steve Ebersole
  */
 public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( JpaMetamodel.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JpaMetamodel.class );
 
 	private static class ImportInfo<T> {
 		private final String importedName;
@@ -388,7 +388,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	public void addNamedEntityGraph(String graphName, RootGraphImplementor<?> rootGraph) {
 		final EntityGraph<?> old = entityGraphMap.put( graphName, rootGraph.makeImmutableCopy( graphName ) );
 		if ( old != null ) {
-			log.tracef( "EntityGraph named '%s' was replaced", graphName );
+			LOG.tracef( "EntityGraph named '%s' was replaced", graphName );
 		}
 	}
 
@@ -485,7 +485,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	private void applyNamedEntityGraphs(Collection<NamedEntityGraphDefinition> namedEntityGraphs) {
 		for ( NamedEntityGraphDefinition definition : namedEntityGraphs ) {
-			log.tracef( "Applying named entity graph [name=%s, source=%s]",
+			LOG.tracef( "Applying named entity graph [name=%s, source=%s]",
 					definition.name(), definition.source() );
 
 			final RootGraphImplementor<?> graph = definition.graphCreator().createEntityGraph(
@@ -766,7 +766,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		final Set<MappedSuperclass> unusedMappedSuperclasses = context.getUnusedMappedSuperclasses();
 		if ( !unusedMappedSuperclasses.isEmpty() ) {
 			for ( MappedSuperclass mappedSuperclass : unusedMappedSuperclasses ) {
-				log.unusedMappedSuperclass( mappedSuperclass.getMappedClass().getName() );
+				LOG.unusedMappedSuperclass( mappedSuperclass.getMappedClass().getName() );
 				locateOrBuildMappedSuperclassType( mappedSuperclass, context, typeConfiguration );
 			}
 		}

@@ -34,7 +34,7 @@ public class DefaultPersistEventListener
 		extends AbstractSaveEventListener<PersistContext>
 		implements PersistEventListener, CallbackRegistryConsumer {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( DefaultPersistEventListener.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultPersistEventListener.class );
 
 	@Override
 	protected CascadingAction<PersistContext> getCascadeAction() {
@@ -119,7 +119,7 @@ public class DefaultPersistEventListener
 	}
 
 	protected void entityIsPersistent(PersistEvent event, PersistContext createCache) {
-		log.trace( "Ignoring persistent instance" );
+		LOG.trace( "Ignoring persistent instance" );
 		final var source = event.getSession();
 		//TODO: check that entry.getIdentifier().equals(requestedId)
 		final Object entity = source.getPersistenceContextInternal().unproxy( event.getObject() );
@@ -141,7 +141,7 @@ public class DefaultPersistEventListener
 	 * @param createCache The copy cache of entity instance to merge/copy instance
 	 */
 	protected void entityIsTransient(PersistEvent event, PersistContext createCache) {
-		log.trace( "Persisting transient instance" );
+		LOG.trace( "Persisting transient instance" );
 		final var source = event.getSession();
 		final Object entity = source.getPersistenceContextInternal().unproxy( event.getObject() );
 		if ( createCache.add( entity ) ) {
@@ -153,9 +153,9 @@ public class DefaultPersistEventListener
 		final var source = event.getSession();
 		final Object entity = source.getPersistenceContextInternal().unproxy( event.getObject() );
 		final var persister = source.getEntityPersister( event.getEntityName(), entity );
-		if ( log.isTraceEnabled() ) {
+		if ( LOG.isTraceEnabled() ) {
 			final Object id = persister.getIdentifier( entity, source );
-			log.trace( "Unscheduling entity deletion: " + infoString( persister, id, source.getFactory() ) );
+			LOG.trace( "Unscheduling entity deletion: " + infoString( persister, id, source.getFactory() ) );
 		}
 		if ( createCache.add( entity ) ) {
 			justCascade( createCache, source, entity, persister );

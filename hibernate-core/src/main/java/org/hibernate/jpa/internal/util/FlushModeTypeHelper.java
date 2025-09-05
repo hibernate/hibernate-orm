@@ -20,7 +20,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class FlushModeTypeHelper {
-	private static final Logger log = Logger.getLogger( FlushModeTypeHelper.class );
+	private static final Logger LOG = Logger.getLogger( FlushModeTypeHelper.class );
 
 	private FlushModeTypeHelper() {
 	}
@@ -31,11 +31,11 @@ public class FlushModeTypeHelper {
 		}
 		return switch (flushMode) {
 			case ALWAYS -> {
-				log.debug("Interpreting Hibernate FlushMode.ALWAYS as JPA FlushModeType.AUTO (may cause problems if relying on FlushMode.ALWAYS-specific behavior)");
+				LOG.debug("Interpreting Hibernate FlushMode.ALWAYS as JPA FlushModeType.AUTO (may cause problems if relying on FlushMode.ALWAYS-specific behavior)");
 				yield FlushModeType.AUTO;
 			}
 			case MANUAL -> {
-				log.debug("Interpreting Hibernate FlushMode.MANUAL as JPA FlushModeType.COMMIT (may cause problems if relying on FlushMode.MANUAL-specific behavior)");
+				LOG.debug("Interpreting Hibernate FlushMode.MANUAL as JPA FlushModeType.COMMIT (may cause problems if relying on FlushMode.MANUAL-specific behavior)");
 				yield FlushModeType.COMMIT;
 			}
 			case COMMIT -> FlushModeType.COMMIT;
@@ -101,11 +101,11 @@ public class FlushModeTypeHelper {
 		}
 
 		try {
-			log.tracef( "Attempting to interpret external setting [%s] as FlushMode name", externalName );
+			LOG.tracef( "Attempting to interpret external setting [%s] as FlushMode name", externalName );
 			return FlushMode.valueOf( externalName.toUpperCase( Locale.ROOT) );
 		}
 		catch ( IllegalArgumentException e ) {
-			log.tracef( "Attempting to interpret external setting [%s] as FlushModeType name", externalName );
+			LOG.tracef( "Attempting to interpret external setting [%s] as FlushModeType name", externalName );
 		}
 
 		try {

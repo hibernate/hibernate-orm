@@ -26,7 +26,7 @@ import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_A
 @Deprecated(since = "7.0", forRemoval = true)
 public class TypeInfo {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( TypeInfo.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( TypeInfo.class );
 
 	private final String typeName;
 	private final int jdbcTypeCode;
@@ -104,19 +104,19 @@ public class TypeInfo {
 				}
 			}
 			catch ( SQLException e ) {
-				log.unableToAccessTypeInfoResultSet( e.toString() );
+				LOG.unableToAccessTypeInfoResultSet( e.toString() );
 			}
 			finally {
 				try {
 					resultSet.close();
 				}
 				catch ( SQLException e ) {
-					log.unableToReleaseTypeInfoResultSet();
+					LOG.unableToReleaseTypeInfoResultSet();
 				}
 			}
 		}
 		catch ( SQLException e ) {
-			log.unableToRetrieveTypeInfoResultSet( e.toString() );
+			LOG.unableToRetrieveTypeInfoResultSet( e.toString() );
 		}
 
 		return typeInfoSet;

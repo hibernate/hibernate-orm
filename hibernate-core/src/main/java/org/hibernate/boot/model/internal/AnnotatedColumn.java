@@ -65,7 +65,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
  */
 public class AnnotatedColumn {
 
-	private static final CoreMessageLogger log = messageLogger( AnnotatedColumn.class );
+	private static final CoreMessageLogger LOG = messageLogger( AnnotatedColumn.class );
 
 	private Column mappingColumn;
 	private boolean insertable = true;
@@ -238,8 +238,8 @@ public class AnnotatedColumn {
 
 	public void bind() {
 		if ( isNotEmpty( formulaString ) ) {
-			if ( log.isTraceEnabled() ) {
-				log.trace( "Binding formula: " + formulaString );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Binding formula: " + formulaString );
 			}
 			formula = new Formula();
 			formula.setFormula( formulaString );
@@ -272,8 +272,8 @@ public class AnnotatedColumn {
 			if ( generatedAs != null ) {
 				mappingColumn.setGeneratedAs( generatedAs );
 			}
-			if ( log.isDebugEnabled() && logicalColumnName != null ) {
-				log.trace( "Binding column: " + logicalColumnName );
+			if ( LOG.isDebugEnabled() && logicalColumnName != null ) {
+				LOG.trace( "Binding column: " + logicalColumnName );
 			}
 		}
 	}
@@ -772,8 +772,8 @@ public class AnnotatedColumn {
 						+ " '@AttributeOverride's but the overridden property has " + overriddenCols.length
 						+ " columns (every column must have exactly one '@AttributeOverride')" );
 			}
-			if ( log.isTraceEnabled() ) {
-				log.trace( "Column mapping overridden for property: " + inferredData.getPropertyName() );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Column mapping overridden for property: " + inferredData.getPropertyName() );
 			}
 			return isEmpty( overriddenCols ) ? null : overriddenCols;
 		}
@@ -933,7 +933,7 @@ public class AnnotatedColumn {
 			}
 		}
 		else {
-			log.trace("Could not perform @ColumnDefault lookup as 'PropertyData' did not give access to XProperty");
+			LOG.trace("Could not perform @ColumnDefault lookup as 'PropertyData' did not give access to XProperty");
 		}
 	}
 
@@ -954,7 +954,7 @@ public class AnnotatedColumn {
 			}
 		}
 		else {
-			log.trace("Could not perform @GeneratedColumn lookup as 'PropertyData' did not give access to XProperty");
+			LOG.trace("Could not perform @GeneratedColumn lookup as 'PropertyData' did not give access to XProperty");
 		}
 	}
 
@@ -997,7 +997,7 @@ public class AnnotatedColumn {
 			}
 		}
 		else {
-			log.trace("Could not perform @Check lookup as 'PropertyData' did not give access to XProperty");
+			LOG.trace("Could not perform @Check lookup as 'PropertyData' did not give access to XProperty");
 		}
 	}
 

@@ -24,7 +24,7 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  * @author Steve Ebersole
  */
 class FilterDefinitionBinder {
-	private static final Logger log = Logger.getLogger( FilterDefinitionBinder.class );
+	private static final Logger LOG = Logger.getLogger( FilterDefinitionBinder.class );
 
 	/**
 	 * Handling for a {@code <filter-def/>} declaration.
@@ -43,8 +43,8 @@ class FilterDefinitionBinder {
 			if ( content instanceof String string ) {
 				final String contentString = string.trim();
 				if ( isNotEmpty( contentString ) ) {
-					if ( condition != null && log.isDebugEnabled() ) {
-						log.debugf(
+					if ( condition != null && LOG.isDebugEnabled() ) {
+						LOG.debugf(
 								"filter-def [name=%s, origin=%s] defined multiple conditions, accepting arbitrary one",
 								jaxbFilterDefinitionMapping.getName(),
 								context.getOrigin().toString()
@@ -87,6 +87,6 @@ class FilterDefinitionBinder {
 				)
 		);
 
-		log.tracef( "Processed filter definition: %s", jaxbFilterDefinitionMapping.getName() );
+		LOG.tracef( "Processed filter definition: %s", jaxbFilterDefinitionMapping.getName() );
 	}
 }

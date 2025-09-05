@@ -44,7 +44,7 @@ import jakarta.persistence.RollbackException;
  * @author Andrea Boriero
  */
 public class ExceptionConverterImpl implements ExceptionConverter {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( ExceptionConverterImpl.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ExceptionConverterImpl.class );
 
 	private final SharedSessionContractImplementor session;
 	private final boolean isJpaBootstrap;
@@ -134,7 +134,7 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			}
 			catch (Exception ne) {
 				//we do not want the subsequent exception to swallow the original one
-				log.unableToMarkForRollbackOnTransientObjectException( ne );
+				LOG.unableToMarkForRollbackOnTransientObjectException( ne );
 			}
 			//Spec 3.2.3 Synchronization rules
 			return new IllegalStateException( exception );
@@ -235,7 +235,7 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			}
 			catch (Exception ne) {
 				//we do not want the subsequent exception to swallow the original one
-				log.unableToMarkForRollbackOnPersistenceException( ne );
+				LOG.unableToMarkForRollbackOnPersistenceException( ne );
 			}
 		}
 	}

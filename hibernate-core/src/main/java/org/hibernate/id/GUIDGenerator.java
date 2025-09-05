@@ -25,14 +25,14 @@ import org.hibernate.internal.CoreMessageLogger;
 @Deprecated(since = "6.0")
 public class GUIDGenerator implements IdentifierGenerator {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( GUIDGenerator.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( GUIDGenerator.class );
 
 	private static boolean WARNED;
 
 	public GUIDGenerator() {
 		if ( !WARNED ) {
 			WARNED = true;
-			log.deprecatedUuidGenerator( UUIDGenerator.class.getName(), UUIDGenerationStrategy.class.getName() );
+			LOG.deprecatedUuidGenerator( UUIDGenerator.class.getName(), UUIDGenerationStrategy.class.getName() );
 		}
 	}
 
@@ -47,7 +47,7 @@ public class GUIDGenerator implements IdentifierGenerator {
 						throw new HibernateException( "The database returned no GUID identity value" );
 					}
 					final String result = rs.getString( 1 );
-					log.guidGenerated( result );
+					LOG.guidGenerated( result );
 					return result;
 				}
 				finally {

@@ -71,7 +71,7 @@ import static org.hibernate.metamodel.internal.InjectionHelper.injectField;
  */
 @Internal
 public class MetadataContext {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( MetadataContext.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( MetadataContext.class );
 
 	private final JpaMetamodelImplementor jpaMetamodel;
 	private final RuntimeModelCreationContext runtimeModelCreationContext;
@@ -291,8 +291,8 @@ public class MetadataContext {
 	}
 
 	public void wrapUp() {
-		if ( log.isTraceEnabled() ) {
-			log.trace( "Wrapping up metadata context..." );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Wrapping up metadata context..." );
 		}
 
 		final boolean staticMetamodelScanEnabled =
@@ -302,8 +302,8 @@ public class MetadataContext {
 		//we need to process types from superclasses to subclasses
 		for ( Object mapping : orderedMappings ) {
 			if ( mapping instanceof PersistentClass persistentClass ) {
-				if ( log.isTraceEnabled() ) {
-					log.trace( "Starting entity [" + persistentClass.getEntityName() + ']' );
+				if ( LOG.isTraceEnabled() ) {
+					LOG.trace( "Starting entity [" + persistentClass.getEntityName() + ']' );
 				}
 				try {
 					final var jpaMapping = entityTypesByPersistentClass.get( persistentClass );
@@ -333,14 +333,14 @@ public class MetadataContext {
 					}
 				}
 				finally {
-					if ( log.isTraceEnabled() ) {
-						log.trace( "Completed entity [" + persistentClass.getEntityName() + ']' );
+					if ( LOG.isTraceEnabled() ) {
+						LOG.trace( "Completed entity [" + persistentClass.getEntityName() + ']' );
 					}
 				}
 			}
 			else if ( mapping instanceof MappedSuperclass mappedSuperclass ) {
-				if ( log.isTraceEnabled() ) {
-					log.trace( "Starting mapped superclass [" + mappedSuperclass.getMappedClass().getName() + ']' );
+				if ( LOG.isTraceEnabled() ) {
+					LOG.trace( "Starting mapped superclass [" + mappedSuperclass.getMappedClass().getName() + ']' );
 				}
 				try {
 					final var jpaType = mappedSuperclassByMappedSuperclassMapping.get( mappedSuperclass );
@@ -370,8 +370,8 @@ public class MetadataContext {
 					}
 				}
 				finally {
-					if ( log.isTraceEnabled() ) {
-						log.trace( "Completed mapped superclass [" + mappedSuperclass.getMappedClass().getName() + ']' );
+					if ( LOG.isTraceEnabled() ) {
+						LOG.trace( "Completed mapped superclass [" + mappedSuperclass.getMappedClass().getName() + ']' );
 					}
 				}
 			}
@@ -702,8 +702,8 @@ public class MetadataContext {
 	private <X> Set<SingularPersistentAttribute<? super X, ?>> buildIdClassAttributes(
 			IdentifiableDomainType<X> ownerType,
 			List<Property> properties) {
-		if ( log.isTraceEnabled() ) {
-			log.trace( "Building old-school composite identifier [" + ownerType.getJavaType().getName() + ']' );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Building old-school composite identifier [" + ownerType.getJavaType().getName() + ']' );
 		}
 		final Set<SingularPersistentAttribute<? super X, ?>> attributes = new HashSet<>();
 		for ( Property property : properties ) {
@@ -806,7 +806,7 @@ public class MetadataContext {
 			injectField( metamodelClass, name, attribute, allowNonDeclaredFieldReference );
 		}
 		catch (NoSuchFieldException e) {
-			log.unableToLocateStaticMetamodelField( metamodelClass.getName(), name );
+			LOG.unableToLocateStaticMetamodelField( metamodelClass.getName(), name );
 //			throw new AssertionFailure(
 //					"Unable to locate static metamodel field: " + metamodelClass.getName() + '#' + name
 //			);

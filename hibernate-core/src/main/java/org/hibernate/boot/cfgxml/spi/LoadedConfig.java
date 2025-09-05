@@ -32,7 +32,7 @@ import org.jboss.logging.Logger;
  * representation can be maintained through calls to {@link #merge}.
  */
 public class LoadedConfig {
-	private static final Logger log = Logger.getLogger( LoadedConfig.class );
+	private static final Logger LOG = Logger.getLogger( LoadedConfig.class );
 
 	private String sessionFactoryName;
 
@@ -107,7 +107,7 @@ public class LoadedConfig {
 
 				for ( JaxbCfgEventListenerType listener : listenerGroup.getListener() ) {
 					if ( listener.getType() != null ) {
-						log.debugf( "Listener [%s] defined as part of a group also defined event type", listener.getClazz() );
+						LOG.debugf( "Listener [%s] defined as part of a group also defined event type", listener.getClazz() );
 					}
 					cfg.addEventListener( eventType, listener.getClazz() );
 				}
@@ -194,7 +194,7 @@ public class LoadedConfig {
 	public void merge(LoadedConfig incoming) {
 		if ( sessionFactoryName != null ) {
 			if ( incoming.getSessionFactoryName() != null ) {
-				log.debugf(
+				LOG.debugf(
 						"More than one cfg.xml file attempted to supply SessionFactory name: [%s], [%s].  Keeping initially discovered one [%s]",
 						getSessionFactoryName(),
 						incoming.getSessionFactoryName(),

@@ -21,7 +21,7 @@ import org.jboss.logging.Logger;
 public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 	public static final StandardJtaPlatformResolver INSTANCE = new StandardJtaPlatformResolver();
 
-	private static final Logger log = Logger.getLogger( StandardJtaPlatformResolver.class );
+	private static final Logger LOG = Logger.getLogger( StandardJtaPlatformResolver.class );
 
 	@Override
 	public JtaPlatform resolveJtaPlatform(Map<?,?> configurationValues, ServiceRegistryImplementor registry) {
@@ -30,7 +30,7 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 		// Initially look for a JtaPlatformProvider
 		for ( JtaPlatformProvider provider : classLoaderService.loadJavaServices( JtaPlatformProvider.class ) ) {
 			final JtaPlatform providedPlatform = provider.getProvidedJtaPlatform();
-			log.tracef( "Located JtaPlatformProvider [%s] provided JtaPlatform : %s", provider, providedPlatform );
+			LOG.tracef( "Located JtaPlatformProvider [%s] provided JtaPlatform : %s", provider, providedPlatform );
 			if ( providedPlatform!= null ) {
 				return providedPlatform;
 			}
@@ -88,7 +88,7 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 		}
 
 		// Finally, return the default...
-		log.tracef( "Could not resolve JtaPlatform, using default [%s]", NoJtaPlatform.class.getName() );
+		LOG.tracef( "Could not resolve JtaPlatform, using default [%s]", NoJtaPlatform.class.getName() );
 		return NoJtaPlatform.INSTANCE;
 	}
 }

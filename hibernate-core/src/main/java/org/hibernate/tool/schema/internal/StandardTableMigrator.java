@@ -36,7 +36,7 @@ import static org.hibernate.tool.schema.internal.ColumnDefinitions.getFullColumn
 @Incubating
 public class StandardTableMigrator implements TableMigrator {
 
-	private static final Logger log = Logger.getLogger( Table.class );
+	private static final Logger LOG = Logger.getLogger( Table.class );
 
 	protected final Dialect dialect;
 
@@ -103,7 +103,7 @@ public class StandardTableMigrator implements TableMigrator {
 		}
 
 		if ( results.isEmpty() ) {
-			log.debugf( "No alter strings for table : %s", table.getQuotedName() );
+			LOG.debugf( "No alter strings for table : %s", table.getQuotedName() );
 		}
 
 		return results;

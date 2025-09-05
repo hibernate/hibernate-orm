@@ -20,7 +20,7 @@ import org.jboss.logging.Logger;
 public class JtaPlatformResolverInitiator implements StandardServiceInitiator<JtaPlatformResolver> {
 	public static final JtaPlatformResolverInitiator INSTANCE = new JtaPlatformResolverInitiator();
 
-	private static final Logger log = Logger.getLogger( JtaPlatformResolverInitiator.class );
+	private static final Logger LOG = Logger.getLogger( JtaPlatformResolverInitiator.class );
 
 	@Override
 	public JtaPlatformResolver initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
@@ -29,7 +29,7 @@ public class JtaPlatformResolverInitiator implements StandardServiceInitiator<Jt
 				registry.requireService( StrategySelector.class )
 						.resolveStrategy( JtaPlatformResolver.class, setting );
 		if ( resolver == null ) {
-			log.tracef( "No JtaPlatformResolver was specified, using default [%s]", StandardJtaPlatformResolver.class.getName() );
+			LOG.tracef( "No JtaPlatformResolver was specified, using default [%s]", StandardJtaPlatformResolver.class.getName() );
 			return StandardJtaPlatformResolver.INSTANCE;
 		}
 		return resolver;

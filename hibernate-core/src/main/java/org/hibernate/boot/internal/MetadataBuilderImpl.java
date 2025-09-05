@@ -100,7 +100,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
  * @author Steve Ebersole
  */
 public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeContributions {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( MetadataBuilderImpl.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( MetadataBuilderImpl.class );
 
 	private final MetadataSources sources;
 	private final BootstrapContextImpl bootstrapContext;
@@ -118,7 +118,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			return standardServiceRegistry;
 		}
 		else if ( serviceRegistry instanceof BootstrapServiceRegistry bootstrapServiceRegistry ) {
-			log.debug(
+			LOG.debug(
 					"ServiceRegistry passed to MetadataBuilder was a BootstrapServiceRegistry; this likely won't end well " +
 							"if attempt is made to build SessionFactory"
 			);

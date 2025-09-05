@@ -40,7 +40,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class MappingDocument implements HbmLocalMetadataBuildingContext, MetadataSourceProcessor {
-	private static final Logger log = Logger.getLogger( MappingDocument.class );
+	private static final Logger LOG = Logger.getLogger( MappingDocument.class );
 
 	private final JaxbHbmHibernateMapping documentRoot;
 	private final Origin origin;
@@ -186,7 +186,7 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 					? StringHelper.unqualify( name )
 					: renameBinding.getRename();
 			getMetadataCollector().addImport( rename, name );
-			log.tracef( "Import (query rename): %s -> %s", rename, name );
+			LOG.tracef( "Import (query rename): %s -> %s", rename, name );
 		}
 	}
 

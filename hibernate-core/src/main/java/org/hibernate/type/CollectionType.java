@@ -58,7 +58,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  */
 public abstract class CollectionType extends AbstractType implements AssociationType {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( CollectionType.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( CollectionType.class );
 
 	@Internal
 	public static final Object UNFETCHED_COLLECTION = new MarkerObject( "UNFETCHED COLLECTION" );
@@ -721,7 +721,7 @@ public abstract class CollectionType extends AbstractType implements Association
 			else {
 				// original is a detached copy of the collection;
 				// it contains queued operations, which will be ignored
-				log.ignoreQueuedOperationsOnMerge( collectionInfoString( getRole(), collection.getKey() ) );
+				LOG.ignoreQueuedOperationsOnMerge( collectionInfoString( getRole(), collection.getKey() ) );
 			}
 		}
 		return target;
@@ -830,8 +830,8 @@ public abstract class CollectionType extends AbstractType implements Association
 		if ( hasHolder() ) {
 			persistenceContext.addCollectionHolder( collection );
 		}
-		if ( log.isTraceEnabled() ) {
-			log.trace( "Created collection wrapper: "
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Created collection wrapper: "
 						+ collectionInfoString( persister, collection, key, session ) );
 		}
 		return collection;

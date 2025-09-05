@@ -43,7 +43,7 @@ import static org.hibernate.tool.schema.internal.Helper.createSqlStringGeneratio
  * @author Gavin King
  */
 public class SchemaTruncatorImpl extends AbstractSchemaPopulator implements SchemaTruncator {
-	private static final Logger log = Logger.getLogger( SchemaTruncatorImpl.class );
+	private static final Logger LOG = Logger.getLogger( SchemaTruncatorImpl.class );
 
 	private final HibernateSchemaManagementTool tool;
 	private final SchemaFilter schemaFilter;
@@ -89,7 +89,7 @@ public class SchemaTruncatorImpl extends AbstractSchemaPopulator implements Sche
 					target.release();
 				}
 				catch (Exception e) {
-					log.debugf( "Problem releasing GenerationTarget [%s] : %s", target, e.getMessage() );
+					LOG.debugf( "Problem releasing GenerationTarget [%s] : %s", target, e.getMessage() );
 				}
 			}
 		}

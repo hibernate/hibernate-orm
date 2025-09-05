@@ -24,7 +24,7 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 abstract class AggregatedServiceLoader<S> {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( AggregatedServiceLoader.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AggregatedServiceLoader.class );
 
 	static <S> AggregatedServiceLoader<S> create(AggregatedClassLoader aggregatedClassLoader,
 			Class<S> serviceContract) {
@@ -151,7 +151,7 @@ abstract class AggregatedServiceLoader<S> {
 					return iterator.hasNext();
 				}
 				catch (ServiceConfigurationError e) {
-					log.ignoringServiceConfigurationError( serviceContract.getName(), e );
+					LOG.ignoringServiceConfigurationError( serviceContract.getName(), e );
 				}
 			}
 		}

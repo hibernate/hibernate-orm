@@ -61,7 +61,7 @@ import static org.hibernate.models.internal.util.StringHelper.isEmpty;
  * @author Emmanuel Bernard
  */
 public abstract class QueryBinder {
-	private static final CoreMessageLogger log = messageLogger( QueryBinder.class );
+	private static final CoreMessageLogger LOG = messageLogger( QueryBinder.class );
 
 	public static void bindQuery(
 			NamedQuery namedQuery,
@@ -78,8 +78,8 @@ public abstract class QueryBinder {
 						"Class or package level '@NamedQuery' annotation must specify a 'name'" );
 			}
 
-			if ( log.isTraceEnabled() ) {
-				log.tracef( "Binding named query '%s' to [%s]", queryName,
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracef( "Binding named query '%s' to [%s]", queryName,
 						queryString.replace( '\n', ' ' ) );
 			}
 
@@ -139,8 +139,8 @@ public abstract class QueryBinder {
 					createNamedQueryDefinition( registrationName, queryString, resultClass, resultSetMappingName, hints,
 							location );
 
-			if ( log.isTraceEnabled() ) {
-				log.tracef( "Binding named native query '%s' to [%s]",
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracef( "Binding named native query '%s' to [%s]",
 						queryDefinition.getRegistrationName(),
 						queryDefinition.getSqlQueryString().replace( '\n', ' ' ) );
 			}
@@ -231,8 +231,8 @@ public abstract class QueryBinder {
 					createQueryDefinition( namedNativeQuery, registrationName, resultSetMappingName, resultClass,
 							namedNativeQuery.timeout(), namedNativeQuery.fetchSize(), querySpaces, location );
 			final var queryDefinition = builder.build();
-			if ( log.isTraceEnabled() ) {
-				log.tracef(
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracef(
 						"Binding named native query '%' to [%s]",
 						queryDefinition.getRegistrationName(),
 						queryDefinition.getSqlQueryString().replace( '\n', ' ' )
@@ -384,8 +384,8 @@ public abstract class QueryBinder {
 
 		final var hqlQueryDefinition = builder.build();
 
-		if ( log.isTraceEnabled() ) {
-			log.tracef( "Binding named query '%s' to [%s]",
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef( "Binding named query '%s' to [%s]",
 					hqlQueryDefinition.getRegistrationName(),
 					hqlQueryDefinition.getHqlString().replace( '\n', ' ' ) );
 		}
@@ -448,7 +448,7 @@ public abstract class QueryBinder {
 			else {
 				collector.addNamedProcedureCallDefinition( definition );
 			}
-			log.tracef( "Bound named stored procedure query: %s => %s",
+			LOG.tracef( "Bound named stored procedure query: %s => %s",
 					definition.getRegistrationName(),
 					definition.getProcedureName() );
 		}

@@ -36,7 +36,7 @@ import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
  * @author Brett Meyer
  */
 public class HibernatePersistenceProvider implements PersistenceProvider {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( HibernatePersistenceProvider.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( HibernatePersistenceProvider.class );
 
 	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 
@@ -47,10 +47,10 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	 */
 	@Override
 	public EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
-		log.tracef( "Starting createEntityManagerFactory for persistenceUnitName %s", persistenceUnitName );
+		LOG.tracef( "Starting createEntityManagerFactory for persistenceUnitName %s", persistenceUnitName );
 		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties );
 		if ( builder == null ) {
-			log.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning null" );
+			LOG.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning null" );
 			return null;
 		}
 		return builder.build();
@@ -72,12 +72,12 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 	private EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map<?,?> properties,
 			ClassLoader providedClassLoader, ClassLoaderService providedClassLoaderService) {
-		log.tracef( "Attempting to obtain correct EntityManagerFactoryBuilder for persistenceUnitName : %s", persistenceUnitName );
+		LOG.tracef( "Attempting to obtain correct EntityManagerFactoryBuilder for persistenceUnitName : %s", persistenceUnitName );
 
 		final Map<?,?> integration = wrap( properties );
 		final Collection<PersistenceUnitDescriptor> units = locatePersistenceUnits( integration, providedClassLoader, providedClassLoaderService );
 
-		log.tracef( "Located and parsed %s persistence units; checking each", units.size() );
+		LOG.tracef( "Located and parsed %s persistence units; checking each", units.size() );
 
 		if ( persistenceUnitName == null && units.size() > 1 ) {
 			// no persistence-unit name to look for was given and we found multiple persistence-units
@@ -85,8 +85,8 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		}
 
 		for ( PersistenceUnitDescriptor persistenceUnit : units ) {
-			if ( log.isTraceEnabled() ) {
-				log.tracef(
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracef(
 						"Checking persistence-unit [name=%s, explicit-provider=%s] against incoming persistence unit name [%s]",
 						persistenceUnit.getName(),
 						persistenceUnit.getProviderClassName(),
@@ -96,13 +96,13 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 			final boolean matches = persistenceUnitName == null || persistenceUnit.getName().equals( persistenceUnitName );
 			if ( !matches ) {
-				log.tracef( "Excluding from consideration due to name mismatch" );
+				LOG.tracef( "Excluding from consideration due to name mismatch" );
 				continue;
 			}
 
 			// See if we (Hibernate) are the persistence provider
 			if ( ! ProviderChecker.isProvider( persistenceUnit, properties ) ) {
-				log.tracef( "Excluding from consideration due to provider mismatch" );
+				LOG.tracef( "Excluding from consideration due to provider mismatch" );
 				continue;
 			}
 
@@ -114,7 +114,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			}
 		}
 
-		log.debug( "Found no matching persistence units" );
+		LOG.debug( "Found no matching persistence units" );
 		return null;
 	}
 
@@ -130,7 +130,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			var parser = PersistenceXmlParser.create( integration, providedClassLoader, providedClassLoaderService );
 			final List<URL> xmlUrls = parser.getClassLoaderService().locateResources( "META-INF/persistence.xml" );
 			if ( xmlUrls.isEmpty() ) {
-				log.unableToFindPersistenceXmlInClasspath();
+				LOG.unableToFindPersistenceXmlInClasspath();
 				units = List.of();
 			}
 			else {
@@ -138,7 +138,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			}
 		}
 		catch (Exception e) {
-			log.debug( "Unable to locate persistence units", e );
+			LOG.debug( "Unable to locate persistence units", e );
 			throw new PersistenceException( "Unable to locate persistence units", e );
 		}
 		return units;
@@ -151,8 +151,8 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	 */
 	@Override
 	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map properties) {
-		if ( log.isTraceEnabled() ) {
-			log.tracef( "Starting createContainerEntityManagerFactory : %s", info.getPersistenceUnitName() );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef( "Starting createContainerEntityManagerFactory : %s", info.getPersistenceUnitName() );
 		}
 
 		return getEntityManagerFactoryBuilder( info, properties ).build();
@@ -160,8 +160,8 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 	@Override
 	public void generateSchema(PersistenceUnitInfo info, Map map) {
-		if ( log.isTraceEnabled() ) {
-			log.tracef( "Starting generateSchema : PUI.name=%s", info.getPersistenceUnitName() );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef( "Starting generateSchema : PUI.name=%s", info.getPersistenceUnitName() );
 		}
 
 		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilder( info, map );
@@ -170,11 +170,11 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 	@Override
 	public boolean generateSchema(String persistenceUnitName, Map map) {
-		log.tracef( "Starting generateSchema for persistenceUnitName %s", persistenceUnitName );
+		LOG.tracef( "Starting generateSchema for persistenceUnitName %s", persistenceUnitName );
 
 		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, map );
 		if ( builder == null ) {
-			log.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning false" );
+			LOG.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning false" );
 			return false;
 		}
 		builder.generateSchema();

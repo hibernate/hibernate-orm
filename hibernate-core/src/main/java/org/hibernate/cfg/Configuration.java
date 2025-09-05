@@ -142,7 +142,7 @@ import jakarta.persistence.SharedCacheMode;
  * @see org.hibernate.jpa.HibernatePersistenceConfiguration
  */
 public class Configuration {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( Configuration.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Configuration.class );
 
 	private final BootstrapServiceRegistry bootstrapServiceRegistry;
 	private final MetadataSources metadataSources;
@@ -1024,7 +1024,7 @@ public class Configuration {
 	 * @throws HibernateException usually indicates an invalid configuration or invalid mapping information
 	 */
 	public SessionFactory buildSessionFactory(ServiceRegistry serviceRegistry) throws HibernateException {
-		log.trace( "Building session factory using provided StandardServiceRegistry" );
+		LOG.trace( "Building session factory using provided StandardServiceRegistry" );
 		final MetadataBuilder metadataBuilder =
 				metadataSources.getMetadataBuilder( (StandardServiceRegistry) serviceRegistry );
 
@@ -1127,7 +1127,7 @@ public class Configuration {
 	 * @throws HibernateException usually indicates an invalid configuration or invalid mapping information
 	 */
 	public SessionFactory buildSessionFactory() throws HibernateException {
-		log.trace( "Building session factory using internal StandardServiceRegistryBuilder" );
+		LOG.trace( "Building session factory using internal StandardServiceRegistryBuilder" );
 		standardServiceRegistryBuilder.applySettings( properties );
 		var serviceRegistry = standardServiceRegistryBuilder.build();
 		try {

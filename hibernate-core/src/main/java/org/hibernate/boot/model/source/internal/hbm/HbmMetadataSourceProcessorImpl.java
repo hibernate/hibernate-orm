@@ -24,7 +24,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
-	private static final Logger log = Logger.getLogger( HbmMetadataSourceProcessorImpl.class );
+	private static final Logger LOG = Logger.getLogger( HbmMetadataSourceProcessorImpl.class );
 
 	private final Collection<MappingDocument> mappingDocuments;
 
@@ -127,8 +127,8 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 		hierarchy_loop : for ( EntityHierarchySourceImpl entityHierarchy : entityHierarchies ) {
 			for ( String entityName : entityHierarchy.getContainedEntityNames() ) {
 				if ( processedEntityNames.contains( entityName ) ) {
-					if ( log.isDebugEnabled() ) {
-						log.debugf(
+					if ( LOG.isDebugEnabled() ) {
+						LOG.debugf(
 								"Skipping HBM processing of entity hierarchy [%s], as at least one entity [%s] has been processed",
 								entityHierarchy.getRoot().getEntityNamingSource().getEntityName(),
 								entityName

@@ -52,7 +52,7 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  */
 public class DefaultFlushEntityEventListener implements FlushEntityEventListener, CallbackRegistryConsumer {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( DefaultFlushEntityEventListener.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultFlushEntityEventListener.class );
 
 	private CallbackRegistry callbackRegistry;
 
@@ -287,21 +287,21 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 	private static void logScheduleUpdate(
 			EntityEntry entry, SessionFactoryImplementor factory, Status status, EntityPersister persister) {
-		if ( log.isTraceEnabled() ) {
+		if ( LOG.isTraceEnabled() ) {
 			final String info = infoString( persister, entry.getId(), factory );
 			if ( status == Status.DELETED ) {
 				if ( !persister.isMutable() ) {
-					log.trace( "Updating immutable, deleted entity: " + info );
+					LOG.trace( "Updating immutable, deleted entity: " + info );
 				}
 				else if ( !entry.isModifiableEntity() ) {
-					log.trace( "Updating non-modifiable, deleted entity: " + info );
+					LOG.trace( "Updating non-modifiable, deleted entity: " + info );
 				}
 				else {
-					log.trace( "Updating deleted entity: " + info );
+					LOG.trace( "Updating deleted entity: " + info );
 				}
 			}
 			else {
-				log.trace( "Updating entity: " + info );
+				LOG.trace( "Updating entity: " + info );
 			}
 		}
 	}
@@ -648,14 +648,14 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private void logDirtyProperties(EntityEntry entry, int[] dirtyProperties) {
-		if ( dirtyProperties != null && dirtyProperties.length > 0 && log.isTraceEnabled() ) {
+		if ( dirtyProperties != null && dirtyProperties.length > 0 && LOG.isTraceEnabled() ) {
 			final var persister = entry.getPersister();
 			final String[] allPropertyNames = persister.getPropertyNames();
 			final String[] dirtyPropertyNames = new String[dirtyProperties.length];
 			for ( int i = 0; i < dirtyProperties.length; i++ ) {
 				dirtyPropertyNames[i] = allPropertyNames[dirtyProperties[i]];
 			}
-			log.trace( "Found dirty properties [" + infoString( persister.getEntityName(), entry.getId() )
+			LOG.trace( "Found dirty properties [" + infoString( persister.getEntityName(), entry.getId() )
 						+ "] : " + Arrays.toString( dirtyPropertyNames ) );
 		}
 	}

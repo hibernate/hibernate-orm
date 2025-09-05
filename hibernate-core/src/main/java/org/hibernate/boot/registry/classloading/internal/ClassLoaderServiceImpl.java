@@ -31,7 +31,7 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 public class ClassLoaderServiceImpl implements ClassLoaderService {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( ClassLoaderServiceImpl.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ClassLoaderServiceImpl.class );
 
 	private static final String CLASS_PATH_SCHEME = "classpath://";
 
@@ -133,7 +133,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	public InputStream locateResourceStream(String name) {
 		// first we try name as a URL
 		try {
-			log.tracef( "trying via [new URL(\"%s\")]", name );
+			LOG.tracef( "trying via [new URL(\"%s\")]", name );
 			return new URL( name ).openStream();
 		}
 		catch (Exception ignore) {
@@ -144,7 +144,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		name = stripClasspathScheme( name );
 
 		try {
-			log.tracef( "trying via [ClassLoader.getResourceAsStream(\"%s\")]", name );
+			LOG.tracef( "trying via [ClassLoader.getResourceAsStream(\"%s\")]", name );
 			final InputStream stream = getAggregatedClassLoader().getResourceAsStream( name );
 			if ( stream != null ) {
 				return stream;
@@ -157,14 +157,14 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 		if ( stripped != null ) {
 			try {
-				log.tracef( "trying via [new URL(\"%s\")]", stripped );
+				LOG.tracef( "trying via [new URL(\"%s\")]", stripped );
 				return new URL( stripped ).openStream();
 			}
 			catch (Exception ignore) {
 			}
 
 			try {
-				log.tracef( "trying via [ClassLoader.getResourceAsStream(\"%s\")]", stripped );
+				LOG.tracef( "trying via [ClassLoader.getResourceAsStream(\"%s\")]", stripped );
 				final InputStream stream = getAggregatedClassLoader().getResourceAsStream( stripped );
 				if ( stream != null ) {
 					return stream;
@@ -222,11 +222,11 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 					.getPackage();
 		}
 		catch (ClassNotFoundException e) {
-			log.packageNotFound( packageName );
+			LOG.packageNotFound( packageName );
 			return null;
 		}
 		catch (LinkageError e) {
-			log.linkageError( packageName, e );
+			LOG.linkageError( packageName, e );
 			return null;
 		}
 	}

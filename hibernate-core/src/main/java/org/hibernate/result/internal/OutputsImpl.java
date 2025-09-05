@@ -39,7 +39,7 @@ import static org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptio
  * @author Steve Ebersole
  */
 public class OutputsImpl implements Outputs {
-	private static final Logger log = CoreLogging.logger( OutputsImpl.class );
+	private static final Logger LOG = CoreLogging.logger( OutputsImpl.class );
 
 	private final ResultContext context;
 	private final PreparedStatement jdbcStatement;
@@ -251,8 +251,8 @@ public class OutputsImpl implements Outputs {
 		}
 
 		protected Output buildOutput() {
-			if ( log.isTraceEnabled() ) {
-				log.tracef( "Building Return [isResultSet=%s, updateCount=%s, extendedReturn=%s]",
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracef( "Building Return [isResultSet=%s, updateCount=%s, extendedReturn=%s]",
 						isResultSet(), getUpdateCount(), hasExtendedReturns() );
 			}
 

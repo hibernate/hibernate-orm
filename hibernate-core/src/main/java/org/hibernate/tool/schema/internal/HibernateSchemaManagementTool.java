@@ -74,7 +74,7 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  * @author Steve Ebersole
  */
 public class HibernateSchemaManagementTool implements SchemaManagementTool, ServiceRegistryAwareService {
-	private static final Logger log = Logger.getLogger( HibernateSchemaManagementTool.class );
+	private static final Logger LOG = Logger.getLogger( HibernateSchemaManagementTool.class );
 
 	private ServiceRegistry serviceRegistry;
 	private GenerationTarget customTarget;
@@ -355,7 +355,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			);
 
 			if ( indicatedDialect == null ) {
-				log.debugf(
+				LOG.debugf(
 						"Unable to resolve indicated Dialect resolution info (%s, %s, %s)",
 						dbName,
 						dbMajor,

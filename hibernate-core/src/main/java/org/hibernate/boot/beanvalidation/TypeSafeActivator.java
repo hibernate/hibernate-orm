@@ -72,7 +72,7 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  */
 class TypeSafeActivator {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( TypeSafeActivator.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( TypeSafeActivator.class );
 
 	/**
 	 * Used to validate a supplied ValidatorFactory instance as being castable to ValidatorFactory.
@@ -105,7 +105,7 @@ class TypeSafeActivator {
 				if ( e.getCause() != null && e.getCause() instanceof NoProviderFoundException ) {
 					// all good, we are looking at the ValidationMode.AUTO, and there are no providers available.
 					// Hence, we just don't enable the Jakarta Validation integration:
-					log.debug( "Unable to acquire Jakarta Validation ValidatorFactory, skipping activation" );
+					LOG.debug( "Unable to acquire Jakarta Validation ValidatorFactory, skipping activation" );
 					return;
 				}
 				else {
@@ -173,7 +173,7 @@ class TypeSafeActivator {
 				|| modes.contains( ValidationMode.AUTO );
 		}
 		else {
-			log.debug( "Skipping application of relational constraints from legacy Hibernate Validator" );
+			LOG.debug( "Skipping application of relational constraints from legacy Hibernate Validator" );
 			return false;
 		}
 	}
@@ -219,7 +219,7 @@ class TypeSafeActivator {
 					);
 				}
 				catch (Exception e) {
-					log.unableToApplyConstraints( className, e );
+					LOG.unableToApplyConstraints( className, e );
 				}
 			}
 		}
@@ -368,7 +368,7 @@ class TypeSafeActivator {
 						return result != null && "OR".equals( result.toString() );
 					}
 					catch ( NoSuchMethodException | IllegalAccessException | InvocationTargetException ex ) {
-						log.debug( "ConstraintComposition type could not be determined. Assuming AND", ex );
+						LOG.debug( "ConstraintComposition type could not be determined. Assuming AND", ex );
 						return false;
 					}
 				}
@@ -432,7 +432,7 @@ class TypeSafeActivator {
 						column.setNullable( false );
 					}
 					else {
-						log.debugf(
+						LOG.debugf(
 								"@NotNull was applied to attribute [%s] which is defined (at least partially) " +
 										"by formula(s); formula portions will be skipped",
 								property.getName()

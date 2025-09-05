@@ -125,7 +125,7 @@ import static org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelp
  */
 @SuppressWarnings({"deprecation", "removal"})
 public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuilder {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( EntityManagerFactoryBuilderImpl.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityManagerFactoryBuilderImpl.class );
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -267,7 +267,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		// flush before completion validation
 		final var config = mergedSettings.getConfigurationValues();
 		if ( getBoolean( FLUSH_BEFORE_COMPLETION, config, false ) ) {
-			log.definingFlushBeforeCompletionIgnoredInHem( FLUSH_BEFORE_COMPLETION );
+			LOG.definingFlushBeforeCompletionIgnoredInHem( FLUSH_BEFORE_COMPLETION );
 			config.put( FLUSH_BEFORE_COMPLETION, String.valueOf(false) );
 		}
 	}
@@ -351,7 +351,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 					classTransformer.discoverTypes(classLoader, className );
 				}
 				catch (EnhancementException ex) {
-					log.enhancementDiscoveryFailed( className, ex );
+					LOG.enhancementDiscoveryFailed( className, ex );
 				}
 			}
 		}
@@ -803,7 +803,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	private static boolean handeTransactionCoordinatorStrategy(MergedSettings mergedSettings) {
-		log.overridingTransactionStrategyDangerous( TRANSACTION_COORDINATOR_STRATEGY );
+		LOG.overridingTransactionStrategyDangerous( TRANSACTION_COORDINATOR_STRATEGY );
 		// see if we can tell whether it is a JTA coordinator
 		final Object strategy = mergedSettings.getConfigurationValues().get( TRANSACTION_COORDINATOR_STRATEGY );
 		return strategy instanceof TransactionCoordinatorBuilder transactionCoordinatorBuilder
@@ -824,7 +824,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		final var txnType = configuredTransactionType( persistenceUnit, integrationSettingsCopy, mergedSettings );
 		if ( txnType == null ) {
 			// is it more appropriate to have this be based on bootstrap entry point (EE vs SE)?
-			log.debug( "PersistenceUnitTransactionType not specified - falling back to RESOURCE_LOCAL" );
+			LOG.debug( "PersistenceUnitTransactionType not specified - falling back to RESOURCE_LOCAL" );
 			return PersistenceUnitTransactionType.RESOURCE_LOCAL;
 		}
 		else {
@@ -1123,12 +1123,12 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		for ( String key : keys ) {
 			final Object removedSetting = integrationSettingsCopy.remove( key );
 			if ( removedSetting != null ) {
-				log.debugf( "Removed integration override setting [%s] due to normalization", key );
+				LOG.debugf( "Removed integration override setting [%s] due to normalization", key );
 			}
 
 			final Object removedMergedSetting = mergedSettings.getConfigurationValues().remove( key );
 			if ( removedMergedSetting != null ) {
-				log.debugf( "Removed merged setting [%s] due to normalization", key );
+				LOG.debugf( "Removed merged setting [%s] due to normalization", key );
 			}
 		}
 	}

@@ -337,32 +337,35 @@ public abstract class AbstractQuery<R>
 
 	@Override
 	protected void collectHints(Map<String, Object> hints) {
-		if ( getQueryOptions().getTimeout() != null ) {
-			hints.put( HINT_TIMEOUT, getQueryOptions().getTimeout() );
-			hints.put( HINT_SPEC_QUERY_TIMEOUT, getQueryOptions().getTimeout() * 1000 );
-			hints.put( HINT_JAVAEE_QUERY_TIMEOUT, getQueryOptions().getTimeout() * 1000 );
+		final var queryOptions = getQueryOptions();
+		final var lockOptions = getLockOptions();
+
+		if ( queryOptions.getTimeout() != null ) {
+			hints.put( HINT_TIMEOUT, queryOptions.getTimeout() );
+			hints.put( HINT_SPEC_QUERY_TIMEOUT, queryOptions.getTimeout() * 1000 );
+			hints.put( HINT_JAVAEE_QUERY_TIMEOUT, queryOptions.getTimeout() * 1000 );
 		}
 
-		if ( getLockOptions().getTimeout().milliseconds() != Timeouts.WAIT_FOREVER_MILLI ) {
-			hints.put( HINT_SPEC_LOCK_TIMEOUT, getLockOptions().getTimeOut() );
-			hints.put( HINT_JAVAEE_LOCK_TIMEOUT, getLockOptions().getTimeOut() );
+		if ( lockOptions.getTimeout().milliseconds() != Timeouts.WAIT_FOREVER_MILLI ) {
+			hints.put( HINT_SPEC_LOCK_TIMEOUT, lockOptions.getTimeOut() );
+			hints.put( HINT_JAVAEE_LOCK_TIMEOUT, lockOptions.getTimeOut() );
 		}
 
-		if ( getLockOptions().getLockScope() == PessimisticLockScope.EXTENDED ) {
-			hints.put( HINT_SPEC_LOCK_SCOPE, getLockOptions().getLockScope() );
-			hints.put( HINT_JAVAEE_LOCK_SCOPE, getLockOptions().getLockScope() );
+		if ( lockOptions.getLockScope() == PessimisticLockScope.EXTENDED ) {
+			hints.put( HINT_SPEC_LOCK_SCOPE, lockOptions.getLockScope() );
+			hints.put( HINT_JAVAEE_LOCK_SCOPE, lockOptions.getLockScope() );
 		}
 
 		putIfNotNull( hints, HINT_COMMENT, getComment() );
-		putIfNotNull( hints, HINT_FETCH_SIZE, getQueryOptions().getFetchSize() );
-		putIfNotNull( hints, HINT_FLUSH_MODE,  getQueryOptions().getFlushMode() );
+		putIfNotNull( hints, HINT_FETCH_SIZE, queryOptions.getFetchSize() );
+		putIfNotNull( hints, HINT_FLUSH_MODE,  queryOptions.getFlushMode() );
 
 		if ( getCacheMode() != null ) {
 			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );
-			putIfNotNull( hints, HINT_SPEC_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
-			putIfNotNull( hints, HINT_SPEC_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
-			putIfNotNull( hints, HINT_JAVAEE_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
-			putIfNotNull( hints, HINT_JAVAEE_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
+			putIfNotNull( hints, HINT_SPEC_CACHE_RETRIEVE_MODE, queryOptions.getCacheRetrieveMode() );
+			putIfNotNull( hints, HINT_SPEC_CACHE_STORE_MODE, queryOptions.getCacheStoreMode() );
+			putIfNotNull( hints, HINT_JAVAEE_CACHE_RETRIEVE_MODE, queryOptions.getCacheRetrieveMode() );
+			putIfNotNull( hints, HINT_JAVAEE_CACHE_STORE_MODE, queryOptions.getCacheStoreMode() );
 		}
 
 		if ( isCacheable() ) {

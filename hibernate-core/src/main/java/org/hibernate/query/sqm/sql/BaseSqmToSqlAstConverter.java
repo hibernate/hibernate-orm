@@ -5914,8 +5914,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private MappingModelExpressible<?> determineValueMapping(SqmExpression<?> sqmExpression, FromClauseIndex fromClauseIndex) {
-		if ( sqmExpression instanceof SqmParameter ) {
-			return determineValueMapping( (SqmParameter<?>) sqmExpression );
+		if ( sqmExpression instanceof SqmParameter<?> ) {
+			return determineValueMapping( getSqmParameter( sqmExpression ) );
 		}
 
 		if ( sqmExpression instanceof SqmPath ) {
@@ -8153,10 +8153,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			SqmInListPredicate<?> sqmPredicate,
 			JpaCriteriaParameter<?> jpaCriteriaParameter) {
 		assert jpaCriteriaParameter.allowsMultiValuedBinding();
-		final QueryParameterBinding<?> domainParamBinding = domainParameterBindings.getBinding( jpaCriteriaParameter );
+		final SqmJpaCriteriaParameterWrapper<?> sqmWrapper = jpaCriteriaParamResolutions.get( jpaCriteriaParameter );
+		final QueryParameterImplementor<?> domainParam = domainParameterXref.getQueryParameter( sqmWrapper );
+		final QueryParameterBinding<?> domainParamBinding = domainParameterBindings.getBinding( domainParam );
 		if ( domainParamBinding.isMultiValued() ) {
-			final SqmJpaCriteriaParameterWrapper<?> sqmWrapper = jpaCriteriaParamResolutions.get( jpaCriteriaParameter );
-			return processInSingleParameter( sqmPredicate, sqmWrapper, jpaCriteriaParameter, domainParamBinding );
+			return processInSingleParameter( sqmPredicate, sqmWrapper, domainParam, domainParamBinding );
 		}
 		else {
 			return null;

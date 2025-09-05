@@ -9,10 +9,9 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.NavigablePath;
-
-import java.util.Objects;
 
 /**
  * @author Steve Ebersole
@@ -92,14 +91,16 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		return object instanceof SqmCorrelatedRoot<?> that
-			&& super.equals( object )
-			&& Objects.equals( this.correlationParent, that.correlationParent );
+	public boolean deepEquals(SqmFrom<?, ?> other) {
+		return super.deepEquals( other )
+			&& other instanceof SqmCorrelatedRoot<?> that
+			&& correlationParent.equals( that.correlationParent );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( super.hashCode(), correlationParent );
+	public boolean isDeepCompatible(SqmFrom<?, ?> other) {
+		return super.isDeepCompatible( other )
+			&& other instanceof SqmCorrelatedRoot<?> that
+			&& correlationParent.isCompatible( that.correlationParent );
 	}
 }

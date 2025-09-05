@@ -94,4 +94,18 @@ public class SqmCorrelatedListJoin<O, T> extends SqmListJoin<O, T> implements Sq
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitCorrelatedListJoin( this );
 	}
+
+	@Override
+	public boolean deepEquals(SqmFrom<?, ?> other) {
+		return super.deepEquals( other )
+			&& other instanceof SqmCorrelatedListJoin<?, ?> that
+			&& correlationParent.equals( that.correlationParent );
+	}
+
+	@Override
+	public boolean isDeepCompatible(SqmFrom<?, ?> other) {
+		return super.isDeepCompatible( other )
+			&& other instanceof SqmCorrelatedListJoin<?, ?> that
+			&& correlationParent.isCompatible( that.correlationParent );
+	}
 }

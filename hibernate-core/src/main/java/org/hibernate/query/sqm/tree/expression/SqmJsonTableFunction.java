@@ -15,6 +15,7 @@ import org.hibernate.query.criteria.JpaJsonTableColumnsNode;
 import org.hibernate.query.criteria.JpaJsonTableFunction;
 import org.hibernate.query.criteria.JpaJsonValueNode;
 import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -54,6 +55,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
@@ -286,7 +288,43 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		}
 	}
 
-	sealed interface ColumnDefinition {
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmJsonTableFunction<?> that
+			&& super.equals( object )
+			&& columns.equals( that.columns )
+			&& Objects.equals( passingExpressions, that.passingExpressions )
+			&& errorBehavior == that.errorBehavior;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + columns.hashCode();
+		result = 31 * result + Objects.hashCode( passingExpressions );
+		result = 31 * result + errorBehavior.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmJsonTableFunction<?> that
+				&& super.isCompatible( object )
+				&& columns.isCompatible( that.columns )
+				&& SqmCacheable.areCompatible( passingExpressions, that.passingExpressions )
+				&& errorBehavior == that.errorBehavior;
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + columns.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( passingExpressions );
+		result = 31 * result + errorBehavior.hashCode();
+		return result;
+	}
+
+	sealed interface ColumnDefinition extends SqmCacheable {
 		ColumnDefinition copy(SqmCopyContext context);
 
 		JsonTableColumnDefinition convertToSqlAst(SqmToSqlAstConverter walker);
@@ -387,6 +425,34 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		public JpaJsonExistsNode falseOnError() {
 			errorBehavior = ErrorBehavior.FALSE;
 			return this;
+		}
+
+		@Override
+		public boolean equals(Object object) {
+			return object instanceof ExistsColumnDefinition that
+				&& name.equals( that.name )
+				&& type.equals( that.type )
+				&& Objects.equals( jsonPath, that.jsonPath )
+				&& errorBehavior == that.errorBehavior;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = name.hashCode();
+			result = 31 * result + type.hashCode();
+			result = 31 * result + Objects.hashCode( jsonPath );
+			result = 31 * result + errorBehavior.hashCode();
+			return result;
+		}
+
+		@Override
+		public boolean isCompatible(Object object) {
+			return equals( object );
+		}
+
+		@Override
+		public int cacheHashCode() {
+			return hashCode();
 		}
 	}
 
@@ -579,6 +645,38 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			emptyBehavior = EmptyBehavior.EMPTY_OBJECT;
 			return this;
 		}
+
+		@Override
+		public boolean equals(Object object) {
+			return object instanceof QueryColumnDefinition that
+				&& name.equals( that.name )
+				&& type.equals( that.type )
+				&& Objects.equals( jsonPath, that.jsonPath )
+				&& wrapMode == that.wrapMode
+				&& errorBehavior == that.errorBehavior
+				&& emptyBehavior == that.emptyBehavior;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = name.hashCode();
+			result = 31 * result + type.hashCode();
+			result = 31 * result + Objects.hashCode( jsonPath );
+			result = 31 * result + wrapMode.hashCode();
+			result = 31 * result + errorBehavior.hashCode();
+			result = 31 * result + emptyBehavior.hashCode();
+			return result;
+		}
+
+		@Override
+		public boolean isCompatible(Object object) {
+			return equals( object );
+		}
+
+		@Override
+		public int cacheHashCode() {
+			return hashCode();
+		}
 	}
 
 	static final class ValueColumnDefinition<X> implements ColumnDefinition, JpaJsonValueNode<X> {
@@ -768,6 +866,54 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			this.emptyBehavior = EmptyBehavior.DEFAULT;
 			return this;
 		}
+
+		@Override
+		public boolean equals(Object object) {
+			return object instanceof ValueColumnDefinition<?> that
+				&& name.equals( that.name )
+				&& type.equals( that.type )
+				&& Objects.equals( jsonPath, that.jsonPath )
+				&& errorBehavior == that.errorBehavior
+				&& emptyBehavior == that.emptyBehavior
+				&& Objects.equals( errorDefaultExpression, that.errorDefaultExpression )
+				&& Objects.equals( emptyDefaultExpression, that.emptyDefaultExpression );
+		}
+
+		@Override
+		public int hashCode() {
+			int result = name.hashCode();
+			result = 31 * result + type.hashCode();
+			result = 31 * result + Objects.hashCode( jsonPath );
+			result = 31 * result + errorBehavior.hashCode();
+			result = 31 * result + emptyBehavior.hashCode();
+			result = 31 * result + Objects.hashCode( errorDefaultExpression );
+			result = 31 * result + Objects.hashCode( emptyDefaultExpression );
+			return result;
+		}
+
+		@Override
+		public boolean isCompatible(Object object) {
+			return object instanceof ValueColumnDefinition<?> that
+				&& name.equals( that.name )
+				&& type.equals( that.type )
+				&& Objects.equals( jsonPath, that.jsonPath )
+				&& errorBehavior == that.errorBehavior
+				&& emptyBehavior == that.emptyBehavior
+				&& SqmCacheable.areCompatible( errorDefaultExpression, that.errorDefaultExpression )
+				&& SqmCacheable.areCompatible( emptyDefaultExpression, that.emptyDefaultExpression );
+		}
+
+		@Override
+		public int cacheHashCode() {
+			int result = name.hashCode();
+			result = 31 * result + type.hashCode();
+			result = 31 * result + Objects.hashCode( jsonPath );
+			result = 31 * result + errorBehavior.hashCode();
+			result = 31 * result + emptyBehavior.hashCode();
+			result = 31 * result + SqmCacheable.cacheHashCode( errorDefaultExpression );
+			result = 31 * result + SqmCacheable.cacheHashCode( emptyDefaultExpression );
+			return result;
+		}
 	}
 
 	record OrdinalityColumnDefinition(String name, BasicType<Long> type) implements ColumnDefinition {
@@ -792,6 +938,16 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			componentNames[offset] = name;
 			componentTypes[offset] = type;
 			return 1;
+		}
+
+		@Override
+		public boolean isCompatible(Object object) {
+			return equals( object );
+		}
+
+		@Override
+		public int cacheHashCode() {
+			return hashCode();
 		}
 	}
 
@@ -945,6 +1101,34 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 
 			// No-op since this object is going to be visible as function argument
 			return null;
+		}
+
+		@Override
+		public boolean equals(Object object) {
+			return object instanceof NestedColumns that
+				&& jsonPath.equals( that.jsonPath )
+				&& Objects.equals( columnDefinitions, that.columnDefinitions );
+		}
+
+		@Override
+		public int hashCode() {
+			int result = jsonPath.hashCode();
+			result = 31 * result + Objects.hashCode( columnDefinitions );
+			return result;
+		}
+
+		@Override
+		public boolean isCompatible(Object object) {
+			return object instanceof NestedColumns that
+				&& jsonPath.equals( that.jsonPath )
+				&& SqmCacheable.areCompatible( columnDefinitions, that.columnDefinitions );
+		}
+
+		@Override
+		public int cacheHashCode() {
+			int result = jsonPath.hashCode();
+			result = 31 * result + SqmCacheable.cacheHashCode( columnDefinitions );
+			return result;
 		}
 	}
 

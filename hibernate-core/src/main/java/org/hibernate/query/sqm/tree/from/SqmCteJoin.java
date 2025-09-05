@@ -159,14 +159,14 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> implements SqmSingularV
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		return object instanceof SqmCteJoin<?> that
-			&& super.equals( object )
-			&& Objects.equals( this.cte.getName(), that.cte.getName() );
+	public boolean deepEquals(SqmFrom<?, ?> object) {
+		return super.deepEquals( object )
+			&& Objects.equals( cte.getCteTable().getCteName(), ((SqmCteJoin<?>) object).cte.getCteTable().getCteName() );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( super.hashCode(), cte.getName() );
+	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
+		return super.isDeepCompatible( object )
+			&& Objects.equals( cte.getCteTable().getCteName(), ((SqmCteJoin<?>) object).cte.getCteTable().getCteName() );
 	}
 }

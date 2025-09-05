@@ -9,6 +9,7 @@ import java.util.Objects;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaSetReturningFunction;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -97,17 +98,32 @@ public abstract class SqmSetReturningFunction<T> extends AbstractSqmNode
 	}
 
 	@Override
-	// TODO: override on all subtypes
-	public boolean equals(Object other) {
-		return other instanceof SqmSetReturningFunction<?> that
-			&& Objects.equals( this.functionName, that.functionName )
-			&& Objects.equals( this.arguments, that.arguments )
+	public boolean equals(Object object) {
+		return object instanceof SqmSetReturningFunction<?> that
 			&& this.getClass() == that.getClass()
-			&& Objects.equals( this.toHqlString(), that.toHqlString() );
+			&& this.functionName.equals( that.functionName )
+			&& Objects.equals( this.arguments, that.arguments );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( functionName, arguments, getClass() );
+		int result = functionName.hashCode();
+		result = 31 * result + Objects.hashCode( arguments );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmSetReturningFunction<?> that
+			&& this.getClass() == that.getClass()
+			&& this.functionName.equals( that.functionName )
+			&& SqmCacheable.areCompatible( this.arguments, that.arguments );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = functionName.hashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( arguments );
+		return result;
 	}
 }

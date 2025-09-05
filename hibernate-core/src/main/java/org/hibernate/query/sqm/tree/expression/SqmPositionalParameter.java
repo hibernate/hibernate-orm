@@ -85,13 +85,6 @@ public class SqmPositionalParameter<T> extends AbstractSqmParameter<T> {
 	}
 
 	@Override
-	public int compareTo(SqmParameter<T> parameter) {
-		return parameter instanceof SqmPositionalParameter<T> positionalParameter
-				? getPosition().compareTo( positionalParameter.getPosition() )
-				: 1;
-	}
-
-	@Override
 	public boolean equals(Object object) {
 		return object instanceof SqmPositionalParameter<?> that
 			&& position == that.position;
@@ -100,5 +93,15 @@ public class SqmPositionalParameter<T> extends AbstractSqmParameter<T> {
 	@Override
 	public int hashCode() {
 		return position;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
 	}
 }

@@ -11,6 +11,7 @@ import java.util.Objects;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -154,6 +155,22 @@ public class SqmSelectClause extends AbstractSqmNode
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( distinct, selections );
+		int result = Boolean.hashCode( distinct );
+		result = 31 * result + Objects.hashCode( selections );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object other) {
+		return other instanceof SqmSelectClause that
+			&& distinct == that.distinct
+			&& SqmCacheable.areCompatible( this.selections, that.selections );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = Boolean.hashCode( distinct );
+		result = 31 * result + SqmCacheable.cacheHashCode( selections );
+		return result;
 	}
 }

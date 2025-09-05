@@ -12,8 +12,6 @@ import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.spi.NavigablePath;
 
-import java.util.Objects;
-
 /**
  * A TREAT form of {@linkplain SqmCrossJoin}
  *
@@ -100,19 +98,6 @@ public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin 
 		hql.append( " as " );
 		hql.append( treatTarget.getName() );
 		hql.append( ')' );
-	}
-
-	@Override
-	public boolean equals(Object object) {
-		return object instanceof SqmTreatedCrossJoin that
-			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() )
-			&& Objects.equals( this.treatTarget.getName(), that.treatTarget.getName() )
-			&& Objects.equals( this.wrappedPath.getNavigablePath(), that.wrappedPath.getNavigablePath() );
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash( treatTarget.getName(), wrappedPath.getNavigablePath() );
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })

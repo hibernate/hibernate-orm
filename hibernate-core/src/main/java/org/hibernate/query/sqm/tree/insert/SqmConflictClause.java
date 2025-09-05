@@ -14,6 +14,7 @@ import org.hibernate.query.criteria.JpaConflictClause;
 import org.hibernate.query.criteria.JpaConflictUpdateAction;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
@@ -217,7 +218,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 	@Override
 	public boolean equals(Object object) {
 		return object instanceof SqmConflictClause<?> that
-			&& Objects.equals( excludedRoot, that.excludedRoot )
+			&& excludedRoot.equals( that.excludedRoot )
 			&& Objects.equals( constraintName, that.constraintName )
 			&& Objects.equals( constraintPaths, that.constraintPaths )
 			&& Objects.equals( updateAction, that.updateAction );
@@ -225,6 +226,28 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( excludedRoot, constraintName, constraintPaths, updateAction );
+		int result = excludedRoot.hashCode();
+		result = 31 * result + Objects.hashCode( constraintName );
+		result = 31 * result + Objects.hashCode( constraintPaths );
+		result = 31 * result + Objects.hashCode( updateAction );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmConflictClause<?> that
+			&& excludedRoot.isCompatible( that.excludedRoot )
+			&& Objects.equals( constraintName, that.constraintName )
+			&& SqmCacheable.areCompatible( constraintPaths, that.constraintPaths )
+			&& SqmCacheable.areCompatible( updateAction, that.updateAction );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = excludedRoot.cacheHashCode();
+		result = 31 * result + Objects.hashCode( constraintName );
+		result = 31 * result + SqmCacheable.cacheHashCode( constraintPaths );
+		result = 31 * result + SqmCacheable.cacheHashCode( updateAction );
+		return result;
 	}
 }

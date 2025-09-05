@@ -14,7 +14,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public interface SqmNode extends JpaCriteriaNode {
+public interface SqmNode extends JpaCriteriaNode, SqmCacheable {
 	Logger LOG = Logger.getLogger( SqmNode.class );
 
 	default String asLoggableText() {

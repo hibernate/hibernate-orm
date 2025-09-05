@@ -54,4 +54,32 @@ public class SqmWindowFrame extends AbstractSqmNode implements JpaWindowFrame {
 				)
 		);
 	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmWindowFrame that
+			&& kind == that.kind
+			&& expression.equals( that.expression );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = kind.hashCode();
+		result = 31 * result + expression.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmWindowFrame that
+				&& kind == that.kind
+				&& expression.isCompatible( that.expression );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = kind.hashCode();
+		result = 31 * result + expression.cacheHashCode();
+		return result;
+	}
 }

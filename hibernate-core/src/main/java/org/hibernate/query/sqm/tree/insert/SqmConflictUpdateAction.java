@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.insert;
 
 import org.hibernate.query.criteria.JpaConflictUpdateAction;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmNode;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -22,6 +23,8 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.util.Objects;
 
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertAssignable;
 
@@ -165,5 +168,33 @@ public class SqmConflictUpdateAction<T> implements SqmNode, JpaConflictUpdateAct
 			sb.append( " where " );
 			whereClause.getPredicate().appendHqlString( sb, context );
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmConflictUpdateAction<?> that
+			&& setClause.equals( that.getSetClause() )
+			&& Objects.equals( whereClause, that.getWhereClause() );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = setClause.hashCode();
+		result = 31 * result + Objects.hashCode( whereClause );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmConflictUpdateAction<?> that
+				&& setClause.isCompatible( that.getSetClause() )
+				&& SqmCacheable.areCompatible( whereClause, that.getWhereClause() );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = setClause.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( whereClause );
+		return result;
 	}
 }

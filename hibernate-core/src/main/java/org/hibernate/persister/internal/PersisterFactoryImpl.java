@@ -64,8 +64,8 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 			EntityDataAccess entityCacheAccessStrategy,
 			NaturalIdDataAccess naturalIdCacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) {
-		final Class<? extends EntityPersister> persisterClass = persisterClassResolver.getEntityPersisterClass( entityBinding );
-		final Constructor<? extends EntityPersister> constructor = resolveEntityPersisterConstructor( persisterClass );
+		final var persisterClass = persisterClassResolver.getEntityPersisterClass( entityBinding );
+		final var constructor = resolveEntityPersisterConstructor( persisterClass );
 		try {
 			return constructor.newInstance( entityBinding, entityCacheAccessStrategy, naturalIdCacheAccessStrategy, creationContext );
 		}
@@ -73,7 +73,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 			throw e;
 		}
 		catch (InvocationTargetException e) {
-			final Throwable target = e.getTargetException();
+			final var target = e.getTargetException();
 			if ( target instanceof HibernateException hibernateException ) {
 				throw hibernateException;
 			}
@@ -117,8 +117,8 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 			Collection collectionBinding,
 			@Nullable CollectionDataAccess cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) {
-		final Class<? extends CollectionPersister> persisterClass = persisterClassResolver.getCollectionPersisterClass( collectionBinding );
-		final Constructor<? extends CollectionPersister> constructor = resolveCollectionPersisterConstructor( persisterClass );
+		final var persisterClass = persisterClassResolver.getCollectionPersisterClass( collectionBinding );
+		final var constructor = resolveCollectionPersisterConstructor( persisterClass );
 		try {
 			return constructor.newInstance( collectionBinding, cacheAccessStrategy, creationContext );
 		}

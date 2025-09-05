@@ -37,9 +37,9 @@ public class PersisterFactoryInitiator implements StandardServiceInitiator<Persi
 		}
 
 		@SuppressWarnings("unchecked")
-		final Class<? extends PersisterFactory> customImplClass =
+		final var customImplClass =
 				customImpl instanceof Class
-						? ( Class<? extends PersisterFactory> ) customImpl
+						? (Class<? extends PersisterFactory>) customImpl
 						: locate( registry, customImpl.toString() );
 		try {
 			return customImplClass.newInstance();

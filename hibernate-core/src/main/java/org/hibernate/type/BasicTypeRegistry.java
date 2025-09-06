@@ -46,7 +46,6 @@ public class BasicTypeRegistry implements Serializable {
 
 	private final TypeConfiguration typeConfiguration;
 
-	private final Map<JdbcType, Map<JavaType<?>, BasicType<?>>> registryValues = new ConcurrentHashMap<>();
 	private boolean primed;
 
 	private final Map<String, BasicType<?>> typesByName = new ConcurrentHashMap<>();
@@ -95,7 +94,6 @@ public class BasicTypeRegistry implements Serializable {
 		final var javaType = getJavaTypeRegistry().getDescriptor( typeReference.getJavaType() );
 		final var jdbcType = getJdbcTypeRegistry().getDescriptor( typeReference.getSqlTypeCode() );
 		final var createdType = createBasicType( typeReference, javaType, jdbcType );
-		primeRegistryEntry( createdType );
 		typesByName.put( typeReference.getName(), createdType );
 		typesByName.put( name, createdType );
 		return createdType;
@@ -244,11 +242,7 @@ public class BasicTypeRegistry implements Serializable {
 	 * JdbcType combo or create (and register) one.
 	 */
 	public <J> BasicType<J> resolve(JavaType<J> javaType, JdbcType jdbcType, Supplier<BasicType<J>> creator) {
-		final var registeredBasicType = registryForJdbcType( jdbcType ).get( javaType );
-		//noinspection unchecked
-		return registeredBasicType != null
-				? (BasicType<J>) registeredBasicType
-				: createIfUnregistered( javaType, jdbcType, creator );
+		return createIfUnregistered( javaType, jdbcType, creator );
 	}
 
 	private <J> BasicType<J> createIfUnregistered(
@@ -276,7 +270,6 @@ public class BasicTypeRegistry implements Serializable {
 
 	private <J> void register(JavaType<J> javaType, JdbcType jdbcType, BasicType<J> createdType) {
 		if ( createdType != null ) {
-			registryForJdbcType( jdbcType ).put( javaType, createdType );
 			// if we are still building mappings, register this adhoc
 			// type via a unique code. (This is to support Envers.)
 			try {
@@ -312,27 +305,12 @@ public class BasicTypeRegistry implements Serializable {
 			throw new HibernateException( "Type to register cannot be null" );
 		}
 
-		applyOrOverwriteEntry( type );
-
 		// explicit registration keys
 		if ( isEmpty( keys ) ) {
 			LOG.typeDefinedNoRegistrationKeys( type );
 		}
 		else {
 			applyRegistrationKeys( type, keys );
-		}
-	}
-
-	private void applyOrOverwriteEntry(BasicType<?> type) {
-		final var jdbcType = type.getJdbcType();
-		final var existing = registryForJdbcType( jdbcType ).put( type.getMappedJavaType(), type );
-		if ( existing != null ) {
-			LOG.tracef(
-					"BasicTypeRegistry registration overwritten (%s + %s); previous =`%s`",
-					jdbcType.getFriendlyName(),
-					type.getJavaTypeDescriptor(),
-					existing
-			);
 		}
 	}
 
@@ -380,8 +358,6 @@ public class BasicTypeRegistry implements Serializable {
 			throw new HibernateException( "Type to register cannot be null" );
 		}
 
-		primeRegistryEntry( type );
-
 		// Legacy name registration
 		if ( isNotEmpty( legacyTypeClassName ) ) {
 			typesByName.put( legacyTypeClassName, type );
@@ -417,26 +393,6 @@ public class BasicTypeRegistry implements Serializable {
 		else {
 			applyRegistrationKeys( type, registrationKeys );
 		}
-	}
-
-	private void primeRegistryEntry(BasicType<?> type) {
-		final var jdbcType = type.getJdbcType();
-		final var existing = registryForJdbcType( jdbcType ).get( type.getMappedJavaType() );
-		if ( existing != null ) {
-			LOG.tracef(
-					"Skipping registration of BasicType (%s + %s); still priming. existing = %s",
-					jdbcType.getFriendlyName(),
-					type.getJavaTypeDescriptor(),
-					existing
-			);
-		}
-		else {
-			registryForJdbcType( jdbcType ).put( type.getMappedJavaType(), type );
-		}
-	}
-
-	private Map<JavaType<?>, BasicType<?>> registryForJdbcType(JdbcType jdbcType) {
-		return registryValues.computeIfAbsent( jdbcType, key -> new ConcurrentHashMap<>() );
 	}
 
 	private void applyRegistrationKeys(BasicType<?> type, String[] keys) {

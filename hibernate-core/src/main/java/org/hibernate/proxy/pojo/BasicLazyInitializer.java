@@ -86,7 +86,6 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 
 		// otherwise:
 		return INVOKE_IMPLEMENTATION;
-
 	}
 
 	private Object getReplacement() {

@@ -117,7 +117,7 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 			 * (on DST end), so conversion must be done using the number of milliseconds since the epoch.
 			 * - around 1905, both methods are equally valid, so we don't really care which one is used.
 			 */
-			ZonedDateTime zonedDateTime = instant.atZone( ZoneId.systemDefault() );
+			final ZonedDateTime zonedDateTime = instant.atZone( ZoneId.systemDefault() );
 			if ( zonedDateTime.getYear() < 1905 ) {
 				return (X) Timestamp.valueOf( zonedDateTime.toLocalDateTime() );
 			}
@@ -186,8 +186,8 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 			return ZonedDateTime.ofInstant( calendar.toInstant(), calendar.getTimeZone().toZoneId() ).toInstant();
 		}
 
-		if ( value instanceof Date ) {
-			return ( (Date) value ).toInstant();
+		if ( value instanceof Date date ) {
+			return date.toInstant();
 		}
 
 		throw unknownWrap( value.getClass() );

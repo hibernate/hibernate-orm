@@ -10,11 +10,8 @@ import java.util.Arrays;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNotUnsaved;
@@ -122,10 +119,10 @@ public class ManyToOneType extends EntityType {
 			throws MappingException {
 		//cannot batch fetch by unique key (property-ref associations)
 		if ( uniqueKeyPropertyName == null && id != null ) {
-			final EntityPersister persister = getAssociatedEntityPersister( session.getFactory() );
+			final var persister = getAssociatedEntityPersister( session.getFactory() );
 			if ( session.getLoadQueryInfluencers().effectivelyBatchLoadable( persister ) ) {
-				final EntityKey entityKey = session.generateEntityKey( id, persister );
-				final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+				final var entityKey = session.generateEntityKey( id, persister );
+				final var persistenceContext = session.getPersistenceContextInternal();
 				if ( !persistenceContext.containsEntity( entityKey ) ) {
 					persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
 				}

@@ -39,20 +39,13 @@ public abstract class AbstractTemporalJavaType<T>
 		if ( precision == null ) {
 			return forMissingPrecision( typeConfiguration );
 		}
-
-		switch ( precision ) {
-			case DATE: {
-				return forDatePrecision( typeConfiguration );
-			}
-			case TIME: {
-				return forTimePrecision( typeConfiguration );
-			}
-			case TIMESTAMP: {
-				return forTimestampPrecision( typeConfiguration );
-			}
+		else {
+			return switch ( precision ) {
+				case DATE -> forDatePrecision( typeConfiguration );
+				case TIME -> forTimePrecision( typeConfiguration );
+				case TIMESTAMP -> forTimestampPrecision( typeConfiguration );
+			};
 		}
-
-		throw new IllegalArgumentException( "Unrecognized JPA TemporalType precision [" + precision + "]" );
 	}
 
 	private <X> TemporalJavaType<X> forMissingPrecision(TypeConfiguration typeConfiguration) {

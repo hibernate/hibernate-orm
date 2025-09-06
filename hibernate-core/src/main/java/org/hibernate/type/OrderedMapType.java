@@ -4,8 +4,10 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.linkedMap;
+import static org.hibernate.internal.util.collections.CollectionHelper.linkedMapOfSize;
 
 /**
  * A specialization of the map type, with (resultset-based) ordering.
@@ -23,9 +25,7 @@ public class OrderedMapType extends MapType {
 
 	@Override
 	public Object instantiate(int anticipatedSize) {
-		return anticipatedSize > 0
-				? CollectionHelper.linkedMap()
-				: CollectionHelper.linkedMapOfSize( anticipatedSize );
+		return anticipatedSize > 0 ? linkedMap() : linkedMapOfSize( anticipatedSize );
 	}
 
 }

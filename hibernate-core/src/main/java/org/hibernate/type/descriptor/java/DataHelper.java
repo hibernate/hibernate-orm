@@ -60,7 +60,7 @@ public final class DataHelper {
 	public static String extractString(Reader reader, int lengthHint) {
 		// read the Reader contents into a buffer and return the complete string
 		final int bufferSize = getSuggestedBufferSize( lengthHint );
-		final StringBuilder stringBuilder = new StringBuilder( bufferSize );
+		final var stringBuilder = new StringBuilder( bufferSize );
 		try {
 			final char[] buffer = new char[bufferSize];
 			while (true) {
@@ -98,7 +98,7 @@ public final class DataHelper {
 		if ( length == 0 ) {
 			return "";
 		}
-		final StringBuilder stringBuilder = new StringBuilder( length );
+		final var stringBuilder = new StringBuilder( length );
 		try {
 			final long skipped = characterStream.skip( start );
 			if ( skipped != start ) {
@@ -155,7 +155,7 @@ public final class DataHelper {
 		}
 
 		// read the stream contents into a buffer and return the complete byte[]
-		final ByteArrayOutputStream outputStream = new ByteArrayOutputStream(BUFFER_SIZE);
+		final var outputStream = new ByteArrayOutputStream(BUFFER_SIZE);
 		try {
 			final byte[] buffer = new byte[BUFFER_SIZE];
 			while (true) {
@@ -205,7 +205,7 @@ public final class DataHelper {
 			return result;
 		}
 
-		final ByteArrayOutputStream outputStream = new ByteArrayOutputStream( length );
+		final var outputStream = new ByteArrayOutputStream( length );
 		try {
 			final long skipped = inputStream.skip( start );
 			if ( skipped != start ) {
@@ -253,7 +253,7 @@ public final class DataHelper {
 	 */
 	public static String extractString(final Clob value) {
 		try {
-			final Reader characterStream = value.getCharacterStream();
+			final var characterStream = value.getCharacterStream();
 			final long length = determineLengthForBufferSizing( value );
 			return length > Integer.MAX_VALUE
 					? extractString( characterStream, Integer.MAX_VALUE )

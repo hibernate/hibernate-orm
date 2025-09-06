@@ -12,7 +12,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
 import java.util.Calendar;
@@ -56,10 +55,9 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		if ( context.isPreferJavaTimeJdbcTypesEnabled() ) {
-			return context.getJdbcType( SqlTypes.LOCAL_TIME );
-		}
-		return context.getJdbcType( Types.TIME );
+		return context.isPreferJavaTimeJdbcTypesEnabled()
+				? context.getJdbcType( SqlTypes.LOCAL_TIME )
+				: context.getJdbcType( Types.TIME );
 	}
 
 	@Override
@@ -95,7 +93,7 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 		}
 
 		if ( Time.class.isAssignableFrom( type ) ) {
-			final Time time = Time.valueOf( value );
+			final var time = Time.valueOf( value );
 			if ( value.getNano() == 0 ) {
 				return (X) time;
 			}
@@ -108,13 +106,13 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 		// the legacy Date/Time types...
 
 
-		final ZonedDateTime zonedDateTime = value.atDate( LocalDate.of( 1970, 1, 1 ) ).atZone( ZoneId.systemDefault() );
+		final var zonedDateTime = value.atDate( LocalDate.of( 1970, 1, 1 ) ).atZone( ZoneId.systemDefault() );
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			return (X) GregorianCalendar.from( zonedDateTime );
 		}
 
-		final Instant instant = zonedDateTime.toInstant();
+		final var instant = zonedDateTime.toInstant();
 
 		if ( Timestamp.class.isAssignableFrom( type ) ) {
 			return (X) Timestamp.from( instant );
@@ -160,7 +158,7 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 		}
 
 		if (value instanceof Long longValue) {
-			final Instant instant = Instant.ofEpochMilli( longValue );
+			final var instant = Instant.ofEpochMilli( longValue );
 			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() ).toLocalTime();
 		}
 
@@ -169,7 +167,7 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 		}
 
 		if (value instanceof Date timestamp ) {
-			final Instant instant = Instant.ofEpochMilli( timestamp.getTime() );
+			final var instant = Instant.ofEpochMilli( timestamp.getTime() );
 			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() ).toLocalTime();
 		}
 

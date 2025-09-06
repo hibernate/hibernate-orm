@@ -119,7 +119,7 @@ public abstract class AbstractType implements Type {
 	private boolean needsReplacement(ForeignKeyDirection foreignKeyDirection) {
 		// Collection and OneToOne are the only associations that could be TO_PARENT
 		if ( this instanceof CollectionType || this instanceof OneToOneType ) {
-			final AssociationType associationType = (AssociationType) this;
+			final var associationType = (AssociationType) this;
 			return associationType.getForeignKeyDirection() == foreignKeyDirection;
 		}
 		else {

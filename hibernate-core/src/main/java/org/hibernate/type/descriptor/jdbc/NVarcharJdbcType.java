@@ -68,7 +68,7 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 			JavaType<?> domainJtd) {
 		assert domainJtd != null;
 
-		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
+		final var typeConfiguration = indicators.getTypeConfiguration();
 		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
 
 		final int jdbcTypeCode;

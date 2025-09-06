@@ -30,14 +30,13 @@ public class TrueFalseConverter extends CharBooleanConverter {
 		if ( relationalForm == null ) {
 			return null;
 		}
-
-		switch ( relationalForm ) {
-			case 'T':
-				return true;
-			case 'F':
-				return false;
+		else {
+			return switch ( relationalForm ) {
+				case 'T' -> true;
+				case 'F' -> false;
+				default -> null;
+			};
 		}
-		return null;
 	}
 
 	@Override
@@ -45,7 +44,8 @@ public class TrueFalseConverter extends CharBooleanConverter {
 		if ( domainForm == null ) {
 			return null;
 		}
-
-		return domainForm ? 'T' : 'F';
+		else {
+			return domainForm ? 'T' : 'F';
+		}
 	}
 }

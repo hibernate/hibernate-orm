@@ -66,7 +66,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 
 	@Override
 	public void addDescriptor(JdbcType jdbcType) {
-		final JdbcType previous = descriptorMap.put( jdbcType.getDefaultSqlTypeCode(), jdbcType );
+		final var previous = descriptorMap.put( jdbcType.getDefaultSqlTypeCode(), jdbcType );
 //		if ( previous != null && previous != jdbcType ) {
 //			LOG.tracef( "addDescriptor(%s) replaced previous registration(%s)", jdbcType, previous );
 //		}
@@ -74,7 +74,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 
 	@Override
 	public void addDescriptor(int typeCode, JdbcType jdbcType) {
-		final JdbcType previous = descriptorMap.put( typeCode, jdbcType );
+		final var previous = descriptorMap.put( typeCode, jdbcType );
 //		if ( previous != null && previous != jdbcType ) {
 //			LOG.tracef( "addDescriptor(%d, %s) replaced previous registration(%s)", typeCode, jdbcType, previous );
 //		}
@@ -93,7 +93,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 	}
 
 	public JdbcType getDescriptor(int jdbcTypeCode) {
-		final JdbcType descriptor = descriptorMap.get( jdbcTypeCode );
+		final var descriptor = descriptorMap.get( jdbcTypeCode );
 		if ( descriptor != null ) {
 			return descriptor;
 		}
@@ -104,7 +104,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 //			}
 
 			// see if the typecode is part of a known type family...
-			final JdbcType potentialAlternateDescriptor = getFamilyDescriptor( jdbcTypeCode );
+			final var potentialAlternateDescriptor = getFamilyDescriptor( jdbcTypeCode );
 			if ( potentialAlternateDescriptor != null ) {
 				return potentialAlternateDescriptor;
 			}
@@ -123,7 +123,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 		if ( family != null ) {
 			for ( int potentialAlternateTypeCode : family.getTypeCodes() ) {
 				if ( potentialAlternateTypeCode != jdbcTypeCode ) {
-					final JdbcType potentialAlternateDescriptor = descriptorMap.get( potentialAlternateTypeCode );
+					final var potentialAlternateDescriptor = descriptorMap.get( potentialAlternateTypeCode );
 					if ( potentialAlternateDescriptor != null ) {
 						// todo (6.0) : add a SqlTypeDescriptor#canBeAssignedFrom method ?
 						return potentialAlternateDescriptor;
@@ -174,7 +174,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 			EmbeddableMappingType embeddableMappingType,
 			RuntimeModelCreationContext context,
 			String registrationKey) {
-		final JdbcType descriptor = getDescriptor( jdbcTypeCode );
+		final var descriptor = getDescriptor( jdbcTypeCode );
 		if ( descriptor instanceof AggregateJdbcType aggregateJdbcType ) {
 			final AggregateJdbcType resolvedJdbcType =
 					aggregateJdbcType.resolveAggregateJdbcType( embeddableMappingType, typeName, context );
@@ -241,15 +241,15 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 				columnTypeInformation == null
 						? new TypeConstructedJdbcTypeKey( jdbcTypeConstructorCode, elementType )
 						: new TypeConstructedJdbcTypeKey( jdbcTypeConstructorCode, elementType, columnTypeInformation );
-		final JdbcType descriptor = typeConstructorDescriptorMap.get( key );
+		final var descriptor = typeConstructorDescriptorMap.get( key );
 		if ( descriptor != null ) {
 			return descriptor;
 		}
 		else {
 			final JdbcTypeConstructor jdbcTypeConstructor = getConstructor( jdbcTypeConstructorCode );
 			if ( jdbcTypeConstructor != null ) {
-				final JdbcType jdbcType = jdbcElementType( elementType, columnTypeInformation, jdbcTypeConstructor );
-				final JdbcType existingType = typeConstructorDescriptorMap.putIfAbsent( key, jdbcType );
+				final var jdbcType = jdbcElementType( elementType, columnTypeInformation, jdbcTypeConstructor );
+				final var existingType = typeConstructorDescriptorMap.putIfAbsent( key, jdbcType );
 				if ( existingType != null ) {
 					return existingType;
 				}

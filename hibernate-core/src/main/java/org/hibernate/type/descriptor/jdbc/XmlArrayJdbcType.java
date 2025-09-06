@@ -71,7 +71,7 @@ public class XmlArrayJdbcType extends ArrayJdbcType {
 	}
 
 	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {
-		final JdbcType elementJdbcType = getElementJdbcType();
+		final var elementJdbcType = getElementJdbcType();
 		final Object[] domainObjects = javaType.unwrap( value, Object[].class, options );
 		if ( elementJdbcType instanceof XmlJdbcType xmlElementJdbcType ) {
 			final EmbeddableMappingType embeddableMappingType = xmlElementJdbcType.getEmbeddableMappingType();

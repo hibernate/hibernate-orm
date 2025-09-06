@@ -29,7 +29,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
  */
 public class SerializableJavaType<T extends Serializable> extends AbstractClassJavaType<T> {
 
-	// unfortunately the param types cannot be the same so use something other than 'T' here to make that obvious
+	// unfortunately, the param types cannot be the same so use something other than 'T' here to make that obvious
 	public static class SerializableMutabilityPlan<S extends Serializable> extends MutableMutabilityPlan<S> {
 		public static final SerializableMutabilityPlan<Serializable> INSTANCE = new SerializableMutabilityPlan<>();
 
@@ -66,9 +66,7 @@ public class SerializableJavaType<T extends Serializable> extends AbstractClassJ
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
-		final int typeCode = indicators.isLob()
-				? Types.BLOB
-				: Types.VARBINARY;
+		final int typeCode = indicators.isLob() ? Types.BLOB : Types.VARBINARY;
 		return indicators.getJdbcType( typeCode );
 	}
 
@@ -85,11 +83,13 @@ public class SerializableJavaType<T extends Serializable> extends AbstractClassJ
 		if ( one == another ) {
 			return true;
 		}
-		if ( one == null || another == null ) {
+		else if ( one == null || another == null ) {
 			return false;
 		}
-		return one.equals( another )
+		else {
+			return one.equals( another )
 				|| Arrays.equals( toBytes( one ), toBytes( another ) );
+		}
 	}
 
 	@Override

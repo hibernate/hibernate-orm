@@ -10,7 +10,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
@@ -51,10 +50,9 @@ public class LocalDateJavaType extends AbstractTemporalJavaType<LocalDate> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		if ( context.isPreferJavaTimeJdbcTypesEnabled() ) {
-			return context.getJdbcType( SqlTypes.LOCAL_DATE );
-		}
-		return context.getJdbcType( Types.DATE );
+		return context.isPreferJavaTimeJdbcTypesEnabled()
+				? context.getJdbcType( SqlTypes.LOCAL_DATE )
+				: context.getJdbcType( Types.DATE );
 	}
 
 	@Override
@@ -106,13 +104,13 @@ public class LocalDateJavaType extends AbstractTemporalJavaType<LocalDate> {
 			return (X) Timestamp.valueOf( localDateTime );
 		}
 
-		final ZonedDateTime zonedDateTime = localDateTime.atZone( ZoneId.systemDefault() );
+		final var zonedDateTime = localDateTime.atZone( ZoneId.systemDefault() );
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			return (X) GregorianCalendar.from( zonedDateTime );
 		}
 
-		final Instant instant = zonedDateTime.toInstant();
+		final var instant = zonedDateTime.toInstant();
 
 		if ( Date.class.equals( type ) ) {
 			return (X) Date.from( instant );
@@ -147,7 +145,7 @@ public class LocalDateJavaType extends AbstractTemporalJavaType<LocalDate> {
 		}
 
 		if (value instanceof Long longValue) {
-			final Instant instant = Instant.ofEpochMilli( longValue );
+			final var instant = Instant.ofEpochMilli( longValue );
 			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() ).toLocalDate();
 		}
 

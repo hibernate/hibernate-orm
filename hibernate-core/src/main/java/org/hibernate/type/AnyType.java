@@ -4,7 +4,6 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.EntityNameResolver;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -17,10 +16,8 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.io.Serializable;
@@ -166,7 +163,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	private Object extractIdentifier(Object entity, SessionFactoryImplementor factory) {
-		final EntityPersister concretePersister = guessEntityPersister( entity, factory );
+		final var concretePersister = guessEntityPersister( entity, factory );
 		return concretePersister == null
 				? null
 				: concretePersister.getIdentifier( entity );
@@ -181,7 +178,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 
 		// this code is largely copied from Session's bestGuessEntityName
 		Object entity = object;
-		final LazyInitializer lazyInitializer = extractLazyInitializer( entity );
+		final var lazyInitializer = extractLazyInitializer( entity );
 		if ( lazyInitializer != null ) {
 			if ( lazyInitializer.isUninitialized() ) {
 				entityName = lazyInitializer.getEntityName();
@@ -190,13 +187,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		}
 
 		if ( entityName == null ) {
-			final MappingMetamodelImplementor mappingMetamodel = factory.getMappingMetamodel();
-			for ( EntityNameResolver resolver : mappingMetamodel.getEntityNameResolvers() ) {
-				entityName = resolver.resolveEntityName( entity );
-				if ( entityName != null ) {
-					break;
-				}
-			}
+			entityName = entityNameFromResolvers( factory, entity );
 		}
 
 		if ( entityName == null ) {
@@ -205,6 +196,16 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		}
 
 		return factory.getMappingMetamodel().getEntityDescriptor( entityName );
+	}
+
+	private static String entityNameFromResolvers(SessionFactoryImplementor factory, Object entity) {
+		for ( var resolver : factory.getMappingMetamodel().getEntityNameResolvers() ) {
+			final String entityName = resolver.resolveEntityName( entity );
+			if ( entityName != null ) {
+				return entityName;
+			}
+		}
+		return null;
 	}
 
 	@Override
@@ -221,12 +222,13 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		else if ( old == null ) {
 			return true;
 		}
-
-		final ObjectTypeCacheEntry holder = (ObjectTypeCacheEntry) old;
-		final boolean[] idCheckable = new boolean[checkable.length-1];
-		System.arraycopy( checkable, 1, idCheckable, 0, idCheckable.length );
-		return checkable[0] && !holder.entityName.equals( session.bestGuessEntityName( current ) )
+		else {
+			final var holder = (ObjectTypeCacheEntry) old;
+			final boolean[] idCheckable = new boolean[checkable.length - 1];
+			System.arraycopy( checkable, 1, idCheckable, 0, idCheckable.length );
+			return checkable[0] && !holder.entityName.equals( session.bestGuessEntityName( current ) )
 				|| identifierType.isModified( holder.id, getIdentifier( current, session ), idCheckable, session );
+		}
 	}
 
 	@Override
@@ -295,9 +297,10 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		}
 
 		final String entityName = factory.bestGuessEntityName(value);
-		final EntityPersister descriptor = entityName == null
-				? null
-				: factory.getMappingMetamodel().getEntityDescriptor( entityName );
+		final var descriptor =
+				entityName == null
+						? null
+						: factory.getMappingMetamodel().getEntityDescriptor( entityName );
 		return infoString( descriptor, value, factory );
 	}
 

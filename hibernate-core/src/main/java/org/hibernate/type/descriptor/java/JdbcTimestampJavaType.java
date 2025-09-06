@@ -13,7 +13,6 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -205,9 +204,9 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 	@Override
 	public Date fromString(CharSequence string) {
 		try {
-			final TemporalAccessor accessor = LITERAL_FORMATTER.parse( string );
-			final Timestamp timestamp = new Timestamp( accessor.getLong( ChronoField.INSTANT_SECONDS ) * 1000L );
-			timestamp.setNanos( accessor.get( ChronoField.NANO_OF_SECOND ) );
+			final var temporalAccessor = LITERAL_FORMATTER.parse( string );
+			final var timestamp = new Timestamp( temporalAccessor.getLong( ChronoField.INSTANT_SECONDS ) * 1000L );
+			timestamp.setNanos( temporalAccessor.get( ChronoField.NANO_OF_SECOND ) );
 			return timestamp;
 		}
 		catch ( DateTimeParseException pe) {
@@ -223,14 +222,14 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 	@Override
 	public Date fromEncodedString(CharSequence charSequence, int start, int end) {
 		try {
-			final TemporalAccessor accessor = ENCODED_FORMATTER.parse( subSequence( charSequence, start, end ) );
+			final var temporalAccessor = ENCODED_FORMATTER.parse( subSequence( charSequence, start, end ) );
 			final Timestamp timestamp;
-			if ( accessor.isSupported( ChronoField.INSTANT_SECONDS ) ) {
-				timestamp = new Timestamp( accessor.getLong( ChronoField.INSTANT_SECONDS ) * 1000L );
-				timestamp.setNanos( accessor.get( ChronoField.NANO_OF_SECOND ) );
+			if ( temporalAccessor.isSupported( ChronoField.INSTANT_SECONDS ) ) {
+				timestamp = new Timestamp( temporalAccessor.getLong( ChronoField.INSTANT_SECONDS ) * 1000L );
+				timestamp.setNanos( temporalAccessor.get( ChronoField.NANO_OF_SECOND ) );
 			}
 			else {
-				timestamp = Timestamp.valueOf( LocalDateTime.from( accessor ) );
+				timestamp = Timestamp.valueOf( LocalDateTime.from( temporalAccessor ) );
 			}
 			return timestamp;
 		}
@@ -285,7 +284,7 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 		public Date deepCopyNotNull(Date value) {
 			if ( value instanceof Timestamp timestamp ) {
 				// make sure to get the nanos
-				final Timestamp copy = new Timestamp( timestamp.getTime() );
+				final var copy = new Timestamp( timestamp.getTime() );
 				copy.setNanos( timestamp.getNanos() );
 				return copy;
 			}

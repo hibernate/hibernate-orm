@@ -137,7 +137,7 @@ public class ArrayJdbcType implements JdbcType {
 
 	protected <T> Object[] getArray(BasicBinder<?> binder, ValueBinder<T> elementBinder, T value, WrapperOptions options)
 			throws SQLException {
-		final JdbcType elementJdbcType = ( (ArrayJdbcType) binder.getJdbcType() ).getElementJdbcType();
+		final var elementJdbcType = ( (ArrayJdbcType) binder.getJdbcType() ).getElementJdbcType();
 		//noinspection unchecked
 		final JavaType<T> javaType = (JavaType<T>) binder.getJavaType();
 		if ( elementJdbcType instanceof AggregateJdbcType ) {
@@ -151,8 +151,8 @@ public class ArrayJdbcType implements JdbcType {
 			return objects;
 		}
 		else {
-			final TypeConfiguration typeConfiguration = options.getTypeConfiguration();
-			final JdbcType underlyingJdbcType =
+			final var typeConfiguration = options.getTypeConfiguration();
+			final var underlyingJdbcType =
 					typeConfiguration.getJdbcTypeRegistry()
 							.getDescriptor( elementJdbcType.getDefaultSqlTypeCode() );
 			final Class<?> preferredJavaTypeClass = elementJdbcType.getPreferredJavaTypeClass( options );

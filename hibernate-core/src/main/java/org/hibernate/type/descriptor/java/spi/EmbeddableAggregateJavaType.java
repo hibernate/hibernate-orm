@@ -52,14 +52,14 @@ public class EmbeddableAggregateJavaType<T> extends AbstractClassJavaType<T> {
 		if ( context.getExplicitJdbcTypeCode() != null && context.getExplicitJdbcTypeCode() == SqlTypes.XML_ARRAY
 			// Also prefer XML is the Dialect prefers XML arrays
 			|| context.getDialect().getPreferredSqlTypeCodeForArray() == SqlTypes.XML_ARRAY ) {
-			final JdbcType descriptor = context.getJdbcType( SqlTypes.SQLXML );
+			final var descriptor = context.getJdbcType( SqlTypes.SQLXML );
 			if ( descriptor != null ) {
 				return descriptor;
 			}
 		}
 		else {
 			// Otherwise use json by default for now
-			final JdbcType descriptor = context.getJdbcType( SqlTypes.JSON );
+			final var descriptor = context.getJdbcType( SqlTypes.JSON );
 			if ( descriptor != null ) {
 				return descriptor;
 			}

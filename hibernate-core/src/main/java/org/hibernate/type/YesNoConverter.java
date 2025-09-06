@@ -30,15 +30,13 @@ public class YesNoConverter extends CharBooleanConverter {
 		if ( relationalForm == null ) {
 			return null;
 		}
-
-		switch ( relationalForm ) {
-			case 'Y':
-				return true;
-			case 'N':
-				return false;
+		else {
+			return switch ( relationalForm ) {
+				case 'Y' -> true;
+				case 'N' -> false;
+				default -> null;
+			};
 		}
-
-		return null;
 	}
 
 	@Override
@@ -46,7 +44,8 @@ public class YesNoConverter extends CharBooleanConverter {
 		if ( domainForm == null ) {
 			return null;
 		}
-
-		return domainForm ? 'Y' : 'N';
+		else {
+			return domainForm ? 'Y' : 'N';
+		}
 	}
 }

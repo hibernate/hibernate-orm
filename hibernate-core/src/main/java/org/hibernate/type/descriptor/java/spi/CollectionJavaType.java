@@ -51,49 +51,34 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 		return null;
 	}
 
-	@Override
+	@Override @SuppressWarnings({"unchecked", "rawtypes"})
 	public JavaType<C> createJavaType(
 			ParameterizedType parameterizedType,
 			TypeConfiguration typeConfiguration) {
-		final Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
-		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
-		switch ( semantics.getCollectionClassification() ) {
-			case ARRAY:
-				//noinspection unchecked
-				return (JavaType<C>) new ArrayJavaType<>(
-						javaTypeRegistry.resolveDescriptor(
-								( (Class<?>) parameterizedType.getRawType() ).getComponentType()
-						)
-				);
-			case BAG:
-			case ID_BAG:
-			case LIST:
-			case SET:
-			case SORTED_SET:
-			case ORDERED_SET:
-				//noinspection unchecked,rawtypes
-				return new BasicCollectionJavaType(
-						parameterizedType,
-						javaTypeRegistry.resolveDescriptor( actualTypeArguments[actualTypeArguments.length - 1] ),
-						semantics
-				);
-
-		}
-		// Construct a basic java type that knows its parametrization
-		//noinspection unchecked,rawtypes
-		return new UnknownBasicJavaType(
-				parameterizedType,
-				new MapMutabilityPlan<>(
-						(MapSemantics<Map<Object, Object>, Object, Object>) semantics,
-						javaTypeRegistry.resolveDescriptor( actualTypeArguments[0] ),
-						javaTypeRegistry.resolveDescriptor( actualTypeArguments[actualTypeArguments.length - 1] )
-				)
-		);
-	}
-
-	@Override
-	public C fromString(CharSequence string) {
-		throw new UnsupportedOperationException();
+		final Type[] typeArguments = parameterizedType.getActualTypeArguments();
+		final var registry = typeConfiguration.getJavaTypeRegistry();
+		return switch ( semantics.getCollectionClassification() ) {
+			case ARRAY -> {
+				final var arrayClass = (Class<?>) parameterizedType.getRawType();
+				yield (JavaType<C>) new ArrayJavaType<>( registry.resolveDescriptor( arrayClass.getComponentType() ) );
+			}
+			case BAG, ID_BAG, LIST, SET, SORTED_SET, ORDERED_SET ->
+					new BasicCollectionJavaType(
+							parameterizedType,
+							registry.resolveDescriptor( typeArguments[typeArguments.length-1] ),
+							semantics
+					);
+			case MAP, ORDERED_MAP, SORTED_MAP ->
+				// Construct a basic java type that knows its parametrization
+					new UnknownBasicJavaType(
+							parameterizedType,
+							new MapMutabilityPlan(
+									(MapSemantics) semantics,
+									registry.resolveDescriptor( typeArguments[0] ),
+									registry.resolveDescriptor( typeArguments[typeArguments.length-1] )
+							)
+					);
+		};
 	}
 
 	@Override
@@ -111,16 +96,20 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 		if ( one == another ) {
 			return true;
 		}
-
-		if ( one instanceof PersistentCollection<?> pc ) {
-			return pc.wasInitialized() && ( pc.isWrapper( another ) || pc.isDirectlyProvidedCollection( another ) );
+		else if ( one instanceof PersistentCollection<?> collection ) {
+			return wraps( collection, another );
 		}
-
-		if ( another instanceof PersistentCollection<?> pc ) {
-			return pc.wasInitialized() && ( pc.isWrapper( one ) || pc.isDirectlyProvidedCollection( one ) );
+		else if ( another instanceof PersistentCollection<?> collection ) {
+			return wraps( collection, one );
 		}
+		else {
+			return Objects.equals( one, another );
+		}
+	}
 
-		return Objects.equals( one, another );
+	private static <C> boolean wraps(PersistentCollection<?> collection, C other) {
+		return collection.wasInitialized()
+			&& collection.isWrapper( other );
 	}
 
 	@Override
@@ -153,13 +142,14 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 			if ( value == null ) {
 				return null;
 			}
-			final C copy = semantics.instantiateRaw( value.size(), null );
-
-			for ( var entry : value.entrySet() ) {
-				copy.put( keyPlan.deepCopy( entry.getKey() ),
-						valuePlan.deepCopy( entry.getValue() ) );
+			else {
+				final C copy = semantics.instantiateRaw( value.size(), null );
+				for ( var entry : value.entrySet() ) {
+					copy.put( keyPlan.deepCopy( entry.getKey() ),
+							valuePlan.deepCopy( entry.getValue() ) );
+				}
+				return copy;
 			}
-			return copy;
 		}
 
 		@Override

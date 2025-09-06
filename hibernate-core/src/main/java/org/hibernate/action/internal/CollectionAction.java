@@ -73,7 +73,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 		// the database. This action is responsible for second-level cache invalidation only.
 		if ( persister.hasCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
-			final Object cacheKey = cache.generateCacheKey(
+			final var cacheKey = cache.generateCacheKey(
 					key,
 					persister,
 					session.getFactory(),
@@ -148,7 +148,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 	@Override
 	public int compareTo(ComparableExecutable executable) {
 		// sort first by role name
-		final int roleComparison = collectionRole.compareTo( executable.getPrimarySortClassifier() );
+		final var roleComparison = collectionRole.compareTo( executable.getPrimarySortClassifier() );
 		return roleComparison != 0
 				? roleComparison
 				//then by fk
@@ -170,7 +170,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 		@Override
 		public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
 			final var cache = persister.getCacheAccessStrategy();
-			final Object cacheKey = cache.generateCacheKey(
+			final var cacheKey = cache.generateCacheKey(
 					key,
 					persister,
 					session.getFactory(),

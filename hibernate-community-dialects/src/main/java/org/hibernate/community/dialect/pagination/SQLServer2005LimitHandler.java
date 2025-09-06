@@ -98,15 +98,15 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 			sql = sql.substring( 0, sql.length()-1 );
 		}
 
-		final int selectOffset = Keyword.SELECT.rootOffset( sql );
-		final int afterSelectOffset = Keyword.SELECT.endOffset( sql, selectOffset );
-		final int fromOffset = Keyword.FROM.rootOffset( sql ); //TODO: what if there is no 'from' clause?!
+		final var selectOffset = Keyword.SELECT.rootOffset( sql );
+		final var afterSelectOffset = Keyword.SELECT.endOffset( sql, selectOffset );
+		final var fromOffset = Keyword.FROM.rootOffset( sql ); //TODO: what if there is no 'from' clause?!
 
-		boolean hasCommonTables = Keyword.WITH.occursAt( sql, 0 );
-		boolean hasOrderBy = Keyword.ORDER_BY.rootOffset( sql ) > 0;
-		boolean hasFirstRow = hasFirstRow( limit );
+		var hasCommonTables = Keyword.WITH.occursAt( sql, 0 );
+		var hasOrderBy = Keyword.ORDER_BY.rootOffset( sql ) > 0;
+		var hasFirstRow = hasFirstRow( limit );
 
-		final StringBuilder result = new StringBuilder( sql );
+		final var result = new StringBuilder( sql );
 
 		if ( !hasFirstRow || hasOrderBy ) {
 			if ( ParameterMarkerStrategyStandard.isStandardRenderer( parameterMarkerStrategy ) ) {
@@ -124,7 +124,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 			// enclose original SQL statement with outer query
 			// that provides the rownumber_ column
 
-			String aliases = selectAliases( sql, afterSelectOffset, fromOffset, result ); //warning: changes result by side-effect
+			var aliases = selectAliases( sql, afterSelectOffset, fromOffset, result ); //warning: changes result by side-effect
 			result.insert( selectOffset, ( hasCommonTables ? "," : "with" )
 					+ " query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" )
 					.append( ") row_) select " ).append( aliases )
@@ -133,7 +133,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 				result.append( "? and rownumber_<?" );
 			}
 			else {
-				final int firstPosition = jdbcParameterCount + 1 + ( topAdded ? 1 : 0 );
+				final var firstPosition = jdbcParameterCount + 1 + ( topAdded ? 1 : 0 );
 				result.append( parameterMarkerStrategy.createMarker( firstPosition, null ) );
 				result.append( " and rownumber_<" );
 				result.append( parameterMarkerStrategy.createMarker( firstPosition + 1, null ) );

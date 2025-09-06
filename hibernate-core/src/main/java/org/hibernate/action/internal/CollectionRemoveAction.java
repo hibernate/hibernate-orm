@@ -107,7 +107,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 			// (if the collection is uninitialized, Hibernate has no way of
 			// knowing if the collection is actually empty without querying the db)
 			final var persister = getPersister();
-			final Object key = getKey();
+			final var key = getKey();
 			final var eventMonitor = session.getEventMonitor();
 			final var event = eventMonitor.beginCollectionRemoveEvent();
 			boolean success = false;

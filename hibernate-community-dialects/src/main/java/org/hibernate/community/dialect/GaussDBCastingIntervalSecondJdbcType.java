@@ -51,9 +51,7 @@ public class GaussDBCastingIntervalSecondJdbcType implements AdjustableJdbcType 
 			// we have to switch to the numeric type if the value is greater
 			return indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( SqlTypes.NUMERIC );
 		}
-		else {
-			return this;
-		}
+		return this;
 	}
 
 	@Override

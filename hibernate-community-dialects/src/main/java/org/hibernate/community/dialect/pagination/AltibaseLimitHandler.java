@@ -26,9 +26,7 @@ public class AltibaseLimitHandler extends LimitLimitHandler {
 		if ( hasFirstRow ) {
 			return " limit 1+" + firstParameter + "," + parameterMarkerStrategy.createMarker( jdbcParameterCount + 2, null );
 		}
-		else {
-			return " limit " + firstParameter;
-		}
+		return " limit " + firstParameter;
 	}
 
 	@Override

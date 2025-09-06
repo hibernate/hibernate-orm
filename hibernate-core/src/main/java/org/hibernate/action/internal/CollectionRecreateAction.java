@@ -41,7 +41,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 		preRecreate();
 		final var session = getSession();
 		final var persister = getPersister();
-		final Object key = getKey();
+		final var key = getKey();
 		final var eventMonitor = session.getEventMonitor();
 		final var event = eventMonitor.beginCollectionRecreateEvent();
 		boolean success = false;

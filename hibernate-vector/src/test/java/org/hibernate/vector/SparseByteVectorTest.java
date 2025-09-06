@@ -10,11 +10,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
 import org.hibernate.annotations.Array;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.SqlTypes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -128,6 +130,7 @@ public class SparseByteVectorTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTaxicabDistance.class)
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle 23.9 bug")
 	public void testTaxicabDistance(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			final byte[] vector = new byte[]{ 1, 1, 1 };
@@ -162,6 +165,7 @@ public class SparseByteVectorTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsHammingDistance.class)
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle 23.9 bug")
 	public void testHammingDistance(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			final byte[] vector = new byte[]{ 1, 1, 1 };

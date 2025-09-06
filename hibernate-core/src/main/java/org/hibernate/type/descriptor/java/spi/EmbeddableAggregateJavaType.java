@@ -34,13 +34,13 @@ public class EmbeddableAggregateJavaType<T> extends AbstractClassJavaType<T> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		final BasicType<T> basicType = context.getTypeConfiguration().getBasicTypeForJavaType( getJavaType() );
+		final var basicType = context.getTypeConfiguration().getBasicTypeForJavaType( getJavaType() );
 		if ( basicType != null ) {
 			return basicType.getJdbcType();
 		}
 		if ( structName != null ) {
-			final JdbcTypeRegistry jdbcTypeRegistry = context.getTypeConfiguration().getJdbcTypeRegistry();
-			final AggregateJdbcType aggregateDescriptor = jdbcTypeRegistry.findAggregateDescriptor( structName );
+			final var jdbcTypeRegistry = context.getTypeConfiguration().getJdbcTypeRegistry();
+			final var aggregateDescriptor = jdbcTypeRegistry.findAggregateDescriptor( structName );
 			if ( aggregateDescriptor != null ) {
 				return aggregateDescriptor;
 			}
@@ -49,9 +49,10 @@ public class EmbeddableAggregateJavaType<T> extends AbstractClassJavaType<T> {
 			}
 		}
 		// When the column is mapped as XML array, the component type must be SQLXML
-		if ( context.getExplicitJdbcTypeCode() != null && context.getExplicitJdbcTypeCode() == SqlTypes.XML_ARRAY
-			// Also prefer XML is the Dialect prefers XML arrays
-			|| context.getDialect().getPreferredSqlTypeCodeForArray() == SqlTypes.XML_ARRAY ) {
+		final Integer explicitJdbcTypeCode = context.getExplicitJdbcTypeCode();
+		if ( explicitJdbcTypeCode != null && explicitJdbcTypeCode == SqlTypes.XML_ARRAY
+				// Also prefer XML as the Dialect prefers XML arrays
+				|| context.getDialect().getPreferredSqlTypeCodeForArray() == SqlTypes.XML_ARRAY ) {
 			final var descriptor = context.getJdbcType( SqlTypes.SQLXML );
 			if ( descriptor != null ) {
 				return descriptor;

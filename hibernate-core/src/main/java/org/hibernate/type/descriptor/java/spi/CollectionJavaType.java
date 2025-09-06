@@ -56,7 +56,7 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 			ParameterizedType parameterizedType,
 			TypeConfiguration typeConfiguration) {
 		final Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
-		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
+		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		switch ( semantics.getCollectionClassification() ) {
 			case ARRAY:
 				//noinspection unchecked
@@ -155,8 +155,9 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 			}
 			final C copy = semantics.instantiateRaw( value.size(), null );
 
-			for ( Map.Entry<K, V> entry : value.entrySet() ) {
-				copy.put( keyPlan.deepCopy( entry.getKey() ), valuePlan.deepCopy( entry.getValue() ) );
+			for ( var entry : value.entrySet() ) {
+				copy.put( keyPlan.deepCopy( entry.getKey() ),
+						valuePlan.deepCopy( entry.getValue() ) );
 			}
 			return copy;
 		}

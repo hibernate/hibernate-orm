@@ -15,12 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgCollectionCacheType;
-import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgConfigPropertyType;
 import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgEntityCacheType;
-import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgEventListenerGroupType;
-import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgEventListenerType;
 import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgHibernateConfiguration;
-import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgMappingReferenceType;
 import org.hibernate.event.spi.EventType;
 
 import org.jboss.logging.Logger;
@@ -75,13 +71,13 @@ public class LoadedConfig {
 	 * @return The parsed representation
 	 */
 	public static LoadedConfig consume(JaxbCfgHibernateConfiguration jaxbCfg) {
-		final LoadedConfig cfg = new LoadedConfig( jaxbCfg.getSessionFactory().getName() );
+		final var cfg = new LoadedConfig( jaxbCfg.getSessionFactory().getName() );
 
-		for ( JaxbCfgConfigPropertyType jaxbProperty : jaxbCfg.getSessionFactory().getProperty() ) {
+		for ( var jaxbProperty : jaxbCfg.getSessionFactory().getProperty() ) {
 			cfg.addConfigurationValue( jaxbProperty.getName(), jaxbProperty.getValue() );
 		}
 
-		for ( JaxbCfgMappingReferenceType jaxbMapping : jaxbCfg.getSessionFactory().getMapping() ) {
+		for ( var jaxbMapping : jaxbCfg.getSessionFactory().getMapping() ) {
 			cfg.addMappingReference( MappingReference.consume( jaxbMapping ) );
 		}
 
@@ -89,27 +85,27 @@ public class LoadedConfig {
 			cfg.addCacheRegionDefinition( parseCacheRegionDefinition( cacheDeclaration ) );
 		}
 
-		if ( !jaxbCfg.getSessionFactory().getListener().isEmpty() ) {
-			for ( JaxbCfgEventListenerType listener : jaxbCfg.getSessionFactory().getListener() ) {
-				final EventType<?> eventType = EventType.resolveEventTypeByName( listener.getType().value() );
+		final var eventListeners = jaxbCfg.getSessionFactory().getListener();
+		if ( !eventListeners.isEmpty() ) {
+			for ( var listener : eventListeners ) {
+				final var eventType = EventType.resolveEventTypeByName( listener.getType().value() );
 				cfg.addEventListener( eventType, listener.getClazz() );
 			}
 		}
 
-		if ( !jaxbCfg.getSessionFactory().getEvent().isEmpty() ) {
-			for ( JaxbCfgEventListenerGroupType listenerGroup : jaxbCfg.getSessionFactory().getEvent() ) {
-				if ( listenerGroup.getListener().isEmpty() ) {
-					continue;
-				}
-
-				final String eventTypeName = listenerGroup.getType().value();
-				final EventType<?> eventType = EventType.resolveEventTypeByName( eventTypeName );
-
-				for ( JaxbCfgEventListenerType listener : listenerGroup.getListener() ) {
-					if ( listener.getType() != null ) {
-						LOG.debugf( "Listener [%s] defined as part of a group also defined event type", listener.getClazz() );
+		final var listenerGroups = jaxbCfg.getSessionFactory().getEvent();
+		if ( !listenerGroups.isEmpty() ) {
+			for ( var listenerGroup : listenerGroups ) {
+				if ( !listenerGroup.getListener().isEmpty() ) {
+					final String eventTypeName = listenerGroup.getType().value();
+					final var eventType = EventType.resolveEventTypeByName( eventTypeName );
+					for ( var listener : listenerGroup.getListener() ) {
+						if ( listener.getType() != null ) {
+							LOG.debugf( "Listener [%s] defined as part of a group also defined event type",
+									listener.getClazz() );
+						}
+						cfg.addEventListener( eventType, listener.getClazz() );
 					}
-					cfg.addEventListener( eventType, listener.getClazz() );
 				}
 			}
 		}
@@ -118,17 +114,13 @@ public class LoadedConfig {
 	}
 
 	private static String trim(String value) {
-		if ( value == null ) {
-			return null;
-		}
+		return value == null ? null : value.trim();
 
-		return value.trim();
 	}
 
 	private void addConfigurationValue(String propertyName, String value) {
 		value = trim( value );
 		configurationValues.put( propertyName, value );
-
 		if ( !propertyName.startsWith( "hibernate." ) ) {
 			configurationValues.put( "hibernate." + propertyName, value );
 		}
@@ -138,7 +130,6 @@ public class LoadedConfig {
 		if ( mappingReferences == null ) {
 			mappingReferences =  new ArrayList<>();
 		}
-
 		mappingReferences.add( mappingReference );
 	}
 
@@ -152,8 +143,7 @@ public class LoadedConfig {
 					"all".equals( jaxbClassCache.getInclude() )
 			);
 		}
-		else {
-			final JaxbCfgCollectionCacheType jaxbCollectionCache = (JaxbCfgCollectionCacheType) cacheDeclaration;
+		else if ( cacheDeclaration instanceof JaxbCfgCollectionCacheType jaxbCollectionCache ) {
 			return new CacheRegionDefinition(
 					CacheRegionDefinition.CacheRegionType.COLLECTION,
 					jaxbCollectionCache.getCollection(),
@@ -161,6 +151,9 @@ public class LoadedConfig {
 					jaxbCollectionCache.getRegion(),
 					false
 			);
+		}
+		else {
+			throw new IllegalArgumentException( "Unrecognized cache declaration" );
 		}
 	}
 
@@ -213,22 +206,18 @@ public class LoadedConfig {
 	}
 
 	protected void addConfigurationValues(Map<String,Object> configurationValues) {
-		if ( configurationValues == null ) {
-			return;
+		if ( configurationValues != null ) {
+			this.configurationValues.putAll( configurationValues );
 		}
-
-		this.configurationValues.putAll( configurationValues );
 	}
 
 	private void addMappingReferences(List<MappingReference> mappingReferences) {
-		if ( mappingReferences == null ) {
-			return;
+		if ( mappingReferences != null ) {
+			if ( this.mappingReferences == null ) {
+				this.mappingReferences = new ArrayList<>();
+			}
+			this.mappingReferences.addAll( mappingReferences );
 		}
-
-		if ( this.mappingReferences == null ) {
-			this.mappingReferences =  new ArrayList<>();
-		}
-		this.mappingReferences.addAll( mappingReferences );
 	}
 
 	private void addCacheRegionDefinitions(List<CacheRegionDefinition> cacheRegionDefinitions) {
@@ -243,21 +232,19 @@ public class LoadedConfig {
 	}
 
 	private void addEventListeners(Map<EventType<?>, Set<String>> eventListenerMap) {
-		if ( eventListenerMap == null ) {
-			return;
-		}
-
-		if ( this.eventListenerMap == null ) {
-			this.eventListenerMap = new HashMap<>();
-		}
-
-		for ( Map.Entry<EventType<?>, Set<String>> incomingEntry : eventListenerMap.entrySet() ) {
-			Set<String> listenerClasses = this.eventListenerMap.get( incomingEntry.getKey() );
-			if ( listenerClasses == null ) {
-				listenerClasses = new HashSet<>();
-				this.eventListenerMap.put( incomingEntry.getKey(), listenerClasses );
+		if ( eventListenerMap != null ) {
+			if ( this.eventListenerMap == null ) {
+				this.eventListenerMap = new HashMap<>();
 			}
-			listenerClasses.addAll( incomingEntry.getValue() );
+
+			for ( var incomingEntry : eventListenerMap.entrySet() ) {
+				var listenerClasses = this.eventListenerMap.get( incomingEntry.getKey() );
+				if ( listenerClasses == null ) {
+					listenerClasses = new HashSet<>();
+					this.eventListenerMap.put( incomingEntry.getKey(), listenerClasses );
+				}
+				listenerClasses.addAll( incomingEntry.getValue() );
+			}
 		}
 	}
 

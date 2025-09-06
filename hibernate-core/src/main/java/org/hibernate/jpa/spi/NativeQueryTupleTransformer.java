@@ -136,9 +136,8 @@ public class NativeQueryTupleTransformer implements ResultTransformer<Tuple>, Ty
 
 		@Override
 		public List<TupleElement<?>> getElements() {
-			List<TupleElement<?>> elements = new ArrayList<>( size );
-
-			for ( Map.Entry<String, Object> entry : aliasToValue.entrySet() ) {
+			final List<TupleElement<?>> elements = new ArrayList<>( size );
+			for ( var entry : aliasToValue.entrySet() ) {
 				elements.add( new NativeTupleElementImpl<>( getValueClass( entry.getValue() ), entry.getKey() ) );
 			}
 			return elements;

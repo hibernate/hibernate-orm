@@ -4,15 +4,12 @@
  */
 package org.hibernate.type.descriptor.java.spi;
 
-import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
-import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.internal.DelayedStructJdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 /**
  * Java type for embeddable aggregates, which allows resolving a recommended {@link JdbcType}.

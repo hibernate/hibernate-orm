@@ -95,7 +95,7 @@ public abstract class FormatMapperBasedJavaType<T> extends AbstractJavaType<T> i
 
 	@Override
 	public MutabilityPlan<T> getMutabilityPlan() {
-		final MutabilityPlan<T> mutabilityPlan = super.getMutabilityPlan();
+		final var mutabilityPlan = super.getMutabilityPlan();
 		return mutabilityPlan == null ? this : mutabilityPlan;
 	}
 

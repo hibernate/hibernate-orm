@@ -55,7 +55,14 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 			.withZone( ZoneId.from( ZoneOffset.UTC ) );
 
 	public JdbcTimestampJavaType() {
-		super( Timestamp.class, TimestampMutabilityPlan.INSTANCE );
+		super( Date.class, TimestampMutabilityPlan.INSTANCE );
+	}
+
+	@Override
+	public Class<Date> getJavaType() {
+		// wrong, but needed for backward compatibility
+		//noinspection unchecked, rawtypes
+		return (Class) java.sql.Timestamp.class;
 	}
 
 	@Override
@@ -105,7 +112,7 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 
 	@Override
 	public int extractHashCode(Date value) {
-		return Long.valueOf( value.getTime() / 1000 ).hashCode();
+		return Long.hashCode( value.getTime() / 1000 );
 	}
 
 	@Override
@@ -136,9 +143,9 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 		}
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
-			final GregorianCalendar cal = new GregorianCalendar();
-			cal.setTimeInMillis( value.getTime() );
-			return cal;
+			final var gregorianCalendar = new GregorianCalendar();
+			gregorianCalendar.setTimeInMillis( value.getTime() );
+			return gregorianCalendar;
 		}
 
 		if ( Long.class.isAssignableFrom( type ) ) {
@@ -147,13 +154,13 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
 			return value instanceof java.sql.Date
-					? ( java.sql.Date ) value
+					? (java.sql.Date) value
 					: new java.sql.Date( value.getTime() );
 		}
 
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
 			return value instanceof java.sql.Time
-					? ( java.sql.Time ) value
+					? (java.sql.Time) value
 					: new java.sql.Time( value.getTime() % 86_400_000 );
 		}
 

@@ -404,8 +404,8 @@ public class InferredBasicValueResolver {
 		);
 	}
 
-	private static <E extends Enum<E>> Field determineEnumeratedValueField(Class<E> enumJavaTypeClass) {
-		for ( Field field : enumJavaTypeClass.getDeclaredFields() ) {
+	private static <E extends Enum<E>> Field determineEnumeratedValueField(Class<? extends E> enumJavaTypeClass) {
+		for ( var field : enumJavaTypeClass.getDeclaredFields() ) {
 			if ( field.isAnnotationPresent( EnumeratedValue.class ) ) {
 				return field;
 			}

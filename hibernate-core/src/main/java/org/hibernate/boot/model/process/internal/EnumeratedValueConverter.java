@@ -36,7 +36,7 @@ public class EnumeratedValueConverter<E extends Enum<E>,R> implements BasicValue
 
 		ensureAccessibility( valueField );
 
-		final Class<E> enumJavaTypeClass = enumJavaType.getJavaTypeClass();
+		final var enumJavaTypeClass = enumJavaType.getJavaTypeClass();
 		final E[] enumConstants = enumJavaTypeClass.getEnumConstants();
 		relationalToEnumMap = mapOfSize( enumConstants.length );
 		enumToRelationalMap = mapOfSize( enumConstants.length );

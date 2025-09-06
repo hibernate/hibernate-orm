@@ -18,6 +18,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.spi.EmbeddableAggregateJavaType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.ATTRIBUTE;
 
@@ -45,10 +46,7 @@ public final class AggregateComponentBinder {
 			final String structName = structQualifiedName == null ? null : structQualifiedName.render();
 
 			// We must register a special JavaType for the embeddable which can provide a recommended JdbcType
-			typeConfiguration.getJavaTypeRegistry().resolveDescriptor(
-					component.getComponentClass(),
-					() -> new EmbeddableAggregateJavaType<>( component.getComponentClass(), structName )
-			);
+			registerDescriptor( component.getComponentClass(), typeConfiguration, structName );
 			component.setStructName( structQualifiedName );
 			component.setStructColumnNames( determineStructAttributeNames( inferredData, componentClassDetails ) );
 
@@ -96,6 +94,12 @@ public final class AggregateComponentBinder {
 					)
 			);
 		}
+	}
+
+	private static <T> void registerDescriptor(Class<T> componentClass, TypeConfiguration typeConfiguration, String structName) {
+		typeConfiguration.getJavaTypeRegistry()
+				.resolveDescriptor( componentClass,
+						() -> new EmbeddableAggregateJavaType<>( componentClass, structName ) );
 	}
 
 	private static int getStructPluralSqlTypeCode(MetadataBuildingContext context) {

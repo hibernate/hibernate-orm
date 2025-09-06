@@ -134,7 +134,9 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		isBound = true;
 		bindValue = null;
 		if ( resolveJdbcTypeIfNecessary && bindType == null ) {
-			bindType = getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( "null" );
+			bindType = (BindableType<? super T>)
+					getTypeConfiguration().getBasicTypeRegistry()
+							.getRegisteredType( "null" );
 		}
 	}
 

@@ -131,10 +131,8 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 			return javaTypeRegistry.getDescriptor( bootDescriptor.getComponentClass() );
 		}
 		else {
-			return javaTypeRegistry.resolveDescriptor(
-					compositeUserType.returnedClass(),
-					() -> new CompositeUserTypeJavaTypeWrapper<>( compositeUserType )
-			);
+			return javaTypeRegistry.resolveDescriptor( compositeUserType.returnedClass(),
+					() -> new CompositeUserTypeJavaTypeWrapper<>( compositeUserType ) );
 		}
 	}
 

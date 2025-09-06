@@ -89,47 +89,53 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 
 	@Deprecated(since = "7.2") // Due to unbound type parameter
 	public <T> JavaType<T> getDescriptor(Type javaType) {
-		return resolveDescriptor( javaType );
+		//noinspection unchecked
+		return (JavaType<T>) resolveDescriptor( javaType );
 	}
 
-	@Deprecated(since = "7.2") // Due to unbound type parameter
-	public <J> JavaType<J> findDescriptor(Type javaType) {
-		//noinspection unchecked
-		return (JavaType<J>) descriptorsByTypeName.get( javaType.getTypeName() );
+	public JavaType<?> findDescriptor(Type javaType) {
+		return descriptorsByTypeName.get( javaType.getTypeName() );
 	}
 
 	public <J> JavaType<J> findDescriptor(Class<J> javaType) {
 		//noinspection unchecked
-		return (JavaType<J>) descriptorsByTypeName.get( javaType.getTypeName() );
+		return (JavaType<J>) findDescriptor( (Type) javaType );
 	}
 
-	public <J> JavaType<J> resolveDescriptor(Type javaType, Supplier<JavaType<J>> creator) {
-		return resolveDescriptor( javaType.getTypeName(), creator );
+	public <J> JavaType<J> resolveDescriptor(Class<? extends J> javaType, Supplier<JavaType<J>> creator) {
+		//noinspection unchecked
+		return (JavaType<J>) resolveDescriptor( javaType.getTypeName(), creator );
 	}
 
-	private <J> JavaType<J> resolveDescriptor(String javaTypeName, Supplier<JavaType<J>> creator) {
-		final JavaType<?> cached = descriptorsByTypeName.get( javaTypeName );
+	@Deprecated(since = "7.2", forRemoval = true) // Can be private
+	private JavaType<?> resolveDescriptor(String javaTypeName, Supplier<? extends JavaType<?>> creator) {
+		final var cached = descriptorsByTypeName.get( javaTypeName );
 		if ( cached != null ) {
-			//noinspection unchecked
-			return (JavaType<J>) cached;
+			return cached;
 		}
-
-		final JavaType<J> created = creator.get();
-		descriptorsByTypeName.put( javaTypeName, created );
-		return created;
+		else {
+			final var created = creator.get();
+			descriptorsByTypeName.put( javaTypeName, created );
+			return created;
+		}
 	}
 
-	@Deprecated(since = "7.2") // Due to unbound type parameter
-	public <J> JavaType<J> resolveDescriptor(Type javaType) {
+	public JavaType<?> resolveDescriptor(Type javaType) {
 		return resolveDescriptor( javaType, JavaTypeRegistry::createMutabilityPlan );
 	}
 
 	public <J> JavaType<J> resolveDescriptor(Class<J> javaType) {
-		return resolveDescriptor( javaType, JavaTypeRegistry::createMutabilityPlan );
+		//noinspection unchecked
+		return (JavaType<J>) resolveDescriptor( javaType, JavaTypeRegistry::createMutabilityPlan );
 	}
 
-	private static <J> MutabilityPlan<?> createMutabilityPlan(Type elementJavaType, TypeConfiguration typeConfiguration) {
-		final MutabilityPlan<J> determinedPlan = RegistryHelper.INSTANCE.determineMutabilityPlan(
+	public <J> JavaType<J> resolveDescriptor(JavaType<J> javaType) {
+		//noinspection unchecked
+		return (JavaType<J>) resolveDescriptor( javaType.getJavaTypeClass().getTypeName(), () -> javaType );
+	}
+
+	private static MutabilityPlan<?> createMutabilityPlan(Type elementJavaType, TypeConfiguration typeConfiguration) {
+		final MutabilityPlan<?> determinedPlan = RegistryHelper.INSTANCE.determineMutabilityPlan(
 				elementJavaType,
 				typeConfiguration
 		);
@@ -141,25 +147,27 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 	}
 
 	public <T> JavaType<T[]> resolveArrayDescriptor(Class<T> elementJavaType) {
-		return resolveDescriptor( elementJavaType.getTypeName() + "[]",
-				() -> createArrayTypeDescriptor( elementJavaType, JavaTypeRegistry::createMutabilityPlan) );
+		//noinspection unchecked
+		return (JavaType<T[]>)
+				resolveDescriptor( elementJavaType.getTypeName() + "[]",
+						() -> createArrayTypeDescriptor( elementJavaType, JavaTypeRegistry::createMutabilityPlan) );
 	}
 
-	public <J> JavaType<J> resolveDescriptor(
+	@Deprecated(since = "7.2", forRemoval = true) // Can be private
+	public JavaType<?> resolveDescriptor(
 			Type javaType,
 			BiFunction<Type, TypeConfiguration, MutabilityPlan<?>> mutabilityPlanCreator) {
 		return resolveDescriptor(
 				javaType.getTypeName(),
 				() -> {
 					if ( javaType instanceof ParameterizedType parameterizedType ) {
-						final JavaType<J> rawType = findDescriptor( parameterizedType.getRawType() );
+						final var rawType = findDescriptor( parameterizedType.getRawType() );
 						if ( rawType != null ) {
 							return rawType.createJavaType( parameterizedType, typeConfiguration );
 						}
 					}
 					else if ( javaType instanceof Class<?> javaClass && javaClass.isArray() ) {
-						//noinspection unchecked
-						return (JavaType<J>) createArrayTypeDescriptor( javaClass.getComponentType(), mutabilityPlanCreator );
+						return createArrayTypeDescriptor( javaClass.getComponentType(), mutabilityPlanCreator );
 					}
 					return createTypeDescriptor( javaType, mutabilityPlanCreator );
 				}
@@ -183,25 +191,34 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		);
 	}
 
-	public <J> JavaType<J> resolveManagedTypeDescriptor(Type javaType) {
+	public JavaType<?> resolveManagedTypeDescriptor(Type javaType) {
 		return resolveManagedTypeDescriptor( javaType, false );
 	}
 
-	public <J> JavaType<J> resolveEntityTypeDescriptor(Type javaType) {
+	public <J> JavaType<J> resolveManagedTypeDescriptor(Class<J> javaType) {
+		//noinspection unchecked
+		return (JavaType<J>) resolveManagedTypeDescriptor( javaType, false );
+	}
+
+	public JavaType<?> resolveEntityTypeDescriptor(Type javaType) {
 		return resolveManagedTypeDescriptor( javaType, true );
 	}
 
-	@SuppressWarnings("unchecked")
-	private <J> JavaType<J> resolveManagedTypeDescriptor(Type javaType, boolean entity) {
+	public <J> JavaType<J> resolveEntityTypeDescriptor(Class<J> javaType) {
+		//noinspection unchecked
+		return (JavaType<J>) resolveManagedTypeDescriptor( javaType, true );
+	}
+
+	private <J> JavaType<?> resolveManagedTypeDescriptor(Type javaType, boolean entity) {
 		return resolveDescriptor(
-				javaType,
+				javaType.getTypeName(),
 				() -> {
 					final Class<J> javaTypeClass;
 					if ( javaType instanceof Class<?> ) {
 						javaTypeClass = (Class<J>) javaType;
 					}
 					else {
-						final ParameterizedType parameterizedType = (ParameterizedType) javaType;
+						final var parameterizedType = (ParameterizedType) javaType;
 						javaTypeClass = (Class<J>) parameterizedType.getRawType();
 					}
 
@@ -209,9 +226,10 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 							javaType,
 							typeConfiguration
 					);
-					final MutabilityPlan<J> mutabilityPlan = (determinedPlan != null)
-							? determinedPlan
-							: (MutabilityPlan<J>) MutableMutabilityPlan.INSTANCE;
+					final MutabilityPlan<J> mutabilityPlan =
+							determinedPlan != null
+									? determinedPlan
+									: (MutabilityPlan<J>) MutableMutabilityPlan.INSTANCE;
 
 					return entity
 							? new EntityJavaType<>( javaTypeClass, mutabilityPlan )

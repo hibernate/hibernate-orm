@@ -116,8 +116,9 @@ public class FullyQualifiedReflectivePathTerminal<E>
 		if ( namedClass.isEnum() ) {
 			return new SqmEnumLiteral(
 					Enum.valueOf( namedClass, getLocalName() ),
-					(EnumJavaType) javaTypeRegistry()
-							.resolveDescriptor( namedClass, () -> new EnumJavaType( namedClass ) ),
+					(EnumJavaType)
+							javaTypeRegistry()
+									.resolveDescriptor( namedClass, () -> new EnumJavaType( namedClass ) ),
 					getLocalName(),
 					nodeBuilder()
 			);

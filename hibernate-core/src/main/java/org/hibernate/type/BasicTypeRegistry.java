@@ -67,14 +67,12 @@ public class BasicTypeRegistry implements Serializable {
 		return typeConfiguration.getJdbcTypeRegistry();
 	}
 
-	@Deprecated(since = "7.2") // due to the unbound type parameter
-	public <J> BasicType<J> getRegisteredType(String key) {
+	public BasicType<?> getRegisteredType(String key) {
 		var basicType = typesByName.get( key );
 		if ( basicType == null ) {
 			basicType = resolveTypeReference( key );
 		}
-		//noinspection unchecked
-		return (BasicType<J>) basicType;
+		return basicType;
 	}
 
 	private BasicType<?> resolveTypeReference(String name) {
@@ -120,13 +118,13 @@ public class BasicTypeRegistry implements Serializable {
 		}
 	}
 
-	@Deprecated(since = "7.2") // due to the unbound type parameter
-	public <J> BasicType<J> getRegisteredType(java.lang.reflect.Type javaType) {
+	public BasicType<?> getRegisteredType(java.lang.reflect.Type javaType) {
 		return getRegisteredType( javaType.getTypeName() );
 	}
 
 	public <J> BasicType<J> getRegisteredType(Class<J> javaType) {
-		return getRegisteredType( javaType.getTypeName() );
+		//noinspection unchecked
+		return (BasicType<J>) getRegisteredType( javaType.getTypeName() );
 	}
 
 	public BasicType<?> getRegisteredArrayType(java.lang.reflect.Type javaElementType) {
@@ -134,15 +132,15 @@ public class BasicTypeRegistry implements Serializable {
 	}
 
 	public <J> BasicType<J> resolve(BasicTypeReference<J> basicTypeReference) {
-		return getRegisteredType( basicTypeReference.getName() );
+		//noinspection unchecked
+		return (BasicType<J>) getRegisteredType( basicTypeReference.getName() );
 	}
 
 	public <J> BasicType<J> resolve(Class<J> javaType, int sqlTypeCode) {
-		return resolve( (java.lang.reflect.Type) javaType, sqlTypeCode );
+		return resolve( getJavaTypeRegistry().resolveDescriptor( javaType ), sqlTypeCode );
 	}
 
-	@Deprecated(since = "7.2") // due to the unbound type parameter
-	public <J> BasicType<J> resolve(java.lang.reflect.Type javaType, int sqlTypeCode) {
+	public BasicType<?> resolve(java.lang.reflect.Type javaType, int sqlTypeCode) {
 		return resolve( getJavaTypeRegistry().getDescriptor( javaType ), sqlTypeCode );
 	}
 

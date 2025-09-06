@@ -9,9 +9,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.Arrays;
 
@@ -30,18 +27,21 @@ public class MultiKeyLoadHelper {
 			JdbcMapping keyMapping,
 			Class<?> elementClass,
 			SessionFactoryImplementor sessionFactory) {
-		BasicType<?> arrayBasicType = sessionFactory.getTypeConfiguration().getBasicTypeRegistry()
-				.getRegisteredArrayType( elementClass );
+		final var arrayBasicType =
+				sessionFactory.getTypeConfiguration().getBasicTypeRegistry()
+						.getRegisteredArrayType( elementClass );
 		if ( arrayBasicType != null ) {
 			return arrayBasicType;
 		}
 
-		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
-		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
+		final var typeConfiguration = sessionFactory.getTypeConfiguration();
+		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 
-		final JavaType<?> rawArrayJavaType = javaTypeRegistry.resolveArrayDescriptor( elementClass );
+		final var rawArrayJavaType = javaTypeRegistry.resolveArrayDescriptor( elementClass );
 		if ( !(rawArrayJavaType instanceof BasicPluralJavaType<?> arrayJavaType ) ) {
-			throw new IllegalArgumentException( "Expecting BasicPluralJavaType for array class `" + elementClass.getTypeName() + "[]`, but got `" + rawArrayJavaType + "`" );
+			throw new IllegalArgumentException( "Expecting BasicPluralJavaType for array class '"
+												+ elementClass.getTypeName() + "[]', but got '"
+												+ rawArrayJavaType + "'" );
 		}
 
 		//noinspection unchecked,rawtypes
@@ -79,6 +79,8 @@ public class MultiKeyLoadHelper {
 		while ( newLength>1 && keysToInitialize[newLength-1] == null ) {
 			newLength--;
 		}
-		return newLength < length ? Arrays.copyOf(keysToInitialize, newLength) : keysToInitialize;
+		return newLength < length
+				? Arrays.copyOf(keysToInitialize, newLength)
+				: keysToInitialize;
 	}
 }

@@ -128,7 +128,7 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		return MutableMutabilityPlan.INSTANCE;
 	}
 
-	public JavaType<?> resolveArrayDescriptor(Class<?> elementJavaType) {
+	public <T> JavaType<T[]> resolveArrayDescriptor(Class<T> elementJavaType) {
 		return resolveDescriptor( elementJavaType.getTypeName() + "[]",
 				() -> createArrayTypeDescriptor( elementJavaType, JavaTypeRegistry::createMutabilityPlan) );
 	}

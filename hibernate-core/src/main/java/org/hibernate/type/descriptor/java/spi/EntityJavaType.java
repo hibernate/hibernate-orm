@@ -4,7 +4,6 @@
  */
 package org.hibernate.type.descriptor.java.spi;
 
-import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.java.IncomparableComparator;

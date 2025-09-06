@@ -52,12 +52,19 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 			.toFormatter();
 
 	public JdbcDateJavaType() {
-		super( java.sql.Date.class, DateMutabilityPlan.INSTANCE );
+		super( Date.class, DateMutabilityPlan.INSTANCE );
 	}
 
 	@Override
 	public TemporalType getPrecision() {
 		return TemporalType.DATE;
+	}
+
+	@Override
+	public Class<Date> getJavaType() {
+		// wrong, but needed for backward compatibility
+		//noinspection unchecked, rawtypes
+		return (Class) java.sql.Date.class;
 	}
 
 	@Override
@@ -135,9 +142,9 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 		}
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
-			final GregorianCalendar cal = new GregorianCalendar();
-			cal.setTimeInMillis( unwrapDateEpoch( value ) );
-			return cal;
+			final var gregorianCalendar = new GregorianCalendar();
+			gregorianCalendar.setTimeInMillis( unwrapDateEpoch( value ) );
+			return gregorianCalendar;
 		}
 
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {

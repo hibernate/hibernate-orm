@@ -17,18 +17,18 @@ public abstract class AbstractTemporalJavaType<T>
 		extends AbstractClassJavaType<T>
 		implements TemporalJavaType<T> {
 
-	protected AbstractTemporalJavaType(Class<? extends T> type) {
+	protected AbstractTemporalJavaType(Class<T> type) {
 		super( type );
 	}
 
-	protected AbstractTemporalJavaType(Class<? extends T> type, MutabilityPlan<? extends T> mutabilityPlan) {
+	protected AbstractTemporalJavaType(Class<T> type, MutabilityPlan<T> mutabilityPlan) {
 		super( type, mutabilityPlan );
 	}
 
 	public AbstractTemporalJavaType(
-			Class<? extends T> type,
-			MutabilityPlan<? extends T> mutabilityPlan,
-			Comparator<? extends T> comparator) {
+			Class<T> type,
+			MutabilityPlan<T> mutabilityPlan,
+			Comparator<T> comparator) {
 		super( type, mutabilityPlan, comparator );
 	}
 

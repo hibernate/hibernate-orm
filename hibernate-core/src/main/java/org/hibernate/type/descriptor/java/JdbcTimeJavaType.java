@@ -52,12 +52,19 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 
 
 	public JdbcTimeJavaType() {
-		super( Time.class, TimeMutabilityPlan.INSTANCE );
+		super( Date.class, TimeMutabilityPlan.INSTANCE );
 	}
 
 	@Override
 	public TemporalType getPrecision() {
 		return TemporalType.TIME;
+	}
+
+	@Override
+	public Class<Date> getJavaType() {
+		// wrong, but needed for backward compatibility
+		//noinspection unchecked, rawtypes
+		return (Class) java.sql.Time.class;
 	}
 
 	@Override
@@ -69,7 +76,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 
 	@Override
 	public int extractHashCode(Date value) {
-		final Calendar calendar = Calendar.getInstance();
+		final var calendar = Calendar.getInstance();
 		calendar.setTime( value );
 		int hashCode = 1;
 		hashCode = 31 * hashCode + calendar.get( Calendar.HOUR_OF_DAY );
@@ -118,9 +125,9 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 
 		if ( LocalTime.class.isAssignableFrom( type ) ) {
 			final Time time = value instanceof java.sql.Time
-					? ( (java.sql.Time) value )
+					? (java.sql.Time) value
 					: new java.sql.Time( value.getTime() % 86_400_000 );
-			final LocalTime localTime = time.toLocalTime();
+			final var localTime = time.toLocalTime();
 			long millis = time.getTime() % 1000;
 			if ( millis == 0 ) {
 				return localTime;
@@ -152,9 +159,9 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 		}
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
-			final GregorianCalendar cal = new GregorianCalendar();
-			cal.setTimeInMillis( value.getTime() );
-			return cal;
+			final var gregorianCalendar = new GregorianCalendar();
+			gregorianCalendar.setTimeInMillis( value.getTime() );
+			return gregorianCalendar;
 		}
 
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {

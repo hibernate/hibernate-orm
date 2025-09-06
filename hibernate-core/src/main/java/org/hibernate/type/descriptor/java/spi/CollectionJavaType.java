@@ -36,7 +36,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 	private final CollectionSemantics<C,?> semantics;
 
-	public CollectionJavaType(Class<? extends C> type, CollectionSemantics<C,?> semantics) {
+	public CollectionJavaType(Class<C> type, CollectionSemantics<C,?> semantics) {
 		super( type );
 		this.semantics = semantics;
 	}

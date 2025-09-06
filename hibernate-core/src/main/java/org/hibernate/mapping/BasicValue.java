@@ -19,7 +19,6 @@ import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.internal.AutoApplicableConverterDescriptorBypassedImpl;
 import org.hibernate.boot.model.convert.spi.AutoApplicableConverterDescriptor;
@@ -40,7 +39,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
-import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
@@ -57,7 +55,6 @@ import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.java.spi.JsonJavaType;
 import org.hibernate.type.descriptor.java.spi.RegistryHelper;
 import org.hibernate.type.descriptor.java.spi.XmlJavaType;
@@ -319,8 +316,9 @@ public class BasicValue extends SimpleValue
 	@Override
 	public Type getType() throws MappingException {
 		resolve();
-		assert getResolution() != null;
-		return getResolution().getLegacyResolvedBasicType();
+		final var resolution = getResolution();
+		assert resolution != null;
+		return resolution.getLegacyResolvedBasicType();
 	}
 
 	public Resolution<?> getResolution() {
@@ -392,8 +390,9 @@ public class BasicValue extends SimpleValue
 //		}
 
 		if ( dialect.supportsColumnCheck() ) {
-			final String checkCondition = resolution.getLegacyResolvedBasicType()
-					.getCheckCondition( column.getQuotedName( dialect ), dialect );
+			final String checkCondition =
+					resolution.getLegacyResolvedBasicType()
+							.getCheckCondition( column.getQuotedName( dialect ), dialect );
 			if ( checkCondition != null ) {
 				column.addCheckConstraint( new CheckConstraint( checkCondition ) );
 			}
@@ -415,7 +414,7 @@ public class BasicValue extends SimpleValue
 	}
 
 	protected Resolution<?> buildResolution() {
-		final Properties typeParameters = getTypeParameters();
+		final var typeParameters = getTypeParameters();
 		if ( typeParameters != null
 				&& parseBoolean( typeParameters.getProperty(DynamicParameterizedType.IS_DYNAMIC) )
 				&& typeParameters.get(DynamicParameterizedType.PARAMETER_TYPE) == null ) {
@@ -443,8 +442,8 @@ public class BasicValue extends SimpleValue
 		}
 		else {
 			// determine JavaType if we can
-			final JavaType<?> javaType = determineJavaType();
-			final ConverterDescriptor<?,?> converterDescriptor = getConverterDescriptor( javaType );
+			final var javaType = determineJavaType();
+			final var converterDescriptor = getConverterDescriptor( javaType );
 			return converterDescriptor != null
 					? converterResolution( javaType, converterDescriptor )
 					: resolution( getExplicitJavaType(), javaType );
@@ -456,13 +455,13 @@ public class BasicValue extends SimpleValue
 	}
 
 	private ConverterDescriptor<?,?> getConverterDescriptor(JavaType<?> javaType) {
-		final ConverterDescriptor<?,?> converterDescriptor = getAttributeConverterDescriptor();
+		final var converterDescriptor = getAttributeConverterDescriptor();
 		if ( isSoftDelete() && getSoftDeleteStrategy() != SoftDeleteType.TIMESTAMP ) {
 			assert converterDescriptor != null;
 			@SuppressWarnings("unchecked")
-			final ConverterDescriptor<Boolean, ?> booleanConverterDescriptor =
+			final var booleanConverterDescriptor =
 					(ConverterDescriptor<Boolean, ?>) converterDescriptor;
-			final ConverterDescriptor<Boolean,?> softDeleteConverterDescriptor =
+			final var softDeleteConverterDescriptor =
 					getSoftDeleteConverterDescriptor( booleanConverterDescriptor, javaType );
 			return getSoftDeleteStrategy() == SoftDeleteType.ACTIVE
 					? new ReversedConverterDescriptor<>( softDeleteConverterDescriptor )
@@ -478,8 +477,8 @@ public class BasicValue extends SimpleValue
 		final boolean conversionWasUnspecified =
 				SoftDelete.UnspecifiedConversion.class.equals( attributeConverterDescriptor.getAttributeConverterClass() );
 		if ( conversionWasUnspecified ) {
-			final JdbcType jdbcType = BooleanJdbcType.INSTANCE.resolveIndicatedType( this, javaType );
-			final ClassmateContext classmateContext = getBuildingContext().getBootstrapContext().getClassmateContext();
+			final var jdbcType = BooleanJdbcType.INSTANCE.resolveIndicatedType( this, javaType );
+			final var classmateContext = getBuildingContext().getBootstrapContext().getClassmateContext();
 			if ( jdbcType.isNumber() ) {
 				return ConverterDescriptors.of( NumericBooleanConverter.INSTANCE, classmateContext );
 			}
@@ -619,7 +618,7 @@ public class BasicValue extends SimpleValue
 		final JavaType<T> basicJavaType;
 		final JdbcType jdbcType;
 		if ( explicitJdbcTypeAccess != null ) {
-			final TypeConfiguration typeConfiguration = getTypeConfiguration();
+			final var typeConfiguration = getTypeConfiguration();
 			jdbcType = explicitJdbcTypeAccess.apply( typeConfiguration );
 			basicJavaType = javaType == null && jdbcType != null
 					? jdbcType.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration )
@@ -635,8 +634,8 @@ public class BasicValue extends SimpleValue
 
 		if ( basicJavaType instanceof BasicJavaType<T> castType
 				&& ( !basicJavaType.getJavaTypeClass().isEnum() || enumerationStyle == null ) ) {
-			final MetadataBuildingContext context = getBuildingContext();
-			final TypeDefinition autoAppliedTypeDef = context.getTypeDefinitionRegistry().resolveAutoApplied( castType );
+			final var context = getBuildingContext();
+			final var autoAppliedTypeDef = context.getTypeDefinitionRegistry().resolveAutoApplied( castType );
 			if ( autoAppliedTypeDef != null ) {
 				LOG.trace( "BasicValue resolution matched auto-applied type definition" );
 				return autoAppliedTypeDef.resolve( getTypeParameters(), null, context, this );
@@ -664,7 +663,7 @@ public class BasicValue extends SimpleValue
 	}
 
 	private Resolution<?> converterResolution(JavaType<?> javaType, ConverterDescriptor<?,?> attributeConverterDescriptor) {
-		final NamedConverterResolution<?> converterResolution = NamedConverterResolution.from(
+		final var converterResolution = NamedConverterResolution.from(
 				attributeConverterDescriptor,
 				explicitJavaTypeAccess,
 				explicitJdbcTypeAccess,
@@ -717,7 +716,7 @@ public class BasicValue extends SimpleValue
 //		}
 
 		if ( javaType == null ) {
-			final JavaType<?> reflectedJtd = determineReflectedJavaType();
+			final var reflectedJtd = determineReflectedJavaType();
 			if ( reflectedJtd != null ) {
 				return reflectedJtd;
 			}
@@ -727,8 +726,8 @@ public class BasicValue extends SimpleValue
 	}
 
 	private JavaType<?> determineReflectedJavaType() {
-		final TypeConfiguration typeConfiguration = getTypeConfiguration();
-		final java.lang.reflect.Type impliedJavaType = impliedJavaType( typeConfiguration );
+		final var typeConfiguration = getTypeConfiguration();
+		final var impliedJavaType = impliedJavaType( typeConfiguration );
 		if ( impliedJavaType == null ) {
 			return null;
 		}
@@ -762,7 +761,7 @@ public class BasicValue extends SimpleValue
 	private JavaType<?> specialJavaType(
 			TypeConfiguration typeConfiguration,
 			java.lang.reflect.Type impliedJavaType) {
-		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
+		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		if ( jdbcTypeCode != null ) {
 			// Construct special JavaType instances for JSON/XML types which can report recommended JDBC types
 			// and implement toString/fromString as well as copying based on FormatMapper operations
@@ -783,12 +782,12 @@ public class BasicValue extends SimpleValue
 					return xmlJavaType;
 			}
 		}
-		return javaTypeRegistry.resolveDescriptor( impliedJavaType );
+		return javaTypeRegistry.getDescriptor( impliedJavaType );
 	}
 
 	private MutabilityPlan<?> mutabilityPlan(
 			TypeConfiguration typeConfiguration, java.lang.reflect.Type impliedJavaType) {
-		final MutabilityPlan<?> explicitMutabilityPlan = getExplicitMutabilityPlan();
+		final var explicitMutabilityPlan = getExplicitMutabilityPlan();
 		return explicitMutabilityPlan != null
 				? explicitMutabilityPlan
 				: RegistryHelper.INSTANCE.determineMutabilityPlan( impliedJavaType, typeConfiguration );
@@ -810,10 +809,10 @@ public class BasicValue extends SimpleValue
 			JdbcTypeIndicators stdIndicators,
 			MetadataBuildingContext context) {
 
-		final BootstrapContext bootstrapContext = context.getBootstrapContext();
+		final var bootstrapContext = context.getBootstrapContext();
 
-		final ManagedBeanRegistry managedBeanRegistry = bootstrapContext.getManagedBeanRegistry();
-		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
+		final var managedBeanRegistry = bootstrapContext.getManagedBeanRegistry();
+		final var typeConfiguration = bootstrapContext.getTypeConfiguration();
 
 		final JpaAttributeConverterCreationContext converterCreationContext = new JpaAttributeConverterCreationContext() {
 			@Override
@@ -860,7 +859,8 @@ public class BasicValue extends SimpleValue
 		}
 
 		// see if it is a named basic type
-		final BasicType<?> basicTypeByName = typeConfiguration.getBasicTypeRegistry().getRegisteredType( name );
+		final BasicType<?> basicTypeByName =
+				typeConfiguration.getBasicTypeRegistry().getRegisteredType( name );
 		if ( basicTypeByName != null ) {
 			return getNamedBasicTypeResolution(
 					explicitMutabilityPlanAccess,
@@ -872,7 +872,7 @@ public class BasicValue extends SimpleValue
 		}
 
 		// see if it is a named TypeDefinition
-		final TypeDefinition typeDefinition = context.getTypeDefinitionRegistry().resolve( name );
+		final var typeDefinition = context.getTypeDefinitionRegistry().resolve( name );
 		if ( typeDefinition != null ) {
 			final Resolution<?> resolution = typeDefinition.resolve(
 					localTypeParams,
@@ -890,7 +890,7 @@ public class BasicValue extends SimpleValue
 			// if there are no local config params, register an implicit TypeDefinition for this custom type
 			// later uses may find it and reuse its cacheable reference
 			if ( isEmpty( localTypeParams ) ) {
-				final TypeDefinition implicitDefinition =
+				final var implicitDefinition =
 						new TypeDefinition( name, typeNamedClass, null, null );
 				context.getTypeDefinitionRegistry().register( implicitDefinition );
 				return implicitDefinition.resolve(
@@ -1064,7 +1064,7 @@ public class BasicValue extends SimpleValue
 	}
 
 	private Properties getCustomTypeProperties() {
-		final Properties properties = new Properties();
+		final var properties = new Properties();
 		if ( isNotEmpty( getTypeParameters() ) ) {
 			properties.putAll( getTypeParameters() );
 		}
@@ -1075,7 +1075,7 @@ public class BasicValue extends SimpleValue
 	}
 
 	private UserType<?> getConfiguredUserTypeBean(Class<? extends UserType<?>> explicitCustomType, Properties properties) {
-		final UserType<?> typeInstance =
+		final var typeInstance =
 				getBuildingContext().getBuildingOptions().isAllowExtensionsInCdi()
 						? getUserTypeBean( explicitCustomType, properties ).getBeanInstance()
 						: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( explicitCustomType );
@@ -1100,7 +1100,7 @@ public class BasicValue extends SimpleValue
 	}
 
 	private <T> ManagedBean<T> getUserTypeBean(Class<T> explicitCustomType, Properties properties) {
-		final BeanInstanceProducer producer = getBuildingContext().getBootstrapContext().getCustomTypeProducer();
+		final var producer = getBuildingContext().getBootstrapContext().getCustomTypeProducer();
 		if ( isNotEmpty( properties ) ) {
 			final String name = explicitCustomType.getName() + COUNTER++;
 			return getManagedBeanRegistry().getBean( name, explicitCustomType, producer );

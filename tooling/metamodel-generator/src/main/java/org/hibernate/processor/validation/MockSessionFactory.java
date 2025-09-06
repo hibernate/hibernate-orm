@@ -891,7 +891,7 @@ public abstract class MockSessionFactory
 		public JavaType<?> getJavaConstantType(String className, String fieldName) {
 			return MockSessionFactory.this.getTypeConfiguration()
 					.getJavaTypeRegistry()
-					.getDescriptor( javaConstantType( className, fieldName ) );
+					.resolveDescriptor( javaConstantType( className, fieldName ) );
 		}
 
 		@Override
@@ -1147,7 +1147,7 @@ public abstract class MockSessionFactory
 		property.setName(name);
 		final JavaType<?> collectionJavaType =
 				typeConfiguration.getJavaTypeRegistry()
-						.getDescriptor(collectionType.getReturnedClass());
+						.resolveDescriptor(collectionType.getReturnedClass());
 		final SqmDomainType<?> elementDomainType = getElementDomainType(entityName, collectionType, owner);
 		final CollectionClassification classification = collectionType.getCollectionClassification();
 		return switch ( classification ) {

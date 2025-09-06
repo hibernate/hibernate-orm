@@ -5,14 +5,10 @@
 package org.hibernate.query.results.internal.dynamic;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.internal.ResultsHelper;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -119,11 +115,11 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
-		final SqlAstCreationState sqlAstCreationState = domainResultCreationState.getSqlAstCreationState();
-		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
-		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final var sqlAstCreationState = domainResultCreationState.getSqlAstCreationState();
+		final var typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
+		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
-		final Expression expression = sqlExpressionResolver.resolveSqlExpression(
+		final var expression = sqlExpressionResolver.resolveSqlExpression(
 				SqlExpressionResolver.createColumnReferenceKey( columnName ),
 				state -> resultSetMappingSqlSelection( jdbcResultsMetadata, typeConfiguration )
 		);
@@ -137,12 +133,12 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 			converter = null;
 		}
 		else {
-			final JdbcMapping jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
+			final var jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
 			javaType = jdbcMapping.getMappedJavaType();
 			jdbcJavaType = jdbcMapping.getJdbcJavaType();
 			converter = jdbcMapping.getValueConverter();
 		}
-		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
+		final var sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				expression,
 				jdbcJavaType,
 				null,
@@ -170,7 +166,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 						? columnPosition
 						: jdbcResultsMetadata.resolveColumnPosition( columnName );
 		final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
-		final BasicType<?> basicType =
+		final var basicType =
 				explicitType != null
 						? explicitType
 						: jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaType, typeConfiguration );
@@ -186,7 +182,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 			return false;
 		}
 
-		final DynamicResultBuilderBasicStandard that = (DynamicResultBuilderBasicStandard) o;
+		final var that = (DynamicResultBuilderBasicStandard) o;
 		return columnPosition == that.columnPosition
 			&& columnName.equals( that.columnName )
 			&& resultAlias.equals( that.resultAlias )

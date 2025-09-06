@@ -31,10 +31,13 @@ public class EmbeddableRepresentationStrategyMap implements EmbeddableRepresenta
 			Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
 			EmbeddableInstantiator customInstantiator,
 			RuntimeModelCreationContext creationContext) {
-		this.mapJavaType = creationContext.getTypeConfiguration().getJavaTypeRegistry().getDescriptor( Map.class );
-		this.instantiator = customInstantiator != null
-				? customInstantiator
-				: new EmbeddableInstantiatorDynamicMap( bootDescriptor, runtimeDescriptorAccess );
+		mapJavaType =
+				creationContext.getTypeConfiguration().getJavaTypeRegistry()
+						.getDescriptor( Map.class );
+		instantiator =
+				customInstantiator == null
+						? new EmbeddableInstantiatorDynamicMap( bootDescriptor, runtimeDescriptorAccess )
+						: customInstantiator;
 	}
 
 	@Override

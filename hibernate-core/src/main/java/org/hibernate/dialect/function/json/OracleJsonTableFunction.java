@@ -101,7 +101,7 @@ public class OracleJsonTableFunction extends JsonTableFunction {
 						selectableMappings,
 						definition.name(),
 						typeConfiguration.getBasicTypeRegistry().resolve(
-								typeConfiguration.getJavaTypeRegistry().getDescriptor( String.class ),
+								typeConfiguration.getJavaTypeRegistry().resolveDescriptor( String.class ),
 								JsonAsStringJdbcType.CLOB_INSTANCE
 						),
 						converter

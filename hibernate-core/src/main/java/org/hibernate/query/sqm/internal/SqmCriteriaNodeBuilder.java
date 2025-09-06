@@ -913,7 +913,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		checkMultiselect( selections );
 		return new SqmJpaCompoundSelection<>(
 				selections.stream().map( selection -> (SqmSelectableNode<?>) selection ).toList(),
-				getTypeConfiguration().getJavaTypeRegistry().getDescriptor( Tuple.class ),
+				getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( Tuple.class ),
 				this
 		);
 	}
@@ -973,7 +973,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	public <Y> JpaCompoundSelection<Y> arrayInternal(Class<Y> resultClass, List<? extends SqmSelectableNode<?>> selections) {
 		checkMultiselect( selections );
-		final JavaType<Y> javaType = getTypeConfiguration().getJavaTypeRegistry().getDescriptor( resultClass );
+		final var javaType = getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( resultClass );
 		return new SqmJpaCompoundSelection<>( selections, javaType, this );
 	}
 
@@ -1658,7 +1658,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		private final JavaType<T> javaType;
 
 		public MultiValueParameterType(Class<T> type) {
-			this.javaType = getTypeConfiguration().getJavaTypeRegistry().getDescriptor( type );
+			javaType = getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( type );
 		}
 
 		@Override

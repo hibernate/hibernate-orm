@@ -34,7 +34,6 @@ import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorConverter;
 import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
@@ -43,13 +42,10 @@ import org.hibernate.persister.entity.DiscriminatorHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.UserComponentType;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.MappingContext;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -603,19 +599,19 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	public DiscriminatorType<?> getDiscriminatorType() {
-		DiscriminatorType<?> type = discriminatorType;
+		final var type = discriminatorType;
 		if ( type == null ) {
-			type = discriminatorType = buildDiscriminatorType();
+			return discriminatorType = buildDiscriminatorType();
 		}
 		return type;
 	}
 
 	private DiscriminatorType<?> buildDiscriminatorType() {
 		return getBuildingContext().getMetadataCollector().resolveEmbeddableDiscriminatorType( getComponentClass(), () -> {
-			final JavaTypeRegistry javaTypeRegistry = getTypeConfiguration().getJavaTypeRegistry();
-			final JavaType<String> domainJavaType = javaTypeRegistry.resolveDescriptor( Class.class );
-			final BasicType<?> discriminatorType = DiscriminatorHelper.getDiscriminatorType( this );
-			final DiscriminatorConverter<String, ?> converter = EmbeddableDiscriminatorConverter.fromValueMappings(
+			final var javaTypeRegistry = getTypeConfiguration().getJavaTypeRegistry();
+			final var domainJavaType = javaTypeRegistry.resolveDescriptor( Class.class );
+			final var discriminatorType = DiscriminatorHelper.getDiscriminatorType( this );
+			final var converter = EmbeddableDiscriminatorConverter.fromValueMappings(
 					qualify( getComponentClassName(), DISCRIMINATOR_ROLE_NAME ),
 					domainJavaType,
 					discriminatorType,
@@ -659,12 +655,12 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	private Generator buildIdentifierGenerator(Dialect dialect, RootClass rootClass, GeneratorSettings defaults) {
-		final CompositeNestedGeneratedValueGenerator generator =
+		final var generator =
 				new CompositeNestedGeneratedValueGenerator(
 						new StandardGenerationContextLocator( rootClass.getEntityName() ),
 						getType()
 				);
-		final List<Property> properties = getProperties();
+		final var properties = getProperties();
 		for ( int i = 0; i < properties.size(); i++ ) {
 			final Property property = properties.get( i );
 			if ( property.getValue().isSimpleValue() ) {

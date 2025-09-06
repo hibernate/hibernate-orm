@@ -48,7 +48,6 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.metamodel.EntityType;
@@ -88,10 +87,9 @@ public class Builders {
 			String resultAlias,
 			Class<?> javaTypeClass,
 			SessionFactoryImplementor factory) {
-		final JavaType<?> javaType = factory.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.getDescriptor( javaTypeClass );
-
+		final var javaType =
+				factory.getTypeConfiguration().getJavaTypeRegistry()
+						.resolveDescriptor( javaTypeClass );
 		return new DynamicResultBuilderBasicStandard( columnAlias, resultAlias, javaType );
 	}
 
@@ -140,9 +138,9 @@ public class Builders {
 	}
 
 	public static <J> DynamicResultBuilderInstantiation<J> instantiation(Class<J> targetJavaType, SessionFactoryImplementor factory) {
-		final JavaType<J> targetJtd = factory.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.getDescriptor( targetJavaType );
+		final var targetJtd =
+				factory.getTypeConfiguration().getJavaTypeRegistry()
+						.resolveDescriptor( targetJavaType );
 		return new DynamicResultBuilderInstantiation<>( targetJtd );
 	}
 

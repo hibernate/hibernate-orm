@@ -38,10 +38,8 @@ import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.model.domain.internal.PrimitiveBasicTypeImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.EntityJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.ArrayList;
@@ -862,8 +860,8 @@ public class MetadataContext {
 	}
 
 	private <J> BasicDomainType<J> basicDomainType(Class<J> javaType) {
-		final JavaType<J> javaTypeDescriptor = getJavaTypeRegistry().resolveDescriptor( javaType );
-		final JdbcType jdbcType =
+		final var javaTypeDescriptor = getJavaTypeRegistry().resolveDescriptor( javaType );
+		final var jdbcType =
 				javaTypeDescriptor.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
 		return javaType.isPrimitive()
 				? new PrimitiveBasicTypeImpl<>( javaTypeDescriptor, jdbcType, javaType )

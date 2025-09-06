@@ -9,18 +9,13 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.internal.ResultsHelper;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.converter.internal.AttributeConverterBean;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.Objects;
@@ -41,12 +36,14 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 			AttributeConverter<O, R> converter,
 			SessionFactoryImplementor sessionFactory) {
 		this.columnAlias = columnAlias;
-		final JavaTypeRegistry javaTypeRegistry = sessionFactory.getTypeConfiguration().getJavaTypeRegistry();
+		final var javaTypeRegistry = sessionFactory.getTypeConfiguration().getJavaTypeRegistry();
+		@SuppressWarnings("unchecked")
+		final var converterClass = (Class<AttributeConverter<O, R>>) converter.getClass();
 		this.basicValueConverter = new AttributeConverterBean<>(
 				new ProvidedInstanceManagedBeanImpl<>( converter ),
-				javaTypeRegistry.getDescriptor( converter.getClass() ),
-				javaTypeRegistry.getDescriptor( domainJavaType ),
-				javaTypeRegistry.getDescriptor( jdbcJavaType )
+				javaTypeRegistry.resolveDescriptor( converterClass ),
+				javaTypeRegistry.resolveDescriptor( domainJavaType ),
+				javaTypeRegistry.resolveDescriptor( jdbcJavaType )
 		);
 	}
 
@@ -57,13 +54,13 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 			Class<? extends AttributeConverter<O, R>> converterJavaType,
 			SessionFactoryImplementor sessionFactory) {
 		this.columnAlias = columnAlias;
-		final ManagedBeanRegistry beans = sessionFactory.getManagedBeanRegistry();
-		final JavaTypeRegistry javaTypeRegistry = sessionFactory.getTypeConfiguration().getJavaTypeRegistry();
+		final var beans = sessionFactory.getManagedBeanRegistry();
+		final var javaTypeRegistry = sessionFactory.getTypeConfiguration().getJavaTypeRegistry();
 		this.basicValueConverter = new AttributeConverterBean<>(
 				beans.getBean( converterJavaType ),
-				javaTypeRegistry.getDescriptor( converterJavaType ),
-				javaTypeRegistry.getDescriptor( domainJavaType ),
-				javaTypeRegistry.getDescriptor( jdbcJavaType )
+				javaTypeRegistry.resolveDescriptor( converterJavaType ),
+				javaTypeRegistry.resolveDescriptor( domainJavaType ),
+				javaTypeRegistry.resolveDescriptor( jdbcJavaType )
 		);
 	}
 
@@ -82,15 +79,15 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
-		final SqlAstCreationState sqlAstCreationState = domainResultCreationState.getSqlAstCreationState();
-		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
-		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final var sqlAstCreationState = domainResultCreationState.getSqlAstCreationState();
+		final var typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
+		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
 		final String columnName =
 				columnAlias != null
 						? columnAlias
 						: jdbcResultsMetadata.resolveColumnName( resultPosition + 1 );
-		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
+		final var sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey( columnName ),
 						state -> resultSetMappingSqlSelection( jdbcResultsMetadata, resultPosition, typeConfiguration )
@@ -117,7 +114,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 				columnAlias != null
 						? jdbcResultsMetadata.resolveColumnPosition( columnAlias )
 						: resultPosition + 1;
-		final BasicType<?> basicType = jdbcResultsMetadata.resolveType(
+		final var basicType = jdbcResultsMetadata.resolveType(
 				jdbcPosition,
 				basicValueConverter.getRelationalJavaType(),
 				typeConfiguration
@@ -135,7 +132,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 			return false;
 		}
 
-		DynamicResultBuilderBasicConverted<?, ?> that = (DynamicResultBuilderBasicConverted<?, ?>) o;
+		final var that = (DynamicResultBuilderBasicConverted<?, ?>) o;
 
 		return Objects.equals( columnAlias, that.columnAlias )
 			&& basicValueConverter.equals( that.basicValueConverter );

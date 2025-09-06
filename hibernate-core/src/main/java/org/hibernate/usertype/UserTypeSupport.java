@@ -7,7 +7,6 @@ package org.hibernate.usertype;
 import java.util.function.BiConsumer;
 
 import org.hibernate.type.descriptor.java.BasicJavaType;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
@@ -29,9 +28,9 @@ public class UserTypeSupport<T> extends BaseUserTypeSupport<T> implements TypeCo
 	@Override
 	protected void resolve(BiConsumer<BasicJavaType<T>, JdbcType> resolutionConsumer) {
 		assert typeConfiguration != null;
-		final JavaType<T> descriptor =
+		final var descriptor =
 				typeConfiguration.getJavaTypeRegistry()
-						.getDescriptor( returnedClass );
+						.resolveDescriptor( returnedClass );
 		resolutionConsumer.accept(
 				(BasicJavaType<T>) descriptor,
 				typeConfiguration

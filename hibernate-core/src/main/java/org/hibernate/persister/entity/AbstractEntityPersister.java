@@ -5369,9 +5369,9 @@ public abstract class AbstractEntityPersister
 			);
 		}
 		else if ( attrType instanceof AnyType anyType ) {
-			final JavaType<Object> baseAssociationJtd =
+			final var baseAssociationJtd =
 					creationContext.getTypeConfiguration().getJavaTypeRegistry()
-							.getDescriptor( Object.class );
+							.resolveDescriptor( Object.class );
 
 			final MutabilityPlan<?> mutabilityPlan =
 					new DiscriminatedAssociationAttributeMapping.MutabilityPlanImpl( anyType );

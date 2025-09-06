@@ -303,17 +303,21 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 		if ( resultJavaTypes.size() == 1 ) {
 			final JavaType<?> firstJavaType = resultJavaTypes.get( 0 );
 			if ( firstJavaType == null ) {
-				return javaTypeRegistry.resolveDescriptor( Object.class );
+				return javaTypeRegistry.getDescriptor( Object.class );
 			}
-			//noinspection unchecked
-			return (JavaType<R>) firstJavaType;
+			else {
+				//noinspection unchecked
+				return (JavaType<R>) firstJavaType;
+			}
 		}
-
-		return javaTypeRegistry.resolveDescriptor( Object[].class );
+		else {
+			return javaTypeRegistry.getDescriptor( Object[].class );
+		}
 	}
 
 	private static boolean isMoreConcrete(JavaType<?> resultJavaType, @Nullable JavaType<?> javaType) {
-		return javaType != null && resultJavaType.getJavaTypeClass().isAssignableFrom( javaType.getJavaTypeClass() );
+		return javaType != null
+			&& resultJavaType.getJavaTypeClass().isAssignableFrom( javaType.getJavaTypeClass() );
 	}
 
 	@Override

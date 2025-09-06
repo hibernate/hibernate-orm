@@ -396,8 +396,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
 		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		this.integerDomainType = typeConfiguration.standardBasicTypeForJavaType( Integer.class );
-		this.listJavaType = javaTypeRegistry.resolveDescriptor( List.class );
-		this.mapJavaType = javaTypeRegistry.resolveDescriptor( Map.class );
+		this.listJavaType = javaTypeRegistry.getDescriptor( List.class );
+		this.mapJavaType = javaTypeRegistry.getDescriptor( Map.class );
 	}
 
 	@Override

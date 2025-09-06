@@ -10,8 +10,6 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 
 import static org.hibernate.internal.util.GenericsHelper.extractClass;
 import static org.hibernate.internal.util.GenericsHelper.extractParameterizedType;
@@ -23,30 +21,28 @@ import static org.hibernate.internal.util.GenericsHelper.extractParameterizedTyp
 public class ConverterHelper {
 	public static <X, Y> BasicValueConverter<X, Y> createValueConverter(
 			AttributeConverter<X,Y> converter, JavaTypeRegistry registry) {
-		final ParameterizedType converterType =
-				extractParameterizedType( converter.getClass(), AttributeConverter.class );
-		final Type[] typeArguments = converterType.getActualTypeArguments();
-		final Class<?> domainJavaClass = extractClass( typeArguments[0] );
-		final Class<?> relationalJavaClass = extractClass( typeArguments[1] );
+		final var converterType = extractParameterizedType( converter.getClass(), AttributeConverter.class );
+		final var typeArguments = converterType.getActualTypeArguments();
+		final var domainJavaClass = extractClass( typeArguments[0] );
+		final var relationalJavaClass = extractClass( typeArguments[1] );
 		return new AttributeConverterInstance<>(
 				converter,
-				registry.resolveDescriptor( domainJavaClass ),
-				registry.resolveDescriptor( relationalJavaClass )
+				registry.getDescriptor( domainJavaClass ),
+				registry.getDescriptor( relationalJavaClass )
 		);
 	}
 
 	public static <X, Y> JpaAttributeConverter<X, Y> createJpaAttributeConverter(
 			ManagedBean<? extends AttributeConverter<X,Y>> bean, JavaTypeRegistry registry) {
-		final ParameterizedType converterType =
-				extractParameterizedType( bean.getBeanClass(), AttributeConverter.class );
-		final Type[] typeArguments = converterType.getActualTypeArguments();
-		final Class<?> domainJavaClass = extractClass( typeArguments[0] );
-		final Class<?> relationalJavaClass = extractClass( typeArguments[1] );
+		final var converterType = extractParameterizedType( bean.getBeanClass(), AttributeConverter.class );
+		final var typeArguments = converterType.getActualTypeArguments();
+		final var domainJavaClass = extractClass( typeArguments[0] );
+		final var relationalJavaClass = extractClass( typeArguments[1] );
 		return new AttributeConverterBean<>(
 				bean,
 				registry.resolveDescriptor( bean.getBeanClass() ),
-				registry.resolveDescriptor( domainJavaClass ),
-				registry.resolveDescriptor( relationalJavaClass )
+				registry.getDescriptor( domainJavaClass ),
+				registry.getDescriptor( relationalJavaClass )
 		);
 	}
 }

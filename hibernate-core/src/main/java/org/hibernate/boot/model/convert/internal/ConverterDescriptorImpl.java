@@ -13,6 +13,7 @@ import org.hibernate.type.descriptor.converter.internal.AttributeConverterBean;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
+
 class ConverterDescriptorImpl<X, Y> implements ConverterDescriptor<X, Y> {
 	private final Class<? extends AttributeConverter<X, Y>> converterType;
 	private final ResolvedType domainTypeToMatch;
@@ -58,9 +59,9 @@ class ConverterDescriptorImpl<X, Y> implements ConverterDescriptor<X, Y> {
 		final var converterBean = context.getManagedBeanRegistry().getBean( converterType );
 		return new AttributeConverterBean<>(
 				converterBean,
-				javaTypeRegistry.getDescriptor( converterBean.getBeanClass() ),
-				javaTypeRegistry.resolveDescriptor( domainTypeToMatch.getErasedType() ),
-				javaTypeRegistry.resolveDescriptor( relationalType.getErasedType() )
+				javaTypeRegistry.resolveDescriptor( converterBean.getBeanClass() ),
+				javaTypeRegistry.getDescriptor( domainTypeToMatch.getErasedType() ),
+				javaTypeRegistry.getDescriptor( relationalType.getErasedType() )
 		);
 	}
 }

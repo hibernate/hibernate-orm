@@ -69,9 +69,9 @@ public class PluralAttributeBuilder<D, C, E, K> {
 			boolean isGeneric,
 			MetadataContext metadataContext) {
 
-		final JavaType<Y> attributeJtd =
+		final var attributeJtd =
 				metadataContext.getTypeConfiguration().getJavaTypeRegistry()
-						.getDescriptor( attributeMetadata.getJavaType() );
+						.resolveDescriptor( attributeMetadata.getJavaType() );
 
 		final var builder = new PluralAttributeBuilder<>(
 				attributeJtd,

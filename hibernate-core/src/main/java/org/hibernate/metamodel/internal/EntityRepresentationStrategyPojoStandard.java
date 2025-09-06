@@ -21,7 +21,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Subclass;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
@@ -69,15 +68,15 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			RuntimeModelCreationContext creationContext) {
 		final var registry = creationContext.getTypeConfiguration().getJavaTypeRegistry();
 
-		final Class<?> mappedJavaType = bootDescriptor.getMappedClass();
+		final var mappedJavaType = bootDescriptor.getMappedClass();
 		mappedJtd = registry.resolveEntityTypeDescriptor( mappedJavaType );
 
-		final Class<?> proxyJavaType = bootDescriptor.getProxyInterface();
-		proxyJtd = proxyJavaType != null ? registry.getDescriptor( proxyJavaType ) : null;
+		final var proxyJavaType = bootDescriptor.getProxyInterface();
+		proxyJtd = proxyJavaType != null ? registry.resolveDescriptor( proxyJavaType ) : null;
 
 		isBytecodeEnhanced = isPersistentAttributeInterceptableType( mappedJavaType );
 
-		final Property identifierProperty = bootDescriptor.getIdentifierProperty();
+		final var identifierProperty = bootDescriptor.getIdentifierProperty();
 		if ( identifierProperty == null ) {
 			identifierPropertyName = null;
 			identifierPropertyAccess = null;
@@ -182,12 +181,12 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			BytecodeProvider bytecodeProvider,
 			RuntimeModelCreationContext creationContext) {
 
-		final Class<?> mappedClass = mappedJtd.getJavaTypeClass();
-		final Class<?> proxyInterface = proxyJtd == null ? null : proxyJtd.getJavaTypeClass();
+		final var mappedClass = mappedJtd.getJavaTypeClass();
+		final var proxyInterface = proxyJtd == null ? null : proxyJtd.getJavaTypeClass();
 
-		final Set<Class<?>> proxyInterfaces = proxyInterfaces( bootDescriptor, proxyInterface, mappedClass );
+		final var proxyInterfaces = proxyInterfaces( bootDescriptor, proxyInterface, mappedClass );
 
-		final Class<?> clazz = bootDescriptor.getMappedClass();
+		final var clazz = bootDescriptor.getMappedClass();
 		final Method idGetterMethod;
 		final Method idSetterMethod;
 		try {
@@ -213,10 +212,10 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			return null;
 		}
 
-		final Method proxyGetIdentifierMethod =
+		final var proxyGetIdentifierMethod =
 				idGetterMethod == null || proxyInterface == null ? null
 						: getMethod( proxyInterface, idGetterMethod );
-		final Method proxySetIdentifierMethod =
+		final var proxySetIdentifierMethod =
 				idSetterMethod == null || proxyInterface == null ? null
 						: getMethod( proxyInterface, idSetterMethod );
 
@@ -254,7 +253,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			proxyInterfaces.add( mappedClass );
 		}
 
-		for ( Subclass subclass : bootDescriptor.getSubclasses() ) {
+		for ( var subclass : bootDescriptor.getSubclasses() ) {
 			final Class<?> subclassProxy = subclass.getProxyInterface();
 			final Class<?> subclassClass = subclass.getMappedClass();
 			if ( subclassProxy != null && !subclassClass.equals( subclassProxy ) ) {
@@ -307,7 +306,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	}
 
 	private PropertyAccess makePropertyAccess(Property bootAttributeDescriptor) {
-		final Class<?> mappedClass = mappedJtd.getJavaTypeClass();
+		final var mappedClass = mappedJtd.getJavaTypeClass();
 		final String descriptorName = bootAttributeDescriptor.getName();
 		final var strategy = propertyAccessStrategy( bootAttributeDescriptor, mappedClass, strategySelector );
 		if ( strategy == null ) {

@@ -568,7 +568,7 @@ public class MappingMetamodelImpl
 
 		else if ( sqmExpressible instanceof BasicDomainType<?> ) {
 			return getTypeConfiguration()
-					.getBasicTypeForJavaType( sqmExpressible.getRelationalJavaType().getJavaType() );
+					.getBasicTypeForJavaType( sqmExpressible.getRelationalJavaType().getJavaTypeClass() );
 		}
 
 		else if ( sqmExpressible instanceof BasicSqmPathSource<?>
@@ -667,8 +667,8 @@ public class MappingMetamodelImpl
 
 		if ( javaType.isArray()
 				&& javaTypeRegistry.findDescriptor( javaType.getComponentType() ) != null ) {
-			final JavaType<T> resolvedJavaType = javaTypeRegistry.resolveDescriptor( javaType );
-			final JdbcType recommendedJdbcType =
+			final var resolvedJavaType = javaTypeRegistry.resolveDescriptor( javaType );
+			final var recommendedJdbcType =
 					resolvedJavaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
 			if ( recommendedJdbcType != null ) {
 				return typeConfiguration.getBasicTypeRegistry().resolve( resolvedJavaType, recommendedJdbcType );

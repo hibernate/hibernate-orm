@@ -36,7 +36,6 @@ import org.hibernate.query.named.ResultMementoInstantiation.ArgumentMemento;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
-import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.ConstructorResult;
@@ -213,9 +212,9 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 					(mapping) -> argumentResultMementos.add( mapping.resolve( resolutionContext ) )
 			);
 
-			final JavaType<?> targetJtd =
+			final var targetJtd =
 					resolutionContext.getTypeConfiguration().getJavaTypeRegistry()
-							.getDescriptor( targetJavaType );
+							.resolveDescriptor( targetJavaType );
 
 			return new ResultMementoInstantiationStandard( targetJtd, argumentResultMementos );
 		}

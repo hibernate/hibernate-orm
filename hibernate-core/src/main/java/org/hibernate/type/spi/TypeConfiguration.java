@@ -367,8 +367,8 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 				try {
 					final Class<?> javaTypeClass = scope.getClassLoaderService().classForName( name );
-					final JavaType<?> jtd = javaTypeRegistry.resolveDescriptor( javaTypeClass );
-					final JdbcType jdbcType = jtd.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() );
+					final var jtd = javaTypeRegistry.resolveDescriptor( javaTypeClass );
+					final var jdbcType = jtd.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() );
 					return basicTypeRegistry.resolve( jtd, jdbcType );
 				}
 				catch ( Exception ignore ) {
@@ -763,6 +763,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return getBasicTypeForJavaType( (Type) javaType );
 	}
 
+	@Deprecated(since = "7.2") // due to the unbound type parameter
 	public <J> BasicType<J> getBasicTypeForJavaType(Type javaType) {
 		final var existing = basicTypeByJavaType.get( javaType );
 		if ( existing != null ) {
@@ -834,7 +835,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 					}
 					else {
 						// otherwise, apply the creator
-						return creator.apply( javaTypeRegistry.resolveDescriptor( javaType ) );
+						return creator.apply( javaTypeRegistry.getDescriptor( javaType ) );
 					}
 				}
 		);

@@ -13,7 +13,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.BasicJavaType;
@@ -39,12 +38,12 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 
 		// todo (6.0) : add support for Dialect-specific interpretation?
 
-		final TypeConfiguration typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
-		final java.lang.reflect.Type implicitJavaType = implicitJavaTypeAccess.apply( typeConfiguration );
-		final JavaType<E> registered = typeConfiguration.getJavaTypeRegistry().resolveDescriptor( implicitJavaType );
-		final BasicJavaType<E> basicJavaType = (BasicJavaType<E>) registered;
+		final var typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
+		final var implicitJavaType = implicitJavaTypeAccess.apply( typeConfiguration );
+		final JavaType<E> registered = typeConfiguration.getJavaTypeRegistry().getDescriptor( implicitJavaType );
+		final var basicJavaType = (BasicJavaType<E>) registered;
 
-		final JdbcType recommendedJdbcType = basicJavaType.getRecommendedJdbcType(
+		final var recommendedJdbcType = basicJavaType.getRecommendedJdbcType(
 				new JdbcTypeIndicators() {
 					@Override
 					public TypeConfiguration getTypeConfiguration() {
@@ -104,9 +103,9 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 				}
 		);
 
-		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		final BasicType<?> basicType = basicTypeRegistry.resolve( basicJavaType, recommendedJdbcType );
-		final BasicType<E> legacyType = basicTypeRegistry.getRegisteredType( basicJavaType.getJavaType() );
+		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+		final var basicType = basicTypeRegistry.resolve( basicJavaType, recommendedJdbcType );
+		final var legacyType = basicTypeRegistry.getRegisteredType( basicJavaType.getJavaTypeClass() );
 
 		assert legacyType.getJdbcType().getDefaultSqlTypeCode() == recommendedJdbcType.getDefaultSqlTypeCode();
 

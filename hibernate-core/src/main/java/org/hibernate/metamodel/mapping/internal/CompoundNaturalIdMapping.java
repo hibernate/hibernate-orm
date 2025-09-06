@@ -285,10 +285,10 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	public <T> DomainResult<T> createDomainResult(NavigablePath navigablePath, TableGroup tableGroup, String resultVariable, DomainResultCreationState creationState) {
 		assert navigablePath.getLocalName().equals( NaturalIdMapping.PART_NAME );
 
-		final JavaType<Object[]> jtd =
+		final var objectArrayJavaType =
 				creationState.getSqlAstCreationState().getCreationContext()
 						.getTypeConfiguration().getJavaTypeRegistry()
-						.getDescriptor( Object[].class );
+						.resolveDescriptor( Object[].class );
 
 		// register the table group under `...{natural-id}` as well
 		creationState.getSqlAstCreationState().getFromClauseAccess()
@@ -297,7 +297,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		return (DomainResult<T>) new DomainResultImpl(
 				navigablePath,
 				this,
-				jtd,
+				objectArrayJavaType,
 				resultVariable,
 				creationState
 		);

@@ -52,7 +52,7 @@ public class SQLServerCastingVectorJdbcType extends ArrayJdbcType {
 			Integer precision,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor( float[].class );
+		return typeConfiguration.getJavaTypeRegistry().getDescriptor( float[].class );
 	}
 
 	@Override

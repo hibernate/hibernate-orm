@@ -563,7 +563,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 				attributeMapping = new DiscriminatedAssociationAttributeMapping(
 						valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
-						typeConfiguration.getJavaTypeRegistry().getDescriptor( Object.class ),
+						typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Object.class ),
 						this,
 						attributeIndex,
 						attributeIndex,

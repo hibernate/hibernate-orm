@@ -279,7 +279,7 @@ public class AttributeFactory {
 
 	private static EmbeddableTypeImpl<?> dynamicEmbeddableType(MetadataContext context, Component component) {
 		final var embeddableType = new EmbeddableTypeImpl<>(
-				context.getJavaTypeRegistry().getDescriptor( java.util.Map.class ),
+				context.getJavaTypeRegistry().resolveDescriptor( java.util.Map.class ),
 				null,
 				null,
 				true,

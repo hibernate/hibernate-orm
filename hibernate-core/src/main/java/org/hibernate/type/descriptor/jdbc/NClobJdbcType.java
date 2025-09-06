@@ -268,7 +268,7 @@ public abstract class NClobJdbcType implements JdbcType {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					final CharacterStream characterStream = javaType.unwrap( value, CharacterStream.class, options );
+					final var characterStream = javaType.unwrap( value, CharacterStream.class, options );
 					if ( options.getDialect().supportsNationalizedMethods() ) {
 						st.setNCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
 					}
@@ -280,7 +280,7 @@ public abstract class NClobJdbcType implements JdbcType {
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					final CharacterStream characterStream = javaType.unwrap( value, CharacterStream.class, options );
+					final var characterStream = javaType.unwrap( value, CharacterStream.class, options );
 					if ( options.getDialect().supportsNationalizedMethods() ) {
 						st.setNCharacterStream( name, characterStream.asReader(), characterStream.getLength() );
 					}

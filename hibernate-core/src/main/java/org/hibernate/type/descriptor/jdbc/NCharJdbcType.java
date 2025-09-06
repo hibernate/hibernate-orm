@@ -8,7 +8,6 @@ import java.sql.Types;
 
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Descriptor for {@link Types#NCHAR NCHAR} handling.
@@ -37,7 +36,7 @@ public class NCharJdbcType extends NVarcharJdbcType {
 			JavaType<?> domainJtd) {
 		assert domainJtd != null;
 
-		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
+		final var typeConfiguration = indicators.getTypeConfiguration();
 		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
 
 		final int jdbcTypeCode;

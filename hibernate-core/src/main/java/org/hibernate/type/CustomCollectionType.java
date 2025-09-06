@@ -84,8 +84,9 @@ public class CustomCollectionType extends CollectionType {
 			Object owner,
 			Map<Object,Object> copyCache,
 			SharedSessionContractImplementor session) {
-		final CollectionPersister collectionDescriptor =
-				session.getFactory().getMappingMetamodel().getCollectionDescriptor( getRole() );
+		final var collectionDescriptor =
+				session.getFactory().getMappingMetamodel()
+						.getCollectionDescriptor( getRole() );
 		return userType.replaceElements( original, target, collectionDescriptor, owner, copyCache, session );
 	}
 

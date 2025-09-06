@@ -19,7 +19,6 @@ import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -67,8 +66,8 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 				);
 			}
 		}
-		final JavaType<T> elementTypeJavaType = elementType.getJavaTypeDescriptor();
-		final Class<?> elementJavaTypeClass = elementTypeJavaType.getJavaTypeClass();
+		final var elementTypeJavaType = elementType.getJavaTypeDescriptor();
+		final var elementJavaTypeClass = elementTypeJavaType.getJavaTypeClass();
 		if ( elementType instanceof BasicPluralType<?, ?>
 				|| elementJavaTypeClass != null
 					&& elementJavaTypeClass.isArray()
@@ -85,7 +84,7 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			// Register the array type as that will be resolved in the next step
 			typeConfiguration.getJavaTypeRegistry().addDescriptor( arrayJavaType );
 		}
-		final BasicValueConverter<T, ?> valueConverter = elementType.getValueConverter();
+		final var valueConverter = elementType.getValueConverter();
 		return valueConverter == null
 				? resolveType( typeConfiguration, arrayJavaType, elementType, columnTypeInformation, stdIndicators )
 				: createTypeUsingConverter( typeConfiguration, elementType, columnTypeInformation, stdIndicators, valueConverter );
@@ -100,7 +99,7 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 		if ( iMax == -1 ) {
 			return "[]";
 		}
-		final StringBuilder sb = new StringBuilder();
+		final var sb = new StringBuilder();
 		sb.append( '[' );
 		for ( int i = 0; ; i++ ) {
 			sb.append( getElementJavaType().extractLoggableRepresentation( value[i] ) );
@@ -181,7 +180,7 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 		if ( charSequence == null ) {
 			return null;
 		}
-		final java.util.ArrayList<String> lst = new java.util.ArrayList<>();
+		final var lst = new java.util.ArrayList<String>();
 		StringBuilder sb = null;
 		char lastChar = charSequence.charAt( charSequence.length() - 1 );
 		char firstChar = charSequence.charAt( 0 );
@@ -241,7 +240,7 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			sb.append( c );
 		}
 		//noinspection unchecked
-		final T[] result = (T[]) newInstance( getElementJavaType().getJavaTypeClass(), lst.size() );
+		final var result = (T[]) newInstance( getElementJavaType().getJavaTypeClass(), lst.size() );
 		for ( int i = 0; i < result.length; i ++ ) {
 			if ( lst.get( i ) != null ) {
 				result[i] = getElementJavaType().fromString( lst.get( i ) );
@@ -268,7 +267,7 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			return (X) new ArrayBackedBinaryStream( toBytes( value ) );
 		}
 		else if ( type.isArray() ) {
-			final Class<?> preferredJavaTypeClass = type.getComponentType();
+		final var preferredJavaTypeClass = type.getComponentType();
 			final Object[] unwrapped = (Object[]) newInstance( preferredJavaTypeClass, value.length );
 			for ( int i = 0; i < value.length; i++ ) {
 				unwrapped[i] = getElementJavaType().unwrap( value[i], preferredJavaTypeClass, options );
@@ -297,11 +296,11 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			}
 		}
 
-		final JavaType<T> elementJavaType = getElementJavaType();
+		final var elementJavaType = getElementJavaType();
 		if ( value instanceof Object[] raw ) {
-			final Class<T> componentClass = elementJavaType.getJavaTypeClass();
+			final var componentClass = elementJavaType.getJavaTypeClass();
 			//noinspection unchecked
-			final T[] wrapped = (T[]) newInstance( componentClass, raw.length );
+			final var wrapped = (T[]) newInstance( componentClass, raw.length );
 			if ( componentClass.isAssignableFrom( value.getClass().getComponentType() ) ) {
 				for (int i = 0; i < raw.length; i++) {
 					//noinspection unchecked
@@ -325,14 +324,14 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 		else if ( elementJavaType.isInstance( value ) ) {
 			// Support binding a single element as parameter value
 			//noinspection unchecked
-			final T[] wrapped = (T[]) newInstance( elementJavaType.getJavaTypeClass(), 1 );
+			final var wrapped = (T[]) newInstance( elementJavaType.getJavaTypeClass(), 1 );
 			//noinspection unchecked
 			wrapped[0] = (T) value;
 			return wrapped;
 		}
 		else if ( value instanceof Collection<?> collection ) {
 			//noinspection unchecked
-			final T[] wrapped = (T[]) newInstance( elementJavaType.getJavaTypeClass(), collection.size() );
+			final var wrapped = (T[]) newInstance( elementJavaType.getJavaTypeClass(), collection.size() );
 			int i = 0;
 			for ( Object e : collection ) {
 				wrapped[i++] = elementJavaType.wrap( e, options );
@@ -361,10 +360,10 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 	}
 
 	private T[] fromBytes(byte[] bytes) {
-		final Class<T> elementClass = getElementJavaType().getJavaTypeClass();
+		final var elementClass = getElementJavaType().getJavaTypeClass();
 		if ( elementClass.isEnum() ) {
 			final T[] enumConstants = elementClass.getEnumConstants();
-			final Object[] array = (Object[]) newInstance( elementClass, bytes.length );
+			final var array = (Object[]) newInstance( elementClass, bytes.length );
 			for (int i = 0; i < bytes.length; i++ ) {
 				// null enum value was encoded as -1
 				array[i] = bytes[i] == -1 ? null : enumConstants[bytes[i]];

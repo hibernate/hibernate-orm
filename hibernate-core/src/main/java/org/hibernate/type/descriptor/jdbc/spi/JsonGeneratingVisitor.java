@@ -112,7 +112,7 @@ public class JsonGeneratingVisitor {
 				if ( length != 0 ) {
 					//noinspection unchecked
 					final JavaType<Object> elementJavaType = ((BasicPluralJavaType<Object>) basicType.getJdbcJavaType()).getElementJavaType();
-					final JdbcType elementJdbcType = ((ArrayJdbcType) basicType.getJdbcType()).getElementJdbcType();
+					final var elementJdbcType = ((ArrayJdbcType) basicType.getJdbcType()).getElementJdbcType();
 					final Object domainArray = basicType.convertToRelationalValue( value );
 					for ( int j = 0; j < length; j++ ) {
 						writer.serializeJsonValue( Array.get( domainArray, j ), elementJavaType, elementJdbcType, options );

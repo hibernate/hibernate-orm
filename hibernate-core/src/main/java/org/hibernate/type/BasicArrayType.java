@@ -66,9 +66,9 @@ public class BasicArrayType<T,E>
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		return o == this || o.getClass() == BasicArrayType.class
-				&& Objects.equals( baseDescriptor, ( (BasicArrayType<?, ?>) o ).baseDescriptor );
+	public boolean equals(Object object) {
+		return object == this || object.getClass() == BasicArrayType.class
+			&& Objects.equals( baseDescriptor, ( (BasicArrayType<?, ?>) object ).baseDescriptor );
 	}
 
 	@Override

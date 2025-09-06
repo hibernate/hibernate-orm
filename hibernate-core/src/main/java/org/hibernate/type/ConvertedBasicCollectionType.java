@@ -66,10 +66,10 @@ public class ConvertedBasicCollectionType<C extends Collection<E>, E> extends Ba
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		return o == this || super.equals( o )
-			&& o instanceof ConvertedBasicCollectionType<?, ?> that
-			&& Objects.equals( converter, that.converter );
+	public boolean equals(Object object) {
+		return object == this || super.equals( object )
+								&& object instanceof ConvertedBasicCollectionType<?, ?> that
+								&& Objects.equals( converter, that.converter );
 	}
 
 	@Override

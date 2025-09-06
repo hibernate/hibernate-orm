@@ -75,8 +75,8 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 		}
 		// Always determine the recommended type to make sure this is a valid basic java type
 		// (even though we only use this inside the if block, we want it to throw here if something wrong)
-		final JdbcType recommendedComponentJdbcType = componentJavaType.getRecommendedJdbcType( indicators );
-		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
+		final var recommendedComponentJdbcType = componentJavaType.getRecommendedJdbcType( indicators );
+		final var typeConfiguration = indicators.getTypeConfiguration();
 		return typeConfiguration.getJdbcTypeRegistry()
 				.resolveTypeConstructorDescriptor(
 						indicators.getPreferredSqlTypeCodeForArray( recommendedComponentJdbcType.getDefaultSqlTypeCode() ),
@@ -123,7 +123,7 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 		}
 		final BasicValueConverter<E, ?> valueConverter = elementType.getValueConverter();
 		final int arrayTypeCode = stdIndicators.getPreferredSqlTypeCodeForArray( elementType.getJdbcType().getDefaultSqlTypeCode() );
-		final JdbcType arrayJdbcType =
+		final var arrayJdbcType =
 				typeConfiguration.getJdbcTypeRegistry()
 						.resolveTypeConstructorDescriptor( arrayTypeCode, elementType, columnTypeInformation );
 		if ( valueConverter == null ) {

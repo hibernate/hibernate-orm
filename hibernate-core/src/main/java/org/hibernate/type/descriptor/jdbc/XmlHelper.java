@@ -471,7 +471,7 @@ public class XmlHelper {
 							final SelectableMapping selectable = embeddableMappingType.getJdbcValueSelectable(
 									selectableIndex
 							);
-							final JdbcType jdbcType = selectable.getJdbcMapping().getJdbcType();
+							final var jdbcType = selectable.getJdbcMapping().getJdbcType();
 							if ( jdbcType instanceof AggregateJdbcType aggregateJdbcType ) {
 								final EmbeddableMappingType subMappingType = aggregateJdbcType.getEmbeddableMappingType();
 								final Object[] subValues;
@@ -918,7 +918,7 @@ public class XmlHelper {
 				if ( length != 0 ) {
 					//noinspection unchecked
 					final JavaType<Object> elementJavaType = ( (BasicPluralJavaType<Object>) jdbcJavaType ).getElementJavaType();
-					final JdbcType elementJdbcType = ( (ArrayJdbcType) jdbcType ).getElementJdbcType();
+					final var elementJdbcType = ( (ArrayJdbcType) jdbcType ).getElementJdbcType();
 
 					if ( elementJdbcType instanceof AggregateJdbcType aggregateJdbcType ) {
 						final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();

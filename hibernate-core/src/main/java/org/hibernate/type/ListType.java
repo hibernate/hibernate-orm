@@ -48,10 +48,10 @@ public class ListType extends CollectionType {
 
 	@Override
 	public Object indexOf(Object collection, Object element) {
-		List<?> list = (List<?>) collection;
+		final var list = (List<?>) collection;
 		for ( int i=0; i<list.size(); i++ ) {
 			//TODO: proxies!
-			if ( list.get(i)==element ) {
+			if ( list.get(i) == element ) {
 				return i;
 			}
 		}

@@ -5,11 +5,13 @@
 package org.hibernate.type.descriptor.java;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+
+import static java.lang.Character.toUpperCase;
+import static org.hibernate.internal.util.CharSequenceHelper.regionMatchesIgnoreCase;
 
 /**
  * Descriptor for {@link Boolean} handling.
@@ -36,8 +38,8 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 
 	public BooleanJavaType(char characterValueTrue, char characterValueFalse) {
 		super( Boolean.class );
-		this.characterValueTrue = Character.toUpperCase( characterValueTrue );
-		this.characterValueFalse = Character.toUpperCase( characterValueFalse );
+		this.characterValueTrue = toUpperCase( characterValueTrue );
+		this.characterValueFalse = toUpperCase( characterValueFalse );
 
 		characterValueTrueLC = Character.toLowerCase( characterValueTrue );
 
@@ -67,15 +69,11 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 
 	@Override
 	public Boolean fromEncodedString(CharSequence charSequence, int start, int end) {
-		switch ( charSequence.charAt( start ) ) {
-			case 't':
-			case 'T':
-				return CharSequenceHelper.regionMatchesIgnoreCase( charSequence, start + 1, "rue", 0, 3 );
-			case 'y':
-			case 'Y':
-				return end == start + 1;
-		}
-		return false;
+		return switch ( charSequence.charAt( start ) ) {
+			case 't', 'T' -> regionMatchesIgnoreCase( charSequence, start + 1, "rue", 0, 3 );
+			case 'y', 'Y' -> end == start + 1;
+			default -> false;
+		};
 	}
 
 	@SuppressWarnings("unchecked")
@@ -133,7 +131,8 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 	}
 
 	private boolean isTrue(char charValue) {
-		return charValue == characterValueTrue || charValue == characterValueTrueLC;
+		return charValue == characterValueTrue
+			|| charValue == characterValueTrueLC;
 	}
 
 	public int toInt(Boolean value) {
@@ -202,8 +201,7 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 			}
 			else if ( jdbcType.isInteger() ) {
 				@SuppressWarnings("unchecked")
-				final BasicValueConverter<Boolean, ? extends Number> numericConverter =
-						(BasicValueConverter<Boolean, ? extends Number>) converter;
+				final var numericConverter = (BasicValueConverter<Boolean, ? extends Number>) converter;
 				final Number falseValue = numericConverter.toRelationalValue( false );
 				final Number trueValue = numericConverter.toRelationalValue( true );
 				final Long[] values = getPossibleNumericValues( numericConverter, falseValue, trueValue );

@@ -13,9 +13,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import jakarta.persistence.EnumType;
 
 import static jakarta.persistence.EnumType.ORDINAL;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
@@ -47,9 +45,9 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 	}
 
 	private int sqlType(JdbcTypeIndicators context) {
-		final EnumType enumType = context.getEnumeratedType();
+		final var enumType = context.getEnumeratedType();
 		final boolean preferNativeEnumTypes = context.isPreferNativeEnumTypesEnabled();
-		final JdbcTypeRegistry jdbcTypeRegistry = context.getTypeConfiguration().getJdbcTypeRegistry();
+		final var jdbcTypeRegistry = context.getTypeConfiguration().getJdbcTypeRegistry();
 		return switch ( enumType == null ? ORDINAL : enumType ) {
 			case ORDINAL:
 				if ( preferNativeEnumTypes && jdbcTypeRegistry.hasRegisteredDescriptor( ORDINAL_ENUM ) ) {

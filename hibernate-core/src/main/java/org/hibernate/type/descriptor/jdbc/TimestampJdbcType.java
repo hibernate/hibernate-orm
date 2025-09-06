@@ -53,9 +53,10 @@ public class TimestampJdbcType implements JdbcType {
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
+		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		return typeConfiguration.getCurrentBaseSqlTypeIndicators().preferJdbcDatetimeTypes()
-				? typeConfiguration.getJavaTypeRegistry().getDescriptor( Timestamp.class )
-				: typeConfiguration.getJavaTypeRegistry().getDescriptor( LocalDateTime.class );
+				? javaTypeRegistry.getDescriptor( Timestamp.class )
+				: javaTypeRegistry.getDescriptor( LocalDateTime.class );
 	}
 
 	@Override

@@ -11,7 +11,6 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Map;
 
-import jakarta.persistence.AttributeConverter;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -76,7 +75,7 @@ public class CustomType<J>
 		name = userType.getClass().getName();
 		mappedJavaType = getMappedJavaType( userType );
 
-		final AttributeConverter<J, ?> valueConverter = userType.getValueConverter();
+		final var valueConverter = userType.getValueConverter();
 		if ( valueConverter != null ) {
 			converter = createValueConverter( valueConverter, typeConfiguration.getJavaTypeRegistry() );
 			// When an explicit value converter is given,

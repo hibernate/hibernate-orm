@@ -12,7 +12,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -94,8 +93,8 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 			return true;
 		}
 
-		final Calendar calendar1 = Calendar.getInstance();
-		final Calendar calendar2 = Calendar.getInstance();
+		final var calendar1 = Calendar.getInstance();
+		final var calendar2 = Calendar.getInstance();
 		calendar1.setTime( one );
 		calendar2.setTime( another );
 
@@ -216,9 +215,9 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 	@Override
 	public Date fromString(CharSequence string) {
 		try {
-			final TemporalAccessor accessor = LITERAL_FORMATTER.parse( string );
-			final LocalTime localTime = LocalTime.from( accessor );
-			final Time time = Time.valueOf( localTime );
+			final var temporalAccessor = LITERAL_FORMATTER.parse( string );
+			final var localTime = LocalTime.from( temporalAccessor );
+			final var time = Time.valueOf( localTime );
 			time.setTime( time.getTime() + localTime.getNano() / 1_000_000 );
 			return time;
 		}
@@ -230,8 +229,8 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 	@Override
 	public Date fromEncodedString(CharSequence charSequence, int start, int end) {
 		try {
-			final TemporalAccessor accessor = ENCODED_FORMATTER.parse( subSequence( charSequence, start, end ) );
-			return java.sql.Time.valueOf( accessor.query( LocalTime::from ) );
+			final var temporalAccessor = ENCODED_FORMATTER.parse( subSequence( charSequence, start, end ) );
+			return java.sql.Time.valueOf( temporalAccessor.query( LocalTime::from ) );
 		}
 		catch ( DateTimeParseException pe) {
 			throw new HibernateException( "could not parse time string " + subSequence( charSequence, start, end ), pe );

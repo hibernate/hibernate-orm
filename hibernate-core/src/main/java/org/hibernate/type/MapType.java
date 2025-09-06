@@ -64,18 +64,17 @@ public class MapType extends CollectionType {
 			final Object owner,
 			final Map<Object, Object> copyCache,
 			final SharedSessionContractImplementor session) throws HibernateException {
-		final CollectionPersister persister =
+		final var persister =
 				session.getFactory().getMappingMetamodel()
 						.getCollectionDescriptor( getRole() );
 
-		final Map source = (Map) original;
+		final var source = (Map<?,?>) original;
 		final Map result = (Map) target;
 		result.clear();
 
-		for ( Object entry : source.entrySet() ) {
-			final Map.Entry me = (Map.Entry) entry;
-			final Object key = persister.getIndexType().replace( me.getKey(), null, session, owner, copyCache );
-			final Object value = persister.getElementType().replace( me.getValue(), null, session, owner, copyCache );
+		for ( var entry : source.entrySet() ) {
+			final Object key = persister.getIndexType().replace( entry.getKey(), null, session, owner, copyCache );
+			final Object value = persister.getElementType().replace( entry.getValue(), null, session, owner, copyCache );
 			result.put( key, value );
 		}
 
@@ -83,14 +82,13 @@ public class MapType extends CollectionType {
 
 	}
 
-	@Override @SuppressWarnings("rawtypes")
+	@Override
 	public Object indexOf(Object collection, Object element) {
-		final Map map = (Map) collection;
-		for ( Object entry : map.entrySet() ) {
-			final Map.Entry me = (Map.Entry) entry;
+		final var map = (Map<?,?>) collection;
+		for ( var entry : map.entrySet() ) {
 			//TODO: proxies!
-			if ( me.getValue() == element ) {
-				return me.getKey();
+			if ( entry.getValue() == element ) {
+				return entry.getKey();
 			}
 		}
 		return null;

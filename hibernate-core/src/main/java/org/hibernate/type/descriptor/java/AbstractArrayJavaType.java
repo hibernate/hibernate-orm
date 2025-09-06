@@ -46,8 +46,8 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 					+ " (attribute is not annotated '@ElementCollection', '@OneToMany', or '@ManyToMany')");
 		}
 		// Always determine the recommended type to make sure this is a valid basic java type
-		final JdbcType recommendedComponentJdbcType = componentJavaType.getRecommendedJdbcType( indicators );
-		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
+		final var recommendedComponentJdbcType = componentJavaType.getRecommendedJdbcType( indicators );
+		final var typeConfiguration = indicators.getTypeConfiguration();
 		return typeConfiguration.getJdbcTypeRegistry()
 				.resolveTypeConstructorDescriptor(
 						indicators.getPreferredSqlTypeCodeForArray( recommendedComponentJdbcType.getDefaultSqlTypeCode() ),
@@ -69,7 +69,7 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 			BasicType<E> elementType,
 			ColumnTypeInformation columnTypeInformation,
 			JdbcTypeIndicators stdIndicators) {
-		final Class<?> elementJavaTypeClass = elementType.getJavaTypeDescriptor().getJavaTypeClass();
+		final var elementJavaTypeClass = elementType.getJavaTypeDescriptor().getJavaTypeClass();
 		if ( elementType instanceof BasicPluralType<?, ?>
 				|| elementJavaTypeClass != null && elementJavaTypeClass.isArray() ) {
 			return null;
@@ -97,11 +97,11 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 			ColumnTypeInformation columnTypeInformation,
 			JdbcTypeIndicators indicators,
 			BasicValueConverter<E, F> valueConverter) {
-		final Class<F> convertedElementClass = valueConverter.getRelationalJavaType().getJavaTypeClass();
-		final Class<?> convertedArrayClass = newInstance( convertedElementClass, 0 ).getClass();
-		final JavaType<?> relationalJavaType =
+		final var convertedElementClass = valueConverter.getRelationalJavaType().getJavaTypeClass();
+		final var convertedArrayClass = newInstance( convertedElementClass, 0 ).getClass();
+		final var relationalJavaType =
 				typeConfiguration.getJavaTypeRegistry()
-						.getDescriptor( convertedArrayClass );
+					.getDescriptor( convertedArrayClass );
 		return new ConvertedBasicArrayType<>(
 				elementType,
 				arrayJdbcType( typeConfiguration, elementType, columnTypeInformation, indicators ),
@@ -116,7 +116,7 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 			BasicType<E> elementType,
 			ColumnTypeInformation columnTypeInformation,
 			JdbcTypeIndicators indicators) {
-		final JdbcType arrayJdbcType =
+		final var arrayJdbcType =
 				arrayJdbcType( typeConfiguration, elementType, columnTypeInformation, indicators );
 		return typeConfiguration.getBasicTypeRegistry()
 				.resolve( arrayJavaType, arrayJdbcType,

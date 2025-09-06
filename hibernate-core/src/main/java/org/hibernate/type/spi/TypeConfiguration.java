@@ -684,22 +684,22 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	/**
 	 * @see QueryHelper#highestPrecedenceType2
 	 */
-	public SqmExpressible<?> resolveArithmeticType(
-			SqmExpressible<?> firstType,
-			SqmExpressible<?> secondType,
+	public SqmBindableType<?> resolveArithmeticType(
+			SqmBindableType<?> firstType,
+			SqmBindableType<?> secondType,
 			BinaryArithmeticOperator operator) {
 		return resolveArithmeticType( firstType, secondType );
 	}
 
 	/**
 	 * Determine the result type of an arithmetic operation as defined by the
-	 * rules in section 6.5.8.1.
+	 * rules in section 6.5.8.1, taking converters into account.
 	 *
 	 * @see QueryHelper#highestPrecedenceType2
 	 */
-	public SqmExpressible<?> resolveArithmeticType(
-			SqmExpressible<?> firstType,
-			SqmExpressible<?> secondType) {
+	public SqmBindableType<?> resolveArithmeticType(
+			SqmBindableType<?> firstType,
+			SqmBindableType<?> secondType) {
 
 		if ( getSqlTemporalType( firstType ) != null ) {
 			if ( secondType==null || getSqlTemporalType( secondType ) != null ) {
@@ -731,20 +731,21 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 
 		if ( firstType != null && ( secondType == null
-				|| firstType.getRelationalJavaType().isWider( secondType.getRelationalJavaType() ) ) ) {
-			return resolveBasicArithmeticType( firstType );
+				|| !secondType.getRelationalJavaType().isWider( firstType.getRelationalJavaType() ) ) ) {
+			return resolveArithmeticType( firstType );
 		}
-		return secondType != null ? resolveBasicArithmeticType( secondType ) : null;
+		return secondType != null ? resolveArithmeticType( secondType ) : null;
 	}
 
-	private BasicType<?> resolveBasicArithmeticType(SqmExpressible<?> expressible) {
-		if ( isNumberArray( expressible ) ) {
-			return (BasicType<?>) expressible.getSqmType();
-		}
-		else {
-			// Use the relational java type to account for possible converters
-			return getBasicTypeForJavaType( expressible.getRelationalJavaType().getJavaTypeClass() );
-		}
+	/**
+	 * Determine the result type of a unary arithmetic operation,
+	 * taking converters into account.
+	 */
+	public SqmBindableType<?> resolveArithmeticType(SqmBindableType<?> expressible) {
+		return isNumberArray( expressible )
+				? expressible.getSqmType()
+				// Use the relational java type to account for possible converters
+				: getBasicTypeForJavaType( expressible.getRelationalJavaType().getJavaTypeClass() );
 	}
 
 	private static boolean matchesJavaType(SqmExpressible<?> type, Class<?> javaType) {
@@ -797,6 +798,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 	}
 
+	@Deprecated(since = "7.2") // due to the unbound type parameter
 	public BasicType<?> standardBasicTypeForJavaType(Type javaType) {
 		if ( javaType == null ) {
 			return null;

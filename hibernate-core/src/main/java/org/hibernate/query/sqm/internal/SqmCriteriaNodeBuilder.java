@@ -1219,7 +1219,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		final SqmExpression<N> sqmExpression = (SqmExpression<N>) x;
 		return new SqmUnaryOperation<>(
 				UnaryArithmeticOperator.UNARY_MINUS,
-				sqmExpression
+				sqmExpression,
+				getNodeBuilder()
 		);
 	}
 

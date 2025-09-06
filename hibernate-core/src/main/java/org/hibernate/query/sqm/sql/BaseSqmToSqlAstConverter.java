@@ -107,6 +107,7 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.DiscriminatorSqmPath;
 import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.sqm.InterpretationException;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
@@ -5985,8 +5986,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				return (MappingModelExpressible<?>) getTypeConfiguration().resolveArithmeticType(
 						// These casts should be safe, since the only JdbcMapping is BasicType
 						// which also implements SqmExpressible
-						lhs == null ? null : (SqmExpressible<?>) lhs.getSingleJdbcMapping(),
-						rhs == null ? null : (SqmExpressible<?>) rhs.getSingleJdbcMapping()
+						lhs == null ? null : (SqmBindableType<?>) lhs.getSingleJdbcMapping(),
+						rhs == null ? null : (SqmBindableType<?>) rhs.getSingleJdbcMapping()
 				);
 			}
 		}

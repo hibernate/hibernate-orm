@@ -141,6 +141,7 @@ public class BasicTypeRegistry implements Serializable {
 		return resolve( (java.lang.reflect.Type) javaType, sqlTypeCode );
 	}
 
+	@Deprecated(since = "7.2") // due to the unbound type parameter
 	public <J> BasicType<J> resolve(java.lang.reflect.Type javaType, int sqlTypeCode) {
 		return resolve( getJavaTypeRegistry().getDescriptor( javaType ), sqlTypeCode );
 	}

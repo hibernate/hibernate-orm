@@ -53,11 +53,11 @@ public class SqmFunctionRegistry {
 	 */
 	public Stream<Map.Entry<String, SqmFunctionDescriptor>> getFunctionsByName() {
 		final Map<String, SqmFunctionDescriptor> sortedFunctionMap = new TreeMap<>( CASE_INSENSITIVE_ORDER );
-		for ( Map.Entry<String, SqmFunctionDescriptor> e : functionMap.unmodifiableEntrySet() ) {
-			sortedFunctionMap.put( e.getKey(), e.getValue() );
+		for ( var entry : functionMap.unmodifiableEntrySet() ) {
+			sortedFunctionMap.put( entry.getKey(), entry.getValue() );
 		}
-		for ( Map.Entry<String, String> e : alternateKeyMap.unmodifiableEntrySet() ) {
-			sortedFunctionMap.put( e.getKey(), functionMap.get( e.getValue() ) );
+		for ( var entry : alternateKeyMap.unmodifiableEntrySet() ) {
+			sortedFunctionMap.put( entry.getKey(), functionMap.get( entry.getValue() ) );
 		}
 		return sortedFunctionMap.entrySet().stream();
 	}
@@ -67,11 +67,11 @@ public class SqmFunctionRegistry {
 	 */
 	public Stream<Map.Entry<String, SqmSetReturningFunctionDescriptor>> getSetReturningFunctionsByName() {
 		final Map<String, SqmSetReturningFunctionDescriptor> sortedFunctionMap = new TreeMap<>( CASE_INSENSITIVE_ORDER );
-		for ( Map.Entry<String, SqmSetReturningFunctionDescriptor> e : setReturningFunctionMap.unmodifiableEntrySet() ) {
-			sortedFunctionMap.put( e.getKey(), e.getValue() );
+		for ( var entry : setReturningFunctionMap.unmodifiableEntrySet() ) {
+			sortedFunctionMap.put( entry.getKey(), entry.getValue() );
 		}
-		for ( Map.Entry<String, String> e : alternateKeyMap.unmodifiableEntrySet() ) {
-			sortedFunctionMap.put( e.getKey(), setReturningFunctionMap.get( e.getValue() ) );
+		for ( var entry : alternateKeyMap.unmodifiableEntrySet() ) {
+			sortedFunctionMap.put( entry.getKey(), setReturningFunctionMap.get( entry.getValue() ) );
 		}
 		return sortedFunctionMap.entrySet().stream();
 	}

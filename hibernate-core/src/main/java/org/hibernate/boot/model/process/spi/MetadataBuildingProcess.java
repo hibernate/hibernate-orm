@@ -13,10 +13,8 @@ import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -32,8 +30,6 @@ import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
-import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
@@ -44,18 +40,13 @@ import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.source.internal.annotations.AnnotationMetadataSourceProcessorImpl;
 import org.hibernate.boot.model.source.internal.annotations.DomainModelSource;
 import org.hibernate.boot.model.source.internal.hbm.EntityHierarchyBuilder;
-import org.hibernate.boot.model.source.internal.hbm.EntityHierarchySourceImpl;
 import org.hibernate.boot.model.source.internal.hbm.HbmMetadataSourceProcessorImpl;
 import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.model.source.internal.hbm.ModelBinder;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
-import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
-import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
-import org.hibernate.boot.models.xml.spi.XmlProcessingResult;
 import org.hibernate.boot.models.xml.spi.XmlProcessor;
-import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
@@ -66,7 +57,6 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -75,15 +65,12 @@ import org.hibernate.mapping.Table;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
-import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.descriptor.java.ByteArrayJavaType;
 import org.hibernate.type.descriptor.java.CharacterArrayJavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcTypeConstructor;
@@ -94,9 +81,7 @@ import org.hibernate.type.descriptor.jdbc.XmlAsStringArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.XmlAsStringJdbcType;
 import org.hibernate.type.descriptor.jdbc.UuidAsBinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.NamedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
@@ -157,7 +142,7 @@ public class MetadataBuildingProcess {
 	public static ManagedResources prepare(
 			final MetadataSources sources,
 			final BootstrapContext bootstrapContext) {
-		final ManagedResourcesImpl managedResources = ManagedResourcesImpl.baseline( sources, bootstrapContext );
+		final var managedResources = ManagedResourcesImpl.baseline( sources, bootstrapContext );
 		final boolean xmlMappingEnabled =
 				bootstrapContext.getConfigurationService()
 						.getSetting( XML_MAPPING_ENABLED, StandardConverters.BOOLEAN, true );
@@ -182,19 +167,18 @@ public class MetadataBuildingProcess {
 			final BootstrapContext bootstrapContext,
 			final MetadataBuildingOptions options) {
 
-		final InFlightMetadataCollectorImpl metadataCollector =
-				new InFlightMetadataCollectorImpl( bootstrapContext, options );
+		final var metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, options );
 
 		handleTypes( bootstrapContext, options, metadataCollector );
 
-		final DomainModelSource domainModelSource = processManagedResources(
+		final var domainModelSource = processManagedResources(
 				managedResources,
 				metadataCollector,
 				bootstrapContext,
 				options.getMappingDefaults()
 		);
 
-		final MetadataBuildingContextRootImpl rootMetadataBuildingContext = new MetadataBuildingContextRootImpl(
+		final var rootMetadataBuildingContext = new MetadataBuildingContextRootImpl(
 				"orm",
 				bootstrapContext,
 				options,
@@ -220,7 +204,7 @@ public class MetadataBuildingProcess {
 				metadataCollector
 		);
 
-		final ClassLoaderService classLoaderService = bootstrapContext.getClassLoaderService();
+		final var classLoaderService = bootstrapContext.getClassLoaderService();
 		processAdditionalMappingContributions( metadataCollector, options, classLoaderService, rootMetadataBuildingContext );
 
 		applyExtraQueryImports( managedResources, metadataCollector );
@@ -235,7 +219,7 @@ public class MetadataBuildingProcess {
 			MetadataBuildingContextRootImpl rootMetadataBuildingContext,
 			DomainModelSource domainModelSource,
 			InFlightMetadataCollectorImpl metadataCollector) {
-		final MetadataSourceProcessor processor = new MetadataSourceProcessor() {
+		final var processor = new MetadataSourceProcessor() {
 			private final MetadataSourceProcessor hbmProcessor = options.isXmlMappingEnabled()
 					? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )
 					: new NoOpMetadataSourceProcessorImpl();
@@ -373,9 +357,9 @@ public class MetadataBuildingProcess {
 		//		- allKnownClassNames (technically could be included in xmlPreProcessingResult)
 		//		- ModelsContext
 
-		final PersistenceUnitMetadata aggregatedPersistenceUnitMetadata = metadataCollector.getPersistenceUnitMetadata();
-		final ModelsContext modelsContext = bootstrapContext.getModelsContext();
-		final XmlPreProcessingResult xmlPreProcessingResult = XmlPreProcessor.preProcessXmlResources(
+		final var aggregatedPersistenceUnitMetadata = metadataCollector.getPersistenceUnitMetadata();
+		final var modelsContext = bootstrapContext.getModelsContext();
+		final var xmlPreProcessingResult = XmlPreProcessor.preProcessXmlResources(
 				managedResources,
 				aggregatedPersistenceUnitMetadata
 		);
@@ -387,7 +371,7 @@ public class MetadataBuildingProcess {
 		);
 		managedResources.getAnnotatedPackageNames().forEach( (packageName) -> {
 			try {
-				final Class<?> packageInfoClass = modelsContext.getClassLoading().classForName( packageName + ".package-info" );
+				final var packageInfoClass = modelsContext.getClassLoading().classForName( packageName + ".package-info" );
 				allKnownClassNames.add( packageInfoClass.getName() );
 			}
 			catch (ClassLoadingException classLoadingException) {
@@ -412,17 +396,17 @@ public class MetadataBuildingProcess {
 		//		- mappedSuperClasses
 		//  	- embeddables
 
-		final ClassDetailsRegistry classDetailsRegistry = modelsContext.getClassDetailsRegistry();
-		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
+		final var classDetailsRegistry = modelsContext.getClassDetailsRegistry();
+		final var modelCategorizationCollector = new DomainModelCategorizationCollector(
 				metadataCollector.getGlobalRegistrations(),
 				modelsContext
 		);
 
-		final RootMappingDefaults rootMappingDefaults = new RootMappingDefaults(
+		final var rootMappingDefaults = new RootMappingDefaults(
 				optionDefaults,
 				aggregatedPersistenceUnitMetadata
 		);
-		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml(
+		final var xmlProcessingResult = XmlProcessor.processXml(
 				xmlPreProcessingResult,
 				aggregatedPersistenceUnitMetadata,
 				modelCategorizationCollector::apply,
@@ -477,10 +461,10 @@ public class MetadataBuildingProcess {
 			ClassDetailsRegistry classDetailsRegistry,
 			DomainModelCategorizationCollector modelCategorizationCollector) {
 		modelCategorizationCollector.apply( classDetails );
-		if ( classDetails.getSuperClass() != null
-				&& classDetails.getSuperClass() != ClassDetails.OBJECT_CLASS_DETAILS ) {
-			if ( categorizedClassNames.add( classDetails.getSuperClass().getClassName() ) ) {
-				applyKnownClass( classDetails.getSuperClass(), categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
+		final var superClass = classDetails.getSuperClass();
+		if ( superClass != null && superClass != ClassDetails.OBJECT_CLASS_DETAILS ) {
+			if ( categorizedClassNames.add( superClass.getClassName() ) ) {
+				applyKnownClass( superClass, categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
 			}
 		}
 	}
@@ -491,14 +475,15 @@ public class MetadataBuildingProcess {
 			ClassLoaderService classLoaderService,
 			MetadataBuildingContextRootImpl rootMetadataBuildingContext) {
 
-		final AdditionalMappingContributionsImpl contributions = new AdditionalMappingContributionsImpl(
+		final var contributions = new AdditionalMappingContributionsImpl(
 				metadataCollector,
 				options,
 				options.isXmlMappingEnabled() ? new MappingBinder( classLoaderService, () -> false ) : null,
 				rootMetadataBuildingContext
 		);
 
-		final Collection<AdditionalMappingContributor> additionalMappingContributors = classLoaderService.loadJavaServices( AdditionalMappingContributor.class );
+		final var additionalMappingContributors =
+				classLoaderService.loadJavaServices( AdditionalMappingContributor.class );
 		additionalMappingContributors.forEach( (contributor) -> {
 			contributions.setCurrentContributor( contributor.getContributorName() );
 			try {
@@ -570,9 +555,8 @@ public class MetadataBuildingProcess {
 		@Override
 		public void contributeBinding(InputStream xmlStream) {
 			final Origin origin = new Origin( SourceType.INPUT_STREAM, null );
-			final Binding<JaxbBindableMappingDescriptor> binding = mappingBinder.bind( xmlStream, origin );
-
-			final JaxbBindableMappingDescriptor bindingRoot = binding.getRoot();
+			final var binding = mappingBinder.bind( xmlStream, origin );
+			final var bindingRoot = binding.getRoot();
 			if ( bindingRoot instanceof JaxbHbmHibernateMapping hibernateMapping ) {
 				contributeBinding( hibernateMapping );
 			}
@@ -586,30 +570,25 @@ public class MetadataBuildingProcess {
 
 		@Override
 		public void contributeBinding(JaxbEntityMappingsImpl mappingJaxbBinding) {
-			if ( ! options.isXmlMappingEnabled() ) {
-				return;
+			if ( options.isXmlMappingEnabled() ) {
+				if ( additionalJaxbMappings == null ) {
+					additionalJaxbMappings = new ArrayList<>();
+				}
+				additionalJaxbMappings.add( mappingJaxbBinding );
 			}
-
-			if ( additionalJaxbMappings == null ) {
-				additionalJaxbMappings = new ArrayList<>();
-			}
-			additionalJaxbMappings.add( mappingJaxbBinding );
 		}
 
 		@Override
 		public void contributeBinding(JaxbHbmHibernateMapping hbmJaxbBinding) {
-			if ( ! options.isXmlMappingEnabled() ) {
-				return;
+			if ( options.isXmlMappingEnabled() ) {
+				extraHbmXml = true;
+				hierarchyBuilder.indexMappingDocument( new MappingDocument(
+						currentContributor,
+						hbmJaxbBinding,
+						new Origin( SourceType.OTHER, null ),
+						rootMetadataBuildingContext
+				) );
 			}
-
-			extraHbmXml = true;
-
-			hierarchyBuilder.indexMappingDocument( new MappingDocument(
-					currentContributor,
-					hbmJaxbBinding,
-					new Origin( SourceType.OTHER, null ),
-					rootMetadataBuildingContext
-			) );
 		}
 
 		@Override
@@ -655,8 +634,8 @@ public class MetadataBuildingProcess {
 
 			// hbm.xml
 			if ( extraHbmXml ) {
-				final ModelBinder binder = ModelBinder.prepare( rootMetadataBuildingContext );
-				for ( EntityHierarchySourceImpl entityHierarchySource : hierarchyBuilder.buildHierarchies() ) {
+				final var binder = ModelBinder.prepare( rootMetadataBuildingContext );
+				for ( var entityHierarchySource : hierarchyBuilder.buildHierarchies() ) {
 					binder.bindEntityHierarchy( entityHierarchySource );
 				}
 			}
@@ -667,13 +646,11 @@ public class MetadataBuildingProcess {
 	private static void applyExtraQueryImports(
 			ManagedResources managedResources,
 			InFlightMetadataCollectorImpl metadataCollector) {
-		final Map<String, Class<?>> extraQueryImports = managedResources.getExtraQueryImports();
-		if ( extraQueryImports == null || extraQueryImports.isEmpty() ) {
-			return;
-		}
-
-		for ( Map.Entry<String, Class<?>> entry : extraQueryImports.entrySet() ) {
-			metadataCollector.addImport( entry.getKey(), entry.getValue().getName() );
+		final var extraQueryImports = managedResources.getExtraQueryImports();
+		if ( extraQueryImports != null && !extraQueryImports.isEmpty() ) {
+			for ( var entry : extraQueryImports.entrySet() ) {
+				metadataCollector.addImport( entry.getKey(), entry.getValue().getName() );
+			}
 		}
 	}
 
@@ -694,11 +671,11 @@ public class MetadataBuildingProcess {
 			BootstrapContext bootstrapContext,
 			MetadataBuildingOptions options,
 			InFlightMetadataCollector metadataCollector) {
-		final ClassLoaderService classLoaderService = bootstrapContext.getClassLoaderService();
-		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
-		final StandardServiceRegistry serviceRegistry = bootstrapContext.getServiceRegistry();
-		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
-		final TypeContributions typeContributions = new TypeContributions() {
+		final var classLoaderService = bootstrapContext.getClassLoaderService();
+		final var typeConfiguration = bootstrapContext.getTypeConfiguration();
+		final var serviceRegistry = bootstrapContext.getServiceRegistry();
+		final var jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
+		final var typeContributions = new TypeContributions() {
 			@Override
 			public TypeConfiguration getTypeConfiguration() {
 				return typeConfiguration;
@@ -718,7 +695,7 @@ public class MetadataBuildingProcess {
 		if ( options.getWrapperArrayHandling() == WrapperArrayHandling.LEGACY ) {
 			typeConfiguration.getJavaTypeRegistry().addDescriptor( ByteArrayJavaType.INSTANCE );
 			typeConfiguration.getJavaTypeRegistry().addDescriptor( CharacterArrayJavaType.INSTANCE );
-			final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+			final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 
 			basicTypeRegistry.addTypeReferenceRegistrationKey(
 					StandardBasicTypes.CHARACTER_ARRAY.getName(),
@@ -731,12 +708,12 @@ public class MetadataBuildingProcess {
 		}
 
 		// add Dialect contributed types
-		final Dialect dialect = options.getServiceRegistry().requireService( JdbcServices.class ).getDialect();
+		final var dialect = options.getServiceRegistry().requireService( JdbcServices.class ).getDialect();
 		dialect.contribute( typeContributions, options.getServiceRegistry() );
 
 		// add TypeContributor contributed types.
-		for ( TypeContributor contributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
-			contributor.contribute( typeContributions, options.getServiceRegistry() );
+		for ( var typeContributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
+			typeContributor.contribute( typeContributions, options.getServiceRegistry() );
 		}
 
 		// add fallback type descriptors
@@ -808,9 +785,9 @@ public class MetadataBuildingProcess {
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.MATERIALIZED_CLOB, SqlTypes.CLOB );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.MATERIALIZED_NCLOB, SqlTypes.NCLOB );
 
-		final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+		final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
 		// Fallback to the geometry DdlType when geography is requested
-		final DdlType geometryType = ddlTypeRegistry.getDescriptor( SqlTypes.GEOMETRY );
+		final var geometryType = ddlTypeRegistry.getDescriptor( SqlTypes.GEOMETRY );
 		if ( geometryType != null ) {
 			ddlTypeRegistry.addDescriptorIfAbsent(
 					new DdlTypeImpl(
@@ -823,16 +800,16 @@ public class MetadataBuildingProcess {
 
 		// add explicit application registered types
 		typeConfiguration.addBasicTypeRegistrationContributions( options.getBasicTypeRegistrations() );
-		for ( CompositeUserType<?> compositeUserType : options.getCompositeUserTypes() ) {
+		for ( var compositeUserType : options.getCompositeUserTypes() ) {
 			metadataCollector.registerCompositeUserType( compositeUserType.returnedClass(),
 					ReflectHelper.getClass( compositeUserType.getClass() ) );
 		}
 
-		final JdbcType timestampWithTimeZoneOverride = getTimestampWithTimeZoneOverride( options, jdbcTypeRegistry );
+		final var timestampWithTimeZoneOverride = getTimestampWithTimeZoneOverride( options, jdbcTypeRegistry );
 		if ( timestampWithTimeZoneOverride != null ) {
 			adaptTimestampTypesToDefaultTimeZoneStorage( typeConfiguration, timestampWithTimeZoneOverride );
 		}
-		final JdbcType timeWithTimeZoneOverride = getTimeWithTimeZoneOverride( options, jdbcTypeRegistry );
+		final var timeWithTimeZoneOverride = getTimeWithTimeZoneOverride( options, jdbcTypeRegistry );
 		if ( timeWithTimeZoneOverride != null ) {
 			adaptTimeTypesToDefaultTimeZoneStorage( typeConfiguration, timeWithTimeZoneOverride );
 		}
@@ -871,8 +848,8 @@ public class MetadataBuildingProcess {
 			Class<?> javaType,
 			String name,
 			String... additionalKeys) {
-		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
-		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
+		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 		final BasicType<?> basicType = new NamedBasicTypeImpl<>(
 				javaTypeRegistry.getDescriptor( javaType ),
 				jdbcTypeRegistry.getDescriptor( preferredSqlTypeCode ),
@@ -887,8 +864,8 @@ public class MetadataBuildingProcess {
 	private static void adaptTimeTypesToDefaultTimeZoneStorage(
 			TypeConfiguration typeConfiguration,
 			JdbcType timestampWithTimeZoneOverride) {
-		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
-		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
+		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 		final BasicType<?> offsetDateTimeType = new NamedBasicTypeImpl<>(
 				javaTypeRegistry.getDescriptor( OffsetTime.class ),
 				timestampWithTimeZoneOverride,
@@ -905,8 +882,8 @@ public class MetadataBuildingProcess {
 	private static void adaptTimestampTypesToDefaultTimeZoneStorage(
 			TypeConfiguration typeConfiguration,
 			JdbcType timestampWithTimeZoneOverride) {
-		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
-		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
+		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 		final BasicType<?> offsetDateTimeType = new NamedBasicTypeImpl<>(
 				javaTypeRegistry.getDescriptor( OffsetDateTime.class ),
 				timestampWithTimeZoneOverride,

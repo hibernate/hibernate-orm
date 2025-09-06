@@ -1056,18 +1056,18 @@ public class Configuration {
 			userTypeRegistrations.forEach( registration ->  registration.registerType( metadataBuilder ) );
 		}
 
-		for ( BasicType<?> basicType : basicTypes ) {
+		for ( var basicType : basicTypes ) {
 			metadataBuilder.applyBasicType( basicType );
 		}
 
 		if ( customFunctionDescriptors != null ) {
-			for ( Map.Entry<String, SqmFunctionDescriptor> entry : customFunctionDescriptors.entrySet() ) {
+			for ( var entry : customFunctionDescriptors.entrySet() ) {
 				metadataBuilder.applySqlFunction( entry.getKey(), entry.getValue() );
 			}
 		}
 
 		if ( auxiliaryDatabaseObjectList != null ) {
-			for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : auxiliaryDatabaseObjectList ) {
+			for ( var auxiliaryDatabaseObject : auxiliaryDatabaseObjectList ) {
 				metadataBuilder.applyAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
 			}
 		}

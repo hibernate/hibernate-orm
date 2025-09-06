@@ -135,7 +135,7 @@ public class FilterHelper {
 
 	public boolean isAffectedBy(Map<String, Filter> enabledFilters, boolean onlyApplyForLoadByKey) {
 		for ( String filterName : filterNames ) {
-			Filter filter = enabledFilters.get( filterName );
+			final var filter = enabledFilters.get( filterName );
 			if ( filter != null && ( !onlyApplyForLoadByKey || filter.isAppliedToLoadByKey() ) ) {
 				return true;
 			}
@@ -168,7 +168,7 @@ public class FilterHelper {
 			boolean onlyApplyLoadByKeyFilters,
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
-		final FilterPredicate predicate = generateFilterPredicate(
+		final var predicate = generateFilterPredicate(
 				aliasGenerator,
 				enabledFilters,
 				onlyApplyLoadByKeyFilters,
@@ -186,10 +186,10 @@ public class FilterHelper {
 			boolean onlyApplyLoadByKeyFilters,
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
-		final FilterPredicate filterPredicate = new FilterPredicate();
+		final var filterPredicate = new FilterPredicate();
 
 		for ( int i = 0, max = filterNames.length; i < max; i++ ) {
-			final Filter enabledFilter = enabledFilters.get( filterNames[i] );
+			final var enabledFilter = enabledFilters.get( filterNames[i] );
 			if ( enabledFilter != null && ( !onlyApplyLoadByKeyFilters || enabledFilter.isAppliedToLoadByKey() ) ) {
 				filterPredicate.applyFragment( render( aliasGenerator, i, tableGroup, creationState ), enabledFilter, parameterNames[i] );
 			}
@@ -203,7 +203,7 @@ public class FilterHelper {
 	}
 
 	public String render(FilterAliasGenerator aliasGenerator, Map<String, Filter> enabledFilters) {
-		final StringBuilder buffer = new StringBuilder();
+		final var buffer = new StringBuilder();
 		render( buffer, aliasGenerator, enabledFilters );
 		return buffer.toString();
 	}
@@ -249,7 +249,7 @@ public class FilterHelper {
 			}
 			else {
 				String newCondition = condition;
-				for ( Map.Entry<String, String> entry : aliasTableMap.entrySet() ) {
+				for ( var entry : aliasTableMap.entrySet() ) {
 					final String tableName = entry.getValue();
 					newCondition =
 							replaceAlias( tableGroup, creationState, newCondition,

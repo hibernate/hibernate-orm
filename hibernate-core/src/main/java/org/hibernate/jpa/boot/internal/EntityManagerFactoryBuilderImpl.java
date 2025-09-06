@@ -658,7 +658,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		// these should have precedence.
 		// NOTE that this occurs after the specialized normalize calls above which
 		//      remove any specially-handled settings.
-		for ( Map.Entry<String,Object> entry : integrationSettingsCopy.entrySet() ) {
+		for ( var entry : integrationSettingsCopy.entrySet() ) {
 			final String key = entry.getKey();
 			if ( key != null ) {
 				final Object value = entry.getValue();
@@ -676,7 +676,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			PersistenceUnitDescriptor persistenceUnit,
 			Map<String, Object> integrationSettingsCopy,
 			MergedSettings mergedSettings) {
-		final Map<String, Object> configurationSettings = mergedSettings.getConfigurationValues();
+		final var configurationSettings = mergedSettings.getConfigurationValues();
 		// normalize SharedCacheMode
 		final Object intgCacheMode = integrationSettingsCopy.remove( JPA_SHARED_CACHE_MODE );
 		final Object jakartaIntgCacheMode = integrationSettingsCopy.remove( JAKARTA_SHARED_CACHE_MODE );
@@ -696,7 +696,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			PersistenceUnitDescriptor persistenceUnit,
 			Map<String, Object> integrationSettingsCopy,
 			MergedSettings mergedSettings) {
-		final Map<String, Object> configurationSettings = mergedSettings.getConfigurationValues();
+		final var configurationSettings = mergedSettings.getConfigurationValues();
 		// normalize ValidationMode
 		final Object intgValidationMode = integrationSettingsCopy.remove( JPA_VALIDATION_MODE );
 		final Object jakartaIntgValidationMode = integrationSettingsCopy.remove( JAKARTA_VALIDATION_MODE );

@@ -56,7 +56,7 @@ final class JndiServiceImpl implements JndiService {
 	private static Hashtable<String,Object> extractJndiProperties(Map<?,?> configurationValues) {
 		final Hashtable<String,Object> jndiProperties = new Hashtable<>();
 
-		for ( Map.Entry<?,?> entry : configurationValues.entrySet() ) {
+		for ( var entry : configurationValues.entrySet() ) {
 			if ( entry.getKey() instanceof String propertyName ) {
 				final Object propertyValue = entry.getValue();
 				if ( propertyName.startsWith( Environment.JNDI_PREFIX ) ) {
@@ -86,7 +86,7 @@ final class JndiServiceImpl implements JndiService {
 
 	@Override
 	public Object locate(String jndiName) {
-		final InitialContext initialContext = buildInitialContext();
+		final var initialContext = buildInitialContext();
 		final Name name = parseName( jndiName, initialContext );
 		try {
 			return initialContext.lookup( name );
@@ -131,13 +131,10 @@ final class JndiServiceImpl implements JndiService {
 	}
 
 	private static boolean allowedScheme(final String scheme) {
-		switch ( scheme ) {
-			case "java" :
-			case "osgi" :
-				return true;
-			default:
-				return false;
-		}
+		return switch ( scheme ) {
+			case "java", "osgi" -> true;
+			default -> false;
+		};
 	}
 
 	private void cleanUp(InitialContext initialContext) {
@@ -151,7 +148,7 @@ final class JndiServiceImpl implements JndiService {
 
 	@Override
 	public void bind(String jndiName, Object value) {
-		final InitialContext initialContext = buildInitialContext();
+		final var initialContext = buildInitialContext();
 		final Name name = parseName( jndiName, initialContext );
 		try {
 			bind( name, value, initialContext );
@@ -219,7 +216,7 @@ final class JndiServiceImpl implements JndiService {
 
 	@Override
 	public void unbind(String jndiName) {
-		final InitialContext initialContext = buildInitialContext();
+		final var initialContext = buildInitialContext();
 		final Name name = parseName( jndiName, initialContext );
 		try {
 			initialContext.unbind( name );
@@ -234,7 +231,7 @@ final class JndiServiceImpl implements JndiService {
 
 	@Override
 	public void addListener(String jndiName, NamespaceChangeListener listener) {
-		final InitialContext initialContext = buildInitialContext();
+		final var initialContext = buildInitialContext();
 		final Name name = parseName( jndiName, initialContext );
 		try {
 			( (EventContext) initialContext ).addNamingListener( name, EventContext.OBJECT_SCOPE, listener );

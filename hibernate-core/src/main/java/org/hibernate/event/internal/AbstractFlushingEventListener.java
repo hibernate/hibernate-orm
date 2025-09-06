@@ -127,11 +127,11 @@ public abstract class AbstractFlushingEventListener {
 		LOG.trace( "Processing flush-time cascades" );
 		final var context = PersistContext.create();
 		// safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
-		for ( var me : persistenceContext.reentrantSafeEntityEntries() ) {
-//		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
-			final var entry = me.getValue();
-			if ( flushable( entry ) ) {
-				cascadeOnFlush( session, entry.getPersister(), me.getKey(), context );
+		for ( var entry : persistenceContext.reentrantSafeEntityEntries() ) {
+//		for ( Map.Entry entry : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
+			final var entityEntry = entry.getValue();
+			if ( flushable( entityEntry ) ) {
+				cascadeOnFlush( session, entityEntry.getPersister(), entry.getKey(), context );
 			}
 		}
 		checkForTransientReferences( session, persistenceContext );

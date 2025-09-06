@@ -8,7 +8,6 @@ import java.sql.PreparedStatement;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
@@ -62,7 +61,7 @@ public class PreparedStatementGroupStandard extends AbstractPreparedStatementGro
 	@Override
 	public int getNumberOfActiveStatements() {
 		int count = 0;
-		for ( Map.Entry<String, PreparedStatementDetails> entry : statementMap.entrySet() ) {
+		for ( var entry : statementMap.entrySet() ) {
 			if ( entry.getValue().getStatement() != null ) {
 				count++;
 			}
@@ -99,7 +98,7 @@ public class PreparedStatementGroupStandard extends AbstractPreparedStatementGro
 
 	@Override
 	public boolean hasMatching(Predicate<PreparedStatementDetails> filter) {
-		for ( Map.Entry<String, PreparedStatementDetails> entry : statementMap.entrySet() ) {
+		for ( var entry : statementMap.entrySet() ) {
 			if ( filter.test( entry.getValue() ) ) {
 				return true;
 			}

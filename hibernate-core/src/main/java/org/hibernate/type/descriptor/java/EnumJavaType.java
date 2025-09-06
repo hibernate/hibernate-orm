@@ -4,6 +4,7 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.boot.model.process.internal.EnumeratedValueConverter;
@@ -301,5 +302,22 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 				return valueSet;
 			}
 		}
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if ( obj == this ) {
+			return true;
+		}
+		if ( obj == null || obj.getClass() != this.getClass() ) {
+			return false;
+		}
+		var that = (EnumJavaType<T>) obj;
+		return Objects.equals( this.getTypeName(), that.getTypeName() );
+	}
+
+	@Override
+	public int hashCode() {
+		return this.getTypeName().hashCode();
 	}
 }

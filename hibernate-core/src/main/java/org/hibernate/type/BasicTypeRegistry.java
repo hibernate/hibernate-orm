@@ -56,6 +56,18 @@ public class BasicTypeRegistry implements Serializable {
 		this.typeConfiguration = typeConfiguration;
 	}
 
+	/**
+	 * @apiNote For strictly internal (testing) use ONLY. It can be removed without any prior warning.
+	 */
+	@Internal
+	protected BasicTypeRegistry(BasicTypeRegistry basicTypeRegistry){
+		this.typeConfiguration = basicTypeRegistry.typeConfiguration;
+		this.registryValues.putAll( basicTypeRegistry.registryValues );
+		this.primed = basicTypeRegistry.primed;
+		this.typesByName.putAll( basicTypeRegistry.typesByName );
+		this.typeReferencesByName.putAll( basicTypeRegistry.typeReferencesByName );
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Access
 
@@ -65,6 +77,14 @@ public class BasicTypeRegistry implements Serializable {
 
 	private JdbcTypeRegistry getJdbcTypeRegistry() {
 		return typeConfiguration.getJdbcTypeRegistry();
+	}
+
+	/**
+	 * @apiNote This method is for strictly internal (testing) use ONLY. It can be removed without any prior warning.
+	 */
+	@Internal
+	protected Map<JdbcType, Map<JavaType<?>, BasicType<?>>> getRegistryValues() {
+		return registryValues;
 	}
 
 	public <J> BasicType<J> getRegisteredType(String key) {

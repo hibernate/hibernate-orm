@@ -117,27 +117,17 @@ public class SQLiteDialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case DECIMAL:
-				return getVersion().isBefore( 3 ) ? columnType( SqlTypes.NUMERIC ) : super.columnType( sqlTypeCode );
-			case CHAR:
-				return getVersion().isBefore( 3 ) ? "char" : super.columnType( sqlTypeCode );
-			case NCHAR:
-				return getVersion().isBefore( 3 ) ? "nchar" : super.columnType( sqlTypeCode );
+		return switch ( sqlTypeCode ) {
+			case DECIMAL -> getVersion().isBefore( 3 ) ? columnType( SqlTypes.NUMERIC ) : super.columnType( sqlTypeCode );
+			case CHAR -> getVersion().isBefore( 3 ) ? "char" : super.columnType( sqlTypeCode );
+			case NCHAR -> getVersion().isBefore( 3 ) ? "nchar" : super.columnType( sqlTypeCode );
 			// No precision support
-			case FLOAT:
-				return "float";
-			case TIMESTAMP:
-			case TIMESTAMP_WITH_TIMEZONE:
-				return "timestamp";
-			case TIME_WITH_TIMEZONE:
-				return "time";
-			case BINARY:
-			case VARBINARY:
-				return "blob";
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+			case FLOAT -> "float";
+			case TIMESTAMP, TIMESTAMP_WITH_TIMEZONE -> "timestamp";
+			case TIME_WITH_TIMEZONE -> "time";
+			case BINARY, VARBINARY -> "blob";
+			default ->  super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -182,32 +172,20 @@ public class SQLiteDialect extends Dialect {
 	 */
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		switch ( unit ) {
-			case SECOND:
-				return "cast(strftime('%S.%f',?2) as double)";
-			case MINUTE:
-				return "strftime('%M',?2)";
-			case HOUR:
-				return "strftime('%H',?2)";
-			case DAY:
-			case DAY_OF_MONTH:
-				return "(strftime('%d',?2)+1)";
-			case MONTH:
-				return "strftime('%m',?2)";
-			case YEAR:
-				return "strftime('%Y',?2)";
-			case DAY_OF_WEEK:
-				return "(strftime('%w',?2)+1)";
-			case DAY_OF_YEAR:
-				return "strftime('%j',?2)";
-			case EPOCH:
-				return "strftime('%s',?2)";
-			case WEEK:
-				// Thanks https://stackoverflow.com/questions/15082584/sqlite-return-wrong-week-number-for-2013
-				return "((strftime('%j',date(?2,'-3 days','weekday 4'))-1)/7+1)";
-			default:
-				return super.extractPattern(unit);
-		}
+		return switch ( unit ) {
+			case SECOND -> "cast(strftime('%S.%f',?2) as double)";
+			case MINUTE -> "strftime('%M',?2)";
+			case HOUR -> "strftime('%H',?2)";
+			case DAY, DAY_OF_MONTH -> "(strftime('%d',?2)+1)";
+			case MONTH -> "strftime('%m',?2)";
+			case YEAR -> "strftime('%Y',?2)";
+			case DAY_OF_WEEK -> "(strftime('%w',?2)+1)";
+			case DAY_OF_YEAR -> "strftime('%j',?2)";
+			case EPOCH -> "strftime('%s',?2)";
+			// Thanks https://stackoverflow.com/questions/15082584/sqlite-return-wrong-week-number-for-2013
+			case WEEK -> "((strftime('%j',date(?2,'-3 days','weekday 4'))-1)/7+1)";
+			default -> super.extractPattern(unit);
+		};
 	}
 
 	@Override

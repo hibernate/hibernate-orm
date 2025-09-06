@@ -212,54 +212,31 @@ public class CockroachLegacyDialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case TINYINT:
-				return "smallint"; //no tinyint
-			case INTEGER:
-				return "int4";
-
-			case NCHAR:
-				return columnType( CHAR );
-			case NVARCHAR:
-				return columnType( VARCHAR );
-
-			case NCLOB:
-			case CLOB:
-				return "string";
-
-			case BINARY:
-			case VARBINARY:
-			case BLOB:
-				return "bytes";
+		return switch ( sqlTypeCode ) {
+			case TINYINT -> "smallint"; //no tinyint
+			case INTEGER -> "int4";
+			case NCHAR -> columnType( CHAR );
+			case NVARCHAR -> columnType( VARCHAR );
+			case NCLOB, CLOB -> "string";
+			case BINARY, VARBINARY, BLOB -> "bytes";
 
 			// We do not use the time with timezone type because PG deprecated it and it lacks certain operations like subtraction
 //			case TIME_UTC:
 //				return columnType( TIME_WITH_TIMEZONE );
 
-			case TIMESTAMP_UTC:
-				return columnType( TIMESTAMP_WITH_TIMEZONE );
+			case TIMESTAMP_UTC -> columnType( TIMESTAMP_WITH_TIMEZONE );
 
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
 	protected String castType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case CHAR:
-			case NCHAR:
-			case VARCHAR:
-			case NVARCHAR:
-			case LONG32VARCHAR:
-			case LONG32NVARCHAR:
-				return "string";
-			case BINARY:
-			case VARBINARY:
-			case LONG32VARBINARY:
-				return "bytes";
-		}
-		return super.castType( sqlTypeCode );
+		return switch ( sqlTypeCode ) {
+			case CHAR, NCHAR, VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR -> "string";
+			case BINARY, VARBINARY, LONG32VARBINARY -> "bytes";
+			default -> super.castType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -344,22 +321,16 @@ public class CockroachLegacyDialect extends Dialect {
 
 	@Override
 	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
-		switch ( columnTypeName ) {
-			case "bool":
-				return Types.BOOLEAN;
-			case "float4":
-				// Use REAL instead of FLOAT to get Float as recommended Java type
-				return Types.REAL;
-			case "float8":
-				return Types.DOUBLE;
-			case "int2":
-				return Types.SMALLINT;
-			case "int4":
-				return Types.INTEGER;
-			case "int8":
-				return Types.BIGINT;
-		}
-		return super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
+		return switch ( columnTypeName ) {
+			case "bool" -> Types.BOOLEAN;
+			// Use REAL instead of FLOAT to get Float as recommended Java type
+			case "float4" -> Types.REAL;
+			case "float8" -> Types.DOUBLE;
+			case "int2" -> Types.SMALLINT;
+			case "int4" -> Types.INTEGER;
+			case "int8" -> Types.BIGINT;
+			default -> super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
+		};
 	}
 
 	@Override
@@ -1188,19 +1159,15 @@ public class CockroachLegacyDialect extends Dialect {
 			if ( sqlState == null ) {
 				return null;
 			}
-			switch ( sqlState ) {
-				case "40P01":
-					// DEADLOCK DETECTED
-					return new LockAcquisitionException( message, sqlException, sql);
-				case "55P03":
-					// LOCK NOT AVAILABLE
-					return new PessimisticLockException( message, sqlException, sql);
-				case "57014":
-					return new QueryTimeoutException( message, sqlException, sql );
-				default:
-					// returning null allows other delegates to operate
-					return null;
-			}
+			return switch ( sqlState ) {
+				// DEADLOCK DETECTED
+				case "40P01" -> new LockAcquisitionException( message, sqlException, sql);
+				// LOCK NOT AVAILABLE
+				case "55P03" -> new PessimisticLockException( message, sqlException, sql);
+				case "57014" -> new QueryTimeoutException( message, sqlException, sql );
+				// returning null allows other delegates to operate
+				default -> null;
+			};
 		};
 	}
 

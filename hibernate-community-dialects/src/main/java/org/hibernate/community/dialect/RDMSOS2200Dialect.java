@@ -115,37 +115,20 @@ public class RDMSOS2200Dialect extends Dialect {
 		 * Note that $l (dollar-L) will use the length value if provided.
 		 * Also new for Hibernate3 is the $p percision and $s (scale) parameters
 		 */
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-			case TINYINT:
-				return "smallint";
-			case BIGINT:
-				return "numeric(19,0)";
+		return switch ( sqlTypeCode ) {
+			case BOOLEAN, TINYINT -> "smallint";
+			case BIGINT -> "numeric(19,0)";
 			//'varchar' is not supported in RDMS for OS 2200
 			//(but it is for other flavors of RDMS)
 			//'character' means ASCII by default, 'unicode(n)'
 			//means 'character(n) character set "UCS-2"'
-			case CHAR:
-			case NCHAR:
-			case VARCHAR:
-			case NVARCHAR:
-			case LONG32VARCHAR:
-			case LONG32NVARCHAR:
-				return "unicode($l)";
-			case CLOB:
-			case NCLOB:
-				return "clob($l)";
+			case CHAR, NCHAR, VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR -> "unicode($l)";
+			case CLOB, NCLOB ->  "clob($l)";
 			//no 'binary' nor 'varbinary' so use 'blob'
-			case BINARY:
-			case VARBINARY:
-			case LONG32VARBINARY:
-			case BLOB:
-				return "blob($l)";
-			case TIMESTAMP_WITH_TIMEZONE:
-				return columnType( TIMESTAMP );
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+			case BINARY, VARBINARY, LONG32VARBINARY, BLOB -> "blob($l)";
+			case TIMESTAMP_WITH_TIMEZONE -> columnType( TIMESTAMP );
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -265,42 +248,31 @@ public class RDMSOS2200Dialect extends Dialect {
 	 */
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		switch (unit) {
-			case SECOND:
-				return "(second(?2)+microsecond(?2)/1e6)";
-			case DAY_OF_WEEK:
-				return "dayofweek(?2)";
-			case DAY_OF_MONTH:
-				return "dayofmonth(?2)";
-			case DAY_OF_YEAR:
-				return "dayofyear(?2)";
-			default:
-				return "?1(?2)";
-		}
+		return switch (unit) {
+			case SECOND -> "(second(?2)+microsecond(?2)/1e6)";
+			case DAY_OF_WEEK -> "dayofweek(?2)";
+			case DAY_OF_MONTH -> "dayofmonth(?2)";
+			case DAY_OF_YEAR -> "dayofyear(?2)";
+			default -> "?1(?2)";
+		};
 	}
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		switch (unit) {
-			case NANOSECOND:
-				return "timestampadd('SQL_TSI_FRAC_SECOND',(?2)/1e3,?3)";
-			case NATIVE:
-				return "timestampadd('SQL_TSI_FRAC_SECOND',?2,?3)";
-			default:
-				return "dateadd('?1',?2,?3)";
-		}
+		return switch (unit) {
+			case NANOSECOND -> "timestampadd('SQL_TSI_FRAC_SECOND',(?2)/1e3,?3)";
+			case NATIVE -> "timestampadd('SQL_TSI_FRAC_SECOND',?2,?3)";
+			default -> "dateadd('?1',?2,?3)";
+		};
 	}
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		switch (unit) {
-			case NANOSECOND:
-				return "timestampdiff('SQL_TSI_FRAC_SECOND',?2,?3)*1e3";
-			case NATIVE:
-				return "timestampdiff('SQL_TSI_FRAC_SECOND',?2,?3)";
-			default:
-				return "dateadd('?1',?2,?3)";
-		}
+		return switch (unit) {
+			case NANOSECOND -> "timestampdiff('SQL_TSI_FRAC_SECOND',?2,?3)*1e3";
+			case NATIVE -> "timestampdiff('SQL_TSI_FRAC_SECOND',?2,?3)";
+			default -> "dateadd('?1',?2,?3)";
+		};
 	}
 
 	// Dialect method overrides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

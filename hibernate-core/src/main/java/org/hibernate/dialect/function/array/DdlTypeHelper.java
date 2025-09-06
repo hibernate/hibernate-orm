@@ -4,7 +4,6 @@
  */
 package org.hibernate.dialect.function.array;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.util.List;
 
@@ -27,10 +26,11 @@ public class DdlTypeHelper {
 	@SuppressWarnings("unchecked")
 	@AllowReflection
 	public static BasicType<?> resolveArrayType(DomainType<?> elementType, TypeConfiguration typeConfiguration) {
-		@SuppressWarnings("unchecked") final BasicPluralJavaType<Object> arrayJavaType = (BasicPluralJavaType<Object>) typeConfiguration.getJavaTypeRegistry()
-				.getDescriptor(
-						Array.newInstance( elementType.getJavaType(), 0 ).getClass()
-				);
+		@SuppressWarnings("unchecked")
+		final var arrayJavaType =
+				(BasicPluralJavaType<Object>)
+						typeConfiguration.getJavaTypeRegistry()
+								.resolveArrayDescriptor( elementType.getJavaType() );
 		final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
 		return arrayJavaType.resolveType(
 				typeConfiguration,
@@ -43,12 +43,15 @@ public class DdlTypeHelper {
 
 	@SuppressWarnings("unchecked")
 	public static BasicType<?> resolveListType(DomainType<?> elementType, TypeConfiguration typeConfiguration) {
-		@SuppressWarnings("unchecked") final BasicPluralJavaType<Object> arrayJavaType = (BasicPluralJavaType<Object>) typeConfiguration.getJavaTypeRegistry()
-				.getDescriptor( List.class )
-				.createJavaType(
-						new ParameterizedTypeImpl( List.class, new Type[]{ elementType.getJavaType() }, null ),
-						typeConfiguration
-				);
+		@SuppressWarnings("unchecked")
+		final BasicPluralJavaType<Object> arrayJavaType =
+				(BasicPluralJavaType<Object>)
+						typeConfiguration.getJavaTypeRegistry()
+								.getDescriptor( List.class )
+								.createJavaType(
+										new ParameterizedTypeImpl( List.class, new Type[]{ elementType.getJavaType() }, null ),
+										typeConfiguration
+								);
 		final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
 		return arrayJavaType.resolveType(
 				typeConfiguration,

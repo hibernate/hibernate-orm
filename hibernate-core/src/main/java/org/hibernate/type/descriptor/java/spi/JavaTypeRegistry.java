@@ -74,10 +74,6 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		descriptorsByTypeName.values().forEach( consumer );
 	}
 
-	public <T> JavaType<T> getDescriptor(Type javaType) {
-		return resolveDescriptor( javaType );
-	}
-
 	public void addDescriptor(JavaType<?> descriptor) {
 		final JavaType<?> old = descriptorsByTypeName.put( descriptor.getJavaType().getTypeName(), descriptor );
 		if ( old != null ) {
@@ -91,7 +87,18 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		performInjections( descriptor );
 	}
 
+	@Deprecated(since = "7.2") // Due to unbound type parameter
+	public <T> JavaType<T> getDescriptor(Type javaType) {
+		return resolveDescriptor( javaType );
+	}
+
+	@Deprecated(since = "7.2") // Due to unbound type parameter
 	public <J> JavaType<J> findDescriptor(Type javaType) {
+		//noinspection unchecked
+		return (JavaType<J>) descriptorsByTypeName.get( javaType.getTypeName() );
+	}
+
+	public <J> JavaType<J> findDescriptor(Class<J> javaType) {
 		//noinspection unchecked
 		return (JavaType<J>) descriptorsByTypeName.get( javaType.getTypeName() );
 	}
@@ -112,7 +119,12 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		return created;
 	}
 
+	@Deprecated(since = "7.2") // Due to unbound type parameter
 	public <J> JavaType<J> resolveDescriptor(Type javaType) {
+		return resolveDescriptor( javaType, JavaTypeRegistry::createMutabilityPlan );
+	}
+
+	public <J> JavaType<J> resolveDescriptor(Class<J> javaType) {
 		return resolveDescriptor( javaType, JavaTypeRegistry::createMutabilityPlan );
 	}
 

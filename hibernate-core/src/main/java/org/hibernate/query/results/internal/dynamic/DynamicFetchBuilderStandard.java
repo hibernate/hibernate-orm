@@ -6,7 +6,6 @@ package org.hibernate.query.results.internal.dynamic;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
@@ -17,7 +16,6 @@ import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -69,14 +67,14 @@ public class DynamicFetchBuilderStandard
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationState domainResultCreationState) {
-		final DomainResultCreationStateImpl creationStateImpl = ResultsHelper.impl( domainResultCreationState );
-		final TableGroup ownerTableGroup =
+		final var creationStateImpl = ResultsHelper.impl( domainResultCreationState );
+		final var ownerTableGroup =
 				creationStateImpl.getFromClauseAccess().getTableGroup( parent.getNavigablePath() );
 
-		final SqlExpressionResolver sqlExpressionResolver =
+		final var sqlExpressionResolver =
 				domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
 
-		final BasicValuedModelPart basicPart = fetchable.asBasicValuedModelPart();
+		final var basicPart = fetchable.asBasicValuedModelPart();
 		if ( basicPart != null ) {
 			fetchable.forEachSelectable(
 					getSelectableConsumer(
@@ -177,7 +175,7 @@ public class DynamicFetchBuilderStandard
 			SqlExpressionResolver sqlExpressionResolver,
 			ValuedModelPart valuedModelPart) {
 		return (selectionIndex, selectableMapping) -> {
-			final TableReference tableReference = ownerTableGroup.resolveTableReference(
+			final var tableReference = ownerTableGroup.resolveTableReference(
 					fetchPath,
 					valuedModelPart,
 					selectableMapping.getContainingTableExpression()
@@ -225,7 +223,7 @@ public class DynamicFetchBuilderStandard
 			return false;
 		}
 
-		final DynamicFetchBuilderStandard that = (DynamicFetchBuilderStandard) o;
+		final var that = (DynamicFetchBuilderStandard) o;
 		return fetchable.equals( that.fetchable )
 			&& columnNames.equals( that.columnNames );
 	}

@@ -403,7 +403,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			if ( idJavaClass != null ) {
 				return (BasicJavaType<?>)
 						buildingContext.getBootstrapContext().getTypeConfiguration()
-								.getJavaTypeRegistry().getDescriptor( idJavaClass.idType() );
+								.getJavaTypeRegistry().resolveDescriptor( idJavaClass.idType() );
 			}
 			final var idJavaType = attribute.locateAnnotationUsage( CollectionIdJavaType.class, modelContext );
 			if ( idJavaType != null ) {
@@ -561,7 +561,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			if ( mapKeyClassAnn != null ) {
 				return (BasicJavaType<?>)
 						typeConfiguration.getJavaTypeRegistry()
-								.getDescriptor( mapKeyClassAnn.value() );
+								.resolveDescriptor( mapKeyClassAnn.value() );
 			}
 			else {
 				return null;
@@ -723,7 +723,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 					else {
 						return (BasicJavaType<?>)
 								typeConfiguration.getJavaTypeRegistry()
-										.getDescriptor( targetClassDetails );
+										.resolveDescriptor( targetClassDetails );
 					}
 				};
 			}
@@ -854,7 +854,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			if ( anyKeyJavaClass != null ) {
 				return (BasicJavaType<?>)
 						typeConfiguration.getJavaTypeRegistry()
-								.getDescriptor( anyKeyJavaClass.value() );
+								.resolveDescriptor( anyKeyJavaClass.value() );
 			}
 
 			// mainly used in XML interpretation

@@ -26,7 +26,6 @@ import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.internal.CompositeUserTypeJavaTypeWrapper;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -54,20 +53,20 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 			EmbeddableInstantiator customInstantiator,
 			CompositeUserType<Object> compositeUserType,
 			RuntimeModelCreationContext creationContext) {
-		this.embeddableJavaType = resolveEmbeddableJavaType( bootDescriptor, compositeUserType, creationContext );
+		embeddableJavaType = resolveEmbeddableJavaType( bootDescriptor, compositeUserType, creationContext );
 
 		final int propertySpan = bootDescriptor.getPropertySpan();
-		this.propertyAccesses = new PropertyAccess[propertySpan];
-		this.attributeNameToPositionMap = new HashMap<>( propertySpan );
+		propertyAccesses = new PropertyAccess[propertySpan];
+		attributeNameToPositionMap = new HashMap<>( propertySpan );
 
 		// We need access to the Class objects, used only during initialization
-		final Map<String, Class<?>> subclassesByName = getSubclassesByName( bootDescriptor, creationContext );
+		final var subclassesByName = getSubclassesByName( bootDescriptor, creationContext );
 		boolean foundCustomAccessor = false;
 		for ( int i = 0; i < bootDescriptor.getProperties().size(); i++ ) {
 			final Property property = bootDescriptor.getProperty( i );
 			final Class<?> embeddableClass;
 			if ( subclassesByName != null ) {
-				final Class<?> subclass = subclassesByName.get( bootDescriptor.getPropertyDeclaringClass( property ) );
+				final var subclass = subclassesByName.get( bootDescriptor.getPropertyDeclaringClass( property ) );
 				embeddableClass = subclass != null ? subclass : getEmbeddableJavaType().getJavaTypeClass();
 			}
 			else {
@@ -82,8 +81,8 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 		}
 
 		boolean hasCustomAccessors = foundCustomAccessor;
-		this.strategySelector = creationContext.getServiceRegistry().getService( StrategySelector.class );
-		this.reflectionOptimizer = buildReflectionOptimizer(
+		strategySelector = creationContext.getServiceRegistry().getService( StrategySelector.class );
+		reflectionOptimizer = buildReflectionOptimizer(
 				bootDescriptor,
 				hasCustomAccessors,
 				propertyAccesses,
@@ -92,11 +91,11 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 
 		if ( bootDescriptor.isPolymorphic() ) {
 			final int size = bootDescriptor.getDiscriminatorValues().size();
-			this.instantiatorsByDiscriminator = new HashMap<>( size );
-			this.instantiatorsByClass = new HashMap<>( size );
-			for ( Map.Entry<Object, String> discriminator : bootDescriptor.getDiscriminatorValues().entrySet() ) {
+			instantiatorsByDiscriminator = new HashMap<>( size );
+			instantiatorsByClass = new HashMap<>( size );
+			for ( var discriminator : bootDescriptor.getDiscriminatorValues().entrySet() ) {
 				final String className = discriminator.getValue();
-				final EmbeddableInstantiator instantiator = determineInstantiator(
+				final var instantiator = determineInstantiator(
 						bootDescriptor,
 						castNonNull( subclassesByName ).get( className ),
 						reflectionOptimizer,
@@ -106,10 +105,10 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 				instantiatorsByDiscriminator.put( discriminator.getKey(), instantiator );
 				instantiatorsByClass.put( className, instantiator );
 			}
-			this.instantiator = null;
+			instantiator = null;
 		}
 		else {
-			this.instantiator = customInstantiator != null ?
+			instantiator = customInstantiator != null ?
 					customInstantiator :
 					determineInstantiator(
 							bootDescriptor,
@@ -118,8 +117,8 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 							runtimeDescriptorAccess,
 							creationContext
 					);
-			this.instantiatorsByDiscriminator = null;
-			this.instantiatorsByClass = null;
+			instantiatorsByDiscriminator = null;
+			instantiatorsByClass = null;
 		}
 	}
 
@@ -127,9 +126,9 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 			Component bootDescriptor,
 			CompositeUserType<T> compositeUserType,
 			RuntimeModelCreationContext creationContext) {
-		final JavaTypeRegistry javaTypeRegistry = creationContext.getTypeConfiguration().getJavaTypeRegistry();
+		final var javaTypeRegistry = creationContext.getTypeConfiguration().getJavaTypeRegistry();
 		if ( compositeUserType == null ) {
-			return javaTypeRegistry.resolveDescriptor( bootDescriptor.getComponentClass() );
+			return javaTypeRegistry.getDescriptor( bootDescriptor.getComponentClass() );
 		}
 		else {
 			return javaTypeRegistry.resolveDescriptor(

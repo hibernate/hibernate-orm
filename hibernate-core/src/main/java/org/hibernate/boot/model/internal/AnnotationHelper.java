@@ -66,15 +66,15 @@ public class AnnotationHelper {
 						valueConverter.getDomainJavaType().getTypeName(),
 						valueConverter.getRelationalJavaType().getTypeName()
 				),
-				registry.<Y>resolveDescriptor( valueConverter.getRelationalJavaType().getJavaType() )
+				registry.resolveDescriptor( valueConverter.getRelationalJavaType().getJavaTypeClass() )
 						.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() ),
 				valueConverter
 		);
 	}
 
-	public static BasicType<Object> resolveBasicType(Class<?> type, MetadataBuildingContext context) {
+	public static BasicType<?> resolveBasicType(Class<?> type, MetadataBuildingContext context) {
 		final var typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
-		final var jtd = typeConfiguration.getJavaTypeRegistry().findDescriptor( type );
+		final JavaType<?> jtd = typeConfiguration.getJavaTypeRegistry().findDescriptor( type );
 		if ( jtd != null ) {
 			final JdbcType jdbcType = jtd.getRecommendedJdbcType(
 					new JdbcTypeIndicators() {
@@ -132,7 +132,9 @@ public class AnnotationHelper {
 			Class<JavaType<?>> javaTypeClass,
 			MetadataBuildingContext context,
 			TypeConfiguration typeConfiguration) {
-		final JavaType<?> registeredJtd = typeConfiguration.getJavaTypeRegistry().findDescriptor( javaTypeClass );
+		final JavaType<?> registeredJtd =
+				typeConfiguration.getJavaTypeRegistry()
+						.findDescriptor( javaTypeClass );
 		if ( registeredJtd != null ) {
 			return registeredJtd;
 		}

@@ -14,7 +14,6 @@ import org.hibernate.annotations.Immutable;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -68,7 +67,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 		assert name.startsWith( ConverterDescriptor.TYPE_NAME_PREFIX );
 		final String converterClassName = name.substring( ConverterDescriptor.TYPE_NAME_PREFIX.length() );
 
-		final BootstrapContext bootstrapContext = context.getBootstrapContext();
+		final var bootstrapContext = context.getBootstrapContext();
 		final Class<? extends AttributeConverter<T, ?>> converterClass =
 				bootstrapContext.getClassLoaderService().classForName( converterClassName );
 		final ConverterDescriptor<T,?> converterDescriptor =
@@ -99,29 +98,32 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			Type resolvedJavaType,
 			JdbcTypeIndicators sqlTypeIndicators,
 			MetadataBuildingContext context) {
-		final TypeConfiguration typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
+		final var typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
 
 		//noinspection unchecked
-		final JavaType<T> explicitJtd =
+		final var explicitJtd =
 				explicitJtdAccess != null
 						? (JavaType<T>) explicitJtdAccess.apply( typeConfiguration )
 						: null;
 
-		final JavaType<T> domainJtd = explicitJtd != null
-				? explicitJtd
-				: converter.getDomainJavaType();
+		final var domainJtd =
+				explicitJtd != null
+						? explicitJtd
+						: converter.getDomainJavaType();
 
-		final JdbcType explicitJdbcType = explicitStdAccess != null
-				? explicitStdAccess.apply( typeConfiguration )
-				: null;
+		final var explicitJdbcType =
+				explicitStdAccess != null
+						? explicitStdAccess.apply( typeConfiguration )
+						: null;
 
-		final JavaType<?> relationalJtd = converter.getRelationalJavaType();
+		final var relationalJtd = converter.getRelationalJavaType();
 
-		final JdbcType jdbcType = explicitJdbcType != null
-				? explicitJdbcType
-				: relationalJtd.getRecommendedJdbcType( sqlTypeIndicators );
+		final var jdbcType =
+				explicitJdbcType != null
+						? explicitJdbcType
+						: relationalJtd.getRecommendedJdbcType( sqlTypeIndicators );
 
-		final MutabilityPlan<T> mutabilityPlan = determineMutabilityPlan(
+		final var mutabilityPlan = determineMutabilityPlan(
 				explicitMutabilityPlanAccess,
 				typeConfiguration,
 				converter,
@@ -129,7 +131,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 		);
 
 		//noinspection unchecked
-		final Class<T> primitiveClass =
+		final var primitiveClass =
 				resolvedJavaType instanceof Class<?> clazz && clazz.isPrimitive()
 						? (Class<T>) resolvedJavaType
 						: null;
@@ -150,7 +152,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			JpaAttributeConverter<T, ?> converter,
 			JavaType<T> domainJtd) {
 		//noinspection unchecked
-		final MutabilityPlan<T> explicitMutabilityPlan =
+		final var explicitMutabilityPlan =
 				explicitMutabilityPlanAccess != null
 						? (MutabilityPlan<T>) explicitMutabilityPlanAccess.apply( typeConfiguration )
 						: null;

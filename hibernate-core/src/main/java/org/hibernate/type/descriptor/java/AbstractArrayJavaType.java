@@ -101,7 +101,7 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 		final var convertedArrayClass = newInstance( convertedElementClass, 0 ).getClass();
 		final var relationalJavaType =
 				typeConfiguration.getJavaTypeRegistry()
-					.getDescriptor( convertedArrayClass );
+					.resolveDescriptor( convertedArrayClass );
 		return new ConvertedBasicArrayType<>(
 				elementType,
 				arrayJdbcType( typeConfiguration, elementType, columnTypeInformation, indicators ),

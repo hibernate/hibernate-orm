@@ -26,8 +26,8 @@ public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuild
 	protected AbstractFetchBuilderContainer(AbstractFetchBuilderContainer<T> original) {
 		if ( original.fetchBuilderMap != null ) {
 			fetchBuilderMap = new HashMap<>( original.fetchBuilderMap.size() );
-			for ( Map.Entry<Fetchable, FetchBuilder> entry : original.fetchBuilderMap.entrySet() ) {
-				final FetchBuilder fetchBuilder =
+			for ( var entry : original.fetchBuilderMap.entrySet() ) {
+				final var fetchBuilder =
 						entry.getValue() instanceof DynamicFetchBuilderStandard dynamicFetchBuilderStandard
 								? dynamicFetchBuilderStandard.cacheKeyInstance( this )
 								: entry.getValue().cacheKeyInstance();
@@ -45,14 +45,14 @@ public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuild
 
 	@Override
 	public T addProperty(Fetchable fetchable, String columnAlias) {
-		final DynamicFetchBuilder fetchBuilder = addProperty( fetchable );
+		final var fetchBuilder = addProperty( fetchable );
 		fetchBuilder.addColumnAlias( columnAlias );
 		return (T) this;
 	}
 
 	@Override
 	public T addProperty(Fetchable fetchable, String... columnAliases) {
-		final DynamicFetchBuilder fetchBuilder = addProperty( fetchable );
+		final var fetchBuilder = addProperty( fetchable );
 		ArrayHelper.forEach( columnAliases, fetchBuilder::addColumnAlias );
 		return (T) this;
 	}
@@ -63,7 +63,7 @@ public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuild
 			fetchBuilderMap = new HashMap<>();
 		}
 		else {
-			final FetchBuilder existing = fetchBuilderMap.get( fetchable );
+			final var existing = fetchBuilderMap.get( fetchable );
 			if ( existing != null ) {
 				throw new IllegalArgumentException(
 						String.format(
@@ -77,7 +77,7 @@ public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuild
 			}
 		}
 
-		final DynamicFetchBuilderStandard fetchBuilder = new DynamicFetchBuilderStandard( fetchable	);
+		final var fetchBuilder = new DynamicFetchBuilderStandard( fetchable	);
 		fetchBuilderMap.put( fetchable, fetchBuilder );
 		return fetchBuilder;
 	}
@@ -99,7 +99,7 @@ public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuild
 			return false;
 		}
 
-		final AbstractFetchBuilderContainer<?> that = (AbstractFetchBuilderContainer<?>) o;
+		final var that = (AbstractFetchBuilderContainer<?>) o;
 		return Objects.equals( fetchBuilderMap, that.fetchBuilderMap );
 	}
 

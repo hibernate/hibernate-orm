@@ -41,7 +41,7 @@ public class ManagedResourcesImpl implements ManagedResources {
 	private Map<String, Class<?>> extraQueryImports;
 
 	public static ManagedResourcesImpl baseline(MetadataSources sources, BootstrapContext bootstrapContext) {
-		final ManagedResourcesImpl managedResources = new ManagedResourcesImpl();
+		final var managedResources = new ManagedResourcesImpl();
 		bootstrapContext.getAttributeConverters().forEach( managedResources::addAttributeConverterDefinition );
 		managedResources.annotatedClassReferences.addAll( sources.getAnnotatedClasses() );
 		managedResources.annotatedClassNames.addAll( sources.getAnnotatedClassNames() );

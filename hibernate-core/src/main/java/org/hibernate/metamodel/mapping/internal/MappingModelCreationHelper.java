@@ -6,7 +6,6 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.SortedSet;
@@ -44,16 +43,13 @@ import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Resolvable;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SortableValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -62,7 +58,6 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -74,10 +69,8 @@ import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.SelectablePath;
-import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.ChainedPropertyAccessImpl;
@@ -105,7 +98,6 @@ import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -114,7 +106,6 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -145,16 +136,16 @@ public class MappingModelCreationHelper {
 			String[] rootTableKeyColumnNames,
 			CompositeType cidType,
 			MappingModelCreationProcess creationProcess) {
-		final PersistentClass bootEntityDescriptor =
+		final var bootEntityDescriptor =
 				creationProcess.getCreationContext().getBootModel()
 						.getEntityBinding( entityPersister.getEntityName() );
 
-		final PropertyAccess propertyAccess =
+		final var propertyAccess =
 				entityPersister.getRepresentationStrategy()
 						.resolvePropertyAccess( bootEntityDescriptor.getIdentifierProperty() );
 
-		final Component component = (Component) bootProperty.getValue();
-		final EmbeddableMappingTypeImpl embeddableMappingType = EmbeddableMappingTypeImpl.from(
+		final var component = (Component) bootProperty.getValue();
+		final var embeddableMappingType = EmbeddableMappingTypeImpl.from(
 				component,
 				cidType,
 				rootTableName,
@@ -205,7 +196,7 @@ public class MappingModelCreationHelper {
 			int fetchableIndex,
 			Property bootProperty,
 			ManagedMappingType declaringType,
-			BasicType attrType,
+			BasicType<?> attrType,
 			String tableExpression,
 			String attrColumnName,
 			SelectablePath selectablePath,
@@ -282,9 +273,9 @@ public class MappingModelCreationHelper {
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess) {
-		final SimpleValue value = (SimpleValue) bootProperty.getValue();
-		final BasicValue.Resolution<?> resolution = ( (Resolvable) value ).resolve();
-		final SimpleAttributeMetadata attributeMetadata =
+		final var value = (SimpleValue) bootProperty.getValue();
+		final var resolution = ( (Resolvable) value ).resolve();
+		final var attributeMetadata =
 				new SimpleAttributeMetadata( propertyAccess, resolution.getMutabilityPlan(), bootProperty, value );
 
 		final FetchTiming fetchTiming;
@@ -383,7 +374,7 @@ public class MappingModelCreationHelper {
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess) {
-		final AttributeMetadata attributeMetadataAccess = getAttributeMetadata(
+		final var attributeMetadataAccess = getAttributeMetadata(
 				bootProperty,
 				attrType,
 				propertyAccess,
@@ -396,8 +387,8 @@ public class MappingModelCreationHelper {
 			componentValue = dependantValue.getWrappedValue();
 		}
 
-		final Component component = (Component) componentValue;
-		final EmbeddableMappingTypeImpl embeddableMappingType = EmbeddableMappingTypeImpl.from(
+		final var component = (Component) componentValue;
+		final var embeddableMappingType = EmbeddableMappingTypeImpl.from(
 				component,
 				attrType,
 				tableExpression,
@@ -544,22 +535,22 @@ public class MappingModelCreationHelper {
 			MappingModelCreationProcess creationProcess,
 			Function<PluralAttributeMappingImpl, PluralAttributeMappingImpl> mappingConverter) {
 
-		final Collection bootValueMapping = (Collection) bootProperty.getValue();
+		final var bootValueMapping = (Collection) bootProperty.getValue();
 
-		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
-		final Dialect dialect = creationContext.getDialect();
-		final MappingMetamodel domainModel = creationContext.getDomainModel();
+		final var creationContext = creationProcess.getCreationContext();
+		final var dialect = creationContext.getDialect();
+		final var domainModel = creationContext.getDomainModel();
 
-		final CollectionPersister collectionDescriptor = domainModel.findCollectionDescriptor( bootValueMapping.getRole() );
+		final var collectionDescriptor = domainModel.findCollectionDescriptor( bootValueMapping.getRole() );
 		assert collectionDescriptor != null;
 
 		final String tableExpression = collectionDescriptor.getTableName();
 
 		final String sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( bootProperty.getName() );
 
-		final JavaTypeRegistry jtdRegistry = creationContext.getJavaTypeRegistry();
+		final var jtdRegistry = creationContext.getJavaTypeRegistry();
 
-		final CollectionPart elementDescriptor = interpretElement(
+		final var elementDescriptor = interpretElement(
 				bootValueMapping,
 				tableExpression,
 				collectionDescriptor,
@@ -571,7 +562,7 @@ public class MappingModelCreationHelper {
 		final CollectionPart indexDescriptor;
 		CollectionIdentifierDescriptor identifierDescriptor = null;
 
-		final CollectionSemantics<?,?> collectionSemantics = collectionDescriptor.getCollectionSemantics();
+		final var collectionSemantics = collectionDescriptor.getCollectionSemantics();
 		final CollectionMappingType<?> collectionMappingType;
 		switch ( collectionSemantics.getCollectionClassification() ) {
 			case ARRAY: {
@@ -580,8 +571,8 @@ public class MappingModelCreationHelper {
 						StandardArraySemantics.INSTANCE
 				);
 
-				final BasicValue index = (BasicValue) ( (IndexedCollection) bootValueMapping ).getIndex();
-				final SelectableMapping selectableMapping = SelectableMappingImpl.from(
+				final var index = (BasicValue) ( (IndexedCollection) bootValueMapping ).getIndex();
+				final var selectableMapping = SelectableMappingImpl.from(
 						tableExpression,
 						index.getSelectables().get(0),
 						creationContext.getTypeConfiguration().getBasicTypeForJavaType( Integer.class ),
@@ -632,8 +623,8 @@ public class MappingModelCreationHelper {
 				break;
 			}
 			case LIST: {
-				final BasicValue index = (BasicValue) ( (IndexedCollection) bootValueMapping ).getIndex();
-				final SelectableMapping selectableMapping = SelectableMappingImpl.from(
+				final var index = (BasicValue) ( (IndexedCollection) bootValueMapping ).getIndex();
+				final var selectableMapping = SelectableMappingImpl.from(
 						tableExpression,
 						index.getSelectables().get(0),
 						creationContext.getTypeConfiguration().getBasicTypeForJavaType( Integer.class ),
@@ -707,7 +698,7 @@ public class MappingModelCreationHelper {
 			}
 		}
 
-		final SimpleAttributeMetadata attributeMetadata = new SimpleAttributeMetadata(
+		final var attributeMetadata = new SimpleAttributeMetadata(
 				propertyAccess,
 				ImmutableMutabilityPlan.instance(),
 				bootProperty.isOptional(),
@@ -718,24 +709,24 @@ public class MappingModelCreationHelper {
 				cascadeStyle
 		);
 
-		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
-		final CollectionType collectionType = collectionDescriptor.getCollectionType();
+		final var sessionFactory = creationContext.getSessionFactory();
+		final var collectionType = collectionDescriptor.getCollectionType();
 
-		final FetchStyle style = FetchOptionsHelper.determineFetchStyleByMetadata(
+		final var fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				fetchMode,
 				collectionType,
 				sessionFactory
 		);
 
-		final FetchTiming timing = determineFetchTiming(
-				style,
+		final var fetchTiming = determineFetchTiming(
+				fetchStyle,
 				collectionType,
 				collectionDescriptor.isLazy(),
 				collectionDescriptor.getRole(),
 				sessionFactory
 		);
 
-		final PluralAttributeMappingImpl pluralAttributeMapping = mappingConverter.apply( new PluralAttributeMappingImpl(
+		final var pluralAttributeMapping = mappingConverter.apply( new PluralAttributeMappingImpl(
 				attrName,
 				bootValueMapping,
 				propertyAccess,
@@ -746,8 +737,8 @@ public class MappingModelCreationHelper {
 				elementDescriptor,
 				indexDescriptor,
 				identifierDescriptor,
-				timing,
-				style,
+				fetchTiming,
+				fetchStyle,
 				cascadeStyle,
 				declaringType,
 				collectionDescriptor,
@@ -796,8 +787,9 @@ public class MappingModelCreationHelper {
 			attributeMappingSubPart = null;
 		}
 		else {
-			final ModelPartContainer partMappingType =
-					(ModelPartContainer) attributeMapping.getElementDescriptor().getPartMappingType();
+			final var partMappingType =
+					(ModelPartContainer)
+							attributeMapping.getElementDescriptor().getPartMappingType();
 			attributeMappingSubPart =
 					partMappingType.findSubPart( collectionDescriptor.getMappedByProperty(), null );
 		}
@@ -820,7 +812,7 @@ public class MappingModelCreationHelper {
 		final boolean isReferenceToPrimaryKey = lhsPropertyName == null;
 		final String collectionTableName = collectionDescriptor.getTableName();
 
-		final  ManagedMappingType keyDeclaringType =
+		final var keyDeclaringType =
 				collectionDescriptor.getElementType() instanceof EntityType
 						? collectionDescriptor.getElementPersister()
 						// This is not "really correct" but it is as good as it gets.
@@ -829,7 +821,7 @@ public class MappingModelCreationHelper {
 						// Since the declaring type is needed for certain operations, we use the one from the target side of the FK
 						: declaringType;
 
-		final ModelPart fkTargetPart =
+		final var fkTargetPart =
 				isReferenceToPrimaryKey
 						? collectionDescriptor.getOwnerEntityPersister().getIdentifierMappingForJoin()
 						: declaringType.findContainingEntityMapping().findSubPart( lhsPropertyName );
@@ -837,10 +829,10 @@ public class MappingModelCreationHelper {
 		if ( keyType instanceof BasicType ) {
 			assert bootValueMappingKey.getColumnSpan() == 1;
 
-			final BasicValuedModelPart simpleFkTargetPart = castNonNull( fkTargetPart.asBasicValuedModelPart() );
+			final var simpleFkTargetPart = castNonNull( fkTargetPart.asBasicValuedModelPart() );
 
 			final String keyTableExpression = collectionTableName;//getTableIdentifierExpression( bootValueMappingKey.getTable(), creationProcess );
-			final SelectableMapping keySelectableMapping = SelectableMappingImpl.from(
+			final var keySelectableMapping = SelectableMappingImpl.from(
 					keyTableExpression,
 					bootValueMappingKey.getSelectables().get(0),
 					(JdbcMapping) keyType,
@@ -853,7 +845,7 @@ public class MappingModelCreationHelper {
 					creationProcess.getCreationContext()
 			);
 
-			final SimpleForeignKeyDescriptor keyDescriptor = new SimpleForeignKeyDescriptor(
+			final var keyDescriptor = new SimpleForeignKeyDescriptor(
 					keyDeclaringType,
 					keySelectableMapping,
 					simpleFkTargetPart,
@@ -864,7 +856,7 @@ public class MappingModelCreationHelper {
 			creationProcess.registerForeignKey( collectionDescriptor.getAttributeMapping(), keyDescriptor );
 		}
 		else if ( fkTargetPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
-			final EmbeddedForeignKeyDescriptor keyDescriptor = buildEmbeddableForeignKeyDescriptor(
+			final var keyDescriptor = buildEmbeddableForeignKeyDescriptor(
 					embeddableValuedModelPart,
 					bootValueMapping,
 					keyDeclaringType,
@@ -941,7 +933,7 @@ public class MappingModelCreationHelper {
 				);
 			}
 
-			final ModelPart modelPart = referencedEntityDescriptor.findByPath( referencedPropertyName );
+			final var modelPart = referencedEntityDescriptor.findByPath( referencedPropertyName );
 			if ( modelPart == null ) {
 				throw new IllegalArgumentException( "Unable to find attribute " + bootProperty.getPersistentClass()
 						.getEntityName() + " -> " + bootProperty.getName() );
@@ -957,7 +949,7 @@ public class MappingModelCreationHelper {
 				);
 			}
 			else if ( modelPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
-				final EmbeddedForeignKeyDescriptor embeddedForeignKeyDescriptor = buildEmbeddableForeignKeyDescriptor(
+				final var embeddedForeignKeyDescriptor = buildEmbeddableForeignKeyDescriptor(
 						embeddableValuedModelPart,
 						bootValueMapping,
 						attributeMapping.getDeclaringType(),
@@ -980,21 +972,21 @@ public class MappingModelCreationHelper {
 			return true;
 		}
 
-		final ModelPart fkTarget =
+		final var fkTarget =
 				bootValueMapping.isReferenceToPrimaryKey()
 						? referencedEntityDescriptor.getIdentifierMappingForJoin()
 						: referencedEntityDescriptor.findByPath( bootValueMapping.getReferencedPropertyName() );
 
-		final BasicValuedModelPart simpleFkTarget = fkTarget.asBasicValuedModelPart();
+		final var simpleFkTarget = fkTarget.asBasicValuedModelPart();
 		if ( simpleFkTarget != null ) {
-			final Iterator<Selectable> columnIterator = bootValueMapping.getSelectables().iterator();
-			final Table table = bootValueMapping.getTable();
+			final var columnIterator = bootValueMapping.getSelectables().iterator();
+			final var table = bootValueMapping.getTable();
 			final String tableExpression = getTableIdentifierExpression( table, creationProcess );
 			final PropertyAccess declaringKeyPropertyAccess;
 			if ( inversePropertyAccess == null ) {
 				// So far, OneToOne mappings are only supported based on the owner's PK
 				if ( bootValueMapping instanceof OneToOne ) {
-					final EntityIdentifierMapping identifierMapping =
+					final var identifierMapping =
 							attributeMapping.findContainingEntityMapping().getIdentifierMapping();
 					declaringKeyPropertyAccess = ( (PropertyBasedMapping) identifierMapping ).getPropertyAccess();
 				}
@@ -1011,7 +1003,7 @@ public class MappingModelCreationHelper {
 						( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess()
 				);
 			}
-			final SelectablePath parentSelectablePath = getSelectablePath( attributeMapping.getDeclaringType() );
+			final var parentSelectablePath = getSelectablePath( attributeMapping.getDeclaringType() );
 			final SelectableMapping keySelectableMapping;
 			int i = 0;
 			final Value value = bootProperty.getValue();
@@ -1024,7 +1016,7 @@ public class MappingModelCreationHelper {
 						creationProcess.getCreationContext().getTypeConfiguration(),
 						value.isColumnInsertable( i ),
 						value.isColumnUpdateable( i ),
-						((SimpleValue) value).isPartitionKey(),
+						value.isPartitionKey(),
 						dialect,
 						creationProcess.getSqmFunctionRegistry(),
 						creationProcess.getCreationContext()
@@ -1041,14 +1033,14 @@ public class MappingModelCreationHelper {
 						creationProcess.getCreationContext().getTypeConfiguration(),
 						value.isColumnInsertable( 0 ),
 						value.isColumnUpdateable( 0 ),
-						((SimpleValue) value).isPartitionKey(),
+						value.isPartitionKey(),
 						dialect,
 						creationProcess.getSqmFunctionRegistry(),
 						creationProcess.getCreationContext()
 				);
 			}
 
-			final ForeignKeyDescriptor foreignKeyDescriptor = new SimpleForeignKeyDescriptor(
+			final var foreignKeyDescriptor = new SimpleForeignKeyDescriptor(
 					attributeMapping.getDeclaringType(),
 					keySelectableMapping,
 					declaringKeyPropertyAccess,
@@ -1109,7 +1101,7 @@ public class MappingModelCreationHelper {
 
 		for ( int i = 0; i < propertyPath.length; i++ ) {
 			final String path = propertyPath[i];
-			final ModelPart modelPart = i == 0
+			final var modelPart = i == 0
 					? referencedEntityDescriptor.findSubPart( path )
 					: lastEmbeddableModelPart.findSubPart( path, null );
 
@@ -1117,7 +1109,7 @@ public class MappingModelCreationHelper {
 				return false;
 			}
 			else if ( modelPart instanceof ToOneAttributeMapping referencedAttributeMapping ) {
-				final ForeignKeyDescriptor foreignKeyDescriptor = referencedAttributeMapping.getForeignKeyDescriptor();
+				final var foreignKeyDescriptor = referencedAttributeMapping.getForeignKeyDescriptor();
 				if ( foreignKeyDescriptor == null ) {
 					return false;
 				}
@@ -1173,7 +1165,7 @@ public class MappingModelCreationHelper {
 			boolean[] updateable,
 			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
-		final SelectablePath parentSelectablePath = getSelectablePath( keyDeclaringType );
+		final var parentSelectablePath = getSelectablePath( keyDeclaringType );
 		final boolean hasConstraint;
 		final SelectableMappings keySelectableMappings;
 		if ( bootValueMapping instanceof Collection collectionBootValueMapping ) {
@@ -1264,17 +1256,17 @@ public class MappingModelCreationHelper {
 	}
 
 	public static int[] getPropertyOrder(Value bootValueMapping, MappingModelCreationProcess creationProcess) {
-		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
+		final var creationContext = creationProcess.getCreationContext();
 		final ComponentType componentType;
 		final boolean sorted;
 		if ( bootValueMapping instanceof Collection collectionBootValueMapping ) {
 			componentType = (ComponentType) collectionBootValueMapping.getKey().getType();
-			final SortableValue key = (SortableValue) collectionBootValueMapping.getKey();
+			final var key = (SortableValue) collectionBootValueMapping.getKey();
 			assert key.isSorted();
 			sorted = key.isSorted();
 		}
 		else {
-			final EntityType entityType = (EntityType) bootValueMapping.getType();
+			final var entityType = (EntityType) bootValueMapping.getType();
 			final Type identifierOrUniqueKeyType =
 					entityType.getIdentifierOrUniqueKeyType( creationContext.getMetadata() );
 			if ( identifierOrUniqueKeyType instanceof ComponentType composite ) {
@@ -1316,12 +1308,12 @@ public class MappingModelCreationHelper {
 			String referencedPropertyName,
 			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
-		ForeignKeyDescriptor foreignKeyDescriptor = referencedAttributeMapping.getForeignKeyDescriptor();
+		var foreignKeyDescriptor = referencedAttributeMapping.getForeignKeyDescriptor();
 		if ( foreignKeyDescriptor == null ) {
-			final PersistentClass entityBinding =
+			final var entityBinding =
 					creationProcess.getCreationContext().getBootModel()
 							.getEntityBinding( referencedEntityDescriptor.getEntityName() );
-			final Property property = entityBinding.getRecursiveProperty( referencedPropertyName );
+			final var property = entityBinding.getRecursiveProperty( referencedPropertyName );
 			interpretToOneKeyDescriptor(
 					referencedAttributeMapping,
 					property,
@@ -1333,8 +1325,8 @@ public class MappingModelCreationHelper {
 			foreignKeyDescriptor = referencedAttributeMapping.getForeignKeyDescriptor();
 		}
 
-		final EntityMappingType declaringEntityMapping = attributeMapping.findContainingEntityMapping();
-		final ValuedModelPart targetPart = foreignKeyDescriptor.getTargetPart();
+		final var declaringEntityMapping = attributeMapping.findContainingEntityMapping();
+		final var targetPart = foreignKeyDescriptor.getTargetPart();
 		if ( targetPart instanceof EntityIdentifierMapping
 				&& targetPart != declaringEntityMapping.getIdentifierMapping() ) {
 			// If the many-to-one refers to the super type, but the one-to-many is defined in a subtype,
@@ -1372,8 +1364,8 @@ public class MappingModelCreationHelper {
 			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
 		assert bootValueMapping instanceof IndexedCollection;
-		final IndexedCollection indexedCollection = (IndexedCollection) bootValueMapping;
-		final Value bootMapKeyDescriptor = indexedCollection.getIndex();
+		final var indexedCollection = (IndexedCollection) bootValueMapping;
+		final var bootMapKeyDescriptor = indexedCollection.getIndex();
 
 		if ( bootMapKeyDescriptor instanceof BasicValue basicValue ) {
 			final boolean insertable;
@@ -1388,7 +1380,7 @@ public class MappingModelCreationHelper {
 				insertable = updatable = basicValue.isColumnInsertable( 0 )
 						|| basicValue.isColumnUpdateable( 0 );
 			}
-			final SelectableMapping selectableMapping = SelectableMappingImpl.from(
+			final var selectableMapping = SelectableMappingImpl.from(
 					tableExpression,
 					basicValue.getSelectables().get( 0 ),
 					basicValue.resolve().getJdbcMapping(),
@@ -1408,8 +1400,8 @@ public class MappingModelCreationHelper {
 		}
 
 		if ( bootMapKeyDescriptor instanceof Component component ) {
-			final CompositeType compositeType = component.getType();
-			final EmbeddableMappingTypeImpl mappingType = EmbeddableMappingTypeImpl.from(
+			final var compositeType = component.getType();
+			final var mappingType = EmbeddableMappingTypeImpl.from(
 					component,
 					compositeType,
 					component.getColumnInsertability(),
@@ -1429,8 +1421,8 @@ public class MappingModelCreationHelper {
 		}
 
 		if ( bootMapKeyDescriptor instanceof OneToMany || bootMapKeyDescriptor instanceof ToOne ) {
-			final EntityType indexEntityType = (EntityType) collectionDescriptor.getIndexType();
-			final EntityPersister associatedEntity =
+			final var indexEntityType = (EntityType) collectionDescriptor.getIndexType();
+			final var associatedEntity =
 					creationProcess.getEntityPersister( indexEntityType.getAssociatedEntityName() );
 
 			final EntityCollectionPart indexDescriptor;
@@ -1481,7 +1473,7 @@ public class MappingModelCreationHelper {
 		final Value element = bootDescriptor.getElement();
 
 		if ( element instanceof BasicValue basicElement ) {
-			final SelectableMapping selectableMapping = SelectableMappingImpl.from(
+			final var selectableMapping = SelectableMappingImpl.from(
 					tableExpression,
 					basicElement.getSelectables().get(0),
 					basicElement.resolve().getJdbcMapping(),
@@ -1502,8 +1494,8 @@ public class MappingModelCreationHelper {
 		}
 
 		if ( element instanceof Component component ) {
-			final CompositeType compositeType = (CompositeType) collectionDescriptor.getElementType();
-			final EmbeddableMappingTypeImpl mappingType = EmbeddableMappingTypeImpl.from(
+			final var compositeType = (CompositeType) collectionDescriptor.getElementType();
+			final var mappingType = EmbeddableMappingTypeImpl.from(
 					component,
 					compositeType,
 					component.getColumnInsertability(),
@@ -1523,13 +1515,11 @@ public class MappingModelCreationHelper {
 		}
 
 		if ( element instanceof Any anyBootMapping ) {
-			final JavaTypeRegistry jtdRegistry =
-					creationProcess.getCreationContext().getTypeConfiguration()
-							.getJavaTypeRegistry();
 			return new DiscriminatedCollectionPart(
 					CollectionPart.Nature.ELEMENT,
 					collectionDescriptor,
-					jtdRegistry.getDescriptor(Object.class),
+					creationProcess.getCreationContext().getTypeConfiguration()
+							.getJavaTypeRegistry().resolveDescriptor( Object.class ),
 					anyBootMapping,
 					anyBootMapping.getType(),
 					creationProcess
@@ -1590,7 +1580,7 @@ public class MappingModelCreationHelper {
 			TableGroupProducer declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
 			MappingModelCreationProcess creationProcess) {
-		final EmbeddableMappingType embeddableTypeDescriptor = modelPart.getEmbeddableTypeDescriptor();
+		final var embeddableTypeDescriptor = modelPart.getEmbeddableTypeDescriptor();
 		if ( modelPart instanceof NonAggregatedIdentifierMapping nonAggregatedIdentifierMapping ) {
 			return new InverseNonAggregatedIdentifierMapping(
 					keyDeclaringType,
@@ -1653,7 +1643,7 @@ public class MappingModelCreationHelper {
 			return new SqlTuple( columnReferences, modelPart );
 		}
 		else {
-			final BasicValuedModelPart basicPart = castNonNull( modelPart.asBasicValuedModelPart() );
+			final var basicPart = castNonNull( modelPart.asBasicValuedModelPart() );
 			final String qualifier =
 					tableGroup == null
 							? basicPart.getContainingTableExpression()
@@ -1676,9 +1666,9 @@ public class MappingModelCreationHelper {
 			NavigableRole navigableRole,
 			Column column) {
 		if ( column instanceof AggregateColumn aggregateColumn ) {
-			final Component component = aggregateColumn.getComponent();
-			final NavigableRole embeddableRole = navigableRole.append( CollectionPart.Nature.ELEMENT.getName() );
-			final EmbeddableMappingTypeImpl mappingType = EmbeddableMappingTypeImpl.from(
+			final var component = aggregateColumn.getComponent();
+			final var embeddableRole = navigableRole.append( CollectionPart.Nature.ELEMENT.getName() );
+			final var mappingType = EmbeddableMappingTypeImpl.from(
 					component,
 					component.getType(),
 					component.getColumnInsertability(),
@@ -1890,17 +1880,17 @@ public class MappingModelCreationHelper {
 			MappingModelCreationProcess creationProcess,
 			Function<ToOneAttributeMapping, ToOneAttributeMapping> mappingConverter) {
 		if ( bootProperty.getValue() instanceof ToOne value ) {
-			final EntityPersister entityPersister = creationProcess.getEntityPersister( value.getReferencedEntityName() );
-			final AttributeMetadata attributeMetadata = getAttributeMetadata(
+			final var entityPersister = creationProcess.getEntityPersister( value.getReferencedEntityName() );
+			final var attributeMetadata = getAttributeMetadata(
 					bootProperty,
 					attrType,
 					propertyAccess,
 					cascadeStyle,
 					creationProcess
 			);
-			final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+			final var sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 
-			final AssociationType type = (AssociationType) bootProperty.getType();
+			final var type = (AssociationType) bootProperty.getType();
 			final FetchStyle fetchStyle = FetchOptionsHelper
 					.determineFetchStyleByMetadata(
 							bootProperty.getValue().getFetchMode(),
@@ -1940,7 +1930,7 @@ public class MappingModelCreationHelper {
 				fetchTiming = determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
 			}
 
-			final ToOneAttributeMapping attributeMapping = mappingConverter.apply( new ToOneAttributeMapping(
+			final var attributeMapping = mappingConverter.apply( new ToOneAttributeMapping(
 					attrName,
 					navigableRole,
 					stateArrayPosition,

@@ -39,12 +39,12 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 	public EntityRepresentationStrategyMap(
 			PersistentClass bootType,
 			RuntimeModelCreationContext creationContext) {
-		this.mapJavaType = creationContext.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.getDescriptor( Map.class );
+		mapJavaType =
+				creationContext.getTypeConfiguration().getJavaTypeRegistry()
+						.getDescriptor( Map.class );
 
-		this.proxyFactory = createProxyFactory( bootType );
-		this.instantiator = new EntityInstantiatorDynamicMap( bootType );
+		proxyFactory = createProxyFactory( bootType );
+		instantiator = new EntityInstantiatorDynamicMap( bootType );
 
 		createProxyFactory( bootType );
 	}

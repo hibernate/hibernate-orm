@@ -67,6 +67,7 @@ public class BasicTypeRegistry implements Serializable {
 		return typeConfiguration.getJdbcTypeRegistry();
 	}
 
+	@Deprecated(since = "7.2") // due to the unbound type parameter
 	public <J> BasicType<J> getRegisteredType(String key) {
 		var basicType = typesByName.get( key );
 		if ( basicType == null ) {
@@ -91,8 +92,8 @@ public class BasicTypeRegistry implements Serializable {
 		return createBasicType( name, typeReference );
 	}
 
-	private BasicType<?> createBasicType(String name, BasicTypeReference<?> typeReference) {
-		final var javaType = getJavaTypeRegistry().getDescriptor( typeReference.getJavaType() );
+	private <T> BasicType<T> createBasicType(String name, BasicTypeReference<T> typeReference) {
+		final var javaType = getJavaTypeRegistry().resolveDescriptor( typeReference.getJavaType() );
 		final var jdbcType = getJdbcTypeRegistry().getDescriptor( typeReference.getSqlTypeCode() );
 		final var createdType = createBasicType( typeReference, javaType, jdbcType );
 		primeRegistryEntry( createdType );
@@ -101,8 +102,8 @@ public class BasicTypeRegistry implements Serializable {
 		return createdType;
 	}
 
-	private static BasicType<?> createBasicType(
-			BasicTypeReference<?> typeReference, JavaType<Object> javaType, JdbcType jdbcType) {
+	private static <T> BasicType<T> createBasicType(
+			BasicTypeReference<T> typeReference, JavaType<T> javaType, JdbcType jdbcType) {
 		final String name = typeReference.getName();
 		if ( typeReference.getConverter() == null ) {
 			return typeReference.isForceImmutable()
@@ -119,6 +120,7 @@ public class BasicTypeRegistry implements Serializable {
 		}
 	}
 
+	@Deprecated(since = "7.2") // due to the unbound type parameter
 	public <J> BasicType<J> getRegisteredType(java.lang.reflect.Type javaType) {
 		return getRegisteredType( javaType.getTypeName() );
 	}
@@ -257,7 +259,7 @@ public class BasicTypeRegistry implements Serializable {
 			Supplier<BasicType<J>> creator) {
 		// Before simply creating the type, we try to find if there is a registered type for this java type,
 		// and if so, if the jdbc type descriptor matches. Unless it does, we at least reuse the name
-		final BasicType<J> registeredType = getRegisteredType( javaType.getJavaType() );
+		final var registeredType = getRegisteredType( javaType.getJavaTypeClass() );
 		if ( registeredTypeMatches( javaType, jdbcType, registeredType ) ) {
 			return registeredType;
 		}

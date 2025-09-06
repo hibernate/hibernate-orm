@@ -12,7 +12,6 @@ import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.java.spi.RegistryHelper;
 
 import java.util.Objects;
@@ -54,8 +53,8 @@ public final class AttributeConverterBean<O,R> implements JpaAttributeConverter<
 		this.attributeConverterBean = attributeConverterBean;
 		this.converterJavaType = converterJavaType;
 
-		final JavaTypeRegistry jtdRegistry = context.getJavaTypeRegistry();
-		this.jdbcJavaType = jtdRegistry.getDescriptor( jdbcJavaType );
+		final var jtdRegistry = context.getJavaTypeRegistry();
+		this.jdbcJavaType = jtdRegistry.resolveDescriptor( jdbcJavaType );
 		this.domainJavaType = jtdRegistry.resolveDescriptor( domainJavaType,
 				() -> getTypeDescriptor( attributeConverterBean, domainJavaType, context ) );
 	}

@@ -76,7 +76,7 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
-		final SqlSelection sqlSelection =
+		final var sqlSelection =
 				sqlSelection( jdbcResultsMetadata, domainResultCreationState, impl( domainResultCreationState ) );
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
@@ -116,11 +116,11 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 			return false;
 		}
 
-		final DynamicResultBuilderAttribute that = (DynamicResultBuilderAttribute) o;
+		final var that = (DynamicResultBuilderAttribute) o;
 		return attributeMapping.equals( that.attributeMapping )
-				&& columnAlias.equals( that.columnAlias )
-				&& entityName.equals( that.entityName )
-				&& attributePath.equals( that.attributePath );
+			&& columnAlias.equals( that.columnAlias )
+			&& entityName.equals( that.entityName )
+			&& attributePath.equals( that.attributePath );
 	}
 
 	@Override

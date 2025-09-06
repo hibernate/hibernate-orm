@@ -22,6 +22,7 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 		this(
 				operation,
 				operand,
+				//TODO: this is wrong, T represents the domain type, not the relational type
 				operand.nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType(
 						operand.getExpressible().getRelationalJavaType().getJavaType()
 				)
@@ -55,7 +56,7 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 		return expression;
 	}
 
-	public SqmExpression getOperand() {
+	public SqmExpression<T> getOperand() {
 		return operand;
 	}
 

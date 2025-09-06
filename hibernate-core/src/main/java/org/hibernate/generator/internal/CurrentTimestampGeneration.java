@@ -81,7 +81,7 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 	public static final String CLOCK_SETTING_NAME = "hibernate.testing.clock";
 
 	private final EnumSet<EventType> eventTypes;
-	private final JavaType<Object> propertyType;
+	private final JavaType<?> propertyType;
 	private final GeneratorDelegate delegate;
 
 	private static final ConcurrentHashMap<Key, GeneratorDelegate> GENERATOR_DELEGATES = new ConcurrentHashMap<>();
@@ -157,9 +157,9 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		return (T) sessionFactory.getProperties().get( CLOCK_SETTING_NAME );
 	}
 
-	private static JavaType<Object> getPropertyType(GeneratorCreationContext context) {
+	private static JavaType<?> getPropertyType(GeneratorCreationContext context) {
 		return context.getDatabase().getTypeConfiguration().getJavaTypeRegistry()
-				.getDescriptor( context.getProperty().getType().getReturnedClass() );
+				.resolveDescriptor( context.getProperty().getType().getReturnedClass() );
 	}
 
 	@Override

@@ -66,7 +66,7 @@ public class ArrayJdbcType implements JdbcType {
 			TypeConfiguration typeConfiguration) {
 		final JavaType<?> elementJavaType =
 				elementJdbcType.getJdbcRecommendedJavaTypeMapping( precision, scale, typeConfiguration );
-		final JavaType<?> javaType =
+		final var javaType =
 				typeConfiguration.getJavaTypeRegistry()
 						.resolveDescriptor( newInstance( elementJavaType.getJavaTypeClass(), 0 ).getClass() );
 		if ( javaType instanceof BasicPluralType<?, ?> ) {

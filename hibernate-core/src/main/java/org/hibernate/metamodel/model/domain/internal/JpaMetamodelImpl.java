@@ -355,7 +355,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			final Field referencedField = getJavaField( className, fieldName );
 			if ( referencedField != null ) {
 				return getTypeConfiguration().getJavaTypeRegistry()
-						.getDescriptor( referencedField.getType() );
+						.resolveDescriptor( referencedField.getType() );
 			}
 		}
 		catch (NoSuchFieldException e) {
@@ -577,13 +577,13 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 			// if we found any matching, create the virtual root EntityDomainType reference
 			if ( !matchingDescriptors.isEmpty() ) {
-				final SqmPolymorphicRootDescriptor<T> descriptor = new SqmPolymorphicRootDescriptor<>(
+				final var polymorphicRootDescriptor = new SqmPolymorphicRootDescriptor<>(
 						typeConfiguration.getJavaTypeRegistry().resolveDescriptor( javaType ),
 						matchingDescriptors,
 						this
 				);
-				polymorphicEntityReferenceMap.putIfAbsent( javaType, descriptor );
-				return descriptor;
+				polymorphicEntityReferenceMap.putIfAbsent( javaType, polymorphicRootDescriptor );
+				return polymorphicRootDescriptor;
 			}
 		}
 

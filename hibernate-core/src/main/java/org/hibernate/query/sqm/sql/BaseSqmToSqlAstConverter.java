@@ -1649,7 +1649,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public DynamicInstantiation<?> visitDynamicInstantiation(SqmDynamicInstantiation<?> sqmDynamicInstantiation) {
 		final SqmDynamicInstantiationTarget<?> instantiationTarget = sqmDynamicInstantiation.getInstantiationTarget();
 		final DynamicInstantiationNature instantiationNature = instantiationTarget.getNature();
-		final JavaType<Object> targetTypeDescriptor = interpretInstantiationTarget( instantiationTarget );
+		final JavaType<?> targetTypeDescriptor = interpretInstantiationTarget( instantiationTarget );
 
 		final DynamicInstantiation<?> dynamicInstantiation =
 				new DynamicInstantiation<>( instantiationNature, targetTypeDescriptor );
@@ -1668,10 +1668,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return dynamicInstantiation;
 	}
 
-	private <X> JavaType<X> interpretInstantiationTarget(SqmDynamicInstantiationTarget<?> instantiationTarget) {
-		return getCreationContext().getMappingMetamodel()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry()
+	private <X> JavaType<X> interpretInstantiationTarget(SqmDynamicInstantiationTarget<X> instantiationTarget) {
+		return getCreationContext().getTypeConfiguration().getJavaTypeRegistry()
 				.getDescriptor( switch ( instantiationTarget.getNature() ) {
 					case LIST -> List.class;
 					case MAP -> Map.class;
@@ -4767,14 +4765,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 		registerProjectionUsageFromDescriptor( tableGroup, valueDescriptor );
 
-		return new DomainResultProducer<Map.Entry<Object, Object>>() {
+		//noinspection rawtypes
+		return new DomainResultProducer<Map.Entry>() {
 			@Override
-			public DomainResult<Map.Entry<Object, Object>> createDomainResult(
+			public DomainResult<Map.Entry> createDomainResult(
 					String resultVariable,
 					DomainResultCreationState creationState) {
-				final JavaType<Map.Entry<Object, Object>> mapEntryDescriptor = getTypeConfiguration()
-						.getJavaTypeRegistry()
-						.resolveDescriptor( Map.Entry.class );
+				final var mapEntryDescriptor =
+						getTypeConfiguration().getJavaTypeRegistry()
+								.resolveDescriptor( Map.Entry.class );
 				return new SqmMapEntryResult<>( indexResult, valueResult, resultVariable, mapEntryDescriptor );
 			}
 

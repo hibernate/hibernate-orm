@@ -419,7 +419,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 				attributeMapping = new DiscriminatedAssociationAttributeMapping(
 						navigableRole.append( bootPropertyDescriptor.getName() ),
-						typeConfiguration.getJavaTypeRegistry().getDescriptor( Object.class ),
+						typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Object.class ),
 						declarer,
 						attributeIndex,
 						attributeIndex,

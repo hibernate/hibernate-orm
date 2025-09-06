@@ -21,7 +21,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.EnumJavaType;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -63,10 +62,6 @@ public class EnumType<T extends Enum<T>>
 	public EnumType() {
 	}
 
-	public Class<T> getEnumClass() {
-		return enumClass;
-	}
-
 	/**
 	 * <p>
 	 * An instance of this class is "configured" by a call to {@link #setParameterValues},
@@ -105,11 +100,13 @@ public class EnumType<T extends Enum<T>>
 
 		enumClass = getEnumClass( parameters, reader );
 
-		final JavaType<T> descriptor = typeConfiguration.getJavaTypeRegistry().getDescriptor( enumClass );
-		enumJavaType = (EnumJavaType<T>) descriptor;
+		enumJavaType =
+				(EnumJavaType<T>)
+						typeConfiguration.getJavaTypeRegistry()
+								.resolveDescriptor( enumClass );
 
 		if ( parameters.containsKey( TYPE ) ) {
-			int jdbcTypeCode = Integer.parseInt( (String) parameters.get( TYPE ) );
+			final int jdbcTypeCode = Integer.parseInt( (String) parameters.get( TYPE ) );
 			jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( jdbcTypeCode );
 			isOrdinal = jdbcType.isInteger()
 					// Both, ENUM and NAMED_ENUM are treated like ordinal with respect to the ordering
@@ -134,7 +131,7 @@ public class EnumType<T extends Enum<T>>
 						columnLength
 				);
 			}
-			jdbcType = descriptor.getRecommendedJdbcType( indicators );
+			jdbcType = typeConfiguration.getJavaTypeRegistry().resolveDescriptor( enumClass ).getRecommendedJdbcType( indicators );
 			isOrdinal = indicators.getEnumeratedType() != STRING;
 		}
 	}

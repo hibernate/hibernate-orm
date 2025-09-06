@@ -71,7 +71,7 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 			ResultSetMappingResolutionContext context) {
 		this.explicitColumnName = definition.name();
 
-		final Class<?> definedType = definition.type();
+		final var definedType = definition.type();
 		if ( void.class == definedType ) {
 			builder = new CompleteResultBuilderBasicValuedStandard( explicitColumnName, null, null );
 		}
@@ -81,14 +81,11 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 
 			if ( AttributeConverter.class.isAssignableFrom( definedType ) ) {
 				@SuppressWarnings("unchecked")
-				final Class<? extends AttributeConverter<?, ?>> converterClass =
-						(Class<? extends AttributeConverter<?, ?>>) definedType;
-				final ManagedBean<? extends AttributeConverter<?,?>> converterBean =
-						managedBeanRegistry.getBean( converterClass );
-				final JavaType<? extends AttributeConverter<?,?>> converterJtd =
-						typeConfiguration.getJavaTypeRegistry().getDescriptor( converterClass );
+				final var converterClass = (Class<? extends AttributeConverter<?, ?>>) definedType;
+				final var converterBean = managedBeanRegistry.getBean( converterClass );
+				final var converterJtd = typeConfiguration.getJavaTypeRegistry().resolveDescriptor( converterClass );
 
-				final ParameterizedType parameterizedType =
+				final var parameterizedType =
 						extractAttributeConverterParameterizedType( converterBean.getBeanClass() );
 
 				builder = new CompleteResultBuilderBasicValuedConverted(
@@ -104,15 +101,15 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 				final JavaType<?> explicitJavaType;
 
 				// see if this is a registered BasicType...
-				final BasicType<Object> registeredBasicType =
+				final BasicType<?> registeredBasicType =
 						typeConfiguration.getBasicTypeRegistry().getRegisteredType( definedType.getName() );
 				if ( registeredBasicType != null ) {
 					explicitType = registeredBasicType;
 					explicitJavaType = registeredBasicType.getJavaTypeDescriptor();
 				}
 				else {
-					final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
-					final JavaType<Object> registeredJtd = jtdRegistry.getDescriptor( definedType );
+					final var jtdRegistry = typeConfiguration.getJavaTypeRegistry();
+					final var registeredJtd = jtdRegistry.resolveDescriptor( definedType );
 					if ( BasicType.class.isAssignableFrom( registeredJtd.getJavaTypeClass() ) ) {
 						final ManagedBean<BasicType<?>> typeBean =
 								(ManagedBean) managedBeanRegistry.getBean( registeredJtd.getJavaTypeClass() );
@@ -128,7 +125,7 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 					}
 					else {
 						explicitType = null;
-						explicitJavaType = jtdRegistry.getDescriptor( definedType );
+						explicitJavaType = jtdRegistry.resolveDescriptor( definedType );
 					}
 				}
 
@@ -140,18 +137,17 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 	private BasicJavaType<?> determineDomainJavaType(
 			ParameterizedType parameterizedType,
 			JavaTypeRegistry jtdRegistry) {
-		final java.lang.reflect.Type[] typeParameters = parameterizedType.getActualTypeArguments();
-		final java.lang.reflect.Type domainTypeType = typeParameters[ 0 ];
-		final Class<?> domainClass = (Class<?>) domainTypeType;
-
-		return (BasicJavaType<?>) jtdRegistry.getDescriptor( domainClass );
+		final var typeParameters = parameterizedType.getActualTypeArguments();
+		final var domainTypeType = typeParameters[ 0 ];
+		final var domainClass = (Class<?>) domainTypeType;
+		return (BasicJavaType<?>) jtdRegistry.resolveDescriptor( domainClass );
 	}
 
 	private BasicValuedMapping resolveUnderlyingMapping(
 			ParameterizedType parameterizedType,
 			TypeConfiguration typeConfiguration) {
-		final java.lang.reflect.Type[] typeParameters = parameterizedType.getActualTypeArguments();
-		return typeConfiguration.standardBasicTypeForJavaType( (Class) typeParameters[ 1 ] );
+		final var typeParameters = parameterizedType.getActualTypeArguments();
+		return typeConfiguration.standardBasicTypeForJavaType( typeParameters[ 1 ] );
 	}
 
 	public ResultMementoBasicStandard(

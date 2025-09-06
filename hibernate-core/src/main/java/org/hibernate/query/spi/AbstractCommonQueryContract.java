@@ -701,7 +701,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	private <P> JavaType<P> getJavaType(Class<P> javaType) {
 		return getTypeConfiguration().getJavaTypeRegistry()
-				.getDescriptor( javaType );
+				.resolveDescriptor( javaType );
 	}
 
 	protected <P> QueryParameterBinding<P> locateBinding(Parameter<P> parameter) {

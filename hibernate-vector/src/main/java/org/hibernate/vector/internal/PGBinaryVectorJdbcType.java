@@ -49,7 +49,7 @@ public class PGBinaryVectorJdbcType extends ArrayJdbcType {
 			Integer precision,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor( byte[].class );
+		return typeConfiguration.getJavaTypeRegistry().getDescriptor( byte[].class );
 	}
 
 //	@Override

@@ -851,7 +851,7 @@ public class MetadataBuildingProcess {
 		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 		final BasicType<?> basicType = new NamedBasicTypeImpl<>(
-				javaTypeRegistry.getDescriptor( javaType ),
+				javaTypeRegistry.resolveDescriptor( javaType ),
 				jdbcTypeRegistry.getDescriptor( preferredSqlTypeCode ),
 				name
 		);
@@ -866,8 +866,8 @@ public class MetadataBuildingProcess {
 			JdbcType timestampWithTimeZoneOverride) {
 		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		final BasicType<?> offsetDateTimeType = new NamedBasicTypeImpl<>(
-				javaTypeRegistry.getDescriptor( OffsetTime.class ),
+		final BasicType<OffsetTime> offsetDateTimeType = new NamedBasicTypeImpl<>(
+				javaTypeRegistry.resolveDescriptor( OffsetTime.class ),
 				timestampWithTimeZoneOverride,
 				"OffsetTime"
 		);
@@ -884,13 +884,13 @@ public class MetadataBuildingProcess {
 			JdbcType timestampWithTimeZoneOverride) {
 		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		final BasicType<?> offsetDateTimeType = new NamedBasicTypeImpl<>(
-				javaTypeRegistry.getDescriptor( OffsetDateTime.class ),
+		final BasicType<OffsetDateTime> offsetDateTimeType = new NamedBasicTypeImpl<>(
+				javaTypeRegistry.resolveDescriptor( OffsetDateTime.class ),
 				timestampWithTimeZoneOverride,
 				"OffsetDateTime"
 		);
-		final BasicType<?> zonedDateTimeType = new NamedBasicTypeImpl<>(
-				javaTypeRegistry.getDescriptor( ZonedDateTime.class ),
+		final BasicType<ZonedDateTime> zonedDateTimeType = new NamedBasicTypeImpl<>(
+				javaTypeRegistry.resolveDescriptor( ZonedDateTime.class ),
 				timestampWithTimeZoneOverride,
 				"ZonedDateTime"
 		);

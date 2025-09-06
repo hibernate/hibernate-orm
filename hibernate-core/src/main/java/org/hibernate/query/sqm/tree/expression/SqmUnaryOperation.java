@@ -77,4 +77,18 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 		hql.append( operation.getOperatorChar() );
 		operand.appendHqlString( hql, context );
 	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmUnaryOperation<?> that
+				&& operation == that.getOperation()
+				&& operand.isCompatible( that.getOperand() );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = operation.hashCode();
+		result = 31 * result + operand.cacheHashCode();
+		return result;
+	}
 }

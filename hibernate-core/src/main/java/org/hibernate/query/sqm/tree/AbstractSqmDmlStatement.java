@@ -205,4 +205,19 @@ public abstract class AbstractSqmDmlStatement<E>
 			sb.setLength( sb.length() - 2 );
 		}
 	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof AbstractSqmDmlStatement<?> that
+			&& getClass() == that.getClass()
+			&& getTarget().isCompatible( that.getTarget() )
+			&& SqmCacheable.areCompatible( cteStatements, that.cteStatements );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = getTarget().cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( cteStatements );
+		return result;
+	}
 }

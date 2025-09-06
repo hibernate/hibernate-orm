@@ -6,7 +6,6 @@ package org.hibernate.query.sqm.tree.predicate;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -77,13 +76,13 @@ public class SqmGroupedPredicate extends AbstractSqmPredicate {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmGroupedPredicate that
-			&& Objects.equals( subPredicate, that.subPredicate );
+			&& subPredicate.isCompatible( that.subPredicate );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hashCode( subPredicate );
+	public int cacheHashCode() {
+		return subPredicate.cacheHashCode();
 	}
 }

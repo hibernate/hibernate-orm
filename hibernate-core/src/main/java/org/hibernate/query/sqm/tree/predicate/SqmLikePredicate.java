@@ -12,7 +12,6 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
-import java.util.Objects;
 
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertString;
 
@@ -143,18 +142,23 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmLikePredicate that
 			&& this.isNegated() == that.isNegated()
 			&& isCaseSensitive == that.isCaseSensitive
-			&& Objects.equals( this.matchExpression, that.matchExpression )
-			&& Objects.equals( pattern, that.pattern )
-			&& Objects.equals( escapeCharacter, that.escapeCharacter );
+			&& matchExpression.isCompatible( that.matchExpression )
+			&& pattern.isCompatible( that.pattern )
+			&& escapeCharacter.isCompatible( that.escapeCharacter );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( isNegated(), matchExpression, pattern, escapeCharacter, isCaseSensitive );
+	public int cacheHashCode() {
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + matchExpression.cacheHashCode();
+		result = 31 * result + pattern.cacheHashCode();
+		result = 31 * result + escapeCharacter.cacheHashCode();
+		result = 31 * result + Boolean.hashCode( isCaseSensitive );
+		return result;
 	}
 
 	@Override

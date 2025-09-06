@@ -98,4 +98,15 @@ public class SqmCorrelatedCrossJoin<T> extends SqmCrossJoin<T> implements SqmCor
 		return walker.visitCorrelatedCrossJoin( this );
 	}
 
+	@Override
+	public boolean isCompatible(Object other) {
+		return other instanceof SqmCorrelatedCrossJoin<?> that
+			&& correlationParent.isCompatible( that.correlationParent );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return correlationParent.cacheHashCode();
+	}
+
 }

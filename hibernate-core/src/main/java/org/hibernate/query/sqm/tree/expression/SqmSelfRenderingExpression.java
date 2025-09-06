@@ -55,4 +55,14 @@ public class SqmSelfRenderingExpression<T> extends AbstractSqmExpression<T> {
 	// No equals() / hashCode() because this stuff is only
 	// ever used internally and is irrelevant for caching,
 	// so basing equality on the object identity is fine
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return this == object;
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return System.identityHashCode( this );
+	}
 }

@@ -7,13 +7,13 @@ package org.hibernate.query.sqm.function;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -176,22 +176,16 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( o == null || getClass() != o.getClass() ) {
-			return false;
-		}
-		if ( !super.equals( o ) ) {
-			return false;
-		}
-
-		SelfRenderingSqmOrderedSetAggregateFunction<?> that = (SelfRenderingSqmOrderedSetAggregateFunction<?>) o;
-		return Objects.equals( withinGroup, that.withinGroup );
+	public boolean isCompatible(Object o) {
+		return super.isCompatible( o )
+			&& o instanceof SelfRenderingSqmOrderedSetAggregateFunction<?> that
+			&& SqmCacheable.areCompatible( withinGroup, that.withinGroup );
 	}
 
 	@Override
-	public int hashCode() {
+	public int cacheHashCode() {
 		int result = super.hashCode();
-		result = 31 * result + Objects.hashCode( withinGroup );
+		result = 31 * result + SqmCacheable.cacheHashCode( withinGroup );
 		return result;
 	}
 }

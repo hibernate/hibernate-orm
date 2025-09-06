@@ -10,6 +10,7 @@ import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
+import java.util.Objects;
 
 
 /**
@@ -54,8 +55,19 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 	}
 
 	@Override
-	public int compareTo(SqmParameter<T> parameter) {
-		return Integer.compare( hashCode(), parameter.hashCode() );
+	public int compareTo(SqmParameter anotherParameter) {
+		return this == anotherParameter ? 0 : 1;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof ValueBindJpaCriteriaParameter<?> that
+				&& Objects.equals( getNodeType(), that.getNodeType() );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return Objects.hashCode( getNodeType() );
 	}
 
 	@Override
@@ -65,6 +77,6 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 
 	@Override
 	public int hashCode() {
-		return super.hashCode();
+		return System.identityHashCode( this );
 	}
 }

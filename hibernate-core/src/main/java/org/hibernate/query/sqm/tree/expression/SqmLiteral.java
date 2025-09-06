@@ -102,13 +102,14 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmLiteral<?> that
+			&& getClass() == that.getClass()
 			&& Objects.equals( value, that.value );
 	}
 
 	@Override
-	public int hashCode() {
+	public int cacheHashCode() {
 		return Objects.hashCode( value );
 	}
 }

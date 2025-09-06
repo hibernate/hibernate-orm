@@ -5,15 +5,15 @@
 package org.hibernate.query.sqm.tree.predicate;
 
 import java.util.Collection;
-import java.util.Objects;
 
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmWhereClause implements SqmPredicateCollection {
+public class SqmWhereClause implements SqmPredicateCollection, SqmCacheable {
 	private final NodeBuilder nodeBuilder;
 
 	private SqmPredicate predicate;
@@ -72,13 +72,13 @@ public class SqmWhereClause implements SqmPredicateCollection {
 	}
 
 	@Override
-	public boolean equals(Object other) {
+	public boolean isCompatible(Object other) {
 		return other instanceof SqmWhereClause that
-			&& Objects.equals( this.predicate, that.predicate );
+			&& SqmCacheable.areCompatible( this.predicate, that.predicate );
 	}
 
 	@Override
-	public int hashCode() {
-		return predicate == null ? 0 : predicate.hashCode();
+	public int cacheHashCode() {
+		return SqmCacheable.cacheHashCode( this.predicate );
 	}
 }

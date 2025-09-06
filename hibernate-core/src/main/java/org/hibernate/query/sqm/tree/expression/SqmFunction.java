@@ -5,7 +5,6 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import java.util.List;
-import java.util.Objects;
 
 import org.hibernate.query.criteria.JpaFunction;
 import org.hibernate.query.hql.spi.SemanticPathPart;
@@ -15,6 +14,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.domain.SqmFunctionPath;
@@ -205,21 +205,17 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 	}
 
 	@Override
-	public boolean equals(Object other) {
-		if ( this == other ) {
-			return true;
-		}
-		if ( other == null || getClass() != other.getClass() ) {
-			return false;
-		}
-
-		final SqmFunction<?> that = (SqmFunction<?>) other;
-		return Objects.equals( this.functionName, that.functionName )
-			&& Objects.equals( this.arguments, that.arguments );
+	public boolean isCompatible(Object other) {
+		return other instanceof SqmFunction<?> that
+			&& getClass() == other.getClass()
+			&& functionName.equals( that.functionName )
+			&& SqmCacheable.areCompatible( arguments, that.arguments );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( functionName, arguments );
+	public int cacheHashCode() {
+		int result = functionName.hashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( arguments );
+		return result;
 	}
 }

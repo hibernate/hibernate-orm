@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.domain;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -40,7 +41,7 @@ public class SqmMapEntryReference<K,V>
 
 	private final JavaType<Map.Entry<K,V>> mapEntryTypeDescriptor;
 
-	private String explicitAlias;
+	private @Nullable String explicitAlias;
 
 	public SqmMapEntryReference(
 			SqmPath<?> mapPath,
@@ -149,15 +150,17 @@ public class SqmMapEntryReference<K,V>
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmMapEntryReference<?, ?> that
-			&& Objects.equals( mapPath, that.mapPath )
+			&& mapPath.isCompatible( that.mapPath )
 			&& Objects.equals( explicitAlias, that.explicitAlias );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( mapPath, explicitAlias );
+	public int cacheHashCode() {
+		int result = mapPath.cacheHashCode();
+		result = 31 * result + Objects.hashCode( explicitAlias );
+		return result;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

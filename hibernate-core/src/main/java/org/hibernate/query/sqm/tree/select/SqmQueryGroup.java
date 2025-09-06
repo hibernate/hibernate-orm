@@ -7,7 +7,6 @@ package org.hibernate.query.sqm.tree.select;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.query.common.FetchClauseType;
@@ -18,6 +17,7 @@ import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaQueryGroup;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -248,15 +248,18 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmQueryGroup<?> that
-			&& super.equals( that )
+			&& super.isCompatible( that )
 			&& this.setOperator == that.setOperator
-			&& Objects.equals( this.queryParts, that.queryParts );
+			&& SqmCacheable.areCompatible( this.queryParts, that.queryParts );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( super.hashCode(), queryParts, setOperator );
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( queryParts );
+		result = 31 * result + setOperator.hashCode();
+		return result;
 	}
 }

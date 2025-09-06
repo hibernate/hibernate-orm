@@ -115,7 +115,7 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmCastTarget<?> that
 			&& Objects.equals( type, that.type )
 			&& Objects.equals( length, that.length )
@@ -124,7 +124,7 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>
 	}
 
 	@Override
-	public int hashCode() {
+	public int cacheHashCode() {
 		return Objects.hash( type, length, precision, scale );
 	}
 }

@@ -135,4 +135,18 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 			whereClause.getPredicate().appendHqlString( hql, context );
 		}
 	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof AbstractSqmRestrictedDmlStatement<?> that
+			&& super.isCompatible( object )
+			&& SqmCacheable.areCompatible( getWhereClause(), that.getWhereClause() );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( getWhereClause() );
+		return result;
+	}
 }

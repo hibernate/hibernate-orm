@@ -188,4 +188,18 @@ public class SqmJsonExistsExpression extends AbstractSqmJsonPathExpression<Boole
 		} );
 		hql.append( ')' );
 	}
+
+	@Override
+	public boolean isCompatible(Object other) {
+		return super.isCompatible( other )
+			&& other instanceof SqmJsonExistsExpression that
+			&& errorBehavior == that.errorBehavior;
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + errorBehavior.hashCode();
+		return result;
+	}
 }

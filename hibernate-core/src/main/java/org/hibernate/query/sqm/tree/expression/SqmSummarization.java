@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
@@ -78,4 +79,17 @@ public class SqmSummarization<T> extends AbstractSqmExpression<T> {
 		hql.append( ')' );
 	}
 
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmSummarization<?> that
+			&& kind == that.kind
+			&& SqmCacheable.areCompatible( groupings, that.groupings );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = kind.hashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( groupings );
+		return result;
+	}
 }

@@ -21,7 +21,6 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 
-import java.util.Objects;
 
 /**
  * @author Steve Ebersole
@@ -155,12 +154,12 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		// Note that this implementation of equals() is only used for
 		// and is only correct when comparing use of AbstractSqmJoin
 		// within path expressions. See SqmFromClause.equalsJoins().
 		return object instanceof AbstractSqmJoin
-			&& super.equals( object );
+			&& super.isCompatible( object );
 			// We do not need to include these in the comparison because
 			// this is taken care of in SqmFromClause.equalsJoins(), which
 			// exists because including the onClausePredicate would result
@@ -171,7 +170,9 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( super.hashCode(), joinType );
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + joinType.hashCode();
+		return result;
 	}
 }

@@ -12,7 +12,6 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 
-import java.util.Objects;
 
 /**
  * @author Gavin King
@@ -62,13 +61,13 @@ public class SqmDistinct<T> extends AbstractSqmNode implements SqmTypedNode<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmDistinct<?> that
-			&& Objects.equals( this.expression, that.expression );
+			&& expression.isCompatible( that.expression );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hashCode( expression );
+	public int cacheHashCode() {
+		return expression.cacheHashCode();
 	}
 }

@@ -341,17 +341,16 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof AbstractSqmPath<?> that
 			&& this.getClass() == that.getClass()
-			&& Objects.equals( this.navigablePath, that.navigablePath )
-			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() );
+			&& Objects.equals( this.navigablePath, that.navigablePath );
 //			&& Objects.equals( this.lhs, that.lhs );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( navigablePath, getExplicitAlias() );
+	public int cacheHashCode() {
+		return navigablePath.hashCode();
 //		return lhs == null ? 0 : lhs.hashCode();
 //		return navigablePath.hashCode();
 //		return Objects.hash( navigablePath, lhs );

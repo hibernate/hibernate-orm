@@ -11,7 +11,6 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
-import java.util.Objects;
 
 /**
  * Represents a {@link Modifier#ALL}, {@link Modifier#ANY}, {@link Modifier#SOME} modifier applied to a subquery as
@@ -92,14 +91,16 @@ public class SqmModifiedSubQueryExpression<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmModifiedSubQueryExpression<?> that
 			&& modifier == that.modifier
-			&& Objects.equals( subQuery, that.subQuery );
+			&& subQuery.isCompatible( that.subQuery );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( subQuery, modifier );
+	public int cacheHashCode() {
+		int result = subQuery.cacheHashCode();
+		result = 31 * result + modifier.hashCode();
+		return result;
 	}
 }

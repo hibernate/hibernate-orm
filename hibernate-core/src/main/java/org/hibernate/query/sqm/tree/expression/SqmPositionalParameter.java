@@ -92,13 +92,13 @@ public class SqmPositionalParameter<T> extends AbstractSqmParameter<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmPositionalParameter<?> that
 			&& position == that.position;
 	}
 
 	@Override
-	public int hashCode() {
+	public int cacheHashCode() {
 		return position;
 	}
 }

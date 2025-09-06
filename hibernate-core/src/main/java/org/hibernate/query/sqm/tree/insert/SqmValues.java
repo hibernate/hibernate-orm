@@ -5,6 +5,7 @@
 package org.hibernate.query.sqm.tree.insert;
 
 import org.hibernate.query.criteria.JpaValues;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
@@ -16,7 +17,7 @@ import java.util.List;
 /**
  * @author Gavin King
  */
-public class SqmValues implements JpaValues, Serializable {
+public class SqmValues implements JpaValues, Serializable, SqmCacheable {
 	private final List<SqmExpression<?>> expressions;
 
 	public SqmValues(List<SqmExpression<?>> expressions) {
@@ -37,5 +38,16 @@ public class SqmValues implements JpaValues, Serializable {
 	@Override
 	public List<SqmExpression<?>> getExpressions() {
 		return Collections.unmodifiableList( expressions );
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmValues that
+			&& SqmCacheable.areCompatible( expressions, that.expressions );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return SqmCacheable.cacheHashCode( expressions );
 	}
 }

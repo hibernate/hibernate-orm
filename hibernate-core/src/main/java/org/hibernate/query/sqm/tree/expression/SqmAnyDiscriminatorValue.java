@@ -99,14 +99,16 @@ public class SqmAnyDiscriminatorValue<T> extends AbstractSqmExpression<T>
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmAnyDiscriminatorValue<?> that
 			&& Objects.equals( this.value.getName(), that.value.getName() )
 			&& Objects.equals( this.pathName, that.pathName );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( value.getName(), pathName );
+	public int cacheHashCode() {
+		int result = value.getName().hashCode();
+		result = 31 * result + pathName.hashCode();
+		return result;
 	}
 }

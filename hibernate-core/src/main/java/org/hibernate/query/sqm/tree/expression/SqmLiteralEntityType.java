@@ -102,13 +102,13 @@ public class SqmLiteralEntityType<T>
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmLiteralEntityType<?> that
 			&& Objects.equals( this.entityType.getName(), that.entityType.getName() );
 	}
 
 	@Override
-	public int hashCode() {
+	public int cacheHashCode() {
 		return entityType.getName().hashCode();
 	}
 }

@@ -6,12 +6,14 @@ package org.hibernate.query.sqm.tree.cte;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
 import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleSimpleSqmPathSource;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.tuple.internal.CteTupleTableGroupProducer;
@@ -25,7 +27,7 @@ import org.hibernate.type.BasicType;
  * @author Steve Ebersole
  * @author Christian Beikov
  */
-public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCriteriaType<T> {
+public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCriteriaType<T>, SqmCacheable {
 	private final String name;
 	private final SqmCteStatement<T> cteStatement;
 	private final List<SqmCteTableColumn> columns;
@@ -146,5 +148,19 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 			return (BasicType<?>) cteStatement.getCycleLiteral().getNodeType();
 		}
 		return null;
+	}
+
+	@Override
+	public boolean isCompatible(Object o) {
+		return o instanceof SqmCteTable<?> that
+			&& Objects.equals( name, that.name )
+			&& SqmCacheable.areCompatible( columns, that.columns );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = name.hashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( columns );
+		return result;
 	}
 }

@@ -135,14 +135,14 @@ public class SqmJpaCriteriaParameterWrapper<T>
 				: 1;
 	}
 
-//	@Override
-//	public boolean equals(Object object) {
-//		return object instanceof SqmJpaCriteriaParameterWrapper<?> that
-//			&& Objects.equals( this.jpaCriteriaParameter, that.jpaCriteriaParameter );
-//	}
-//
-//	@Override
-//	public int hashCode() {
-//		return jpaCriteriaParameter.hashCode();
-//	}
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmJpaCriteriaParameterWrapper<?> that
+				&& jpaCriteriaParameter.isCompatible( that.getJpaCriteriaParameter() );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return jpaCriteriaParameter.cacheHashCode();
+	}
 }

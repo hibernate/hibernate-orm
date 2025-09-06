@@ -988,4 +988,19 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		}
 		return prefix + "_" + (++aliasCounter);
 	}
+
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return super.isCompatible( object )
+			&& object instanceof AbstractSqmFrom<?, ?> that
+			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result =  super.cacheHashCode();
+		result += 31 * this.getExplicitAlias().hashCode();
+		return result;
+	}
 }

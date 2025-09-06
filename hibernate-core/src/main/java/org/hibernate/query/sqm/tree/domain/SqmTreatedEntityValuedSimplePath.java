@@ -145,7 +145,7 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean isCompatible(Object object) {
 		return object instanceof SqmTreatedEntityValuedSimplePath<?, ?> that
 			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() )
 			&& Objects.equals( this.treatTarget.getTypeName(), that.treatTarget.getTypeName() )
@@ -153,7 +153,7 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 	}
 
 	@Override
-	public int hashCode() {
+	public int cacheHashCode() {
 		return Objects.hash( treatTarget.getTypeName(), wrappedPath.getNavigablePath() );
 	}
 }

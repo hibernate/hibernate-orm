@@ -95,4 +95,15 @@ public class SqmCorrelatedCteJoin<T> extends SqmCteJoin<T> implements SqmCorrela
 		return walker.visitCorrelatedCteJoin( this );
 	}
 
+	@Override
+	public boolean isCompatible(Object other) {
+		return other instanceof SqmCorrelatedCteJoin<?> that
+			&& correlationParent.isCompatible( that.correlationParent );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return correlationParent.cacheHashCode();
+	}
+
 }

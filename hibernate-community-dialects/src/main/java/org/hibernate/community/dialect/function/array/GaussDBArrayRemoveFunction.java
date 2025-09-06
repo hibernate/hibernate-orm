@@ -35,8 +35,7 @@ public class GaussDBArrayRemoveFunction extends AbstractArrayRemoveFunction {
 		arrayExpression.accept( walker );
 		sqlAppender.append( ") AS val" );
 
-		if ( indexExpression instanceof Literal ) {
-			Literal literal = (Literal) indexExpression;
+		if ( indexExpression instanceof Literal literal ) {
 			Object literalValue = literal.getLiteralValue();
 			if ( literalValue != null ) {
 				appendWhere( sqlAppender, walker, indexExpression );

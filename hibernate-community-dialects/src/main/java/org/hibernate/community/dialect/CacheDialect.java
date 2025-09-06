@@ -83,20 +83,14 @@ public class CacheDialect extends Dialect {
 	protected String columnType(int sqlTypeCode) {
 		// Note: For object <-> SQL datatype mappings see:
 		// Configuration Manager > Advanced > SQL > System DDL Datatype Mappings
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-				return "bit";
+		return switch ( sqlTypeCode ) {
+			case BOOLEAN -> "bit";
 			//no explicit precision
-			case TIMESTAMP:
-			case TIMESTAMP_WITH_TIMEZONE:
-				return "timestamp";
-			case BLOB:
-				return "image";
-			case CLOB:
-				return "text";
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+			case TIMESTAMP, TIMESTAMP_WITH_TIMEZONE -> "timestamp";
+			case BLOB -> "image";
+			case CLOB -> "text";
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -228,24 +222,18 @@ public class CacheDialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		switch (unit) {
-			case NANOSECOND:
-			case NATIVE:
-				return "dateadd(millisecond,(?2)/1e6,?3)";
-			default:
-				return "dateadd(?1,?2,?3)";
-		}
+		return switch (unit) {
+			case NANOSECOND, NATIVE -> "dateadd(millisecond,(?2)/1e6,?3)";
+			default -> "dateadd(?1,?2,?3)";
+		};
 	}
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		switch (unit) {
-			case NANOSECOND:
-			case NATIVE:
-				return "datediff(millisecond,?2,?3)*1e6";
-			default:
-				return "datediff(?1,?2,?3)";
-		}
+		return switch (unit) {
+			case NANOSECOND, NATIVE -> "datediff(millisecond,?2,?3)*1e6";
+			default -> "datediff(?1,?2,?3)";
+		};
 	}
 
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

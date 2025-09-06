@@ -145,43 +145,22 @@ public class DerbyLegacyDialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-				return getVersion().isBefore( 10, 7 ) ? "smallint" : super.columnType( sqlTypeCode );
-			case TINYINT:
-				//no tinyint
-				return "smallint";
-
-			case NUMERIC:
-				// HHH-12827: map them both to the same type to avoid problems with schema update
-				// Note that 31 is the maximum precision Derby supports
-				return columnType( DECIMAL );
-
-			case VARBINARY:
-				return "varchar($l) for bit data";
-
-			case NCHAR:
-				return columnType( CHAR );
-			case NVARCHAR:
-				return columnType( VARCHAR );
-
-			case BLOB:
-				return "blob";
-			case CLOB:
-			case NCLOB:
-				return "clob";
-
-			case TIME:
-			case TIME_WITH_TIMEZONE:
-				return "time";
-
-			case TIMESTAMP:
-			case TIMESTAMP_WITH_TIMEZONE:
-				return "timestamp";
-
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+		return switch ( sqlTypeCode ) {
+			case BOOLEAN ->  getVersion().isBefore( 10, 7 ) ? "smallint" : super.columnType( sqlTypeCode );
+			//no tinyint
+			case TINYINT -> "smallint";
+			// HHH-12827: map them both to the same type to avoid problems with schema update
+			// Note that 31 is the maximum precision Derby supports
+			case NUMERIC -> columnType( DECIMAL );
+			case VARBINARY -> "varchar($l) for bit data";
+			case NCHAR -> columnType( CHAR );
+			case NVARCHAR -> columnType( VARCHAR );
+			case BLOB -> "blob";
+			case CLOB, NCLOB -> "clob";
+			case TIME, TIME_WITH_TIMEZONE -> "time";
+			case TIMESTAMP, TIMESTAMP_WITH_TIMEZONE -> "timestamp";
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -435,39 +414,27 @@ public class DerbyLegacyDialect extends Dialect {
 	 */
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		switch (unit) {
-			case DAY_OF_MONTH:
-				return "day(?2)";
-			case DAY_OF_YEAR:
-				return "({fn timestampdiff(sql_tsi_day,date(char(year(?2),4)||'-01-01'),?2)}+1)";
-			case DAY_OF_WEEK:
-				// Use the approach as outlined here: https://stackoverflow.com/questions/36357013/day-of-week-from-seconds-since-epoch
-				return "(mod(mod({fn timestampdiff(sql_tsi_day,{d '1970-01-01'},?2)}+4,7)+7,7)+1)";
-			case WEEK:
-				// Use the approach as outlined here: https://www.sqlservercentral.com/articles/a-simple-formula-to-calculate-the-iso-week-number
-				// In SQL Server terms this is (DATEPART(dy,DATEADD(dd,DATEDIFF(dd,'17530101',@SomeDate)/7*7,'17530104'))+6)/7
-				return "(({fn timestampdiff(sql_tsi_day,date(char(year(?2),4)||'-01-01'),{fn timestampadd(sql_tsi_day,{fn timestampdiff(sql_tsi_day,{d '1753-01-01'},?2)}/7*7,{d '1753-01-04'})})}+7)/7)";
-			case QUARTER:
-				return "((month(?2)+2)/3)";
-			case EPOCH:
-				return "{fn timestampdiff(sql_tsi_second,{ts '1970-01-01 00:00:00'},?2)}";
-			default:
-				return "?1(?2)";
-		}
+		return switch (unit) {
+			case DAY_OF_MONTH -> "day(?2)";
+			case DAY_OF_YEAR -> "({fn timestampdiff(sql_tsi_day,date(char(year(?2),4)||'-01-01'),?2)}+1)";
+			// Use the approach as outlined here: https://stackoverflow.com/questions/36357013/day-of-week-from-seconds-since-epoch
+			case DAY_OF_WEEK -> "(mod(mod({fn timestampdiff(sql_tsi_day,{d '1970-01-01'},?2)}+4,7)+7,7)+1)";
+			// Use the approach as outlined here: https://www.sqlservercentral.com/articles/a-simple-formula-to-calculate-the-iso-week-number
+			// In SQL Server terms this is (DATEPART(dy,DATEADD(dd,DATEDIFF(dd,'17530101',@SomeDate)/7*7,'17530104'))+6)/7
+			case WEEK -> "(({fn timestampdiff(sql_tsi_day,date(char(year(?2),4)||'-01-01'),{fn timestampadd(sql_tsi_day,{fn timestampdiff(sql_tsi_day,{d '1753-01-01'},?2)}/7*7,{d '1753-01-04'})})}+7)/7)";
+			case QUARTER -> "((month(?2)+2)/3)";
+			case EPOCH -> "{fn timestampdiff(sql_tsi_second,{ts '1970-01-01 00:00:00'},?2)}";
+			default -> "?1(?2)";
+		};
 	}
 
 	@Override
 	public String translateExtractField(TemporalUnit unit) {
-		switch (unit) {
-			case WEEK:
-			case DAY_OF_YEAR:
-			case DAY_OF_WEEK:
-				throw new UnsupportedOperationException("field type not supported on Derby: " + unit);
-			case DAY_OF_MONTH:
-				return "day";
-			default:
-				return super.translateExtractField(unit);
-		}
+		return switch (unit) {
+			case WEEK, DAY_OF_YEAR, DAY_OF_WEEK -> throw new UnsupportedOperationException("field type not supported on Derby: " + unit);
+			case DAY_OF_MONTH -> "day";
+			default -> super.translateExtractField(unit);
+		};
 	}
 
 	/**
@@ -527,13 +494,10 @@ public class DerbyLegacyDialect extends Dialect {
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		switch (unit) {
-			case NANOSECOND:
-			case NATIVE:
-				return "{fn timestampdiff(sql_tsi_frac_second,?2,?3)}";
-			default:
-				return "{fn timestampdiff(sql_tsi_?1,?2,?3)}";
-		}
+		return switch (unit) {
+			case NANOSECOND, NATIVE -> "{fn timestampdiff(sql_tsi_frac_second,?2,?3)}";
+			default -> "{fn timestampdiff(sql_tsi_?1,?2,?3)}";
+		};
 	}
 
 	@Override
@@ -752,8 +716,7 @@ public class DerbyLegacyDialect extends Dialect {
 								ConstraintViolationException.ConstraintKind.UNIQUE,
 								constraintName
 						);
-					case "40XL1":
-					case "40XL2":
+					case "40XL1", "40XL2":
 						return new LockTimeoutException( message, sqlException, sql );
 				}
 			}

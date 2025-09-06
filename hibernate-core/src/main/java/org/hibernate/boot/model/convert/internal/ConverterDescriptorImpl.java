@@ -11,7 +11,6 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.type.descriptor.converter.internal.AttributeConverterBean;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
 
 class ConverterDescriptorImpl<X, Y> implements ConverterDescriptor<X, Y> {
@@ -55,7 +54,7 @@ class ConverterDescriptorImpl<X, Y> implements ConverterDescriptor<X, Y> {
 
 	@Override
 	public JpaAttributeConverter<X, Y> createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
-		final JavaTypeRegistry javaTypeRegistry = context.getTypeConfiguration().getJavaTypeRegistry();
+		final var javaTypeRegistry = context.getTypeConfiguration().getJavaTypeRegistry();
 		final var converterBean = context.getManagedBeanRegistry().getBean( converterType );
 		return new AttributeConverterBean<>(
 				converterBean,

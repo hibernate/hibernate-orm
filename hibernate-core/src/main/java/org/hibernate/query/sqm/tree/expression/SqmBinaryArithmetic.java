@@ -33,11 +33,12 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 			NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
-				(SqmBindableType<T>) nodeBuilder.getTypeConfiguration().resolveArithmeticType(
-						lhsOperand.getExpressible(),
-						rhsOperand.getExpressible(),
-						operator
-				),
+				(SqmBindableType<T>) // TODO: this cast is unsound
+						nodeBuilder.getTypeConfiguration().resolveArithmeticType(
+								lhsOperand.getExpressible(),
+								rhsOperand.getExpressible(),
+								operator
+						),
 				nodeBuilder
 		);
 
@@ -45,12 +46,15 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 		this.operator = operator;
 		this.rhsOperand = rhsOperand;
 
-		if ( lhsOperand.getExpressible() == null && isDuration( rhsOperand.getExpressible() ) &&
-				( operator == ADD || operator == SUBTRACT ) ) {
+		final SqmBindableType<?> lhsExpressible = lhsOperand.getExpressible();
+		final SqmBindableType<?> rhsExpressible = rhsOperand.getExpressible();
+		if ( lhsExpressible == null
+				&& isDuration( rhsExpressible )
+				&& ( operator == ADD || operator == SUBTRACT ) ) {
 			return;
 		}
-		this.lhsOperand.applyInferableType( rhsOperand.getExpressible() );
-		this.rhsOperand.applyInferableType( lhsOperand.getExpressible() );
+		this.lhsOperand.applyInferableType( rhsExpressible );
+		this.rhsOperand.applyInferableType( lhsExpressible );
 	}
 
 	public SqmBinaryArithmetic(

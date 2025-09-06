@@ -3772,7 +3772,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmExpression<?> expression = (SqmExpression<?>) ctx.expression().accept(this);
 		final UnaryArithmeticOperator operator = (UnaryArithmeticOperator) ctx.signOperator().accept(this);
 		TypecheckUtil.assertNumeric( expression, operator );
-		return new SqmUnaryOperation<>( operator, expression );
+		return new SqmUnaryOperation<>( operator, expression, nodeBuilder() );
 	}
 
 	@Override

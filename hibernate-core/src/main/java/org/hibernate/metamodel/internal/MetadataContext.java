@@ -577,17 +577,20 @@ public class MetadataContext {
 		return null;
 	}
 
-	private <Y> EmbeddableTypeImpl<Y> applyIdClassMetadata(Component idClassComponent) {
-		final var embeddableType =
-				new EmbeddableTypeImpl<Y>(
-						getJavaTypeRegistry().resolveManagedTypeDescriptor( idClassComponent.getComponentClass() ),
-						getMappedSuperclassDomainType( idClassComponent ),
-						null,
-						false,
-						getJpaMetamodel()
-				);
+	private EmbeddableTypeImpl<?> applyIdClassMetadata(Component idClassComponent) {
+		final var embeddableType = embeddableType( idClassComponent, idClassComponent.getComponentClass() );
 		registerEmbeddableType( embeddableType, idClassComponent );
 		return embeddableType;
+	}
+
+	private <Y> EmbeddableTypeImpl<Y> embeddableType(Component idClassComponent, Class<Y> componentClass) {
+		return new EmbeddableTypeImpl<>(
+				getJavaTypeRegistry().resolveManagedTypeDescriptor( componentClass ),
+				getMappedSuperclassDomainType( idClassComponent ),
+				null,
+				false,
+				getJpaMetamodel()
+		);
 	}
 
 	@SuppressWarnings("unchecked")

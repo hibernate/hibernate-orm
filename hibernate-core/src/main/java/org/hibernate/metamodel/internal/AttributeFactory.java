@@ -29,6 +29,7 @@ import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.ValueClassification;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.model.domain.internal.AbstractIdentifiableType;
@@ -237,17 +238,14 @@ public class AttributeFactory {
 		}
 
 		final var mappedSuperclass = component.getMappedSuperclass();
-		final var superType = mappedSuperclass == null ? null : context.locateMappedSuperclassType( mappedSuperclass );
+		final var superType =
+				mappedSuperclass == null
+						? null
+						: context.locateMappedSuperclassType( mappedSuperclass );
 
 		final var discriminatorType = component.isPolymorphic() ? component.getDiscriminatorType() : null;
 
-		final var embeddableType = new EmbeddableTypeImpl<>(
-				context.getJavaTypeRegistry().resolveManagedTypeDescriptor( embeddableClass ),
-				superType,
-				discriminatorType,
-				false,
-				context.getJpaMetamodel()
-		);
+		final var embeddableType = embeddableType( context, embeddableClass, superType, discriminatorType );
 		context.registerEmbeddableType( embeddableType, component );
 
 		if ( component.isPolymorphic() ) {
@@ -259,22 +257,34 @@ public class AttributeFactory {
 			for ( final String subclassName : embeddableSubclasses ) {
 				if ( domainTypes.containsKey( subclassName ) ) {
 					assert subclassName.equals( embeddableType.getTypeName() );
-					continue;
 				}
-				final Class<?> subclass = classLoaderService.classForName( subclassName );
-				final var subType = new EmbeddableTypeImpl<>(
-						context.getJavaTypeRegistry().resolveManagedTypeDescriptor( subclass ),
-						domainTypes.get( component.getSuperclass( subclassName ) ),
-						discriminatorType,
-						false,
-						context.getJpaMetamodel()
-				);
-				domainTypes.put( subclassName, subType );
-				context.registerEmbeddableType( subType, component );
+				else {
+					final Class<?> subclass = classLoaderService.classForName( subclassName );
+					final var superTypeEmbeddable = domainTypes.get( component.getSuperclass( subclassName ) );
+					final var subType = embeddableType( context, subclass, superTypeEmbeddable, discriminatorType );
+					domainTypes.put( subclassName, subType );
+					context.registerEmbeddableType( subType, component );
+				}
 			}
 		}
 
 		return embeddableType;
+	}
+
+	private static <J> EmbeddableTypeImpl<J> embeddableType(
+			MetadataContext context,
+			Class<J> subclass,
+			ManagedDomainType<?> superType,
+			DiscriminatorType<?> discriminatorType) {
+		@SuppressWarnings("unchecked")
+		final var castSuperType = (ManagedDomainType<? super J>) superType;
+		return new EmbeddableTypeImpl<>(
+				context.getJavaTypeRegistry().resolveManagedTypeDescriptor( subclass ),
+				castSuperType,
+				discriminatorType,
+				false,
+				context.getJpaMetamodel()
+		);
 	}
 
 	private static EmbeddableTypeImpl<?> dynamicEmbeddableType(MetadataContext context, Component component) {

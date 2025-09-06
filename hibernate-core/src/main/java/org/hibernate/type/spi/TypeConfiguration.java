@@ -286,23 +286,25 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	public void addBasicTypeRegistrationContributions(List<BasicTypeRegistration> contributions) {
 		for ( var basicTypeRegistration : contributions ) {
-			final var basicType = basicTypeRegistration.getBasicType();
+			addBasicTypeRegistration( basicTypeRegistration, basicTypeRegistration.getBasicType() );
+		}
+	}
 
-			basicTypeRegistry.register(
-					basicType,
-					basicTypeRegistration.getRegistrationKeys()
-			);
+	private <T> void addBasicTypeRegistration(BasicTypeRegistration basicTypeRegistration, BasicType<T> basicType) {
+		basicTypeRegistry.register(
+				basicType,
+				basicTypeRegistration.getRegistrationKeys()
+		);
 
-			javaTypeRegistry.resolveDescriptor(
-					basicType.getJavaType(),
-					basicType::getJavaTypeDescriptor
-			);
+		javaTypeRegistry.resolveDescriptor(
+				basicType.getJavaType(),
+				basicType::getJavaTypeDescriptor
+		);
 
-			jdbcToHibernateTypeContributionMap.computeIfAbsent(
+		jdbcToHibernateTypeContributionMap.computeIfAbsent(
 				basicType.getJdbcType().getDefaultSqlTypeCode(),
 				k -> new HashSet<>()
-			).add( basicType.getName() );
-		}
+		).add( basicType.getName() );
 	}
 
 	/**
@@ -757,22 +759,22 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	private final ConcurrentHashMap<Type, BasicType<?>> basicTypeByJavaType = new ConcurrentHashMap<>();
 
 	public <J> BasicType<J> getBasicTypeForGenericJavaType(Class<? super J> javaType, Type... typeArguments) {
-		return getBasicTypeForJavaType( new ParameterizedTypeImpl( javaType, typeArguments, null ) );
+		//noinspection unchecked
+		return (BasicType<J>) getBasicTypeForJavaType( new ParameterizedTypeImpl( javaType, typeArguments, null ) );
 	}
 
 	public <J> BasicType<J> getBasicTypeForJavaType(Class<J> javaType) {
-		return getBasicTypeForJavaType( (Type) javaType );
+		//noinspection unchecked
+		return (BasicType<J>) getBasicTypeForJavaType( (Type) javaType );
 	}
 
-	@Deprecated(since = "7.2") // due to the unbound type parameter
-	public <J> BasicType<J> getBasicTypeForJavaType(Type javaType) {
+	public BasicType<?> getBasicTypeForJavaType(Type javaType) {
 		final var existing = basicTypeByJavaType.get( javaType );
 		if ( existing != null ) {
-			//noinspection unchecked
-			return (BasicType<J>) existing;
+			return existing;
 		}
 		else {
-			final BasicType<J> registeredType = basicTypeRegistry.getRegisteredType( javaType );
+			final var registeredType = basicTypeRegistry.getRegisteredType( javaType );
 			if ( registeredType != null ) {
 				basicTypeByJavaType.put( javaType, registeredType );
 				return registeredType;
@@ -788,40 +790,26 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			return null;
 		}
 		else {
-			return standardBasicTypeForJavaType(
-					javaType,
-					javaTypeDescriptor -> new BasicTypeImpl<>(
-							javaTypeDescriptor,
-							javaTypeDescriptor.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() )
-					)
-			);
+			return standardBasicTypeForJavaType( javaType,
+					javaTypeDescriptor -> new BasicTypeImpl<>( javaTypeDescriptor,
+							javaTypeDescriptor.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) ) );
 		}
 	}
 
-	@Deprecated(since = "7.2") // due to the unbound type parameter
 	public BasicType<?> standardBasicTypeForJavaType(Type javaType) {
 		if ( javaType == null ) {
 			return null;
 		}
 		else {
-			return standardBasicTypeForJavaType(
-					javaType,
-					javaTypeDescriptor -> new BasicTypeImpl<>(
-							javaTypeDescriptor,
-							javaTypeDescriptor.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() )
-					)
-			);
+			return standardBasicTypeForJavaType( javaType,
+					javaTypeDescriptor -> new BasicTypeImpl<>( javaTypeDescriptor,
+							javaTypeDescriptor.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) ) );
 		}
 	}
 
+	@Deprecated(since = "7.2", forRemoval = true) // Can be private
 	public <J> BasicType<J> standardBasicTypeForJavaType(
 			Class<J> javaType,
-			Function<JavaType<J>, BasicType<J>> creator) {
-		return standardBasicTypeForJavaType( (Type) javaType, creator );
-	}
-
-	public <J> BasicType<J> standardBasicTypeForJavaType(
-			Type javaType,
 			Function<JavaType<J>, BasicType<J>> creator) {
 		if ( javaType == null ) {
 			return null;
@@ -831,14 +819,29 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 				javaType,
 				jt -> {
 					// See if one exists in the BasicTypeRegistry and use that one if so
-					final BasicType<J> registeredType = basicTypeRegistry.getRegisteredType( javaType );
-					if ( registeredType != null ) {
-						return registeredType;
-					}
-					else {
-						// otherwise, apply the creator
-						return creator.apply( javaTypeRegistry.getDescriptor( javaType ) );
-					}
+					final var registeredType = basicTypeRegistry.getRegisteredType( javaType );
+					return registeredType != null
+							? registeredType
+							: creator.apply( javaTypeRegistry.getDescriptor( javaType ) );
+				}
+		);
+	}
+
+	@Deprecated(since = "7.2", forRemoval = true) // Due to weird signature
+	public <J> BasicType<?> standardBasicTypeForJavaType(
+			Type javaType,
+			Function<JavaType<J>, BasicType<J>> creator) {
+		if ( javaType == null ) {
+			return null;
+		}
+		return basicTypeByJavaType.computeIfAbsent(
+				javaType,
+				jt -> {
+					// See if one exists in the BasicTypeRegistry and use that one if so
+					final var registeredType = basicTypeRegistry.getRegisteredType( javaType );
+					return registeredType != null
+							? registeredType
+							: creator.apply( javaTypeRegistry.getDescriptor( javaType ) );
 				}
 		);
 	}

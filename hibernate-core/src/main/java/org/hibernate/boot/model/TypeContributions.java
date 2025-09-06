@@ -89,7 +89,7 @@ public interface TypeContributions {
 	default void contributeType(BasicType<?> type) {
 		getTypeConfiguration().getBasicTypeRegistry().register( type );
 		final JavaType<?> javaType = type.getJavaTypeDescriptor();
-		getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( javaType.getJavaType(), () -> javaType );
+		getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( javaType );
 	}
 
 	/**
@@ -99,7 +99,7 @@ public interface TypeContributions {
 	default void contributeType(BasicType<?> type, String... keys) {
 		getTypeConfiguration().getBasicTypeRegistry().register( type, keys );
 		final JavaType<?> javaType = type.getJavaTypeDescriptor();
-		getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( javaType.getJavaType(), () -> javaType );
+		getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( javaType );
 	}
 
 	/**
@@ -109,6 +109,6 @@ public interface TypeContributions {
 	default void contributeType(UserType<?> type, String... keys) {
 		final CustomType<?> customType = getTypeConfiguration().getBasicTypeRegistry().register( type, keys );
 		final JavaType<?> javaType = customType.getJavaTypeDescriptor();
-		getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( javaType.getJavaType(), () -> javaType );
+		getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( javaType );
 	}
 }

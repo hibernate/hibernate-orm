@@ -51,14 +51,14 @@ public class BasicTypeRegistryTest extends BaseUnitTestCase {
 		assertTrue( uuidBinaryRegistration.getJavaTypeDescriptor() instanceof UUIDJavaType );
 		assertTrue( uuidBinaryRegistration.getJdbcType() instanceof BinaryJdbcType );
 
-		final BasicType<UUID> uuidRegistration = registry.getRegisteredType( UUID.class.getName() );
+		final BasicType<?> uuidRegistration = registry.getRegisteredType( UUID.class.getName() );
 		assertTrue( uuidRegistration.getJavaTypeDescriptor() instanceof UUIDJavaType );
 		assertTrue( uuidRegistration.getJdbcType() instanceof ObjectJdbcType );
 
 		final BasicType<?> override = new BasicTypeImpl<>( UUIDJavaType.INSTANCE, CharJdbcType.INSTANCE );
 		registry.register( override, UUID.class.getName() );
 
-		final BasicType<Object> overrideRegistration = registry.getRegisteredType( UUID.class.getName() );
+		final BasicType<?> overrideRegistration = registry.getRegisteredType( UUID.class.getName() );
 
 		assertSame( override, overrideRegistration );
 		assertNotSame( uuidBinaryRegistration, overrideRegistration );

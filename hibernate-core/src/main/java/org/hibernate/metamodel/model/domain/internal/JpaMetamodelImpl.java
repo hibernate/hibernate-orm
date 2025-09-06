@@ -621,7 +621,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		);
 
 
-		for ( PersistentClass entityBinding : bootMetamodel.getEntityBindings() ) {
+		for ( var entityBinding : bootMetamodel.getEntityBindings() ) {
 			locateOrBuildEntityType( entityBinding, context, typeConfiguration );
 		}
 		handleUnusedMappedSuperclasses( context, typeConfiguration );
@@ -719,47 +719,47 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 				.add( enumClassName );
 	}
 
-	private <T> EntityDomainType<T> locateOrBuildEntityType(
+	private EntityDomainType<?> locateOrBuildEntityType(
 			PersistentClass persistentClass,
 			MetadataContext context,
 			final TypeConfiguration typeConfiguration) {
-		@SuppressWarnings("unchecked")
-		final EntityDomainType<T> entityType =
-				(EntityDomainType<T>)
-						context.locateEntityType( persistentClass );
+		final var entityType = context.locateEntityType( persistentClass );
 		return entityType == null
 				? buildEntityType( persistentClass, context, typeConfiguration )
 				: entityType;
 	}
 
-	private <T> EntityTypeImpl<T> buildEntityType(
+	private EntityTypeImpl<?> buildEntityType(
 			PersistentClass persistentClass,
 			MetadataContext context,
 			TypeConfiguration typeConfiguration) {
 		context.pushEntityWorkedOn( persistentClass );
-		final EntityTypeImpl<T> entityType =
-				new EntityTypeImpl<>(
-						javaType( persistentClass, context ),
-						supertypeForPersistentClass( persistentClass, context, typeConfiguration ),
-						persistentClass,
-						this
-				);
+		final var entityType = entityType( persistentClass, persistentClass.getMappedClass(), context, typeConfiguration );
 		context.registerEntityType( persistentClass, entityType );
 		context.popEntityWorkedOn( persistentClass );
 		return entityType;
 	}
 
-	@SuppressWarnings("unchecked")
-	private static <T> JavaType<T> javaType(PersistentClass persistentClass, MetadataContext context) {
-		final Class<T> javaTypeClass = (Class<T>) persistentClass.getMappedClass();
-		if ( javaTypeClass == null || Map.class.isAssignableFrom( javaTypeClass ) ) {
+	private <J> EntityTypeImpl<J> entityType(
+			PersistentClass persistentClass,
+			Class<J> mappedClass,
+			MetadataContext context,
+			TypeConfiguration typeConfiguration) {
+		@SuppressWarnings("unchecked")
+		final var supertype =
+				(IdentifiableDomainType<? super J>)
+						supertypeForPersistentClass( persistentClass, context, typeConfiguration );
+		final JavaType<J> javaType;
+		if ( mappedClass == null || Map.class.isAssignableFrom( mappedClass ) ) {
 			// dynamic map
-			return (JavaType<T>) new DynamicModelJavaType();
+			//noinspection unchecked
+			javaType = (JavaType<J>) new DynamicModelJavaType();
 		}
 		else {
-			return context.getTypeConfiguration().getJavaTypeRegistry()
-					.resolveEntityTypeDescriptor( javaTypeClass );
+			javaType = context.getTypeConfiguration().getJavaTypeRegistry()
+					.resolveEntityTypeDescriptor( mappedClass );
 		}
+		return new EntityTypeImpl<>( javaType, supertype, persistentClass, this );
 	}
 
 	private void handleUnusedMappedSuperclasses(MetadataContext context, TypeConfiguration typeConfiguration) {
@@ -772,39 +772,41 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		}
 	}
 
-	private <T> MappedSuperclassDomainType<T> locateOrBuildMappedSuperclassType(
+	private MappedSuperclassDomainType<?> locateOrBuildMappedSuperclassType(
 			MappedSuperclass mappedSuperclass,
 			MetadataContext context,
 			TypeConfiguration typeConfiguration) {
-		@SuppressWarnings("unchecked")
-		final MappedSuperclassDomainType<T> mappedSuperclassType =
-				(MappedSuperclassDomainType<T>) context.locateMappedSuperclassType( mappedSuperclass );
+		final MappedSuperclassDomainType<?> mappedSuperclassType =
+				context.locateMappedSuperclassType( mappedSuperclass );
 		return mappedSuperclassType == null
-				? buildMappedSuperclassType( mappedSuperclass, context, typeConfiguration )
+				? buildMappedSuperclassType( mappedSuperclass, mappedSuperclass.getMappedClass(), context, typeConfiguration )
 				: mappedSuperclassType;
 	}
 
 	private <T> MappedSuperclassTypeImpl<T> buildMappedSuperclassType(
 			MappedSuperclass mappedSuperclass,
+			Class<T> mappedClass,
 			MetadataContext context,
 			TypeConfiguration typeConfiguration) {
+		@SuppressWarnings("unchecked")
 		final IdentifiableDomainType<? super T> superType =
-				supertypeForMappedSuperclass( mappedSuperclass, context, typeConfiguration );
+				(IdentifiableDomainType<? super T>)
+						supertypeForMappedSuperclass( mappedSuperclass, context, typeConfiguration );
 		final JavaType<T> javaType =
 				context.getTypeConfiguration().getJavaTypeRegistry()
-						.resolveManagedTypeDescriptor( mappedSuperclass.getMappedClass() );
+						.resolveManagedTypeDescriptor( mappedClass );
 		final MappedSuperclassTypeImpl<T> mappedSuperclassType =
 				new MappedSuperclassTypeImpl<>( javaType, mappedSuperclass, superType, this );
 		context.registerMappedSuperclassType( mappedSuperclass, mappedSuperclassType );
 		return mappedSuperclassType;
 	}
 
-	private <T> IdentifiableDomainType<? super T> supertypeForPersistentClass(
+	private IdentifiableDomainType<?> supertypeForPersistentClass(
 			PersistentClass persistentClass,
 			MetadataContext context,
 			TypeConfiguration typeConfiguration) {
 		final MappedSuperclass superMappedSuperclass = persistentClass.getSuperMappedSuperclass();
-		final IdentifiableDomainType<? super T> supertype =
+		final IdentifiableDomainType<?> supertype =
 				superMappedSuperclass == null
 						? null
 						: locateOrBuildMappedSuperclassType( superMappedSuperclass, context, typeConfiguration );
@@ -821,12 +823,12 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		}
 	}
 
-	private <T> IdentifiableDomainType<? super T> supertypeForMappedSuperclass(
+	private IdentifiableDomainType<?> supertypeForMappedSuperclass(
 			MappedSuperclass mappedSuperclass,
 			MetadataContext context,
 			TypeConfiguration typeConfiguration) {
 		final MappedSuperclass superMappedSuperclass = mappedSuperclass.getSuperMappedSuperclass();
-		final IdentifiableDomainType<T> superType =
+		final IdentifiableDomainType<?> superType =
 				superMappedSuperclass == null
 						? null
 						: locateOrBuildMappedSuperclassType( superMappedSuperclass, context, typeConfiguration );

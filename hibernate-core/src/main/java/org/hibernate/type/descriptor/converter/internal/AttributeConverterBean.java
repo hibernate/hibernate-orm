@@ -55,8 +55,9 @@ public final class AttributeConverterBean<O,R> implements JpaAttributeConverter<
 
 		final var jtdRegistry = context.getJavaTypeRegistry();
 		this.jdbcJavaType = jtdRegistry.resolveDescriptor( jdbcJavaType );
-		this.domainJavaType = jtdRegistry.resolveDescriptor( domainJavaType,
-				() -> getTypeDescriptor( attributeConverterBean, domainJavaType, context ) );
+		this.domainJavaType =
+				jtdRegistry.resolveDescriptor( domainJavaType,
+						() -> getTypeDescriptor( attributeConverterBean, domainJavaType, context ) );
 	}
 
 	private JavaType<O> getTypeDescriptor(

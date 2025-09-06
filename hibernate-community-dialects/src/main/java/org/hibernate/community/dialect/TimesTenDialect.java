@@ -82,37 +82,25 @@ public class TimesTenDialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
+		return switch ( sqlTypeCode ) {
 			//Note: these are the correct type mappings
 			//      for the default Oracle type mode
 			//      TypeMode=0
-			case SqlTypes.BOOLEAN:
-			case SqlTypes.TINYINT:
-				return "tt_tinyint";
-			case SqlTypes.SMALLINT:
-				return "tt_smallint";
-			case SqlTypes.INTEGER:
-				return "tt_integer";
-			case SqlTypes.BIGINT:
-				return "tt_bigint";
+			case SqlTypes.BOOLEAN, SqlTypes.TINYINT -> "tt_tinyint";
+			case SqlTypes.SMALLINT -> "tt_smallint";
+			case SqlTypes.INTEGER -> "tt_integer";
+			case SqlTypes.BIGINT -> "tt_bigint";
 			//note that 'binary_float'/'binary_double' might
 			//be better mappings for Java Float/Double
 
 			//'numeric'/'decimal' are synonyms for 'number'
-			case SqlTypes.NUMERIC:
-			case SqlTypes.DECIMAL:
-				return "number($p,$s)";
-			case SqlTypes.DATE:
-				return "tt_date";
-			case SqlTypes.TIME:
-				return "tt_time";
+			case SqlTypes.NUMERIC, SqlTypes.DECIMAL -> "number($p,$s)";
+			case SqlTypes.DATE -> "tt_date";
+			case SqlTypes.TIME -> "tt_time";
 			//`timestamp` has more precision than `tt_timestamp`
-			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
-				return "timestamp($p)";
-
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+			case SqlTypes.TIMESTAMP_WITH_TIMEZONE -> "timestamp($p)";
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -193,24 +181,18 @@ public class TimesTenDialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		switch (unit) {
-			case NANOSECOND:
-			case NATIVE:
-				return "timestampadd(sql_tsi_frac_second,?2,?3)";
-			default:
-				return "timestampadd(sql_tsi_?1,?2,?3)";
-		}
+		return switch (unit) {
+			case NANOSECOND, NATIVE -> "timestampadd(sql_tsi_frac_second,?2,?3)";
+			default -> "timestampadd(sql_tsi_?1,?2,?3)";
+		};
 	}
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		switch (unit) {
-			case NANOSECOND:
-			case NATIVE:
-				return "timestampdiff(sql_tsi_frac_second,?2,?3)";
-			default:
-				return "timestampdiff(sql_tsi_?1,?2,?3)";
-		}
+		return switch (unit) {
+			case NANOSECOND, NATIVE -> "timestampdiff(sql_tsi_frac_second,?2,?3)";
+			default -> "timestampdiff(sql_tsi_?1,?2,?3)";
+		};
 	}
 
 	@Override

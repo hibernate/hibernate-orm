@@ -48,9 +48,9 @@ public class SingleStoreJsonArrayAggFunction extends JsonArrayAggFunction {
 		}
 		final SqlAstNode firstArg = sqlAstArguments.get( 0 );
 		final Expression arg;
-		if ( firstArg instanceof Distinct ) {
+		if ( firstArg instanceof Distinct distinctArg) {
 			sqlAppender.appendSql( "distinct " );
-			arg = ( (Distinct) firstArg ).getExpression();
+			arg = distinctArg.getExpression();
 		}
 		else {
 			arg = (Expression) firstArg;

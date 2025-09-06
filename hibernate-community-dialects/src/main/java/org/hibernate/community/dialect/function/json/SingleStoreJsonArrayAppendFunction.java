@@ -77,9 +77,8 @@ public class SingleStoreJsonArrayAppendFunction extends AbstractJsonArrayAppendF
 			if ( pathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
 				sqlAppender.appendSingleQuoteEscapedString( attribute.attribute() );
 			}
-			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess ) {
-				final String parameterName = ( (JsonPathHelper.JsonParameterIndexAccess) pathElement ).parameterName();
-				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
+			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess indexParameter) {
+				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + indexParameter.parameterName() + "] that is not passed" );
 			}
 			else {
 				sqlAppender.appendSql( '\'' );

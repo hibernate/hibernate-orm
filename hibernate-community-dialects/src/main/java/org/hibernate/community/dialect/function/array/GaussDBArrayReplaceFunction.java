@@ -31,8 +31,7 @@ public class GaussDBArrayReplaceFunction extends ArrayReplaceUnnestFunction {
 		sqlAstArguments.get( 0 ).accept( walker );
 		sqlAppender.append( " IS NULL THEN NULL ELSE COALESCE((SELECT array_agg(CASE ");
 		final Expression originValueExpression = (Expression) sqlAstArguments.get( 1 );
-		if ( originValueExpression instanceof Literal ) {
-			Literal literal = (Literal) originValueExpression;
+		if ( originValueExpression instanceof Literal literal) {
 			Object literalValue = literal.getLiteralValue();
 			if ( literalValue != null ) {
 				sqlAppender.append( "WHEN val =  ");

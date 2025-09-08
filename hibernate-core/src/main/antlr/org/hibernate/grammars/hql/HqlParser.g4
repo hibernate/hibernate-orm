@@ -663,26 +663,21 @@ predicate
 	| expression NOT? IN inList													# InPredicate
 	| expression NOT? BETWEEN expression AND expression							# BetweenPredicate
 	| expression NOT? (LIKE | ILIKE) expression likeEscape?						# LikePredicate
-	| expression NOT? (CONTAINS | INCLUDES | INTERSECTS) expression  			# BinaryExpressionPredicate
-	| expression comparisonOperator expression									# ComparisonPredicate
+	| expression
+	    ( NOT? (CONTAINS | INCLUDES | INTERSECTS)
+	    | EQUAL
+        | NOT_EQUAL
+        | GREATER
+        | GREATER_EQUAL
+        | LESS
+        | LESS_EQUAL
+	    ) expression  			                                                # BinaryExpressionPredicate
 	| EXISTS collectionQuantifier LEFT_PAREN simplePath RIGHT_PAREN				# ExistsCollectionPartPredicate
 	| EXISTS expression															# ExistsPredicate
 	| NOT predicate																# NegatedPredicate
 	| predicate AND predicate													# AndPredicate
 	| predicate OR predicate													# OrPredicate
 	| expression																# BooleanExpressionPredicate
-	;
-
-/**
- * An operator which compares values for equality or order
- */
-comparisonOperator
-	: EQUAL
-	| NOT_EQUAL
-	| GREATER
-	| GREATER_EQUAL
-	| LESS
-	| LESS_EQUAL
 	;
 
 /**

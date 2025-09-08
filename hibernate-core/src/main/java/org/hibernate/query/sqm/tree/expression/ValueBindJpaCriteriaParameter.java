@@ -10,6 +10,7 @@ import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
+import java.util.Objects;
 
 
 /**
@@ -59,12 +60,34 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		return this == object;
+	public boolean equals(Object obj) {
+		if ( this == obj ) {
+			return true;
+		}
+		if ( obj instanceof ValueBindJpaCriteriaParameter<?> that ) {
+			if ( value == null ) {
+				return that.value == null && Objects.equals( getNodeType(), that.getNodeType() );
+			}
+			final var javaType = getJavaTypeDescriptor();
+			if ( that.value != null ) {
+				if ( javaType != null ) {
+					//noinspection unchecked
+					return javaType.equals( that.getJavaTypeDescriptor() ) && javaType.areEqual( value, (T) that.value );
+				}
+				else {
+					return that.getJavaTypeDescriptor() == null && value.equals( that.value );
+				}
+			}
+		}
+		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return super.hashCode();
+		if ( value == null ) {
+			return 0;
+		}
+		final var javaType = getJavaTypeDescriptor();
+		return javaType == null ? value.hashCode() : javaType.extractHashCode( value );
 	}
 }

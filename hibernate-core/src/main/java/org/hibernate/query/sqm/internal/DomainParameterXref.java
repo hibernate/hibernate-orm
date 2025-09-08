@@ -6,11 +6,11 @@ package org.hibernate.query.sqm.internal;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.hibernate.internal.util.collections.LinkedIdentityHashMap;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -31,7 +31,7 @@ import static java.util.Collections.emptyList;
 public class DomainParameterXref {
 
 	public static final DomainParameterXref EMPTY = new DomainParameterXref(
-			new LinkedHashMap<>( 0 ),
+			new LinkedIdentityHashMap<>( 0 ),
 			new IdentityHashMap<>( 0 ),
 			SqmStatement.ParameterResolutions.empty()
 	);
@@ -46,8 +46,8 @@ public class DomainParameterXref {
 		}
 		else {
 			final int sqmParamCount = parameterResolutions.getSqmParameters().size();
-			final LinkedHashMap<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam =
-					new LinkedHashMap<>( sqmParamCount );
+			final Map<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam =
+					new LinkedIdentityHashMap<>( sqmParamCount );
 			final IdentityHashMap<SqmParameter<?>, QueryParameterImplementor<?>> queryParamBySqmParam =
 					new IdentityHashMap<>( sqmParamCount );
 
@@ -118,13 +118,13 @@ public class DomainParameterXref {
 
 	private final SqmStatement.ParameterResolutions parameterResolutions;
 
-	private final LinkedHashMap<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam;
+	private final Map<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam;
 	private final IdentityHashMap<SqmParameter<?>, QueryParameterImplementor<?>> queryParamBySqmParam;
 
 	private Map<SqmParameter<?>,List<SqmParameter<?>>> expansions;
 
 	private DomainParameterXref(
-			LinkedHashMap<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam,
+			Map<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam,
 			IdentityHashMap<SqmParameter<?>, QueryParameterImplementor<?>> queryParamBySqmParam,
 			SqmStatement.ParameterResolutions parameterResolutions) {
 		this.sqmParamsByQueryParam = sqmParamsByQueryParam;
@@ -148,7 +148,9 @@ public class DomainParameterXref {
 	}
 
 	/**
-	 * Get all of the QueryParameters mapped by this xref
+	 * Get all the QueryParameters mapped by this xref.
+	 * Note that order of parameters is important - parameters are
+	 * included in cache keys for query results caching.
 	 */
 	public Map<QueryParameterImplementor<?>, List<SqmParameter<?>>> getQueryParameters() {
 		return sqmParamsByQueryParam;

@@ -2453,49 +2453,28 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		);
 	}
 
-
 	@Override
-	public SqmNullnessPredicate visitIsNullPredicate(HqlParser.IsNullPredicateContext ctx) {
-		return new SqmNullnessPredicate(
-				(SqmExpression<?>) ctx.expression().accept( this ),
-				ctx.NOT() != null,
-				creationContext.getNodeBuilder()
-		);
-	}
-
-	@Override
-	public SqmEmptinessPredicate visitIsEmptyPredicate(HqlParser.IsEmptyPredicateContext ctx) {
-		SqmExpression<?> expression = (SqmExpression<?>) ctx.expression().accept(this);
-		if ( expression instanceof SqmPluralValuedSimplePath ) {
-			return new SqmEmptinessPredicate(
-					(SqmPluralValuedSimplePath<?>) expression,
-					ctx.NOT() != null,
-					creationContext.getNodeBuilder()
-			);
+	public SqmPredicate visitUnaryIsPredicate(HqlParser.UnaryIsPredicateContext ctx) {
+		final var expression = (SqmExpression<?>) ctx.expression().accept( this );
+		final var negated = ctx.NOT() != null;
+		final var nodeBuilder = creationContext.getNodeBuilder();
+		switch ( ((TerminalNode) ctx.getChild( ctx.getChildCount() - 1 )).getSymbol().getType() ) {
+			case HqlParser.NULL:
+				return new SqmNullnessPredicate( expression, negated, nodeBuilder );
+			case HqlParser.EMPTY:
+				if ( expression instanceof SqmPluralValuedSimplePath<?> ) {
+					return new SqmEmptinessPredicate( (SqmPluralValuedSimplePath<?>) expression, negated, nodeBuilder );
+				}
+				else {
+					throw new SemanticException( "Operand of 'is empty' operator must be a plural path", query );
+				}
+			case HqlParser.TRUE:
+				return new SqmTruthnessPredicate( expression, true, negated, nodeBuilder );
+			case HqlParser.FALSE:
+				return new SqmTruthnessPredicate( expression, false, negated, nodeBuilder );
+			default:
+				throw new AssertionError( "Unknown unary is predicate: " + ctx.getChild( ctx.getChildCount() - 1 ) );
 		}
-		else {
-			throw new SemanticException( "Operand of 'is empty' operator must be a plural path", query );
-		}
-	}
-
-	@Override
-	public Object visitIsTruePredicate(HqlParser.IsTruePredicateContext ctx) {
-		return new SqmTruthnessPredicate(
-				(SqmExpression<?>) ctx.expression().accept( this ),
-				true,
-				ctx.NOT() != null,
-				creationContext.getNodeBuilder()
-		);
-	}
-
-	@Override
-	public Object visitIsFalsePredicate(HqlParser.IsFalsePredicateContext ctx) {
-		return new SqmTruthnessPredicate(
-				(SqmExpression<?>) ctx.expression().accept( this ),
-				false,
-				ctx.NOT() != null,
-				creationContext.getNodeBuilder()
-		);
 	}
 
 	@Override

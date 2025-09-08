@@ -755,12 +755,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final var oldCte = currentPotentialRecursiveCte;
 		try {
 			currentPotentialRecursiveCte = null;
-			if ( queryExpressionContext instanceof HqlParser.SetQueryGroupContext setContext ) {
-				// A recursive query is only possible if the child count is lower than 5 e.g. `withClause? q1 op q2`
-				if ( setContext.getChildCount() < 5 ) {
-					if ( handleRecursive( ctx, setContext, cteContainer, name, cte, materialization ) ) {
-						return null;
-					}
+			// A recursive query is only possible if there are 2 ordered queries e.g. `q1 op q2`
+			if ( queryExpressionContext.orderedQuery().size() == 2 ) {
+				if ( handleRecursive( ctx, queryExpressionContext, cteContainer, name, cte, materialization ) ) {
+					return null;
 				}
 			}
 			queryExpressionContext.accept( this );
@@ -778,7 +776,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private boolean handleRecursive(
 			HqlParser.CteContext cteContext,
-			HqlParser.SetQueryGroupContext setContext,
+			HqlParser.QueryExpressionContext setContext,
 			SqmCteContainer cteContainer,
 			String name,
 			SqmSelectQuery<Object> cte,
@@ -942,15 +940,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
-	public SqmQueryPart<?> visitSimpleQueryGroup(HqlParser.SimpleQueryGroupContext ctx) {
-		final var withClauseContext = ctx.withClause();
-		if ( withClauseContext != null ) {
-			withClauseContext.accept( this );
-		}
-		return (SqmQueryPart<?>) ctx.orderedQuery().accept( this );
-	}
-
-	@Override
 	public SqmQueryPart<?> visitQueryOrderExpression(HqlParser.QueryOrderExpressionContext ctx) {
 		final var sqmQuerySpec = currentQuerySpec();
 		final var fromClause = buildInferredFromClause(null);
@@ -986,24 +975,27 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
-	public SqmQueryGroup<?> visitSetQueryGroup(HqlParser.SetQueryGroupContext ctx) {
+	public SqmQueryPart<?> visitQueryExpression(HqlParser.QueryExpressionContext ctx) {
 		var withClauseContext = ctx.withClause();
 		if ( withClauseContext != null ) {
 			withClauseContext.accept( this );
 		}
-		final var firstQueryPart = (SqmQueryPart<?>) ctx.orderedQuery(0).accept( this );
+		final var orderedQueryContexts = ctx.orderedQuery();
+		final var firstQueryPart = (SqmQueryPart<?>) orderedQueryContexts.get( 0 ).accept( this );
+		if ( orderedQueryContexts.size() == 1 ) {
+			return firstQueryPart;
+		}
 		SqmQueryGroup<?> queryGroup =
 				firstQueryPart instanceof SqmQueryGroup<?> sqmQueryGroup
 						? sqmQueryGroup
 						: new SqmQueryGroup<>( firstQueryPart );
 		setCurrentQueryPart( queryGroup );
-		final var orderedQueryContexts = ctx.orderedQuery();
 		final var setOperatorContexts = ctx.setOperator();
 		final var firstProcessingState = processingStateStack.pop();
 		for ( int i = 0; i < setOperatorContexts.size(); i++ ) {
 			queryGroup = getSqmQueryGroup(
 					visitSetOperator( setOperatorContexts.get(i) ),
-					orderedQueryContexts.get( i+1 ),
+					orderedQueryContexts.get( i + 1 ),
 					queryGroup,
 					setOperatorContexts.size(),
 					firstProcessingState,

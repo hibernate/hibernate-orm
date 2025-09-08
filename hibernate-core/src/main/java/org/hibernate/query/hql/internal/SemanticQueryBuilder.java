@@ -2559,38 +2559,21 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 								);
 				return new SqmBooleanExpressionPredicate( contains, negated, creationContext.getNodeBuilder() );
 			}
+			case HqlParser.EQUAL:
+				return createComparisonPredicate( ComparisonOperator.EQUAL, lhsCtx, rhsCtx );
+			case HqlParser.NOT_EQUAL:
+				return createComparisonPredicate( ComparisonOperator.NOT_EQUAL, lhsCtx, rhsCtx );
+			case HqlParser.LESS:
+				return createComparisonPredicate( ComparisonOperator.LESS_THAN, lhsCtx, rhsCtx );
+			case HqlParser.LESS_EQUAL:
+				return createComparisonPredicate( ComparisonOperator.LESS_THAN_OR_EQUAL, lhsCtx, rhsCtx );
+			case HqlParser.GREATER:
+				return createComparisonPredicate( ComparisonOperator.GREATER_THAN, lhsCtx, rhsCtx );
+			case HqlParser.GREATER_EQUAL:
+				return createComparisonPredicate( ComparisonOperator.GREATER_THAN_OR_EQUAL, lhsCtx, rhsCtx );
 			default:
 				throw new AssertionError( "Unknown binary expression predicate: " + operationSymbol );
 		}
-	}
-
-	@Override
-	public Object visitComparisonOperator(HqlParser.ComparisonOperatorContext ctx) {
-		final TerminalNode firstToken = (TerminalNode) ctx.getChild( 0 );
-		switch ( firstToken.getSymbol().getType() ) {
-			case HqlLexer.EQUAL:
-				return ComparisonOperator.EQUAL;
-			case HqlLexer.NOT_EQUAL:
-				return ComparisonOperator.NOT_EQUAL;
-			case HqlLexer.LESS:
-				return ComparisonOperator.LESS_THAN;
-			case HqlLexer.LESS_EQUAL:
-				return ComparisonOperator.LESS_THAN_OR_EQUAL;
-			case HqlLexer.GREATER:
-				return ComparisonOperator.GREATER_THAN;
-			case HqlLexer.GREATER_EQUAL:
-				return ComparisonOperator.GREATER_THAN_OR_EQUAL;
-			default:
-				throw new ParsingException("Unrecognized comparison operator");
-		}
-	}
-
-	@Override
-	public SqmPredicate visitComparisonPredicate(HqlParser.ComparisonPredicateContext ctx) {
-		final ComparisonOperator comparisonOperator = (ComparisonOperator) ctx.comparisonOperator().accept( this );
-		final HqlParser.ExpressionContext leftExpressionContext = ctx.expression( 0 );
-		final HqlParser.ExpressionContext rightExpressionContext = ctx.expression( 1 );
-		return createComparisonPredicate( comparisonOperator, leftExpressionContext, rightExpressionContext );
 	}
 
 	@Override

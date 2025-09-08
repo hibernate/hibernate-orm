@@ -4,132 +4,295 @@
  */
 package org.hibernate.internal.util.collections;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
+import java.util.AbstractMap;
+import java.util.AbstractSet;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+
 
 /**
- * Utility {@link Map} implementation that uses identity (==) for key comparison and
- * preserves insertion order like {@link LinkedHashMap}.
+ * Utility {@link Map} implementation that uses identity (==) for key comparison and preserves insertion order
  */
-public class LinkedIdentityHashMap<K, V> implements Map<K, V> {
-	private final LinkedHashMap<Identity<K>, V> delegate;
+public class LinkedIdentityHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
+	private static final int DEFAULT_INITIAL_CAPACITY = 16; // must be power of two
 
-	record Identity<K>(K key) {
+	static final class Node<K, V> implements Map.Entry<K, V> {
+		final K key;
+		V value;
+		Node<K, V> next;
+		Node<K, V> before;
+		Node<K, V> after;
+
+		Node(K key, V value, Node<K, V> next) {
+			this.key = key;
+			this.value = value;
+			this.next = next;
+		}
+
 		@Override
-		public int hashCode() {
-			return System.identityHashCode( key );
+		public K getKey() {
+			return key;
+		}
+
+		@Override
+		public V getValue() {
+			return value;
+		}
+
+		@Override
+		public V setValue(V newValue) {
+			final V old = value;
+			value = newValue;
+			return old;
 		}
 
 		@Override
 		public boolean equals(Object o) {
-			return o instanceof Identity<?> that && this.key == that.key;
+			return o instanceof Node<?, ?> node && key == node.key && Objects.equals( value, node.value );
+		}
+
+		@Override
+		public int hashCode() {
+			int result = System.identityHashCode( key );
+			result = 31 * result + Objects.hashCode( value );
+			return result;
+		}
+
+		@Override
+		public String toString() {
+			return key + "=" + value;
 		}
 	}
 
+	private Node<K, V>[] table;
+	private int size;
+
+	private Node<K, V> head;
+	private Node<K, V> tail;
+
+	private transient Set<Map.Entry<K, V>> entrySetView;
+
 	public LinkedIdentityHashMap() {
-		delegate = new LinkedHashMap<>();
+		this( DEFAULT_INITIAL_CAPACITY );
 	}
 
-	public LinkedIdentityHashMap(int expectedSize) {
-		delegate = new LinkedHashMap<>( expectedSize );
+	public LinkedIdentityHashMap(int initialCapacity) {
+		if ( initialCapacity < 0 ) {
+			throw new IllegalArgumentException( "Illegal initial capacity: " + initialCapacity );
+		}
+		int cap = 1;
+		while ( cap < initialCapacity ) {
+			cap <<= 1;
+		}
+		//noinspection unchecked
+		table = (Node<K, V>[]) new Node[cap];
 	}
 
-	@Override
-	public int size() {
-		return delegate.size();
-	}
-
-	@Override
-	public boolean isEmpty() {
-		return delegate.isEmpty();
-	}
-
-	@Override
-	public boolean containsKey(Object key) {
-		return delegate.containsKey( new Identity<>( key ) );
-	}
-
-	@Override
-	public boolean containsValue(Object value) {
-		return delegate.containsValue( value );
+	private static int indexFor(int hash, int length) {
+		return hash & (length - 1);
 	}
 
 	@Override
 	public V get(Object key) {
-		return delegate.get( new Identity<>( key ) );
+		final Node<K, V> e = getNode( key );
+		return e != null ? e.value : null;
+	}
+
+	private Node<K, V> getNode(Object key) {
+		final int hash = System.identityHashCode( key );
+		final int idx = indexFor( hash, table.length );
+		for ( Node<K, V> e = table[idx]; e != null; e = e.next ) {
+			if ( e.key == key ) {
+				return e;
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public boolean containsKey(Object key) {
+		return getNode( key ) != null;
+	}
+
+	@Override
+	public boolean containsValue(Object value) {
+		for ( Node<K, V> e = head; e != null; e = e.after ) {
+			if ( Objects.equals( e.value, value ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override
 	public V put(K key, V value) {
-		return delegate.put( new Identity<>( key ), value );
+		final int hash = System.identityHashCode( key );
+		final int idx = indexFor( hash, table.length );
+		for ( Node<K, V> e = table[idx]; e != null; e = e.next ) {
+			if ( e.key == key ) {
+				final V old = e.value;
+				e.value = value;
+				return old;
+			}
+		}
+		// not found -> insert
+		final Node<K, V> newNode = new Node<>( key, value, table[idx] );
+		table[idx] = newNode;
+		linkLast( newNode );
+		size++;
+		if ( size == table.length ) {
+			resize();
+		}
+		return null;
 	}
 
-	@Override
-	public V putIfAbsent(K key, V value) {
-		return delegate.putIfAbsent( new Identity<>( key ), value );
-	}
-
-	@Override
-	public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
-		return delegate.computeIfAbsent( new Identity<>( key ), k -> mappingFunction.apply( k.key ) );
-	}
-
-	@Override
-	public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-		return delegate.computeIfPresent( new Identity<>( key ), (k, v) -> remappingFunction.apply( k.key, v ) );
-	}
-
-	@Override
-	public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-		return delegate.compute( new Identity<>( key ), (k, v) -> remappingFunction.apply( k.key, v ) );
+	private void linkLast(Node<K, V> node) {
+		if ( tail == null ) {
+			head = tail = node;
+		}
+		else {
+			tail.after = node;
+			node.before = tail;
+			tail = node;
+		}
 	}
 
 	@Override
 	public V remove(Object key) {
-		return delegate.remove( new Identity<>( key ) );
-	}
-
-	@Override
-	public void putAll(Map<? extends K, ? extends V> m) {
-		delegate.putAll( m.entrySet().stream()
-				.collect( Collectors.toMap( e -> new Identity<>( e.getKey() ), Entry::getValue ) ) );
-	}
-
-	@Override
-	public boolean remove(Object key, Object value) {
-		return delegate.remove( new Identity<>( key ), value );
+		final int hash = System.identityHashCode( key );
+		final int idx = indexFor( hash, table.length );
+		Node<K, V> prev = null;
+		for ( Node<K, V> e = table[idx]; e != null; prev = e, e = e.next ) {
+			if ( e.key == key ) {
+				// remove from bucket chain
+				if ( prev == null ) {
+					table[idx] = e.next;
+				}
+				else {
+					prev.next = e.next;
+				}
+				// unlink from insertion-order list
+				final Node<K, V> b = e.before;
+				final Node<K, V> a = e.after;
+				if ( b == null ) {
+					head = a;
+				}
+				else {
+					b.after = a;
+				}
+				if ( a == null ) {
+					tail = b;
+				}
+				else {
+					a.before = b;
+				}
+				size--;
+				return e.value;
+			}
+		}
+		return null;
 	}
 
 	@Override
 	public void clear() {
-		delegate.clear();
+		Arrays.fill( table, null );
+		head = tail = null;
+		size = 0;
 	}
 
 	@Override
-	public Set<K> keySet() {
-		return delegate.keySet().stream().map( w -> w.key )
-				.collect( Collectors.toCollection( LinkedHashSet::new ) );
+	public int size() {
+		return size;
+	}
+
+	private void resize() {
+		final int oldCap = table.length;
+		final int newCap = oldCap << 1;
+		//noinspection unchecked
+		final Node<K, V>[] newTable = (Node<K, V>[]) new Node[newCap];
+		for ( int i = 0; i < oldCap; i++ ) {
+			Node<K, V> e = table[i];
+			while ( e != null ) {
+				final Node<K, V> next = e.next;
+				final int idx = indexFor( System.identityHashCode( e.key ), newCap );
+				e.next = newTable[idx];
+				newTable[idx] = e;
+				e = next;
+			}
+		}
+		table = newTable;
 	}
 
 	@Override
-	public Collection<V> values() {
-		return delegate.values();
+	public Set<Map.Entry<K, V>> entrySet() {
+		if ( entrySetView == null ) {
+			entrySetView = new EntrySet();
+		}
+		return entrySetView;
 	}
 
-	@Override
-	public Set<Entry<K, V>> entrySet() {
-		return delegate.entrySet().stream().map( e -> Map.entry( e.getKey().key, e.getValue() ) )
-				.collect( Collectors.toCollection( LinkedHashSet::new ) );
-	}
+	private final class EntrySet extends AbstractSet<Entry<K, V>> {
+		@Override
+		public Iterator<Entry<K, V>> iterator() {
+			return new Iterator<>() {
+				private Node<K, V> next = head;
+				private Node<K, V> lastReturned = null;
 
-	@Override
-	public Object clone() throws CloneNotSupportedException {
-		throw new CloneNotSupportedException();
+				@Override
+				public boolean hasNext() {
+					return next != null;
+				}
+
+				@Override
+				public Map.Entry<K, V> next() {
+					if ( next == null ) {
+						throw new NoSuchElementException();
+					}
+					lastReturned = next;
+					next = next.after;
+					return lastReturned;
+				}
+
+				@Override
+				public void remove() {
+					if ( lastReturned == null ) {
+						throw new IllegalStateException();
+					}
+					LinkedIdentityHashMap.this.remove( lastReturned.key );
+					lastReturned = null;
+				}
+			};
+		}
+
+		@Override
+		public int size() {
+			return LinkedIdentityHashMap.this.size;
+		}
+
+		@Override
+		public void clear() {
+			LinkedIdentityHashMap.this.clear();
+		}
+
+		@Override
+		public boolean contains(Object o) {
+			if ( !(o instanceof Entry<?, ?> e) ) {
+				return false;
+			}
+			final Node<K, V> n = getNode( e.getKey() );
+			return n != null && Objects.equals( n.value, e.getValue() );
+		}
+
+		@Override
+		public boolean remove(Object o) {
+			if ( !(o instanceof Entry<?, ?> e) ) {
+				return false;
+			}
+			return LinkedIdentityHashMap.this.remove( e.getKey() ) != null;
+		}
 	}
 }

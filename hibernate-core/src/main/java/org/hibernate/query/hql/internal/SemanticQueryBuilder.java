@@ -2542,30 +2542,20 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 								);
 				yield new SqmBooleanExpressionPredicate( contains, negated, nodeBuilder() );
 			}
+			case HqlParser.EQUAL ->
+					createComparisonPredicate( ComparisonOperator.EQUAL, lhsCtx, rhsCtx );
+			case HqlParser.NOT_EQUAL ->
+					createComparisonPredicate( ComparisonOperator.NOT_EQUAL, lhsCtx, rhsCtx );
+			case HqlParser.LESS ->
+					createComparisonPredicate( ComparisonOperator.LESS_THAN, lhsCtx, rhsCtx );
+			case HqlParser.LESS_EQUAL ->
+					createComparisonPredicate( ComparisonOperator.LESS_THAN_OR_EQUAL, lhsCtx, rhsCtx );
+			case HqlParser.GREATER ->
+					createComparisonPredicate( ComparisonOperator.GREATER_THAN, lhsCtx, rhsCtx );
+			case HqlParser.GREATER_EQUAL ->
+					createComparisonPredicate( ComparisonOperator.GREATER_THAN_OR_EQUAL, lhsCtx, rhsCtx );
 			default -> throw new AssertionError( "Unknown binary expression predicate: " + operationSymbol );
 		};
-	}
-
-	@Override
-	public Object visitComparisonOperator(HqlParser.ComparisonOperatorContext ctx) {
-		final TerminalNode firstToken = (TerminalNode) ctx.getChild( 0 );
-		return switch ( firstToken.getSymbol().getType() ) {
-			case HqlLexer.EQUAL -> ComparisonOperator.EQUAL;
-			case HqlLexer.NOT_EQUAL -> ComparisonOperator.NOT_EQUAL;
-			case HqlLexer.LESS -> ComparisonOperator.LESS_THAN;
-			case HqlLexer.LESS_EQUAL -> ComparisonOperator.LESS_THAN_OR_EQUAL;
-			case HqlLexer.GREATER -> ComparisonOperator.GREATER_THAN;
-			case HqlLexer.GREATER_EQUAL -> ComparisonOperator.GREATER_THAN_OR_EQUAL;
-			default -> throw new ParsingException( "Unrecognized comparison operator" );
-		};
-	}
-
-	@Override
-	public SqmPredicate visitComparisonPredicate(HqlParser.ComparisonPredicateContext ctx) {
-		final ComparisonOperator comparisonOperator = (ComparisonOperator) ctx.comparisonOperator().accept( this );
-		final var leftExpressionContext = ctx.expression( 0 );
-		final var rightExpressionContext = ctx.expression( 1 );
-		return createComparisonPredicate( comparisonOperator, leftExpressionContext, rightExpressionContext );
 	}
 
 	@Override

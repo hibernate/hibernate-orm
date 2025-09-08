@@ -658,13 +658,13 @@ predicate
 	//highest to lowest precedence
 	: LEFT_PAREN predicate RIGHT_PAREN											# GroupedPredicate
 	| expression IS NOT? (NULL|EMPTY|TRUE|FALSE)								# UnaryIsPredicate
-	| expression IS NOT? DISTINCT FROM expression								# IsDistinctFromPredicate
 	| expression NOT? MEMBER OF? path											# MemberOfPredicate
 	| expression NOT? IN inList													# InPredicate
 	| expression NOT? BETWEEN expression AND expression							# BetweenPredicate
 	| expression NOT? (LIKE | ILIKE) expression likeEscape?						# LikePredicate
 	| expression
 	    ( NOT? (CONTAINS | INCLUDES | INTERSECTS)
+	    | IS NOT? DISTINCT FROM
 	    | EQUAL
         | NOT_EQUAL
         | GREATER

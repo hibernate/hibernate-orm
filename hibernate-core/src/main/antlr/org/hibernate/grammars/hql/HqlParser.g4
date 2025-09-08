@@ -660,9 +660,7 @@ predicate
 	| expression NOT? IN inList													# InPredicate
 	| expression NOT? BETWEEN expression AND expression							# BetweenPredicate
 	| expression NOT? (LIKE | ILIKE) expression likeEscape?						# LikePredicate
-	| expression NOT? CONTAINS expression										# ContainsPredicate
-	| expression NOT? INCLUDES expression										# IncludesPredicate
-	| expression NOT? INTERSECTS expression										# IntersectsPredicate
+	| expression NOT? (CONTAINS | INCLUDES | INTERSECTS) expression  			# BinaryExpressionPredicate
 	| expression comparisonOperator expression									# ComparisonPredicate
 	| EXISTS collectionQuantifier LEFT_PAREN simplePath RIGHT_PAREN				# ExistsCollectionPartPredicate
 	| EXISTS expression															# ExistsPredicate

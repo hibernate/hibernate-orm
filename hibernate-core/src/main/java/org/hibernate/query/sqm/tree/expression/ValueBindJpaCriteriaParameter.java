@@ -10,6 +10,7 @@ import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
+import java.util.Objects;
 
 
 /**
@@ -59,12 +60,13 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		return this == object;
+	public boolean equals(Object obj) {
+		return obj instanceof ValueBindJpaCriteriaParameter<?> that
+			&& Objects.equals( value, that.value );
 	}
 
 	@Override
 	public int hashCode() {
-		return super.hashCode();
+		return Objects.hashCode( value );
 	}
 }

@@ -151,8 +151,7 @@ cycleClause
  * A toplevel query of subquery, which may be a union or intersection of subqueries
  */
 queryExpression
-	: withClause? orderedQuery								# SimpleQueryGroup
-	| withClause? orderedQuery (setOperator orderedQuery)+	# SetQueryGroup
+	: withClause? orderedQuery (setOperator orderedQuery)*
 	;
 
 /**

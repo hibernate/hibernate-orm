@@ -657,10 +657,7 @@ whereClause
 predicate
 	//highest to lowest precedence
 	: LEFT_PAREN predicate RIGHT_PAREN											# GroupedPredicate
-	| expression IS NOT? NULL													# IsNullPredicate
-	| expression IS NOT? EMPTY													# IsEmptyPredicate
-	| expression IS NOT? TRUE													# IsTruePredicate
-	| expression IS NOT? FALSE													# IsFalsePredicate
+	| expression IS NOT? (NULL|EMPTY|TRUE|FALSE)								# UnaryIsPredicate
 	| expression IS NOT? DISTINCT FROM expression								# IsDistinctFromPredicate
 	| expression NOT? MEMBER OF? path											# MemberOfPredicate
 	| expression NOT? IN inList													# InPredicate

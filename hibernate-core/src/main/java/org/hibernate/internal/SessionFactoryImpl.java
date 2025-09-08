@@ -84,6 +84,7 @@ import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.jpa.internal.ExceptionMapperLegacyJpaImpl;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.GeneratorSettings;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.RepresentationMode;
@@ -1810,6 +1811,27 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		public SqlStringGenerationContext getSqlStringGenerationContext() {
 			return sqlStringGenerationContext;
+		}
+
+		@Override
+		public Generator getOrCreateIdGenerator(String rootName, PersistentClass persistentClass) {
+			final var existing = getGenerators().get( rootName );
+			if ( existing != null ) {
+				return existing;
+			}
+			else {
+				final var idGenerator =
+						persistentClass.getIdentifier()
+								// returns the cached Generator if it was already created
+								.createGenerator(
+										getDialect(),
+										persistentClass.getRootClass(),
+										persistentClass.getIdentifierProperty(),
+										getGeneratorSettings()
+								);
+				getGenerators().put( rootName, idGenerator );
+				return idGenerator;
+			}
 		}
 	}
 }

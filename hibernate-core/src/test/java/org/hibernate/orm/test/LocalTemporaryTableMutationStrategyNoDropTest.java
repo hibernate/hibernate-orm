@@ -23,6 +23,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.Generator;
 import org.hibernate.mapping.GeneratorSettings;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -208,6 +209,11 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 		@Override
 		public GeneratorSettings getGeneratorSettings() {
 			return this;
+		}
+
+		@Override
+		public Generator getOrCreateIdGenerator(String rootName, PersistentClass persistentClass) {
+			return null;
 		}
 	}
 }

@@ -2404,49 +2404,25 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		);
 	}
 
-
 	@Override
-	public SqmNullnessPredicate visitIsNullPredicate(HqlParser.IsNullPredicateContext ctx) {
-		return new SqmNullnessPredicate(
-				(SqmExpression<?>) ctx.expression().accept( this ),
-				ctx.NOT() != null,
-				nodeBuilder()
-		);
-	}
-
-	@Override
-	public SqmEmptinessPredicate visitIsEmptyPredicate(HqlParser.IsEmptyPredicateContext ctx) {
-		final var expression = (SqmExpression<?>) ctx.expression().accept(this);
-		if ( expression instanceof SqmPluralValuedSimplePath<?> pluralValuedSimplePath ) {
-			return new SqmEmptinessPredicate(
-					pluralValuedSimplePath,
-					ctx.NOT() != null,
-					nodeBuilder()
-			);
-		}
-		else {
-			throw new SemanticException( "Operand of 'is empty' operator must be a plural path", query );
-		}
-	}
-
-	@Override
-	public Object visitIsTruePredicate(HqlParser.IsTruePredicateContext ctx) {
-		return new SqmTruthnessPredicate(
-				(SqmExpression<?>) ctx.expression().accept( this ),
-				true,
-				ctx.NOT() != null,
-				nodeBuilder()
-		);
-	}
-
-	@Override
-	public Object visitIsFalsePredicate(HqlParser.IsFalsePredicateContext ctx) {
-		return new SqmTruthnessPredicate(
-				(SqmExpression<?>) ctx.expression().accept( this ),
-				false,
-				ctx.NOT() != null,
-				nodeBuilder()
-		);
+	public SqmPredicate visitUnaryIsPredicate(HqlParser.UnaryIsPredicateContext ctx) {
+		final var expression = (SqmExpression<?>) ctx.expression().accept( this );
+		final var negated = ctx.NOT() != null;
+		final var nodeBuilder = nodeBuilder();
+		return switch ( ((TerminalNode) ctx.getChild( ctx.getChildCount() - 1 )).getSymbol().getType() ) {
+			case HqlParser.NULL -> new SqmNullnessPredicate( expression, negated, nodeBuilder );
+			case HqlParser.EMPTY -> {
+				if ( expression instanceof SqmPluralValuedSimplePath<?> pluralValuedSimplePath ) {
+					yield new SqmEmptinessPredicate( pluralValuedSimplePath, negated, nodeBuilder );
+				}
+				else {
+					throw new SemanticException( "Operand of 'is empty' operator must be a plural path", query );
+				}
+			}
+			case HqlParser.TRUE -> new SqmTruthnessPredicate( expression, true, negated, nodeBuilder );
+			case HqlParser.FALSE -> new SqmTruthnessPredicate( expression, false, negated, nodeBuilder );
+			default -> throw new AssertionError( "Unknown unary is predicate: " + ctx.getChild( ctx.getChildCount() - 1 ) );
+		};
 	}
 
 	@Override

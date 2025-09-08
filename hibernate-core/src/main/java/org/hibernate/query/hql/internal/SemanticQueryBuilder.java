@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 import jakarta.persistence.criteria.Nulls;
+import org.antlr.v4.runtime.Token;
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.QuerySettings;
@@ -2426,6 +2427,91 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
+	public SqmPredicate visitBinaryExpressionPredicate(HqlParser.BinaryExpressionPredicateContext ctx) {
+		final var firstSymbol = ((TerminalNode) ctx.getChild( 1 )).getSymbol();
+		final boolean negated;
+		final Token operationSymbol;
+		if ( firstSymbol.getType() == HqlParser.NOT ) {
+			negated = true;
+			operationSymbol = ((TerminalNode) ctx.getChild( 2 )).getSymbol();
+		}
+		else {
+			negated = false;
+			operationSymbol = firstSymbol;
+		}
+		final var expressions = ctx.expression();
+		final var lhsCtx = expressions.get( 0 );
+		final var rhsCtx = expressions.get( 1 );
+		return switch ( operationSymbol.getType() ) {
+			case HqlParser.CONTAINS -> {
+				final var lhs = (SqmExpression<?>) lhsCtx.accept( this );
+				final var rhs = (SqmExpression<?>) rhsCtx.accept( this );
+				final var lhsExpressible = lhs.getExpressible();
+				if ( lhsExpressible != null && !(lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
+					throw new SemanticException(
+							"First operand for contains predicate must be a basic plural type expression, but found: " + lhsExpressible.getSqmType(),
+							query
+					);
+				}
+				final SelfRenderingSqmFunction<Boolean> contains = getFunctionDescriptor(
+						"array_contains" ).generateSqmExpression(
+						asList( lhs, rhs ),
+						null,
+						queryEngine()
+				);
+				yield new SqmBooleanExpressionPredicate( contains, negated, nodeBuilder() );
+			}
+			case HqlParser.INCLUDES -> {
+				final var lhs = (SqmExpression<?>) lhsCtx.accept( this );
+				final var rhs = (SqmExpression<?>) rhsCtx.accept( this );
+				final var lhsExpressible = lhs.getExpressible();
+				final var rhsExpressible = rhs.getExpressible();
+				if ( lhsExpressible != null && !( lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
+					throw new SemanticException(
+							"First operand for includes predicate must be a basic plural type expression, but found: "
+							+ lhsExpressible.getSqmType(),
+							query
+					);
+				}
+				if ( rhsExpressible != null && !( rhsExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
+					throw new SemanticException(
+							"Second operand for includes predicate must be a basic plural type expression, but found: "
+							+ rhsExpressible.getSqmType(),
+							query
+					);
+				}
+				final SelfRenderingSqmFunction<Boolean> contains = getFunctionDescriptor( "array_includes" ).generateSqmExpression(
+						asList( lhs, rhs ),
+						null,
+						queryEngine()
+				);
+				yield new SqmBooleanExpressionPredicate( contains, negated, nodeBuilder() );
+			}
+			case HqlParser.INTERSECTS -> {
+				final var lhs = (SqmExpression<?>) lhsCtx.accept( this );
+				final var rhs = (SqmExpression<?>) rhsCtx.accept( this );
+				final var lhsExpressible = lhs.getExpressible();
+				if ( lhsExpressible != null && !( lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
+					throw new SemanticException(
+							"First operand for intersects predicate must be a basic plural type expression, but found: "
+							+ lhsExpressible.getSqmType(),
+							query
+					);
+				}
+				final SelfRenderingSqmFunction<Boolean> contains =
+						getFunctionDescriptor( "array_intersects" )
+								.generateSqmExpression(
+										asList( lhs, rhs ),
+										null,
+										queryEngine()
+								);
+				yield new SqmBooleanExpressionPredicate( contains, negated, nodeBuilder() );
+			}
+			default -> throw new AssertionError( "Unknown binary expression predicate: " + operationSymbol );
+		};
+	}
+
+	@Override
 	public Object visitComparisonOperator(HqlParser.ComparisonOperatorContext ctx) {
 		final var firstToken = (TerminalNode) ctx.getChild( 0 );
 		return switch ( firstToken.getSymbol().getType() ) {
@@ -2571,27 +2657,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 		}
 		return null;
-	}
-
-	@Override
-	public SqmPredicate visitContainsPredicate(HqlParser.ContainsPredicateContext ctx) {
-		final boolean negated = ctx.NOT() != null;
-		final var lhs = (SqmExpression<?>) ctx.expression( 0 ).accept( this );
-		final var rhs = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
-		final var lhsExpressible = lhs.getExpressible();
-		if ( lhsExpressible != null
-				&& !( lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?> ) ) {
-			throw new SemanticException(
-					"First operand for contains predicate must be a basic plural type expression, but found: " + lhsExpressible.getSqmType(),
-					query
-			);
-		}
-		final SelfRenderingSqmFunction<Boolean> contains = getFunctionDescriptor( "array_contains" ).generateSqmExpression(
-				asList( lhs, rhs ),
-				null,
-				queryEngine()
-		);
-		return new SqmBooleanExpressionPredicate( contains, negated, nodeBuilder() );
 	}
 
 	@Override
@@ -3126,58 +3191,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					query
 			);
 		}
-	}
-
-	@Override
-	public SqmPredicate visitIncludesPredicate(HqlParser.IncludesPredicateContext ctx) {
-		final boolean negated = ctx.NOT() != null;
-		final var lhs = (SqmExpression<?>) ctx.expression( 0 ).accept( this );
-		final var rhs = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
-		final var lhsExpressible = lhs.getExpressible();
-		final var rhsExpressible = rhs.getExpressible();
-		if ( lhsExpressible != null && !( lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
-			throw new SemanticException(
-					"First operand for includes predicate must be a basic plural type expression, but found: "
-							+ lhsExpressible.getSqmType(),
-					query
-			);
-		}
-		if ( rhsExpressible != null && !( rhsExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
-			throw new SemanticException(
-					"Second operand for includes predicate must be a basic plural type expression, but found: "
-							+ rhsExpressible.getSqmType(),
-					query
-			);
-		}
-		final SelfRenderingSqmFunction<Boolean> contains = getFunctionDescriptor( "array_includes" ).generateSqmExpression(
-				asList( lhs, rhs ),
-				null,
-				queryEngine()
-		);
-		return new SqmBooleanExpressionPredicate( contains, negated, nodeBuilder() );
-	}
-
-	@Override
-	public SqmPredicate visitIntersectsPredicate(HqlParser.IntersectsPredicateContext ctx) {
-		final boolean negated = ctx.NOT() != null;
-		final var lhs = (SqmExpression<?>) ctx.expression( 0 ).accept( this );
-		final var rhs = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
-		final var lhsExpressible = lhs.getExpressible();
-		if ( lhsExpressible != null && !( lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
-			throw new SemanticException(
-					"First operand for intersects predicate must be a basic plural type expression, but found: "
-							+ lhsExpressible.getSqmType(),
-					query
-			);
-		}
-		final SelfRenderingSqmFunction<Boolean> contains =
-				getFunctionDescriptor( "array_intersects" )
-						.generateSqmExpression(
-								asList( lhs, rhs ),
-								null,
-								queryEngine()
-						);
-		return new SqmBooleanExpressionPredicate( contains, negated, nodeBuilder() );
 	}
 
 	@Override

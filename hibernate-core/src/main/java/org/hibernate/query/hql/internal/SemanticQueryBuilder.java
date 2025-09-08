@@ -2436,7 +2436,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			operationSymbol = ((TerminalNode) ctx.getChild( 2 )).getSymbol();
 		}
 		else {
-			negated = false;
+			negated = firstSymbol.getType() == HqlParser.IS
+					&& ((TerminalNode) ctx.getChild( 2 )).getSymbol().getType() == HqlParser.NOT;
 			operationSymbol = firstSymbol;
 		}
 		final var expressions = ctx.expression();
@@ -2519,18 +2520,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					createComparisonPredicate( ComparisonOperator.GREATER_THAN, lhsCtx, rhsCtx );
 			case HqlParser.GREATER_EQUAL ->
 					createComparisonPredicate( ComparisonOperator.GREATER_THAN_OR_EQUAL, lhsCtx, rhsCtx );
+			case HqlParser.IS -> {
+				final var comparisonOperator = !negated
+						? ComparisonOperator.DISTINCT_FROM
+						: ComparisonOperator.NOT_DISTINCT_FROM;
+				yield createComparisonPredicate( comparisonOperator, lhsCtx, rhsCtx );
+			}
 			default -> throw new AssertionError( "Unknown binary expression predicate: " + operationSymbol );
 		};
-	}
-
-	@Override
-	public SqmPredicate visitIsDistinctFromPredicate(HqlParser.IsDistinctFromPredicateContext ctx) {
-		final var leftExpressionContext = ctx.expression( 0 );
-		final var rightExpressionContext = ctx.expression( 1 );
-		final var comparisonOperator = ctx.NOT() == null
-				? ComparisonOperator.DISTINCT_FROM
-				: ComparisonOperator.NOT_DISTINCT_FROM;
-		return createComparisonPredicate( comparisonOperator, leftExpressionContext, rightExpressionContext );
 	}
 
 	private SqmComparisonPredicate createComparisonPredicate(

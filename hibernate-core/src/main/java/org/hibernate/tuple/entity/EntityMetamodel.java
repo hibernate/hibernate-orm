@@ -155,7 +155,7 @@ public class EntityMetamodel implements Serializable {
 			PersistentClass persistentClass,
 			RuntimeModelCreationContext creationContext) {
 		this( persistentClass, creationContext,
-				rootName -> buildIdGenerator( rootName, persistentClass, creationContext ) );
+				rootName -> creationContext.getOrCreateIdGenerator( rootName, persistentClass ) );
 	}
 
 	/*
@@ -573,26 +573,6 @@ public class EntityMetamodel implements Serializable {
 //			throw new HibernateException( "BeforeExecutionGenerator returned false from OnExecutionGenerator.writePropertyValue()" );
 //		}
 		return writePropertyValue;
-	}
-
-	private static Generator buildIdGenerator(String rootName, PersistentClass persistentClass, RuntimeModelCreationContext creationContext) {
-		final var existing = creationContext.getGenerators().get( rootName );
-		if ( existing != null ) {
-			return existing;
-		}
-		else {
-			final var idGenerator =
-					persistentClass.getIdentifier()
-							// returns the cached Generator if it was already created
-							.createGenerator(
-									creationContext.getDialect(),
-									persistentClass.getRootClass(),
-									persistentClass.getIdentifierProperty(),
-									creationContext.getGeneratorSettings()
-							);
-			creationContext.getGenerators().put( rootName, idGenerator );
-			return idGenerator;
-		}
 	}
 
 	private void verifyNaturalIdProperty(Property property) {

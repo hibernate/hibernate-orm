@@ -75,8 +75,13 @@ public class OrderByFragmentTranslator {
 			return parser.orderByFragment();
 		}
 		catch (ParseCancellationException e) {
+			// When resetting the parser, its CommonTokenStream will seek(0) i.e. restart emitting buffered tokens.
+			// This is enough when reusing the lexer and parser, and it would be wrong to also reset the lexer.
+			// Resetting the lexer causes it to hand out tokens again from the start, which will then append to the
+			// CommonTokenStream and cause a wrong parse
+			// lexer.reset();
+
 			// reset the input token stream and parser state
-			lexer.reset();
 			parser.reset();
 
 			// fall back to LL(k)-based parsing

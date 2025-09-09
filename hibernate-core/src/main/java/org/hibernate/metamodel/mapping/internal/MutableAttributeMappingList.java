@@ -22,7 +22,7 @@ import org.hibernate.sql.results.graph.Fetchable;
 @Deprecated
 public final class MutableAttributeMappingList implements AttributeMappingsList {
 
-	private final List list;
+	private final List<AttributeMapping> list;
 
 	public MutableAttributeMappingList(final int length) {
 		this.list = new ArrayList<>( length );

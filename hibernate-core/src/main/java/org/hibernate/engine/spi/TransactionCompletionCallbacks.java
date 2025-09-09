@@ -11,6 +11,8 @@ import org.hibernate.Incubating;
  * callbacks related to transaction completion.
  *
  * @author Steve Ebersole
+ *
+ * @since 7.2
  */
 @Incubating
 public interface TransactionCompletionCallbacks {

@@ -20,6 +20,8 @@ import java.util.function.UnaryOperator;
 
 /**
  * @author Steve Ebersole
+ *
+ * @since 7.2
  */
 public interface SharedSessionBuilderImplementor extends SharedSessionBuilder, SessionBuilderImplementor {
 	@Override

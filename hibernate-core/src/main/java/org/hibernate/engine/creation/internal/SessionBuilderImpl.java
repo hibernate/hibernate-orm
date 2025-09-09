@@ -12,7 +12,6 @@ import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.SessionImpl;
-import org.hibernate.internal.SessionOwnerBehavior;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.jboss.logging.Logger;
@@ -47,9 +46,6 @@ public class SessionBuilderImpl
 	// (Need a fresh build for each Session as the listener instances can't be reused across sessions)
 	// Only initialize of the builder is overriding the default.
 	private List<SessionEventListener> listeners;
-
-	//todo : expose setting
-	private final SessionOwnerBehavior sessionOwnerBehavior = SessionOwnerBehavior.LEGACY_NATIVE;
 
 	public SessionBuilderImpl(SessionFactoryImpl sessionFactory) {
 		super( sessionFactory );

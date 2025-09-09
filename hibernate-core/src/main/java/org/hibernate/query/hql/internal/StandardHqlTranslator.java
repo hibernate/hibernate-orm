@@ -132,9 +132,14 @@ public class StandardHqlTranslator implements HqlTranslator {
 		try {
 			return hqlParser.statement();
 		}
-		catch ( ParseCancellationException e) {
+		catch (ParseCancellationException e) {
+			// When resetting the parser, its CommonTokenStream will seek(0) i.e. restart emitting buffered tokens.
+			// This is enough when reusing the lexer and parser, and it would be wrong to also reset the lexer.
+			// Resetting the lexer causes it to hand out tokens again from the start, which will then append to the
+			// CommonTokenStream and cause a wrong parse
+			// hqlLexer.reset();
+
 			// reset the input token stream and parser state
-			hqlLexer.reset();
 			hqlParser.reset();
 
 			// fall back to LL(k)-based parsing

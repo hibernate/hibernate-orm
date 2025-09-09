@@ -36,6 +36,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -134,6 +135,11 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 		@Override
 		public BootstrapContext getBootstrapContext() {
 			return null;
+		}
+
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return sessionFactory.getTypeConfiguration();
 		}
 
 		@Override

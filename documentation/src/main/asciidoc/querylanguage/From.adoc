@@ -488,7 +488,7 @@ where pub.name like :pubName
 [[collection-valued-associations]]
 ==== Joining collections and many-valued associations
 
-When a join involves a collection or many-valued association, the declared identification variable refers to the _elements_ of the collection, that is:
+When a join involves a collection or many-valued association, by default, the declared identification variable refers to the _elements_ of the collection, that is:
 
 - to the elements of a `Set`,
 - to the elements of a `List`, not to their indices in the list, or
@@ -506,6 +506,17 @@ where author.name like :namePattern
 
 In this example, the identification variable `author` is of type `Author`, the element type of the list `Book.authors`.
 But if we need to refer to the index of an `Author` in the list, we need some extra syntax.
+
+If the key of a map is an entity, we may join it using the `key()` function:
+
+[source, hql]
+----
+select book.isbn, lang.language, lang.country, lang.variant
+from Book book
+join key(book.translations) as lang
+----
+
+It's also legal, but redundant, to use the `value()` function when joining the value of a map.
 
 You might recall that we mentioned <<list-functions>> and <<map-functions>> a bit earlier.
 These functions may be applied to the identification variable declared in a collection join or many-valued association join.
@@ -542,6 +553,13 @@ from Publisher as publisher
     join book.authors as leadAuthor
 where leadAuthor.name like :namePattern
   and index(leadAuthor) == 0
+----
+
+[source, hql]
+----
+select book.isbn, key(translation).language, key(translation).country
+from Book book
+join book.translations as translation
 ----
 
 

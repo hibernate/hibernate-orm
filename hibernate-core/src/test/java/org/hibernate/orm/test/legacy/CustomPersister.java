@@ -149,6 +149,11 @@ public 	class CustomPersister extends EntityMetamodel implements EntityPersister
 	}
 
 	@Override
+	public void forEachTableDetails(Consumer<TableDetails> consumer) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public ModelPart findSubPart(
 			String name, EntityMappingType targetType) {
 		return null;

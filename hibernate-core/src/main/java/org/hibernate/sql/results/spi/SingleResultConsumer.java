@@ -9,9 +9,9 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
-import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 
 /**
  * Used beneath {@link SelectionQuery#getResultCount()}.
@@ -35,7 +35,7 @@ public class SingleResultConsumer<T> implements ResultsConsumer<T, T> {
 			JdbcValues jdbcValues,
 			SharedSessionContractImplementor session,
 			JdbcValuesSourceProcessingOptions processingOptions,
-			JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState,
+			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
 			RowProcessingStateStandardImpl rowProcessingState,
 			RowReader<T> rowReader) {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();

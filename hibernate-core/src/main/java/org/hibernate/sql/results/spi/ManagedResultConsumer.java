@@ -8,9 +8,9 @@ import org.hibernate.Incubating;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
-import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 
 /**
  * Reads rows without producing a result.
@@ -27,7 +27,7 @@ public class ManagedResultConsumer implements ResultsConsumer<Void, Object> {
 			JdbcValues jdbcValues,
 			SharedSessionContractImplementor session,
 			JdbcValuesSourceProcessingOptions processingOptions,
-			JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState,
+			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
 			RowProcessingStateStandardImpl rowProcessingState,
 			RowReader<Object> rowReader) {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();

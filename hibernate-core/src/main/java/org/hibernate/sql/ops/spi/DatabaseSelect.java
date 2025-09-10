@@ -19,7 +19,7 @@ import java.sql.PreparedStatement;
  * @author Steve Ebersole
  */
 @Incubating
-public interface DatabaseSelect<S extends JdbcSelect> extends DatabaseOperation<S > {
+public interface DatabaseSelect extends DatabaseOperation<JdbcSelect> {
 	/**
 	 * Execute the underlying statements and return the result(s).
 	 *

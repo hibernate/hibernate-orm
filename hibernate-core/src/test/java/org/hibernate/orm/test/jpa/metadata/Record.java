@@ -25,9 +25,10 @@ public class Record {
 	@Id @GeneratedValue
 	String id;
 	String text;
-	LocalDateTime timestamp = LocalDateTime.now();
+	LocalDateTime timestamp;
 	Record() {}
-	public Record(String text) {
+	public Record(String text, LocalDateTime timestamp) {
 		this.text = text;
+		this.timestamp = timestamp;
 	}
 }

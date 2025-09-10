@@ -4,7 +4,6 @@
  */
 package org.hibernate.sql.ops.internal;
 
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
@@ -14,6 +13,8 @@ import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.ops.spi.DatabaseSelect;
+import org.hibernate.sql.ops.spi.JdbcSelect;
+import org.hibernate.sql.ops.spi.LoadedValuesCollector;
 import org.hibernate.sql.ops.spi.PostAction;
 import org.hibernate.sql.ops.spi.PreAction;
 import org.hibernate.sql.results.spi.ResultsConsumer;
@@ -27,18 +28,42 @@ import java.sql.Connection;
  * @author Steve Ebersole
  */
 public class DatabaseSelectImpl
-		extends AbstractDatabaseOperation<JdbcOperationQuerySelect>
-		implements DatabaseSelect<JdbcOperationQuerySelect> {
+		extends AbstractDatabaseOperation<JdbcSelect>
+		implements DatabaseSelect {
+	private final LoadedValuesCollector loadedValuesCollector;
 
 	public DatabaseSelectImpl(JdbcOperationQuerySelect primaryOperation) {
-		this( null, null, primaryOperation );
+		this( primaryOperation, null );
+	}
+
+	public DatabaseSelectImpl(JdbcOperationQuerySelect primaryOperation, LoadedValuesCollector loadedValuesCollector) {
+		this( primaryOperation, loadedValuesCollector, null, null );
 	}
 
 	public DatabaseSelectImpl(
+			JdbcOperationQuerySelect primaryOperation,
 			PreAction[] preActions,
-			PostAction[] postActions,
-			JdbcOperationQuerySelect primaryOperation) {
+			PostAction[] postActions) {
+		this( primaryOperation, null, preActions, postActions );
+	}
+
+	public DatabaseSelectImpl(
+			JdbcOperationQuerySelect primaryOperation,
+			LoadedValuesCollector loadedValuesCollector,
+			PreAction[] preActions,
+			PostAction[] postActions) {
 		super( primaryOperation, preActions, postActions );
+		this.loadedValuesCollector = loadedValuesCollector;
+	}
+
+	@Override
+	public JdbcOperationQuerySelect getPrimaryOperation() {
+		return (JdbcOperationQuerySelect) super.getPrimaryOperation();
+	}
+
+	@Override
+	public LoadedValuesCollector getLoadedValuesCollector() {
+		return loadedValuesCollector;
 	}
 
 	@Override
@@ -100,17 +125,22 @@ public class DatabaseSelectImpl
 			RowTransformer<R> rowTransformer,
 			ResultsConsumer<T, R> resultsConsumer,
 			ExecutionContext executionContext) {
-		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcSelectExecutor jdbcSelectExecutor = jdbcServices.getJdbcSelectExecutor();
+//		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
+//		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+//		final JdbcSelectExecutor jdbcSelectExecutor = jdbcServices.getJdbcSelectExecutor();
+		final JdbcSelectExecutorImpl jdbcSelectExecutor = JdbcSelectExecutorImpl.INSTANCE;
+
 		return jdbcSelectExecutor.executeQuery(
 				getPrimaryOperation(),
 				jdbcParameterBindings,
-				executionContext,
 				rowTransformer,
 				resultType,
+				1,
+				(c, options) ->
+						new ProposedProcessingState( loadedValuesCollector, options, executionContext ),
 				statementCreator,
-				resultsConsumer
+				resultsConsumer,
+				executionContext
 		);
 	}
 
@@ -120,6 +150,7 @@ public class DatabaseSelectImpl
 
 	public static class Builder extends AbstractDatabaseOperation.Builder<Builder> {
 		private final JdbcOperationQuerySelect primaryAction;
+		private LoadedValuesCollector loadedValuesCollector;
 
 		private Builder(JdbcOperationQuerySelect primaryAction) {
 			this.primaryAction = primaryAction;
@@ -130,13 +161,18 @@ public class DatabaseSelectImpl
 			return this;
 		}
 
+		public Builder setLoadedValuesCollector(LoadedValuesCollector loadedValuesCollector) {
+			this.loadedValuesCollector = loadedValuesCollector;
+			return this;
+		}
+
 		public DatabaseSelectImpl build() {
 			if ( preActions == null && postActions == null ) {
-				return new DatabaseSelectImpl( primaryAction );
+				return new DatabaseSelectImpl( primaryAction, loadedValuesCollector );
 			}
 			final PreAction[] preActions = toPreActionArray( this.preActions );
 			final PostAction[] postActions = toPostActionArray( this.postActions );
-			return new DatabaseSelectImpl( preActions, postActions, primaryAction );
+			return new DatabaseSelectImpl( primaryAction, loadedValuesCollector, preActions, postActions );
 		}
 	}
 }

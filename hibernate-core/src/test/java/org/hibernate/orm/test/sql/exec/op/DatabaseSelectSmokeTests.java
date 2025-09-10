@@ -2,27 +2,20 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.sql.exec.spi;
+package org.hibernate.orm.test.sql.exec.op;
 
 import jakarta.persistence.Timeout;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.MutableObject;
-import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.internal.BaseExecutionContext;
+import org.hibernate.sql.ast.internal.LockTimeoutHandler;
 import org.hibernate.sql.exec.internal.CallbackImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.StandardStatementCreator;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -31,7 +24,6 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.StatementAccess;
 import org.hibernate.sql.ops.internal.DatabaseSelectImpl;
 import org.hibernate.sql.ops.spi.PostAction;
-import org.hibernate.sql.ops.spi.PreAction;
 import org.hibernate.sql.results.spi.SingleResultConsumer;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -75,7 +67,7 @@ public class DatabaseSelectSmokeTests {
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel().findEntityDescriptor( Person.class );
 
-		final PersonQuery personQuery = createPersonQuery( entityDescriptor, sessionFactory );
+		final Helper.SelectByIdQuery personQuery = Helper.createSelectByIdQuery( entityDescriptor, sessionFactory );
 		final JdbcOperationQuerySelect jdbcOperation = personQuery.jdbcOperation();
 		final JdbcParameterBindings jdbcParameterBindings = personQuery.jdbcParameterBindings();
 
@@ -112,12 +104,18 @@ public class DatabaseSelectSmokeTests {
 
 		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel().findEntityDescriptor( Person.class );
 
-		final PersonQuery personQuery = createPersonQuery( entityDescriptor, sessionFactory );
+		final Helper.SelectByIdQuery personQuery = Helper.createSelectByIdQuery( entityDescriptor, sessionFactory );
 		final JdbcOperationQuerySelect jdbcOperation = personQuery.jdbcOperation();
 		final JdbcParameterBindings jdbcParameterBindings = personQuery.jdbcParameterBindings();
 
+		final LockOptions lockOptions = new LockOptions(
+				LockMode.PESSIMISTIC_WRITE,
+				2000,
+				Locking.Scope.INCLUDE_COLLECTIONS,
+				Locking.FollowOn.ALLOW
+		);
 
-		final LockTimeoutHandler lockTimeoutHandler = new LockTimeoutHandler( Timeout.seconds( 2 ), lockTimeoutStrategy );
+		final LockTimeoutHandler lockTimeoutHandler = new LockTimeoutHandler( lockOptions.getTimeout(), lockTimeoutStrategy );
 
 		final DatabaseSelectImpl databaseOperation = DatabaseSelectImpl.builder( jdbcOperation )
 				.addSecondaryActionPair( lockTimeoutHandler )
@@ -152,7 +150,7 @@ public class DatabaseSelectSmokeTests {
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel().findEntityDescriptor( Person.class );
 
-		final PersonQuery personQuery = createPersonQuery( entityDescriptor, sessionFactory );
+		final Helper.SelectByIdQuery personQuery = Helper.createSelectByIdQuery( entityDescriptor, sessionFactory );
 		final JdbcOperationQuerySelect jdbcOperation = personQuery.jdbcOperation();
 		final JdbcParameterBindings jdbcParameterBindings = personQuery.jdbcParameterBindings();
 
@@ -203,40 +201,6 @@ public class DatabaseSelectSmokeTests {
 
 	}
 
-	private static class LockTimeoutHandler implements PreAction, PostAction {
-		private final ConnectionLockTimeoutStrategy lockTimeoutStrategy;
-		private final Timeout timeout;
-		private Timeout baseline;
-
-		public LockTimeoutHandler(Timeout timeout, ConnectionLockTimeoutStrategy lockTimeoutStrategy) {
-			this.timeout = timeout;
-			this.lockTimeoutStrategy = lockTimeoutStrategy;
-		}
-
-		public Timeout getBaseline() {
-			return baseline;
-		}
-
-		@Override
-		public void performPreAction(StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext) {
-			final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
-
-			// first, get the baseline (for post-action)
-			baseline = lockTimeoutStrategy.getLockTimeout( jdbcConnection, factory );
-
-			// now set the timeout
-			lockTimeoutStrategy.setLockTimeout( timeout, jdbcConnection, factory );
-		}
-
-		@Override
-		public void performPostAction(StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext) {
-			final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
-
-			// reset the timeout
-			lockTimeoutStrategy.setLockTimeout( baseline, jdbcConnection, factory );
-		}
-	}
-
 	private static class LoadedValueCollector implements PostAction {
 		private final List<Object> loadedValues = new ArrayList<>();
 
@@ -249,90 +213,4 @@ public class DatabaseSelectSmokeTests {
 	}
 
 
-	private PersonQuery createPersonQuery(
-			EntityPersister entityDescriptor,
-			SessionFactoryImplementor sessionFactory) {
-		final MutableObject<JdbcParameter> jdbcParamRef = new MutableObject<>();
-		final SelectStatement selectAst = LoaderSelectBuilder.createSelect(
-				entityDescriptor,
-				null,
-				entityDescriptor.getIdentifierMapping(),
-				null,
-				1,
-				new LoadQueryInfluencers( sessionFactory ),
-				null,
-				jdbcParamRef::setIfNot,
-				sessionFactory
-		);
-
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( 1 );
-		jdbcParameterBindings.addBinding(
-				jdbcParamRef.get(),
-				new JdbcParameterBindingImpl(
-						entityDescriptor.getIdentifierMapping().getJdbcMapping( 0 ),
-						1
-				)
-		);
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcOperationQuerySelect jdbcOperation = jdbcServices
-				.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
-				.buildSelectTranslator( sessionFactory, selectAst )
-				.translate( jdbcParameterBindings, QueryOptions.NONE );
-
-		return new PersonQuery( jdbcOperation, jdbcParameterBindings );
-	}
-
-	private record PersonQuery(
-			JdbcOperationQuerySelect jdbcOperation,
-			JdbcParameterBindings jdbcParameterBindings) {
-	}
-
-	private static class SingleIdExecutionContext extends BaseExecutionContext {
-		private final Object entityInstance;
-		private final Object restrictedValue;
-		private final EntityMappingType rootEntityDescriptor;
-		private final QueryOptions queryOptions;
-		private final Callback callback;
-
-		public SingleIdExecutionContext(
-				SharedSessionContractImplementor session,
-				Object entityInstance,
-				Object restrictedValue,
-				EntityMappingType rootEntityDescriptor, QueryOptions queryOptions,
-				Callback callback) {
-			super( session );
-			this.entityInstance = entityInstance;
-			this.restrictedValue = restrictedValue;
-			this.rootEntityDescriptor = rootEntityDescriptor;
-			this.queryOptions = queryOptions;
-			this.callback = callback;
-		}
-
-		@Override
-		public Object getEntityInstance() {
-			return entityInstance;
-		}
-
-		@Override
-		public Object getEntityId() {
-			return restrictedValue;
-		}
-
-		@Override
-		public EntityMappingType getRootEntityDescriptor() {
-			return rootEntityDescriptor;
-		}
-
-		@Override
-		public QueryOptions getQueryOptions() {
-			return queryOptions;
-		}
-
-		@Override
-		public Callback getCallback() {
-			return callback;
-		}
-
-	}
 }

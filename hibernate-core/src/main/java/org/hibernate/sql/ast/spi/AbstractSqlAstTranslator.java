@@ -14,6 +14,9 @@ import org.hibernate.Timeouts;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.dialect.lock.PessimisticLockStyle;
+import org.hibernate.dialect.lock.spi.LockTimeoutType;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -70,8 +73,9 @@ import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlTreeCreationException;
-import org.hibernate.sql.ast.internal.TableGroupHelper;
+import org.hibernate.sql.ast.internal.LockTimeoutHandler;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
+import org.hibernate.sql.ast.internal.TableGroupHelper;
 import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -86,7 +90,44 @@ import org.hibernate.sql.ast.tree.cte.CteTableGroup;
 import org.hibernate.sql.ast.tree.cte.SearchClauseSpecification;
 import org.hibernate.sql.ast.tree.cte.SelfRenderingCteObject;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.expression.*;
+import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
+import org.hibernate.sql.ast.tree.expression.Any;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
+import org.hibernate.sql.ast.tree.expression.CastTarget;
+import org.hibernate.sql.ast.tree.expression.Collation;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Distinct;
+import org.hibernate.sql.ast.tree.expression.Duration;
+import org.hibernate.sql.ast.tree.expression.DurationUnit;
+import org.hibernate.sql.ast.tree.expression.EmbeddableTypeLiteral;
+import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
+import org.hibernate.sql.ast.tree.expression.Every;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.ExtractUnit;
+import org.hibernate.sql.ast.tree.expression.Format;
+import org.hibernate.sql.ast.tree.expression.FunctionExpression;
+import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.Literal;
+import org.hibernate.sql.ast.tree.expression.LiteralAsParameter;
+import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
+import org.hibernate.sql.ast.tree.expression.NestedColumnReference;
+import org.hibernate.sql.ast.tree.expression.OrderedSetAggregateFunctionExpression;
+import org.hibernate.sql.ast.tree.expression.Over;
+import org.hibernate.sql.ast.tree.expression.Overflow;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
+import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
+import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
+import org.hibernate.sql.ast.tree.expression.Star;
+import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.expression.TrimSpecification;
+import org.hibernate.sql.ast.tree.expression.UnaryOperation;
+import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
 import org.hibernate.sql.ast.tree.from.DerivedTableReference;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
@@ -158,6 +199,12 @@ import org.hibernate.sql.model.internal.TableInsertCustomSql;
 import org.hibernate.sql.model.internal.TableInsertStandard;
 import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
+import org.hibernate.sql.ops.internal.DatabaseSelectImpl;
+import org.hibernate.sql.ops.internal.lock.FollowOnLockingAction;
+import org.hibernate.sql.ops.internal.LoadedValuesCollectorImpl;
+import org.hibernate.sql.ops.internal.SingleRootLoadedValuesCollector;
+import org.hibernate.sql.ops.spi.DatabaseSelect;
+import org.hibernate.sql.ops.spi.LoadedValuesCollector;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.type.BasicType;
@@ -751,6 +798,101 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		finally {
 			cleanup();
+		}
+	}
+
+	@Override
+	public DatabaseSelect translateLockingSelect(
+			JdbcParameterBindings jdbcParameterBindings,
+			QueryOptions queryOptions) {
+		final SelectStatement selectAst = (SelectStatement) statementStack.pop();
+		final JdbcOperationQuerySelect jdbcOperation = translateSelect( selectAst );
+
+		final DatabaseSelectImpl.Builder databaseSelectBuilder = DatabaseSelectImpl.builder( jdbcOperation );
+
+		final LockOptions lockOptions = queryOptions.getLockOptions();
+		if ( lockOptions == null || !lockOptions.getLockMode().isPessimistic() ) {
+			// nothing special to do for locking
+			return databaseSelectBuilder.build();
+		}
+
+		final LockingSupport lockingSupport = getDialect().getLockingSupport();
+		final LockingSupport.Metadata lockingSupportMetadata = lockingSupport.getMetadata();
+
+		final LockTimeoutType lockTimeoutType = lockingSupportMetadata.getLockTimeoutType( lockOptions.getTimeout() );
+		if ( lockTimeoutType == LockTimeoutType.CONNECTION ) {
+			databaseSelectBuilder.addSecondaryActionPair( new LockTimeoutHandler(
+					lockOptions.getTimeout(),
+					lockingSupport.getConnectionLockTimeoutStrategy()
+			) );
+		}
+
+		final PessimisticLockStyle pessimisticLockStyle = lockingSupportMetadata.getPessimisticLockStyle();
+		if ( pessimisticLockStyle == PessimisticLockStyle.TABLE_HINT
+			|| pessimisticLockStyle == PessimisticLockStyle.NONE ) {
+			// nothing special to do for locking
+			return databaseSelectBuilder.build();
+		}
+
+		if ( lockingTarget == null ) {
+			// nothing special to do for locking
+			// todo : not sure this can actually happen
+			return databaseSelectBuilder.build();
+
+		}
+
+		final LockStrategy lockStrategy = determineLockingStrategy( lockingTarget, lockOptions.getFollowOnStrategy() );
+		if ( lockStrategy == LockStrategy.NONE || lockStrategy == LockStrategy.CLAUSE ) {
+			// nothing special to do for locking
+			return databaseSelectBuilder.build();
+		}
+
+		// todo : would be great to implement this using one big CTE, but I don't think that
+		//		will be feasible due to restrictions trying to apply restrictions from the
+		//		original query.
+		//		so instead this tries to use individual CTE queries based on the original query
+
+		assert lockStrategy == LockStrategy.FOLLOW_ON;
+		applyFollowOnLockingActions(
+				selectAst,
+				jdbcOperation,
+				lockOptions,
+				lockingTarget,
+				lockingClauseStrategy,
+				databaseSelectBuilder
+		);
+		return databaseSelectBuilder.build();
+	}
+
+	private void applyFollowOnLockingActions(
+			SelectStatement selectAst,
+			JdbcOperationQuerySelect jdbcOperation,
+			LockOptions lockOptions,
+			QuerySpec lockingTarget,
+			LockingClauseStrategy lockingClauseStrategy,
+			DatabaseSelectImpl.Builder databaseSelectBuilder) {
+		final FromClause fromClause = lockingTarget.getFromClause();
+		final var loadedValuesCollector = resolveLoadedValuesCollector( fromClause );
+
+		// NOTE: we need to set this separately so that it can get incorporated into
+		// the JdbcValuesSourceProcessingState for proper callbacks
+		databaseSelectBuilder.setLoadedValuesCollector( loadedValuesCollector );
+
+		// additionally, add a post-action which uses the collected values.
+		databaseSelectBuilder.appendPostAction( new FollowOnLockingAction(
+				loadedValuesCollector,
+				lockOptions.getLockMode(),
+				lockOptions.getTimeout()
+		) );
+	}
+
+	protected static LoadedValuesCollector resolveLoadedValuesCollector(FromClause fromClause) {
+		final List<TableGroup> roots = fromClause.getRoots();
+		if ( roots.size() == 1 ) {
+			return new SingleRootLoadedValuesCollector( roots.get( 0 ).getNavigablePath() );
+		}
+		else {
+			return new LoadedValuesCollectorImpl( roots.stream().map( TableGroup::getNavigablePath ).toList() );
 		}
 	}
 

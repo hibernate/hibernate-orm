@@ -9,7 +9,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.PrintStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -41,6 +43,23 @@ public class ExamplesTestIT {
         assertFalse(personFile.exists());
         project.executeTarget("reveng");
         assertTrue(personFile.exists());
+    }
+
+    @Test
+    public void testClasspath() throws Exception {
+        PrintStream savedOut = System.out;
+        try {
+            File buildFile = new File(baseFolder, "classpath/build.xml");
+            Project project = createProject(buildFile);
+            assertNotNull(project);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            assertFalse(out.toString().contains("Hello from Exporter!"));
+            System.setOut(new PrintStream(out));
+            project.executeTarget("reveng");
+            assertTrue(out.toString().contains("Hello from Exporter!"));
+        } finally {
+            System.setOut(savedOut);
+        }
     }
 
     private Project createProject(File buildXmlFile) throws Exception {

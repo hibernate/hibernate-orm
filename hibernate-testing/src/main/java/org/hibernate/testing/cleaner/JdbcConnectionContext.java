@@ -11,6 +11,8 @@ import java.util.Properties;
 
 import org.hibernate.cfg.AvailableSettings;
 
+import static org.hibernate.testing.jdbc.GradleParallelTestingUsernameResolver.*;
+
 /**
  * @author Christian Beikov
  */
@@ -31,11 +33,12 @@ public final class JdbcConnectionContext {
 			driver = (Driver) Class.forName( driverClassName ).newInstance();
 			url = connectionProperties.getProperty(
 					AvailableSettings.URL );
+			resolveFromSettings(connectionProperties);
 			user = connectionProperties.getProperty(
 					AvailableSettings.USER );
 			password = connectionProperties.getProperty(
 					AvailableSettings.PASS );
-			Properties p = new Properties();
+			final Properties p = new Properties();
 			if ( user != null ) {
 				p.put( "user", user );
 			}

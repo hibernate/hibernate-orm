@@ -37,6 +37,7 @@ import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_DRIVER;
 import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_PASSWORD;
 import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_URL;
 import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_USER;
+import static org.hibernate.testing.jdbc.GradleParallelTestingUsernameResolver.*;
 
 
 /**
@@ -66,7 +67,7 @@ public class JakartaSchemaToolingTests {
 				actionSettingName, Action.CREATE_DROP,
 				driverSettingName, Environment.getProperties().get( AvailableSettings.DRIVER ),
 				urlSettingName, Environment.getProperties().get( AvailableSettings.URL ),
-				userSettingName, Environment.getProperties().get( AvailableSettings.USER ),
+				userSettingName, resolveUsername( (String)Environment.getProperties().get( AvailableSettings.USER ) ),
 				passwordSettingName, Environment.getProperties().get( AvailableSettings.PASS )
 		);
 		try {
@@ -95,7 +96,7 @@ public class JakartaSchemaToolingTests {
 				JPA_JDBC_DRIVER, "does.not.exist",
 				JAKARTA_JDBC_URL, Environment.getProperties().get( AvailableSettings.URL ),
 				JPA_JDBC_URL, "jdbc:na:nowhere",
-				JAKARTA_JDBC_USER, Environment.getProperties().get( AvailableSettings.USER ),
+				JAKARTA_JDBC_USER, resolveUsername( (String)Environment.getProperties().get( AvailableSettings.USER ) ),
 				JPA_JDBC_USER, "goofy",
 				JAKARTA_JDBC_PASSWORD, Environment.getProperties().get( AvailableSettings.PASS ),
 				JPA_JDBC_PASSWORD, "goober"
@@ -112,7 +113,7 @@ public class JakartaSchemaToolingTests {
 				JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP,
 				JAKARTA_JDBC_DRIVER, Environment.getProperties().get( AvailableSettings.DRIVER ),
 				JAKARTA_JDBC_URL, Environment.getProperties().get( AvailableSettings.URL ),
-				JAKARTA_JDBC_USER, Environment.getProperties().get( AvailableSettings.USER ),
+				JAKARTA_JDBC_USER, resolveUsername( (String)Environment.getProperties().get( AvailableSettings.USER ) ),
 				JAKARTA_JDBC_PASSWORD, Environment.getProperties().get( AvailableSettings.PASS ),
 				// Simulates a failure from e.g. the Hibernate Search observer
 				AvailableSettings.SESSION_FACTORY_OBSERVER, new SessionFactoryObserver() {
@@ -129,7 +130,7 @@ public class JakartaSchemaToolingTests {
 				JAKARTA_HBM2DDL_DATABASE_ACTION, Action.NONE,
 				JAKARTA_JDBC_DRIVER, Environment.getProperties().get( AvailableSettings.DRIVER ),
 				JAKARTA_JDBC_URL, Environment.getProperties().get( AvailableSettings.URL ),
-				JAKARTA_JDBC_USER, Environment.getProperties().get( AvailableSettings.USER ),
+				JAKARTA_JDBC_USER, resolveUsername( (String)Environment.getProperties().get( AvailableSettings.USER ) ),
 				JAKARTA_JDBC_PASSWORD, Environment.getProperties().get( AvailableSettings.PASS )
 		) ) {
 			assertThatThrownBy( () -> tryQuery( sessionFactory ) ).isNotNull();

@@ -9,8 +9,8 @@ import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.hikaricp.internal.HikariCPConnectionProvider;
 
+import org.hibernate.test.hikaricp.util.GradleParallelTestingHikariCPConnectionProvider;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.common.connections.BaseTransactionIsolationConfigTest;
 
@@ -24,6 +24,6 @@ import org.hibernate.testing.common.connections.BaseTransactionIsolationConfigTe
 public class HikariTransactionIsolationConfigTest extends BaseTransactionIsolationConfigTest {
 	@Override
 	protected ConnectionProvider getConnectionProviderUnderTest() {
-		return new HikariCPConnectionProvider();
+		return new GradleParallelTestingHikariCPConnectionProvider();
 	}
 }

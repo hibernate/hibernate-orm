@@ -227,7 +227,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			selectableName = selectable.getText();
 		}
 		else {
-			Column column = (Column) selectable;
+			var column = (Column) selectable;
 			columnExpression = selectable.getText( dialect );
 			columnDefinition = column.getSqlType();
 			length = column.getLength();

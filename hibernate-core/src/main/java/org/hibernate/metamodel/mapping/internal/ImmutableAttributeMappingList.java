@@ -37,8 +37,8 @@ public final class ImmutableAttributeMappingList implements AttributeMappingsLis
 
 	@Override
 	public void forEach(Consumer<? super AttributeMapping> attributeMappingConsumer) {
-		for ( AttributeMapping o : list ) {
-			attributeMappingConsumer.accept( o );
+		for ( var attributeMapping : list ) {
+			attributeMappingConsumer.accept( attributeMapping );
 		}
 	}
 
@@ -83,7 +83,7 @@ public final class ImmutableAttributeMappingList implements AttributeMappingsLis
 
 		public boolean assertFetchableIndexes() {
 			for ( int i = 0; i < builderList.size(); i++ ) {
-				final AttributeMapping attributeMapping = builderList.get( i );
+				final var attributeMapping = builderList.get( i );
 				assert i == attributeMapping.getFetchableKey();
 			}
 			return true;

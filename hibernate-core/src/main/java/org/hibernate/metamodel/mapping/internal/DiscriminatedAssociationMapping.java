@@ -4,22 +4,18 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.Iterator;
 import java.util.Locale;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatorMapping;
 import org.hibernate.metamodel.mapping.DiscriminatorValueDetails;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -39,6 +35,8 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.MetaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getSelectablePath;
+
 /**
  * Represents the "type" of an any-valued mapping
  *
@@ -54,30 +52,31 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			Any bootValueMapping,
 			MappingModelCreationProcess creationProcess) {
 
-		final Dialect dialect = creationProcess.getCreationContext().getDialect();
+		final var dialect = creationProcess.getCreationContext().getDialect();
 		final String tableName = MappingModelCreationHelper.getTableIdentifierExpression(
 				bootValueMapping.getTable(),
 				creationProcess
 		);
 
 		assert bootValueMapping.getColumnSpan() == 2;
-		final Iterator<Selectable> columnIterator = bootValueMapping.getSelectables().iterator();
+		final var columnIterator = bootValueMapping.getSelectables().iterator();
 
 		assert columnIterator.hasNext();
-		final Selectable metaSelectable = columnIterator.next();
+		final var metaSelectable = columnIterator.next();
 		assert columnIterator.hasNext();
-		final Selectable keySelectable = columnIterator.next();
+		final var keySelectable = columnIterator.next();
 		assert !columnIterator.hasNext();
 		assert !metaSelectable.isFormula();
 		assert !keySelectable.isFormula();
-		final Column metaColumn = (Column) metaSelectable;
-		final Column keyColumn = (Column) keySelectable;
-		final SelectablePath parentSelectablePath = declaringModelPart.asAttributeMapping() != null
-				? MappingModelCreationHelper.getSelectablePath( declaringModelPart.asAttributeMapping().getDeclaringType() )
-				: null;
+		final var metaColumn = (Column) metaSelectable;
+		final var keyColumn = (Column) keySelectable;
+		final SelectablePath parentSelectablePath =
+				declaringModelPart.asAttributeMapping() != null
+						? getSelectablePath( declaringModelPart.asAttributeMapping().getDeclaringType() )
+						: null;
 
-		final MetaType metaType = (MetaType) anyType.getDiscriminatorType();
-		final AnyDiscriminatorPart discriminatorPart = new AnyDiscriminatorPart(
+		final var metaType = (MetaType) anyType.getDiscriminatorType();
+		final var discriminatorPart = new AnyDiscriminatorPart(
 				containerRole.append( AnyDiscriminatorPart.ROLE_NAME ),
 				declaringModelPart,
 				tableName,
@@ -101,8 +100,8 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		);
 
 
-		final BasicType<?> keyType = (BasicType<?>) anyType.getIdentifierType();
-		final BasicValuedModelPart keyPart = new AnyKeyPart(
+		final var keyType = (BasicType<?>) anyType.getIdentifierType();
+		final var keyPart = new AnyKeyPart(
 				containerRole.append( AnyKeyPart.KEY_NAME ),
 				declaringModelPart,
 				tableName,
@@ -179,12 +178,10 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	}
 
 	public EntityMappingType resolveDiscriminatorValueToEntityMapping(Object discriminatorValue) {
-		final DiscriminatorValueDetails details =
+		final var details =
 				discriminatorPart.getValueConverter().
 						getDetailsForDiscriminatorValue( discriminatorValue );
-		return details != null
-				? details.getIndicatedEntity()
-				: null;
+		return details == null ? null : details.getIndicatedEntity();
 	}
 
 	public <X, Y> int breakDownJdbcValues(
@@ -200,13 +197,13 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			return getDiscriminatorPart().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
 		}
 		else {
-			final EntityMappingType concreteMappingType = determineConcreteType( domainValue, session );
+			final var concreteMappingType = determineConcreteType( domainValue, session );
 
 			final Object discriminator = getModelPart().resolveDiscriminatorForEntityType( concreteMappingType );
 			final Object disassembledDiscriminator = getDiscriminatorPart().disassemble( discriminator, session );
 			valueConsumer.consume( offset, x, y, disassembledDiscriminator, getDiscriminatorPart() );
 
-			final EntityIdentifierMapping identifierMapping = concreteMappingType.getIdentifierMapping();
+			final var identifierMapping = concreteMappingType.getIdentifierMapping();
 			final Object identifier = identifierMapping.getIdentifier( domainValue );
 			final Object disassembledKey = getKeyPart().disassemble( identifier, session );
 			valueConsumer.consume( offset + 1, x, y, disassembledKey, getKeyPart() );
@@ -226,12 +223,12 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			valueConsumer.consume( offset + 1, x, y, null, getKeyPart() );
 		}
 		else {
-			final EntityMappingType concreteMappingType = determineConcreteType( domainValue, session );
+			final var concreteMappingType = determineConcreteType( domainValue, session );
 
 			final Object discriminator = getModelPart().resolveDiscriminatorForEntityType( concreteMappingType );
 			getDiscriminatorPart().decompose( discriminator, offset, x, y, valueConsumer, session );
 
-			final EntityIdentifierMapping identifierMapping = concreteMappingType.getIdentifierMapping();
+			final var identifierMapping = concreteMappingType.getIdentifierMapping();
 			final Object identifier = identifierMapping.getIdentifier( domainValue );
 			getKeyPart().decompose( identifier, offset + 1, x, y, valueConsumer, session );
 		}
@@ -239,9 +236,10 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	}
 
 	private EntityMappingType determineConcreteType(Object entity, SharedSessionContractImplementor session) {
-		final String entityName = session == null
-				? sessionFactory.bestGuessEntityName( entity )
-				: session.bestGuessEntityName( entity );
+		final String entityName =
+				session == null
+						? sessionFactory.bestGuessEntityName( entity )
+						: session.bestGuessEntityName( entity );
 		return sessionFactory.getMappingMetamodel()
 				.getEntityDescriptor( entityName );
 	}
@@ -264,7 +262,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 
 		return discriminatorPart.getValueConverter().fromValueDetails( (detail) -> {
 			try {
-				final ModelPart subPart = resolveAssociatedSubPart( name, detail.getIndicatedEntity() );
+				final var subPart = resolveAssociatedSubPart( name, detail.getIndicatedEntity() );
 				if ( subPart != null ) {
 					return subPart;
 				}
@@ -277,7 +275,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	}
 
 	private ModelPart resolveAssociatedSubPart(String name, EntityMappingType entityMapping) {
-		final EntityIdentifierMapping identifierMapping = entityMapping.getIdentifierMapping();
+		final var identifierMapping = entityMapping.getIdentifierMapping();
 
 		if ( identifierMapping.getPartName().equals( name ) ) {
 			return getKeyPart();
@@ -297,18 +295,16 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		assert treatTarget != null;
 
 		final DiscriminatorValueDetails details = discriminatorPart.getValueConverter().getDetailsForEntityName( treatTarget.getEntityName() );
-		if ( details != null ) {
-			return;
+		if ( details == null ) {
+			throw new IllegalArgumentException(
+					String.format(
+							Locale.ROOT,
+							"Treat-target [`%s`] is not not an entity mapped by ANY value : %s",
+							treatTarget.getEntityName(),
+							modelPart.getNavigableRole()
+					)
+			);
 		}
-
-		throw new IllegalArgumentException(
-				String.format(
-						Locale.ROOT,
-						"Treat-target [`%s`] is not not an entity mapped by ANY value : %s",
-						treatTarget.getEntityName(),
-						modelPart.getNavigableRole()
-				)
-		);
 	}
 
 	public MappingType getPartMappingType() {

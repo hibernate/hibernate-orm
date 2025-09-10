@@ -281,8 +281,9 @@ public class MappingModelCreationHelper {
 		final FetchTiming fetchTiming;
 		final FetchStyle fetchStyle;
 		final boolean partitioned;
+		boolean lazy = bootProperty.isLazy();
 		if ( declaringType instanceof EmbeddableMappingType embeddableMappingType ) {
-			if ( bootProperty.isLazy() ) {
+			if ( lazy) {
 				MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
 						"Attribute was declared LAZY, but is part of embeddable '%s#%s', LAZY ignored",
 						declaringType.getNavigableRole().getFullPath(),
@@ -295,8 +296,8 @@ public class MappingModelCreationHelper {
 					&& !embeddableMappingType.getEmbeddedValueMapping().isVirtual();
 		}
 		else {
-			fetchTiming = bootProperty.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE;
-			fetchStyle = bootProperty.isLazy() ? FetchStyle.SELECT : FetchStyle.JOIN;
+			fetchTiming = lazy ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE;
+			fetchStyle = lazy ? FetchStyle.SELECT : FetchStyle.JOIN;
 			partitioned = value.isPartitionKey();
 		}
 
@@ -907,7 +908,7 @@ public class MappingModelCreationHelper {
 
 		attributeMapping.setIdentifyingColumnsTableExpression( tableName );
 
-		final EntityPersister referencedEntityDescriptor =
+		final var referencedEntityDescriptor =
 				creationProcess.getEntityPersister( bootValueMapping.getReferencedEntityName() );
 
 		String referencedPropertyName;
@@ -1054,8 +1055,8 @@ public class MappingModelCreationHelper {
 			creationProcess.registerForeignKey( attributeMapping, foreignKeyDescriptor );
 		}
 		else if ( fkTarget instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
-			final Value value = bootProperty.getValue();
-			final EmbeddedForeignKeyDescriptor embeddedForeignKeyDescriptor = buildEmbeddableForeignKeyDescriptor(
+			final var value = bootProperty.getValue();
+			final var embeddedForeignKeyDescriptor = buildEmbeddableForeignKeyDescriptor(
 					embeddableValuedModelPart,
 					bootValueMapping,
 					attributeMapping.getDeclaringType(),
@@ -1169,7 +1170,8 @@ public class MappingModelCreationHelper {
 		final boolean hasConstraint;
 		final SelectableMappings keySelectableMappings;
 		if ( bootValueMapping instanceof Collection collectionBootValueMapping ) {
-			hasConstraint = ((SimpleValue) collectionBootValueMapping.getKey()).isConstrained();
+			final var key = (SimpleValue) collectionBootValueMapping.getKey();
+			hasConstraint = key.isConstrained();
 			keyTableExpression = keyTableExpression != null
 					? keyTableExpression
 					: getTableIdentifierExpression( collectionBootValueMapping.getCollectionTable(), creationProcess );
@@ -1377,7 +1379,8 @@ public class MappingModelCreationHelper {
 				updatable = false;
 			}
 			else {
-				insertable = updatable = basicValue.isColumnInsertable( 0 )
+				insertable = updatable =
+						basicValue.isColumnInsertable( 0 )
 						|| basicValue.isColumnUpdateable( 0 );
 			}
 			final var selectableMapping = SelectableMappingImpl.from(
@@ -1527,8 +1530,8 @@ public class MappingModelCreationHelper {
 		}
 
 		if ( element instanceof OneToMany || element instanceof ToOne ) {
-			final EntityType elementEntityType = (EntityType) collectionDescriptor.getElementType();
-			final EntityPersister associatedEntity =
+			final var elementEntityType = (EntityType) collectionDescriptor.getElementType();
+			final var associatedEntity =
 					creationProcess.getEntityPersister( elementEntityType.getAssociatedEntityName() );
 
 			final EntityCollectionPart elementDescriptor;
@@ -1888,47 +1891,18 @@ public class MappingModelCreationHelper {
 					cascadeStyle,
 					creationProcess
 			);
-			final var sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+			final var factory = creationProcess.getCreationContext().getSessionFactory();
 
 			final var type = (AssociationType) bootProperty.getType();
-			final FetchStyle fetchStyle = FetchOptionsHelper
-					.determineFetchStyleByMetadata(
+			final var fetchStyle =
+					FetchOptionsHelper.determineFetchStyleByMetadata(
 							bootProperty.getValue().getFetchMode(),
 							type,
-							sessionFactory
+							factory
 					);
 
-			final FetchTiming fetchTiming;
-			final String role = declaringType.getNavigableRole().toString() + "." + bootProperty.getName();
-			final boolean lazy = value.isLazy();
-			if ( lazy && entityPersister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
-				if ( value.isUnwrapProxy() ) {
-					fetchTiming = determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
-				}
-				else if ( value instanceof ManyToOne manyToOne && value.isNullable() && manyToOne.isIgnoreNotFound() ) {
-					fetchTiming = FetchTiming.IMMEDIATE;
-				}
-				else {
-					fetchTiming = determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
-				}
-			}
-			else if ( !lazy
-					|| value instanceof OneToOne && value.isNullable()
-					|| value instanceof ManyToOne manyToOne && value.isNullable() && manyToOne.isIgnoreNotFound() ) {
-				fetchTiming = FetchTiming.IMMEDIATE;
-				if ( lazy ) {
-					if ( MAPPING_MODEL_CREATION_MESSAGE_LOGGER.isTraceEnabled() ) {
-						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.tracef(
-								"Forcing FetchTiming.IMMEDIATE for to-one association: %s.%s",
-								declaringType.getNavigableRole(),
-								bootProperty.getName()
-						);
-					}
-				}
-			}
-			else {
-				fetchTiming = determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
-			}
+			final var fetchTiming =
+					fetchTiming( bootProperty, declaringType, value, entityPersister, fetchStyle, type, factory );
 
 			final var attributeMapping = mappingConverter.apply( new ToOneAttributeMapping(
 					attrName,
@@ -1960,6 +1934,39 @@ public class MappingModelCreationHelper {
 		}
 		else {
 			throw new UnsupportedOperationException( "AnyType support has not yet been implemented" );
+		}
+	}
+
+	private static FetchTiming fetchTiming(Property bootProperty, ManagedMappingType declaringType, ToOne value, EntityPersister entityPersister, FetchStyle fetchStyle, AssociationType type, SessionFactoryImplementor sessionFactory) {
+		final String role = declaringType.getNavigableRole().toString() + "." + bootProperty.getName();
+		final boolean lazy = value.isLazy();
+		if ( lazy && entityPersister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
+			if ( value.isUnwrapProxy() ) {
+				return determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
+			}
+			else if ( value instanceof ManyToOne manyToOne && value.isNullable() && manyToOne.isIgnoreNotFound() ) {
+				return FetchTiming.IMMEDIATE;
+			}
+			else {
+				return determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
+			}
+		}
+		else if ( !lazy
+				|| value instanceof OneToOne && value.isNullable()
+				|| value instanceof ManyToOne manyToOne && value.isNullable() && manyToOne.isIgnoreNotFound() ) {
+			if ( lazy ) {
+				if ( MAPPING_MODEL_CREATION_MESSAGE_LOGGER.isTraceEnabled() ) {
+					MAPPING_MODEL_CREATION_MESSAGE_LOGGER.tracef(
+							"Forcing FetchTiming.IMMEDIATE for to-one association: %s.%s",
+							declaringType.getNavigableRole(),
+							bootProperty.getName()
+					);
+				}
+			}
+			return FetchTiming.IMMEDIATE;
+		}
+		else {
+			return determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
 		}
 	}
 }

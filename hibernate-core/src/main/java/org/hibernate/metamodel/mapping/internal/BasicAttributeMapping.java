@@ -23,11 +23,8 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -193,11 +190,12 @@ public class BasicAttributeMapping
 		else {
 			this.customWriteExpression = customWriteExpression;
 		}
-		this.isLazy = navigableRole.getParent().getParent() == null && declaringType.findContainingEntityMapping()
-				.getEntityPersister()
-				.getBytecodeEnhancementMetadata()
-				.getLazyAttributesMetadata()
-				.isLazyAttribute( attributeName );
+		this.isLazy = navigableRole.getParent().getParent() == null
+					&& declaringType.findContainingEntityMapping()
+							.getEntityPersister()
+							.getBytecodeEnhancementMetadata()
+							.getLazyAttributesMetadata()
+							.isLazyAttribute( attributeName );
 	}
 
 	public static BasicAttributeMapping withSelectableMapping(
@@ -409,21 +407,19 @@ public class BasicAttributeMapping
 			TableGroup tableGroup,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
-		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
-		final TableReference tableReference = tableGroup.resolveTableReference(
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
+		final var expressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final var tableReference = tableGroup.resolveTableReference(
 				navigablePath,
 				this,
 				getContainingTableExpression()
 		);
 
 		return expressionResolver.resolveSqlSelection(
-				expressionResolver.resolveSqlExpression(
-						tableReference,
-						this
-				),
+				expressionResolver.resolveSqlExpression( tableReference, this ),
 				jdbcMapping.getJdbcJavaType(),
 				fetchParent,
-				creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 	}
 
@@ -441,7 +437,8 @@ public class BasicAttributeMapping
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, null, creationState ), getJdbcMapping() );
+		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, null, creationState ),
+				getJdbcMapping() );
 	}
 
 	@Override
@@ -462,11 +459,10 @@ public class BasicAttributeMapping
 			sqlSelection = null;
 		}
 		else {
-			final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-			final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup(
-					fetchParent.getNavigablePath()
-			);
-
+			final var sqlAstCreationState = creationState.getSqlAstCreationState();
+			final var tableGroup =
+					sqlAstCreationState.getFromClauseAccess()
+							.getTableGroup( fetchParent.getNavigablePath() );
 			assert tableGroup != null;
 
 			sqlSelection = resolveSqlSelection(

@@ -9,8 +9,6 @@ import java.util.List;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -25,6 +23,8 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.MappingContext;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
  * @author Christian Beikov
@@ -43,8 +43,7 @@ public class SelectableMappingsImpl implements SelectableMappings {
 						? entityType.getIdentifierOrUniqueKeyType( mapping )
 						: valueType;
 		if ( keyType instanceof CompositeType compositeType ) {
-			Type[] subtypes = compositeType.getSubtypes();
-			for ( Type subtype : subtypes ) {
+			for ( Type subtype : compositeType.getSubtypes() ) {
 				resolveJdbcMappings( jdbcMappings, mapping, subtype );
 			}
 		}
@@ -94,9 +93,8 @@ public class SelectableMappingsImpl implements SelectableMappings {
 		final List<JdbcMapping> jdbcMappings = new ArrayList<>();
 		resolveJdbcMappings( jdbcMappings, mappingContext, value.getType() );
 
-		final List<Selectable> selectables = value.getVirtualSelectables();
-
-		final SelectableMapping[] selectableMappings = new SelectableMapping[jdbcMappings.size()];
+		final var selectables = value.getVirtualSelectables();
+		final var selectableMappings = new SelectableMapping[jdbcMappings.size()];
 		for ( int i = 0; i < selectables.size(); i++ ) {
 			selectableMappings[propertyOrder[i]] = SelectableMappingImpl.from(
 					containingTableExpression,
@@ -118,14 +116,12 @@ public class SelectableMappingsImpl implements SelectableMappings {
 
 	public static SelectableMappings from(EmbeddableMappingType embeddableMappingType) {
 		final int propertySpan = embeddableMappingType.getNumberOfAttributeMappings();
-		final List<SelectableMapping> selectableMappings = CollectionHelper.arrayList( propertySpan );
-
+		final List<SelectableMapping> selectableMappings = arrayList( propertySpan );
 		embeddableMappingType.forEachAttributeMapping(
 				(index, attributeMapping) -> attributeMapping.forEachSelectable(
 						(columnIndex, selection) -> selectableMappings.add( selection )
 				)
 		);
-
 		return new SelectableMappingsImpl( selectableMappings.toArray( new SelectableMapping[0] ) );
 	}
 

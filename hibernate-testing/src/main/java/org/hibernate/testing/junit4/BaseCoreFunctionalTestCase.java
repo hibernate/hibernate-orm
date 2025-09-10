@@ -64,7 +64,6 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("deprecation")
 public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	public static final String VALIDATE_DATA_CLEANUP = "hibernate.test.validateDataCleanup";
 

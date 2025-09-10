@@ -64,10 +64,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 
 	@Override
 	public Dialect getDialect() {
-		if ( jdbcEnvironment != null ) {
-			return jdbcEnvironment.getDialect();
-		}
-		return null;
+		return jdbcEnvironment != null ? jdbcEnvironment.getDialect() : null;
 	}
 
 	@Override

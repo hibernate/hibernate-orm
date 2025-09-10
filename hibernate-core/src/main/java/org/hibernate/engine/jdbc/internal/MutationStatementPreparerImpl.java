@@ -12,11 +12,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.event.monitor.spi.EventMonitor;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
-import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
-import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 
 /**
@@ -82,20 +78,19 @@ public class MutationStatementPreparerImpl implements MutationStatementPreparer 
 		protected final String sql;
 
 		protected StatementPreparationTemplate(String incomingSql) {
-			final String inspectedSql = jdbcCoordinator.getJdbcSessionOwner()
-					.getJdbcSessionContext()
-					.getStatementInspector()
-					.inspect( incomingSql );
-			this.sql = inspectedSql == null ? incomingSql : inspectedSql;
+			final String inspectedSql =
+					jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext()
+							.getStatementInspector().inspect( incomingSql );
+			sql = inspectedSql == null ? incomingSql : inspectedSql;
 		}
 
 		public PreparedStatement prepareStatement() {
 			try {
+				final var jdbcSessionOwner = jdbcCoordinator.getJdbcSessionOwner();
+				final var jdbcEventHandler = jdbcSessionOwner.getJdbcSessionContext().getEventHandler();
+				final var eventMonitor = jdbcSessionOwner.getEventMonitor();
+				final var jdbcPreparedStatementCreation = eventMonitor.beginJdbcPreparedStatementCreationEvent();
 				final PreparedStatement preparedStatement;
-				final JdbcSessionOwner jdbcSessionOwner = jdbcCoordinator.getJdbcSessionOwner();
-				final JdbcEventHandler jdbcEventHandler = jdbcSessionOwner.getJdbcSessionContext().getEventHandler();
-				final EventMonitor eventMonitor = jdbcSessionOwner.getEventMonitor();
-				final DiagnosticEvent jdbcPreparedStatementCreation = eventMonitor.beginJdbcPreparedStatementCreationEvent();
 				try {
 					jdbcEventHandler.jdbcPrepareStatementStart();
 					preparedStatement = doPrepare();

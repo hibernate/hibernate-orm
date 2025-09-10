@@ -74,12 +74,9 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 		}
 		else if ( supportedContextualLobTypes.contains( LobTypes.BLOB )
 				&& supportedContextualLobTypes.contains( LobTypes.CLOB ) ){
-			if ( !supportedContextualLobTypes.contains( LobTypes.NCLOB ) ) {
-				return new BlobAndClobCreator( lobCreationContext, useConnectionToCreateLob );
-			}
-			else {
-				return new StandardLobCreator( lobCreationContext, useConnectionToCreateLob );
-			}
+			return !supportedContextualLobTypes.contains( LobTypes.NCLOB )
+					? new BlobAndClobCreator( lobCreationContext, useConnectionToCreateLob )
+					: new StandardLobCreator( lobCreationContext, useConnectionToCreateLob );
 		}
 		else {
 			LOB_LOGGER.debug( "Unexpected condition resolving type of LobCreator to use. Falling back to NonContextualLobCreator" );

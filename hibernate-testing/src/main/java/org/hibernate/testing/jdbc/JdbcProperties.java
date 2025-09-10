@@ -10,6 +10,8 @@ import java.util.Properties;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.testing.jdbc.GradleParallelTestingUsernameResolver.resolveFromSettings;
+
 /**
  * @author Vlad Mihalcea
  */
@@ -36,6 +38,7 @@ public class JdbcProperties {
 				connectionProperties.load( inputStream );
 				url = connectionProperties.getProperty(
 						"hibernate.connection.url" );
+				resolveFromSettings(connectionProperties);
 				user = connectionProperties.getProperty(
 						"hibernate.connection.username" );
 				password = connectionProperties.getProperty(

@@ -8,8 +8,8 @@ import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.agroal.internal.AgroalConnectionProvider;
 
+import org.hibernate.test.agroal.util.GradleParallelTestingAgroalConnectionProvider;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.common.connections.BaseTransactionIsolationConfigTest;
 
@@ -22,6 +22,6 @@ import org.hibernate.testing.common.connections.BaseTransactionIsolationConfigTe
 public class AgroalTransactionIsolationConfigTest extends BaseTransactionIsolationConfigTest {
 	@Override
 	protected ConnectionProvider getConnectionProviderUnderTest() {
-		return new AgroalConnectionProvider();
+		return new GradleParallelTestingAgroalConnectionProvider();
 	}
 }

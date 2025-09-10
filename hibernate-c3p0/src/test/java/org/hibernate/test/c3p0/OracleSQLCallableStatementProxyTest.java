@@ -17,10 +17,10 @@ import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.SqlResultSetMappings;
 import jakarta.persistence.StoredProcedureParameter;
 
-import org.hibernate.c3p0.internal.C3P0ConnectionProvider;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.OracleDialect;
 
+import org.hibernate.test.c3p0.util.GradleParallelTestingC3P0ConnectionProvider;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -41,7 +41,7 @@ public class OracleSQLCallableStatementProxyTest extends
 	protected void configure(Configuration configuration) {
 		configuration.setProperty(
 				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
-				C3P0ConnectionProvider.class
+				GradleParallelTestingC3P0ConnectionProvider.class
 		);
 	}
 

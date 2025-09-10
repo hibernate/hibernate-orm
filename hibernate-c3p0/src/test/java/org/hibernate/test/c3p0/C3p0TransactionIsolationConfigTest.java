@@ -14,6 +14,7 @@ import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
+import org.hibernate.test.c3p0.util.GradleParallelTestingC3P0ConnectionProvider;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.common.connections.BaseTransactionIsolationConfigTest;
 import org.junit.Before;
@@ -35,7 +36,7 @@ public class C3p0TransactionIsolationConfigTest extends BaseTransactionIsolation
 
 	@Override
 	protected ConnectionProvider getConnectionProviderUnderTest() {
-		C3P0ConnectionProvider provider = new C3P0ConnectionProvider();
+		C3P0ConnectionProvider provider = new GradleParallelTestingC3P0ConnectionProvider();
 		provider.injectServices( (ServiceRegistryImplementor) ssr );
 		return provider;
 	}

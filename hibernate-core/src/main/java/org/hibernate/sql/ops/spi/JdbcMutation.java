@@ -5,7 +5,7 @@
 package org.hibernate.sql.ops.spi;
 
 /**
- * A database mutation ({@code INSERT}, {@code UPDATE} or {@code DELETE}) performed via JDBC.
+ * Primary operation, which is an ({@code INSERT}, {@code UPDATE} or {@code DELETE}) performed via JDBC.
  *
  * @author Steve Ebersole
  */

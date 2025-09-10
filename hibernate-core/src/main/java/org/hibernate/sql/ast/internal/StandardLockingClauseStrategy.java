@@ -30,6 +30,8 @@ import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.model.TableMapping;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -147,6 +149,16 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 	public void render(SqlAppender sqlAppender) {
 		renderLockFragment( sqlAppender );
 		renderResultSetOptions( sqlAppender );
+	}
+
+	@Override
+	public Collection<TableGroup> getRootsToLock() {
+		return rootsToLock;
+	}
+
+	@Override
+	public Collection<TableGroupJoin> getJoinsToLock() {
+		return joinsToLock;
 	}
 
 	protected void renderLockFragment(SqlAppender sqlAppender) {

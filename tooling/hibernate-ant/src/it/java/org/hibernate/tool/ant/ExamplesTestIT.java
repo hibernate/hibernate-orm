@@ -62,6 +62,17 @@ public class ExamplesTestIT {
         }
     }
 
+    @Test
+    public void testConfiguration() throws Exception {
+        File buildFile = new File(baseFolder, "configuration/build.xml");
+        Project project = createProject(buildFile);
+        assertNotNull(project);
+        File cfgXmlFile = new File(baseFolder, "configuration/generated/hibernate.cfg.xml");
+        assertFalse(cfgXmlFile.exists());
+        project.executeTarget("reveng");
+        assertTrue(cfgXmlFile.exists());
+    }
+
     private Project createProject(File buildXmlFile) throws Exception {
         Project result = new Project();
         ProjectHelper projectHelper = ProjectHelper.getProjectHelper();

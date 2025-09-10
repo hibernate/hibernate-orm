@@ -154,6 +154,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			if ( currentBatch != null ) {
 				JDBC_MESSAGE_LOGGER.closingUnreleasedBatch( hashCode() );
 				currentBatch.release();
+				currentBatch = null;
 			}
 		}
 		finally {
@@ -173,7 +174,10 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 					currentBatch.execute();
 				}
 				finally {
-					currentBatch.release();
+					if ( currentBatch != null ) {
+						currentBatch.release();
+						currentBatch = null;
+					}
 				}
 			}
 		}
@@ -191,7 +195,10 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 				currentBatch.execute();
 			}
 			finally {
-				currentBatch.release();
+				if ( currentBatch != null ) { // abortBatch() might have been called
+					currentBatch.release();
+					currentBatch = null;
+				}
 			}
 		}
 	}
@@ -204,7 +211,10 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 				currentBatch.execute();
 			}
 			finally {
-				currentBatch.release();
+				if ( currentBatch != null ) { // abortBatch() might have been called
+					currentBatch.release();
+					currentBatch = null;
+				}
 			}
 		}
 	}
@@ -212,8 +222,9 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void abortBatch() {
 		if ( currentBatch != null ) {
-			BATCH_MESSAGE_LOGGER.abortBatch( currentBatch.getKey() .toLoggableString());
+			BATCH_MESSAGE_LOGGER.abortBatch( currentBatch.getKey().toLoggableString());
 			currentBatch.release();
+			currentBatch = null;
 		}
 	}
 

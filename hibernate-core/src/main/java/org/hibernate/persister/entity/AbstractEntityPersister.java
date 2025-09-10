@@ -4646,7 +4646,7 @@ public abstract class AbstractEntityPersister
 				creationProcess.getCreationContext().getBootModel()
 						.getEntityBinding( getEntityName() );
 		initializeSpecialAttributeMappings( creationProcess, persistentClass );
-		versionGenerator = createVersionGenerator( this, versionMapping );
+		versionGenerator = createVersionGenerator( super.getVersionGenerator(), versionMapping );
 		buildDeclaredAttributeMappings( creationProcess, persistentClass );
 		getAttributeMappings();
 		initializeNaturalIdMapping( creationProcess, persistentClass );
@@ -4705,15 +4705,15 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private static BeforeExecutionGenerator createVersionGenerator
-			(EntityMetamodel currentEntityMetamodel, EntityVersionMapping versionMapping) {
-		if ( currentEntityMetamodel.isVersioned() ) {
-			final var generator = currentEntityMetamodel.getVersionGenerator();
+	private static @Nullable BeforeExecutionGenerator createVersionGenerator(
+			@Nullable BeforeExecutionGenerator configuredGenerator,
+			@Nullable EntityVersionMapping versionMapping) {
+		if ( versionMapping != null ) {
 			// need to do this here because EntityMetamodel doesn't have the EntityVersionMapping :-(
-			return generator == null ? new VersionGeneration( versionMapping ) : generator;
+			return configuredGenerator == null ? new VersionGeneration( versionMapping ) : configuredGenerator;
 		}
 		else {
-			return null;
+			return configuredGenerator;
 		}
 	}
 

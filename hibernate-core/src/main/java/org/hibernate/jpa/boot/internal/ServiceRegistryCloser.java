@@ -22,11 +22,12 @@ class ServiceRegistryCloser implements SessionFactoryObserver {
 
 	@Override
 	public void sessionFactoryClosed(SessionFactory sessionFactory) {
-		final SessionFactoryImplementor factoryImplementor = (SessionFactoryImplementor) sessionFactory;
-		final ServiceRegistryImplementor serviceRegistry = factoryImplementor.getServiceRegistry();
+		final var factoryImplementor = (SessionFactoryImplementor) sessionFactory;
+		final var serviceRegistry = factoryImplementor.getServiceRegistry();
 		serviceRegistry.destroy();
-		final ServiceRegistryImplementor basicRegistry =
-				(ServiceRegistryImplementor) serviceRegistry.getParentServiceRegistry();
+		final var basicRegistry =
+				(ServiceRegistryImplementor)
+						serviceRegistry.getParentServiceRegistry();
 		if ( basicRegistry != null ) {
 			basicRegistry.destroy();
 		}

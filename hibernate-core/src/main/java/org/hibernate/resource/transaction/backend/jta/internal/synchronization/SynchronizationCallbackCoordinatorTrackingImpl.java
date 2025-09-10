@@ -5,8 +5,9 @@
 package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 
+import static org.hibernate.engine.transaction.internal.jta.JtaStatusHelper.isCommitted;
+import static org.hibernate.engine.transaction.internal.jta.JtaStatusHelper.isRollback;
 import static org.hibernate.resource.transaction.backend.jta.internal.JtaLogging.JTA_LOGGER;
 
 /**
@@ -50,7 +51,7 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 		// As far as we know, this can only ever happen in the rollback case where the transaction had been rolled
 		// back on a separate "reaper" thread. Since we know the transaction status and that check is not as heavy
 		// as accessing the current thread, we check that first
-		if ( JtaStatusHelper.isRollback( status ) ) {
+		if ( isRollback( status ) ) {
 			// We are processing a rollback, see if it is the same thread
 			final long currentThreadId = Thread.currentThread().getId();
 			final boolean isRegistrationThread = currentThreadId == registrationThreadId;
@@ -64,7 +65,7 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 		}
 
 		// otherwise, do the callback immediately
-		doAfterCompletion( JtaStatusHelper.isCommitted( status ), false );
+		doAfterCompletion( isCommitted( status ), false );
 	}
 
 	@Override

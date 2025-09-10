@@ -34,8 +34,8 @@ public class HibernateTraversableResolver implements TraversableResolver {
 	private final Map<Class<?>, Set<String>> associationsPerEntityClass = new HashMap<>();
 
 	public void addPersister(EntityPersister persister, SessionFactoryImplementor factory) {
-		Class<?> javaTypeClass = persister.getEntityMappingType().getMappedJavaType().getJavaTypeClass();
-		Set<String> associations = new HashSet<>();
+		final var javaTypeClass = persister.getEntityMappingType().getMappedJavaType().getJavaTypeClass();
+		final Set<String> associations = new HashSet<>();
 		addAssociationsToTheSetForAllProperties( persister.getPropertyNames(), persister.getPropertyTypes(), "", factory, associations );
 		associationsPerEntityClass.put( javaTypeClass, associations );
 	}
@@ -69,8 +69,8 @@ public class HibernateTraversableResolver implements TraversableResolver {
 	}
 
 	private String getStringBasedPath(Path.Node traversableProperty, Path pathToTraversableObject) {
-		final StringBuilder path = new StringBuilder( );
-		for ( Path.Node node : pathToTraversableObject ) {
+		final var path = new StringBuilder( );
+		for ( var node : pathToTraversableObject ) {
 			if (node.getName() != null) {
 				path.append( node.getName() ).append( '.' );
 			}
@@ -99,10 +99,8 @@ public class HibernateTraversableResolver implements TraversableResolver {
 			Class<?> rootBeanType,
 			Path pathToTraversableObject,
 			ElementType elementType) {
-		Set<String> associations = associationsPerEntityClass.get( rootBeanType);
-		if ( associations == null ) {
-			return false;
-		}
-		return !associations.contains( getStringBasedPath( traversableProperty, pathToTraversableObject ) );
+		final var associations = associationsPerEntityClass.get( rootBeanType);
+		return associations != null
+			&& !associations.contains( getStringBasedPath( traversableProperty, pathToTraversableObject ) );
 	}
 }

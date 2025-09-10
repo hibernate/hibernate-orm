@@ -107,9 +107,9 @@ public final class JtaStatusHelper {
 	 * @return True if the code indicates a roll back; false otherwise.
 	 */
 	public static boolean isRollback(int status) {
-		return status == Status.STATUS_MARKED_ROLLBACK ||
-				status == Status.STATUS_ROLLING_BACK ||
-				status == Status.STATUS_ROLLEDBACK;
+		return status == Status.STATUS_MARKED_ROLLBACK
+			|| status == Status.STATUS_ROLLING_BACK
+			|| status == Status.STATUS_ROLLEDBACK;
 	}
 
 	/**

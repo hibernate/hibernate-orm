@@ -17,7 +17,7 @@ public class JpaEntityNotFoundDelegate implements EntityNotFoundDelegate, Serial
 	public static final JpaEntityNotFoundDelegate INSTANCE = new JpaEntityNotFoundDelegate();
 
 	public void handleEntityNotFound(String entityName, Object identifier) {
-		final ObjectNotFoundException exception = new ObjectNotFoundException( entityName, identifier );
+		final var exception = new ObjectNotFoundException( entityName, identifier );
 		throw new EntityNotFoundException( exception.getMessage(), exception );
 	}
 }

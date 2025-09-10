@@ -47,31 +47,32 @@ public class SessionFactoryServiceRegistryImpl
 	public static SessionFactoryServiceRegistryImpl create(
 			ServiceRegistryImplementor parent,
 			List<SessionFactoryServiceInitiator<?>> initiators,
-			List<ProvidedService<?>> providedServices,
+			List<ProvidedService<? extends Service>> providedServices,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryOptions sessionFactoryOptions) {
-		final SessionFactoryServiceRegistryImpl instance =
-				new SessionFactoryServiceRegistryImpl( parent, sessionFactory, sessionFactoryOptions );
+		final var instance = new SessionFactoryServiceRegistryImpl( parent, sessionFactory, sessionFactoryOptions );
 		instance.initialize( initiators, providedServices );
 		return instance;
 	}
 
-	protected void initialize(List<SessionFactoryServiceInitiator<?>> initiators, List<ProvidedService<?>> providedServices) {
+	protected void initialize(
+			List<SessionFactoryServiceInitiator<?>> initiators,
+			List<ProvidedService<? extends Service>> providedServices) {
 		super.initialize();
 		// for now, just use the standard initiator list
-		for ( SessionFactoryServiceInitiator<?> initiator : initiators ) {
+		for ( var initiator : initiators ) {
 			// create the bindings up front to help identify to which registry services belong
 			createServiceBinding( initiator );
 		}
 
-		for ( ProvidedService providedService : providedServices ) {
+		for ( var providedService : providedServices ) {
 			createServiceBinding( providedService );
 		}
 	}
 
 	@Override
 	public <R extends Service> R initiateService(ServiceInitiator<R> serviceInitiator) {
-		SessionFactoryServiceInitiator<R> sessionFactoryServiceInitiator = (SessionFactoryServiceInitiator<R>) serviceInitiator;
+		final var sessionFactoryServiceInitiator = (SessionFactoryServiceInitiator<R>) serviceInitiator;
 		return sessionFactoryServiceInitiator.initiateService( this );
 	}
 
@@ -108,7 +109,8 @@ public class SessionFactoryServiceRegistryImpl
 			//noinspection unchecked
 			return (R) sessionFactory.getEventEngine().getListenerRegistry();
 		}
-
-		return super.getService( serviceRole );
+		else {
+			return super.getService( serviceRole );
+		}
 	}
 }

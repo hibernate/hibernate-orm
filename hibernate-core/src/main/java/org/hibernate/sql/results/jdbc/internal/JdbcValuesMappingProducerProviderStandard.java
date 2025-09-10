@@ -9,7 +9,6 @@ import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.results.internal.ResultSetMappingImpl;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
-import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
@@ -37,10 +36,12 @@ public class JdbcValuesMappingProducerProviderStandard implements JdbcValuesMapp
 
 	private static List<SqlSelection> getSelections(SelectStatement selectStatement) {
 		if ( selectStatement.getQueryPart() instanceof QueryGroup queryGroup ) {
-			for ( QueryPart queryPart : queryGroup.getQueryParts() ) {
-				if ( !(queryPart.getFirstQuerySpec().getSelectClause().getSqlSelections()
-						.get( 0 ).getExpressionType().getSingleJdbcMapping().getJdbcType() instanceof NullJdbcType) ) {
-					return queryPart.getFirstQuerySpec().getSelectClause().getSqlSelections();
+			for ( var queryPart : queryGroup.getQueryParts() ) {
+				final var selectClause = queryPart.getFirstQuerySpec().getSelectClause();
+				if ( !( selectClause.getSqlSelections().get( 0 )
+						.getExpressionType().getSingleJdbcMapping().getJdbcType()
+								instanceof NullJdbcType ) ) {
+					return selectClause.getSqlSelections();
 				}
 			}
 		}

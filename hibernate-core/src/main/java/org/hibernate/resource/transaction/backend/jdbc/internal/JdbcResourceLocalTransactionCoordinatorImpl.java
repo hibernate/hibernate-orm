@@ -166,8 +166,8 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		try {
 			transactionCoordinatorOwner.beforeTransactionCompletion();
 			synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();
-			for ( TransactionObserver observer : observers() ) {
-				observer.beforeCompletion();
+			for ( var transactionObserver : observers() ) {
+				transactionObserver.beforeCompletion();
 			}
 		}
 		catch (RuntimeException e) {
@@ -184,8 +184,8 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		final int statusToSend = successful ? Status.STATUS_COMMITTED : Status.STATUS_ROLLEDBACK;
 		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( statusToSend );
 		transactionCoordinatorOwner.afterTransactionCompletion( successful, false );
-		for ( TransactionObserver observer : observers() ) {
-			observer.afterCompletion( successful, false );
+		for ( var transactionObserver : observers() ) {
+			transactionObserver.afterCompletion( successful, false );
 		}
 	}
 

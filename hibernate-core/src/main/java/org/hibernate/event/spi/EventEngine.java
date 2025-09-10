@@ -50,7 +50,7 @@ public class EventEngine {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// resolve event types and listeners
 
-		final EventListenerRegistryImpl.Builder listenerRegistryBuilder =
+		final var listenerRegistryBuilder =
 				new EventListenerRegistryImpl.Builder( callbackRegistry, sessionFactoryOptions.isJpaBootstrap() );
 
 		final Map<String,EventType<?>> eventTypes = new HashMap<>();
@@ -64,7 +64,7 @@ public class EventEngine {
 
 	private static void callContributors(
 			ServiceRegistryImplementor serviceRegistry, EventEngineContributions contributionManager) {
-		final Collection<EventEngineContributor> discoveredContributors =
+		final var discoveredContributors =
 				serviceRegistry.requireService( ClassLoaderService.class )
 						.loadJavaServices( EventEngineContributor.class );
 		if ( isNotEmpty( discoveredContributors ) ) {
@@ -117,7 +117,7 @@ public class EventEngine {
 
 		@Override
 		public <T> EventType<T> contributeEventType(String name, Class<T> listenerRole) {
-			final EventType<T> eventType = registerEventType( name, listenerRole );
+			final var eventType = registerEventType( name, listenerRole );
 			listenerRegistryBuilder.prepareListeners( eventType );
 			return eventType;
 		}
@@ -131,7 +131,7 @@ public class EventEngine {
 			}
 			// make sure it does not match an existing name...
 			else if ( eventTypes.containsKey( name ) ) {
-				final EventType<?> existing = eventTypes.get( name );
+				final var existing = eventTypes.get( name );
 				throw new HibernateException(
 						"Custom event-type already registered: " + name + " => " + existing
 				);
@@ -146,7 +146,7 @@ public class EventEngine {
 		@Override
 		@SafeVarargs
 		public final <T> EventType<T> contributeEventType(String name, Class<T> listenerRole, T... defaultListeners) {
-			final EventType<T> eventType = contributeEventType( name, listenerRole );
+			final var eventType = contributeEventType( name, listenerRole );
 			if ( defaultListeners != null ) {
 				listenerRegistryBuilder.getListenerGroup( eventType ).appendListeners( defaultListeners );
 			}

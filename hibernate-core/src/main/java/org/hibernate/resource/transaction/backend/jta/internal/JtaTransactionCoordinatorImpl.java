@@ -7,13 +7,10 @@ package org.hibernate.resource.transaction.backend.jta.internal;
 import java.util.ArrayList;
 import java.util.List;
 import jakarta.transaction.Status;
-import jakarta.transaction.TransactionManager;
-import jakarta.transaction.UserTransaction;
 
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.resource.transaction.spi.IsolationDelegate;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.RegisteredSynchronization;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.SynchronizationCallbackCoordinator;
@@ -75,7 +72,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		this.transactionCoordinatorOwner = owner;
 		this.autoJoinTransactions = autoJoinTransactions;
 
-		final JdbcSessionContext jdbcSessionContext = owner.getJdbcSessionOwner().getJdbcSessionContext();
+		final var jdbcSessionContext = owner.getJdbcSessionOwner().getJdbcSessionContext();
 
 		this.jtaPlatform = jtaPlatform;
 
@@ -210,7 +207,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	}
 
 	private TransactionDriverControlImpl makePhysicalTransactionDelegate() {
-		final JtaTransactionAdapter adapter =
+		final var adapter =
 				preferUserTransactions
 						? getTransactionAdapterPreferringUserTransaction()
 						: getTransactionAdapterPreferringTransactionManager();
@@ -225,7 +222,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	}
 
 	private JtaTransactionAdapter getTransactionAdapterPreferringTransactionManager() {
-		final JtaTransactionAdapter adapter = makeTransactionManagerAdapter();
+		final var adapter = makeTransactionManagerAdapter();
 		if ( adapter == null ) {
 			JTA_LOGGER.debug( "Unable to access TransactionManager, attempting to use UserTransaction instead" );
 			return makeUserTransactionAdapter();
@@ -234,7 +231,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	}
 
 	private JtaTransactionAdapter getTransactionAdapterPreferringUserTransaction() {
-		final JtaTransactionAdapter adapter = makeUserTransactionAdapter();
+		final var adapter = makeUserTransactionAdapter();
 		if ( adapter == null ) {
 			JTA_LOGGER.debug( "Unable to access UserTransaction, attempting to use TransactionManager instead" );
 			return makeTransactionManagerAdapter();
@@ -244,7 +241,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 	private JtaTransactionAdapter makeUserTransactionAdapter() {
 		try {
-			final UserTransaction userTransaction = jtaPlatform.retrieveUserTransaction();
+			final var userTransaction = jtaPlatform.retrieveUserTransaction();
 			if ( userTransaction == null ) {
 				JTA_LOGGER.debug( "JtaPlatform.retrieveUserTransaction() returned null" );
 				return null;
@@ -261,7 +258,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 	private JtaTransactionAdapter makeTransactionManagerAdapter() {
 		try {
-			final TransactionManager transactionManager = jtaPlatform.retrieveTransactionManager();
+			final var transactionManager = jtaPlatform.retrieveTransactionManager();
 			if ( transactionManager == null ) {
 				JTA_LOGGER.debug( "JtaPlatform.retrieveTransactionManager() returned null" );
 				return null;
@@ -333,8 +330,8 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		}
 		finally {
 			synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();
-			for ( TransactionObserver observer : observers() ) {
-				observer.beforeCompletion();
+			for ( var transactionObserver : observers() ) {
+				transactionObserver.beforeCompletion();
 			}
 		}
 	}
@@ -351,8 +348,8 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 			transactionCoordinatorOwner.afterTransactionCompletion( successful, delayed );
 
-			for ( TransactionObserver observer : observers() ) {
-				observer.afterCompletion( successful, delayed );
+			for ( var transactionObserver : observers() ) {
+				transactionObserver.afterCompletion( successful, delayed );
 			}
 
 			synchronizationRegistered = false;

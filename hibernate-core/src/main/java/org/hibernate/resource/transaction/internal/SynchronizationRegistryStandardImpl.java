@@ -52,7 +52,7 @@ public class SynchronizationRegistryStandardImpl implements SynchronizationRegis
 	public void notifySynchronizationsBeforeTransactionCompletion() {
 		LOG.trace( "Notifying Synchronizations (before completion)" );
 		if ( synchronizations != null ) {
-			for ( Synchronization synchronization : synchronizations ) {
+			for ( var synchronization : synchronizations ) {
 				try {
 					synchronization.beforeCompletion();
 				}
@@ -72,7 +72,7 @@ public class SynchronizationRegistryStandardImpl implements SynchronizationRegis
 		LOG.tracef( "Notifying Synchronizations (after completion with status %s)", status );
 		if ( synchronizations != null ) {
 			try {
-				for ( Synchronization synchronization : synchronizations ) {
+				for ( var synchronization : synchronizations ) {
 					try {
 						synchronization.afterCompletion( status );
 					}

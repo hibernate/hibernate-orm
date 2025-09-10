@@ -72,20 +72,20 @@ public class QueryEngineImpl implements QueryEngine {
 			ServiceRegistryImplementor serviceRegistry,
 			Map<String,Object> properties,
 			String name) {
-		this.dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
-		this.bindingContext = context;
-		this.typeConfiguration = metadata.getTypeConfiguration();
-		this.sqmFunctionRegistry = createFunctionRegistry( serviceRegistry, metadata, options, dialect );
-		this.sqmTranslatorFactory = resolveSqmTranslatorFactory( options, dialect );
-		this.namedObjectRepository = metadata.buildNamedQueryRepository();
-		this.interpretationCache = buildInterpretationCache( serviceRegistry, properties );
-		this.nativeQueryInterpreter = serviceRegistry.getService( NativeQueryInterpreter.class );
-		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
+		bindingContext = context;
+		typeConfiguration = metadata.getTypeConfiguration();
+		sqmFunctionRegistry = createFunctionRegistry( serviceRegistry, metadata, options, dialect );
+		sqmTranslatorFactory = resolveSqmTranslatorFactory( options, dialect );
+		namedObjectRepository = metadata.buildNamedQueryRepository();
+		interpretationCache = buildInterpretationCache( serviceRegistry, properties );
+		nativeQueryInterpreter = serviceRegistry.getService( NativeQueryInterpreter.class );
+		classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		// here we have something nasty: we need to pass a reference to the current object to
 		// create the NodeBuilder, but then we need the NodeBuilder to create the HqlTranslator
 		// and that's only because we're using the NodeBuilder as the SqmCreationContext
-		this.nodeBuilder = createCriteriaBuilder( context, this, options, options.getUuid(), name );
-		this.hqlTranslator = resolveHqlTranslator( options, dialect, nodeBuilder );
+		nodeBuilder = createCriteriaBuilder( context, this, options, options.getUuid(), name );
+		hqlTranslator = resolveHqlTranslator( options, dialect, nodeBuilder );
 	}
 
 	private static SqmCriteriaNodeBuilder createCriteriaBuilder(
@@ -139,12 +139,11 @@ public class QueryEngineImpl implements QueryEngine {
 		}
 
 		//TODO: probably better to turn this back into an anonymous class
-		final FunctionContributions functionContributions =
+		final var functionContributions =
 				new FunctionContributionsImpl( serviceRegistry, metadata.getTypeConfiguration(), sqmFunctionRegistry );
 		for ( var contributor : sortedFunctionContributors( serviceRegistry ) ) {
 			contributor.contributeFunctions( functionContributions );
 		}
-
 		dialect.initializeFunctionRegistry( functionContributions );
 
 		if ( LOG_HQL_FUNCTIONS.isDebugEnabled() ) {

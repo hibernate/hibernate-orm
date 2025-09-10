@@ -30,9 +30,11 @@ public class ExceptionMapperLegacyJpaImpl implements ExceptionMapper {
 		if (failure instanceof HibernateException) {
 			throw session.getExceptionConverter().convert( failure );
 		}
-		if (failure instanceof PersistenceException) {
+		else if (failure instanceof PersistenceException) {
 			throw failure;
 		}
-		throw new PersistenceException( message, failure );
+		else {
+			throw new PersistenceException( message, failure );
+		}
 	}
 }

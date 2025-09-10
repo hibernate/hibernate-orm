@@ -507,17 +507,6 @@ where author.name like :namePattern
 In this example, the identification variable `author` is of type `Author`, the element type of the list `Book.authors`.
 But if we need to refer to the index of an `Author` in the list, we need some extra syntax.
 
-If the key of a map is an entity, we may join it using the `key()` function:
-
-[source, hql]
-----
-select book.isbn, lang.language, lang.country, lang.variant
-from Book book
-join key(book.translations) as lang
-----
-
-It's also legal, but redundant, to use the `value()` function when joining the value of a map.
-
 You might recall that we mentioned <<list-functions>> and <<map-functions>> a bit earlier.
 These functions may be applied to the identification variable declared in a collection join or many-valued association join.
 
@@ -560,6 +549,24 @@ where leadAuthor.name like :namePattern
 select book.isbn, key(translation).language, key(translation).country
 from Book book
 join book.translations as translation
+----
+
+If the key of a map is an entity type, then HQL (but not JPQL) lets us use the `key()` function in the `join` clause:
+
+[source, hql]
+----
+select book.isbn, lang.language, lang.country, lang.variant
+from Book book
+join key(book.translations) as lang
+----
+
+It's also legal, but redundant, to use the `value()` function in the `join` clause when the value of a map is an entity type.
+
+[source, hql]
+----
+select book.isbn, trans.isbn, book.title, trans.title
+from Book book
+join value(book.translations) as trans  /* redundant use of value() */
 ----
 
 

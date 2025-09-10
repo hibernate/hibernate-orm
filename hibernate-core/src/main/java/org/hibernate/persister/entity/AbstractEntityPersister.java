@@ -134,7 +134,6 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.internal.MappingModelHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
@@ -304,6 +303,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize
 import static org.hibernate.internal.util.collections.CollectionHelper.toSmallList;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.supportsSqlArrayType;
 import static org.hibernate.metamodel.RepresentationMode.POJO;
+import static org.hibernate.metamodel.mapping.internal.MappingModelHelper.isCompatibleModelPart;
 import static org.hibernate.persister.entity.DiscriminatorHelper.NOT_NULL_DISCRIMINATOR;
 import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINATOR;
 import static org.hibernate.pretty.MessageHelper.infoString;
@@ -5773,50 +5773,30 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
-		if ( treatTargetType != null ) {
-			if ( ! treatTargetType.isTypeOrSuperType( this ) ) {
-				return null;
-			}
-
-			if ( subclassMappingTypes != null && !subclassMappingTypes.isEmpty() ) {
-				for ( EntityMappingType subMappingType : subclassMappingTypes.values() ) {
-					if ( ! treatTargetType.isTypeOrSuperType( subMappingType ) ) {
-						continue;
-					}
-
-					final ModelPart subDefinedAttribute = subMappingType.findSubTypesSubPart( name, treatTargetType );
-
-					if ( subDefinedAttribute != null ) {
-						return subDefinedAttribute;
-					}
-				}
+		if ( treatTargetType == null ) {
+			final var subDefinedAttribute = findSubPartInSubclassMappings( name );
+			if ( subDefinedAttribute != null ) {
+				return subDefinedAttribute;
 			}
 		}
-		else {
-			if ( subclassMappingTypes != null && !subclassMappingTypes.isEmpty() ) {
-				ModelPart attribute = null;
-				for ( EntityMappingType subMappingType : subclassMappingTypes.values() ) {
-					final ModelPart subDefinedAttribute = subMappingType.findSubTypesSubPart( name, treatTargetType );
-					if ( subDefinedAttribute != null ) {
-						if ( attribute != null && !MappingModelHelper.isCompatibleModelPart( attribute, subDefinedAttribute ) ) {
-							throw new PathException(
-									String.format(
-											Locale.ROOT,
-											"Could not resolve attribute '%s' of '%s' due to the attribute being declared in multiple subtypes '%s' and '%s'",
-											name,
-											getJavaType().getTypeName(),
-											attribute.asAttributeMapping().getDeclaringType()
-													.getJavaType().getTypeName(),
-											subDefinedAttribute.asAttributeMapping().getDeclaringType()
-													.getJavaType().getTypeName()
-									)
-							);
-						}
-						attribute = subDefinedAttribute;
+		else if ( treatTargetType != this ) {
+			if ( !treatTargetType.isTypeOrSuperType( this ) ) {
+				return null;
+			}
+			// Prefer attributes defined in the treat target type or its subtypes
+			final var treatTypeSubPart = treatTargetType.findSubTypesSubPart( name, null );
+			if ( treatTypeSubPart != null ) {
+				return treatTypeSubPart;
+			}
+			else {
+				// If not found, look in the treat target type's supertypes
+				EntityMappingType superType = treatTargetType.getSuperMappingType();
+				while ( superType != this ) {
+					final var superTypeSubPart = superType.findDeclaredAttributeMapping( name );
+					if ( superTypeSubPart != null ) {
+						return superTypeSubPart;
 					}
-				}
-				if ( attribute != null ) {
-					return attribute;
+					superType = superType.getSuperMappingType();
 				}
 			}
 		}
@@ -5838,6 +5818,29 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	private ModelPart findSubPartInSubclassMappings(String name) {
+		ModelPart attribute = null;
+		if ( isNotEmpty( subclassMappingTypes ) ) {
+			for ( var subMappingType : subclassMappingTypes.values() ) {
+				final var subDefinedAttribute = subMappingType.findSubTypesSubPart( name, null );
+				if ( subDefinedAttribute != null ) {
+					if ( attribute != null && !isCompatibleModelPart( attribute, subDefinedAttribute ) ) {
+						throw new PathException( String.format(
+								Locale.ROOT,
+								"Could not resolve attribute '%s' of '%s' due to the attribute being declared in multiple subtypes '%s' and '%s'",
+								name,
+								getJavaType().getTypeName(),
+								attribute.asAttributeMapping().getDeclaringType().getJavaType().getTypeName(),
+								subDefinedAttribute.asAttributeMapping().getDeclaringType().getJavaType().getTypeName()
+						) );
+					}
+					attribute = subDefinedAttribute;
+				}
+			}
+		}
+		return attribute;
+	}
+
 	@Override
 	public ModelPart findSubTypesSubPart(String name, EntityMappingType treatTargetType) {
 		final AttributeMapping declaredAttribute = declaredAttributeMappings.get( name );
@@ -5845,15 +5848,7 @@ public abstract class AbstractEntityPersister
 			return declaredAttribute;
 		}
 		else {
-			if ( subclassMappingTypes != null && !subclassMappingTypes.isEmpty() ) {
-				for ( EntityMappingType subMappingType : subclassMappingTypes.values() ) {
-					final ModelPart subDefinedAttribute = subMappingType.findSubTypesSubPart( name, treatTargetType );
-					if ( subDefinedAttribute != null ) {
-						return subDefinedAttribute;
-					}
-				}
-			}
-			return null;
+			return findSubPartInSubclassMappings( name );
 		}
 	}
 

@@ -7,6 +7,8 @@ package org.hibernate.sql.ast.spi;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 
+import java.util.Collection;
+
 /**
  * Strategy for dealing with locking via a SQL {@code FOR UPDATE (OF)}
  * clause.
@@ -40,4 +42,7 @@ public interface LockingClauseStrategy {
 	boolean containsOuterJoins();
 
 	void render(SqlAppender sqlAppender);
+
+	Collection<TableGroup> getRootsToLock();
+	Collection<TableGroupJoin> getJoinsToLock();
 }

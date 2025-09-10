@@ -16,11 +16,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
-import org.hibernate.event.monitor.spi.EventMonitor;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
-import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
-import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -68,7 +64,7 @@ class StatementPreparerImpl implements StatementPreparer {
 	@Override
 	public Statement createStatement() {
 		try {
-			final Statement statement = connection().createStatement();
+			final var statement = connection().createStatement();
 			jdbcCoordinator.getLogicalConnection().getResourceRegistry().register( statement, true );
 			return statement;
 		}
@@ -151,37 +147,37 @@ class StatementPreparerImpl implements StatementPreparer {
 			resultSetType = ResultSet.TYPE_FORWARD_ONLY;
 		}
 
-		final PreparedStatement ps = new QueryStatementPreparationTemplate( sql ) {
-			public PreparedStatement doPrepare() throws SQLException {
-					return isCallable
-							? connection().prepareCall( sql, resultSetType, ResultSet.CONCUR_READ_ONLY )
-							: connection().prepareStatement( sql, resultSetType, ResultSet.CONCUR_READ_ONLY );
-			}
-		}.prepareStatement();
-		jdbcCoordinator.registerLastQuery( ps );
-		return ps;
+		final var preparedStatement =
+				new QueryStatementPreparationTemplate( sql ) {
+					public PreparedStatement doPrepare() throws SQLException {
+						return isCallable
+								? connection().prepareCall( sql, resultSetType, ResultSet.CONCUR_READ_ONLY )
+								: connection().prepareStatement( sql, resultSetType, ResultSet.CONCUR_READ_ONLY );
+					}
+				}.prepareStatement();
+		jdbcCoordinator.registerLastQuery( preparedStatement );
+		return preparedStatement;
 	}
 
 	private abstract class StatementPreparationTemplate {
 		protected final String sql;
 
 		protected StatementPreparationTemplate(String incomingSql) {
-			final String inspectedSql = jdbcCoordinator.getJdbcSessionOwner()
-					.getJdbcSessionContext()
-					.getStatementInspector()
-					.inspect( incomingSql );
-			this.sql = inspectedSql == null ? incomingSql : inspectedSql;
+			final String inspectedSql =
+					jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext()
+							.getStatementInspector().inspect( incomingSql );
+			sql = inspectedSql == null ? incomingSql : inspectedSql;
 		}
 
 		public PreparedStatement prepareStatement() {
 			try {
 				jdbcServices.getSqlStatementLogger().logStatement( sql );
 
+				final var jdbcSessionOwner = jdbcCoordinator.getJdbcSessionOwner();
+				final var observer = jdbcSessionOwner.getJdbcSessionContext().getEventHandler();
+				final var eventMonitor = jdbcSessionOwner.getEventMonitor();
+				final var jdbcPreparedStatementCreation = eventMonitor.beginJdbcPreparedStatementCreationEvent();
 				final PreparedStatement preparedStatement;
-				final JdbcSessionOwner jdbcSessionOwner = jdbcCoordinator.getJdbcSessionOwner();
-				final JdbcEventHandler observer = jdbcSessionOwner.getJdbcSessionContext().getEventHandler();
-				final EventMonitor eventMonitor = jdbcSessionOwner.getEventMonitor();
-				final DiagnosticEvent jdbcPreparedStatementCreation = eventMonitor.beginJdbcPreparedStatementCreationEvent();
 				try {
 					observer.jdbcPrepareStatementStart();
 					preparedStatement = doPrepare();

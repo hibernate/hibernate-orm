@@ -48,32 +48,28 @@ public class BatchBuilderImpl implements BatchBuilder {
 		return globalBatchSize;
 	}
 
+	private int batchSize(Integer explicitBatchSize) {
+		return explicitBatchSize == null
+				? globalBatchSize
+				: explicitBatchSize;
+	}
+
 	@Override
 	public Batch buildBatch(
 			BatchKey key,
 			Integer explicitBatchSize,
 			Supplier<PreparedStatementGroup> statementGroupSupplier,
 			JdbcCoordinator jdbcCoordinator) {
-		final int batchSize =
-				explicitBatchSize == null
-						? globalBatchSize
-						: explicitBatchSize;
+		final int batchSize = batchSize( explicitBatchSize );
 		assert batchSize > 1;
 		return new BatchImpl( key, statementGroupSupplier.get(), batchSize, jdbcCoordinator );
 	}
-
 
 	/**
 	 * Intended for use from tests
 	 */
 	@Internal
 	public BatchImpl buildBatch(BatchKey batchKey, Integer sizeOverride, String table, SessionImplementor session, String sql) {
-		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-
-		final int batchSize = sizeOverride == null
-				? globalBatchSize
-				: sizeOverride;
-
 		return new BatchImpl(
 				batchKey,
 				new PreparedStatementGroupSingleTable(
@@ -137,8 +133,8 @@ public class BatchBuilderImpl implements BatchBuilder {
 						),
 						session
 				),
-				batchSize,
-				jdbcCoordinator
+				batchSize( sizeOverride ),
+				session.getJdbcCoordinator()
 		);
 	}
 }

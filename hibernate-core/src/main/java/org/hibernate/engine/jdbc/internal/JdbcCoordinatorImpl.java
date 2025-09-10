@@ -19,7 +19,6 @@ import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
-import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl;
 import org.hibernate.resource.jdbc.internal.LogicalConnectionProvidedImpl;
 import org.hibernate.resource.jdbc.internal.ResourceRegistryStandardImpl;
@@ -87,7 +86,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	private static LogicalConnectionImplementor createLogicalConnection(
 			Connection userSuppliedConnection,
 			JdbcSessionOwner owner) {
-		final ResourceRegistry resourceRegistry =
+		final var resourceRegistry =
 				new ResourceRegistryStandardImpl( owner.getJdbcSessionContext().getEventHandler() );
 		return userSuppliedConnection == null
 				? new LogicalConnectionManagedImpl( owner, resourceRegistry )
@@ -149,7 +148,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		if ( TRACE_ENABLED ) {
 			JDBC_MESSAGE_LOGGER.closingJdbcCoordinator( hashCode() );
 		}
-		Connection connection;
+		final Connection connection;
 		try {
 			if ( currentBatch != null ) {
 				JDBC_MESSAGE_LOGGER.closingUnreleasedBatch( hashCode() );
@@ -178,9 +177,9 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			}
 		}
 
-		currentBatch = owner.getJdbcSessionContext().getBatchBuilder()
-				.buildBatch( key, batchSize, statementGroupSupplier, this );
-
+		currentBatch =
+				owner.getJdbcSessionContext().getBatchBuilder()
+						.buildBatch( key, batchSize, statementGroupSupplier, this );
 		return currentBatch;
 	}
 
@@ -271,7 +270,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public void afterStatementExecution() {
-		final ConnectionReleaseMode connectionReleaseMode = connectionReleaseMode();
+		final var connectionReleaseMode = connectionReleaseMode();
 		if ( TRACE_ENABLED ) {
 			JDBC_MESSAGE_LOGGER.statementExecutionComplete( connectionReleaseMode, hashCode() );
 		}
@@ -309,7 +308,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public <T> T coordinateWork(WorkExecutorVisitable<T> work) {
-		final Connection connection = getLogicalConnection().getPhysicalConnection();
+		final var connection = getLogicalConnection().getPhysicalConnection();
 		try {
 			final T result = work.accept( new WorkExecutor<>(), connection );
 			afterStatementExecution();
@@ -334,7 +333,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 //			LOG.tracef( "Registering last query statement [%s] @%s", statement, hashCode() );
 //		}
 		if ( statement instanceof JdbcWrapper ) {
-			final JdbcWrapper<Statement> wrapper = (JdbcWrapper<Statement>) statement;
+			final var wrapper = (JdbcWrapper<Statement>) statement;
 			registerLastQuery( wrapper.getWrappedObject() );
 		}
 		else {
@@ -358,7 +357,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	private SqlExceptionHelper safeSqlExceptionHelper() {
-		final SqlExceptionHelper sqlExceptionHelper = sqlExceptionHelper();
+		final var sqlExceptionHelper = sqlExceptionHelper();
 		//Should always be non-null, but to make sure as the implementation is lazy:
 		return sqlExceptionHelper == null ? new SqlExceptionHelper( false ) : sqlExceptionHelper;
 	}

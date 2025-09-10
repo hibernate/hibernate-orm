@@ -20,10 +20,6 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -256,13 +252,13 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		// get the collection TableGroup
-		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
-		final TableGroup tableGroup = fromClauseAccess.getTableGroup( fetchablePath.getParent() );
+		final var fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
+		final var tableGroup = fromClauseAccess.getTableGroup( fetchablePath.getParent() );
 
-		final SqlAstCreationState astCreationState = creationState.getSqlAstCreationState();
-		final SqlExpressionResolver sqlExpressionResolver = astCreationState.getSqlExpressionResolver();
+		final var astCreationState = creationState.getSqlAstCreationState();
+		final var sqlExpressionResolver = astCreationState.getSqlExpressionResolver();
 
-		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
+		final var sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
 						tableGroup.getPrimaryTableReference(),
 						this
@@ -287,11 +283,11 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 			NavigablePath collectionPath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		final SqlAstCreationState astCreationState = creationState.getSqlAstCreationState();
-		final SqlAstCreationContext astCreationContext = astCreationState.getCreationContext();
-		final SqlExpressionResolver sqlExpressionResolver = astCreationState.getSqlExpressionResolver();
+		final var astCreationState = creationState.getSqlAstCreationState();
+		final var astCreationContext = astCreationState.getCreationContext();
+		final var sqlExpressionResolver = astCreationState.getSqlExpressionResolver();
 
-		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
+		final var sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
 						tableGroup.getPrimaryTableReference(),
 						this

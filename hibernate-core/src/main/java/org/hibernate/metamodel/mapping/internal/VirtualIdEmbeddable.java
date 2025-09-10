@@ -6,8 +6,6 @@ package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Component;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -46,16 +44,16 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 			MappingModelCreationProcess creationProcess) {
 		super( new MutableAttributeMappingList( virtualIdSource.getType().getPropertyNames().length ) );
 
-		this.navigableRole = idMapping.getNavigableRole();
 		this.idMapping = idMapping;
-		this.representationStrategy = new VirtualIdRepresentationStrategy(
+		navigableRole = idMapping.getNavigableRole();
+		representationStrategy = new VirtualIdRepresentationStrategy(
 				this,
 				identifiedEntityMapping,
 				virtualIdSource,
 				creationProcess.getCreationContext()
 		);
 
-		final CompositeType compositeType = virtualIdSource.getType();
+		final var compositeType = virtualIdSource.getType();
 		( (CompositeTypeImplementor) compositeType ).injectMappingModelPart( idMapping, creationProcess );
 
 		creationProcess.registerInitializationCallback(
@@ -165,7 +163,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 		else {
 			int span = 0;
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				final var attributeMapping = attributeMappings.get( i );
 				span += attributeMapping.decompose(
 						attributeMapping.getValue( domainValue ),
 						offset + span,
@@ -239,15 +237,16 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 
 	@Override
 	public boolean areEqual(@Nullable Object one, @Nullable Object other, SharedSessionContractImplementor session) {
-		final IdClassEmbeddable idClassEmbeddable = idMapping.getIdClassEmbeddable();
+		final var idClassEmbeddable = idMapping.getIdClassEmbeddable();
 		if ( idClassEmbeddable != null ) {
 			return idClassEmbeddable.areEqual( one, other, session );
 		}
 		else {
-			final AttributeMappingsList attributeMappings = getAttributeMappings();
+			final var attributeMappings = getAttributeMappings();
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				final AttributeMapping attribute = attributeMappings.get( i );
-				if ( !attribute.areEqual( attribute.getValue( one ), attribute.getValue( other ), session ) ) {
+				final var attribute = attributeMappings.get( i );
+				if ( !attribute.areEqual( attribute.getValue( one ),
+						attribute.getValue( other ), session ) ) {
 					return false;
 				}
 			}
@@ -257,12 +256,14 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 
 	@Override
 	public int compare(Object value1, Object value2) {
-		final IdClassEmbeddable idClassEmbeddable = idMapping.getIdClassEmbeddable();
+		final var idClassEmbeddable = idMapping.getIdClassEmbeddable();
 		if ( idClassEmbeddable != null ) {
-			final AttributeMappingsList attributeMappings = idClassEmbeddable.getAttributeMappings();
+			final var attributeMappings = idClassEmbeddable.getAttributeMappings();
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				final AttributeMapping attribute = attributeMappings.get( i );
-				final int comparison = attribute.compare( attribute.getValue( value1 ), attribute.getValue( value2 ) );
+				final var attribute = attributeMappings.get( i );
+				final int comparison =
+						attribute.compare( attribute.getValue( value1 ),
+								attribute.getValue( value2 ) );
 				if ( comparison != 0 ) {
 					return comparison;
 				}

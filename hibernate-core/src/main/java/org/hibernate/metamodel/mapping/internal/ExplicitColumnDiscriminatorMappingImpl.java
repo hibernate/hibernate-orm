@@ -12,11 +12,9 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.type.BasicType;
 
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
@@ -86,7 +84,9 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 			@Nullable Integer scale,
 			DiscriminatorType<?> discriminatorType) {
 		//noinspection unchecked
-		super( mappingType, (DiscriminatorType<Object>) discriminatorType, (BasicType<Object>) discriminatorType.getUnderlyingJdbcMapping() );
+		super( mappingType,
+				(DiscriminatorType<Object>) discriminatorType,
+				(BasicType<Object>) discriminatorType.getUnderlyingJdbcMapping() );
 		this.name = name;
 		this.tableExpression = tableExpression;
 		this.isPhysical = isPhysical;
@@ -124,9 +124,8 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 			JdbcMapping jdbcMappingToUse,
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
-		final SqlExpressionResolver expressionResolver = creationState.getSqlExpressionResolver();
-		final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, tableExpression );
-
+		final var expressionResolver = creationState.getSqlExpressionResolver();
+		final var tableReference = tableGroup.resolveTableReference( navigablePath, tableExpression );
 		return expressionResolver.resolveSqlExpression(
 				createColumnReferenceKey(
 						tableGroup.getPrimaryTableReference(),

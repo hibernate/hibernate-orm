@@ -23,13 +23,10 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchOptions;
@@ -379,17 +376,17 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
-		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
+		final var fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
+		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
-		final TableGroup tableGroup = fromClauseAccess.getTableGroup( fetchablePath.getParent().getParent() );
-		final TableReference tableReference = tableGroup.resolveTableReference( fetchablePath, table );
-		final Expression columnReference = sqlExpressionResolver.resolveSqlExpression(
+		final var tableGroup = fromClauseAccess.getTableGroup( fetchablePath.getParent().getParent() );
+		final var tableReference = tableGroup.resolveTableReference( fetchablePath, table );
+		final var columnReference = sqlExpressionResolver.resolveSqlExpression(
 				tableReference,
 				this
 		);
-		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
+		final var sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				columnReference,
 				jdbcMapping().getJdbcJavaType(),
 				fetchParent,
@@ -423,7 +420,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
+		final var sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
@@ -440,11 +437,13 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			JdbcMapping jdbcMappingToUse,
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
-		return creationState.getSqlExpressionResolver().resolveSqlExpression( tableGroup.resolveTableReference(
+		var tableReference = tableGroup.resolveTableReference(
 				navigablePath,
 				this,
 				getContainingTableExpression()
-		), this );
+		);
+		return creationState.getSqlExpressionResolver()
+				.resolveSqlExpression( tableReference, this );
 	}
 
 	@Override
@@ -468,7 +467,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
 		return sqlAstCreationState.getSqlExpressionResolver().resolveSqlSelection(
 				resolveSqlExpression( navigablePath, null, tableGroup, sqlAstCreationState ),
 				jdbcMapping().getJdbcJavaType(),

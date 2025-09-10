@@ -22,7 +22,6 @@ import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatorMapping;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
@@ -188,15 +187,19 @@ public class DiscriminatedAssociationAttributeMapping
 
 	@Override
 	public Fetchable getFetchable(int position) {
-		switch ( position ) {
-			case 0:
-				assert getDiscriminatorPart().getFetchableKey() == 0;
-				return getDiscriminatorPart();
-			case 1:
-				assert getKeyPart().getFetchableKey() == 1;
-				return getKeyPart();
-		}
-		throw new IndexOutOfBoundsException(position);
+		return switch ( position ) {
+			case 0 -> {
+				final var discriminatorPart = getDiscriminatorPart();
+				assert discriminatorPart.getFetchableKey() == 0;
+				yield discriminatorPart;
+			}
+			case 1 -> {
+				final var keyPart = getKeyPart();
+				assert keyPart.getFetchableKey() == 1;
+				yield keyPart;
+			}
+			default -> throw new IndexOutOfBoundsException( position );
+		};
 	}
 
 	@Override
@@ -211,12 +214,11 @@ public class DiscriminatedAssociationAttributeMapping
 
 	@Override
 	public JdbcMapping getJdbcMapping(final int index) {
-		switch (index) {
-			case 0 : return discriminatorMapping.getDiscriminatorPart().getJdbcMapping();
-			case 1 : return discriminatorMapping.getKeyPart().getJdbcMapping();
-			default:
-				throw new IndexOutOfBoundsException( index );
-		}
+		return switch ( index ) {
+			case 0 -> discriminatorMapping.getDiscriminatorPart().getJdbcMapping();
+			case 1 -> discriminatorMapping.getKeyPart().getJdbcMapping();
+			default -> throw new IndexOutOfBoundsException( index );
+		};
 	}
 
 	@Override
@@ -233,12 +235,12 @@ public class DiscriminatedAssociationAttributeMapping
 			return null;
 		}
 
-		final EntityMappingType concreteMappingType = determineConcreteType( value, session );
-		final EntityIdentifierMapping identifierMapping = concreteMappingType.getIdentifierMapping();
+		final var concreteMappingType = determineConcreteType( value, session );
+		final var identifierMapping = concreteMappingType.getIdentifierMapping();
 
-		final Object discriminator = discriminatorMapping
-				.getModelPart()
-				.resolveDiscriminatorForEntityType( concreteMappingType );
+		final Object discriminator =
+				discriminatorMapping.getModelPart()
+						.resolveDiscriminatorForEntityType( concreteMappingType );
 		final Object identifier = identifierMapping.getIdentifier( value );
 
 		return new Object[] {
@@ -254,22 +256,23 @@ public class DiscriminatedAssociationAttributeMapping
 			cacheKey.addHashCode( 0 );
 		}
 		else {
-			final EntityMappingType concreteMappingType = determineConcreteType( value, session );
+			final var concreteMappingType = determineConcreteType( value, session );
 
-			final Object discriminator = discriminatorMapping
-					.getModelPart()
-					.resolveDiscriminatorForEntityType( concreteMappingType );
+			final Object discriminator =
+					discriminatorMapping.getModelPart()
+							.resolveDiscriminatorForEntityType( concreteMappingType );
 			discriminatorMapping.getDiscriminatorPart().addToCacheKey( cacheKey, discriminator, session );
 
-			final EntityIdentifierMapping identifierMapping = concreteMappingType.getIdentifierMapping();
+			final var identifierMapping = concreteMappingType.getIdentifierMapping();
 			identifierMapping.addToCacheKey( cacheKey, identifierMapping.getIdentifier( value ), session );
 		}
 	}
 
 	private EntityMappingType determineConcreteType(Object entity, SharedSessionContractImplementor session) {
-		final String entityName = session == null
-				? sessionFactory.bestGuessEntityName( entity )
-				: session.bestGuessEntityName( entity );
+		final String entityName =
+				session == null
+						? sessionFactory.bestGuessEntityName( entity )
+						: session.bestGuessEntityName( entity );
 		return sessionFactory.getMappingMetamodel()
 				.getEntityDescriptor( entityName );
 	}
@@ -332,12 +335,13 @@ public class DiscriminatedAssociationAttributeMapping
 				);
 			}
 			else {
-				final EntityMappingType concreteMappingType = determineConcreteType( value, session );
+				final var concreteMappingType = determineConcreteType( value, session );
 
-				final Object discriminator = discriminatorMapping
-						.getModelPart()
-						.resolveDiscriminatorForEntityType( concreteMappingType );
-				final Object disassembledDiscriminator = discriminatorMapping.getDiscriminatorPart().disassemble( discriminator, session );
+				final Object discriminator =
+						discriminatorMapping.getModelPart()
+								.resolveDiscriminatorForEntityType( concreteMappingType );
+				final Object disassembledDiscriminator =
+						discriminatorMapping.getDiscriminatorPart().disassemble( discriminator, session );
 				valuesConsumer.consume(
 						offset,
 						x,
@@ -346,7 +350,7 @@ public class DiscriminatedAssociationAttributeMapping
 						discriminatorMapping.getDiscriminatorPart().getJdbcMapping()
 				);
 
-				final EntityIdentifierMapping identifierMapping = concreteMappingType.getIdentifierMapping();
+				final var identifierMapping = concreteMappingType.getIdentifierMapping();
 				final Object identifier = identifierMapping.getIdentifier( value );
 				final Object disassembledKey = discriminatorMapping.getKeyPart().disassemble( identifier, session );
 				valuesConsumer.consume(
@@ -422,7 +426,7 @@ public class DiscriminatedAssociationAttributeMapping
 	@Override
 	public boolean hasPartitionedSelectionMapping() {
 		return discriminatorMapping.getDiscriminatorPart().isPartitioned()
-				|| discriminatorMapping.getKeyPart().isPartitioned();
+			|| discriminatorMapping.getKeyPart().isPartitioned();
 	}
 
 	public static class MutabilityPlanImpl implements MutabilityPlan<Object> {
@@ -488,8 +492,8 @@ public class DiscriminatedAssociationAttributeMapping
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
-		final SqlAstJoinType joinType = Objects.requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
-		final TableGroup tableGroup = createRootTableGroupJoin(
+		final var joinType = Objects.requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
+		final var tableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
 				explicitSourceAlias,

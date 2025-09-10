@@ -14,7 +14,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
-import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
@@ -72,8 +71,7 @@ public class GeneratedValuesProcessor {
 			jdbcParameters = null;
 		}
 		else {
-			final JdbcParametersList.Builder builder = JdbcParametersList.newBuilder();
-
+			final var builder = JdbcParametersList.newBuilder();
 			selectStatement = LoaderSelectBuilder.createSelect(
 					entityDescriptor,
 					generatedValuesToSelect,
@@ -85,7 +83,8 @@ public class GeneratedValuesProcessor {
 					builder::add,
 					sessionFactory
 			);
-			jdbcSelect = sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+			jdbcSelect =
+					sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
 							.buildSelectTranslator( sessionFactory, selectStatement )
 							.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
 			jdbcParameters = builder.build();
@@ -95,10 +94,10 @@ public class GeneratedValuesProcessor {
 	private boolean needsSubsequentSelect(EventType timing, List<AttributeMapping> generatedAttributes) {
 		if ( timing == EventType.INSERT ) {
 			return entityDescriptor.getInsertDelegate() == null
-					|| !entityDescriptor.getInsertDelegate().supportsArbitraryValues()
-					// Check if we need to select more properties than what is processed by the identity delegate.
-					// This can happen for on-execution generated values on non-identifier tables
-					|| generatedAttributes.size() > numberOfGeneratedNonIdentifierProperties( timing );
+				|| !entityDescriptor.getInsertDelegate().supportsArbitraryValues()
+				// Check if we need to select more properties than what is processed by the identity delegate.
+				// This can happen for on-execution generated values on non-identifier tables
+				|| generatedAttributes.size() > numberOfGeneratedNonIdentifierProperties( timing );
 		}
 		else {
 			return entityDescriptor.getUpdateDelegate() == null;
@@ -123,10 +122,10 @@ public class GeneratedValuesProcessor {
 	public static List<AttributeMapping> getGeneratedAttributes(EntityMappingType entityDescriptor, EventType timing) {
 		// todo (6.0): For now, we rely on the entity metamodel as composite attributes report
 		//             GenerationTiming.NEVER even if they have attributes that would need generation
-		final Generator[] generators = entityDescriptor.getEntityPersister().getGenerators();
+		final var generators = entityDescriptor.getEntityPersister().getGenerators();
 		final List<AttributeMapping> generatedValuesToSelect = new ArrayList<>();
 		entityDescriptor.forEachAttributeMapping( mapping -> {
-			final Generator generator = generators[ mapping.getStateArrayPosition() ];
+			final var generator = generators[ mapping.getStateArrayPosition() ];
 			if ( generator != null
 					&& generator.generatedOnExecution()
 					&& generator.getEventTypes().contains(timing) ) {
@@ -147,20 +146,20 @@ public class GeneratedValuesProcessor {
 			SharedSessionContractImplementor session) {
 		if ( hasActualGeneratedValuesToSelect( session, entity ) ) {
 			if ( selectStatement != null ) {
-				final List<Object[]> results = executeSelect( id, session );
+				final var results = executeSelect( id, session );
 				assert results.size() == 1;
 				setEntityAttributes( entity, state, results.get( 0 ) );
 			}
 			else if ( generatedValues != null ) {
 				// can be null when an update action resulted in a no-op (e.g. only changes to unowned association)
-				final List<Object> results = generatedValues.getGeneratedValues( generatedValuesToSelect );
+				final var results = generatedValues.getGeneratedValues( generatedValuesToSelect );
 				setEntityAttributes( entity, state, results.toArray( new Object[0] ) );
 			}
 		}
 	}
 
 	private boolean hasActualGeneratedValuesToSelect(SharedSessionContractImplementor session, Object entity) {
-		for ( AttributeMapping attributeMapping : generatedValuesToSelect ) {
+		for ( var attributeMapping : generatedValuesToSelect ) {
 			if ( attributeMapping.getGenerator().generatedOnExecution( entity, session ) ) {
 				return true;
 			}
@@ -169,7 +168,7 @@ public class GeneratedValuesProcessor {
 	}
 
 	private List<Object[]> executeSelect(Object id, SharedSessionContractImplementor session) {
-		final JdbcParameterBindings jdbcParamBindings = getJdbcParameterBindings( id, session );
+		final var jdbcParamBindings = getJdbcParameterBindings( id, session );
 		return session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParamBindings,
@@ -182,7 +181,7 @@ public class GeneratedValuesProcessor {
 	}
 
 	private JdbcParameterBindings getJdbcParameterBindings(Object id, SharedSessionContractImplementor session) {
-		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
+		final var jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		int offset = jdbcParamBindings.registerParametersForEachJdbcValue(
 				id,
 				entityDescriptor.getIdentifierMapping(),
@@ -195,7 +194,7 @@ public class GeneratedValuesProcessor {
 
 	private void setEntityAttributes(Object entity, Object[] state, Object[] selectionResults) {
 		for ( int i = 0; i < generatedValuesToSelect.size(); i++ ) {
-			final AttributeMapping attribute = generatedValuesToSelect.get( i );
+			final var attribute = generatedValuesToSelect.get( i );
 			final Object generatedValue = selectionResults[i];
 			state[ attribute.getStateArrayPosition() ] = generatedValue;
 			attribute.getAttributeMetadata().getPropertyAccess().getSetter().set( entity, generatedValue );

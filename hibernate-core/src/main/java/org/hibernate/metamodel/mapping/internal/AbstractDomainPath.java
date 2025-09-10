@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.criteria.Nulls;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -18,17 +17,14 @@ import org.hibernate.metamodel.mapping.ordering.ast.DomainPath;
 import org.hibernate.metamodel.mapping.ordering.ast.OrderingExpression;
 import org.hibernate.query.SortDirection;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
-import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
@@ -61,9 +57,9 @@ public abstract class AbstractDomainPath implements DomainPath {
 			TableGroup tableGroup,
 			String modelPartName,
 			SqlAstCreationState creationState) {
-		final BasicValuedModelPart selection = referenceModelPart.asBasicValuedModelPart();
+		final var selection = referenceModelPart.asBasicValuedModelPart();
 		if ( selection != null ) {
-			final TableReference tableReference = tableGroup.resolveTableReference(
+			final var tableReference = tableGroup.resolveTableReference(
 					null,
 					selection,
 					selection.getContainingTableExpression()
@@ -81,7 +77,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			);
 		}
 		else if ( referenceModelPart instanceof EntityValuedModelPart entityValuedModelPart ) {
-			final ModelPart subPart =
+			final var subPart =
 					ELEMENT_TOKEN.equals( modelPartName )
 							? entityValuedModelPart.getEntityMappingType().getIdentifierMapping()
 							: entityValuedModelPart.findSubPart( modelPartName );
@@ -93,13 +89,13 @@ public abstract class AbstractDomainPath implements DomainPath {
 				final int size = embeddableValuedModelPart.getNumberOfFetchables();
 				final List<Expression> expressions = new ArrayList<>( size );
 				for ( int i = 0; i < size; i++ ) {
-					final Fetchable fetchable = embeddableValuedModelPart.getFetchable( i );
+					final var fetchable = embeddableValuedModelPart.getFetchable( i );
 					expressions.add( resolve( fetchable, ast, tableGroup, modelPartName, creationState ) );
 				}
 				return new SqlTuple( expressions, embeddableValuedModelPart );
 			}
 			else {
-				ModelPart subPart = embeddableValuedModelPart.findSubPart( modelPartName, null );
+				final var subPart = embeddableValuedModelPart.findSubPart( modelPartName, null );
 				assert subPart.asBasicValuedModelPart() != null;
 				return resolve( subPart, ast, tableGroup, modelPartName, creationState );
 			}
@@ -140,7 +136,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			SortDirection sortOrder,
 			Nulls nullPrecedence,
 			SqlAstCreationState creationState) {
-		final BasicValuedModelPart basicPart = referenceModelPart.asBasicValuedModelPart();
+		final var basicPart = referenceModelPart.asBasicValuedModelPart();
 		if ( basicPart != null ) {
 			addSortSpecification(
 					basicPart,
@@ -153,10 +149,11 @@ public abstract class AbstractDomainPath implements DomainPath {
 			);
 		}
 		else if ( referenceModelPart instanceof EntityValuedModelPart entityValuedModelPart ) {
-			final ModelPart subPart = ELEMENT_TOKEN.equals( modelPartName )
-					? entityValuedModelPart.getEntityMappingType().getIdentifierMapping()
-					// Default to using the foreign key of an entity valued model part
-					: entityValuedModelPart.findSubPart( ForeignKeyDescriptor.PART_NAME );
+			final var subPart =
+					ELEMENT_TOKEN.equals( modelPartName )
+							? entityValuedModelPart.getEntityMappingType().getIdentifierMapping()
+							// Default to using the foreign key of an entity valued model part
+							: entityValuedModelPart.findSubPart( ForeignKeyDescriptor.PART_NAME );
 			apply(
 					subPart,
 					ast,
@@ -195,8 +192,8 @@ public abstract class AbstractDomainPath implements DomainPath {
 			SortDirection sortOrder,
 			Nulls nullPrecedence,
 			SqlAstCreationState creationState) {
-		if ( embeddableValuedModelPart.getFetchableName()
-				.equals( modelPartName ) || ELEMENT_TOKEN.equals( modelPartName ) ) {
+		if ( embeddableValuedModelPart.getFetchableName().equals( modelPartName )
+				|| ELEMENT_TOKEN.equals( modelPartName ) ) {
 			embeddableValuedModelPart.forEachSelectable(
 					(columnIndex, selection) -> {
 						addSortSpecification(
@@ -212,7 +209,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			);
 		}
 		else {
-			ModelPart subPart = embeddableValuedModelPart.findSubPart( modelPartName, null );
+			final var subPart = embeddableValuedModelPart.findSubPart( modelPartName, null );
 			addSortSpecification(
 					castNonNull( subPart.asBasicValuedModelPart() ),
 					ast,
@@ -233,49 +230,43 @@ public abstract class AbstractDomainPath implements DomainPath {
 			SortDirection sortOrder,
 			Nulls nullPrecedence,
 			SqlAstCreationState creationState) {
-		final TableReference tableReference = tableGroup.resolveTableReference( null, selection.getContainingTableExpression() );
-		final Expression expression = creationState.getSqlExpressionResolver().resolveSqlExpression(
-				createColumnReferenceKey(
-						tableReference,
-						selection.getSelectionExpression(),
-						selection.getJdbcMapping()
-				),
-				processingState -> new ColumnReference(
-						tableReference,
-						selection
-				)
-		);
+		final var tableReference =
+				tableGroup.resolveTableReference( null,
+						selection.getContainingTableExpression() );
+		final var expression =
+				creationState.getSqlExpressionResolver()
+						.resolveSqlExpression(
+								createColumnReferenceKey(
+										tableReference,
+										selection.getSelectionExpression(),
+										selection.getJdbcMapping()
+								),
+								processingState -> new ColumnReference( tableReference, selection )
+						);
 		// It makes no sense to order by an expression multiple times
 		// SQL Server even reports a query error in this case
 		if ( ast.hasSortSpecifications() ) {
-			for ( SortSpecification sortSpecification : ast.getSortSpecifications() ) {
+			for ( var sortSpecification : ast.getSortSpecifications() ) {
 				if ( sortSpecification.getSortExpression() == expression ) {
 					return;
 				}
 			}
 		}
 
-		final SelectClause selectClause = ast.getSelectClause();
-
-		if ( selectClause.isDistinct() && selectClauseDoesNotContainOrderExpression( expression, selectClause ) ) {
+		final var selectClause = ast.getSelectClause();
+		if ( selectClause.isDistinct()
+				&& selectClauseDoesNotContainOrderExpression( expression, selectClause ) ) {
 			final int valuesArrayPosition = selectClause.getSqlSelections().size();
-			SqlSelection sqlSelection = new SqlSelectionImpl(
-					valuesArrayPosition,
-					expression
-			);
-			selectClause.addSqlSelection( sqlSelection );
+			selectClause.addSqlSelection( new SqlSelectionImpl( valuesArrayPosition, expression ) );
 		}
 
-		final Expression sortExpression = OrderingExpression.applyCollation(
-				expression,
-				collation,
-				creationState
-		);
+		final var sortExpression =
+				OrderingExpression.applyCollation( expression, collation, creationState );
 		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence ) );
 	}
 
 	private static boolean selectClauseDoesNotContainOrderExpression(Expression expression, SelectClause selectClause) {
-		for ( SqlSelection sqlSelection : selectClause.getSqlSelections() ) {
+		for ( var sqlSelection : selectClause.getSqlSelections() ) {
 			if ( sqlSelection.getExpression().equals( expression ) ) {
 				return false;
 			}

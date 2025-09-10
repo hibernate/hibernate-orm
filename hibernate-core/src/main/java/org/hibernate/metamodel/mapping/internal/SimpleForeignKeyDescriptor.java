@@ -17,7 +17,6 @@ import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.internal.CacheHelper;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AssociationKey;
@@ -26,24 +25,19 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.OneToManyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
@@ -110,12 +104,12 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		assert targetModelPart != null;
 
 		if ( swapDirection ) {
-			this.keySide = new SimpleForeignKeyDescriptorSide( Nature.KEY, targetModelPart );
-			this.targetSide = new SimpleForeignKeyDescriptorSide( Nature.TARGET, keyModelPart );
+			keySide = new SimpleForeignKeyDescriptorSide( Nature.KEY, targetModelPart );
+			targetSide = new SimpleForeignKeyDescriptorSide( Nature.TARGET, keyModelPart );
 		}
 		else {
-			this.keySide = new SimpleForeignKeyDescriptorSide( Nature.KEY, keyModelPart );
-			this.targetSide = new SimpleForeignKeyDescriptorSide( Nature.TARGET, targetModelPart );
+			keySide = new SimpleForeignKeyDescriptorSide( Nature.KEY, keyModelPart );
+			targetSide = new SimpleForeignKeyDescriptorSide( Nature.TARGET, targetModelPart );
 		}
 
 		this.refersToPrimaryKey = refersToPrimaryKey;
@@ -225,7 +219,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			TableGroupProducer declaringTableGroupProducer,
 			IntFunction<SelectableMapping> selectableMappingAccess,
 			MappingModelCreationProcess creationProcess) {
-		final SelectableMapping selectableMapping = selectableMappingAccess.apply( 0 );
+		final var selectableMapping = selectableMappingAccess.apply( 0 );
 		return new SimpleForeignKeyDescriptor(
 				declaringType,
 				keySide.getModelPart(),
@@ -319,7 +313,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	private boolean isTargetTableGroup(TableGroup tableGroup) {
 		tableGroup = getUnderlyingTableGroup( tableGroup );
-		final TableGroupProducer tableGroupProducer =
+		final var tableGroupProducer =
 				tableGroup instanceof OneToManyTableGroup oneToManyTableGroup
 						? (TableGroupProducer) oneToManyTableGroup.getElementTableGroup().getModelPart()
 						: (TableGroupProducer) tableGroup.getModelPart();
@@ -356,8 +350,8 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			BasicValuedModelPart selectableMapping,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
-		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
+		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final TableReference tableReference;
 		try {
 			tableReference = tableGroup.resolveTableReference(
@@ -378,15 +372,15 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			);
 		}
 
-		final JavaType<?> javaType = selectableMapping.getJdbcMapping().getJdbcJavaType();
-		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
+		final var javaType = selectableMapping.getJdbcMapping().getJdbcJavaType();
+		final var sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression( tableReference, selectableMapping ),
 				javaType,
 				fetchParent,
 				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 
-		final JdbcMappingContainer selectionType = sqlSelection.getExpressionType();
+		final var selectionType = sqlSelection.getExpressionType();
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				null,
@@ -415,11 +409,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			TableGroup targetSideTableGroup,
 			TableGroup keySideTableGroup,
 			SqlAstCreationState creationState) {
-		final TableReference lhsTableReference = targetSideTableGroup.resolveTableReference(
+		final var lhsTableReference = targetSideTableGroup.resolveTableReference(
 				targetSideTableGroup.getNavigablePath(),
 				targetSide.getModelPart().getContainingTableExpression()
 		);
-		final TableReference rhsTableKeyReference = keySideTableGroup.resolveTableReference(
+		final var rhsTableKeyReference = keySideTableGroup.resolveTableReference(
 				null,
 				keySide.getModelPart().getContainingTableExpression()
 		);
@@ -435,8 +429,8 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		if ( comparisonPredicate.getOperator() != ComparisonOperator.EQUAL ) {
 			return false;
 		}
-		final Expression lhsExpr = comparisonPredicate.getLeftHandExpression();
-		final Expression rhsExpr = comparisonPredicate.getRightHandExpression();
+		final var lhsExpr = comparisonPredicate.getLeftHandExpression();
+		final var rhsExpr = comparisonPredicate.getRightHandExpression();
 		if ( lhsExpr instanceof ColumnReference lhsColumnRef
 				&& rhsExpr instanceof ColumnReference rhsColumnRef ) {
 			final String lhs = lhsColumnRef.getColumnExpression();
@@ -495,7 +489,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		if ( targetObject == null ) {
 			return null;
 		}
-		final LazyInitializer lazyInitializer = extractLazyInitializer( targetObject );
+		final var lazyInitializer = extractLazyInitializer( targetObject );
 		if ( lazyInitializer != null ) {
 			if ( refersToPrimaryKey ) {
 				return lazyInitializer.getInternalIdentifier();
@@ -504,15 +498,14 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 				targetObject = lazyInitializer.getImplementation();
 			}
 		}
-		final ModelPart modelPart = side.getModelPart();
+		final var modelPart = side.getModelPart();
 		if ( modelPart.isEntityIdentifierMapping() ) {
 			return ( (EntityIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );
 		}
 
 		if ( lazyInitializer == null && isPersistentAttributeInterceptable( targetObject ) ) {
-			final PersistentAttributeInterceptor interceptor =
-					asPersistentAttributeInterceptable( targetObject ).$$_hibernate_getInterceptor();
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor
+			if ( asPersistentAttributeInterceptable( targetObject ).$$_hibernate_getInterceptor()
+						instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor
 					&& !lazinessInterceptor.isInitialized() ) {
 				Hibernate.initialize( targetObject );
 			}

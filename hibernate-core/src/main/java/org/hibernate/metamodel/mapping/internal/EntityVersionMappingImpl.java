@@ -345,10 +345,10 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	}
 
 	private SqlSelection resolveSqlSelection(TableGroup tableGroup, DomainResultCreationState creationState) {
-		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
 
-		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final TableReference columnTableReference = tableGroup.resolveTableReference(
+		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final var columnTableReference = tableGroup.resolveTableReference(
 				tableGroup.getNavigablePath()
 						.append( getNavigableRole().getNavigableName() ),
 				columnTableExpression

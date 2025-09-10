@@ -7,8 +7,10 @@ package org.hibernate.orm.test.query;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -23,6 +25,7 @@ import org.junit.jupiter.api.Test;
 public class SubQueryShadowingTest {
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOffsetInSubquery.class, comment = "The check is for both, limit and offset in subqueries")
 	@Jira("https://hibernate.atlassian.net/browse/HHH-19745")
 	public void testSelectCase(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {

@@ -10,7 +10,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.agroal.internal.AgroalConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.jdbc.JdbcSpies;
@@ -21,7 +20,7 @@ import org.hibernate.testing.jdbc.JdbcSpies;
  *
  * @author Vlad Mihalcea
  */
-public class PreparedStatementSpyConnectionProvider extends AgroalConnectionProvider {
+public class PreparedStatementSpyConnectionProvider extends GradleParallelTestingAgroalConnectionProvider {
 	public final JdbcSpies.SpyContext spyContext = new JdbcSpies.SpyContext();
 
 	private final List<Connection> acquiredConnections = new ArrayList<>( );

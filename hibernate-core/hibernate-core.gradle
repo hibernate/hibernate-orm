@@ -266,6 +266,12 @@ tasks.withType( Test.class ).each { test ->
         // Parallel test runs when running with in-memory databases
         test.maxParallelForks = Runtime.runtime.availableProcessors().intdiv( 2 ) ?: 1
     }
+    else if ( project.db == "oracle_test_pilot_database" ) {
+        // Parallel test runs when running with Oracle Test Pilot databases
+        // see GradleParallelTestingUsernameResolver
+        test.maxParallelForks = Runtime.runtime.availableProcessors() ?: 1
+        test.systemProperty 'maxParallelForks', test.maxParallelForks
+    }
 }
 
 tasks.named( "javadoc", Javadoc ) {

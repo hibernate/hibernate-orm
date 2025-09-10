@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.ops.spi;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -20,6 +21,14 @@ import java.sql.PreparedStatement;
  */
 @Incubating
 public interface DatabaseSelect extends DatabaseOperation<JdbcSelect> {
+	/**
+	 * Access to a collector of values loaded to be applied during the
+	 * operation's {@linkplain #getPrimaryOperation() primary action}.
+	 * May be {@code null}.
+	 */
+	@Nullable
+	LoadedValuesCollector getLoadedValuesCollector();
+
 	/**
 	 * Execute the underlying statements and return the result(s).
 	 *

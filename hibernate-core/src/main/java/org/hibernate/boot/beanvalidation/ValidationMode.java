@@ -70,12 +70,14 @@ public enum ValidationMode {
 		if ( modes == null || modes.isEmpty() ) {
 			return "[<empty>]";
 		}
-		final StringBuilder result = new StringBuilder( "[" );
-		String sep = "";
-		for ( ValidationMode mode : modes ) {
-			result.append( sep ).append( mode.externalForm() );
-			sep = ", ";
+		else {
+			final var result = new StringBuilder( "[" );
+			String sep = "";
+			for ( var mode : modes ) {
+				result.append( sep ).append( mode.externalForm() );
+				sep = ", ";
+			}
+			return result.append( "]" ).toString();
 		}
-		return result.append( "]" ).toString();
 	}
 }

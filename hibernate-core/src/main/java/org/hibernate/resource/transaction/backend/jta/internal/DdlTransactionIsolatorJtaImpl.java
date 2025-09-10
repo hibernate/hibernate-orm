@@ -34,7 +34,7 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 		this.jdbcContext = jdbcContext;
 
 		try {
-			final JtaPlatform jtaPlatform = jdbcContext.getServiceRegistry().requireService( JtaPlatform.class );
+			final var jtaPlatform = jdbcContext.getServiceRegistry().requireService( JtaPlatform.class );
 			LOG.tracef( "DdlTransactionIsolatorJtaImpl#prepare: JtaPlatform -> %s", jtaPlatform );
 
 			final TransactionManager tm = jtaPlatform.retrieveTransactionManager();

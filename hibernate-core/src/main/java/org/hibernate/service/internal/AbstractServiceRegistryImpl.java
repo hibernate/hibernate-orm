@@ -7,7 +7,6 @@ package org.hibernate.service.internal;
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -21,7 +20,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.UnknownServiceException;
@@ -35,6 +33,8 @@ import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.Stoppable;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
  * Basic implementation of the {@link ServiceRegistry} and {@link ServiceRegistryImplementor} contracts.
@@ -58,9 +58,10 @@ public abstract class AbstractServiceRegistryImpl
 	// (i.e., configured, dependencies injected, and started)
 	private final ConcurrentMap<Class<?>,Service> initializedServiceByRole = new ConcurrentHashMap<>();
 
-	// IMPL NOTE : the list used for ordered destruction.  Cannot used map above because we need to
-	// iterate it in reverse order which is only available through ListIterator
-	// assume 20 services for initial sizing
+	// IMPL NOTE: the list used for ordered destruction. Cannot use the map above,
+	// because we need to iterate it in reverse order, which is only available
+	// through ListIterator.
+	// Assume 20 services for initial sizing.
 	// All access guarded by synchronization on the serviceBindingList itself.
 	private final List<ServiceBinding<?>> serviceBindingList = CollectionHelper.arrayList( 20 );
 
@@ -80,7 +81,7 @@ public abstract class AbstractServiceRegistryImpl
 			boolean autoCloseRegistry) {
 
 		this.parent = parent;
-		this.allowCrawling = ConfigurationHelper.getBoolean( ALLOW_CRAWLING, Environment.getProperties(), true );
+		this.allowCrawling = getBoolean( ALLOW_CRAWLING, Environment.getProperties(), true );
 		this.autoCloseRegistry = autoCloseRegistry;
 	}
 
@@ -91,29 +92,28 @@ public abstract class AbstractServiceRegistryImpl
 	public AbstractServiceRegistryImpl(
 			BootstrapServiceRegistry bootstrapServiceRegistry,
 			boolean autoCloseRegistry) {
-
+		this.autoCloseRegistry = autoCloseRegistry;
 		if ( !(bootstrapServiceRegistry instanceof ServiceRegistryImplementor) ) {
 			throw new IllegalArgumentException( "ServiceRegistry parent needs to implement ServiceRegistryImplementor" );
 		}
 		this.parent = (ServiceRegistryImplementor) bootstrapServiceRegistry;
-		this.allowCrawling = ConfigurationHelper.getBoolean( ALLOW_CRAWLING, Environment.getProperties(), true );
-		this.autoCloseRegistry = autoCloseRegistry;
+		this.allowCrawling = getBoolean( ALLOW_CRAWLING, Environment.getProperties(), true );
 	}
 
 	// For nullness checking purposes
 	protected void initialize() {
-		if ( this.parent != null ) {
-			this.parent.registerChild( this );
+		if ( parent != null ) {
+			parent.registerChild( this );
 		}
 	}
 
 	protected <R extends Service> void createServiceBinding(ServiceInitiator<R> initiator) {
-		final ServiceBinding<?> serviceBinding = new ServiceBinding<>( this, initiator );
-		serviceBindingMap.put( initiator.getServiceInitiated(), serviceBinding );
+		serviceBindingMap.put( initiator.getServiceInitiated(),
+				new ServiceBinding<>( this, initiator ) );
 	}
 
 	protected <R extends Service> void createServiceBinding(ProvidedService<R> providedService) {
-		ServiceBinding<R> binding = locateServiceBinding( providedService.getServiceRole(), false );
+		var binding = locateServiceBinding( providedService.getServiceRole(), false );
 		if ( binding == null ) {
 			binding = new ServiceBinding<>( this, providedService.getServiceRole(), providedService.getService() );
 			serviceBindingMap.put( providedService.getServiceRole(), binding );
@@ -137,7 +137,7 @@ public abstract class AbstractServiceRegistryImpl
 
 	@SuppressWarnings("unchecked")
 	protected <R extends Service> @Nullable ServiceBinding<R> locateServiceBinding(Class<R> serviceRole, boolean checkParent) {
-		ServiceBinding<R> serviceBinding = (ServiceBinding<R>) serviceBindingMap.get( serviceRole );
+		var serviceBinding = (ServiceBinding<R>) serviceBindingMap.get( serviceRole );
 		if ( serviceBinding == null && checkParent && parent != null ) {
 			// look in parent
 			serviceBinding = parent.locateServiceBinding( serviceRole );
@@ -158,7 +158,7 @@ public abstract class AbstractServiceRegistryImpl
 		}
 
 		// perform a crawl looking for an alternate registration
-		for ( ServiceBinding<?> binding : serviceBindingMap.values() ) {
+		for ( var binding : serviceBindingMap.values() ) {
 			if ( serviceRole.isAssignableFrom( binding.getServiceRole() ) ) {
 				// we found an alternate...
 				LOG.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
@@ -252,7 +252,7 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	protected <R extends Service> @Nullable R createService(ServiceBinding<R> serviceBinding) {
-		final ServiceInitiator<R> serviceInitiator = serviceBinding.getServiceInitiator();
+		final var serviceInitiator = serviceBinding.getServiceInitiator();
 		if ( serviceInitiator == null ) {
 			// this condition should never ever occur
 			throw new UnknownServiceException( serviceBinding.getServiceRole() );
@@ -355,10 +355,10 @@ public abstract class AbstractServiceRegistryImpl
 				//threads not owning the synchronization lock can't get an invalid Service:
 				initializedServiceByRole.clear();
 				synchronized (serviceBindingList) {
-					final ListIterator<ServiceBinding<?>> serviceBindingsIterator =
+					final var serviceBindingsIterator =
 							serviceBindingList.listIterator( serviceBindingList.size() );
 					while ( serviceBindingsIterator.hasPrevious() ) {
-						final ServiceBinding<?> serviceBinding = serviceBindingsIterator.previous();
+						final var serviceBinding = serviceBindingsIterator.previous();
 						serviceBinding.getLifecycleOwner().stopService( serviceBinding );
 					}
 					serviceBindingList.clear();
@@ -375,7 +375,7 @@ public abstract class AbstractServiceRegistryImpl
 
 	@Override
 	public synchronized <R extends Service> void stopService(ServiceBinding<R> binding) {
-		final Service service = binding.getService();
+		final var service = binding.getService();
 		if ( service instanceof Stoppable stoppable ) {
 			try {
 				stoppable.stop();
@@ -392,10 +392,7 @@ public abstract class AbstractServiceRegistryImpl
 			childRegistries = new HashSet<>();
 		}
 		if ( !childRegistries.add( child ) ) {
-			LOG.warnf(
-					"Child ServiceRegistry [%s] was already registered; this will end badly later",
-					child
-			);
+			LOG.warnf( "Child ServiceRegistry [%s] was already registered; this will end badly later", child );
 		}
 	}
 
@@ -452,7 +449,7 @@ public abstract class AbstractServiceRegistryImpl
 		}
 
 		if ( childRegistries != null ) {
-			for ( ServiceRegistryImplementor childRegistry : childRegistries ) {
+			for ( var childRegistry : childRegistries ) {
 				final T extracted = childRegistry.getService( serviceRole );
 				if ( extracted != null ) {
 					return extracted;

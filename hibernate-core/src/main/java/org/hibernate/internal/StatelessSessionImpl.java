@@ -31,7 +31,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacks;
-import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.service.spi.EventListenerGroups;
@@ -85,6 +84,7 @@ import static org.hibernate.engine.internal.PersistenceContexts.createPersistenc
 import static org.hibernate.engine.internal.Versioning.incrementVersion;
 import static org.hibernate.engine.internal.Versioning.seedVersion;
 import static org.hibernate.engine.internal.Versioning.setVersion;
+import static org.hibernate.engine.transaction.internal.jta.JtaStatusHelper.isRollback;
 import static org.hibernate.event.internal.DefaultInitializeCollectionEventListener.handlePotentiallyEmptyCollection;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
@@ -1372,7 +1372,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		try {
 			return !isClosed()
 				&& !isFlushModeNever()
-				&& !JtaStatusHelper.isRollback( getJtaPlatform().getCurrentStatus() );
+				&& !isRollback( getJtaPlatform().getCurrentStatus() );
 		}
 		catch ( SystemException se ) {
 			throw new HibernateException( "could not determine transaction status in beforeCompletion()", se );

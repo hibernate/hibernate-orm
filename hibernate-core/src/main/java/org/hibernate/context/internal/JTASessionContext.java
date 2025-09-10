@@ -8,19 +8,19 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import jakarta.transaction.Synchronization;
 import jakarta.transaction.Transaction;
-import jakarta.transaction.TransactionManager;
 
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.context.spi.AbstractCurrentSessionContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+
+import static org.hibernate.engine.transaction.internal.jta.JtaStatusHelper.isActive;
 
 /**
  * An implementation of {@link org.hibernate.context.spi.CurrentSessionContext} which scopes the notion
@@ -59,8 +59,8 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 
 	@Override
 	public Session currentSession() throws HibernateException {
-		final JtaPlatform jtaPlatform = factory().getServiceRegistry().requireService( JtaPlatform.class );
-		final TransactionManager transactionManager = jtaPlatform.retrieveTransactionManager();
+		final var jtaPlatform = factory().getServiceRegistry().requireService( JtaPlatform.class );
+		final var transactionManager = jtaPlatform.retrieveTransactionManager();
 		if ( transactionManager == null ) {
 			throw new HibernateException( "No TransactionManagerLookup specified" );
 		}
@@ -71,7 +71,7 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 			if ( txn == null ) {
 				throw new HibernateException( "Unable to locate current JTA transaction" );
 			}
-			if ( !JtaStatusHelper.isActive( txn.getStatus() ) ) {
+			if ( !isActive( txn.getStatus() ) ) {
 				// We could register the session against the transaction even though it is
 				// not started, but we'd have no guarantee of ever getting the map
 				// entries cleaned up (aside from spawning threads).

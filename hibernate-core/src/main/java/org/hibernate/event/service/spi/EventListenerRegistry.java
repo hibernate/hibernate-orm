@@ -14,6 +14,7 @@ import org.hibernate.service.Service;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings("unchecked") // heap pollution due to varargs
 public interface EventListenerRegistry extends Service {
 
 	<T> EventListenerGroup<T> getEventListenerGroup(EventType<T> eventType);

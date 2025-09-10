@@ -17,7 +17,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
@@ -48,9 +47,12 @@ public class BeanValidationIntegrator implements Integrator {
 	public static void validateFactory(Object object) {
 		try {
 			// this direct usage of ClassLoader should be fine since the classes exist in the same jar
-			final Class<?> activatorClass = BeanValidationIntegrator.class.getClassLoader().loadClass( ACTIVATOR_CLASS_NAME );
+			final var activatorClass =
+					BeanValidationIntegrator.class.getClassLoader()
+							.loadClass( ACTIVATOR_CLASS_NAME );
 			try {
-				final Method validateMethod = activatorClass.getMethod( VALIDATE_SUPPLIED_FACTORY_METHOD_NAME, Object.class );
+				final var validateMethod =
+						activatorClass.getMethod( VALIDATE_SUPPLIED_FACTORY_METHOD_NAME, Object.class );
 				try {
 					validateMethod.invoke( null, object );
 				}
@@ -84,14 +86,14 @@ public class BeanValidationIntegrator implements Integrator {
 			Metadata metadata,
 			BootstrapContext bootstrapContext,
 			SessionFactoryImplementor sessionFactory) {
-		final ServiceRegistryImplementor serviceRegistry = sessionFactory.getServiceRegistry();
-		final ConfigurationService cfgService = serviceRegistry.requireService( ConfigurationService.class );
-		// IMPL NOTE : see the comments on ActivationContext.getValidationModes() as to why this is multi-valued...
+		final var serviceRegistry = sessionFactory.getServiceRegistry();
+		final var cfgService = serviceRegistry.requireService( ConfigurationService.class );
+		// IMPL NOTE: see the comments on ActivationContext.getValidationModes() as to why this is multi-valued...
 		Object modeSetting = cfgService.getSettings().get( JAKARTA_MODE_PROPERTY );
 		if ( modeSetting == null ) {
 			modeSetting = cfgService.getSettings().get( MODE_PROPERTY );
 		}
-		final Set<ValidationMode> modes = ValidationMode.getModes( modeSetting );
+		final var modes = ValidationMode.getModes( modeSetting );
 		if ( modes.size() > 1 ) {
 			LOG.multipleValidationModes( ValidationMode.loggable( modes ) );
 		}
@@ -100,8 +102,7 @@ public class BeanValidationIntegrator implements Integrator {
 			return;
 		}
 
-		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
-
+		final var classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		// see if the Bean Validation API is available on the classpath
 		if ( isBeanValidationApiAvailable( classLoaderService ) ) {
 			// and if so, call out to the TypeSafeActivator

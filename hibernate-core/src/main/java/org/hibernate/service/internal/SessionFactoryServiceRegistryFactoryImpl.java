@@ -29,16 +29,11 @@ public class SessionFactoryServiceRegistryFactoryImpl implements SessionFactoryS
 	public SessionFactoryServiceRegistry buildServiceRegistry(
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryOptions options) {
-		final ClassLoaderService classLoaderService =
-				options.getServiceRegistry().requireService( ClassLoaderService.class );
-		final SessionFactoryServiceRegistryBuilderImpl builder =
-				new SessionFactoryServiceRegistryBuilderImpl( theBasicServiceRegistry );
-
-		for ( SessionFactoryServiceContributor contributor :
-				classLoaderService.loadJavaServices( SessionFactoryServiceContributor.class ) ) {
+		final var classLoaderService = options.getServiceRegistry().requireService( ClassLoaderService.class );
+		final var builder = new SessionFactoryServiceRegistryBuilderImpl( theBasicServiceRegistry );
+		for ( var contributor : classLoaderService.loadJavaServices( SessionFactoryServiceContributor.class ) ) {
 			contributor.contribute( builder );
 		}
-
 		return builder.buildSessionFactoryServiceRegistry( sessionFactory, options );
 	}
 }

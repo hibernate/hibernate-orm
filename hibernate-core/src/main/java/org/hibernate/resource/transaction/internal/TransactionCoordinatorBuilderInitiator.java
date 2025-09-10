@@ -8,11 +8,12 @@ import java.util.Map;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+
+import static org.hibernate.cfg.TransactionSettings.TRANSACTION_COORDINATOR_STRATEGY;
 
 /**
  * StandardServiceInitiator for initiating the TransactionCoordinatorBuilder service.
@@ -30,15 +31,14 @@ public class TransactionCoordinatorBuilderInitiator implements StandardServiceIn
 
 	@Override
 	public TransactionCoordinatorBuilder initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
-		return registry.requireService( StrategySelector.class ).resolveDefaultableStrategy(
-				TransactionCoordinatorBuilder.class,
-				determineStrategySelection( configurationValues ),
-				JdbcResourceLocalTransactionCoordinatorBuilderImpl.INSTANCE
-		);
+		return registry.requireService( StrategySelector.class )
+				.resolveDefaultableStrategy( TransactionCoordinatorBuilder.class,
+						determineStrategySelection( configurationValues ),
+						JdbcResourceLocalTransactionCoordinatorBuilderImpl.INSTANCE );
 	}
 
-	private static Object determineStrategySelection(Map configurationValues) {
-		final Object coordinatorStrategy = configurationValues.get( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY );
+	private static Object determineStrategySelection(Map<String, Object> configurationValues) {
+		final Object coordinatorStrategy = configurationValues.get( TRANSACTION_COORDINATOR_STRATEGY );
 		if ( coordinatorStrategy != null ) {
 			return coordinatorStrategy;
 		}
@@ -47,7 +47,7 @@ public class TransactionCoordinatorBuilderInitiator implements StandardServiceIn
 		if ( legacySetting != null ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedTransactionFactorySetting(
 					LEGACY_SETTING_NAME,
-					AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY
+					TRANSACTION_COORDINATOR_STRATEGY
 			);
 			return legacySetting;
 		}

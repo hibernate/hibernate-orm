@@ -6,10 +6,21 @@ package org.hibernate.jpa.internal;
 
 import java.util.Map;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
+
+import static org.hibernate.cfg.JpaComplianceSettings.JPAQL_STRICT_COMPLIANCE;
+import static org.hibernate.cfg.JpaComplianceSettings.JPA_CACHING_COMPLIANCE;
+import static org.hibernate.cfg.JpaComplianceSettings.JPA_CLOSED_COMPLIANCE;
+import static org.hibernate.cfg.JpaComplianceSettings.JPA_COMPLIANCE;
+import static org.hibernate.cfg.JpaComplianceSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE;
+import static org.hibernate.cfg.JpaComplianceSettings.JPA_LOAD_BY_ID_COMPLIANCE;
+import static org.hibernate.cfg.JpaComplianceSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE;
+import static org.hibernate.cfg.JpaComplianceSettings.JPA_PROXY_COMPLIANCE;
+import static org.hibernate.cfg.JpaComplianceSettings.JPA_QUERY_COMPLIANCE;
+import static org.hibernate.cfg.JpaComplianceSettings.JPA_TRANSACTION_COMPLIANCE;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
+import static org.hibernate.internal.util.config.ConfigurationHelper.toBoolean;
 
 /**
  * @author Steve Ebersole
@@ -25,53 +36,51 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	private boolean loadByIdCompliance;
 
 	public MutableJpaComplianceImpl(Map<?,?> configurationSettings) {
-		this(
-				configurationSettings,
-				ConfigurationHelper.getBoolean( AvailableSettings.JPA_COMPLIANCE, configurationSettings )
-		);
+		this( configurationSettings,
+				getBoolean( JPA_COMPLIANCE, configurationSettings ) );
 	}
 
 	@SuppressWarnings("ConstantConditions")
 	public MutableJpaComplianceImpl(Map<?,?> configurationSettings, boolean jpaByDefault) {
-		final Object legacyQueryCompliance = configurationSettings.get( AvailableSettings.JPAQL_STRICT_COMPLIANCE );
+		final Object legacyQueryCompliance = configurationSettings.get( JPAQL_STRICT_COMPLIANCE );
 
-		proxyCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_PROXY_COMPLIANCE,
+		proxyCompliance = getBoolean(
+				JPA_PROXY_COMPLIANCE,
 				configurationSettings,
 				jpaByDefault
 		);
-		generatorNameScopeCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE,
+		generatorNameScopeCompliance = getBoolean(
+				JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE,
 				configurationSettings,
 				jpaByDefault
 		);
-		orderByMappingCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE,
+		orderByMappingCompliance = getBoolean(
+				JPA_ORDER_BY_MAPPING_COMPLIANCE,
 				configurationSettings,
 				jpaByDefault
 		);
-		queryCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_QUERY_COMPLIANCE,
+		queryCompliance = getBoolean(
+				JPA_QUERY_COMPLIANCE,
 				configurationSettings,
-				ConfigurationHelper.toBoolean( legacyQueryCompliance, jpaByDefault )
+				toBoolean( legacyQueryCompliance, jpaByDefault )
 		);
-		transactionCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_TRANSACTION_COMPLIANCE,
-				configurationSettings,
-				jpaByDefault
-		);
-		closedCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_CLOSED_COMPLIANCE,
+		transactionCompliance = getBoolean(
+				JPA_TRANSACTION_COMPLIANCE,
 				configurationSettings,
 				jpaByDefault
 		);
-		cachingCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_CACHING_COMPLIANCE,
+		closedCompliance = getBoolean(
+				JPA_CLOSED_COMPLIANCE,
 				configurationSettings,
 				jpaByDefault
 		);
-		loadByIdCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_LOAD_BY_ID_COMPLIANCE,
+		cachingCompliance = getBoolean(
+				JPA_CACHING_COMPLIANCE,
+				configurationSettings,
+				jpaByDefault
+		);
+		loadByIdCompliance = getBoolean(
+				JPA_LOAD_BY_ID_COMPLIANCE,
 				configurationSettings,
 				jpaByDefault
 		);

@@ -258,7 +258,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Deprecated(forRemoval = true)
 	private boolean releaseResourcesOnCloseEnabled;
 
-	@SuppressWarnings( "unchecked" )
 	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry, BootstrapContext context) {
 		this.serviceRegistry = serviceRegistry;
 		jpaBootstrap = context.isJpaBootstrap();
@@ -1700,14 +1699,14 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	private static CacheRetrieveMode defaultCacheRetrieveMode(Map<String, Object> settings) {
-		final CacheRetrieveMode cacheRetrieveMode = (CacheRetrieveMode) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
+		final var cacheRetrieveMode = (CacheRetrieveMode) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
 		return cacheRetrieveMode == null
 				? (CacheRetrieveMode) settings.get( JAKARTA_SHARED_CACHE_RETRIEVE_MODE )
 				: cacheRetrieveMode;
 	}
 
 	private static CacheStoreMode defaultCacheStoreMode(Map<String, Object> settings) {
-		final CacheStoreMode cacheStoreMode = (CacheStoreMode) settings.get( JPA_SHARED_CACHE_STORE_MODE );
+		final var cacheStoreMode = (CacheStoreMode) settings.get( JPA_SHARED_CACHE_STORE_MODE );
 		return cacheStoreMode == null
 				? (CacheStoreMode) settings.get( JAKARTA_SHARED_CACHE_STORE_MODE )
 				: cacheStoreMode;
@@ -1733,7 +1732,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	private static LockOptions defaultLockOptions(Map<String, Object> defaultSessionProperties) {
-		final LockOptions lockOptions = new LockOptions();
+		final var lockOptions = new LockOptions();
 		applyPropertiesToLockOptions( defaultSessionProperties, () -> lockOptions );
 		return lockOptions;
 	}

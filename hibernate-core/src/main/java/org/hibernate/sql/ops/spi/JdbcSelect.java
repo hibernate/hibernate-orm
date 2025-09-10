@@ -5,7 +5,7 @@
 package org.hibernate.sql.ops.spi;
 
 /**
- * A {@code SELECT} performed via JDBC.
+ * Primary operation which is a {@code SELECT} performed via JDBC.
  *
  * @author Steve Ebersole
  */

@@ -612,6 +612,11 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
+	public void forEachTableDetails(Consumer<TableDetails> consumer) {
+		delegate.getEntityMappingType().forEachTableDetails( consumer );
+	}
+
+	@Override
 	public void visitQuerySpaces(Consumer<String> querySpaceConsumer) {
 		delegate.getEntityMappingType().visitQuerySpaces( querySpaceConsumer );
 	}

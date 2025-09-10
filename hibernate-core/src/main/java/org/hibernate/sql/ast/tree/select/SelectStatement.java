@@ -46,6 +46,11 @@ public class SelectStatement extends AbstractStatement implements SqlAstNode, Ex
 		this.domainResults = domainResults;
 	}
 
+	@Override
+	public boolean isSelection() {
+		return true;
+	}
+
 	public QuerySpec getQuerySpec() {
 		return queryPart.getFirstQuerySpec();
 	}

@@ -28,6 +28,10 @@ public class ExamplesTestIT {
 
     @BeforeAll
     public static void beforeAll() throws Exception {
+        // The needed resource for this test are put in place
+        // in the 'baseFolder' (normally 'target/test-classes')
+        // by the 'build-helper-maven-plugin' execution.
+        // See the 'pom.xml'
         baseFolder = determineBaseFolder();
         editIncludedXml();
         overwriteHibernateProperties();
@@ -82,6 +86,17 @@ public class ExamplesTestIT {
         assertFalse(barSqlFile.exists());
         project.executeTarget("reveng");
         assertTrue(barSqlFile.exists());
+    }
+
+    @Test
+    public void testNative() throws Exception {
+        File buildFile = new File(baseFolder, "native/build.xml");
+        Project project = createProject(buildFile);
+        assertNotNull(project);
+        File fooSqlFile = new File(baseFolder, "native/generated/foo.sql");
+        assertFalse(fooSqlFile.exists());
+        project.executeTarget("reveng");
+        assertTrue(fooSqlFile.exists());
     }
 
     private Project createProject(File buildXmlFile) throws Exception {

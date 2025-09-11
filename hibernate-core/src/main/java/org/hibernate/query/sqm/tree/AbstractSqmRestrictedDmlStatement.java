@@ -5,6 +5,7 @@
 package org.hibernate.query.sqm.tree;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -134,5 +135,33 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 			hql.append( " where " );
 			whereClause.getPredicate().appendHqlString( hql, context );
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof AbstractSqmRestrictedDmlStatement<?> that
+			&& super.equals( object )
+			&& Objects.equals( getWhereClause(), that.getWhereClause() );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + Objects.hashCode( getWhereClause() );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof AbstractSqmRestrictedDmlStatement<?> that
+			&& super.isCompatible( object )
+			&& SqmCacheable.areCompatible( getWhereClause(), that.getWhereClause() );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( getWhereClause() );
+		return result;
 	}
 }

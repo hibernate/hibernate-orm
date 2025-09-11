@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.sqm.tree;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.hibernate.query.sqm.NodeBuilder;
@@ -47,7 +47,7 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 			return null;
 		}
 		else {
-			final Set<SqmParameter<?>> parameters = new HashSet<>( this.parameters.size() );
+			final Set<SqmParameter<?>> parameters = new LinkedHashSet<>( this.parameters.size() );
 			for ( SqmParameter<?> parameter : this.parameters ) {
 				parameters.add( parameter.copy( context ) );
 			}
@@ -63,7 +63,7 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 	@Override
 	public void addParameter(SqmParameter<?> parameter) {
 		if ( parameters == null ) {
-			parameters = new HashSet<>();
+			parameters = new LinkedHashSet<>();
 		}
 		parameters.add( parameter );
 	}

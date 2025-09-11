@@ -61,8 +61,8 @@ class NamedQueryMethod implements MetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		final TreeSet<SqmParameter<?>> sortedParameters =
-				new TreeSet<>( select.getSqmParameters() );
+		final TreeSet<SqmParameter<?>> sortedParameters = new TreeSet<>( SqmParameter.COMPARATOR );
+		sortedParameters.addAll( select.getSqmParameters() );
 		StringBuilder declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( declaration );

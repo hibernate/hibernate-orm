@@ -9,6 +9,7 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
@@ -22,6 +23,7 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 
 import java.util.Objects;
+
 
 /**
  * @author Steve Ebersole
@@ -154,24 +156,22 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 		return super.join( targetEntityClass, joinType );
 	}
 
+	// No need for equals/hashCode or isCompatible/cacheHashCode, because the base implementation using NavigablePath
+	// is fine for the purpose of matching nodes "syntactically".
+
 	@Override
-	public boolean equals(Object object) {
-		// Note that this implementation of equals() is only used for
-		// and is only correct when comparing use of AbstractSqmJoin
-		// within path expressions. See SqmFromClause.equalsJoins().
-		return object instanceof AbstractSqmJoin
-			&& super.equals( object );
-			// We do not need to include these in the comparison because
-			// this is taken care of in SqmFromClause.equalsJoins(), which
-			// exists because including the onClausePredicate would result
-			// in a circularity when comparing AbstractSqmJoin in path
-			// expressions.
-//			&& this.joinType == that.joinType
-//			&& Objects.equals( this.onClausePredicate, that.onClausePredicate );
+	public boolean deepEquals(SqmFrom<?, ?> object) {
+		return super.deepEquals( object )
+			&& object instanceof AbstractSqmJoin<?,?> thatJoin
+			&& joinType == thatJoin.getSqmJoinType()
+			&& Objects.equals( onClausePredicate, thatJoin.getOn() );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( super.hashCode(), joinType );
+	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
+		return super.isDeepCompatible( object )
+			&& object instanceof AbstractSqmJoin<?,?> thatJoin
+			&& joinType == thatJoin.getSqmJoinType()
+			&& SqmCacheable.areCompatible( onClausePredicate, thatJoin.getOn() );
 	}
 }

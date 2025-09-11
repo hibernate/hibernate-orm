@@ -8,11 +8,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
@@ -26,7 +28,7 @@ public class SqmCaseSearched<R>
 		extends AbstractSqmExpression<R>
 		implements JpaSearchedCase<R> {
 	private final List<WhenFragment<? extends R>> whenFragments;
-	private SqmExpression<? extends R> otherwise;
+	private @Nullable SqmExpression<? extends R> otherwise;
 
 	public SqmCaseSearched(NodeBuilder nodeBuilder) {
 		this( null, nodeBuilder );
@@ -123,7 +125,7 @@ public class SqmCaseSearched<R>
 		return "<searched-case>";
 	}
 
-	public static class WhenFragment<R> {
+	public static class WhenFragment<R> implements SqmCacheable {
 		private final SqmPredicate predicate;
 		private final SqmExpression<R> result;
 
@@ -137,6 +139,34 @@ public class SqmCaseSearched<R>
 		}
 
 		public SqmExpression<R> getResult() {
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object object) {
+			return object instanceof WhenFragment<?> that
+				&& predicate.equals( that.predicate )
+				&& result.equals( that.result );
+		}
+
+		@Override
+		public int hashCode() {
+			int result = predicate.hashCode();
+			result = 31 * result + this.result.hashCode();
+			return result;
+		}
+
+		@Override
+		public boolean isCompatible(Object object) {
+			return object instanceof WhenFragment<?> that
+					&& predicate.isCompatible( that.predicate )
+					&& result.isCompatible( that.result );
+		}
+
+		@Override
+		public int cacheHashCode() {
+			int result = predicate.cacheHashCode();
+			result = 31 * result + this.result.cacheHashCode();
 			return result;
 		}
 	}
@@ -167,7 +197,23 @@ public class SqmCaseSearched<R>
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( whenFragments, otherwise );
+		int result = Objects.hashCode( whenFragments );
+		result = 31 * result + Objects.hashCode( otherwise );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmCaseSearched<?> that
+			&& SqmCacheable.areCompatible( this.whenFragments, that.whenFragments )
+			&& SqmCacheable.areCompatible( this.otherwise, that.otherwise );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = SqmCacheable.cacheHashCode( whenFragments );
+		result = 31 * result + SqmCacheable.cacheHashCode( otherwise );
+		return result;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

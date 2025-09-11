@@ -21,7 +21,6 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.criteria.JoinType;
 
-import java.util.Objects;
 
 /**
  * Models a join based on a mapped attribute reference.
@@ -154,16 +153,20 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 	@Override
 	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetched);
 
+	// No need for equals/hashCode or isCompatible/cacheHashCode, because the base implementation using NavigablePath
+	// is fine for the purpose of matching nodes "syntactically".
+
 	@Override
-	public boolean equals(Object object) {
-		return object instanceof AbstractSqmAttributeJoin<?, ?> that
-			&& super.equals( object )
-			&& this.implicitJoin == that.implicitJoin
-			&& this.fetchJoin == that.fetchJoin;
+	public boolean deepEquals(SqmFrom<?, ?> object) {
+		return super.deepEquals( object )
+				&& object instanceof AbstractSqmAttributeJoin<?, ?> thatJoin
+				&& fetchJoin == thatJoin.isFetched();
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( super.hashCode(), implicitJoin, fetchJoin );
+	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
+		return super.isDeepCompatible( object )
+			&& object instanceof AbstractSqmAttributeJoin<?, ?> thatJoin
+			&& fetchJoin == thatJoin.isFetched();
 	}
 }

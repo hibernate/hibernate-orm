@@ -44,6 +44,12 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 		this.value = null;
 	}
 
+	// Constructor for SqmEnumLiteral
+	SqmLiteral(SqmBindableType<T> inherentType, T value, NodeBuilder nodeBuilder) {
+		super( inherentType, nodeBuilder );
+		this.value = value;
+	}
+
 	@Override
 	public SqmLiteral<T> copy(SqmCopyContext context) {
 		final SqmLiteral<T> existing = context.getCopy( this );
@@ -104,11 +110,22 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 	@Override
 	public boolean equals(Object object) {
 		return object instanceof SqmLiteral<?> that
+			&& getClass() == that.getClass()
 			&& Objects.equals( value, that.value );
 	}
 
 	@Override
 	public int hashCode() {
 		return Objects.hashCode( value );
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
 	}
 }

@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -14,7 +15,6 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
-import java.util.Objects;
 
 /**
  * @author Steve Ebersole
@@ -24,7 +24,7 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 
 	public SqmIndexedCollectionAccessPath(
 			NavigablePath navigablePath,
-			SqmPath<?> pluralDomainPath,
+			SqmJoin<?, ?> pluralDomainPath,
 			SqmExpression<?> selectorExpression) {
 		//noinspection unchecked
 		super(
@@ -44,7 +44,7 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 			return existing;
 		}
 
-		final SqmPath<?> lhsCopy = getLhs().copy( context );
+		final SqmJoin<?, ?> lhsCopy = (SqmJoin<?, ?>) getLhs().copy( context );
 		final SqmIndexedCollectionAccessPath<T> path = context.registerCopy(
 				this,
 				new SqmIndexedCollectionAccessPath<T>(
@@ -96,22 +96,15 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
-		getLhs().appendHqlString( hql, context );
+		getLhs().getLhs().appendHqlString( hql, context );
+		hql.append( '.' );
+		hql.append( getLhs().getReferencedPathSource().getPathName() );
 		hql.append( '[' );
 		selectorExpression.appendHqlString( hql, context );
 		hql.append( ']' );
 	}
 
-	@Override
-	public boolean equals(Object object) {
-		return object instanceof SqmIndexedCollectionAccessPath<?> that
-			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() )
-			&& Objects.equals( this.getLhs(), that.getLhs() )
-			&& Objects.equals( this.selectorExpression, that.selectorExpression );
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash( getLhs(), selectorExpression );
-	}
+	// No need for a custom equals/hashCode or isCompatible/cacheHashCode, because the LHS is a SqmJoin
+	// which is checked for deep equality/compatibility through SqmFromClause. The NavigablePath equality check is
+	// enough to determine "syntactic" equality for expressions and predicates
 }

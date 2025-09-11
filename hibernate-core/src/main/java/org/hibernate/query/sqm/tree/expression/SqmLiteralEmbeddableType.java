@@ -100,4 +100,14 @@ public class SqmLiteralEmbeddableType<T>
 	public int hashCode() {
 		return embeddableDomainType.getTypeName().hashCode();
 	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
+	}
 }

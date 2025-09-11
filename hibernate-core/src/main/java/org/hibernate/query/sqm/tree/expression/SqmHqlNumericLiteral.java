@@ -87,6 +87,30 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 	}
 
 	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmHqlNumericLiteral<?> that
+			&& literalValue.equals( that.literalValue )
+			&& typeCategory.equals( that.typeCategory );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = literalValue.hashCode();
+		result = 31 * result + typeCategory.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
+	}
+
+	@Override
 	public String asLoggableText() {
 		final StringBuilder stringBuilder = new StringBuilder();
 		appendHqlString( stringBuilder, SqmRenderContext.simpleContext() );

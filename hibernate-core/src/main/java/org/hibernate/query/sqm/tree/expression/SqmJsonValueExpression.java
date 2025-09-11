@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.expression;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.ReturnableType;
@@ -19,6 +20,7 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -30,6 +32,8 @@ import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * Special expression for the json_value function that also captures special syntax elements like error and empty behavior.
  *
@@ -38,9 +42,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @Incubating
 public class SqmJsonValueExpression<T> extends AbstractSqmJsonPathExpression<T> implements JpaJsonValueExpression<T> {
 	private ErrorBehavior errorBehavior = ErrorBehavior.UNSPECIFIED;
-	private SqmExpression<T> errorDefaultExpression;
+	private @Nullable SqmExpression<T> errorDefaultExpression;
 	private EmptyBehavior emptyBehavior = EmptyBehavior.UNSPECIFIED;
-	private SqmExpression<T> emptyDefaultExpression;
+	private @Nullable SqmExpression<T> emptyDefaultExpression;
 
 	public SqmJsonValueExpression(
 			SqmFunctionDescriptor descriptor,
@@ -225,14 +229,14 @@ public class SqmJsonValueExpression<T> extends AbstractSqmJsonPathExpression<T> 
 			case NULL -> arguments.add( JsonValueErrorBehavior.NULL );
 			case ERROR -> arguments.add( JsonValueErrorBehavior.ERROR );
 			case DEFAULT -> arguments.add( JsonValueErrorBehavior.defaultOnError(
-					(Expression) errorDefaultExpression.accept( walker )
+					(Expression) castNonNull( errorDefaultExpression ).accept( walker )
 			) );
 		}
 		switch ( emptyBehavior ) {
 			case NULL -> arguments.add( JsonValueEmptyBehavior.NULL );
 			case ERROR -> arguments.add( JsonValueEmptyBehavior.ERROR );
 			case DEFAULT -> arguments.add( JsonValueEmptyBehavior.defaultOnEmpty(
-					(Expression) emptyDefaultExpression.accept( walker )
+					(Expression) castNonNull( emptyDefaultExpression ).accept( walker )
 			) );
 		}
 		return new SelfRenderingFunctionSqlAstExpression(
@@ -260,6 +264,7 @@ public class SqmJsonValueExpression<T> extends AbstractSqmJsonPathExpression<T> 
 			case NULL -> hql.append( " null on error" );
 			case ERROR -> hql.append( " error on error" );
 			case DEFAULT -> {
+				assert errorDefaultExpression != null;
 				hql.append( " default " );
 				errorDefaultExpression.appendHqlString( hql, context );
 				hql.append( " on error" );
@@ -269,11 +274,52 @@ public class SqmJsonValueExpression<T> extends AbstractSqmJsonPathExpression<T> 
 			case NULL -> hql.append( " null on empty" );
 			case ERROR -> hql.append( " error on empty" );
 			case DEFAULT -> {
+				assert emptyDefaultExpression != null;
 				hql.append( " default " );
 				emptyDefaultExpression.appendHqlString( hql, context );
 				hql.append( " on empty" );
 			}
 		}
 		hql.append( ')' );
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		return super.equals( other )
+			&& other instanceof SqmJsonValueExpression<?> that
+			&& errorBehavior == that.errorBehavior
+			&& Objects.equals( errorDefaultExpression, that.errorDefaultExpression )
+			&& emptyBehavior == that.emptyBehavior
+			&& Objects.equals( emptyDefaultExpression, that.emptyDefaultExpression );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + errorBehavior.hashCode();
+		result = 31 * result + Objects.hashCode( errorDefaultExpression );
+		result = 31 * result + emptyBehavior.hashCode();
+		result = 31 * result + Objects.hashCode( emptyDefaultExpression );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object other) {
+		return super.isCompatible( other )
+			&& other instanceof SqmJsonValueExpression<?> that
+			&& errorBehavior == that.errorBehavior
+			&& SqmCacheable.areCompatible( errorDefaultExpression, that.errorDefaultExpression )
+			&& emptyBehavior == that.emptyBehavior
+			&& SqmCacheable.areCompatible( emptyDefaultExpression, that.emptyDefaultExpression );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + errorBehavior.hashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( errorDefaultExpression );
+		result = 31 * result + emptyBehavior.hashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( emptyDefaultExpression );
+		return result;
 	}
 }

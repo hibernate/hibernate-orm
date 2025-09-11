@@ -988,4 +988,22 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		}
 		return prefix + "_" + (++aliasCounter);
 	}
+
+	// No need for equals/hashCode or isCompatible/cacheHashCode, because the base implementation using NavigablePath
+	// is fine for the purpose of matching nodes "syntactically".
+	// Since the navigablePath contains the alias, no need to check this separately here
+
+	@Override
+	public boolean deepEquals(SqmFrom<?, ?> object) {
+		return equals( object )
+			&& SqmFrom.areDeepEqual( getSqmJoins(), object.getSqmJoins() )
+			&& SqmFrom.areDeepEqual( getSqmTreats(), object.getSqmTreats() );
+	}
+
+	@Override
+	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
+		return isCompatible( object )
+				&& SqmFrom.areDeepCompatible( getSqmJoins(), object.getSqmJoins() )
+				&& SqmFrom.areDeepCompatible( getSqmTreats(), object.getSqmTreats() );
+	}
 }

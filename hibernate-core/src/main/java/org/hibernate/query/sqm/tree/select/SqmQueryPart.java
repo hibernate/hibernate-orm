@@ -12,6 +12,7 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaQueryPart;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
@@ -206,6 +207,7 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 	@Override
 	public boolean equals(Object object) {
 		return object instanceof SqmQueryPart<?> that
+			&& getClass() == that.getClass()
 			&& Objects.equals( orderByClause, that.orderByClause )
 			&& Objects.equals( offsetExpression, that.offsetExpression )
 			&& Objects.equals( fetchExpression, that.fetchExpression )
@@ -214,6 +216,29 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( orderByClause, offsetExpression, fetchExpression, fetchClauseType );
+		int result = Objects.hashCode( orderByClause );
+		result = 31 * result + Objects.hashCode( offsetExpression );
+		result = 31 * result + Objects.hashCode( fetchExpression );
+		result = 31 * result + fetchClauseType.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmQueryPart<?> that
+			&& getClass() == that.getClass()
+			&& SqmCacheable.areCompatible( orderByClause, that.orderByClause )
+			&& SqmCacheable.areCompatible( offsetExpression, that.offsetExpression )
+			&& SqmCacheable.areCompatible( fetchExpression, that.fetchExpression )
+			&& fetchClauseType == that.fetchClauseType;
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = SqmCacheable.cacheHashCode( orderByClause );
+		result = 31 * result + SqmCacheable.cacheHashCode( offsetExpression );
+		result = 31 * result + SqmCacheable.cacheHashCode( fetchExpression );
+		result = 31 * result + fetchClauseType.hashCode();
+		return result;
 	}
 }

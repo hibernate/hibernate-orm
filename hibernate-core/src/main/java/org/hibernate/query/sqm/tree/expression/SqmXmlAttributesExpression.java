@@ -6,11 +6,13 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -91,5 +93,27 @@ public class SqmXmlAttributesExpression implements SqmTypedNode<Object> {
 			separator = ", ";
 		}
 		hql.append( ')' );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmXmlAttributesExpression that
+			&& Objects.equals( attributes, that.attributes );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode( attributes );
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmXmlAttributesExpression that
+			&& SqmCacheable.areCompatible( attributes, that.attributes );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return SqmCacheable.cacheHashCode( attributes );
 	}
 }

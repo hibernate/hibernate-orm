@@ -37,12 +37,22 @@ public class SqmStar extends AbstractSqmExpression<Object> {
 	}
 
 	@Override
-	public boolean equals(Object other) {
-		return other instanceof SqmStar;
+	public boolean equals(Object object) {
+		return object instanceof SqmStar;
 	}
 
 	@Override
 	public int hashCode() {
 		return 1;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
 	}
 }

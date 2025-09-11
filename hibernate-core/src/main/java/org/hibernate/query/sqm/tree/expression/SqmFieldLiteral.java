@@ -38,7 +38,7 @@ import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
  */
 public class SqmFieldLiteral<T>
 		implements SqmExpression<T>, SqmBindableType<T>, SqmSelectableNode<T>, SemanticPathPart {
-	private final T value;
+	private final @Nullable T value;
 	private final JavaType<T> fieldJavaType;
 	private final String fieldName;
 	private final NodeBuilder nodeBuilder;
@@ -146,17 +146,6 @@ public class SqmFieldLiteral<T>
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		SqmLiteral.appendHqlString( hql, getJavaTypeDescriptor(), getValue() );
-	}
-
-	@Override
-	public boolean equals(Object object) {
-		return object instanceof SqmFieldLiteral<?> that
-			&& Objects.equals( value, that.value );
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash( value );
 	}
 
 	@Override
@@ -323,4 +312,24 @@ public class SqmFieldLiteral<T>
 		return null;
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmFieldLiteral<?> that
+			&& Objects.equals( value, that.value );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( value );
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
+	}
 }

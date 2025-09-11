@@ -136,4 +136,5 @@ public interface QueryParameterBindings {
 	static QueryParameterBindings empty() {
 		return QueryParameterBindingsImpl.EMPTY;
 	}
+
 }

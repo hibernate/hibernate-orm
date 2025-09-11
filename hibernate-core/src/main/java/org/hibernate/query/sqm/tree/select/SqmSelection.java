@@ -78,16 +78,31 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 		}
 	}
 
-
 	@Override
 	public boolean equals(Object object) {
 		return object instanceof SqmSelection<?> that
-			&& Objects.equals( this.selectableNode, that.selectableNode )
-			&& Objects.equals( this.alias, that.alias );
+			&& selectableNode.equals( that.selectableNode )
+			&& Objects.equals( alias, that.alias );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( selectableNode, alias );
+		int result = selectableNode.hashCode();
+		result = 31 * result + Objects.hashCode( alias );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmSelection<?> that
+			&& selectableNode.isCompatible( that.selectableNode )
+			&& Objects.equals( alias, that.alias );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = selectableNode.cacheHashCode();
+		result = 31 * result + Objects.hashCode( alias );
+		return result;
 	}
 }

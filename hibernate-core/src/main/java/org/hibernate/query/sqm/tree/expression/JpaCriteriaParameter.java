@@ -145,25 +145,28 @@ public class JpaCriteriaParameter<T>
 	}
 
 	@Override
-	public int compareTo(SqmParameter<T> parameter) {
-		return parameter instanceof JpaCriteriaParameter<T>
-				? Integer.compare( hashCode(), parameter.hashCode() )
-				: 1;
-	}
-
-	// we can use value equality if the parameter has a name
-	// otherwise we must fall back to identity equality
-
-	@Override
 	public boolean equals(Object object) {
 		return this == object
 			|| object instanceof JpaCriteriaParameter<?> that
-				&& this.name != null && that.name != null
-				&& Objects.equals( this.name, that.name );
+				&& name != null
+				&& Objects.equals( name, that.name );
 	}
 
 	@Override
 	public int hashCode() {
 		return name == null ? super.hashCode() : name.hashCode();
+	}
+
+	// For caching, we can consider two parameters to be compatible if are unnamed, or they have the same name
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return getClass() == object.getClass()
+			&& Objects.equals( name, ((JpaCriteriaParameter<?>) object).name );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return name == null ? 0 : name.hashCode();
 	}
 }

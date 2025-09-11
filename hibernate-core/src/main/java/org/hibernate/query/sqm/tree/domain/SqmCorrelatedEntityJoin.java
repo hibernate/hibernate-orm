@@ -11,6 +11,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 /**
@@ -114,4 +115,17 @@ public class SqmCorrelatedEntityJoin<L,R> extends SqmEntityJoin<L,R> implements 
 		);
 	}
 
+	@Override
+	public boolean deepEquals(SqmFrom<?, ?> other) {
+		return super.deepEquals( other )
+			&& other instanceof SqmCorrelatedEntityJoin<?, ?> that
+			&& correlationParent.equals( that.correlationParent );
+	}
+
+	@Override
+	public boolean isDeepCompatible(SqmFrom<?, ?> other) {
+		return super.isDeepCompatible( other )
+			&& other instanceof SqmCorrelatedEntityJoin<?, ?> that
+			&& correlationParent.isCompatible( that.correlationParent );
+	}
 }

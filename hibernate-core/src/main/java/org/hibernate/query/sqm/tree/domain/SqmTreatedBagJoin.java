@@ -18,8 +18,6 @@ import org.hibernate.spi.NavigablePath;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 
-import java.util.Objects;
-
 /**
  * @author Steve Ebersole
  */
@@ -127,19 +125,6 @@ public class SqmTreatedBagJoin<L, R, S extends R> extends SqmBagJoin<L, S> imple
 		hql.append( " as " );
 		hql.append( treatTarget.getTypeName() );
 		hql.append( ')' );
-	}
-
-	@Override
-	public boolean equals(Object object) {
-		return object instanceof SqmTreatedBagJoin<?, ?, ?> that
-			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() )
-			&& Objects.equals( this.treatTarget.getTypeName(), that.treatTarget.getTypeName() )
-			&& Objects.equals( this.wrappedPath.getNavigablePath(), that.wrappedPath.getNavigablePath() );
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash( treatTarget.getTypeName(), wrappedPath.getNavigablePath() );
 	}
 
 	@Override

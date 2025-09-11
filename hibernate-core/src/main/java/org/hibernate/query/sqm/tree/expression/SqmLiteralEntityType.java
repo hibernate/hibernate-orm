@@ -111,4 +111,14 @@ public class SqmLiteralEntityType<T>
 	public int hashCode() {
 		return entityType.getName().hashCode();
 	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
+	}
 }

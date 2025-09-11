@@ -10,8 +10,6 @@ import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
-import java.util.Objects;
-
 /**
  * @author Gavin King
  */
@@ -71,12 +69,28 @@ public class SqmByUnit extends AbstractSqmExpression<Long> {
 	@Override
 	public boolean equals(Object object) {
 		return object instanceof SqmByUnit that
-			&& Objects.equals( this.unit, that.unit )
-			&& Objects.equals( this.duration, that.duration );
+			&& this.unit.equals( that.unit )
+			&& this.duration.equals( that.duration );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( unit, duration );
+		int result = unit.hashCode();
+		result = 31 * result + duration.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmByUnit that
+			&& this.unit.isCompatible( that.unit )
+			&& this.duration.isCompatible( that.duration );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = unit.cacheHashCode();
+		result = 31 * result + duration.cacheHashCode();
+		return result;
 	}
 }

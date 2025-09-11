@@ -101,13 +101,23 @@ public class ExamplesTestIT {
 
     @Test
     public void testProperties() throws Exception {
-        File buildFile = new File(baseFolder, "properties/build.xml");
-        Project project = createProject(buildFile);
-        assertNotNull(project);
-//        File fooSqlFile = new File(baseFolder, "native/generated/foo.sql");
-//        assertFalse(fooSqlFile.exists());
-        project.executeTarget("reveng");
-//        assertTrue(fooSqlFile.exists());
+        PrintStream savedOut = System.out;
+        try {
+            File buildFile = new File(baseFolder, "properties/build.xml");
+            Project project = createProject(buildFile);
+            assertNotNull(project);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            System.setOut(new PrintStream(out));
+            assertFalse(out.toString().contains("Hello, World!"));
+            assertFalse(out.toString().contains("Hello, Foo!"));
+            assertFalse(out.toString().contains("Hello, Bar!"));
+            project.executeTarget("reveng");
+            assertTrue(out.toString().contains("Hello, World!"));
+            assertTrue(out.toString().contains("Hello, Foo!"));
+            assertTrue(out.toString().contains("Hello, Bar!"));
+        } finally {
+            System.setOut(savedOut);
+        }
     }
 
     private Project createProject(File buildXmlFile) throws Exception {

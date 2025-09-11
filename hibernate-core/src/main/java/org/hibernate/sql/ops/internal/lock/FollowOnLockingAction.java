@@ -7,11 +7,13 @@ package org.hibernate.sql.ops.internal.lock;
 import jakarta.persistence.Timeout;
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
+import org.hibernate.Locking;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
@@ -45,14 +47,17 @@ public class FollowOnLockingAction implements PostAction {
 	private final LoadedValuesCollector loadedValuesCollector;
 	private final LockMode lockMode;
 	private final Timeout lockTimeout;
+	private final Locking.Scope lockScope;
 
 	public FollowOnLockingAction(
 			LoadedValuesCollector loadedValuesCollector,
 			LockMode lockMode,
-			Timeout lockTimeout) {
+			Timeout lockTimeout,
+			Locking.Scope lockScope) {
 		this.loadedValuesCollector = loadedValuesCollector;
 		this.lockMode = lockMode;
 		this.lockTimeout = lockTimeout;
+		this.lockScope = lockScope;
 	}
 
 	@Override
@@ -77,23 +82,35 @@ public class FollowOnLockingAction implements PostAction {
 			}
 
 			// create a segment for each table for the entity
-			final Map<String,TableSegment> tableSegments = prepareTableSegments( entityMappingType, entityKeys, session );
+			final Map<String, TableSegment> tableSegments = prepareTableSegments( entityMappingType, entityKeys, session );
 
 			// create a cross-reference of information related to an entity based on its identifier,
 			// we'll use this later when we adjust the state array and inject state into the entity instance.
 			final Map<Object, EntityDetails> entityDetailsMap = resolveEntityKeys( entityKeys, executionContext );
 
 			entityMappingType.forEachAttributeMapping( (index, attributeMapping) -> {
-				if ( attributeMapping.isPluralAttributeMapping() ) {
-					// for now...
+				if ( attributeMapping instanceof PluralAttributeMapping pluralAttributeMapping ) {
+					// handle collections specially...
+					if ( lockScope == Locking.Scope.INCLUDE_COLLECTIONS ) {
+						// we may need to lock the "collection table".
+						// the conditions are a bit unclear, so for now always lock them.
+						CollectionTableHelper.lockCollectionTable(
+								pluralAttributeMapping,
+								lockMode,
+								lockTimeout,
+								entityDetailsMap,
+								executionContext
+						);
+					}
 					return;
 				}
+
 				final String tableExpression = attributeMapping.getContainingTableExpression();
-				final TableSegment tableSegment = tableSegments.get( tableExpression );
+				final TableSegment entityTableSegment = tableSegments.get( tableExpression );
 
 				// here we apply the selection for the attribute to the corresponding
 				// table-segment keeping track of the state array index for later.
-				tableSegment.applyDomainResult( index, attributeMapping );
+				entityTableSegment.applyDomainResult( index, attributeMapping );
 			} );
 
 			// at this point, we have all the individual locking selects ready to go.
@@ -112,8 +129,8 @@ public class FollowOnLockingAction implements PostAction {
 				}
 			};
 
-			tableSegments.forEach( (s, tableSegment) -> {
-				tableSegment.performActions( entityDetailsMap, lockingExecutionContext );
+			tableSegments.forEach( (s, entityTableSegment) -> {
+				entityTableSegment.performActions( entityDetailsMap, lockingExecutionContext );
 			} );
 		} );
 	}

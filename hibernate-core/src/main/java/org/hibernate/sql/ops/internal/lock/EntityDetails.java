@@ -10,5 +10,5 @@ import org.hibernate.engine.spi.EntityKey;
 /**
  * @author Steve Ebersole
  */
-record EntityDetails(EntityKey key, EntityEntry entry, Object instance) {
+public record EntityDetails(EntityKey key, EntityEntry entry, Object instance) {
 }

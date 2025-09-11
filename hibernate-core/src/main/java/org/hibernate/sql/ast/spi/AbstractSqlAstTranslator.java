@@ -882,7 +882,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		databaseSelectBuilder.appendPostAction( new FollowOnLockingAction(
 				loadedValuesCollector,
 				lockOptions.getLockMode(),
-				lockOptions.getTimeout()
+				lockOptions.getTimeout(),
+				lockOptions.getScope()
 		) );
 	}
 

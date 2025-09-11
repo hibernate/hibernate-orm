@@ -99,6 +99,17 @@ public class ExamplesTestIT {
         assertTrue(fooSqlFile.exists());
     }
 
+    @Test
+    public void testProperties() throws Exception {
+        File buildFile = new File(baseFolder, "properties/build.xml");
+        Project project = createProject(buildFile);
+        assertNotNull(project);
+//        File fooSqlFile = new File(baseFolder, "native/generated/foo.sql");
+//        assertFalse(fooSqlFile.exists());
+        project.executeTarget("reveng");
+//        assertTrue(fooSqlFile.exists());
+    }
+
     private Project createProject(File buildXmlFile) throws Exception {
         Project result = new Project();
         ProjectHelper projectHelper = ProjectHelper.getProjectHelper();

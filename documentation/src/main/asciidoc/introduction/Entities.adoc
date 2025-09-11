@@ -778,6 +778,14 @@ On the other hand, if we _don't_ set `autoapply=true`, then we must explicitly a
 EnumSet<DayOfWeek> daysOfWeek;
 ----
 
+[CAUTION]
+====
+Converters are supposed to be used for type conversion.
+Some enterprising members of the community have noticed that they can be (mis)used to perform other tasks: trimming whitespace, normalizing case, assigning a default value in place of `null`, and so on.
+Hibernate _tolerates_ but does not encourage such (mis)use.
+In particular, we strongly recommend against defining an `autoApply` converter acting on a <<basic-type-list,basic type>>.
+====
+
 All this is nice, but it probably won't surprise you that Hibernate goes beyond what is required by JPA.
 
 [[compositional-basic-types]]

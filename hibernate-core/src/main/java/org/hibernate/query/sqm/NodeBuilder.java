@@ -1529,6 +1529,8 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	BasicType<Character> getCharacterType();
 
+	BasicType<String> getStringType();
+
 	JpaCompliance getJpaCompliance();
 
 	@Deprecated(since = "7.0", forRemoval = true)

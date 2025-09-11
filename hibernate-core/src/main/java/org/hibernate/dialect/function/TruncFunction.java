@@ -10,8 +10,6 @@ import java.util.List;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.type.BindingContext;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionRenderer;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
@@ -76,23 +74,26 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 						StandardFunctionArgumentTypeResolvers.NULL
 				)
 		);
-		this.numericRenderingSupport = new TruncRenderingSupport(
-				new PatternRenderer( truncPattern ),
-				twoArgTruncPattern != null ? new PatternRenderer( twoArgTruncPattern ) : null
-		);
 		this.datetimeTrunc = datetimeTrunc;
-		TruncRenderingSupport renderingSupport = null;
-		DateTruncEmulation emulation = null;
-		if ( datetimeTrunc != null ) {
+		numericRenderingSupport =
+				new TruncRenderingSupport( new PatternRenderer( truncPattern ),
+						twoArgTruncPattern == null ? null : new PatternRenderer( twoArgTruncPattern ) );
+		if ( datetimeTrunc == null ) {
+			dateTruncEmulation = null;
+			datetimeRenderingSupport = null;
+		}
+		else {
 			if ( datetimeTrunc.getPattern() != null ) {
-				renderingSupport = new TruncRenderingSupport( new PatternRenderer( datetimeTrunc.getPattern() ), null );
+				datetimeRenderingSupport =
+						new TruncRenderingSupport( new PatternRenderer( datetimeTrunc.getPattern() ), null );
+				dateTruncEmulation = null;
 			}
 			else {
-				emulation = new DateTruncEmulation( toDateFunction, typeConfiguration );
+				dateTruncEmulation =
+						new DateTruncEmulation( toDateFunction, typeConfiguration );
+				datetimeRenderingSupport = null;
 			}
 		}
-		this.datetimeRenderingSupport = renderingSupport;
-		this.dateTruncEmulation = emulation;
 	}
 
 	@Override
@@ -100,11 +101,11 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
-		final NodeBuilder nodeBuilder = queryEngine.getCriteriaBuilder();
+		final var nodeBuilder = queryEngine.getCriteriaBuilder();
 		final List<SqmTypedNode<?>> args = new ArrayList<>( arguments );
 		final FunctionRenderer renderingSupport;
 		final ArgumentsValidator argumentsValidator;
-		if ( arguments.size() == 2 && arguments.get( 1 ) instanceof SqmExtractUnit ) {
+		if ( arguments.size() == 2 && arguments.get( 1 ) instanceof SqmExtractUnit<?> extractUnit ) {
 			// datetime truncation
 			renderingSupport = datetimeRenderingSupport;
 			argumentsValidator = TruncArgumentsValidator.DATETIME_VALIDATOR;
@@ -120,39 +121,20 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 			}
 			else if ( datetimeTrunc == DatetimeTrunc.TRUNC ) {
 				// the trunc() function requires translating the temporal_unit to a format string
-				final TemporalUnit temporalUnit = ( (SqmExtractUnit<?>) arguments.get( 1 ) ).getUnit();
-				final String pattern;
-				switch ( temporalUnit ) {
-					case YEAR:
-						pattern = "YYYY";
-						break;
-					case MONTH:
-						pattern = "MM";
-						break;
-					case WEEK:
-						pattern = "IW";
-						break;
-					case DAY:
-						pattern = "DD";
-						break;
-					case HOUR:
-						pattern = "HH";
-						break;
-					case MINUTE:
-						pattern = "MI";
-						break;
-					case SECOND:
-						pattern = "SS";
-						break;
-					default:
-						throw new UnsupportedOperationException( "Temporal unit not supported [" + temporalUnit + "]" );
-				}
+				final var temporalUnit = extractUnit.getUnit();
+				final String pattern = switch ( temporalUnit ) {
+					case YEAR -> "YYYY";
+					case MONTH -> "MM";
+					case WEEK -> "IW";
+					case DAY -> "DD";
+					case HOUR -> "HH";
+					case MINUTE -> "MI";
+					case SECOND -> "SS";
+					default -> throw new UnsupportedOperationException(
+							"Temporal unit not supported [" + temporalUnit + "]" );
+				};
 				// replace temporal_unit parameter with translated string format literal
-				args.set( 1, new SqmLiteral<>(
-						pattern,
-						nodeBuilder.getTypeConfiguration().getBasicTypeForJavaType( String.class ),
-						nodeBuilder
-				) );
+				args.set( 1, new SqmLiteral<>( pattern, nodeBuilder.getStringType(), nodeBuilder ) );
 			}
 		}
 		else {
@@ -188,13 +170,10 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 				List<? extends SqlAstNode> sqlAstArguments,
 				ReturnableType<?> returnType,
 				SqlAstTranslator<?> walker) {
-			final PatternRenderer pattern;
-			if ( twoArgTruncPattern != null && sqlAstArguments.size() == 2 ) {
-				pattern = twoArgTruncPattern;
-			}
-			else {
-				pattern = truncPattern;
-			}
+			final var pattern =
+					twoArgTruncPattern != null && sqlAstArguments.size() == 2
+							? twoArgTruncPattern
+							: truncPattern;
 			pattern.render( sqlAppender, sqlAstArguments, walker );
 		}
 	}
@@ -217,12 +196,11 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 				List<? extends SqmTypedNode<?>> arguments,
 				String functionName,
 				BindingContext bindingContext) {
-			if ( arguments.size() == 2 && arguments.get( 1 ) instanceof SqmExtractUnit ) {
-				DATETIME_VALIDATOR.validate( arguments, functionName, bindingContext );
-			}
-			else {
-				NUMERIC_VALIDATOR.validate( arguments, functionName, bindingContext );
-			}
+			final var validator =
+					arguments.size() == 2 && arguments.get( 1 ) instanceof SqmExtractUnit
+							? DATETIME_VALIDATOR
+							: NUMERIC_VALIDATOR;
+			validator.validate( arguments, functionName, bindingContext );
 		}
 	}
 }

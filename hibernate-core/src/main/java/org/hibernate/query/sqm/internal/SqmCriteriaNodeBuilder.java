@@ -301,6 +301,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return characterType;
 	}
 
+	@Override
 	public BasicType<String> getStringType() {
 		final BasicType<String> stringType = this.stringType;
 		if ( stringType == null ) {

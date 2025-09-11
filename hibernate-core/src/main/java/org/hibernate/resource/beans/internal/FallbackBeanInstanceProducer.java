@@ -4,7 +4,6 @@
  */
 package org.hibernate.resource.beans.internal;
 
-import java.lang.reflect.Constructor;
 
 import org.hibernate.InstantiationException;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
@@ -36,7 +35,7 @@ public class FallbackBeanInstanceProducer implements BeanInstanceProducer {
 	public <B> B produceBeanInstance(Class<B> beanType) {
 		LOG.tracef( "Creating ManagedBean [%s] using direct instantiation", beanType.getName() );
 		try {
-			final Constructor<B> constructor = beanType.getDeclaredConstructor();
+			final var constructor = beanType.getDeclaredConstructor();
 			constructor.setAccessible( true );
 			return constructor.newInstance();
 		}

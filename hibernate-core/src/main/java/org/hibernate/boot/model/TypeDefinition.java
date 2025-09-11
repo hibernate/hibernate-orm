@@ -16,11 +16,9 @@ import org.hibernate.boot.model.process.internal.UserTypeResolution;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
-import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
@@ -39,6 +37,7 @@ import org.hibernate.usertype.UserType;
 
 import static java.util.Collections.emptyMap;
 import static org.hibernate.boot.model.process.internal.InferredBasicValueResolver.resolveSqlTypeIndicators;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.mapping.MappingHelper.injectParameters;
 
 /**
@@ -97,13 +96,21 @@ public class TypeDefinition implements Serializable {
 
 	public BasicValue.Resolution<?> resolve(
 			Map<?,?> localConfigParameters,
+			MetadataBuildingContext context,
+			JdbcTypeIndicators indicators) {
+		return resolve( localConfigParameters, null, context, indicators );
+	}
+
+	public BasicValue.Resolution<?> resolve(
+			Map<?,?> localConfigParameters,
+			// TODO: why is this parameter ignored??
 			MutabilityPlan<?> explicitMutabilityPlan,
 			MetadataBuildingContext context,
 			JdbcTypeIndicators indicators) {
-		if ( CollectionHelper.isEmpty( localConfigParameters ) ) {
+		if ( isEmpty( localConfigParameters ) ) {
 			// we can use the re-usable resolution...
 			if ( reusableResolution == null ) {
-				reusableResolution = createResolution( name, emptyMap(), indicators, context );
+				reusableResolution = createResolution( this.name, emptyMap(), indicators, context );
 			}
 			return reusableResolution;
 		}
@@ -152,7 +159,7 @@ public class TypeDefinition implements Serializable {
 				configurationAware.setTypeConfiguration( typeConfiguration );
 			}
 
-			final Properties combinedTypeParameters = new Properties();
+			final var combinedTypeParameters = new Properties();
 			if ( parameters!=null ) {
 				combinedTypeParameters.putAll( parameters );
 			}
@@ -225,19 +232,21 @@ public class TypeDefinition implements Serializable {
 
 	private static <T> BasicValue.Resolution<T> resolveLegacyCases(
 			Class<T> typeImplementorClass, JdbcTypeIndicators indicators, TypeConfiguration typeConfiguration) {
-		final BasicType<T> legacyType;
+		return createBasicTypeResolution( getLegacyType( typeImplementorClass ),
+				typeImplementorClass, indicators, typeConfiguration );
+	}
+
+	private static <T> BasicType<T> getLegacyType(Class<T> typeImplementorClass) {
 		if ( Serializable.class.isAssignableFrom( typeImplementorClass ) ) {
-			legacyType = new SerializableType( typeImplementorClass );
+			return new SerializableType( typeImplementorClass );
 		}
 		else if ( typeImplementorClass.isInterface() ) {
-			legacyType = (BasicType<T>) new JavaObjectType();
+			return (BasicType<T>) new JavaObjectType();
 		}
 		else {
 			throw new IllegalArgumentException( "Named type [" + typeImplementorClass
-					+ "] did not implement BasicType nor UserType" );
+												+ "] did not implement BasicType nor UserType" );
 		}
-
-		return createBasicTypeResolution( legacyType, typeImplementorClass, indicators, typeConfiguration );
 	}
 
 	private static <T> BasicValue.Resolution<T> createBasicTypeResolution(
@@ -304,7 +313,7 @@ public class TypeDefinition implements Serializable {
 		}
 		else {
 			final var beanRegistry = serviceRegistry.requireService( ManagedBeanRegistry.class );
-			final ManagedBean<T> typeBean = name != null
+			final var typeBean = name != null
 					? beanRegistry.getBean( name, typeImplementorClass, instanceProducer )
 					: beanRegistry.getBean( typeImplementorClass, instanceProducer );
 			return typeBean.getBeanInstance();
@@ -321,29 +330,31 @@ public class TypeDefinition implements Serializable {
 				typeImplementorClass,
 				localTypeParams,
 				null,
-				buildingContext.getBootstrapContext().getTypeConfiguration().getCurrentBaseSqlTypeIndicators(),
+				buildingContext.getBootstrapContext().getTypeConfiguration()
+						.getCurrentBaseSqlTypeIndicators(),
 				buildingContext
 		);
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( !(o instanceof TypeDefinition that) ) {
+		else if ( !(object instanceof TypeDefinition that) ) {
 			return false;
 		}
-
-		return Objects.equals( this.name, that.name )
-			&& Objects.equals( this.typeImplementorClass, that.typeImplementorClass )
-			&& Arrays.equals( this.registrationKeys, that.registrationKeys )
-			&& Objects.equals( this.parameters, that.parameters );
+		else {
+			return Objects.equals( this.name, that.name )
+				&& Objects.equals( this.typeImplementorClass, that.typeImplementorClass )
+				&& Arrays.equals( this.registrationKeys, that.registrationKeys )
+				&& Objects.equals( this.parameters, that.parameters );
+		}
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( name, typeImplementorClass, registrationKeys, parameters );
+		return Objects.hash( name, typeImplementorClass, Arrays.hashCode( registrationKeys ), parameters );
 	}
 
 	@Override

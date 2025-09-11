@@ -638,7 +638,7 @@ public class BasicValue extends SimpleValue
 			final var autoAppliedTypeDef = context.getTypeDefinitionRegistry().resolveAutoApplied( castType );
 			if ( autoAppliedTypeDef != null ) {
 				LOG.trace( "BasicValue resolution matched auto-applied type definition" );
-				return autoAppliedTypeDef.resolve( getTypeParameters(), null, context, this );
+				return autoAppliedTypeDef.resolve( getTypeParameters(), context, this );
 			}
 		}
 
@@ -874,7 +874,7 @@ public class BasicValue extends SimpleValue
 		// see if it is a named TypeDefinition
 		final var typeDefinition = context.getTypeDefinitionRegistry().resolve( name );
 		if ( typeDefinition != null ) {
-			final Resolution<?> resolution = typeDefinition.resolve(
+			final var resolution = typeDefinition.resolve(
 					localTypeParams,
 					getMutabilityPlan( explicitMutabilityPlanAccess, typeConfiguration ),
 					context,
@@ -1099,14 +1099,15 @@ public class BasicValue extends SimpleValue
 		return typeInstance;
 	}
 
-	private <T> ManagedBean<T> getUserTypeBean(Class<T> explicitCustomType, Properties properties) {
+	private <T> ManagedBean<? extends T> getUserTypeBean(Class<T> explicitCustomType, Properties properties) {
 		final var producer = getBuildingContext().getBootstrapContext().getCustomTypeProducer();
+		final var managedBeanRegistry = getManagedBeanRegistry();
 		if ( isNotEmpty( properties ) ) {
 			final String name = explicitCustomType.getName() + COUNTER++;
-			return getManagedBeanRegistry().getBean( name, explicitCustomType, producer );
+			return managedBeanRegistry.getBean( name, explicitCustomType, producer );
 		}
 		else {
-			return getManagedBeanRegistry().getBean( explicitCustomType, producer );
+			return managedBeanRegistry.getBean( explicitCustomType, producer );
 		}
 	}
 

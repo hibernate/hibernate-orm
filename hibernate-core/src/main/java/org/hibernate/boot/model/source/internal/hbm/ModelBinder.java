@@ -1178,12 +1178,12 @@ public class ModelBinder {
 		final Map<String,String> typeParameters = new HashMap<>();
 		if ( typeName != null ) {
 			// see if there is a corresponding type-def
-			final TypeDefinition typeDef =
+			final var typeDefinition =
 					mappingDocument.getMetadataCollector().getTypeDefinition( typeName );
-			if ( typeDef != null ) {
-				typeName = typeDef.getTypeImplementorClass().getName();
-				if ( typeDef.getParameters() != null ) {
-					typeParameters.putAll( typeDef.getParameters() );
+			if ( typeDefinition != null ) {
+				typeName = typeDefinition.getTypeImplementorClass().getName();
+				if ( typeDefinition.getParameters() != null ) {
+					typeParameters.putAll( typeDefinition.getParameters() );
 				}
 			}
 			else {
@@ -2081,16 +2081,12 @@ public class ModelBinder {
 		}
 
 		// see if it is a named TypeDefinition
-		final TypeDefinition typeDefinition =
+		final var typeDefinition =
 				metadataBuildingContext.getTypeDefinitionRegistry().resolve( typeName );
 		if ( typeDefinition != null ) {
-			final BasicValue.Resolution<?> resolution = typeDefinition.resolve(
-					parameters,
-					null,
-					metadataBuildingContext,
-					typeConfiguration.getCurrentBaseSqlTypeIndicators()
-			);
-
+			final var resolution =
+					typeDefinition.resolve( parameters, metadataBuildingContext,
+							typeConfiguration.getCurrentBaseSqlTypeIndicators() );
 			if ( resolution.getCombinedTypeParameters() != null ) {
 				discriminatorMapping.setTypeParameters( resolution.getCombinedTypeParameters() );
 			}
@@ -2222,7 +2218,7 @@ public class ModelBinder {
 		}
 		else {
 			boolean firstPass = true;
-			final StringBuilder buffer = new StringBuilder();
+			final var buffer = new StringBuilder();
 			for ( var cascadeType : defaultCascadeTypes ) {
 				if ( firstPass ) {
 					firstPass = false;
@@ -2530,7 +2526,7 @@ public class ModelBinder {
 			return null;
 		}
 
-		final TypeDefinition typeDefinition =
+		final var typeDefinition =
 				sourceDocument.getMetadataCollector()
 						.getTypeDefinition( typeSource.getName() );
 		final Map<String,String> typeParameters = new HashMap<>();

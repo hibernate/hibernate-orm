@@ -29,6 +29,7 @@ import org.hibernate.dialect.BooleanDecoder;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.OracleServerConfiguration;
 import org.hibernate.dialect.temptable.OracleLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.StandardGlobalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
@@ -206,6 +207,18 @@ public class OracleLegacyDialect extends Dialect {
 		}
 	};
 
+	// Is it an Autonomous Database Cloud Service?
+	protected final boolean autonomous;
+
+	// Is MAX_STRING_SIZE set to EXTENDED?
+	protected final boolean extended;
+
+	// Is the database accessed using a database service protected by Application Continuity.
+	protected final boolean applicationContinuity;
+
+	protected final int driverMajorVersion;
+	protected final int driverMinorVersion;
+
 	private final LockingSupport lockingSupport;
 
 	public OracleLegacyDialect() {
@@ -213,13 +226,39 @@ public class OracleLegacyDialect extends Dialect {
 	}
 
 	public OracleLegacyDialect(DatabaseVersion version) {
-		super(version);
+		super( version );
 		lockingSupport = new OracleLockingSupport( version );
+		autonomous = false;
+		extended = false;
+		applicationContinuity = false;
+		driverMajorVersion = 19;
+		driverMinorVersion = 0;
 	}
 
 	public OracleLegacyDialect(DialectResolutionInfo info) {
-		super(info);
+		this( info, OracleServerConfiguration.fromDialectResolutionInfo( info ) );
+	}
+
+	public OracleLegacyDialect(DialectResolutionInfo info, OracleServerConfiguration serverConfiguration) {
+		super( info );
 		lockingSupport = new OracleLockingSupport( getVersion() );
+		autonomous = serverConfiguration.isAutonomous();
+		extended = serverConfiguration.isExtended();
+		applicationContinuity = serverConfiguration.isApplicationContinuity();
+		this.driverMinorVersion = serverConfiguration.getDriverMinorVersion();
+		this.driverMajorVersion = serverConfiguration.getDriverMajorVersion();
+	}
+
+	public boolean isAutonomous() {
+		return autonomous;
+	}
+
+	public boolean isExtended() {
+		return extended;
+	}
+
+	public boolean isApplicationContinuity() {
+		return applicationContinuity;
 	}
 
 	@Override
@@ -1662,10 +1701,10 @@ public class OracleLegacyDialect extends Dialect {
 
 	@Override
 	public boolean useInputStreamToInsertBlob() {
-		// see HHH-18206
-		return false;
+		// If application continuity is enabled, don't use stream bindings, since a replay could otherwise fail
+		// if the underlying stream doesn't support mark and reset
+		return !isApplicationContinuity();
 	}
-
 
 	@Override
 	public String appendCheckConstraintOptions(CheckConstraint checkConstraint, String sqlCheckConstraint) {

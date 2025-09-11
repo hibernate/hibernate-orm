@@ -939,7 +939,16 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean useInputStreamToInsertBlob() {
+	public boolean useConnectionToCreateLob() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsNationalizedMethods() {
+		// See HHH-12753, HHH-18314, HHH-19201
+		// Old DB2 JDBC drivers do not support setNClob, setNCharcterStream or setNString.
+		// In more recent driver versions, some methods just delegate to the non-N variant, but others still fail.
+		// Ultimately, let's just avoid the N variant methods on DB2 altogether
 		return false;
 	}
 

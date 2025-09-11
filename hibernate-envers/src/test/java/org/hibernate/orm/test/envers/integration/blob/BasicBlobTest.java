@@ -89,6 +89,7 @@ public class BasicBlobTest extends BaseEnversJPAFunctionalTestCase {
 				.getResource( "org/hibernate/orm/test/envers/integration/blob/blob.txt" ).toURI() );
 
 		try (final InputStream stream = new BufferedInputStream( Files.newInputStream( path ) )) {
+			final long length = Files.size( path );
 			doInJPA( this::entityManagerFactory, entityManager -> {
 				final Asset asset = new Asset();
 				asset.setFileName( "blob.txt" );
@@ -108,7 +109,7 @@ public class BasicBlobTest extends BaseEnversJPAFunctionalTestCase {
 				// H2, MySQL, Oracle, SQL Server work this way.
 				//
 				//
-				Blob blob = BlobProxy.generateProxy( stream, 9192L );
+				Blob blob = BlobProxy.generateProxy( stream, length );
 
 				asset.setData( blob );
 				entityManager.persist( asset );

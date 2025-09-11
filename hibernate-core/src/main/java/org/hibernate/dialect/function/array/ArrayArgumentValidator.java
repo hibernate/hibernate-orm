@@ -7,7 +7,6 @@ package org.hibernate.dialect.function.array;
 import java.util.List;
 
 import org.hibernate.type.BindingContext;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -32,28 +31,26 @@ public class ArrayArgumentValidator implements ArgumentsValidator {
 			List<? extends SqmTypedNode<?>> arguments,
 			String functionName,
 			BindingContext bindingContext) {
-		getElementType( arguments, functionName, bindingContext );
+		getElementType( arguments, functionName );
 	}
 
 	protected BasicType<?> getElementType(
 			List<? extends SqmTypedNode<?>> arguments,
-			String functionName,
-			BindingContext bindingContext) {
-		return getElementType( arrayIndex, arguments, functionName, bindingContext );
+			String functionName) {
+		return getElementType( arrayIndex, arguments, functionName );
 	}
 
 	protected BasicPluralType<?, ?> getPluralType(
 			int arrayIndex,
 			List<? extends SqmTypedNode<?>> arguments,
-			String functionName,
-			BindingContext bindingContext) {
-		final SqmTypedNode<?> arrayArgument = arguments.get( arrayIndex );
-		final SqmExpressible<?> expressible = arrayArgument.getExpressible();
+			String functionName) {
+		final var arrayArgument = arguments.get( arrayIndex );
+		final var expressible = arrayArgument.getExpressible();
 		if ( expressible == null ) {
 			return null;
 		}
 		else {
-			final SqmExpressible<?> arrayType = expressible.getSqmType();
+			final var arrayType = expressible.getSqmType();
 			if ( arrayType == null ) {
 				return null;
 			}
@@ -76,8 +73,7 @@ public class ArrayArgumentValidator implements ArgumentsValidator {
 	protected BasicType<?> getElementType(
 			int arrayIndex,
 			List<? extends SqmTypedNode<?>> arguments,
-			String functionName,
-			BindingContext bindingContext) {
-		return getPluralType( arrayIndex, arguments, functionName, bindingContext ).getElementType();
+			String functionName) {
+		return getPluralType( arrayIndex, arguments, functionName ).getElementType();
 	}
 }

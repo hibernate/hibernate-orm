@@ -91,7 +91,7 @@ public final class StandardArgumentsValidators {
 
 			@Override
 			public String getSignature() {
-				final StringBuilder sig = new StringBuilder("(");
+				final var sig = new StringBuilder("(");
 				for (int i=0; i<minNumOfArgs; i++) {
 					if (i!=0) {
 						sig.append(", ");
@@ -128,7 +128,7 @@ public final class StandardArgumentsValidators {
 
 			@Override
 			public String getSignature() {
-				final StringBuilder sig = new StringBuilder("(");
+				final var sig = new StringBuilder("(");
 				for (int i=0; i<number; i++) {
 					if (i!=0) {
 						sig.append(", ");
@@ -167,7 +167,7 @@ public final class StandardArgumentsValidators {
 
 			@Override
 			public String getSignature() {
-				final StringBuilder sig = new StringBuilder("([");
+				final var sig = new StringBuilder("([");
 				for (int i=0; i<maxNumOfArgs; i++) {
 					if (i!=0) {
 						sig.append(", ");
@@ -203,7 +203,7 @@ public final class StandardArgumentsValidators {
 
 			@Override
 			public String getSignature() {
-				final StringBuilder sig = new StringBuilder("(");
+				final var sig = new StringBuilder("(");
 				for (int i=0; i<maxNumOfArgs; i++) {
 					if (i==minNumOfArgs) {
 						sig.append("[");

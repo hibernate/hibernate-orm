@@ -78,7 +78,7 @@ public class XmlForestFunction extends AbstractSqmSelfRenderingFunctionDescripto
 			SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( "xmlforest" );
 		char separator = '(';
-		for ( SqlAstNode sqlAstArgument : sqlAstArguments ) {
+		for ( var sqlAstArgument : sqlAstArguments ) {
 			sqlAppender.appendSql( separator );
 			if ( sqlAstArgument instanceof AliasedExpression aliasedExpression ) {
 				aliasedExpression.getExpression().accept( walker );

@@ -103,37 +103,31 @@ public class DateTruncEmulation extends AbstractSqmFunctionDescriptor implements
 			default:
 				throw new UnsupportedOperationException( "Temporal unit not supported [" + temporalUnit + "]" );
 		}
-		final SqmTypedNode<?> datetime = arguments.get( 0 );
-		final SqmExpression<?> formatExpression = queryEngine.getSqmFunctionRegistry()
-				.findFunctionDescriptor( "format" )
-				.generateSqmExpression(
-						asList(
-								datetime,
-								new SqmFormat(
-										pattern,
-										nodeBuilder.getTypeConfiguration().getBasicTypeForJavaType( String.class ),
-										nodeBuilder
-								)
-						),
-						null,
-						queryEngine
-				);
+		final var datetime = arguments.get( 0 );
+		final var formatExpression =
+				queryEngine.getSqmFunctionRegistry()
+						.findFunctionDescriptor( "format" )
+						.generateSqmExpression(
+								asList(
+										datetime,
+										new SqmFormat( pattern, nodeBuilder.getStringType(), nodeBuilder )
+								),
+								null,
+								queryEngine
+						);
 		final SqmExpression<?> formattedDatetime;
 		if ( literal != null ) {
-			formattedDatetime = queryEngine.getSqmFunctionRegistry()
-					.findFunctionDescriptor( "concat" )
-					.generateSqmExpression(
-							asList(
-									formatExpression,
-									new SqmLiteral<>(
-											literal,
-											nodeBuilder.getTypeConfiguration().getBasicTypeForJavaType( String.class ),
-											nodeBuilder
-									)
-							),
-							null,
-							queryEngine
-					);
+			formattedDatetime =
+					queryEngine.getSqmFunctionRegistry()
+							.findFunctionDescriptor( "concat" )
+							.generateSqmExpression(
+									asList(
+											formatExpression,
+											new SqmLiteral<>( literal, nodeBuilder.getStringType(), nodeBuilder )
+									),
+									null,
+									queryEngine
+							);
 		}
 		else {
 			formattedDatetime = formatExpression;

@@ -1810,10 +1810,10 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public boolean useInputStreamToInsertBlob() {
-		// see HHH-18206
-		return false;
+		// If application continuity is enabled, don't use stream bindings, since a replay could otherwise fail
+		// if the underlying stream doesn't support mark and reset
+		return !isApplicationContinuity();
 	}
-
 
 	@Override
 	public String appendCheckConstraintOptions(CheckConstraint checkConstraint, String sqlCheckConstraint) {

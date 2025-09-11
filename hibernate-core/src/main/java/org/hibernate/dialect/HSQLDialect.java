@@ -746,6 +746,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsRowValueConstructorSyntax() {
+		// It's supported but not usable due to a bug: https://sourceforge.net/p/hsqldb/bugs/1714/
 		return false;
 	}
 
@@ -757,11 +758,13 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		// It's supported but not usable due to a bug: https://sourceforge.net/p/hsqldb/bugs/1714/
 		return false;
 	}
 
 	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
+		// It's supported but not usable due to a bug: https://sourceforge.net/p/hsqldb/bugs/1714/
 		return false;
 	}
 

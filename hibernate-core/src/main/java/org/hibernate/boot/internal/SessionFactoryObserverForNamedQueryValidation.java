@@ -30,8 +30,8 @@ class SessionFactoryObserverForNamedQueryValidation implements SessionFactoryObs
 
 	@Override
 	public void sessionFactoryCreated(SessionFactory factory) {
-		final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) factory;
-		final QueryEngine queryEngine = sessionFactory.getQueryEngine();
+		final var sessionFactory = (SessionFactoryImplementor) factory;
+		final var queryEngine = sessionFactory.getQueryEngine();
 		queryEngine.getNamedObjectRepository().prepare( sessionFactory, metadata );
 		if ( sessionFactory.getSessionFactoryOptions().isNamedQueryStartupCheckingEnabled() ) {
 			queryEngine.validateNamedQueries();

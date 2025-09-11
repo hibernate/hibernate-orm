@@ -2,30 +2,37 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.sql.ops.internal;
+package org.hibernate.sql.ops.internal.lock;
 
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ops.spi.LoadedValuesCollector;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+
+import static org.hibernate.sql.ops.internal.lock.LoadedValuesCollectorImpl.extractPathsToLock;
 
 /**
  * @author Steve Ebersole
  */
-public class LoadedValuesCollectorImpl implements LoadedValuesCollector {
-	private final List<NavigablePath> rootPaths;
+public class SingleRootLoadedValuesCollector implements LoadedValuesCollector {
+	private final NavigablePath rootPath;
+	private final Collection<NavigablePath> pathsToLock;
 
 	private List<LoadedEntityRegistration> loadedRootEntities;
 	private List<LoadedEntityRegistration> loadedNonRootEntities;
 	private List<LoadedCollectionRegistration> loadedCollections;
 
-	public LoadedValuesCollectorImpl(List<NavigablePath> rootPaths) {
-		this.rootPaths = rootPaths;
+	public SingleRootLoadedValuesCollector(NavigablePath rootPath, LockingClauseStrategy lockingClauseStrategy) {
+		this.rootPath = rootPath;
+		pathsToLock = extractPathsToLock( lockingClauseStrategy );
 	}
 
 	@Override
@@ -33,7 +40,11 @@ public class LoadedValuesCollectorImpl implements LoadedValuesCollector {
 			NavigablePath navigablePath,
 			EntityMappingType entityDescriptor,
 			EntityKey entityKey) {
-		if ( isRootPath( navigablePath ) ) {
+		if ( !pathsToLock.contains( navigablePath ) ) {
+			return;
+		}
+
+		if ( rootPath.pathsMatch( navigablePath ) ) {
 			if ( loadedRootEntities == null ) {
 				loadedRootEntities = new ArrayList<>();
 			}
@@ -47,20 +58,15 @@ public class LoadedValuesCollectorImpl implements LoadedValuesCollector {
 		}
 	}
 
-	private boolean isRootPath(NavigablePath navigablePath) {
-		for ( int i = 0; i < rootPaths.size(); i++ ) {
-			if ( rootPaths.get(i).pathsMatch( navigablePath ) ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	@Override
 	public void registerCollection(
 			NavigablePath navigablePath,
 			PluralAttributeMapping collectionDescriptor,
 			CollectionKey collectionKey) {
+		if ( !pathsToLock.contains( navigablePath ) ) {
+			return;
+		}
+
 		if ( loadedCollections == null ) {
 			loadedCollections = new ArrayList<>();
 		}
@@ -69,16 +75,16 @@ public class LoadedValuesCollectorImpl implements LoadedValuesCollector {
 
 	@Override
 	public List<LoadedEntityRegistration> getCollectedRootEntities() {
-		return loadedRootEntities;
+		return loadedRootEntities == null ? Collections.emptyList() : loadedRootEntities;
 	}
 
 	@Override
 	public List<LoadedEntityRegistration> getCollectedNonRootEntities() {
-		return loadedNonRootEntities;
+		return loadedNonRootEntities == null ? Collections.emptyList() : loadedNonRootEntities;
 	}
 
 	@Override
 	public List<LoadedCollectionRegistration> getCollectedCollections() {
-		return loadedCollections;
+		return loadedCollections == null ? Collections.emptyList() : loadedCollections;
 	}
 }

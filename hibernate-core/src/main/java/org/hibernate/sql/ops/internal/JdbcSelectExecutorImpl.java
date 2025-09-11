@@ -8,9 +8,9 @@ import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.ops.internal.lock.SpecialResultSetAccess;
 import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
-import org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
@@ -37,7 +37,7 @@ public class JdbcSelectExecutorImpl extends JdbcSelectExecutorStandardImpl {
 			ResultsConsumer<T, R> resultsConsumer,
 			ExecutionContext executionContext) {
 
-		final var deferredResultSetAccess = new DeferredResultSetAccess(
+		final var deferredResultSetAccess = new SpecialResultSetAccess(
 				jdbcSelect,
 				jdbcParameterBindings,
 				executionContext,

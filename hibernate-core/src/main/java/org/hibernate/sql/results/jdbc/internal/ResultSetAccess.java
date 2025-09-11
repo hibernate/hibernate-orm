@@ -31,4 +31,12 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 	 * @since 6.6
 	 */
 	int getResultCountEstimate();
+
+	/**
+	 * @deprecated Temporary
+	 */
+	@Deprecated(forRemoval = true)
+	default boolean usesFollowOnLocking() {
+		return false;
+	}
 }

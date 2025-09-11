@@ -578,13 +578,18 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	}
 
 	@Override
+	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+	@Override
 	protected boolean supportsRowValueConstructorSyntaxInInList() {
 		return false;
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
+	protected boolean supportsRowValueConstructorSyntaxInInSubQuery() {
+		return true;
 	}
 
 	@Override

@@ -322,16 +322,19 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	@Override
 	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
+		// It's supported but not usable due to a bug: https://sourceforge.net/p/hsqldb/bugs/1714/
 		return false;
 	}
 
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		// It's supported but not usable due to a bug: https://sourceforge.net/p/hsqldb/bugs/1714/
+		return false;
+	}
+
+	@Override
+	protected boolean supportsRowValueConstructorSyntaxInInList() {
+		// It's supported but not usable due to a bug: https://sourceforge.net/p/hsqldb/bugs/1714/
 		return false;
 	}
 

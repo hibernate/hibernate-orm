@@ -32,7 +32,6 @@ import org.jboss.logging.annotations.ValidIdRange;
 import jakarta.transaction.Synchronization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_MODE;
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
@@ -498,10 +497,6 @@ public interface CoreMessageLogger extends BasicLogger {
 			id = 447
 	)
 	void explicitSkipLockedLockCombo();
-
-	@LogMessage(level = INFO)
-	@Message(value = "'" + JAKARTA_VALIDATION_MODE + "' named multiple values: %s", id = 448)
-	void multipleValidationModes(String modes);
 
 	@LogMessage(level = WARN)
 	@Message(

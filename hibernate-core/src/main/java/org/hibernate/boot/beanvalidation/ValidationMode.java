@@ -33,14 +33,19 @@ public enum ValidationMode {
 		};
 	}
 
+	@Deprecated(since = "7.2", forRemoval = true)
 	public static Set<ValidationMode> getModes(Object modeProperty) {
-		final Set<ValidationMode> modes = setOfSize( 3);
+		return parseValidationModes( modeProperty );
+	}
+
+	public static Set<ValidationMode> parseValidationModes(Object modeProperty) {
+		final Set<ValidationMode> modes = setOfSize( 3 );
 		if ( modeProperty == null ) {
 			modes.add( ValidationMode.AUTO );
 		}
 		else {
 			for ( String modeInString : split( ",", modeProperty.toString() ) ) {
-				modes.add( getMode(modeInString) );
+				modes.add( parseValidationMode( modeInString ) );
 			}
 		}
 		if ( modes.size() > 1
@@ -50,8 +55,8 @@ public enum ValidationMode {
 		return modes;
 	}
 
-	private static ValidationMode getMode(String modeProperty) {
-		if ( modeProperty == null || modeProperty.isEmpty() ) {
+	private static ValidationMode parseValidationMode(String modeProperty) {
+		if ( modeProperty == null || modeProperty.isBlank() ) {
 			return AUTO;
 		}
 		else {

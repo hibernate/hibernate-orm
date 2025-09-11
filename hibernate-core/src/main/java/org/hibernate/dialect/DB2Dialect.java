@@ -1317,4 +1317,9 @@ public class DB2Dialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInSubQuery() {
+		return true;
+	}
+
 }

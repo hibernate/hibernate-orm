@@ -4,6 +4,9 @@
  */
 package org.hibernate.orm.test.sql.exec.op;
 
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -31,6 +34,7 @@ public class Helper {
 
 	static SelectByIdAst createSelectByIdAst(
 			EntityPersister entityDescriptor,
+			LockMode lockMode,
 			SessionFactoryImplementor sessionFactory) {
 		final MutableObject<JdbcParameter> jdbcParamRef = new MutableObject<>();
 		final SelectStatement selectAst = LoaderSelectBuilder.createSelect(
@@ -40,7 +44,7 @@ public class Helper {
 				null,
 				1,
 				new LoadQueryInfluencers( sessionFactory ),
-				null,
+				new LockOptions( lockMode ),
 				jdbcParamRef::setIfNot,
 				sessionFactory
 		);
@@ -59,25 +63,25 @@ public class Helper {
 
 	static SelectByIdQuery createSelectByIdQuery(
 			EntityPersister entityDescriptor,
+			LockMode lockMode,
 			SessionFactoryImplementor sessionFactory) {
-		return createSelectByIdQuery( entityDescriptor, List.of(), sessionFactory );
+		return createSelectByIdQuery( entityDescriptor, lockMode, Locking.Scope.ROOT_ONLY, sessionFactory );
 	}
 
 	static SelectByIdQuery createSelectByIdQuery(
 			EntityPersister entityDescriptor,
-			List<String> associationsToFetch,
+			LockMode lockMode,
+			Locking.Scope lockScope,
 			SessionFactoryImplementor sessionFactory) {
-		final List<ModelPart> modelPartsToFetch = resolveModelPartsToFetch( entityDescriptor, associationsToFetch );
-
 		final MutableObject<JdbcParameter> jdbcParamRef = new MutableObject<>();
 		final SelectStatement selectAst = LoaderSelectBuilder.createSelect(
 				entityDescriptor,
-				modelPartsToFetch,
+				null,
 				entityDescriptor.getIdentifierMapping(),
 				null,
 				1,
 				new LoadQueryInfluencers( sessionFactory ),
-				null,
+				new LockOptions( lockMode ).setScope( lockScope ),
 				jdbcParamRef::setIfNot,
 				sessionFactory
 		);

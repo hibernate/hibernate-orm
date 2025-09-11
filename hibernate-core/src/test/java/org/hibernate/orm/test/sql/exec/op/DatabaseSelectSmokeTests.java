@@ -67,7 +67,7 @@ public class DatabaseSelectSmokeTests {
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel().findEntityDescriptor( Person.class );
 
-		final Helper.SelectByIdQuery personQuery = Helper.createSelectByIdQuery( entityDescriptor, sessionFactory );
+		final Helper.SelectByIdQuery personQuery = Helper.createSelectByIdQuery( entityDescriptor, LockMode.NONE, sessionFactory );
 		final JdbcOperationQuerySelect jdbcOperation = personQuery.jdbcOperation();
 		final JdbcParameterBindings jdbcParameterBindings = personQuery.jdbcParameterBindings();
 
@@ -104,7 +104,7 @@ public class DatabaseSelectSmokeTests {
 
 		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel().findEntityDescriptor( Person.class );
 
-		final Helper.SelectByIdQuery personQuery = Helper.createSelectByIdQuery( entityDescriptor, sessionFactory );
+		final Helper.SelectByIdQuery personQuery = Helper.createSelectByIdQuery( entityDescriptor, LockMode.NONE, sessionFactory );
 		final JdbcOperationQuerySelect jdbcOperation = personQuery.jdbcOperation();
 		final JdbcParameterBindings jdbcParameterBindings = personQuery.jdbcParameterBindings();
 
@@ -150,7 +150,7 @@ public class DatabaseSelectSmokeTests {
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel().findEntityDescriptor( Person.class );
 
-		final Helper.SelectByIdQuery personQuery = Helper.createSelectByIdQuery( entityDescriptor, sessionFactory );
+		final Helper.SelectByIdQuery personQuery = Helper.createSelectByIdQuery( entityDescriptor, LockMode.NONE, sessionFactory );
 		final JdbcOperationQuerySelect jdbcOperation = personQuery.jdbcOperation();
 		final JdbcParameterBindings jdbcParameterBindings = personQuery.jdbcParameterBindings();
 

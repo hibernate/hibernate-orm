@@ -73,6 +73,17 @@ public class ExamplesTestIT {
         assertTrue(cfgXmlFile.exists());
     }
 
+    @Test
+    public void testJpa() throws Exception {
+        File buildFile = new File(baseFolder, "jpa/build.xml");
+        Project project = createProject(buildFile);
+        assertNotNull(project);
+        File barSqlFile = new File(baseFolder, "jpa/generated/bar.sql");
+        assertFalse(barSqlFile.exists());
+        project.executeTarget("reveng");
+        assertTrue(barSqlFile.exists());
+    }
+
     private Project createProject(File buildXmlFile) throws Exception {
         Project result = new Project();
         ProjectHelper projectHelper = ProjectHelper.getProjectHelper();

@@ -297,7 +297,7 @@ public final class ReflectHelper {
 		}
 
 		try {
-			final Constructor<T> constructor = clazz.getDeclaredConstructor( NO_PARAM_SIGNATURE );
+			final var constructor = clazz.getDeclaredConstructor( NO_PARAM_SIGNATURE );
 			ensureAccessibility( constructor );
 			return constructor;
 		}
@@ -314,7 +314,7 @@ public final class ReflectHelper {
 		}
 
 		try {
-			final Constructor<T> constructor = clazz.getDeclaredConstructor( NO_PARAM_SIGNATURE );
+			final var constructor = clazz.getDeclaredConstructor( NO_PARAM_SIGNATURE );
 			ensureAccessibility( constructor );
 			return () -> {
 				try {
@@ -370,20 +370,19 @@ public final class ReflectHelper {
 	public static <T> Constructor<T> getConstructorOrNull(
 			Class<T> clazz,
 			Class<?>... constructorArgs) {
-		Constructor<T> constructor = null;
 		try {
-			constructor = clazz.getDeclaredConstructor( constructorArgs );
+			final var constructor = clazz.getDeclaredConstructor( constructorArgs );
 			try {
 				ensureAccessibility( constructor );
 			}
 			catch ( SecurityException e ) {
-				constructor = null;
+				return null;
 			}
+			return constructor;
 		}
 		catch ( NoSuchMethodException ignore ) {
+			return null;
 		}
-
-		return constructor;
 	}
 
 	public static Method getMethod(Class<?> clazz, Method method) {

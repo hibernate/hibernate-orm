@@ -258,7 +258,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			JdbcOperationQuerySelect jdbcSelect,
 			boolean canBeCached,
 			ExecutionContext executionContext,
-			DeferredResultSetAccess resultSetAccess) {
+			ResultSetAccess resultSetAccess) {
 		final var session = executionContext.getSession();
 		final var factory = session.getFactory();
 		final boolean queryCacheEnabled = factory.getSessionFactoryOptions().isQueryCacheEnabled();
@@ -354,7 +354,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 	private static AbstractJdbcValues resolveJdbcValues(
 			String queryIdentifier,
 			ExecutionContext executionContext,
-			DeferredResultSetAccess resultSetAccess,
+			ResultSetAccess resultSetAccess,
 			List<?> cachedResults,
 			QueryKey queryResultsCacheKey,
 			JdbcValuesMappingProducer mappingProducer,

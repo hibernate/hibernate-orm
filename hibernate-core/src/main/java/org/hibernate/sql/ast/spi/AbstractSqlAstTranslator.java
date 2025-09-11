@@ -201,8 +201,8 @@ import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.ops.internal.DatabaseSelectImpl;
 import org.hibernate.sql.ops.internal.lock.FollowOnLockingAction;
-import org.hibernate.sql.ops.internal.LoadedValuesCollectorImpl;
-import org.hibernate.sql.ops.internal.SingleRootLoadedValuesCollector;
+import org.hibernate.sql.ops.internal.lock.LoadedValuesCollectorImpl;
+import org.hibernate.sql.ops.internal.lock.SingleRootLoadedValuesCollector;
 import org.hibernate.sql.ops.spi.DatabaseSelect;
 import org.hibernate.sql.ops.spi.LoadedValuesCollector;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -806,10 +806,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			JdbcParameterBindings jdbcParameterBindings,
 			QueryOptions queryOptions) {
 		final SelectStatement selectAst = (SelectStatement) statementStack.pop();
+
+		// for translateSelect
+		lockOptions = queryOptions.getLockOptions();
 		final JdbcOperationQuerySelect jdbcOperation = translateSelect( selectAst );
 
 		final DatabaseSelectImpl.Builder databaseSelectBuilder = DatabaseSelectImpl.builder( jdbcOperation );
 
+		// for follow-on locking
 		final LockOptions lockOptions = queryOptions.getLockOptions();
 		if ( lockOptions == null || !lockOptions.getLockMode().isPessimistic() ) {
 			// nothing special to do for locking
@@ -854,8 +858,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		assert lockStrategy == LockStrategy.FOLLOW_ON;
 		applyFollowOnLockingActions(
-				selectAst,
-				jdbcOperation,
 				lockOptions,
 				lockingTarget,
 				lockingClauseStrategy,
@@ -865,14 +867,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private void applyFollowOnLockingActions(
-			SelectStatement selectAst,
-			JdbcOperationQuerySelect jdbcOperation,
 			LockOptions lockOptions,
 			QuerySpec lockingTarget,
 			LockingClauseStrategy lockingClauseStrategy,
 			DatabaseSelectImpl.Builder databaseSelectBuilder) {
 		final FromClause fromClause = lockingTarget.getFromClause();
-		final var loadedValuesCollector = resolveLoadedValuesCollector( fromClause );
+		final var loadedValuesCollector = resolveLoadedValuesCollector( fromClause, lockingClauseStrategy );
 
 		// NOTE: we need to set this separately so that it can get incorporated into
 		// the JdbcValuesSourceProcessingState for proper callbacks
@@ -886,13 +886,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		) );
 	}
 
-	protected static LoadedValuesCollector resolveLoadedValuesCollector(FromClause fromClause) {
+	protected static LoadedValuesCollector resolveLoadedValuesCollector(
+			FromClause fromClause,
+			LockingClauseStrategy lockingClauseStrategy) {
 		final List<TableGroup> roots = fromClause.getRoots();
 		if ( roots.size() == 1 ) {
-			return new SingleRootLoadedValuesCollector( roots.get( 0 ).getNavigablePath() );
+			return new SingleRootLoadedValuesCollector( roots.get( 0 ).getNavigablePath(), lockingClauseStrategy );
 		}
 		else {
-			return new LoadedValuesCollectorImpl( roots.stream().map( TableGroup::getNavigablePath ).toList() );
+			return new LoadedValuesCollectorImpl( roots.stream().map( TableGroup::getNavigablePath ).toList(), lockingClauseStrategy );
 		}
 	}
 

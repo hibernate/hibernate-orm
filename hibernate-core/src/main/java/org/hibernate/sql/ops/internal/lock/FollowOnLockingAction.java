@@ -5,6 +5,7 @@
 package org.hibernate.sql.ops.internal.lock;
 
 import jakarta.persistence.Timeout;
+import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
@@ -124,10 +125,17 @@ public class FollowOnLockingAction implements PostAction {
 		final Map<EntityMappingType, List<EntityKey>> map = new IdentityHashMap<>();
 		segmentLoadedValues( loadedValuesCollector.getCollectedRootEntities(), map );
 		segmentLoadedValues( loadedValuesCollector.getCollectedNonRootEntities(), map );
+		if ( map.isEmpty() ) {
+			throw new AssertionFailure( "Expecting some values" );
+		}
 		return map;
 	}
 
 	private void segmentLoadedValues(List<LoadedEntityRegistration> registrations, Map<EntityMappingType, List<EntityKey>> map) {
+		if ( registrations == null ) {
+			return;
+		}
+
 		registrations.forEach( (registration) -> {
 			final List<EntityKey> entityKeys = map.computeIfAbsent(
 					registration.entityDescriptor(),

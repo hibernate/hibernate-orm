@@ -8,26 +8,20 @@ import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
-import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.internal.QueryOptionsImpl;
-import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.internal.LockTimeoutHandler;
 import org.hibernate.sql.exec.internal.StandardStatementCreator;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
-import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.ops.internal.DatabaseSelectImpl;
-import org.hibernate.sql.ops.internal.lock.FollowOnLockingAction;
-import org.hibernate.sql.ops.internal.LoadedValuesCollectorImpl;
-import org.hibernate.sql.ops.internal.SingleRootLoadedValuesCollector;
 import org.hibernate.sql.ops.spi.DatabaseSelect;
 import org.hibernate.sql.ops.spi.LoadedValuesCollector;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -45,7 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = {Person.class, Team.class})
-@SessionFactory
+@SessionFactory( useCollectingStatementInspector = true )
 public class FollowOnLockingParadigmTests {
 	@BeforeEach
 	void createTestData(SessionFactoryScope factoryScope) {
@@ -77,21 +71,28 @@ public class FollowOnLockingParadigmTests {
 	 * starting from SqlAstTranslator, to achieve follow-on locking.
 	 */
 	@Test
-	void testFollowOnLockingFlow(SessionFactoryScope factoryScope) {
+	void testFollowOnLockingFlowNormalScope(SessionFactoryScope factoryScope) {
+		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel().findEntityDescriptor( Team.class );
 
+		final LockMode lockMode = LockMode.PESSIMISTIC_WRITE;
+		final Locking.Scope lockScope = Locking.Scope.ROOT_ONLY;
+		final Timeout lockTimeout = Timeout.seconds( 2 );
+
 		final Helper.SelectByIdQuery selectByIdQuery = Helper.createSelectByIdQuery(
 				entityDescriptor,
+				lockMode,
 				sessionFactory
 		);
 
 		final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
 		queryOptions.getLockOptions()
-				.setLockMode( LockMode.PESSIMISTIC_WRITE )
+				.setLockMode( lockMode )
 				.setFollowOnStrategy( Locking.FollowOn.FORCE )
-				.setTimeout( Timeout.seconds( 2 ) )
-				.setScope( Locking.Scope.INCLUDE_COLLECTIONS );
+				.setTimeout( lockTimeout )
+				.setScope( lockScope );
 
 		final NavigablePath rootPath = selectByIdQuery.sqlAst()
 				.getQuerySpec()
@@ -116,10 +117,102 @@ public class FollowOnLockingParadigmTests {
 					null,
 					1,
 					entityDescriptor,
-					QueryOptions.NONE,
+					queryOptions,
 					null
 			);
 
+			sqlCollector.clear();
+			final List<Team> results = databaseSelect.execute(
+					Team.class,
+					1,
+					StandardStatementCreator.getStatementCreator( ScrollMode.FORWARD_ONLY ),
+					selectByIdQuery.jdbcParameterBindings(),
+					row -> (Team) row[0],
+					ListResultsConsumer.instance( ListResultsConsumer.UniqueSemantic.FILTER ),
+					executionContext
+			);
+
+			// the initial query and subsequent locking-select for the root
+			assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
+
+			final Team team = results.get( 0 );
+
+			assertThat( team.getMembers() ).hasSize( 3 );
+			assertThat( loadedValuesCollector.getCollectedRootEntities() ).hasSize( 1 );
+			assertThat( loadedValuesCollector.getCollectedNonRootEntities() ).isEmpty();
+			assertThat( loadedValuesCollector.getCollectedCollections() ).isEmpty();
+
+			// let's look a little deeper...
+
+			// the root
+			final LoadedValuesCollector.LoadedEntityRegistration rootEntityDetails = loadedValuesCollector.getCollectedRootEntities().get( 0 );
+			assertThat( session.getPersistenceContext().getEntity( rootEntityDetails.entityKey() ) ).isSameAs( team );
+			assertThat( rootEntityDetails.navigablePath() ).isEqualTo( rootPath );
+
+		} );
+	}
+
+	/**
+	 * This is the test that actually leverages the full DatabaseOperation flow,
+	 * starting from SqlAstTranslator, to achieve follow-on locking.
+	 */
+	@Test
+	@NotImplementedYet( reason = "collection scope (JPA extended scope) is not properly handled yet" )
+	void testFollowOnLockingFlowCollectionScope(SessionFactoryScope factoryScope) {
+		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+
+		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
+		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel()
+				.findEntityDescriptor( Team.class );
+
+		final LockMode lockMode = LockMode.PESSIMISTIC_WRITE;
+		final Locking.Scope lockScope = Locking.Scope.INCLUDE_COLLECTIONS;
+		final Timeout lockTimeout = Timeout.seconds( 2 );
+
+		final Helper.SelectByIdQuery selectByIdQuery = Helper.createSelectByIdQuery(
+				entityDescriptor,
+				lockMode,
+				lockScope,
+				sessionFactory
+		);
+
+		final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
+		queryOptions.getLockOptions()
+				.setLockMode( lockMode )
+				.setFollowOnStrategy( Locking.FollowOn.FORCE )
+				.setTimeout( lockTimeout )
+				.setScope( lockScope );
+
+		final NavigablePath rootPath = selectByIdQuery.sqlAst()
+				.getQuerySpec()
+				.getFromClause()
+				.getRoots()
+				.get( 0 )
+				.getNavigablePath();
+
+		final SqlAstTranslatorFactory translatorFactory = sessionFactory.getJdbcServices().getDialect()
+				.getSqlAstTranslatorFactory();
+		final SqlAstTranslator<JdbcOperationQuerySelect> translator = translatorFactory.buildSelectTranslator(
+				sessionFactory, selectByIdQuery.sqlAst() );
+
+		final DatabaseSelect databaseSelect = translator.translateLockingSelect(
+				selectByIdQuery.jdbcParameterBindings(),
+				queryOptions
+		);
+
+		final LoadedValuesCollector loadedValuesCollector = databaseSelect.getLoadedValuesCollector();
+
+		factoryScope.inTransaction( (session) -> {
+			final SingleIdExecutionContext executionContext = new SingleIdExecutionContext(
+					session,
+					null,
+					1,
+					entityDescriptor,
+					queryOptions,
+					null
+			);
+
+			sqlCollector.clear();
 			final List<Team> results = databaseSelect.execute(
 					Team.class,
 					1,
@@ -132,6 +225,11 @@ public class FollowOnLockingParadigmTests {
 
 			final Team team = results.get( 0 );
 
+			// 1. initial query
+			// 2. lock of teams
+			// 3. lock of persons
+			assertThat( sqlCollector.getSqlQueries() ).hasSize( 3 );
+
 			assertThat( team.getMembers() ).hasSize( 3 );
 			assertThat( loadedValuesCollector.getCollectedRootEntities() ).hasSize( 1 );
 			assertThat( loadedValuesCollector.getCollectedNonRootEntities() ).hasSize( 3 );
@@ -140,34 +238,48 @@ public class FollowOnLockingParadigmTests {
 			// let's look a little deeper...
 
 			// the root
-			final LoadedValuesCollectorImpl.LoadedEntityRegistration rootEntityDetails = loadedValuesCollector.getCollectedRootEntities().get( 0 );
+			final LoadedValuesCollector.LoadedEntityRegistration rootEntityDetails = loadedValuesCollector.getCollectedRootEntities()
+					.get( 0 );
 			assertThat( session.getPersistenceContext().getEntity( rootEntityDetails.entityKey() ) ).isSameAs( team );
 			assertThat( rootEntityDetails.navigablePath() ).isEqualTo( rootPath );
 
 			// the collection
 			final NavigablePath expectedMembersPath = rootPath.append( "members" );
-			final LoadedValuesCollectorImpl.LoadedCollectionRegistration membersDetails = loadedValuesCollector.getCollectedCollections().get( 0 );
+			final LoadedValuesCollector.LoadedCollectionRegistration membersDetails = loadedValuesCollector.getCollectedCollections()
+					.get( 0 );
 			assertThat( membersDetails.navigablePath() ).isEqualTo( expectedMembersPath );
 			assertThat( membersDetails.collectionKey().getKey() ).isEqualTo( 1 );
 		} );
 	}
 
+	/**
+	 * This is the test that actually leverages the full DatabaseOperation flow,
+	 * starting from SqlAstTranslator, to achieve follow-on locking.
+	 */
 	@Test
-	void testFollowOnLockingParadigm(SessionFactoryScope factoryScope) {
+	void testFollowOnLockingFlowFetchScope(SessionFactoryScope factoryScope) {
+		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel().findEntityDescriptor( Team.class );
 
+		final LockMode lockMode = LockMode.PESSIMISTIC_WRITE;
+		final Locking.Scope lockScope = Locking.Scope.INCLUDE_FETCHES;
+		final Timeout lockTimeout = Timeout.seconds( 2 );
+
 		final Helper.SelectByIdQuery selectByIdQuery = Helper.createSelectByIdQuery(
 				entityDescriptor,
+				lockMode,
+				lockScope,
 				sessionFactory
 		);
 
 		final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
 		queryOptions.getLockOptions()
-				.setLockMode( LockMode.PESSIMISTIC_WRITE )
+				.setLockMode( lockMode )
 				.setFollowOnStrategy( Locking.FollowOn.FORCE )
-				.setTimeout( Timeout.seconds( 2 ) )
-				.setScope( Locking.Scope.INCLUDE_COLLECTIONS );
+				.setTimeout( lockTimeout )
+				.setScope( lockScope );
 
 		final NavigablePath rootPath = selectByIdQuery.sqlAst()
 				.getQuerySpec()
@@ -175,12 +287,16 @@ public class FollowOnLockingParadigmTests {
 				.getRoots()
 				.get( 0 )
 				.getNavigablePath();
-		final var loadedValuesCollector = new SingleRootLoadedValuesCollector( rootPath );
 
-		final DatabaseSelect databaseSelect = DatabaseSelectImpl
-				.builder( selectByIdQuery.jdbcOperation() )
-				.setLoadedValuesCollector( loadedValuesCollector )
-				.build();
+		final SqlAstTranslatorFactory translatorFactory = sessionFactory.getJdbcServices().getDialect().getSqlAstTranslatorFactory();
+		final SqlAstTranslator<JdbcOperationQuerySelect> translator = translatorFactory.buildSelectTranslator( sessionFactory, selectByIdQuery.sqlAst() );
+
+		final DatabaseSelect databaseSelect = translator.translateLockingSelect(
+				selectByIdQuery.jdbcParameterBindings(),
+				queryOptions
+		);
+
+		final LoadedValuesCollector loadedValuesCollector = databaseSelect.getLoadedValuesCollector();
 
 		factoryScope.inTransaction( (session) -> {
 			final SingleIdExecutionContext executionContext = new SingleIdExecutionContext(
@@ -188,11 +304,12 @@ public class FollowOnLockingParadigmTests {
 					null,
 					1,
 					entityDescriptor,
-					QueryOptions.NONE,
+					queryOptions,
 					null
 			);
 
-			databaseSelect.execute(
+			sqlCollector.clear();
+			final List<Team> results = databaseSelect.execute(
 					Team.class,
 					1,
 					StandardStatementCreator.getStatementCreator( ScrollMode.FORWARD_ONLY ),
@@ -201,94 +318,11 @@ public class FollowOnLockingParadigmTests {
 					ListResultsConsumer.instance( ListResultsConsumer.UniqueSemantic.FILTER ),
 					executionContext
 			);
-		} );
-	}
-
-	// todo (JdbcOperation) : for this to work properly, we'd really need a way
-	//		to understand the association relationships between entities being loaded.
-	//  	+
-	//		e.g. `from Team t join fetch t.members` would load both Team and Person
-	//		data.  But given the current Callback/AfterLoadAction structure we can't
-	//		understand that Team refs we see are the roots and Person refs relate
-	//		to Team#members and may need to be separately locked.
-	//		+
-	//		so here we fake it and base it simply on a few assumptions :
-	//			1. there is only one root, which is not necessarily valid for Query
-	//			2. loading entities which match the root entity descriptor are considered a root,
-	//				which is not valid for self-referential associations e.g.
-	//		and a few others - basically this Callback/AfterLoadAction structure really
-	//		needs redesigned.
-
-	@Test
-	void testFollowOnLockingParadigm2(SessionFactoryScope factoryScope) {
-		// same as testFollowOnLockingParadigm, but here playing with collections
-		// and "secondary tables" - i.e., JPA extended locking scope
-
-		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
-		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel().findEntityDescriptor( Team.class );
-
-		final Helper.SelectByIdQuery selectByIdQuery = Helper.createSelectByIdQuery(
-				entityDescriptor,
-				sessionFactory
-		);
-		final JdbcOperationQuerySelect jdbcOperation = selectByIdQuery.jdbcOperation();
-		final JdbcParameterBindings jdbcParameterBindings = selectByIdQuery.jdbcParameterBindings();
-
-		final NavigablePath rootPath = selectByIdQuery.sqlAst()
-				.getQuerySpec()
-				.getFromClause()
-				.getRoots()
-				.get( 0 )
-				.getNavigablePath();
-		final var loadedValuesCollector = new SingleRootLoadedValuesCollector( rootPath );
-
-		final Timeout lockTimeout = Timeout.seconds( 2 );
-		factoryScope.inTransaction( (session) -> {
-
-			final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
-			queryOptions.getLockOptions()
-					.setLockMode( LockMode.PESSIMISTIC_WRITE )
-					.setFollowOnStrategy( Locking.FollowOn.FORCE )
-					.setTimeout( lockTimeout )
-					.setScope( Locking.Scope.INCLUDE_COLLECTIONS );
-
-			final SingleIdExecutionContext executionContext = new SingleIdExecutionContext(
-					session,
-					null,
-					1,
-					entityDescriptor,
-					QueryOptions.NONE,
-					null
-			);
-
-
-			final DatabaseSelectImpl.Builder operationBuilder = DatabaseSelectImpl.builder( jdbcOperation )
-					.setLoadedValuesCollector( loadedValuesCollector );
-
-			final ConnectionLockTimeoutStrategy lockTimeoutStrategy = session
-					.getDialect()
-					.getLockingSupport()
-					.getConnectionLockTimeoutStrategy();
-			if ( lockTimeoutStrategy.getSupportedLevel() != ConnectionLockTimeoutStrategy.Level.NONE ) {
-				final LockTimeoutHandler lockTimeoutHandler = new LockTimeoutHandler( lockTimeout, lockTimeoutStrategy );
-				operationBuilder.addSecondaryActionPair( lockTimeoutHandler, lockTimeoutHandler );
-			}
-
-			final DatabaseSelectImpl databaseOperation = operationBuilder.build();
-			final List<Team> results = databaseOperation.execute(
-					Team.class,
-					1,
-					StandardStatementCreator.getStatementCreator( ScrollMode.FORWARD_ONLY ),
-					jdbcParameterBindings,
-					row -> (Team) row[0],
-					ListResultsConsumer.instance( ListResultsConsumer.UniqueSemantic.FILTER ),
-					executionContext
-			);
-
-			// for visual confirmation...
-			FollowOnLockingAction.logLoadedValues( loadedValuesCollector );
 
 			final Team team = results.get( 0 );
+
+			// initial query and the lock of the 2 tables
+			assertThat( sqlCollector.getSqlQueries() ).hasSize( 3 );
 
 			assertThat( team.getMembers() ).hasSize( 3 );
 			assertThat( loadedValuesCollector.getCollectedRootEntities() ).hasSize( 1 );
@@ -298,13 +332,13 @@ public class FollowOnLockingParadigmTests {
 			// let's look a little deeper...
 
 			// the root
-			final LoadedValuesCollectorImpl.LoadedEntityRegistration rootEntityDetails = loadedValuesCollector.getCollectedRootEntities().get( 0 );
+			final LoadedValuesCollector.LoadedEntityRegistration rootEntityDetails = loadedValuesCollector.getCollectedRootEntities().get( 0 );
 			assertThat( session.getPersistenceContext().getEntity( rootEntityDetails.entityKey() ) ).isSameAs( team );
 			assertThat( rootEntityDetails.navigablePath() ).isEqualTo( rootPath );
 
 			// the collection
 			final NavigablePath expectedMembersPath = rootPath.append( "members" );
-			final LoadedValuesCollectorImpl.LoadedCollectionRegistration membersDetails = loadedValuesCollector.getCollectedCollections().get( 0 );
+			final LoadedValuesCollector.LoadedCollectionRegistration membersDetails = loadedValuesCollector.getCollectedCollections().get( 0 );
 			assertThat( membersDetails.navigablePath() ).isEqualTo( expectedMembersPath );
 			assertThat( membersDetails.collectionKey().getKey() ).isEqualTo( 1 );
 		} );

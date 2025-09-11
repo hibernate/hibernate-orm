@@ -316,6 +316,11 @@ tasks.named("jar") {
                 '-exportcontents': "*;version=${project.version}"
         )
     }
+    metaInf {
+        from(rootProject.projectDir, {
+            include "LICENSE.txt"
+        })
+    }
 }
 
 

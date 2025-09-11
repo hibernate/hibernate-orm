@@ -4,7 +4,6 @@
  */
 package org.hibernate.sql.ops.internal.lock;
 
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.spi.NavigablePath;
@@ -22,13 +21,16 @@ import java.util.function.Consumer;
 class SimpleTableGroup implements TableGroup {
 	private final TableReference tableReference;
 	private final String tableName;
-	private final EntityMappingType entityMappingType;
+	private final ModelPartContainer modelPart;
 	private final NavigablePath navigablePath;
 
-	public SimpleTableGroup(TableReference tableReference, String tableName, EntityMappingType entityMappingType) {
+	public SimpleTableGroup(
+			TableReference tableReference,
+			String tableName,
+			ModelPartContainer modelPart) {
 		this.tableReference = tableReference;
 		this.tableName = tableName;
-		this.entityMappingType = entityMappingType;
+		this.modelPart = modelPart;
 		this.navigablePath = new NavigablePath( tableName );
 	}
 
@@ -44,7 +46,7 @@ class SimpleTableGroup implements TableGroup {
 
 	@Override
 	public ModelPartContainer getModelPart() {
-		return entityMappingType;
+		return modelPart;
 	}
 
 	@Override
@@ -107,7 +109,7 @@ class SimpleTableGroup implements TableGroup {
 
 	@Override
 	public ModelPart getExpressionType() {
-		return entityMappingType;
+		return modelPart;
 	}
 
 	@Override

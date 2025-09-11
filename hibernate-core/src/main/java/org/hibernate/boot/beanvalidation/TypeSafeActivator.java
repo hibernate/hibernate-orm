@@ -34,8 +34,6 @@ import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventType;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -52,6 +50,7 @@ import jakarta.validation.metadata.PropertyDescriptor;
 
 import static java.util.Collections.disjoint;
 import static org.hibernate.boot.beanvalidation.BeanValidationIntegrator.APPLY_CONSTRAINTS;
+import static org.hibernate.boot.beanvalidation.BeanValidationLogger.BEAN_VALIDATION_LOGGER;
 import static org.hibernate.boot.beanvalidation.GroupsPerOperation.buildGroupsForOperation;
 import static org.hibernate.boot.model.internal.BinderHelper.findPropertyByName;
 import static org.hibernate.cfg.ValidationSettings.CHECK_NULLABILITY;
@@ -68,7 +67,6 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  */
 class TypeSafeActivator {
 
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( TypeSafeActivator.class );
 
 	/**
 	 * Used to validate a supplied ValidatorFactory instance as being castable to ValidatorFactory.
@@ -98,10 +96,10 @@ class TypeSafeActivator {
 				throw new IntegrationException( "Jakarta Validation provider was not available, but 'ddl' validation mode was requested", exception );
 			}
 			else {
-				if ( exception.getCause() != null && exception.getCause() instanceof NoProviderFoundException ) {
+				if ( exception.getCause() instanceof NoProviderFoundException ) {
 					// all good, we are looking at the ValidationMode.AUTO, and there are no providers available.
 					// Hence, we just don't enable the Jakarta Validation integration:
-					LOG.debug( "Unable to acquire Jakarta Validation ValidatorFactory, skipping activation" );
+					BEAN_VALIDATION_LOGGER.validationFactorySkipped();
 					return;
 				}
 				else {
@@ -172,7 +170,7 @@ class TypeSafeActivator {
 				|| modes.contains( ValidationMode.AUTO );
 		}
 		else {
-			LOG.debug( "Skipping application of relational constraints from legacy Hibernate Validator" );
+			BEAN_VALIDATION_LOGGER.skippingLegacyHVConstraints();
 			return false;
 		}
 	}
@@ -215,7 +213,7 @@ class TypeSafeActivator {
 					);
 				}
 				catch (Exception e) {
-					LOG.unableToApplyConstraints( className, e );
+					BEAN_VALIDATION_LOGGER.unableToApplyConstraints( className, e );
 				}
 			}
 		}
@@ -362,11 +360,11 @@ class TypeSafeActivator {
 							final Method valueMethod = annotation.annotationType().getMethod( "value" );
 							final Object result = valueMethod.invoke( annotation );
 							return result != null && "OR".equals( result.toString() );
-						}
-						catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
-							LOG.debug( "ConstraintComposition type could not be determined. Assuming AND", ex );
-							return false;
-						}
+					}
+					catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
+						BEAN_VALIDATION_LOGGER.constraintCompositionTypeUnknown( ex );
+						return false;
+					}
 					}
 				}
 				return false;
@@ -429,11 +427,7 @@ class TypeSafeActivator {
 						column.setNullable( false );
 					}
 					else {
-						LOG.debugf(
-								"@NotNull was applied to attribute [%s] which is defined (at least partially) " +
-										"by formula(s); formula portions will be skipped",
-								property.getName()
-						);
+						BEAN_VALIDATION_LOGGER.notNullOnFormulaPortion( property.getName() );
 					}
 				}
 			}

@@ -23,8 +23,6 @@ import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.event.spi.PreUpsertEvent;
 import org.hibernate.event.spi.PreUpsertEventListener;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -33,6 +31,7 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 
+import static org.hibernate.boot.beanvalidation.BeanValidationLogger.BEAN_VALIDATION_LOGGER;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 
@@ -44,10 +43,9 @@ import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize
  */
 //FIXME review exception model
 public class BeanValidationEventListener
-		implements PreInsertEventListener, PreUpdateEventListener, PreDeleteEventListener, PreUpsertEventListener, PreCollectionUpdateEventListener,
-		SessionFactoryObserver {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BeanValidationEventListener.class );
+		implements SessionFactoryObserver,
+				PreInsertEventListener, PreUpdateEventListener, PreDeleteEventListener, PreUpsertEventListener,
+				PreCollectionUpdateEventListener {
 
 	private final HibernateTraversableResolver traversableResolver;
 	private final Validator validator;
@@ -130,7 +128,7 @@ public class BeanValidationEventListener
 					final Set<ConstraintViolation<?>> propagatedViolations = setOfSize( constraintViolations.size() );
 					final Set<String> classNames = new HashSet<>();
 					for ( var violation : constraintViolations ) {
-						LOG.trace( violation );
+						BEAN_VALIDATION_LOGGER.trace( violation );
 						propagatedViolations.add( violation );
 						classNames.add( violation.getLeafBean().getClass().getName() );
 					}

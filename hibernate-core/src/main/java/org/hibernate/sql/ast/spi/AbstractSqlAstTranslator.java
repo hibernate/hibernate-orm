@@ -7753,7 +7753,24 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 			else if ( !supportsRowValueConstructorSyntaxInInList() ) {
 				// Some DBs like Oracle support tuples only for the IN subquery predicate
-				if ( supportsRowValueConstructorSyntaxInInSubQuery() && dialect.supportsUnionAll() ) {
+				if ( supportsRowValueConstructorSyntaxInInSubQuery() && dialect.supportsValuesList() ) {
+					inListPredicate.getTestExpression().accept( this );
+					if ( inListPredicate.isNegated() ) {
+						appendSql( " not" );
+					}
+					appendSql( " in (select * from (values" );
+					char separator = ' ';
+					for ( Expression expression : listExpressions ) {
+						appendSql( separator );
+						appendSql( OPEN_PARENTHESIS );
+						renderCommaSeparated( SqlTupleContainer.getSqlTuple( expression ).getExpressions() );
+						appendSql( CLOSE_PARENTHESIS );
+						separator = ',';
+					}
+					appendSql( CLOSE_PARENTHESIS );
+					appendSql( CLOSE_PARENTHESIS );
+				}
+				else if ( supportsRowValueConstructorSyntaxInInSubQuery() && dialect.supportsUnionAll() ) {
 					inListPredicate.getTestExpression().accept( this );
 					if ( inListPredicate.isNegated() ) {
 						appendSql( " not" );

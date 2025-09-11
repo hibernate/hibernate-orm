@@ -18,7 +18,6 @@ import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
-import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.SharedStatelessSessionBuilder;
 import org.hibernate.Transaction;
@@ -187,7 +186,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		factoryOptions = factory.getSessionFactoryOptions();
 		jdbcServices = factory.getJdbcServices();
-		cacheTransactionSynchronization = factory.getCache().getRegionFactory().createTransactionContext( this );
+		cacheTransactionSynchronization =
+				factory.getCache().getRegionFactory()
+						.createTransactionContext( this );
 
 		tenantIdentifier = getTenantId( factoryOptions, options );
 		readOnly = options.isReadOnly();
@@ -1719,13 +1720,15 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		jdbcServices = factory.getJdbcServices();
 
 		//TODO: this isn't quite right, see createSessionEventsManager()
-		final SessionEventListener[] baseline = factoryOptions.buildSessionEventListeners();
+		final var baseline = factoryOptions.buildSessionEventListeners();
 		sessionEventsManager = new SessionEventListenerManagerImpl( baseline );
 
 		jdbcSessionContext = createJdbcSessionContext( (StatementInspector) ois.readObject() );
 		jdbcCoordinator = JdbcCoordinatorImpl.deserialize( ois, this );
 
-		cacheTransactionSynchronization = factory.getCache().getRegionFactory().createTransactionContext( this );
+		cacheTransactionSynchronization =
+				factory.getCache().getRegionFactory()
+						.createTransactionContext( this );
 		transactionCoordinator =
 				factory.transactionCoordinatorBuilder.buildTransactionCoordinator( jdbcCoordinator, this );
 

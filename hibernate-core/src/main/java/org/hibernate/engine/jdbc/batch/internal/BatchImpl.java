@@ -17,7 +17,6 @@ import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 
@@ -60,7 +59,7 @@ public class BatchImpl implements Batch {
 		this.jdbcCoordinator = jdbcCoordinator;
 		this.statementGroup = statementGroup;
 
-		final JdbcServices jdbcServices =
+		final var jdbcServices =
 				jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getJdbcServices();
 		sqlStatementLogger = jdbcServices.getSqlStatementLogger();
 		sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();

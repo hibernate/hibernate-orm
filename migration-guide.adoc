@@ -1,4 +1,4 @@
-= 7.1 Migration Guide
+= {version} Migration Guide
 :toc:
 :toclevels: 4
 :version: 7.2

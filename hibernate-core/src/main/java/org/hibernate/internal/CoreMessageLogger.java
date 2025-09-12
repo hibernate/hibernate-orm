@@ -17,7 +17,6 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.JDBCException;
-import org.hibernate.LockMode;
 import org.hibernate.cache.CacheException;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.type.SerializationException;
@@ -29,7 +28,6 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
-import jakarta.transaction.Synchronization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
@@ -109,14 +107,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Duplicate generator name %s", id = 69)
 	void duplicateGeneratorName(String name);
-
-	@LogMessage(level = INFO)
-	@Message(value = "entity listener duplication, first event definition will be used: %s", id = 73)
-	void duplicateListener(String className);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Found more than one <persistence-unit-metadata>, subsequent ignored", id = 74)
-	void duplicateMetadata();
 
 	@LogMessage(level = WARN)
 	@Message(value = "Entity [%s] is abstract-class/interface explicitly mapped as non-abstract; be sure to supply entity-names",
@@ -274,14 +264,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	void startTime(long startTime);
 
 	@LogMessage(level = INFO)
-	@Message(value = "Synchronization [%s] was already registered", id = 259)
-	void synchronizationAlreadyRegistered(Synchronization synchronization);
-
-	@LogMessage(level = ERROR)
-	@Message(value = "Exception calling user Synchronization [%s]: %s", id = 260)
-	void synchronizationFailed(Synchronization synchronization, Throwable t);
-
-	@LogMessage(level = INFO)
 	@Message(value = "Table not found: %s", id = 262)
 	void tableNotFound(String name);
 
@@ -300,10 +282,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Error accessing type info result set: %s", id = 273)
 	void unableToAccessTypeInfoResultSet(String string);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Unable to apply constraints on DDL for %s", id = 274)
-	void unableToApplyConstraints(String className, @Cause Exception e);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Unable to cleanup temporary id table after use [%s]", id = 283)
@@ -485,14 +463,6 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)
 	@Message(
-			value = "Alias-specific lock modes requested, which is not currently supported with follow-on locking; " +
-					"all acquired locks will be [%s]",
-			id = 445
-	)
-	void aliasSpecificLockingWithFollowOnLocking(LockMode lockMode);
-
-	@LogMessage(level = WARN)
-	@Message(
 			value = "Explicit use of UPGRADE_SKIPLOCKED in lock() calls is not recommended; use normal UPGRADE locking instead",
 			id = 447
 	)
@@ -669,14 +639,6 @@ public interface CoreMessageLogger extends BasicLogger {
 			value = "Invalid JSON column type [%s], was expecting [%s]; for efficiency schema should be migrate to JSON DDL type"
 	)
 	void invalidJSONColumnType(String actual, String expected);
-
-	@LogMessage(level = TRACE)
-	@Message(value = "Closing logical connection", id = 456)
-	void closingLogicalConnection();
-
-	@LogMessage(level = TRACE)
-	@Message(value = "Logical connection closed", id = 457)
-	void logicalConnectionClosed();
 
 	@LogMessage(level = TRACE)
 	@Message(value = "Initializing service: %s", id = 500)

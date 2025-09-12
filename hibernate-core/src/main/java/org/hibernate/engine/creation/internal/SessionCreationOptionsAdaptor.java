@@ -1,12 +1,14 @@
-package org.hibernate.internal;
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.engine.creation.internal;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionEventListener;
 import org.hibernate.Transaction;
-import org.hibernate.engine.creation.internal.SessionCreationOptions;
-import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -117,7 +119,7 @@ public record SessionCreationOptionsAdaptor(
 	}
 
 	@Override
-	public List<SessionEventListener> getCustomSessionEventListener() {
+	public List<SessionEventListener> getCustomSessionEventListeners() {
 		return null;
 	}
 

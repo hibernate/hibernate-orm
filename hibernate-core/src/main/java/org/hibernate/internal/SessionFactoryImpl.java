@@ -63,6 +63,7 @@ import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.monitor.internal.EmptyEventMonitor;
 import org.hibernate.event.monitor.spi.EventMonitor;
@@ -542,12 +543,22 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public SessionBuilderImplementor withOptions() {
-		return new SessionBuilderImpl( this );
+		return new SessionBuilderImpl( this ) {
+			@Override
+			protected SessionImplementor createSession() {
+				return new SessionImpl( (SessionFactoryImpl) sessionFactory, this );
+			}
+		};
 	}
 
 	@Override
 	public StatelessSessionBuilder withStatelessOptions() {
-		return new StatelessSessionBuilderImpl( this );
+		return new StatelessSessionBuilderImpl( this ) {
+			@Override
+			protected StatelessSessionImplementor createStatelessSession() {
+				return new StatelessSessionImpl( (SessionFactoryImpl) sessionFactory, this );
+			}
+		};
 	}
 
 	@Override
@@ -1051,46 +1062,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public EntityNotFoundDelegate getEntityNotFoundDelegate() {
 		return sessionFactoryOptions.getEntityNotFoundDelegate();
-	}
-
-	/**
-	 * @deprecated use {@link #configuredInterceptor(Interceptor, boolean, SessionFactoryOptions)}
-	 */
-	@Deprecated
-	public static Interceptor configuredInterceptor(Interceptor interceptor, SessionFactoryOptions options) {
-		return configuredInterceptor( interceptor, false, options );
-	}
-
-	public static Interceptor configuredInterceptor(Interceptor interceptor, boolean explicitNoInterceptor, SessionFactoryOptions options) {
-		// NOTE: DO NOT return EmptyInterceptor.INSTANCE from here as a "default for the Session"
-		// 		 we "filter" that one out here.  The return from here should represent the
-		//		 explicitly configured Interceptor (if one). Return null from here instead;
-		//		 Session will handle it
-
-		if ( interceptor != null && interceptor != EmptyInterceptor.INSTANCE ) {
-			return interceptor;
-		}
-
-		// prefer the SessionFactory-scoped interceptor, prefer that to any Session-scoped interceptor prototype
-		final var optionsInterceptor = options.getInterceptor();
-		if ( optionsInterceptor != null && optionsInterceptor != EmptyInterceptor.INSTANCE ) {
-			return optionsInterceptor;
-		}
-
-		// If explicitly asking for no interceptor and there is no SessionFactory-scoped interceptor, then
-		// no need to inherit from the configured stateless session ones.
-		if ( explicitNoInterceptor ) {
-			return null;
-		}
-
-		// then check the Session-scoped interceptor prototype
-		final var statelessInterceptorImplementorSupplier =
-				options.getStatelessInterceptorImplementorSupplier();
-		if ( statelessInterceptorImplementorSupplier != null ) {
-			return statelessInterceptorImplementorSupplier.get();
-		}
-
-		return null;
 	}
 
 	public Object resolveTenantIdentifier() {

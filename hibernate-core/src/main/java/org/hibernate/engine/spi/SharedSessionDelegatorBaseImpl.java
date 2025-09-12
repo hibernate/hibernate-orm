@@ -17,6 +17,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.SharedStatelessSessionBuilder;
 import org.hibernate.Transaction;
@@ -720,5 +721,15 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public void beforeReleaseConnection(Connection connection) throws SQLException {
 		delegate.beforeReleaseConnection(  connection );
+	}
+
+	@Override
+	public Transaction getCurrentTransaction() {
+		return delegate.getCurrentTransaction();
+	}
+
+	@Override
+	public SharedSessionBuilder sessionWithOptions() {
+		return delegate.sessionWithOptions();
 	}
 }

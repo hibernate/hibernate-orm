@@ -75,12 +75,13 @@ public interface SharedSessionContractImplementor
 	/**
 	 * Obtain the {@linkplain SessionFactoryImplementor factory} which created this session.
 	 */
+	@Override
 	SessionFactoryImplementor getFactory();
 
 	/**
 	 * Obtain the {@linkplain SessionFactoryImplementor factory} which created this session.
 	 */
-//	@Override
+	@Override
 	default SessionFactoryImplementor getSessionFactory() {
 		return getFactory();
 	}
@@ -396,6 +397,7 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @return The flush mode
 	 */
+	@Override
 	FlushMode getHibernateFlushMode();
 
 	/**

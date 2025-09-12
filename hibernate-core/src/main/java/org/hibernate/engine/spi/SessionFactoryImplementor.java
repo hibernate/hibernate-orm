@@ -187,6 +187,15 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver();
 
 	/**
+	 * Object the current tenant identifier using the
+	 * {@linkplain #getCurrentTenantIdentifierResolver() resolver}.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	Object resolveTenantIdentifier();
+
+	/**
 	 * The {@link JavaType} to use for a tenant identifier.
 	 *
 	 * @since 6.4

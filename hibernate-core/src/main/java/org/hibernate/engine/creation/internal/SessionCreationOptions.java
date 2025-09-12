@@ -62,5 +62,5 @@ public interface SessionCreationOptions {
 	 * @return the full list of SessionEventListener if this was customized,
 	 * or null if this Session is being created with the default list.
 	 */
-	List<SessionEventListener> getCustomSessionEventListener();
+	List<SessionEventListener> getCustomSessionEventListeners();
 }

@@ -2088,12 +2088,13 @@ public class SessionImpl
 	}
 
 	private boolean isTransactionFlushable() {
-		if ( getCurrentTransaction() == null ) {
+		final var currentTransaction = getCurrentTransaction();
+		if ( currentTransaction == null ) {
 			// assume it is flushable - CMT, auto-commit, etc
 			return true;
 		}
 		else {
-			final TransactionStatus status = getCurrentTransaction().getStatus();
+			final TransactionStatus status = currentTransaction.getStatus();
 			return status == TransactionStatus.ACTIVE
 				|| status == TransactionStatus.COMMITTING;
 		}

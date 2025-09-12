@@ -10,10 +10,12 @@ import org.hibernate.Interceptor;
 import org.hibernate.SessionEventListener;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
-import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.internal.StatelessSessionImpl;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.StatelessSessionImplementor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.jboss.logging.Logger;
 
 import java.sql.Connection;
 import java.util.List;
@@ -22,11 +24,13 @@ import java.util.TimeZone;
 /**
  * @author Steve Ebersole
  */
-public class StatelessSessionBuilderImpl
+public abstract class StatelessSessionBuilderImpl
 		extends AbstractCommonBuilder<StatelessSessionBuilder>
 		implements StatelessSessionBuilder, SessionCreationOptions {
 
-	public StatelessSessionBuilderImpl(SessionFactoryImpl sessionFactory) {
+	private static final Logger LOG = CoreLogging.logger( StatelessSessionBuilderImpl.class );
+
+	public StatelessSessionBuilderImpl(SessionFactoryImplementor sessionFactory) {
 		super( sessionFactory );
 	}
 
@@ -40,11 +44,14 @@ public class StatelessSessionBuilderImpl
 
 	@Override
 	public StatelessSession openStatelessSession() {
-		return new StatelessSessionImpl( sessionFactory, this );
+		LOG.tracef( "Opening StatelessSession [tenant=%s]", tenantIdentifier );
+		return createStatelessSession();
 	}
 
+	protected abstract StatelessSessionImplementor createStatelessSession();
+
 	@Override
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	public StatelessSessionBuilder tenantIdentifier(String tenantIdentifier) {
 		this.tenantIdentifier = tenantIdentifier;
 		return this;
@@ -97,8 +104,7 @@ public class StatelessSessionBuilderImpl
 
 	@Override
 	public Interceptor getInterceptor() {
-		return SessionFactoryImpl.configuredInterceptor( interceptor, explicitNoInterceptor,
-				sessionFactory.getSessionFactoryOptions() );
+		return configuredInterceptor();
 	}
 
 	@Override
@@ -144,7 +150,7 @@ public class StatelessSessionBuilderImpl
 	}
 
 	@Override
-	public List<SessionEventListener> getCustomSessionEventListener() {
+	public List<SessionEventListener> getCustomSessionEventListeners() {
 		return null;
 	}
 }

@@ -45,17 +45,14 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 
 	@Override
 	public void afterStatement() {
-//		LOG.trace( "LogicalConnection#afterStatement" );
 	}
 
 	@Override
 	public void beforeTransactionCompletion() {
-//		LOG.trace( "LogicalConnection#beforeTransactionCompletion" );
 	}
 
 	@Override
 	public void afterTransaction() {
-//		LOG.trace( "LogicalConnection#afterTransaction" );
 		resourceRegistry.releaseResources();
 	}
 

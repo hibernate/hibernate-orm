@@ -21,6 +21,8 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  * used when creating sessions.
  *
  * @author Steve Ebersole
+ *
+ * @since 7.2
  */
 public interface SessionCreationOptions {
 

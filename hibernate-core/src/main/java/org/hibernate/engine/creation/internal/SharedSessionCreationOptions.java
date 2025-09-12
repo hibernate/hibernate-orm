@@ -17,6 +17,8 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinator;
  * @author Steve Ebersole
  *
  * @see org.hibernate.SharedSessionBuilder
+ *
+ * @since 7.2
  */
 public interface SharedSessionCreationOptions extends SessionCreationOptions {
 	boolean isTransactionCoordinatorShared();

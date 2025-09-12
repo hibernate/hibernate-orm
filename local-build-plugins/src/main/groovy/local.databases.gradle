@@ -165,7 +165,7 @@ ext {
                     'jdbc.driver': 'org.mariadb.jdbc.Driver',
                     'jdbc.user'  : 'root',
                     'jdbc.pass'  : 'hibernate_orm_test',
-                    'jdbc.url'   : 'jdbc:mariadb://' + dbHost + '/hibernate_orm_test',
+                    'jdbc.url'   : 'jdbc:mariadb://' + dbHost + '/hibernate_orm_test_$worker',
                     'jdbc.datasource' : 'org.mariadb.jdbc.Driver',
 //                        'jdbc.datasource' : 'org.mariadb.jdbc.MariaDbDataSource',
                     'connection.init_sql' : ''

@@ -38,6 +38,9 @@ public interface SessionBuilderImplementor extends SessionBuilder {
 	SessionBuilderImplementor noInterceptor();
 
 	@Override
+	SessionBuilderImplementor noSessionInterceptorCreation();
+
+	@Override
 	SessionBuilderImplementor statementInspector(UnaryOperator<String> operator);
 
 	@Override

@@ -34,6 +34,12 @@ public interface SessionBuilder extends CommonBuilder {
 	SessionBuilder noInterceptor();
 
 	@Override
+	SessionBuilder noSessionInterceptorCreation();
+
+	@Override
+	SessionBuilder noStatementInspector();
+
+	@Override
 	SessionBuilder statementInspector(UnaryOperator<String> operator);
 
 	/**

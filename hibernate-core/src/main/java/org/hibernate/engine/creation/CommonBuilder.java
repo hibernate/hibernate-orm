@@ -60,11 +60,15 @@ public interface CommonBuilder {
 	CommonBuilder interceptor(Interceptor interceptor);
 
 	/**
-	 * Signifies that no {@link Interceptor} should be used.
+	 * Specifies that no {@link Interceptor} should be used.
 	 * <p>
-	 * By default, if no {@code Interceptor} is explicitly specified, the
+	 * By default, if no {@code Interceptor} is explicitly
+	 * {@linkplain #interceptor(Interceptor) specified}, the
 	 * {@code Interceptor} associated with the {@link SessionFactory} is
-	 * inherited by the new session.
+	 * inherited by the new session. Or, if there is no interceptor
+	 * associated with the {@link SessionFactory}, but a session-scoped
+	 * interceptor has been configured, a new session-scoped
+	 * {@code Interceptor} will be created for the new session.
 	 * <p>
 	 * Calling {@link #interceptor(Interceptor) interceptor(null)} has the
 	 * same effect.
@@ -72,6 +76,28 @@ public interface CommonBuilder {
 	 * @return {@code this}, for method chaining
 	 */
 	CommonBuilder noInterceptor();
+
+	/**
+	 * Specifies that no
+	 * {@linkplain org.hibernate.cfg.SessionEventSettings#SESSION_SCOPED_INTERCEPTOR
+	 * session-scoped interceptor} should be instantiated for the new session.
+	 * <p>
+	 * By default, if no {@link Interceptor} is explicitly
+	 * {@linkplain #interceptor(Interceptor) specified}, and if there
+	 * is no interceptor associated with the {@link SessionFactory}, but
+	 * a session-scoped interceptor has been configured, a new session-scoped
+	 * {@code Interceptor} will be created for the new session.
+	 * <p>
+	 * Note that this operation does not disable use of an interceptor
+	 * associated with the {@link SessionFactory}.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.SessionEventSettings#SESSION_SCOPED_INTERCEPTOR
+	 *
+	 * @since 7.2
+	 */
+	CommonBuilder noSessionInterceptorCreation();
 
 	/**
 	 * Applies the given statement inspection function to the session.

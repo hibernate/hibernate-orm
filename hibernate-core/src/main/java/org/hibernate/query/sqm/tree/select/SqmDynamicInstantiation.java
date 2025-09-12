@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -264,6 +265,11 @@ public class SqmDynamicInstantiation<T>
 		@Override
 		public Class<T> getBindableJavaType() {
 			return getTargetTypeDescriptor().getJavaTypeClass();
+		}
+
+		@Override
+		public DomainType<T> getSqmType() {
+			return null;
 		}
 	}
 

@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
@@ -39,6 +40,11 @@ public class BasicSqmPathSource<J>
 	public BasicDomainType<J> getSqmPathType() {
 		//noinspection unchecked
 		return (BasicDomainType<J>) super.getSqmPathType();
+	}
+
+	@Override
+	public DomainType<J> getSqmType() {
+		return getSqmPathType();
 	}
 
 	@Override

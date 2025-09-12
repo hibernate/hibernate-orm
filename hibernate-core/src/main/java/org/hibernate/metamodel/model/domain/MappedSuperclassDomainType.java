@@ -16,4 +16,8 @@ import jakarta.persistence.metamodel.MappedSuperclassType;
  * @author Steve Ebersole
  */
 public interface MappedSuperclassDomainType<J> extends IdentifiableDomainType<J>, MappedSuperclassType<J>, SqmPathSource<J> {
+	@Override
+	default DomainType<J> getSqmType() {
+		return IdentifiableDomainType.super.getSqmType();
+	}
 }

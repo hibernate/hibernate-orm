@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -148,5 +149,10 @@ public class SqmJpaCompoundSelection<T>
 	@Override
 	public void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {
 		selectableNodes.forEach( jpaSelectionConsumer );
+	}
+
+	@Override
+	public DomainType<T> getSqmType() {
+		return null;
 	}
 }

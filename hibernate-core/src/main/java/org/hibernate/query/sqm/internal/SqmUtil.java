@@ -379,6 +379,7 @@ public class SqmUtil {
 					final Iterator<?> valueItr = bindValues.iterator();
 
 					// the original SqmParameter is the one we are processing.. create a binding for it..
+					final Object firstValue = valueItr.next();
 					for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
 						final JdbcParametersList jdbcParams = jdbcParamsBinds.get( i );
 						createValueBindings(
@@ -387,7 +388,7 @@ public class SqmUtil {
 								domainParamBinding,
 								parameterType,
 								jdbcParams,
-								valueItr.next(),
+								firstValue,
 								tableGroupLocator,
 								session
 						);
@@ -395,23 +396,30 @@ public class SqmUtil {
 
 					// an then one for each of the expansions
 					final List<SqmParameter<?>> expansions = domainParameterXref.getExpansions( sqmParameter );
-					assert expansions.size() == bindValues.size() - 1;
+					final int expansionCount = bindValues.size() - 1;
+					final int parameterUseCount = jdbcParamsBinds.size();
+					assert expansions.size() == expansionCount * parameterUseCount;
 					int expansionPosition = 0;
 					while ( valueItr.hasNext() ) {
-						final SqmParameter<?> expansionSqmParam = expansions.get( expansionPosition++ );
-						final List<JdbcParametersList> jdbcParamBinds = jdbcParamMap.get( expansionSqmParam );
-						for ( int i = 0; i < jdbcParamBinds.size(); i++ ) {
-							JdbcParametersList expansionJdbcParams = jdbcParamBinds.get( i );
-							createValueBindings(
-									jdbcParameterBindings,
-									queryParam, domainParamBinding,
-									parameterType,
-									expansionJdbcParams,
-									valueItr.next(),
-									tableGroupLocator,
-									session
-							);
+						final Object expandedValue = valueItr.next();
+						for ( int j = 0; j < parameterUseCount; j++ ) {
+							final SqmParameter<?> expansionSqmParam = expansions.get( expansionPosition + j * expansionCount );
+							final List<JdbcParametersList> jdbcParamBinds = jdbcParamMap.get( expansionSqmParam );
+							for ( int i = 0; i < jdbcParamBinds.size(); i++ ) {
+								JdbcParametersList expansionJdbcParams = jdbcParamBinds.get( i );
+								createValueBindings(
+										jdbcParameterBindings,
+										queryParam,
+										domainParamBinding,
+										parameterType,
+										expansionJdbcParams,
+										expandedValue,
+										tableGroupLocator,
+										session
+								);
+							}
 						}
+						expansionPosition++;
 					}
 				}
 				else if ( domainParamBinding.getBindValue() == null ) {

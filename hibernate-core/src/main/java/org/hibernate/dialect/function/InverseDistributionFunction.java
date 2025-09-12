@@ -153,8 +153,11 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 
 		@Override
 		protected ReturnableType<?> resolveResultType(TypeConfiguration typeConfiguration) {
-			return (ReturnableType<?>) withinGroupClause.getSortSpecifications().get( 0 ).getSortExpression()
-						.getExpressible();
+			return (ReturnableType<?>)
+					getWithinGroup().getSortSpecifications().get( 0 )
+							.getSortExpression()
+							.getExpressible()
+							.getSqmType();
 		}
 
 		@Override

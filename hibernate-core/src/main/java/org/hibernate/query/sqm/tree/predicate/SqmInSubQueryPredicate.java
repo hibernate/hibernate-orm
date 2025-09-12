@@ -41,8 +41,8 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 		this.subQueryExpression = subQueryExpression;
 
 		final SqmExpressible<?> expressibleType = QueryHelper.highestPrecedenceType2(
-				testExpression.getNodeType(),
-				subQueryExpression.getNodeType()
+				testExpression.getExpressible(),
+				subQueryExpression.getExpressible()
 		);
 
 		testExpression.applyInferableType( expressibleType );

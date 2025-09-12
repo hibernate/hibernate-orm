@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -121,6 +122,7 @@ import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
+import org.hibernate.query.sqm.tree.expression.AbstractSqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmAny;
 import org.hibernate.query.sqm.tree.expression.SqmAnyDiscriminatorValue;
@@ -310,6 +312,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private ParameterCollector parameterCollector;
 	private ParameterStyle parameterStyle;
+	private Map<Object, AbstractSqmParameter<?>> parameters;
 
 	private boolean isExtractingJdbcTemporalType;
 	// Provides access to the current CTE that is being processed, which is potentially recursive
@@ -3832,14 +3835,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			HqlParser.NamedParameterContext ctx,
 			SqmExpressible<T> expressibleType) {
 		parameterStyle = parameterStyle.withNamed();
-		final SqmNamedParameter<T> param = new SqmNamedParameter<>(
-				ctx.getChild( 1 ).getText(),
-				parameterDeclarationContextStack.getCurrent().isMultiValuedBindingAllowed(),
-				expressibleType,
-				creationContext.getNodeBuilder()
+		return resolveParameter(
+				new SqmNamedParameter<>(
+						ctx.getChild( 1 ).getText(),
+						parameterDeclarationContextStack.getCurrent().isMultiValuedBindingAllowed(),
+						expressibleType,
+						creationContext.getNodeBuilder()
+				)
 		);
-		parameterCollector.addParameter( param );
-		return param;
 	}
 
 	@Override
@@ -3854,14 +3857,28 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			throw new SemanticException( "Unlabeled ordinal parameter ('?' rather than ?1)" );
 		}
 		parameterStyle = parameterStyle.withPositional();
-		final SqmPositionalParameter<T> param = new SqmPositionalParameter<>(
-				Integer.parseInt( ctx.getChild( 1 ).getText() ),
-				parameterDeclarationContextStack.getCurrent().isMultiValuedBindingAllowed(),
-				expressibleType,
-				creationContext.getNodeBuilder()
+		return resolveParameter(
+				new SqmPositionalParameter<>(
+						Integer.parseInt( ctx.getChild( 1 ).getText() ),
+						parameterDeclarationContextStack.getCurrent().isMultiValuedBindingAllowed(),
+						expressibleType,
+						creationContext.getNodeBuilder()
+				)
 		);
-		parameterCollector.addParameter( param );
-		return param;
+	}
+
+	private <T extends AbstractSqmParameter<?>> T resolveParameter(T parameter) {
+		if ( parameters == null ) {
+			parameters = new HashMap<>();
+		}
+		final Object key = parameter.getName() == null ? parameter.getPosition() : parameter.getName();
+		final AbstractSqmParameter<?> existingParameter = parameters.putIfAbsent( key, parameter );
+		if ( existingParameter == null ) {
+			parameterCollector.addParameter( parameter );
+			return parameter;
+		}
+		//noinspection unchecked
+		return (T) existingParameter;
 	}
 
 

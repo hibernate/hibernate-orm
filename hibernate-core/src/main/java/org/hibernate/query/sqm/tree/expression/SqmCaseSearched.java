@@ -96,7 +96,7 @@ public class SqmCaseSearched<R>
 			return;
 		}
 
-		final SqmExpressible<?> oldType = getNodeType();
+		final SqmExpressible<?> oldType = getExpressible();
 
 		final SqmExpressible<?> newType = QueryHelper.highestPrecedenceType2( oldType, type );
 		if ( newType != null && newType != oldType ) {

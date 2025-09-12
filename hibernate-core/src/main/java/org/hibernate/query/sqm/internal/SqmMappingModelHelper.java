@@ -32,8 +32,10 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmSpecificPluralPartPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -212,13 +214,34 @@ public class SqmMappingModelHelper {
 		}
 
 		if ( sqmPath.getLhs() == null ) {
-			final EntityDomainType<?> entityDomainType = (EntityDomainType<?>) sqmPath.getReferencedPathSource();
-			return domainModel.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
+			final SqmPathSource<?> referencedPathSource = sqmPath.getReferencedPathSource();
+			if ( referencedPathSource instanceof EntityDomainType<?> ) {
+				final EntityDomainType<?> entityDomainType = (EntityDomainType<?>) referencedPathSource;
+				return domainModel.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
+			}
+			assert referencedPathSource instanceof SqmCteTable<?>;
+			return null;
 		}
 		final TableGroup lhsTableGroup = tableGroupLocator.apply( sqmPath.getLhs().getNavigablePath() );
 		final ModelPartContainer modelPart;
 		if ( lhsTableGroup == null ) {
 			modelPart = (ModelPartContainer) resolveSqmPath( sqmPath.getLhs(), domainModel, tableGroupLocator );
+			if ( modelPart == null ) {
+				// There are many reasons for why this situation can happen,
+				// but they all boil down to a parameter being compared against a SqmPath.
+
+				// * If the parameter is used in multiple queries (CTE or subquery),
+				// resolving the parameter type based on a SqmPath from a query context other than the current one will fail.
+
+				// * If the parameter is compared to paths with a polymorphic root,
+				// the parameter has a SqmPath set as SqmExpressible
+				// which is still referring to the polymorphic navigable path,
+				// but during query splitting, the SqmRoot in the query is replaced with a root for a subtype.
+				// Unfortunately, we can't copy the parameter to reset the SqmExpressible,
+				// because we currently build only a single DomainParameterXref, instead of one per query split,
+				// so we have to handle this here instead
+				return null;
+			}
 		}
 		else {
 			modelPart = lhsTableGroup.getModelPart();

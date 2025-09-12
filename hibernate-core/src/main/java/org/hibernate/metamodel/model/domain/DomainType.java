@@ -26,6 +26,12 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public interface DomainType<J> extends SqmExpressible<J> {
+
+	@Override
+	default DomainType<J> getSqmType() {
+		return this;
+	}
+
 	/**
 	 * The name of the type.
 	 *

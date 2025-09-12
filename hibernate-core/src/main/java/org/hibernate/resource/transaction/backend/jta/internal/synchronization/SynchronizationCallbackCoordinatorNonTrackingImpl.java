@@ -33,7 +33,7 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 
 	@Override
 	public void beforeCompletion() {
-		JTA_LOGGER.trace( "Synchronization coordinator: beforeCompletion()" );
+		JTA_LOGGER.synchronizationCoordinatorBeforeCompletion();
 		if ( target.isActive() ) {
 			target.beforeCompletion();
 		}
@@ -41,13 +41,12 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 
 	@Override
 	public void afterCompletion(int status) {
-		JTA_LOGGER.tracef( "Synchronization coordinator: afterCompletion(status=%s)", status );
+		JTA_LOGGER.synchronizationCoordinatorAfterCompletion( status );
 		doAfterCompletion( isCommitted( status ), false );
 	}
 
 	protected void doAfterCompletion(boolean successful, boolean delayed) {
-		JTA_LOGGER.tracef( "Synchronization coordinator: doAfterCompletion(successful=%s, delayed=%s)",
-				successful, delayed );
+		JTA_LOGGER.synchronizationCoordinatorDoAfterCompletion( successful, delayed );
 		try {
 			target.afterCompletion( successful, delayed );
 		}

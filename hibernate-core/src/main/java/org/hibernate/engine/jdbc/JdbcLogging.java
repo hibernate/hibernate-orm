@@ -152,4 +152,28 @@ public interface JdbcLogging extends BasicLogger {
 	@LogMessage(level = TRACE)
 	@Message(value = "Sequence value retrieved from database: %s", id = 100032)
 	void sequenceValueRetrievedFromDatabase(Number sequenceValue);
+
+	@LogMessage(level = TRACE)
+	@Message(value = "Notifying resource-local transaction observers after begin", id = 100033)
+	void notifyingResourceLocalObserversAfterBegin();
+
+	@LogMessage(level = TRACE)
+	@Message(value = "Notifying resource-local transaction observers before completion", id = 100034)
+	void notifyingResourceLocalObserversBeforeCompletion();
+
+	@LogMessage(level = TRACE)
+	@Message(value = "Notifying resource-local transaction observers after completion", id = 100035)
+	void notifyingResourceLocalObserversAfterCompletion();
+
+	@LogMessage(level = TRACE)
+	@Message(value = "On commit, transaction was marked for rollback only, rolling back", id = 100036)
+	void onCommitMarkedRollbackOnlyRollingBack();
+
+	@LogMessage(level = TRACE)
+	@Message(value = "JDBC transaction marked for rollback only (exception provided for stack trace)", id = 100037)
+	void jdbcTransactionMarkedForRollbackOnly(@Cause Throwable stackTraceHolder);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Encountered failure rolling back failed commit", id = 100038)
+	void encounteredFailureRollingBackFailedCommit(@Cause Throwable cause);
 }

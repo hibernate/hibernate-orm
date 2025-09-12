@@ -8,6 +8,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.Interceptor;
 import org.hibernate.Transaction;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -43,6 +44,7 @@ public interface CommonSharedSessionCreationOptions {
 	boolean isTransactionCoordinatorShared();
 	TransactionCoordinator getTransactionCoordinator();
 	JdbcCoordinator getJdbcCoordinator();
+	TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor();
 	Transaction getTransaction();
 
 	TimeZone getJdbcTimeZone();

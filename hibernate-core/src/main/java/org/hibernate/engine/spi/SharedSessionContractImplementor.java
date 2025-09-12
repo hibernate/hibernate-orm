@@ -265,6 +265,14 @@ public interface SharedSessionContractImplementor
 	TransactionCompletionCallbacks getTransactionCompletionCallbacks();
 
 	/**
+	 * Access to registered callbacks for transaction completion processing.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor();
+
+	/**
 	 * Instantiate an {@link EntityKey} with the given id and for the
 	 * entity represented by the given {@link EntityPersister}.
 	 *

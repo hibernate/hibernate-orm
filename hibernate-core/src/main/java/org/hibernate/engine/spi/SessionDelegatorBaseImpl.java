@@ -1176,6 +1176,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor() {
+		return delegate.getTransactionCompletionCallbacksImplementor();
+	}
+
+	@Override
 	public Object instantiate(EntityPersister persister, Object id) throws HibernateException {
 		return delegate.instantiate( persister, id );
 	}

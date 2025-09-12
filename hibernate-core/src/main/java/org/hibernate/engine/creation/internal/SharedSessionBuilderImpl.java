@@ -12,10 +12,10 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.Transaction;
 import org.hibernate.engine.creation.spi.SharedSessionBuilderImplementor;
-import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -277,6 +277,14 @@ public abstract class SharedSessionBuilderImpl
 				: null;
 	}
 
+	@Override
+	public TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacks() {
+		return shareTransactionContext
+				? original.getTransactionCompletionCallbacksImplementor()
+				: null;
+	}
+
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// CommonSharedSessionCreationOptions
 
@@ -308,11 +316,6 @@ public abstract class SharedSessionBuilderImpl
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SharedSessionCreationOptions
-
-	@Override
-	public TransactionCompletionCallbacksImpl getTransactionCompletionCallbacks() {
-		return null;
-	}
 
 	@Override
 	public boolean shouldAutoJoinTransactions() {

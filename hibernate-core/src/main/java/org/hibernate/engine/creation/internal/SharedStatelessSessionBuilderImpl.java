@@ -14,6 +14,7 @@ import org.hibernate.Transaction;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
+import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -164,6 +165,13 @@ public abstract class SharedStatelessSessionBuilderImpl
 	public JdbcCoordinator getJdbcCoordinator() {
 		return shareTransactionContext
 				? original.getJdbcCoordinator()
+				: null;
+	}
+
+	@Override
+	public TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor() {
+		return shareTransactionContext
+				? original.getTransactionCompletionCallbacksImplementor()
 				: null;
 	}
 

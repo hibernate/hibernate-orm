@@ -5,12 +5,12 @@
 package org.hibernate.engine.internal;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.TransactionCompletionCallbacks;
+import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
 
 /**
  * @author Steve Ebersole
  */
-public class TransactionCompletionCallbacksImpl implements TransactionCompletionCallbacks {
+public class TransactionCompletionCallbacksImpl implements TransactionCompletionCallbacksImplementor {
 	private final SharedSessionContractImplementor session;
 
 	private BeforeTransactionCompletionProcessQueue beforeTransactionProcesses;
@@ -28,11 +28,13 @@ public class TransactionCompletionCallbacksImpl implements TransactionCompletion
 		beforeTransactionProcesses.register( process );
 	}
 
+	@Override
 	public boolean hasBeforeCompletionCallbacks() {
 		return beforeTransactionProcesses != null
 			&& beforeTransactionProcesses.hasActions();
 	}
 
+	@Override
 	public void beforeTransactionCompletion() {
 		if ( beforeTransactionProcesses != null && beforeTransactionProcesses.hasActions() ) {
 			beforeTransactionProcesses.beforeTransactionCompletion();
@@ -47,23 +49,27 @@ public class TransactionCompletionCallbacksImpl implements TransactionCompletion
 		afterTransactionProcesses.register( process );
 	}
 
+	@Override
 	public boolean hasAfterCompletionCallbacks() {
 		return afterTransactionProcesses != null && afterTransactionProcesses.hasActions();
 	}
 
+	@Override
 	public void afterTransactionCompletion(boolean success) {
 		if ( afterTransactionProcesses != null && afterTransactionProcesses.hasActions() ) {
 			afterTransactionProcesses.afterTransactionCompletion( success );
 		}
 	}
 
+	@Override
 	public void addSpaceToInvalidate(String space) {
 		if ( afterTransactionProcesses == null ) {
 			afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
 		}
 		afterTransactionProcesses.addSpaceToInvalidate( space );
-}
+	}
 
+	@Override
 	public TransactionCompletionCallbacksImpl forSharing() {
 		if ( beforeTransactionProcesses == null ) {
 			beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );

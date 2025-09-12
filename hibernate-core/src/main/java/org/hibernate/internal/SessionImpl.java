@@ -1984,7 +1984,7 @@ public class SessionImpl
 		return loadQueryInfluencers.getBatchSize();
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public LobHelper getLobHelper() {
 		return Hibernate.getLobHelper();
 	}

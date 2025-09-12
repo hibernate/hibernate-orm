@@ -732,4 +732,9 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	public SharedSessionBuilder sessionWithOptions() {
 		return delegate.sessionWithOptions();
 	}
+
+	@Override
+	public TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor() {
+		return delegate.getTransactionCompletionCallbacksImplementor();
+	}
 }

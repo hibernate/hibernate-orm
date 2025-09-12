@@ -9,7 +9,7 @@ import org.hibernate.agroal.internal.AgroalConnectionProvider;
 
 import java.util.Map;
 
-import static org.hibernate.testing.jdbc.GradleParallelTestingUsernameResolver.resolveFromSettings;
+import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.resolveFromSettings;
 
 /**
  * @author Loïc Lefèvre

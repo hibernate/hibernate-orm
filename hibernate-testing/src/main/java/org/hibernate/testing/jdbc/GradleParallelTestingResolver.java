@@ -10,11 +10,11 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * JDBC username resolver for parallel tests.
+ * JDBC config resolver for parallel tests.
  *
  * @author Loïc Lefèvre
  */
-public class GradleParallelTestingUsernameResolver {
+public class GradleParallelTestingResolver {
 
 	private static final String JDBC_USER_CONNECTION_PROPERTY = "user";
 
@@ -38,6 +38,11 @@ public class GradleParallelTestingUsernameResolver {
 				connectionProps.put( JDBC_USER_CONNECTION_PROPERTY,
 						user.replace( GRADLE_WORKER_PATTERN, String.valueOf( getRunningID() ) ) );
 			}
+			final String url = connectionProps.getProperty( AvailableSettings.URL );
+			if ( url != null && url.contains( GRADLE_WORKER_PATTERN ) ) {
+				connectionProps.put( AvailableSettings.URL,
+						url.replace( GRADLE_WORKER_PATTERN, String.valueOf( getRunningID() ) ) );
+			}
 		}
 	}
 
@@ -48,6 +53,11 @@ public class GradleParallelTestingUsernameResolver {
 			if ( user.contains( GRADLE_WORKER_PATTERN ) ) {
 				settingsProps.put( AvailableSettings.USER,
 						user.replace( GRADLE_WORKER_PATTERN, String.valueOf( getRunningID() ) ) );
+			}
+			final String url = settingsProps.getProperty( AvailableSettings.URL );
+			if ( url != null && url.contains( GRADLE_WORKER_PATTERN ) ) {
+				settingsProps.put( AvailableSettings.URL,
+						url.replace( GRADLE_WORKER_PATTERN, String.valueOf( getRunningID() ) ) );
 			}
 		}
 	}
@@ -60,20 +70,20 @@ public class GradleParallelTestingUsernameResolver {
 				settingsProps.put( AvailableSettings.USER,
 						user.replace( GRADLE_WORKER_PATTERN, String.valueOf( getRunningID() ) ) );
 			}
+			final String url = (String) settingsProps.get( AvailableSettings.URL );
+			if ( url != null && url.contains( GRADLE_WORKER_PATTERN ) ) {
+				settingsProps.put( AvailableSettings.URL,
+						url.replace( GRADLE_WORKER_PATTERN, String.valueOf( getRunningID() ) ) );
+			}
 		}
 	}
 
+	public static String resolveUrl(String url) {
+		return url.replace( GRADLE_WORKER_PATTERN, String.valueOf( getRunningID() ) );
+	}
+
 	public static String resolveUsername(String username) {
-		if(username != null) {
-			if ( username.contains( GRADLE_WORKER_PATTERN ) ) {
-				return username.replace( GRADLE_WORKER_PATTERN, String.valueOf( getRunningID() ) );
-			}
-			else {
-				return username;
-			}
-		} else {
-			throw new IllegalArgumentException("Username must not be null!");
-		}
+		return username.replace( GRADLE_WORKER_PATTERN, String.valueOf( getRunningID() ) );
 	}
 
 	/**
@@ -87,7 +97,8 @@ public class GradleParallelTestingUsernameResolver {
 	private static int getRunningID() {
 		// enable parallelization of up to GRADLE_MAXIMUM_PARALLEL_FORKS
 		final Integer maxParallelForks = Integer.valueOf( System.getProperty( GRADLE_MAXIMUM_PARALLEL_FORKS, "1" ) );
+		// Note that the worker ids are strictly monotonic
 		final Integer worker = Integer.valueOf( System.getProperty( GRADLE_WORKER_ID, "1" ) );
-		return (worker % maxParallelForks) + 1; // returns 1, 2, 3...
+		return (worker % maxParallelForks) + 1;
 	}
 }

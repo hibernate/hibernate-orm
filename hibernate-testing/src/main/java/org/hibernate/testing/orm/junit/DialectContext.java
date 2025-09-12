@@ -18,7 +18,8 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.internal.util.ReflectHelper;
 
-import static org.hibernate.testing.jdbc.GradleParallelTestingUsernameResolver.resolveFromSettings;
+import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.resolveFromSettings;
+import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.resolveUrl;
 
 /**
  * @author Christian Beikov
@@ -45,7 +46,7 @@ public final class DialectContext {
 	static void init() {
 		final Properties properties = Environment.getProperties();
 		final String driverClassName = properties.getProperty( Environment.DRIVER );
-		final String jdbcUrl = properties.getProperty( Environment.URL );
+		final String jdbcUrl = resolveUrl( properties.getProperty( Environment.URL ) );
 		final Properties props = new Properties();
 		resolveFromSettings(properties);
 		props.setProperty( "user", properties.getProperty( Environment.USER ) );

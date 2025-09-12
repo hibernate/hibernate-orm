@@ -577,7 +577,7 @@ mssql_2017() {
     do
         # We need a database that uses a non-lock based MVCC approach
         # https://github.com/microsoft/homebrew-mssql-release/issues/2#issuecomment-682285561
-        $CONTAINER_CLI exec mssql bash -c 'echo "create database hibernate_orm_test collate SQL_Latin1_General_CP1_CS_AS; alter database hibernate_orm_test set READ_COMMITTED_SNAPSHOT ON" | /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin' && break
+        $CONTAINER_CLI exec mssql bash -c 'echo "select 1" | /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin' 2>&1 1>/dev/null && break
         echo "Waiting for SQL Server to start..."
         n=$((n+1))
         sleep 5
@@ -587,6 +587,12 @@ mssql_2017() {
     else
       echo "SQL Server successfully started"
     fi
+    echo "Creating databases..."
+    for n in $(seq 1 $(($(nproc)/2)))
+    do
+      $CONTAINER_CLI exec mssql bash -c "echo \"create database hibernate_orm_test_${n} collate SQL_Latin1_General_CP1_CS_AS; alter database hibernate_orm_test_${n} set READ_COMMITTED_SNAPSHOT ON\" | /opt/mssql-tools/bin/sqlcmd -C -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin"
+    done
+    echo "SQL Server is ready"
 }
 
 mssql_2022() {
@@ -599,7 +605,7 @@ mssql_2022() {
     do
         # We need a database that uses a non-lock based MVCC approach
         # https://github.com/microsoft/homebrew-mssql-release/issues/2#issuecomment-682285561
-        $CONTAINER_CLI exec mssql bash -c 'echo "create database hibernate_orm_test collate SQL_Latin1_General_CP1_CS_AS; alter database hibernate_orm_test set READ_COMMITTED_SNAPSHOT ON" | /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin' && break
+        $CONTAINER_CLI exec mssql bash -c 'echo "select 1" | /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin' 2>&1 1>/dev/null && break
         echo "Waiting for SQL Server to start..."
         n=$((n+1))
         sleep 5
@@ -609,6 +615,12 @@ mssql_2022() {
     else
       echo "SQL Server successfully started"
     fi
+    echo "Creating databases..."
+    for n in $(seq 1 $(($(nproc)/2)))
+    do
+      $CONTAINER_CLI exec mssql bash -c "echo \"create database hibernate_orm_test_${n} collate SQL_Latin1_General_CP1_CS_AS; alter database hibernate_orm_test_${n} set READ_COMMITTED_SNAPSHOT ON\" | /opt/mssql-tools/bin/sqlcmd -C -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin"
+    done
+    echo "SQL Server is ready"
 }
 
 mssql_2025() {
@@ -621,7 +633,7 @@ mssql_2025() {
     do
         # We need a database that uses a non-lock based MVCC approach
         # https://github.com/microsoft/homebrew-mssql-release/issues/2#issuecomment-682285561
-        $CONTAINER_CLI exec mssql bash -c 'echo "create database hibernate_orm_test collate SQL_Latin1_General_CP1_CS_AS; alter database hibernate_orm_test set READ_COMMITTED_SNAPSHOT ON" | /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin' && break
+        $CONTAINER_CLI exec mssql bash -c 'echo "select 1" | /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin' 2>&1 1>/dev/null && break
         echo "Waiting for SQL Server to start..."
         n=$((n+1))
         sleep 5
@@ -631,6 +643,12 @@ mssql_2025() {
     else
       echo "SQL Server successfully started"
     fi
+    echo "Creating databases..."
+    for n in $(seq 1 $(($(nproc)/2)))
+    do
+      $CONTAINER_CLI exec mssql bash -c "echo \"create database hibernate_orm_test_${n} collate SQL_Latin1_General_CP1_CS_AS; alter database hibernate_orm_test_${n} set READ_COMMITTED_SNAPSHOT ON\" | /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin"
+    done
+    echo "SQL Server is ready"
 }
 
 sybase() {

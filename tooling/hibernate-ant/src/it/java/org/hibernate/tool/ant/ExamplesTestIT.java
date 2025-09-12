@@ -120,6 +120,19 @@ public class ExamplesTestIT {
         }
     }
 
+    @Test
+    public void testTemplatePath() throws Exception {
+        File buildFile = new File(baseFolder, "templatepath/build.xml");
+        Project project = createProject(buildFile);
+        assertNotNull(project);
+        File personFile = new File(baseFolder, "templatepath/generated/Person.java");
+        assertFalse(personFile.exists());
+        project.executeTarget("reveng");
+        assertTrue(personFile.exists());
+        String personFileContents = new String(Files.readAllBytes(personFile.toPath()));
+        assertTrue(personFileContents.contains("// This is just an example of a custom template"));
+    }
+
     private Project createProject(File buildXmlFile) throws Exception {
         Project result = new Project();
         ProjectHelper projectHelper = ProjectHelper.getProjectHelper();

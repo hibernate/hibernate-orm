@@ -29,6 +29,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.creation.internal.SessionCreationOptions;
+import org.hibernate.engine.creation.internal.SessionCreationOptionsAdaptor;
 import org.hibernate.engine.creation.internal.SharedSessionBuilderImpl;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.creation.internal.SharedStatelessSessionBuilderImpl;
@@ -43,7 +44,9 @@ import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.graph.GraphSemantic;
@@ -242,12 +245,23 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public SharedStatelessSessionBuilder statelessWithOptions() {
-		return new SharedStatelessSessionBuilderImpl( this );
+		return new SharedStatelessSessionBuilderImpl( this ) {
+			@Override
+			protected StatelessSessionImplementor createStatelessSession() {
+				return new StatelessSessionImpl( factory,
+						new SessionCreationOptionsAdaptor( factory, this ) );
+			}
+		};
 	}
 
 	@Override
 	public SharedSessionBuilder sessionWithOptions() {
-		return new SharedSessionBuilderImpl( this );
+		return new SharedSessionBuilderImpl( this ) {
+			@Override
+			protected SessionImplementor createSession() {
+				return new SessionImpl( factory, this );
+			}
+		};
 	}
 
 	protected final void setUpMultitenancy(SessionFactoryImplementor factory, LoadQueryInfluencers loadQueryInfluencers) {
@@ -319,7 +333,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	private static SessionEventListenerManager createSessionEventsManager(
 			SessionFactoryOptions factoryOptions, SessionCreationOptions options) {
-		final var customListeners = options.getCustomSessionEventListener();
+		final var customListeners = options.getCustomSessionEventListeners();
 		return customListeners == null
 				? new SessionEventListenerManagerImpl( factoryOptions.buildSessionEventListeners() )
 				: new SessionEventListenerManagerImpl( customListeners );

@@ -15,7 +15,6 @@ import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -27,13 +26,13 @@ import java.util.Collection;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -57,16 +56,14 @@ public class SessionWithSharedConnectionTest {
 //		secondSession.createCriteria( IrrelevantEntity.class ).list();
 
 		//the list should have registered and then released a JDBC resource
-		assertFalse(
-				((SessionImplementor) secondSession)
-						.getJdbcCoordinator().getLogicalConnection().getResourceRegistry()
-						.hasRegisteredResources()
-		);
+		assertFalse( ((SessionImplementor) secondSession)
+				.getJdbcCoordinator().getLogicalConnection().getResourceRegistry()
+				.hasRegisteredResources() );
 
 		assertTrue( session.isOpen() );
 		assertTrue( secondSession.isOpen() );
 
-		assertSame( session.getTransaction(), secondSession.getTransaction() );
+		Assertions.assertSame( session.getTransaction(), secondSession.getTransaction() );
 
 		session.getTransaction().commit();
 
@@ -232,13 +229,13 @@ public class SessionWithSharedConnectionTest {
 		session.getTransaction().commit();
 
 		//both entities should have their names updated to the postCommitMessage value
-		assertEquals(postCommitMessage, irrelevantEntityMainSession.getName());
-		assertEquals(postCommitMessage, irrelevantEntitySecondarySession.getName());
+		assertEquals( postCommitMessage, irrelevantEntityMainSession.getName() );
+		assertEquals( postCommitMessage, irrelevantEntitySecondarySession.getName() );
 	}
 
 	@Test
 	@JiraKey( value = "HHH-7239" )
-	public void testChildSessionTwoTransactions(SessionFactoryScope scope) throws Exception {
+	public void testChildSessionTwoTransactions(SessionFactoryScope scope) {
 		Session session = scope.getSessionFactory().openSession();
 
 		session.getTransaction().begin();
@@ -262,10 +259,10 @@ public class SessionWithSharedConnectionTest {
 
 	@Test
 	@JiraKey(value = "HHH-11830")
-	public void testSharedSessionTransactionObserver(SessionFactoryScope scope) throws Exception {
+	public void testSharedSessionTransactionObserver(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Field field = null;
-			Class<?> clazz = ( (JdbcSessionOwner) session ).getTransactionCoordinator().getClass();
+			Class<?> clazz = session.getTransactionCoordinator().getClass();
 			while ( clazz != null ) {
 				try {
 					field = clazz.getDeclaredField( "observers" );
@@ -279,12 +276,12 @@ public class SessionWithSharedConnectionTest {
 					throw new IllegalStateException( e );
 				}
 			}
-			assertNotNull( "Observers field was not found", field );
+			assertNotNull( field, "Observers field was not found" );
 
 			try {
 				//Some of these collections could be lazily initialize: check for null before invoking size()
-				final Collection collection = (Collection) field.get( session.getTransactionCoordinator() );
-				assertTrue( collection == null || collection.size() == 0 );
+				final Collection<?> collection = (Collection<?>) field.get( session.getTransactionCoordinator() );
+				assertTrue( collection == null || collection.isEmpty() );
 
 				//open secondary sessions with managed options and immediately close
 				Session secondarySession;
@@ -296,18 +293,14 @@ public class SessionWithSharedConnectionTest {
 							.openSession();
 
 					//when the shared session is opened it should register an observer
-					assertEquals(
-							1,
-							( (Collection) field.get( session.getTransactionCoordinator() ) ).size()
-					);
+					assertEquals( 1,
+							( (Collection<?>) field.get( session.getTransactionCoordinator() ) ).size() );
 
 					//observer should be released
 					secondarySession.close();
 
-					assertEquals(
-							0,
-							( (Collection) field.get( session.getTransactionCoordinator() ) ).size()
-					);
+					assertEquals( 0,
+							( (Collection<?>) field.get( session.getTransactionCoordinator() ) ).size() );
 				}
 			}
 			catch (Exception e) {

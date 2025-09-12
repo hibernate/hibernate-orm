@@ -52,7 +52,7 @@ public interface SharedSessionBuilderImplementor extends SharedSessionBuilder, S
 	@Override
 	SharedSessionBuilderImplementor interceptor();
 
-	@Override
+	@Override @Deprecated
 	SharedSessionBuilderImplementor connectionReleaseMode();
 
 	@Override
@@ -79,7 +79,7 @@ public interface SharedSessionBuilderImplementor extends SharedSessionBuilder, S
 	@Override
 	SharedSessionBuilderImplementor flushMode(FlushMode flushMode);
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	SharedSessionBuilderImplementor tenantIdentifier(String tenantIdentifier);
 
 	@Override

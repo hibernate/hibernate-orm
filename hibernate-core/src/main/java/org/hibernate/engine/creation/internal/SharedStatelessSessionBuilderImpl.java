@@ -12,11 +12,10 @@ import org.hibernate.Transaction;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
-import org.hibernate.internal.CommonSharedSessionCreationOptions;
-import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.internal.StatelessSessionImpl;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+import org.jboss.logging.Logger;
 
 import java.util.Objects;
 
@@ -27,21 +26,24 @@ import java.util.Objects;
  *
  * @author Steve Ebersole
  */
-public class SharedStatelessSessionBuilderImpl
+public abstract class SharedStatelessSessionBuilderImpl
 		extends AbstractCommonBuilder<SharedStatelessSessionBuilder>
 		implements SharedStatelessSessionBuilder, CommonSharedSessionCreationOptions {
+
+	private static final Logger LOG = CoreLogging.logger( SharedStatelessSessionBuilderImpl.class );
 
 	protected final SharedSessionContractImplementor original;
 	protected boolean shareTransactionContext;
 
 	public SharedStatelessSessionBuilderImpl(SharedSessionContractImplementor original) {
-		super( (SessionFactoryImpl) original.getSessionFactory() );
+		super( original.getSessionFactory() );
 		this.original = original;
-		tenantIdentifier = original.getTenantIdentifierValue();
 		final var options = original.getSessionFactory().getSessionFactoryOptions();
-		interceptor = options.getInterceptor();
 		statementInspector = options.getStatementInspector();
+		tenantIdentifier = original.getTenantIdentifierValue();
 	}
+
+	protected abstract StatelessSessionImplementor createStatelessSession();
 
 	@Override
 	protected SharedStatelessSessionBuilder getThis() {
@@ -53,6 +55,7 @@ public class SharedStatelessSessionBuilderImpl
 
 	@Override
 	public StatelessSessionImplementor open() {
+		LOG.tracef( "Opening StatelessSession [tenant=%s]", tenantIdentifier );
 		if ( original.getSessionFactory().getSessionFactoryOptions().isMultiTenancyEnabled() ) {
 			if ( shareTransactionContext ) {
 				final var tenantId = original.getTenantIdentifierValue();
@@ -62,7 +65,7 @@ public class SharedStatelessSessionBuilderImpl
 				}
 			}
 		}
-		return new StatelessSessionImpl( original.getSessionFactory(), this );
+		return createStatelessSession();
 	}
 
 	@Override
@@ -89,7 +92,7 @@ public class SharedStatelessSessionBuilderImpl
 
 	@Override
 	public Interceptor getInterceptor() {
-		return interceptor;
+		return configuredInterceptor();
 	}
 
 	@Override

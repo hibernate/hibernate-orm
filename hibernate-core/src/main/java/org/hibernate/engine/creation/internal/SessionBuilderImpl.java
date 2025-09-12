@@ -9,9 +9,9 @@ import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionEventListener;
 import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.internal.SessionImpl;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.jboss.logging.Logger;
@@ -28,17 +28,19 @@ import static java.util.Collections.addAll;
  *
  * @author Steve Ebersole
  */
-public class SessionBuilderImpl
+public abstract class SessionBuilderImpl
 		extends AbstractCommonBuilder<SessionBuilderImplementor>
 		implements SessionBuilderImplementor, SessionCreationOptions {
-	private static final Logger log = CoreLogging.logger( SessionBuilderImpl.class );
+
+	private static final Logger LOG = CoreLogging.logger( SessionBuilderImpl.class );
 
 	private boolean autoJoinTransactions = true;
-	private FlushMode flushMode;
 	private boolean autoClose;
 	private boolean autoClear;
 	private boolean identifierRollback;
 	private TimeZone jdbcTimeZone;
+	private FlushMode flushMode;
+
 	private final int defaultBatchFetchSize;
 	private final boolean subselectFetchEnabled;
 
@@ -47,21 +49,15 @@ public class SessionBuilderImpl
 	// Only initialize of the builder is overriding the default.
 	private List<SessionEventListener> listeners;
 
-	public SessionBuilderImpl(SessionFactoryImpl sessionFactory) {
+	public SessionBuilderImpl(SessionFactoryImplementor sessionFactory) {
 		super( sessionFactory );
-
-		// set up default builder values...
+		// set up default builder values
 		final var options = sessionFactory.getSessionFactoryOptions();
-		statementInspector = options.getStatementInspector();
-		connectionHandlingMode = options.getPhysicalConnectionHandlingMode();
 		autoClose = options.isAutoCloseSessionEnabled();
+		identifierRollback = options.isIdentifierRollbackEnabled();
+		jdbcTimeZone = options.getJdbcTimeZone();
 		defaultBatchFetchSize = options.getDefaultBatchFetchSize();
 		subselectFetchEnabled = options.isSubselectFetchEnabled();
-		identifierRollback = options.isIdentifierRollbackEnabled();
-		cacheMode = options.getInitialSessionCacheMode();
-
-		tenantIdentifier = sessionFactory.resolveTenantIdentifier();
-		jdbcTimeZone = options.getJdbcTimeZone();
 	}
 
 	@Override
@@ -110,8 +106,7 @@ public class SessionBuilderImpl
 
 	@Override
 	public Interceptor getInterceptor() {
-		return SessionFactoryImpl.configuredInterceptor( interceptor, explicitNoInterceptor,
-				sessionFactory.getSessionFactoryOptions() );
+		return configuredInterceptor();
 	}
 
 	@Override
@@ -157,7 +152,7 @@ public class SessionBuilderImpl
 	}
 
 	@Override
-	public List<SessionEventListener> getCustomSessionEventListener() {
+	public List<SessionEventListener> getCustomSessionEventListeners() {
 		return listeners;
 	}
 
@@ -165,10 +160,12 @@ public class SessionBuilderImpl
 	// SessionBuilder
 
 	@Override
-	public SessionImpl openSession() {
-		log.tracef( "Opening Hibernate Session.  tenant=%s", tenantIdentifier );
-		return new SessionImpl( sessionFactory, this );
+	public SessionImplementor openSession() {
+		LOG.tracef( "Opening Hibernate Session [tenant=%s]", tenantIdentifier );
+		return createSession();
 	}
+
+	protected abstract SessionImplementor createSession();
 
 	@Override
 	@Deprecated
@@ -250,6 +247,4 @@ public class SessionBuilderImpl
 		jdbcTimeZone = timeZone;
 		return this;
 	}
-
-
 }

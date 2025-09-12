@@ -24,7 +24,6 @@ import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacks;
@@ -125,25 +124,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public StatelessSessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 		connectionProvided = options.getConnection() != null;
-		transactionCompletionCallbacks = new TransactionCompletionCallbacksImpl( this );
-		temporaryPersistenceContext = createPersistenceContext( this );
-		influencers = new LoadQueryInfluencers( getFactory() );
-		eventListenerGroups = factory.getEventListenerGroups();
-		setUpMultitenancy( factory, influencers );
-		// a nonzero batch size forces use of write-behind
-		// therefore ignore the value of hibernate.jdbc.batch_size
-		setJdbcBatchSize( 0 );
-	}
-
-	/**
-	 * Form used when creating a "shared" stateless session.
-	 */
-	public StatelessSessionImpl(SessionFactoryImplementor factory, CommonSharedSessionCreationOptions options) {
-		super(
-				(SessionFactoryImpl) factory,
-				new SessionCreationOptionsAdaptor( factory, options )
-		);
-		connectionProvided = false;
 		transactionCompletionCallbacks = new TransactionCompletionCallbacksImpl( this );
 		temporaryPersistenceContext = createPersistenceContext( this );
 		influencers = new LoadQueryInfluencers( getFactory() );

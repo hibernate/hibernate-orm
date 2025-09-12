@@ -423,4 +423,9 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	public <R> TypedQueryReference<R> addNamedQuery(String name, TypedQuery<R> query) {
 		return delegate.addNamedQuery( name, query );
 	}
+
+	@Override
+	public Object resolveTenantIdentifier() {
+		return delegate.resolveTenantIdentifier();
+	}
 }

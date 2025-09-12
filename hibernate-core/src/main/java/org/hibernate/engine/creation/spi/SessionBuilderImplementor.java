@@ -61,7 +61,7 @@ public interface SessionBuilderImplementor extends SessionBuilder {
 	@Override
 	SessionBuilderImplementor flushMode(FlushMode flushMode);
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	SessionBuilderImplementor tenantIdentifier(String tenantIdentifier);
 
 	@Override

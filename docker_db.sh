@@ -79,6 +79,7 @@ mysql_setup() {
         -e MYSQL_PASSWORD=hibernate_orm_test \
         -e MYSQL_ROOT_PASSWORD=hibernate_orm_test \
         -e MYSQL_DATABASE=hibernate_orm_test \
+        --tmpfs /var/lib/mysql \
         -p3306:3306 -d "${image_value}" \
         --character-set-server=utf8mb4 \
         --collation-server=utf8mb4_0900_as_cs \
@@ -101,9 +102,42 @@ mysql_setup() {
 
     if [ "$n" -gt 5 ]; then
         echo "MySQL failed to start and configure after 30 seconds"
+        exit 1
     else
         echo "MySQL successfully started"
     fi
+
+    # Wait for MySQL to become ready
+    OUTPUT=
+    n=0
+    until [ "$n" -gt 5 ]; do
+        OUTPUT="$( { $CONTAINER_CLI exec mysql bash -c "mysqladmin ping -u root -phibernate_orm_test"; } 2>/dev/null )"
+        if [[ $OUTPUT == *"alive"* ]]; then
+            break;
+        fi
+        n=$((n+1))
+        echo "Waiting for MySQL to be ready..."
+        sleep 2
+    done
+
+    if [ "$n" -gt 5 ]; then
+        echo "MySQL failed to become ready after 10 seconds"
+        exit 1
+    else
+        echo "MySQL is ready"
+    fi
+
+    databases=()
+    for n in $(seq 1 $(($(nproc)/2)))
+    do
+      databases+=("hibernate_orm_test_${n}")
+    done
+    create_cmd=
+    for i in "${!databases[@]}";do
+      create_cmd+="create database ${databases[i]}; grant all privileges on ${databases[i]}.* to 'hibernate_orm_test'@'%';"
+    done
+    $CONTAINER_CLI exec mysql bash -c "mysql -u root -phibernate_orm_test -e \"${create_cmd}\"" 2>/dev/null
+    echo "MySQL databases were successfully setup"
 }
 
 mariadb() {

@@ -314,7 +314,7 @@ ext {
                     'jdbc.driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
                     'jdbc.user'  : 'sa',
                     'jdbc.pass'  : 'Hibernate_orm_test',
-                    'jdbc.url'   : 'jdbc:sqlserver://' + dbHost + ';databaseName=hibernate_orm_test;sendTimeAsDatetime=false;trustServerCertificate=true',
+                    'jdbc.url'   : 'jdbc:sqlserver://' + dbHost + ';databaseName=hibernate_orm_test_$worker;sendTimeAsDatetime=false;trustServerCertificate=true',
                     'jdbc.datasource' : 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
 //                        'jdbc.datasource' : 'com.microsoft.sqlserver.jdbc.SQLServerDataSource',
                     'connection.init_sql' : ''

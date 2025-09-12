@@ -63,7 +63,13 @@ dependencies {
 
     testRuntimeOnly libs.byteBuddy
     testRuntimeOnly testLibs.weld
-    testRuntimeOnly testLibs.wildFlyTxnClient
+    implementation(libs.logging)
+    testRuntimeOnly(testLibs.wildFlyTxnClient) {
+        // WildFly Elytron includes a whole copy of JBoss Logging, Jackson with its original package,
+        // not even shaded, which causes lots of problems.
+        // Since we don't need WildFly Elytron in our tests, we'll just exclude it.
+        exclude group: 'org.wildfly.security', module: 'wildfly-elytron'
+    }
     testImplementation libs.jandex
     testImplementation jakartaLibs.jsonb
     testImplementation libs.jackson

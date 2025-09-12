@@ -23,7 +23,7 @@ import static org.hibernate.ConnectionAcquisitionMode.IMMEDIATELY;
 import static org.hibernate.ConnectionReleaseMode.AFTER_STATEMENT;
 import static org.hibernate.ConnectionReleaseMode.BEFORE_TRANSACTION_COMPLETION;
 import static org.hibernate.ConnectionReleaseMode.ON_CLOSE;
-import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+import static org.hibernate.resource.jdbc.internal.LogicalConnectionLogging.LOGGER;
 import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION;
 
 /**
@@ -53,7 +53,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		}
 
 		if ( sessionOwner.getJdbcSessionContext().doesConnectionProviderDisableAutoCommit() ) {
-			JDBC_MESSAGE_LOGGER.connectionProviderDisablesAutoCommitEnabled();
+			LOGGER.connectionProviderDisablesAutoCommitEnabled();
 		}
 	}
 
@@ -131,10 +131,10 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		super.afterStatement();
 		if ( connectionHandlingMode.getReleaseMode() == AFTER_STATEMENT ) {
 			if ( getResourceRegistry().hasRegisteredResources() ) {
-				JDBC_MESSAGE_LOGGER.skipConnectionReleaseAfterStatementDueToResources( hashCode() );
+	LOGGER.skipConnectionReleaseAfterStatementDueToResources( hashCode() );
 			}
 			else {
-				JDBC_MESSAGE_LOGGER.initiatingConnectionReleaseAfterStatement( hashCode() );
+	LOGGER.initiatingConnectionReleaseAfterStatement( hashCode() );
 				releaseConnectionIfNeeded();
 			}
 		}
@@ -144,7 +144,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	public void beforeTransactionCompletion() {
 		super.beforeTransactionCompletion();
 		if ( connectionHandlingMode.getReleaseMode() == BEFORE_TRANSACTION_COMPLETION ) {
-			JDBC_MESSAGE_LOGGER.initiatingConnectionReleaseBeforeTransactionCompletion( hashCode() );
+LOGGER.initiatingConnectionReleaseBeforeTransactionCompletion( hashCode() );
 			releaseConnectionIfNeeded();
 		}
 	}
@@ -157,7 +157,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			// - AFTER_STATEMENT cases that were circumvented due to held resources
 			// - BEFORE_TRANSACTION_COMPLETION cases that were circumvented because a rollback occurred
 			//   (we don't get a beforeTransactionCompletion event on rollback).
-			JDBC_MESSAGE_LOGGER.initiatingConnectionReleaseAfterTransaction( hashCode() );
+LOGGER.initiatingConnectionReleaseAfterTransaction( hashCode() );
 			releaseConnectionIfNeeded();
 		}
 	}
@@ -238,7 +238,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			jdbcSessionOwner.beforeReleaseConnection( physicalConnection );
 		}
 		catch (SQLException e) {
-			JDBC_MESSAGE_LOGGER.errorBeforeReleasingJdbcConnection( hashCode(), e );
+LOGGER.errorBeforeReleasingJdbcConnection( hashCode(), e );
 		}
 	}
 
@@ -256,14 +256,14 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	public Connection close() {
 		if ( !closed ) {
 			getResourceRegistry().releaseResources();
-			JDBC_MESSAGE_LOGGER.closingLogicalConnection( hashCode() );
+LOGGER.closingLogicalConnection( hashCode() );
 			try {
 				releaseConnectionIfNeeded();
 			}
 			finally {
 				// no matter what
 				closed = true;
-				JDBC_MESSAGE_LOGGER.logicalConnectionClosed( hashCode() );
+	LOGGER.logicalConnectionClosed( hashCode() );
 			}
 		}
 		return null;

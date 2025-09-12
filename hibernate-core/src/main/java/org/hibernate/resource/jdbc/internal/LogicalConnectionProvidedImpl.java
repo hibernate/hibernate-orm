@@ -9,9 +9,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.sql.Connection;
 
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.resource.jdbc.LogicalConnection;
+import static org.hibernate.resource.jdbc.internal.LogicalConnectionLogging.LOGGER;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
@@ -21,7 +19,6 @@ import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.IMM
  * @author Steve Ebersole
  */
 public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImplementor {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( LogicalConnection.class );
 
 	private transient Connection providedConnection;
 	private final boolean initiallyAutoCommit;
@@ -54,7 +51,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 
 	@Override
 	public Connection close() {
-		LOG.closingLogicalConnection();
+		LOGGER.closingLogicalConnection();
 		getResourceRegistry().releaseResources();
 		try {
 			return providedConnection;
@@ -62,7 +59,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 		finally {
 			providedConnection = null;
 			closed = true;
-			LOG.logicalConnectionClosed();
+			LOGGER.logicalConnectionClosed();
 		}
 	}
 
@@ -110,7 +107,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 		}
 		else if ( connection == providedConnection ) {
 			// likely an unmatched reconnect call (no matching disconnect call)
-			LOG.trace( "Reconnecting the same connection that is already connected; should this connection have been disconnected?" );
+			LOGGER.reconnectingSameConnectionAlreadyConnected();
 		}
 		else if ( providedConnection != null ) {
 			throw new IllegalArgumentException(
@@ -118,7 +115,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 			);
 		}
 		providedConnection = connection;
-		LOG.trace( "Manually reconnected logical connection" );
+		LOGGER.manuallyReconnectedLogicalConnection();
 	}
 
 	@Override

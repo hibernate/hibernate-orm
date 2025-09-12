@@ -276,6 +276,7 @@ edb_13() {
       (cd edb; $CONTAINER_CLI build -t edb-test:13 -f edb13.Dockerfile .)
     fi
     $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d $DB_IMAGE_EDB
+    edb_setup
 }
 
 edb_14() {
@@ -286,6 +287,7 @@ edb_14() {
       (cd edb; $CONTAINER_CLI build -t edb-test:14 -f edb14.Dockerfile .)
     fi
     $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d $DB_IMAGE_EDB
+    edb_setup
 }
 
 edb_15() {
@@ -296,6 +298,7 @@ edb_15() {
       (cd edb; $CONTAINER_CLI build -t edb-test:15 -f edb15.Dockerfile .)
     fi
     $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d $DB_IMAGE_EDB
+    edb_setup
 }
 
 edb_16() {
@@ -306,6 +309,7 @@ edb_16() {
       (cd edb; $CONTAINER_CLI build -t edb-test:16 -f edb16.Dockerfile .)
     fi
     $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d $DB_IMAGE_EDB
+    edb_setup
 }
 
 edb_17() {
@@ -316,6 +320,28 @@ edb_17() {
       (cd edb; $CONTAINER_CLI build -t edb-test:17 -f edb17.Dockerfile .)
     fi
     $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d $DB_IMAGE_EDB
+    edb_setup
+}
+
+edb_setup() {
+  databases=()
+  for n in $(seq 1 $(($(nproc)/2)))
+  do
+    databases+=("hibernate_orm_test_${n}")
+  done
+  create_cmd=
+  for i in "${!databases[@]}";do
+    create_cmd+="psql -U hibernate_orm_test -d postgres -c \"create database ${databases[i]};\";"
+  done
+  $CONTAINER_CLI exec edb bash -c "until pg_isready -U hibernate_orm_test; do sleep 1; done"
+  # Database seems to restart after it was ready once, so give it some time
+  sleep 1
+  $CONTAINER_CLI exec edb bash -c "until pg_isready -U hibernate_orm_test; do sleep 1; done"
+  $CONTAINER_CLI exec edb bash -c "${create_cmd}"
+  $CONTAINER_CLI exec edb bash -c 'psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
+  for i in "${!databases[@]}";do
+    $CONTAINER_CLI exec edb bash -c "psql -U hibernate_orm_test -d ${databases[i]} -c \"create extension postgis;\""
+  done
 }
 
 db2() {

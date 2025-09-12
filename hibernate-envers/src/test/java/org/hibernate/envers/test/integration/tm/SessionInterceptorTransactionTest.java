@@ -63,10 +63,10 @@ public class SessionInterceptorTransactionTest extends BaseEnversJPAFunctionalTe
 	}
 
 	@Test
-	public void testInterceptorInvocations() throws Exception {
-		// The interceptor should only be created once and should only be invoked once.
+	public void testInterceptorInvocations() {
+		// The interceptor should be created one and should only be invoked once
 		final Map<TestInterceptor, Integer> invocationMap = TestInterceptor.getBeforeCompletionCallbacks();
 		assertEquals( 1, invocationMap.size() );
-		assertEquals( invocationMap.values().stream().filter( v -> v == 1 ).count(), 1 );
+		invocationMap.values().forEach( c -> assertEquals( 1, c.intValue() ) );
 	}
 }

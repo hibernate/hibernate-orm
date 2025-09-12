@@ -193,7 +193,7 @@ ext {
             oracle_ci : [
                     'db.dialect' : 'org.hibernate.dialect.OracleDialect',
                     'jdbc.driver': 'oracle.jdbc.OracleDriver',
-                    'jdbc.user'  : 'hibernate_orm_test',
+                    'jdbc.user'  : 'hibernate_orm_test_$worker',
                     'jdbc.pass'  : 'hibernate_orm_test',
                     'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521/freepdb1',
                     'jdbc.datasource' : 'oracle.jdbc.OracleDriver',
@@ -203,7 +203,7 @@ ext {
             oracle_xe_ci : [
                     'db.dialect' : 'org.hibernate.dialect.OracleDialect',
                     'jdbc.driver': 'oracle.jdbc.OracleDriver',
-                    'jdbc.user'  : 'hibernate_orm_test',
+                    'jdbc.user'  : 'hibernate_orm_test_$worker',
                     'jdbc.pass'  : 'hibernate_orm_test',
                     'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521/xepdb1',
                     'jdbc.datasource' : 'oracle.jdbc.OracleDriver',

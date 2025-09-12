@@ -709,6 +709,19 @@ oracle_setup() {
     done
     sleep 2;
     echo "Oracle successfully started"
+
+    users=()
+    for n in $(seq 1 $(($(nproc)/2)))
+    do
+      users+=("hibernate_orm_test_${n}")
+    done
+    create_cmd=
+    for i in "${!users[@]}";do
+      create_cmd+="
+create user ${users[i]} identified by hibernate_orm_test quota unlimited on users;
+grant all privileges to ${users[i]};"
+    done
+    
     # We increase file sizes to avoid online resizes as that requires lots of CPU which is restricted in XE
     $PRIVILEGED_CLI $CONTAINER_CLI exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
 cat <<EOF | \$ORACLE_HOME/bin/sqlplus / as sysdba
@@ -770,6 +783,7 @@ alter tablespace SYSAUX nologging;
 
 create user hibernate_orm_test identified by hibernate_orm_test quota unlimited on users;
 grant all privileges to hibernate_orm_test;
+${create_cmd}
 EOF\""
 }
 
@@ -789,6 +803,19 @@ oracle_free_setup() {
     done
     sleep 2;
     echo "Oracle successfully started"
+
+    users=()
+    for n in $(seq 1 $(($(nproc)/2)))
+    do
+      users+=("hibernate_orm_test_${n}")
+    done
+    create_cmd=
+    for i in "${!users[@]}";do
+      create_cmd+="
+create user ${users[i]} identified by hibernate_orm_test quota unlimited on users;
+grant all privileges to ${users[i]};"
+    done
+
     # We increase file sizes to avoid online resizes as that requires lots of CPU which is restricted in XE
     $PRIVILEGED_CLI $CONTAINER_CLI exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
 cat <<EOF | \$ORACLE_HOME/bin/sqlplus / as sysdba
@@ -849,6 +876,7 @@ alter tablespace SYSAUX nologging;
 
 create user hibernate_orm_test identified by hibernate_orm_test quota unlimited on users;
 grant all privileges to hibernate_orm_test;
+${create_cmd}
 EOF\""
 }
 

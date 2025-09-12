@@ -40,6 +40,9 @@ See the link:{releaseSeriesBase}#whats-new[website] for the list of new features
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#api[API].
 
+* Code underlying the session builder APIs was reengineered, and the behavior of `noInterceptor()` for `SharedSessionBuilder` and `SharedStatelessSessionBuilder` was aligned with the preexisting semantics of this method on `SessionBuilder` and `StatelessSessionBuilder`.
+  The previous behavior may be recovered by calling `noSessionInterceptorCreation()`.
+
 * `org.hibernate.dialect.AzureSQLServerDialect` was deprecated. Use `org.hibernate.dialect.SQLServerDialect` instead.
   If you set `hibernate.boot.allow_jdbc_metadata_access=false` for offline startup,
   remember to also set the targeted database version through `jakarta.persistence.database-product-version`;
@@ -53,6 +56,8 @@ This section describes changes to contracts (classes, interfaces, methods, etc.)
 == Changes to SPI
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#spi[SPI].
+
+* Some operations of `TypeConfiguration`, `JavaTypeRegistry`, and `BasicTypeRegistry` used unbound type parameters in the return type. The generic signatures of these methods have been changed for improved type safety.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

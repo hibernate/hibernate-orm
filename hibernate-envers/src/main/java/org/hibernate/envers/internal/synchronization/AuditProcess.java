@@ -18,8 +18,10 @@ import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.internal.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.tools.Pair;
-import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.jboss.logging.Logger;
+
+import static org.hibernate.ConnectionAcquisitionMode.AS_NEEDED;
+import static org.hibernate.ConnectionReleaseMode.AFTER_TRANSACTION;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -148,7 +150,7 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 			if ( statelessSession.isClosed() ) {
 				try (StatelessSessionImplementor temporarySession = (StatelessSessionImplementor) statelessSession.statelessWithOptions()
 						.connection()
-						.noInterceptor()
+						.noSessionInterceptorCreation()
 						.open()) {
 					executeInStatelessSession( temporarySession );
 				}
@@ -163,8 +165,8 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 			try (SessionImplementor temporarySession = (SessionImplementor) statefulSession.sessionWithOptions()
 					.connection()
 					.autoClose( false )
-					.connectionHandlingMode( PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION )
-					.noInterceptor()
+					.connectionHandling( AS_NEEDED, AFTER_TRANSACTION )
+					.noSessionInterceptorCreation()
 					.openSession()) {
 				executeInSession( temporarySession );
 				temporarySession.flush();

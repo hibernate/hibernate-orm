@@ -8,7 +8,6 @@ import java.sql.Connection;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
-import org.hibernate.engine.creation.CommonSharedBuilder;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -108,13 +107,13 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 	}
 
 	@Override
-	public CommonSharedBuilder statementInspector() {
+	public SharedSessionBuilder statementInspector() {
 		delegate.statementInspector();
 		return this;
 	}
 
 	@Override
-	public CommonSharedBuilder noStatementInspector() {
+	public SharedSessionBuilder noStatementInspector() {
 		delegate.noStatementInspector();
 		return this;
 	}

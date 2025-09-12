@@ -46,8 +46,6 @@ public interface SessionCreationOptions {
 
 	PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode();
 
-	String getTenantIdentifier();
-
 	Object getTenantIdentifierValue();
 
 	boolean isReadOnly();

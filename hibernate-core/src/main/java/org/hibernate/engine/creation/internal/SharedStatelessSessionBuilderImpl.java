@@ -8,16 +8,20 @@ import org.hibernate.CacheMode;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionException;
 import org.hibernate.SharedStatelessSessionBuilder;
+import org.hibernate.StatelessSession;
+import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.Transaction;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.jboss.logging.Logger;
 
 import java.util.Objects;
+import java.util.TimeZone;
 
 /**
  * Builder for shared {@linkplain StatelessSessionImplementor stateless} sessions.
@@ -41,6 +45,8 @@ public abstract class SharedStatelessSessionBuilderImpl
 		final var options = original.getSessionFactory().getSessionFactoryOptions();
 		statementInspector = options.getStatementInspector();
 		tenantIdentifier = original.getTenantIdentifierValue();
+		// good idea to inherit this
+		jdbcTimeZone = original.getJdbcTimeZone();
 	}
 
 	protected abstract StatelessSessionImplementor createStatelessSession();
@@ -66,6 +72,11 @@ public abstract class SharedStatelessSessionBuilderImpl
 			}
 		}
 		return createStatelessSession();
+	}
+
+	@Override
+	public StatelessSession openStatelessSession() {
+		return open();
 	}
 
 	@Override
@@ -113,6 +124,28 @@ public abstract class SharedStatelessSessionBuilderImpl
 	@Override
 	public CacheMode getInitialCacheMode() {
 		return cacheMode;
+	}
+
+	@Override
+	public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
+		return connectionHandlingMode;
+	}
+
+	@Override
+	public TimeZone getJdbcTimeZone() {
+		return jdbcTimeZone;
+	}
+
+	@Override @Deprecated(forRemoval = true)
+	public StatelessSessionBuilder tenantIdentifier(String tenantIdentifier) {
+		this.tenantIdentifier = tenantIdentifier;
+		return null;
+	}
+
+	@Override @Deprecated
+	public StatelessSessionBuilder statementInspector(StatementInspector statementInspector) {
+		this.statementInspector = statementInspector;
+		return this;
 	}
 
 	@Override

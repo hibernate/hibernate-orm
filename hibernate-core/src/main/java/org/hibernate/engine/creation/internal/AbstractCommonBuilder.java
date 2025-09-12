@@ -15,6 +15,7 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import java.sql.Connection;
+import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
 /**
@@ -33,6 +34,7 @@ public abstract class AbstractCommonBuilder<T extends CommonBuilder> implements 
 	protected Object tenantIdentifier;
 	protected boolean readOnly;
 	protected CacheMode cacheMode;
+	protected TimeZone jdbcTimeZone;
 
 	public AbstractCommonBuilder(SessionFactoryImplementor factory) {
 		sessionFactory = factory;
@@ -40,6 +42,7 @@ public abstract class AbstractCommonBuilder<T extends CommonBuilder> implements 
 		statementInspector = options.getStatementInspector();
 		cacheMode = options.getInitialSessionCacheMode();
 		connectionHandlingMode = options.getPhysicalConnectionHandlingMode();
+		jdbcTimeZone = options.getJdbcTimeZone();
 		tenantIdentifier = factory.resolveTenantIdentifier();
 	}
 
@@ -141,6 +144,12 @@ public abstract class AbstractCommonBuilder<T extends CommonBuilder> implements 
 	@Override
 	public T noStatementInspector() {
 		this.statementInspector = null;
+		return getThis();
+	}
+
+	@Override
+	public T jdbcTimeZone(TimeZone timeZone) {
+		jdbcTimeZone = timeZone;
 		return getThis();
 	}
 }

@@ -15,6 +15,7 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.StatelessSession;
 
 import java.sql.Connection;
+import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
 /**
@@ -157,4 +158,12 @@ public interface CommonBuilder {
 	 * @see SharedSessionContract#getCacheMode()
 	 */
 	CommonBuilder initialCacheMode(CacheMode cacheMode);
+
+	/**
+	 * Specify the {@linkplain org.hibernate.cfg.JdbcSettings#JDBC_TIME_ZONE
+	 * JDBC time zone} for the session.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	CommonBuilder jdbcTimeZone(TimeZone timeZone);
 }

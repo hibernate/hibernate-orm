@@ -124,12 +124,6 @@ public abstract class StatelessSessionBuilderImpl
 	}
 
 	@Override
-	public String getTenantIdentifier() {
-		return tenantIdentifier == null ? null
-				: sessionFactory.getTenantIdentifierJavaType().toString( tenantIdentifier );
-	}
-
-	@Override
 	public boolean isReadOnly() {
 		return readOnly;
 	}
@@ -146,7 +140,7 @@ public abstract class StatelessSessionBuilderImpl
 
 	@Override
 	public TimeZone getJdbcTimeZone() {
-		return sessionFactory.getSessionFactoryOptions().getJdbcTimeZone();
+		return jdbcTimeZone;
 	}
 
 	@Override

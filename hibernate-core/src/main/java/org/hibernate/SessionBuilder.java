@@ -169,6 +169,7 @@ public interface SessionBuilder extends CommonBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	SessionBuilder jdbcTimeZone(TimeZone timeZone);
 
 	/**

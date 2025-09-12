@@ -67,7 +67,7 @@ public interface SharedSessionBuilderImplementor extends SharedSessionBuilder, S
 	@Override
 	SharedSessionBuilderImplementor autoClose();
 
-	@Override
+	@Override @Deprecated
 	SharedSessionBuilderImplementor connectionHandlingMode(PhysicalConnectionHandlingMode mode);
 
 	@Override

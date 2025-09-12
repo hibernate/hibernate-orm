@@ -26,6 +26,7 @@ public class Extension {
 	public String outputFolder = "generated-sources";
 	public String packageName = "";
 	public String revengStrategy = null;
+	public String revengFile = null;
 	public Boolean generateAnnotations = true;
 	public Boolean useGenerics = true;
 	

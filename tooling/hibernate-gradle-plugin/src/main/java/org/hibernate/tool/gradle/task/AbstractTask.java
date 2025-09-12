@@ -118,25 +118,38 @@ public abstract class AbstractTask extends DefaultTask {
 	}
 	
 	RevengStrategy setupReverseEngineeringStrategy() {
+		File[] revengFiles = getRevengFiles();
 		RevengStrategy result = RevengStrategyFactory
-				.createReverseEngineeringStrategy(getExtension().revengStrategy);
+				.createReverseEngineeringStrategy(getExtension().revengStrategy, revengFiles);
 		RevengSettings settings = new RevengSettings(result);
 		settings.setDefaultPackageName(getExtension().packageName);
 		result.setSettings(settings);
 		return result;
 	}
-	
-	private File getPropertyFile() {
-		String hibernatePropertiesFile = getExtension().hibernateProperties;
+
+	private File getFile(String filename) {
 		SourceSetContainer ssc = getProject().getExtensions().getByType(SourceSetContainer.class);
 		SourceSet ss = ssc.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
 		SourceDirectorySet sds = ss.getResources();
 		for (File f : sds.getFiles()) {
-			if (hibernatePropertiesFile.equals(f.getName())) {
+			if (filename.equals(f.getName())) {
 				return f;
 			}
 		}
-		throw new BuildException("File '" + hibernatePropertiesFile + "' could not be found");
+		throw new BuildException("File '" + filename + "' could not be found");
+	}
+
+	private File getPropertyFile() {
+		return getFile(getExtension().hibernateProperties);
+	}
+
+	private File[] getRevengFiles() {
+		String revengFile = getExtension().revengFile;
+		if (revengFile == null) {
+			return null;
+		}
+
+		return new File[] { getFile(revengFile) };
 	}
 
 	private void loadPropertiesFile(File propertyFile) {

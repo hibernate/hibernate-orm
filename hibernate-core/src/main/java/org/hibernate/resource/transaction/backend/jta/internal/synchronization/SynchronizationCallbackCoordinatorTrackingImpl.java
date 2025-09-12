@@ -43,7 +43,7 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 
 	@Override
 	public void afterCompletion(int status) {
-		JTA_LOGGER.tracef( "Synchronization coordinator: afterCompletion(status=%s)", status );
+		JTA_LOGGER.synchronizationCoordinatorAfterCompletion( status );
 
 		// The whole concept of "tracking" comes down to this code block.
 		// Essentially, we need to see if we can process the callback immediately. So here we check whether the

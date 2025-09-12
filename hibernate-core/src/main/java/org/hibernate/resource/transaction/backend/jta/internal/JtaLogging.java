@@ -20,6 +20,7 @@ import java.lang.invoke.MethodHandles;
 
 import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
+import static org.jboss.logging.Logger.Level.DEBUG;
 
 /**
  * Logging interface for JTA transaction operations.
@@ -191,4 +192,115 @@ public interface JtaLogging extends BasicLogger {
 			id = NAMESPACE + 31
 	)
 	void resumedTransactionForDdlIsolation();
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "JTA platform says we cannot currently register synchronization; skipping",
+			id = NAMESPACE + 32
+	)
+	void cannotRegisterSynchronization();
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Hibernate RegisteredSynchronization successfully registered with JTA platform",
+			id = NAMESPACE + 33
+	)
+	void registeredSynchronization();
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "JTA transaction was already joined (RegisteredSynchronization already registered)",
+			id = NAMESPACE + 34
+	)
+	void alreadyJoinedJtaTransaction();
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Notifying JTA transaction observers before completion",
+			id = NAMESPACE + 35
+	)
+	void notifyingJtaObserversBeforeCompletion();
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Notifying JTA transaction observers after completion",
+			id = NAMESPACE + 36
+	)
+	void notifyingJtaObserversAfterCompletion();
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Registered JTA Synchronization: beforeCompletion()",
+			id = NAMESPACE + 37
+	)
+	void registeredSynchronizationBeforeCompletion();
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Registered JTA Synchronization: afterCompletion(%s)",
+			id = NAMESPACE + 38
+	)
+	void registeredSynchronizationAfterCompletion(int status);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Synchronization coordinator: beforeCompletion()",
+			id = NAMESPACE + 39
+	)
+	void synchronizationCoordinatorBeforeCompletion();
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Synchronization coordinator: afterCompletion(status=%s)",
+			id = NAMESPACE + 40
+	)
+	void synchronizationCoordinatorAfterCompletion(int status);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Synchronization coordinator: doAfterCompletion(successful=%s, delayed=%s)",
+			id = NAMESPACE + 41
+	)
+	void synchronizationCoordinatorDoAfterCompletion(boolean successful, boolean delayed);
+	@LogMessage(level = DEBUG)
+	@Message(
+			value = "Unable to access TransactionManager, attempting to use UserTransaction instead",
+			id = NAMESPACE + 42
+	)
+	void unableToAccessTransactionManagerTryingUserTransaction();
+
+	@LogMessage(level = DEBUG)
+	@Message(
+			value = "Unable to access UserTransaction, attempting to use TransactionManager instead",
+			id = NAMESPACE + 43
+	)
+	void unableToAccessUserTransactionTryingTransactionManager();
+
+	@LogMessage(level = DEBUG)
+	@Message(
+			value = "JtaPlatform.retrieveUserTransaction() returned null",
+			id = NAMESPACE + 44
+	)
+	void userTransactionReturnedNull();
+
+	@LogMessage(level = DEBUG)
+	@Message(
+			value = "JtaPlatform.retrieveUserTransaction() threw an exception [%s]",
+			id = NAMESPACE + 45
+	)
+	void exceptionRetrievingUserTransaction(String message, @Cause Exception cause);
+
+	@LogMessage(level = DEBUG)
+	@Message(
+			value = "JtaPlatform.retrieveTransactionManager() returned null",
+			id = NAMESPACE + 46
+	)
+	void transactionManagerReturnedNull();
+
+	@LogMessage(level = DEBUG)
+	@Message(
+			value = "JtaPlatform.retrieveTransactionManager() threw an exception [%s]",
+			id = NAMESPACE + 47
+	)
+	void exceptionRetrievingTransactionManager(String message, @Cause Exception cause);
 }

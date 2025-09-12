@@ -198,8 +198,6 @@ processTestResources {
 tasks.withType( Test.class ).each { test ->
     test.useJUnitPlatform()
 
-    test.usesService( project.gradle.sharedServices.registrations.getByName( 'databaseService' ).service )
-
     // Byteman needs this property to be set, https://developer.jboss.org/thread/274997
     test.jvmArgs += ["-Djdk.attach.allowAttachSelf=true"]
 

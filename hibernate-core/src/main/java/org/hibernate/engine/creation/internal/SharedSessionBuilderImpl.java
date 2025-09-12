@@ -6,7 +6,6 @@ package org.hibernate.engine.creation.internal;
 
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionEventListener;
@@ -27,7 +26,6 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
-import java.util.function.UnaryOperator;
 
 import static java.util.Collections.addAll;
 
@@ -47,7 +45,6 @@ public abstract class SharedSessionBuilderImpl
 	private boolean autoClose;
 	private boolean autoClear;
 	private boolean identifierRollback;
-	private TimeZone jdbcTimeZone;
 	private FlushMode flushMode;
 
 	private boolean tenantIdChanged;
@@ -67,12 +64,13 @@ public abstract class SharedSessionBuilderImpl
 		final var options = sessionFactory.getSessionFactoryOptions();
 		autoClose = options.isAutoCloseSessionEnabled();
 		identifierRollback = options.isIdentifierRollbackEnabled();
-		jdbcTimeZone = options.getJdbcTimeZone();
 		defaultBatchFetchSize = options.getDefaultBatchFetchSize();
 		subselectFetchEnabled = options.isSubselectFetchEnabled();
 		// override defaults from factory
 		tenantIdentifier = original.getTenantIdentifierValue();
 		identifierRollback = original.isIdentifierRollbackEnabled();
+		// good idea to inherit this
+		jdbcTimeZone = original.getJdbcTimeZone();
 	}
 
 	protected abstract SessionImplementor createSession();
@@ -200,12 +198,6 @@ public abstract class SharedSessionBuilderImpl
 	}
 
 	@Override
-	public SharedSessionBuilderImplementor jdbcTimeZone(TimeZone timeZone) {
-		this.jdbcTimeZone = timeZone;
-		return this;
-	}
-
-	@Override
 	public SharedSessionBuilderImplementor clearEventListeners() {
 		if ( listeners == null ) {
 			//Needs to initialize explicitly to an empty list as otherwise "null" implies the default listeners will be applied
@@ -237,22 +229,9 @@ public abstract class SharedSessionBuilderImpl
 	}
 
 	@Override
-	public SharedSessionBuilderImplementor statementInspector(UnaryOperator<String> operator) {
-		super.statementInspector( operator );
-		return this;
-	}
-
-	@Override
 	@Deprecated
 	public SharedSessionBuilderImplementor connectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
 		super.connectionHandlingMode = connectionHandlingMode;
-		return this;
-	}
-
-	@Override
-	@Deprecated
-	public SharedSessionBuilderImplementor connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode) {
-		super.connectionHandling( acquisitionMode, releaseMode );
 		return this;
 	}
 
@@ -265,36 +244,6 @@ public abstract class SharedSessionBuilderImpl
 			addAll( this.listeners, baselineListeners );
 		}
 		addAll( this.listeners, listeners );
-		return this;
-	}
-
-	@Override
-	public SharedSessionBuilderImplementor connection(Connection connection) {
-		super.connection( connection );
-		return this;
-	}
-
-	@Override
-	public SharedSessionBuilderImplementor interceptor(Interceptor interceptor) {
-		super.interceptor( interceptor );
-		return this;
-	}
-
-	@Override
-	public SharedSessionBuilderImplementor noInterceptor() {
-		super.noInterceptor();
-		return this;
-	}
-
-	@Override
-	public SharedSessionBuilderImplementor initialCacheMode(CacheMode cacheMode) {
-		super.initialCacheMode( cacheMode );
-		return this;
-	}
-
-	@Override
-	public SharedSessionBuilderImplementor noStatementInspector() {
-		super.noStatementInspector();
 		return this;
 	}
 
@@ -403,13 +352,6 @@ public abstract class SharedSessionBuilderImpl
 	@Override
 	public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
 		return connectionHandlingMode;
-	}
-
-	@Override
-	public String getTenantIdentifier() {
-		return tenantIdentifier != null
-				? sessionFactory.getTenantIdentifierJavaType().toString( tenantIdentifier )
-				: null;
 	}
 
 	@Override

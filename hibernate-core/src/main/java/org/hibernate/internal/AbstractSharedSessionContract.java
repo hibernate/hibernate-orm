@@ -520,7 +520,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			}
 
 			try {
-				if ( shouldCloseJdbcCoordinatorOnClose( isTransactionCoordinatorShared ) ) {
+				if ( !isTransactionCoordinatorShared ) {
+					checkBeforeClosingJdbcCoordinator();
 					jdbcCoordinator.close();
 				}
 			}
@@ -536,8 +537,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		cleanupOnClose();
 	}
 
-	protected boolean shouldCloseJdbcCoordinatorOnClose(boolean isTransactionCoordinatorShared) {
-		return true;
+	protected void checkBeforeClosingJdbcCoordinator() {
 	}
 
 	protected void cleanupOnClose() {

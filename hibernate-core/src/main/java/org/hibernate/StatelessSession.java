@@ -79,10 +79,6 @@ import java.util.List;
  * @author Gavin King
  */
 public interface StatelessSession extends SharedSessionContract {
-	/**
-	 * Close the stateless session and release the JDBC connection.
-	 */
-	void close();
 
 	/**
 	 * Insert a record.

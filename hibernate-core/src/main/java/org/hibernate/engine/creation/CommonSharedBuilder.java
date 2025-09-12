@@ -5,11 +5,15 @@
 package org.hibernate.engine.creation;
 
 import org.hibernate.CacheMode;
+import org.hibernate.ConnectionAcquisitionMode;
+import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 
+import java.sql.Connection;
+import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
 /**
@@ -48,6 +52,7 @@ public interface CommonSharedBuilder extends CommonBuilder {
 	 * Signifies that no SQL {@linkplain org.hibernate.resource.jdbc.spi.StatementInspector statement inspector}
 	 * should be used.
 	 */
+	@Override
 	CommonSharedBuilder noStatementInspector();
 
 	@Override
@@ -67,4 +72,13 @@ public interface CommonSharedBuilder extends CommonBuilder {
 
 	@Override
 	CommonSharedBuilder tenantIdentifier(Object tenantIdentifier);
+
+	@Override
+	CommonBuilder connection(Connection connection);
+
+	@Override
+	CommonSharedBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode);
+
+	@Override
+	CommonSharedBuilder jdbcTimeZone(TimeZone timeZone);
 }

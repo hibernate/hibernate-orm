@@ -71,6 +71,12 @@ public interface SharedSessionBuilder extends SessionBuilder, CommonSharedBuilde
 	@Override
 	SharedSessionBuilder statementInspector(UnaryOperator<String> operator);
 
+	@Override
+	SharedSessionBuilder statementInspector();
+
+	@Override
+	SharedSessionBuilder noStatementInspector();
+
 	@Override @Deprecated
 	SharedSessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode);
 

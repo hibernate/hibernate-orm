@@ -6,6 +6,8 @@ package org.hibernate;
 
 import org.hibernate.engine.creation.CommonSharedBuilder;
 
+import java.sql.Connection;
+import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
 /**
@@ -21,7 +23,7 @@ import java.util.function.UnaryOperator;
  * @author Steve Ebersole
  */
 @Incubating
-public interface SharedStatelessSessionBuilder extends CommonSharedBuilder {
+public interface SharedStatelessSessionBuilder extends StatelessSessionBuilder, CommonSharedBuilder {
 	/**
 	 * Open the stateless session.
 	 */
@@ -55,4 +57,13 @@ public interface SharedStatelessSessionBuilder extends CommonSharedBuilder {
 
 	@Override
 	SharedStatelessSessionBuilder initialCacheMode(CacheMode cacheMode);
+
+	@Override
+	SharedStatelessSessionBuilder connection(Connection connection);
+
+	@Override
+	SharedStatelessSessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode);
+
+	@Override
+	SharedStatelessSessionBuilder jdbcTimeZone(TimeZone timeZone);
 }

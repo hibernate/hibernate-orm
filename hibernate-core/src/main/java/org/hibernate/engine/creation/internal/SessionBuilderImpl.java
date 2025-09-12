@@ -38,7 +38,6 @@ public abstract class SessionBuilderImpl
 	private boolean autoClose;
 	private boolean autoClear;
 	private boolean identifierRollback;
-	private TimeZone jdbcTimeZone;
 	private FlushMode flushMode;
 
 	private final int defaultBatchFetchSize;
@@ -55,7 +54,6 @@ public abstract class SessionBuilderImpl
 		final var options = sessionFactory.getSessionFactoryOptions();
 		autoClose = options.isAutoCloseSessionEnabled();
 		identifierRollback = options.isIdentifierRollbackEnabled();
-		jdbcTimeZone = options.getJdbcTimeZone();
 		defaultBatchFetchSize = options.getDefaultBatchFetchSize();
 		subselectFetchEnabled = options.isSubselectFetchEnabled();
 	}
@@ -117,13 +115,6 @@ public abstract class SessionBuilderImpl
 	@Override
 	public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
 		return connectionHandlingMode;
-	}
-
-	@Override
-	public String getTenantIdentifier() {
-		return tenantIdentifier != null
-				? sessionFactory.getTenantIdentifierJavaType().toString( tenantIdentifier )
-				: null;
 	}
 
 	@Override
@@ -239,12 +230,6 @@ public abstract class SessionBuilderImpl
 		else {
 			listeners.clear();
 		}
-		return this;
-	}
-
-	@Override
-	public SessionBuilderImplementor jdbcTimeZone(TimeZone timeZone) {
-		jdbcTimeZone = timeZone;
 		return this;
 	}
 }

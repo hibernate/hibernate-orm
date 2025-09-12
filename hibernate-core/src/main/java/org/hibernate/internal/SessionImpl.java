@@ -422,14 +422,11 @@ public class SessionImpl
 	}
 
 	@Override
-	protected boolean shouldCloseJdbcCoordinatorOnClose(boolean isTransactionCoordinatorShared) {
-		if ( isTransactionCoordinatorShared ) {
-			final var actionQueue = getActionQueue();
-			if ( actionQueue.hasBeforeTransactionActions() || actionQueue.hasAfterTransactionActions() ) {
-				LOG.warn( "Closing shared session with unprocessed transaction completion actions" );
-			}
+	protected void checkBeforeClosingJdbcCoordinator() {
+		final var actionQueue = getActionQueue();
+		if ( actionQueue.hasBeforeTransactionActions() || actionQueue.hasAfterTransactionActions() ) {
+			LOG.warn( "Closing shared session with unprocessed transaction completion actions" );
 		}
-		return !isTransactionCoordinatorShared;
 	}
 
 	@Override

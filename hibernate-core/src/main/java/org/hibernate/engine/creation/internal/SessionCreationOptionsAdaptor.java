@@ -66,16 +66,19 @@ public record SessionCreationOptionsAdaptor(
 
 	@Override
 	public FlushMode getInitialSessionFlushMode() {
-		return FlushMode.ALWAYS;
+		// stateless sessions don't have a flush mode
+		return FlushMode.AUTO;
 	}
 
 	@Override
 	public boolean isSubselectFetchEnabled() {
+		// for some reason, StatelessSession has no setSubselectFetchEnabled()
 		return false;
 	}
 
 	@Override
 	public int getDefaultBatchFetchSize() {
+		// for some reason, StatelessSession has no setFetchBatchSize()
 		return -1;
 	}
 
@@ -102,20 +105,13 @@ public record SessionCreationOptionsAdaptor(
 
 	@Override
 	public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
-		return factory.getSessionFactoryOptions().getPhysicalConnectionHandlingMode();
-	}
-
-	@Override
-	public String getTenantIdentifier() {
-		final Object tenantIdentifier = getTenantIdentifierValue();
-		return tenantIdentifier == null
-				? null
-				: factory.getTenantIdentifierJavaType().toString( tenantIdentifier );
+		return options.getPhysicalConnectionHandlingMode();
 	}
 
 	@Override
 	public TimeZone getJdbcTimeZone() {
-		return factory.getSessionFactoryOptions().getJdbcTimeZone();
+		// not exposed via SharedStatelessSessionBuilder
+		return options.getJdbcTimeZone();
 	}
 
 	@Override

@@ -5,6 +5,7 @@
 package org.hibernate;
 
 import java.sql.Connection;
+import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
 import org.hibernate.engine.creation.CommonBuilder;
@@ -42,6 +43,9 @@ public interface StatelessSessionBuilder extends CommonBuilder {
 
 	@Override
 	StatelessSessionBuilder statementInspector(UnaryOperator<String> operator);
+
+	@Override
+	StatelessSessionBuilder jdbcTimeZone(TimeZone timeZone);
 
 	/**
 	 * Define the tenant identifier to be associated with the opened session.

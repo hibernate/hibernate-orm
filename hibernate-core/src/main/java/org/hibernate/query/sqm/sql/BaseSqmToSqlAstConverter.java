@@ -5626,11 +5626,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( sqmExpression instanceof SqmPath ) {
 			log.debugf( "Determining mapping-model type for SqmPath : %s ", sqmExpression );
 
-			return SqmMappingModelHelper.resolveMappingModelExpressible(
+			final MappingModelExpressible<?> mappingModelExpressible = SqmMappingModelHelper.resolveMappingModelExpressible(
 					sqmExpression,
 					domainModel,
 					fromClauseIndex::findTableGroup
 			);
+			if ( mappingModelExpressible != null ) {
+				return mappingModelExpressible;
+			}
 		}
 
 		if ( sqmExpression instanceof SqmBooleanExpressionPredicate ) {
@@ -5791,19 +5794,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final SqmExpressible<?> paramSqmType = paramType.resolveExpressible( creationContext.getSessionFactory() );
 
 		if ( paramSqmType instanceof SqmPath ) {
-			final SqmPath<?> sqmPath = (SqmPath<?>) paramSqmType;
-			final NavigablePath navigablePath = sqmPath.getNavigablePath();
-			final ModelPart modelPart;
-			if ( navigablePath.getParent() != null ) {
-				final TableGroup tableGroup = getFromClauseAccess().getTableGroup( navigablePath.getParent() );
-				modelPart = tableGroup.getModelPart().findSubPart(
-						navigablePath.getLocalName(),
-						null
-				);
-			}
-			else {
-				modelPart = getFromClauseAccess().getTableGroup( navigablePath ).getModelPart();
-			}
+			final MappingModelExpressible<?> modelPart = determineValueMapping( (SqmPath<?>) paramSqmType );
 			if ( modelPart instanceof PluralAttributeMapping ) {
 				return resolveInferredValueMappingForParameter( ( (PluralAttributeMapping) modelPart ).getElementDescriptor() );
 			}

@@ -1323,6 +1323,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		public Class<T> getBindableJavaType() {
 			return javaType.getJavaTypeClass();
 		}
+
+		@Override
+		public DomainType<T> getSqmType() {
+			return null;
+		}
 	}
 
 	@Override
@@ -1902,8 +1907,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <Y> JpaCoalesce<Y> coalesce(Expression<? extends Y> x, Expression<? extends Y> y) {
 		@SuppressWarnings("unchecked")
 		final SqmExpressible<Y> sqmExpressible = (SqmExpressible<Y>) highestPrecedenceType(
-				( (SqmExpression<? extends Y>) x ).getNodeType(),
-				( (SqmExpression<? extends Y>) y ).getNodeType()
+				( (SqmExpression<? extends Y>) x ).getExpressible(),
+				( (SqmExpression<? extends Y>) y ).getExpressible()
 		);
 		return new SqmCoalesce<>(
 				sqmExpressible,
@@ -1934,9 +1939,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	private <Y> SqmExpression<Y> createNullifFunctionNode(SqmExpression<Y> first, SqmExpression<Y> second) {
 		//noinspection unchecked
 		final ReturnableType<Y> type = (ReturnableType<Y>) highestPrecedenceType(
-				first.getNodeType(),
-				second.getNodeType()
-		);
+				first.getExpressible(),
+				second.getExpressible()
+		).getSqmType();
 
 		return getFunctionDescriptor("nullif").generateSqmExpression(
 				asList( first, second ),

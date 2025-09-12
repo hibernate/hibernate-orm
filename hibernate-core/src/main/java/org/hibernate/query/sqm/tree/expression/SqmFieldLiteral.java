@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.QueryException;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.hql.spi.SemanticPathPart;
@@ -272,6 +273,11 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 
 	@Override
 	public String getAlias() {
+		return null;
+	}
+
+	@Override
+	public DomainType<T> getSqmType() {
 		return null;
 	}
 

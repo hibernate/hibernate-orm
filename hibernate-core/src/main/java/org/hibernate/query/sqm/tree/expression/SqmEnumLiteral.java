@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Locale;
 
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -26,7 +27,7 @@ import org.hibernate.type.descriptor.java.EnumJavaType;
  *
  * @author Steve Ebersole
  */
-public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> implements SqmExpressible<E>, SemanticPathPart {
+public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements SqmExpressible<E>, SemanticPathPart {
 	private final E enumValue;
 	private final EnumJavaType<E> referencedEnumTypeDescriptor;
 	private final String enumValueName;
@@ -60,6 +61,16 @@ public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> 
 		);
 		copyTo( expression, context );
 		return expression;
+	}
+
+	@Override
+	public SqmExpressible<E> getExpressible() {
+		return this;
+	}
+
+	@Override
+	public DomainType<E> getSqmType() {
+		return null;
 	}
 
 	public E getEnumValue() {

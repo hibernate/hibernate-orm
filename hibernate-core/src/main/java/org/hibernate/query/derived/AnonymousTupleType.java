@@ -212,7 +212,7 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 		else {
 			return new AnonymousTupleSimpleSqmPathSource<>(
 					name,
-					(DomainType<? extends Object>) component.getExpressible(),
+					component.getExpressible().getSqmType(),
 					BindableType.SINGULAR_ATTRIBUTE
 			);
 		}
@@ -241,6 +241,11 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 
 	@Override
 	public DomainType<?> getSqmPathType() {
+		return this;
+	}
+
+	@Override
+	public DomainType<T> getSqmType() {
 		return this;
 	}
 

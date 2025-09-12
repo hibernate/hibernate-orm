@@ -231,7 +231,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		statistics.queryExecuted( query, rows, milliseconds );
 	}
 
-	private static <R> RowTransformer<R> getRowTransformer(ExecutionContext executionContext, JdbcValues jdbcValues) {
+	protected static <R> RowTransformer<R> getRowTransformer(ExecutionContext executionContext, JdbcValues jdbcValues) {
 		@SuppressWarnings("unchecked")
 		final var tupleTransformer =
 				(TupleTransformer<R>)
@@ -249,16 +249,16 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		}
 	}
 
-	private <T> int getResultSize(T result) {
+	protected  <T> int getResultSize(T result) {
 		return result instanceof List<?> list ? list.size() : -1;
 	}
 
-	private JdbcValues resolveJdbcValuesSource(
+	protected JdbcValues resolveJdbcValuesSource(
 			String queryIdentifier,
 			JdbcOperationQuerySelect jdbcSelect,
 			boolean canBeCached,
 			ExecutionContext executionContext,
-			DeferredResultSetAccess resultSetAccess) {
+			ResultSetAccess resultSetAccess) {
 		final var session = executionContext.getSession();
 		final var factory = session.getFactory();
 		final boolean queryCacheEnabled = factory.getSessionFactoryOptions().isQueryCacheEnabled();
@@ -354,7 +354,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 	private static AbstractJdbcValues resolveJdbcValues(
 			String queryIdentifier,
 			ExecutionContext executionContext,
-			DeferredResultSetAccess resultSetAccess,
+			ResultSetAccess resultSetAccess,
 			List<?> cachedResults,
 			QueryKey queryResultsCacheKey,
 			JdbcValuesMappingProducer mappingProducer,

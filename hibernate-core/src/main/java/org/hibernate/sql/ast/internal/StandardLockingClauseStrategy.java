@@ -30,6 +30,8 @@ import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.model.TableMapping;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -66,6 +68,9 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 			PessimisticLockKind lockKind,
 			RowLockStrategy rowLockStrategy,
 			LockOptions lockOptions) {
+		// NOTE: previous versions would limit collection based on RowLockStrategy.
+		// however, this causes problems with the new follow-on locking approach
+
 		assert lockKind != PessimisticLockKind.NONE;
 
 		this.dialect = dialect;
@@ -84,12 +89,10 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 			}
 		}
 
-		if ( rowLockStrategy != RowLockStrategy.NONE ) {
-			if ( rootsToLock == null ) {
-				rootsToLock = new HashSet<>();
-			}
-			rootsToLock.add( root );
+		if ( rootsToLock == null ) {
+			rootsToLock = new HashSet<>();
 		}
+		rootsToLock.add( root );
 	}
 
 	@Override
@@ -130,12 +133,10 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 			}
 		}
 
-		if ( rowLockStrategy != RowLockStrategy.NONE ) {
-			if ( joinsToLock == null ) {
-				joinsToLock = new LinkedHashSet<>();
-			}
-			joinsToLock.add( join );
+		if ( joinsToLock == null ) {
+			joinsToLock = new LinkedHashSet<>();
 		}
+		joinsToLock.add( join );
 	}
 
 	@Override
@@ -147,6 +148,16 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 	public void render(SqlAppender sqlAppender) {
 		renderLockFragment( sqlAppender );
 		renderResultSetOptions( sqlAppender );
+	}
+
+	@Override
+	public Collection<TableGroup> getRootsToLock() {
+		return rootsToLock;
+	}
+
+	@Override
+	public Collection<TableGroupJoin> getJoinsToLock() {
+		return joinsToLock;
 	}
 
 	protected void renderLockFragment(SqlAppender sqlAppender) {
@@ -166,6 +177,10 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 	}
 
 	private String collectLockItems() {
+		if ( rowLockStrategy == null ) {
+			return "";
+		}
+
 		final List<String> lockItems = new ArrayList<>();
 		for ( TableGroup root : rootsToLock ) {
 			collectLockItems( root, lockItems );

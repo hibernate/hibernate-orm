@@ -210,6 +210,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		return finalSql;
 	}
 
+	@Override
 	public boolean usesFollowOnLocking() {
 		return usesFollowOnLocking;
 	}

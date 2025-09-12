@@ -4,6 +4,7 @@
  */
 package org.hibernate.resource.transaction.backend.jta.internal;
 
+import jakarta.transaction.Transaction;
 import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 
@@ -176,4 +177,18 @@ public interface JtaLogging extends BasicLogger {
 					"delaying afterCompletion processing until the original thread can handle it. [status=%s]"
 	)
 	void rollbackFromBackgroundThread(int status);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Suspended transaction to isolate DDL execution [%s]",
+			id = NAMESPACE + 30
+	)
+	void suspendedTransactionForDdlIsolation(Transaction suspendedTransaction);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Resumed transaction after isolated DDL execution",
+			id = NAMESPACE + 31
+	)
+	void resumedTransactionForDdlIsolation();
 }

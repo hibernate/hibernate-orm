@@ -17,8 +17,7 @@ import java.util.Objects;
 
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.bytecode.enhance.internal.BytecodeEnhancementLogging;
 
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.AsmVisitorWrapper;
@@ -42,8 +41,6 @@ import net.bytebuddy.pool.TypePool;
 import net.bytebuddy.utility.OpenedClassReader;
 
 final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDeclaredMethods.MethodVisitorWrapper {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PersistentAttributeTransformer.class );
 
 	private static final Junction<MethodDescription> NOT_HIBERNATE_GENERATED = not( nameStartsWith( "$$_hibernate_" ) );
 	private static final ModifierContributor.ForField REMOVE_PRIVATE_FINAL_MODIFIER = new ModifierContributor.ForField() {
@@ -130,9 +127,8 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		}
 
 		AnnotatedFieldDescription[] orderedFields = enhancementContext.order( persistentFieldList.toArray( new AnnotatedFieldDescription[0] ) );
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef(
-					"Persistent fields for entity %s: %s",
+		if ( BytecodeEnhancementLogging.LOGGER.isTraceEnabled() ) {
+			BytecodeEnhancementLogging.LOGGER.persistentFieldsForEntity(
 					managedCtClass.getName(),
 					Arrays.toString( orderedFields )
 			);
@@ -158,7 +154,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 			return collectInheritPersistentFields( managedCtSuperclass, enhancementContext );
 		}
 
-		LOG.tracef( "Found @MappedSuperclass %s to collectPersistenceFields", managedCtSuperclass );
+		BytecodeEnhancementLogging.LOGGER.foundMappedSuperclass( String.valueOf( managedCtSuperclass ) );
 
 		List<AnnotatedFieldDescription> persistentFieldList = new ArrayList<>();
 

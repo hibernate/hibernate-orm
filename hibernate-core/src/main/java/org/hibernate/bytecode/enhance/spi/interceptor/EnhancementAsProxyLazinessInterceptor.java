@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
-import org.hibernate.bytecode.BytecodeLogging;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -144,9 +143,8 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractInterceptor i
 	}
 
 	public Object forceInitialize(Object target, String attributeName) {
-		if ( BytecodeLogging.LOGGER.isTraceEnabled() ) {
-			BytecodeLogging.LOGGER.tracef(
-					"EnhancementAsProxyLazinessInterceptor#forceInitialize : %s#%s -> %s )",
+		if ( BytecodeInterceptorLogging.MESSAGE_LOGGER.isTraceEnabled() ) {
+			BytecodeInterceptorLogging.MESSAGE_LOGGER.enhancementAsProxyLazinessForceInitialize(
 					entityKey.getEntityName(),
 					entityKey.getIdentifier(),
 					attributeName
@@ -166,9 +164,8 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractInterceptor i
 			String attributeName,
 			SharedSessionContractImplementor session,
 			boolean isTemporarySession) {
-		if ( BytecodeLogging.LOGGER.isTraceEnabled() ) {
-			BytecodeLogging.LOGGER.tracef(
-					"EnhancementAsProxyLazinessInterceptor#forceInitialize : %s#%s -> %s )",
+		if ( BytecodeInterceptorLogging.MESSAGE_LOGGER.isTraceEnabled() ) {
+			BytecodeInterceptorLogging.MESSAGE_LOGGER.enhancementAsProxyLazinessForceInitialize(
 					entityKey.getEntityName(),
 					entityKey.getIdentifier(),
 					attributeName

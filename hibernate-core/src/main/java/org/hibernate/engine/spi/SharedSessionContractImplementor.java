@@ -247,6 +247,15 @@ public interface SharedSessionContractImplementor
 	Transaction accessTransaction();
 
 	/**
+	 * The current {@link Transaction} object associated with this session,
+	 * if it has already been created, or {@code null} otherwise.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	Transaction getCurrentTransaction();
+
+	/**
 	 * Access to register callbacks for transaction completion processing.
 	 *
 	 * @since 7.2

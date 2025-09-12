@@ -26,7 +26,6 @@ import org.hibernate.*;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.creation.internal.SessionCreationOptions;
-import org.hibernate.engine.creation.internal.SharedSessionBuilderImpl;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.internal.PersistenceContexts;
 import org.hibernate.engine.spi.ActionQueue;
@@ -327,11 +326,6 @@ public class SessionImpl
 	}
 
 	@Override
-	public SharedSessionBuilder sessionWithOptions() {
-		return new SharedSessionBuilderImpl( this );
-	}
-
-	@Override
 	public void clear() {
 		checkOpen();
 
@@ -438,10 +432,7 @@ public class SessionImpl
 		return !isTransactionCoordinatorShared;
 	}
 
-	/**
-	 * Should this session be automatically closed after the current
-	 * transaction completes?
-	 */
+	@Override
 	public boolean isAutoCloseSessionEnabled() {
 		return autoClose;
 	}
@@ -489,9 +480,9 @@ public class SessionImpl
 		}
 		else {
 			// JPA technically requires that this be a PersistentUnityTransactionType#JTA to work,
-			// but we do not assert that here...
-			//return isAutoCloseSessionEnabled() && getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta();
+			// but we do not assert that here:
 			return isAutoCloseSessionEnabled();
+			//  && getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta();
 		}
 	}
 

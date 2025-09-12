@@ -4,10 +4,15 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionEventListener;
+import org.hibernate.Transaction;
 import org.hibernate.engine.creation.internal.SessionCreationOptions;
+import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
+import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 import java.sql.Connection;
 import java.util.List;
@@ -15,7 +20,7 @@ import java.util.TimeZone;
 
 /**
  * Wraps a {@link CommonSharedSessionCreationOptions} as a
- * {@link SessionCreationOptions} to pass to
+ * {@link SharedSessionCreationOptions} to pass to
  * {@link org.hibernate.internal.AbstractSharedSessionContract}
  * during construction.
  *
@@ -25,7 +30,7 @@ import java.util.TimeZone;
 public record SessionCreationOptionsAdaptor(
 		SessionFactoryImplementor factory,
 		CommonSharedSessionCreationOptions options)
-			implements SessionCreationOptions {
+			implements SharedSessionCreationOptions {
 
 	@Override
 	public Interceptor getInterceptor() {
@@ -113,6 +118,31 @@ public record SessionCreationOptionsAdaptor(
 
 	@Override
 	public List<SessionEventListener> getCustomSessionEventListener() {
+		return null;
+	}
+
+	@Override
+	public boolean isTransactionCoordinatorShared() {
+		return options.isTransactionCoordinatorShared();
+	}
+
+	@Override
+	public TransactionCoordinator getTransactionCoordinator() {
+		return options.getTransactionCoordinator();
+	}
+
+	@Override
+	public JdbcCoordinator getJdbcCoordinator() {
+		return options.getJdbcCoordinator();
+	}
+
+	@Override
+	public Transaction getTransaction() {
+		return options.getTransaction();
+	}
+
+	@Override
+	public TransactionCompletionCallbacksImpl getTransactionCompletionCallbacks() {
 		return null;
 	}
 }

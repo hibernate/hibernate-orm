@@ -39,6 +39,14 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 	SharedStatelessSessionBuilder statelessWithOptions();
 
 	/**
+	 * Obtain a {@link Session} builder with the ability to copy certain
+	 * information from this session.
+	 *
+	 * @return the session builder
+	 */
+	SharedSessionBuilder sessionWithOptions();
+
+	/**
 	 * Obtain the tenant identifier associated with this session, as a string.
 	 *
 	 * @return The tenant identifier associated with this session, or {@code null}

@@ -8,6 +8,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionException;
 import org.hibernate.SharedStatelessSessionBuilder;
+import org.hibernate.Transaction;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
@@ -36,10 +37,10 @@ public class SharedStatelessSessionBuilderImpl
 	public SharedStatelessSessionBuilderImpl(SharedSessionContractImplementor original) {
 		super( (SessionFactoryImpl) original.getSessionFactory() );
 		this.original = original;
-
-		this.tenantIdentifier = original.getTenantIdentifierValue();
-		this.interceptor = original.getSessionFactory().getSessionFactoryOptions().getInterceptor();
-		this.statementInspector = original.getSessionFactory().getSessionFactoryOptions().getStatementInspector();
+		tenantIdentifier = original.getTenantIdentifierValue();
+		final var options = original.getSessionFactory().getSessionFactoryOptions();
+		interceptor = options.getInterceptor();
+		statementInspector = options.getStatementInspector();
 	}
 
 	@Override
@@ -54,8 +55,9 @@ public class SharedStatelessSessionBuilderImpl
 	public StatelessSessionImplementor open() {
 		if ( original.getSessionFactory().getSessionFactoryOptions().isMultiTenancyEnabled() ) {
 			if ( shareTransactionContext ) {
-				assert original.getTenantIdentifierValue() != null;
-				if ( Objects.equals( original.getTenantIdentifierValue(), tenantIdentifier ) ) {
+				final var tenantId = original.getTenantIdentifierValue();
+				assert tenantId != null;
+				if ( Objects.equals( tenantId, tenantIdentifier ) ) {
 					throw new SessionException( "Cannot redefine the tenant identifier on a child session if the connection is reused" );
 				}
 			}
@@ -117,15 +119,22 @@ public class SharedStatelessSessionBuilderImpl
 
 	@Override
 	public TransactionCoordinator getTransactionCoordinator() {
-		return isTransactionCoordinatorShared()
+		return shareTransactionContext
 				? original.getTransactionCoordinator()
 				: null;
 	}
 
 	@Override
 	public JdbcCoordinator getJdbcCoordinator() {
-		return isTransactionCoordinatorShared()
+		return shareTransactionContext
 				? original.getJdbcCoordinator()
+				: null;
+	}
+
+	@Override
+	public Transaction getTransaction() {
+		return shareTransactionContext
+				? original.getTransaction()
 				: null;
 	}
 }

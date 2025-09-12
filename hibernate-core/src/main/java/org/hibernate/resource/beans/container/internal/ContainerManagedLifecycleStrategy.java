@@ -13,7 +13,7 @@ import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.resource.beans.internal.BeansMessageLogger.BEANS_MSG_LOGGER;
 
 /**
  * A {@link BeanLifecycleStrategy} to use when CDI compliance is required
@@ -26,8 +26,6 @@ import org.jboss.logging.Logger;
  * and are not duplicated, in contrast to {@link JpaCompliantLifecycleStrategy}.
  */
 public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy {
-	private static final Logger LOG = Logger.getLogger( ContainerManagedLifecycleStrategy.class );
-
 	public static final ContainerManagedLifecycleStrategy INSTANCE = new ContainerManagedLifecycleStrategy();
 
 	private ContainerManagedLifecycleStrategy() {
@@ -99,7 +97,7 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 				throw e;
 			}
 			catch (Exception e) {
-				LOG.debug( "Error resolving CDI bean - using fallback" );
+				BEANS_MSG_LOGGER.errorResolvingCdiBeanUsingFallback();
 				beanInstance = produceFallbackInstance();
 				instance = null;
 			}
@@ -124,12 +122,7 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 				instance.destroy( beanInstance );
 			}
 			catch (ContextNotActiveException e) {
-				LOG.debugf(
-						"Error destroying managed bean instance [%s] - the context is not active anymore."
-								+ " The instance must have been destroyed already - ignoring.",
-						instance,
-						e
-				);
+				BEANS_MSG_LOGGER.errorDestroyingManagedBeanInstanceContextNotActive( instance, e );
 			}
 			finally {
 				beanInstance = null;

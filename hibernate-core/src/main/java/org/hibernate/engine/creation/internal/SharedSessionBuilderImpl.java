@@ -15,6 +15,8 @@ import org.hibernate.Transaction;
 import org.hibernate.engine.creation.spi.SharedSessionBuilderImplementor;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -31,13 +33,13 @@ import java.util.function.UnaryOperator;
 public class SharedSessionBuilderImpl
 		extends SessionBuilderImpl
 		implements SharedSessionBuilderImplementor, SharedSessionCreationOptions {
-	private final SessionImpl session;
+	private final SharedSessionContractImplementor session;
 
 	private boolean shareTransactionContext;
 	private boolean tenantIdChanged;
 	private boolean readOnlyChanged;
 
-	public SharedSessionBuilderImpl(SessionImpl session) {
+	public SharedSessionBuilderImpl(SharedSessionContractImplementor session) {
 		super( (SessionFactoryImpl) session.getFactory() );
 		this.session = session;
 		super.tenantIdentifier( session.getTenantIdentifierValue() );
@@ -151,7 +153,8 @@ public class SharedSessionBuilderImpl
 
 	@Override
 	public SharedSessionBuilderImplementor autoClose() {
-		autoClose( session.isAutoCloseSessionEnabled() );
+		autoClose( session instanceof SessionImplementor statefulSession
+					&& statefulSession.isAutoCloseSessionEnabled() );
 		return this;
 	}
 
@@ -259,23 +262,30 @@ public class SharedSessionBuilderImpl
 
 	@Override
 	public TransactionCoordinator getTransactionCoordinator() {
-		return shareTransactionContext ? session.getTransactionCoordinator() : null;
+		return shareTransactionContext
+				? session.getTransactionCoordinator()
+				: null;
 	}
 
 	@Override
 	public JdbcCoordinator getJdbcCoordinator() {
-		return shareTransactionContext ? session.getJdbcCoordinator() : null;
+		return shareTransactionContext
+				? session.getJdbcCoordinator()
+				: null;
 	}
 
 	@Override
 	public Transaction getTransaction() {
-		return shareTransactionContext ? session.getCurrentTransaction() : null;
+		return shareTransactionContext
+				? session.getCurrentTransaction()
+				: null;
 	}
 
 	@Override
 	public TransactionCompletionCallbacksImpl getTransactionCompletionCallbacks() {
 		return shareTransactionContext
-				? session.getActionQueue().getTransactionCompletionCallbacks()
+			&& session instanceof SessionImplementor statefulSession
+				? statefulSession.getActionQueue().getTransactionCompletionCallbacks()
 				: null;
 	}
 }

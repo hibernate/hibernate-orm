@@ -19,6 +19,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
 import org.hibernate.SessionException;
+import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SharedStatelessSessionBuilder;
 import org.hibernate.Transaction;
 import org.hibernate.UnknownEntityTypeException;
@@ -28,6 +29,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.creation.internal.SessionCreationOptions;
+import org.hibernate.engine.creation.internal.SharedSessionBuilderImpl;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.creation.internal.SharedStatelessSessionBuilderImpl;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
@@ -205,9 +207,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		final var statementInspector = interpret( options.getStatementInspector() );
 
-		isTransactionCoordinatorShared = isTransactionCoordinatorShared( options );
-		if ( isTransactionCoordinatorShared ) {
-			final var sharedOptions = (SharedSessionCreationOptions) options;
+		if ( options instanceof SharedSessionCreationOptions sharedOptions
+				&& sharedOptions.isTransactionCoordinatorShared() ) {
+			isTransactionCoordinatorShared = true;
 			if ( options.getConnection() != null ) {
 				throw new SessionException( "Cannot simultaneously share transaction context and specify connection" );
 			}
@@ -222,6 +224,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			addSharedSessionTransactionObserver( transactionCoordinator );
 		}
 		else {
+			isTransactionCoordinatorShared = false;
 			autoJoinTransactions = options.shouldAutoJoinTransactions();
 			connectionHandlingMode = options.getPhysicalConnectionHandlingMode();
 			jdbcSessionContext = createJdbcSessionContext( statementInspector );
@@ -242,9 +245,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return new SharedStatelessSessionBuilderImpl( this );
 	}
 
-	private static boolean isTransactionCoordinatorShared(SessionCreationOptions options) {
-		return options instanceof SharedSessionCreationOptions sharedSessionCreationOptions
-			&& sharedSessionCreationOptions.isTransactionCoordinatorShared();
+	@Override
+	public SharedSessionBuilder sessionWithOptions() {
+		return new SharedSessionBuilderImpl( this );
 	}
 
 	protected final void setUpMultitenancy(SessionFactoryImplementor factory, LoadQueryInfluencers loadQueryInfluencers) {
@@ -686,6 +689,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
+	@Override
 	public Transaction getCurrentTransaction() {
 		return currentHibernateTransaction;
 	}

@@ -1416,14 +1416,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	<E> Collection<E> getManagedEntities(EntityType<E> entityType);
 
 	/**
-	 * Obtain a {@link Session} builder with the ability to copy certain
-	 * information from this session.
-	 *
-	 * @return the session builder
-	 */
-	SharedSessionBuilder sessionWithOptions();
-
-	/**
 	 * Add one or more listeners to the Session
 	 *
 	 * @param listeners the listener(s) to add

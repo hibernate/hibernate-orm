@@ -78,6 +78,12 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 		return getActionQueue();
 	}
 
+	/**
+	 * Should this session be automatically closed after the current
+	 * transaction completes?
+	 */
+	boolean isAutoCloseSessionEnabled();
+
 	@Override
 	Object instantiate(EntityPersister persister, Object id) throws HibernateException;
 

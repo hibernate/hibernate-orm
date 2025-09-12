@@ -387,6 +387,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public boolean isAutoCloseSessionEnabled() {
+		return delegate.isAutoCloseSessionEnabled();
+	}
+
+	@Override
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
 		return delegate.getLoadQueryInfluencers();
 	}
@@ -430,6 +435,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public Transaction accessTransaction() {
 		return delegate.accessTransaction();
+	}
+
+	@Override
+	public Transaction getCurrentTransaction() {
+		return delegate.getCurrentTransaction();
 	}
 
 	@Override

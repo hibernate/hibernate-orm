@@ -28,7 +28,8 @@ public abstract class AbstractCommonBuilder<T extends CommonBuilder> implements 
 
 	protected StatementInspector statementInspector;
 	protected Interceptor interceptor;
-	protected boolean explicitNoInterceptor;
+	protected boolean allowInterceptor = true;
+	protected boolean allowSessionInterceptorCreation = true;
 	protected Connection connection;
 	protected PhysicalConnectionHandlingMode connectionHandlingMode;
 	protected Object tenantIdentifier;
@@ -48,7 +49,7 @@ public abstract class AbstractCommonBuilder<T extends CommonBuilder> implements 
 
 	Interceptor configuredInterceptor() {
 		// If we were explicitly asked for no interceptor, always return null.
-		if ( explicitNoInterceptor ) {
+		if ( !allowInterceptor ) {
 			return null;
 		}
 
@@ -69,11 +70,13 @@ public abstract class AbstractCommonBuilder<T extends CommonBuilder> implements 
 			return optionsInterceptor;
 		}
 
-		// then check the Session-scoped interceptor prototype
-		final var statelessInterceptorImplementorSupplier =
-				options.getStatelessInterceptorImplementorSupplier();
-		if ( statelessInterceptorImplementorSupplier != null ) {
-			return statelessInterceptorImplementorSupplier.get();
+		if ( allowSessionInterceptorCreation ) {
+			// then check the Session-scoped interceptor prototype
+			final var statelessInterceptorImplementorSupplier =
+					options.getStatelessInterceptorImplementorSupplier();
+			if ( statelessInterceptorImplementorSupplier != null ) {
+				return statelessInterceptorImplementorSupplier.get();
+			}
 		}
 
 		return null;
@@ -100,7 +103,7 @@ public abstract class AbstractCommonBuilder<T extends CommonBuilder> implements 
 		}
 		else {
 			this.interceptor = interceptor;
-			this.explicitNoInterceptor = false;
+			this.allowInterceptor = true;
 		}
 		return getThis();
 	}
@@ -108,7 +111,13 @@ public abstract class AbstractCommonBuilder<T extends CommonBuilder> implements 
 	@Override
 	public T noInterceptor() {
 		this.interceptor = null;
-		this.explicitNoInterceptor = true;
+		this.allowInterceptor = false;
+		return getThis();
+	}
+
+	@Override
+	public T noSessionInterceptorCreation() {
+		this.allowSessionInterceptorCreation = false;
 		return getThis();
 	}
 

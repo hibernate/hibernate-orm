@@ -62,6 +62,9 @@ public interface CommonSharedBuilder extends CommonBuilder {
 	CommonSharedBuilder noInterceptor();
 
 	@Override
+	CommonSharedBuilder noSessionInterceptorCreation();
+
+	@Override
 	CommonSharedBuilder statementInspector(UnaryOperator<String> operator);
 
 	@Override

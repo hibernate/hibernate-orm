@@ -94,6 +94,12 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 		return this;
 	}
 
+	@Override
+	public SharedSessionBuilder noSessionInterceptorCreation() {
+		delegate.noSessionInterceptorCreation();
+		return this;
+	}
+
 	@Override @Deprecated
 	public SharedSessionBuilder statementInspector(StatementInspector statementInspector) {
 		delegate.statementInspector( statementInspector );

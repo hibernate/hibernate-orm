@@ -41,6 +41,9 @@ public interface SharedStatelessSessionBuilder extends StatelessSessionBuilder, 
 	@Override
 	SharedStatelessSessionBuilder noInterceptor();
 
+	@Override
+	SharedStatelessSessionBuilder noSessionInterceptorCreation();
+
 	SharedStatelessSessionBuilder statementInspector(UnaryOperator<String> operator);
 
 	@Override

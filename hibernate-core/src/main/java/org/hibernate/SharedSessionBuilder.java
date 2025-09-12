@@ -117,6 +117,9 @@ public interface SharedSessionBuilder extends SessionBuilder, CommonSharedBuilde
 	SharedSessionBuilder noInterceptor();
 
 	@Override
+	SharedSessionBuilder noSessionInterceptorCreation();
+
+	@Override
 	SharedSessionBuilder connection(Connection connection);
 
 	@Override

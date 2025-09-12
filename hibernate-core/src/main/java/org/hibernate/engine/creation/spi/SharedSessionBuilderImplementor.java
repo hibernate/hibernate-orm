@@ -31,6 +31,9 @@ public interface SharedSessionBuilderImplementor extends SharedSessionBuilder, S
 	SharedSessionBuilderImplementor noInterceptor();
 
 	@Override
+	SharedSessionBuilderImplementor noSessionInterceptorCreation();
+
+	@Override
 	SharedSessionBuilderImplementor statementInspector(UnaryOperator<String> operator);
 
 	@Override

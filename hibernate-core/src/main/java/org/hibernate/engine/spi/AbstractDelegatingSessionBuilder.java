@@ -59,6 +59,12 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 		return this;
 	}
 
+	@Override
+	public SessionBuilderImplementor noSessionInterceptorCreation() {
+		delegate.noSessionInterceptorCreation();
+		return this;
+	}
+
 	@Override @Deprecated
 	public SessionBuilderImplementor statementInspector(StatementInspector statementInspector) {
 		delegate.statementInspector( statementInspector );

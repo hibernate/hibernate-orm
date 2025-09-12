@@ -443,6 +443,7 @@ EOF
         OUTPUT=$($CONTAINER_CLI logs db2 2>&1)
     done
     $CONTAINER_CLI exec -t db2 su - orm_test bash -c ". /database/config/orm_test/sqllib/db2profile; /database/config/orm_test/sqllib/bin/db2 'connect to orm_test'; /database/config/orm_test/sqllib/bin/db2 'CREATE USER TEMPORARY TABLESPACE usr_tbsp MANAGED BY AUTOMATIC STORAGE'"
+    db2_setup
 }
 
 db2_12_1() {
@@ -488,6 +489,19 @@ EOF
         OUTPUT=$($CONTAINER_CLI logs db2 2>&1)
     done
     $CONTAINER_CLI exec -t db2 su - orm_test bash -c ". /database/config/orm_test/sqllib/db2profile; /database/config/orm_test/sqllib/bin/db2 'connect to orm_test'; /database/config/orm_test/sqllib/bin/db2 'CREATE USER TEMPORARY TABLESPACE usr_tbsp MANAGED BY AUTOMATIC STORAGE'"
+    db2_setup
+}
+
+db2_setup() {
+    pids=()
+    for n in $(seq 1 $(($(nproc)/2)))
+    do
+      $CONTAINER_CLI exec -t db2 su - orm_test bash -c ". /database/config/orm_test/sqllib/db2profile; /database/config/orm_test/sqllib/bin/db2 'connect to orm_test'; /database/config/orm_test/sqllib/bin/db2 'create tenant ORM_${n}';" &
+      pids[${i}]=$!
+    done
+    for pid in ${pids[*]}; do
+        wait $pid
+    done
 }
 
 db2_spatial() {

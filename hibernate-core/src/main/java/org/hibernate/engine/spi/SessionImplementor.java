@@ -78,6 +78,11 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 		return getActionQueue();
 	}
 
+	@Override
+	default TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor() {
+		return getActionQueue().getTransactionCompletionCallbacks();
+	}
+
 	/**
 	 * Should this session be automatically closed after the current
 	 * transaction completes?

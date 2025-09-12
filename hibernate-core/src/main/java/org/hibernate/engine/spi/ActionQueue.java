@@ -95,7 +95,7 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 
 
 	private transient boolean isTransactionCoordinatorShared;
-	private TransactionCompletionCallbacksImpl transactionCompletionCallbacks;;
+	private TransactionCompletionCallbacksImplementor transactionCompletionCallbacks;;
 
 	// Extract this as a constant to perform efficient iterations:
 	// method values() otherwise allocates a new array on each invocation.
@@ -725,7 +725,7 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 		return insertions == null ? 0 : insertions.size();
 	}
 
-	public TransactionCompletionCallbacksImpl getTransactionCompletionCallbacks() {
+	public TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacks() {
 		return transactionCompletionCallbacks.forSharing();
 	}
 
@@ -738,7 +738,7 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 	 * @param isTransactionCoordinatorShared Flag indicating shared transaction context.
 	 */
 	public void setTransactionCompletionCallbacks(
-			TransactionCompletionCallbacksImpl callbacks,
+			TransactionCompletionCallbacksImplementor callbacks,
 			boolean isTransactionCoordinatorShared) {
 		this.isTransactionCoordinatorShared = isTransactionCoordinatorShared;
 		this.transactionCompletionCallbacks = callbacks;

@@ -2,14 +2,14 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.stateless.shared;
+package org.hibernate.orm.test.sharedSession;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.Interceptor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
-import org.hibernate.orm.test.interceptor.StatefulInterceptor;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -24,9 +24,9 @@ import static org.junit.jupiter.api.Assertions.assertSame;
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(annotatedClasses = SimpleSharedStatelessSessionBuildingTests.Something.class)
-@SessionFactory(useCollectingStatementInspector = true, interceptorClass = StatefulInterceptor.class)
-public class SimpleSharedStatelessSessionBuildingTests {
+@DomainModel(annotatedClasses = SimpleSharedSessionBuildingTests.Something.class)
+@SessionFactory(useCollectingStatementInspector = true, interceptorClass = DummyInterceptor.class)
+public class SimpleSharedSessionBuildingTests {
 
 	@Test
 	void testStatementInspector(SessionFactoryScope factoryScope) {
@@ -41,26 +41,26 @@ public class SimpleSharedStatelessSessionBuildingTests {
 				.openSession()) {
 
 			// baseline:
-			try (var nested = (StatelessSessionImplementor) base.
-					statelessWithOptions()
-					.open()) {
+			try (var nested = (SessionImplementor) base.
+					sessionWithOptions()
+					.openSession()) {
 				assertThat( nested.getJdbcSessionContext().getStatementInspector() ).isSameAs( sqlCollector );
 			}
 
 			// 1. noStatementInspector
-			try (var nested = (StatelessSessionImplementor) base
-					.statelessWithOptions()
+			try (var nested = (SessionImplementor) base
+					.sessionWithOptions()
 					.noStatementInspector()
-					.open()) {
+					.openSession()) {
 				assertThat( nested.getJdbcSessionContext().getStatementInspector() ).isNotSameAs( sqlCollector );
 				assertThat( nested.getJdbcSessionContext().getStatementInspector() ).isNotSameAs( appliedToBase );
 			}
 
 			// 2. statementInspector()
-			try (var nested = (StatelessSessionImplementor) base
-					.statelessWithOptions()
+			try (var nested = (SessionImplementor) base
+					.sessionWithOptions()
 					.statementInspector()
-					.open()) {
+					.openSession()) {
 				assertThat( nested.getJdbcSessionContext().getStatementInspector() ).isSameAs( appliedToBase );
 			}
 		}
@@ -79,26 +79,26 @@ public class SimpleSharedStatelessSessionBuildingTests {
 				.openSession()) {
 
 			// baseline - should use the Interceptor from SF
-			try (var nested = (StatelessSessionImplementor) base.
-					statelessWithOptions()
-					.open()) {
+			try (var nested = (SessionImplementor) base.
+					sessionWithOptions()
+					.openSession()) {
 				assertThat( nested.getInterceptor() ).isSameAs( sfInterceptor );
 			}
 
 			// 1. noInterceptor() - should use no (Empty)Interceptor
-			try (var nested = (StatelessSessionImplementor) base
-					.statelessWithOptions()
+			try (var nested = (SessionImplementor) base
+					.sessionWithOptions()
 					.noInterceptor()
-					.open()) {
+					.openSession()) {
 				assertThat( nested.getInterceptor() ).isNotSameAs( sfInterceptor );
 				assertThat( nested.getInterceptor() ).isNotSameAs( appliedToBase );
 			}
 
 			// 2. interceptor() - should share the interceptor from the base session
-			try (var nested = (StatelessSessionImplementor) base
-					.statelessWithOptions()
+			try (var nested = (SessionImplementor) base
+					.sessionWithOptions()
 					.interceptor()
-					.open()) {
+					.openSession()) {
 				assertThat( nested.getInterceptor() ).isSameAs( appliedToBase );
 			}
 		}
@@ -111,16 +111,17 @@ public class SimpleSharedStatelessSessionBuildingTests {
 		// try from Session
 		sqlCollector.clear();
 		factoryScope.inTransaction( (statefulSession) -> {
-			try (var statelessSession = statefulSession
-					.statelessWithOptions()
+			try (var session = statefulSession
+					.sessionWithOptions()
 					.connection()
-					.open()) {
-				statelessSession.insert( new Something( 1, "first" ) );
-				assertSame( statefulSession.getTransaction(), statelessSession.getTransaction() );
+					.openSession()) {
+				session.persist( new Something( 1, "first" ) );
+				assertSame( statefulSession.getTransaction(), session.getTransaction() );
 				assertSame( statefulSession.getJdbcCoordinator(),
-						((StatelessSessionImplementor) statelessSession).getJdbcCoordinator() );
+						((SessionImplementor) session).getJdbcCoordinator() );
 				assertSame( statefulSession.getTransactionCompletionCallbacksImplementor(),
-						((StatelessSessionImplementor) statelessSession).getTransactionCompletionCallbacksImplementor() );
+						((SessionImplementor) session).getTransactionCompletionCallbacksImplementor() );
+				session.flush(); //TODO: should not be needed!
 			}
 		} );
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
@@ -128,16 +129,17 @@ public class SimpleSharedStatelessSessionBuildingTests {
 		// try from StatelessSession
 		sqlCollector.clear();
 		factoryScope.inStatelessTransaction( (statelessSession) -> {
-			try (var session = statelessSession
-					.statelessWithOptions()
+			try (var statefulSession = statelessSession
+					.sessionWithOptions()
 					.connection()
-					.open()) {
-				session.insert( new Something( 2, "first" ) );
-				assertSame( session.getTransaction(), statelessSession.getTransaction() );
-				assertSame( ((StatelessSessionImplementor) session).getJdbcCoordinator(),
+					.openSession()) {
+				statefulSession.persist( new Something( 2, "first" ) );
+				assertSame( statefulSession.getTransaction(), statelessSession.getTransaction() );
+				assertSame( ((SessionImplementor) statefulSession).getJdbcCoordinator(),
 						((StatelessSessionImplementor) statelessSession).getJdbcCoordinator() );
-				assertSame( ((StatelessSessionImplementor) session).getTransactionCompletionCallbacksImplementor(),
+				assertSame( ((SessionImplementor) statefulSession).getTransactionCompletionCallbacksImplementor(),
 						((StatelessSessionImplementor) statelessSession).getTransactionCompletionCallbacksImplementor() );
+				statefulSession.flush(); //TODO: should not be needed!
 			}
 		} );
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );

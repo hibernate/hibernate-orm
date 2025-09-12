@@ -546,7 +546,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return new SessionBuilderImpl( this ) {
 			@Override
 			protected SessionImplementor createSession() {
-				return new SessionImpl( (SessionFactoryImpl) sessionFactory, this );
+				return new SessionImpl( SessionFactoryImpl.this, this );
 			}
 		};
 	}
@@ -556,7 +556,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return new StatelessSessionBuilderImpl( this ) {
 			@Override
 			protected StatelessSessionImplementor createStatelessSession() {
-				return new StatelessSessionImpl( (SessionFactoryImpl) sessionFactory, this );
+				return new StatelessSessionImpl( SessionFactoryImpl.this, this );
 			}
 		};
 	}

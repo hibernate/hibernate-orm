@@ -9,9 +9,9 @@ import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionEventListener;
 import org.hibernate.Transaction;
-import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -140,7 +140,7 @@ public record SessionCreationOptionsAdaptor(
 	}
 
 	@Override
-	public TransactionCompletionCallbacksImpl getTransactionCompletionCallbacks() {
-		return null;
+	public TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacks() {
+		return options.getTransactionCompletionCallbacksImplementor();
 	}
 }

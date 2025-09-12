@@ -5,8 +5,8 @@
 package org.hibernate.engine.creation.internal;
 
 import org.hibernate.Transaction;
-import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 /**
@@ -25,5 +25,5 @@ public interface SharedSessionCreationOptions extends SessionCreationOptions {
 	TransactionCoordinator getTransactionCoordinator();
 	JdbcCoordinator getJdbcCoordinator();
 	Transaction getTransaction();
-	TransactionCompletionCallbacksImpl getTransactionCompletionCallbacks();
+	TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacks();
 }

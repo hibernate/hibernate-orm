@@ -901,7 +901,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public boolean isReleaseResourcesOnCloseEnabled() {
 		return releaseResourcesOnCloseEnabled;
 	}

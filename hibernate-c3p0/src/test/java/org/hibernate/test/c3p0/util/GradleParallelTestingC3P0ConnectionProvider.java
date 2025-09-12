@@ -9,7 +9,7 @@ import org.hibernate.c3p0.internal.C3P0ConnectionProvider;
 
 import java.util.Map;
 
-import static org.hibernate.testing.jdbc.GradleParallelTestingUsernameResolver.resolveFromSettings;
+import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.resolveFromSettings;
 
 /**
  * @author Loïc Lefèvre

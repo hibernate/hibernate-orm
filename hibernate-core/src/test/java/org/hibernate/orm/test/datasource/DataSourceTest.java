@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 
 
 import static org.hibernate.internal.util.StringHelper.split;
+import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.resolveUrl;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Jpa(annotatedClasses = DataSourceTest.TestEntity.class,
@@ -54,7 +55,7 @@ public class DataSourceTest {
 		@Override
 		public void loggedEvent(Logger.Level level, String renderedMessage, Throwable thrown) {
 			if ( renderedMessage.contains( "Database info:" ) ) {
-				final String url = Environment.getProperties().getProperty( JdbcSettings.URL );
+				final String url = resolveUrl( Environment.getProperties().getProperty( JdbcSettings.URL ) );
 				final String firstUrlPart = split( "?", split( ";", url )[0])[0];
 				final String baseUrl = firstUrlPart.endsWith( "/" ) ? firstUrlPart.substring( 0, firstUrlPart.length() - 1 ) : firstUrlPart;
 				seen = renderedMessage.contains( baseUrl );

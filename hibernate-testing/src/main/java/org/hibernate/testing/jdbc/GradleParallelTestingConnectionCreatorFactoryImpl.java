@@ -14,7 +14,7 @@ import java.sql.Driver;
 import java.util.Map;
 import java.util.Properties;
 
-import static org.hibernate.testing.jdbc.GradleParallelTestingUsernameResolver.*;
+import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.*;
 
 /**
  * A factory for {@link ConnectionCreator} instances that can be used for Gradle Parallel Testing.
@@ -38,6 +38,7 @@ public class GradleParallelTestingConnectionCreatorFactoryImpl implements Connec
 			Map<String, Object> configurationValues) {
 
 		// now resolve JDBC Username if needed for Gradle Parallel Testing
+		url = resolveUrl( url );
 		resolve( connectionProps );
 
 		if ( driver == null ) {

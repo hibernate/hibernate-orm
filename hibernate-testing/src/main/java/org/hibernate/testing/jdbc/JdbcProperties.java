@@ -10,7 +10,8 @@ import java.util.Properties;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.testing.jdbc.GradleParallelTestingUsernameResolver.resolveFromSettings;
+import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.resolveFromSettings;
+import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.resolveUrl;
 
 /**
  * @author Vlad Mihalcea
@@ -36,13 +37,10 @@ public class JdbcProperties {
 					.getResourceAsStream( "hibernate.properties" );
 			try {
 				connectionProperties.load( inputStream );
-				url = connectionProperties.getProperty(
-						"hibernate.connection.url" );
+				url = resolveUrl( connectionProperties.getProperty( "hibernate.connection.url" ) );
 				resolveFromSettings(connectionProperties);
-				user = connectionProperties.getProperty(
-						"hibernate.connection.username" );
-				password = connectionProperties.getProperty(
-						"hibernate.connection.password" );
+				user = connectionProperties.getProperty( "hibernate.connection.username" );
+				password = connectionProperties.getProperty( "hibernate.connection.password" );
 			}
 			catch ( IOException e ) {
 				throw new IllegalArgumentException( e );

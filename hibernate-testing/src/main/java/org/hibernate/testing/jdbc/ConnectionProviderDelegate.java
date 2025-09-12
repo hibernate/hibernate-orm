@@ -20,7 +20,7 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
-import static org.hibernate.testing.jdbc.GradleParallelTestingUsernameResolver.resolveFromSettings;
+import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.resolveFromSettings;
 
 /**
  * This {@link ConnectionProvider} extends any other ConnectionProvider

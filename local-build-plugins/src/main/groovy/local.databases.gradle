@@ -94,7 +94,7 @@ ext {
                     'jdbc.user'  : 'hibernate_orm_test',
                     'jdbc.pass'  : 'hibernate_orm_test',
                     // Disable prepared statement caching due to https://www.postgresql.org/message-id/CAEcMXhmmRd4-%2BNQbnjDT26XNdUoXdmntV9zdr8%3DTu8PL9aVCYg%40mail.gmail.com
-                    'jdbc.url'   : 'jdbc:edb://' + dbHost + '/hibernate_orm_test?preparedStatementCacheQueries=0&escapeSyntaxCallMode=callIfNoReturn',
+                    'jdbc.url'   : 'jdbc:edb://' + dbHost + '/hibernate_orm_test_$worker?preparedStatementCacheQueries=0&escapeSyntaxCallMode=callIfNoReturn',
                     'jdbc.datasource' : 'com.edb.Driver',
 //                        'jdbc.datasource' : 'com.edb.ds.PGSimpleDataSource',
                     'connection.init_sql' : ''

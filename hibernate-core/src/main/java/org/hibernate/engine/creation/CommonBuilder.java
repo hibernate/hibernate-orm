@@ -66,7 +66,8 @@ public interface CommonBuilder {
 	 * {@code Interceptor} associated with the {@link SessionFactory} is
 	 * inherited by the new session.
 	 * <p>
-	 * Calling {@link #interceptor(Interceptor)} with null has the same effect.
+	 * Calling {@link #interceptor(Interceptor) interceptor(null)} has the
+	 * same effect.
 	 *
 	 * @return {@code this}, for method chaining
 	 */

@@ -27,10 +27,10 @@ import static org.jboss.logging.Logger.Level.WARN;
  */
 @SubSystemLogging(
 		name = SessionFactoryLogging.NAME,
-		description = "Logging related to SessionFactory lifecycle, serialization, and registry/JNDI operations"
+		description = "Logging related to SessionFactory lifecycle and serialization"
 )
 @MessageLogger(projectCode = "HHH")
-@ValidIdRange(min = 90006001, max = 90006100)
+@ValidIdRange(min = 90020001, max = 90030000)
 @Internal
 public interface SessionFactoryLogging extends BasicLogger {
 	String NAME = SubSystemLogging.BASE + ".factory";
@@ -44,7 +44,7 @@ public interface SessionFactoryLogging extends BasicLogger {
 	void buildingSessionFactory();
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Instantiating factory [%s] with settings: %s", id = 90006001)
+	@Message(value = "Instantiating factory [%s] with settings: %s", id = 90020001)
 	void instantiatingFactory(String uuid, Map<String, Object> settings);
 
 	@LogMessage(level = TRACE)
@@ -64,15 +64,15 @@ public interface SessionFactoryLogging extends BasicLogger {
 	void alreadyClosed();
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Closing factory [%s]", id = 90006005)
+	@Message(value = "Closing factory [%s]", id = 90020005)
 	void closingFactory(String uuid);
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Serializing factory [%s]", id = 90006010)
+	@Message(value = "Serializing factory [%s]", id = 90020010)
 	void serializingFactory(String uuid);
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Deserialized factory [%s]", id = 90006011)
+	@Message(value = "Deserialized factory [%s]", id = 90020011)
 	void deserializedFactory(String uuid);
 
 	@LogMessage(level = TRACE)
@@ -88,11 +88,11 @@ public interface SessionFactoryLogging extends BasicLogger {
 	void resolvingSerializedFactory();
 
 	@LogMessage(level = TRACE)
-	@Message("Resolved factory by UUID: %s")
+	@Message("Resolved factory by UUID: [%s]")
 	void resolvedFactoryByUuid(String uuid);
 
 	@LogMessage(level = TRACE)
-	@Message("Resolved factory by name: %s")
+	@Message("Resolved factory by name: '%s'")
 	void resolvedFactoryByName(String name);
 
 	@LogMessage(level = TRACE)
@@ -100,7 +100,7 @@ public interface SessionFactoryLogging extends BasicLogger {
 	void resolvingFactoryFromDeserializedSession();
 
 	@LogMessage(level = WARN)
-	@Message(value = "Unable to construct current session context [%s]", id = 90006030)
+	@Message(value = "Unable to construct current session context [%s]", id = 90020030)
 	void unableToConstructCurrentSessionContext(String sessionContextType, @Cause Throwable throwable);
 
 }

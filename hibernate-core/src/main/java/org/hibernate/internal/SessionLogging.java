@@ -31,7 +31,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 		description = "Logging related to session lifecycle and operations"
 )
 @MessageLogger(projectCode = "HHH")
-@ValidIdRange(min = 90006101, max = 90006500)
+@ValidIdRange(min = 90010001, max = 90020000)
 @Internal
 public interface SessionLogging extends BasicLogger {
 	String NAME = SubSystemLogging.BASE + ".session";
@@ -61,7 +61,7 @@ public interface SessionLogging extends BasicLogger {
 	void closingSession(UUID sessionIdentifier);
 
 	@LogMessage(level = WARN)
-	@Message(id = 90006101, value = "Closing shared session with unprocessed transaction completion actions")
+	@Message(id = 90010101, value = "Closing shared session with unprocessed transaction completion actions")
 	void closingSharedSessionWithUnprocessedTxCompletions();
 
 	@LogMessage(level = TRACE)
@@ -105,19 +105,19 @@ public interface SessionLogging extends BasicLogger {
 	void afterTransactionCompletion(boolean successful, boolean delayed);
 
 	@LogMessage(level = ERROR)
-	@Message(id = 90006102, value = "JDBC exception executing SQL; transaction rolled back")
+	@Message(id = 90010102, value = "JDBC exception executing SQL; transaction rolled back")
 	void jdbcExceptionThrownWithTransactionRolledBack(@Cause Exception e);
 
 	@LogMessage(level = DEBUG)
-	@Message(id = 90006103, value = "Ignoring EntityNotFoundException for '%s.%s'")
+	@Message(id = 90010103, value = "Ignoring EntityNotFoundException for '%s.%s'")
 	void ignoringEntityNotFound(String entityName, Object id);
 
 	@LogMessage(level = WARN)
-	@Message(id = 90006104, value = "Property '%s' is not serializable, value won't be set")
+	@Message(id = 90010104, value = "Property '%s' is not serializable, value won't be set")
 	void nonSerializableProperty(String propertyName);
 
 	@LogMessage(level = WARN)
-	@Message(id = 90006105, value = "Property having key null is illegal, value won't be set")
+	@Message(id = 90010105, value = "Property having key null is illegal, value won't be set")
 	void nullPropertyKey();
 
 	@LogMessage(level = TRACE)
@@ -129,11 +129,11 @@ public interface SessionLogging extends BasicLogger {
 	void deserializingSession(UUID sessionIdentifier);
 
 	@LogMessage(level = ERROR)
-	@Message(id = 90006106, value = "Exception in interceptor beforeTransactionCompletion()")
+	@Message(id = 90010106, value = "Exception in interceptor beforeTransactionCompletion()")
 	void exceptionInBeforeTransactionCompletionInterceptor(@Cause Throwable e);
 
 	@LogMessage(level = ERROR)
-	@Message(id = 90006107, value = "Exception in interceptor afterTransactionCompletion()")
+	@Message(id = 90010107, value = "Exception in interceptor afterTransactionCompletion()")
 	void exceptionInAfterTransactionCompletionInterceptor(@Cause Throwable e);
 
 	// StatelessSession-specific

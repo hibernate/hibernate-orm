@@ -46,10 +46,6 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)
-	@Message(value = "Already session bound on call to bind(); make sure you clean up your sessions", id = 2)
-	void alreadySessionBound();
-
-	@LogMessage(level = WARN)
 	@Message(value = "Configuration settings with for connection provider '%s' are set, but the connection provider is not on the classpath; these properties will be ignored",
 			id = 22)
 	void providerClassNotFound(String c3p0ProviderClassName);

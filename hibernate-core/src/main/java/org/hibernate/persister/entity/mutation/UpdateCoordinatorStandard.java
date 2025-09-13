@@ -557,7 +557,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 						&& generator.generatesOnUpdate()
 						&& generator.generatedBeforeExecution( object, session ) ) {
 					newValues[i] = ( (BeforeExecutionGenerator) generator ).generate( session, object, newValues[i], UPDATE );
-					entityPersister().setPropertyValue( object, i, newValues[i] );
+					entityPersister().setValue( object, i, newValues[i] );
 					fieldsPreUpdateNeeded[count++] = i;
 				}
 			}

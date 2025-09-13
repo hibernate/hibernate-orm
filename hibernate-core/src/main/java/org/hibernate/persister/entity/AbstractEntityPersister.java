@@ -310,7 +310,15 @@ public abstract class AbstractEntityPersister
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractEntityPersister.class );
 
+	/**
+	 * The property name of the "special" identifier property in HQL
+	 *
+	 * @deprecated this feature of HQL is now deprecated
+	 */
+	@Deprecated(since = "6.2")
+	public static final String ENTITY_ID = "id";
 	public static final String ENTITY_CLASS = "class";
+
 	public static final String VERSION_COLUMN_ALIAS = "version_";
 	public static final String ROWID_ALIAS = "rowid_";
 
@@ -4080,11 +4088,6 @@ public abstract class AbstractEntityPersister
 	@Override
 	public CascadeStyle[] getPropertyCascadeStyles() {
 		return getCascadeStyles();
-	}
-
-	@Override
-	public boolean isPropertySelectable(int propertyNumber) {
-		return getAttributeMapping( propertyNumber ).getAttributeMetadata().isSelectable();
 	}
 
 	@Override

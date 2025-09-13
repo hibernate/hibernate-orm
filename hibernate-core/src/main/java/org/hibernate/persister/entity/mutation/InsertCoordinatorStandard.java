@@ -140,7 +140,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 						&& generator.generatesOnInsert()
 						&& generator.generatedBeforeExecution( entity, session ) ) {
 					values[i] = ( (BeforeExecutionGenerator) generator ).generate( session, entity, values[i], INSERT );
-					persister.setPropertyValue( entity, i, values[i] );
+					persister.setValue( entity, i, values[i] );
 					foundStateDependentGenerator = foundStateDependentGenerator || generator.generatedOnExecution();
 				}
 			}

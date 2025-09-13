@@ -1192,10 +1192,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public String getManyToManyFilterFragment(TableGroup tableGroup, Map<String, Filter> enabledFilters) {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
 		public boolean hasIndex() {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}

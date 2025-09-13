@@ -107,6 +107,7 @@ import static org.hibernate.event.spi.LoadEventListener.INTERNAL_LOAD_EAGER;
 import static org.hibernate.event.spi.LoadEventListener.INTERNAL_LOAD_LAZY;
 import static org.hibernate.event.spi.LoadEventListener.INTERNAL_LOAD_NULLABLE;
 import static org.hibernate.internal.LockOptionsHelper.applyPropertiesToLockOptions;
+import static org.hibernate.internal.SessionLogging.SESSION_LOGGER;
 import static org.hibernate.jpa.HibernateHints.HINT_BATCH_FETCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_ENABLE_SUBSELECT_FETCH;
 import static org.hibernate.jpa.HibernateHints.HINT_FETCH_PROFILE;
@@ -154,7 +155,6 @@ public class SessionImpl
 		extends AbstractSharedSessionContract
 		implements Serializable, SharedSessionContractImplementor, JdbcSessionOwner, SessionImplementor, EventSource,
 				TransactionCoordinatorBuilder.Options, WrapperOptions, LoadAccessContext {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SessionImpl.class );
 
 	// Defaults to null which means the properties are the default
 	// as defined in FastSessionServices#defaultSessionProperties
@@ -220,9 +220,8 @@ public class SessionImpl
 				statistics.openSession();
 			}
 
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracef( "Opened Session [%s] at timestamp: %s",
-						getSessionIdentifier(), currentTimeMillis() );
+			if ( SESSION_LOGGER.isTraceEnabled() ) {
+				SESSION_LOGGER.openedSession( getSessionIdentifier(), currentTimeMillis() );
 			}
 		}
 		finally {
@@ -359,7 +358,7 @@ public class SessionImpl
 			if ( getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
 				throw new IllegalStateException( "EntityManager was already closed" );
 			}
-			LOG.trace( "Already closed" );
+		SESSION_LOGGER.alreadyClosed();
 		}
 		else {
 			closeWithoutOpenChecks();
@@ -367,8 +366,8 @@ public class SessionImpl
 	}
 
 	public void closeWithoutOpenChecks() {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef( "Closing session [%s]", getSessionIdentifier() );
+		if ( SESSION_LOGGER.isTraceEnabled() ) {
+			SESSION_LOGGER.closingSession( getSessionIdentifier() );
 		}
 
 		final var eventMonitor = getEventMonitor();
@@ -425,7 +424,7 @@ public class SessionImpl
 	protected void checkBeforeClosingJdbcCoordinator() {
 		final var actionQueue = getActionQueue();
 		if ( actionQueue.hasBeforeTransactionActions() || actionQueue.hasAfterTransactionActions() ) {
-			LOG.warn( "Closing shared session with unprocessed transaction completion actions" );
+			SESSION_LOGGER.closingSharedSessionWithUnprocessedTxCompletions();
 		}
 	}
 
@@ -453,17 +452,17 @@ public class SessionImpl
 
 	protected void checkSessionFactoryOpen() {
 		if ( !getFactory().isOpen() ) {
-			LOG.trace( "Forcing-closing session since factory is already closed" );
+			SESSION_LOGGER.forcingCloseBecauseFactoryClosed();
 			setClosed();
 		}
 	}
 
 	private void managedFlush() {
 		if ( !isOpenOrWaitingForAutoClose() ) {
-			LOG.trace( "Skipping auto-flush since the session is closed" );
+			SESSION_LOGGER.skippingAutoFlushSessionClosed();
 		}
 		else {
-			LOG.trace( "Automatically flushing session" );
+			SESSION_LOGGER.automaticallyFlushingSession();
 			fireFlush();
 		}
 	}
@@ -484,7 +483,7 @@ public class SessionImpl
 	}
 
 	private void managedClose() {
-		LOG.trace( "Automatically closing session" );
+			SESSION_LOGGER.automaticallyClosingSession();
 		closeWithoutOpenChecks();
 	}
 
@@ -825,7 +824,7 @@ public class SessionImpl
 	public void delete(String entityName, Object object, boolean isCascadeDeleteEnabled, DeleteContext transientEntities) {
 		checkOpenOrWaitingForAutoClose();
 		final boolean removingOrphanBeforeUpdates = persistenceContext.isRemovingOrphanBeforeUpdates();
-		final boolean traceEnabled = LOG.isTraceEnabled();
+		final boolean traceEnabled = SESSION_LOGGER.isTraceEnabled();
 		if ( traceEnabled && removingOrphanBeforeUpdates ) {
 			logRemoveOrphanBeforeUpdates( "before continuing", entityName, object );
 		}
@@ -842,7 +841,7 @@ public class SessionImpl
 	public void removeOrphanBeforeUpdates(String entityName, Object child) {
 		// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.
 		//       This should be removed once action/task ordering is improved.
-		final boolean traceEnabled = LOG.isTraceEnabled();
+		final boolean traceEnabled = SESSION_LOGGER.isTraceEnabled();
 		if ( traceEnabled ) {
 			logRemoveOrphanBeforeUpdates( "begin", entityName, child );
 		}
@@ -860,13 +859,10 @@ public class SessionImpl
 	}
 
 	private void logRemoveOrphanBeforeUpdates(String timing, String entityName, Object entity) {
-		if ( LOG.isTraceEnabled() ) {
+		if ( SESSION_LOGGER.isTraceEnabled() ) {
 			final var entityEntry = persistenceContext.getEntry( entity );
-			LOG.tracef(
-					"%s remove orphan before updates: [%s]",
-					timing,
-					entityEntry == null ? entityName : infoString( entityName, entityEntry.getId() )
-			);
+			final String entityInfo = entityEntry == null ? entityName : infoString( entityName, entityEntry.getId() );
+			SESSION_LOGGER.removeOrphanBeforeUpdates( timing, entityInfo );
 		}
 	}
 
@@ -1002,9 +998,9 @@ public class SessionImpl
 	 */
 	@Override
 	public Object immediateLoad(String entityName, Object id) {
-		if ( LOG.isDebugEnabled() ) {
+		if ( SESSION_LOGGER.isDebugEnabled() ) {
 			final var persister = requireEntityPersister( entityName );
-			LOG.tracef( "Initializing proxy: %s", infoString( persister, id, getFactory() ) );
+			SESSION_LOGGER.initializingProxy( infoString( persister, id, getFactory() ) );
 		}
 		final var event = makeLoadEvent( entityName, id, getReadOnlyFromLoadQueryInfluencers(), true );
 		fireLoadNoChecks( event, IMMEDIATE_LOAD );
@@ -1026,7 +1022,7 @@ public class SessionImpl
 			clearedEffectiveGraph = false;
 		}
 		else {
-			LOG.trace( "Clearing effective entity graph for subsequent select" );
+			SESSION_LOGGER.clearingEffectiveEntityGraph();
 			clearedEffectiveGraph = true;
 			effectiveEntityGraph.clear();
 		}
@@ -1467,9 +1463,8 @@ public class SessionImpl
 
 	@Override
 	public void forceFlush(EntityKey key) {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef("Flushing to force deletion of re-saved object: "
-					+ infoString( key.getPersister(), key.getIdentifier(), getFactory() ) );
+		if ( SESSION_LOGGER.isTraceEnabled() ) {
+			SESSION_LOGGER.flushingToForceDeletion( infoString( key.getPersister(), key.getIdentifier(), getFactory() ) );
 		}
 
 		if ( persistenceContext.getCascadeLevel() > 0 ) {
@@ -1839,7 +1834,7 @@ public class SessionImpl
 						.append( "SessionImpl(" )
 						.append( System.identityHashCode( this ) );
 		if ( !isClosed() ) {
-			if ( LOG.isTraceEnabled() ) {
+			if ( SESSION_LOGGER.isTraceEnabled() ) {
 				string.append( persistenceContext )
 					.append( ";" )
 					.append( actionQueue );
@@ -1991,7 +1986,7 @@ public class SessionImpl
 
 	@Override
 	public void beforeTransactionCompletion() {
-		LOG.trace( "SessionImpl#beforeTransactionCompletion()" );
+		SESSION_LOGGER.beforeTransactionCompletion();
 		flushBeforeTransactionCompletion();
 		actionQueue.beforeTransactionCompletion();
 		beforeTransactionCompletionEvents();
@@ -2000,8 +1995,8 @@ public class SessionImpl
 
 	@Override
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef( "SessionImpl#afterTransactionCompletion(successful=%s, delayed=%s)", successful, delayed );
+		if ( SESSION_LOGGER.isTraceEnabled() ) {
+			SESSION_LOGGER.afterTransactionCompletion( successful, delayed );
 		}
 
 		final boolean notClosed = isOpenOrWaitingForAutoClose();
@@ -2193,7 +2188,7 @@ public class SessionImpl
 			if ( accessTransaction().isActive() && accessTransaction().getRollbackOnly() ) {
 				// Assume situation HHH-12472 running on WildFly
 				// Just log the exception and return null
-				LOG.jdbcExceptionThrownWithTransactionRolledBack( e );
+				SESSION_LOGGER.jdbcExceptionThrownWithTransactionRolledBack( e );
 				return null;
 			}
 			else {
@@ -2211,8 +2206,8 @@ public class SessionImpl
 
 	// Hibernate Reactive calls this
 	protected static <T> void logIgnoringEntityNotFound(Class<T> entityClass, Object primaryKey) {
-		if ( LOG.isDebugEnabled() ) {
-			LOG.ignoringEntityNotFound(
+		if ( SESSION_LOGGER.isDebugEnabled() ) {
+			SESSION_LOGGER.ignoringEntityNotFound(
 					entityClass != null ? entityClass.getName(): null,
 					primaryKey != null ? primaryKey.toString() : null
 			);
@@ -2544,12 +2539,12 @@ public class SessionImpl
 		checkOpen();
 
 		if ( !( value instanceof Serializable ) ) {
-			LOG.warnf( "Property '%s' is not serializable, value won't be set", propertyName );
+			SESSION_LOGGER.nonSerializableProperty( propertyName );
 			return;
 		}
 
 		if ( propertyName == null ) {
-			LOG.warn( "Property having key null is illegal, value won't be set" );
+			SESSION_LOGGER.nullPropertyKey();
 			return;
 		}
 
@@ -2767,8 +2762,8 @@ public class SessionImpl
 	 */
 	@Serial
 	private void writeObject(ObjectOutputStream oos) throws IOException {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef( "Serializing Session [%s]", getSessionIdentifier() );
+		if ( SESSION_LOGGER.isTraceEnabled() ) {
+			SESSION_LOGGER.serializingSession( getSessionIdentifier() );
 		}
 
 		oos.defaultWriteObject();
@@ -2789,8 +2784,8 @@ public class SessionImpl
 	 */
 	@Serial
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException, SQLException {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef( "Deserializing Session [%s]", getSessionIdentifier() );
+		if ( SESSION_LOGGER.isTraceEnabled() ) {
+			SESSION_LOGGER.deserializingSession( getSessionIdentifier() );
 		}
 
 		ois.defaultReadObject();

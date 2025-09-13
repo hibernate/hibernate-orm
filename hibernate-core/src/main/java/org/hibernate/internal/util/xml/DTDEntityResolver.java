@@ -53,7 +53,7 @@ public class DTDEntityResolver implements EntityResolver, Serializable {
 		if ( systemId != null ) {
 			LOG.debugf( "Trying to resolve system-id [%s]", systemId );
 			if ( systemId.startsWith( HIBERNATE_NAMESPACE ) ) {
-				LOG.debug( "Recognized hibernate namespace; attempting to resolve on classpath under org/hibernate/" );
+				LOG.debug( "Recognized Hibernate namespace; attempting to resolve on classpath under org/hibernate/" );
 				source = resolveOnClassPath( publicId, systemId, HIBERNATE_NAMESPACE );
 			}
 			else if ( systemId.startsWith( OLD_HIBERNATE_NAMESPACE ) ) {

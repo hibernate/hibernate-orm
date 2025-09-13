@@ -28,7 +28,7 @@ import static org.jboss.logging.Logger.Level.WARN;
  */
 @SubSystemLogging(
 		name = SessionLogging.NAME,
-		description = "Logging related to Session / StatelessSession lifecycle and operations"
+		description = "Logging related to session lifecycle and operations"
 )
 @MessageLogger(projectCode = "HHH")
 @ValidIdRange(min = 90006101, max = 90006500)

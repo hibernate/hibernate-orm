@@ -35,15 +35,19 @@ import static org.jboss.logging.Logger.getMessageLogger;
 public interface SessionFactoryRegistryMessageLogger extends BasicLogger  {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".factoryRegistry";
 
-	SessionFactoryRegistryMessageLogger INSTANCE =
+	SessionFactoryRegistryMessageLogger REGISTRY_LOGGER =
 			getMessageLogger( MethodHandles.lookup(), SessionFactoryRegistryMessageLogger.class, LOGGER_NAME );
 
+	@LogMessage(level = TRACE)
+	@Message("Initializing SessionFactoryRegistry @%s")
+
+	void initializingSessionFactoryRegistry(int hashCode);
 	@LogMessage(level = WARN)
 	@Message(value = "Naming exception occurred accessing factory: %s", id = 20178)
 	void namingExceptionAccessingFactory(NamingException exception);
 
 	@LogMessage(level = INFO)
-	@Message(value = "Bound factory to JNDI name: %s", id = 20194)
+	@Message(value = "Bound factory to JNDI name: '%s'", id = 20194)
 	void factoryBoundToJndiName(String name);
 
 	@LogMessage(level = INFO)
@@ -55,7 +59,7 @@ public interface SessionFactoryRegistryMessageLogger extends BasicLogger  {
 	void couldNotBindJndiListener();
 
 	@LogMessage(level = ERROR)
-	@Message(value = "Invalid JNDI name: %s", id = 20135)
+	@Message(value = "Invalid JNDI name: '%s'", id = 20135)
 	void invalidJndiName(String name, @Cause JndiNameException e);
 
 	@LogMessage(level = WARN)
@@ -63,11 +67,11 @@ public interface SessionFactoryRegistryMessageLogger extends BasicLogger  {
 	void unableToBindFactoryToJndi(@Cause JndiException e);
 
 	@LogMessage(level = INFO)
-	@Message(value = "Unbound factory from JNDI name: %s", id = 20197)
+	@Message(value = "Unbound factory from JNDI name: '%s'", id = 20197)
 	void factoryUnboundFromJndiName(String name);
 
 	@LogMessage(level = INFO)
-	@Message(value = "A factory was unbound from name: %s", id = 20198)
+	@Message(value = "A factory was unbound from name: '%s'", id = 20198)
 	void factoryUnboundFromName(String name);
 
 	@LogMessage(level = WARN)
@@ -75,7 +79,7 @@ public interface SessionFactoryRegistryMessageLogger extends BasicLogger  {
 	void unableToUnbindFactoryFromJndi(@Cause JndiException e);
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Registering SessionFactory: %s (%s)", id = 20384)
+	@Message(value = "Registering SessionFactory [%s] (%s)", id = 20384)
 	void registeringSessionFactory(String uuid, String name);
 
 	@LogMessage(level = DEBUG)
@@ -87,10 +91,22 @@ public interface SessionFactoryRegistryMessageLogger extends BasicLogger  {
 	void attemptingToUnbindFactoryFromJndi(String name);
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "A SessionFactory was successfully bound to name: %s", id = 20282)
+	@Message(value = "A SessionFactory was successfully bound to name '%s'", id = 20282)
 	void factoryBoundToJndi(String name);
 
 	@LogMessage(level = TRACE)
 	@Message(value = "Not binding SessionFactory to JNDI, no JNDI name configured", id = 20385)
 	void notBindingSessionFactory();
+
+	@LogMessage(level = TRACE)
+	@Message("JNDI lookup by name '%s'")
+	void jndiLookupByName(String name);
+
+	@LogMessage(level = TRACE)
+	@Message("JNDI lookup by UUID [%s]")
+	void jndiLookupByUuid(String uuid);
+
+	@LogMessage(level = TRACE)
+	@Message("Resolved to UUID [%s]")
+	void resolvedToUuid(String uuid);
 }

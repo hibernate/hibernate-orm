@@ -127,6 +127,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.cfg.AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
 import static org.hibernate.internal.FetchProfileHelper.addFetchProfiles;
+import static org.hibernate.internal.SessionFactoryLogging.SESSION_FACTORY_LOGGER;
 import static org.hibernate.internal.SessionFactorySettings.determineJndiName;
 import static org.hibernate.internal.SessionFactorySettings.getMaskedSettings;
 import static org.hibernate.internal.SessionFactorySettings.getSessionFactoryName;
@@ -155,7 +156,6 @@ import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DEL
  * @author Chris Cranford
  */
 public class SessionFactoryImpl implements SessionFactoryImplementor {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SessionFactoryImpl.class );
 
 	private final String name;
 	private final String jndiName;
@@ -211,7 +211,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			final MetadataImplementor bootMetamodel,
 			final SessionFactoryOptions options,
 			final BootstrapContext bootstrapContext) {
-		LOG.trace( "Building session factory" );
+SESSION_FACTORY_LOGGER.buildingSessionFactory();
 		typeConfiguration = bootstrapContext.getTypeConfiguration();
 
 		sessionFactoryOptions = options;
@@ -228,7 +228,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		jdbcServices = serviceRegistry.requireService( JdbcServices.class );
 
 		settings = getMaskedSettings( options, serviceRegistry );
-		LOG.instantiatingFactory( uuid, settings );
+		SESSION_FACTORY_LOGGER.instantiatingFactory( uuid, settings );
 
 		sqlStringGenerationContext = createSqlStringGenerationContext( bootMetamodel, options, jdbcServices );
 
@@ -330,14 +330,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				close();
 			}
 			catch (Exception closeException) {
-				LOG.trace( "Eating error closing factory after failed instantiation" );
+				SESSION_FACTORY_LOGGER.eatingErrorClosingFactoryAfterFailedInstantiation();
 			}
 			throw e;
 		}
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Instantiated factory: " + uuid );
-		}
+		SESSION_FACTORY_LOGGER.instantiatedFactory( uuid );
 	}
 
 	private JavaType<Object> tenantIdentifierType(SessionFactoryOptions options) {
@@ -762,7 +760,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public Reference getReference() {
 		// from javax.naming.Referenceable
-		LOG.trace( "Returning a Reference to the factory" );
+		SESSION_FACTORY_LOGGER.returningReferenceToFactory();
 		return new Reference(
 				SessionFactoryImpl.class.getName(),
 				new StringRefAddr( "uuid", getUuid() ),
@@ -792,16 +790,14 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				if ( getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
 					throw new IllegalStateException( "EntityManagerFactory is already closed" );
 				}
-
-				LOG.trace( "Already closed" );
+				SESSION_FACTORY_LOGGER.alreadyClosed();
 				return;
 			}
-
 			status = Status.CLOSING;
 		}
 
 		try {
-			LOG.closingFactory( getUuid() );
+			SESSION_FACTORY_LOGGER.closingFactory( uuid );
 			observer.sessionFactoryClosing( this );
 
 			// NOTE: the null checks below handle cases where close is called
@@ -1036,8 +1032,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 									.getConstructor( new Class[]{ SessionFactoryImplementor.class } )
 									.newInstance( this );
 				}
-				catch ( Throwable t ) {
-					LOG.unableToConstructCurrentSessionContext( sessionContextType, t );
+				catch ( Throwable throwable ) {
+					SESSION_FACTORY_LOGGER.unableToConstructCurrentSessionContext( sessionContextType, throwable );
 					return null;
 				}
 		}
@@ -1109,9 +1105,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	 */
 	@Serial
 	private void writeObject(ObjectOutputStream out) throws IOException {
-		LOG.serializingFactory( getUuid() );
+		SESSION_FACTORY_LOGGER.serializingFactory( uuid );
 		out.defaultWriteObject();
-		LOG.trace( "Serialized factory" );
+		SESSION_FACTORY_LOGGER.serializedFactory();
 	}
 
 	/**
@@ -1124,9 +1120,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	 */
 	@Serial
 	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-		LOG.trace( "Deserializing factory" );
+		SESSION_FACTORY_LOGGER.deserializingFactory();
 		in.defaultReadObject();
-		LOG.deserializedFactory( getUuid() );
+		SESSION_FACTORY_LOGGER.deserializedFactory( uuid );
 	}
 
 	/**
@@ -1142,16 +1138,16 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	 */
 	@Serial
 	private Object readResolve() throws InvalidObjectException {
-		LOG.trace( "Resolving serialized factory" );
-		return locateSessionFactoryOnDeserialization( getUuid(), name );
+		SESSION_FACTORY_LOGGER.trace( "Resolving serialized factory" );
+		return locateSessionFactoryOnDeserialization( uuid, name );
 	}
 
 	private static SessionFactory locateSessionFactoryOnDeserialization(String uuid, String name)
 			throws InvalidObjectException{
-		final SessionFactory uuidResult = SessionFactoryRegistry.INSTANCE.getSessionFactory( uuid );
+		final var uuidResult = SessionFactoryRegistry.INSTANCE.getSessionFactory( uuid );
 		if ( uuidResult != null ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Resolved factory by UUID: " + uuid );
+			if ( SESSION_FACTORY_LOGGER.isTraceEnabled() ) {
+				SESSION_FACTORY_LOGGER.resolvedFactoryByUuid( uuid );
 			}
 			return uuidResult;
 		}
@@ -1159,10 +1155,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		// in case we were deserialized in a different JVM, look for an instance with the same name
 		// (provided we were given a name)
 		if ( name != null ) {
-			final SessionFactory namedResult = SessionFactoryRegistry.INSTANCE.getNamedSessionFactory( name );
+			final var namedResult = SessionFactoryRegistry.INSTANCE.getNamedSessionFactory( name );
 			if ( namedResult != null ) {
-				if ( LOG.isTraceEnabled() ) {
-					LOG.trace( "Resolved factory by name: " + name );
+				if ( SESSION_FACTORY_LOGGER.isTraceEnabled() ) {
+					SESSION_FACTORY_LOGGER.resolvedFactoryByName( name );
 				}
 				return namedResult;
 			}
@@ -1193,7 +1189,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	 * @throws IOException indicates problems reading back serial data stream
 	 */
 	static SessionFactoryImpl deserialize(ObjectInputStream ois) throws IOException {
-		LOG.trace( "Resolving factory from deserialized session" );
+		SESSION_FACTORY_LOGGER.resolvingFactoryFromDeserializedSession();
 		final String uuid = ois.readUTF();
 		boolean isNamed = ois.readBoolean();
 		final String name = isNamed ? ois.readUTF() : null;

@@ -9,7 +9,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceConfigurationError;
 import java.util.Set;
@@ -66,22 +65,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = DEBUG)
 	@Message(value = "Second-level cache disabled", id = 26)
 	void noRegionFactory();
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Instantiating factory [%s] with settings: %s", id = 30)
-	void instantiatingFactory(String uuid, Map<String, Object> settings);
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Closing factory [%s]", id = 31)
-	void closingFactory(String uuid);
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Serializing factory [%s]", id = 32)
-	void serializingFactory(String uuid);
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Deserialized factory [%s]", id = 33)
-	void deserializedFactory(String uuid);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Composite id class does not override equals(): %s", id = 38)
@@ -305,10 +288,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = ERROR)
 	@Message(value = "Could not close stream on hibernate.properties: %s", id = 297)
 	void unableToCloseStreamError(IOException error);
-
-	@LogMessage(level = ERROR)
-	@Message(value = "Unable to construct current session context [%s]", id = 302)
-	void unableToConstructCurrentSessionContext(String impl, @Cause Throwable e);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Unable to close temporary session used to load lazy collection associated to no session", id = 303)

@@ -15,8 +15,7 @@ import org.hibernate.Session;
 import org.hibernate.context.spi.AbstractCurrentSessionContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+import static org.hibernate.context.internal.CurrentSessionLogging.CURRENT_SESSION_LOGGER;
 
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
@@ -43,8 +42,6 @@ import static org.hibernate.engine.transaction.internal.jta.JtaStatusHelper.isAc
  * @author Steve Ebersole
  */
 public class JTASessionContext extends AbstractCurrentSessionContext {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JTASessionContext.class );
 
 	private transient final Map<Object, Session> currentSessionMap = new ConcurrentHashMap<>();
 
@@ -100,7 +97,7 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 					currentSession.close();
 				}
 				catch ( Throwable e ) {
-					LOG.debug( "Unable to release generated current-session on failed synchronization registration", e );
+					CURRENT_SESSION_LOGGER.unableToReleaseGeneratedCurrentSessionOnFailedSynchronizationRegistration(e);
 				}
 				throw new HibernateException( "Unable to register cleanup Synchronization with TransactionManager" );
 			}

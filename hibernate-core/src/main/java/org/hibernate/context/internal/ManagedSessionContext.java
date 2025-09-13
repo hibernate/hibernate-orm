@@ -52,14 +52,14 @@ public class ManagedSessionContext extends AbstractCurrentSessionContext {
 
 	@Override
 	public Session currentSession() {
-		final Session current = existingSession( factory() );
+		final var current = existingSession( factory() );
 		if ( current == null ) {
 			throw new HibernateException( "No session currently bound to execution context" );
 		}
 		else {
 			validateExistingSession( current );
+			return current;
 		}
-		return current;
 	}
 
 	/**
@@ -92,7 +92,7 @@ public class ManagedSessionContext extends AbstractCurrentSessionContext {
 	 * @return The bound session if one, else null.
 	 */
 	public static Session unbind(SessionFactory factory) {
-		final Map<SessionFactory,Session> sessionMap = sessionMap();
+		final var sessionMap = sessionMap();
 		Session existing = null;
 		if ( sessionMap != null ) {
 			existing = sessionMap.remove( factory );
@@ -102,13 +102,8 @@ public class ManagedSessionContext extends AbstractCurrentSessionContext {
 	}
 
 	private static Session existingSession(SessionFactory factory) {
-		final Map<SessionFactory,Session> sessionMap = sessionMap();
-		if ( sessionMap == null ) {
-			return null;
-		}
-		else {
-			return sessionMap.get( factory );
-		}
+		final var sessionMap = sessionMap();
+		return sessionMap == null ? null : sessionMap.get( factory );
 	}
 
 	protected static Map<SessionFactory,Session> sessionMap() {
@@ -116,7 +111,7 @@ public class ManagedSessionContext extends AbstractCurrentSessionContext {
 	}
 
 	private static Map<SessionFactory,Session> sessionMap(boolean createMap) {
-		Map<SessionFactory,Session> sessionMap = CONTEXT_TL.get();
+		var sessionMap = CONTEXT_TL.get();
 		if ( sessionMap == null && createMap ) {
 			sessionMap = new HashMap<>();
 			CONTEXT_TL.set( sessionMap );
@@ -125,7 +120,7 @@ public class ManagedSessionContext extends AbstractCurrentSessionContext {
 	}
 
 	private static void doCleanup() {
-		final Map<SessionFactory,Session> sessionMap = sessionMap( false );
+		final var sessionMap = sessionMap( false );
 		if ( sessionMap != null ) {
 			if ( sessionMap.isEmpty() ) {
 				CONTEXT_TL.remove();

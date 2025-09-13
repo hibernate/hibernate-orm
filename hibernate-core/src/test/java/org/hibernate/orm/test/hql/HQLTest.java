@@ -2195,6 +2195,24 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	public void test_hql_entity_type_exp_example_3() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-entity-type-exp-example[]
+
+			// using a parameter instead of a literal entity type
+			List<Payment> payments = entityManager.createQuery(
+							"select p " +
+							"from Payment p " +
+							"where type(p) = type(:instance)",
+							Payment.class)
+					.setParameter("instance", new WireTransferPayment())
+					.getResultList();
+			//end::hql-entity-type-exp-example[]
+			assertEquals(1, payments.size());
+		});
+	}
+
+	@Test
 	public void test_simple_case_expressions_example_1() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-simple-case-expressions-example[]

@@ -11,6 +11,8 @@ import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 
+import static org.hibernate.query.sqm.internal.TypecheckUtil.isTypeAssignable;
+
 /**
  * A {@link ArgumentsValidator} that validates the array type is compatible with the element type.
  */
@@ -37,8 +39,9 @@ public class ArrayAndElementArgumentValidator extends ArrayArgumentValidator {
 				final var expressible = elementArgument.getExpressible();
 				final var elementType = expressible != null ? expressible.getSqmType() : null;
 				if ( expectedElementType != null && elementType != null
-					 && !expectedElementType.getJavaType()
-						.isAssignableFrom( elementType.getExpressibleJavaType().getJavaTypeClass() ) ) {
+						&& !isTypeAssignable( expectedElementType, elementType.getSqmType(), bindingContext ) ) {
+//						&& !expectedElementType.getRelationalJavaType().getJavaTypeClass()
+//							.isAssignableFrom( elementType.getRelationalJavaType().getJavaTypeClass() ) ) {
 					throw new FunctionArgumentException(
 							String.format(
 									"Parameter %d of function '%s()' has type %s, but argument is of type '%s'",

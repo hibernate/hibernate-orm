@@ -81,6 +81,7 @@ import static org.hibernate.engine.internal.Versioning.setVersion;
 import static org.hibernate.engine.transaction.internal.jta.JtaStatusHelper.isRollback;
 import static org.hibernate.event.internal.DefaultInitializeCollectionEventListener.handlePotentiallyEmptyCollection;
 import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.internal.SessionLogging.SESSION_LOGGER;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.loader.internal.CacheLoadHelper.initializeCollectionFromCache;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
@@ -112,7 +113,6 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Steve Ebersole
  */
 public class StatelessSessionImpl extends AbstractSharedSessionContract implements StatelessSessionImplementor {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( StatelessSessionImpl.class );
 
 	public static final MultiIdLoadOptions MULTI_ID_LOAD_OPTIONS = new MultiLoadOptions();
 
@@ -924,8 +924,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		checkOpen();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Refreshing transient {0}", infoString( persister, id, getFactory() ) );
+		if ( SESSION_LOGGER.isTraceEnabled() ) {
+			SESSION_LOGGER.refreshingTransient( infoString( persister, id, getFactory() ) );
 		}
 
 		if ( persister.canWriteToCache() ) {
@@ -971,19 +971,18 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		if ( !collection.wasInitialized() ) {
 			final var loadedPersister = ce.getLoadedPersister();
 			final Object loadedKey = ce.getLoadedKey();
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Initializing collection "
-							+ collectionInfoString( loadedPersister, collection, loadedKey, this ) );
+			if ( SESSION_LOGGER.isTraceEnabled() ) {
+				SESSION_LOGGER.initializingCollection( collectionInfoString( loadedPersister, collection, loadedKey, this ) );
 			}
 			final boolean foundInCache =
 					initializeCollectionFromCache( loadedKey, loadedPersister, collection, this );
 			if ( foundInCache ) {
-				LOG.trace( "Collection initialized from cache" );
+				SESSION_LOGGER.collectionInitializedFromCache();
 			}
 			else {
 				loadedPersister.initialize( loadedKey, this );
 				handlePotentiallyEmptyCollection( collection, persistenceContext, loadedKey, loadedPersister );
-				LOG.trace( "Collection initialized" );
+				SESSION_LOGGER.collectionInitialized();
 				final var statistics = getStatistics();
 				if ( statistics.isStatisticsEnabled() ) {
 					statistics.fetchCollection( loadedPersister.getRole() );
@@ -1037,9 +1036,9 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					final Object proxy = holder == null ? null : holder.getProxy();
 
 					if ( proxy != null ) {
-						LOG.trace( "Entity proxy found in session cache" );
-						if ( LOG.isDebugEnabled() && extractLazyInitializer( proxy ).isUnwrap() ) {
-							LOG.debug( "Ignoring NO_PROXY to honor laziness" );
+						SESSION_LOGGER.entityProxyFoundInSessionCache();
+						if ( SESSION_LOGGER.isDebugEnabled() && extractLazyInitializer( proxy ).isUnwrap() ) {
+							SESSION_LOGGER.ignoringNoProxyToHonorLaziness();
 						}
 
 						return persistenceContext.narrowProxy( proxy, persister, entityKey, null );
@@ -1048,7 +1047,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					// specialized handling for entities with subclasses with a HibernateProxy factory
 					if ( persister.hasSubclasses() ) {
 						// entities with subclasses that define a ProxyFactory can create a HibernateProxy.
-						LOG.trace( "Creating a HibernateProxy for to-one association with subclasses to honor laziness" );
+						SESSION_LOGGER.creatingHibernateProxyToHonorLaziness();
 						return createProxy( entityKey );
 					}
 					return enhancementMetadata.createEnhancedProxy( entityKey, false, this );
@@ -1145,13 +1144,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					final boolean foundInCache =
 							initializeCollectionFromCache( key, collectionDescriptor, collection, this );
 					if ( foundInCache ) {
-						LOG.trace( "Collection fetched from cache" );
+						SESSION_LOGGER.collectionFetchedFromCache();
 					}
 					else {
 						collectionDescriptor.initialize( key, this );
 						handlePotentiallyEmptyCollection( collection, getPersistenceContextInternal(), key,
 								collectionDescriptor );
-						LOG.trace( "Collection fetched" );
+						SESSION_LOGGER.collectionFetched();
 						final var statistics = getStatistics();
 						if ( statistics.isStatisticsEnabled() ) {
 							statistics.fetchCollection( collectionDescriptor.getRole() );

@@ -16,7 +16,6 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
-import org.hibernate.JDBCException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.type.SerializationException;
@@ -590,12 +589,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	void enhancementDiscoveryFailed(String className, @Cause Throwable cause);
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "JDBCException was thrown for a transaction marked for rollback. " +
-			" This is probably due to an operation failing fast due to the transaction being marked for rollback.",
-			id = 520)
-	void jdbcExceptionThrownWithTransactionRolledBack(@Cause JDBCException e);
-
-	@LogMessage(level = DEBUG)
 	@Message(value = "Flushing and evicting managed instance of type [%s] before removing detached instance with same id",
 			id = 530)
 	void flushAndEvictOnRemove(String entityName);
@@ -613,11 +606,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToLocateStaticMetamodelField(
 			String name,
 			String name2);
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Returning null (as required by JPA spec) rather than throwing EntityNotFoundException " +
-			"since the entity of type '%s' with id [%s] does not exist", id = 15013)
-	void ignoringEntityNotFound(String entityName, String identifier);
 
 	@LogMessage(level = DEBUG)
 	@Message(

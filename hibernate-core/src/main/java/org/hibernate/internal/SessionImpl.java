@@ -358,7 +358,7 @@ public class SessionImpl
 			if ( getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
 				throw new IllegalStateException( "EntityManager was already closed" );
 			}
-		SESSION_LOGGER.alreadyClosed();
+			SESSION_LOGGER.alreadyClosed();
 		}
 		else {
 			closeWithoutOpenChecks();
@@ -483,7 +483,7 @@ public class SessionImpl
 	}
 
 	private void managedClose() {
-			SESSION_LOGGER.automaticallyClosingSession();
+		SESSION_LOGGER.automaticallyClosingSession();
 		closeWithoutOpenChecks();
 	}
 
@@ -841,10 +841,7 @@ public class SessionImpl
 	public void removeOrphanBeforeUpdates(String entityName, Object child) {
 		// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.
 		//       This should be removed once action/task ordering is improved.
-		final boolean traceEnabled = SESSION_LOGGER.isTraceEnabled();
-		if ( traceEnabled ) {
-			logRemoveOrphanBeforeUpdates( "begin", entityName, child );
-		}
+		logRemoveOrphanBeforeUpdates( "begin", entityName, child );
 		persistenceContext.beginRemoveOrphanBeforeUpdates();
 		try {
 			checkOpenOrWaitingForAutoClose();
@@ -852,9 +849,7 @@ public class SessionImpl
 		}
 		finally {
 			persistenceContext.endRemoveOrphanBeforeUpdates();
-			if ( traceEnabled ) {
-				logRemoveOrphanBeforeUpdates( "end", entityName, child );
-			}
+			logRemoveOrphanBeforeUpdates( "end", entityName, child );
 		}
 	}
 

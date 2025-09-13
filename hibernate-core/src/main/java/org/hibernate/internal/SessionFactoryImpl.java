@@ -211,7 +211,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			final MetadataImplementor bootMetamodel,
 			final SessionFactoryOptions options,
 			final BootstrapContext bootstrapContext) {
-SESSION_FACTORY_LOGGER.buildingSessionFactory();
+		SESSION_FACTORY_LOGGER.buildingSessionFactory();
 		typeConfiguration = bootstrapContext.getTypeConfiguration();
 
 		sessionFactoryOptions = options;

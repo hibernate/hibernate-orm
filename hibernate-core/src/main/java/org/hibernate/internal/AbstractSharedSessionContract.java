@@ -120,6 +120,7 @@ import java.util.function.Function;
 
 import static java.lang.Boolean.TRUE;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
+import static org.hibernate.internal.SessionLogging.SESSION_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsSelectStatement;
 
@@ -139,7 +140,6 @@ import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsSelectStatement;
  * @author Steve Ebersole
  */
 public abstract class AbstractSharedSessionContract implements SharedSessionContractImplementor {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SessionImpl.class );
 
 	private transient SessionFactoryImpl factory;
 	private transient SessionFactoryOptions factoryOptions;
@@ -282,13 +282,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	private void logInconsistentOptions(SharedSessionCreationOptions sharedOptions) {
+		// TODO: these should probable be exceptions!
 		if ( sharedOptions.shouldAutoJoinTransactions() ) {
-			LOG.debug( "Session creation specified 'autoJoinTransactions', which is invalid in conjunction " +
-							"with sharing JDBC connection between sessions; ignoring" );
+			SESSION_LOGGER.invalidAutoJoinTransactionsWithSharedConnection();
 		}
 		if ( sharedOptions.getPhysicalConnectionHandlingMode() != connectionHandlingMode ) {
-			LOG.debug( "Session creation specified 'PhysicalConnectionHandlingMode' which is invalid in conjunction " +
-							"with sharing JDBC connection between sessions; ignoring" );
+			SESSION_LOGGER.invalidPhysicalConnectionHandlingModeWithSharedConnection();
 		}
 	}
 
@@ -357,15 +356,17 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	void beforeTransactionCompletionEvents() {
+		SESSION_LOGGER.beforeTransactionCompletion();
 		try {
 			getInterceptor().beforeTransactionCompletion( getTransactionIfAccessible() );
 		}
 		catch (Throwable t) {
-			LOG.exceptionInBeforeTransactionCompletionInterceptor( t );
+			SESSION_LOGGER.exceptionInBeforeTransactionCompletionInterceptor( t );
 		}
 	}
 
 	void afterTransactionCompletionEvents(boolean successful) {
+		SESSION_LOGGER.afterTransactionCompletion( successful, false );
 		getEventListenerManager().transactionCompletion(successful);
 
 		final var statistics = getFactory().getStatistics();
@@ -377,7 +378,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			getInterceptor().afterTransactionCompletion( getTransactionIfAccessible() );
 		}
 		catch (Throwable t) {
-			LOG.exceptionInAfterTransactionCompletionInterceptor( t );
+			SESSION_LOGGER.exceptionInAfterTransactionCompletionInterceptor( t );
 		}
 	}
 
@@ -1686,9 +1687,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Serial
 	private void writeObject(ObjectOutputStream oos) throws IOException {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Serializing " + getClass().getSimpleName() + " [" );
-		}
+		SESSION_LOGGER.serializingSession( getSessionIdentifier() );
 
 
 		if ( !jdbcCoordinator.isReadyForSerialization() ) {
@@ -1721,13 +1720,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Serial
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException, SQLException {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Deserializing " + getClass().getSimpleName() );
-		}
-
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Step 1 :: read back non-transient state...
 		ois.defaultReadObject();
+		SESSION_LOGGER.deserializingSession( getSessionIdentifier() );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Step 2 :: read back transient state...

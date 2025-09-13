@@ -13,11 +13,29 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 /**
- * Allows creation of a new {@link Session} with specific options.
+ * Allows creation of a new {@link Session} with specific options
+ * overriding the defaults from the {@link SessionFactory}.
+ * <pre>
+ * try (var session =
+ *         sessionFactory.withOptions()
+ *             .tenantIdentifier(tenantId)
+ *             .initialCacheMode(CacheMode.PUT)
+ *             .flushMode(FlushMode.COMMIT)
+ *             .interceptor(new Interceptor() {
+ *                 &#64;Override
+ *                 public void preFlush(Iterator&lt;Object&gt; entities) {
+ *                     ...
+ *                 }
+ *             })
+ *             .openSession()) {
+ *     ...
+ * }
+ * </pre>
  *
  * @author Steve Ebersole
  *
  * @see SessionFactory#withOptions()
+ * @see SharedSessionBuilder
  */
 public interface SessionBuilder extends CommonBuilder {
 	/**

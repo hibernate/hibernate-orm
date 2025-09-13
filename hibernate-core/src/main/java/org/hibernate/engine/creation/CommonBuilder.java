@@ -124,7 +124,15 @@ public interface CommonBuilder {
 	CommonBuilder noStatementInspector();
 
 	/**
-	 * Define the tenant identifier to be associated with the opened session.
+	 * Specify the tenant identifier to be associated with the opened session.
+	 * <pre>
+	 * try (var session =
+	 *         sessionFactory.withOptions()
+	 *             .tenantIdentifier(tenantId)
+	 *             .openSession()) {
+	 *     ...
+	 * }
+	 * </pre>
 	 *
 	 * @param tenantIdentifier The tenant identifier.
 	 *
@@ -159,6 +167,16 @@ public interface CommonBuilder {
 	 * must be set to {@link CacheMode#IGNORE}. However, it's also usually
 	 * possible to structure data access code in a way which eliminates
 	 * this possibility.
+	 * <p>
+	 * <pre>
+	 * try (var readOnlySession =
+	 *         sessionFactory.withOptions()
+	 *                 .readOnly(true)
+	 *                 .initialCacheMode(CacheMode.IGNORE)
+	 *                 .openSession()) {
+	 *     ...
+	 * }
+	 * </pre>
 	 * <p>
 	 * If a session is created in read-only mode, then it cannot be
 	 * changed to read-write mode, and any call to

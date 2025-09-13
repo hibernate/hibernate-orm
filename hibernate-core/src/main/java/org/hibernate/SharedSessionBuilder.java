@@ -13,11 +13,39 @@ import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
 /**
- * Specialized {@link SessionBuilder} with access to stuff from another session.
+ * Allows creation of a child {@link Session} which shares some options with
+ * another pre-existing parent session. Each session has its own isolated
+ * persistence context, and entity instances must not be shared between
+ * parent and child sessions.
+ * <p>
+ * When {@linkplain Transaction resource-local} transaction management is used:
+ * <ul>
+ * <li>by default, each session executes with its own dedicated JDBC connection
+ *     and therefore has its own isolated transaction, but
+ * <li>calling the {@link #connection()} method specifies that the connection,
+ *     and therefore also the JDBC transaction, should be shared from parent
+ *     to child.
+ * </ul>
+ * <p>
+ * <pre>
+ * try (var childSession
+ *          = session.sessionWithOptions()
+ *                  .connection() // share the JDBC connection
+ *                  .cacheMode(CacheMode.IGNORE)
+ *                  .openSession()) {
+ *     ...
+ * }
+ * </pre>
+ * <p>
+ * On the other hand, when JTA transaction management is used, all sessions
+ * execute within the same transaction. Typically, connection sharing is
+ * handled automatically by the JTA-enabled {@link javax.sql.DataSource}.
  *
  * @author Steve Ebersole
  *
  * @see Session#sessionWithOptions()
+ * @see StatelessSession#sessionWithOptions()
+ * @see SessionBuilder
  */
 public interface SharedSessionBuilder extends SessionBuilder, CommonSharedBuilder {
 

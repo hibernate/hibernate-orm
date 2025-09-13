@@ -172,19 +172,11 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 		final StringBuilder pattern = new StringBuilder();
 		pattern.append("add_");
 		switch (unit) {
-			case NATIVE:
-			case NANOSECOND:
-				pattern.append("second");
-				break;
-			case WEEK:
-				//note: DB2 does not have add_weeks()
-				pattern.append("day");
-				break;
-			case QUARTER:
-				pattern.append("month");
-				break;
-			default:
-				pattern.append("?1");
+			case NATIVE, NANOSECOND -> pattern.append("second");
+			//note: DB2 does not have add_weeks()
+			case WEEK -> pattern.append("day");
+			case QUARTER -> pattern.append("month");
+			default -> pattern.append("?1");
 		}
 		pattern.append("s(");
 		final String timestampExpression;
@@ -207,17 +199,10 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 		pattern.append(timestampExpression);
 		pattern.append(",");
 		switch (unit) {
-			case NANOSECOND:
-				pattern.append("(?2)/1e9");
-				break;
-			case WEEK:
-				pattern.append("(?2)*7");
-				break;
-			case QUARTER:
-				pattern.append("(?2)*3");
-				break;
-			default:
-				pattern.append("?2");
+			case NANOSECOND -> pattern.append("(?2)/1e9");
+			case WEEK -> pattern.append("(?2)*7");
+			case QUARTER -> pattern.append("(?2)*3");
+			default -> pattern.append("?2");
 		}
 		pattern.append(")");
 		return pattern.toString();

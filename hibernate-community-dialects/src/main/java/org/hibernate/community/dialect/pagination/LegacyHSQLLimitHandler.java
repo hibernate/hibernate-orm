@@ -27,9 +27,7 @@ public class LegacyHSQLLimitHandler extends AbstractSimpleLimitHandler {
 		if ( hasFirstRow ) {
 			return " limit 1+" + firstParameter + " " + parameterMarkerStrategy.createMarker( 2, null );
 		}
-		else {
-			return " top " + firstParameter;
-		}
+		return " top " + firstParameter;
 	}
 
 	@Override

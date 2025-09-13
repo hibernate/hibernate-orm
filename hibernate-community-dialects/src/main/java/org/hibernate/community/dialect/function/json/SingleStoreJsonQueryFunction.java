@@ -56,11 +56,11 @@ public class SingleStoreJsonQueryFunction extends JsonQueryFunction {
 			arguments.jsonDocument().accept( walker );
 			for ( JsonPathHelper.JsonPathElement pathElement : jsonPathElements ) {
 				sqlAppender.appendSql( ',' );
-				if ( pathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
+				if ( pathElement instanceof final JsonPathHelper.JsonAttribute attribute ) {
 					sqlAppender.appendSingleQuoteEscapedString( attribute.attribute() );
 				}
-				else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess ) {
-					final String parameterName = ( (JsonPathHelper.JsonParameterIndexAccess) pathElement ).parameterName();
+				else if ( pathElement instanceof final JsonPathHelper.JsonParameterIndexAccess indexParameter) {
+					final String parameterName = indexParameter.parameterName();
 					throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
 				}
 				else {

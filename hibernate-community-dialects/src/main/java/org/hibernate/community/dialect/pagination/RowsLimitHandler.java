@@ -36,9 +36,7 @@ public class RowsLimitHandler extends AbstractSimpleLimitHandler {
 		if ( hasFirstRow ) {
 			return " rows " + firstParameter + " to " + parameterMarkerStrategy.createMarker( jdbcParameterCount + 2, null );
 		}
-		else {
-			return " rows " + firstParameter;
-		}
+		return " rows " + firstParameter;
 	}
 
 	@Override

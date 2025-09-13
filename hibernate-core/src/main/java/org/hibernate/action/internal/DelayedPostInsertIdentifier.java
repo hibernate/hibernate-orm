@@ -49,7 +49,7 @@ public class DelayedPostInsertIdentifier
 		if ( this == object ) {
 			return true;
 		}
-		else if ( !(object  instanceof DelayedPostInsertIdentifier that) ) {
+		else if ( !(object  instanceof final DelayedPostInsertIdentifier that) ) {
 			return false;
 		}
 		else {

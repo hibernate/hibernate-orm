@@ -172,7 +172,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	}
 
 	private void postCommitInsertOnFailure(PostInsertEventListener listener, PostInsertEvent event) {
-		if ( listener instanceof PostCommitInsertEventListener postCommitInsertEventListener ) {
+		if ( listener instanceof final PostCommitInsertEventListener postCommitInsertEventListener ) {
 			postCommitInsertEventListener.onPostInsertCommitFailed( event );
 		}
 		else {
@@ -238,8 +238,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 		if ( isDelayed ) {
 			return getSession().generateEntityKey( getDelayedId(), getPersister() );
 		}
-		else {
-			throw new AssertionFailure( "cannot request delayed entity-key for early-insert post-insert-id generation" );
-		}
+
+		throw new AssertionFailure( "cannot request delayed entity-key for early-insert post-insert-id generation" );
 	}
 }

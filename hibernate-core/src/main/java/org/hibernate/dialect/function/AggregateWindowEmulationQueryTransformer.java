@@ -217,7 +217,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 						return expression;
 					}
 					final Expression outerExpression;
-					if ( expression instanceof SqlSelectionExpression selectionExpression ) {
+					if ( expression instanceof final SqlSelectionExpression selectionExpression ) {
 						final SqlSelection selection = selectionExpression.getSelection();
 						outerExpression = selectClause.getSqlSelections()
 								.get( selection.getValuesArrayPosition() )
@@ -225,7 +225,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 					}
 					else {
 						final Expression realExpression;
-						if ( expression instanceof SqmPathInterpretation<?> pathInterpretation ) {
+						if ( expression instanceof final SqmPathInterpretation<?> pathInterpretation ) {
 							realExpression = pathInterpretation.getSqlExpression();
 						}
 						else {
@@ -282,7 +282,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 				}
 				else {
 					final Expression realExpression;
-					if ( sortExpression instanceof SqmPathInterpretation<?> pathInterpretation ) {
+					if ( sortExpression instanceof final SqmPathInterpretation<?> pathInterpretation ) {
 						realExpression = pathInterpretation.getSqlExpression();
 					}
 					else {

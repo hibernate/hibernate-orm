@@ -44,7 +44,7 @@ public class SkipFirstLimitHandler extends AbstractLimitHandler {
 			return sql;
 		}
 
-		StringBuilder skipFirst = new StringBuilder();
+		var skipFirst = new StringBuilder();
 
 		if ( supportsVariableLimit() ) {
 			if ( ParameterMarkerStrategyStandard.isStandardRenderer( parameterMarkerStrategy ) ) {
@@ -56,7 +56,7 @@ public class SkipFirstLimitHandler extends AbstractLimitHandler {
 				}
 			}
 			else {
-				String marker = parameterMarkerStrategy.createMarker( 1, null );
+				var marker = parameterMarkerStrategy.createMarker( 1, null );
 				if ( hasMaxRows ) {
 					skipFirst.append( " skip " );
 					skipFirst.append( marker );

@@ -303,9 +303,8 @@ public class EntityUpdateAction extends EntityAction {
 			// multiple actions queued during the same flush
 			return persister.getVersion( getInstance() );
 		}
-		else {
-			return previousVersion;
-		}
+
+		return previousVersion;
 	}
 
 	protected Object lockCacheItem(Object previousVersion) {
@@ -322,9 +321,8 @@ public class EntityUpdateAction extends EntityAction {
 			lock = cache.lockItem( session, cacheKey, previousVersion );
 			return cacheKey;
 		}
-		else {
-			return null;
-		}
+
+		return null;
 	}
 
 	protected boolean updateCache(EntityPersister persister, Object previousVersion, Object cacheKey) {

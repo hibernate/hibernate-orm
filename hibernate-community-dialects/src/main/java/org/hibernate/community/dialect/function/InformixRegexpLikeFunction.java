@@ -32,8 +32,8 @@ public class InformixRegexpLikeFunction extends AbstractRegexpLikeFunction {
 			SqlAstTranslator<?> walker) {
 		final boolean caseSensitive;
 		if ( arguments.size() > 2 ) {
-			if ( !(arguments.get( 2 ) instanceof Literal literal)
-				|| !(literal.getLiteralValue() instanceof String flags)
+			if ( !(arguments.get( 2 ) instanceof final Literal literal)
+				|| !(literal.getLiteralValue() instanceof final String flags)
 				|| !flags.equals( "i" ) ) {
 				throw new IllegalArgumentException( "Informix only supports the case insensitive flag 'i' as literal but got." );
 			}

@@ -312,7 +312,7 @@ public class TypecheckUtil {
 	 *
 	 * @see #areTypesComparable(SqmBindableType, SqmBindableType, BindingContext)
 	 */
-	private static boolean isTypeAssignable(
+	public static boolean isTypeAssignable(
 			SqmBindableType<?> targetType, SqmBindableType<?> expressionType,
 			BindingContext bindingContext) {
 

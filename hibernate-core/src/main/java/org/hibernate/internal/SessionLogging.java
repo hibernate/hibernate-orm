@@ -38,6 +38,16 @@ public interface SessionLogging extends BasicLogger {
 
 	SessionLogging SESSION_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), SessionLogging.class, NAME );
 
+	@LogMessage(level = DEBUG)
+	@Message("Session creation specified 'autoJoinTransactions', "
+			+ "which is invalid in conjunction with sharing JDBC connection between sessions; ignoring")
+	void invalidAutoJoinTransactionsWithSharedConnection();
+
+	@LogMessage(level = DEBUG)
+	@Message("Session creation specified a 'PhysicalConnectionHandlingMode', "
+			+ "which is invalid in conjunction with sharing JDBC connection between sessions; ignoring")
+	void invalidPhysicalConnectionHandlingModeWithSharedConnection();
+
 	@LogMessage(level = TRACE)
 	@Message("Opened Session [%s] at timestamp: %s")
 	void openedSession(UUID sessionIdentifier, long timestamp);
@@ -117,6 +127,14 @@ public interface SessionLogging extends BasicLogger {
 	@LogMessage(level = TRACE)
 	@Message("Deserializing Session [%s]")
 	void deserializingSession(UUID sessionIdentifier);
+
+	@LogMessage(level = ERROR)
+	@Message(id = 90006106, value = "Exception in interceptor beforeTransactionCompletion()")
+	void exceptionInBeforeTransactionCompletionInterceptor(@Cause Throwable e);
+
+	@LogMessage(level = ERROR)
+	@Message(id = 90006107, value = "Exception in interceptor afterTransactionCompletion()")
+	void exceptionInAfterTransactionCompletionInterceptor(@Cause Throwable e);
 
 	// StatelessSession-specific
 

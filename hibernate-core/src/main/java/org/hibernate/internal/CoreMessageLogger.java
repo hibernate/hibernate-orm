@@ -95,14 +95,6 @@ public interface CoreMessageLogger extends BasicLogger {
 			id = 84)
 	void entityMappedAsNonAbstract(String name);
 
-	@LogMessage(level = ERROR)
-	@Message(value = "Exception in interceptor afterTransactionCompletion()", id = 87)
-	void exceptionInAfterTransactionCompletionInterceptor(@Cause Throwable e);
-
-	@LogMessage(level = ERROR)
-	@Message(value = "Exception in interceptor beforeTransactionCompletion()", id = 88)
-	void exceptionInBeforeTransactionCompletionInterceptor(@Cause Throwable e);
-
 	@LogMessage(level = INFO)
 	@Message(value = "Sub-resolver threw unexpected exception, continuing to next: %s", id = 89)
 	void exceptionInSubResolver(String message);

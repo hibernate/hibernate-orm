@@ -12,11 +12,13 @@ import org.hibernate.engine.creation.CommonBuilder;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 /**
- * Allows creation of a new {@link StatelessSession} with specific options.
+ * Allows creation of a new {@link StatelessSession} with specific options
+ * overriding the defaults from the {@link SessionFactory}.
  *
  * @author Steve Ebersole
  *
  * @see SessionFactory#withStatelessOptions()
+ * @see SharedStatelessSessionBuilder
  */
 public interface StatelessSessionBuilder extends CommonBuilder {
 	/**

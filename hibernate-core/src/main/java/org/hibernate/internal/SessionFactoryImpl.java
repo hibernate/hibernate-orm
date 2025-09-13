@@ -1138,7 +1138,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	 */
 	@Serial
 	private Object readResolve() throws InvalidObjectException {
-		SESSION_FACTORY_LOGGER.trace( "Resolving serialized factory" );
+		SESSION_FACTORY_LOGGER.resolvingSerializedFactory();
 		return locateSessionFactoryOnDeserialization( uuid, name );
 	}
 

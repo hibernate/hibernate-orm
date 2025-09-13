@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.internal;
+package org.hibernate.engine.internal;
 
 import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;

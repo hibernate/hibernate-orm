@@ -49,8 +49,6 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.InstanceIdentityMap;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -71,6 +69,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.PersistenceContextLogging.PERSISTENCE_CONTEXT_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
@@ -87,8 +86,6 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Sanne Grinovero
  */
 class StatefulPersistenceContext implements PersistenceContext {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( StatefulPersistenceContext.class );
 
 	private static final int INIT_COLL_SIZE = 8;
 
@@ -434,19 +431,21 @@ class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void postLoad(JdbcValuesSourceProcessingState processingState, Consumer<EntityHolder> holderConsumer) {
 		final var callback = processingState.getExecutionContext().getCallback();
-		if ( processingState.getLoadingEntityHolders() != null ) {
+		final var loadingEntityHolders = processingState.getLoadingEntityHolders();
+		if ( loadingEntityHolders != null ) {
 			final var listenerGroup = getSession().getFactory().getEventListenerGroups().eventListenerGroup_POST_LOAD;
 			final var postLoadEvent = processingState.getPostLoadEvent();
-			for ( final var holder : processingState.getLoadingEntityHolders() ) {
+			for ( final var holder : loadingEntityHolders ) {
 				processLoadedEntityHolder( holder, listenerGroup, postLoadEvent, callback, holderConsumer );
 			}
-			processingState.getLoadingEntityHolders().clear();
+			loadingEntityHolders.clear();
 		}
-		if ( processingState.getReloadedEntityHolders() != null ) {
-			for ( final var holder : processingState.getReloadedEntityHolders() ) {
+		final var reloadedEntityHolders = processingState.getReloadedEntityHolders();
+		if ( reloadedEntityHolders != null ) {
+			for ( final var holder : reloadedEntityHolders ) {
 				processLoadedEntityHolder( holder, null, null, callback, holderConsumer );
 			}
-			processingState.getReloadedEntityHolders().clear();
+			reloadedEntityHolders.clear();
 		}
 	}
 
@@ -459,7 +458,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 		if ( holderConsumer != null ) {
 			holderConsumer.accept( holder );
 		}
-		if ( holder.getEntity() == null ) {
+		final Object entity = holder.getEntity();
+		if ( entity == null ) {
 			// It's possible that we tried to load an entity and found out it doesn't exist,
 			// in which case we added an entry with a null proxy and entity.
 			// Remove that empty entry on post load to avoid unwanted side effects
@@ -468,13 +468,13 @@ class StatefulPersistenceContext implements PersistenceContext {
 		else {
 			if ( postLoadEvent != null ) {
 				postLoadEvent.reset();
-				postLoadEvent.setEntity( holder.getEntity() )
+				postLoadEvent.setEntity( entity )
 						.setId( holder.getEntityKey().getIdentifier() )
 						.setPersister( holder.getDescriptor() );
 				listenerGroup.fireEventOnEachListener( postLoadEvent, PostLoadEventListener::onPostLoad );
 			}
 			if ( callback != null ) {
-				callback.invokeAfterLoadActions( holder.getEntity(), holder.getDescriptor(), getSession() );
+				callback.invokeAfterLoadActions( entity, holder.getDescriptor(), getSession() );
 			}
 			holder.resetEntityInitialier();
 		}
@@ -538,22 +538,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	private EntityHolderImpl removeHolder(EntityKey key) {
-		final EntityHolderImpl holder;
-		if ( entitiesByKey != null ) {
-			holder = entitiesByKey.remove( key );
-			if ( entitiesByUniqueKey != null ) {
-				final Object entity = holder == null ? null : holder.entity;
-				final var itr = entitiesByUniqueKey.values().iterator();
-				while ( itr.hasNext() ) {
-					if ( itr.next() == entity ) {
-						itr.remove();
-					}
-				}
-			}
-		}
-		else {
-			holder = null;
-		}
+		final var holder = findHolder( key );
 
 		// Clear all parent cache
 		parentsByChild = null;
@@ -569,6 +554,25 @@ class StatefulPersistenceContext implements PersistenceContext {
 			fetchQueue.removeSubselect( key );
 		}
 		return holder;
+	}
+
+	private EntityHolderImpl findHolder(EntityKey key) {
+		if ( entitiesByKey != null ) {
+			final var holder = entitiesByKey.remove( key );
+			if ( entitiesByUniqueKey != null ) {
+				final Object entity = holder == null ? null : holder.entity;
+				final var itr = entitiesByUniqueKey.values().iterator();
+				while ( itr.hasNext() ) {
+					if ( itr.next() == entity ) {
+						itr.remove();
+					}
+				}
+			}
+			return holder;
+		}
+		else {
+			return null;
+		}
 	}
 
 	@Override
@@ -615,8 +619,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 			final boolean existsInDatabase,
 			final EntityPersister persister,
 			final boolean disableVersionIncrement) {
-		final EntityHolder entityHolder = addEntityHolder( entityKey, entity );
-		final EntityEntry entityEntry = addEntry(
+		final var entityHolder = addEntityHolder( entityKey, entity );
+		final var entityEntry = addEntry(
 				entity,
 				status,
 				loadedState,
@@ -645,7 +649,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 			final EntityPersister persister,
 			final boolean disableVersionIncrement) {
 		assert lockMode != null;
-		final EntityEntry entityEntry =
+		final var entityEntry =
 				new EntityEntryImpl(
 						status,
 						loadedState,
@@ -667,7 +671,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	public EntityEntry addReferenceEntry(
 			final Object entity,
 			final Status status) {
-		final EntityEntry entityEntry = asManagedEntity( entity ).$$_hibernate_getEntityEntry();
+		final var entityEntry = asManagedEntity( entity ).$$_hibernate_getEntityEntry();
 		entityEntry.setStatus( status );
 		entityEntryContext.addEntityEntry( entity, entityEntry );
 		setHasNonReadOnlyEnties( status );
@@ -720,7 +724,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	public void reassociateProxy(Object value, Object id) throws MappingException {
 		final var lazyInitializer = extractLazyInitializer( value );
 		if ( lazyInitializer != null ) {
-			LOG.tracef( "Setting proxy identifier: %s", id );
+			PERSISTENCE_CONTEXT_LOGGER.settingProxyIdentifier( id );
 			lazyInitializer.setIdentifier( id );
 			reassociateProxy( lazyInitializer, asHibernateProxy( value ) );
 		}
@@ -806,11 +810,11 @@ class StatefulPersistenceContext implements PersistenceContext {
 	public Object narrowProxy(Object proxy, EntityPersister persister, EntityKey key, Object object)
 			throws HibernateException {
 
-		final Class<?> concreteProxyClass = persister.getConcreteProxyClass();
+		final var concreteProxyClass = persister.getConcreteProxyClass();
 		final boolean alreadyNarrow = concreteProxyClass.isInstance( proxy );
 
 		if ( !alreadyNarrow ) {
-			LOG.narrowingProxy( concreteProxyClass );
+			PERSISTENCE_CONTEXT_LOGGER.narrowingProxy( concreteProxyClass );
 
 			// If an impl is passed, there is really no point in creating a proxy.
 			// It would just be extra processing.  Just return the impl
@@ -962,15 +966,15 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Object getLoadedCollectionOwnerOrNull(PersistentCollection<?> collection) {
-		final var ce = getCollectionEntry( collection );
-		if ( ce == null || ce.getLoadedPersister() == null ) {
+		final var collectionEntry = getCollectionEntry( collection );
+		if ( collectionEntry == null || collectionEntry.getLoadedPersister() == null ) {
 			return null;
 		}
 		else {
 			// TODO: an alternative is to check if the owner has changed; if it hasn't then
 			// return collection.getOwner()
-			final Object entityId = getLoadedCollectionOwnerIdOrNull( ce );
-			return entityId != null ? getCollectionOwner( entityId, ce.getLoadedPersister() ) : null;
+			final Object entityId = getLoadedCollectionOwnerIdOrNull( collectionEntry );
+			return entityId != null ? getCollectionOwner( entityId, collectionEntry.getLoadedPersister() ) : null;
 		}
 	}
 
@@ -982,27 +986,29 @@ class StatefulPersistenceContext implements PersistenceContext {
 	/**
 	 * Get the ID for the entity that owned this persistent collection when it was loaded
 	 *
-	 * @param ce The collection entry
+	 * @param collectionEntry The collection entry
 	 * @return the owner ID if available from the collection's loaded key; otherwise, returns null
 	 */
-	private Object getLoadedCollectionOwnerIdOrNull(CollectionEntry ce) {
-		if ( ce == null || ce.getLoadedKey() == null || ce.getLoadedPersister() == null ) {
+	private Object getLoadedCollectionOwnerIdOrNull(CollectionEntry collectionEntry) {
+		if ( collectionEntry == null
+				|| collectionEntry.getLoadedKey() == null
+				|| collectionEntry.getLoadedPersister() == null ) {
 			return null;
 		}
 		else {
 			// TODO: an alternative is to check if the owner has changed; if it hasn't then
 			// get the ID from collection.getOwner()
-			return ce.getLoadedPersister().getCollectionType()
-					.getIdOfOwnerOrNull( ce.getLoadedKey(), session );
+			return collectionEntry.getLoadedPersister().getCollectionType()
+					.getIdOfOwnerOrNull( collectionEntry.getLoadedKey(), session );
 		}
 	}
 
 	@Override
 	public void addUninitializedCollection(CollectionPersister persister, PersistentCollection<?> collection, Object id) {
-		final var ce = new CollectionEntry( collection, persister, id, flushing );
-		addCollection( collection, ce, id );
+		final var collectionEntry = new CollectionEntry( collection, persister, id, flushing );
+		addCollection( collection, collectionEntry, id );
 		if ( session.getLoadQueryInfluencers().effectivelyBatchLoadable( persister ) ) {
-			getBatchFetchQueue().addBatchLoadableCollection( collection, ce );
+			getBatchFetchQueue().addBatchLoadableCollection( collection, collectionEntry );
 		}
 	}
 
@@ -1010,10 +1016,10 @@ class StatefulPersistenceContext implements PersistenceContext {
 	public void addUninitializedDetachedCollection(CollectionPersister persister, PersistentCollection<?> collection) {
 		final Object key = collection.getKey();
 		assert key != null;
-		final var ce = new CollectionEntry( persister, key );
-		addCollection( collection, ce, key );
+		final var collectionEntry = new CollectionEntry( persister, key );
+		addCollection( collection, collectionEntry, key );
 		if ( session.getLoadQueryInfluencers().effectivelyBatchLoadable( persister ) ) {
-			getBatchFetchQueue().addBatchLoadableCollection( collection, ce );
+			getBatchFetchQueue().addBatchLoadableCollection( collection, collectionEntry );
 		}
 	}
 
@@ -1085,8 +1091,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	 * @param persister The collection persister
 	 */
 	private void addCollection(PersistentCollection<?> collection, CollectionPersister persister) {
-		final var ce = new CollectionEntry( persister, collection );
-		putCollectionEntry( collection, ce );
+		putCollectionEntry( collection, new CollectionEntry( persister, collection ) );
 	}
 
 	@Override
@@ -1097,18 +1102,17 @@ class StatefulPersistenceContext implements PersistenceContext {
 			addCollection( collection, collectionPersister );
 		}
 		else {
-			final var ce = new CollectionEntry( collection, session.getFactory() );
-			addCollection( collection, ce, collection.getKey() );
+			addCollection( collection, new CollectionEntry( collection, session.getFactory() ), collection.getKey() );
 		}
 	}
 
 	@Override
 	public CollectionEntry addInitializedCollection(CollectionPersister persister, PersistentCollection<?> collection, Object id)
 			throws HibernateException {
-		final var ce = new CollectionEntry( collection, persister, id, flushing );
-		ce.postInitialize( collection, session );
-		addCollection( collection, ce, id );
-		return ce;
+		final var collectionEntry = new CollectionEntry( collection, persister, id, flushing );
+		collectionEntry.postInitialize( collection, session );
+		addCollection( collection, collectionEntry, id );
+		return collectionEntry;
 	}
 
 	@Override
@@ -1509,9 +1513,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 								collectionPersister,
 								unmergedInstance
 						);
-						LOG.tracef(
-								"Detached object being merged (corresponding with a managed entity) has a collection that [%s] the detached child",
-								( found ? "contains" : "does not contain" )
+						PERSISTENCE_CONTEXT_LOGGER.detachedManagedContainsChild(
+							( found ? "contains" : "does not contain" )
 						);
 					}
 				}
@@ -1540,9 +1543,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 								collectionPersister,
 								mergeMap.get( proxy )
 						);
-						LOG.debugf(
-								"Detached proxy being merged has a collection that [%s] the managed child",
-								(found ? "contains" : "does not contain")
+						PERSISTENCE_CONTEXT_LOGGER.detachedProxyContainsManagedChild(
+							(found ? "contains" : "does not contain")
 						);
 						if ( !found ) {
 							found = isFoundInParent(
@@ -1552,9 +1554,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 									collectionPersister,
 									mergeMap.get( proxy )
 							);
-							LOG.debugf(
-									"Detached proxy being merged has a collection that [%s] the detached child being merged",
-									(found ? "contains" : "does not contain")
+							PERSISTENCE_CONTEXT_LOGGER.detachedProxyContainsDetachedChild(
+								(found ? "contains" : "does not contain")
 							);
 						}
 						if ( found ) {
@@ -1583,8 +1584,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 			Object potentialParent) {
 		final Object collection = persister.getPropertyValue( potentialParent, property );
 		return collection != null
-				&& Hibernate.isInitialized( collection )
-				&& collectionPersister.getCollectionType().contains( collection, childEntity, session );
+			&& Hibernate.isInitialized( collection )
+			&& collectionPersister.getCollectionType().contains( collection, childEntity, session );
 	}
 
 	@Override
@@ -1594,7 +1595,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 		final var cp = metamodel.getCollectionDescriptor( entity + '.' + property );
 
 		//Extracted as we're logging within two hot loops
-		final boolean debugEnabled = LOG.isDebugEnabled();
+		final boolean debugEnabled = PERSISTENCE_CONTEXT_LOGGER.isDebugEnabled();
 
 		// try cache lookup first
 		final Object parent = getParentsByChild( childEntity );
@@ -1609,10 +1610,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 					if ( unMergedInstance != null && unMergedChild != null ) {
 						index = getIndexInParent( property, unMergedChild, persister, cp, unMergedInstance );
 						if ( debugEnabled ) {
-							LOG.debugf(
-									"A detached object being merged (corresponding to a parent in parentsByChild) has an indexed collection that [%s] the detached child being merged. ",
-									( index != null ? "contains" : "does not contain" )
-							);
+							PERSISTENCE_CONTEXT_LOGGER.detachedParentIndexedContainsDetachedChild(
+									index != null ? "contains" : "does not contain" );
 						}
 					}
 				}
@@ -1627,11 +1626,10 @@ class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		//Not found in cache, proceed
-		for ( var me : reentrantSafeEntityEntries() ) {
-			final EntityEntry ee = me.getValue();
-			if ( persister.isSubclassEntityName( ee.getEntityName() ) ) {
-				final Object instance = me.getKey();
-
+		for ( var entry : reentrantSafeEntityEntries() ) {
+			final var entityEntry = entry.getValue();
+			if ( persister.isSubclassEntityName( entityEntry.getEntityName() ) ) {
+				final Object instance = entry.getKey();
 				Object index = getIndexInParent( property, childEntity, persister, cp, instance );
 				if ( index==null && mergeMap!=null ) {
 					final Object unMergedInstance = mergeMap.get( instance );
@@ -1639,10 +1637,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 					if ( unMergedInstance != null && unMergedChild!=null ) {
 						index = getIndexInParent( property, unMergedChild, persister, cp, unMergedInstance );
 						if ( debugEnabled ) {
-							LOG.debugf(
-									"A detached object being merged (corresponding to a managed entity) has an indexed collection that [%s] the detached child being merged. ",
-									(index != null ? "contains" : "does not contain" )
-							);
+							PERSISTENCE_CONTEXT_LOGGER.detachedManagedIndexedContainsDetachedChild(
+								index != null ? "contains" : "does not contain" );
 						}
 					}
 				}
@@ -1797,7 +1793,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	 * @throws IOException serialization errors.
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		LOG.trace( "Serializing persistence context" );
+		PERSISTENCE_CONTEXT_LOGGER.serializingPersistenceContext();
 
 		oos.writeBoolean( defaultReadOnly );
 		oos.writeBoolean( hasNonReadOnlyEntities );
@@ -1878,10 +1874,9 @@ class StatefulPersistenceContext implements PersistenceContext {
 			oos.writeInt( 0 );
 		}
 		else {
-			oos.writeInt( collection.size() );
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Starting serialization of [" + collection.size() + "] " + keysName + " entries" );
-			}
+			final int size = collection.size();
+			oos.writeInt( size );
+			PERSISTENCE_CONTEXT_LOGGER.startingSerializationOfEntries( size, keysName );
 			for ( E entry : collection ) {
 				serializer.serialize( entry, oos );
 			}
@@ -1902,7 +1897,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	public static StatefulPersistenceContext deserialize(
 			ObjectInputStream ois,
 			SessionImplementor session) throws IOException, ClassNotFoundException {
-		LOG.trace( "Deserializing persistence context" );
+		PERSISTENCE_CONTEXT_LOGGER.deserializingPersistenceContext();
 		final var rtn = new StatefulPersistenceContext( session );
 		final var sfi = session.getFactory();
 
@@ -1917,9 +1912,9 @@ class StatefulPersistenceContext implements PersistenceContext {
 			rtn.hasNonReadOnlyEntities = ois.readBoolean();
 
 			int count = ois.readInt();
-			final boolean traceEnabled = LOG.isTraceEnabled();
+			final boolean traceEnabled = PERSISTENCE_CONTEXT_LOGGER.isTraceEnabled();
 			if ( traceEnabled ) {
-				LOG.trace( "Starting deserialization of [" + count + "] entitiesByUniqueKey entries" );
+				PERSISTENCE_CONTEXT_LOGGER.startingDeserializationOfEntries( count, "entitiesByUniqueKey" );
 			}
 			if ( count != 0 ) {
 				rtn.entitiesByUniqueKey = mapOfSize(Math.max(count, INIT_COLL_SIZE));
@@ -1930,7 +1925,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 			count = ois.readInt();
 			if ( traceEnabled ) {
-				LOG.trace( "Starting deserialization of [" + count + "] entitySnapshotsByKey entries" );
+				PERSISTENCE_CONTEXT_LOGGER.startingDeserializationOfEntries( count, "entitySnapshotsByKey" );
 			}
 			rtn.entitySnapshotsByKey = mapOfSize(Math.max(count, INIT_COLL_SIZE));
 			for ( int i = 0; i < count; i++ ) {
@@ -1941,7 +1936,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 			count = ois.readInt();
 			if ( traceEnabled ) {
-				LOG.trace( "Starting deserialization of [" + count + "] entitiesByKey entries" );
+				PERSISTENCE_CONTEXT_LOGGER.startingDeserializationOfEntries( count, "entitiesByKey" );
 			}
 			rtn.entitiesByKey = mapOfSize(Math.max(count, INIT_COLL_SIZE));
 			final var metamodel = sfi.getMappingMetamodel();
@@ -1962,7 +1957,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 					else {
 						// otherwise, the proxy was pruned during the serialization process
 						if ( traceEnabled ) {
-							LOG.trace( "Encountered pruned proxy" );
+							PERSISTENCE_CONTEXT_LOGGER.encounteredPrunedProxy();
 						}
 					}
 				}
@@ -1972,7 +1967,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 			count = ois.readInt();
 			if ( traceEnabled ) {
-				LOG.trace( "Starting deserialization of [" + count + "] collectionsByKey entries" );
+				PERSISTENCE_CONTEXT_LOGGER.startingDeserializationOfEntries( count, "collectionsByKey" );
 			}
 			rtn.collectionsByKey = mapOfSize(Math.max(count, INIT_COLL_SIZE));
 			for ( int i = 0; i < count; i++ ) {
@@ -1984,7 +1979,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 			count = ois.readInt();
 			if ( traceEnabled ) {
-				LOG.trace( "Starting deserialization of [" + count + "] collectionEntries entries" );
+				PERSISTENCE_CONTEXT_LOGGER.startingDeserializationOfEntries( count, "collectionEntries" );
 			}
 			for ( int i = 0; i < count; i++ ) {
 				final var pc = (PersistentCollection<?>) ois.readObject();
@@ -1995,7 +1990,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 			count = ois.readInt();
 			if ( traceEnabled ) {
-				LOG.trace( "Starting deserialization of [" + count + "] arrayHolders entries" );
+				PERSISTENCE_CONTEXT_LOGGER.startingDeserializationOfEntries( count, "arrayHolders" );
 			}
 			if ( count != 0 ) {
 				rtn.arrayHolders = new IdentityHashMap<>(Math.max(count, INIT_COLL_SIZE));
@@ -2006,7 +2001,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 			count = ois.readInt();
 			if ( traceEnabled ) {
-				LOG.trace( "Starting deserialization of [" + count + "] nullifiableEntityKey entries" );
+				PERSISTENCE_CONTEXT_LOGGER.startingDeserializationOfEntries( count, "nullifiableEntityKey" );
 			}
 			rtn.nullifiableEntityKeys = new HashSet<>();
 			for ( int i = 0; i < count; i++ ) {
@@ -2014,8 +2009,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 			}
 			count = ois.readInt();
 
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Starting deserialization of [" + count + "] deletedUnloadedEntityKeys entries" );
+			if ( PERSISTENCE_CONTEXT_LOGGER.isTraceEnabled() ) {
+				PERSISTENCE_CONTEXT_LOGGER.startingDeserializationOfEntries( count, "deletedUnloadedEntityKeys" );
 			}
 			rtn.deletedUnloadedEntityKeys = new HashSet<>();
 			for ( int i = 0; i < count; i++ ) {
@@ -2153,11 +2148,11 @@ class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public PersistentCollection<?> addCollectionByKey(CollectionKey collectionKey, PersistentCollection<?> persistentCollection) {
+	public PersistentCollection<?> addCollectionByKey(CollectionKey collectionKey, PersistentCollection<?> collection) {
 		if ( collectionsByKey == null ) {
 			collectionsByKey = mapOfSize( INIT_COLL_SIZE );
 		}
-		return collectionsByKey.put( collectionKey, persistentCollection );
+		return collectionsByKey.put( collectionKey, collection );
 	}
 
 	@Override

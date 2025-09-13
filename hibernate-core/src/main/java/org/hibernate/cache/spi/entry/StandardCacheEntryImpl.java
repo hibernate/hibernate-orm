@@ -149,7 +149,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 
 		}
 
-		persister.setPropertyValues( instance, state );
+		persister.setValues( instance, state );
 
 		return state;
 	}

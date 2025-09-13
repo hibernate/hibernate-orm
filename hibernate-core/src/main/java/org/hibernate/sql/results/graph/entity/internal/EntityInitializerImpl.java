@@ -1366,7 +1366,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 						.injectInterceptor( entityInstanceForNotify, entityIdentifier, session );
 			}
 		}
-		data.concreteDescriptor.setPropertyValues( entityInstanceForNotify, resolvedEntityState );
+		data.concreteDescriptor.setValues( entityInstanceForNotify, resolvedEntityState );
 
 		persistenceContext.addEntity( entityKey, entityInstanceForNotify );
 

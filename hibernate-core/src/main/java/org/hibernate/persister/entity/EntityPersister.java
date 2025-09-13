@@ -627,7 +627,10 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	/**
 	 * Load the id for the entity based on the natural id.
+	 *
+	 * @deprecated No longer used
 	 */
+	@Deprecated(since = "7.2")
 	Object loadEntityIdByNaturalId(
 			Object[] naturalIdValues,
 			LockOptions lockOptions,
@@ -637,17 +640,6 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * Load an instance of the persistent class.
 	 */
 	Object load(Object id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session);
-
-	/**
-	 * @deprecated Use {@link #load(Object, Object, LockMode, SharedSessionContractImplementor)}
-	 */
-	@Deprecated(since = "6.0")
-	default Object load(
-			Object id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session,
-			@SuppressWarnings("unused") Boolean readOnly)
-			throws HibernateException {
-		return load( id, optionalObject, lockMode, session );
-	}
 
 	/**
 	 * Load an instance of the persistent class.
@@ -897,10 +889,6 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * Get the cascade styles of the properties (optional operation)
 	 */
 	CascadeStyle[] getPropertyCascadeStyles();
-
-	default boolean isPropertySelectable(int propertyNumber) {
-		return true;
-	}
 
 	/**
 	 * Get the identifier type
@@ -1377,14 +1365,6 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	boolean storeDiscriminatorInShallowQueryCacheLayout();
 
 	boolean hasFilterForLoadByKey();
-
-	/**
-	 * The property name of the "special" identifier property in HQL
-	 *
-	 * @deprecated this feature of HQL is now deprecated
-	 */
-	@Deprecated(since = "6.2")
-	String ENTITY_ID = "id";
 
 	/**
 	 * @return Metadata for each unique key defined

@@ -332,9 +332,9 @@ class EntityPropertyMapping {
 
 		if ( etype.isReferenceToPrimaryKey() ) {
 			if ( !hasNonIdentifierPropertyNamedId ) {
-				String idpath1 = extendPath( path, EntityPersister.ENTITY_ID );
-				addPropertyPath( idpath1, idtype, columns, columnReaders, columnReaderTemplates, factory );
-				initPropertyPaths( idpath1, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
+				String idpath = extendPath( path, AbstractEntityPersister.ENTITY_ID );
+				addPropertyPath( idpath, idtype, columns, columnReaders, columnReaderTemplates, factory );
+				initPropertyPaths( idpath, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
 			}
 		}
 
@@ -352,7 +352,7 @@ class EntityPropertyMapping {
 		try {
 			return factory.getReferencedPropertyType(
 					entityType.getAssociatedEntityName(),
-					EntityPersister.ENTITY_ID
+					AbstractEntityPersister.ENTITY_ID
 			) != null;
 		}
 		catch (MappingException e) {

@@ -142,7 +142,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			// now update the object
 			// has to be outside the main if block above (because of collections)
 			if ( substitute ) {
-				persister.setPropertyValues( entity, values );
+				persister.setValues( entity, values );
 			}
 			// Search for collections by reachability, updating their role.
 			// We don't want to touch collections reachable from a deleted object

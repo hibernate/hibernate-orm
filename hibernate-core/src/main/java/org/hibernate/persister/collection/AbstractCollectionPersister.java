@@ -1277,25 +1277,6 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public String getManyToManyFilterFragment(TableGroup tableGroup, Map<String, Filter> enabledFilters) {
-		final var fragment = new StringBuilder();
-		if ( manyToManyFilterHelper != null ) {
-			manyToManyFilterHelper.render( fragment,
-					elementPersister.getFilterAliasGenerator( tableGroup ), enabledFilters );
-		}
-		if ( manyToManyWhereString != null ) {
-			if ( !fragment.isEmpty() ) {
-				fragment.append( " and " );
-			}
-			assert elementPersister != null;
-			fragment.append( replace( manyToManyWhereTemplate, Template.TEMPLATE,
-					tableGroup.resolveTableReference( elementPersister.getTableName() )
-							.getIdentificationVariable() ) );
-		}
-		return fragment.toString();
-	}
-
-	@Override
 	public EntityPersister getElementPersister() {
 		if ( elementPersister == null ) {
 			throw new AssertionFailure( "not an association" );

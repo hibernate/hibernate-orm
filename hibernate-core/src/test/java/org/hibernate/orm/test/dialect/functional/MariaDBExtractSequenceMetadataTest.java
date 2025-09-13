@@ -22,6 +22,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.resolveUrl;
+import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.resolveUsername;
+
 /**
  * @author Nathan Xu
  */
@@ -80,8 +83,8 @@ public class MariaDBExtractSequenceMetadataTest {
 	}
 
 	private static Connection getConnection() throws SQLException {
-		String url = Environment.getProperties().getProperty( Environment.URL );
-		String user = Environment.getProperties().getProperty( Environment.USER );
+		String url = resolveUrl( Environment.getProperties().getProperty( Environment.URL ) );
+		String user = resolveUsername( Environment.getProperties().getProperty( Environment.USER ) );
 		String password = Environment.getProperties().getProperty( Environment.PASS );
 		return DriverManager.getConnection( url, user, password );
 	}

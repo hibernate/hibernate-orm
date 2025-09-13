@@ -31,6 +31,8 @@ import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.TargetType;
 import org.junit.Test;
 
+import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.resolveUsername;
+
 /**
  * @author Chris Cranford
  */
@@ -41,7 +43,7 @@ public class JoinTableWithDefaultSchemaTest extends BaseUnitTestCase {
 	@RequiresDialect(SQLServerDialect.class)
 	public void testGetTableDataForJoinTableWithDefaultSchema() {
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( AvailableSettings.DEFAULT_CATALOG, "hibernate_orm_test" )
+				.applySetting( AvailableSettings.DEFAULT_CATALOG, resolveUsername( "hibernate_orm_test_$worker" ) )
 				.build();
 		try {
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )

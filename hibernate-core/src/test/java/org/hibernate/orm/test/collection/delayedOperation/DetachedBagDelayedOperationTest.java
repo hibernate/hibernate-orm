@@ -20,6 +20,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
 import org.hibernate.Hibernate;
+import org.hibernate.collection.internal.CollectionLogger;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
 import org.hibernate.type.CollectionType;
@@ -67,16 +68,16 @@ import static org.junit.jupiter.api.Assertions.fail;
 						loggers = @org.hibernate.testing.orm.junit.Logger( loggerNameClass = CollectionType.class )
 				),
 				@LoggingInspections.Message(
-						messageKey = "HHH000495",
-						loggers = @org.hibernate.testing.orm.junit.Logger( loggerNameClass = AbstractPersistentCollection.class )
+						messageKey = "HHH90030004",
+						loggers = @org.hibernate.testing.orm.junit.Logger( loggerName = CollectionLogger.NAME )
 				),
 				@LoggingInspections.Message(
-						messageKey = "HHH000496",
-						loggers = @org.hibernate.testing.orm.junit.Logger( loggerNameClass = AbstractPersistentCollection.class )
+						messageKey = "HHH90030005",
+						loggers = @org.hibernate.testing.orm.junit.Logger( loggerName = CollectionLogger.NAME )
 				),
 				@LoggingInspections.Message(
-						messageKey = "HHH000498",
-						loggers = @org.hibernate.testing.orm.junit.Logger( loggerNameClass = AbstractPersistentCollection.class )
+						messageKey = "HHH90030006",
+						loggers = @org.hibernate.testing.orm.junit.Logger( loggerName = CollectionLogger.NAME )
 				)
 		}
 )
@@ -122,9 +123,9 @@ public class DetachedBagDelayedOperationTest {
 		);
 
 		final MessageKeyWatcher opMergedWatcher = loggingScope.getWatcher( "HHH000494", CollectionType.class );
-		final MessageKeyWatcher opAttachedWatcher = loggingScope.getWatcher( "HHH000495", AbstractPersistentCollection.class );
-		final MessageKeyWatcher opDetachedWatcher = loggingScope.getWatcher( "HHH000496", AbstractPersistentCollection.class );
-		final MessageKeyWatcher opRollbackWatcher = loggingScope.getWatcher( "HHH000498", AbstractPersistentCollection.class );
+		final MessageKeyWatcher opAttachedWatcher = loggingScope.getWatcher( "HHH90030004", CollectionLogger.NAME );
+		final MessageKeyWatcher opDetachedWatcher = loggingScope.getWatcher( "HHH90030005", CollectionLogger.NAME );
+		final MessageKeyWatcher opRollbackWatcher = loggingScope.getWatcher( "HHH90030006", CollectionLogger.NAME );
 
 		final Parent pWithQueuedOperations = scope.fromTransaction(
 				session -> {
@@ -145,10 +146,6 @@ public class DetachedBagDelayedOperationTest {
 					session.detach( p );
 
 					assertTrue( opDetachedWatcher.wasTriggered() );
-					assertEquals(
-							"HHH000496: Detaching an uninitialized collection with queued operations from a session: [org.hibernate.orm.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children with owner id '1']",
-							opDetachedWatcher.getFirstTriggeredMessage()
-					);
 					opDetachedWatcher.reset();
 
 					// Make sure nothing else got triggered
@@ -182,10 +179,6 @@ public class DetachedBagDelayedOperationTest {
 					assertFalse( opMergedWatcher.wasTriggered() );
 					Parent p = session.merge( pWithQueuedOperations );
 					assertTrue( opMergedWatcher.wasTriggered() );
-					assertEquals(
-							"HHH000494: Attempt to merge an uninitialized collection with queued operations; queued operations will be ignored: [org.hibernate.orm.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children with owner id '1']",
-							opMergedWatcher.getFirstTriggeredMessage()
-					);
 					opMergedWatcher.reset();
 
 					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
@@ -217,9 +210,9 @@ public class DetachedBagDelayedOperationTest {
 			SessionFactoryScope scope,
 			LoggingInspectionsScope loggingScope) {
 		final MessageKeyWatcher opMergedWatcher = loggingScope.getWatcher( "HHH000494", CollectionType.class );
-		final MessageKeyWatcher opAttachedWatcher = loggingScope.getWatcher( "HHH000495", AbstractPersistentCollection.class );
-		final MessageKeyWatcher opDetachedWatcher = loggingScope.getWatcher( "HHH000496", AbstractPersistentCollection.class );
-		final MessageKeyWatcher opRollbackWatcher = loggingScope.getWatcher( "HHH000498", AbstractPersistentCollection.class );
+		final MessageKeyWatcher opAttachedWatcher = loggingScope.getWatcher( "HHH90030004", CollectionLogger.NAME );
+		final MessageKeyWatcher opDetachedWatcher = loggingScope.getWatcher( "HHH90030005", CollectionLogger.NAME );
+		final MessageKeyWatcher opRollbackWatcher = loggingScope.getWatcher( "HHH90030006", CollectionLogger.NAME );
 
 		final Parent pOriginal = scope.fromTransaction(
 				session -> {

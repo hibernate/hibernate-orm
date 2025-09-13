@@ -137,10 +137,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Instantiating explicit connection provider: %s", id = 130)
 	void instantiatingExplicitConnectionProvider(String providerClassName);
 
-	@LogMessage(level = ERROR)
-	@Message(value = "Array element type error\n%s", id = 132)
-	void invalidArrayElementType(String message);
-
 	@LogMessage(level = INFO)
 	@Message(value = "java.sql.Types mapped the same code [%s] multiple times; was [%s]; now [%s]", id = 141)
 	void JavaSqlTypesMappedSameCodeMultipleTimes(int code, String old, String name);
@@ -280,10 +276,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = ERROR)
 	@Message(value = "Could not close stream on hibernate.properties: %s", id = 297)
 	void unableToCloseStreamError(IOException error);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Unable to close temporary session used to load lazy collection associated to no session", id = 303)
-	void unableToCloseTemporarySession();
 
 	@LogMessage(level = WARN)
 	@Message(value = "Could not copy system properties, system properties will be ignored", id = 304)
@@ -450,14 +442,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Creating pooled optimizer (lo) with [incrementSize=%s; returnClass=%s]", id = 467)
 	void creatingPooledLoOptimizer(int incrementSize, String name);
 
-	@LogMessage(level = WARN)
-	@Message(value = "An unexpected session is defined for a collection, but the collection is not connected to that session. A persistent collection may only be associated with one session at a time. Overwriting session. %s", id = 470)
-	void logUnexpectedSessionInCollectionNotConnected(String msg);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Cannot unset session in a collection because an unexpected session is defined. A persistent collection may only be associated with one session at a time. %s", id = 471 )
-	void logCannotUnsetUnexpectedSessionInCollection(String msg);
-
 	@LogMessage(level = INFO)
 	@Message(value = "Omitting cached file [%s] as the mapping file is newer", id = 473)
 	void cachedFileObsolete(File cachedFile);
@@ -514,28 +498,12 @@ public interface CoreMessageLogger extends BasicLogger {
 	void ignoreQueuedOperationsOnMerge(String collectionInfoString);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Attaching an uninitialized collection with queued operations to a session: %s", id = 495)
-	void queuedOperationWhenAttachToSession(String collectionInfoString);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Detaching an uninitialized collection with queued operations from a session: %s", id = 496)
-	void queuedOperationWhenDetachFromSession(String collectionInfoString);
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Detaching an uninitialized collection with queued operations from a session due to rollback: %s", id = 498)
-	void queuedOperationWhenDetachFromSessionOnRollback(String collectionInfoString);
-
-	@LogMessage(level = WARN)
 	@Message(value = "The [%s] property of the [%s] entity was modified, but it won't be updated because the property is immutable.", id = 502)
 	void ignoreImmutablePropertyModification(String propertyName, String entityName);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Multiple configuration properties defined to create schema. Choose at most one among 'jakarta.persistence.create-database-schemas' or 'hibernate.hbm2ddl.create_namespaces'.", id = 504)
 	void multipleSchemaCreationSettingsDefined();
-
-	@LogMessage(level = WARN)
-	@Message(value = "Detaching an uninitialized collection with enabled filters from a session: %s", id = 506)
-	void enabledFiltersWhenDetachFromSession(String collectionInfoString);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Multi-table insert is not available due to missing identity and window function support for: %s", id = 509)

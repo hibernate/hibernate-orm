@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static org.hibernate.Hibernate.unproxy;
 import static org.hibernate.internal.util.collections.CollectionHelper.concurrentMap;
 import static org.hibernate.persister.entity.DiscriminatorHelper.NOT_NULL_DISCRIMINATOR;
 import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINATOR;
@@ -100,17 +101,8 @@ public class UnifiedAnyDiscriminatorConverter<O,R> extends DiscriminatorConverte
 		}
 
 		if ( relationalValue.getClass().isEnum() ) {
-			final Object enumValue;
-			if ( getRelationalJavaType() instanceof StringJavaType ) {
-				enumValue = ( (Enum<?>) relationalValue ).name();
-			}
-			else if ( getRelationalJavaType() instanceof CharacterJavaType ) {
-				enumValue = ( (Enum<?>) relationalValue ).name().charAt( 0 );
-			}
-			else {
-				enumValue = ( (Enum<?>) relationalValue ).ordinal();
-			}
-			final DiscriminatorValueDetails enumMatch = detailsByValue.get( enumValue );
+			final Object enumValue = enumValue( (Enum<?>) relationalValue );
+			final var enumMatch = detailsByValue.get( enumValue );
 			if ( enumMatch != null ) {
 				return enumMatch;
 			}
@@ -130,6 +122,19 @@ public class UnifiedAnyDiscriminatorConverter<O,R> extends DiscriminatorConverte
 		}
 
 		throw new HibernateException( "Unknown discriminator value (" + discriminatorRole.getFullPath() + ") : " + relationalValue );
+	}
+
+	private Object enumValue(Enum<?> relationalEnum) {
+		final var relationalJavaType = getRelationalJavaType();
+		if ( relationalJavaType instanceof StringJavaType ) {
+			return relationalEnum.name();
+		}
+		else if ( relationalJavaType instanceof CharacterJavaType ) {
+			return relationalEnum.name().charAt( 0 );
+		}
+		else {
+			return relationalEnum.ordinal();
+		}
 	}
 
 	@Override
@@ -167,5 +172,28 @@ public class UnifiedAnyDiscriminatorConverter<O,R> extends DiscriminatorConverte
 			}
 		}
 		return null;
+	}
+
+	@Override
+	protected String getEntityName(O domainForm) {
+		final Class<?> entityClass;
+		if ( domainForm == null ) {
+			return null;
+		}
+		else if ( domainForm instanceof Class<?> clazz ) {
+			entityClass = clazz;
+		}
+		else if ( domainForm instanceof String name ) {
+			return name;
+		}
+		else {
+			entityClass = unproxy( domainForm ).getClass();
+		}
+		try {
+			return mappingMetamodel.getEntityDescriptor( entityClass ).getEntityName();
+		}
+		catch (IllegalArgumentException iae) {
+			throw new IllegalArgumentException( "Illegal discriminator value: " + domainForm );
+		}
 	}
 }

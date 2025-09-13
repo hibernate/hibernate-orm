@@ -8,8 +8,9 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import org.hibernate.Incubating;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.spi.DotIdentifierSequence;
+
+import static org.hibernate.internal.util.StringHelper.split;
 
 /**
  * The path for a selectable.
@@ -38,16 +39,18 @@ public class SelectablePath implements Serializable, DotIdentifierSequence {
 		if ( path == null || path.isEmpty() ) {
 			return null;
 		}
-		final String[] parts = StringHelper.split( ".", path );
-		SelectablePath selectablePath = new SelectablePath( parts[0] );
-		for ( int i = 1; i < parts.length; i++ ) {
-			selectablePath = selectablePath.append( parts[i] );
+		else {
+			final var parts = split( ".", path );
+			var selectablePath = new SelectablePath( parts[0] );
+			for ( int i = 1; i < parts.length; i++ ) {
+				selectablePath = selectablePath.append( parts[i] );
+			}
+			return selectablePath;
 		}
-		return selectablePath;
 	}
 
 	public SelectablePath[] getParts() {
-		final SelectablePath[] array = new SelectablePath[index + 1];
+		final var array = new SelectablePath[index + 1];
 		parts( array );
 		return array;
 	}
@@ -60,7 +63,7 @@ public class SelectablePath implements Serializable, DotIdentifierSequence {
 	}
 
 	public SelectablePath[] relativize(SelectablePath basePath) {
-		final SelectablePath[] array = new SelectablePath[index - basePath.index];
+		final var array = new SelectablePath[index - basePath.index];
 		relativize( array, basePath );
 		return array;
 	}
@@ -104,9 +107,9 @@ public class SelectablePath implements Serializable, DotIdentifierSequence {
 
 	@Override
 	public String toString() {
-		final StringBuilder sb = new StringBuilder( name.length() * index );
-		toString( sb );
-		return sb.toString();
+		final var string = new StringBuilder( name.length() * index );
+		toString( string );
+		return string.toString();
 	}
 
 	private void toString(StringBuilder sb) {

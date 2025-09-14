@@ -11,7 +11,6 @@ import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.Properties;
-import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
@@ -320,21 +319,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Write locks via update not supported for non-versioned entities [%s]", id = 416)
 	void writeLocksNotSupported(String entityName);
-
-	@LogMessage(level = WARN)
-	@Message(
-			id = 437,
-			value = """
-					Attempting to save one or more entities that have a non-nullable association with an unsaved transient entity.
-					The unsaved transient entity must be saved in an operation prior to saving these dependent entities.
-						Unsaved transient entity: %s
-						Dependent entities: %s
-						Non-nullable associations: %s"""
-	)
-	void cannotResolveNonNullableTransientDependencies(
-			String transientEntityString,
-			Set<String> dependentEntityStrings,
-			Set<String> nonNullableAssociationPaths);
 
 	@LogMessage(level = WARN)
 	@Message(

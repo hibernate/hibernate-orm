@@ -16,6 +16,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.Internal;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.event.spi.EventSource;
 
@@ -28,13 +29,18 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 
 /**
- * A list of {@link Executable executeble actions}. Responsible for
- * {@linkplain #sort() sorting} the executables, and calculating the
- * affected {@linkplain #getQuerySpaces() query spaces}.
+ * A list of {@linkplain Executable executable actions}. Responsible
+ * for {@linkplain #sort sorting} the executables, and calculating the
+ * affected {@linkplain #getQuerySpaces query spaces}.
+ *
+ * @apiNote This is an internal implementation class and is not
+ * intended for direct use by clients. It will be made non-public
+ * in a future release.
  *
  * @author Steve Ebersole
  * @author Anton Marsden
  */
+@Internal
 public class ExecutableList<E extends ComparableExecutable>
 		implements Serializable, Iterable<E>, Externalizable {
 

@@ -46,8 +46,8 @@ public final class Collections {
 		final var loadedPersister = entry.getLoadedPersister();
 
 		if ( loadedPersister != null && CORE_LOGGER.isTraceEnabled() ) {
-			CORE_LOGGER.trace( "Collection dereferenced: "
-							+ collectionInfoString( loadedPersister, collection, entry.getLoadedKey(), session ) );
+			CORE_LOGGER.collectionDereferenced(
+					collectionInfoString( loadedPersister, collection, entry.getLoadedKey(), session ) );
 		}
 
 		// do a check
@@ -112,8 +112,8 @@ public final class Collections {
 		final Object loadedKey = entry.getLoadedKey();
 
 		if ( CORE_LOGGER.isTraceEnabled() ) {
-			CORE_LOGGER.trace( "Found collection with unloaded owner: "
-							+ collectionInfoString( loadedPersister, collection, loadedKey, session ) );
+			CORE_LOGGER.collectionWithUnloadedOwner(
+					collectionInfoString( loadedPersister, collection, loadedKey, session ) );
 		}
 
 		entry.setCurrentPersister( loadedPersister );
@@ -161,8 +161,8 @@ public final class Collections {
 			// the class of the collection owner is enhanced for lazy loading,
 			// and we found an un-initialized PersistentCollection, so skip it
 			if ( CORE_LOGGER.isTraceEnabled() ) {
-				CORE_LOGGER.trace( "Skipping uninitialized bytecode-lazy collection: "
-								+ collectionInfoString( persister, collection, collectionEntry.getCurrentKey(), session ) );
+				CORE_LOGGER.skippingUninitializedBytecodeLazyCollection(
+						collectionInfoString( persister, collection, collectionEntry.getCurrentKey(), session ) );
 			}
 			collectionEntry.setReached( true );
 			collectionEntry.setProcessed( true );
@@ -187,8 +187,7 @@ public final class Collections {
 			CollectionEntry collectionEntry) {
 		if ( CORE_LOGGER.isTraceEnabled() ) {
 			if ( collection.wasInitialized() ) {
-				CORE_LOGGER.tracef(
-						"Collection found: %s, was: %s (initialized)",
+				CORE_LOGGER.collectionFoundInitialized(
 						collectionInfoString(
 								persister,
 								collection,
@@ -204,8 +203,7 @@ public final class Collections {
 				);
 			}
 			else {
-				CORE_LOGGER.tracef(
-						"Collection found: %s, was: %s (uninitialized)",
+				CORE_LOGGER.collectionFoundUninitialized(
 						collectionInfoString(
 								persister,
 								collection,
@@ -268,7 +266,7 @@ public final class Collections {
 					// we will need to remove the old entries
 					collectionEntry.setDoremove( true );
 					if ( collectionEntry.isDorecreate() ) {
-						CORE_LOGGER.trace( "Forcing collection initialization" );
+						CORE_LOGGER.forcingCollectionInitialization();
 						collection.forceInitialization();
 					}
 				}

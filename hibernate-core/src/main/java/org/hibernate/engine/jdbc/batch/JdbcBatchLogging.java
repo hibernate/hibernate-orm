@@ -81,4 +81,8 @@ public interface JdbcBatchLogging extends BasicLogger {
 	@LogMessage(level = TRACE)
 	@Message("PreparedStatementDetails did not contain PreparedStatement on releaseStatements: %s")
 	void noPreparedStatements(String sqlString);
+
+	@LogMessage(level = TRACE)
+	@Message( "Success of batch update unknown: %s")
+	void batchSuccessUnknown(int batchPosition);
 }

@@ -96,8 +96,10 @@ public class GeneratedValuesHelper {
 		final var results = readGeneratedValues( resultSet, statement, persister, mappingProducer, session );
 
 		if ( CORE_LOGGER.isDebugEnabled() ) {
-			CORE_LOGGER.debug( "Extracted generated values for entity "
-							+ infoString( persister ) + ": " + ArrayHelper.toString( results ) );
+			CORE_LOGGER.extractedGeneratedValues(
+					infoString( persister ),
+					ArrayHelper.toString( results )
+			);
 		}
 
 		for ( int i = 0; i < results.length; i++ ) {

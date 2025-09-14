@@ -15,7 +15,7 @@ import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 
 import static java.sql.Statement.EXECUTE_FAILED;
 import static java.sql.Statement.SUCCESS_NO_INFO;
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_MESSAGE_LOGGER;
 
 /**
  * Useful operations for dealing with {@link Expectation}s.
@@ -67,7 +67,7 @@ public class Expectations {
 			case EXECUTE_FAILED:
 				throw new BatchFailedException( "Batch update failed: " + batchPosition );
 			case SUCCESS_NO_INFO:
-				CORE_LOGGER.debugf( "Success of batch update unknown: %s", batchPosition );
+				BATCH_MESSAGE_LOGGER.batchSuccessUnknown( batchPosition );
 				break;
 			default:
 				if ( expectedRowCount > rowCount ) {

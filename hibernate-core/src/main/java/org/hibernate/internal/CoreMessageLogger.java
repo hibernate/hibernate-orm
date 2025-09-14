@@ -13,6 +13,7 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CollectionEntry;
@@ -469,4 +470,56 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = TRACE)
 	@Message( id = 6022, value = "Reset storedSnapshot to %s for %s" )
 	void resetStoredSnapshot(Serializable storedSnapshot, CollectionEntry collectionEntry);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6041, value = "Building session factory using provided StandardServiceRegistry" )
+	void buildingFactoryWithProvidedRegistry();
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6042, value = "Building session factory using internal StandardServiceRegistryBuilder" )
+	void buildingFactoryWithInternalRegistryBuilder();
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6043, value = "Found collection with unloaded owner: %s" )
+	void collectionWithUnloadedOwner(String info);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6044, value = "Forcing collection initialization" )
+	void forcingCollectionInitialization();
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6045, value = "Collection dereferenced: %s" )
+	void collectionDereferenced(String info);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6046, value = "Skipping uninitialized bytecode-lazy collection: %s" )
+	void skippingUninitializedBytecodeLazyCollection(String info);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6047, value = "Collection found: %s, was: %s (initialized)" )
+	void collectionFoundInitialized(String is, String was);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6048, value = "Collection found: %s, was: %s (uninitialized)" )
+	void collectionFoundUninitialized(String is, String was);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6049, value = "Starting serialization of [%s] EntityEntry entries" )
+	void startingEntityEntrySerialization(int count);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6050, value = "Starting deserialization of [%s] EntityEntry entries" )
+	void startingEntityEntryDeserialization(int count);
+
+	@LogMessage(level = ERROR)
+	@Message( id = 6051, value = "Enable to deserialize [%s]" )
+	void unableToDeserialize(String entityEntryClassName);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6061, value = "Extracted generated values for entity %s - %s" )
+	void extractedGeneratedValues(String s, String string);
+
+	@LogMessage(level = WARN)
+	@Message( id = 6062, value = "Could not resolve type name [%s] as Java type" )
+	void couldNotResolveTypeName(String typeName, @Cause ClassLoadingException exception);
 }

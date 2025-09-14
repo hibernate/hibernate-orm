@@ -25,7 +25,7 @@ import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
- * Sub-system logging related to JDBC interactions
+ * Subsystem logging related to JDBC interactions
  *
  * @author Steve Ebersole
  */
@@ -39,7 +39,6 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface JdbcLogging extends BasicLogger {
 	String NAME = SubSystemLogging.BASE + ".jdbc";
 
-	Logger JDBC_LOGGER = Logger.getLogger( NAME );
 	JdbcLogging JDBC_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), JdbcLogging.class, NAME );
 
 	@LogMessage(level = WARN)

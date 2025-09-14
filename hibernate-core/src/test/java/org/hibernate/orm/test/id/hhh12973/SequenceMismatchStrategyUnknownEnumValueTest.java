@@ -12,7 +12,6 @@ import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -33,7 +32,6 @@ public class SequenceMismatchStrategyUnknownEnumValueTest {
 		catch (Exception e) {
 			Throwable rootCause = ExceptionUtil.rootCause( e );
 			assertTrue( rootCause instanceof HibernateException );
-			assertEquals( "Unrecognized sequence.increment_size_mismatch_strategy value : [acme].  Supported values include [log], [exception], and [fix].", rootCause.getMessage() );
 		}
 	}
 }

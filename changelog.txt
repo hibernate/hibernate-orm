@@ -3,6 +3,17 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.29.Final (September 14, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/35156
+
+** Bug
+    * [HHH-19756] - Invalid SQL generated when using treat() with joined = discriminator inheritance and same attribute names
+    * [HHH-19747] - Hibernate Envers can not handle @EnumeratedValue annotation
+    * [HHH-19201] - BlobProxy with InputStream reads whole stream into a byte array
+
+
 Changes in 6.6.28.Final (August 31, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

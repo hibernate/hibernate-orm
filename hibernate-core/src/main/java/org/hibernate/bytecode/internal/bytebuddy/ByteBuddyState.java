@@ -20,7 +20,6 @@ import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImplConstants;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.proxy.ProxyConfiguration;
 import org.hibernate.proxy.ProxyFactory;
 
@@ -47,7 +46,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * A utility to hold all ByteBuddy related state, as in the current version of
@@ -55,8 +54,6 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * is able to benefit from some caching and general state reuse.
  */
 public final class ByteBuddyState {
-
-	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyState.class );
 
 	private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
 
@@ -278,7 +275,7 @@ public final class ByteBuddyState {
 				unloadedClass.saveIn( new File( System.getProperty( "java.io.tmpdir" ) + "/bytebuddy/" ) );
 			}
 			catch (IOException e) {
-				LOG.warn( "Unable to save generated class %1$s", unloadedClass.getTypeDescription().getName(), e );
+				CORE_LOGGER.warn( "Unable to save generated class %1$s", unloadedClass.getTypeDescription().getName(), e );
 			}
 		}
 		return unloadedClass;

@@ -4,15 +4,12 @@
  */
 package org.hibernate.orm.test.tool.schema;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator;
-import org.hibernate.internal.CoreMessageLogger;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
@@ -22,8 +19,8 @@ import org.hibernate.testing.logger.Triggerable;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.jboss.logging.Logger;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -33,8 +30,7 @@ import static org.junit.Assert.assertTrue;
 public class JtaPlatformLoggingTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, JtaPlatformInitiator.class.getName() ) );
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( CORE_LOGGER );
 
 	private Triggerable triggerable = logInspection.watchForLogMessages( "HHH000490" );
 

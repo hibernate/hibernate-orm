@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.annotations.formula;
 
 import java.io.Serializable;
-import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import org.hibernate.annotations.JoinColumnOrFormula;
@@ -13,8 +12,6 @@ import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.processing.Exclude;
-import org.hibernate.boot.model.internal.ToOneBinder;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -23,7 +20,6 @@ import org.hibernate.testing.logger.Triggerable;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.jboss.logging.Logger;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -35,6 +31,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -44,9 +41,7 @@ import static org.junit.Assert.assertNull;
 public class JoinFormulaOneToOneNotIgnoreLazyFetchingTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, ToOneBinder.class.getName() )
-	);
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( CORE_LOGGER );
 
 	private final Triggerable triggerable = logInspection.watchForLogMessages( "HHH000491" );
 

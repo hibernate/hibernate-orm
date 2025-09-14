@@ -8,14 +8,13 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.SecondPass;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Value;
 
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * Collection second pass
@@ -23,8 +22,6 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * @author Emmanuel Bernard
  */
 public abstract class CollectionSecondPass implements SecondPass {
-
-	private static final CoreMessageLogger LOG = messageLogger( CollectionSecondPass.class);
 
 	private final Collection collection;
 
@@ -35,14 +32,14 @@ public abstract class CollectionSecondPass implements SecondPass {
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses)
 			throws MappingException {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Second pass for collection: " + collection.getRole() );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.trace( "Second pass for collection: " + collection.getRole() );
 		}
 
 		secondPass( persistentClasses );
 		collection.createAllKeys();
 
-		if ( LOG.isTraceEnabled() ) {
+		if ( CORE_LOGGER.isTraceEnabled() ) {
 			String msg = "Mapped collection key: " + columns( collection.getKey() );
 			if ( collection.isIndexed() ) {
 				msg += ", index: " + columns( ( (IndexedCollection) collection ).getIndex() );
@@ -54,7 +51,7 @@ public abstract class CollectionSecondPass implements SecondPass {
 			else {
 				msg += ", element: " + columns( collection.getElement() );
 			}
-			LOG.trace( msg );
+			CORE_LOGGER.trace( msg );
 		}
 	}
 

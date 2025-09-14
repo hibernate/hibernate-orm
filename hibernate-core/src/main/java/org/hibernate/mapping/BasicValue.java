@@ -34,8 +34,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
@@ -75,6 +73,7 @@ import jakarta.persistence.TemporalType;
 
 import static java.lang.Boolean.parseBoolean;
 import static org.hibernate.boot.model.convert.spi.ConverterDescriptor.TYPE_NAME_PREFIX;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.reflectedPropertyType;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
@@ -87,7 +86,6 @@ import static org.hibernate.mapping.MappingHelper.injectParameters;
  */
 public class BasicValue extends SimpleValue
 		implements JdbcTypeIndicators, Resolvable, JpaAttributeConverterCreationContext {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BasicValue.class );
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// incoming "configuration" values
@@ -637,7 +635,7 @@ public class BasicValue extends SimpleValue
 			final var context = getBuildingContext();
 			final var autoAppliedTypeDef = context.getTypeDefinitionRegistry().resolveAutoApplied( castType );
 			if ( autoAppliedTypeDef != null ) {
-				LOG.trace( "BasicValue resolution matched auto-applied type definition" );
+				CORE_LOGGER.trace( "BasicValue resolution matched auto-applied type definition" );
 				return autoAppliedTypeDef.resolve( getTypeParameters(), context, this );
 			}
 		}
@@ -905,7 +903,7 @@ public class BasicValue extends SimpleValue
 		}
 		catch (ClassLoadingException e) {
 			// allow the exception below to trigger
-			LOG.debugf( "Could not resolve type-name [%s] as Java type : %s", name, e );
+			CORE_LOGGER.debugf( "Could not resolve type-name [%s] as Java type : %s", name, e );
 		}
 
 		throw new MappingException( "Could not resolve named type : " + name );

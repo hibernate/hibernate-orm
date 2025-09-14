@@ -10,19 +10,17 @@ import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.jboss.logging.Logger;
-
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
+import static org.hibernate.internal.CoreMessageLogger.LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedMapOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedSetOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
@@ -38,8 +36,6 @@ import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize
  * @author Guenther Demetz
  */
 public class BatchFetchQueue {
-
-	private static final Logger LOG = CoreLogging.logger( BatchFetchQueue.class );
 
 	private final PersistenceContext context;
 
@@ -110,9 +106,9 @@ public class BatchFetchQueue {
 		}
 
 		final var previous = subselectsByEntityKey.put( key, subquery );
-		if ( previous != null && LOG.isDebugEnabled() ) {
-			LOG.debugf(
-					"SubselectFetch previously registered with BatchFetchQueue for `%s#s`",
+		if ( previous != null && LOGGER.isDebugEnabled() ) {
+			LOGGER.tracef(
+					"SubselectFetch previously registered with BatchFetchQueue for '%s.s'",
 					key.getEntityName(),
 					key.getIdentifier()
 			);

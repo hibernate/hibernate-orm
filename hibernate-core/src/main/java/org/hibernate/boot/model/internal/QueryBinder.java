@@ -28,7 +28,6 @@ import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.SqlResultSetMappingDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.models.spi.AnnotationTarget;
@@ -45,7 +44,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import static java.lang.Character.isWhitespace;
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.collections.ArrayHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.determineProperSizing;
@@ -61,7 +60,6 @@ import static org.hibernate.models.internal.util.StringHelper.isEmpty;
  * @author Emmanuel Bernard
  */
 public abstract class QueryBinder {
-	private static final CoreMessageLogger LOG = messageLogger( QueryBinder.class );
 
 	public static void bindQuery(
 			NamedQuery namedQuery,
@@ -78,8 +76,8 @@ public abstract class QueryBinder {
 						"Class or package level '@NamedQuery' annotation must specify a 'name'" );
 			}
 
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracef( "Binding named query '%s' to [%s]", queryName,
+			if ( CORE_LOGGER.isTraceEnabled() ) {
+				CORE_LOGGER.tracef( "Binding named query '%s' to [%s]", queryName,
 						queryString.replace( '\n', ' ' ) );
 			}
 
@@ -139,8 +137,8 @@ public abstract class QueryBinder {
 					createNamedQueryDefinition( registrationName, queryString, resultClass, resultSetMappingName, hints,
 							location );
 
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracef( "Binding named native query '%s' to [%s]",
+			if ( CORE_LOGGER.isTraceEnabled() ) {
+				CORE_LOGGER.tracef( "Binding named native query '%s' to [%s]",
 						queryDefinition.getRegistrationName(),
 						queryDefinition.getSqlQueryString().replace( '\n', ' ' ) );
 			}
@@ -231,8 +229,8 @@ public abstract class QueryBinder {
 					createQueryDefinition( namedNativeQuery, registrationName, resultSetMappingName, resultClass,
 							namedNativeQuery.timeout(), namedNativeQuery.fetchSize(), querySpaces, location );
 			final var queryDefinition = builder.build();
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracef(
+			if ( CORE_LOGGER.isTraceEnabled() ) {
+				CORE_LOGGER.tracef(
 						"Binding named native query '%' to [%s]",
 						queryDefinition.getRegistrationName(),
 						queryDefinition.getSqlQueryString().replace( '\n', ' ' )
@@ -384,8 +382,8 @@ public abstract class QueryBinder {
 
 		final var hqlQueryDefinition = builder.build();
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef( "Binding named query '%s' to [%s]",
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.tracef( "Binding named query '%s' to [%s]",
 					hqlQueryDefinition.getRegistrationName(),
 					hqlQueryDefinition.getHqlString().replace( '\n', ' ' ) );
 		}
@@ -448,7 +446,7 @@ public abstract class QueryBinder {
 			else {
 				collector.addNamedProcedureCallDefinition( definition );
 			}
-			LOG.tracef( "Bound named stored procedure query: %s => %s",
+			CORE_LOGGER.tracef( "Bound named stored procedure query: %s => %s",
 					definition.getRegistrationName(),
 					definition.getProcedureName() );
 		}

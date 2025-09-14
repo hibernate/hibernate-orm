@@ -4,12 +4,10 @@
  */
 package org.hibernate.orm.test.jpa.persistenceunit;
 
-import java.lang.invoke.MethodHandles;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -21,8 +19,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.jboss.logging.Logger;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ConfigHelper.findAsResource;
 import static org.junit.Assert.assertTrue;
 
@@ -34,9 +32,7 @@ public class DuplicatePersistenceUnitNameTest extends BaseUnitTestCase {
 	private Triggerable triggerable;
 
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, PersistenceXmlParser.class.getName() )
-	);
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( CORE_LOGGER );
 
 	@Before
 	public void setUp() {

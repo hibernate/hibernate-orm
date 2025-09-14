@@ -22,8 +22,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.monitor.spi.DiagnosticEvent;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
@@ -37,13 +35,12 @@ import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 
 import static java.util.Collections.emptyMap;
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * @author Steve Ebersole
  */
 public class DeferredResultSetAccess extends AbstractResultSetAccess {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DeferredResultSetAccess.class );
 
 	private final JdbcOperationQuerySelect jdbcSelect;
 	private final JdbcParameterBindings jdbcParameterBindings;
@@ -136,7 +133,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		final LockMode lockMode = determineFollowOnLockMode( lockOptions );
 		if ( lockMode != LockMode.UPGRADE_SKIPLOCKED ) {
 			if ( lockOptions.getLockMode() != LockMode.NONE ) {
-				LOG.usingFollowOnLocking();
+				CORE_LOGGER.usingFollowOnLocking();
 			}
 
 			final LockOptions lockOptionsToUse = new LockOptions(
@@ -265,7 +262,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 
 		final SharedSessionContractImplementor session = executionContext.getSession();
 		try {
-			LOG.tracef( "Executing query to retrieve ResultSet: %s", finalSql );
+			CORE_LOGGER.tracef( "Executing query to retrieve ResultSet: %s", finalSql );
 			// prepare the query
 			preparedStatement = statementCreator.createStatement( executionContext, finalSql );
 

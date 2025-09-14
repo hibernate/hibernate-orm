@@ -29,7 +29,6 @@ import org.hibernate.binder.TypeBinder;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -70,7 +69,7 @@ import static org.hibernate.boot.model.internal.GeneratorBinder.createIdGenerato
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.unqualify;
@@ -81,8 +80,6 @@ import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize
  * instances of the mapping model object {@link Component}.
  */
 public class EmbeddableBinder {
-
-	private static final CoreMessageLogger LOG = messageLogger( EmbeddableBinder.class );
 
 	static PropertyBinder createCompositeBinder(
 			PropertyHolder propertyHolder,
@@ -441,8 +438,8 @@ public class EmbeddableBinder {
 		);
 
 		final String subpath = getPath( propertyHolder, inferredData );
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Binding embeddable with path: " + subpath );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.trace( "Binding embeddable with path: " + subpath );
 		}
 		final var subholder = buildPropertyHolder(
 				embeddable,

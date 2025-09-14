@@ -40,8 +40,6 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
@@ -51,6 +49,7 @@ import org.hibernate.type.Type;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
@@ -64,7 +63,6 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Anton Marsden
  */
 public class ActionQueue implements TransactionCompletionCallbacks {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ActionQueue.class );
 
 	private final SessionImplementor session;
 
@@ -248,7 +246,7 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 	 * @param action The action representing the entity insertion
 	 */
 	public void addAction(EntityInsertAction action) {
-		LOG.tracev( "Adding an EntityInsertAction for [{0}] object", action.getEntityName() );
+		CORE_LOGGER.tracev( "Adding an EntityInsertAction for [{0}] object", action.getEntityName() );
 		addInsertAction( action );
 	}
 
@@ -256,17 +254,17 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 		if ( insert.isEarlyInsert() ) {
 			// For early inserts, must execute inserts before finding non-nullable transient entities.
 			// TODO: find out why this is necessary
-			LOG.tracev( "Executing inserts before finding non-nullable transient entities for early insert: [{0}]", insert );
+			CORE_LOGGER.tracev( "Executing inserts before finding non-nullable transient entities for early insert: [{0}]", insert );
 			executeInserts();
 		}
 		final NonNullableTransientDependencies nonNullableTransientDependencies = insert.findNonNullableTransientEntities();
 		if ( nonNullableTransientDependencies == null ) {
-			LOG.tracev( "Adding insert with no non-nullable, transient entities: [{0}]", insert );
+			CORE_LOGGER.tracev( "Adding insert with no non-nullable, transient entities: [{0}]", insert );
 			addResolvedEntityInsertAction( insert );
 		}
 		else {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Adding insert with non-nullable, transient entities; insert=[{0}], dependencies=[{1}]", insert,
+			if ( CORE_LOGGER.isTraceEnabled() ) {
+				CORE_LOGGER.tracev( "Adding insert with non-nullable, transient entities; insert=[{0}], dependencies=[{1}]", insert,
 							nonNullableTransientDependencies.toLoggableString( insert.getSession() ) );
 			}
 			if ( unresolvedInsertions == null ) {
@@ -278,13 +276,13 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 
 	private void addResolvedEntityInsertAction(AbstractEntityInsertAction insert) {
 		if ( insert.isEarlyInsert() ) {
-			LOG.trace( "Executing insertions before resolved early-insert" );
+			CORE_LOGGER.trace( "Executing insertions before resolved early-insert" );
 			executeInserts();
-			LOG.trace( "Executing identity-insert immediately" );
+			CORE_LOGGER.trace( "Executing identity-insert immediately" );
 			execute( insert );
 		}
 		else {
-			LOG.trace( "Adding resolved non-early insert action." );
+			CORE_LOGGER.trace( "Adding resolved non-early insert action." );
 			OrderedActions.EntityInsertAction.ensureInitialized( this );
 			insertions.add( insert );
 		}
@@ -311,7 +309,7 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 	 * @param action The action representing the entity insertion
 	 */
 	public void addAction(EntityIdentityInsertAction action) {
-		LOG.tracev( "Adding an EntityIdentityInsertAction for [{0}] object", action.getEntityName() );
+		CORE_LOGGER.tracev( "Adding an EntityIdentityInsertAction for [{0}] object", action.getEntityName() );
 		addInsertAction( action );
 	}
 
@@ -586,7 +584,7 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 		else {
 			for ( var actionSpace : queue.getQuerySpaces() ) {
 				if ( tableSpaces.contains( actionSpace ) ) {
-					LOG.tracef( "Changes must be flushed to space: %s", actionSpace );
+					CORE_LOGGER.tracef( "Changes must be flushed to space: %s", actionSpace );
 					return true;
 				}
 			}
@@ -598,7 +596,7 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 		for ( var action : actions.getDependentEntityInsertActions() ) {
 			for ( var space : action.getPropertySpaces() ) {
 				if ( tableSpaces.contains( space ) ) {
-					LOG.tracef( "Changes must be flushed to space: %s", space );
+					CORE_LOGGER.tracef( "Changes must be flushed to space: %s", space );
 					return true;
 				}
 			}
@@ -881,7 +879,7 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 	 * @throws IOException Indicates an error writing to the stream
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		LOG.trace( "Serializing action-queue" );
+		CORE_LOGGER.trace( "Serializing action-queue" );
 		if ( unresolvedInsertions == null ) {
 			unresolvedInsertions = new UnresolvedEntityInsertActions();
 		}
@@ -910,9 +908,9 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 	 */
 	public static ActionQueue deserialize(ObjectInputStream ois, EventSource session)
 			throws IOException, ClassNotFoundException {
-		final boolean traceEnabled = LOG.isTraceEnabled();
+		final boolean traceEnabled = CORE_LOGGER.isTraceEnabled();
 		if ( traceEnabled ) {
-			LOG.trace( "Deserializing action-queue" );
+			CORE_LOGGER.trace( "Deserializing action-queue" );
 		}
 		final var actionQueue = new ActionQueue( session );
 		actionQueue.unresolvedInsertions = UnresolvedEntityInsertActions.deserialize( ois, session );
@@ -927,7 +925,7 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 				}
 				queue.readExternal( ois );
 				if ( traceEnabled ) {
-					LOG.tracev( "Deserialized [{0}] entries", queue.size() );
+					CORE_LOGGER.tracev( "Deserialized [{0}] entries", queue.size() );
 				}
 				queue.afterDeserialize( session );
 			}
@@ -1152,8 +1150,8 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 			}
 			while ( lastScheduleSize != scheduledEntityNames.size() );
 			if ( !insertInfosByEntityName.isEmpty() ) {
-				LOG.warn( "The batch containing " + insertions.size() + " statements could not be sorted. "
-						+ "This might indicate a circular entity relationship.");
+				CORE_LOGGER.warn( "The batch containing " + insertions.size() + " statements could not be sorted. "
+								+ "This might indicate a circular entity relationship.");
 			}
 			insertions.clear();
 			for ( InsertInfo insertInfo : insertInfos ) {

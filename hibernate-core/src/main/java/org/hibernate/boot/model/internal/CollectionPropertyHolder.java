@@ -16,7 +16,6 @@ import org.hibernate.annotations.MapKeyType;
 import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
@@ -37,7 +36,7 @@ import jakarta.persistence.MapKeyTemporal;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Temporal;
 
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
@@ -46,8 +45,6 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  * @author Steve Ebersole
  */
 public class CollectionPropertyHolder extends AbstractPropertyHolder {
-
-	private static final CoreMessageLogger LOG = messageLogger( CollectionPropertyHolder.class );
 
 	private final Collection collection;
 
@@ -184,7 +181,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		final boolean specCompliant = isNotEmpty( attributeName )
 				&& (attributeName.startsWith( "key" ) || attributeName.startsWith( "value" ) );
 		if ( !specCompliant ) {
-			LOG.nonCompliantMapConversion( role );
+			CORE_LOGGER.nonCompliantMapConversion( role );
 		}
 	}
 

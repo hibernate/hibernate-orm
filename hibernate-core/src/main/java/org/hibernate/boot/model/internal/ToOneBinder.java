@@ -20,7 +20,6 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.SimpleValue;
@@ -49,7 +48,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.getFetchMode;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.handleForeignKeyConstraint;
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -64,8 +63,6 @@ import static org.hibernate.internal.util.StringHelper.qualify;
  * @author Emmanuel Bernard
  */
 public class ToOneBinder {
-
-	private static final CoreMessageLogger LOG = messageLogger( ToOneBinder.class );
 
 	static void bindManyToOne(
 			PropertyHolder propertyHolder,
@@ -234,7 +231,7 @@ public class ToOneBinder {
 		final var notFound = property.getDirectAnnotationUsage( NotFound.class );
 		final NotFoundAction notFoundAction = notFound == null ? null : notFound.action();
 		if ( notFoundAction != null && fetchType == LAZY ) {
-			LOG.ignoreNotFoundWithFetchTypeLazy( propertyHolder.getEntityName(), property.getName() );
+			CORE_LOGGER.ignoreNotFoundWithFetchTypeLazy( propertyHolder.getEntityName(), property.getName() );
 		}
 		return notFoundAction;
 	}

@@ -24,8 +24,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Locking;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.spi.NativeQueryArrayTransformer;
 import org.hibernate.jpa.spi.NativeQueryConstructorTransformer;
 import org.hibernate.jpa.spi.NativeQueryListTransformer;
@@ -121,6 +119,7 @@ import jakarta.persistence.metamodel.Type;
 
 import static java.lang.Character.isWhitespace;
 import static java.util.Collections.addAll;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.isClass;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
@@ -141,8 +140,6 @@ import static org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard.isS
 public class NativeQueryImpl<R>
 		extends AbstractQuery<R>
 		implements NativeQueryImplementor<R>, DomainQueryExecutionContext, ResultSetMappingResolutionContext {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( NativeQueryImpl.class );
 
 	private final String sqlString;
 	private final String originalSqlString;
@@ -980,7 +977,7 @@ public class NativeQueryImpl<R>
 			int inExprLimit, int bindValueCount,
 			Dialect dialect, QueryParameterImplementor<?> queryParameter) {
 		if ( inExprLimit > 0 && bindValueCount > inExprLimit ) {
-			LOG.tooManyInExpressions(
+			CORE_LOGGER.tooManyInExpressions(
 					dialect.getClass().getName(),
 					inExprLimit,
 					queryParameter.getName() == null

@@ -18,16 +18,15 @@ import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.AbstractWork;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * @author Steve Ebersole
  */
 public class TemporaryTableHelper {
-	private final static CoreMessageLogger LOG = CoreLogging.messageLogger( TemporaryTableHelper.class );
 
 	public static final String SESSION_ID_COLUMN_NAME = "hib_sess_id";
 
@@ -72,7 +71,7 @@ public class TemporaryTableHelper {
 					return Boolean.TRUE;
 				}
 				catch (SQLException e) {
-					LOG.debugf(
+					CORE_LOGGER.debugf(
 							"Unable to create temporary table [%s]; `%s` failed : %s",
 							temporaryTable.getQualifiedTableName(),
 							creationCommand,
@@ -81,7 +80,7 @@ public class TemporaryTableHelper {
 				}
 			}
 			catch( Exception e ) {
-				LOG.debugf( "Error creating temporary table(s) : %s", e.getMessage() );
+				CORE_LOGGER.debugf( "Error creating temporary table(s) : %s", e.getMessage() );
 			}
 			return Boolean.FALSE;
 		}
@@ -128,7 +127,7 @@ public class TemporaryTableHelper {
 					jdbcServices.getSqlExceptionHelper().handleAndClearWarnings( statement, WARNING_HANDLER );
 				}
 				catch (SQLException e) {
-					LOG.debugf(
+					CORE_LOGGER.debugf(
 							"Unable to drop temporary table [%s]; `%s` failed : %s",
 							temporaryTable.getQualifiedTableName(),
 							dropCommand,
@@ -137,7 +136,7 @@ public class TemporaryTableHelper {
 				}
 			}
 			catch( Exception e ) {
-				LOG.debugf( "Error dropping temporary table(s) : %s", e.getMessage() );
+				CORE_LOGGER.debugf( "Error dropping temporary table(s) : %s", e.getMessage() );
 			}
 		}
 	}
@@ -163,7 +162,7 @@ public class TemporaryTableHelper {
 			jdbcCoordinator.getResultSetReturn().executeUpdate( preparedStatement, sql );
 		}
 		catch( Throwable t ) {
-			LOG.unableToCleanupTemporaryIdTable(t);
+			CORE_LOGGER.unableToCleanupTemporaryIdTable(t);
 		}
 		finally {
 			if ( preparedStatement != null ) {
@@ -186,17 +185,17 @@ public class TemporaryTableHelper {
 	private static final SqlExceptionHelper.WarningHandler WARNING_HANDLER =
 			new SqlExceptionHelper.WarningHandlerLoggingSupport() {
 				public boolean doProcess() {
-					return LOG.isDebugEnabled();
+					return CORE_LOGGER.isDebugEnabled();
 				}
 
 				public void prepare(SQLWarning warning) {
-					LOG.warningsCreatingTempTable( warning );
+					CORE_LOGGER.warningsCreatingTempTable( warning );
 				}
 
 				@Override
 				protected void logWarning(String description, String message) {
-					LOG.debug( description );
-					LOG.debug( message );
+					CORE_LOGGER.debug( description );
+					CORE_LOGGER.debug( message );
 				}
 			};
 

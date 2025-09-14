@@ -31,8 +31,6 @@ import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedType;
@@ -59,6 +57,7 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 import static org.hibernate.tool.schema.internal.Helper.applyScript;
 import static org.hibernate.tool.schema.internal.Helper.applySqlString;
@@ -597,7 +596,6 @@ public class SchemaDropperImpl implements SchemaDropper {
 	}
 
 	private static class DelayedDropActionImpl implements DelayedDropAction, Serializable {
-		private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DelayedDropActionImpl.class );
 
 		private final ArrayList<String> commands;
 		private GenerationTarget target;
@@ -609,7 +607,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 		@Override
 		public void perform(ServiceRegistry serviceRegistry) {
-			LOG.startingDelayedSchemaDrop();
+			CORE_LOGGER.startingDelayedSchemaDrop();
 
 			final JdbcContext jdbcContext = new JdbcContextDelayedDropImpl( serviceRegistry );
 
@@ -630,8 +628,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 					catch (CommandAcceptanceException e) {
 						// implicitly we do not "halt on error", but we do want to
 						// report the problem
-						LOG.unsuccessfulSchemaManagementCommand( command );
-						LOG.debugf( e, "Error performing delayed DROP command [%s]", command );
+						CORE_LOGGER.unsuccessfulSchemaManagementCommand( command );
+						CORE_LOGGER.debugf( e, "Error performing delayed DROP command [%s]", command );
 					}
 				}
 			}

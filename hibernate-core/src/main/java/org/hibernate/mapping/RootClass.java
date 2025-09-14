@@ -12,9 +12,8 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.overridesEquals;
 import static org.hibernate.internal.util.ReflectHelper.overridesHashCode;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
@@ -26,8 +25,6 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
  * @author Gavin King
  */
 public final class RootClass extends PersistentClass implements TableOwner, SoftDeletable {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( RootClass.class );
 
 	private Property identifierProperty;
 	private KeyValue identifier;
@@ -334,10 +331,10 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 			final Class<?> idClass = id.getComponentClass();
 			if ( idClass != null ) {
 				if ( !overridesEquals( idClass ) ) {
-					LOG.compositeIdClassDoesNotOverrideEquals( idClass.getName() );
+					CORE_LOGGER.compositeIdClassDoesNotOverrideEquals( idClass.getName() );
 				}
 				else if ( !overridesHashCode( idClass ) ) {
-					LOG.compositeIdClassDoesNotOverrideHashCode( idClass.getName() );
+					CORE_LOGGER.compositeIdClassDoesNotOverrideHashCode( idClass.getName() );
 				}
 			}
 		}

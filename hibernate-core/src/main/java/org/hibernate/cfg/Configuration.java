@@ -48,8 +48,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.context.spi.TenantSchemaMapper;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.EmptyInterceptor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -62,6 +60,8 @@ import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.SharedCacheMode;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 
 /**
@@ -142,7 +142,6 @@ import jakarta.persistence.SharedCacheMode;
  * @see org.hibernate.jpa.HibernatePersistenceConfiguration
  */
 public class Configuration {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Configuration.class );
 
 	private final BootstrapServiceRegistry bootstrapServiceRegistry;
 	private final MetadataSources metadataSources;
@@ -1024,7 +1023,7 @@ public class Configuration {
 	 * @throws HibernateException usually indicates an invalid configuration or invalid mapping information
 	 */
 	public SessionFactory buildSessionFactory(ServiceRegistry serviceRegistry) throws HibernateException {
-		LOG.trace( "Building session factory using provided StandardServiceRegistry" );
+		CORE_LOGGER.trace( "Building session factory using provided StandardServiceRegistry" );
 		final MetadataBuilder metadataBuilder =
 				metadataSources.getMetadataBuilder( (StandardServiceRegistry) serviceRegistry );
 
@@ -1127,7 +1126,7 @@ public class Configuration {
 	 * @throws HibernateException usually indicates an invalid configuration or invalid mapping information
 	 */
 	public SessionFactory buildSessionFactory() throws HibernateException {
-		LOG.trace( "Building session factory using internal StandardServiceRegistryBuilder" );
+		CORE_LOGGER.trace( "Building session factory using internal StandardServiceRegistryBuilder" );
 		standardServiceRegistryBuilder.applySettings( properties );
 		var serviceRegistry = standardServiceRegistryBuilder.build();
 		try {

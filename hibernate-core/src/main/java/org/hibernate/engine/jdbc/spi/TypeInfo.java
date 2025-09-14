@@ -9,10 +9,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedHashSet;
 
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 
-
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 
@@ -25,8 +23,6 @@ import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_A
  */
 @Deprecated(since = "7.0", forRemoval = true)
 public class TypeInfo {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( TypeInfo.class );
 
 	private final String typeName;
 	private final int jdbcTypeCode;
@@ -104,19 +100,19 @@ public class TypeInfo {
 				}
 			}
 			catch ( SQLException e ) {
-				LOG.unableToAccessTypeInfoResultSet( e.toString() );
+				CORE_LOGGER.unableToAccessTypeInfoResultSet( e.toString() );
 			}
 			finally {
 				try {
 					resultSet.close();
 				}
 				catch ( SQLException e ) {
-					LOG.unableToReleaseTypeInfoResultSet();
+					CORE_LOGGER.unableToReleaseTypeInfoResultSet();
 				}
 			}
 		}
 		catch ( SQLException e ) {
-			LOG.unableToRetrieveTypeInfoResultSet( e.toString() );
+			CORE_LOGGER.unableToRetrieveTypeInfoResultSet( e.toString() );
 		}
 
 		return typeInfoSet;

@@ -16,8 +16,6 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.integrator.internal.IntegratorServiceImpl;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.internal.AbstractServiceRegistryImpl;
@@ -28,6 +26,8 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * {@link ServiceRegistry} implementation containing specialized "bootstrap" services, specifically:<ul>
@@ -40,8 +40,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class BootstrapServiceRegistryImpl
 		implements ServiceRegistryImplementor, BootstrapServiceRegistry, ServiceBinding.ServiceLifecycleOwner {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BootstrapServiceRegistryImpl.class );
 
 	private final boolean autoCloseRegistry;
 	private boolean active = true;
@@ -266,7 +264,7 @@ public class BootstrapServiceRegistryImpl
 				stoppable.stop();
 			}
 			catch ( Exception e ) {
-				LOG.unableToStopService( binding.getServiceRole().getName(), e );
+				CORE_LOGGER.unableToStopService( binding.getServiceRole().getName(), e );
 			}
 		}
 	}
@@ -277,7 +275,7 @@ public class BootstrapServiceRegistryImpl
 			childRegistries = new HashSet<>();
 		}
 		if ( !childRegistries.add( child ) ) {
-			LOG.warnf(
+			CORE_LOGGER.warnf(
 					"Child ServiceRegistry [%s] was already registered; this will end badly later...",
 					child
 			);
@@ -292,11 +290,11 @@ public class BootstrapServiceRegistryImpl
 		childRegistries.remove( child );
 		if ( childRegistries.isEmpty() ) {
 			if ( autoCloseRegistry ) {
-				LOG.trace( "Automatically destroying bootstrap registry after deregistration of every child ServiceRegistry" );
+				CORE_LOGGER.trace( "Automatically destroying bootstrap registry after deregistration of every child ServiceRegistry" );
 				destroy();
 			}
 			else {
-				LOG.trace( "Skipping destroying bootstrap registry after deregistration of every child ServiceRegistry" );
+				CORE_LOGGER.trace( "Skipping destroying bootstrap registry after deregistration of every child ServiceRegistry" );
 			}
 		}
 	}

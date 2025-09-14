@@ -34,7 +34,6 @@ import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.uuid.UuidValueGenerator;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
@@ -65,7 +64,7 @@ import static org.hibernate.boot.model.internal.GeneratorParameters.interpretSeq
 import static org.hibernate.boot.model.internal.GeneratorParameters.interpretTableGenerator;
 import static org.hibernate.boot.model.internal.GeneratorStrategies.generatorClass;
 import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -77,8 +76,6 @@ import static org.hibernate.internal.util.collections.CollectionHelper.combineUn
  * @author Gavin King
  */
 public class GeneratorBinder {
-
-	private static final CoreMessageLogger LOG = messageLogger( GeneratorBinder.class );
 
 	public static final String ASSIGNED_GENERATOR_NAME = "assigned";
 	public static final GeneratorCreator ASSIGNED_IDENTIFIER_GENERATOR_CREATOR =
@@ -299,8 +296,8 @@ public class GeneratorBinder {
 		definitionBuilder.setStrategy( strategy );
 		definitionBuilder.addParams( extractParameterMap( generatorAnnotation.parameters() ) );
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Added generator with name: {0}, strategy: {0}",
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.tracev( "Added generator with name: {0}, strategy: {0}",
 					definitionBuilder.getName(), definitionBuilder.getStrategy() );
 		}
 		return definitionBuilder.build();
@@ -309,8 +306,8 @@ public class GeneratorBinder {
 	private static IdentifierGeneratorDefinition buildSequenceIdGenerator(SequenceGenerator generatorAnnotation) {
 		final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 		interpretSequenceGenerator( generatorAnnotation, definitionBuilder );
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Added sequence generator with name: {0}", definitionBuilder.getName() );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.tracev( "Added sequence generator with name: {0}", definitionBuilder.getName() );
 		}
 		return definitionBuilder.build();
 	}
@@ -318,8 +315,8 @@ public class GeneratorBinder {
 	private static IdentifierGeneratorDefinition buildTableIdGenerator(TableGenerator generatorAnnotation) {
 		final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 		interpretTableGenerator( generatorAnnotation, definitionBuilder );
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Added sequence generator with name: {0}", definitionBuilder.getName() );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.tracev( "Added sequence generator with name: {0}", definitionBuilder.getName() );
 		}
 		return definitionBuilder.build();
 	}

@@ -70,8 +70,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -92,6 +90,7 @@ import jakarta.persistence.SharedCacheMode;
 
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.engine.config.spi.StandardConverters.STRING;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
@@ -100,7 +99,6 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
  * @author Steve Ebersole
  */
 public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeContributions {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( MetadataBuilderImpl.class );
 
 	private final MetadataSources sources;
 	private final BootstrapContextImpl bootstrapContext;
@@ -118,7 +116,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			return standardServiceRegistry;
 		}
 		else if ( serviceRegistry instanceof BootstrapServiceRegistry bootstrapServiceRegistry ) {
-			LOG.debug(
+			CORE_LOGGER.debug(
 					"ServiceRegistry passed to MetadataBuilder was a BootstrapServiceRegistry; this likely won't end well " +
 							"if attempt is made to build SessionFactory"
 			);

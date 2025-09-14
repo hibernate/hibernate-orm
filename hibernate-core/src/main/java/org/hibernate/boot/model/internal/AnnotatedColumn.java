@@ -25,7 +25,6 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.CheckConstraint;
@@ -40,7 +39,7 @@ import org.hibernate.models.spi.ModelsContext;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -64,8 +63,6 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
  * @author Emmanuel Bernard
  */
 public class AnnotatedColumn {
-
-	private static final CoreMessageLogger LOG = messageLogger( AnnotatedColumn.class );
 
 	private Column mappingColumn;
 	private boolean insertable = true;
@@ -238,8 +235,8 @@ public class AnnotatedColumn {
 
 	public void bind() {
 		if ( isNotEmpty( formulaString ) ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Binding formula: " + formulaString );
+			if ( CORE_LOGGER.isTraceEnabled() ) {
+				CORE_LOGGER.trace( "Binding formula: " + formulaString );
 			}
 			formula = new Formula();
 			formula.setFormula( formulaString );
@@ -272,8 +269,8 @@ public class AnnotatedColumn {
 			if ( generatedAs != null ) {
 				mappingColumn.setGeneratedAs( generatedAs );
 			}
-			if ( LOG.isDebugEnabled() && logicalColumnName != null ) {
-				LOG.trace( "Binding column: " + logicalColumnName );
+			if ( CORE_LOGGER.isDebugEnabled() && logicalColumnName != null ) {
+				CORE_LOGGER.trace( "Binding column: " + logicalColumnName );
 			}
 		}
 	}
@@ -772,8 +769,8 @@ public class AnnotatedColumn {
 						+ " '@AttributeOverride's but the overridden property has " + overriddenCols.length
 						+ " columns (every column must have exactly one '@AttributeOverride')" );
 			}
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Column mapping overridden for property: " + inferredData.getPropertyName() );
+			if ( CORE_LOGGER.isTraceEnabled() ) {
+				CORE_LOGGER.trace( "Column mapping overridden for property: " + inferredData.getPropertyName() );
 			}
 			return isEmpty( overriddenCols ) ? null : overriddenCols;
 		}
@@ -933,7 +930,7 @@ public class AnnotatedColumn {
 			}
 		}
 		else {
-			LOG.trace("Could not perform @ColumnDefault lookup as 'PropertyData' did not give access to XProperty");
+			CORE_LOGGER.trace("Could not perform @ColumnDefault lookup as 'PropertyData' did not give access to XProperty");
 		}
 	}
 
@@ -954,7 +951,7 @@ public class AnnotatedColumn {
 			}
 		}
 		else {
-			LOG.trace("Could not perform @GeneratedColumn lookup as 'PropertyData' did not give access to XProperty");
+			CORE_LOGGER.trace("Could not perform @GeneratedColumn lookup as 'PropertyData' did not give access to XProperty");
 		}
 	}
 
@@ -997,7 +994,7 @@ public class AnnotatedColumn {
 			}
 		}
 		else {
-			LOG.trace("Could not perform @Check lookup as 'PropertyData' did not give access to XProperty");
+			CORE_LOGGER.trace("Could not perform @Check lookup as 'PropertyData' did not give access to XProperty");
 		}
 	}
 

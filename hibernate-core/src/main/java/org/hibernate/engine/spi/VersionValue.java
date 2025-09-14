@@ -6,11 +6,10 @@ package org.hibernate.engine.spi;
 
 import org.hibernate.MappingException;
 import org.hibernate.id.IdentifierGeneratorHelper;
-import org.hibernate.internal.CoreLogging;
-
-import org.jboss.logging.Logger;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.CoreMessageLogger.LOGGER;
 
 /**
  * A strategy for determining if a version value is a version of
@@ -22,8 +21,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class VersionValue implements UnsavedValueStrategy {
 
-	private static final Logger LOG = CoreLogging.logger( VersionValue.class );
-
 	private final @Nullable Object value;
 	/**
 	 * Assume the transient instance is newly instantiated if the version
@@ -32,7 +29,7 @@ public class VersionValue implements UnsavedValueStrategy {
 	public static final VersionValue NULL = new VersionValue() {
 		@Override
 		public Boolean isUnsaved(@Nullable Object version) {
-			LOG.trace( "Version unsaved-value strategy NULL" );
+			LOGGER.trace( "Version unsaved-value strategy NULL" );
 			return version == null;
 		}
 
@@ -54,7 +51,7 @@ public class VersionValue implements UnsavedValueStrategy {
 	public static final VersionValue UNDEFINED = new VersionValue() {
 		@Override
 		public @Nullable Boolean isUnsaved(@Nullable Object version) {
-			LOG.trace( "Version unsaved-value strategy UNDEFINED" );
+			LOGGER.trace( "Version unsaved-value strategy UNDEFINED" );
 			return version == null ? Boolean.TRUE : null;
 		}
 
@@ -77,7 +74,7 @@ public class VersionValue implements UnsavedValueStrategy {
 
 		@Override
 		public Boolean isUnsaved(@Nullable Object version) throws MappingException {
-			LOG.trace( "Version unsaved-value strategy NEGATIVE" );
+			LOGGER.trace( "Version unsaved-value strategy NEGATIVE" );
 			if ( version == null ) {
 				return Boolean.TRUE;
 			}
@@ -116,7 +113,7 @@ public class VersionValue implements UnsavedValueStrategy {
 
 	@Override
 	public @Nullable Boolean isUnsaved(@Nullable Object version) throws MappingException {
-		LOG.tracef( "Version unsaved-value: %s", value );
+		LOGGER.tracef( "Version unsaved-value: %s", value );
 		return version == null || version.equals( value );
 	}
 

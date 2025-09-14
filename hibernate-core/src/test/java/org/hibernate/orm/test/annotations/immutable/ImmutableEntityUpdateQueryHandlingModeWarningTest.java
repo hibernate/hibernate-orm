@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.annotations.immutable;
 
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -14,12 +12,11 @@ import org.hibernate.testing.logger.Triggerable;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.jboss.logging.Logger;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Map;
 
 import static org.hibernate.cfg.QuerySettings.IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
@@ -30,8 +27,7 @@ import static org.junit.Assert.assertEquals;
 public class ImmutableEntityUpdateQueryHandlingModeWarningTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, SqmUpdateStatement.class.getName() ) );
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( CORE_LOGGER );
 
 	@Override
 	protected Class[] getAnnotatedClasses() {

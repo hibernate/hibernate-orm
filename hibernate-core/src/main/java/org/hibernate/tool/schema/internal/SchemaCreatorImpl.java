@@ -27,8 +27,6 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
@@ -51,6 +49,7 @@ import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 import static org.hibernate.tool.schema.internal.Helper.applyScript;
 import static org.hibernate.tool.schema.internal.Helper.applySqlStrings;
@@ -63,7 +62,6 @@ import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabl
  * @author Steve Ebersole
  */
 public class SchemaCreatorImpl extends AbstractSchemaPopulator implements SchemaCreator {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SchemaCreatorImpl.class );
 
 	private final HibernateSchemaManagementTool tool;
 	private final SchemaFilter schemaFilter;
@@ -135,7 +133,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 					target.release();
 				}
 				catch (Exception e) {
-					LOG.debugf( "Problem releasing GenerationTarget [%s]: %s", target, e.getMessage() );
+					CORE_LOGGER.debugf( "Problem releasing GenerationTarget [%s]: %s", target, e.getMessage() );
 				}
 			}
 		}

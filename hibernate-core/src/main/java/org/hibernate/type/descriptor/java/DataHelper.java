@@ -17,8 +17,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 
 /**
@@ -33,8 +33,6 @@ public final class DataHelper {
 
 	/** The size of the buffer we will use to deserialize larger streams */
 	private static final int BUFFER_SIZE = 1024 * 4;
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DataHelper.class );
 
 	/**
 	 * Extract the contents of the given reader/stream as a string.
@@ -79,7 +77,7 @@ public final class DataHelper {
 				reader.close();
 			}
 			catch (IOException e) {
-				LOG.unableToCloseStream( e );
+				CORE_LOGGER.unableToCloseStream( e );
 			}
 		}
 		return stringBuilder.toString();
@@ -174,13 +172,13 @@ public final class DataHelper {
 				inputStream.close();
 			}
 			catch ( IOException e ) {
-				LOG.unableToCloseInputStream( e );
+				CORE_LOGGER.unableToCloseInputStream( e );
 			}
 			try {
 				outputStream.close();
 			}
 			catch ( IOException e ) {
-				LOG.unableToCloseOutputStream( e );
+				CORE_LOGGER.unableToCloseOutputStream( e );
 			}
 		}
 		return outputStream.toByteArray();

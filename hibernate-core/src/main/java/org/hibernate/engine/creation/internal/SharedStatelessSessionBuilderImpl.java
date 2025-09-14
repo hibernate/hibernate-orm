@@ -15,14 +15,14 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
-import org.jboss.logging.Logger;
 
 import java.util.Objects;
 import java.util.TimeZone;
+
+import static org.hibernate.internal.CoreMessageLogger.LOGGER;
 
 /**
  * Builder for shared {@linkplain StatelessSessionImplementor stateless} sessions.
@@ -34,8 +34,6 @@ import java.util.TimeZone;
 public abstract class SharedStatelessSessionBuilderImpl
 		extends AbstractCommonBuilder<SharedStatelessSessionBuilder>
 		implements SharedStatelessSessionBuilder, CommonSharedSessionCreationOptions {
-
-	private static final Logger LOG = CoreLogging.logger( SharedStatelessSessionBuilderImpl.class );
 
 	protected final SharedSessionContractImplementor original;
 	protected boolean shareTransactionContext;
@@ -62,7 +60,7 @@ public abstract class SharedStatelessSessionBuilderImpl
 
 	@Override
 	public StatelessSessionImplementor open() {
-		LOG.tracef( "Opening StatelessSession [tenant=%s]", tenantIdentifier );
+		LOGGER.tracef( "Opening StatelessSession [tenant=%s]", tenantIdentifier );
 		if ( original.getSessionFactory().getSessionFactoryOptions().isMultiTenancyEnabled() ) {
 			if ( shareTransactionContext ) {
 				final var tenantId = original.getTenantIdentifierValue();

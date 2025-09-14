@@ -4,16 +4,14 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
-import java.lang.invoke.MethodHandles;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.internal.CoreMessageLogger;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
 * @author Steve Ebersole
@@ -24,7 +22,6 @@ import org.jboss.logging.Logger;
  */
 @Deprecated
 class DatabaseExporter implements Exporter {
-	private static final CoreMessageLogger log = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, DatabaseExporter.class.getName() );
 
 	private final ConnectionHelper connectionHelper;
 	private final SqlExceptionHelper sqlExceptionHelper;
@@ -56,7 +53,7 @@ class DatabaseExporter implements Exporter {
 			}
 		}
 		catch( SQLException e ) {
-			log.unableToLogSqlWarnings( e );
+			CORE_LOGGER.unableToLogSqlWarnings( e );
 		}
 	}
 

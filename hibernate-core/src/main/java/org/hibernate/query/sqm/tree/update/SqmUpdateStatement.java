@@ -12,8 +12,6 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaCriteriaUpdate;
@@ -42,6 +40,7 @@ import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertAssignable;
 
 /**
@@ -50,8 +49,6 @@ import static org.hibernate.query.sqm.internal.TypecheckUtil.assertAssignable;
 public class SqmUpdateStatement<T>
 		extends AbstractSqmRestrictedDmlStatement<T>
 		implements SqmDeleteOrUpdateStatement<T>, JpaCriteriaUpdate<T> {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SqmUpdateStatement.class );
 
 	private boolean versioned;
 	private SqmSetClause setClause;
@@ -138,10 +135,10 @@ public class SqmUpdateStatement<T>
 			final String querySpaces = Arrays.toString( persister.getQuerySpaces() );
 			switch ( nodeBuilder().getImmutableEntityUpdateQueryHandlingMode() ) {
 				case ALLOW :
-					LOG.immutableEntityUpdateQueryAllowed( hql, querySpaces );
+					CORE_LOGGER.immutableEntityUpdateQueryAllowed( hql, querySpaces );
 					break;
 				case WARNING:
-					LOG.immutableEntityUpdateQuery( hql, querySpaces );
+					CORE_LOGGER.immutableEntityUpdateQuery( hql, querySpaces );
 					break;
 				case EXCEPTION:
 					throw new HibernateException( "The query attempts to update an immutable entity: "

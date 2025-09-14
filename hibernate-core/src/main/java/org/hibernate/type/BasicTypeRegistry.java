@@ -13,8 +13,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
@@ -32,6 +30,7 @@ import org.hibernate.type.internal.NamedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
@@ -41,8 +40,6 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
  * @author Steve Ebersole
  */
 public class BasicTypeRegistry implements Serializable {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BasicTypeRegistry.class );
 
 	private final TypeConfiguration typeConfiguration;
 
@@ -308,7 +305,7 @@ public class BasicTypeRegistry implements Serializable {
 
 		// explicit registration keys
 		if ( isEmpty( keys ) ) {
-			LOG.typeDefinedNoRegistrationKeys( type );
+			CORE_LOGGER.typeDefinedNoRegistrationKeys( type );
 		}
 		else {
 			applyRegistrationKeys( type, keys );
@@ -366,7 +363,7 @@ public class BasicTypeRegistry implements Serializable {
 
 		// explicit registration keys
 		if ( registrationKeys == null || registrationKeys.length == 0 ) {
-			LOG.typeDefinedNoRegistrationKeys( type );
+			CORE_LOGGER.typeDefinedNoRegistrationKeys( type );
 		}
 		else {
 			applyRegistrationKeys( type, registrationKeys );
@@ -389,7 +386,7 @@ public class BasicTypeRegistry implements Serializable {
 
 		// explicit registration keys
 		if ( registrationKeys == null || registrationKeys.length == 0 ) {
-			LOG.typeDefinedNoRegistrationKeys( type );
+			CORE_LOGGER.typeDefinedNoRegistrationKeys( type );
 		}
 		else {
 			applyRegistrationKeys( type, registrationKeys );

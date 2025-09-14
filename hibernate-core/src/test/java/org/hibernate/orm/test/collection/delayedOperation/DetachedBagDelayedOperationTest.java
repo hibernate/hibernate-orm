@@ -22,8 +22,8 @@ import jakarta.persistence.OneToMany;
 import org.hibernate.Hibernate;
 import org.hibernate.collection.internal.CollectionLogger;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
-import org.hibernate.type.CollectionType;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -65,7 +65,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		messages = {
 				@LoggingInspections.Message(
 						messageKey = "HHH000494",
-						loggers = @org.hibernate.testing.orm.junit.Logger( loggerNameClass = CollectionType.class )
+						loggers = @org.hibernate.testing.orm.junit.Logger( loggerName = CoreMessageLogger.NAME )
 				),
 				@LoggingInspections.Message(
 						messageKey = "HHH90030004",
@@ -122,7 +122,7 @@ public class DetachedBagDelayedOperationTest {
 				}
 		);
 
-		final MessageKeyWatcher opMergedWatcher = loggingScope.getWatcher( "HHH000494", CollectionType.class );
+		final MessageKeyWatcher opMergedWatcher = loggingScope.getWatcher( "HHH000494", CoreMessageLogger.NAME );
 		final MessageKeyWatcher opAttachedWatcher = loggingScope.getWatcher( "HHH90030004", CollectionLogger.NAME );
 		final MessageKeyWatcher opDetachedWatcher = loggingScope.getWatcher( "HHH90030005", CollectionLogger.NAME );
 		final MessageKeyWatcher opRollbackWatcher = loggingScope.getWatcher( "HHH90030006", CollectionLogger.NAME );
@@ -209,7 +209,7 @@ public class DetachedBagDelayedOperationTest {
 	public void testCollectionWithQueuedOperationsOnRollback(
 			SessionFactoryScope scope,
 			LoggingInspectionsScope loggingScope) {
-		final MessageKeyWatcher opMergedWatcher = loggingScope.getWatcher( "HHH000494", CollectionType.class );
+		final MessageKeyWatcher opMergedWatcher = loggingScope.getWatcher( "HHH000494", CoreMessageLogger.NAME );
 		final MessageKeyWatcher opAttachedWatcher = loggingScope.getWatcher( "HHH90030004", CollectionLogger.NAME );
 		final MessageKeyWatcher opDetachedWatcher = loggingScope.getWatcher( "HHH90030005", CollectionLogger.NAME );
 		final MessageKeyWatcher opRollbackWatcher = loggingScope.getWatcher( "HHH90030006", CollectionLogger.NAME );

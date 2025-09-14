@@ -10,8 +10,6 @@ import java.util.Map;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -19,14 +17,14 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.PolyNull;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+
 /**
  * The standard {@link ConfigurationService} implementation.
  *
  * @author Steve Ebersole
  */
 public class ConfigurationServiceImpl implements ConfigurationService, ServiceRegistryAwareService {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ConfigurationServiceImpl.class );
 
 	private final Map<String, Object> settings;
 	private ServiceRegistryImplementor serviceRegistry;
@@ -88,7 +86,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 						.classForName( candidate.toString() );
 			}
 			catch ( ClassLoadingException e ) {
-				LOG.debugf( "Unable to locate %s implementation class %s", expected.getName(), candidate.toString() );
+				CORE_LOGGER.debugf( "Unable to locate %s implementation class %s", expected.getName(), candidate.toString() );
 				target = null;
 			}
 		}
@@ -97,7 +95,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 				return target.newInstance();
 			}
 			catch ( Exception e ) {
-				LOG.debugf(
+				CORE_LOGGER.debugf(
 						"Unable to instantiate %s class %s", expected.getName(),
 						target.getName()
 				);

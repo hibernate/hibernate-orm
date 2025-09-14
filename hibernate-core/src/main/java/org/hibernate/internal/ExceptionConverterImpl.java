@@ -40,11 +40,12 @@ import jakarta.persistence.PessimisticLockException;
 import jakarta.persistence.QueryTimeoutException;
 import jakarta.persistence.RollbackException;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+
 /**
  * @author Andrea Boriero
  */
 public class ExceptionConverterImpl implements ExceptionConverter {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ExceptionConverterImpl.class );
 
 	private final SharedSessionContractImplementor session;
 	private final boolean isJpaBootstrap;
@@ -134,7 +135,7 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			}
 			catch (Exception ne) {
 				//we do not want the subsequent exception to swallow the original one
-				LOG.unableToMarkForRollbackOnTransientObjectException( ne );
+				CORE_LOGGER.unableToMarkForRollbackOnTransientObjectException( ne );
 			}
 			//Spec 3.2.3 Synchronization rules
 			return new IllegalStateException( exception );
@@ -235,7 +236,7 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			}
 			catch (Exception ne) {
 				//we do not want the subsequent exception to swallow the original one
-				LOG.unableToMarkForRollbackOnPersistenceException( ne );
+				CORE_LOGGER.unableToMarkForRollbackOnPersistenceException( ne );
 			}
 		}
 	}

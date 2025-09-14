@@ -24,8 +24,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
@@ -34,6 +32,8 @@ import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+
 /**
  * A commandline tool to update a database schema. May also be called from
  * inside an application.
@@ -41,14 +41,13 @@ import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
  * @author Christoph Sturm
  */
 public class SchemaValidator {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( SchemaValidator.class );
 
 	public void validate(Metadata metadata) {
 		validate( metadata, ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry() );
 	}
 
 	public void validate(Metadata metadata, ServiceRegistry serviceRegistry) {
-		log.runningSchemaValidator();
+		CORE_LOGGER.runningSchemaValidator();
 
 		Map<String, Object> config =
 				new HashMap<>( serviceRegistry.requireService( ConfigurationService.class ).getSettings() );
@@ -77,7 +76,7 @@ public class SchemaValidator {
 			}
 		}
 		catch (Exception e) {
-			log.unableToRunSchemaUpdate( e );
+			CORE_LOGGER.unableToRunSchemaUpdate( e );
 		}
 	}
 

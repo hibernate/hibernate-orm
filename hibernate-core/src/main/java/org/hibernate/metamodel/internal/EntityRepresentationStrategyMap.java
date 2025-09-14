@@ -10,8 +10,6 @@ import java.util.function.Consumer;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
@@ -24,12 +22,12 @@ import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.map.MapProxyFactory;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+
 /**
  * @author Steve Ebersole
  */
 public class EntityRepresentationStrategyMap implements EntityRepresentationStrategy {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityRepresentationStrategyMap.class );
 
 	private final JavaType<Map<String,?>> mapJavaType;
 
@@ -63,7 +61,7 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 			return proxyFactory;
 		}
 		catch (HibernateException he) {
-			LOG.unableToCreateProxyFactory( bootType.getEntityName(), he );
+			CORE_LOGGER.unableToCreateProxyFactory( bootType.getEntityName(), he );
 			return null;
 		}
 	}

@@ -4,8 +4,7 @@
  */
 package org.hibernate;
 
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * Indicates failure of an assertion: a possible bug in Hibernate.
@@ -14,8 +13,6 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 public class AssertionFailure extends RuntimeException {
 
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AssertionFailure.class );
-
 	/**
 	 * Creates an instance of AssertionFailure using the given message.
 	 *
@@ -23,7 +20,7 @@ public class AssertionFailure extends RuntimeException {
 	 */
 	public AssertionFailure(String message) {
 		super( message );
-		LOG.failed( this );
+		CORE_LOGGER.failed( this );
 	}
 
 	/**
@@ -34,6 +31,6 @@ public class AssertionFailure extends RuntimeException {
 	 */
 	public AssertionFailure(String message, Throwable cause) {
 		super( message, cause );
-		LOG.failed( cause );
+		CORE_LOGGER.failed( cause );
 	}
 }

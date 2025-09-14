@@ -11,10 +11,8 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.jboss.logging.Logger;
 
 import java.sql.Connection;
 import java.util.ArrayList;
@@ -22,6 +20,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import static java.util.Collections.addAll;
+import static org.hibernate.internal.CoreMessageLogger.LOGGER;
 
 /**
  * SessionBuilder implementation.
@@ -31,8 +30,6 @@ import static java.util.Collections.addAll;
 public abstract class SessionBuilderImpl
 		extends AbstractCommonBuilder<SessionBuilderImplementor>
 		implements SessionBuilderImplementor, SessionCreationOptions {
-
-	private static final Logger LOG = CoreLogging.logger( SessionBuilderImpl.class );
 
 	private boolean autoJoinTransactions = true;
 	private boolean autoClose;
@@ -151,7 +148,7 @@ public abstract class SessionBuilderImpl
 
 	@Override
 	public SessionImplementor openSession() {
-		LOG.tracef( "Opening Hibernate Session [tenant=%s]", tenantIdentifier );
+		LOGGER.tracef( "Opening Hibernate Session [tenant=%s]", tenantIdentifier );
 		return createSession();
 	}
 

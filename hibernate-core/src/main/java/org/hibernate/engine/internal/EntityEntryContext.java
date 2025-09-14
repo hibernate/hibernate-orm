@@ -11,8 +11,6 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.InstanceIdentityStore;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -28,6 +26,7 @@ import java.util.function.Consumer;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptableOrNull;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedEntity;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * Defines a context for maintaining the relation between an entity associated with the
@@ -46,7 +45,6 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedEntity;
  * @author Steve Ebersole
  */
 public class EntityEntryContext {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityEntryContext.class );
 
 	private final transient PersistenceContext persistenceContext;
 
@@ -226,7 +224,7 @@ public class EntityEntryContext {
 		}
 		else {
 			// otherPersistenceContext is associated with a closed PersistenceContext
-			LOG.stalePersistenceContextInEntityEntry( entityEntry.toString() );
+			CORE_LOGGER.stalePersistenceContextInEntityEntry( entityEntry.toString() );
 		}
 	}
 
@@ -441,7 +439,7 @@ public class EntityEntryContext {
 	 * @throws IOException Indicates an IO exception accessing the given stream
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		LOG.tracef( "Starting serialization of [%s] EntityEntry entries", count );
+		CORE_LOGGER.tracef( "Starting serialization of [%s] EntityEntry entries", count );
 		oos.writeInt( count );
 		if ( count == 0 ) {
 			return;
@@ -475,7 +473,7 @@ public class EntityEntryContext {
 	public static EntityEntryContext deserialize(ObjectInputStream ois, StatefulPersistenceContext rtn)
 			throws IOException, ClassNotFoundException {
 		final int count = ois.readInt();
-		LOG.tracef( "Starting deserialization of [%s] EntityEntry entries", count );
+		CORE_LOGGER.tracef( "Starting deserialization of [%s] EntityEntry entries", count );
 
 		final var context = new EntityEntryContext( rtn );
 		context.count = count;
@@ -555,7 +553,7 @@ public class EntityEntryContext {
 			entry = (EntityEntry) deserializeMethod.invoke( null, ois, persistenceContext );
 		}
 		catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-			LOG.errorf( "Enable to deserialize [%s]", entityEntryClassName );
+			CORE_LOGGER.errorf( "Enable to deserialize [%s]", entityEntryClassName );
 		}
 
 		return entry;

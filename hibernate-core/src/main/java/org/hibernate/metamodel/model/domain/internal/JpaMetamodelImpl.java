@@ -28,8 +28,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.MappingMetamodel;
@@ -39,7 +37,6 @@ import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
@@ -60,6 +57,7 @@ import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.Type;
 
 import static java.util.Collections.emptySet;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.metamodel.internal.InjectionHelper.injectEntityGraph;
 import static org.hibernate.metamodel.internal.InjectionHelper.injectTypedQueryReference;
 
@@ -67,7 +65,6 @@ import static org.hibernate.metamodel.internal.InjectionHelper.injectTypedQueryR
  * @author Steve Ebersole
  */
 public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JpaMetamodel.class );
 
 	private static class ImportInfo<T> {
 		private final String importedName;
@@ -388,7 +385,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	public void addNamedEntityGraph(String graphName, RootGraphImplementor<?> rootGraph) {
 		final EntityGraph<?> old = entityGraphMap.put( graphName, rootGraph.makeImmutableCopy( graphName ) );
 		if ( old != null ) {
-			LOG.tracef( "EntityGraph named '%s' was replaced", graphName );
+			CORE_LOGGER.tracef( "EntityGraph named '%s' was replaced", graphName );
 		}
 	}
 
@@ -485,7 +482,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	private void applyNamedEntityGraphs(Collection<NamedEntityGraphDefinition> namedEntityGraphs) {
 		for ( NamedEntityGraphDefinition definition : namedEntityGraphs ) {
-			LOG.tracef( "Applying named entity graph [name=%s, source=%s]",
+			CORE_LOGGER.tracef( "Applying named entity graph [name=%s, source=%s]",
 					definition.name(), definition.source() );
 
 			final RootGraphImplementor<?> graph = definition.graphCreator().createEntityGraph(
@@ -766,7 +763,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		final Set<MappedSuperclass> unusedMappedSuperclasses = context.getUnusedMappedSuperclasses();
 		if ( !unusedMappedSuperclasses.isEmpty() ) {
 			for ( MappedSuperclass mappedSuperclass : unusedMappedSuperclasses ) {
-				LOG.unusedMappedSuperclass( mappedSuperclass.getMappedClass().getName() );
+				CORE_LOGGER.unusedMappedSuperclass( mappedSuperclass.getMappedClass().getName() );
 				locateOrBuildMappedSuperclassType( mappedSuperclass, context, typeConfiguration );
 			}
 		}

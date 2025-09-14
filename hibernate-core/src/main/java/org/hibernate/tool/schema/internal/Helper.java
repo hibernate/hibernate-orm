@@ -21,8 +21,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.Formatter;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
@@ -44,6 +42,7 @@ import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 
@@ -54,8 +53,6 @@ import static org.hibernate.internal.util.StringHelper.splitAtCommas;
  */
 public class Helper {
 
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Helper.class );
-
 	public static ScriptSourceInput interpretScriptSourceSetting(
 			Object scriptSourceSetting, //Reader or String URL
 			ClassLoaderService classLoaderService,
@@ -65,7 +62,7 @@ public class Helper {
 		}
 		else {
 			final String scriptSourceSettingString = scriptSourceSetting.toString();
-			LOG.tracef( "Attempting to resolve script source setting: %s", scriptSourceSettingString );
+			CORE_LOGGER.tracef( "Attempting to resolve script source setting: %s", scriptSourceSettingString );
 
 			final String[] paths = splitAtCommas( scriptSourceSettingString );
 			if ( paths.length == 1 ) {
@@ -89,7 +86,7 @@ public class Helper {
 		//		2) relative file path (resource lookup)
 		//		3) absolute file path
 
-		LOG.trace( "Trying as URL..." );
+		CORE_LOGGER.trace( "Trying as URL..." );
 		// ClassLoaderService.locateResource() first tries the given resource name as url form...
 		final URL url = classLoaderService.locateResource( scriptSourceSettingString );
 		return url != null
@@ -111,14 +108,14 @@ public class Helper {
 		}
 		else {
 			final String scriptTargetSettingString = scriptTargetSetting.toString();
-			LOG.tracef( "Attempting to resolve script source setting: %s", scriptTargetSettingString );
+			CORE_LOGGER.tracef( "Attempting to resolve script source setting: %s", scriptTargetSettingString );
 
 			// setting could be either:
 			//		1) string URL representation (i.e., "file://...")
 			//		2) relative file path (resource lookup)
 			//		3) absolute file path
 
-			LOG.trace( "Trying as URL..." );
+			CORE_LOGGER.trace( "Trying as URL..." );
 			// ClassLoaderService.locateResource() first tries the given resource name as url form...
 			final URL url = classLoaderService.locateResource( scriptTargetSettingString );
 			return url != null
@@ -160,7 +157,7 @@ public class Helper {
 			count++;
 		}
 		if ( count > 1 ) {
-			LOG.multipleSchemaCreationSettingsDefined();
+			CORE_LOGGER.multipleSchemaCreationSettingsDefined();
 		}
 	}
 

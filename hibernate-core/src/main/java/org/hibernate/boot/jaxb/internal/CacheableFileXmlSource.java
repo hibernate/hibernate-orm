@@ -9,8 +9,6 @@ import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.type.SerializationException;
 
@@ -18,6 +16,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * Support for creating a mapping {@linkplain Binding binding} from "cached" XML files.
@@ -30,7 +30,6 @@ import java.io.FileOutputStream;
  * @author Steve Ebersole
  */
 public class CacheableFileXmlSource {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( CacheableFileXmlSource.class );
 
 	public static Binding<? extends JaxbBindableMappingDescriptor> fromCacheableFile(
 			File xmlFile,
@@ -74,17 +73,17 @@ public class CacheableFileXmlSource {
 					return new Binding<>( readSerFile( serFile ), origin );
 				}
 				catch ( SerializationException e ) {
-					LOG.unableToDeserializeCache( serFile.getName(), e );
+					CORE_LOGGER.unableToDeserializeCache( serFile.getName(), e );
 				}
 				catch ( FileNotFoundException e ) {
-					LOG.cachedFileNotFound( serFile.getName(), e );
+					CORE_LOGGER.cachedFileNotFound( serFile.getName(), e );
 				}
 			}
 			else {
-				LOG.cachedFileObsolete( serFile );
+				CORE_LOGGER.cachedFileObsolete( serFile );
 			}
 
-			LOG.readingMappingsFromFile( xmlFile.getPath() );
+			CORE_LOGGER.readingMappingsFromFile( xmlFile.getPath() );
 			final Binding<? extends JaxbBindableMappingDescriptor> binding = FileXmlSource.fromFile( xmlFile, binder );
 
 			writeSerFile( binding.getRoot(), xmlFile, serFile );
@@ -125,7 +124,7 @@ public class CacheableFileXmlSource {
 	}
 
 	private static <T extends JaxbBindableMappingDescriptor> T readSerFile(File serFile) throws SerializationException, FileNotFoundException {
-		LOG.readingCachedMappings( serFile );
+		CORE_LOGGER.readingCachedMappings( serFile );
 		return SerializationHelper.deserialize( new FileInputStream( serFile ) );
 	}
 
@@ -134,17 +133,17 @@ public class CacheableFileXmlSource {
 			File xmlFile,
 			File serFile) {
 		try ( FileOutputStream fos = new FileOutputStream( serFile ) ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracef( "Writing cache file for: %s to: %s", xmlFile.getAbsolutePath(), serFile.getAbsolutePath() );
+			if ( CORE_LOGGER.isTraceEnabled() ) {
+				CORE_LOGGER.tracef( "Writing cache file for: %s to: %s", xmlFile.getAbsolutePath(), serFile.getAbsolutePath() );
 			}
 			SerializationHelper.serialize( jaxbModel, fos );
 			boolean success = serFile.setLastModified( System.currentTimeMillis() );
 			if ( !success ) {
-				LOG.warn( "Could not update cacheable hbm.xml bin file timestamp" );
+				CORE_LOGGER.warn( "Could not update cacheable hbm.xml bin file timestamp" );
 			}
 		}
 		catch ( Exception e ) {
-			LOG.unableToWriteCachedFile( serFile.getAbsolutePath(), e.getMessage() );
+			CORE_LOGGER.unableToWriteCachedFile( serFile.getAbsolutePath(), e.getMessage() );
 		}
 	}
 

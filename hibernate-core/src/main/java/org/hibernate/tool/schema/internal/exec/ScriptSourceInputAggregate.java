@@ -11,10 +11,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * A script source input that aggregates over multiple other {@link ScriptSourceInput}.
@@ -22,8 +21,6 @@ import org.hibernate.tool.schema.spi.ScriptSourceInput;
  * @author Christian Beikov
  */
 public class ScriptSourceInputAggregate implements ScriptSourceInput {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SchemaCreatorImpl.class );
 
 	private final AbstractScriptSourceInput[] inputs;
 
@@ -46,7 +43,7 @@ public class ScriptSourceInputAggregate implements ScriptSourceInput {
 			if ( scriptSourceInput.exists() ) {
 				final Reader reader = scriptSourceInput.prepareReader();
 				try {
-					LOG.executingScript( scriptSourceInput.getScriptDescription() );
+					CORE_LOGGER.executingScript( scriptSourceInput.getScriptDescription() );
 					lists[i] = extractor.apply( reader );
 					size += lists[i].size();
 				}

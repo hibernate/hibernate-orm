@@ -26,8 +26,6 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.TargetType;
@@ -40,6 +38,8 @@ import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+
 /**
  * A commandline tool to update a database schema. May also be called from inside an application.
  *
@@ -47,7 +47,6 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
  * @author Steve Ebersole
  */
 public class SchemaUpdate {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( SchemaUpdate.class );
 
 	private final List<Exception> exceptions = new ArrayList<>();
 
@@ -64,12 +63,12 @@ public class SchemaUpdate {
 
 	public void execute(EnumSet<TargetType> targetTypes, Metadata metadata, ServiceRegistry serviceRegistry) {
 		if ( targetTypes.isEmpty() ) {
-			log.debug( "Skipping SchemaExport as no targets were specified" );
+			CORE_LOGGER.debug( "Skipping SchemaExport as no targets were specified" );
 			return;
 		}
 
 		exceptions.clear();
-		log.runningHbm2ddlSchemaUpdate();
+		CORE_LOGGER.runningHbm2ddlSchemaUpdate();
 
 		Map<String,Object> config =
 				new HashMap<>( serviceRegistry.requireService( ConfigurationService.class ).getSettings() );
@@ -164,7 +163,7 @@ public class SchemaUpdate {
 			}
 		}
 		catch (Exception e) {
-			log.unableToRunSchemaUpdate( e );
+			CORE_LOGGER.unableToRunSchemaUpdate( e );
 		}
 	}
 
@@ -290,7 +289,7 @@ public class SchemaUpdate {
 			}
 			else {
 				if ( !script || !doUpdate ) {
-					log.warn( "--text or --quiet was used; prefer --target=none|(stdout|database|script)*" );
+					CORE_LOGGER.warn( "--text or --quiet was used; prefer --target=none|(stdout|database|script)*" );
 				}
 				parsedArgs.targetTypes = TargetTypeHelper.parseCommandLineOptions( targetText );
 			}

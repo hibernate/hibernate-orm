@@ -10,8 +10,6 @@ import oracle.sql.json.OracleJsonDatum;
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonGenerator;
 import org.hibernate.dialect.type.OracleJsonJdbcType;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -36,6 +34,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+
 /**
  * Type mapping JSON SQL data type for Oracle database.
  * This implementation is used when the JDBC OSON extension is available.
@@ -44,8 +44,6 @@ import java.sql.SQLFeatureNotSupportedException;
  */
 public class OracleOsonJdbcType extends OracleJsonJdbcType {
 	public static final OracleOsonJdbcType INSTANCE = new OracleOsonJdbcType( null );
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( OracleOsonJdbcType.class );
 
 	static final OracleJsonFactory OSON_JSON_FACTORY = new OracleJsonFactory();
 
@@ -248,7 +246,7 @@ public class OracleOsonJdbcType extends OracleJsonJdbcType {
 							// This may happen if we are fetching data from an existing schema
 							// that uses BLOB for JSON column. In that case we assume bytes are
 							// UTF-8 bytes (i.e not OSON) and we fall back to previous String-based implementation
-							LOG.invalidJSONColumnType( OracleType.BLOB.getName(), OracleType.JSON.getName() );
+							CORE_LOGGER.invalidJSONColumnType( OracleType.BLOB.getName(), OracleType.JSON.getName() );
 							return fromString( getBytesFromResultSetByIndex( rs, paramIndex ), options );
 						}
 						else {
@@ -273,7 +271,7 @@ public class OracleOsonJdbcType extends OracleJsonJdbcType {
 							// This may happen if we are fetching data from an existing schema
 							// that uses BLOB for JSON column In that case we assume bytes are
 							// UTF-8 bytes (i.e not OSON) and we fall back to previous String-based implementation
-							LOG.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
+							CORE_LOGGER.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
 							return fromString( getBytesFromStatementByIndex( statement, index ), options );
 						}
 						else {
@@ -299,7 +297,7 @@ public class OracleOsonJdbcType extends OracleJsonJdbcType {
 							// This may happen if we are fetching data from an existing schema
 							// that uses BLOB for JSON column In that case we assume bytes are
 							// UTF-8 bytes (i.e not OSON) and we fall back to previous String-based implementation
-							LOG.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
+							CORE_LOGGER.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
 							return fromString( getBytesFromStatementByName( statement, name ), options );
 						}
 						else {

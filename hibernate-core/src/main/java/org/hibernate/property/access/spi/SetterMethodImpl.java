@@ -12,20 +12,17 @@ import java.lang.reflect.Method;
 import org.hibernate.Internal;
 import org.hibernate.PropertyAccessException;
 import org.hibernate.PropertySetterAccessException;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.property.access.internal.AbstractSetterMethodSerialForm;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * @author Steve Ebersole
  */
 @Internal
 public class SetterMethodImpl implements Setter {
-
-	private static final CoreMessageLogger LOG = messageLogger( SetterMethodImpl.class );
 
 	private final Class<?> containerClass;
 	private final String propertyName;
@@ -101,8 +98,8 @@ public class SetterMethodImpl implements Setter {
 			}
 			else {
 				final var expectedType = setterMethod.getParameterTypes()[0];
-				LOG.illegalPropertySetterArgument( containerClass.getName(), propertyName );
-				LOG.expectedType( expectedType.getName(), value == null ? null : value.getClass().getName() );
+				CORE_LOGGER.illegalPropertySetterArgument( containerClass.getName(), propertyName );
+				CORE_LOGGER.expectedType( expectedType.getName(), value == null ? null : value.getClass().getName() );
 				throw new PropertySetterAccessException(
 						iae,
 						containerClass,

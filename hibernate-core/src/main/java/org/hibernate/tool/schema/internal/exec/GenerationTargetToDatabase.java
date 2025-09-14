@@ -12,12 +12,12 @@ import java.sql.Statement;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
+
+import static org.hibernate.internal.CoreMessageLogger.*;
 
 /**
  * A {@link GenerationTarget} which exports DDL directly to the database.
@@ -25,7 +25,6 @@ import org.hibernate.tool.schema.spi.ScriptSourceInput;
  * @author Steve Ebersole
  */
 public class GenerationTargetToDatabase implements GenerationTarget {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( GenerationTargetToDatabase.class );
 
 	private final DdlTransactionIsolator ddlTransactionIsolator;
 	private final boolean releaseAfterUse;
@@ -66,7 +65,7 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 	@Override
 	public void beforeScript(ScriptSourceInput scriptSource) {
 		if ( scriptSource.exists() ) {
-			LOG.executingScript( scriptSource.getScriptDescription() );
+			CORE_LOGGER.executingScript( scriptSource.getScriptDescription() );
 		}
 	}
 
@@ -85,7 +84,7 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 				}
 			}
 			catch( SQLException e ) {
-				LOG.unableToLogSqlWarnings( e );
+				CORE_LOGGER.unableToLogSqlWarnings( e );
 			}
 		}
 		catch (SQLException e) {

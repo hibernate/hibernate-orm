@@ -14,12 +14,12 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
 import org.hibernate.stat.spi.StatisticsImplementor;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 
 /**
@@ -35,8 +35,6 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  * @since 3.5
  */
 public class PessimisticWriteUpdateLockingStrategy implements LockingStrategy {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PessimisticWriteUpdateLockingStrategy.class );
 
 	private final EntityPersister lockable;
 	private final LockMode lockMode;
@@ -55,7 +53,7 @@ public class PessimisticWriteUpdateLockingStrategy implements LockingStrategy {
 			throw new HibernateException( "[" + lockMode + "] not valid for update statement" );
 		}
 		if ( !lockable.isVersioned() ) {
-			LOG.writeLocksNotSupported( lockable.getEntityName() );
+			CORE_LOGGER.writeLocksNotSupported( lockable.getEntityName() );
 			this.sql = null;
 		}
 		else {

@@ -8,11 +8,11 @@ import java.util.concurrent.TimeUnit;
 
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.service.Service;
 import org.jboss.logging.Logger;
+
 
 /**
  * Centralize logging for SQL statements.
@@ -20,8 +20,8 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class SqlStatementLogger implements Service {
-	private static final Logger LOG = CoreLogging.logger( "org.hibernate.SQL" );
-	private static final Logger LOG_SLOW = CoreLogging.logger( "org.hibernate.SQL_SLOW" );
+	private static final Logger LOG = Logger.getLogger( "org.hibernate.SQL" );
+	private static final Logger LOG_SLOW = Logger.getLogger( "org.hibernate.SQL_SLOW" );
 
 	private final boolean logToStdout;
 	private final boolean format;

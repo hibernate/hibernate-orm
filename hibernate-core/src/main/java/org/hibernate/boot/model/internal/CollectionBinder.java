@@ -28,7 +28,6 @@ import org.hibernate.boot.spi.InFlightMetadataCollector.CollectionTypeRegistrati
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.boot.spi.SecondPass;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
@@ -111,7 +110,7 @@ import static org.hibernate.boot.model.internal.QueryBinder.bindNativeQuery;
 import static org.hibernate.boot.model.internal.QueryBinder.bindQuery;
 import static org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation.toJoinColumn;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.StringHelper.isBlank;
@@ -130,8 +129,6 @@ import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.
  * @author Emmanuel Bernard
  */
 public abstract class CollectionBinder {
-
-	private static final CoreMessageLogger LOG = messageLogger( CollectionBinder.class );
 
 	private static final List<Class<?>> INFERRED_CLASS_PRIORITY = List.of(
 			List.class,
@@ -1060,8 +1057,8 @@ public abstract class CollectionBinder {
 	private void bind() {
 		collection = createCollection( propertyHolder.getPersistentClass() );
 		final String role = qualify( propertyHolder.getPath(), propertyName );
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Binding collection role: " + role );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.trace( "Binding collection role: " + role );
 		}
 		collection.setRole( role );
 		collection.setMappedByProperty( mappedBy );
@@ -1143,13 +1140,13 @@ public abstract class CollectionBinder {
 			}
 			if ( oneToMany ) {
 				if ( property.hasDirectAnnotationUsage( MapKeyColumn.class ) ) {
-					LOG.warn( "Association '"
+					CORE_LOGGER.warn( "Association '"
 								+ qualify( propertyHolder.getPath(), propertyName )
 								+ "' is 'mappedBy' another entity and should not specify a '@MapKeyColumn'"
 								+ " (use '@MapKey' instead)" );
 				}
 				if ( property.hasDirectAnnotationUsage( OrderColumn.class ) ) {
-					LOG.warn( "Association '"
+					CORE_LOGGER.warn( "Association '"
 								+ qualify( propertyHolder.getPath(), propertyName )
 								+ "' is 'mappedBy' another entity and should not specify an '@OrderColumn'"
 								+ " (use '@OrderBy' instead)" );
@@ -2772,8 +2769,8 @@ public abstract class CollectionBinder {
 	}
 
 	private void logOneToManySecondPass() {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Binding one-to-many association through foreign key: " + safeCollectionRole() );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.trace( "Binding one-to-many association through foreign key: " + safeCollectionRole() );
 		}
 	}
 
@@ -2781,18 +2778,18 @@ public abstract class CollectionBinder {
 			boolean isOneToMany,
 			boolean isCollectionOfEntities,
 			boolean isManyToAny) {
-		if ( LOG.isTraceEnabled() ) {
+		if ( CORE_LOGGER.isTraceEnabled() ) {
 			if ( isCollectionOfEntities && isOneToMany ) {
-				LOG.trace( "Binding one-to-many association through association table: " + safeCollectionRole() );
+				CORE_LOGGER.trace( "Binding one-to-many association through association table: " + safeCollectionRole() );
 			}
 			else if ( isCollectionOfEntities ) {
-				LOG.trace( "Binding many-to-many association through association table: " + safeCollectionRole() );
+				CORE_LOGGER.trace( "Binding many-to-many association through association table: " + safeCollectionRole() );
 			}
 			else if ( isManyToAny ) {
-				LOG.trace( "Binding many-to-any: " + safeCollectionRole() );
+				CORE_LOGGER.trace( "Binding many-to-any: " + safeCollectionRole() );
 			}
 			else {
-				LOG.trace( "Binding element collection to collection table: " + safeCollectionRole() );
+				CORE_LOGGER.trace( "Binding element collection to collection table: " + safeCollectionRole() );
 			}
 		}
 	}

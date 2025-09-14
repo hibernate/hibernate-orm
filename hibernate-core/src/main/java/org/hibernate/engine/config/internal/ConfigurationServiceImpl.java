@@ -86,7 +86,8 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 						.classForName( candidate.toString() );
 			}
 			catch ( ClassLoadingException e ) {
-				CORE_LOGGER.debugf( "Unable to locate %s implementation class %s", expected.getName(), candidate.toString() );
+				CORE_LOGGER.debugf( "Unable to locate %s implementation class %s",
+						expected.getName(), candidate.toString() );
 				target = null;
 			}
 		}
@@ -95,10 +96,8 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 				return target.newInstance();
 			}
 			catch ( Exception e ) {
-				CORE_LOGGER.debugf(
-						"Unable to instantiate %s class %s", expected.getName(),
-						target.getName()
-				);
+				CORE_LOGGER.debugf( "Unable to instantiate %s class %s",
+						expected.getName(), target.getName() );
 			}
 		}
 		return null;

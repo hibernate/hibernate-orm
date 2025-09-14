@@ -5,6 +5,7 @@
 package org.hibernate.internal;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
@@ -13,6 +14,8 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.cache.CacheException;
+import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.BasicLogger;
@@ -28,6 +31,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
@@ -421,4 +425,48 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = DEBUG)
 	@Message( id = 6004, value = "Unable to drop temporary table [%s]: '%s' failed" )
 	void unableToDropTempTable(String qualifiedTableName, String creationCommand, @Cause SQLException e);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6005, value = "Cascading %s to child entity '%s'" )
+	void cascading(CascadingAction<?> delete, String childEntityName);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6006, value = "Cascading %s to collection '%s'" )
+	void cascadingCollection(CascadingAction<?> delete, String collectionRole);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6007, value = "Done cascading %s to collection '%s'" )
+	void doneCascadingCollection(CascadingAction<?> delete, String collectionRole);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6008, value = "Processing cascade %s for entity '%s'" )
+	void processingCascade(CascadingAction<?> action, String entityName);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6009, value = "Processing cascade %s for entity '%s'" )
+	void doneProcessingCascade(CascadingAction<?> action, String entityName);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6011, value = "Deleting orphaned child entity instance of type '%s'" )
+	void deletingOrphanOfType(String entityName);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6012, value = "Deleting orphaned child entity instance: %s" )
+	void deletingOrphan(String info);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6013, value = "Deleting orphans for collection '%s'" )
+	void deletingOrphans(String role);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6014, value = "Done deleting orphans for collection '%s'" )
+	void doneDeletingOrphans(String role);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6021, value = "Collection dirty: %s" )
+	void collectionDirty(String info);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6022, value = "Reset storedSnapshot to %s for %s" )
+	void resetStoredSnapshot(Serializable storedSnapshot, CollectionEntry collectionEntry);
 }

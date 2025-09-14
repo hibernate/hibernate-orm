@@ -26,7 +26,7 @@ import static org.jboss.logging.Logger.Level.TRACE;
 		description = "Logging related to EntityCopyObservers"
 )
 @MessageLogger(projectCode = "HHH")
-@ValidIdRange(min = 90070001, max = 90080000)
+@ValidIdRange(min = 90080001, max = 90090000)
 @Internal
 public interface EntityCopyLogging extends BasicLogger {
 	String NAME = EventListenerLogging.NAME + ".copy";
@@ -37,28 +37,28 @@ public interface EntityCopyLogging extends BasicLogger {
 	// EntityCopyObserver
 
 	@LogMessage(level = TRACE)
-	@Message(id = 90070001, value = "More than one representation of the same persistent entity being merged: %s")
+	@Message(id = 90080001, value = "More than one representation of the same persistent entity being merged: %s")
 	void duplicateRepresentationBeingMerged(String infoString);
 
 	@LogMessage(level = DEBUG)
-	@Message(id = 90070002, value = "Summary: number of %s entities with multiple representations merged: %d")
+	@Message(id = 90080002, value = "Summary: number of %s entities with multiple representations merged: %d")
 	void mergeSummaryMultipleRepresentations(String entityName, int count);
 
 	@LogMessage(level = DEBUG)
-	@Message(id = 90070003, value = "No entity copies merged")
+	@Message(id = 90080003, value = "No entity copies merged")
 	void noEntityCopiesMerged();
 
 	@LogMessage(level = DEBUG)
-	@Message(id = 90070010, value = "Details: merged %d representations of the same entity %s being merged: %s; resulting managed entity: [%s]")
+	@Message(id = 90080010, value = "Details: merged %d representations of the same entity %s being merged: %s; resulting managed entity: [%s]")
 	void mergeDetails(int numberOfRepresentations, String entityInfo, String mergedEntitiesList, String managedEntityString);
 
 	// EntityCopyObserverFactoryInitiator
 
 	@LogMessage(level = TRACE)
-	@Message(id = 90070100, value = "Configured EntityCopyObserver strategy: %s")
+	@Message(id = 90080100, value = "Configured EntityCopyObserver strategy: %s")
 	void configuredEntityCopyObserverStrategy(String strategyName);
 
 	@LogMessage(level = TRACE)
-	@Message(id = 90070101, value = "Configured EntityCopyObserver is a custom implementation of type '%s'")
+	@Message(id = 90080101, value = "Configured EntityCopyObserver is a custom implementation of type '%s'")
 	void configuredEntityCopyObserverCustomImplementation(String typeName);
 }

@@ -39,9 +39,8 @@ public abstract class SessionBuilderImpl
 	private boolean autoClear;
 	private boolean identifierRollback;
 	private FlushMode flushMode;
-
-	private final int defaultBatchFetchSize;
-	private final boolean subselectFetchEnabled;
+	private int defaultBatchFetchSize;
+	private boolean subselectFetchEnabled;
 
 	// Lazy: defaults can be built by invoking the builder in fastSessionServices.defaultSessionEventListeners
 	// (Need a fresh build for each Session as the listener instances can't be reused across sessions)
@@ -230,6 +229,18 @@ public abstract class SessionBuilderImpl
 		else {
 			listeners.clear();
 		}
+		return this;
+	}
+
+	@Override
+	public SessionBuilderImplementor defaultBatchFetchSize(int defaultBatchFetchSize) {
+		this.defaultBatchFetchSize = defaultBatchFetchSize;
+		return this;
+	}
+
+	@Override
+	public SessionBuilderImplementor subselectFetchEnabled(boolean subselectFetchEnabled) {
+		this.subselectFetchEnabled = subselectFetchEnabled;
 		return this;
 	}
 }

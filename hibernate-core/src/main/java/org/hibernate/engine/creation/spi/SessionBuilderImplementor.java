@@ -93,4 +93,10 @@ public interface SessionBuilderImplementor extends SessionBuilder {
 
 	@Override
 	SessionBuilderImplementor noStatementInspector();
+
+	@Override
+	SessionBuilderImplementor defaultBatchFetchSize(int defaultBatchFetchSize);
+
+	@Override
+	SessionBuilderImplementor subselectFetchEnabled(boolean subselectFetchEnabled);
 }

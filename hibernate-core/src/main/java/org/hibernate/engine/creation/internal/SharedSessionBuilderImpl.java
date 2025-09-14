@@ -46,12 +46,12 @@ public abstract class SharedSessionBuilderImpl
 	private boolean autoClear;
 	private boolean identifierRollback;
 	private FlushMode flushMode;
+	private int defaultBatchFetchSize;
+	private boolean subselectFetchEnabled;
 
 	private boolean tenantIdChanged;
 	private boolean readOnlyChanged;
 
-	private final int defaultBatchFetchSize;
-	private final boolean subselectFetchEnabled;
 
 	// Lazy: defaults can be built by invoking the builder in fastSessionServices.defaultSessionEventListeners
 	// (Need a fresh build for each Session as the listener instances can't be reused across sessions)
@@ -247,6 +247,17 @@ public abstract class SharedSessionBuilderImpl
 		return this;
 	}
 
+	@Override
+	public SharedSessionBuilderImplementor defaultBatchFetchSize(int defaultBatchFetchSize) {
+		this.defaultBatchFetchSize = defaultBatchFetchSize;
+		return this;
+	}
+
+	@Override
+	public SharedSessionBuilderImplementor subselectFetchEnabled(boolean subselectFetchEnabled) {
+		this.subselectFetchEnabled = subselectFetchEnabled;
+		return this;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SharedSessionCreationOptions

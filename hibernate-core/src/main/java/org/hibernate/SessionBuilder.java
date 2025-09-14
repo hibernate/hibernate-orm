@@ -217,4 +217,28 @@ public interface SessionBuilder extends CommonBuilder {
 	 * @since 7.0
 	 */
 	SessionBuilder identifierRollback(boolean identifierRollback);
+
+	/**
+	 * Specify the default batch fetch size for the session.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.FetchSettings#DEFAULT_BATCH_FETCH_SIZE
+	 * @see Session#setFetchBatchSize(int)
+	 *
+	 * @since 7.2
+	 */
+	SessionBuilder defaultBatchFetchSize(int defaultBatchFetchSize);
+
+	/**
+	 * Specify whether subselect fetching is enabled for the session.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.FetchSettings#USE_SUBSELECT_FETCH
+	 * @see Session#setSubselectFetchingEnabled(boolean)
+	 *
+	 * @since 7.2
+	 */
+	SessionBuilder subselectFetchEnabled(boolean subselectFetchEnabled);
 }

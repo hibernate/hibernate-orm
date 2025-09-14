@@ -283,14 +283,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Unable to mark for rollback on TransientObjectException: ", id = 338)
 	void unableToMarkForRollbackOnTransientObjectException(@Cause Exception e);
 
-	@LogMessage(level = WARN)
-	@Message(value = "Could not obtain connection metadata: %s", id = 339)
-	void unableToObtainConnectionMetadata(SQLException error);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Could not obtain connection to query JDBC database metadata", id = 342)
-	void unableToObtainConnectionToQueryMetadata(@Cause Exception e);
-
 	@LogMessage(level = ERROR)
 	@Message(value = "Could not release a cache lock: %s", id = 353)
 	void unableToReleaseCacheLock(CacheException ce);

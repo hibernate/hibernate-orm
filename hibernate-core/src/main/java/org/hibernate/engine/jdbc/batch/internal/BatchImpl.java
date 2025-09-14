@@ -22,7 +22,6 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 
 import static java.util.Objects.requireNonNull;
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
-import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_LOGGER;
 import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_MESSAGE_LOGGER;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
@@ -64,7 +63,7 @@ public class BatchImpl implements Batch {
 		sqlStatementLogger = jdbcServices.getSqlStatementLogger();
 		sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
 
-		if ( BATCH_LOGGER.isTraceEnabled() ) {
+		if ( BATCH_MESSAGE_LOGGER.isTraceEnabled() ) {
 			BATCH_MESSAGE_LOGGER.createBatch(
 					batchSizeToUse,
 					key.toLoggableString()
@@ -102,7 +101,7 @@ public class BatchImpl implements Batch {
 
 	@Override
 	public void addToBatch(JdbcValueBindings jdbcValueBindings, TableInclusionChecker inclusionChecker) {
-		final boolean loggerTraceEnabled = BATCH_LOGGER.isTraceEnabled();
+		final boolean loggerTraceEnabled = BATCH_MESSAGE_LOGGER.isTraceEnabled();
 		if ( loggerTraceEnabled ) {
 			BATCH_MESSAGE_LOGGER.addToBatch(
 					batchPosition + 1,
@@ -132,10 +131,9 @@ public class BatchImpl implements Batch {
 					try {
 						statement.addBatch();
 					}
-					catch (SQLException e) {
-						BATCH_LOGGER.debug( "SQLException escaped proxy", e );
+					catch (SQLException exception) {
 						throw sqlExceptionHelper.convert(
-								e,
+								exception,
 								"Could not perform addBatch",
 								sqlString
 						);
@@ -212,14 +210,11 @@ public class BatchImpl implements Batch {
 	@Override
 	public void execute() {
 		notifyObserversExplicitExecution();
-		if ( getStatementGroup().getNumberOfStatements() != 0 ) {
+		if ( getStatementGroup().getNumberOfStatements() > 0 ) {
 			try {
 				if ( batchPosition == 0 ) {
-					if ( !batchExecuted && BATCH_LOGGER.isDebugEnabled() ) {
-						BATCH_LOGGER.debugf(
-								"No batched statements to execute - %s",
-								getKey().toLoggableString()
-						);
+					if ( !batchExecuted && BATCH_MESSAGE_LOGGER.isTraceEnabled() ) {
+						BATCH_MESSAGE_LOGGER.emptyBatch( getKey().toLoggableString() );
 					}
 				}
 				else {
@@ -233,7 +228,7 @@ public class BatchImpl implements Batch {
 	}
 
 	protected void performExecution() {
-		if ( BATCH_LOGGER.isTraceEnabled() ) {
+		if ( BATCH_MESSAGE_LOGGER.isTraceEnabled() ) {
 			BATCH_MESSAGE_LOGGER.executeBatch(
 					batchPosition,
 					batchSizeToUse,
@@ -314,7 +309,7 @@ public class BatchImpl implements Batch {
 	public void release() {
 		if ( BATCH_MESSAGE_LOGGER.isInfoEnabled() ) {
 			final var statementGroup = getStatementGroup();
-			if ( statementGroup.getNumberOfStatements() != 0
+			if ( statementGroup.getNumberOfStatements() > 0
 					&& statementGroup.hasMatching( statementDetails -> statementDetails.getStatement() != null ) ) {
 				BATCH_MESSAGE_LOGGER.batchContainedStatementsOnRelease();
 			}

@@ -31,8 +31,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.event.monitor.internal.EmptyEventMonitor;
 import org.hibernate.event.monitor.spi.EventMonitor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
@@ -79,8 +77,6 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
  * @author Steve Ebersole
  */
 public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEnvironment> {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JdbcEnvironmentInitiator.class );
 
 	public static final JdbcEnvironmentInitiator INSTANCE = new JdbcEnvironmentInitiator();
 
@@ -137,7 +133,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			Integer explicitDatabaseMajorVersion,
 			Integer explicitDatabaseMinorVersion,
 			String explicitDatabaseVersion) {
-		final DialectFactory dialectFactory = registry.requireService( DialectFactory.class );
+		final var dialectFactory = registry.requireService( DialectFactory.class );
 
 		final JdbcEnvironment jdbcEnvironment;
 		final DatabaseConnectionInfo databaseConnectionInfo;
@@ -211,7 +207,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			Integer explicitDatabaseMajorVersion,
 			Integer explicitDatabaseMinorVersion,
 			String explicitDatabaseVersion) {
-		final DialectResolutionInfo dialectResolutionInfo = new DialectResolutionInfoImpl(
+		final var dialectResolutionInfo = new DialectResolutionInfoImpl(
 				null,
 				explicitDatabaseName,
 				explicitDatabaseVersion,
@@ -333,15 +329,15 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			Integer explicitDatabaseMajorVersion,
 			Integer explicitDatabaseMinorVersion,
 			String explicitDatabaseVersion) {
-		final JdbcConnectionAccess jdbcConnectionAccess = buildJdbcConnectionAccess( registry );
-		final JdbcServicesImpl jdbcServices = new JdbcServicesImpl( registry );
-		final TemporaryJdbcSessionOwner temporaryJdbcSessionOwner = new TemporaryJdbcSessionOwner(
+		final var jdbcConnectionAccess = buildJdbcConnectionAccess( registry );
+		final var jdbcServices = new JdbcServicesImpl( registry );
+		final var temporaryJdbcSessionOwner = new TemporaryJdbcSessionOwner(
 				jdbcConnectionAccess,
 				jdbcServices,
 				new SqlExceptionHelper( false ),
 				registry
 		);
-		final JdbcCoordinatorImpl jdbcCoordinator = new JdbcCoordinatorImpl( null, temporaryJdbcSessionOwner, jdbcServices );
+		final var jdbcCoordinator = new JdbcCoordinatorImpl( null, temporaryJdbcSessionOwner, jdbcServices );
 
 		try {
 			temporaryJdbcSessionOwner.transactionCoordinator = registry.requireService( TransactionCoordinatorBuilder.class )
@@ -351,10 +347,9 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 						@Override
 						public JdbcEnvironmentImpl execute(Connection connection) {
 							try {
-								final DatabaseMetaData metadata = connection.getMetaData();
+								final var metadata = connection.getMetaData();
 								logDatabaseAndDriver( metadata );
-
-								final DialectResolutionInfo dialectResolutionInfo = new DialectResolutionInfoImpl(
+								final var dialectResolutionInfo = new DialectResolutionInfoImpl(
 										metadata,
 										explicitDatabaseName == null
 												? metadata.getDatabaseProductName()
@@ -385,7 +380,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 								);
 							}
 							catch (SQLException e) {
-								LOG.unableToObtainConnectionMetadata( e );
+								JDBC_MESSAGE_LOGGER.unableToObtainConnectionMetadata( e );
 							}
 
 							// accessing the JDBC metadata failed
@@ -416,7 +411,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			);
 		}
 		catch ( Exception e ) {
-			LOG.unableToObtainConnectionToQueryMetadata( e );
+			JDBC_MESSAGE_LOGGER.unableToObtainConnectionToQueryMetadata( e );
 		}
 		finally {
 			//noinspection resource
@@ -427,7 +422,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 	}
 
 	private static void logDatabaseAndDriver(DatabaseMetaData dbmd) throws SQLException {
-		if ( LOG.isDebugEnabled() ) {
+		if ( JDBC_MESSAGE_LOGGER.isDebugEnabled() ) {
 			JDBC_MESSAGE_LOGGER.logDatabaseInfo(
 					dbmd.getDatabaseProductName(),
 					dbmd.getDatabaseProductVersion(),

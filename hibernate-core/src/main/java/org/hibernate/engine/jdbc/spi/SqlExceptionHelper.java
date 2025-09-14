@@ -311,14 +311,14 @@ public class SqlExceptionHelper {
 		}
 		catch (SQLException sqle) {
 			// workaround for WebLogic
-			WARNING_LOG.debug( "could not log warnings", sqle );
+			WARNING_LOG.couldNotLogWarnings( sqle );
 		}
 		try {
 			// Sybase fail if we don't do that, sigh...
 			connection.clearWarnings();
 		}
 		catch (SQLException sqle) {
-			WARNING_LOG.debug( "could not clear warnings", sqle );
+			WARNING_LOG.couldNotClearWarnings( sqle );
 		}
 	}
 
@@ -339,7 +339,7 @@ public class SqlExceptionHelper {
 			}
 			catch (SQLException sqlException) {
 				// workaround for WebLogic
-				WARNING_LOG.debug( "could not log warnings", sqlException );
+				WARNING_LOG.couldNotLogWarnings( sqlException );
 			}
 		}
 		try {
@@ -347,7 +347,7 @@ public class SqlExceptionHelper {
 			statement.clearWarnings();
 		}
 		catch (SQLException sqle) {
-			WARNING_LOG.debug( "could not clear warnings", sqle );
+			WARNING_LOG.couldNotClearWarnings( sqle );
 		}
 	}
 }

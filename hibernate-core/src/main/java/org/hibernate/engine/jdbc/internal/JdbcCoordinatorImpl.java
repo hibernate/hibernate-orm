@@ -205,7 +205,10 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void conditionallyExecuteBatch(BatchKey key) {
 		if ( currentBatch != null && !currentBatch.getKey().equals( key ) ) {
-			BATCH_MESSAGE_LOGGER.conditionallyExecuteBatch( currentBatch.getKey().toLoggableString() );
+			if ( BATCH_MESSAGE_LOGGER.isTraceEnabled() ) {
+				BATCH_MESSAGE_LOGGER.conditionallyExecuteBatch(
+						currentBatch.getKey().toLoggableString() );
+			}
 			try {
 				currentBatch.execute();
 			}
@@ -221,7 +224,10 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void abortBatch() {
 		if ( currentBatch != null ) {
-			BATCH_MESSAGE_LOGGER.abortBatch( currentBatch.getKey().toLoggableString());
+			if ( BATCH_MESSAGE_LOGGER.isTraceEnabled() ) {
+				BATCH_MESSAGE_LOGGER.abortBatch(
+						currentBatch.getKey().toLoggableString() );
+			}
 			currentBatch.release();
 			currentBatch = null;
 		}

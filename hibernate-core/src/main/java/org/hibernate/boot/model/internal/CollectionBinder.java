@@ -84,6 +84,7 @@ import static jakarta.persistence.ConstraintMode.NO_CONSTRAINT;
 import static jakarta.persistence.ConstraintMode.PROVIDER_DEFAULT;
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.annotations.CascadeType.DELETE_ORPHAN;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.EMBEDDABLE;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.NONE;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromAnnotation;
@@ -110,7 +111,6 @@ import static org.hibernate.boot.model.internal.QueryBinder.bindNativeQuery;
 import static org.hibernate.boot.model.internal.QueryBinder.bindQuery;
 import static org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation.toJoinColumn;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.StringHelper.isBlank;
@@ -1057,8 +1057,8 @@ public abstract class CollectionBinder {
 	private void bind() {
 		collection = createCollection( propertyHolder.getPersistentClass() );
 		final String role = qualify( propertyHolder.getPath(), propertyName );
-		if ( CORE_LOGGER.isTraceEnabled() ) {
-			CORE_LOGGER.trace( "Binding collection role: " + role );
+		if ( BOOT_LOGGER.isTraceEnabled() ) {
+BOOT_LOGGER.bindingCollectionRole( role );
 		}
 		collection.setRole( role );
 		collection.setMappedByProperty( mappedBy );
@@ -1140,16 +1140,16 @@ public abstract class CollectionBinder {
 			}
 			if ( oneToMany ) {
 				if ( property.hasDirectAnnotationUsage( MapKeyColumn.class ) ) {
-					CORE_LOGGER.warn( "Association '"
-								+ qualify( propertyHolder.getPath(), propertyName )
-								+ "' is 'mappedBy' another entity and should not specify a '@MapKeyColumn'"
-								+ " (use '@MapKey' instead)" );
+					BOOT_LOGGER.warn( "Association '"
+									+ qualify( propertyHolder.getPath(), propertyName )
+									+ "' is 'mappedBy' another entity and should not specify a '@MapKeyColumn'"
+									+ " (use '@MapKey' instead)" );
 				}
 				if ( property.hasDirectAnnotationUsage( OrderColumn.class ) ) {
-					CORE_LOGGER.warn( "Association '"
-								+ qualify( propertyHolder.getPath(), propertyName )
-								+ "' is 'mappedBy' another entity and should not specify an '@OrderColumn'"
-								+ " (use '@OrderBy' instead)" );
+					BOOT_LOGGER.warn( "Association '"
+									+ qualify( propertyHolder.getPath(), propertyName )
+									+ "' is 'mappedBy' another entity and should not specify an '@OrderColumn'"
+									+ " (use '@OrderBy' instead)" );
 				}
 			}
 			else {
@@ -2769,8 +2769,8 @@ public abstract class CollectionBinder {
 	}
 
 	private void logOneToManySecondPass() {
-		if ( CORE_LOGGER.isTraceEnabled() ) {
-			CORE_LOGGER.trace( "Binding one-to-many association through foreign key: " + safeCollectionRole() );
+		if ( BOOT_LOGGER.isTraceEnabled() ) {
+BOOT_LOGGER.bindingOneToManyThroughForeignKey( safeCollectionRole() );
 		}
 	}
 
@@ -2778,18 +2778,18 @@ public abstract class CollectionBinder {
 			boolean isOneToMany,
 			boolean isCollectionOfEntities,
 			boolean isManyToAny) {
-		if ( CORE_LOGGER.isTraceEnabled() ) {
+		if ( BOOT_LOGGER.isTraceEnabled() ) {
 			if ( isCollectionOfEntities && isOneToMany ) {
-				CORE_LOGGER.trace( "Binding one-to-many association through association table: " + safeCollectionRole() );
+	BOOT_LOGGER.bindingOneToManyThroughAssociationTable( safeCollectionRole() );
 			}
 			else if ( isCollectionOfEntities ) {
-				CORE_LOGGER.trace( "Binding many-to-many association through association table: " + safeCollectionRole() );
+	BOOT_LOGGER.bindingManyToManyThroughAssociationTable( safeCollectionRole() );
 			}
 			else if ( isManyToAny ) {
-				CORE_LOGGER.trace( "Binding many-to-any: " + safeCollectionRole() );
+	BOOT_LOGGER.bindingManyToAny( safeCollectionRole() );
 			}
 			else {
-				CORE_LOGGER.trace( "Binding element collection to collection table: " + safeCollectionRole() );
+	BOOT_LOGGER.bindingElementCollectionToCollectionTable( safeCollectionRole() );
 			}
 		}
 	}

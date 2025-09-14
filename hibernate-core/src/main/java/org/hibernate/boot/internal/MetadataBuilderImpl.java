@@ -90,7 +90,7 @@ import jakarta.persistence.SharedCacheMode;
 
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.engine.config.spi.StandardConverters.STRING;
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
@@ -116,10 +116,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			return standardServiceRegistry;
 		}
 		else if ( serviceRegistry instanceof BootstrapServiceRegistry bootstrapServiceRegistry ) {
-			CORE_LOGGER.debug(
-					"ServiceRegistry passed to MetadataBuilder was a BootstrapServiceRegistry; this likely won't end well " +
-							"if attempt is made to build SessionFactory"
-			);
+			BOOT_LOGGER.badServiceRegistry();
 			return new StandardServiceRegistryBuilder( bootstrapServiceRegistry ).build();
 		}
 		else {

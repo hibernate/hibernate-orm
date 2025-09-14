@@ -35,7 +35,7 @@ public class ResultSetMappingSecondPass implements QuerySecondPass {
 			return;
 		}
 
-		final SqlResultSetMappingDescriptor mappingDefinition = SqlResultSetMappingDescriptor.from( annotation );
+		final var mappingDefinition = SqlResultSetMappingDescriptor.from( annotation );
 
 		if ( isDefault ) {
 			context.getMetadataCollector().addDefaultResultSetMapping( mappingDefinition );

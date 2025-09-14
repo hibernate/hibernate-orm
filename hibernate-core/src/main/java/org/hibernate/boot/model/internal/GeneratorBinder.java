@@ -64,7 +64,7 @@ import static org.hibernate.boot.model.internal.GeneratorParameters.interpretSeq
 import static org.hibernate.boot.model.internal.GeneratorParameters.interpretTableGenerator;
 import static org.hibernate.boot.model.internal.GeneratorStrategies.generatorClass;
 import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -296,9 +296,8 @@ public class GeneratorBinder {
 		definitionBuilder.setStrategy( strategy );
 		definitionBuilder.addParams( extractParameterMap( generatorAnnotation.parameters() ) );
 
-		if ( CORE_LOGGER.isTraceEnabled() ) {
-			CORE_LOGGER.tracev( "Added generator with name: {0}, strategy: {0}",
-					definitionBuilder.getName(), definitionBuilder.getStrategy() );
+		if ( BOOT_LOGGER.isTraceEnabled() ) {
+			BOOT_LOGGER.addedGenerator( definitionBuilder.getName(), definitionBuilder.getStrategy() );
 		}
 		return definitionBuilder.build();
 	}
@@ -306,8 +305,8 @@ public class GeneratorBinder {
 	private static IdentifierGeneratorDefinition buildSequenceIdGenerator(SequenceGenerator generatorAnnotation) {
 		final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 		interpretSequenceGenerator( generatorAnnotation, definitionBuilder );
-		if ( CORE_LOGGER.isTraceEnabled() ) {
-			CORE_LOGGER.tracev( "Added sequence generator with name: {0}", definitionBuilder.getName() );
+		if ( BOOT_LOGGER.isTraceEnabled() ) {
+			BOOT_LOGGER.addedSequenceGenerator( definitionBuilder.getName() );
 		}
 		return definitionBuilder.build();
 	}
@@ -315,8 +314,8 @@ public class GeneratorBinder {
 	private static IdentifierGeneratorDefinition buildTableIdGenerator(TableGenerator generatorAnnotation) {
 		final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 		interpretTableGenerator( generatorAnnotation, definitionBuilder );
-		if ( CORE_LOGGER.isTraceEnabled() ) {
-			CORE_LOGGER.tracev( "Added sequence generator with name: {0}", definitionBuilder.getName() );
+		if ( BOOT_LOGGER.isTraceEnabled() ) {
+			BOOT_LOGGER.addedTableGenerator( definitionBuilder.getName() );
 		}
 		return definitionBuilder.build();
 	}

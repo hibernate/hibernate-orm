@@ -33,7 +33,7 @@ import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 
 /**
  * Represents a namespace (named schema/catalog pair) with a Database and manages objects defined within.
@@ -56,8 +56,7 @@ public class Namespace {
 		this.jdbcEnvironment = jdbcEnvironment;
 		this.name = name;
 		this.physicalName = physicalName( name, physicalNamingStrategy, jdbcEnvironment );
-
-		CORE_LOGGER.tracef( "Created database namespace [logicalName=%s, physicalName=%s]", name, physicalName );
+		BOOT_LOGGER.createdDatabaseNamespace( name, physicalName );
 	}
 
 	private static Name physicalName(Name name, PhysicalNamingStrategy physicalNaming, JdbcEnvironment environment) {
@@ -95,11 +94,10 @@ public class Namespace {
 	public void registerTable(Identifier logicalName, Table table) {
 		final Table previous = tables.put( logicalName, table );
 		if ( previous != null ) {
-			CORE_LOGGER.debugf(
-					"Replacing Table registration(%s) : %s -> %s",
-					logicalName,
-					previous,
-					table
+			BOOT_LOGGER.replacingTableRegistration(
+					String.valueOf(logicalName),
+					String.valueOf(previous),
+					String.valueOf(table)
 			);
 		}
 	}

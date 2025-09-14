@@ -21,7 +21,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 
 /**
  * Standard implementation of the service for interacting with class loaders
@@ -131,7 +131,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	public InputStream locateResourceStream(String name) {
 		// first we try name as a URL
 		try {
-			CORE_LOGGER.tracef( "trying via [new URL(\"%s\")]", name );
+			BOOT_LOGGER.tryingURL( name );
 			return new URL( name ).openStream();
 		}
 		catch (Exception ignore) {
@@ -142,7 +142,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		name = stripClasspathScheme( name );
 
 		try {
-			CORE_LOGGER.tracef( "trying via [ClassLoader.getResourceAsStream(\"%s\")]", name );
+			BOOT_LOGGER.tryingClassLoader( name );
 			final InputStream stream = getAggregatedClassLoader().getResourceAsStream( name );
 			if ( stream != null ) {
 				return stream;
@@ -155,14 +155,14 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 		if ( stripped != null ) {
 			try {
-				CORE_LOGGER.tracef( "trying via [new URL(\"%s\")]", stripped );
+				BOOT_LOGGER.tryingURL( stripped );
 				return new URL( stripped ).openStream();
 			}
 			catch (Exception ignore) {
 			}
 
 			try {
-				CORE_LOGGER.tracef( "trying via [ClassLoader.getResourceAsStream(\"%s\")]", stripped );
+				BOOT_LOGGER.tryingClassLoader( stripped );
 				final InputStream stream = getAggregatedClassLoader().getResourceAsStream( stripped );
 				if ( stream != null ) {
 					return stream;
@@ -220,11 +220,11 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 					.getPackage();
 		}
 		catch (ClassNotFoundException e) {
-			CORE_LOGGER.packageNotFound( packageName );
+			BOOT_LOGGER.packageNotFound( packageName );
 			return null;
 		}
 		catch (LinkageError e) {
-			CORE_LOGGER.linkageError( packageName, e );
+			BOOT_LOGGER.linkageError( packageName, e );
 			return null;
 		}
 	}

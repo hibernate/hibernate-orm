@@ -41,7 +41,7 @@ import java.util.Map;
 import static java.util.Collections.addAll;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
@@ -104,10 +104,8 @@ public class MetadataSources implements Serializable {
 	public MetadataSources(ServiceRegistry serviceRegistry, XmlMappingBinderAccess xmlMappingBinderAccess) {
 		// service registry really should be either BootstrapServiceRegistry or StandardServiceRegistry type...
 		if ( !isExpectedServiceRegistryType( serviceRegistry ) ) {
-			if ( CORE_LOGGER.isDebugEnabled() ) {
-				CORE_LOGGER.debugf(
-						"Unexpected ServiceRegistry type [%s] encountered during building of MetadataSources; may cause " +
-								"problems later attempting to construct MetadataBuilder",
+			if ( BOOT_LOGGER.isDebugEnabled() ) {
+				BOOT_LOGGER.unexpectedServiceRegistryType(
 						serviceRegistry.getClass().getName()
 				);
 			}

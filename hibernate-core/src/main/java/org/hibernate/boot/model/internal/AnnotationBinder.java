@@ -48,7 +48,7 @@ import static org.hibernate.boot.model.internal.GeneratorParameters.interpretSeq
 import static org.hibernate.boot.model.internal.GeneratorParameters.interpretTableGenerator;
 import static org.hibernate.boot.model.internal.InheritanceState.getInheritanceStateOfSuperEntity;
 import static org.hibernate.boot.model.internal.InheritanceState.getSuperclassInheritanceState;
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.mapping.MetadataSource.ANNOTATIONS;
 
@@ -76,9 +76,9 @@ public final class AnnotationBinder {
 		globalRegistrations.getSequenceGeneratorRegistrations().forEach( (name, generatorRegistration) -> {
 			final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 			interpretSequenceGenerator( generatorRegistration.configuration(), definitionBuilder );
-			final IdentifierGeneratorDefinition idGenDef = definitionBuilder.build();
-			if ( CORE_LOGGER.isTraceEnabled() ) {
-				CORE_LOGGER.trace( "Adding global sequence generator with name: " + name );
+			final var idGenDef = definitionBuilder.build();
+			if ( BOOT_LOGGER.isTraceEnabled() ) {
+				BOOT_LOGGER.addingGlobalSequenceGenerator( name );
 			}
 			metadataCollector.addDefaultIdentifierGenerator( idGenDef );
 		} );
@@ -86,9 +86,9 @@ public final class AnnotationBinder {
 		globalRegistrations.getTableGeneratorRegistrations().forEach( (name, generatorRegistration) -> {
 			final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 			interpretTableGenerator( generatorRegistration.configuration(), definitionBuilder );
-			final IdentifierGeneratorDefinition idGenDef = definitionBuilder.build();
-			if ( CORE_LOGGER.isTraceEnabled() ) {
-				CORE_LOGGER.trace( "Adding global table generator with name: " + name );
+			final var idGenDef = definitionBuilder.build();
+			if ( BOOT_LOGGER.isTraceEnabled() ) {
+				BOOT_LOGGER.addingGlobalTableGenerator( name );
 			}
 			metadataCollector.addDefaultIdentifierGenerator( idGenDef );
 		} );
@@ -142,6 +142,9 @@ public final class AnnotationBinder {
 			bindFilterDefs( packageInfo, context );
 
 			bindNamedEntityGraphs( packageInfo, context );
+		}
+		else {
+			BOOT_LOGGER.packageNotFound( packageName );
 		}
 	}
 

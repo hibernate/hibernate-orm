@@ -36,7 +36,7 @@ import jakarta.persistence.MapKeyTemporal;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Temporal;
 
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
@@ -181,7 +181,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		final boolean specCompliant = isNotEmpty( attributeName )
 				&& (attributeName.startsWith( "key" ) || attributeName.startsWith( "value" ) );
 		if ( !specCompliant ) {
-			CORE_LOGGER.nonCompliantMapConversion( role );
+			BOOT_LOGGER.nonCompliantMapConversion( role );
 		}
 	}
 

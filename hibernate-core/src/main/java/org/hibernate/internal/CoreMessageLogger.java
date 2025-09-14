@@ -109,10 +109,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "GUID identifier generated: %s", id = 113)
 	void guidGenerated(String result);
 
-	@LogMessage(level = DEBUG)
-	@Message(value = "Handling transient entity in delete processing", id = 114)
-	void handlingTransientEntity();
-
 	@LogMessage(level = WARN)
 	@Message(value = "HSQLDB supports only READ_UNCOMMITTED isolation", id = 118)
 	void hsqldbSupportsOnlyReadCommittedIsolation();
@@ -305,10 +301,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Unable to instantiate UUID generation strategy class: %s", id = 325)
 	void unableToInstantiateUuidGenerationStrategy(Exception ignore);
 
-	@LogMessage(level = INFO)
-	@Message(value = "Error performing load command", id = 327)
-	void unableToLoadCommand(@Cause HibernateException e);
-
 	@LogMessage(level = ERROR)
 	@Message(value = "Problem loading properties from hibernate.properties", id = 329)
 	void unableToLoadProperties();
@@ -421,16 +413,10 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)
 	@Message(
-			value = "Explicit use of UPGRADE_SKIPLOCKED in lock() calls is not recommended; use normal UPGRADE locking instead",
-			id = 447
-	)
-	void explicitSkipLockedLockCombo();
-
-	@LogMessage(level = WARN)
-	@Message(
 			id = 449,
-			value = "@Convert annotation applied to Map attribute [%s] did not explicitly specify 'attributeName' " +
-					"using 'key'/'value' as required by spec; attempting to DoTheRightThing"
+			value = "@Convert annotation applied to Map attribute [%s] did not explicitly specify "
+					+ "'attributeName=\"key\" or 'attributeName=\"value\"' as required by spec; "
+					+ "attempting to infer whether converter applies to key or value"
 	)
 	void nonCompliantMapConversion(String collectionRole);
 
@@ -522,11 +508,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Failed to discover types for enhancement from class: %s",
 			id = 516)
 	void enhancementDiscoveryFailed(String className, @Cause Throwable cause);
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Flushing and evicting managed instance of type [%s] before removing detached instance with same id",
-			id = 530)
-	void flushAndEvictOnRemove(String entityName);
 
 	@LogMessage(level = ERROR)
 	@Message(value = "Illegal argument on static metamodel field injection: %s#%s; expected type: %s; encountered type: %s", id = 15007)

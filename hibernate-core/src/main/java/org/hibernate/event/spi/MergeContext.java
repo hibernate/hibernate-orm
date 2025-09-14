@@ -361,8 +361,11 @@ public class MergeContext implements Map<Object,Object> {
 		if ( session.getPersistenceContextInternal().getEntry( entity ) != null ) {
 			return MessageHelper.infoString( session.getEntityName( entity ), session.getIdentifier( entity ) );
 		}
-		// Entity was not found in current persistence context. Use Object#toString() method.
-		return "[" + entity + "]";
+		else {
+			// Entity was not found in the current persistence context.
+			// Use Object#toString() method.
+			return "[" + entity + "]";
+		}
 	}
 
 	public EventSource getEventSource() {

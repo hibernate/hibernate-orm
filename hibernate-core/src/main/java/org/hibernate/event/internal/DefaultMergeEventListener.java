@@ -23,8 +23,6 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.MergeContext;
 import org.hibernate.event.spi.MergeEvent;
 import org.hibernate.event.spi.MergeEventListener;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.AnyType;
@@ -43,7 +41,9 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTracker;
 import static org.hibernate.event.internal.EntityState.getEntityState;
+import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.event.internal.EventUtil.getLoggableName;
+import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
@@ -55,8 +55,6 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 public class DefaultMergeEventListener
 		extends AbstractSaveEventListener<MergeContext>
 		implements MergeEventListener {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultMergeEventListener.class );
 
 	@Override
 	protected Map<Object,Object> getMergeMap(MergeContext context) {
@@ -100,7 +98,7 @@ public class DefaultMergeEventListener
 			final var lazyInitializer = extractLazyInitializer( original );
 			if ( lazyInitializer != null ) {
 				if ( lazyInitializer.isUninitialized() ) {
-					LOG.trace( "Ignoring uninitialized proxy" );
+					EVENT_LISTENER_LOGGER.ignoringUninitializedProxy();
 					event.setResult( source.getReference( lazyInitializer.getEntityName(), lazyInitializer.getInternalIdentifier() ) );
 				}
 				else {
@@ -110,7 +108,7 @@ public class DefaultMergeEventListener
 			else if ( isPersistentAttributeInterceptable( original ) ) {
 				if ( asPersistentAttributeInterceptable( original ).$$_hibernate_getInterceptor()
 						instanceof EnhancementAsProxyLazinessInterceptor proxyInterceptor ) {
-					LOG.trace( "Ignoring uninitialized enhanced proxy" );
+					EVENT_LISTENER_LOGGER.ignoringUninitializedEnhancedProxy();
 					event.setResult( source.byId( proxyInterceptor.getEntityName() )
 							.getReference( proxyInterceptor.getIdentifier() ) );
 				}
@@ -126,12 +124,12 @@ public class DefaultMergeEventListener
 
 	private void doMerge(MergeEvent event, MergeContext copiedAlready, Object entity) {
 		if ( copiedAlready.containsKey( entity ) && copiedAlready.isOperatedOn( entity ) ) {
-			LOG.trace( "Already in merge process" );
+			EVENT_LISTENER_LOGGER.alreadyInMergeProcess();
 			event.setResult( entity );
 		}
 		else {
 			if ( copiedAlready.containsKey( entity ) ) {
-				LOG.trace( "Already in copyCache; setting in merge process" );
+				EVENT_LISTENER_LOGGER.alreadyInMergeContext();
 				copiedAlready.setOperatedOn( entity, true );
 			}
 			event.setEntity( entity );
@@ -256,11 +254,15 @@ public class DefaultMergeEventListener
 	}
 
 	protected void entityIsPersistent(MergeEvent event, MergeContext copyCache) {
-		LOG.trace( "Ignoring persistent instance" );
 		//TODO: check that entry.getIdentifier().equals(requestedId)
 		final Object entity = event.getEntity();
 		final var source = event.getSession();
-		final var persister = source.getEntityPersister( event.getEntityName(), entity );
+		final String entityName = event.getEntityName();
+		final var persister = source.getEntityPersister( entityName, entity );
+		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
+			EVENT_LISTENER_LOGGER.ignoringPersistentInstance(
+					infoString( entityName, persister.getIdentifier( entity, copyCache ) ) );
+		}
 		copyCache.put( entity, entity, true );  //before cascade!
 		cascadeOnMerge( source, persister, entity, copyCache );
 		TypeHelper.replace( persister, entity, source, entity, copyCache );
@@ -268,13 +270,14 @@ public class DefaultMergeEventListener
 	}
 
 	protected void entityIsTransient(MergeEvent event, Object id, MergeContext copyCache) {
-		LOG.trace( "Merging transient instance" );
-
 		final Object entity = event.getEntity();
 		final var session = event.getSession();
 		final var interceptor = session.getInterceptor();
 		final String entityName = event.getEntityName();
 		final var persister = session.getEntityPersister( entityName, entity );
+		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
+			EVENT_LISTENER_LOGGER.mergingTransientInstance( infoString( entityName, id ) );
+		}
 		final String[] propertyNames = persister.getPropertyNames();
 		final Type[] propertyTypes = persister.getPropertyTypes();
 		final Object copy = copyEntity( copyCache, entity, session, persister, id );
@@ -395,8 +398,6 @@ public class DefaultMergeEventListener
 	}
 
 	protected void entityIsDetached(MergeEvent event, Object copiedId, Object originalId, MergeContext copyCache) {
-		LOG.trace( "Merging detached instance" );
-
 		final Object entity = event.getEntity();
 		final var session = event.getSession();
 		final var persister = session.getEntityPersister( event.getEntityName(), entity );
@@ -409,15 +410,19 @@ public class DefaultMergeEventListener
 						? persister.getIdentifierType().deepCopy( originalId, event.getFactory() )
 						: copiedId;
 		final Object id = getDetachedEntityId( event, originalId, persister );
-		// we must clone embedded composite identifiers, or we will get back the same instance that we pass in
-		// apply the special MERGE fetch profile and perform the resolution (Session#get)
+		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
+			EVENT_LISTENER_LOGGER.mergingDetachedInstance( infoString( entityName, id ) );
+		}
+		// We must clone embedded composite identifiers, or we will get
+		// back the same instance that we pass in. Apply the special MERGE
+		// fetch profile and perform the resolution (Session#get).
 		final Object result =
 				session.getLoadQueryInfluencers()
 						.fromInternalFetchProfile( CascadingFetchProfile.MERGE,
 								() -> session.get( entityName, clonedIdentifier ) );
 
 		if ( result == null ) {
-			LOG.trace( "Detached instance not found in database" );
+			EVENT_LISTENER_LOGGER.detachedInstanceNotFoundInDatabase();
 			// we got here because we assumed that an instance
 			// with an assigned id and no version was detached
 			// when it was really transient (or deleted)

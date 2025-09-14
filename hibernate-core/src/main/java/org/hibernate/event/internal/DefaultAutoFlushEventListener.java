@@ -9,9 +9,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 
+import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 
 
 /**
@@ -21,8 +20,6 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Steve Ebersole
  */
 public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener implements AutoFlushEventListener {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultAutoFlushEventListener.class );
 
 	/**
 	 * Handle the given auto-flush event.
@@ -50,7 +47,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 				final int oldSize = actionQueue.numberOfCollectionRemovals();
 				flushEverythingToExecutions( event, persistenceContext, session );
 				if ( flushIsReallyNeeded( event, source ) ) {
-					LOG.trace( "Need to execute flush" );
+					EVENT_LISTENER_LOGGER.needToExecuteFlush();
 					event.setFlushRequired( true );
 
 					// note: performExecutions() clears all collectionXxxxtion
@@ -70,7 +67,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 					}
 				}
 				else {
-					LOG.trace( "No need to execute flush" );
+					EVENT_LISTENER_LOGGER.noNeedToExecuteFlush();
 					event.setFlushRequired( false );
 					actionQueue.clearFromFlushNeededCheck( oldSize );
 				}

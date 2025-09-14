@@ -8,6 +8,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.event.spi.FlushEvent;
 import org.hibernate.event.spi.FlushEventListener;
 
+import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
+
 /**
  * Defines the default flush event listeners used by hibernate for
  * flushing session state in response to generated flush events.
@@ -26,6 +28,7 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 		final var eventMonitor = source.getEventMonitor();
 		if ( persistenceContext.getNumberOfManagedEntities() > 0
 				|| persistenceContext.getCollectionEntriesSize() > 0 ) {
+			EVENT_LISTENER_LOGGER.executingFlush();
 			final var flushEvent = eventMonitor.beginFlushEvent();
 			final var eventListenerManager = source.getEventListenerManager();
 			try {
@@ -50,6 +53,7 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 			}
 		}
 		else if ( source.getActionQueue().hasAnyQueuedActions() ) {
+			EVENT_LISTENER_LOGGER.executingFlush();
 			// execute any queued unloaded-entity deletions
 			performExecutions( source );
 		}

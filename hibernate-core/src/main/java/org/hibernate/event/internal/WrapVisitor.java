@@ -11,8 +11,6 @@ import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterc
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -20,6 +18,7 @@ import org.hibernate.type.Type;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.persister.entity.AbstractEntityPersister.getCollectionKey;
 
 /**
@@ -28,8 +27,6 @@ import static org.hibernate.persister.entity.AbstractEntityPersister.getCollecti
  * @author Gavin King
  */
 public class WrapVisitor extends ProxyVisitor {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( WrapVisitor.class );
 
 	protected Object entity;
 	protected Object id;
@@ -117,8 +114,8 @@ public class WrapVisitor extends ProxyVisitor {
 
 				final var persistentCollection = collectionType.wrap( session, collection );
 				persistenceContext.addNewCollection( persister, persistentCollection );
-				if ( LOG.isTraceEnabled() ) {
-					LOG.trace( "Wrapped collection in role: " + collectionType.getRole() );
+				if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
+					EVENT_LISTENER_LOGGER.wrappedCollectionInRole( collectionType.getRole() );
 				}
 				return persistentCollection; //Force a substitution!
 			}

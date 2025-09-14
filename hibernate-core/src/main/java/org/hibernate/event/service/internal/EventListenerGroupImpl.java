@@ -26,13 +26,12 @@ import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 
-import org.jboss.logging.Logger;
-
 import static java.lang.System.arraycopy;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 
 /**
  * Standard EventListenerGroup implementation
@@ -41,8 +40,6 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
  * @author Sanne Grinovero
  */
 class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
-
-	private static final Logger LOG = Logger.getLogger( EventListenerGroupImpl.class );
 
 	private static final DuplicationStrategy DEFAULT_DUPLICATION_STRATEGY =
 			new DuplicationStrategy() {
@@ -296,7 +293,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 		final T[] listenersWrite = createListenerArrayForWrite( size );
 		arraycopy( listenersRead, 0, listenersWrite, 0, size );
 
-		final boolean traceEnabled = LOG.isTraceEnabled();
+		final boolean traceEnabled = EVENT_LISTENER_LOGGER.isTraceEnabled();
 
 		for ( DuplicationStrategy strategy : duplicationStrategies ) {
 
@@ -308,13 +305,13 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 			for ( int i = 0; i < size; i++ ) {
 				final T existingListener = listenersRead[i];
 				if ( traceEnabled ) {
-					LOG.tracef( "Checking incoming listener [`%s`] for match against existing listener [`%s`]",
+					EVENT_LISTENER_LOGGER.tracef( "Checking incoming listener [`%s`] for match against existing listener [`%s`]",
 							listener, existingListener );
 				}
 
 				if ( strategy.areMatch( listener,  existingListener ) ) {
 					if ( traceEnabled ) {
-						LOG.tracef( "Found listener match between `%s` and `%s`",
+						EVENT_LISTENER_LOGGER.tracef( "Found listener match between `%s` and `%s`",
 								listener, existingListener );
 					}
 
@@ -324,13 +321,13 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 							throw new EventListenerRegistrationException( "Duplicate event listener found" );
 						case KEEP_ORIGINAL:
 							if ( traceEnabled ) {
-								LOG.tracef( "Skipping listener registration (%s) : `%s`",
+								EVENT_LISTENER_LOGGER.tracef( "Skipping listener registration (%s) : `%s`",
 										action, listener );
 							}
 							return;
 						case REPLACE_ORIGINAL:
 							if ( traceEnabled ) {
-								LOG.tracef( "Replacing listener registration (%s) : `%s` -> `%s`",
+								EVENT_LISTENER_LOGGER.tracef( "Replacing listener registration (%s) : `%s` -> `%s`",
 										action, existingListener, listener );
 							}
 							prepareListener( listener );

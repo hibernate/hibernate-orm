@@ -344,6 +344,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 *
 	 * @see java.sql.Statement#getFetchSize()
 	 * @see java.sql.Statement#setFetchSize(int)
+	 * @see org.hibernate.cfg.JdbcSettings#STATEMENT_FETCH_SIZE
 	 */
 	Integer getFetchSize();
 
@@ -355,6 +356,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * @return {@code this}, for method chaining
 	 *
 	 * @see #getFetchSize()
+	 * @see org.hibernate.cfg.JdbcSettings#STATEMENT_FETCH_SIZE
 	 */
 	SelectionQuery<R> setFetchSize(int fetchSize);
 

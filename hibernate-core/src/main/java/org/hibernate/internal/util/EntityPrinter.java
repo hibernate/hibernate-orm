@@ -7,7 +7,6 @@ package org.hibernate.internal.util;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityHolder;
@@ -16,6 +15,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.type.Type;
 
+import static org.hibernate.Hibernate.isInitialized;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
@@ -60,7 +60,7 @@ public final class EntityPrinter {
 					if ( values[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 						strValue = values[i].toString();
 					}
-					else if ( !Hibernate.isInitialized( values[i] ) ) {
+					else if ( !isInitialized( values[i] ) ) {
 						strValue = "<uninitialized>";
 					}
 					else {
@@ -87,8 +87,10 @@ public final class EntityPrinter {
 		final Map<String, String> result = new HashMap<>();
 		for ( var entry : namedTypedValues.entrySet() ) {
 			final String key = entry.getKey();
-			final TypedValue value = entry.getValue();
-			result.put( key, value.getType().toLoggableString( value.getValue(), factory ) );
+			final var typedValue = entry.getValue();
+			result.put( key,
+					typedValue.getType()
+							.toLoggableString( typedValue.getValue(), factory ) );
 		}
 		return result.toString();
 	}
@@ -101,14 +103,13 @@ public final class EntityPrinter {
 			int i = 0;
 			for ( var entityKeyAndEntity : entitiesByEntityKey ) {
 				final var holder = entityKeyAndEntity.getValue();
-				if ( holder.getEntity() == null ) {
-					continue;
+				if ( holder.getEntity() != null ) {
+					if ( i++ > 20 ) {
+						CORE_LOGGER.debug( "More......" );
+						break;
+					}
+					CORE_LOGGER.debug( toString( entityKeyAndEntity.getKey().getEntityName(), holder.getEntity() ) );
 				}
-				if ( i++ > 20 ) {
-					CORE_LOGGER.debug( "More......" );
-					break;
-				}
-				CORE_LOGGER.debug( toString( entityKeyAndEntity.getKey().getEntityName(), holder.getEntity() ) );
 			}
 		}
 	}

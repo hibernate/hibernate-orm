@@ -200,10 +200,8 @@ public class Configuration {
 	}
 
 	private XmlMappingBinderAccess createMappingBinderAccess(BootstrapServiceRegistry serviceRegistry) {
-		return new XmlMappingBinderAccess(
-				serviceRegistry,
-				(settingName) -> properties == null ? null : properties.get( settingName )
-		);
+		return new XmlMappingBinderAccess( serviceRegistry,
+				settingName -> properties == null ? null : properties.get( settingName ) );
 	}
 
 	/**
@@ -578,9 +576,7 @@ public class Configuration {
 		if ( userTypeRegistrations == null ) {
 			userTypeRegistrations = new ArrayList<>();
 		}
-		userTypeRegistrations.add(
-				metadataBuilder -> metadataBuilder.applyBasicType( type, keys )
-		);
+		userTypeRegistrations.add( builder -> builder.applyBasicType( type, keys ) );
 		return this;
 	}
 
@@ -759,7 +755,12 @@ public class Configuration {
 		if ( entityClass == null ) {
 			throw new IllegalArgumentException( "The specified class cannot be null" );
 		}
-		return addResource( entityClass.getName().replace( '.', '/' ) + ".hbm.xml" );
+		return addResource( hbmFileName( entityClass ) );
+	}
+
+	private static String hbmFileName(Class<?> entityClass) {
+		return entityClass.getName().replace( '.', '/' )
+			+ ".hbm.xml";
 	}
 
 	/**
@@ -1023,8 +1024,8 @@ public class Configuration {
 	 * @throws HibernateException usually indicates an invalid configuration or invalid mapping information
 	 */
 	public SessionFactory buildSessionFactory(ServiceRegistry serviceRegistry) throws HibernateException {
-		CORE_LOGGER.trace( "Building session factory using provided StandardServiceRegistry" );
-		final MetadataBuilder metadataBuilder =
+		CORE_LOGGER.buildingFactoryWithProvidedRegistry();
+		final var metadataBuilder =
 				metadataSources.getMetadataBuilder( (StandardServiceRegistry) serviceRegistry );
 
 		if ( implicitNamingStrategy != null ) {
@@ -1043,11 +1044,11 @@ public class Configuration {
 			metadataBuilder.applySharedCacheMode( sharedCacheMode );
 		}
 
-		for ( TypeContributor typeContributor : typeContributorRegistrations ) {
+		for ( var typeContributor : typeContributorRegistrations ) {
 			metadataBuilder.applyTypes( typeContributor );
 		}
 
-		for ( FunctionContributor functionContributor : functionContributorRegistrations ) {
+		for ( var functionContributor : functionContributorRegistrations ) {
 			metadataBuilder.applyFunctions( functionContributor );
 		}
 
@@ -1126,7 +1127,7 @@ public class Configuration {
 	 * @throws HibernateException usually indicates an invalid configuration or invalid mapping information
 	 */
 	public SessionFactory buildSessionFactory() throws HibernateException {
-		CORE_LOGGER.trace( "Building session factory using internal StandardServiceRegistryBuilder" );
+		CORE_LOGGER.buildingFactoryWithInternalRegistryBuilder();
 		standardServiceRegistryBuilder.applySettings( properties );
 		var serviceRegistry = standardServiceRegistryBuilder.build();
 		try {

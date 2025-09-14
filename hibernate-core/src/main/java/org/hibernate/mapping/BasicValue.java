@@ -812,17 +812,18 @@ public class BasicValue extends SimpleValue
 		final var managedBeanRegistry = bootstrapContext.getManagedBeanRegistry();
 		final var typeConfiguration = bootstrapContext.getTypeConfiguration();
 
-		final JpaAttributeConverterCreationContext converterCreationContext = new JpaAttributeConverterCreationContext() {
-			@Override
-			public ManagedBeanRegistry getManagedBeanRegistry() {
-				return managedBeanRegistry;
-			}
+		final var converterCreationContext =
+				new JpaAttributeConverterCreationContext() {
+					@Override
+					public ManagedBeanRegistry getManagedBeanRegistry() {
+						return managedBeanRegistry;
+					}
 
-			@Override
-			public TypeConfiguration getTypeConfiguration() {
-				return typeConfiguration;
-			}
-		};
+					@Override
+					public TypeConfiguration getTypeConfiguration() {
+						return typeConfiguration;
+					}
+				};
 
 		// Name could refer to:
 		//		1) a named converter - HBM support for JPA's AttributeConverter via its `type="..."` XML attribute
@@ -857,8 +858,9 @@ public class BasicValue extends SimpleValue
 		}
 
 		// see if it is a named basic type
-		final BasicType<?> basicTypeByName =
-				typeConfiguration.getBasicTypeRegistry().getRegisteredType( name );
+		final var basicTypeByName =
+				typeConfiguration.getBasicTypeRegistry()
+						.getRegisteredType( name );
 		if ( basicTypeByName != null ) {
 			return getNamedBasicTypeResolution(
 					explicitMutabilityPlanAccess,
@@ -870,7 +872,9 @@ public class BasicValue extends SimpleValue
 		}
 
 		// see if it is a named TypeDefinition
-		final var typeDefinition = context.getTypeDefinitionRegistry().resolve( name );
+		final var typeDefinition =
+				context.getTypeDefinitionRegistry()
+						.resolve( name );
 		if ( typeDefinition != null ) {
 			final var resolution = typeDefinition.resolve(
 					localTypeParams,
@@ -884,7 +888,7 @@ public class BasicValue extends SimpleValue
 
 		// see if the name is a UserType or BasicType implementor class name
 		try {
-			final Class<?> typeNamedClass = classForName( name, bootstrapContext );
+			final var typeNamedClass = classForName( name, bootstrapContext );
 			// if there are no local config params, register an implicit TypeDefinition for this custom type
 			// later uses may find it and reuse its cacheable reference
 			if ( isEmpty( localTypeParams ) ) {
@@ -903,10 +907,10 @@ public class BasicValue extends SimpleValue
 		}
 		catch (ClassLoadingException e) {
 			// allow the exception below to trigger
-			CORE_LOGGER.debugf( "Could not resolve type-name [%s] as Java type : %s", name, e );
+			CORE_LOGGER.couldNotResolveTypeName( name, e );
 		}
 
-		throw new MappingException( "Could not resolve named type : " + name );
+		throw new MappingException( "Could not resolve named type: " + name );
 	}
 
 	private static <J> NamedBasicTypeResolution<J> getNamedBasicTypeResolution(
@@ -919,8 +923,9 @@ public class BasicValue extends SimpleValue
 		final JavaType<J> domainJtd;
 		if ( converterDescriptor != null ) {
 			//noinspection unchecked
-			valueConverter = (BasicValueConverter<J,?>)
-					converterDescriptor.createJpaAttributeConverter( converterCreationContext );
+			valueConverter =
+					(BasicValueConverter<J,?>)
+							converterDescriptor.createJpaAttributeConverter( converterCreationContext );
 			domainJtd = valueConverter.getDomainJavaType();
 		}
 		else {
@@ -997,7 +1002,10 @@ public class BasicValue extends SimpleValue
 		return aggregateColumn == null
 				? jdbcTypeCode
 				: getDialect().getAggregateSupport()
-				.aggregateComponentSqlTypeCode( aggregateColumn.getType().getJdbcType().getDefaultSqlTypeCode(), jdbcTypeCode );
+						.aggregateComponentSqlTypeCode(
+								aggregateColumn.getType().getJdbcType().getDefaultSqlTypeCode(),
+								jdbcTypeCode
+						);
 	}
 
 	@Override
@@ -1143,7 +1151,7 @@ public class BasicValue extends SimpleValue
 	}
 
 	private boolean isWrapperByteOrCharacterArray() {
-		final Class<?> javaTypeClass = getResolution().getDomainJavaType().getJavaTypeClass();
+		final var javaTypeClass = getResolution().getDomainJavaType().getJavaTypeClass();
 		return javaTypeClass == Byte[].class || javaTypeClass == Character[].class;
 	}
 

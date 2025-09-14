@@ -99,11 +99,11 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 			Map<String,AttributeConversionInfo> elementAttributeConversionInfoMap,
 			Map<String,AttributeConversionInfo> keyAttributeConversionInfoMap) {
 
-		// IMPL NOTE : the rules here are quite more lenient than what JPA says. For example, JPA says that @Convert
-		// on a Map of basic types should default to "value" but it should explicitly specify attributeName of "key"
+		// IMPL NOTE: the rules here are quite more lenient than what JPA says. For example, JPA says that @Convert
+		// on a Map of basic types should default to "value" but it should explicitly specify 'attributeName' of "key"
 		// (or prefixed with "key." for embedded paths) to be applied on the key. However, we try to see if conversion
-		// of either is disabled for whatever reason. For example, if the Map is annotated with @Enumerated the
-		// elements cannot be converted so any @Convert likely meant the key, so we apply it to the key
+		// of either is disabled for whatever reason. For example, if the Map is annotated with @Enumerated, the
+		// elements cannot be converted, and so any @Convert likely meant the key, so we apply it to the key
 
 		final var info = new AttributeConversionInfo( convertAnnotation, collectionProperty );
 		final String attributeName = info.getAttributeName();

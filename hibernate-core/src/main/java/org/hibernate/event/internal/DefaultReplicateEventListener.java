@@ -17,12 +17,11 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.ReplicateEvent;
 import org.hibernate.event.spi.ReplicateEventListener;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
@@ -38,8 +37,6 @@ public class DefaultReplicateEventListener
 		extends AbstractSaveEventListener<ReplicationMode>
 		implements ReplicateEventListener {
 
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultReplicateEventListener.class );
-
 	/**
 	 * Handle the given replicate event.
 	 *
@@ -52,12 +49,12 @@ public class DefaultReplicateEventListener
 		final var source = event.getSession();
 		final var persistenceContext = source.getPersistenceContextInternal();
 		if ( persistenceContext.reassociateIfUninitializedProxy( event.getObject() ) ) {
-			LOG.trace( "Uninitialized proxy passed to replicate()" );
+			EVENT_LISTENER_LOGGER.uninitializedProxyPassedToReplicate();
 		}
 		else {
 			final Object entity = persistenceContext.unproxyAndReassociate( event.getObject() );
 			if ( persistenceContext.isEntryFor( entity ) ) {
-				LOG.trace( "Ignoring persistent instance passed to replicate()" );
+				EVENT_LISTENER_LOGGER.ignoringPersistentInstancePassedToReplicate();
 				//hum ... should we cascade anyway? throw an exception? fine like it is?
 			}
 			else {
@@ -83,8 +80,9 @@ public class DefaultReplicateEventListener
 				: persister.getCurrentVersion( id, source); // what is the version on the database?
 
 		if ( oldVersion != null ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Found existing row for " + infoString( persister, id, event.getFactory() ) );
+			if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
+				EVENT_LISTENER_LOGGER.foundExistingRowFor(
+						infoString( persister, id, event.getFactory() ) );
 			}
 			// If the entity has no version, getCurrentVersion() just returns
 			// a meaningless value to indicate that the row exists (HHH-2378)
@@ -95,18 +93,18 @@ public class DefaultReplicateEventListener
 				// execute a SQL UPDATE
 				performReplication( entity, id, realOldVersion, persister, replicationMode, source );
 			}
-			else if ( LOG.isTraceEnabled() ) {
+			else if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
 				// do nothing (don't even reassociate entity!)
-				LOG.trace( "No need to replicate" );
+				EVENT_LISTENER_LOGGER.noNeedToReplicate();
 			}
 
 			//TODO: would it be better to do a refresh from db?
 		}
 		else {
 			// no existing row - execute a SQL INSERT
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "No existing row, replicating new instance "
-							+ infoString( persister, id, event.getFactory() ) );
+			if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
+				EVENT_LISTENER_LOGGER.noExistingRowReplicatingNewInstance(
+						infoString( persister, id, event.getFactory() ) );
 			}
 			final boolean regenerate = persister.isIdentifierAssignedByInsert(); // prefer re-generation of identity!
 			final var key = regenerate ? null : source.generateEntityKey( id, persister );
@@ -155,8 +153,9 @@ public class DefaultReplicateEventListener
 			ReplicationMode replicationMode,
 			EventSource source) throws HibernateException {
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Replicating changes to " + infoString( persister, id, source.getFactory() ) );
+		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
+			EVENT_LISTENER_LOGGER.replicatingChangesTo(
+					infoString( persister, id, source.getFactory() ) );
 		}
 
 		new OnReplicateVisitor( source, id, entity, true ).process( entity, persister );

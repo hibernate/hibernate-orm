@@ -16,14 +16,13 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.AbstractSessionEvent;
 import org.hibernate.event.spi.LockEvent;
 import org.hibernate.event.spi.LockEventListener;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.type.TypeHelper;
 
 
 import static org.hibernate.engine.internal.Versioning.getVersion;
+import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.loader.ast.internal.LoaderHelper.upgradeLock;
 import static org.hibernate.pretty.MessageHelper.infoString;
 
@@ -34,8 +33,6 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  * @author Steve Ebersole
  */
 public class DefaultLockEventListener implements LockEventListener {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultLockEventListener.class );
 
 	/**
 	 * Handle the given lock event.
@@ -50,11 +47,8 @@ public class DefaultLockEventListener implements LockEventListener {
 		}
 
 		final var lockMode = event.getLockMode();
-		if ( lockMode == LockMode.WRITE ) {
+		if ( lockMode == LockMode.WRITE || lockMode == LockMode.UPGRADE_SKIPLOCKED ) {
 			throw new HibernateException( "Invalid lock mode for lock()" );
-		}
-		if ( lockMode == LockMode.UPGRADE_SKIPLOCKED ) {
-			LOG.explicitSkipLockedLockCombo();
 		}
 
 		final var source = event.getSession();
@@ -110,8 +104,9 @@ public class DefaultLockEventListener implements LockEventListener {
 	 */
 	protected final EntityEntry reassociate(AbstractSessionEvent event, Object object, Object id, EntityPersister persister) {
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Reassociating transient instance: " + infoString( persister, id, event.getFactory() ) );
+		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
+			EVENT_LISTENER_LOGGER.reassociatingTransientInstance(
+					infoString( persister, id, event.getFactory() ) );
 		}
 
 		final var source = event.getSession();

@@ -24,8 +24,6 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.FlushEntityEvent;
 import org.hibernate.event.spi.FlushEntityEventListener;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
@@ -42,6 +40,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.processIfManagedEn
 import static org.hibernate.engine.internal.Versioning.getVersion;
 import static org.hibernate.engine.internal.Versioning.incrementVersion;
 import static org.hibernate.engine.internal.Versioning.setVersion;
+import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
 import static org.hibernate.pretty.MessageHelper.infoString;
 
@@ -51,8 +50,6 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  * @author Gavin King
  */
 public class DefaultFlushEntityEventListener implements FlushEntityEventListener, CallbackRegistryConsumer {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultFlushEntityEventListener.class );
 
 	private CallbackRegistry callbackRegistry;
 
@@ -287,21 +284,21 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 	private static void logScheduleUpdate(
 			EntityEntry entry, SessionFactoryImplementor factory, Status status, EntityPersister persister) {
-		if ( LOG.isTraceEnabled() ) {
+		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
 			final String info = infoString( persister, entry.getId(), factory );
 			if ( status == Status.DELETED ) {
 				if ( !persister.isMutable() ) {
-					LOG.trace( "Updating immutable, deleted entity: " + info );
+					EVENT_LISTENER_LOGGER.updatingImmutableDeletedEntity( info );
 				}
 				else if ( !entry.isModifiableEntity() ) {
-					LOG.trace( "Updating non-modifiable, deleted entity: " + info );
+					EVENT_LISTENER_LOGGER.updatingNonModifiableDeletedEntity( info );
 				}
 				else {
-					LOG.trace( "Updating deleted entity: " + info );
+					EVENT_LISTENER_LOGGER.updatingDeletedEntity( info );
 				}
 			}
 			else {
-				LOG.trace( "Updating entity: " + info );
+				EVENT_LISTENER_LOGGER.updatingEntity( info );
 			}
 		}
 	}
@@ -648,15 +645,17 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private void logDirtyProperties(EntityEntry entry, int[] dirtyProperties) {
-		if ( dirtyProperties != null && dirtyProperties.length > 0 && LOG.isTraceEnabled() ) {
+		if ( dirtyProperties != null && dirtyProperties.length > 0 && EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
 			final var persister = entry.getPersister();
 			final String[] allPropertyNames = persister.getPropertyNames();
 			final String[] dirtyPropertyNames = new String[dirtyProperties.length];
 			for ( int i = 0; i < dirtyProperties.length; i++ ) {
 				dirtyPropertyNames[i] = allPropertyNames[dirtyProperties[i]];
 			}
-			LOG.trace( "Found dirty properties [" + infoString( persister.getEntityName(), entry.getId() )
-						+ "] : " + Arrays.toString( dirtyPropertyNames ) );
+			EVENT_LISTENER_LOGGER.foundDirtyProperties(
+					infoString( persister.getEntityName(), entry.getId() ),
+					Arrays.toString( dirtyPropertyNames )
+			);
 		}
 	}
 

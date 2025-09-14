@@ -7,12 +7,11 @@ package org.hibernate.event.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
@@ -21,8 +20,6 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
  * @author Gavin King
  */
 public abstract class ReattachVisitor extends ProxyVisitor {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ReattachVisitor.class );
 
 	private final Object ownerIdentifier;
 	private final Object owner;
@@ -76,11 +73,13 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 */
 	void removeCollection(CollectionPersister role, Object collectionKey, EventSource source)
 			throws HibernateException {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Collection dereferenced while transient "
-						+ collectionInfoString( role, ownerIdentifier, source.getFactory() ) );
+		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
+			EVENT_LISTENER_LOGGER.collectionDereferencedWhileTransient(
+					collectionInfoString( role, ownerIdentifier, source.getFactory() )
+			);
 		}
-		source.getActionQueue().addAction( new CollectionRemoveAction( owner, role, collectionKey, false, source ) );
+		source.getActionQueue()
+				.addAction( new CollectionRemoveAction( owner, role, collectionKey, false, source ) );
 	}
 
 	/**
@@ -95,10 +94,9 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 */
 	final Object extractCollectionKeyFromOwner(CollectionPersister role) {
 		final var collectionType = role.getCollectionType();
-		if ( collectionType.useLHSPrimaryKey() ) {
-			return ownerIdentifier;
-		}
-		return role.getOwnerEntityPersister()
-				.getPropertyValue( owner, collectionType.getLHSPropertyName() );
+		return collectionType.useLHSPrimaryKey()
+				? ownerIdentifier :
+				role.getOwnerEntityPersister()
+						.getPropertyValue( owner, collectionType.getLHSPropertyName() );
 	}
 }

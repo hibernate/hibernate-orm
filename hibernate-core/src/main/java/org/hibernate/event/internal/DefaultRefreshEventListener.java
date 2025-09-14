@@ -19,8 +19,6 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.event.spi.RefreshEvent;
 import org.hibernate.event.spi.RefreshEventListener;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
@@ -28,6 +26,7 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
@@ -38,8 +37,6 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Steve Ebersole
  */
 public class DefaultRefreshEventListener implements RefreshEventListener {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultRefreshEventListener.class );
 
 	@Override
 	public void onRefresh(RefreshEvent event) throws HibernateException {
@@ -65,7 +62,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				refresh( event, refreshedAlready, entity );
 			}
 			else {
-				LOG.trace( "Already refreshed" );
+				EVENT_LISTENER_LOGGER.alreadyRefreshed();
 			}
 		}
 	}
@@ -139,16 +136,18 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				throw new TransientObjectException( "Cannot refresh instance of entity '" + persister.getEntityName()
 						+ "' because it has a null identifier" );
 			}
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Refreshing transient " + infoString( persister, id, event.getFactory() ) );
+			if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
+				EVENT_LISTENER_LOGGER.refreshingTransient(
+						infoString( persister, id, event.getFactory() ) );
 			}
 			if ( persistenceContext.getEntry( source.generateEntityKey( id, persister ) ) != null ) {
 				throw new NonUniqueObjectException( id, persister.getEntityName() );
 			}
 		}
 		else {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Refreshing " + infoString( entry.getPersister(), entry.getId(), event.getFactory() ) );
+			if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
+				EVENT_LISTENER_LOGGER.refreshing(
+						infoString( entry.getPersister(), entry.getId(), event.getFactory() ) );
 			}
 			if ( !entry.isExistsInDatabase() ) {
 				throw new UnresolvableObjectException(

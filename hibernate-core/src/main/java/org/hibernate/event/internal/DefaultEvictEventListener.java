@@ -12,11 +12,10 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EvictEvent;
 import org.hibernate.event.spi.EvictEventListener;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
 
+import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
@@ -29,8 +28,6 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Steve Ebersole
  */
 public class DefaultEvictEventListener implements EvictEventListener {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultEvictEventListener.class );
 
 	/**
 	 * Handle the given evict event.
@@ -106,8 +103,8 @@ public class DefaultEvictEventListener implements EvictEventListener {
 			final EntityPersister persister,
 			final EventSource session)
 			throws HibernateException {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Evicting " + infoString( persister ) );
+		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
+			EVENT_LISTENER_LOGGER.evicting( infoString( persister ) );
 		}
 
 		final var persistenceContext = session.getPersistenceContextInternal();

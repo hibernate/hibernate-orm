@@ -32,22 +32,21 @@ public final class EntityCopyNotAllowedObserver implements EntityCopyObserver {
 			Object mergeEntity2,
 			EventSource session) {
 		if ( mergeEntity1 == managedEntity && mergeEntity2 == managedEntity) {
-			throw new AssertionFailure( "entity1 and entity2 are the same as managedEntity; must be different." );
+			throw new AssertionFailure( "entity1 and entity2 are the same as managedEntity; must be different" );
 		}
-		final String managedEntityString =
-				infoString( session.getEntityName( managedEntity ),
-						session.getIdentifier( managedEntity ) );
-		throw new IllegalStateException(
-				"Multiple representations of the same entity " + managedEntityString + " are being merged. " +
-						getManagedOrDetachedEntityString( managedEntity, mergeEntity1 ) + "; " +
-						getManagedOrDetachedEntityString( managedEntity, mergeEntity2 )
-		);
+		throw new IllegalStateException( "Multiple representations of the same entity "
+				+ infoString( session.getEntityName( managedEntity ), session.getIdentifier( managedEntity ) )
+				+ " are being merged: " + managedOrDetachedEntityString( managedEntity, mergeEntity1 )
+				+ "; " + managedOrDetachedEntityString( managedEntity, mergeEntity2 ) );
 	}
 
-	private String getManagedOrDetachedEntityString(Object managedEntity, Object entity ) {
-		return entity == managedEntity
-				? "Managed: [" + entity + "]"
-				: "Detached: [" + entity + "]";
+	private String managedOrDetachedEntityString(Object managedEntity, Object entity ) {
+		return new StringBuilder()
+				.append( entity == managedEntity ? "Managed" : "Detached" )
+				.append( " [" )
+				.append( entity )
+				.append( ']' )
+				.toString();
 	}
 
 	public void clear() {

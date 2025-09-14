@@ -972,7 +972,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			final var loadedPersister = ce.getLoadedPersister();
 			final Object loadedKey = ce.getLoadedKey();
 			if ( SESSION_LOGGER.isTraceEnabled() ) {
-				SESSION_LOGGER.initializingCollection( collectionInfoString( loadedPersister, collection, loadedKey, this ) );
+				SESSION_LOGGER.initializingCollection(
+						collectionInfoString( loadedPersister, collection, loadedKey, this ) );
 			}
 			final boolean foundInCache =
 					initializeCollectionFromCache( loadedKey, loadedPersister, collection, this );

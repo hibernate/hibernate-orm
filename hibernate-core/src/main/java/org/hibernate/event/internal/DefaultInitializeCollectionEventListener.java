@@ -10,12 +10,11 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.InitializeCollectionEvent;
 import org.hibernate.event.spi.InitializeCollectionEventListener;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.results.internal.ResultsHelper;
 
 import static org.hibernate.collection.spi.AbstractPersistentCollection.checkPersister;
+import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.loader.internal.CacheLoadHelper.initializeCollectionFromCache;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
@@ -24,8 +23,6 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
  */
 public class DefaultInitializeCollectionEventListener implements InitializeCollectionEventListener {
 
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultInitializeCollectionEventListener.class );
-
 	/**
 	 * called by a collection that wants to initialize itself
 	 */
@@ -33,30 +30,29 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 	public void onInitializeCollection(InitializeCollectionEvent event) throws HibernateException {
 		final var collection = event.getCollection();
 		final var source = event.getSession();
-
 		final var persistenceContext = source.getPersistenceContextInternal();
-		final var ce = persistenceContext.getCollectionEntry( collection );
-		if ( ce == null ) {
+		final var collectionEntry = persistenceContext.getCollectionEntry( collection );
+		if ( collectionEntry == null ) {
 			throw new HibernateException( "Collection was evicted" );
 		}
 		if ( !collection.wasInitialized() ) {
-			final var loadedPersister = ce.getLoadedPersister();
+			final var loadedPersister = collectionEntry.getLoadedPersister();
 			checkPersister(collection, loadedPersister);
-			final Object loadedKey = ce.getLoadedKey();
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Initializing collection "
-							+ collectionInfoString( loadedPersister, collection, loadedKey, source ) );
+			final Object loadedKey = collectionEntry.getLoadedKey();
+			if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
+				EVENT_LISTENER_LOGGER.initializingCollection(
+						collectionInfoString( loadedPersister, collection, loadedKey, source ) );
 			}
 
 			final boolean foundInCache = initializeFromCache( loadedKey, loadedPersister, collection, source );
 			if ( foundInCache ) {
-				LOG.trace( "Collection initialized from cache" );
+				EVENT_LISTENER_LOGGER.collectionInitializedFromCache();
 			}
 			else {
-				LOG.trace( "Collection not cached" );
+				EVENT_LISTENER_LOGGER.collectionNotCached();
 				loadedPersister.initialize( loadedKey, source );
 				handlePotentiallyEmptyCollection( collection, persistenceContext, loadedKey, loadedPersister );
-				LOG.trace( "Collection initialized" );
+				EVENT_LISTENER_LOGGER.collectionInitialized();
 
 				final var statistics = source.getFactory().getStatistics();
 				if ( statistics.isStatisticsEnabled() ) {
@@ -101,7 +97,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 			SessionImplementor source) {
 		if ( source.getLoadQueryInfluencers().hasEnabledFilters()
 				&& persister.isAffectedByEnabledFilters( source ) ) {
-			LOG.trace( "Disregarding cached version (if any) of collection due to enabled filters" );
+			EVENT_LISTENER_LOGGER.disregardingCachedVersionDueToEnabledFilters();
 			return false;
 		}
 		else {

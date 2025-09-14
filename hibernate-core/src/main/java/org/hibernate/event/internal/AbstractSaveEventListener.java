@@ -22,8 +22,6 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerationException;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
@@ -35,6 +33,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirti
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfManagedEntity;
 import static org.hibernate.engine.internal.Versioning.getVersion;
 import static org.hibernate.engine.internal.Versioning.seedVersion;
+import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.id.IdentifierGeneratorHelper.SHORT_CIRCUIT_INDICATOR;
 import static org.hibernate.pretty.MessageHelper.infoString;
@@ -47,8 +46,6 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  * @author Steve Ebersole.
  */
 public abstract class AbstractSaveEventListener<C> implements CallbackRegistryConsumer {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractSaveEventListener.class );
 
 	private CallbackRegistry callbackRegistry;
 
@@ -158,10 +155,9 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			throw new IdentifierGenerationException( "Null id generated for entity '" + persister.getEntityName() + "'" );
 		}
 		else {
-			if ( LOG.isTraceEnabled() ) {
+			if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
 				// TODO: define toString()s for generators
-				LOG.tracef(
-						"Generated identifier [%s] using generator '%s'",
+				EVENT_LISTENER_LOGGER.generatedId(
 						persister.getIdentifierType().toLoggableString( id, source.getFactory() ),
 						generator.getClass().getName()
 				);
@@ -210,8 +206,9 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			}
 		}
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Persisting " + infoString( persister, id, source.getFactory() ) );
+		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
+			EVENT_LISTENER_LOGGER.persisting(
+					infoString( persister, id, source.getFactory() ) );
 		}
 
 		final var key = useIdentityColumn ? null : entityKey( id, persister, source );

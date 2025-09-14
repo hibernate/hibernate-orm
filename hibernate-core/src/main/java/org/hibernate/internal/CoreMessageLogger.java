@@ -35,10 +35,10 @@ import static org.jboss.logging.Logger.Level.WARN;
  */
 @SubSystemLogging(
 		name = SessionLogging.NAME,
-		description = "Miscellaneous Logging related to Hibernate ORM Core"
+		description = "Miscellaneous logging related to Hibernate ORM Core"
 )
 @MessageLogger(projectCode = "HHH")
-@ValidIdRange(min=2,max = 10000)
+@ValidIdRange(min=2,max = 8000)
 @Internal
 public interface CoreMessageLogger extends BasicLogger {
 
@@ -58,10 +58,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Ignoring bag join fetch [%s] due to prior collection join fetch", id = 51)
 	void containsJoinFetchedCollection(String role);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Defining %s=true ignored in HEM", id = 59)
-	void definingFlushBeforeCompletionIgnoredInHem(String flushBeforeCompletion);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Entity [%s] is abstract-class/interface explicitly mapped as non-abstract; be sure to supply entity-names",
@@ -116,14 +112,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "No default (no-argument) constructor for class [%s] (class must be instantiated by Interceptor)",
 			id = 182)
 	void noDefaultConstructor(String name);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Overriding %s is dangerous, this might break the EJB3 specification implementation", id = 193)
-	void overridingTransactionStrategyDangerous(String transactionStrategy);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Processing PersistenceUnitInfo [name: %s]", id = 204)
-	void processingPersistenceUnitInfoName(String persistenceUnitName);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Loaded properties from resource hibernate.properties: %s", id = 205)
@@ -219,10 +207,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = ERROR)
 	@Message(value = "Error creating schema ", id = 306)
 	void unableToCreateSchema(@Cause Exception e);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Could not find any META-INF/persistence.xml file in the classpath", id = 318)
-	void unableToFindPersistenceXmlInClasspath();
 
 	@LogMessage(level = ERROR)
 	@Message(value = "Problem loading properties from hibernate.properties", id = 329)
@@ -369,23 +353,12 @@ public interface CoreMessageLogger extends BasicLogger {
 			id = 513)
 	void unableToGenerateReflectionOptimizer(String className, String cause);
 
-	@LogMessage(level = WARN)
-	@Message(value = "Failed to discover types for enhancement from class: %s",
-			id = 516)
-	void enhancementDiscoveryFailed(String className, @Cause Throwable cause);
 	@LogMessage(level = DEBUG)
 	@Message(
 			id = 517,
 			value = "Encountered a MappedSuperclass [%s] not used in any entity hierarchy"
 	)
 	void unusedMappedSuperclass(String name);
-
-	@LogMessage(level = WARN)
-	@Message(
-			id = 518,
-			value = "Encountered multiple persistence-unit stanzas defining same name [%s]; persistence-unit names must be unique"
-	)
-	void duplicatedPersistenceUnitName(String name);
 
 	@LogMessage(level = WARN)
 	@Message(

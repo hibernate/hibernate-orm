@@ -21,7 +21,7 @@ import jakarta.persistence.PersistenceUnitTransactionType;
 
 import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -130,9 +130,8 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 		// During testing, we will return a null temp class loader
 		// in cases where we don't care about enhancement
 		if ( persistenceUnitInfo.getNewTempClassLoader() != null ) {
-			if ( CORE_LOGGER.isTraceEnabled() ) {
-				CORE_LOGGER.trace( "Pushing class transformers for PU named '" + getName()
-								+ "' on loading classloader " + enhancementContext.getLoadingClassLoader() );
+			if ( JPA_LOGGER.isTraceEnabled() ) {
+				JPA_LOGGER.pushingClassTransformers( getName(), String.valueOf( enhancementContext.getLoadingClassLoader() ) );
 			}
 			final EnhancingClassTransformerImpl classTransformer =
 					new EnhancingClassTransformerImpl( enhancementContext );

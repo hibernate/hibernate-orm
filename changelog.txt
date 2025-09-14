@@ -3,6 +3,15 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.45.Final (September 14, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/35155
+
+** Improvement
+    * [HHH-16739] - Several failures when comparing enum parameters with constant values
+
+
 Changes in 6.2.44.Final (August 31, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

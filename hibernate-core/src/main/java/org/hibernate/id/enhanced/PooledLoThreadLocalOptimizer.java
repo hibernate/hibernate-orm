@@ -7,8 +7,7 @@ package org.hibernate.id.enhanced;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+import static org.hibernate.id.enhanced.OptimizerLogger.OPTIMIZER_MESSAGE_LOGGER;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
 import java.io.Serializable;
@@ -27,8 +26,6 @@ import java.util.Map;
  */
 public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PooledLoOptimizer.class );
-
 	private final ThreadLocal<GenerationState> singleTenantState = ThreadLocal.withInitial( GenerationState::new );
 	private final ThreadLocal<Map<String, GenerationState>> multiTenantStates = ThreadLocal.withInitial( HashMap::new );
 
@@ -43,7 +40,7 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 		if ( incrementSize < 1 ) {
 			throw new HibernateException( "increment size cannot be less than 1" );
 		}
-		LOG.creatingPooledLoOptimizer( incrementSize, returnClass.getName() );
+		OPTIMIZER_MESSAGE_LOGGER.creatingPooledLoOptimizer( incrementSize, returnClass.getName() );
 	}
 
 	@Override
@@ -57,8 +54,8 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 			return singleTenantState.get();
 		}
 		else {
-			Map<String, GenerationState> states = multiTenantStates.get();
-			GenerationState state = states.get( tenantIdentifier );
+			var states = multiTenantStates.get();
+			var state = states.get( tenantIdentifier );
 			if ( state == null ) {
 				state = new GenerationState();
 				states.put( tenantIdentifier, state );
@@ -69,8 +66,7 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 
 	// for Hibernate testsuite use only
 	private GenerationState noTenantGenerationState() {
-		GenerationState noTenantState = locateGenerationState( null );
-
+		final var noTenantState = locateGenerationState( null );
 		if ( noTenantState == null ) {
 			throw new IllegalStateException( "Could not locate previous generation state for no-tenant" );
 		}

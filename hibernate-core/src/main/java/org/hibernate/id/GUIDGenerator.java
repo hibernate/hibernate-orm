@@ -9,7 +9,6 @@ import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
-import static org.hibernate.id.UUIDLogger.UUID_MESSAGE_LOGGER;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**

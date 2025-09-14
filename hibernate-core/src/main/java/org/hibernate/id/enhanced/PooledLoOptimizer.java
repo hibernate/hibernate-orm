@@ -7,8 +7,7 @@ package org.hibernate.id.enhanced;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+import static org.hibernate.id.enhanced.OptimizerLogger.OPTIMIZER_MESSAGE_LOGGER;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
 import java.io.Serializable;
@@ -26,8 +25,6 @@ import java.util.concurrent.locks.ReentrantLock;
  * @see PooledOptimizer
  */
 public class PooledLoOptimizer extends AbstractOptimizer {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PooledLoOptimizer.class );
 
 	private static class GenerationState {
 		// last value read from db source
@@ -49,15 +46,14 @@ public class PooledLoOptimizer extends AbstractOptimizer {
 		if ( incrementSize < 1 ) {
 			throw new HibernateException( "increment size cannot be less than 1" );
 		}
-		LOG.creatingPooledLoOptimizer( incrementSize, returnClass.getName() );
+		OPTIMIZER_MESSAGE_LOGGER.creatingPooledLoOptimizer( incrementSize, returnClass.getName() );
 	}
 
 	@Override
 	public Serializable generate(AccessCallback callback) {
 		lock.lock();
 		try {
-			final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
-
+			final var generationState = locateGenerationState( callback.getTenantIdentifier() );
 			if ( generationState.lastSourceValue == null
 					|| ! generationState.value.lt( generationState.upperLimitValue ) ) {
 				generationState.lastSourceValue = callback.getNextValue();
@@ -90,21 +86,27 @@ public class PooledLoOptimizer extends AbstractOptimizer {
 			return noTenantState;
 		}
 		else {
-			GenerationState state;
-			if ( tenantSpecificState == null ) {
-				tenantSpecificState = new ConcurrentHashMap<>();
-				state = new GenerationState();
-				tenantSpecificState.put( tenantIdentifier, state );
-			}
-			else {
-				state = tenantSpecificState.get( tenantIdentifier );
-				if ( state == null ) {
-					state = new GenerationState();
-					tenantSpecificState.put( tenantIdentifier, state );
-				}
-			}
-			return state;
+			return generationState( tenantIdentifier );
 		}
+	}
+
+	private GenerationState generationState(String tenantIdentifier) {
+		if ( tenantSpecificState == null ) {
+			tenantSpecificState = new ConcurrentHashMap<>();
+			return assignNewStateToTenant( tenantIdentifier );
+		}
+		else {
+			final var state = tenantSpecificState.get( tenantIdentifier );
+			return state == null
+					? assignNewStateToTenant( tenantIdentifier )
+					: state;
+		}
+	}
+
+	private GenerationState assignNewStateToTenant(String tenantIdentifier) {
+		final var newState = new GenerationState();
+		tenantSpecificState.put( tenantIdentifier, newState );
+		return newState;
 	}
 
 	private GenerationState noTenantGenerationState() {

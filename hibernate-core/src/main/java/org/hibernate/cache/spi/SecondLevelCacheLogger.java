@@ -16,6 +16,7 @@ import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
@@ -221,4 +222,25 @@ public interface SecondLevelCacheLogger extends BasicLogger {
 		id = NAMESPACE + 24
 	)
 	void lastUpdateTimestampForSpace(String space, Long lastUpdate, Long timestamp);
+
+	@LogMessage(level = INFO)
+	@Message(
+			value = "Second-level cache region factory [%s]",
+			id = NAMESPACE + 28
+	)
+	void regionFactory(String name);
+
+	@LogMessage(level = DEBUG)
+	@Message(
+			value = "Second-level cache disabled",
+			id = NAMESPACE + 29
+	)
+	void noRegionFactory();
+
+	@LogMessage(level = INFO)
+	@Message(
+			value = "Cannot default RegionFactory based on registered strategies as %s RegionFactory strategies were registered",
+			id = NAMESPACE + 30
+	)
+	void cannotDefaultRegionFactory(int size);
 }

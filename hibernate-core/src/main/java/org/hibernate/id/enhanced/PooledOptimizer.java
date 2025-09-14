@@ -7,9 +7,7 @@ package org.hibernate.id.enhanced;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import static org.hibernate.id.enhanced.OptimizerLogger.OPTIMIZER_MESSAGE_LOGGER;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -37,8 +35,6 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class PooledOptimizer extends AbstractOptimizer implements InitialValueAwareOptimizer {
 
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PooledOptimizer.class );
-
 	private static class GenerationState {
 		private IntegralDataTypeHolder hiValue;
 		private IntegralDataTypeHolder value;
@@ -57,10 +53,7 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 		if ( incrementSize < 1 ) {
 			throw new HibernateException( "increment size cannot be less than 1" );
 		}
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Creating pooled optimizer with [incrementSize={0}; returnClass={1}]",
-					incrementSize, returnClass.getName() );
-		}
+		OPTIMIZER_MESSAGE_LOGGER.creatingPooledOptimizer( incrementSize, returnClass.getName() );
 	}
 
 
@@ -77,7 +70,7 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 				// because we would not be able to control this if
 				// we are using a sequence...
 				if ( generationState.hiValue.lt( 1 ) ) {
-					LOG.pooledOptimizerReportedInitialValue( generationState.hiValue );
+					OPTIMIZER_MESSAGE_LOGGER.pooledOptimizerReportedInitialValue( generationState.hiValue );
 				}
 				// the call to obtain next-value just gave us the initialValue
 				if ( ( initialValue == -1
@@ -116,21 +109,27 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 			return noTenantState;
 		}
 		else {
-			GenerationState state;
-			if ( tenantSpecificState == null ) {
-				tenantSpecificState = new ConcurrentHashMap<>();
-				state = new GenerationState();
-				tenantSpecificState.put( tenantIdentifier, state );
-			}
-			else {
-				state = tenantSpecificState.get( tenantIdentifier );
-				if ( state == null ) {
-					state = new GenerationState();
-					tenantSpecificState.put( tenantIdentifier, state );
-				}
-			}
-			return state;
+			return generationState( tenantIdentifier );
 		}
+	}
+
+	private GenerationState generationState(String tenantIdentifier) {
+		if ( tenantSpecificState == null ) {
+			tenantSpecificState = new ConcurrentHashMap<>();
+			return assignNewStateToTenant( tenantIdentifier );
+		}
+		else {
+			final var state = tenantSpecificState.get( tenantIdentifier );
+			return state == null
+					? assignNewStateToTenant( tenantIdentifier )
+					: state;
+		}
+	}
+
+	private GenerationState assignNewStateToTenant(String tenantIdentifier) {
+		final var newState = new GenerationState();
+		tenantSpecificState.put( tenantIdentifier, newState );
+		return newState;
 	}
 
 	private GenerationState noTenantGenerationState() {
@@ -168,7 +167,7 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 
 	@Override
 	public Expression createLowValueExpression(Expression databaseValue, SessionFactoryImplementor sessionFactory) {
-		BasicValuedMapping integerType = sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
+		final var integerType = sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
 		return new BinaryArithmeticExpression(
 				databaseValue,
 				BinaryArithmeticOperator.SUBTRACT,

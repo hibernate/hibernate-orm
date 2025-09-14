@@ -56,7 +56,7 @@ public class NegativeValueSequenceTest {
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 
-			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090203" );
+			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090205" );
 
 			Metadata metadata = new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( NegativeOneIncrementSize.class )
@@ -104,7 +104,7 @@ public class NegativeValueSequenceTest {
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 
-			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090203" );
+			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090205" );
 
 			Metadata metadata = new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( NegativeTwoIncrementSize.class )
@@ -153,7 +153,7 @@ public class NegativeValueSequenceTest {
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 
-			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090203" );
+			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090205" );
 
 			Metadata metadata = new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( PositiveOneIncrementSize.class )
@@ -202,7 +202,7 @@ public class NegativeValueSequenceTest {
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 
-			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090203" );
+			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090205" );
 
 			Metadata metadata = new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( PositiveTwoIncrementSize.class )
@@ -252,7 +252,7 @@ public class NegativeValueSequenceTest {
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 
-			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090203" );
+			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090205" );
 
 			Metadata metadata = new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( PositiveTwoIncrementSize.class )
@@ -302,7 +302,7 @@ public class NegativeValueSequenceTest {
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 
-			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090203" );
+			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090205" );
 
 			Metadata metadata = new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( NegativeTwoIncrementSizePositiveInitialValue.class )

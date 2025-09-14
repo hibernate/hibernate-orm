@@ -16,7 +16,6 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.cache.CacheException;
-import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.type.SerializationException;
 
 import org.jboss.logging.BasicLogger;
@@ -54,14 +53,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "I/O reported cached file could not be found: [%s]: %s", id = 23)
 	void cachedFileNotFound(String path, FileNotFoundException error);
 
-	@LogMessage(level = INFO)
-	@Message(value = "Second-level cache region factory [%s]", id = 25)
-	void regionFactory(String name);
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Second-level cache disabled", id = 26)
-	void noRegionFactory();
-
 	@LogMessage(level = WARN)
 	@Message(value = "Composite id class does not override equals(): %s", id = 38)
 	void compositeIdClassDoesNotOverrideEquals(String name);
@@ -77,10 +68,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Defining %s=true ignored in HEM", id = 59)
 	void definingFlushBeforeCompletionIgnoredInHem(String flushBeforeCompletion);
-
-	@LogMessage(level = WARN)
-	@Message(value = "DEPRECATED: use [%s] instead with custom [%s] implementation", id = 65)
-	void deprecatedUuidGenerator(String name, String name2);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Duplicate generator name %s", id = 69)
@@ -104,10 +91,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "an assertion failure occurred" + " (this may indicate a bug in Hibernate, but is more likely due"
 			+ " to unsafe use of the session): %s", id = 99)
 	void failed(Throwable throwable);
-
-	@LogMessage(level = WARN)
-	@Message(value = "GUID identifier generated: %s", id = 113)
-	void guidGenerated(String result);
 
 	@LogMessage(level = WARN)
 	@Message(value = "HSQLDB supports only READ_UNCOMMITTED isolation", id = 118)
@@ -168,11 +151,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "LinkageError while attempting to load package: %s", id = 195)
 	void linkageError(String packageName, @Cause LinkageError e);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Pooled optimizer source reported [%s] as the initial value; use of 1 or greater highly recommended",
-			id = 201)
-	void pooledOptimizerReportedInitialValue(IntegralDataTypeHolder value);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Processing PersistenceUnitInfo [name: %s]", id = 204)
@@ -289,25 +267,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Could not find any META-INF/persistence.xml file in the classpath", id = 318)
 	void unableToFindPersistenceXmlInClasspath();
 
-	@LogMessage(level = WARN)
-	@Message(value = "Unable to interpret specified optimizer [%s], falling back to noop", id = 321)
-	void unableToLocateCustomOptimizerClass(String type);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Unable to instantiate specified optimizer [%s], falling back to noop", id = 322)
-	void unableToInstantiateOptimizer(String type);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Unable to instantiate UUID generation strategy class: %s", id = 325)
-	void unableToInstantiateUuidGenerationStrategy(Exception ignore);
-
 	@LogMessage(level = ERROR)
 	@Message(value = "Problem loading properties from hibernate.properties", id = 329)
 	void unableToLoadProperties();
-
-	@LogMessage(level = WARN)
-	@Message(value = "Unable to locate requested UUID generation strategy class: %s", id = 334)
-	void unableToLocateUuidGenerationStrategy(String strategyClassName);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Unable to log SQLWarnings: %s", id = 335)
@@ -362,11 +324,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Don't use old DTDs, read the Hibernate 3.x Migration Guide", id = 404)
 	void usingOldDtd();
 
-	@LogMessage(level = WARN)
-	@Message(value = "Using %s which does not generate IETF RFC 4122 compliant UUID values; consider using %s instead",
-			id = 409)
-	void usingUuidHexGenerator(String name, String name2);
-
 	@LogMessage(level = INFO)
 	@Message(value = "Hibernate ORM core version %s", id = 412)
 	void version(String versionString);
@@ -419,10 +376,6 @@ public interface CoreMessageLogger extends BasicLogger {
 					+ "attempting to infer whether converter applies to key or value"
 	)
 	void nonCompliantMapConversion(String collectionRole);
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Creating pooled optimizer (lo) with [incrementSize=%s; returnClass=%s]", id = 467)
-	void creatingPooledLoOptimizer(int incrementSize, String name);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Omitting cached file [%s] as the mapping file is newer", id = 473)

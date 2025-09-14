@@ -184,8 +184,8 @@ public final class CollectionEntry implements Serializable {
 		dirty( collection );
 
 		if ( CORE_LOGGER.isTraceEnabled() && collection.isDirty() && loadedPersister != null ) {
-			CORE_LOGGER.trace( "Collection dirty: "
-							+ collectionInfoString( loadedPersister.getRole(), getLoadedKey() ) );
+			CORE_LOGGER.collectionDirty(
+					collectionInfoString( loadedPersister.getRole(), getLoadedKey() ) );
 		}
 
 		setReached( false );
@@ -265,7 +265,7 @@ public final class CollectionEntry implements Serializable {
 	 * @param storedSnapshot the new stored snapshot
 	 */
 	public void resetStoredSnapshot(PersistentCollection<?> collection, Serializable storedSnapshot) {
-		CORE_LOGGER.tracef("Reset storedSnapshot to %s for %s", storedSnapshot, this);
+		CORE_LOGGER.resetStoredSnapshot( storedSnapshot, this );
 
 		if ( !fromMerge ) {
 			snapshot = storedSnapshot;

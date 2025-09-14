@@ -12,14 +12,14 @@ import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.jboss.logging.Logger;
 
 import java.sql.Connection;
 import java.util.List;
 import java.util.TimeZone;
+
+import static org.hibernate.internal.CoreMessageLogger.LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -27,8 +27,6 @@ import java.util.TimeZone;
 public abstract class StatelessSessionBuilderImpl
 		extends AbstractCommonBuilder<StatelessSessionBuilder>
 		implements StatelessSessionBuilder, SessionCreationOptions {
-
-	private static final Logger LOG = CoreLogging.logger( StatelessSessionBuilderImpl.class );
 
 	public StatelessSessionBuilderImpl(SessionFactoryImplementor sessionFactory) {
 		super( sessionFactory );
@@ -44,7 +42,7 @@ public abstract class StatelessSessionBuilderImpl
 
 	@Override
 	public StatelessSession openStatelessSession() {
-		LOG.tracef( "Opening StatelessSession [tenant=%s]", tenantIdentifier );
+		LOGGER.tracef( "Opening StatelessSession [tenant=%s]", tenantIdentifier );
 		return createStatelessSession();
 	}
 

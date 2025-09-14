@@ -14,7 +14,6 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.resource.beans.spi.ManagedBean;
@@ -28,15 +27,13 @@ import static org.hibernate.boot.model.internal.AnnotationHelper.resolveAttribut
 import static org.hibernate.boot.model.internal.AnnotationHelper.resolveBasicType;
 import static org.hibernate.boot.model.internal.AnnotationHelper.resolveJavaType;
 import static org.hibernate.boot.model.internal.AnnotationHelper.resolveUserType;
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
  * @author Gavin King
  */
 public class FilterDefBinder {
-
-	private static final CoreMessageLogger LOG = messageLogger( FilterDefBinder.class );
 
 	public static void bindFilterDefs(AnnotationTarget annotatedElement, MetadataBuildingContext context) {
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
@@ -94,8 +91,8 @@ public class FilterDefBinder {
 				parameterResolvers
 		);
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Binding filter definition: " + filterDefinition.getFilterName() );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.trace( "Binding filter definition: " + filterDefinition.getFilterName() );
 		}
 		context.getMetadataCollector().addFilterDefinition( filterDefinition );
 	}

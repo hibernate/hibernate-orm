@@ -20,8 +20,8 @@ import java.util.concurrent.ConcurrentMap;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * Standard implementation of the service for interacting with class loaders
@@ -30,8 +30,6 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Sanne Grinovero
  */
 public class ClassLoaderServiceImpl implements ClassLoaderService {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ClassLoaderServiceImpl.class );
 
 	private static final String CLASS_PATH_SCHEME = "classpath://";
 
@@ -133,7 +131,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	public InputStream locateResourceStream(String name) {
 		// first we try name as a URL
 		try {
-			LOG.tracef( "trying via [new URL(\"%s\")]", name );
+			CORE_LOGGER.tracef( "trying via [new URL(\"%s\")]", name );
 			return new URL( name ).openStream();
 		}
 		catch (Exception ignore) {
@@ -144,7 +142,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		name = stripClasspathScheme( name );
 
 		try {
-			LOG.tracef( "trying via [ClassLoader.getResourceAsStream(\"%s\")]", name );
+			CORE_LOGGER.tracef( "trying via [ClassLoader.getResourceAsStream(\"%s\")]", name );
 			final InputStream stream = getAggregatedClassLoader().getResourceAsStream( name );
 			if ( stream != null ) {
 				return stream;
@@ -157,14 +155,14 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 		if ( stripped != null ) {
 			try {
-				LOG.tracef( "trying via [new URL(\"%s\")]", stripped );
+				CORE_LOGGER.tracef( "trying via [new URL(\"%s\")]", stripped );
 				return new URL( stripped ).openStream();
 			}
 			catch (Exception ignore) {
 			}
 
 			try {
-				LOG.tracef( "trying via [ClassLoader.getResourceAsStream(\"%s\")]", stripped );
+				CORE_LOGGER.tracef( "trying via [ClassLoader.getResourceAsStream(\"%s\")]", stripped );
 				final InputStream stream = getAggregatedClassLoader().getResourceAsStream( stripped );
 				if ( stream != null ) {
 					return stream;
@@ -222,11 +220,11 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 					.getPackage();
 		}
 		catch (ClassNotFoundException e) {
-			LOG.packageNotFound( packageName );
+			CORE_LOGGER.packageNotFound( packageName );
 			return null;
 		}
 		catch (LinkageError e) {
-			LOG.linkageError( packageName, e );
+			CORE_LOGGER.linkageError( packageName, e );
 			return null;
 		}
 	}

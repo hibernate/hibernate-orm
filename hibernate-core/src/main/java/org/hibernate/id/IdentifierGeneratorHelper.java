@@ -24,8 +24,6 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.id.enhanced.StandardNamingStrategy;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.EntityType;
@@ -33,6 +31,7 @@ import org.hibernate.type.Type;
 
 import static org.hibernate.cfg.MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
 import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNotUnsaved;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.log.IncubationLogger.INCUBATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
@@ -46,8 +45,6 @@ import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
  */
 @Internal
 public final class IdentifierGeneratorHelper {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IdentifierGeneratorHelper.class );
 
 	/**
 	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that we should
@@ -177,7 +174,7 @@ public final class IdentifierGeneratorHelper {
 
 		public void bind(PreparedStatement preparedStatement, int position) throws SQLException {
 			// TODO : bind it as 'exact type'?  Not sure if that gains us anything...
-			LOG.tracef( "binding parameter [%s] - [%s]", position, value );
+			CORE_LOGGER.tracef( "binding parameter [%s] - [%s]", position, value );
 			preparedStatement.setLong( position, value );
 		}
 

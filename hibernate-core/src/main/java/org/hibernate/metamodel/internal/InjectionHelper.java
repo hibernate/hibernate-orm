@@ -7,8 +7,6 @@ package org.hibernate.metamodel.internal;
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.query.NamedQueryDefinition;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 
@@ -17,9 +15,9 @@ import java.lang.reflect.Field;
 import static java.lang.Character.charCount;
 import static java.lang.Character.isJavaIdentifierPart;
 import static java.lang.reflect.Modifier.isPublic;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 public class InjectionHelper {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( MetadataContext.class );
 
 	public static void injectEntityGraph(
 			NamedEntityGraphDefinition definition,
@@ -96,7 +94,7 @@ public class InjectionHelper {
 //								+ "; expected type :  " + attribute.getClass().getName()
 //								+ "; encountered type : " + field.getType().getName()
 //				);
-			LOG.illegalArgumentOnStaticMetamodelFieldInjection(
+			CORE_LOGGER.illegalArgumentOnStaticMetamodelFieldInjection(
 					metamodelClass.getName(),
 					name,
 					model.getClass().getName(),

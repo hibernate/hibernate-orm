@@ -23,8 +23,6 @@ import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.LegacyNamingStrategy;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.SingleNamingStrategy;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
@@ -45,6 +43,7 @@ import static org.hibernate.id.OptimizableGenerator.INITIAL_PARAM;
 import static org.hibernate.id.PersistentIdentifierGenerator.PK;
 import static org.hibernate.id.PersistentIdentifierGenerator.TABLE;
 import static org.hibernate.id.PersistentIdentifierGenerator.TABLES;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
@@ -58,8 +57,6 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
  * @author Gavin King
  */
 public class GeneratorParameters {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( GeneratorBinder.class );
 
 	/**
 	 * Collect the parameters which should be passed to
@@ -253,7 +250,7 @@ public class GeneratorParameters {
 
 		// TODO : implement unique-constraint support
 		if ( isNotEmpty( tableGeneratorAnnotation.uniqueConstraints() ) ) {
-			LOG.ignoringTableGeneratorConstraints( tableGeneratorAnnotation.name() );
+			CORE_LOGGER.ignoringTableGeneratorConstraints( tableGeneratorAnnotation.name() );
 		}
 	}
 

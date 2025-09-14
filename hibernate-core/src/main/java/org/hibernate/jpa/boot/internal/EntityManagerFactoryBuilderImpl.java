@@ -47,8 +47,6 @@ import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
 import org.hibernate.jpa.boot.spi.JpaSettings;
@@ -109,6 +107,7 @@ import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_ASSOCIATION_MAN
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_DIRTY_TRACKING;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION;
 import static org.hibernate.cfg.TransactionSettings.FLUSH_BEFORE_COMPLETION;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -116,7 +115,6 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
-import static org.hibernate.jpa.internal.util.ConfigurationHelper.getBoolean;
 import static org.hibernate.jpa.internal.util.LogHelper.logPersistenceUnitInformation;
 import static org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper.interpretTransactionType;
 
@@ -125,7 +123,6 @@ import static org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelp
  */
 @SuppressWarnings({"deprecation", "removal"})
 public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuilder {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityManagerFactoryBuilderImpl.class );
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -267,7 +264,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		// flush before completion validation
 		final var config = mergedSettings.getConfigurationValues();
 		if ( getBoolean( FLUSH_BEFORE_COMPLETION, config, false ) ) {
-			LOG.definingFlushBeforeCompletionIgnoredInHem( FLUSH_BEFORE_COMPLETION );
+			CORE_LOGGER.definingFlushBeforeCompletionIgnoredInHem( FLUSH_BEFORE_COMPLETION );
 			config.put( FLUSH_BEFORE_COMPLETION, String.valueOf(false) );
 		}
 	}
@@ -351,7 +348,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 					classTransformer.discoverTypes(classLoader, className );
 				}
 				catch (EnhancementException ex) {
-					LOG.enhancementDiscoveryFailed( className, ex );
+					CORE_LOGGER.enhancementDiscoveryFailed( className, ex );
 				}
 			}
 		}
@@ -803,7 +800,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	private static boolean handeTransactionCoordinatorStrategy(MergedSettings mergedSettings) {
-		LOG.overridingTransactionStrategyDangerous( TRANSACTION_COORDINATOR_STRATEGY );
+		CORE_LOGGER.overridingTransactionStrategyDangerous( TRANSACTION_COORDINATOR_STRATEGY );
 		// see if we can tell whether it is a JTA coordinator
 		final Object strategy = mergedSettings.getConfigurationValues().get( TRANSACTION_COORDINATOR_STRATEGY );
 		return strategy instanceof TransactionCoordinatorBuilder transactionCoordinatorBuilder
@@ -824,7 +821,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		final var txnType = configuredTransactionType( persistenceUnit, integrationSettingsCopy, mergedSettings );
 		if ( txnType == null ) {
 			// is it more appropriate to have this be based on bootstrap entry point (EE vs SE)?
-			LOG.debug( "PersistenceUnitTransactionType not specified - falling back to RESOURCE_LOCAL" );
+			CORE_LOGGER.debug( "PersistenceUnitTransactionType not specified - falling back to RESOURCE_LOCAL" );
 			return PersistenceUnitTransactionType.RESOURCE_LOCAL;
 		}
 		else {
@@ -1123,12 +1120,12 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		for ( String key : keys ) {
 			final Object removedSetting = integrationSettingsCopy.remove( key );
 			if ( removedSetting != null ) {
-				LOG.debugf( "Removed integration override setting [%s] due to normalization", key );
+				CORE_LOGGER.debugf( "Removed integration override setting [%s] due to normalization", key );
 			}
 
 			final Object removedMergedSetting = mergedSettings.getConfigurationValues().remove( key );
 			if ( removedMergedSetting != null ) {
-				LOG.debugf( "Removed merged setting [%s] due to normalization", key );
+				CORE_LOGGER.debugf( "Removed merged setting [%s] due to normalization", key );
 			}
 		}
 	}

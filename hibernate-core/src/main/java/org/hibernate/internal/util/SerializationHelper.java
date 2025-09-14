@@ -16,9 +16,9 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import org.hibernate.Hibernate;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.SerializationException;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * Assists with the serialization process and performs additional
@@ -43,8 +43,6 @@ import org.hibernate.type.SerializationException;
  */
 public final class SerializationHelper {
 
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SerializationHelper.class );
-
 	private SerializationHelper() {
 	}
 
@@ -67,7 +65,7 @@ public final class SerializationHelper {
 	 * @throws SerializationException (runtime) if the serialization fails
 	 */
 	public static Object clone(Serializable object) throws SerializationException {
-		LOG.trace( "Starting clone through serialization" );
+		CORE_LOGGER.trace( "Starting clone through serialization" );
 		if ( object == null ) {
 			return null;
 		}
@@ -98,12 +96,12 @@ public final class SerializationHelper {
 			throw new IllegalArgumentException( "The OutputStream must not be null" );
 		}
 
-		if ( LOG.isTraceEnabled() ) {
+		if ( CORE_LOGGER.isTraceEnabled() ) {
 			if ( Hibernate.isInitialized( obj ) ) {
-				LOG.tracev( "Starting serialization of object [{0}]", obj );
+				CORE_LOGGER.tracev( "Starting serialization of object [{0}]", obj );
 			}
 			else {
-				LOG.trace( "Starting serialization of [uninitialized proxy]" );
+				CORE_LOGGER.trace( "Starting serialization of [uninitialized proxy]" );
 			}
 		}
 
@@ -197,7 +195,7 @@ public final class SerializationHelper {
 			throw new IllegalArgumentException( "The InputStream must not be null" );
 		}
 
-		LOG.trace( "Starting deserialization of object" );
+		CORE_LOGGER.trace( "Starting deserialization of object" );
 
 		try ( var in = new CustomObjectInputStream( inputStream, loader, fallbackLoader1, fallbackLoader2 ) ) {
 			//noinspection unchecked
@@ -279,13 +277,13 @@ public final class SerializationHelper {
 		@Override
 		protected Class<?> resolveClass(ObjectStreamClass v) throws IOException, ClassNotFoundException {
 			final String className = v.getName();
-			LOG.tracev( "Attempting to locate class [{0}]", className );
+			CORE_LOGGER.tracev( "Attempting to locate class [{0}]", className );
 
 			try {
 				return Class.forName( className, false, loader1 );
 			}
 			catch (ClassNotFoundException e) {
-				LOG.trace( "Unable to locate class using given classloader" );
+				CORE_LOGGER.trace( "Unable to locate class using given classloader" );
 			}
 
 			if ( !Objects.equals( loader1, loader2 ) ) {
@@ -293,7 +291,7 @@ public final class SerializationHelper {
 					return Class.forName( className, false, loader2 );
 				}
 				catch (ClassNotFoundException e) {
-					LOG.trace( "Unable to locate class using given classloader" );
+					CORE_LOGGER.trace( "Unable to locate class using given classloader" );
 				}
 			}
 
@@ -302,7 +300,7 @@ public final class SerializationHelper {
 					return Class.forName( className, false, loader3 );
 				}
 				catch (ClassNotFoundException e) {
-					LOG.trace( "Unable to locate class using given classloader" );
+					CORE_LOGGER.trace( "Unable to locate class using given classloader" );
 				}
 			}
 

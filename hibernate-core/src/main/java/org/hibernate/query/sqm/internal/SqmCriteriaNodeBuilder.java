@@ -37,8 +37,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.dialect.function.AvgFunction;
 import org.hibernate.dialect.function.SumReturnTypeResolver;
 import org.hibernate.dialect.function.array.DdlTypeHelper;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -170,6 +168,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
 import static java.util.Arrays.asList;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.determineProperSizing;
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
 import static org.hibernate.query.sqm.TrimSpec.fromCriteriaTrimSpec;
@@ -184,8 +183,6 @@ import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation.mapIns
  * @author Steve Ebersole
  */
 public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SqmCriteriaNodeBuilder.class );
 
 	private final String uuid;
 	private final String name;
@@ -3085,14 +3082,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	 */
 	@Serial
 	private Object readResolve() throws InvalidObjectException {
-		LOG.trace( "Resolving serialized SqmCriteriaNodeBuilder" );
+		CORE_LOGGER.trace( "Resolving serialized SqmCriteriaNodeBuilder" );
 		return locateSessionFactoryOnDeserialization( uuid, name ).getCriteriaBuilder();
 	}
 
 	private static SessionFactory locateSessionFactoryOnDeserialization(String uuid, String name) throws InvalidObjectException{
 		final SessionFactory uuidResult = SessionFactoryRegistry.INSTANCE.getSessionFactory( uuid );
 		if ( uuidResult != null ) {
-			LOG.tracef( "Resolved SessionFactory by UUID [%s]", uuid );
+			CORE_LOGGER.tracef( "Resolved SessionFactory by UUID [%s]", uuid );
 			return uuidResult;
 		}
 
@@ -3101,7 +3098,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		if ( name != null ) {
 			final SessionFactory namedResult = SessionFactoryRegistry.INSTANCE.getNamedSessionFactory( name );
 			if ( namedResult != null ) {
-				LOG.tracef( "Resolved SessionFactory by name [%s]", name );
+				CORE_LOGGER.tracef( "Resolved SessionFactory by name [%s]", name );
 				return namedResult;
 			}
 		}

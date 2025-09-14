@@ -27,8 +27,6 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.SourceType;
@@ -48,6 +46,8 @@ import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+
 /**
  * Command-line tool for exporting (create and/or drop) a database schema.  The export can
  * be sent directly to the database, written to script or both.
@@ -57,7 +57,6 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
  * @author Steve Ebersole
  */
 public class SchemaExport {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( SchemaExport.class );
 
 	public enum Type {
 		CREATE( Action.CREATE ),
@@ -242,18 +241,18 @@ public class SchemaExport {
 
 	public void execute(EnumSet<TargetType> targetTypes, Action action, Metadata metadata, ServiceRegistry serviceRegistry) {
 		if ( action == Action.NONE ) {
-			log.debug( "Skipping SchemaExport as Action.NONE was passed" );
+			CORE_LOGGER.debug( "Skipping SchemaExport as Action.NONE was passed" );
 			return;
 		}
 
 		if ( targetTypes.isEmpty() ) {
-			log.debug( "Skipping SchemaExport as no targets were specified" );
+			CORE_LOGGER.debug( "Skipping SchemaExport as no targets were specified" );
 			return;
 		}
 
 		exceptions.clear();
 
-		log.runningHbm2ddlSchemaExport();
+		CORE_LOGGER.runningHbm2ddlSchemaExport();
 
 		final TargetDescriptor targetDescriptor = buildTargetDescriptor(
 				targetTypes,
@@ -382,7 +381,7 @@ public class SchemaExport {
 			execute( commandLineArgs );
 		}
 		catch (Exception e) {
-			log.unableToCreateSchema( e );
+			CORE_LOGGER.unableToCreateSchema( e );
 		}
 	}
 
@@ -595,7 +594,7 @@ public class SchemaExport {
 			}
 			else {
 				if ( drop || create ) {
-					log.warn( "--drop or --create was used; prefer --action=none|create|drop|drop-and-create instead" );
+					CORE_LOGGER.warn( "--drop or --create was used; prefer --action=none|create|drop|drop-and-create instead" );
 				}
 				parsedArgs.action = Action.parseCommandLineOption( actionText );
 			}
@@ -605,7 +604,7 @@ public class SchemaExport {
 			}
 			else {
 				if ( !script || !export ) {
-					log.warn( "--text or --quiet was used; prefer --target=none|(stdout|database|script)*" );
+					CORE_LOGGER.warn( "--text or --quiet was used; prefer --target=none|(stdout|database|script)*" );
 				}
 				parsedArgs.targetTypes = TargetTypeHelper.parseCommandLineOptions( targetText );
 			}

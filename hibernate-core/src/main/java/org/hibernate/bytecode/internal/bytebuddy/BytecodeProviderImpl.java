@@ -32,8 +32,6 @@ import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.internal.PropertyAccessEmbeddedImpl;
 import org.hibernate.property.access.spi.Getter;
@@ -54,9 +52,9 @@ import net.bytebuddy.implementation.MethodCall;
 import net.bytebuddy.jar.asm.Opcodes;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class BytecodeProviderImpl implements BytecodeProvider {
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BytecodeProviderImpl.class );
+public class BytecodeProviderImpl implements BytecodeProvider {
 
 	private static final String INSTANTIATOR_PROXY_NAMING_SUFFIX = "$HibernateInstantiator";
 	private static final String OPTIMIZER_PROXY_NAMING_SUFFIX = "HibernateAccessOptimizer";
@@ -148,7 +146,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			findAccessors( clazz, getterNames, setterNames, types, getters, setters );
 		}
 		catch (InvalidPropertyAccessorException ex) {
-			LOG.unableToGenerateReflectionOptimizer( clazz.getName(), ex.getMessage() );
+			CORE_LOGGER.unableToGenerateReflectionOptimizer( clazz.getName(), ex.getMessage() );
 			return null;
 		}
 
@@ -210,7 +208,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			findAccessors( clazz, propertyAccessMap, getters, setters );
 		}
 		catch (InvalidPropertyAccessorException ex) {
-			LOG.unableToGenerateReflectionOptimizer( clazz.getName(), ex.getMessage() );
+			CORE_LOGGER.unableToGenerateReflectionOptimizer( clazz.getName(), ex.getMessage() );
 			return null;
 		}
 

@@ -8,8 +8,6 @@ import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -19,12 +17,13 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+
+
 /**
  * @author Steve Ebersole
  */
 public final class FetchOptionsHelper {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( FetchOptionsHelper.class );
 
 	private FetchOptionsHelper() {
 	}
@@ -101,7 +100,7 @@ public final class FetchOptionsHelper {
 		switch ( style ) {
 			case JOIN: {
 				if ( lazy ) {
-					LOG.fetchModeJoinWithLazyWarning( role );
+					CORE_LOGGER.fetchModeJoinWithLazyWarning( role );
 					return FetchTiming.DELAYED;
 				}
 				return FetchTiming.IMMEDIATE;

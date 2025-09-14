@@ -21,13 +21,12 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.GeneratorCreationContext;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 
 import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHolder;
 import static org.hibernate.id.PersistentIdentifierGenerator.CATALOG;
 import static org.hibernate.id.PersistentIdentifierGenerator.PK;
 import static org.hibernate.id.PersistentIdentifierGenerator.SCHEMA;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 
@@ -47,8 +46,6 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
  * @implNote This also implements the {@code increment} generation type in {@code hbm.xml} mappings.
  */
 public class IncrementGenerator implements IdentifierGenerator {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IncrementGenerator.class );
 
 	/**
 	 * A parameter identifying the column holding the id.
@@ -132,8 +129,8 @@ public class IncrementGenerator implements IdentifierGenerator {
 	private void initializePreviousValueHolder(SharedSessionContractImplementor session) {
 		previousValueHolder = getIntegralDataTypeHolder( returnClass );
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef( "Fetching initial value: %s", sql );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.tracef( "Fetching initial value: %s", sql );
 		}
 		try {
 			final PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
@@ -147,8 +144,8 @@ public class IncrementGenerator implements IdentifierGenerator {
 						previousValueHolder.initialize( 1L );
 					}
 					sql = null;
-					if ( LOG.isTraceEnabled() ) {
-						LOG.tracef( "First free id: %s", previousValueHolder.makeValue() );
+					if ( CORE_LOGGER.isTraceEnabled() ) {
+						CORE_LOGGER.tracef( "First free id: %s", previousValueHolder.makeValue() );
 					}
 				}
 				finally {

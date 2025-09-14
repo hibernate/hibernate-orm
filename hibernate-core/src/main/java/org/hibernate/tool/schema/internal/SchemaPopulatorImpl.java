@@ -7,8 +7,6 @@ package org.hibernate.tool.schema.internal;
 import org.hibernate.Internal;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
@@ -21,6 +19,7 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import java.util.Map;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabled;
 
 /**
@@ -29,7 +28,6 @@ import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabl
  * @author Gavin King
  */
 public class SchemaPopulatorImpl extends AbstractSchemaPopulator implements SchemaPopulator {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SchemaPopulatorImpl.class );
 
 	private final HibernateSchemaManagementTool tool;
 
@@ -73,7 +71,7 @@ public class SchemaPopulatorImpl extends AbstractSchemaPopulator implements Sche
 					target.release();
 				}
 				catch (Exception e) {
-					LOG.debugf( "Problem releasing GenerationTarget [%s] : %s", target, e.getMessage() );
+					CORE_LOGGER.debugf( "Problem releasing GenerationTarget [%s] : %s", target, e.getMessage() );
 				}
 			}
 		}

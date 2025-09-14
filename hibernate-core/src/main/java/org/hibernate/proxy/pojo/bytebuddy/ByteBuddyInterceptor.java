@@ -8,19 +8,16 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.proxy.ProxyConfiguration;
 import org.hibernate.proxy.pojo.BasicLazyInitializer;
 import org.hibernate.type.CompositeType;
 
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.isPublic;
 
 public class ByteBuddyInterceptor
 		extends BasicLazyInitializer
 		implements ProxyConfiguration.Interceptor {
-
-	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyInterceptor.class );
 
 	private final Class<?>[] interfaces;
 
@@ -66,7 +63,7 @@ public class ByteBuddyInterceptor
 						return proxy;
 					}
 					else {
-						LOG.narrowingProxy( returnValueClass );
+						CORE_LOGGER.narrowingProxy( returnValueClass );
 					}
 				}
 				return returnValue;

@@ -12,11 +12,10 @@ import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.CollectionType;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
@@ -25,8 +24,6 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
  * @author Gavin King
  */
 public final class Collections {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Collections.class );
 
 	/**
 	 * record the fact that this collection was dereferenced
@@ -48,9 +45,9 @@ public final class Collections {
 		final var entry = persistenceContext.getCollectionEntry( collection );
 		final var loadedPersister = entry.getLoadedPersister();
 
-		if ( loadedPersister != null && LOG.isTraceEnabled() ) {
-			LOG.trace( "Collection dereferenced: "
-						+ collectionInfoString( loadedPersister, collection, entry.getLoadedKey(), session ) );
+		if ( loadedPersister != null && CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.trace( "Collection dereferenced: "
+							+ collectionInfoString( loadedPersister, collection, entry.getLoadedKey(), session ) );
 		}
 
 		// do a check
@@ -114,9 +111,9 @@ public final class Collections {
 		final var loadedPersister = entry.getLoadedPersister();
 		final Object loadedKey = entry.getLoadedKey();
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Found collection with unloaded owner: "
-						+ collectionInfoString( loadedPersister, collection, loadedKey, session ) );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.trace( "Found collection with unloaded owner: "
+							+ collectionInfoString( loadedPersister, collection, loadedKey, session ) );
 		}
 
 		entry.setCurrentPersister( loadedPersister );
@@ -163,9 +160,9 @@ public final class Collections {
 		if ( isBytecodeEnhanced && !collection.wasInitialized() ) {
 			// the class of the collection owner is enhanced for lazy loading,
 			// and we found an un-initialized PersistentCollection, so skip it
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Skipping uninitialized bytecode-lazy collection: "
-							+ collectionInfoString( persister, collection, collectionEntry.getCurrentKey(), session ) );
+			if ( CORE_LOGGER.isTraceEnabled() ) {
+				CORE_LOGGER.trace( "Skipping uninitialized bytecode-lazy collection: "
+								+ collectionInfoString( persister, collection, collectionEntry.getCurrentKey(), session ) );
 			}
 			collectionEntry.setReached( true );
 			collectionEntry.setProcessed( true );
@@ -188,9 +185,9 @@ public final class Collections {
 			SessionImplementor session,
 			CollectionPersister persister,
 			CollectionEntry collectionEntry) {
-		if ( LOG.isTraceEnabled() ) {
+		if ( CORE_LOGGER.isTraceEnabled() ) {
 			if ( collection.wasInitialized() ) {
-				LOG.tracef(
+				CORE_LOGGER.tracef(
 						"Collection found: %s, was: %s (initialized)",
 						collectionInfoString(
 								persister,
@@ -207,7 +204,7 @@ public final class Collections {
 				);
 			}
 			else {
-				LOG.tracef(
+				CORE_LOGGER.tracef(
 						"Collection found: %s, was: %s (uninitialized)",
 						collectionInfoString(
 								persister,
@@ -271,7 +268,7 @@ public final class Collections {
 					// we will need to remove the old entries
 					collectionEntry.setDoremove( true );
 					if ( collectionEntry.isDorecreate() ) {
-						LOG.trace( "Forcing collection initialization" );
+						CORE_LOGGER.trace( "Forcing collection initialization" );
 						collection.forceInitialization();
 					}
 				}

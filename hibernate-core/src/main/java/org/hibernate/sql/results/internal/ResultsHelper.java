@@ -14,22 +14,19 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.monitor.spi.EventMonitor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
  * @author Steve Ebersole
  */
 public class ResultsHelper {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ResultsHelper.class );
 
 	public static <R> RowReader<R> createRowReader(
 			SessionFactoryImplementor sessionFactory,
@@ -72,9 +69,9 @@ public class ResultsHelper {
 			statistics.loadCollection( collectionDescriptor.getRole() );
 		}
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Collection fully initialized: "
-						+ collectionInfoString( collectionDescriptor, collection, key, session ) );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.trace( "Collection fully initialized: "
+							+ collectionInfoString( collectionDescriptor, collection, key, session ) );
 		}
 
 		// todo (6.0) : there is other logic still needing to be implemented here.  caching, etc
@@ -136,15 +133,15 @@ public class ResultsHelper {
 			Object key) {
 		final var session = persistenceContext.getSession();
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Caching collection: "
-						+ collectionInfoString( collectionDescriptor, collection, key, session ) );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.trace( "Caching collection: "
+							+ collectionInfoString( collectionDescriptor, collection, key, session ) );
 		}
 
 		if ( session.getLoadQueryInfluencers().hasEnabledFilters()
 				&& collectionDescriptor.isAffectedByEnabledFilters( session ) ) {
 			// some filters affecting the collection are enabled on the session, so do not do the put into the cache.
-			LOG.debug( "Refusing to add to cache due to enabled filters" );
+			CORE_LOGGER.debug( "Refusing to add to cache due to enabled filters" );
 			// todo : add the notion of enabled filters to the cache key to differentiate filtered collections from non-filtered;
 			//      DefaultInitializeCollectionEventHandler.initializeCollectionFromCache() (which makes sure to not read from
 			//      cache with enabled filters).
@@ -157,7 +154,7 @@ public class ResultsHelper {
 			final Object collectionOwner =
 					getCollectionOwner( persistenceContext, collectionDescriptor, collection, key, session );
 			if ( collectionOwner == null ) {
-				LOG.debug( "Unable to resolve owner of loading collection for second level caching. Refusing to add to cache.");
+				CORE_LOGGER.debug( "Unable to resolve owner of loading collection for second level caching. Refusing to add to cache.");
 				return;
 			}
 			version = persistenceContext.getEntry( collectionOwner ).getVersion();

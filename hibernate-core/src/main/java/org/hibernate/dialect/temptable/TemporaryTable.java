@@ -20,8 +20,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -50,6 +48,8 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+
 
 /**
  * @author Steve Ebersole
@@ -62,8 +62,6 @@ public class TemporaryTable implements Exportable, Contributable {
 	public static final String DEFAULT_ALIAS = "temptable_";
 	public static final String ENTITY_TABLE_IDENTITY_COLUMN = "HTE_IDENTITY";
 	public static final String ENTITY_ROW_NUMBER_COLUMN = "rn_";
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( TemporaryTable.class );
 
 	private final String contributor;
 	private final String qualifiedTableName;
@@ -388,7 +386,7 @@ public class TemporaryTable implements Exportable, Contributable {
 													.getIdentityColumnString( integerBasicType.getJdbcType().getDdlTypeCode() );
 						}
 						else {
-							LOG.multiTableInsertNotAvailable( persistentClass.getEntityName() );
+							CORE_LOGGER.multiTableInsertNotAvailable( persistentClass.getEntityName() );
 							rowNumberType = typeConfiguration.getDdlTypeRegistry().getTypeName(
 									integerBasicType.getJdbcType().getDdlTypeCode(),
 									dialect.getSizeStrategy().resolveSize(

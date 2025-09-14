@@ -16,21 +16,18 @@ import java.util.Map;
 import org.hibernate.Internal;
 import org.hibernate.PropertyAccessException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * @author Steve Ebersole
  */
 @Internal
 public class GetterMethodImpl implements Getter {
-
-	private static final CoreMessageLogger LOG = messageLogger( GetterMethodImpl.class );
 
 	private final Class<?> containerClass;
 	private final String propertyName;
@@ -72,7 +69,7 @@ public class GetterMethodImpl implements Getter {
 			//cannot occur
 		}
 		catch (IllegalArgumentException iae) {
-			LOG.illegalPropertyGetterArgument( containerClass.getName(), propertyName );
+			CORE_LOGGER.illegalPropertyGetterArgument( containerClass.getName(), propertyName );
 			throw new PropertyAccessException(
 					iae,
 					"IllegalArgumentException occurred calling",

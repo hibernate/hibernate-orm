@@ -14,9 +14,9 @@ import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.TypedValue;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.Type;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * Renders entities and query parameters to a nicely readable string.
@@ -24,8 +24,6 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public final class EntityPrinter {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityPrinter.class );
 
 	private final SessionFactoryImplementor factory;
 
@@ -98,8 +96,8 @@ public final class EntityPrinter {
 	// Cannot use Map as an argument because it clashes with the previous method (due to type erasure)
 	public void logEntities(Iterable<Map.Entry<EntityKey, EntityHolder>> entitiesByEntityKey)
 			throws HibernateException {
-		if ( LOG.isDebugEnabled() && entitiesByEntityKey.iterator().hasNext() ) {
-			LOG.debug( "Listing entities:" );
+		if ( CORE_LOGGER.isDebugEnabled() && entitiesByEntityKey.iterator().hasNext() ) {
+			CORE_LOGGER.debug( "Listing entities:" );
 			int i = 0;
 			for ( var entityKeyAndEntity : entitiesByEntityKey ) {
 				final var holder = entityKeyAndEntity.getValue();
@@ -107,10 +105,10 @@ public final class EntityPrinter {
 					continue;
 				}
 				if ( i++ > 20 ) {
-					LOG.debug( "More......" );
+					CORE_LOGGER.debug( "More......" );
 					break;
 				}
-				LOG.debug( toString( entityKeyAndEntity.getKey().getEntityName(), holder.getEntity() ) );
+				CORE_LOGGER.debug( toString( entityKeyAndEntity.getKey().getEntityName(), holder.getEntity() ) );
 			}
 		}
 	}

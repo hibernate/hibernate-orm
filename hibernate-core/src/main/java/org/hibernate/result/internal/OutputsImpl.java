@@ -14,7 +14,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.result.Output;
 import org.hibernate.result.Outputs;
@@ -30,8 +29,7 @@ import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateSt
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.spi.RowReader;
 
-import org.jboss.logging.Logger;
-
+import static org.hibernate.internal.CoreMessageLogger.LOGGER;
 import static org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions.NO_OPTIONS;
 
 
@@ -39,7 +37,6 @@ import static org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptio
  * @author Steve Ebersole
  */
 public class OutputsImpl implements Outputs {
-	private static final Logger LOG = CoreLogging.logger( OutputsImpl.class );
 
 	private final ResultContext context;
 	private final PreparedStatement jdbcStatement;
@@ -251,8 +248,8 @@ public class OutputsImpl implements Outputs {
 		}
 
 		protected Output buildOutput() {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracef( "Building Return [isResultSet=%s, updateCount=%s, extendedReturn=%s]",
+			if ( LOGGER.isTraceEnabled() ) {
+				LOGGER.tracef( "Building Return [isResultSet=%s, updateCount=%s, extendedReturn=%s]",
 						isResultSet(), getUpdateCount(), hasExtendedReturns() );
 			}
 

@@ -29,7 +29,6 @@ import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
@@ -49,7 +48,7 @@ import static org.hibernate.boot.model.internal.GeneratorParameters.interpretSeq
 import static org.hibernate.boot.model.internal.GeneratorParameters.interpretTableGenerator;
 import static org.hibernate.boot.model.internal.InheritanceState.getInheritanceStateOfSuperEntity;
 import static org.hibernate.boot.model.internal.InheritanceState.getSuperclassInheritanceState;
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.mapping.MetadataSource.ANNOTATIONS;
 
@@ -63,8 +62,6 @@ import static org.hibernate.mapping.MetadataSource.ANNOTATIONS;
  * @author Hardy Ferentschik
  */
 public final class AnnotationBinder {
-
-	private static final CoreMessageLogger LOG = messageLogger( AnnotationBinder.class );
 
 	private AnnotationBinder() {}
 
@@ -80,8 +77,8 @@ public final class AnnotationBinder {
 			final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 			interpretSequenceGenerator( generatorRegistration.configuration(), definitionBuilder );
 			final IdentifierGeneratorDefinition idGenDef = definitionBuilder.build();
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Adding global sequence generator with name: " + name );
+			if ( CORE_LOGGER.isTraceEnabled() ) {
+				CORE_LOGGER.trace( "Adding global sequence generator with name: " + name );
 			}
 			metadataCollector.addDefaultIdentifierGenerator( idGenDef );
 		} );
@@ -90,8 +87,8 @@ public final class AnnotationBinder {
 			final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 			interpretTableGenerator( generatorRegistration.configuration(), definitionBuilder );
 			final IdentifierGeneratorDefinition idGenDef = definitionBuilder.build();
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Adding global table generator with name: " + name );
+			if ( CORE_LOGGER.isTraceEnabled() ) {
+				CORE_LOGGER.trace( "Adding global table generator with name: " + name );
 			}
 			metadataCollector.addDefaultIdentifierGenerator( idGenDef );
 		} );

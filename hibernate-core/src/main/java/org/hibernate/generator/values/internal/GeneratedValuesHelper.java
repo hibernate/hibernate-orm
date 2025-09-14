@@ -18,12 +18,9 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.GeneratedValueBasicResultBuilder;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
-import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.insert.GetGeneratedKeysDelegate;
 import org.hibernate.id.insert.InsertReturningDelegate;
 import org.hibernate.id.insert.UniqueKeySelectingDelegate;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -47,6 +44,7 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowReader;
 
 import static java.util.Collections.unmodifiableList;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.NaturalIdHelper.getNaturalIdPropertyNames;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.sql.model.MutationType.INSERT;
@@ -60,8 +58,6 @@ import static org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptio
  */
 @Internal
 public class GeneratedValuesHelper {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IdentifierGeneratorHelper.class );
 
 	/**
 	 * Reads the {@linkplain EntityPersister#getGeneratedProperties(EventType) generated values}
@@ -99,9 +95,9 @@ public class GeneratedValuesHelper {
 		final var generatedValues = new GeneratedValuesImpl( generatedProperties );
 		final var results = readGeneratedValues( resultSet, statement, persister, mappingProducer, session );
 
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debug( "Extracted generated values for entity "
-						+ infoString( persister ) + ": " + ArrayHelper.toString( results ) );
+		if ( CORE_LOGGER.isDebugEnabled() ) {
+			CORE_LOGGER.debug( "Extracted generated values for entity "
+							+ infoString( persister ) + ": " + ArrayHelper.toString( results ) );
 		}
 
 		for ( int i = 0; i < results.length; i++ ) {

@@ -16,8 +16,6 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -36,6 +34,7 @@ import org.hibernate.type.spi.CompositeTypeImplementor;
 
 import static java.lang.reflect.Modifier.isFinal;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptableType;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.getMethod;
 import static org.hibernate.metamodel.internal.PropertyAccessHelper.propertyAccessStrategy;
 
@@ -43,8 +42,6 @@ import static org.hibernate.metamodel.internal.PropertyAccessHelper.propertyAcce
  * @author Steve Ebersole
  */
 public class EntityRepresentationStrategyPojoStandard implements EntityRepresentationStrategy {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityRepresentationStrategyPojoStandard.class );
 
 	private final JavaType<?> mappedJtd;
 	private final JavaType<?> proxyJtd;
@@ -208,7 +205,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			}
 		}
 		catch (HibernateException he) {
-			LOG.unableToCreateProxyFactory( clazz.getName(), he );
+			CORE_LOGGER.unableToCreateProxyFactory( clazz.getName(), he );
 			return null;
 		}
 
@@ -295,7 +292,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			);
 		}
 		catch (HibernateException he) {
-			LOG.unableToCreateProxyFactory( entityName, he );
+			CORE_LOGGER.unableToCreateProxyFactory( entityName, he );
 			return null;
 		}
 		return proxyFactory;

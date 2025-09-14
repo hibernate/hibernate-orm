@@ -7,8 +7,6 @@ package org.hibernate.engine.spi;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 
 import java.io.IOException;
@@ -19,6 +17,7 @@ import java.util.Collection;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
@@ -29,8 +28,6 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
  * @author Gavin King
  */
 public final class CollectionEntry implements Serializable {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( CollectionEntry.class );
 
 	//ATTRIBUTES MAINTAINED BETWEEN FLUSH CYCLES
 
@@ -186,8 +183,9 @@ public final class CollectionEntry implements Serializable {
 
 		dirty( collection );
 
-		if ( LOG.isTraceEnabled() && collection.isDirty() && loadedPersister != null ) {
-			LOG.trace( "Collection dirty: " + collectionInfoString( loadedPersister.getRole(), getLoadedKey() ) );
+		if ( CORE_LOGGER.isTraceEnabled() && collection.isDirty() && loadedPersister != null ) {
+			CORE_LOGGER.trace( "Collection dirty: "
+							+ collectionInfoString( loadedPersister.getRole(), getLoadedKey() ) );
 		}
 
 		setReached( false );
@@ -267,7 +265,7 @@ public final class CollectionEntry implements Serializable {
 	 * @param storedSnapshot the new stored snapshot
 	 */
 	public void resetStoredSnapshot(PersistentCollection<?> collection, Serializable storedSnapshot) {
-		LOG.tracef("Reset storedSnapshot to %s for %s", storedSnapshot, this);
+		CORE_LOGGER.tracef("Reset storedSnapshot to %s for %s", storedSnapshot, this);
 
 		if ( !fromMerge ) {
 			snapshot = storedSnapshot;

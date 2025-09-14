@@ -7,6 +7,7 @@ package org.hibernate.internal;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.Properties;
@@ -16,9 +17,11 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.cache.CacheException;
+import org.hibernate.internal.log.SubSystemLogging;
 import org.hibernate.type.SerializationException;
 
 import org.jboss.logging.BasicLogger;
+import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.Cause;
 import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
@@ -34,15 +37,21 @@ import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
- * The jboss-logging {@link MessageLogger} for the hibernate-core module.  It reserves message ids ranging from
- * 00001 to 10000 inclusively.
- * <p>
- * New messages must be added after the last message defined to ensure message codes are unique.
+ * Miscellaneous logging related to Hibernate ORM Core.
  */
+@SubSystemLogging(
+		name = SessionLogging.NAME,
+		description = "Miscellaneous Logging related to Hibernate ORM Core"
+)
 @MessageLogger(projectCode = "HHH")
 @ValidIdRange(min=2,max = 20000)
 @Internal
 public interface CoreMessageLogger extends BasicLogger {
+
+	String NAME = SubSystemLogging.BASE + ".core";
+
+	Logger LOGGER = Logger.getLogger( NAME );
+	CoreMessageLogger CORE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, NAME );
 
 	@LogMessage(level = WARN)
 	@Message(value = "I/O reported cached file could not be found: [%s]: %s", id = 23)

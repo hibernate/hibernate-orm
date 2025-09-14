@@ -17,8 +17,6 @@ import org.hibernate.Internal;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Environment;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
@@ -34,6 +32,7 @@ import org.hibernate.service.spi.Stoppable;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
@@ -44,8 +43,6 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
  */
 public abstract class AbstractServiceRegistryImpl
 		implements ServiceRegistryImplementor, ServiceBinding.ServiceLifecycleOwner {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractServiceRegistryImpl.class );
 
 	public static final String ALLOW_CRAWLING = "hibernate.service.allow_crawling";
 
@@ -161,14 +158,14 @@ public abstract class AbstractServiceRegistryImpl
 		for ( var binding : serviceBindingMap.values() ) {
 			if ( serviceRole.isAssignableFrom( binding.getServiceRole() ) ) {
 				// we found an alternate...
-				LOG.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
+				CORE_LOGGER.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
 				registerAlternate( serviceRole, binding.getServiceRole() );
 				return (ServiceBinding<R>) binding;
 			}
 
 			if ( binding.getService() != null && serviceRole.isInstance( binding.getService() ) ) {
 				// we found an alternate...
-				LOG.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
+				CORE_LOGGER.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
 				registerAlternate( serviceRole, binding.getServiceRole() );
 				return (ServiceBinding<R>) binding;
 			}
@@ -229,8 +226,8 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	private <R extends Service> @Nullable R initializeService(ServiceBinding<R> serviceBinding) {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.initializingService( serviceBinding.getServiceRole().getName() );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.initializingService( serviceBinding.getServiceRole().getName() );
 		}
 
 		// PHASE 1: create service
@@ -297,7 +294,7 @@ public abstract class AbstractServiceRegistryImpl
 			}
 		}
 		catch (NullPointerException e) {
-			LOG.error( "NPE injecting service dependencies: " + service.getClass().getName() );
+			CORE_LOGGER.error( "NPE injecting service dependencies: " + service.getClass().getName() );
 		}
 	}
 
@@ -381,7 +378,7 @@ public abstract class AbstractServiceRegistryImpl
 				stoppable.stop();
 			}
 			catch ( Exception e ) {
-				LOG.unableToStopService( binding.getServiceRole().getName(), e );
+				CORE_LOGGER.unableToStopService( binding.getServiceRole().getName(), e );
 			}
 		}
 	}
@@ -392,7 +389,7 @@ public abstract class AbstractServiceRegistryImpl
 			childRegistries = new HashSet<>();
 		}
 		if ( !childRegistries.add( child ) ) {
-			LOG.warnf( "Child ServiceRegistry [%s] was already registered; this will end badly later", child );
+			CORE_LOGGER.warnf( "Child ServiceRegistry [%s] was already registered; this will end badly later", child );
 		}
 	}
 
@@ -404,11 +401,11 @@ public abstract class AbstractServiceRegistryImpl
 		childRegistries.remove( child );
 		if ( childRegistries.isEmpty() ) {
 			if ( autoCloseRegistry ) {
-				LOG.trace( "Automatically destroying ServiceRegistry after deregistration of every child ServiceRegistry" );
+				CORE_LOGGER.trace( "Automatically destroying ServiceRegistry after deregistration of every child ServiceRegistry" );
 				destroy();
 			}
 			else {
-				LOG.trace( "Skipping destroying ServiceRegistry after deregistration of every child ServiceRegistry" );
+				CORE_LOGGER.trace( "Skipping destroying ServiceRegistry after deregistration of every child ServiceRegistry" );
 			}
 		}
 	}

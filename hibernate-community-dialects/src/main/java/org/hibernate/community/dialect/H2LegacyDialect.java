@@ -49,8 +49,6 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -94,6 +92,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.query.common.TemporalUnit.SECOND;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -131,7 +130,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  * @author Jürgen Kreitler
  */
 public class H2LegacyDialect extends Dialect {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( H2LegacyDialect.class );
 
 	private final LimitHandler limitHandler;
 
@@ -161,7 +159,7 @@ public class H2LegacyDialect extends Dialect {
 				: LimitOffsetLimitHandler.OFFSET_ONLY_INSTANCE;
 
 		if ( version.isBefore( 1, 2, 139 ) ) {
-			LOG.unsupportedMultiTableBulkHqlJpaql( version.getMajor(), version.getMinor(), version.getMicro() );
+			CORE_LOGGER.unsupportedMultiTableBulkHqlJpaql( version.getMajor(), version.getMinor(), version.getMicro() );
 		}
 
 //		supportsTuplesInSubqueries = version.isSameOrAfter( 1, 4, 198 );

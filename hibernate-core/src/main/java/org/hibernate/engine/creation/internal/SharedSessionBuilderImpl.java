@@ -16,11 +16,9 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
-import org.jboss.logging.Logger;
 
 import java.sql.Connection;
 import java.util.ArrayList;
@@ -28,6 +26,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import static java.util.Collections.addAll;
+import static org.hibernate.internal.CoreMessageLogger.LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -35,8 +34,6 @@ import static java.util.Collections.addAll;
 public abstract class SharedSessionBuilderImpl
 		extends AbstractCommonBuilder<SharedSessionBuilderImplementor>
 		implements SharedSessionBuilderImplementor, SharedSessionCreationOptions {
-
-	private static final Logger LOG = CoreLogging.logger( SharedSessionBuilderImpl.class );
 
 	private final SharedSessionContractImplementor original;
 
@@ -85,7 +82,7 @@ public abstract class SharedSessionBuilderImpl
 
 	@Override
 	public SessionImplementor openSession() {
-		LOG.tracef( "Opening Session [tenant=%s]", tenantIdentifier );
+		LOGGER.tracef( "Opening Session [tenant=%s]", tenantIdentifier );
 		if ( original.getFactory().getSessionFactoryOptions().isMultiTenancyEnabled() ) {
 			if ( shareTransactionContext ) {
 				if ( tenantIdChanged ) {

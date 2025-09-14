@@ -18,8 +18,6 @@ import jakarta.persistence.spi.PersistenceUnitInfo;
 import jakarta.persistence.spi.ProviderUtil;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.boot.spi.PersistenceConfigurationDescriptor;
 import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 import org.hibernate.jpa.boot.spi.Bootstrap;
@@ -27,6 +25,8 @@ import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.ProviderChecker;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * The best-ever implementation of a JPA {@link PersistenceProvider}.
@@ -36,7 +36,6 @@ import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
  * @author Brett Meyer
  */
 public class HibernatePersistenceProvider implements PersistenceProvider {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( HibernatePersistenceProvider.class );
 
 	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 
@@ -47,10 +46,10 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	 */
 	@Override
 	public EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
-		LOG.tracef( "Starting createEntityManagerFactory for persistenceUnitName %s", persistenceUnitName );
+		CORE_LOGGER.tracef( "Starting createEntityManagerFactory for persistenceUnitName %s", persistenceUnitName );
 		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties );
 		if ( builder == null ) {
-			LOG.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning null" );
+			CORE_LOGGER.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning null" );
 			return null;
 		}
 		return builder.build();
@@ -72,12 +71,12 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 	private EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map<?,?> properties,
 			ClassLoader providedClassLoader, ClassLoaderService providedClassLoaderService) {
-		LOG.tracef( "Attempting to obtain correct EntityManagerFactoryBuilder for persistenceUnitName : %s", persistenceUnitName );
+		CORE_LOGGER.tracef( "Attempting to obtain correct EntityManagerFactoryBuilder for persistenceUnitName : %s", persistenceUnitName );
 
 		final Map<?,?> integration = wrap( properties );
 		final Collection<PersistenceUnitDescriptor> units = locatePersistenceUnits( integration, providedClassLoader, providedClassLoaderService );
 
-		LOG.tracef( "Located and parsed %s persistence units; checking each", units.size() );
+		CORE_LOGGER.tracef( "Located and parsed %s persistence units; checking each", units.size() );
 
 		if ( persistenceUnitName == null && units.size() > 1 ) {
 			// no persistence-unit name to look for was given and we found multiple persistence-units
@@ -85,8 +84,8 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		}
 
 		for ( PersistenceUnitDescriptor persistenceUnit : units ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracef(
+			if ( CORE_LOGGER.isTraceEnabled() ) {
+				CORE_LOGGER.tracef(
 						"Checking persistence-unit [name=%s, explicit-provider=%s] against incoming persistence unit name [%s]",
 						persistenceUnit.getName(),
 						persistenceUnit.getProviderClassName(),
@@ -96,13 +95,13 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 			final boolean matches = persistenceUnitName == null || persistenceUnit.getName().equals( persistenceUnitName );
 			if ( !matches ) {
-				LOG.tracef( "Excluding from consideration due to name mismatch" );
+				CORE_LOGGER.tracef( "Excluding from consideration due to name mismatch" );
 				continue;
 			}
 
 			// See if we (Hibernate) are the persistence provider
 			if ( ! ProviderChecker.isProvider( persistenceUnit, properties ) ) {
-				LOG.tracef( "Excluding from consideration due to provider mismatch" );
+				CORE_LOGGER.tracef( "Excluding from consideration due to provider mismatch" );
 				continue;
 			}
 
@@ -114,7 +113,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			}
 		}
 
-		LOG.debug( "Found no matching persistence units" );
+		CORE_LOGGER.debug( "Found no matching persistence units" );
 		return null;
 	}
 
@@ -130,7 +129,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			var parser = PersistenceXmlParser.create( integration, providedClassLoader, providedClassLoaderService );
 			final List<URL> xmlUrls = parser.getClassLoaderService().locateResources( "META-INF/persistence.xml" );
 			if ( xmlUrls.isEmpty() ) {
-				LOG.unableToFindPersistenceXmlInClasspath();
+				CORE_LOGGER.unableToFindPersistenceXmlInClasspath();
 				units = List.of();
 			}
 			else {
@@ -138,7 +137,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			}
 		}
 		catch (Exception e) {
-			LOG.debug( "Unable to locate persistence units", e );
+			CORE_LOGGER.debug( "Unable to locate persistence units", e );
 			throw new PersistenceException( "Unable to locate persistence units", e );
 		}
 		return units;
@@ -151,8 +150,8 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	 */
 	@Override
 	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map properties) {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef( "Starting createContainerEntityManagerFactory : %s", info.getPersistenceUnitName() );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.tracef( "Starting createContainerEntityManagerFactory : %s", info.getPersistenceUnitName() );
 		}
 
 		return getEntityManagerFactoryBuilder( info, properties ).build();
@@ -160,8 +159,8 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 	@Override
 	public void generateSchema(PersistenceUnitInfo info, Map map) {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef( "Starting generateSchema : PUI.name=%s", info.getPersistenceUnitName() );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.tracef( "Starting generateSchema : PUI.name=%s", info.getPersistenceUnitName() );
 		}
 
 		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilder( info, map );
@@ -170,11 +169,11 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 	@Override
 	public boolean generateSchema(String persistenceUnitName, Map map) {
-		LOG.tracef( "Starting generateSchema for persistenceUnitName %s", persistenceUnitName );
+		CORE_LOGGER.tracef( "Starting generateSchema for persistenceUnitName %s", persistenceUnitName );
 
 		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, map );
 		if ( builder == null ) {
-			LOG.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning false" );
+			CORE_LOGGER.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning false" );
 			return false;
 		}
 		builder.generateSchema();

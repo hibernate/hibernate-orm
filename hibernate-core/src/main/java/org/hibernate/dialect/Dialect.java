@@ -80,8 +80,6 @@ import org.hibernate.exception.spi.ConversionContext;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
 import org.hibernate.mapping.CheckConstraint;
@@ -222,6 +220,7 @@ import static java.lang.String.join;
 import static org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.MathHelper.ceilingPowerOfTwo;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -338,8 +337,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		"^\\s*(select\\b.+?\\bfrom\\b.+?)(\\b(?:natural )?(?:left |right |full )?(?:inner |outer |cross )?join.+?\\b)?(\\bwhere\\b.+?)$",
 			Pattern.CASE_INSENSITIVE);
 
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Dialect.class );
-
 	//needed for converting precision from decimal to binary digits
 	protected static final double LOG_BASE2OF10 = log(10)/log(2);
 
@@ -380,7 +377,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		final DatabaseVersion version = getVersion();
 		final DatabaseVersion minimumVersion = getMinimumSupportedVersion();
 		if ( version != null && version.isBefore( minimumVersion.getMajor(), minimumVersion.getMinor(), minimumVersion.getMicro() ) ) {
-			LOG.unsupportedDatabaseVersion(
+			CORE_LOGGER.unsupportedDatabaseVersion(
 					getClass().getName(),
 					version.getMajor() + "." + version.getMinor() + "." + version.getMicro(),
 					minimumVersion.getMajor() + "." + minimumVersion.getMinor() + "." + minimumVersion.getMicro()

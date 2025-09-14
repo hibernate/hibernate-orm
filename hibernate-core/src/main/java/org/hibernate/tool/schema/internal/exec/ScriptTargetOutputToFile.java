@@ -10,11 +10,10 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.internal.CoreMessageLogger.LOGGER;
 
 /**
  * ScriptTargetOutput implementation for writing to supplied File references
@@ -22,7 +21,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput implements ScriptTargetOutput {
-	private static final Logger LOG = CoreLogging.logger( ScriptTargetOutputToFile.class );
 
 	private final File file;
 	private final String charsetName;
@@ -89,7 +87,7 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 		try {
 			if ( ! file.exists() ) {
 				// best effort, since this is very likely not allowed in EE environments
-				LOG.debug( "Attempting to create non-existent script target file: " + file.getAbsolutePath() );
+				LOGGER.debug( "Attempting to create non-existent script target file: " + file.getAbsolutePath() );
 				if ( file.getParentFile() != null ) {
 					file.getParentFile().mkdirs();
 				}
@@ -97,7 +95,7 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 			}
 		}
 		catch (Exception e) {
-			LOG.debug( "Exception calling File#createNewFile: " + e );
+			LOGGER.debug( "Exception calling File#createNewFile: " + e );
 		}
 		try {
 			return charsetName != null ?

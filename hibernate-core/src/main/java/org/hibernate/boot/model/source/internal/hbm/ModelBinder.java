@@ -50,8 +50,6 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.generator.internal.GeneratedGeneration;
 import org.hibernate.generator.internal.SourceGeneration;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Array;
@@ -106,6 +104,7 @@ import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.boot.model.source.internal.hbm.Helper.reflectedPropertyClass;
 import static org.hibernate.boot.model.source.internal.hbm.NamedQueryBinder.processNamedNativeQuery;
 import static org.hibernate.boot.model.source.internal.hbm.NamedQueryBinder.processNamedQuery;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -120,7 +119,6 @@ import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.
  * @author Steve Ebersole
  */
 public class ModelBinder {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ModelBinder.class );
 
 	private final MetadataBuildingContext metadataBuildingContext;
 
@@ -178,8 +176,8 @@ public class ModelBinder {
 		);
 
 		rootEntityDescriptor.setTable( primaryTable );
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef( "Mapping class: %s -> %s",
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.tracef( "Mapping class: %s -> %s",
 					rootEntityDescriptor.getEntityName(),
 					primaryTable.getName() );
 		}
@@ -460,8 +458,8 @@ public class ModelBinder {
 		);
 
 		entityDescriptor.setTable( primaryTable );
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef( "Mapping joined-subclass: %s -> %s",
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.tracef( "Mapping joined-subclass: %s -> %s",
 					entityDescriptor.getEntityName(),
 					primaryTable.getName() );
 		}
@@ -530,8 +528,8 @@ public class ModelBinder {
 		);
 		entityDescriptor.setTable( primaryTable );
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef( "Mapping union-subclass: %s -> %s",
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.tracef( "Mapping union-subclass: %s -> %s",
 					entityDescriptor.getEntityName(),
 					primaryTable.getName() );
 		}
@@ -1444,8 +1442,8 @@ public class ModelBinder {
 		secondaryTableJoin.setInverse( secondaryTableSource.isInverse() );
 		secondaryTableJoin.setOptional( secondaryTableSource.isOptional() );
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef(
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.tracef(
 					"Mapping entity secondary-table: %s -> %s",
 					persistentClass.getEntityName(),
 					secondaryTable.getName()
@@ -1712,7 +1710,7 @@ public class ModelBinder {
 				);
 			}
 			else {
-				LOG.tracef(
+				CORE_LOGGER.tracef(
 						"Property [%s.%s] referenced by property-ref [%s] was available - no need for delayed handling",
 						referencedEntityName,
 						referencedPropertyName,
@@ -1726,7 +1724,7 @@ public class ModelBinder {
 	private void registerDelayedPropertyReferenceHandler(
 			DelayedPropertyReferenceHandlerImpl handler,
 			MetadataBuildingContext buildingContext) {
-		LOG.tracef(
+		CORE_LOGGER.tracef(
 				"Property [%s.%s] referenced by property-ref [%s] was not yet available - creating delayed handler",
 				handler.referencedEntityName,
 				handler.referencedPropertyName,
@@ -2113,7 +2111,7 @@ public class ModelBinder {
 				return (BasicType<?>) typeInstance;
 			}
 			catch (ClassLoadingException e) {
-				LOG.debugf( "Unable to load explicit any-discriminator type name as Java Class - %s", typeName );
+				CORE_LOGGER.debugf( "Unable to load explicit any-discriminator type name as Java Class - %s", typeName );
 			}
 
 			throw new org.hibernate.MappingException(
@@ -2207,8 +2205,8 @@ public class ModelBinder {
 
 		property.setMetaAttributes( propertySource.getToolingHintContext().getMetaAttributeMap() );
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Mapped property: " + propertySource.getName() + " -> [" + columns( property.getValue() ) + "]" );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.trace( "Mapped property: " + propertySource.getName() + " -> [" + columns( property.getValue() ) + "]" );
 		}
 	}
 
@@ -2252,7 +2250,7 @@ public class ModelBinder {
 
 				// generated properties can *never* be insertable...
 				if ( property.isInsertable() && timing.includesInsert() ) {
-					LOG.tracef(
+					CORE_LOGGER.tracef(
 							"Property [%s] specified %s generation, setting insertable to false: %s",
 							propertySource.getName(),
 							timing.name(),
@@ -2263,7 +2261,7 @@ public class ModelBinder {
 
 				// properties generated on update can never be updatable...
 				if ( property.isUpdatable() && timing.includesUpdate() ) {
-					LOG.tracef(
+					CORE_LOGGER.tracef(
 							"Property [%s] specified ALWAYS generation, setting updateable to false: %s",
 							propertySource.getName(),
 							mappingDocument.getOrigin()
@@ -2321,23 +2319,23 @@ public class ModelBinder {
 		// todo : better define the conditions in this if/else
 		if ( isDynamic ) {
 			// dynamic is represented as a Map
-			LOG.tracef( "Binding dynamic component [%s]", role );
+			CORE_LOGGER.tracef( "Binding dynamic component [%s]", role );
 			componentBinding.setDynamic( true );
 		}
 		else if ( isVirtual ) {
 			// virtual (what used to be called embedded) is just a conceptual composition...
 			// <properties/> for example
 			if ( componentBinding.getOwner().hasPojoRepresentation() ) {
-				LOG.tracef( "Binding virtual component [%s] to owner class [%s]", role, componentBinding.getOwner().getClassName() );
+				CORE_LOGGER.tracef( "Binding virtual component [%s] to owner class [%s]", role, componentBinding.getOwner().getClassName() );
 				componentBinding.setComponentClassName( componentBinding.getOwner().getClassName() );
 			}
 			else {
-				LOG.tracef( "Binding virtual component [%s] as dynamic", role );
+				CORE_LOGGER.tracef( "Binding virtual component [%s] as dynamic", role );
 				componentBinding.setDynamic( true );
 			}
 		}
 		else {
-			LOG.tracef( "Binding component [%s]", role );
+			CORE_LOGGER.tracef( "Binding component [%s]", role );
 			if ( isNotEmpty( explicitComponentClassName ) ) {
 				try {
 					final Class<?> componentClass =
@@ -2355,20 +2353,20 @@ public class ModelBinder {
 					}
 				}
 				catch (ClassLoadingException ex) {
-					LOG.debugf( ex, "Could load component class [%s]", explicitComponentClassName );
+					CORE_LOGGER.debugf( ex, "Could load component class [%s]", explicitComponentClassName );
 				}
-				LOG.tracef( "Binding component [%s] to explicitly specified class", role, explicitComponentClassName );
+				CORE_LOGGER.tracef( "Binding component [%s] to explicitly specified class", role, explicitComponentClassName );
 				componentBinding.setComponentClassName( explicitComponentClassName );
 			}
 			else if ( componentBinding.getOwner().hasPojoRepresentation() ) {
-				LOG.tracef( "Attempting to determine component class by reflection %s", role );
+				CORE_LOGGER.tracef( "Attempting to determine component class by reflection %s", role );
 				final Class<?> reflectedComponentClass =
 						isNotEmpty( containingClassName ) && isNotEmpty( propertyName )
 								? reflectedPropertyClass( sourceDocument, containingClassName, propertyName )
 								: null;
 
 				if ( reflectedComponentClass == null ) {
-					LOG.debugf(
+					CORE_LOGGER.debugf(
 							"Unable to determine component class name via reflection, and explicit " +
 									"class name not given; role=[%s]",
 							role
@@ -2783,7 +2781,7 @@ public class ModelBinder {
 		}
 
 		public void process(InFlightMetadataCollector metadataCollector) {
-			LOG.tracef(
+			CORE_LOGGER.tracef(
 					"Performing delayed property-ref handling [%s, %s, %s]",
 					referencedEntityName,
 					referencedPropertyName,
@@ -2862,19 +2860,19 @@ public class ModelBinder {
 
 			collectionBinding.createAllKeys();
 
-			if ( LOG.isTraceEnabled() ) {
+			if ( CORE_LOGGER.isTraceEnabled() ) {
 				final Collection collectionBinding = getCollectionBinding();
-				LOG.tracef( "Mapped collection: %s", getPluralAttributeSource().getAttributeRole().getFullPath() );
-				LOG.tracef( "   + table -> %s", collectionBinding.getTable().getName() );
-				LOG.tracef( "   + key -> %s", columns( collectionBinding.getKey() ) );
+				CORE_LOGGER.tracef( "Mapped collection: %s", getPluralAttributeSource().getAttributeRole().getFullPath() );
+				CORE_LOGGER.tracef( "   + table -> %s", collectionBinding.getTable().getName() );
+				CORE_LOGGER.tracef( "   + key -> %s", columns( collectionBinding.getKey() ) );
 				if ( collectionBinding.isIndexed() ) {
-					LOG.tracef( "   + index -> %s", columns( ( (IndexedCollection) collectionBinding).getIndex() ) );
+					CORE_LOGGER.tracef( "   + index -> %s", columns( ( (IndexedCollection) collectionBinding).getIndex() ) );
 				}
 				if ( collectionBinding.isOneToMany() ) {
-					LOG.tracef( "   + one-to-many -> %s", ( (OneToMany) collectionBinding.getElement() ).getReferencedEntityName() );
+					CORE_LOGGER.tracef( "   + one-to-many -> %s", ( (OneToMany) collectionBinding.getElement() ).getReferencedEntityName() );
 				}
 				else {
-					LOG.tracef( "   + element -> %s", columns( collectionBinding.getElement() ) );
+					CORE_LOGGER.tracef( "   + element -> %s", columns( collectionBinding.getElement() ) );
 				}
 			}
 		}
@@ -2929,8 +2927,8 @@ public class ModelBinder {
 
 			final Table collectionTable = collectionBinding.getCollectionTable();
 
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracef( "Mapping collection: %s -> %s",
+			if ( CORE_LOGGER.isTraceEnabled() ) {
+				CORE_LOGGER.tracef( "Mapping collection: %s -> %s",
 						collectionBinding.getRole(),
 						collectionTable.getName() );
 			}
@@ -3000,8 +2998,8 @@ public class ModelBinder {
 				backref.setValue( collectionBinding.getKey() );
 				referenced.addProperty( backref );
 
-				if ( LOG.isTraceEnabled() ) {
-					LOG.tracef(
+				if ( CORE_LOGGER.isTraceEnabled() ) {
+					CORE_LOGGER.tracef(
 							"Added virtual backref property [%s] : %s",
 							backref.getName(),
 							pluralAttributeSource.getAttributeRole().getFullPath()
@@ -3094,8 +3092,8 @@ public class ModelBinder {
 
 		protected void bindCollectionElement() {
 			final PluralAttributeElementSource pluralElementSource = getPluralAttributeSource().getElementSource();
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracef(
+			if ( CORE_LOGGER.isTraceEnabled() ) {
+				CORE_LOGGER.tracef(
 						"Binding [%s] element type for a [%s]",
 						pluralElementSource.getNature(),
 						getPluralAttributeSource().getNature()
@@ -3236,8 +3234,8 @@ public class ModelBinder {
 
 				for ( FilterSource filterSource : elementSource.getFilterSources() ) {
 					if ( filterSource.getName() == null ) {
-						if ( LOG.isTraceEnabled() ) {
-							LOG.tracef(
+						if ( CORE_LOGGER.isTraceEnabled() ) {
+							CORE_LOGGER.tracef(
 									"Encountered filter with no name associated with many-to-many [%s]; skipping",
 									getPluralAttributeSource().getAttributeRole().getFullPath()
 							);
@@ -3257,8 +3255,8 @@ public class ModelBinder {
 						);
 					}
 
-					if ( LOG.isTraceEnabled() ) {
-						LOG.tracef(
+					if ( CORE_LOGGER.isTraceEnabled() ) {
+						CORE_LOGGER.tracef(
 								"Applying many-to-many filter [%s] as [%s] to collection [%s]",
 								filterSource.getName(),
 								filterSource.getCondition(),
@@ -3853,7 +3851,7 @@ public class ModelBinder {
 
 		@Override
 		public void process() {
-			LOG.tracef( "Binding natural-id UniqueKey for entity: %s", entityBinding.getEntityName() );
+			CORE_LOGGER.tracef( "Binding natural-id UniqueKey for entity: %s", entityBinding.getEntityName() );
 
 			final List<Identifier> columnNames = new ArrayList<>();
 

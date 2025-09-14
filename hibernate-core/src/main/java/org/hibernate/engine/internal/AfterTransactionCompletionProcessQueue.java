@@ -9,18 +9,17 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacks.AfterCompletionCallback;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * Encapsulates behavior needed for after transaction processing
  */
 public class AfterTransactionCompletionProcessQueue
 		extends AbstractTransactionCompletionProcessQueue<AfterCompletionCallback> {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AfterTransactionCompletionProcessQueue.class );
 
 	private final Set<String> querySpacesToInvalidate = new HashSet<>();
 
@@ -44,7 +43,7 @@ public class AfterTransactionCompletionProcessQueue
 				process.doAfterTransactionCompletion( success, session );
 			}
 			catch (CacheException ce) {
-				LOG.unableToReleaseCacheLock( ce );
+				CORE_LOGGER.unableToReleaseCacheLock( ce );
 				// continue loop
 			}
 			catch (Exception e) {

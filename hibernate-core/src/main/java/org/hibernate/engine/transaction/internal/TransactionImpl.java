@@ -11,12 +11,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.internal.AbstractSharedSessionContract;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
-import org.jboss.logging.Logger;
-
+import static org.hibernate.internal.CoreMessageLogger.LOGGER;
 import static org.hibernate.resource.transaction.spi.TransactionCoordinator.TransactionDriver;
 
 /**
@@ -24,8 +22,6 @@ import static org.hibernate.resource.transaction.spi.TransactionCoordinator.Tran
  * @author Steve Ebersole
  */
 public class TransactionImpl implements TransactionImplementor {
-
-	private static final Logger LOG = CoreLogging.logger( TransactionImpl.class );
 
 	private final TransactionCoordinator transactionCoordinator;
 	private final boolean jpaCompliance;
@@ -46,11 +42,11 @@ public class TransactionImpl implements TransactionImplementor {
 			this.transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
 		}
 		else {
-			LOG.debug( "TransactionImpl created on closed Session/EntityManager" );
+			LOGGER.debug( "TransactionImpl created on closed Session/EntityManager" );
 		}
 
-		if ( LOG.isDebugEnabled() && jpaCompliance ) {
-			LOG.debugf( "TransactionImpl created in JPA compliant mode" );
+		if ( LOGGER.isDebugEnabled() && jpaCompliance ) {
+			LOGGER.debugf( "TransactionImpl created in JPA compliant mode" );
 		}
 	}
 
@@ -73,7 +69,7 @@ public class TransactionImpl implements TransactionImplementor {
 			}
 		}
 		else {
-			LOG.debug( "Beginning transaction" );
+			LOGGER.debug( "Beginning transaction" );
 			transactionDriverControl.begin();
 		}
 	}
@@ -86,7 +82,7 @@ public class TransactionImpl implements TransactionImplementor {
 			throw new IllegalStateException( "Transaction not successfully started" );
 		}
 		else {
-			LOG.debug( "Committing transaction" );
+			LOGGER.debug( "Committing transaction" );
 			try {
 				internalGetTransactionDriverControl().commit();
 			}
@@ -115,13 +111,13 @@ public class TransactionImpl implements TransactionImplementor {
 		final TransactionStatus status = getStatus();
 		if ( status == TransactionStatus.ROLLED_BACK || status == TransactionStatus.NOT_ACTIVE ) {
 			// allow rollback() on completed transaction as noop
-			LOG.debug( "rollback() called on an inactive transaction" );
+			LOGGER.debug( "rollback() called on an inactive transaction" );
 		}
 		else if ( !status.canRollback() ) {
 			throw new TransactionException( "Cannot roll back transaction in current status [" + status.name() + "]" );
 		}
 		else if ( status != TransactionStatus.FAILED_COMMIT || allowFailedCommitToPhysicallyRollback() ) {
-			LOG.debug( "Rolling back transaction" );
+			LOGGER.debug( "Rolling back transaction" );
 			internalGetTransactionDriverControl().rollback();
 		}
 	}
@@ -197,7 +193,7 @@ public class TransactionImpl implements TransactionImplementor {
 			else {
 				// JpaCompliance disables the check, so this method
 				// is equivalent our native markRollbackOnly()
-				LOG.debug( "setRollbackOnly() called on a inactive transaction" );
+				LOGGER.debug( "setRollbackOnly() called on a inactive transaction" );
 			}
 		}
 		else {

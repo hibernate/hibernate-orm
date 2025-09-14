@@ -24,8 +24,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuilderFactory;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.SerializationException;
 
@@ -43,6 +41,7 @@ import java.util.Map;
 import static java.util.Collections.addAll;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
@@ -66,8 +65,6 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
  * @since 5.0
  */
 public class MetadataSources implements Serializable {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( MetadataSources.class );
 
 	private final ServiceRegistry serviceRegistry;
 	private final ClassLoaderService classLoaderService;
@@ -107,8 +104,8 @@ public class MetadataSources implements Serializable {
 	public MetadataSources(ServiceRegistry serviceRegistry, XmlMappingBinderAccess xmlMappingBinderAccess) {
 		// service registry really should be either BootstrapServiceRegistry or StandardServiceRegistry type...
 		if ( !isExpectedServiceRegistryType( serviceRegistry ) ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf(
+			if ( CORE_LOGGER.isDebugEnabled() ) {
+				CORE_LOGGER.debugf(
 						"Unexpected ServiceRegistry type [%s] encountered during building of MetadataSources; may cause " +
 								"problems later attempting to construct MetadataBuilder",
 						serviceRegistry.getClass().getName()

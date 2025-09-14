@@ -31,7 +31,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.BeforeExecutionGenerator;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ManyToOne;
@@ -56,7 +55,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import static java.util.Collections.singleton;
 import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper.includeInBaseFetchGroup;
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
 import static org.hibernate.internal.util.ReflectHelper.isFinalClass;
 import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
@@ -75,8 +74,6 @@ import static org.hibernate.tuple.PropertyFactory.buildVersionProperty;
  */
 @Deprecated( since = "6", forRemoval = true )
 public class EntityMetamodel implements Serializable {
-
-	private static final CoreMessageLogger LOG = messageLogger( EntityMetamodel.class );
 
 	public static final int NO_VERSION_INDX = -66;
 
@@ -399,7 +396,7 @@ public class EntityMetamodel implements Serializable {
 		versionPropertyIndex = tempVersionProperty;
 		hasLazyProperties = hasLazy;
 		if ( hasLazyProperties ) {
-			LOG.lazyPropertyFetchingAvailable( name );
+			CORE_LOGGER.lazyPropertyFetchingAvailable( name );
 		}
 
 		lazy = isLazy( persistentClass, bytecodeEnhancementMetadata );
@@ -468,7 +465,7 @@ public class EntityMetamodel implements Serializable {
 			if ( !isAbstract
 					&& persistentClass.hasPojoRepresentation()
 					&& isAbstractClass( persistentClass.getMappedClass() ) ) {
-				LOG.entityMappedAsNonAbstract( persistentClass.getEntityName() );
+				CORE_LOGGER.entityMappedAsNonAbstract( persistentClass.getEntityName() );
 			}
 			return isAbstract;
 		}

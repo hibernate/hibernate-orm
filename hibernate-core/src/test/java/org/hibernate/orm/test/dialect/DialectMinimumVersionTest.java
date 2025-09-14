@@ -7,7 +7,6 @@ package org.hibernate.orm.test.dialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SimpleDatabaseVersion;
-import org.hibernate.internal.CoreMessageLogger;
 
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
@@ -16,9 +15,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import org.jboss.logging.Logger;
 
-import java.lang.invoke.MethodHandles;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * @author Jan Schatteman
@@ -28,10 +27,7 @@ public class DialectMinimumVersionTest {
 	private Triggerable triggerable;
 
 	@RegisterExtension
-	public LoggerInspectionExtension logger = LoggerInspectionExtension
-			.builder().setLogger(
-					Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, Dialect.class.getName()  )
-			).build();
+	public LoggerInspectionExtension logger = LoggerInspectionExtension.builder().setLogger( CORE_LOGGER ).build();
 
 	@BeforeEach
 	public void setUp() {

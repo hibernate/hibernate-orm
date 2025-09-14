@@ -9,9 +9,9 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 
 /**
@@ -20,14 +20,12 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
  */
 public final class LogHelper {
 
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( LogHelper.class );
-
 	private LogHelper() {
 	}
 
 	public static void logPersistenceUnitInformation(PersistenceUnitDescriptor descriptor) {
-		if ( ! LOG.isDebugEnabled() ) {
-			LOG.processingPersistenceUnitInfoName( descriptor.getName() );
+		if ( ! CORE_LOGGER.isDebugEnabled() ) {
+			CORE_LOGGER.processingPersistenceUnitInfoName( descriptor.getName() );
 			return;
 		}
 
@@ -98,6 +96,6 @@ public final class LogHelper {
 		}
 		sb.append( "]" );
 
-		LOG.debug( sb.toString() );
+		CORE_LOGGER.debug( sb.toString() );
 	}
 }

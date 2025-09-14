@@ -50,7 +50,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.BasicValue;
@@ -112,7 +111,7 @@ import static org.hibernate.boot.model.internal.TableBinder.bindForeignKey;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.engine.OptimisticLockStyle.fromLockType;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
@@ -132,8 +131,6 @@ import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.
  * @author Emmanuel Bernard
  */
 public class EntityBinder {
-
-	private static final CoreMessageLogger LOG = messageLogger( EntityBinder.class );
 
 	private static final String NATURAL_ID_CACHE_SUFFIX = "##NaturalId";
 
@@ -186,8 +183,8 @@ public class EntityBinder {
 			ClassDetails clazzToProcess,
 			Map<ClassDetails, InheritanceState> inheritanceStates,
 			MetadataBuildingContext context) {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Binding entity with annotated class: " + clazzToProcess.getName() );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.trace( "Binding entity with annotated class: " + clazzToProcess.getName() );
 		}
 
 		final var collector = context.getMetadataCollector();
@@ -1028,9 +1025,9 @@ public class EntityBinder {
 		if ( discriminatorColumn != null ) {
 			final boolean ignore = buildingOptions.ignoreExplicitDiscriminatorsForJoinedInheritance();
 			if ( ignore ) {
-				if ( LOG.isTraceEnabled() ) {
-					LOG.trace( "Ignoring explicit @DiscriminatorColumn annotation on: "
-								+ annotatedClass.getName() );
+				if ( CORE_LOGGER.isTraceEnabled() ) {
+					CORE_LOGGER.trace( "Ignoring explicit @DiscriminatorColumn annotation on: "
+									+ annotatedClass.getName() );
 				}
 			}
 			return !ignore;
@@ -1038,9 +1035,9 @@ public class EntityBinder {
 		else {
 			final boolean createImplicit = buildingOptions.createImplicitDiscriminatorsForJoinedInheritance();
 			if ( createImplicit ) {
-				if ( LOG.isTraceEnabled() ) {
-					LOG.trace( "Inferring implicit @DiscriminatorColumn using defaults for: "
-								+ annotatedClass.getName() );
+				if ( CORE_LOGGER.isTraceEnabled() ) {
+					CORE_LOGGER.trace( "Inferring implicit @DiscriminatorColumn using defaults for: "
+									+ annotatedClass.getName() );
 				}
 			}
 			return createImplicit;

@@ -27,8 +27,6 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -38,6 +36,7 @@ import org.hibernate.persister.entity.Joinable;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
@@ -50,8 +49,6 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Gavin King
  */
 public abstract class CollectionType extends AbstractType implements AssociationType {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( CollectionType.class );
 
 	@Internal
 	public static final Object UNFETCHED_COLLECTION = new MarkerObject( "UNFETCHED COLLECTION" );
@@ -714,7 +711,8 @@ public abstract class CollectionType extends AbstractType implements Association
 			else {
 				// original is a detached copy of the collection;
 				// it contains queued operations, which will be ignored
-				LOG.ignoreQueuedOperationsOnMerge( collectionInfoString( getRole(), collection.getKey() ) );
+				CORE_LOGGER.ignoreQueuedOperationsOnMerge(
+						collectionInfoString( getRole(), collection.getKey() ) );
 			}
 		}
 		return target;
@@ -823,9 +821,9 @@ public abstract class CollectionType extends AbstractType implements Association
 		if ( hasHolder() ) {
 			persistenceContext.addCollectionHolder( collection );
 		}
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Created collection wrapper: "
-						+ collectionInfoString( persister, collection, key, session ) );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.trace( "Created collection wrapper: "
+							+ collectionInfoString( persister, collection, key, session ) );
 		}
 		return collection;
 	}

@@ -15,16 +15,13 @@ import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.Set;
 
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * A service loader bound to an {@link AggregatedClassLoader}.
  * @param <S> The type of the service contract.
  */
 abstract class AggregatedServiceLoader<S> {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AggregatedServiceLoader.class );
 
 	static <S> AggregatedServiceLoader<S> create(AggregatedClassLoader aggregatedClassLoader,
 			Class<S> serviceContract) {
@@ -151,7 +148,7 @@ abstract class AggregatedServiceLoader<S> {
 					return iterator.hasNext();
 				}
 				catch (ServiceConfigurationError e) {
-					LOG.ignoringServiceConfigurationError( serviceContract.getName(), e );
+					CORE_LOGGER.ignoringServiceConfigurationError( serviceContract.getName(), e );
 				}
 			}
 		}

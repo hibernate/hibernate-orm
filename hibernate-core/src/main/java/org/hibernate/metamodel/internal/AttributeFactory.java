@@ -12,8 +12,6 @@ import java.util.HashMap;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.PropertyNotFoundException;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Collection;
@@ -67,6 +65,8 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.metamodel.Attribute;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+
 /**
  * A factory for building {@link Attribute} instances.  Exposes 3 main services for building<ol>
  * <li>{@link #buildAttribute normal attributes}</li>
@@ -78,7 +78,6 @@ import jakarta.persistence.metamodel.Attribute;
  * @author Emmanuel Bernard
  */
 public class AttributeFactory {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AttributeFactory.class );
 
 	private final MetadataContext context;
 
@@ -105,11 +104,11 @@ public class AttributeFactory {
 			MetadataContext metadataContext) {
 		if ( property.isSynthetic() ) {
 			// hide synthetic/virtual properties (fabricated by Hibernate) from the JPA metamodel.
-			LOG.tracef( "Skipping synthetic property %s(%s)", ownerType.getTypeName(), property.getName() );
+			CORE_LOGGER.tracef( "Skipping synthetic property %s(%s)", ownerType.getTypeName(), property.getName() );
 			return null;
 		}
 
-		LOG.tracef( "Building attribute [%s.%s]", ownerType.getTypeName(), property.getName() );
+		CORE_LOGGER.tracef( "Building attribute [%s.%s]", ownerType.getTypeName(), property.getName() );
 		final var attributeMetadata =
 				determineAttributeMetadata( wrap( ownerType, property ), normalMemberResolver, metadataContext );
 
@@ -163,7 +162,7 @@ public class AttributeFactory {
 	public <X> SingularPersistentAttribute<X, ?> buildIdAttribute(
 			IdentifiableDomainType<X> ownerType,
 			Property property) {
-		LOG.tracef( "Building identifier attribute [%s.%s]", ownerType.getTypeName(), property.getName() );
+		CORE_LOGGER.tracef( "Building identifier attribute [%s.%s]", ownerType.getTypeName(), property.getName() );
 
 		final var attributeMetadata =
 				determineAttributeMetadata( wrap( ownerType, property ), identifierMemberResolver );
@@ -191,7 +190,7 @@ public class AttributeFactory {
 	public <X> SingularAttributeImpl<X, ?> buildVersionAttribute(
 			IdentifiableDomainType<X> ownerType,
 			Property property) {
-		LOG.tracef( "Building version attribute [%s.%s]", ownerType.getTypeName(), property.getName() );
+		CORE_LOGGER.tracef( "Building version attribute [%s.%s]", ownerType.getTypeName(), property.getName() );
 
 		final var attributeMetadata =
 				determineAttributeMetadata( wrap( ownerType, property ), versionMemberResolver );
@@ -420,14 +419,14 @@ public class AttributeFactory {
 		final Property propertyMapping = attributeContext.getPropertyMapping();
 		final String propertyName = propertyMapping.getName();
 
-		LOG.tracef( "Starting attribute metadata determination [%s]", propertyName );
+		CORE_LOGGER.tracef( "Starting attribute metadata determination [%s]", propertyName );
 
 		final var member = memberResolver.resolveMember( attributeContext, context );
-		LOG.tracef( "\tMember: %s", member );
+		CORE_LOGGER.tracef( "\tMember: %s", member );
 
 		final var value = propertyMapping.getValue();
 		final var type = value.getType();
-		LOG.tracef( "\tType: %s [%s]", type.getName(), type.getClass().getSimpleName() );
+		CORE_LOGGER.tracef( "\tType: %s [%s]", type.getName(), type.getClass().getSimpleName() );
 
 		if ( type instanceof AnyType ) {
 			return new SingularAttributeMetadataImpl<>(

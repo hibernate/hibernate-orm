@@ -11,7 +11,6 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.MappingMetamodel;
@@ -51,7 +50,7 @@ import static org.hibernate.cfg.QuerySettings.QUERY_PLAN_CACHE_MAX_SIZE;
  */
 public class QueryEngineImpl implements QueryEngine {
 
-	private static final Logger LOG_HQL_FUNCTIONS = CoreLogging.logger("org.hibernate.HQL_FUNCTIONS");
+	private static final Logger LOG_HQL_FUNCTIONS = Logger.getLogger( "org.hibernate.HQL_FUNCTIONS" );
 
 	private final TypeConfiguration typeConfiguration;
 	private final NamedObjectRepository namedObjectRepository;

@@ -32,8 +32,6 @@ import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
@@ -58,6 +56,7 @@ import static org.hibernate.engine.OptimisticLockStyle.DIRTY;
 import static org.hibernate.engine.internal.Versioning.isVersionIncrementRequired;
 import static org.hibernate.engine.jdbc.mutation.internal.ModelMutationHelper.identifiedResultsCheck;
 import static org.hibernate.generator.EventType.UPDATE;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
 import static org.hibernate.internal.util.collections.ArrayHelper.contains;
 import static org.hibernate.internal.util.collections.ArrayHelper.join;
@@ -71,8 +70,6 @@ import static org.hibernate.internal.util.collections.ArrayHelper.trim;
  * @author Steve Ebersole
  */
 public class UpdateCoordinatorStandard extends AbstractMutationCoordinator implements UpdateCoordinator {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UpdateCoordinatorStandard.class );
 
 	private final MutationOperationGroup staticUpdateGroup;
 	private final BatchKey batchKey;
@@ -656,7 +653,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					// In this case we check for exactly DirtynessStatus.DIRTY so to not log warnings when the user didn't get it wrong:
 					if ( analysis.currentAttributeAnalysis.getDirtynessStatus() == AttributeAnalysis.DirtynessStatus.DIRTY ) {
 						if ( !propertyUpdateability[attributeIndex] ) {
-							LOG.ignoreImmutablePropertyModification( attributeMapping.getAttributeName(), persister.getEntityName() );
+							CORE_LOGGER.ignoreImmutablePropertyModification( attributeMapping.getAttributeName(), persister.getEntityName() );
 						}
 					}
 				}

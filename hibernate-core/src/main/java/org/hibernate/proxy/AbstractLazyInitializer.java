@@ -12,10 +12,10 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.persister.entity.EntityPersister;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * Convenience base class for lazy initialization handlers.  Centralizes the basic plumbing of doing lazy
@@ -25,8 +25,6 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Gavin King
  */
 public abstract class AbstractLazyInitializer implements LazyInitializer {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractLazyInitializer.class );
 
 	private final String entityName;
 	private Object id;
@@ -120,7 +118,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			}
 			else if ( isConnectedToSession() ) {
 				//TODO: perhaps this should be some other RuntimeException...
-				LOG.attemptToAssociateProxyWithTwoOpenSessions( entityName, id );
+				CORE_LOGGER.attemptToAssociateProxyWithTwoOpenSessions( entityName, id );
 				throw new HibernateException( "Illegally attempted to associate proxy ["
 						+ entityName + "#" + id + "] with two open sessions" );
 			}
@@ -238,12 +236,12 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 						session.close();
 					}
 					catch (Exception e) {
-						LOG.warn( "Unable to close temporary session used to load lazy proxy associated to no session" );
+						CORE_LOGGER.warn( "Unable to close temporary session used to load lazy proxy associated to no session" );
 					}
 				}
 			}
 			catch (Exception e) {
-				LOG.error( "Initialization failure [" + entityName + "#" + id + "]", e );
+				CORE_LOGGER.error( "Initialization failure [" + entityName + "#" + id + "]", e );
 				throw new LazyInitializationException( e.getMessage() );
 			}
 		}

@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.jpa.persistenceunit;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -36,9 +35,7 @@ public class DuplicatePersistenceUnitNameTest extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() {
-		final Set messagesPrefixes = new HashSet<>();
-		messagesPrefixes.add( "HHH000518" );
-		triggerable = logInspection.watchForLogMessages( messagesPrefixes );
+		triggerable = logInspection.watchForLogMessages( Set.of( "HHH000518" ) );
 	}
 
 	@After
@@ -49,12 +46,8 @@ public class DuplicatePersistenceUnitNameTest extends BaseUnitTestCase {
 	@Test
 	public void testDuplicatePersistenceUnitNameLogAWarnMessage() {
 		PersistenceXmlParser.create().parse( List.of(
-				findAsResource(
-						"org/hibernate/jpa/test/persistenceunit/META-INF/persistence.xml"
-				),
-				findAsResource(
-						"org/hibernate/jpa/test/persistenceunit/META-INF/persistenceUnitForNameDuplicationTest.xml"
-				)
+				findAsResource( "org/hibernate/jpa/test/persistenceunit/META-INF/persistence.xml" ),
+				findAsResource( "org/hibernate/jpa/test/persistenceunit/META-INF/persistenceUnitForNameDuplicationTest.xml" )
 		) );
 		assertTrue( "The warn HHH015018 has not been logged ", triggerable.wasTriggered() );
 	}

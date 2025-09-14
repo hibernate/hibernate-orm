@@ -27,7 +27,7 @@ import org.hibernate.service.spi.Stoppable;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.service.internal.ServiceLogger.SERVICE_LOGGER;
 
 /**
  * {@link ServiceRegistry} implementation containing specialized "bootstrap" services, specifically:<ul>
@@ -264,7 +264,7 @@ public class BootstrapServiceRegistryImpl
 				stoppable.stop();
 			}
 			catch ( Exception e ) {
-				CORE_LOGGER.unableToStopService( binding.getServiceRole().getName(), e );
+				SERVICE_LOGGER.unableToStopService( binding.getServiceRole().getName(), e );
 			}
 		}
 	}
@@ -275,10 +275,7 @@ public class BootstrapServiceRegistryImpl
 			childRegistries = new HashSet<>();
 		}
 		if ( !childRegistries.add( child ) ) {
-			CORE_LOGGER.warnf(
-					"Child ServiceRegistry [%s] was already registered; this will end badly later...",
-					child
-			);
+			SERVICE_LOGGER.childAlreadyRegistered( child );
 		}
 	}
 
@@ -290,11 +287,11 @@ public class BootstrapServiceRegistryImpl
 		childRegistries.remove( child );
 		if ( childRegistries.isEmpty() ) {
 			if ( autoCloseRegistry ) {
-				CORE_LOGGER.trace( "Automatically destroying bootstrap registry after deregistration of every child ServiceRegistry" );
+				SERVICE_LOGGER.destroyingBootstrapRegistry();
 				destroy();
 			}
 			else {
-				CORE_LOGGER.trace( "Skipping destroying bootstrap registry after deregistration of every child ServiceRegistry" );
+				SERVICE_LOGGER.skippingBootstrapRegistryDestruction();
 			}
 		}
 	}

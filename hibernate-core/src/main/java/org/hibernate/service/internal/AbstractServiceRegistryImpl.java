@@ -32,7 +32,7 @@ import org.hibernate.service.spi.Stoppable;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.service.internal.ServiceLogger.SERVICE_LOGGER;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
@@ -158,14 +158,14 @@ public abstract class AbstractServiceRegistryImpl
 		for ( var binding : serviceBindingMap.values() ) {
 			if ( serviceRole.isAssignableFrom( binding.getServiceRole() ) ) {
 				// we found an alternate...
-				CORE_LOGGER.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
+				SERVICE_LOGGER.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
 				registerAlternate( serviceRole, binding.getServiceRole() );
 				return (ServiceBinding<R>) binding;
 			}
 
 			if ( binding.getService() != null && serviceRole.isInstance( binding.getService() ) ) {
 				// we found an alternate...
-				CORE_LOGGER.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
+				SERVICE_LOGGER.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
 				registerAlternate( serviceRole, binding.getServiceRole() );
 				return (ServiceBinding<R>) binding;
 			}
@@ -226,8 +226,8 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	private <R extends Service> @Nullable R initializeService(ServiceBinding<R> serviceBinding) {
-		if ( CORE_LOGGER.isTraceEnabled() ) {
-			CORE_LOGGER.initializingService( serviceBinding.getServiceRole().getName() );
+		if ( SERVICE_LOGGER.isTraceEnabled() ) {
+			SERVICE_LOGGER.initializingService( serviceBinding.getServiceRole().getName() );
 		}
 
 		// PHASE 1: create service
@@ -294,7 +294,7 @@ public abstract class AbstractServiceRegistryImpl
 			}
 		}
 		catch (NullPointerException e) {
-			CORE_LOGGER.error( "NPE injecting service dependencies: " + service.getClass().getName() );
+			SERVICE_LOGGER.error( "NPE injecting service dependencies: " + service.getClass().getName() );
 		}
 	}
 
@@ -378,7 +378,7 @@ public abstract class AbstractServiceRegistryImpl
 				stoppable.stop();
 			}
 			catch ( Exception e ) {
-				CORE_LOGGER.unableToStopService( binding.getServiceRole().getName(), e );
+				SERVICE_LOGGER.unableToStopService( binding.getServiceRole().getName(), e );
 			}
 		}
 	}
@@ -389,7 +389,7 @@ public abstract class AbstractServiceRegistryImpl
 			childRegistries = new HashSet<>();
 		}
 		if ( !childRegistries.add( child ) ) {
-			CORE_LOGGER.warnf( "Child ServiceRegistry [%s] was already registered; this will end badly later", child );
+			SERVICE_LOGGER.warnf( "Child ServiceRegistry [%s] was already registered; this will end badly later", child );
 		}
 	}
 
@@ -401,11 +401,11 @@ public abstract class AbstractServiceRegistryImpl
 		childRegistries.remove( child );
 		if ( childRegistries.isEmpty() ) {
 			if ( autoCloseRegistry ) {
-				CORE_LOGGER.trace( "Automatically destroying ServiceRegistry after deregistration of every child ServiceRegistry" );
+				SERVICE_LOGGER.trace( "Automatically destroying ServiceRegistry after deregistration of every child ServiceRegistry" );
 				destroy();
 			}
 			else {
-				CORE_LOGGER.trace( "Skipping destroying ServiceRegistry after deregistration of every child ServiceRegistry" );
+				SERVICE_LOGGER.trace( "Skipping destroying ServiceRegistry after deregistration of every child ServiceRegistry" );
 			}
 		}
 	}

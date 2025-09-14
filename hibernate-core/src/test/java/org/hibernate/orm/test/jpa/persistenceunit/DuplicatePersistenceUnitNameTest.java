@@ -19,8 +19,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ConfigHelper.findAsResource;
+import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -31,11 +31,11 @@ public class DuplicatePersistenceUnitNameTest extends BaseUnitTestCase {
 	private Triggerable triggerable;
 
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule( CORE_LOGGER );
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( JPA_LOGGER );
 
 	@Before
 	public void setUp() {
-		triggerable = logInspection.watchForLogMessages( Set.of( "HHH000518" ) );
+		triggerable = logInspection.watchForLogMessages( Set.of( "HHH008518" ) );
 	}
 
 	@After

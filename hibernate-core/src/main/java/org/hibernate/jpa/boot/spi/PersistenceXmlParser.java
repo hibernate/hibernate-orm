@@ -40,7 +40,7 @@ import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 
 import static jakarta.persistence.PersistenceUnitTransactionType.JTA;
 import static jakarta.persistence.PersistenceUnitTransactionType.RESOURCE_LOCAL;
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
@@ -158,8 +158,8 @@ public final class PersistenceXmlParser {
 
 	private void parsePersistenceXml(Map<String, PersistenceUnitDescriptor> persistenceUnits,
 			URL xmlUrl, PersistenceUnitTransactionType defaultTransactionType) {
-		if ( CORE_LOGGER.isTraceEnabled() ) {
-			CORE_LOGGER.tracef( "Attempting to parse persistence.xml file : %s", xmlUrl.toExternalForm() );
+		if ( JPA_LOGGER.isTraceEnabled() ) {
+			JPA_LOGGER.attemptingToParsePersistenceXml( xmlUrl.toExternalForm() );
 		}
 
 		final URL persistenceUnitRootUrl = ArchiveHelper.getJarURLFromURLEntry( xmlUrl, "/META-INF/persistence.xml" );
@@ -171,7 +171,7 @@ public final class PersistenceXmlParser {
 			final JaxbPersistenceUnitImpl jaxbPersistenceUnit = jaxbPersistenceUnits.get( i );
 
 			if ( persistenceUnits.containsKey( jaxbPersistenceUnit.getName() ) ) {
-				CORE_LOGGER.duplicatedPersistenceUnitName( jaxbPersistenceUnit.getName() );
+				JPA_LOGGER.duplicatedPersistenceUnitName( jaxbPersistenceUnit.getName() );
 				continue;
 			}
 
@@ -192,7 +192,7 @@ public final class PersistenceXmlParser {
 			ParsedPersistenceXmlDescriptor persistenceUnitDescriptor) {
 		final String name = jaxbPersistenceUnit.getName();
 		if ( StringHelper.isNotEmpty( name ) ) {
-			CORE_LOGGER.tracef( "Persistence unit name from persistence.xml : %s", name );
+			JPA_LOGGER.persistenceUnitNameFromXml( name );
 			persistenceUnitDescriptor.setName( name );
 		}
 

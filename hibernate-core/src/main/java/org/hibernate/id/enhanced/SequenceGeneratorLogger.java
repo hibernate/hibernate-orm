@@ -33,7 +33,6 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface SequenceGeneratorLogger extends BasicLogger {
 	String NAME = SubSystemLogging.BASE + ".id.table";
 
-	Logger SEQUENCE_GENERATOR_LOGGER = Logger.getLogger(NAME);
 	SequenceGeneratorLogger SEQUENCE_GENERATOR_MESSAGE_LOGGER = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			SequenceGeneratorLogger.class,

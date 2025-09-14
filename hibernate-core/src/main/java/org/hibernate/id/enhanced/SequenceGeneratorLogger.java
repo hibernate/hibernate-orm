@@ -16,6 +16,7 @@ import org.jboss.logging.annotations.ValidIdRange;
 import java.lang.invoke.MethodHandles;
 
 import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
@@ -45,14 +46,19 @@ public interface SequenceGeneratorLogger extends BasicLogger {
 	void forcingTableUse();
 
 	@LogMessage(level = WARN)
-	@Message(value = "The increment size of the sequence '%s' is set to [%d] in the entity mapping while the associated database sequence increment size is [%d]"
-					+ " - the database sequence increment size will take precedence to avoid identifier allocation conflicts.",
+	@Message(value = "The increment size of the sequence '%s' is set to [%d] in the entity mapping but the mapped database sequence increment size is [%d]",
 			id = 90202)
 	void sequenceIncrementSizeMismatch(String sequenceName, int incrementSize, int databaseIncrementSize);
 
+	@LogMessage(level = TRACE)
+	@Message(value = "The increment size of the sequence '%s' is set to [%d] in the entity mapping but the mapped database sequence increment size is [%d]"
+					+ " - the database sequence increment size will take precedence to avoid identifier allocation conflicts.",
+			id = 90203)
+	void sequenceIncrementSizeMismatchFixed(String sequenceName, int incrementSize, int databaseIncrementSize);
+
 	@LogMessage(level = WARN)
 	@Message(value = "Sequence-style generator configuration specified explicit optimizer [%s], but [%s=%s]; using optimizer [%s] increment default of [%s]",
-			id = 90203)
+			id = 90205)
 	void honoringOptimizerSetting(
 			String none,
 			String incrementParam,

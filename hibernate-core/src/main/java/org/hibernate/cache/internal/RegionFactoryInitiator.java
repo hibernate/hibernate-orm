@@ -11,12 +11,11 @@ import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
+import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
 import static org.hibernate.cfg.CacheSettings.CACHE_REGION_FACTORY;
 import static org.hibernate.cfg.CacheSettings.USE_QUERY_CACHE;
 import static org.hibernate.cfg.CacheSettings.USE_SECOND_LEVEL_CACHE;
@@ -29,8 +28,6 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getBooleanW
  * @author Brett Meyer
  */
 public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFactory> {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( RegionFactoryInitiator.class );
 
 	/**
 	 * Singleton access
@@ -46,10 +43,10 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 	public RegionFactory initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final var regionFactory = resolveRegionFactory( configurationValues, registry );
 		if ( regionFactory instanceof NoCachingRegionFactory ) {
-			LOG.noRegionFactory();
+			L2CACHE_LOGGER.noRegionFactory();
 		}
 		else {
-			LOG.regionFactory( regionFactory.getClass().getTypeName() );
+			L2CACHE_LOGGER.regionFactory( regionFactory.getClass().getTypeName() );
 		}
 		return regionFactory;
 	}
@@ -74,7 +71,7 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 		//		1) both are explicitly FALSE
 		//		2) USE_SECOND_LEVEL_CACHE is FALSE and USE_QUERY_CACHE is null
 		if ( useSecondLevelCache == FALSE ) {
-			if ( useQueryCache == null || useQueryCache == FALSE ) {
+			if ( useQueryCache == null || !useQueryCache ) {
 				return NoCachingRegionFactory.INSTANCE;
 			}
 		}
@@ -102,7 +99,6 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 			return regionFactory;
 		}
 
-
 		final var fallback = getFallback( configurationValues, registry );
 		if ( fallback != null ) {
 			return fallback;
@@ -115,10 +111,7 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 			return registeredFactory;
 		}
 		else {
-			LOG.debugf(
-					"Cannot default RegionFactory based on registered strategies as `%s` RegionFactory strategies were registered",
-					implementors
-			);
+			L2CACHE_LOGGER.cannotDefaultRegionFactory( implementors.size() );
 		}
 
 		return NoCachingRegionFactory.INSTANCE;

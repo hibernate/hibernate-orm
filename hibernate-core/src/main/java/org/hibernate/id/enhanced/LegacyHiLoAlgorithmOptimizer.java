@@ -12,7 +12,8 @@ import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.jboss.logging.Logger;
+
+import static org.hibernate.id.enhanced.OptimizerLogger.OPTIMIZER_MESSAGE_LOGGER;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -27,7 +28,6 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author Steve Ebersole
  */
 public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
-	private static final Logger LOG = Logger.getLogger( LegacyHiLoAlgorithmOptimizer.class );
 
 	private final long initialMaxLo;
 
@@ -51,10 +51,7 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 		if ( incrementSize < 1 ) {
 			throw new HibernateException( "increment size cannot be less than 1" );
 		}
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Creating hilo optimizer (legacy) with [incrementSize={0}; returnClass={1}]",
-					incrementSize, returnClass.getName() );
-		}
+		OPTIMIZER_MESSAGE_LOGGER.creatingLegacyHiLoOptimizer( incrementSize, returnClass.getName() );
 		initialMaxLo = incrementSize;
 	}
 

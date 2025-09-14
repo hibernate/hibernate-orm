@@ -61,7 +61,7 @@ public class PooledWithCustomNamingStrategyTest {
 		catch (Exception e) {
 			assertThat( e.getMessage() ).isEqualTo(
 					"The increment size of the [MY_SEQ] sequence is set to [50] in the entity " +
-							"mapping while the associated database sequence increment size is [5]."
+							"mapping but the mapped database sequence increment size is [5]"
 			);
 		}
 	}

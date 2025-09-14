@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.hibernate.id.enhanced.SequenceGeneratorLogger.SEQUENCE_GENERATOR_MESSAGE_LOGGER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 
 /**
@@ -48,7 +48,7 @@ public class SequenceMismatchStrategyFixWithSequenceGeneratorTest extends Entity
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule( SEQUENCE_GENERATOR_MESSAGE_LOGGER );
 
-	private final Triggerable triggerable = logInspection.watchForLogMessages( "HHH090202:" );
+	private final Triggerable triggerable = logInspection.watchForLogMessages( "HHH090203:" );
 
 	protected ServiceRegistry serviceRegistry;
 	protected MetadataImplementor metadata;
@@ -90,7 +90,8 @@ public class SequenceMismatchStrategyFixWithSequenceGeneratorTest extends Entity
 
 	@Override
 	protected void entityManagerFactoryBuilt(EntityManagerFactory factory) {
-		assertTrue( triggerable.wasTriggered() );
+		// This message is trace level
+		assertFalse( triggerable.wasTriggered() );
 	}
 
 	@Override

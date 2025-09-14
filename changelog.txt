@@ -3,6 +3,50 @@ Hibernate 7 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.1.1.Final (September 14, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/34792
+
+** Bug
+    * [HHH-19756] - Invalid SQL generated when using treat() with joined = discriminator inheritance and same attribute names
+    * [HHH-19753] - SelfRenderingSqmFunction equals/hashCode implementation not consistent with literals
+    * [HHH-19750] - org.hibernate.sql.exec.ExecutionException when running CriteriaUpdate with specific attribute/parameter configuration
+    * [HHH-19747] - Hibernate Envers can not handle @EnumeratedValue annotation
+    * [HHH-19745] - Equals implementation for SqmPath affects previous identity sensitive checks
+    * [HHH-19740] - Collection table deletion for table per class subclass entity fails with UnknownTableReferenceException
+    * [HHH-19738] - JDBC password logged when specified via jakarta.persistence.jdbc.password
+    * [HHH-19734] - Cache hit of bytecode enhanced proxy with shallow query cache layout fails
+    * [HHH-19732] - @OnDelete on owning collection reset when mapping bidirectional
+    * [HHH-19729] - Column check constraint not correctly hoisted to table level
+    * [HHH-19721] - Jakarta Data is missing from hibernate-platform (BOM)
+    * [HHH-19719] - org.hibernate.query.sqm.function.SelfRenderingSqmWindowFunction#appendHqlString throws IndexOutOfBoundsException  when has no arguments
+    * [HHH-19716] - Collection event listeners may be missing collection owners  in the persistent collection (PersistentCollection#getOwner==null)
+    * [HHH-19712] - Column deduplication leads to wrong alias calculation for native query alias expansion
+    * [HHH-19707] - Include value column name in TableStructure InitCommand  
+    * [HHH-19703] - NativeQueryImpl#addScalar(String, Class) fails when no JavaType is registered
+    * [HHH-19699] - String JSON document writer code only runs with assertions
+    * [HHH-19695] - Invalid SQL generated for FETCH FIRST/NEXT clause
+    * [HHH-19688] - @IdClass is ignored for classes that have a single id field
+    * [HHH-19687] - Criteria query with lazy @OneToOne and @EmbeddedId throws exception
+    * [HHH-19648] - Recursive @Embeddable mapping leads to stack overflow
+    * [HHH-19605] - Session.isDirty might return true when batch fetching entity with CacheConcurrencyStrategy.READ_WRITE
+    * [HHH-19589] - @Converter does not take precedence over @TypeRegistration
+    * [HHH-19453] - sequence support not working on db2 As400 7.3
+    * [HHH-19326] - Jakarta Data CrudRepository is generated without Types in UpdateAll, InsertAll and SaveAll Methods
+    * [HHH-19201] - BlobProxy with InputStream reads whole stream into a byte array
+    * [HHH-18686] - org.hibernate.tool.hbm2ddl.SchemaExport does not call orderColumns
+    * [HHH-17522] - Support correlation of CTEs
+
+** Improvement
+    * [HHH-19701] - MariaDB: "drop sequence" should add "if exists"
+    * [HHH-19697] - Use case-insensitive Dialect query pattern matching
+    * [HHH-19696] - Do not iterate over validated path in the TraversableResolver unless necessary 
+
+** Task
+    * [HHH-19692] - Drop org.hibernate.boot.jaxb.spi.XmlSource
+
+
 Changes in 7.1.0.Final (August 08, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

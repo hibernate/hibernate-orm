@@ -48,7 +48,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.getFetchMode;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.handleForeignKeyConstraint;
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -231,7 +231,7 @@ public class ToOneBinder {
 		final var notFound = property.getDirectAnnotationUsage( NotFound.class );
 		final NotFoundAction notFoundAction = notFound == null ? null : notFound.action();
 		if ( notFoundAction != null && fetchType == LAZY ) {
-			CORE_LOGGER.ignoreNotFoundWithFetchTypeLazy( propertyHolder.getEntityName(), property.getName() );
+			BOOT_LOGGER.ignoreNotFoundWithFetchTypeLazy( propertyHolder.getEntityName(), property.getName() );
 		}
 		return notFoundAction;
 	}

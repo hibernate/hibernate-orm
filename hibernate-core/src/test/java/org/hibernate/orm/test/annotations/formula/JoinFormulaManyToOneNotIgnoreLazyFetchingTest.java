@@ -31,7 +31,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -41,9 +41,9 @@ import static org.junit.Assert.assertNull;
 public class JoinFormulaManyToOneNotIgnoreLazyFetchingTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule( CORE_LOGGER );
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( BOOT_LOGGER );
 
-	private final Triggerable triggerable = logInspection.watchForLogMessages( "HHH000491" );
+	private final Triggerable triggerable = logInspection.watchForLogMessages( "HHH160133" );
 
 
 	@Override

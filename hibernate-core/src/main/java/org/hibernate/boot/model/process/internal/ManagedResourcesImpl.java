@@ -6,7 +6,6 @@ package org.hibernate.boot.model.process.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -14,7 +13,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.Internal;
-import org.hibernate.boot.BootLogging;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
@@ -26,7 +24,9 @@ import org.hibernate.cfg.MappingSettings;
 import jakarta.persistence.AttributeConverter;
 
 import static java.util.Collections.unmodifiableCollection;
+import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableSet;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 
 
 /**
@@ -56,14 +56,14 @@ public class ManagedResourcesImpl implements ManagedResources {
 			ManagedResourcesImpl impl,
 			BootstrapContext bootstrapContext) {
 		if ( !bootstrapContext.getMetadataBuildingOptions().isXmlMappingEnabled() ) {
-			BootLogging.BOOT_LOGGER.debugf(
-					"Ignoring %s XML mappings due to `%s`",
+			BOOT_LOGGER.ignoringXmlMappings(
 					sources.getMappingXmlBindings().size(),
 					MappingSettings.XML_MAPPING_ENABLED
 			);
-			return;
 		}
-		impl.mappingFileBindings.addAll( sources.getXmlBindings() );
+		else {
+			impl.mappingFileBindings.addAll( sources.getXmlBindings() );
+		}
 	}
 
 	public ManagedResourcesImpl() {
@@ -91,7 +91,7 @@ public class ManagedResourcesImpl implements ManagedResources {
 
 	@Override
 	public Collection<Binding<? extends JaxbBindableMappingDescriptor>> getXmlMappingBindings() {
-		return Collections.unmodifiableList( mappingFileBindings );
+		return unmodifiableList( mappingFileBindings );
 	}
 
 	@Override

@@ -43,7 +43,7 @@ import static org.hibernate.id.OptimizableGenerator.INITIAL_PARAM;
 import static org.hibernate.id.PersistentIdentifierGenerator.PK;
 import static org.hibernate.id.PersistentIdentifierGenerator.TABLE;
 import static org.hibernate.id.PersistentIdentifierGenerator.TABLES;
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
@@ -250,7 +250,7 @@ public class GeneratorParameters {
 
 		// TODO : implement unique-constraint support
 		if ( isNotEmpty( tableGeneratorAnnotation.uniqueConstraints() ) ) {
-			CORE_LOGGER.ignoringTableGeneratorConstraints( tableGeneratorAnnotation.name() );
+			BOOT_LOGGER.ignoringTableGeneratorConstraints( tableGeneratorAnnotation.name() );
 		}
 	}
 

@@ -27,7 +27,7 @@ import static org.hibernate.boot.model.internal.AnnotationHelper.resolveAttribut
 import static org.hibernate.boot.model.internal.AnnotationHelper.resolveBasicType;
 import static org.hibernate.boot.model.internal.AnnotationHelper.resolveJavaType;
 import static org.hibernate.boot.model.internal.AnnotationHelper.resolveUserType;
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
@@ -91,8 +91,8 @@ public class FilterDefBinder {
 				parameterResolvers
 		);
 
-		if ( CORE_LOGGER.isTraceEnabled() ) {
-			CORE_LOGGER.trace( "Binding filter definition: " + filterDefinition.getFilterName() );
+		if ( BOOT_LOGGER.isTraceEnabled() ) {
+BOOT_LOGGER.bindingFilterDefinition( filterDefinition.getFilterName() );
 		}
 		context.getMetadataCollector().addFilterDefinition( filterDefinition );
 	}

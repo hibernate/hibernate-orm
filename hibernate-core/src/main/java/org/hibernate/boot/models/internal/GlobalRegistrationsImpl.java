@@ -111,7 +111,7 @@ import static org.hibernate.boot.models.JpaAnnotations.SEQUENCE_GENERATOR;
 import static org.hibernate.boot.models.JpaAnnotations.TABLE_GENERATOR;
 import static org.hibernate.boot.models.HibernateAnnotations.TYPE_REGISTRATION;
 import static org.hibernate.boot.models.xml.internal.QueryProcessing.collectResultClasses;
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
@@ -860,7 +860,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 				throw new IllegalArgumentException( "Duplicate generator name " + name + "; you will likely want to set the property " + AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE + " to false " );
 			}
 			else {
-				CORE_LOGGER.duplicateGeneratorName( name );
+				BOOT_LOGGER.duplicateGeneratorName( name );
 			}
 		}
 	}

@@ -39,7 +39,7 @@ import org.hibernate.models.spi.ModelsContext;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -235,8 +235,8 @@ public class AnnotatedColumn {
 
 	public void bind() {
 		if ( isNotEmpty( formulaString ) ) {
-			if ( CORE_LOGGER.isTraceEnabled() ) {
-				CORE_LOGGER.trace( "Binding formula: " + formulaString );
+if ( BOOT_LOGGER.isTraceEnabled() ) {
+				BOOT_LOGGER.bindingFormula( formulaString );
 			}
 			formula = new Formula();
 			formula.setFormula( formulaString );
@@ -269,8 +269,8 @@ public class AnnotatedColumn {
 			if ( generatedAs != null ) {
 				mappingColumn.setGeneratedAs( generatedAs );
 			}
-			if ( CORE_LOGGER.isDebugEnabled() && logicalColumnName != null ) {
-				CORE_LOGGER.trace( "Binding column: " + logicalColumnName );
+if ( BOOT_LOGGER.isDebugEnabled() && logicalColumnName != null ) {
+				BOOT_LOGGER.bindingColumn( logicalColumnName );
 			}
 		}
 	}
@@ -769,8 +769,8 @@ public class AnnotatedColumn {
 						+ " '@AttributeOverride's but the overridden property has " + overriddenCols.length
 						+ " columns (every column must have exactly one '@AttributeOverride')" );
 			}
-			if ( CORE_LOGGER.isTraceEnabled() ) {
-				CORE_LOGGER.trace( "Column mapping overridden for property: " + inferredData.getPropertyName() );
+			if ( BOOT_LOGGER.isTraceEnabled() ) {
+	BOOT_LOGGER.columnMappingOverridden( inferredData.getPropertyName() );
 			}
 			return isEmpty( overriddenCols ) ? null : overriddenCols;
 		}
@@ -930,7 +930,7 @@ public class AnnotatedColumn {
 			}
 		}
 		else {
-			CORE_LOGGER.trace("Could not perform @ColumnDefault lookup as 'PropertyData' did not give access to XProperty");
+BOOT_LOGGER.couldNotPerformColumnDefaultLookup();
 		}
 	}
 
@@ -951,9 +951,9 @@ public class AnnotatedColumn {
 			}
 		}
 		else {
-			CORE_LOGGER.trace("Could not perform @GeneratedColumn lookup as 'PropertyData' did not give access to XProperty");
+BOOT_LOGGER.couldNotPerformGeneratedColumnLookup();
 		}
-	}
+}
 
 	private void applyColumnCheckConstraint(jakarta.persistence.Column column) {
 		applyCheckConstraints( column.check() );
@@ -994,9 +994,9 @@ public class AnnotatedColumn {
 			}
 		}
 		else {
-			CORE_LOGGER.trace("Could not perform @Check lookup as 'PropertyData' did not give access to XProperty");
+BOOT_LOGGER.couldNotPerformCheckLookup();
 		}
-	}
+}
 
 	//must only be called after all setters are defined and before binding
 	private void extractDataFromPropertyData(

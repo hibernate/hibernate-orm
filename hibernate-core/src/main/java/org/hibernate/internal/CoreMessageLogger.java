@@ -4,8 +4,6 @@
  */
 package org.hibernate.internal;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
@@ -16,7 +14,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.cache.CacheException;
 import org.hibernate.internal.log.SubSystemLogging;
-import org.hibernate.type.SerializationException;
 
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
@@ -51,10 +48,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	CoreMessageLogger CORE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, NAME );
 
 	@LogMessage(level = WARN)
-	@Message(value = "I/O reported cached file could not be found: [%s]: %s", id = 23)
-	void cachedFileNotFound(String path, FileNotFoundException error);
-
-	@LogMessage(level = WARN)
 	@Message(value = "Composite id class does not override equals(): %s", id = 38)
 	void compositeIdClassDoesNotOverrideEquals(String name);
 
@@ -69,10 +62,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Defining %s=true ignored in HEM", id = 59)
 	void definingFlushBeforeCompletionIgnoredInHem(String flushBeforeCompletion);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Duplicate generator name %s", id = 69)
-	void duplicateGeneratorName(String name);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Entity [%s] is abstract-class/interface explicitly mapped as non-abstract; be sure to supply entity-names",
@@ -96,10 +85,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "HSQLDB supports only READ_UNCOMMITTED isolation", id = 118)
 	void hsqldbSupportsOnlyReadCommittedIsolation();
-
-	@LogMessage(level = WARN)
-	@Message(value = "Ignoring unique constraints specified on table generator [%s]", id = 120)
-	void ignoringTableGeneratorConstraints(String name);
 
 	@LogMessage(level = ERROR)
 	@Message(value = "IllegalArgumentException in class: %s, getter method of property: %s", id = 122)
@@ -136,14 +121,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Overriding %s is dangerous, this might break the EJB3 specification implementation", id = 193)
 	void overridingTransactionStrategyDangerous(String transactionStrategy);
 
-	@LogMessage(level = DEBUG)
-	@Message(value = "Package not found or no package-info.java: %s", id = 194)
-	void packageNotFound(String packageName);
-
-	@LogMessage(level = WARN)
-	@Message(value = "LinkageError while attempting to load package: %s", id = 195)
-	void linkageError(String packageName, @Cause LinkageError e);
-
 	@LogMessage(level = INFO)
 	@Message(value = "Processing PersistenceUnitInfo [name: %s]", id = 204)
 	void processingPersistenceUnitInfoName(String persistenceUnitName);
@@ -155,14 +132,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = DEBUG)
 	@Message(value = "'hibernate.properties' not found", id = 206)
 	void propertiesNotFound();
-
-	@LogMessage(level = INFO)
-	@Message(value = "Reading mappings from cache file: %s", id = 219)
-	void readingCachedMappings(File cachedFile);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Reading mappings from file: %s", id = 220)
-	void readingMappingsFromFile(String path);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Recognized obsolete hibernate namespace %s. Use namespace %s instead. Refer to Hibernate 3.6 Migration Guide",
@@ -251,10 +220,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Error creating schema ", id = 306)
 	void unableToCreateSchema(@Cause Exception e);
 
-	@LogMessage(level = WARN)
-	@Message(value = "Could not deserialize cache file [%s]: %s", id = 307)
-	void unableToDeserializeCache(String path, SerializationException error);
-
 	@LogMessage(level = INFO)
 	@Message(value = "Could not find any META-INF/persistence.xml file in the classpath", id = 318)
 	void unableToFindPersistenceXmlInClasspath();
@@ -296,10 +261,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToRunSchemaUpdate(@Cause Exception e);
 
 	@LogMessage(level = WARN)
-	@Message(value = "I/O reported error writing cached file: %s: %s", id = 378)
-	void unableToWriteCachedFile(String path, String message);
-
-	@LogMessage(level = WARN)
 	@Message(value = "The %s.%s.%s version of H2 implements temporary table creation such that it commits current transaction; multi-table, bulk HQL/JPQL will not work properly",
 			id = 393)
 	void unsupportedMultiTableBulkHqlJpaql(int majorVersion, int minorVersion, int buildId);
@@ -336,19 +297,6 @@ public interface CoreMessageLogger extends BasicLogger {
 			id = 444
 	)
 	void usingFollowOnLocking();
-
-	@LogMessage(level = WARN)
-	@Message(
-			id = 449,
-			value = "@Convert annotation applied to Map attribute [%s] did not explicitly specify "
-					+ "'attributeName=\"key\" or 'attributeName=\"value\"' as required by spec; "
-					+ "attempting to infer whether converter applies to key or value"
-	)
-	void nonCompliantMapConversion(String collectionRole);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Omitting cached file [%s] as the mapping file is newer", id = 473)
-	void cachedFileObsolete(File cachedFile);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Cannot locate column information using identifier [%s]; ignoring index [%s]", id = 475 )
@@ -391,11 +339,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = INFO)
 	@Message(value = "Using JTA platform [%s]", id = 490)
 	void usingJtaPlatform(String jtaPlatformClassName);
-
-	@LogMessage(level = WARN)
-	@Message(value = "'%1$s.%2$s' uses both @NotFound and FetchType.LAZY. @ManyToOne and " +
-			"@OneToOne associations mapped with @NotFound are forced to EAGER fetching.", id = 491)
-	void ignoreNotFoundWithFetchTypeLazy(String entity, String association);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Attempt to merge an uninitialized collection with queued operations; queued operations will be ignored: %s", id = 494)

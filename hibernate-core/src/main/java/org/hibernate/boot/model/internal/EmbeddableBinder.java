@@ -69,7 +69,7 @@ import static org.hibernate.boot.model.internal.GeneratorBinder.createIdGenerato
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.unqualify;
@@ -438,8 +438,8 @@ public class EmbeddableBinder {
 		);
 
 		final String subpath = getPath( propertyHolder, inferredData );
-		if ( CORE_LOGGER.isTraceEnabled() ) {
-			CORE_LOGGER.trace( "Binding embeddable with path: " + subpath );
+		if ( BOOT_LOGGER.isTraceEnabled() ) {
+BOOT_LOGGER.bindingEmbeddable( subpath );
 		}
 		final var subholder = buildPropertyHolder(
 				embeddable,

@@ -111,7 +111,7 @@ import static org.hibernate.boot.model.internal.TableBinder.bindForeignKey;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.engine.OptimisticLockStyle.fromLockType;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
@@ -183,8 +183,8 @@ public class EntityBinder {
 			ClassDetails clazzToProcess,
 			Map<ClassDetails, InheritanceState> inheritanceStates,
 			MetadataBuildingContext context) {
-		if ( CORE_LOGGER.isTraceEnabled() ) {
-			CORE_LOGGER.trace( "Binding entity with annotated class: " + clazzToProcess.getName() );
+		if ( BOOT_LOGGER.isTraceEnabled() ) {
+			BOOT_LOGGER.bindingEntityWithAnnotatedClass( clazzToProcess.getName() );
 		}
 
 		final var collector = context.getMetadataCollector();
@@ -1025,9 +1025,8 @@ public class EntityBinder {
 		if ( discriminatorColumn != null ) {
 			final boolean ignore = buildingOptions.ignoreExplicitDiscriminatorsForJoinedInheritance();
 			if ( ignore ) {
-				if ( CORE_LOGGER.isTraceEnabled() ) {
-					CORE_LOGGER.trace( "Ignoring explicit @DiscriminatorColumn annotation on: "
-									+ annotatedClass.getName() );
+				if ( BOOT_LOGGER.isTraceEnabled() ) {
+					BOOT_LOGGER.ignoringExplicitDiscriminatorForJoined( annotatedClass.getName() );
 				}
 			}
 			return !ignore;
@@ -1035,9 +1034,8 @@ public class EntityBinder {
 		else {
 			final boolean createImplicit = buildingOptions.createImplicitDiscriminatorsForJoinedInheritance();
 			if ( createImplicit ) {
-				if ( CORE_LOGGER.isTraceEnabled() ) {
-					CORE_LOGGER.trace( "Inferring implicit @DiscriminatorColumn using defaults for: "
-									+ annotatedClass.getName() );
+				if ( BOOT_LOGGER.isTraceEnabled() ) {
+					BOOT_LOGGER.inferringImplicitDiscriminatorForJoined( annotatedClass.getName() );
 				}
 			}
 			return createImplicit;

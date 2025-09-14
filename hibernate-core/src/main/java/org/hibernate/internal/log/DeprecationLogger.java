@@ -233,5 +233,13 @@ public interface DeprecationLogger extends BasicLogger {
 			id = 90000038,
 			value = "Encountered deprecated value for JtaPlatform setting [%s]: [%s]; use a non-deprecated value among %s instead"
 	)
-	void logDeprecatedJtaPlatformSetting(String settingName, String deprecatedValue, List<String> replacements);
+	void deprecatedJtaPlatformSetting(String settingName, String deprecatedValue, List<String> replacements);
+
+	@LogMessage(level = WARN)
+	@Message(value = "Using %s which does not generate IETF RFC 4122 compliant UUID values; consider using %s instead", id = 90303)
+	void deprecatedUuidHexGenerator(String name, String name2);
+
+	@LogMessage(level = WARN)
+	@Message(value = "DEPRECATED: use [%s] instead with custom [%s] implementation", id = 90304)
+	void deprecatedUuidGenerator(String name, String name2);
 }

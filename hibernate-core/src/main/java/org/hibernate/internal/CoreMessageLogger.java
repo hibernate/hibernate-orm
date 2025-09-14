@@ -122,7 +122,10 @@ public interface CoreMessageLogger extends BasicLogger {
 	void propertiesNotFound();
 
 	@LogMessage(level = WARN)
-	@Message(value = "Recognized obsolete hibernate namespace %s. Use namespace %s instead. Refer to Hibernate 3.6 Migration Guide",
+	@Message(
+			value = """
+					Recognized obsolete hibernate namespace %s.\
+					Use namespace %s instead. Refer to Hibernate 3.6 Migration Guide""",
 			id = 223)
 	void recognizedObsoleteHibernateNamespace(String oldHibernateNamespace, String hibernateNamespace);
 
@@ -245,7 +248,10 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToRunSchemaUpdate(@Cause Exception e);
 
 	@LogMessage(level = WARN)
-	@Message(value = "The %s.%s.%s version of H2 implements temporary table creation such that it commits current transaction; multi-table, bulk HQL/JPQL will not work properly",
+	@Message(
+			value = """
+					The %s.%s.%s version of H2 implements temporary table creation such that it commits current transaction;\
+					multi-table, bulk HQL/JPQL will not work properly""",
 			id = 393)
 	void unsupportedMultiTableBulkHqlJpaql(int majorVersion, int minorVersion, int buildId);
 
@@ -267,17 +273,19 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)
 	@Message(
-			value = "Dialect [%s] limits the number of elements in an IN predicate to %s entries.  " +
-					"However, the given parameter list [%s] contained %s entries, which will likely cause failures " +
-					"to execute the query in the database",
+			value = """
+					Dialect [%s] limits the number of elements in an IN predicate to %s entries.  \
+					However, the given parameter list [%s] contained %s entries, which will likely cause failures \
+					to execute the query in the database""",
 			id = 443
 	)
 	void tooManyInExpressions(String dialectName, int limit, String paramName, int size);
 
 	@LogMessage(level = WARN)
 	@Message(
-			value = "Encountered request for locking however dialect reports that database prefers locking be done in a " +
-					"separate select (follow-on locking); results will be locked after initial query executes",
+			value = """
+					Encountered request for locking however dialect reports that database prefers locking be done in a \
+					separate select (follow-on locking); results will be locked after initial query executes""",
 			id = 444
 	)
 	void usingFollowOnLocking();
@@ -299,7 +307,11 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unsuccessfulSchemaManagementCommand(String command);
 
 	@LogMessage(level = WARN)
-	@Message(value = "A ManagedEntity was associated with a stale PersistenceContext. A ManagedEntity may only be associated with one PersistenceContext at a time; %s", id = 480)
+	@Message(
+			value = """
+					A ManagedEntity was associated with a stale PersistenceContext.\
+					A ManagedEntity may only be associated with one PersistenceContext at a time; %s""",
+			id = 480)
 	void stalePersistenceContextInEntityEntry(String msg);
 
 	@LogMessage(level = ERROR)
@@ -333,7 +345,10 @@ public interface CoreMessageLogger extends BasicLogger {
 	void ignoreImmutablePropertyModification(String propertyName, String entityName);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Multiple configuration properties defined to create schema. Choose at most one among 'jakarta.persistence.create-database-schemas' or 'hibernate.hbm2ddl.create_namespaces'.", id = 504)
+	@Message(value = """
+			Multiple configuration properties defined to create schema.\
+			Choose at most one among 'jakarta.persistence.create-database-schemas' or 'hibernate.hbm2ddl.create_namespaces'.""",
+			id = 504)
 	void multipleSchemaCreationSettingsDefined();
 
 	@LogMessage(level = WARN)
@@ -345,7 +360,11 @@ public interface CoreMessageLogger extends BasicLogger {
 	void fetchModeJoinWithLazyWarning(String role);
 
 	@LogMessage(level = WARN)
-	@Message(value = "The %2$s version for [%s] is no longer supported, hence certain features may not work properly. The minimum supported version is %3$s. Check the community dialects project for available legacy versions.", id = 511)
+	@Message(
+			value = """
+					The %2$s version for [%s] is no longer supported, hence certain features may not work properly.\
+					The minimum supported version is %3$s. Check the community dialects project for available legacy versions.""",
+			id = 511)
 	void unsupportedDatabaseVersion(String databaseName, String actualVersion, String minimumVersion);
 
 	@LogMessage(level = DEBUG)
@@ -386,4 +405,20 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToLocateStaticMetamodelField(
 			String name,
 			String name2);
+
+	@LogMessage(level = DEBUG)
+	@Message( id = 6001, value = "Error creating temp table" )
+	void errorCreatingTempTable(@Cause Exception e);
+
+	@LogMessage(level = DEBUG)
+	@Message( id = 6002, value = "Unable to create temporary table [%s]: '%s' failed" )
+	void unableToCreateTempTable(String qualifiedTableName, String creationCommand, @Cause SQLException e);
+
+	@LogMessage(level = DEBUG)
+	@Message( id = 6003, value = "Error dropping temp table" )
+	void errorDroppingTempTable(@Cause Exception e);
+
+	@LogMessage(level = DEBUG)
+	@Message( id = 6004, value = "Unable to drop temporary table [%s]: '%s' failed" )
+	void unableToDropTempTable(String qualifiedTableName, String creationCommand, @Cause SQLException e);
 }

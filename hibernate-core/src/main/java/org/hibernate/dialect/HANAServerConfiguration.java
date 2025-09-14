@@ -15,9 +15,9 @@ import java.util.regex.Pattern;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.DialectSpecificSettings.HANA_MAX_LOB_PREFETCH_SIZE;
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * Utility class that extracts some initial configuration from the database for {@link HANADialect}.
@@ -58,9 +58,8 @@ public class HANAServerConfiguration {
 			}
 			catch (SQLException e) {
 				// Ignore
-				CORE_LOGGER.debug(
-						"An error occurred while trying to determine the database version.",
-						e );
+				Logger.getLogger( HANAServerConfiguration.class )
+						.debug( "An error occurred while trying to determine the database version.", e );
 			}
 
 			if (databaseMajorVersion > 0 && databaseMajorVersion < 4) {
@@ -75,9 +74,8 @@ public class HANAServerConfiguration {
 				}
 				catch (SQLException e) {
 					// Ignore
-					CORE_LOGGER.debug(
-							"An error occurred while trying to determine the value of the HANA parameter indexserver.ini / session / max_lob_prefetch_size.",
-							e );
+					Logger.getLogger( HANAServerConfiguration.class )
+							.debug( "An error occurred while trying to determine the value of the HANA parameter indexserver.ini / session / max_lob_prefetch_size", e );
 				}
 			}
 			else {
@@ -113,7 +111,8 @@ public class HANAServerConfiguration {
 			}
 			catch (SQLException e) {
 				// Ignore
-				CORE_LOGGER.debug( "An error occurred while trying to determine the HANA Cloud version.", e );
+				Logger.getLogger( HANAServerConfiguration.class )
+						.debug( "An error occurred while trying to determine the HANA Cloud version.", e );
 			}
 		}
 		return databaseVersion == null

@@ -219,4 +219,16 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 		delegate.identifierRollback( identifierRollback );
 		return this;
 	}
+
+	@Override
+	public SharedSessionBuilder defaultBatchFetchSize(int defaultBatchFetchSize) {
+		delegate.defaultBatchFetchSize( defaultBatchFetchSize );
+		return this;
+	}
+
+	@Override
+	public SharedSessionBuilder subselectFetchEnabled(boolean subselectFetchEnabled) {
+		delegate.subselectFetchEnabled( subselectFetchEnabled );
+		return this;
+	}
 }

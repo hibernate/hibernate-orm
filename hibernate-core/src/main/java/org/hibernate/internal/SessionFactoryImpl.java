@@ -163,7 +163,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private transient volatile Status status = Status.OPEN;
 
-	private final transient SessionFactoryObserverChain observer = new SessionFactoryObserverChain();
+	private final transient SessionFactoryObserverChain observerChain = new SessionFactoryObserverChain();
 
 	private final transient SessionFactoryOptions sessionFactoryOptions;
 	private final transient Map<String,Object> settings;
@@ -237,7 +237,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		jpaPersistenceUnitUtil = new PersistenceUnitUtilImpl( this );
 
 		for ( var sessionFactoryObserver : options.getSessionFactoryObservers() ) {
-			observer.addObserver( sessionFactoryObserver );
+			observerChain.addObserver( sessionFactoryObserver );
 		}
 
 		filters = new HashMap<>( bootMetamodel.getFilterDefinitions() );
@@ -258,7 +258,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		jdbcValuesMappingProducerProvider = serviceRegistry.requireService( JdbcValuesMappingProducerProvider.class );
 
 		final var integratorObserver = new IntegratorObserver();
-		observer.addObserver( integratorObserver );
+		observerChain.addObserver( integratorObserver );
 		try {
 			integrate( bootMetamodel, bootstrapContext, integratorObserver );
 
@@ -321,7 +321,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			// we're in an incompletely-initialized state
 			typeConfiguration.scope( this );
 
-			observer.sessionFactoryCreated( this );
+			observerChain.sessionFactoryCreated( this );
 		}
 		catch ( Exception e ) {
 			disintegrate( e, integratorObserver );
@@ -573,7 +573,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public void addObserver(SessionFactoryObserver observer) {
-		this.observer.addObserver( observer );
+		observerChain.addObserver( observer );
 	}
 
 	@Override
@@ -798,7 +798,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		try {
 			SESSION_FACTORY_LOGGER.closingFactory( uuid );
-			observer.sessionFactoryClosing( this );
+			observerChain.sessionFactoryClosing( this );
 
 			// NOTE: the null checks below handle cases where close is called
 			//		 from a failed attempt to create the SessionFactory
@@ -835,7 +835,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			status = Status.CLOSED;
 		}
 
-		observer.sessionFactoryClosed( this );
+		observerChain.sessionFactoryClosed( this );
 		serviceRegistry.destroy();
 	}
 

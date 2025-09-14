@@ -158,4 +158,10 @@ public interface SharedSessionBuilder extends SessionBuilder, CommonSharedBuilde
 
 	@Override
 	SharedSessionBuilder identifierRollback(boolean identifierRollback);
+
+	@Override
+	SharedSessionBuilder defaultBatchFetchSize(int defaultBatchFetchSize);
+
+	@Override
+	SharedSessionBuilder subselectFetchEnabled(boolean subselectFetchEnabled);
 }

@@ -56,7 +56,7 @@ public class LoadQueryInfluencers implements Serializable {
 
 	private boolean subselectFetchEnabled;
 
-	private int batchSize = -1;
+	private int batchSize;
 
 	private final EffectiveEntityGraph effectiveEntityGraph;
 

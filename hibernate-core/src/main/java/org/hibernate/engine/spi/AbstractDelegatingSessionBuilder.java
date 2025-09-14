@@ -172,4 +172,16 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 		delegate.identifierRollback( identifierRollback );
 		return this;
 	}
+
+	@Override
+	public SessionBuilderImplementor defaultBatchFetchSize(int defaultBatchFetchSize) {
+		delegate.defaultBatchFetchSize( defaultBatchFetchSize );
+		return this;
+	}
+
+	@Override
+	public SessionBuilderImplementor subselectFetchEnabled(boolean subselectFetchEnabled) {
+		delegate.subselectFetchEnabled( subselectFetchEnabled );
+		return this;
+	}
 }

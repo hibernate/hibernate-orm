@@ -111,4 +111,10 @@ public interface SharedSessionBuilderImplementor extends SharedSessionBuilder, S
 
 	@Override
 	SharedSessionBuilderImplementor noStatementInspector();
+
+	@Override
+	SharedSessionBuilderImplementor defaultBatchFetchSize(int defaultBatchFetchSize);
+
+	@Override
+	SharedSessionBuilderImplementor subselectFetchEnabled(boolean subselectFetchEnabled);
 }

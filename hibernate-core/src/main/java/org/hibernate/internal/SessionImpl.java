@@ -196,14 +196,9 @@ public class SessionImpl
 
 			identifierRollbackEnabled = options.isIdentifierRollbackEnabled();
 
-			setUpTransactionCompletionProcesses( options );
+			setUpTransactionCompletionProcesses( options, actionQueue );
 
 			loadQueryInfluencers = new LoadQueryInfluencers( factory, options );
-
-			if ( properties != null ) {
-				//There might be custom properties for this session that affect the LockOptions state
-				applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
-			}
 
 			// NOTE : pulse() already handles auto-join-ability correctly
 			getTransactionCoordinator().pulse();
@@ -229,7 +224,7 @@ public class SessionImpl
 		}
 	}
 
-	private void setUpTransactionCompletionProcesses(SessionCreationOptions options) {
+	private static void setUpTransactionCompletionProcesses(SessionCreationOptions options, ActionQueue actionQueue) {
 		if ( options instanceof SharedSessionCreationOptions sharedOptions
 				&& sharedOptions.isTransactionCoordinatorShared() ) {
 			final var callbacks = sharedOptions.getTransactionCompletionCallbacks();

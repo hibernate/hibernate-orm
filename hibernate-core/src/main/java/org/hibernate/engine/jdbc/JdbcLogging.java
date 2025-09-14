@@ -17,6 +17,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.sql.SQLException;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.INFO;
@@ -176,4 +177,17 @@ public interface JdbcLogging extends BasicLogger {
 	@LogMessage(level = DEBUG)
 	@Message(value = "Encountered failure rolling back failed commit", id = 100038)
 	void encounteredFailureRollingBackFailedCommit(@Cause Throwable cause);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Could not access DatabaseMetaData while building the JdbcEnvironment", id = 100039)
+	void noDatabaseMetaData(@Cause SQLException sqle);
+
+	@LogMessage(level = WARN)
+	@Message(value = "Could not obtain connection metadata: %s", id = 100045)
+	void unableToObtainConnectionMetadata(SQLException error);
+
+	@LogMessage(level = WARN)
+	@Message(value = "Could not obtain connection to query JDBC database metadata", id = 100046)
+	void unableToObtainConnectionToQueryMetadata(@Cause Exception e);
+
 }

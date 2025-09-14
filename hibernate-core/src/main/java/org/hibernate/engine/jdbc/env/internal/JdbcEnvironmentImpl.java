@@ -30,8 +30,6 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 
-import org.jboss.logging.Logger;
-
 import static org.hibernate.cfg.MappingSettings.DEFAULT_CATALOG;
 import static org.hibernate.cfg.MappingSettings.DEFAULT_SCHEMA;
 import static org.hibernate.engine.config.spi.StandardConverters.STRING;
@@ -42,7 +40,6 @@ import static org.hibernate.engine.jdbc.env.internal.LobCreatorBuilderImpl.makeL
  * @author Steve Ebersole
  */
 public class JdbcEnvironmentImpl implements JdbcEnvironment {
-	private static final Logger LOG = Logger.getLogger( JdbcEnvironmentImpl.class );
 
 	private final Dialect dialect;
 
@@ -120,7 +117,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 		catch (SQLException sqle) {
 			// should never ever happen
-			LOG.debug( "There was a problem accessing DatabaseMetaData in building the JdbcEnvironment", sqle );
+			JDBC_MESSAGE_LOGGER.noDatabaseMetaData( sqle );
 		}
 		return builder.build();
 	}
@@ -210,7 +207,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 		catch (SQLException sqle) {
 			// should never ever happen
-			LOG.debug( "There was a problem accessing DatabaseMetaData in building the JdbcEnvironment", sqle );
+			JDBC_MESSAGE_LOGGER.noDatabaseMetaData( sqle );
 		}
 		return identifierHelperBuilder.build();
 	}
@@ -224,7 +221,6 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	private NameQualifierSupport determineNameQualifierSupport(DatabaseMetaData databaseMetaData) throws SQLException {
 		final boolean supportsCatalogs = databaseMetaData.supportsCatalogsInTableDefinitions();
 		final boolean supportsSchemas = databaseMetaData.supportsSchemasInTableDefinitions();
-
 		if ( supportsCatalogs && supportsSchemas ) {
 			return NameQualifierSupport.BOTH;
 		}
@@ -271,7 +267,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 		sqlAstTranslatorFactory = resolveSqlAstTranslatorFactory( dialect );
 
-		final ConfigurationService cfgService = configurationService( serviceRegistry );
+		final var cfgService = configurationService( serviceRegistry );
 
 		sqlExceptionHelper =
 				buildSqlExceptionHelper( dialect,
@@ -311,7 +307,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 		catch (SQLException sqle) {
 			// should never ever happen
-			LOG.debug( "There was a problem accessing DatabaseMetaData in building the JdbcEnvironment", sqle );
+			JDBC_MESSAGE_LOGGER.noDatabaseMetaData( sqle );
 		}
 		return builder.build();
 	}

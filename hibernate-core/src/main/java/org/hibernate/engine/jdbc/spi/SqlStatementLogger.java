@@ -12,7 +12,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.service.Service;
-import org.hibernate.stat.spi.StatisticsImplementor;
 import org.jboss.logging.Logger;
 
 /**
@@ -111,26 +110,24 @@ public class SqlStatementLogger implements Service {
 	 */
 	@AllowSysOut
 	public void logStatement(String statement, Formatter formatter) {
-		if ( !logToStdout && !LOG.isDebugEnabled() ) {
-			return;
-		}
-
-		try {
-			if ( format ) {
-				statement = formatter.format( statement );
+		if ( logToStdout || LOG.isDebugEnabled() ) {
+			try {
+				if ( format ) {
+					statement = formatter.format( statement );
+				}
+				if ( highlight ) {
+					statement = FormatStyle.HIGHLIGHT.getFormatter().format( statement );
+				}
 			}
-			if ( highlight ) {
-				statement = FormatStyle.HIGHLIGHT.getFormatter().format( statement );
+			catch (RuntimeException ex) {
+				LOG.debug( "Couldn't format statement", ex );
 			}
-		}
-		catch (RuntimeException ex) {
-			LOG.warn( "Couldn't format statement", ex );
-		}
 
-		LOG.debug( statement );
-		if ( logToStdout ) {
-			String prefix = highlight ? "\u001b[35m[Hibernate]\u001b[0m " : "Hibernate: ";
-			System.out.println( prefix + statement );
+			LOG.debug( statement );
+			if ( logToStdout ) {
+				String prefix = highlight ? "\u001b[35m[Hibernate]\u001b[0m " : "Hibernate: ";
+				System.out.println( prefix + statement );
+			}
 		}
 	}
 
@@ -141,17 +138,17 @@ public class SqlStatementLogger implements Service {
 	 * @param startTimeNanos Start time in nanoseconds.
 	 */
 	public void logSlowQuery(final String sql, final long startTimeNanos, final JdbcSessionContext context) {
-		if ( logSlowQuery < 1 ) {
-			return;
-		}
-		if ( startTimeNanos <= 0 ) {
-			throw new IllegalArgumentException( "startTimeNanos [" + startTimeNanos + "] should be greater than 0" );
-		}
+		if ( logSlowQuery >= 1 ) {
+			if ( startTimeNanos <= 0 ) {
+				throw new IllegalArgumentException(
+						"startTimeNanos [" + startTimeNanos + "] should be greater than 0" );
+			}
 
-		final long queryExecutionMillis = elapsedFrom( startTimeNanos );
+			final long queryExecutionMillis = elapsedFrom( startTimeNanos );
 
-		if ( queryExecutionMillis > logSlowQuery ) {
-			logSlowQueryInternal( context, queryExecutionMillis, sql );
+			if ( queryExecutionMillis > logSlowQuery ) {
+				logSlowQueryInternal( context, queryExecutionMillis, sql );
+			}
 		}
 	}
 
@@ -167,7 +164,7 @@ public class SqlStatementLogger implements Service {
 			System.out.println( logData );
 		}
 		if ( context != null ) {
-			final StatisticsImplementor statisticsImplementor = context.getStatistics();
+			final var statisticsImplementor = context.getStatistics();
 			if ( statisticsImplementor != null && statisticsImplementor.isStatisticsEnabled() ) {
 				statisticsImplementor.slowQuery( sql, queryExecutionMillis );
 			}

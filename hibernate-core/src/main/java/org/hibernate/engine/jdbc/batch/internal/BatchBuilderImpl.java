@@ -19,7 +19,6 @@ import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.jdbc.JdbcInsertMutation;
 
 import static java.util.Collections.emptyList;
-import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_LOGGER;
 import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_MESSAGE_LOGGER;
 
 /**
@@ -40,7 +39,7 @@ public class BatchBuilderImpl implements BatchBuilder {
 		if ( globalBatchSize > 1 ) {
 			BATCH_MESSAGE_LOGGER.batchingEnabled( globalBatchSize );
 		}
-		BATCH_LOGGER.trace( "Using standard BatchBuilder");
+		BATCH_MESSAGE_LOGGER.usingStandardBatchBuilder();
 		this.globalBatchSize = globalBatchSize;
 	}
 

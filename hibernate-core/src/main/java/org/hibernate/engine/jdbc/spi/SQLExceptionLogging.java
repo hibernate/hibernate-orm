@@ -7,12 +7,15 @@ package org.hibernate.engine.jdbc.spi;
 import org.hibernate.internal.log.SubSystemLogging;
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
+import org.jboss.logging.annotations.Cause;
 import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 
 import java.lang.invoke.MethodHandles;
+import java.sql.SQLException;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
@@ -33,4 +36,12 @@ public interface SQLExceptionLogging extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "ErrorCode: %s, SQLState: %s", id = 247)
 	void logErrorCodes(int errorCode, String sqlState);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Could not log SQL warnings", id = 248)
+	void couldNotLogWarnings(@Cause SQLException sqle);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Could not clear SQL warnings", id = 249)
+	void couldNotClearWarnings(@Cause SQLException sqle);
 }

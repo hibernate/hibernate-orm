@@ -11,7 +11,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_LOGGER;
 import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_MESSAGE_LOGGER;
 
 public abstract class AbstractPreparedStatementGroup implements PreparedStatementGroup {
@@ -44,10 +43,7 @@ public abstract class AbstractPreparedStatementGroup implements PreparedStatemen
 	protected void release(PreparedStatementDetails statementDetails) {
 		if ( statementDetails.toRelease() ) {
 			if ( statementDetails.getStatement() == null ) {
-				BATCH_LOGGER.debugf(
-						"PreparedStatementDetails did not contain PreparedStatement on releaseStatements: %s",
-						statementDetails.getSqlString()
-				);
+				BATCH_MESSAGE_LOGGER.noPreparedStatements( statementDetails.getSqlString() );
 			}
 			else {
 				clearBatch( statementDetails );

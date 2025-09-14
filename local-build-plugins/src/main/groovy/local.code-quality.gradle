@@ -120,7 +120,7 @@ checkerFramework {
     extraJavacArgs = [
             '-AsuppressWarnings=initialization',
             // stubs is passed directly through options.compilerArgumentProviders
-            '-AonlyDefs=^org\\.hibernate\\.(jdbc|exception|integrator|processor|service|spi|pretty|property\\.access|stat|engine\\.(config|jndi|profile|spi|transaction)|(action|context|bytecode)\\.spi)\\.'
+            '-AonlyDefs=^org\\.hibernate\\.(jdbc|exception|integrator|processor|service.spi|spi|pretty|property\\.access|stat|engine\\.(config|jndi|profile|spi|transaction)|(action|context|bytecode)\\.spi)\\.'
     ]
 }
 

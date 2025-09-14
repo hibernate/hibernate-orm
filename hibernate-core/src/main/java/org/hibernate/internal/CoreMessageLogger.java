@@ -45,11 +45,6 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)
-	@Message(value = "Configuration settings with for connection provider '%s' are set, but the connection provider is not on the classpath; these properties will be ignored",
-			id = 22)
-	void providerClassNotFound(String c3p0ProviderClassName);
-
-	@LogMessage(level = WARN)
 	@Message(value = "I/O reported cached file could not be found: [%s]: %s", id = 23)
 	void cachedFileNotFound(String path, FileNotFoundException error);
 
@@ -109,10 +104,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	void illegalPropertySetterArgument(String name, String propertyName);
 
 	@LogMessage(level = INFO)
-	@Message(value = "Instantiating explicit connection provider: %s", id = 130)
-	void instantiatingExplicitConnectionProvider(String providerClassName);
-
-	@LogMessage(level = INFO)
 	@Message(value = "java.sql.Types mapped the same code [%s] multiple times; was [%s]; now [%s]", id = 141)
 	void JavaSqlTypesMappedSameCodeMultipleTimes(int code, String old, String name);
 
@@ -129,11 +120,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Narrowing proxy to %s - this operation breaks ==", id = 179)
 	void narrowingProxy(Class<?> concreteProxyClass);
-
-	@LogMessage(level = WARN)
-	@Message(value = "No appropriate connection provider encountered, assuming application will be supplying connections",
-			id = 181)
-	void noAppropriateConnectionProvider();
 
 	@LogMessage(level = INFO)
 	@Message(value = "No default (no-argument) constructor for class [%s] (class must be instantiated by Interceptor)",

@@ -24,7 +24,6 @@ import org.hibernate.resource.transaction.spi.TransactionObserver;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import static java.util.Collections.emptyList;
-import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
 
 /**
@@ -300,7 +299,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		@Override
 		public void markRollbackOnly() {
 			if ( getStatus() != TransactionStatus.ROLLED_BACK ) {
-				if ( JDBC_LOGGER.isTraceEnabled() ) {
+				if ( JDBC_MESSAGE_LOGGER.isTraceEnabled() ) {
 					JDBC_MESSAGE_LOGGER.jdbcTransactionMarkedForRollbackOnly(
 							new Exception( "exception just for purpose of providing stack trace" ) );
 				}

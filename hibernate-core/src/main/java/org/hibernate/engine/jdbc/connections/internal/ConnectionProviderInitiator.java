@@ -17,8 +17,6 @@ import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -43,6 +41,7 @@ import static org.hibernate.cfg.JdbcSettings.URL;
 import static org.hibernate.cfg.JdbcSettings.USER;
 import static org.hibernate.cfg.SchemaToolingSettings.ENABLE_SYNONYMS;
 import static org.hibernate.context.spi.MultiTenancy.isMultiTenancyEnabled;
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderLogging.CONNECTION_PROVIDER_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfBlank;
 
@@ -54,8 +53,6 @@ import static org.hibernate.internal.util.StringHelper.nullIfBlank;
  * @author Brett Meyer
  */
 public class ConnectionProviderInitiator implements StandardServiceInitiator<ConnectionProvider> {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ConnectionProviderInitiator.class );
 
 	/**
 	 * Singleton access
@@ -100,7 +97,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 				return provider;
 			}
 			else if ( explicitSetting instanceof Class<?> providerClass ) {
-				LOG.instantiatingExplicitConnectionProvider( providerClass.getName() );
+				CONNECTION_PROVIDER_LOGGER.instantiatingExplicitConnectionProvider( providerClass.getName() );
 				return instantiateExplicitConnectionProvider( connectionProviderClass( providerClass ), beanContainer );
 			}
 			else {
@@ -126,7 +123,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 
 	private ConnectionProvider instantiateNamedConnectionProvider(
 			String providerName, StrategySelector strategySelector, BeanContainer beanContainer) {
-		LOG.instantiatingExplicitConnectionProvider( providerName );
+		CONNECTION_PROVIDER_LOGGER.instantiatingExplicitConnectionProvider( providerName );
 		final var providerClass = strategySelector.selectStrategyImplementor( ConnectionProvider.class, providerName );
 		try {
 			return instantiateExplicitConnectionProvider( providerClass, beanContainer );
@@ -181,7 +178,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	}
 
 	private ConnectionProvider noAppropriateConnectionProvider() {
-		LOG.noAppropriateConnectionProvider();
+		CONNECTION_PROVIDER_LOGGER.noAppropriateConnectionProvider();
 		return new UserSuppliedConnectionProviderImpl();
 	}
 
@@ -225,7 +222,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return selector.selectStrategyImplementor( ConnectionProvider.class, strategy ).getConstructor().newInstance();
 		}
 		catch ( Exception e ) {
-			LOG.providerClassNotFound(strategy);
+			CONNECTION_PROVIDER_LOGGER.providerClassNotFound(strategy);
 			return null;
 		}
 	}

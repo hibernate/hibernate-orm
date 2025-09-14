@@ -37,7 +37,7 @@ public class DuplicatePersistenceUnitNameTest extends BaseUnitTestCase {
 	@Before
 	public void setUp() {
 		final Set messagesPrefixes = new HashSet<>();
-		messagesPrefixes.add( "HHH015018" );
+		messagesPrefixes.add( "HHH000518" );
 		triggerable = logInspection.watchForLogMessages( messagesPrefixes );
 	}
 

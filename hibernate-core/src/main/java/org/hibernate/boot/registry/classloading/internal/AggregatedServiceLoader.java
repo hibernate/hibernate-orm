@@ -15,7 +15,7 @@ import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.Set;
 
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.service.internal.ServiceLogger.SERVICE_LOGGER;
 
 /**
  * A service loader bound to an {@link AggregatedClassLoader}.
@@ -148,7 +148,7 @@ abstract class AggregatedServiceLoader<S> {
 					return iterator.hasNext();
 				}
 				catch (ServiceConfigurationError e) {
-					CORE_LOGGER.ignoringServiceConfigurationError( serviceContract.getName(), e );
+					SERVICE_LOGGER.ignoringServiceConfigurationError( serviceContract.getName(), e );
 				}
 			}
 		}

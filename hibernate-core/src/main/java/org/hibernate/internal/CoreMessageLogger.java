@@ -11,7 +11,6 @@ import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.Properties;
-import java.util.ServiceConfigurationError;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -33,7 +32,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
-import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
@@ -44,7 +42,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 		description = "Miscellaneous Logging related to Hibernate ORM Core"
 )
 @MessageLogger(projectCode = "HHH")
-@ValidIdRange(min=2,max = 20000)
+@ValidIdRange(min=2,max = 10000)
 @Internal
 public interface CoreMessageLogger extends BasicLogger {
 
@@ -448,9 +446,32 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Failed to discover types for enhancement from class: %s",
 			id = 516)
 	void enhancementDiscoveryFailed(String className, @Cause Throwable cause);
+	@LogMessage(level = DEBUG)
+	@Message(
+			id = 517,
+			value = "Encountered a MappedSuperclass [%s] not used in any entity hierarchy"
+	)
+	void unusedMappedSuperclass(String name);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 518,
+			value = "Encountered multiple persistence-unit stanzas defining same name [%s]; persistence-unit names must be unique"
+	)
+	void duplicatedPersistenceUnitName(String name);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 519,
+			value = "Invalid JSON column type [%s], was expecting [%s]; for efficiency schema should be migrate to JSON DDL type"
+	)
+	void invalidJSONColumnType(String actual, String expected);
 
 	@LogMessage(level = ERROR)
-	@Message(value = "Illegal argument on static metamodel field injection: %s#%s; expected type: %s; encountered type: %s", id = 15007)
+	@Message(
+			id = 5001,
+			value = "Illegal argument on static metamodel field injection: %s#%s; expected type: %s; encountered type: %s"
+	)
 	void illegalArgumentOnStaticMetamodelFieldInjection(
 			String name,
 			String name2,
@@ -458,45 +479,11 @@ public interface CoreMessageLogger extends BasicLogger {
 			String name4);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Unable to locate static metamodel field: %s#%s; this may or may not indicate a problem with the static metamodel", id = 15011)
+	@Message(
+			id = 5002,
+			value = "Unable to locate static metamodel field: %s#%s; this may or may not indicate a problem with the static metamodel"
+	)
 	void unableToLocateStaticMetamodelField(
 			String name,
 			String name2);
-
-	@LogMessage(level = DEBUG)
-	@Message(
-			id = 15015,
-			value = "Encountered a MappedSuperclass [%s] not used in any entity hierarchy"
-	)
-	void unusedMappedSuperclass(String name);
-
-	@LogMessage(level = WARN)
-	@Message(
-			id = 15018,
-			value = "Encountered multiple persistence-unit stanzas defining same name [%s]; persistence-unit names must be unique"
-	)
-	void duplicatedPersistenceUnitName(String name);
-
-	@LogMessage(level = WARN)
-	@Message(
-			id = 15019,
-			value = "Invalid JSON column type [%s], was expecting [%s]; for efficiency schema should be migrate to JSON DDL type"
-	)
-	void invalidJSONColumnType(String actual, String expected);
-
-	@LogMessage(level = TRACE)
-	@Message(value = "Initializing service: %s", id = 500)
-	void initializingService(String serviceRole);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Error stopping service: %s", id = 369)
-	void unableToStopService(String serviceRole, @Cause Exception e);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Ignoring ServiceConfigurationError caught while instantiating service: %s", id = 505)
-	void ignoringServiceConfigurationError(String serviceContract, @Cause ServiceConfigurationError error);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Encountered request for service by non-primary service role [%s -> %s]", id = 450)
-	void alternateServiceRole(String requestedRole, String targetRole);
 }

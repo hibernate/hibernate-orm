@@ -64,4 +64,18 @@ public abstract class AbstractEntityInstantiatorPojo extends AbstractPojoInstant
 			// this one needed only for guessEntityMode()
 			|| proxyInterface!=null && proxyInterface.isInstance(object);
 	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected boolean isApplyBytecodeInterception() {
+		return applyBytecodeInterception;
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected LazyAttributeLoadingInterceptor.EntityRelatedState getLoadingInterceptorState() {
+		return loadingInterceptorState;
+	}
 }

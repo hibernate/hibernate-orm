@@ -18,6 +18,7 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
 import static java.util.Collections.unmodifiableSet;
+import static org.hibernate.bytecode.enhance.spi.interceptor.BytecodeInterceptorLogging.BYTECODE_INTERCEPTOR_LOGGER;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTracker;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTrackerType;
@@ -143,8 +144,8 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractInterceptor i
 	}
 
 	public Object forceInitialize(Object target, String attributeName) {
-		if ( BytecodeInterceptorLogging.MESSAGE_LOGGER.isTraceEnabled() ) {
-			BytecodeInterceptorLogging.MESSAGE_LOGGER.enhancementAsProxyLazinessForceInitialize(
+		if ( BYTECODE_INTERCEPTOR_LOGGER.isTraceEnabled() ) {
+			BYTECODE_INTERCEPTOR_LOGGER.enhancementAsProxyLazinessForceInitialize(
 					entityKey.getEntityName(),
 					entityKey.getIdentifier(),
 					attributeName
@@ -164,8 +165,8 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractInterceptor i
 			String attributeName,
 			SharedSessionContractImplementor session,
 			boolean isTemporarySession) {
-		if ( BytecodeInterceptorLogging.MESSAGE_LOGGER.isTraceEnabled() ) {
-			BytecodeInterceptorLogging.MESSAGE_LOGGER.enhancementAsProxyLazinessForceInitialize(
+		if ( BYTECODE_INTERCEPTOR_LOGGER.isTraceEnabled() ) {
+			BYTECODE_INTERCEPTOR_LOGGER.enhancementAsProxyLazinessForceInitialize(
 					entityKey.getEntityName(),
 					entityKey.getIdentifier(),
 					attributeName

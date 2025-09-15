@@ -6,6 +6,7 @@ package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
 import static net.bytebuddy.matcher.ElementMatchers.hasDescriptor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static org.hibernate.bytecode.enhance.internal.BytecodeEnhancementLogging.ENHANCEMENT_LOGGER;
 
 import jakarta.persistence.Id;
 
@@ -16,7 +17,6 @@ import net.bytebuddy.utility.OpenedClassReader;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
-import org.hibernate.bytecode.enhance.internal.BytecodeEnhancementLogging;
 
 import net.bytebuddy.asm.AsmVisitorWrapper;
 import net.bytebuddy.description.field.FieldList;
@@ -73,7 +73,7 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 						&& !field.hasAnnotation( Id.class )
 						&& !field.getName().equals( "this$0" ) ) {
 
-					BytecodeEnhancementLogging.LOGGER.extendedTransformingFieldAccess(
+					ENHANCEMENT_LOGGER.extendedTransformingFieldAccess(
 							declaredOwnerType.getName(),
 							field.getName(),
 							instrumentedType.getName(),

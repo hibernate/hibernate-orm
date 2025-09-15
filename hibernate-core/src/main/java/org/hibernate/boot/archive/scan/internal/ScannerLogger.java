@@ -37,7 +37,7 @@ public interface ScannerLogger extends BasicLogger {
 	void multipleScannerFactoriesAvailable(String scannerClassName);
 
 	@LogMessage(level = Logger.Level.DEBUG)
-	@Message(id = 60002, value = "No ScannerFactory available; to enable scanning add 'hibernate-scan-jandex' dependency or supply a custom ScannerFactory")
+	@Message(id = 60002, value = "No ScannerFactory available (to enable scanning add 'hibernate-scan-jandex' dependency or supply a custom ScannerFactory)")
 	void noScannerFactoryAvailable();
 
 	@LogMessage(level = Logger.Level.DEBUG)

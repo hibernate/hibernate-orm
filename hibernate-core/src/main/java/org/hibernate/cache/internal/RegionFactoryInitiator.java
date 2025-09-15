@@ -82,7 +82,7 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 		final var implementors = selector.getRegisteredStrategyImplementors( RegionFactory.class );
 
 		if ( setting == null && implementors.size() != 1 ) {
-			// if either is explicitly defined as TRUE we need a RegionFactory
+			// if either is explicitly defined as TRUE, we need a RegionFactory
 			if ( useSecondLevelCache == TRUE || useQueryCache == TRUE ) {
 				throw new CacheException( "Caching was explicitly requested, but no RegionFactory was defined and there is not a single registered RegionFactory" );
 			}
@@ -104,17 +104,21 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 			return fallback;
 		}
 
-		if ( implementors.size() == 1 ) {
-			final var registeredFactory = selector.resolveStrategy( RegionFactory.class, implementors.iterator().next() );
-			configurationValues.put( CACHE_REGION_FACTORY, registeredFactory );
-			configurationValues.put( USE_SECOND_LEVEL_CACHE, "true" );
-			return registeredFactory;
+		switch ( implementors.size() ) {
+			case 1:
+				final var registeredFactory =
+						selector.resolveStrategy( RegionFactory.class,
+								implementors.iterator().next() );
+				configurationValues.put( CACHE_REGION_FACTORY, registeredFactory );
+				configurationValues.put( USE_SECOND_LEVEL_CACHE, "true" );
+				return registeredFactory;
+			case 0:
+				L2CACHE_LOGGER.noDefaultRegionFactory();
+				return NoCachingRegionFactory.INSTANCE;
+			default:
+				L2CACHE_LOGGER.cannotDefaultRegionFactory( implementors.size() );
+				return NoCachingRegionFactory.INSTANCE;
 		}
-		else {
-			L2CACHE_LOGGER.cannotDefaultRegionFactory( implementors.size() );
-		}
-
-		return NoCachingRegionFactory.INSTANCE;
 	}
 
 	protected RegionFactory getFallback(Map<?,?> configurationValues, ServiceRegistryImplementor registry) {

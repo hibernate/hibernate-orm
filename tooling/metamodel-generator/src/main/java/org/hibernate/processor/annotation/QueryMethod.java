@@ -97,10 +97,13 @@ public class QueryMethod extends AbstractQueryMethod {
 		handleRestrictionParameters( declaration, paramTypes );
 		collectOrdering( declaration, paramTypes, containerType );
 		chainSession( declaration );
-		tryReturn( declaration, paramTypes, containerType );
+		inTry( declaration );
+		createQuery( declaration, true );
+		setParameters( declaration, paramTypes );
+		declaration.append( ";\n" );
+		results( declaration, paramTypes, containerType );
 		castResult( declaration );
-		createQuery( declaration );
-		setParameters( declaration, paramTypes, "");
+		select( declaration );
 		handlePageParameters( declaration, paramTypes, containerType );
 		execute( declaration, initiallyUnwrapped() );
 		convertExceptions( declaration );
@@ -116,7 +119,16 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	@Override
-	void createQuery(StringBuilder declaration) {
+	void createQuery(StringBuilder declaration, boolean declareVariable) {
+		if ( declareVariable ) {
+			if ( dataRepository && !isReactive() ) {
+				declaration
+						.append('\t');
+			}
+			declaration
+					.append('\t');
+			declaration.append("var _select = ");
+		}
 		if ( isUsingSpecification() ) {
 			if ( isReactive() ) {
 				declaration
@@ -130,7 +142,7 @@ public class QueryMethod extends AbstractQueryMethod {
 						.append("_spec.createQuery(")
 						.append(localSessionName())
 						.append(getObjectCall())
-						.append(")\n");
+						.append(")");
 			}
 		}
 		else {
@@ -147,7 +159,7 @@ public class QueryMethod extends AbstractQueryMethod {
 						.append(annotationMetaEntity.importType(returnTypeClass))
 						.append(".class");
 			}
-			declaration.append(")\n");
+			declaration.append(")");
 		}
 	}
 
@@ -225,17 +237,15 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	@Override
-	void setParameters(StringBuilder declaration, List<String> paramTypes, String indent) {
+	void setParameters(StringBuilder declaration, List<String> paramTypes) {
 		for ( int i = 0; i < paramNames.size(); i++ ) {
 			if ( !isSpecialParam( paramTypes.get(i) ) ) {
 				final String paramName = paramNames.get(i);
 				final int ordinal = i+1;
 				if ( queryString.contains(":" + paramName) ) {
-					declaration.append(indent);
 					setNamedParameter( declaration, paramName );
 				}
 				else if ( queryString.contains("?" + ordinal) ) {
-					declaration.append(indent);
 					setOrdinalParameter( declaration, ordinal, paramName );
 				}
 			}
@@ -244,20 +254,20 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	private static void setOrdinalParameter(StringBuilder declaration, int i, String paramName) {
 		declaration
-				.append("\t\t\t.setParameter(")
+				.append("\n\t\t\t.setParameter(")
 				.append(i)
 				.append(", ")
 				.append(paramName)
-				.append(")\n");
+				.append(")");
 	}
 
 	private static void setNamedParameter(StringBuilder declaration, String paramName) {
 		declaration
-				.append("\t\t\t.setParameter(\"")
+				.append("\n\t\t\t.setParameter(\"")
 				.append(paramName)
 				.append("\", ")
 				.append(paramName)
-				.append(")\n");
+				.append(")");
 	}
 
 //	private String returnType() {

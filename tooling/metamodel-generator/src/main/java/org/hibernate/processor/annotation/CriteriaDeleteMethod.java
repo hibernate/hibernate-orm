@@ -57,7 +57,7 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 		createSpecification( declaration );
 		handleRestrictionParameters( declaration, paramTypes );
 		tryReturn(declaration);
-		createQuery( declaration );
+		createQuery( declaration, false );
 		execute( declaration );
 	}
 

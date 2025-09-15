@@ -7,6 +7,7 @@ package org.hibernate.bytecode.enhance.internal.bytebuddy;
 import static net.bytebuddy.matcher.ElementMatchers.anyOf;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.not;
+import static org.hibernate.bytecode.enhance.internal.BytecodeEnhancementLogging.ENHANCEMENT_LOGGER;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,7 +18,6 @@ import java.util.Objects;
 
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
-import org.hibernate.bytecode.enhance.internal.BytecodeEnhancementLogging;
 
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.AsmVisitorWrapper;
@@ -127,8 +127,8 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		}
 
 		AnnotatedFieldDescription[] orderedFields = enhancementContext.order( persistentFieldList.toArray( new AnnotatedFieldDescription[0] ) );
-		if ( BytecodeEnhancementLogging.LOGGER.isTraceEnabled() ) {
-			BytecodeEnhancementLogging.LOGGER.persistentFieldsForEntity(
+		if ( ENHANCEMENT_LOGGER.isTraceEnabled() ) {
+			ENHANCEMENT_LOGGER.persistentFieldsForEntity(
 					managedCtClass.getName(),
 					Arrays.toString( orderedFields )
 			);
@@ -154,7 +154,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 			return collectInheritPersistentFields( managedCtSuperclass, enhancementContext );
 		}
 
-		BytecodeEnhancementLogging.LOGGER.foundMappedSuperclass( String.valueOf( managedCtSuperclass ) );
+		ENHANCEMENT_LOGGER.foundMappedSuperclass( String.valueOf( managedCtSuperclass ) );
 
 		List<AnnotatedFieldDescription> persistentFieldList = new ArrayList<>();
 

@@ -32,7 +32,7 @@ import static org.jboss.logging.Logger.Level.TRACE;
 @Internal
 public interface BytecodeEnhancementLogging extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".bytecode.enhancement";
-	BytecodeEnhancementLogging LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), BytecodeEnhancementLogging.class, LOGGER_NAME  );
+	BytecodeEnhancementLogging ENHANCEMENT_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), BytecodeEnhancementLogging.class, LOGGER_NAME  );
 
 	// ---- trace messages ----
 	@LogMessage(level = TRACE)

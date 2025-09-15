@@ -19,6 +19,8 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 
+import static org.hibernate.bytecode.enhance.spi.interceptor.BytecodeInterceptorLogging.BYTECODE_INTERCEPTOR_LOGGER;
+
 /**
  * @author Steve Ebersole
  */
@@ -42,7 +44,7 @@ public class EnhancementHelper {
 		if ( ! isEnhanced ) {
 			if ( value instanceof ToOne toOne ) {
 				if ( toOne.isUnwrapProxy() ) {
-					BytecodeInterceptorLogging.MESSAGE_LOGGER.debugf(
+					BYTECODE_INTERCEPTOR_LOGGER.debugf(
 							"To-one property `%s#%s` was mapped with LAZY + NO_PROXY but the class was not enhanced",
 							bootMapping.getPersistentClass().getEntityName(),
 							bootMapping.getName()
@@ -73,7 +75,7 @@ public class EnhancementHelper {
 				// however, at the time being that leads to inefficient SQL - so for now
 				// we simply log a message that we are ignoring the `@LazyGroup` for to-ones
 
-				BytecodeInterceptorLogging.MESSAGE_LOGGER.lazyGroupIgnoredForToOne(
+				BYTECODE_INTERCEPTOR_LOGGER.lazyGroupIgnoredForToOne(
 						bootMapping.getPersistentClass().getEntityName(),
 						bootMapping.getName(),
 						bootMapping.getLazyGroup()

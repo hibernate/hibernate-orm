@@ -40,11 +40,11 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirti
  *
  * @author Steve Ebersole
  */
-public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementMetadata {
+public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementMetadata {
 	/**
 	 * Static constructor
 	 */
-	public static BytecodeEnhancementMetadata from(
+	public static BytecodeEnhancementMetadataPojoImpl from(
 			PersistentClass persistentClass,
 			Set<String> identifierAttributeNames,
 			CompositeType nonAggregatedCidMapper,
@@ -75,7 +75,10 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 	private final LazyAttributeLoadingInterceptor.EntityRelatedState lazyAttributeLoadingInterceptorState;
 	private volatile transient EnhancementAsProxyLazinessInterceptor.EntityRelatedState enhancementAsProxyInterceptorState;
 
-	BytecodeEnhancementMetadataPojoImpl(
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected BytecodeEnhancementMetadataPojoImpl(
 			String entityName,
 			Class<?> entityClass,
 			Set<String> identifierAttributeNames,
@@ -248,9 +251,12 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 		);
 	}
 
+	/*
+	 * Used by Hibernate Reactive
+	 */
 	//This state object needs to be lazily initialized as it needs access to the Persister, but once
 	//initialized it can be reused across multiple sessions.
-	private EnhancementAsProxyLazinessInterceptor.EntityRelatedState getEnhancementAsProxyLazinessInterceptorMetastate(SharedSessionContractImplementor session) {
+	public EnhancementAsProxyLazinessInterceptor.EntityRelatedState getEnhancementAsProxyLazinessInterceptorMetastate(SharedSessionContractImplementor session) {
 		EnhancementAsProxyLazinessInterceptor.EntityRelatedState state = this.enhancementAsProxyInterceptorState;
 		if ( state == null ) {
 			final EntityPersister entityPersister = session.getFactory().getMappingMetamodel()
@@ -311,4 +317,17 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 		return (BytecodeLazyAttributeInterceptor) interceptor;
 	}
 
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	public Class<?> getEntityClass() {
+		return entityClass;
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	public LazyAttributeLoadingInterceptor.EntityRelatedState getLazyAttributeLoadingInterceptorState() {
+		return lazyAttributeLoadingInterceptorState;
+	}
 }

@@ -5,16 +5,13 @@
 package org.hibernate.cfg;
 
 import java.io.IOException;
-import java.lang.invoke.MethodHandles;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.Version;
-import org.hibernate.internal.CoreMessageLogger;
 
-import org.jboss.logging.Logger;
-
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ConfigHelper.getResourceAsStream;
 import static org.hibernate.internal.util.config.ConfigurationHelper.maskOut;
 
@@ -132,8 +129,6 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.maskOut;
 @Internal
 public final class Environment implements AvailableSettings {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, Environment.class.getName());
-
 	private static final Properties GLOBAL_PROPERTIES;
 
 	static {
@@ -145,19 +140,19 @@ public final class Environment implements AvailableSettings {
 			try (var stream = getResourceAsStream("/hibernate.properties")) {
 				try {
 					GLOBAL_PROPERTIES.load(stream);
-					LOG.propertiesLoaded( maskOut( GLOBAL_PROPERTIES,
+					CORE_LOGGER.propertiesLoaded( maskOut( GLOBAL_PROPERTIES,
 							PASS, JAKARTA_JDBC_PASSWORD, JPA_JDBC_PASSWORD ) );
 				}
 				catch (Exception e) {
-					LOG.unableToLoadProperties();
+					CORE_LOGGER.unableToLoadProperties();
 				}
 			}
 			catch (IOException ioe) {
-				LOG.unableToCloseStreamError( ioe );
+				CORE_LOGGER.unableToCloseStreamError( ioe );
 			}
 		}
 		catch (HibernateException he) {
-			LOG.propertiesNotFound();
+			CORE_LOGGER.propertiesNotFound();
 		}
 
 		try {
@@ -170,7 +165,7 @@ public final class Environment implements AvailableSettings {
 			}
 		}
 		catch (SecurityException se) {
-			LOG.unableToCopySystemProperties();
+			CORE_LOGGER.unableToCopySystemProperties();
 		}
 	}
 

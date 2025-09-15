@@ -26,7 +26,6 @@ import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
-import org.hibernate.internal.log.ConnectionInfoLogger;
 
 import static org.hibernate.cfg.JdbcSettings.AUTOCOMMIT;
 import static org.hibernate.cfg.JdbcSettings.DRIVER;
@@ -220,7 +219,7 @@ public class DriverManagerConnectionProvider
 
 	private static Driver loadDriverIfPossible(String driverClassName, ServiceRegistry serviceRegistry) {
 		if ( driverClassName == null ) {
-			CONNECTION_INFO_LOGGER.debug( "No driver class specified" );
+			CONNECTION_INFO_LOGGER.noDriverClassSpecified();
 			return null;
 		}
 		else if ( serviceRegistry != null ) {
@@ -247,7 +246,7 @@ public class DriverManagerConnectionProvider
 	private static ConnectionCreatorFactory loadConnectionCreatorFactory(
 			String connectionCreatorFactoryClassName, ServiceRegistry serviceRegistry) {
 		if ( connectionCreatorFactoryClassName == null ) {
-			CONNECTION_INFO_LOGGER.debug( "No connection creator factory class specified" );
+			CONNECTION_INFO_LOGGER.noConnectionCreatorFactoryClassSpecified();
 			return null;
 		}
 		else if ( serviceRegistry != null ) {
@@ -340,7 +339,7 @@ public class DriverManagerConnectionProvider
 	protected void validateConnectionsReturned() {
 		final int allocationCount = getOpenConnections();
 		if ( allocationCount != 0 ) {
-			CONNECTION_INFO_LOGGER.error( "Connection leak detected: there are " + allocationCount + " unclosed connections");
+			CONNECTION_INFO_LOGGER.connectionLeakDetected( allocationCount );
 		}
 	}
 

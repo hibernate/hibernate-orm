@@ -4,7 +4,6 @@
  */
 package org.hibernate.engine.jdbc.connections.internal;
 
-import org.hibernate.internal.log.ConnectionInfoLogger;
 
 import java.sql.Connection;
 import java.sql.SQLException;

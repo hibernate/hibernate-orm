@@ -540,4 +540,46 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message( id = 6064, value = "Unable to close temp session" )
 	void unableToCLoseTempSession();
+
+	// AbstractEntityPersister
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6565, value = "Initializing lazy properties from datastore (triggered for '%s')" )
+	void initializingLazyPropertiesFromDatastore(String fieldName);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6566, value = "Initializing lazy properties from second-level cache" )
+	void initializingLazyPropertiesFromSecondLevelCache();
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6567, value = "Done initializing lazy properties" )
+	void doneInitializingLazyProperties();
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6568, value = "Resolving unique key [%s] to identifier for entity [%s]" )
+	void resolvingUniqueKeyToIdentifier(Object key, String entityName);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6569, value = "Reading entity version: %s" )
+	void readingEntityVersion(String info);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6570, value = "Fetching entity: %s" )
+	void fetchingEntity(String info);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6571, value = "%s is dirty" )
+	void propertyIsDirty(String qualifiedProperty);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6572, value = "Forcing version increment [%s]" )
+	void forcingVersionIncrement(String info);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6573, value = "Getting current natural-id snapshot state for `%s#%s" )
+	void gettingCurrentNaturalIdSnapshot(String entityName, Object id);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6574, value = "Initializing lazy properties of: %s, field access: %s" )
+	void initializingLazyPropertiesOf(String info, String fieldName);
 }

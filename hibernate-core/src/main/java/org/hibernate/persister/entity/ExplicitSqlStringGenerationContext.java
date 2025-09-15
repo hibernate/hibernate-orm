@@ -84,16 +84,21 @@ public class ExplicitSqlStringGenerationContext implements SqlStringGenerationCo
 
 	@Override
 	public String formatWithoutCatalog(QualifiedSequenceName qualifiedName) {
-		QualifiedSequenceName nameToFormat;
+		return nameFormater().format( nameToFormat( qualifiedName ), getDialect() );
+	}
+
+	private QualifiedSequenceName nameToFormat(QualifiedSequenceName qualifiedName) {
 		if ( qualifiedName.getCatalogName() != null
 				|| qualifiedName.getSchemaName() == null && defaultSchema != null ) {
-			nameToFormat = new QualifiedSequenceName( null,
-					schemaWithDefault( qualifiedName.getSchemaName() ), qualifiedName.getSequenceName() );
+			return new QualifiedSequenceName(
+					null,
+					schemaWithDefault( qualifiedName.getSchemaName() ),
+					qualifiedName.getSequenceName()
+			);
 		}
 		else {
-			nameToFormat = qualifiedName;
+			return qualifiedName;
 		}
-		return nameFormater().format( nameToFormat, getDialect() );
 	}
 
 	@Override

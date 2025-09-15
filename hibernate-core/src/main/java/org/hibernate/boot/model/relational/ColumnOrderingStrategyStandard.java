@@ -10,14 +10,12 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.temptable.TemporaryTableColumn;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.UserDefinedObjectType;
 
 import static java.lang.Math.log;
@@ -48,7 +46,7 @@ public class ColumnOrderingStrategyStandard implements ColumnOrderingStrategy {
 		// We try to find uniqueKey constraint containing only primary key.
 		//	This uniqueKey then orders primaryKey columns. Otherwise, order as usual.
 		if ( constraint instanceof PrimaryKey primaryKey ) {
-			final UniqueKey uniqueKey = primaryKey.getOrderingUniqueKey();
+			final var uniqueKey = primaryKey.getOrderingUniqueKey();
 			if ( uniqueKey != null ) {
 				return uniqueKey.getColumns();
 			}
@@ -77,7 +75,7 @@ public class ColumnOrderingStrategyStandard implements ColumnOrderingStrategy {
 
 		@Override
 		public int compare(Column o1, Column o2) {
-			final Dialect dialect = metadata.getDatabase().getDialect();
+			final var dialect = metadata.getDatabase().getDialect();
 			final int physicalSizeInBytes1 = physicalSizeInBytes(
 					o1.getSqlTypeCode( metadata ),
 					o1.getColumnSize( dialect, metadata ),

@@ -138,8 +138,8 @@ public class Database {
 	}
 
 	public Namespace locateNamespace(Identifier catalogName, Identifier schemaName) {
-		final Namespace.Name name = new Namespace.Name( catalogName, schemaName );
-		final Namespace namespace = namespaceMap.get( name );
+		final var name = new Namespace.Name( catalogName, schemaName );
+		final var namespace = namespaceMap.get( name );
 		return namespace == null ? makeNamespace( name ) : namespace;
 	}
 

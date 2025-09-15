@@ -15,6 +15,11 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
+import static java.sql.DatabaseMetaData.columnNoNulls;
+import static java.sql.DatabaseMetaData.columnNullable;
+
 /**
  * Implementation of the InformationExtractor contract which uses the standard JDBC {@link java.sql.DatabaseMetaData}
  * API for extraction.
@@ -153,7 +158,6 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 	protected void addColumns(TableInformation tableInformation) {
 		final var dialect = getJdbcEnvironment().getDialect();
 		final var extractionContext = getExtractionContext();
-
 		// We use this dummy query to retrieve the table information through the ResultSetMetaData
 		// Significantly better than using DatabaseMetaData especially on Oracle with synonyms enabled
 		final var qualifiedTableName = tableInformation.getName();
@@ -162,13 +166,12 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 						// The name comes from the database, so the case is correct,
 						// but we quote here to avoid issues with reserved words
 						.format( qualifiedTableName.quote() );
-
 		try {
 			extractionContext.getQueryResults(
 					"select * from " + tableName + " where 1=0",
 					null,
 					resultSet -> {
-						final ResultSetMetaData metaData = resultSet.getMetaData();
+						final var metaData = resultSet.getMetaData();
 						final int columnCount = metaData.getColumnCount();
 						for ( int i = 1; i <= columnCount; i++ ) {
 							tableInformation.addColumn( columnInformation( tableInformation, metaData, i, dialect ) );
@@ -184,15 +187,15 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 
 	private static Boolean interpretNullable(int nullable) {
 		return switch ( nullable ) {
-			case ResultSetMetaData.columnNullable -> Boolean.TRUE;
-			case ResultSetMetaData.columnNoNulls -> Boolean.FALSE;
+			case columnNullable -> TRUE;
+			case columnNoNulls -> FALSE;
 			default -> null;
 		};
 	}
 
 	private static ColumnInformationImpl columnInformation(
 			TableInformation tableInformation, ResultSetMetaData metaData, int i, Dialect dialect)
-			throws SQLException {
+					throws SQLException {
 		final String columnName = metaData.getColumnName( i );
 		final int columnType = metaData.getColumnType( i );
 		final String typeName =

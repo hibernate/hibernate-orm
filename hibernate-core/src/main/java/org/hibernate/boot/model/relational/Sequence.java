@@ -56,11 +56,7 @@ public class Sequence implements ContributableDatabaseObject {
 			int incrementSize,
 			String options) {
 		this.contributor = contributor;
-		this.name = new QualifiedSequenceName(
-				catalogName,
-				schemaName,
-				sequenceName
-		);
+		this.name = new QualifiedSequenceName( catalogName, schemaName, sequenceName );
 		this.exportIdentifier = name.render();
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;

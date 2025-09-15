@@ -163,7 +163,10 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		return propertyAccessMap;
 	}
 
-	private EntityInstantiator determineInstantiator(PersistentClass bootDescriptor, EntityMetamodel entityMetamodel) {
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected EntityInstantiator determineInstantiator(PersistentClass bootDescriptor, EntityMetamodel entityMetamodel) {
 		if ( reflectionOptimizer != null && reflectionOptimizer.getInstantiationOptimizer() != null ) {
 			return new EntityInstantiatorPojoOptimized(
 					entityMetamodel,

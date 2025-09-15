@@ -19,8 +19,8 @@ import org.hibernate.service.spi.Stoppable;
  * The strategy is any interface that has multiple, (possibly short) named implementations.
  * <p>
  * {@code StrategySelector} manages resolution of particular implementation by (possibly short) name via the
- * {@link #selectStrategyImplementor} method, which is the main contract here.  As indicated in the docs of that
- * method the given name might be either a short registered name or the implementation FQN.  As an example, consider
+ * {@link #selectStrategyImplementor} method, which is the main contract here. As indicated in the Javadoc of that
+ * method, the given name might be either a short registered name or the implementation FQN. As an example, consider
  * resolving the {@link org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder} implementation to use.
  * To use the JDBC-based {@code TransactionCoordinatorBuilder} the passed name might be either {@code "jdbc"} or
  * {@code "org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl"}.
@@ -30,7 +30,7 @@ import org.hibernate.service.spi.Stoppable;
  * <p>
  * The service also exposes a general typing API via {@link #resolveStrategy} and {@link #resolveDefaultableStrategy}
  * which accept implementation references rather than implementation names, allowing for a multitude of interpretations
- * of said "implementation reference".  See the docs for {@link #resolveDefaultableStrategy} for details.
+ * of said "implementation reference". See the docs for {@link #resolveDefaultableStrategy} for details.
  *
  * @author Steve Ebersole
  */
@@ -121,9 +121,9 @@ public interface StrategySelector extends Service, Stoppable {
 	<T> T resolveStrategy(Class<T> strategy, Object strategyReference, T defaultValue, StrategyCreator<T> creator);
 
 	/**
-	 * Retrieve all of the registered implementors of the given strategy.  Useful
-	 * to allow defaulting the choice to the single registered implementor when
-	 * only one is registered
+	 * Retrieve all the registered implementors of the given strategy.
+	 * Useful to allow defaulting the choice to the single registered
+	 * implementor when only one is registered
 	 *
 	 * @return The implementors.  Should never return {@code null}
 	 */
@@ -144,8 +144,9 @@ public interface StrategySelector extends Service, Stoppable {
 	<T> void registerStrategyImplementor(Class<T> strategy, String name, Class<? extends T> implementation);
 
 	/**
-	 * Un-registers a named implementor of a particular strategy contract.  Un-registers all named registrations
-	 * for the given strategy contract naming the given class.
+	 * Unregisters a named implementor of a particular strategy contract.
+	 * Unregisters all named registrations for the given strategy contract
+	 * naming the given class.
 	 *
 	 * @param strategy The strategy contract.
 	 * @param implementation The implementation class

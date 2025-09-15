@@ -133,7 +133,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 					target.release();
 				}
 				catch (Exception e) {
-					CORE_LOGGER.debugf( "Problem releasing GenerationTarget [%s]: %s", target, e.getMessage() );
+					CORE_LOGGER.problemReleasingGenerationTarget( target, e );
 				}
 			}
 		}

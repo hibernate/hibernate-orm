@@ -822,8 +822,8 @@ public abstract class CollectionType extends AbstractType implements Association
 			persistenceContext.addCollectionHolder( collection );
 		}
 		if ( CORE_LOGGER.isTraceEnabled() ) {
-			CORE_LOGGER.trace( "Created collection wrapper: "
-							+ collectionInfoString( persister, collection, key, session ) );
+			CORE_LOGGER.createdCollectionWrapper(
+					collectionInfoString( persister, collection, key, session ) );
 		}
 		return collection;
 	}

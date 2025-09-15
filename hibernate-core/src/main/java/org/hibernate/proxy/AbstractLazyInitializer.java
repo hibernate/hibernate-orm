@@ -236,13 +236,13 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 						session.close();
 					}
 					catch (Exception e) {
-						CORE_LOGGER.warn( "Unable to close temporary session used to load lazy proxy associated to no session" );
+						CORE_LOGGER.unableToCLoseTempSession();
 					}
 				}
 			}
 			catch (Exception e) {
-				CORE_LOGGER.error( "Initialization failure [" + entityName + "#" + id + "]", e );
-				throw new LazyInitializationException( e.getMessage() );
+				throw new LazyInitializationException( "Could not initialize proxy ["
+						+ entityName + "#" + id + "]: " + e.getMessage() );
 			}
 		}
 		else if ( session.isOpenOrWaitingForAutoClose() && session.isConnected() ) {

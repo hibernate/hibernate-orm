@@ -629,7 +629,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 						// implicitly we do not "halt on error", but we do want to
 						// report the problem
 						CORE_LOGGER.unsuccessfulSchemaManagementCommand( command );
-						CORE_LOGGER.debugf( e, "Error performing delayed DROP command [%s]", command );
+						CORE_LOGGER.unsuccessfulDelayedDropCommand( e );
 					}
 				}
 			}

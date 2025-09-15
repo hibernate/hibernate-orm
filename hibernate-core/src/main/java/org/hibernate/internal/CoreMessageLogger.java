@@ -45,7 +45,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 		description = "Miscellaneous logging related to Hibernate ORM Core"
 )
 @MessageLogger(projectCode = "HHH")
-@ValidIdRange(min=2,max = 8000)
+@ValidIdRange(max = 8000)
 @Internal
 public interface CoreMessageLogger extends BasicLogger {
 
@@ -53,6 +53,10 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	Logger LOGGER = Logger.getLogger( NAME );
 	CoreMessageLogger CORE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, NAME );
+
+	@LogMessage(level = INFO)
+	@Message(value = "Hibernate ORM core version %s", id = 1)
+	void version(String versionString);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Composite id class does not override equals(): %s", id = 38)
@@ -265,10 +269,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = ERROR)
 	@Message(value = "Don't use old DTDs, read the Hibernate 3.x Migration Guide", id = 404)
 	void usingOldDtd();
-
-	@LogMessage(level = INFO)
-	@Message(value = "Hibernate ORM core version %s", id = 412)
-	void version(String versionString);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Warnings creating temp table: %s", id = 413)

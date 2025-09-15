@@ -19,6 +19,8 @@ import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.internal.log.SubSystemLogging;
 
+import org.hibernate.tool.schema.spi.CommandAcceptanceException;
+import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.Cause;
@@ -311,6 +313,10 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Unsuccessful: %s", id = 478)
 	void unsuccessfulSchemaManagementCommand(String command);
 
+	@LogMessage(level = DEBUG)
+	@Message( value = "Error performing delayed DROP command [%s]", id = 479 )
+	void unsuccessfulDelayedDropCommand(CommandAcceptanceException e);
+
 	@LogMessage(level = WARN)
 	@Message(
 			value = """
@@ -504,22 +510,34 @@ public interface CoreMessageLogger extends BasicLogger {
 	void collectionFoundUninitialized(String is, String was);
 
 	@LogMessage(level = TRACE)
-	@Message( id = 6049, value = "Starting serialization of [%s] EntityEntry entries" )
+	@Message( id = 6049, value = "Created collection wrapper for: %s" )
+	void createdCollectionWrapper(String s);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6051, value = "Starting serialization of [%s] EntityEntry entries" )
 	void startingEntityEntrySerialization(int count);
 
 	@LogMessage(level = TRACE)
-	@Message( id = 6050, value = "Starting deserialization of [%s] EntityEntry entries" )
+	@Message( id = 6052, value = "Starting deserialization of [%s] EntityEntry entries" )
 	void startingEntityEntryDeserialization(int count);
 
 	@LogMessage(level = ERROR)
-	@Message( id = 6051, value = "Enable to deserialize [%s]" )
+	@Message( id = 6053, value = "Unable to deserialize [%s]" )
 	void unableToDeserialize(String entityEntryClassName);
 
 	@LogMessage(level = TRACE)
 	@Message( id = 6061, value = "Extracted generated values for entity %s - %s" )
-	void extractedGeneratedValues(String s, String string);
+	void extractedGeneratedValues(String info, String results);
 
 	@LogMessage(level = WARN)
 	@Message( id = 6062, value = "Could not resolve type name [%s] as Java type" )
 	void couldNotResolveTypeName(String typeName, @Cause ClassLoadingException exception);
+
+	@LogMessage(level = DEBUG)
+	@Message( id = 6063, value = "Problem releasing GenerationTarget [%s]" )
+	void problemReleasingGenerationTarget(GenerationTarget target, @Cause Exception e);
+
+	@LogMessage(level = WARN)
+	@Message( id = 6064, value = "Unable to close temp session" )
+	void unableToCLoseTempSession();
 }

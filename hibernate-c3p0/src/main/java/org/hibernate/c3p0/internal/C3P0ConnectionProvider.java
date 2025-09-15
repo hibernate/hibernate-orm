@@ -51,6 +51,7 @@ import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionI
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getSchema;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasCatalog;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasSchema;
+import static org.hibernate.internal.log.ConnectionInfoLogger.CONNECTION_INFO_LOGGER;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 
@@ -135,7 +136,7 @@ public class C3P0ConnectionProvider
 
 	@Override
 	public void configure(Map<String, Object> properties) {
-		ConnectionInfoLogger.INSTANCE.configureConnectionPool( "c3p0" );
+		CONNECTION_INFO_LOGGER.configureConnectionPool( "c3p0" );
 
 		final String jdbcDriverClass = extractSetting(
 				properties,
@@ -205,7 +206,7 @@ public class C3P0ConnectionProvider
 			return pooledDataSource( unpooledDataSource( jdbcUrl, connectionProps ), poolProperties );
 		}
 		catch (Exception e) {
-			ConnectionInfoLogger.INSTANCE.unableToInstantiateConnectionPool( e );
+			CONNECTION_INFO_LOGGER.unableToInstantiateConnectionPool( e );
 			throw new ConnectionProviderConfigurationException(
 					"Could not configure c3p0: " + e.getMessage(),  e );
 		}
@@ -213,7 +214,7 @@ public class C3P0ConnectionProvider
 
 	private void loadDriverClass(String jdbcDriverClass) {
 		if ( jdbcDriverClass == null ) {
-			ConnectionInfoLogger.INSTANCE.jdbcDriverNotSpecified();
+			CONNECTION_INFO_LOGGER.jdbcDriverNotSpecified();
 		}
 		else {
 			try {
@@ -313,12 +314,12 @@ public class C3P0ConnectionProvider
 
 	@Override
 	public void stop() {
-		ConnectionInfoLogger.INSTANCE.cleaningUpConnectionPool( C3P0_CONFIG_PREFIX );
+		CONNECTION_INFO_LOGGER.cleaningUpConnectionPool( C3P0_CONFIG_PREFIX );
 		try {
 			DataSources.destroy( dataSource );
 		}
 		catch (SQLException sqle) {
-			ConnectionInfoLogger.INSTANCE.unableToDestroyConnectionPool( sqle );
+			CONNECTION_INFO_LOGGER.unableToDestroyConnectionPool( sqle );
 		}
 	}
 

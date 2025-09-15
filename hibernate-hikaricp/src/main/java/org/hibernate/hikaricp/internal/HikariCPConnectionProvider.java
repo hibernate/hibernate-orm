@@ -33,6 +33,7 @@ import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionI
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasCatalog;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasSchema;
 import static org.hibernate.hikaricp.internal.HikariConfigurationUtil.loadConfiguration;
+import static org.hibernate.internal.log.ConnectionInfoLogger.CONNECTION_INFO_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 
 /**
@@ -67,12 +68,12 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	@Override
 	public void configure(Map<String, Object> configuration) throws HibernateException {
 		try {
-			ConnectionInfoLogger.INSTANCE.configureConnectionPool( "HikariCP" );
+			CONNECTION_INFO_LOGGER.configureConnectionPool( "HikariCP" );
 			hikariConfig = loadConfiguration( configuration );
 			hikariDataSource = new HikariDataSource( hikariConfig );
 		}
 		catch (Exception e) {
-			ConnectionInfoLogger.INSTANCE.unableToInstantiateConnectionPool( e );
+			CONNECTION_INFO_LOGGER.unableToInstantiateConnectionPool( e );
 			throw new ConnectionProviderConfigurationException(
 					"Could not configure HikariCP: " + e.getMessage(),  e );
 		}
@@ -168,7 +169,7 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	@Override
 	public void stop() {
 		if ( hikariDataSource != null ) {
-			ConnectionInfoLogger.INSTANCE.cleaningUpConnectionPool( "HikariCP" );
+			CONNECTION_INFO_LOGGER.cleaningUpConnectionPool( "HikariCP" );
 			hikariDataSource.close();
 		}
 	}

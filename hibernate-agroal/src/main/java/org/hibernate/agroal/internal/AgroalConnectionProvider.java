@@ -45,6 +45,7 @@ import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionI
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getSchema;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasCatalog;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasSchema;
+import static org.hibernate.internal.log.ConnectionInfoLogger.CONNECTION_INFO_LOGGER;
 
 /**
  * {@link ConnectionProvider} based on Agroal connection pool.
@@ -105,7 +106,7 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 
 	@Override
 	public void configure(Map<String, Object> properties) throws HibernateException {
-		ConnectionInfoLogger.INSTANCE.configureConnectionPool( "Agroal" );
+		CONNECTION_INFO_LOGGER.configureConnectionPool( "Agroal" );
 		try {
 			final var config = toStringValuedProperties( properties );
 			if ( !properties.containsKey( AgroalSettings.AGROAL_MAX_SIZE ) ) {
@@ -130,7 +131,7 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 			agroalDataSource = AgroalDataSource.from( agroalProperties );
 		}
 		catch ( Exception e ) {
-			ConnectionInfoLogger.INSTANCE.unableToInstantiateConnectionPool( e );
+			CONNECTION_INFO_LOGGER.unableToInstantiateConnectionPool( e );
 			throw new ConnectionProviderConfigurationException(
 					"Could not configure Agroal: " + e.getMessage(),  e );
 		}
@@ -225,7 +226,7 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	@Override
 	public void stop() {
 		if ( agroalDataSource != null ) {
-			ConnectionInfoLogger.INSTANCE.cleaningUpConnectionPool(
+			CONNECTION_INFO_LOGGER.cleaningUpConnectionPool(
 					agroalDataSource.getConfiguration()
 							.connectionPoolConfiguration()
 							.connectionFactoryConfiguration()

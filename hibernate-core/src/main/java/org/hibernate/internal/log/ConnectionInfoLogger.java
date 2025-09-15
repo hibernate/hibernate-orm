@@ -20,6 +20,7 @@ import org.jboss.logging.annotations.ValidIdRange;
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.WARN;
+import static org.jboss.logging.Logger.Level.ERROR;
 
 /**
  * @author Steve Ebersole
@@ -79,7 +80,47 @@ public interface ConnectionInfoLogger extends BasicLogger {
 	@Message(value = "Configuring connection pool [%s]", id = 10001012)
 	void configureConnectionPool(String type);
 
-	@LogMessage(level = INFO)
+@LogMessage(level = INFO)
 	@Message(value = "Ignoring setting '%s' for connection provider [%s]", id = 10001013)
 	void ignoredSetting(String setting, Class<?> provider);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Initializing connection pool with %s connections", id = 10001014)
+	void initializingConnectionPool(int size);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Connection pool now considered primed; min-size will be maintained", id = 10001015)
+	void connectionPoolPrimed();
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Adding %s connections to the pool", id = 10001016)
+	void addingConnectionsToPool(int numberToBeAdded);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Removing %s connections from the pool", id = 10001017)
+	void removingConnectionsFromPool(int numberToBeRemoved);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Connection release failed, closing pooled connection", id = 10001018)
+	void connectionReleaseFailedClosingPooledConnection(@Cause Throwable t);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Connection preparation failed, closing pooled connection", id = 10001019)
+	void connectionPreparationFailedClosingPooledConnection(@Cause Throwable t);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Connection remove failed", id = 10001020)
+	void connectionRemoveFailed();
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "No driver class specified", id = 10001021)
+	void noDriverClassSpecified();
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "No connection creator factory class specified", id = 10001022)
+	void noConnectionCreatorFactoryClassSpecified();
+
+	@LogMessage(level = ERROR)
+	@Message(value = "Connection leak detected: there are %s unclosed connections", id = 10001023)
+	void connectionLeakDetected(int allocationCount);
 }

@@ -5,7 +5,6 @@
 package org.hibernate.engine.jdbc.connections.internal;
 
 import org.hibernate.HibernateException;
-import org.hibernate.internal.log.ConnectionInfoLogger;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -32,7 +31,7 @@ class PooledConnections {
 
 	private PooledConnections(
 			Builder builder) {
-		CONNECTION_INFO_LOGGER.debugf( "Initializing Connection pool with %s Connections", builder.initialSize );
+		CONNECTION_INFO_LOGGER.initializingConnectionPool( builder.initialSize );
 		connectionCreator = builder.connectionCreator;
 		connectionValidator = builder.connectionValidator == null
 				? ConnectionValidator.ALWAYS_VALID
@@ -49,18 +48,18 @@ class PooledConnections {
 		if ( !primed && size >= minSize ) {
 			// IMPL NOTE: the purpose of primed is to allow the pool to lazily reach its
 			// defined min-size.
-			CONNECTION_INFO_LOGGER.debug( "Connection pool now considered primed; min-size will be maintained" );
+			CONNECTION_INFO_LOGGER.connectionPoolPrimed();
 			primed = true;
 		}
 
 		if ( size < minSize && primed ) {
 			int numberToBeAdded = minSize - size;
-			CONNECTION_INFO_LOGGER.debugf( "Adding %s Connections to the pool", numberToBeAdded );
+			CONNECTION_INFO_LOGGER.addingConnectionsToPool( numberToBeAdded );
 			addConnections( numberToBeAdded );
 		}
 		else if ( size > maxSize ) {
 			int numberToBeRemoved = size - maxSize;
-			CONNECTION_INFO_LOGGER.debugf( "Removing %s Connections from the pool", numberToBeRemoved );
+			CONNECTION_INFO_LOGGER.removingConnectionsFromPool( numberToBeRemoved );
 			removeConnections( numberToBeRemoved );
 		}
 	}
@@ -85,7 +84,7 @@ class PooledConnections {
 			t = ex;
 		}
 		closeConnection( conn, t );
-		CONNECTION_INFO_LOGGER.debug( "Connection release failed. Closing pooled connection", t );
+		CONNECTION_INFO_LOGGER.connectionReleaseFailedClosingPooledConnection( t );
 		return null;
 	}
 
@@ -121,7 +120,7 @@ class PooledConnections {
 			t = ex;
 		}
 		closeConnection( conn, t );
-		CONNECTION_INFO_LOGGER.debug( "Connection preparation failed. Closing pooled connection", t );
+		CONNECTION_INFO_LOGGER.connectionPreparationFailedClosingPooledConnection( t );
 		return null;
 	}
 
@@ -137,7 +136,7 @@ class PooledConnections {
 		}
 		finally {
 			if ( !allConnections.remove( conn ) ) {
-				CONNECTION_INFO_LOGGER.debug( "Connection remove failed." );
+				CONNECTION_INFO_LOGGER.connectionRemoveFailed();
 			}
 		}
 	}

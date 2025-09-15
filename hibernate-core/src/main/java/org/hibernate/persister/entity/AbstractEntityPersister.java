@@ -281,6 +281,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize
 import static org.hibernate.internal.util.collections.CollectionHelper.toSmallList;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.supportsSqlArrayType;
 import static org.hibernate.metamodel.RepresentationMode.POJO;
+import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
 import static org.hibernate.metamodel.mapping.internal.GeneratedValuesProcessor.getGeneratedAttributes;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.buildBasicAttributeMapping;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.buildEncapsulatedCompositeIdentifierMapping;
@@ -1766,7 +1767,7 @@ public abstract class AbstractEntityPersister
 		setPropertyValue( entity, index, propValue );
 		final var loadedState = entry.getLoadedState();
 		if ( loadedState != null ) {
-			// object have been loaded with setReadOnly(true); HHH-2236
+			// object has been loaded with setReadOnly(true); HHH-2236
 			loadedState[index] = type.deepCopy( propValue, factory );
 		}
 		// If the entity has deleted state, then update that as well
@@ -2281,7 +2282,7 @@ public abstract class AbstractEntityPersister
 						discriminatorBasicType,
 						new UnifiedAnyDiscriminatorConverter<>(
 								getNavigableRole()
-										.append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
+										.append( DISCRIMINATOR_ROLE_NAME ),
 								factory.getTypeConfiguration().getJavaTypeRegistry()
 										.resolveDescriptor( discriminatedType() ),
 								discriminatorBasicType.getRelationalJavaType(),
@@ -3465,9 +3466,9 @@ public abstract class AbstractEntityPersister
 	public void addSoftDeleteToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
 		if ( softDeleteMapping != null ) {
 			final TableInsertBuilder insertBuilder = insertGroupBuilder.getTableDetailsBuilder( getIdentifierTableName() );
-			final MutatingTableReference mutatingTable = insertBuilder.getMutatingTable();
-			final ColumnReference columnReference = new ColumnReference( mutatingTable, softDeleteMapping );
-			final ColumnValueBinding nonDeletedValueBinding = softDeleteMapping.createNonDeletedValueBinding( columnReference );
+			final var mutatingTable = insertBuilder.getMutatingTable();
+			final var columnReference = new ColumnReference( mutatingTable, softDeleteMapping );
+			final var nonDeletedValueBinding = softDeleteMapping.createNonDeletedValueBinding( columnReference );
 			insertBuilder.addValueColumn( nonDeletedValueBinding );
 		}
 	}
@@ -3512,7 +3513,7 @@ public abstract class AbstractEntityPersister
 			CORE_LOGGER.fetchingEntity( infoString( this, id, getFactory() ) );
 		}
 
-		final SingleIdEntityLoader<?> loader = determineLoaderToUse( session, lockOptions );
+		final var loader = determineLoaderToUse( session, lockOptions );
 		return optionalObject == null
 				? loader.load( id, lockOptions, readOnly, session )
 				: loader.load( id, optionalObject, lockOptions, readOnly, session );
@@ -3558,47 +3559,57 @@ public abstract class AbstractEntityPersister
 			Object entity,
 			String nameOfAttributeBeingAccessed,
 			SharedSessionContractImplementor session) {
-		final var enhancementMetadata = getBytecodeEnhancementMetadata();
-		if ( enhancementMetadata.extractLazyInterceptor( entity )
+		if ( getBytecodeEnhancementMetadata().extractLazyInterceptor( entity )
 				instanceof EnhancementAsProxyLazinessInterceptor proxyInterceptor ) {
-
 			final var entityKey = proxyInterceptor.getEntityKey();
-			final Object identifier = entityKey.getIdentifier();
-
-			Object loaded = null;
-			if ( canReadFromCache && session.isEventSource() ) {
-				final var eventSource = (EventSource) session;
-				loaded = eventSource.loadFromSecondLevelCache( this, entityKey, entity, LockMode.NONE );
-			}
-			if ( loaded == null ) {
-				final var lockOptions = new LockOptions();
-				loaded = determineLoaderToUse( session, lockOptions ).load( identifier, entity, lockOptions, session );
-			}
-
+			final Object id = entityKey.getIdentifier();
+			final Object loaded = loadEnhancedEntityUsedAsProxy( entity, session, entityKey );
 			if ( loaded == null ) {
 				final var persistenceContext = session.getPersistenceContext();
 				persistenceContext.removeEntry( entity );
 				persistenceContext.removeEntity( entityKey );
-				factory.getEntityNotFoundDelegate().handleEntityNotFound( entityKey.getEntityName(), identifier );
+				factory.getEntityNotFoundDelegate().handleEntityNotFound( entityKey.getEntityName(), id );
 			}
-
-			final var interceptor = enhancementMetadata.injectInterceptor( entity, identifier, session );
-
-			final Object value;
-			if ( nameOfAttributeBeingAccessed == null ) {
-				return null;
-			}
-			else if ( interceptor.isAttributeLoaded( nameOfAttributeBeingAccessed ) ) {
-				value = getPropertyValue( entity, nameOfAttributeBeingAccessed );
-			}
-			else {
-				value = initializeLazyProperty( nameOfAttributeBeingAccessed, entity, session );
-			}
-
-			return interceptor.readObject( entity, nameOfAttributeBeingAccessed, value );
+			return readEnhancedEntityAttribute( entity, id, nameOfAttributeBeingAccessed, session );
 		}
+		else {
+			throw new AssertionFailure( "The BytecodeLazyAttributeInterceptor was not an instance of EnhancementAsProxyLazinessInterceptor" );
+		}
+	}
 
-		throw new IllegalStateException();
+	private Object loadEnhancedEntityUsedAsProxy(
+			Object entity,
+			SharedSessionContractImplementor session,
+			EntityKey entityKey) {
+		if ( canReadFromCache && session.isEventSource() ) {
+			final Object cachedEntity =
+					session.loadFromSecondLevelCache( this, entityKey, entity, LockMode.NONE );
+			if ( cachedEntity != null ) {
+				return cachedEntity;
+			}
+		}
+		final var lockOptions = new LockOptions();
+		return determineLoaderToUse( session, lockOptions )
+				.load( entityKey.getIdentifier(), entity, lockOptions, session );
+	}
+
+	private Object readEnhancedEntityAttribute(
+			Object entity, Object id, String nameOfAttributeBeingAccessed,
+			SharedSessionContractImplementor session) {
+		final var interceptor =
+				getBytecodeEnhancementMetadata()
+						.injectInterceptor( entity, id, session );
+		final Object value;
+		if ( nameOfAttributeBeingAccessed == null ) {
+			return null;
+		}
+		else if ( interceptor.isAttributeLoaded( nameOfAttributeBeingAccessed ) ) {
+			value = getPropertyValue( entity, nameOfAttributeBeingAccessed );
+		}
+		else {
+			value = initializeLazyProperty( nameOfAttributeBeingAccessed, entity, session );
+		}
+		return interceptor.readObject( entity, nameOfAttributeBeingAccessed, value );
 	}
 
 	@Override

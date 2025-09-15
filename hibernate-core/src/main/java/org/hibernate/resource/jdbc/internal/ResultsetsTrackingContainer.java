@@ -174,8 +174,10 @@ final class ResultsetsTrackingContainer {
 	}
 
 	private boolean warnOnNotNull(ResultSetsSet existingEntry) {
-		// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
-		// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
+		// Keep this at DEBUG level, rather than WARN.
+		// Connection pool implementations often return a
+		// proxy/wrapper around the JDBC Statement,
+		// causing excessive logging here. See HHH-8210.
 		if ( existingEntry == null ) {
 			CORE_LOGGER.trace( "ResultSet statement was not registered (on register)" );
 		}

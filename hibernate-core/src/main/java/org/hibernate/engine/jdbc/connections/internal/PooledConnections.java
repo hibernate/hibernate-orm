@@ -11,6 +11,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import static org.hibernate.internal.log.ConnectionInfoLogger.CONNECTION_INFO_LOGGER;
+
 class PooledConnections {
 
 	// Thanks to Oleg Varaksin and his article on object pooling using the {@link java.util.concurrent}
@@ -30,7 +32,7 @@ class PooledConnections {
 
 	private PooledConnections(
 			Builder builder) {
-		ConnectionInfoLogger.INSTANCE.debugf( "Initializing Connection pool with %s Connections", builder.initialSize );
+		CONNECTION_INFO_LOGGER.debugf( "Initializing Connection pool with %s Connections", builder.initialSize );
 		connectionCreator = builder.connectionCreator;
 		connectionValidator = builder.connectionValidator == null
 				? ConnectionValidator.ALWAYS_VALID
@@ -47,18 +49,18 @@ class PooledConnections {
 		if ( !primed && size >= minSize ) {
 			// IMPL NOTE: the purpose of primed is to allow the pool to lazily reach its
 			// defined min-size.
-			ConnectionInfoLogger.INSTANCE.debug( "Connection pool now considered primed; min-size will be maintained" );
+			CONNECTION_INFO_LOGGER.debug( "Connection pool now considered primed; min-size will be maintained" );
 			primed = true;
 		}
 
 		if ( size < minSize && primed ) {
 			int numberToBeAdded = minSize - size;
-			ConnectionInfoLogger.INSTANCE.debugf( "Adding %s Connections to the pool", numberToBeAdded );
+			CONNECTION_INFO_LOGGER.debugf( "Adding %s Connections to the pool", numberToBeAdded );
 			addConnections( numberToBeAdded );
 		}
 		else if ( size > maxSize ) {
 			int numberToBeRemoved = size - maxSize;
-			ConnectionInfoLogger.INSTANCE.debugf( "Removing %s Connections from the pool", numberToBeRemoved );
+			CONNECTION_INFO_LOGGER.debugf( "Removing %s Connections from the pool", numberToBeRemoved );
 			removeConnections( numberToBeRemoved );
 		}
 	}
@@ -83,7 +85,7 @@ class PooledConnections {
 			t = ex;
 		}
 		closeConnection( conn, t );
-		ConnectionInfoLogger.INSTANCE.debug( "Connection release failed. Closing pooled connection", t );
+		CONNECTION_INFO_LOGGER.debug( "Connection release failed. Closing pooled connection", t );
 		return null;
 	}
 
@@ -119,7 +121,7 @@ class PooledConnections {
 			t = ex;
 		}
 		closeConnection( conn, t );
-		ConnectionInfoLogger.INSTANCE.debug( "Connection preparation failed. Closing pooled connection", t );
+		CONNECTION_INFO_LOGGER.debug( "Connection preparation failed. Closing pooled connection", t );
 		return null;
 	}
 
@@ -128,14 +130,14 @@ class PooledConnections {
 			conn.close();
 		}
 		catch (SQLException ex) {
-			ConnectionInfoLogger.INSTANCE.unableToClosePooledConnection( ex );
+			CONNECTION_INFO_LOGGER.unableToClosePooledConnection( ex );
 			if ( t != null ) {
 				t.addSuppressed( ex );
 			}
 		}
 		finally {
 			if ( !allConnections.remove( conn ) ) {
-				ConnectionInfoLogger.INSTANCE.debug( "Connection remove failed." );
+				CONNECTION_INFO_LOGGER.debug( "Connection remove failed." );
 			}
 		}
 	}
@@ -144,7 +146,7 @@ class PooledConnections {
 		try {
 			final int allocationCount = allConnections.size() - availableConnections.size();
 			if ( allocationCount > 0 ) {
-				ConnectionInfoLogger.INSTANCE.error(
+				CONNECTION_INFO_LOGGER.error(
 						"Connection leak detected: there are " + allocationCount + " unclosed connections upon shutting down pool " + getUrl() );
 			}
 		}

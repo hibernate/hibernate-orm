@@ -14,6 +14,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
+import static org.hibernate.internal.log.ConnectionInfoLogger.CONNECTION_INFO_LOGGER;
 
 class PoolState implements Runnable {
 
@@ -76,7 +77,7 @@ class PoolState implements Runnable {
 			if ( !active ) {
 				return;
 			}
-			ConnectionInfoLogger.INSTANCE.cleaningUpConnectionPool( pool.getUrl() );
+			CONNECTION_INFO_LOGGER.cleaningUpConnectionPool( pool.getUrl() );
 			active = false;
 			if ( executorService != null ) {
 				executorService.shutdown();
@@ -86,7 +87,7 @@ class PoolState implements Runnable {
 				pool.close();
 			}
 			catch (SQLException e) {
-				ConnectionInfoLogger.INSTANCE.unableToDestroyConnectionPool( e );
+				CONNECTION_INFO_LOGGER.unableToDestroyConnectionPool( e );
 			}
 		}
 		finally {

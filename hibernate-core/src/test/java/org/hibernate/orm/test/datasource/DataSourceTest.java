@@ -33,9 +33,9 @@ public class DataSourceTest {
 	@Test
 	void test(EntityManagerFactoryScope scope) {
 		Listener listener = new Listener();
-		LogInspectionHelper.registerListener( listener, ConnectionInfoLogger.INSTANCE );
+		LogInspectionHelper.registerListener( listener, ConnectionInfoLogger.CONNECTION_INFO_LOGGER );
 		scope.getEntityManagerFactory();
-		LogInspectionHelper.clearAllListeners( ConnectionInfoLogger.INSTANCE );
+		LogInspectionHelper.clearAllListeners( ConnectionInfoLogger.CONNECTION_INFO_LOGGER );
 		Dialect dialect = scope.getDialect();
 		assertTrue( dialect instanceof OracleDialect
 					|| dialect instanceof DB2Dialect

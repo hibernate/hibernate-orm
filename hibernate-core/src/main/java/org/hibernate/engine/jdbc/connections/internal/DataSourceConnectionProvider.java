@@ -25,6 +25,7 @@ import org.hibernate.service.spi.Stoppable;
 
 import static org.hibernate.cfg.JdbcSettings.DATASOURCE;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
+import static org.hibernate.internal.log.ConnectionInfoLogger.CONNECTION_INFO_LOGGER;
 
 /**
  * A {@link ConnectionProvider} that manages connections from an underlying {@link DataSource}.
@@ -110,11 +111,11 @@ public class DataSourceConnectionProvider
 		}
 
 		if ( configuration.containsKey( JdbcSettings.AUTOCOMMIT ) ) {
-			ConnectionInfoLogger.INSTANCE.ignoredSetting( JdbcSettings.AUTOCOMMIT,
+			CONNECTION_INFO_LOGGER.ignoredSetting( JdbcSettings.AUTOCOMMIT,
 					DataSourceConnectionProvider.class );
 		}
 		if ( configuration.containsKey( JdbcSettings.ISOLATION ) ) {
-			ConnectionInfoLogger.INSTANCE.ignoredSetting( JdbcSettings.ISOLATION,
+			CONNECTION_INFO_LOGGER.ignoredSetting( JdbcSettings.ISOLATION,
 					DataSourceConnectionProvider.class );
 		}
 

@@ -43,6 +43,7 @@ import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionI
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getSchema;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasCatalog;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasSchema;
+import static org.hibernate.internal.log.ConnectionInfoLogger.CONNECTION_INFO_LOGGER;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getLong;
@@ -82,7 +83,7 @@ public class DriverManagerConnectionProvider
 
 	@Override
 	public void configure(Map<String, Object> configurationValues) {
-		ConnectionInfoLogger.INSTANCE.usingHibernateBuiltInConnectionPool();
+		CONNECTION_INFO_LOGGER.usingHibernateBuiltInConnectionPool();
 		final PooledConnections pool = buildPool( configurationValues, serviceRegistry );
 		final long validationInterval = getLong( VALIDATION_INTERVAL, configurationValues, 30 );
 		state = new PoolState( pool, validationInterval );
@@ -181,7 +182,7 @@ public class DriverManagerConnectionProvider
 	}
 
 	private static void logAvailableDrivers() {
-		ConnectionInfoLogger.INSTANCE.jdbcDriverNotSpecified();
+		CONNECTION_INFO_LOGGER.jdbcDriverNotSpecified();
 		final var list = new StringBuilder();
 		DriverManager.drivers()
 				.forEach( driver -> {
@@ -190,7 +191,7 @@ public class DriverManagerConnectionProvider
 					}
 					list.append( driver.getClass().getName() );
 				} );
-		ConnectionInfoLogger.INSTANCE.availableJdbcDrivers( list.toString() );
+		CONNECTION_INFO_LOGGER.availableJdbcDrivers( list.toString() );
 	}
 
 	private static String jdbcUrl(Map<String, Object> configuration) {
@@ -219,7 +220,7 @@ public class DriverManagerConnectionProvider
 
 	private static Driver loadDriverIfPossible(String driverClassName, ServiceRegistry serviceRegistry) {
 		if ( driverClassName == null ) {
-			ConnectionInfoLogger.INSTANCE.debug( "No driver class specified" );
+			CONNECTION_INFO_LOGGER.debug( "No driver class specified" );
 			return null;
 		}
 		else if ( serviceRegistry != null ) {
@@ -246,7 +247,7 @@ public class DriverManagerConnectionProvider
 	private static ConnectionCreatorFactory loadConnectionCreatorFactory(
 			String connectionCreatorFactoryClassName, ServiceRegistry serviceRegistry) {
 		if ( connectionCreatorFactoryClassName == null ) {
-			ConnectionInfoLogger.INSTANCE.debug( "No connection creator factory class specified" );
+			CONNECTION_INFO_LOGGER.debug( "No connection creator factory class specified" );
 			return null;
 		}
 		else if ( serviceRegistry != null ) {
@@ -339,7 +340,7 @@ public class DriverManagerConnectionProvider
 	protected void validateConnectionsReturned() {
 		final int allocationCount = getOpenConnections();
 		if ( allocationCount != 0 ) {
-			ConnectionInfoLogger.INSTANCE.error( "Connection leak detected: there are " + allocationCount + " unclosed connections");
+			CONNECTION_INFO_LOGGER.error( "Connection leak detected: there are " + allocationCount + " unclosed connections");
 		}
 	}
 

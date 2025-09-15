@@ -16,6 +16,7 @@ import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
 
+import static org.hibernate.cfg.CacheSettings.CACHE_REGION_FACTORY;
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.TRACE;
@@ -237,10 +238,18 @@ public interface SecondLevelCacheLogger extends BasicLogger {
 	)
 	void noRegionFactory();
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(
-			value = "Cannot default RegionFactory based on registered strategies as %s RegionFactory strategies were registered",
+			value = "Cannot default RegionFactory based on registered strategies as %s RegionFactory strategies were registered"
+					+ " (explicitly set '" + CACHE_REGION_FACTORY + "')",
 			id = NAMESPACE + 30
 	)
 	void cannotDefaultRegionFactory(int size);
+
+	@LogMessage(level = DEBUG)
+	@Message(
+			value = "Cannot default RegionFactory since no RegionFactory strategies were registered",
+			id = NAMESPACE + 31
+	)
+	void noDefaultRegionFactory();
 }

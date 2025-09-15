@@ -13,7 +13,7 @@ import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
 
-import static org.jboss.logging.Logger.Level.WARN;
+import static org.jboss.logging.Logger.Level.INFO;
 
 /**
  * @author Steve Ebersole
@@ -26,11 +26,10 @@ public interface IncubationLogger {
 
 	IncubationLogger INCUBATION_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), IncubationLogger.class, CATEGORY );
 
-	@LogMessage(level = WARN)
+	@LogMessage(level = INFO)
 	@Message(
 			id = 90006001,
-			value = "Encountered incubating setting [%s].  See javadoc on corresponding " +
-					"`org.hibernate.cfg.AvailableSettings` constant for details."
+			value = "Setting '%s' is still incubating (see Javadoc of corresponding member of 'org.hibernate.cfg.AvailableSettings')"
 	)
 	void incubatingSetting(String settingName);
 }

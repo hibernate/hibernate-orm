@@ -44,33 +44,33 @@ public class DatabaseInformationImpl
 			SchemaManagementTool tool) throws SQLException {
 		this.jdbcEnvironment = jdbcEnvironment;
 		this.context = context;
-		this.extractionContext = tool.getExtractionTool().createExtractionContext(
-				serviceRegistry,
-				jdbcEnvironment,
-				context,
-				ddlTransactionIsolator,
-				this
-		);
-
-		this.extractor = tool.getExtractionTool().createInformationExtractor( extractionContext );
-
+		final var extractionTool = tool.getExtractionTool();
+		extractionContext =
+				extractionTool.createExtractionContext(
+						serviceRegistry,
+						jdbcEnvironment,
+						context,
+						ddlTransactionIsolator,
+						this
+				);
+		extractor = extractionTool.createInformationExtractor( extractionContext );
 		// because we do not have defined a way to locate sequence info by name
 		initializeSequences();
 	}
 
+	private static QualifiedSequenceName unqualifiedSequenceName(QualifiedSequenceName sequenceName) {
+		return new QualifiedSequenceName( null, null, sequenceName.getSequenceName() );
+	}
+
 	private void initializeSequences() throws SQLException {
-		Iterable<SequenceInformation> itr = jdbcEnvironment.getDialect()
-				.getSequenceInformationExtractor()
-				.extractMetadata( extractionContext );
-		for ( SequenceInformation sequenceInformation : itr ) {
+		final var sequences =
+				jdbcEnvironment.getDialect().getSequenceInformationExtractor()
+						.extractMetadata( extractionContext );
+		for ( var sequenceInformation : sequences ) {
 			sequenceInformationMap.put(
 					// for now, follow the legacy behavior of storing just the
 					// unqualified sequence name.
-					new QualifiedSequenceName(
-							null,
-							null,
-							sequenceInformation.getSequenceName().getSequenceName()
-					),
+					unqualifiedSequenceName( sequenceInformation.getSequenceName() ),
 					sequenceInformation
 			);
 		}
@@ -107,7 +107,6 @@ public class DatabaseInformationImpl
 		if ( tableName.getObjectName() == null ) {
 			throw new IllegalArgumentException( "Passed table name cannot be null" );
 		}
-
 		return extractor.getTable(
 				context.catalogWithDefault( tableName.getCatalogName() ),
 				context.schemaWithDefault( tableName.getSchemaName() ),
@@ -153,9 +152,8 @@ public class DatabaseInformationImpl
 	public SequenceInformation locateSequenceInformation(QualifiedSequenceName sequenceName) {
 		// again, follow legacy behavior
 		if ( sequenceName.getCatalogName() != null || sequenceName.getSchemaName() != null ) {
-			sequenceName = new QualifiedSequenceName( null, null, sequenceName.getSequenceName() );
+			sequenceName = unqualifiedSequenceName( sequenceName );
 		}
-
 		return sequenceInformationMap.get( sequenceName );
 	}
 }

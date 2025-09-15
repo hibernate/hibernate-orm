@@ -19,7 +19,6 @@ import java.util.StringTokenizer;
 import org.hibernate.JDBCException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -27,6 +26,7 @@ import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
+import org.hibernate.tool.schema.extract.internal.ForeignKeyInformationImpl.ColumnReferenceMappingImpl;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.ForeignKeyInformation;
@@ -40,6 +40,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementException;
 
 import static java.util.Collections.addAll;
 import static org.hibernate.boot.model.naming.DatabaseIdentifier.toIdentifier;
+import static org.hibernate.cfg.SchemaToolingSettings.ENABLE_SYNONYMS;
 import static org.hibernate.cfg.SchemaToolingSettings.EXTRA_PHYSICAL_TABLE_TYPES;
 import static org.hibernate.engine.jdbc.spi.SQLExceptionLogging.ERROR_LOG;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
@@ -92,7 +93,8 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	private String[] getPhysicalTableTypes(String extraPhysicalTableTypesConfig, Dialect dialect) {
 		final List<String> physicalTableTypesList = new ArrayList<>();
 		if ( !isBlank( extraPhysicalTableTypesConfig ) ) {
-			addAll( physicalTableTypesList, splitTrimmingTokens( ",;", extraPhysicalTableTypesConfig, false ) );
+			addAll( physicalTableTypesList,
+					splitTrimmingTokens( ",;", extraPhysicalTableTypesConfig, false ) );
 		}
 		dialect.augmentPhysicalTableTypes( physicalTableTypesList );
 		return physicalTableTypesList.toArray( EMPTY_STRINGS );
@@ -102,7 +104,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		final List<String> tableTypesList = new ArrayList<>();
 		tableTypesList.add( "TABLE" );
 		tableTypesList.add( "VIEW" );
-		if ( getBoolean( AvailableSettings.ENABLE_SYNONYMS, configService.getSettings() ) ) {
+		if ( getBoolean( ENABLE_SYNONYMS, configService.getSettings() ) ) {
 			if ( dialect instanceof DB2Dialect ) { //TODO: should not use Dialect types directly!
 				tableTypesList.add( "ALIAS" );
 			}
@@ -1355,7 +1357,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 
 		@Override
 		public ForeignKeyBuilder addColumnMapping(ColumnInformation referencing, ColumnInformation referenced) {
-			columnMappingList.add( new ForeignKeyInformationImpl.ColumnReferenceMappingImpl( referencing, referenced ) );
+			columnMappingList.add( new ColumnReferenceMappingImpl( referencing, referenced ) );
 			return this;
 		}
 

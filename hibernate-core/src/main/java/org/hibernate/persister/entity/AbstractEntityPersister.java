@@ -201,8 +201,6 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
-import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -1457,8 +1455,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( CORE_LOGGER.isTraceEnabled() ) {
-			CORE_LOGGER.tracev(
-					"Initializing lazy properties of: {0}, field access: {1}",
+			CORE_LOGGER.initializingLazyPropertiesOf(
 					infoString( this, id, getFactory() ),
 					fieldName
 			);
@@ -1601,7 +1598,7 @@ public abstract class AbstractEntityPersister
 			SharedSessionContractImplementor session) {
 
 		assert hasLazyProperties();
-		CORE_LOGGER.tracef( "Initializing lazy properties from datastore (triggered for '%s')", fieldName );
+		CORE_LOGGER.initializingLazyPropertiesFromDatastore( fieldName );
 
 		final var interceptor = asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 		assert interceptor != null : "Expecting bytecode interceptor to be non-null";
@@ -1639,7 +1636,7 @@ public abstract class AbstractEntityPersister
 					}
 				}
 			}
-			CORE_LOGGER.trace( "Done initializing lazy properties" );
+			CORE_LOGGER.doneInitializingLazyProperties();
 			return finalResult;
 		}
 		catch (JDBCException ex) {
@@ -1700,7 +1697,7 @@ public abstract class AbstractEntityPersister
 			final SharedSessionContractImplementor session,
 			final EntityEntry entry,
 			final CacheEntry cacheEntry) {
-		CORE_LOGGER.trace( "Initializing lazy properties from second-level cache" );
+		CORE_LOGGER.initializingLazyPropertiesFromSecondLevelCache();
 		Object result = null;
 		final var disassembledValues = cacheEntry.getDisassembledState();
 		for ( int j = 0; j < lazyPropertyNames.length; j++ ) {
@@ -1718,7 +1715,7 @@ public abstract class AbstractEntityPersister
 				}
 			}
 		}
-		CORE_LOGGER.trace( "Done initializing lazy properties" );
+		CORE_LOGGER.doneInitializingLazyProperties();
 		return result;
 	}
 
@@ -2034,8 +2031,7 @@ public abstract class AbstractEntityPersister
 	@Override
 	public Object getIdByUniqueKey(Object key, String uniquePropertyName, SharedSessionContractImplementor session) {
 		if ( CORE_LOGGER.isTraceEnabled() ) {
-			CORE_LOGGER.tracef( "resolving unique key [%s] to identifier for entity [%s]",
-					key, getEntityName() );
+			CORE_LOGGER.resolvingUniqueKeyToIdentifier( key, getEntityName() );
 		}
 
 		return getUniqueKeyLoader( uniquePropertyName, session ).resolveId( key, session );
@@ -2094,8 +2090,8 @@ public abstract class AbstractEntityPersister
 						.generate( session, null, currentVersion, FORCE_INCREMENT );
 		if ( CORE_LOGGER.isTraceEnabled() ) {
 			final var versionType = getVersionType();
-			CORE_LOGGER.trace(
-					"Forcing version increment [" + infoString( this, id, factory ) + "; "
+			CORE_LOGGER.forcingVersionIncrement(
+					"[" + infoString( this, id, factory ) + "; "
 					+ versionType.toLoggableString( currentVersion, factory ) + " -> "
 					+ versionType.toLoggableString( nextVersion, factory ) + "]"
 			);
@@ -2137,7 +2133,7 @@ public abstract class AbstractEntityPersister
 	public Object getCurrentVersion(Object id, SharedSessionContractImplementor session) throws HibernateException {
 
 		if ( CORE_LOGGER.isTraceEnabled() ) {
-			CORE_LOGGER.tracev( "Getting version: {0}", infoString( this, id, getFactory() ) );
+			CORE_LOGGER.readingEntityVersion( infoString( this, id, getFactory() ) );
 		}
 		final String versionSelectString = getVersionSelectString();
 		try {
@@ -3513,7 +3509,7 @@ public abstract class AbstractEntityPersister
 	private Object doLoad(Object id, Object optionalObject, LockOptions lockOptions, Boolean readOnly, SharedSessionContractImplementor session)
 			throws HibernateException {
 		if ( CORE_LOGGER.isTraceEnabled() ) {
-			CORE_LOGGER.tracev( "Fetching entity: {0}", infoString( this, id, getFactory() ) );
+			CORE_LOGGER.fetchingEntity( infoString( this, id, getFactory() ) );
 		}
 
 		final SingleIdEntityLoader<?> loader = determineLoaderToUse( session, lockOptions );
@@ -3731,7 +3727,7 @@ public abstract class AbstractEntityPersister
 		if ( CORE_LOGGER.isTraceEnabled() ) {
 			for ( int prop : props ) {
 				final String propertyName = getAttributeMapping( prop ).getAttributeName();
-				CORE_LOGGER.trace( qualify( getEntityName(), propertyName ) + " is dirty" );
+				CORE_LOGGER.propertyIsDirty( qualify( getEntityName(), propertyName ) );
 			}
 		}
 	}
@@ -4431,11 +4427,7 @@ public abstract class AbstractEntityPersister
 	public Object getNaturalIdentifierSnapshot(Object id, SharedSessionContractImplementor session) {
 		verifyHasNaturalId();
 		if ( CORE_LOGGER.isTraceEnabled() ) {
-			CORE_LOGGER.tracef(
-					"Getting current natural-id snapshot state for `%s#%s",
-					getEntityName(),
-					id
-			);
+			CORE_LOGGER.gettingCurrentNaturalIdSnapshot( getEntityName(), id );
 		}
 		return getNaturalIdLoader().resolveIdToNaturalId( id, session );
 	}

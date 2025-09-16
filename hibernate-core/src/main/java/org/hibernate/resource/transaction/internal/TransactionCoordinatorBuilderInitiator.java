@@ -8,12 +8,12 @@ import java.util.Map;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import static org.hibernate.cfg.TransactionSettings.TRANSACTION_COORDINATOR_STRATEGY;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
  * StandardServiceInitiator for initiating the TransactionCoordinatorBuilder service.
@@ -45,7 +45,7 @@ public class TransactionCoordinatorBuilderInitiator implements StandardServiceIn
 
 		final Object legacySetting = configurationValues.get( LEGACY_SETTING_NAME );
 		if ( legacySetting != null ) {
-			DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedTransactionFactorySetting(
+			DEPRECATION_LOGGER.logDeprecatedTransactionFactorySetting(
 					LEGACY_SETTING_NAME,
 					TRANSACTION_COORDINATOR_STRATEGY
 			);

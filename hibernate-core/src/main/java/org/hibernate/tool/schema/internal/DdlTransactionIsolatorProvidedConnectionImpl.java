@@ -13,7 +13,7 @@ import org.hibernate.tool.schema.internal.exec.JdbcConnectionAccessProvidedConne
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 
-import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 
 /**
  * Specialized DdlTransactionIsolator for cases where we have a user provided Connection
@@ -69,7 +69,7 @@ class DdlTransactionIsolatorProvidedConnectionImpl implements DdlTransactionIsol
 			connectionAccess.releaseConnection( null );
 		}
 		catch (SQLException exception) {
-			JDBC_MESSAGE_LOGGER.unableToReleaseIsolatedConnection( exception );
+			JDBC_LOGGER.unableToReleaseIsolatedConnection( exception );
 		}
 	}
 }

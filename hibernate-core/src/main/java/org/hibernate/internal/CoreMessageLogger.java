@@ -582,4 +582,34 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = TRACE)
 	@Message( id = 6574, value = "Initializing lazy properties of: %s, field access: %s" )
 	void initializingLazyPropertiesOf(String info, String fieldName);
+
+	// TransactionImpl
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 6581, value = "TransactionImpl created on closed Session/EntityManager")
+	void transactionCreatedOnClosedSession();
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 6582, value = "TransactionImpl created in JPA compliant mode")
+	void transactionCreatedInJpaCompliantMode();
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 6583, value = "Beginning transaction")
+	void beginningTransaction();
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 6584, value = "Committing transaction")
+	void committingTransaction();
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 6585, value = "Rolling back transaction")
+	void rollingBackTransaction();
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 6586, value = "rollback() called with inactive transaction")
+	void rollbackCalledOnInactiveTransaction();
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 6587, value = "setRollbackOnly() called with inactive transaction")
+	void setRollbackOnlyCalledOnInactiveTransaction();
 }

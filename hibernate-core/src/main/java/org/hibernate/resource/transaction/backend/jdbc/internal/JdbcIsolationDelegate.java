@@ -17,7 +17,7 @@ import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 
-import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 
 /**
  * @author Andrea Boriero
@@ -98,7 +98,7 @@ public final class JdbcIsolationDelegate implements IsolationDelegate {
 			connectionAccess.releaseConnection( connection );
 		}
 		catch ( Exception exception ) {
-			JDBC_MESSAGE_LOGGER.unableToReleaseIsolatedConnection( exception );
+			JDBC_LOGGER.unableToReleaseIsolatedConnection( exception );
 		}
 	}
 
@@ -109,7 +109,7 @@ public final class JdbcIsolationDelegate implements IsolationDelegate {
 			}
 		}
 		catch ( Exception exception ) {
-			JDBC_MESSAGE_LOGGER.unableToRollBackIsolatedConnection( exception );
+			JDBC_LOGGER.unableToRollBackIsolatedConnection( exception );
 			original.addSuppressed( exception );
 		}
 	}
@@ -120,7 +120,7 @@ public final class JdbcIsolationDelegate implements IsolationDelegate {
 				connection.setAutoCommit( true );
 			}
 			catch ( Exception exception ) {
-				JDBC_MESSAGE_LOGGER.unableToResetAutoCommitEnabled( exception );
+				JDBC_LOGGER.unableToResetAutoCommitEnabled( exception );
 			}
 		}
 	}

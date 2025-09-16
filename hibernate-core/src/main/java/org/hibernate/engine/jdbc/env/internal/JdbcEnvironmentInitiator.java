@@ -45,7 +45,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 
-import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 
 import static java.lang.Integer.parseInt;
 import static org.hibernate.cfg.AvailableSettings.CONNECTION_HANDLING;
@@ -380,7 +380,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 								);
 							}
 							catch (SQLException e) {
-								JDBC_MESSAGE_LOGGER.unableToObtainConnectionMetadata( e );
+								JDBC_LOGGER.unableToObtainConnectionMetadata( e );
 							}
 
 							// accessing the JDBC metadata failed
@@ -411,7 +411,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			);
 		}
 		catch ( Exception e ) {
-			JDBC_MESSAGE_LOGGER.unableToObtainConnectionToQueryMetadata( e );
+			JDBC_LOGGER.unableToObtainConnectionToQueryMetadata( e );
 		}
 		finally {
 			//noinspection resource
@@ -422,14 +422,14 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 	}
 
 	private static void logDatabaseAndDriver(DatabaseMetaData dbmd) throws SQLException {
-		if ( JDBC_MESSAGE_LOGGER.isDebugEnabled() ) {
-			JDBC_MESSAGE_LOGGER.logDatabaseInfo(
+		if ( JDBC_LOGGER.isDebugEnabled() ) {
+			JDBC_LOGGER.logDatabaseInfo(
 					dbmd.getDatabaseProductName(),
 					dbmd.getDatabaseProductVersion(),
 					dbmd.getDatabaseMajorVersion(),
 					dbmd.getDatabaseMinorVersion()
 			);
-			JDBC_MESSAGE_LOGGER.logDriverInfo(
+			JDBC_LOGGER.logDriverInfo(
 					dbmd.getDriverName(),
 					dbmd.getDriverVersion(),
 					dbmd.getDriverMajorVersion(),

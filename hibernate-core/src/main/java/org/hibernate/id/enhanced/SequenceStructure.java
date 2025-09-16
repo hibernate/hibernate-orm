@@ -18,7 +18,7 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
 
-import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHolder;
 
 /**
@@ -115,8 +115,8 @@ public class SequenceStructure implements DatabaseStructure {
 							rs.next();
 							final IntegralDataTypeHolder value = getIntegralDataTypeHolder( numberType );
 							value.initialize( rs, 1 );
-							if ( JDBC_MESSAGE_LOGGER.isTraceEnabled() ) {
-								JDBC_MESSAGE_LOGGER.sequenceValueRetrievedFromDatabase( value.makeValue() );
+							if ( JDBC_LOGGER.isTraceEnabled() ) {
+								JDBC_LOGGER.sequenceValueRetrievedFromDatabase( value.makeValue() );
 							}
 							return value;
 						}

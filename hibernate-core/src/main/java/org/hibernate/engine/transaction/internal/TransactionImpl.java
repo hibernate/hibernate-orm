@@ -7,14 +7,13 @@ package org.hibernate.engine.transaction.internal;
 import jakarta.transaction.Synchronization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.internal.AbstractSharedSessionContract;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
-import static org.hibernate.internal.CoreMessageLogger.LOGGER;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.resource.transaction.spi.TransactionCoordinator.TransactionDriver;
 
 /**
@@ -33,20 +32,22 @@ public class TransactionImpl implements TransactionImplementor {
 			TransactionCoordinator transactionCoordinator,
 			AbstractSharedSessionContract session) {
 		this.transactionCoordinator = transactionCoordinator;
-		this.jpaCompliance =
-				session.getFactory().getSessionFactoryOptions().getJpaCompliance()
-						.isJpaTransactionComplianceEnabled();
 		this.session = session;
 
+		jpaCompliance =
+				session.getFactory().getSessionFactoryOptions().getJpaCompliance()
+						.isJpaTransactionComplianceEnabled();
+
 		if ( session.isOpen() && transactionCoordinator.isActive() ) {
-			this.transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
+			transactionDriverControl =
+					transactionCoordinator.getTransactionDriverControl();
 		}
 		else {
-			LOGGER.debug( "TransactionImpl created on closed Session/EntityManager" );
+			CORE_LOGGER.transactionCreatedOnClosedSession();
 		}
 
-		if ( LOGGER.isDebugEnabled() && jpaCompliance ) {
-			LOGGER.debugf( "TransactionImpl created in JPA compliant mode" );
+		if ( CORE_LOGGER.isDebugEnabled() && jpaCompliance ) {
+			CORE_LOGGER.transactionCreatedInJpaCompliantMode();
 		}
 	}
 
@@ -57,7 +58,8 @@ public class TransactionImpl implements TransactionImplementor {
 		}
 
 		if ( transactionDriverControl == null ) {
-			transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
+			transactionDriverControl =
+					transactionCoordinator.getTransactionDriverControl();
 		}
 
 		if ( isActive() ) {
@@ -69,7 +71,7 @@ public class TransactionImpl implements TransactionImplementor {
 			}
 		}
 		else {
-			LOGGER.debug( "Beginning transaction" );
+			CORE_LOGGER.beginningTransaction();
 			transactionDriverControl.begin();
 		}
 	}
@@ -82,7 +84,7 @@ public class TransactionImpl implements TransactionImplementor {
 			throw new IllegalStateException( "Transaction not successfully started" );
 		}
 		else {
-			LOGGER.debug( "Committing transaction" );
+			CORE_LOGGER.committingTransaction();
 			try {
 				internalGetTransactionDriverControl().commit();
 			}
@@ -108,16 +110,16 @@ public class TransactionImpl implements TransactionImplementor {
 			throw new IllegalStateException( "rollback() called on inactive transaction (in JPA compliant mode)" );
 		}
 
-		final TransactionStatus status = getStatus();
+		final var status = getStatus();
 		if ( status == TransactionStatus.ROLLED_BACK || status == TransactionStatus.NOT_ACTIVE ) {
 			// allow rollback() on completed transaction as noop
-			LOGGER.debug( "rollback() called on an inactive transaction" );
+			CORE_LOGGER.rollbackCalledOnInactiveTransaction();
 		}
 		else if ( !status.canRollback() ) {
 			throw new TransactionException( "Cannot roll back transaction in current status [" + status.name() + "]" );
 		}
 		else if ( status != TransactionStatus.FAILED_COMMIT || allowFailedCommitToPhysicallyRollback() ) {
-			LOGGER.debug( "Rolling back transaction" );
+			CORE_LOGGER.rollingBackTransaction();
 			internalGetTransactionDriverControl().rollback();
 		}
 	}
@@ -126,7 +128,8 @@ public class TransactionImpl implements TransactionImplementor {
 	public boolean isActive() {
 		if ( transactionDriverControl == null ) {
 			if ( session.isOpen() ) {
-				transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
+				transactionDriverControl =
+						transactionCoordinator.getTransactionDriverControl();
 			}
 			else {
 				return false;
@@ -139,7 +142,8 @@ public class TransactionImpl implements TransactionImplementor {
 	public TransactionStatus getStatus() {
 		if ( transactionDriverControl == null ) {
 			if ( session.isOpen() ) {
-				transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
+				transactionDriverControl =
+						transactionCoordinator.getTransactionDriverControl();
 			}
 			else {
 				return TransactionStatus.NOT_ACTIVE;
@@ -149,8 +153,9 @@ public class TransactionImpl implements TransactionImplementor {
 	}
 
 	@Override
-	public void registerSynchronization(Synchronization synchronization) throws HibernateException {
-		transactionCoordinator.getLocalSynchronizations().registerSynchronization( synchronization );
+	public void registerSynchronization(Synchronization synchronization) {
+		transactionCoordinator.getLocalSynchronizations()
+				.registerSynchronization( synchronization );
 	}
 
 	@Override
@@ -171,11 +176,10 @@ public class TransactionImpl implements TransactionImplementor {
 
 	@Override
 	public void markRollbackOnly() {
-		// this is the Hibernate-specific API, whereas setRollbackOnly is the
-		// JPA-defined API. In our opinion it is much more user-friendly to
-		// always allow user/integration to indicate that the transaction
-		// should not be allowed to commit.
-		//
+		// This is the Hibernate-specific API, whereas setRollbackOnly is the
+		// JPA-defined API. In our opinion, it's much more user-friendly to
+		// always allow the client to indicate that the transaction should
+		// not be allowed to commit.
 		if ( isActive() ) {
 			internalGetTransactionDriverControl().markRollbackOnly();
 		}
@@ -192,8 +196,8 @@ public class TransactionImpl implements TransactionImplementor {
 			}
 			else {
 				// JpaCompliance disables the check, so this method
-				// is equivalent our native markRollbackOnly()
-				LOGGER.debug( "setRollbackOnly() called on a inactive transaction" );
+				// is equivalent to our native markRollbackOnly()
+				CORE_LOGGER.setRollbackOnlyCalledOnInactiveTransaction();
 			}
 		}
 		else {

@@ -33,7 +33,7 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import static org.hibernate.cfg.MappingSettings.DEFAULT_CATALOG;
 import static org.hibernate.cfg.MappingSettings.DEFAULT_SCHEMA;
 import static org.hibernate.engine.config.spi.StandardConverters.STRING;
-import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 import static org.hibernate.engine.jdbc.env.internal.LobCreatorBuilderImpl.makeLobCreatorBuilder;
 
 /**
@@ -117,7 +117,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 		catch (SQLException sqle) {
 			// should never ever happen
-			JDBC_MESSAGE_LOGGER.noDatabaseMetaData( sqle );
+			JDBC_LOGGER.noDatabaseMetaData( sqle );
 		}
 		return builder.build();
 	}
@@ -207,7 +207,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 		catch (SQLException sqle) {
 			// should never ever happen
-			JDBC_MESSAGE_LOGGER.noDatabaseMetaData( sqle );
+			JDBC_LOGGER.noDatabaseMetaData( sqle );
 		}
 		return identifierHelperBuilder.build();
 	}
@@ -307,7 +307,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 		catch (SQLException sqle) {
 			// should never ever happen
-			JDBC_MESSAGE_LOGGER.noDatabaseMetaData( sqle );
+			JDBC_LOGGER.noDatabaseMetaData( sqle );
 		}
 		return builder.build();
 	}
@@ -373,10 +373,10 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	private static void logJdbcFetchSize(int defaultFetchSize, ConfigurationService cfgService) {
 		if ( !cfgService.getSettings().containsKey( JdbcSettings.STATEMENT_FETCH_SIZE ) ) {
 			if ( defaultFetchSize > 0 && defaultFetchSize < 100 ) {
-				JDBC_MESSAGE_LOGGER.warnLowFetchSize( defaultFetchSize );
+				JDBC_LOGGER.warnLowFetchSize( defaultFetchSize );
 			}
 			else {
-				JDBC_MESSAGE_LOGGER.usingFetchSize( defaultFetchSize );
+				JDBC_LOGGER.usingFetchSize( defaultFetchSize );
 			}
 		}
 	}

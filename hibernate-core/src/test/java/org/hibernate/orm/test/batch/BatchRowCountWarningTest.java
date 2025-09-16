@@ -51,7 +51,7 @@ public class BatchRowCountWarningTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
 		trigger = new TriggerOnPrefixLogListener( "HHH100001" );
-		LogInspectionHelper.registerListener( trigger, JdbcLogging.JDBC_MESSAGE_LOGGER );
+		LogInspectionHelper.registerListener( trigger, JdbcLogging.JDBC_LOGGER );
 		scope.inTransaction( session -> {
 			session.persist( new MyEntity( 1L, "Nicola", null ) );
 			session.persist( new MyEntity( 2L, "Stefano", "Ste" ) );
@@ -66,7 +66,7 @@ public class BatchRowCountWarningTest {
 
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
-		LogInspectionHelper.clearAllListeners( JdbcLogging.JDBC_MESSAGE_LOGGER );
+		LogInspectionHelper.clearAllListeners( JdbcLogging.JDBC_LOGGER );
 		scope.inTransaction( session -> {
 			session.createMutationQuery( "delete from BaseEntity" ).executeUpdate();
 			session.createQuery( "from JoinTableEntity", JoinTableEntity.class )

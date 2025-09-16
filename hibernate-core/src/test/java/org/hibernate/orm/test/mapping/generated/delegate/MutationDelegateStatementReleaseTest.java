@@ -78,7 +78,7 @@ public class MutationDelegateStatementReleaseTest {
 
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
-		LogInspectionHelper.clearAllListeners( JdbcLogging.JDBC_MESSAGE_LOGGER );
+		LogInspectionHelper.clearAllListeners( JdbcLogging.JDBC_LOGGER );
 	}
 
 	@Test

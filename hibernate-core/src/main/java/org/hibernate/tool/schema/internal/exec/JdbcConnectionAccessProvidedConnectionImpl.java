@@ -12,7 +12,7 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 
 /**
  * Implementation of JdbcConnectionAccess for cases where we are provided
@@ -73,7 +73,7 @@ public class JdbcConnectionAccessProvidedConnectionImpl implements JdbcConnectio
 				}
 			}
 			catch (SQLException exception) {
-				JDBC_MESSAGE_LOGGER.unableToResetAutoCommitDisabled( exception );
+				JDBC_LOGGER.unableToResetAutoCommitDisabled( exception );
 			}
 		}
 	}

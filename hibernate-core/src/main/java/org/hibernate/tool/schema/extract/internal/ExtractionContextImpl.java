@@ -15,7 +15,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 
-import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -112,7 +112,7 @@ public class ExtractionContextImpl implements ExtractionContext {
 				jdbcConnectionAccess.releaseConnection( jdbcConnection );
 			}
 			catch (SQLException exception) {
-				JDBC_MESSAGE_LOGGER.unableToReleaseConnection( exception );
+				JDBC_LOGGER.unableToReleaseConnection( exception );
 			}
 		}
 	}

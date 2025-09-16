@@ -34,7 +34,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 
 import static java.util.Collections.emptyMap;
-import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
@@ -245,12 +245,12 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		if ( queryOptions != null ) {
 			final Integer fetchSize = queryOptions.getFetchSize();
 			if ( fetchSize != null ) {
-				JDBC_MESSAGE_LOGGER.settingFetchSize( fetchSize );
+				JDBC_LOGGER.settingFetchSize( fetchSize );
 				preparedStatement.setFetchSize( fetchSize );
 			}
 			final Integer timeout = queryOptions.getTimeout();
 			if ( timeout != null ) {
-				JDBC_MESSAGE_LOGGER.settingQueryTimeout( timeout );
+				JDBC_LOGGER.settingQueryTimeout( timeout );
 				preparedStatement.setQueryTimeout( timeout );
 			}
 		}

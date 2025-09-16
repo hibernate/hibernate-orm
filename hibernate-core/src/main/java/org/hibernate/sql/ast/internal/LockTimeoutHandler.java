@@ -9,8 +9,8 @@ import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.StatementAccess;
-import org.hibernate.sql.ops.spi.PostAction;
-import org.hibernate.sql.ops.spi.PreAction;
+import org.hibernate.sql.exec.spi.PostAction;
+import org.hibernate.sql.exec.spi.PreAction;
 
 import java.sql.Connection;
 
@@ -24,7 +24,9 @@ import java.sql.Connection;
 public class LockTimeoutHandler implements PreAction, PostAction {
 	private final ConnectionLockTimeoutStrategy lockTimeoutStrategy;
 	private final Timeout timeout;
+
 	private Timeout baseline;
+	private boolean setTimeout;
 
 	public LockTimeoutHandler(Timeout timeout, ConnectionLockTimeoutStrategy lockTimeoutStrategy) {
 		this.timeout = timeout;
@@ -44,6 +46,7 @@ public class LockTimeoutHandler implements PreAction, PostAction {
 
 		// now set the timeout
 		lockTimeoutStrategy.setLockTimeout( timeout, jdbcConnection, factory );
+		setTimeout = true;
 	}
 
 	@Override
@@ -52,5 +55,11 @@ public class LockTimeoutHandler implements PreAction, PostAction {
 
 		// reset the timeout
 		lockTimeoutStrategy.setLockTimeout( baseline, jdbcConnection, factory );
+	}
+
+	@Override
+	public boolean shouldRunAfterFail() {
+		// if we set the timeout in the pre-action, we should always reset it in post-action
+		return setTimeout;
 	}
 }

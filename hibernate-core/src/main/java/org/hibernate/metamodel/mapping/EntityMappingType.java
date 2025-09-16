@@ -12,11 +12,13 @@ import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.mapping.Contributable;
 import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.metamodel.internal.EntityRepresentationStrategyMap;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityNameUse;
@@ -471,6 +473,15 @@ public interface EntityMappingType
 
 	default String getImportedName() {
 		return getEntityPersister().getImportedName();
+	}
+
+	default RootGraphImplementor createRootGraph(SharedSessionContractImplementor session) {
+		if ( getRepresentationStrategy() instanceof EntityRepresentationStrategyMap mapRep ) {
+			return session.getSessionFactory().createGraphForDynamicEntity( getEntityName() );
+		}
+		else {
+			return session.getSessionFactory().createEntityGraph( getMappedJavaType().getJavaTypeClass() );
+		}
 	}
 
 	interface ConstraintOrderedTableConsumer {

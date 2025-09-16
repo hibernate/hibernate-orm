@@ -4,6 +4,13 @@
  */
 package org.hibernate.metamodel.mapping;
 
+
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+
 import java.util.List;
 
 /**
@@ -49,10 +56,33 @@ public interface TableDetails {
 		 */
 		KeyColumn getKeyColumn(int position);
 
+
+		@FunctionalInterface
+		interface KeyValueConsumer {
+			void consume(Object jdbcValue, KeyColumn columnMapping);
+		}
+
 		/**
 		 * Visit each key column
 		 */
 		void forEachKeyColumn(KeyColumnConsumer consumer);
+
+		/**
+		 * Break a key value down into its constituent parts, calling the consumer for each.
+		 */
+		void breakDownKeyJdbcValues(
+				Object domainValue,
+				KeyValueConsumer valueConsumer,
+				SharedSessionContractImplementor session);
+
+		/**
+		 * Create a DomainResult for selecting and retrieving the key.
+		 */
+		<K> DomainResult<K> createDomainResult(
+				NavigablePath navigablePath,
+				TableReference tableReference,
+				String resultVariable,
+				DomainResultCreationState creationState);
 	}
 
 	/**

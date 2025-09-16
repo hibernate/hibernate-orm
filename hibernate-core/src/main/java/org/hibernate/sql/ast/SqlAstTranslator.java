@@ -16,10 +16,8 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.select.QueryPart;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.ops.spi.DatabaseSelect;
 
 /**
  * {@linkplain #translate Translates} a {@linkplain #getSqlAst() SQL AST}
@@ -32,13 +30,6 @@ public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker 
 	 * Perform the translation and produce the JdbcOperation.
 	 */
 	T translate(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions);
-
-	/**
-	 * Specialized {@linkplain #translate translation} for cases where we have a {@linkplain SelectStatement}.
-	 * <p/>
-	 * Intended to help in cases where we have a {@code SELECT} with pessimistic locking.
-	 */
-	DatabaseSelect translateLockingSelect(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions);
 
 	/**
 	 * The SQL AST being translated.

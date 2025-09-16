@@ -14,7 +14,6 @@ import org.hibernate.Timeouts;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
-import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.engine.jdbc.Size;
@@ -176,14 +175,15 @@ import org.hibernate.sql.exec.ExecutionException;
 import org.hibernate.sql.exec.internal.AbstractJdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
+import org.hibernate.sql.exec.internal.JdbcSelectWithActions;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcLockStrategy;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.sql.exec.spi.JdbcOperationQueryDelete;
+import org.hibernate.sql.exec.internal.JdbcOperationQueryDelete;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
-import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
-import org.hibernate.sql.exec.spi.JdbcOperationQueryUpdate;
+import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
+import org.hibernate.sql.exec.internal.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -199,12 +199,10 @@ import org.hibernate.sql.model.internal.TableInsertCustomSql;
 import org.hibernate.sql.model.internal.TableInsertStandard;
 import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
-import org.hibernate.sql.ops.internal.DatabaseSelectImpl;
-import org.hibernate.sql.ops.internal.lock.FollowOnLockingAction;
-import org.hibernate.sql.ops.internal.lock.LoadedValuesCollectorImpl;
-import org.hibernate.sql.ops.internal.lock.SingleRootLoadedValuesCollector;
-import org.hibernate.sql.ops.spi.DatabaseSelect;
-import org.hibernate.sql.ops.spi.LoadedValuesCollector;
+import org.hibernate.sql.exec.internal.lock.FollowOnLockingAction;
+import org.hibernate.sql.exec.internal.LoadedValuesCollectorImpl;
+import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.exec.spi.LoadedValuesCollector;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.type.BasicType;
@@ -801,104 +799,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	@Override
-	public DatabaseSelect translateLockingSelect(
-			JdbcParameterBindings jdbcParameterBindings,
-			QueryOptions queryOptions) {
-		final SelectStatement selectAst = (SelectStatement) statementStack.pop();
-
-		// for translateSelect
-		lockOptions = queryOptions.getLockOptions();
-		final JdbcOperationQuerySelect jdbcOperation = translateSelect( selectAst );
-
-		final DatabaseSelectImpl.Builder databaseSelectBuilder = DatabaseSelectImpl.builder( jdbcOperation );
-
-		// for follow-on locking
-		final LockOptions lockOptions = queryOptions.getLockOptions();
-		if ( lockOptions == null || !lockOptions.getLockMode().isPessimistic() ) {
-			// nothing special to do for locking
-			return databaseSelectBuilder.build();
-		}
-
-		final LockingSupport lockingSupport = getDialect().getLockingSupport();
-		final LockingSupport.Metadata lockingSupportMetadata = lockingSupport.getMetadata();
-
-		final LockTimeoutType lockTimeoutType = lockingSupportMetadata.getLockTimeoutType( lockOptions.getTimeout() );
-		if ( lockTimeoutType == LockTimeoutType.CONNECTION ) {
-			databaseSelectBuilder.addSecondaryActionPair( new LockTimeoutHandler(
-					lockOptions.getTimeout(),
-					lockingSupport.getConnectionLockTimeoutStrategy()
-			) );
-		}
-
-		final PessimisticLockStyle pessimisticLockStyle = lockingSupportMetadata.getPessimisticLockStyle();
-		if ( pessimisticLockStyle == PessimisticLockStyle.TABLE_HINT
-			|| pessimisticLockStyle == PessimisticLockStyle.NONE ) {
-			// nothing special to do for locking
-			return databaseSelectBuilder.build();
-		}
-
-		if ( lockingTarget == null ) {
-			// nothing special to do for locking
-			// todo : not sure this can actually happen
-			return databaseSelectBuilder.build();
-
-		}
-
-		final LockStrategy lockStrategy = determineLockingStrategy( lockingTarget, lockOptions.getFollowOnStrategy() );
-		if ( lockStrategy == LockStrategy.NONE || lockStrategy == LockStrategy.CLAUSE ) {
-			// nothing special to do for locking
-			return databaseSelectBuilder.build();
-		}
-
-		// todo : would be great to implement this using one big CTE, but I don't think that
-		//		will be feasible due to restrictions trying to apply restrictions from the
-		//		original query.
-		//		so instead this tries to use individual CTE queries based on the original query
-
-		assert lockStrategy == LockStrategy.FOLLOW_ON;
-		applyFollowOnLockingActions(
-				lockOptions,
-				lockingTarget,
-				lockingClauseStrategy,
-				databaseSelectBuilder
-		);
-		return databaseSelectBuilder.build();
-	}
-
-	private void applyFollowOnLockingActions(
-			LockOptions lockOptions,
-			QuerySpec lockingTarget,
-			LockingClauseStrategy lockingClauseStrategy,
-			DatabaseSelectImpl.Builder databaseSelectBuilder) {
-		final FromClause fromClause = lockingTarget.getFromClause();
-		final var loadedValuesCollector = resolveLoadedValuesCollector( fromClause, lockingClauseStrategy );
-
-		// NOTE: we need to set this separately so that it can get incorporated into
-		// the JdbcValuesSourceProcessingState for proper callbacks
-		databaseSelectBuilder.setLoadedValuesCollector( loadedValuesCollector );
-
-		// additionally, add a post-action which uses the collected values.
-		databaseSelectBuilder.appendPostAction( new FollowOnLockingAction(
-				loadedValuesCollector,
-				lockOptions.getLockMode(),
-				lockOptions.getTimeout(),
-				lockOptions.getScope()
-		) );
-	}
-
-	protected static LoadedValuesCollector resolveLoadedValuesCollector(
-			FromClause fromClause,
-			LockingClauseStrategy lockingClauseStrategy) {
-		final List<TableGroup> roots = fromClause.getRoots();
-		if ( roots.size() == 1 ) {
-			return new SingleRootLoadedValuesCollector( roots.get( 0 ).getNavigablePath(), lockingClauseStrategy );
-		}
-		else {
-			return new LoadedValuesCollectorImpl( roots.stream().map( TableGroup::getNavigablePath ).toList(), lockingClauseStrategy );
-		}
-	}
-
 	private JdbcOperation getJdbcOperation(Statement statement) {
 		if ( statement instanceof DeleteStatement deleteStatement ) {
 			return translateDelete( deleteStatement );
@@ -964,14 +864,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	protected JdbcOperationQuerySelect translateSelect(SelectStatement selectStatement) {
+	protected JdbcSelect translateSelect(SelectStatement selectStatement) {
 		logDomainResultGraph( selectStatement.getDomainResultDescriptors() );
 		logSqlAst( selectStatement );
+
+		// we need to make a cope here for later since visitSelectStatement clears it :(
+		final LockOptions lockOptions = this.lockOptions;
 
 		visitSelectStatement( selectStatement );
 
 		final int rowsToSkip;
-		return new JdbcOperationQuerySelect(
+		final JdbcOperationQuerySelect jdbcSelect = new JdbcOperationQuerySelect(
 				getSql(),
 				getParameterBinders(),
 				buildJdbcValuesMappingProducer( selectStatement ),
@@ -983,6 +886,101 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				getOffsetParameter(),
 				getLimitParameter()
 		);
+
+		final boolean needsLockingActions = determineIfLockingActionsNeeded(
+				lockOptions,
+				lockingTarget,
+				getDialect()
+		);
+
+		if ( !needsLockingActions ) {
+			return jdbcSelect;
+		}
+
+		final JdbcSelectWithActions.Builder builder = new JdbcSelectWithActions.Builder( jdbcSelect );
+
+		final LockingSupport lockingSupport = getDialect().getLockingSupport();
+		final LockingSupport.Metadata lockingSupportMetadata = lockingSupport.getMetadata();
+
+		final LockTimeoutType lockTimeoutType = lockingSupportMetadata.getLockTimeoutType( lockOptions.getTimeout() );
+		if ( lockTimeoutType == LockTimeoutType.CONNECTION ) {
+			builder.addSecondaryActionPair( new LockTimeoutHandler(
+					lockOptions.getTimeout(),
+					lockingSupport.getConnectionLockTimeoutStrategy()
+			) );
+		}
+
+		applyFollowOnLockingActions(
+				lockOptions,
+				lockingTarget,
+				lockingClauseStrategy,
+				builder
+		);
+
+		return builder.build();
+	}
+
+	public boolean determineIfLockingActionsNeeded(
+			LockOptions lockOptions,
+			QuerySpec lockingTarget,
+			Dialect dialect) {
+		if ( lockOptions == null || !lockOptions.getLockMode().isPessimistic() ) {
+			return false;
+		}
+
+		final LockingSupport lockingSupport = dialect.getLockingSupport();
+		final LockingSupport.Metadata lockingSupportMetadata = lockingSupport.getMetadata();
+
+		final LockTimeoutType lockTimeoutType = lockingSupportMetadata.getLockTimeoutType( lockOptions.getTimeout() );
+		if ( lockTimeoutType == LockTimeoutType.CONNECTION ) {
+			return true;
+		}
+
+		final LockStrategy lockStrategy = determineLockingStrategy( lockingTarget, lockOptions.getFollowOnStrategy() );
+		if ( lockStrategy == LockStrategy.FOLLOW_ON ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private void applyFollowOnLockingActions(
+			LockOptions lockOptions,
+			QuerySpec lockingTarget,
+			LockingClauseStrategy lockingClauseStrategy,
+			JdbcSelectWithActions.Builder jdbcSelectBuilder) {
+		final FromClause fromClause = lockingTarget.getFromClause();
+		final var loadedValuesCollector = resolveLoadedValuesCollector( fromClause, lockingClauseStrategy );
+
+		// NOTE: we need to set this separately so that it can get incorporated into
+		// the JdbcValuesSourceProcessingState for proper callbacks
+		jdbcSelectBuilder.setLoadedValuesCollector( loadedValuesCollector );
+
+		// additionally, add a post-action which uses the collected values.
+		jdbcSelectBuilder.appendPostAction( new FollowOnLockingAction(
+				loadedValuesCollector,
+				lockOptions.getLockMode(),
+				lockOptions.getTimeout(),
+				lockOptions.getScope()
+		) );
+	}
+
+	protected static LoadedValuesCollector resolveLoadedValuesCollector(
+			FromClause fromClause,
+			LockingClauseStrategy lockingClauseStrategy) {
+		final List<TableGroup> roots = fromClause.getRoots();
+		if ( roots.size() == 1 ) {
+			return new LoadedValuesCollectorImpl(
+					List.of( roots.get( 0 ).getNavigablePath() ),
+					lockingClauseStrategy
+			);
+		}
+		else {
+			return new LoadedValuesCollectorImpl(
+					roots.stream().map( TableGroup::getNavigablePath ).toList(),
+					lockingClauseStrategy
+			);
+		}
 	}
 
 	private JdbcValuesMappingProducer buildJdbcValuesMappingProducer(SelectStatement selectStatement) {

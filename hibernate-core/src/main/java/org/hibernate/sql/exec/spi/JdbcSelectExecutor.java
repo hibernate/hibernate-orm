@@ -4,11 +4,8 @@
  */
 package org.hibernate.sql.exec.spi;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Set;
-
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
 import org.hibernate.LockOptions;
@@ -27,8 +24,10 @@ import org.hibernate.sql.results.spi.ResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.sql.results.spi.ScrollableResultsConsumer;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Set;
 
 /**
  * An executor for JdbcSelect operations.
@@ -42,7 +41,7 @@ public interface JdbcSelectExecutor {
 	 * @since 6.6
 	 */
 	<T, R> T executeQuery(
-			JdbcOperationQuerySelect jdbcSelect,
+			JdbcSelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
@@ -54,7 +53,7 @@ public interface JdbcSelectExecutor {
 	 * @since 6.6
 	 */
 	default <T, R> T executeQuery(
-			JdbcOperationQuerySelect jdbcSelect,
+			JdbcSelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
@@ -77,7 +76,7 @@ public interface JdbcSelectExecutor {
 	 * @since 6.6
 	 */
 	default <T, R> T executeQuery(
-			JdbcOperationQuerySelect jdbcSelect,
+			JdbcSelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
@@ -97,7 +96,7 @@ public interface JdbcSelectExecutor {
 	}
 
 	default <R> List<R> list(
-			JdbcOperationQuerySelect jdbcSelect,
+			JdbcSelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
@@ -106,7 +105,7 @@ public interface JdbcSelectExecutor {
 	}
 
 	default <R> List<R> list(
-			JdbcOperationQuerySelect jdbcSelect,
+			JdbcSelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
@@ -127,7 +126,7 @@ public interface JdbcSelectExecutor {
 	 * @since 6.6
 	 */
 	default <R> List<R> list(
-			JdbcOperationQuerySelect jdbcSelect,
+			JdbcSelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
@@ -147,7 +146,7 @@ public interface JdbcSelectExecutor {
 	}
 
 	default <R> ScrollableResultsImplementor<R> scroll(
-			JdbcOperationQuerySelect jdbcSelect,
+			JdbcSelect jdbcSelect,
 			ScrollMode scrollMode,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
@@ -159,7 +158,7 @@ public interface JdbcSelectExecutor {
 	 * @since 6.6
 	 */
 	default <R> ScrollableResultsImplementor<R> scroll(
-			JdbcOperationQuerySelect jdbcSelect,
+			JdbcSelect jdbcSelect,
 			ScrollMode scrollMode,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,

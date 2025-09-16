@@ -5,7 +5,6 @@
 package org.hibernate.sql.exec.spi;
 
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
-import org.hibernate.sql.ops.spi.JdbcMutation;
 
 /**
  * Specialization of JdbcOperation for cases which mutate

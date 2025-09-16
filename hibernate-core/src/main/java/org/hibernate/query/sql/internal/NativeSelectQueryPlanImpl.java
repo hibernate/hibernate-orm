@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.EmptyScrollableResults;
@@ -22,7 +23,7 @@ import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
+import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
@@ -30,6 +31,7 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.ResultsConsumer;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 
 /**
  * Standard implementation of {@link SelectQueryPlan} for
@@ -87,7 +89,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 		}
 
 		final JdbcOperationQuerySelect jdbcSelect = new JdbcOperationQuerySelect(
-				sql,
+				sqlToUse( sql, executionContext ),
 				jdbcParameterBinders,
 				resultSetMapping,
 				affectedTableNames
@@ -102,6 +104,13 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 				-1,
 				resultsConsumer
 		);
+	}
+
+	private static String sqlToUse(String sql, DomainQueryExecutionContext executionContext) {
+		final LockOptions lockOptions = executionContext.getQueryOptions().getLockOptions();
+		return lockOptions.getLockMode().isPessimistic()
+				? executionContext.getSession().getDialect().applyLocksToSql( sql, lockOptions, emptyMap() )
+				: sql;
 	}
 
 	@Override
@@ -128,7 +137,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 			}
 
 			final JdbcOperationQuerySelect jdbcSelect = new JdbcOperationQuerySelect(
-					sql,
+					sqlToUse( sql, executionContext ),
 					jdbcParameterBinders,
 					resultSetMapping,
 					affectedTableNames
@@ -170,7 +179,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 			}
 
 			final JdbcOperationQuerySelect jdbcSelect = new JdbcOperationQuerySelect(
-					sql,
+					sqlToUse( sql, executionContext ),
 					jdbcParameterBinders,
 					resultSetMapping,
 					affectedTableNames

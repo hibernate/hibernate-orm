@@ -789,3 +789,26 @@ We recommend using https://github.com/agroal/agroal[Agroal] or https://github.co
 Alternatively, you may implement the `ConnectionProvider` interface to integrate the connection pool of your choice.
 In fact, some connection pools already include their own implementations of `ConnectionProvider`.
 
+[[maven-plugin-changes]]
+== Changes to the Maven Plugin
+
+The Maven bytecode enhancement plugin has been completely rewritten since version 7.0. The change that has the
+biggest consequence is that the artefactId and groupId of the Maven artefact has changed. As of now, you will
+need to include the plugin in the build section in your Maven pom file as illustrated below.
+
+```
+<plugin>
+    <groupId>org.hibernate.orm</groupId>
+    <artifactId>hibernate-maven-plugin</artifactId>
+    <version>$currentHibernateVersion</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>enhance</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
+
+The documentation in the userguide has been rewritten accordingly and completed with more examples.

@@ -3362,7 +3362,7 @@ public abstract class AbstractEntityPersister
 				tableMappingBuilder = new TableMappingBuilder(
 						tableExpression,
 						relativePosition,
-						new EntityTableMapping.KeyMapping( keyColumns, identifierMapping ),
+						EntityTableMapping.createKeyMapping( keyColumns, identifierMapping ),
 						!isIdentifierTable && isNullableTable( relativePosition ),
 						inverseTable,
 						isIdentifierTable,

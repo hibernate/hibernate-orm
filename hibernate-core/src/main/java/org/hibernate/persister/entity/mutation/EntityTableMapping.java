@@ -4,23 +4,32 @@
  */
 package org.hibernate.persister.entity.mutation;
 
-import java.util.BitSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.function.Consumer;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.basic.BasicResult;
+
+import java.util.BitSet;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * Descriptor for the mapping of a table relative to an entity
@@ -224,21 +233,67 @@ public class EntityTableMapping implements TableMapping {
 		return "TableMapping(" + tableName + ")";
 	}
 
-	@FunctionalInterface
-	public interface KeyValueConsumer {
-		void consume(Object jdbcValue, KeyColumn columnMapping);
+	public interface KeyMapping extends KeyDetails, SelectableMappings {
 	}
 
-	public static class KeyMapping implements KeyDetails, SelectableMappings {
-		private final List<KeyColumn> keyColumns;
+	public static KeyMapping createKeyMapping(List<KeyColumn> keyColumns, ModelPart identifierPart) {
+		if ( identifierPart instanceof EmbeddableValuedModelPart embeddedModelPart ) {
+			return new CompositeKeyMapping( keyColumns, embeddedModelPart );
+		}
+		else {
+			assert keyColumns.size() == 1;
+			return new SimpleKeyMapping( keyColumns, (BasicValuedModelPart) identifierPart );
+		}
+	}
 
-		private final ModelPart identifierPart;
+	public static abstract class AbstractKeyMapping implements KeyMapping {
+		protected final List<KeyColumn> keyColumns;
+		protected final ModelPart identifierPart;
 
-		public KeyMapping(List<KeyColumn> keyColumns, ModelPart identifierPart) {
-			assert keyColumns.size() == identifierPart.getJdbcTypeCount();
-
+		public AbstractKeyMapping(List<KeyColumn> keyColumns, ModelPart identifierPart) {
 			this.keyColumns = keyColumns;
 			this.identifierPart = identifierPart;
+		}
+
+		@Override
+		public List<? extends KeyColumn> getKeyColumns() {
+			return keyColumns;
+		}
+
+		@Override
+		public int getColumnCount() {
+			return getKeyColumns().size();
+		}
+
+		@Override
+		public KeyColumn getKeyColumn(int position) {
+			return getKeyColumns().get( position );
+		}
+
+		@Override
+		public void forEachKeyColumn(KeyColumnConsumer consumer) {
+			for ( int i = 0; i < getKeyColumns().size(); i++ ) {
+				consumer.consume( i, getKeyColumns().get( i ) );
+			}
+		}
+
+		@Override
+		public int getJdbcTypeCount() {
+			return getKeyColumns().size();
+		}
+
+		@Override
+		public SelectableMapping getSelectable(int columnIndex) {
+			return getKeyColumns().get( columnIndex );
+		}
+
+		@Override
+		public int forEachSelectable(int offset, SelectableConsumer consumer) {
+			for ( int i = 0; i < getKeyColumns().size(); i++ ) {
+				consumer.accept( i, getKeyColumns().get( i ) );
+			}
+
+			return getJdbcTypeCount();
 		}
 
 		public void breakDownKeyJdbcValues(
@@ -247,7 +302,7 @@ public class EntityTableMapping implements TableMapping {
 				SharedSessionContractImplementor session) {
 			identifierPart.forEachJdbcValue(
 					domainValue,
-					keyColumns,
+					getKeyColumns(),
 					valueConsumer,
 					(selectionIndex, keys, consumer, jdbcValue, jdbcMapping) -> consumer.consume(
 							jdbcValue,
@@ -257,49 +312,69 @@ public class EntityTableMapping implements TableMapping {
 			);
 		}
 
-		@Override
-		public int getColumnCount() {
-			return keyColumns.size();
+		protected SqlSelection resolveSqlSelection(
+				TableReference tableReference,
+				KeyColumn keyColumn,
+				SqlAstCreationState creationState) {
+			final SqlExpressionResolver expressionResolver = creationState.getSqlExpressionResolver();
+			return expressionResolver.resolveSqlSelection(
+					expressionResolver.resolveSqlExpression( tableReference, keyColumn ),
+					keyColumn.getJdbcMapping().getJdbcJavaType(),
+					null,
+					creationState.getCreationContext().getTypeConfiguration()
+			);
+		}
+	}
+
+	public static class SimpleKeyMapping extends AbstractKeyMapping {
+		private final KeyColumn keyColumn;
+
+		public SimpleKeyMapping(List<KeyColumn> keyColumns, BasicValuedModelPart identifierPart) {
+			super( keyColumns, identifierPart );
+			this.keyColumn = keyColumns.get( 0 );
 		}
 
 		@Override
-		public List<KeyColumn> getKeyColumns() {
-			return keyColumns;
+		public <K> DomainResult<K> createDomainResult(
+				NavigablePath navigablePath,
+				TableReference tableReference,
+				String resultVariable,
+				DomainResultCreationState creationState) {
+			// create SqlSelection based on the underlying JdbcMapping
+			final SqlSelection sqlSelection = resolveSqlSelection(
+					tableReference,
+					keyColumn,
+					creationState.getSqlAstCreationState()
+			);
+
+			// return a BasicResult with conversion the entity class or entity-name
+			//noinspection unchecked,rawtypes
+			return new BasicResult(
+					sqlSelection.getValuesArrayPosition(),
+					resultVariable,
+					identifierPart.getJavaType(),
+					null,
+					navigablePath,
+					false,
+					!sqlSelection.isVirtual()
+			);
+		}
+	}
+
+	public static class CompositeKeyMapping extends AbstractKeyMapping {
+		public CompositeKeyMapping(List<KeyColumn> keyColumns, EmbeddableValuedModelPart identifierPart) {
+			super( keyColumns, identifierPart );
 		}
 
 		@Override
-		public KeyColumn getKeyColumn(int position) {
-			return keyColumns.get( position );
-		}
-
-		@Override
-		public void forEachKeyColumn(KeyColumnConsumer consumer) {
-			for ( int i = 0; i < keyColumns.size(); i++ ) {
-				consumer.consume( i, keyColumns.get( i ) );
-			}
-		}
-
-		public void forEachKeyColumn(Consumer<KeyColumn> keyColumnConsumer) {
-			keyColumns.forEach( keyColumnConsumer );
-		}
-
-		@Override
-		public int getJdbcTypeCount() {
-			return keyColumns.size();
-		}
-
-		@Override
-		public SelectableMapping getSelectable(int columnIndex) {
-			return keyColumns.get( columnIndex );
-		}
-
-		@Override
-		public int forEachSelectable(int offset, SelectableConsumer consumer) {
-			for ( int i = 0; i < keyColumns.size(); i++ ) {
-				consumer.accept( i, keyColumns.get( i ) );
-			}
-
-			return getJdbcTypeCount();
+		public <K> DomainResult<K> createDomainResult(
+				NavigablePath navigablePath,
+				TableReference tableReference,
+				String resultVariable,
+				DomainResultCreationState creationState) {
+			// this will be challenging if the embeddable defines to-ones.
+			// just error for now.
+			throw new UnsupportedOperationException( "Not implemented yet" );
 		}
 	}
 

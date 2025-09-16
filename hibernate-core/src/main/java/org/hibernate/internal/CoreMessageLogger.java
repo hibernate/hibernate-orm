@@ -630,7 +630,7 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = TRACE)
 	@Message(id = 6592, value = "Identifier unsaved-value [%s]")
-	void idUnsavedValue(Object value);
+	void idUnsavedValue(@Nullable Object value);
 
 	@LogMessage(level = TRACE)
 	@Message(id = 6593, value = "Version unsaved-value strategy %s")
@@ -638,7 +638,7 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = TRACE)
 	@Message(id = 6594, value = "Version unsaved-value [%s]")
-	void versionUnsavedValue(Object value);
+	void versionUnsavedValue(@Nullable Object value);
 
 	@LogMessage(level = TRACE)
 	@Message(id = 601, value = "Attempting to resolve script source setting: %s")

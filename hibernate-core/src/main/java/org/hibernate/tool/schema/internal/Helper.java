@@ -13,11 +13,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.Formatter;
@@ -62,17 +62,15 @@ public class Helper {
 		}
 		else {
 			final String scriptSourceSettingString = scriptSourceSetting.toString();
-			CORE_LOGGER.tracef( "Attempting to resolve script source setting: %s", scriptSourceSettingString );
-
+			CORE_LOGGER.attemptingToResolveScriptSourceSetting( scriptSourceSettingString );
 			final String[] paths = splitAtCommas( scriptSourceSettingString );
 			if ( paths.length == 1 ) {
 				return interpretScriptSourceSetting( scriptSourceSettingString, classLoaderService, charsetName );
 			}
-			final AbstractScriptSourceInput[] inputs = new AbstractScriptSourceInput[paths.length];
+			final var inputs = new AbstractScriptSourceInput[paths.length];
 			for ( int i = 0; i < paths.length; i++ ) {
 				inputs[i] = interpretScriptSourceSetting( paths[i], classLoaderService, charsetName ) ;
 			}
-
 			return new ScriptSourceInputAggregate( inputs );
 		}
 	}
@@ -108,15 +106,14 @@ public class Helper {
 		}
 		else {
 			final String scriptTargetSettingString = scriptTargetSetting.toString();
-			CORE_LOGGER.tracef( "Attempting to resolve script source setting: %s", scriptTargetSettingString );
+			CORE_LOGGER.attemptingToResolveScriptSourceSetting( scriptTargetSettingString );
 
 			// setting could be either:
 			//		1) string URL representation (i.e., "file://...")
 			//		2) relative file path (resource lookup)
 			//		3) absolute file path
 
-			CORE_LOGGER.trace( "Trying as URL..." );
-			// ClassLoaderService.locateResource() first tries the given resource name as url form...
+			// ClassLoaderService.locateResource() first tries the given resource name as URL form...
 			final URL url = classLoaderService.locateResource( scriptTargetSettingString );
 			return url != null
 					? new ScriptTargetOutputToUrl( url, charsetName )
@@ -129,15 +126,15 @@ public class Helper {
 		warnIfConflictingPropertiesSet( configurationValues );
 		// prefer the JPA setting...
 		return ConfigurationHelper.getBoolean(
-				AvailableSettings.HBM2DDL_CREATE_SCHEMAS,
+				SchemaToolingSettings.HBM2DDL_CREATE_SCHEMAS,
 				configurationValues,
 				//Then try the Jakarta JPA setting:
 				ConfigurationHelper.getBoolean(
-						AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS,
+						SchemaToolingSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS,
 						configurationValues,
 						//Then try the Hibernate ORM setting:
 						ConfigurationHelper.getBoolean(
-								AvailableSettings.HBM2DDL_CREATE_NAMESPACES,
+								SchemaToolingSettings.HBM2DDL_CREATE_NAMESPACES,
 								configurationValues
 						)
 				)
@@ -147,13 +144,13 @@ public class Helper {
 	private static void warnIfConflictingPropertiesSet(Map<String, Object> configurationValues) {
 		//Print a warning if multiple conflicting properties are being set:
 		int count = 0;
-		if ( configurationValues.containsKey( AvailableSettings.HBM2DDL_CREATE_SCHEMAS ) ) {
+		if ( configurationValues.containsKey( SchemaToolingSettings.HBM2DDL_CREATE_SCHEMAS ) ) {
 			count++;
 		}
-		if ( configurationValues.containsKey( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS ) ) {
+		if ( configurationValues.containsKey( SchemaToolingSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS ) ) {
 			count++;
 		}
-		if ( configurationValues.containsKey( AvailableSettings.HBM2DDL_CREATE_NAMESPACES ) ) {
+		if ( configurationValues.containsKey( SchemaToolingSettings.HBM2DDL_CREATE_NAMESPACES ) ) {
 			count++;
 		}
 		if ( count > 1 ) {
@@ -187,7 +184,7 @@ public class Helper {
 	}
 
 	public static SqlStringGenerationContext createSqlStringGenerationContext(ExecutionOptions options, Metadata metadata) {
-		final Database database = metadata.getDatabase();
+		final var database = metadata.getDatabase();
 		return SqlStringGenerationContextImpl.fromConfigurationMap(
 				database.getJdbcEnvironment(),
 				database,
@@ -235,7 +232,7 @@ public class Helper {
 		final List<String> commands = scriptInput.extract(
 				reader -> commandExtractor.extractCommands( reader, dialect )
 		);
-		for ( GenerationTarget target : targets ) {
+		for ( var target : targets ) {
 			target.beforeScript( scriptInput );
 		}
 		for ( String command : commands ) {

@@ -7,6 +7,7 @@ package org.hibernate.internal;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
+import java.net.URL;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.Properties;
@@ -638,4 +639,20 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = TRACE)
 	@Message(id = 6594, value = "Version unsaved-value [%s]")
 	void versionUnsavedValue(Object value);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 601, value = "Attempting to resolve script source setting: %s")
+	void attemptingToResolveScriptSourceSetting(String scriptSourceSettingString);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 602, value = "Attempting to create non-existent script target file: %s")
+	void attemptingToCreateScriptTarget(String absolutePath);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 603, value = "Could not create non-existent script target file")
+	void couldNotCreateScriptTarget(@Cause Exception e);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 604, value = "Attempting to resolve writer for URL: %s")
+	void attemptingToCreateWriter(URL url);
 }

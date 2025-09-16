@@ -19,7 +19,7 @@ import java.sql.Connection;
 import java.util.List;
 import java.util.TimeZone;
 
-import static org.hibernate.internal.CoreMessageLogger.LOGGER;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -42,7 +42,7 @@ public abstract class StatelessSessionBuilderImpl
 
 	@Override
 	public StatelessSession openStatelessSession() {
-		LOGGER.tracef( "Opening StatelessSession [tenant=%s]", tenantIdentifier );
+		CORE_LOGGER.openingStatelessSession( tenantIdentifier );
 		return createStatelessSession();
 	}
 

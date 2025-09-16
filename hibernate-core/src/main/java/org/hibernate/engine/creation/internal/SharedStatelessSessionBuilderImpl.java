@@ -22,7 +22,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import java.util.Objects;
 import java.util.TimeZone;
 
-import static org.hibernate.internal.CoreMessageLogger.LOGGER;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * Builder for shared {@linkplain StatelessSessionImplementor stateless} sessions.
@@ -60,7 +60,7 @@ public abstract class SharedStatelessSessionBuilderImpl
 
 	@Override
 	public StatelessSessionImplementor open() {
-		LOGGER.tracef( "Opening StatelessSession [tenant=%s]", tenantIdentifier );
+		CORE_LOGGER.openingStatelessSession( tenantIdentifier );
 		if ( original.getSessionFactory().getSessionFactoryOptions().isMultiTenancyEnabled() ) {
 			if ( shareTransactionContext ) {
 				final var tenantId = original.getTenantIdentifierValue();

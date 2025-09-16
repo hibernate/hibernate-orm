@@ -612,4 +612,14 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = DEBUG)
 	@Message(id = 6587, value = "setRollbackOnly() called with inactive transaction")
 	void setRollbackOnlyCalledOnInactiveTransaction();
+
+	// session builders
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 6588, value = "Opening session [tenant=%s]")
+	void openingSession(Object tenantIdentifier);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 6589, value = "Opening stateless session [tenant=%s]")
+	void openingStatelessSession(Object tenantIdentifier);
 }

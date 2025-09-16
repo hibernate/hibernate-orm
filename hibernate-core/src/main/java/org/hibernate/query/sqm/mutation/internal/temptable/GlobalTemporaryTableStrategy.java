@@ -21,7 +21,7 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.jboss.logging.Logger;
 
-import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
@@ -104,7 +104,7 @@ public class GlobalTemporaryTableStrategy {
 					connectionAccess.releaseConnection( connection );
 				}
 				catch (SQLException exception) {
-					JDBC_MESSAGE_LOGGER.unableToReleaseConnection( exception );
+					JDBC_LOGGER.unableToReleaseConnection( exception );
 				}
 			}
 		}
@@ -146,7 +146,7 @@ public class GlobalTemporaryTableStrategy {
 				connectionAccess.releaseConnection( connection );
 			}
 			catch (SQLException exception) {
-				JDBC_MESSAGE_LOGGER.unableToReleaseConnection( exception );
+				JDBC_LOGGER.unableToReleaseConnection( exception );
 			}
 		}
 	}

@@ -47,7 +47,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static java.sql.Types.TIMESTAMP;
-import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 import static org.hibernate.generator.EventTypeSets.INSERT_AND_UPDATE;
 import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
 import static org.hibernate.generator.EventTypeSets.fromArray;
@@ -221,8 +221,8 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 			final Timestamp ts = callable
 					? extractCalledResult( statement, coordinator, timestampSelectString )
 					: extractResult( statement, coordinator, timestampSelectString );
-			if ( JDBC_MESSAGE_LOGGER.isTraceEnabled() ) {
-				JDBC_MESSAGE_LOGGER.currentTimestampRetrievedFromDatabase( ts, ts.getNanos(), ts.getTime() );
+			if ( JDBC_LOGGER.isTraceEnabled() ) {
+				JDBC_LOGGER.currentTimestampRetrievedFromDatabase( ts, ts.getNanos(), ts.getTime() );
 			}
 			return ts;
 		}

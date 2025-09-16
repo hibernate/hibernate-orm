@@ -22,7 +22,7 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import static java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE;
 import static java.util.Collections.emptyList;
 import static java.util.stream.StreamSupport.stream;
-import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 import static org.hibernate.engine.jdbc.env.spi.SQLStateType.interpretReportedSQLStateType;
 
 /**
@@ -271,7 +271,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 					connectionAccess.releaseConnection( connection );
 				}
 				catch (SQLException exception) {
-					JDBC_MESSAGE_LOGGER.unableToReleaseConnection( exception );
+					JDBC_LOGGER.unableToReleaseConnection( exception );
 				}
 			}
 		}

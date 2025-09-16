@@ -35,7 +35,7 @@ import java.sql.Statement;
 import java.util.function.Supplier;
 
 import static org.hibernate.ConnectionReleaseMode.AFTER_STATEMENT;
-import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_MESSAGE_LOGGER;
 
 /**
@@ -46,7 +46,7 @@ import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_MESSAGE_LOG
  * @author Sanne Grinovero
  */
 public class JdbcCoordinatorImpl implements JdbcCoordinator {
-	private static final boolean TRACE_ENABLED = JDBC_MESSAGE_LOGGER.isTraceEnabled();
+	private static final boolean TRACE_ENABLED = JDBC_LOGGER.isTraceEnabled();
 
 	private transient final LogicalConnectionImplementor logicalConnection;
 	private transient final JdbcSessionOwner owner;
@@ -79,7 +79,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		this.isUserSuppliedConnection = userSuppliedConnection != null;
 		this.logicalConnection = createLogicalConnection( userSuppliedConnection, owner );
 		if ( TRACE_ENABLED ) {
-			JDBC_MESSAGE_LOGGER.createdJdbcCoordinator( hashCode() );
+			JDBC_LOGGER.createdJdbcCoordinator( hashCode() );
 		}
 	}
 
@@ -102,7 +102,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		this.owner = owner;
 		this.jdbcServices = owner.getJdbcSessionContext().getJdbcServices();
 		if ( TRACE_ENABLED ) {
-			JDBC_MESSAGE_LOGGER.createdJdbcCoordinator( hashCode() );
+			JDBC_LOGGER.createdJdbcCoordinator( hashCode() );
 		}
 	}
 
@@ -146,12 +146,12 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public Connection close() {
 		if ( TRACE_ENABLED ) {
-			JDBC_MESSAGE_LOGGER.closingJdbcCoordinator( hashCode() );
+			JDBC_LOGGER.closingJdbcCoordinator( hashCode() );
 		}
 		final Connection connection;
 		try {
 			if ( currentBatch != null ) {
-				JDBC_MESSAGE_LOGGER.closingUnreleasedBatch( hashCode() );
+				JDBC_LOGGER.closingUnreleasedBatch( hashCode() );
 				currentBatch.release();
 				currentBatch = null;
 			}
@@ -289,14 +289,14 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	public void afterStatementExecution() {
 		final var connectionReleaseMode = connectionReleaseMode();
 		if ( TRACE_ENABLED ) {
-			JDBC_MESSAGE_LOGGER.statementExecutionComplete( connectionReleaseMode, hashCode() );
+			JDBC_LOGGER.statementExecutionComplete( connectionReleaseMode, hashCode() );
 		}
 		if ( connectionReleaseMode == AFTER_STATEMENT ) {
 			if ( ! releasesEnabled ) {
-				JDBC_MESSAGE_LOGGER.trace( "Skipping aggressive release due to manual disabling" );
+				JDBC_LOGGER.trace( "Skipping aggressive release due to manual disabling" );
 			}
 			else if ( hasRegisteredResources() ) {
-				JDBC_MESSAGE_LOGGER.trace( "Skipping aggressive release due to registered resources" );
+				JDBC_LOGGER.trace( "Skipping aggressive release due to registered resources" );
 			}
 			else {
 				getLogicalConnection().afterStatement();
@@ -397,7 +397,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void afterTransactionBegin() {
 		if ( TRACE_ENABLED ) {
-			JDBC_MESSAGE_LOGGER.transactionAfterBegin( hashCode() );
+			JDBC_LOGGER.transactionAfterBegin( hashCode() );
 		}
 		owner.afterTransactionBegin();
 	}
@@ -405,7 +405,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void beforeTransactionCompletion() {
 		if ( TRACE_ENABLED ) {
-			JDBC_MESSAGE_LOGGER.transactionBeforeCompletion( hashCode() );
+			JDBC_LOGGER.transactionBeforeCompletion( hashCode() );
 		}
 		owner.beforeTransactionCompletion();
 		logicalConnection.beforeTransactionCompletion();
@@ -414,7 +414,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
 		if ( TRACE_ENABLED ) {
-			JDBC_MESSAGE_LOGGER.transactionAfterCompletion(
+			JDBC_LOGGER.transactionAfterCompletion(
 					successful ? "successful" : "unsuccessful",
 					hashCode() );
 		}

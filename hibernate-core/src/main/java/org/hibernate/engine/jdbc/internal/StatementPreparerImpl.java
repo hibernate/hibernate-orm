@@ -21,7 +21,7 @@ import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 
 /**
  * Standard implementation of {@link StatementPreparer}.
@@ -224,18 +224,18 @@ class StatementPreparerImpl implements StatementPreparer {
 	private void setStatementFetchSize(PreparedStatement statement) throws SQLException {
 		final Integer fetchSize = settings().getFetchSizeOrNull();
 		if ( fetchSize != null ) {
-			JDBC_MESSAGE_LOGGER.settingFetchSize( fetchSize );
+			JDBC_LOGGER.settingFetchSize( fetchSize );
 			statement.setFetchSize( fetchSize );
 		}
 		else {
-			if ( JDBC_MESSAGE_LOGGER.isDebugEnabled() ) {
+			if ( JDBC_LOGGER.isDebugEnabled() ) {
 				final int defaultFetchSize = statement.getFetchSize();
 				if ( defaultFetchSize > 0 && defaultFetchSize < 100 ) {
-					JDBC_MESSAGE_LOGGER.lowFetchSize( defaultFetchSize );
+					JDBC_LOGGER.lowFetchSize( defaultFetchSize );
 				}
 			}
-			else if ( JDBC_MESSAGE_LOGGER.isTraceEnabled() ) {
-				JDBC_MESSAGE_LOGGER.fetchSize( statement.getFetchSize() );
+			else if ( JDBC_LOGGER.isTraceEnabled() ) {
+				JDBC_LOGGER.fetchSize( statement.getFetchSize() );
 			}
 		}
 	}

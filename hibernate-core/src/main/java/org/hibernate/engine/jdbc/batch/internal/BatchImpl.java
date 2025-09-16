@@ -21,7 +21,7 @@ import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 
 import static java.util.Objects.requireNonNull;
-import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_MESSAGE_LOGGER;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
@@ -284,7 +284,7 @@ public class BatchImpl implements Batch {
 			throws SQLException, HibernateException {
 		final int numberOfRowCounts = rowCounts.length;
 		if ( batchPosition != 0 && numberOfRowCounts != batchPosition ) {
-			JDBC_MESSAGE_LOGGER.unexpectedRowCounts(
+			JDBC_LOGGER.unexpectedRowCounts(
 					statementDetails.getMutatingTableDetails().getTableName(),
 					numberOfRowCounts,
 					batchPosition

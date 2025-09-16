@@ -39,7 +39,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface JdbcLogging extends BasicLogger {
 	String NAME = SubSystemLogging.BASE + ".jdbc";
 
-	JdbcLogging JDBC_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), JdbcLogging.class, NAME );
+	JdbcLogging JDBC_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), JdbcLogging.class, NAME );
 
 	@LogMessage(level = WARN)
 	@Message(

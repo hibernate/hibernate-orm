@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 
 /**
  * @author Christian Beikov
+ * @author Loïc Lefèvre
  */
 public class OracleDatabaseCleaner implements DatabaseCleaner {
 
@@ -32,6 +33,9 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
 			"'LBACSYS'," +
 			"'XDB'," +
 			"'WMSYS'";
+
+	private static final int SEQUENCE_DOES_NOT_EXIST = 2289;
+	private static final int TABLE_OR_VIEW_DOES_NOT_EXIST = 942;
 
 	private final List<String> ignoredTables = new ArrayList<>();
 	private final Map<String, List<String>> cachedTruncateTableSqlPerSchema = new HashMap<>();
@@ -63,7 +67,7 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
 				statement -> {
 					try {
 						return statement.executeQuery(
-								"SELECT 'DROP TABLE ' || owner || '.\"' || table_name || '\" CASCADE CONSTRAINTS' " +
+								"SELECT 'DROP TABLE \"' || owner || '\".\"' || table_name || '\" CASCADE CONSTRAINTS PURGE' " +
 										"FROM all_tables " +
 										// Only look at tables owned by the current user
 										"WHERE owner = sys_context('USERENV', 'SESSION_USER')" +
@@ -74,7 +78,7 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
 										// Exclude the tables with names starting like 'DEF$_'
 										"      AND table_name NOT LIKE 'DEF$\\_%' ESCAPE '\\'" +
 										" UNION ALL " +
-										"SELECT 'DROP SEQUENCE ' || sequence_owner || '.' || sequence_name FROM all_sequences WHERE sequence_owner = sys_context('USERENV', 'SESSION_USER') and sequence_name not like 'ISEQ$$%' and sequence_name not like 'MVIEW$%'"
+										"SELECT 'DROP SEQUENCE \"' || sequence_owner || '\".\"' || sequence_name || '\"' FROM all_sequences WHERE sequence_owner = sys_context('USERENV', 'SESSION_USER') and sequence_name not like 'ISEQ$$%' and sequence_name not like 'MVIEW$%'"
 						);
 					}
 					catch (SQLException sqlException) {
@@ -93,18 +97,21 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
 				connection,
 				statement -> {
 					try {
-						return statement.executeQuery(
-								"SELECT 'DROP TABLE ' || owner || '.\"' || table_name || '\" CASCADE CONSTRAINTS' " +
-										"FROM all_tables " +
-										"WHERE owner = '" + schemaName + "'" +
-										// Normally, user tables aren't in sysaux
-										"      AND tablespace_name NOT IN ('SYSAUX')" +
-										// Apparently, user tables have global stats off
-										"      AND global_stats = 'NO'" +
-										// Exclude the tables with names starting like 'DEF$_'
-										"      AND table_name NOT LIKE 'DEF$\\_%' ESCAPE '\\'" +
-										" UNION ALL " +
-										"SELECT 'DROP SEQUENCE ' || sequence_owner || '.' || sequence_name FROM all_sequences WHERE sequence_owner = '" + schemaName + "'"
+						return statement.executeQuery( String.format("""
+								SELECT 'DROP TABLE "' || owner || '"."' || table_name || '" CASCADE CONSTRAINTS PURGE'
+								FROM all_tables
+								WHERE owner = '%s'
+								-- Normally, user tables aren't in sysaux
+								AND tablespace_name NOT IN ('SYSAUX')
+								-- Apparently, user tables have global stats off
+								AND global_stats = 'NO'
+								-- Exclude the tables with names starting like 'DEF$_'
+								AND table_name NOT LIKE 'DEF$\\_%%' ESCAPE '\\'
+								UNION ALL
+								SELECT 'DROP SEQUENCE "' || sequence_owner || '"."' || sequence_name || '"'
+								FROM all_sequences
+								WHERE sequence_owner = '%s'
+								""", schemaName, schemaName )
 						);
 					}
 					catch (SQLException sqlException) {
@@ -129,13 +136,21 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
 
 			LOG.log( Level.FINEST, "Dropping schema objects: START" );
 			for ( String sql : sqls ) {
-				s.execute( sql );
+				try {
+					s.execute( sql );
+				}
+				catch(SQLException sqlException) {
+					switch ( sqlException.getErrorCode() ) {
+						case SEQUENCE_DOES_NOT_EXIST:
+						case TABLE_OR_VIEW_DOES_NOT_EXIST:
+							// it's fine, object has been dropped already
+							break;
+						default:
+							throw sqlException;
+					}
+				}
 			}
 			LOG.log( Level.FINEST, "Dropping schema objects: END" );
-
-			LOG.log( Level.FINEST, "Committing: START" );
-			c.commit();
-			LOG.log( Level.FINEST, "Committing: END" );
 		}
 		catch (SQLException e) {
 			try {
@@ -250,10 +265,6 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
 				s.execute( sql );
 			}
 			LOG.log( Level.FINEST, "Enabling foreign keys: END" );
-
-			LOG.log( Level.FINEST, "Committing: START" );
-			connection.commit();
-			LOG.log( Level.FINEST, "Committing: END" );
 		}
 		catch (SQLException e) {
 			try {
@@ -266,5 +277,4 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
 			throw new RuntimeException( e );
 		}
 	}
-
 }

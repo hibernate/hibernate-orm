@@ -245,6 +245,7 @@ test {
         // Log a statement for each test.
         // Used in the Travis build so that Travis doesn't end up panicking because there's no output for a long time.
         testLogging {
+            displayGranularity 1
             events "passed", "skipped", "failed"
             exceptionFormat = 'full'
         }

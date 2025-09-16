@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import static java.util.Collections.addAll;
-import static org.hibernate.internal.CoreMessageLogger.LOGGER;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * SessionBuilder implementation.
@@ -148,7 +148,7 @@ public abstract class SessionBuilderImpl
 
 	@Override
 	public SessionImplementor openSession() {
-		LOGGER.tracef( "Opening Hibernate Session [tenant=%s]", tenantIdentifier );
+		CORE_LOGGER.openingSession( tenantIdentifier );
 		return createSession();
 	}
 

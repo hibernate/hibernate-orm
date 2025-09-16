@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import static java.util.Collections.addAll;
-import static org.hibernate.internal.CoreMessageLogger.LOGGER;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -82,7 +82,7 @@ public abstract class SharedSessionBuilderImpl
 
 	@Override
 	public SessionImplementor openSession() {
-		LOGGER.tracef( "Opening Session [tenant=%s]", tenantIdentifier );
+		CORE_LOGGER.openingSession( tenantIdentifier );
 		if ( original.getFactory().getSessionFactoryOptions().isMultiTenancyEnabled() ) {
 			if ( shareTransactionContext ) {
 				if ( tenantIdChanged ) {

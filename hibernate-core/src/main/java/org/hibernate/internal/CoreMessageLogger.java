@@ -622,4 +622,20 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = DEBUG)
 	@Message(id = 6589, value = "Opening stateless session [tenant=%s]")
 	void openingStatelessSession(Object tenantIdentifier);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 6591, value = "Identifier unsaved-value strategy %s")
+	void idUnsavedValueStrategy(String strategy);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 6592, value = "Identifier unsaved-value [%s]")
+	void idUnsavedValue(Object value);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 6593, value = "Version unsaved-value strategy %s")
+	void versionUnsavedValueStrategy(String strategy);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 6594, value = "Version unsaved-value [%s]")
+	void versionUnsavedValue(Object value);
 }

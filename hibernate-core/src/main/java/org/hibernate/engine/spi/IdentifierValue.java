@@ -8,7 +8,7 @@ import java.io.Serializable;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static org.hibernate.internal.CoreMessageLogger.LOGGER;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * A strategy for determining if an identifier value is an identifier of
@@ -28,7 +28,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	public static final IdentifierValue ANY = new IdentifierValue() {
 		@Override
 		public Boolean isUnsaved(Object id) {
-			LOGGER.trace( "ID unsaved-value strategy ANY" );
+			CORE_LOGGER.idUnsavedValueStrategy( "ANY" );
 			return Boolean.TRUE;
 		}
 
@@ -49,7 +49,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	public static final IdentifierValue NONE = new IdentifierValue() {
 		@Override
 		public Boolean isUnsaved(Object id) {
-			LOGGER.trace( "ID unsaved-value strategy NONE" );
+			CORE_LOGGER.idUnsavedValueStrategy( "NONE" );
 			return Boolean.FALSE;
 		}
 
@@ -71,7 +71,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	public static final IdentifierValue NULL = new IdentifierValue() {
 		@Override
 		public Boolean isUnsaved(@Nullable Object id) {
-			LOGGER.trace( "ID unsaved-value strategy NULL" );
+			CORE_LOGGER.idUnsavedValueStrategy( "NULL" );
 			return id == null;
 		}
 
@@ -92,7 +92,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	public static final IdentifierValue UNDEFINED = new IdentifierValue() {
 		@Override
 		public @Nullable Boolean isUnsaved(Object id) {
-			LOGGER.trace( "ID unsaved-value strategy UNDEFINED" );
+			CORE_LOGGER.idUnsavedValueStrategy( "UNDEFINED" );
 			return null;
 		}
 
@@ -124,7 +124,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 */
 	@Override
 	public @Nullable Boolean isUnsaved(@Nullable Object id) {
-		LOGGER.tracef( "ID unsaved-value: %s", value );
+		CORE_LOGGER.idUnsavedValue( value );
 		return id == null || id.equals( value );
 	}
 

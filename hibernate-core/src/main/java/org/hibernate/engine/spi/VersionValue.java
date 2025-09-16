@@ -113,7 +113,7 @@ public class VersionValue implements UnsavedValueStrategy {
 
 	@Override
 	public @Nullable Boolean isUnsaved(@Nullable Object version) throws MappingException {
-		CORE_LOGGER.versionUnsavedValue(  value );
+		CORE_LOGGER.versionUnsavedValue( value );
 		return version == null || version.equals( value );
 	}
 

@@ -263,8 +263,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			DomainModelSource domainModelSource,
 			LinkedHashSet<ClassDetails> knownClasses) {
 		final var classDetailsRegistry = domainModelSource.getClassDetailsRegistry();
-		domainModelSource.getManagedClassNames().forEach( (className) -> {
-			knownClasses.add( classDetailsRegistry.resolveClassDetails( className ) );
-		} );
+		domainModelSource.getManagedClassNames()
+				.forEach( className -> knownClasses.add( classDetailsRegistry.resolveClassDetails( className ) ) );
 	}
 }

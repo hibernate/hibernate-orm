@@ -34,6 +34,8 @@ import org.hibernate.mapping.PersistentClass;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.boot.model.source.internal.hbm.Helper.collectToolingHints;
+
 /**
  * Aggregates together information about a mapping document.
  *
@@ -77,9 +79,10 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 						.setPluralAttributesImplicitlyLazy( documentRoot.isDefaultLazy() )
 						.build();
 
-		toolingHintContext = Helper.collectToolingHints( null, documentRoot );
+		toolingHintContext = collectToolingHints( null, documentRoot );
 
-		typeDefinitionRegistry = new TypeDefinitionRegistryStandardImpl( rootBuildingContext.getTypeDefinitionRegistry() );
+		typeDefinitionRegistry =
+				new TypeDefinitionRegistryStandardImpl( rootBuildingContext.getTypeDefinitionRegistry() );
 	}
 
 	public JaxbHbmHibernateMapping getDocumentRoot() {
@@ -173,14 +176,14 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 
 	@Override
 	public void processTypeDefinitions() {
-		for ( JaxbHbmTypeDefinitionType typeDef : documentRoot.getTypedef() ) {
+		for ( var typeDef : documentRoot.getTypedef() ) {
 			TypeDefinitionBinder.processTypeDefinition( this, typeDef );
 		}
 	}
 
 	@Override
 	public void processQueryRenames() {
-		for ( JaxbHbmClassRenameType renameBinding : documentRoot.getImport() ) {
+		for ( var renameBinding : documentRoot.getImport() ) {
 			final String name = qualifyClassName( renameBinding.getClazz() );
 			final String rename = renameBinding.getRename() == null
 					? StringHelper.unqualify( name )
@@ -192,38 +195,38 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 
 	@Override
 	public void processFilterDefinitions() {
-		for ( JaxbHbmFilterDefinitionType filterDefinitionBinding : documentRoot.getFilterDef() ) {
+		for ( var filterDefinitionBinding : documentRoot.getFilterDef() ) {
 			FilterDefinitionBinder.processFilterDefinition( this, filterDefinitionBinding );
 		}
 	}
 
 	@Override
 	public void processFetchProfiles() {
-		for ( JaxbHbmFetchProfileType fetchProfileBinding : documentRoot.getFetchProfile() ) {
+		for ( var fetchProfileBinding : documentRoot.getFetchProfile() ) {
 			FetchProfileBinder.processFetchProfile( this, fetchProfileBinding );
 		}
 	}
 
 	@Override
 	public void processAuxiliaryDatabaseObjectDefinitions() {
-		for ( JaxbHbmAuxiliaryDatabaseObjectType auxDbObjectBinding : documentRoot.getDatabaseObject() ) {
+		for ( var auxDbObjectBinding : documentRoot.getDatabaseObject() ) {
 			AuxiliaryDatabaseObjectBinder.processAuxiliaryDatabaseObject( this, auxDbObjectBinding );
 		}
 	}
 
 	@Override
 	public void processNamedQueries() {
-		for ( JaxbHbmNamedQueryType namedQuery : documentRoot.getQuery() ) {
+		for ( var namedQuery : documentRoot.getQuery() ) {
 			NamedQueryBinder.processNamedQuery( this, namedQuery );
 		}
-		for ( JaxbHbmNamedNativeQueryType namedQuery : documentRoot.getSqlQuery() ) {
+		for ( var namedQuery : documentRoot.getSqlQuery() ) {
 			NamedQueryBinder.processNamedNativeQuery( this, namedQuery );
 		}
 	}
 
 	@Override
 	public void processIdentifierGenerators() {
-		for ( JaxbHbmIdentifierGeneratorDefinitionType identifierGenerator : documentRoot.getIdentifierGenerator() ) {
+		for ( var identifierGenerator : documentRoot.getIdentifierGenerator() ) {
 			IdentifierGeneratorDefinitionBinder.processIdentifierGeneratorDefinition( this, identifierGenerator );
 		}
 	}
@@ -245,12 +248,10 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 
 	@Override
 	public void processResultSetMappings() {
-		documentRoot.getResultset().forEach(
-				(hbmResultSetMapping) -> {
-					getMetadataCollector().addResultSetMapping(
-							new HbmResultSetMappingDescriptor( hbmResultSetMapping, rootBuildingContext ) );
-				}
-		);
+		documentRoot.getResultset()
+				.forEach( hbmResultSetMapping ->
+						getMetadataCollector().addResultSetMapping(
+								new HbmResultSetMappingDescriptor( hbmResultSetMapping, rootBuildingContext ) ) );
 	}
 
 	@Override

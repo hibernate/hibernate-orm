@@ -4,9 +4,6 @@
  */
 package org.hibernate.tool.schema.internal;
 
-import java.sql.Connection;
-import java.util.Map;
-
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.dialect.Dialect;
@@ -17,18 +14,16 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
+import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.extract.internal.InformationExtractorJdbcDatabaseMetaDataImpl;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.InformationExtractor;
-import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToScript;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToStdout;
@@ -36,6 +31,7 @@ import org.hibernate.tool.schema.internal.exec.ImprovedExtractionContextImpl;
 import org.hibernate.tool.schema.internal.exec.JdbcConnectionAccessProvidedConnectionImpl;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.spi.ExtractionTool;
+import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.spi.SchemaCreator;
 import org.hibernate.tool.schema.spi.SchemaDropper;
 import org.hibernate.tool.schema.spi.SchemaFilter;
@@ -47,25 +43,28 @@ import org.hibernate.tool.schema.spi.SchemaPopulator;
 import org.hibernate.tool.schema.spi.SchemaTruncator;
 import org.hibernate.tool.schema.spi.SchemaValidator;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
-
 import org.jboss.logging.Logger;
 
-import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_MAJOR_VERSION;
-import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_MINOR_VERSION;
-import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_NAME;
-import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_VERSION;
-import static org.hibernate.cfg.AvailableSettings.HBM2DDL_CONNECTION;
-import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DELIMITER;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_CONNECTION;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSION;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_NAME;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_VERSION;
+import java.sql.Connection;
+import java.util.Map;
+
+import static org.hibernate.cfg.JdbcSettings.DIALECT_DB_MAJOR_VERSION;
+import static org.hibernate.cfg.JdbcSettings.DIALECT_DB_MINOR_VERSION;
+import static org.hibernate.cfg.JdbcSettings.DIALECT_DB_NAME;
+import static org.hibernate.cfg.JdbcSettings.DIALECT_DB_VERSION;
+import static org.hibernate.cfg.JdbcSettings.HBM2DDL_CONNECTION;
+import static org.hibernate.cfg.JdbcSettings.JAKARTA_HBM2DDL_CONNECTION;
+import static org.hibernate.cfg.JdbcSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION;
+import static org.hibernate.cfg.JdbcSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSION;
+import static org.hibernate.cfg.JdbcSettings.JAKARTA_HBM2DDL_DB_NAME;
+import static org.hibernate.cfg.JdbcSettings.JAKARTA_HBM2DDL_DB_VERSION;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_DELIMITER;
 import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_FILTER_PROVIDER;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 
 /**
  * The standard Hibernate implementation of {@link SchemaManagementTool}
@@ -110,7 +109,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 	@Override
 	public SchemaMigrator getSchemaMigrator(Map<String,Object> options) {
 		final SchemaFilter migrateFilter = getSchemaFilterProvider( options ).getMigrateFilter();
-		return determineJdbcMetadaAccessStrategy( options ) == JdbcMetadaAccessStrategy.GROUPED
+		return determineJdbcMetadaAccessStrategy( options ) == JdbcMetadataAccessStrategy.GROUPED
 				? new GroupedSchemaMigratorImpl( this, migrateFilter )
 				: new IndividuallySchemaMigratorImpl( this, migrateFilter );
 	}
@@ -118,7 +117,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 	@Override
 	public SchemaValidator getSchemaValidator(Map<String,Object> options) {
 		final SchemaFilter validateFilter = getSchemaFilterProvider( options ).getValidateFilter();
-		return determineJdbcMetadaAccessStrategy( options ) == JdbcMetadaAccessStrategy.GROUPED
+		return determineJdbcMetadaAccessStrategy( options ) == JdbcMetadataAccessStrategy.GROUPED
 				? new GroupedSchemaValidatorImpl( this, validateFilter )
 				: new IndividuallySchemaValidatorImpl( this, validateFilter );
 	}
@@ -130,8 +129,8 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 						DefaultSchemaFilterProvider.INSTANCE );
 	}
 
-	private JdbcMetadaAccessStrategy determineJdbcMetadaAccessStrategy(Map<String,Object> options) {
-		return JdbcMetadaAccessStrategy.interpretSetting( options );
+	private JdbcMetadataAccessStrategy determineJdbcMetadaAccessStrategy(Map<String,Object> options) {
+		return JdbcMetadataAccessStrategy.interpretSetting( options );
 	}
 
 	@Override
@@ -154,7 +153,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			JdbcContext jdbcContext,
 			Map<String, Object> options,
 			boolean needsAutoCommit) {
-		final String scriptDelimiter = ConfigurationHelper.getString( HBM2DDL_DELIMITER, options, ";" );
+		final String scriptDelimiter = getString( HBM2DDL_DELIMITER, options, ";" );
 
 		final GenerationTarget[] targets = new GenerationTarget[ targetDescriptor.getTargetTypes().size() ];
 
@@ -199,7 +198,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			TargetDescriptor targetDescriptor,
 			DdlTransactionIsolator ddlTransactionIsolator,
 			Map<String,Object> options) {
-		final String scriptDelimiter = ConfigurationHelper.getString( HBM2DDL_DELIMITER, options, ";" );
+		final String scriptDelimiter = getString( HBM2DDL_DELIMITER, options, ";" );
 
 		final GenerationTarget[] targets = new GenerationTarget[ targetDescriptor.getTargetTypes().size() ];
 
@@ -237,7 +236,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 	}
 
 	public JdbcContext resolveJdbcContext(Map<String,Object> configurationValues) {
-		final JdbcContextBuilder jdbcContextBuilder = new JdbcContextBuilder( serviceRegistry );
+		final var jdbcContextBuilder = new JdbcContextBuilder( serviceRegistry );
 
 		// see if a specific connection has been provided
 		final Connection providedConnection = (Connection) coalesceSuppliedValues(
@@ -251,7 +250,8 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 				}
 		);
 		if ( providedConnection != null ) {
-			jdbcContextBuilder.jdbcConnectionAccess = new JdbcConnectionAccessProvidedConnectionImpl( providedConnection );
+			jdbcContextBuilder.jdbcConnectionAccess =
+					new JdbcConnectionAccessProvidedConnectionImpl( providedConnection );
 		}
 
 		// see if a specific Dialect override has been provided through database name, version, etc

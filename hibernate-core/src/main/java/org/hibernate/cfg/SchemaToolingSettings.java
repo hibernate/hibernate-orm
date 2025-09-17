@@ -7,6 +7,7 @@ package org.hibernate.cfg;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
+import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
 import org.hibernate.tool.schema.UniqueConstraintSchemaUpdateStrategy;
 
 /**
@@ -244,12 +245,12 @@ public interface SchemaToolingSettings {
 	/**
 	 * Setting to choose the strategy used to access the JDBC Metadata.
 	 * <p>
-	 * Valid options are defined by {@link org.hibernate.tool.schema.JdbcMetadaAccessStrategy}.
-	 * {@link org.hibernate.tool.schema.JdbcMetadaAccessStrategy#GROUPED} is the default.
+	 * Valid options are defined by {@link JdbcMetadataAccessStrategy}.
+	 * {@link JdbcMetadataAccessStrategy#GROUPED} is the default.
 	 *
 	 * @settingDefault Grouped, unless {@value #ENABLE_SYNONYMS} is enabled
 	 *
-	 * @see org.hibernate.tool.schema.JdbcMetadaAccessStrategy
+	 * @see JdbcMetadataAccessStrategy
 	 */
 	String HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY = "hibernate.hbm2ddl.jdbc_metadata_extraction_strategy";
 

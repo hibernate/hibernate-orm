@@ -16,12 +16,9 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.Formatter;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
@@ -42,9 +39,14 @@ import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 
+import static org.hibernate.cfg.JdbcSettings.FORMAT_SQL;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_CREATE_NAMESPACES;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_CREATE_SCHEMAS;
+import static org.hibernate.cfg.SchemaToolingSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
  * Helper methods.
@@ -125,16 +127,16 @@ public class Helper {
 	public static boolean interpretNamespaceHandling(Map<String,Object> configurationValues) {
 		warnIfConflictingPropertiesSet( configurationValues );
 		// prefer the JPA setting...
-		return ConfigurationHelper.getBoolean(
-				SchemaToolingSettings.HBM2DDL_CREATE_SCHEMAS,
+		return getBoolean(
+				HBM2DDL_CREATE_SCHEMAS,
 				configurationValues,
 				//Then try the Jakarta JPA setting:
-				ConfigurationHelper.getBoolean(
-						SchemaToolingSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS,
+				getBoolean(
+						JAKARTA_HBM2DDL_CREATE_SCHEMAS,
 						configurationValues,
 						//Then try the Hibernate ORM setting:
-						ConfigurationHelper.getBoolean(
-								SchemaToolingSettings.HBM2DDL_CREATE_NAMESPACES,
+						getBoolean(
+								HBM2DDL_CREATE_NAMESPACES,
 								configurationValues
 						)
 				)
@@ -144,13 +146,13 @@ public class Helper {
 	private static void warnIfConflictingPropertiesSet(Map<String, Object> configurationValues) {
 		//Print a warning if multiple conflicting properties are being set:
 		int count = 0;
-		if ( configurationValues.containsKey( SchemaToolingSettings.HBM2DDL_CREATE_SCHEMAS ) ) {
+		if ( configurationValues.containsKey( HBM2DDL_CREATE_SCHEMAS ) ) {
 			count++;
 		}
-		if ( configurationValues.containsKey( SchemaToolingSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS ) ) {
+		if ( configurationValues.containsKey( JAKARTA_HBM2DDL_CREATE_SCHEMAS ) ) {
 			count++;
 		}
-		if ( configurationValues.containsKey( SchemaToolingSettings.HBM2DDL_CREATE_NAMESPACES ) ) {
+		if ( configurationValues.containsKey( HBM2DDL_CREATE_NAMESPACES ) ) {
 			count++;
 		}
 		if ( count > 1 ) {
@@ -159,7 +161,7 @@ public class Helper {
 	}
 
 	public static boolean interpretFormattingEnabled(Map<String,Object> configurationValues) {
-		return ConfigurationHelper.getBoolean( AvailableSettings.FORMAT_SQL, configurationValues );
+		return getBoolean( FORMAT_SQL, configurationValues );
 	}
 
 	public static DatabaseInformation buildDatabaseInformation(
@@ -211,7 +213,7 @@ public class Helper {
 			GenerationTarget... targets) {
 		if ( !isEmpty( sqlString ) ) {
 			final String sqlStringFormatted = formatter.format( sqlString );
-			for ( GenerationTarget target : targets ) {
+			for ( var target : targets ) {
 				try {
 					target.accept( sqlStringFormatted );
 				}

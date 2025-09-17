@@ -51,7 +51,7 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.cfg.AvailableSettings.UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY;
+import static org.hibernate.cfg.SchemaToolingSettings.UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY;
 import static org.hibernate.engine.config.spi.StandardConverters.STRING;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.tool.schema.UniqueConstraintSchemaUpdateStrategy.DROP_RECREATE_QUIETLY;

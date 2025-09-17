@@ -33,7 +33,6 @@ public class ScriptSourceInputNonExistentImpl extends AbstractScriptSourceInput 
 
 	@Override
 	protected void releaseReader(Reader reader) {
-
 	}
 
 	@Override

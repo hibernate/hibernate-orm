@@ -27,7 +27,6 @@ public class JdbcConnectionAccessConnectionProviderImpl implements JdbcConnectio
 
 	public JdbcConnectionAccessConnectionProviderImpl(ConnectionProvider connectionProvider) {
 		this.connectionProvider = connectionProvider;
-
 		try {
 			jdbcConnection = connectionProvider.getConnection();
 		}

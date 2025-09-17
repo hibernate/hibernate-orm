@@ -336,8 +336,8 @@ public class ConfigurationObjectSettingTest {
 
 		// next verify the action-group determination
 		final ActionGrouping actionGrouping = ActionGrouping.interpret( settings );
-		assertThat( actionGrouping.getDatabaseAction() ).isEqualTo( dbAction );
-		assertThat( actionGrouping.getScriptAction() ).isEqualTo( scriptAction );
+		assertThat( actionGrouping.databaseAction() ).isEqualTo( dbAction );
+		assertThat( actionGrouping.scriptAction() ).isEqualTo( scriptAction );
 
 		// the check above uses a "for testing only" form of what happens for "real".
 		// verify the "real" path as well
@@ -348,9 +348,9 @@ public class ConfigurationObjectSettingTest {
 			final Set<ActionGrouping> actionGroupings = ActionGrouping.interpret( metadata, settings );
 			assertThat( actionGroupings ).hasSize( 1 );
 			final ActionGrouping grouping = actionGroupings.iterator().next();
-			assertThat( grouping.getContributor() ).isEqualTo( "orm" );
-			assertThat( grouping.getDatabaseAction() ).isEqualTo( dbAction );
-			assertThat( grouping.getScriptAction() ).isEqualTo( scriptAction );
+			assertThat( grouping.contributor() ).isEqualTo( "orm" );
+			assertThat( grouping.databaseAction() ).isEqualTo( dbAction );
+			assertThat( grouping.scriptAction() ).isEqualTo( scriptAction );
 
 			// verify also interpreting the db-name, etc... they are used by SF/EMF to resolve Dialect
 			final DialectResolver dialectResolver = new DialectResolverInitiator()

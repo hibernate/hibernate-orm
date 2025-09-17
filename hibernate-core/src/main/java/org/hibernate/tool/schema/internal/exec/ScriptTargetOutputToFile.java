@@ -98,15 +98,10 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 			CORE_LOGGER.couldNotCreateScriptTarget( e );
 		}
 		try {
-			return charsetName != null ?
-					new OutputStreamWriter(
-							new FileOutputStream( file, append ),
-							charsetName
-					) :
-					new OutputStreamWriter( new FileOutputStream(
-							file,
-							append
-					) );
+			final var outputStream = new FileOutputStream( file, append );
+			return charsetName != null
+					? new OutputStreamWriter( outputStream, charsetName )
+					: new OutputStreamWriter( outputStream );
 		}
 		catch (IOException e) {
 			throw new SchemaManagementException( "Unable to open specified script target file for writing : " + file, e );

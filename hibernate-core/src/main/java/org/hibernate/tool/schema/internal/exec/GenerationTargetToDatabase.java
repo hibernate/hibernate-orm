@@ -6,7 +6,6 @@ package org.hibernate.tool.schema.internal.exec;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.SQLWarning;
 import java.sql.Statement;
 
 import org.hibernate.engine.jdbc.internal.FormatStyle;
@@ -72,26 +71,28 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 	@Override
 	public void accept(String command) {
 		getSqlStatementLogger().logStatement( command, FormatStyle.NONE.getFormatter() );
-
 		try {
 			final var statement = jdbcStatement();
 			statement.execute( command );
-
-			try {
-				SQLWarning warnings = statement.getWarnings();
-				if ( warnings != null) {
-					getSqlExceptionHelper().logAndClearWarnings( statement );
-				}
-			}
-			catch( SQLException e ) {
-				CORE_LOGGER.unableToLogSqlWarnings( e );
-			}
+			logWarnings( statement );
 		}
 		catch (SQLException e) {
 			throw new CommandAcceptanceException(
 					"Error executing DDL \"" + command + "\" via JDBC [" + stripSql(e) + "]",
 					e
 			);
+		}
+	}
+
+	private void logWarnings(Statement statement) {
+		try {
+			final var warnings = statement.getWarnings();
+			if ( warnings != null) {
+				getSqlExceptionHelper().logAndClearWarnings( statement );
+			}
+		}
+		catch( SQLException e ) {
+			CORE_LOGGER.unableToLogSqlWarnings( e );
 		}
 	}
 

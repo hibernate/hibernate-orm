@@ -322,7 +322,7 @@ public class SequenceStyleGenerator
 						configurationService.getSettings() );
 		// We know this will only contain at most 1 action
 		final var iterator = actions.iterator();
-		final var action = iterator.hasNext() ? iterator.next().getDatabaseAction() : null;
+		final var action = iterator.hasNext() ? iterator.next().databaseAction() : null;
 		return action == Action.CREATE || action == Action.CREATE_DROP;
 	}
 

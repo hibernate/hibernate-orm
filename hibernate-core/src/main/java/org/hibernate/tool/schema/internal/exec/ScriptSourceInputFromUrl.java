@@ -44,9 +44,10 @@ public class ScriptSourceInputFromUrl extends AbstractScriptSourceInput {
 	@Override
 	protected Reader prepareReader() {
 		try {
+			final var stream = url.openStream();
 			return charsetName != null
-					? new InputStreamReader( url.openStream(), charsetName )
-					: new InputStreamReader( url.openStream() );
+					? new InputStreamReader( stream, charsetName )
+					: new InputStreamReader( stream );
 		}
 		catch (IOException e) {
 			throw new SchemaManagementException(

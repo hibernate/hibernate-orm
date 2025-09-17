@@ -21,7 +21,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
-import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
+import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -75,8 +75,8 @@ public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseTest {
 	}
 
 	@ParameterizedTest
-	@EnumSource(JdbcMetadaAccessStrategy.class)
-	public void testSchemaUpdateDoesNotTryToRecreateExistingTables(JdbcMetadaAccessStrategy strategy)
+	@EnumSource(JdbcMetadataAccessStrategy.class)
+	public void testSchemaUpdateDoesNotTryToRecreateExistingTables(JdbcMetadataAccessStrategy strategy)
 			throws Exception {
 		setUp( strategy.toString() );
 

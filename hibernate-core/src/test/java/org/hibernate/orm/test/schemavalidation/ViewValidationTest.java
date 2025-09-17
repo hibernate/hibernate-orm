@@ -19,7 +19,7 @@ import org.hibernate.testing.SkipForDialect;
 
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
-import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
+import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialects;
@@ -66,7 +66,7 @@ public class ViewValidationTest extends BaseCoreFunctionalTestCase {
 				.applySetting( AvailableSettings.ENABLE_SYNONYMS, "true" )
 				.applySetting(
 						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
-						JdbcMetadaAccessStrategy.GROUPED
+						JdbcMetadataAccessStrategy.GROUPED
 				)
 				.build();
 		try {
@@ -87,7 +87,7 @@ public class ViewValidationTest extends BaseCoreFunctionalTestCase {
 				.applySetting( AvailableSettings.ENABLE_SYNONYMS, "true" )
 				.applySetting(
 						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
-						JdbcMetadaAccessStrategy.INDIVIDUALLY
+						JdbcMetadataAccessStrategy.INDIVIDUALLY
 				)
 				.build();
 		try {

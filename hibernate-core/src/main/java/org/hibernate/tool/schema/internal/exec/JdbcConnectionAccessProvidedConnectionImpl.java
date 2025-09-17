@@ -25,10 +25,13 @@ public class JdbcConnectionAccessProvidedConnectionImpl implements JdbcConnectio
 
 	public JdbcConnectionAccessProvidedConnectionImpl(Connection jdbcConnection) {
 		this.jdbcConnection = jdbcConnection;
+		wasInitiallyAutoCommit = enableAutoCommit( jdbcConnection );
+		JDBC_LOGGER.initialAutoCommit( wasInitiallyAutoCommit );
+	}
 
-		boolean wasInitiallyAutoCommit;
+	private static boolean enableAutoCommit(Connection jdbcConnection) {
 		try {
-			wasInitiallyAutoCommit = jdbcConnection.getAutoCommit();
+			final boolean wasInitiallyAutoCommit = jdbcConnection.getAutoCommit();
 			if ( !wasInitiallyAutoCommit ) {
 				try {
 					jdbcConnection.setAutoCommit( true );
@@ -44,13 +47,11 @@ public class JdbcConnectionAccessProvidedConnectionImpl implements JdbcConnectio
 					);
 				}
 			}
+			return wasInitiallyAutoCommit;
 		}
 		catch (SQLException ignore) {
-			wasInitiallyAutoCommit = false;
+			return false;
 		}
-
-		JDBC_LOGGER.initialAutoCommit( wasInitiallyAutoCommit );
-		this.wasInitiallyAutoCommit = wasInitiallyAutoCommit;
 	}
 
 	@Override
@@ -62,7 +63,6 @@ public class JdbcConnectionAccessProvidedConnectionImpl implements JdbcConnectio
 	public void releaseConnection(Connection connection) throws SQLException {
 		// NOTE: reset auto-commit, but *do not* close the Connection.
 		//       The application handed us this connection.
-
 		if ( !wasInitiallyAutoCommit ) {
 			try {
 				if ( jdbcConnection.getAutoCommit() ) {

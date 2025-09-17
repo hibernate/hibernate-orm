@@ -28,7 +28,7 @@ public class EnversLogging {
 		return Logger.getMessageLogger( MethodHandles.lookup(), EnversMessageLogger .class, loggerName );
 	}
 
-	public static Logger logger(Class classNeedingLogging) {
+	public static Logger logger(Class<?> classNeedingLogging) {
 		return Logger.getLogger( classNeedingLogging );
 	}
 

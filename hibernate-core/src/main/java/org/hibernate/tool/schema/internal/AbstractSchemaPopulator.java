@@ -90,7 +90,7 @@ public abstract class AbstractSchemaPopulator {
 
 	/**
 	 * Handles import scripts specified using
-	 * {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_IMPORT_FILES}.
+	 * {@link org.hibernate.cfg.SchemaToolingSettings#HBM2DDL_IMPORT_FILES}.
 	 *
 	 * @return {@code true} if the legacy {@linkplain #DEFAULT_IMPORT_FILE default import file}
 	 *         was one of the listed imported files that were executed
@@ -130,7 +130,7 @@ public abstract class AbstractSchemaPopulator {
 
 	/**
 	 * Handles import scripts specified using
-	 * {@link org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE}.
+	 * {@link org.hibernate.cfg.SchemaToolingSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE}.
 	 */
 	private void applyImportFiles(
 			ExecutionOptions options,
@@ -175,14 +175,14 @@ public abstract class AbstractSchemaPopulator {
 	}
 
 	/**
-	 * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_CHARSET_NAME
+	 * @see org.hibernate.cfg.SchemaToolingSettings#HBM2DDL_CHARSET_NAME
 	 */
 	private static String getCharsetName(ExecutionOptions options) {
 		return (String) options.getConfigurationValues().get( HBM2DDL_CHARSET_NAME );
 	}
 
 	/**
-	 * @see org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
+	 * @see org.hibernate.cfg.SchemaToolingSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
 	 *
 	 * @return a {@link java.io.Reader} or a string URL
 	 */

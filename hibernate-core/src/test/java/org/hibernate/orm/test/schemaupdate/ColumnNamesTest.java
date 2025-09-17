@@ -22,7 +22,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
-import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
+import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -43,7 +43,7 @@ public class ColumnNamesTest {
 	@Parameterized.Parameters
 	public static Collection<String> parameters() {
 		return Arrays.asList(
-				new String[] {JdbcMetadaAccessStrategy.GROUPED.toString(), JdbcMetadaAccessStrategy.INDIVIDUALLY.toString()}
+				new String[] {JdbcMetadataAccessStrategy.GROUPED.toString(), JdbcMetadataAccessStrategy.INDIVIDUALLY.toString()}
 		);
 	}
 

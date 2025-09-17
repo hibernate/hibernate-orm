@@ -17,7 +17,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
+import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
@@ -51,8 +51,8 @@ public class InstantValidationTest implements ExecutionOptions {
 	@Parameterized.Parameters
 	public static Collection<String> parameters() {
 		return Arrays.asList(
-				JdbcMetadaAccessStrategy.GROUPED.toString(),
-				JdbcMetadaAccessStrategy.INDIVIDUALLY.toString()
+				JdbcMetadataAccessStrategy.GROUPED.toString(),
+				JdbcMetadataAccessStrategy.INDIVIDUALLY.toString()
 		);
 	}
 

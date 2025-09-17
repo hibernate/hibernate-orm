@@ -455,8 +455,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 						.requireService( ConfigurationService.class )
 						.getSettings();
 		for ( ActionGrouping grouping : ActionGrouping.interpret( this, settings ) ) {
-			if ( isColumnOrderingRelevant( grouping.getScriptAction() )
-				|| isColumnOrderingRelevant( grouping.getDatabaseAction() ) ) {
+			if ( isColumnOrderingRelevant( grouping.scriptAction() )
+				|| isColumnOrderingRelevant( grouping.databaseAction() ) ) {
 				return true;
 			}
 		}

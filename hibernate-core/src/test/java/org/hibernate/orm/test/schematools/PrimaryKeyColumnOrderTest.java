@@ -24,7 +24,7 @@ import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
-import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
+import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
 import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
 import org.hibernate.tool.schema.extract.internal.ExtractionContextImpl;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
@@ -89,7 +89,7 @@ public class PrimaryKeyColumnOrderTest extends BaseSessionFactoryFunctionalTest 
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting(
 						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
-						JdbcMetadaAccessStrategy.GROUPED
+						JdbcMetadataAccessStrategy.GROUPED
 				)
 				.build();
 		DdlTransactionIsolator ddlTransactionIsolator = null;

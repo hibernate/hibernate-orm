@@ -16,6 +16,7 @@ import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.TRACE;
 
 /**
@@ -32,8 +33,7 @@ import static org.jboss.logging.Logger.Level.TRACE;
 @Internal
 public interface NaturalIdLogging extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".mapping.natural_id";
-	Logger NATURAL_ID_LOGGER = Logger.getLogger( LOGGER_NAME );
-	NaturalIdLogging NATURAL_ID_MESSAGE_LOGGER = Logger.getMessageLogger(
+	NaturalIdLogging NATURAL_ID_LOGGER = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			NaturalIdLogging.class,
 			LOGGER_NAME
@@ -62,4 +62,8 @@ public interface NaturalIdLogging extends BasicLogger {
 	@LogMessage(level = TRACE)
 	@Message(value = "Retrieving primary key of %s from database for natural id: %s", id = 90006)
 	void retrievingIdForNaturalId(String entityName, Object naturalId);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Cached natural id resolution linked to missing entry in persistence context: %s", id = 90007)
+	void cachedResolutionMissingInContext(String info);
 }

@@ -33,6 +33,7 @@ import org.hibernate.query.sqm.tree.domain.SqmIndexAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.expression.AsWrapperSqmExpression;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmAny;
 import org.hibernate.query.sqm.tree.expression.SqmAnyDiscriminatorValue;
@@ -1130,6 +1131,11 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitFullyQualifiedClass(Class namedClass) {
+		return null;
+	}
+
+	@Override
+	public Object visitAsWrapperExpression(AsWrapperSqmExpression expression) {
 		return null;
 	}
 

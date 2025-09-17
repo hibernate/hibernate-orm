@@ -429,5 +429,18 @@ session.createNativeQuery(
 .getResultList();
 ```
 
+[[criteria-query]]
+== Criteria: `jakarta.persistence.criteria.Expression#as(Class)`
+
+The behaviour of `jakarta.persistence.criteria.Expression#as(Class)` has been changed to conform to the Jakarta Persistence specification.
+
+`Expression.as()` doesn’t do anymore a real type conversions, it’s just an unsafe typecast on the Expression object itself.
+
+In order to perform an actual typecast, `org.hibernate.query.criteria.JpaExpression#cast(Class)` can be used.
+
+E.g.
+```
+( (JpaExpression) from.get( "theInt" ) ).cast( String.class )
+```
 
 

@@ -119,4 +119,9 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 					);
 	}
 
+	@Override
+	default <X> SqmExpression<X> cast(Class<X> type) {
+		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( type ) );
+	}
+
 }

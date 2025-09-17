@@ -25,7 +25,7 @@ dependencies {
 	implementation "org.patrodyne.jvnet:hisrc-basicjaxb-tools:2.2.1"
 	implementation "org.patrodyne.jvnet:hisrc-basicjaxb-plugins:2.2.1"
 
-	implementation 'io.smallrye:jandex:3.1.2'
+	implementation 'io.smallrye:jandex:3.5.0'
 	implementation 'org.apache.httpcomponents:httpclient:4.5.14'
 	implementation 'jakarta.json.bind:jakarta.json.bind-api:2.0.0'
 	implementation 'jakarta.json:jakarta.json-api:2.0.1'

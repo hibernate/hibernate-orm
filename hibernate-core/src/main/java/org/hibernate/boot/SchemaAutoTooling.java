@@ -9,6 +9,8 @@ import org.hibernate.cfg.AvailableSettings;
 
 import java.util.Locale;
 
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_AUTO;
+
 /**
  * Defines the possible values for {@value AvailableSettings#HBM2DDL_AUTO}.
  *
@@ -65,15 +67,13 @@ public enum SchemaAutoTooling {
 			return null;
 		}
 		else {
-			for ( SchemaAutoTooling value : values() ) {
+			for ( var value : values() ) {
 				if ( value.externalForm().equals( configurationValue ) ) {
 					return value;
 				}
 			}
-			throw new HibernateException(
-					"Unrecognized " + AvailableSettings.HBM2DDL_AUTO + " value: '" + configurationValue
-							+ "'.  Supported values include 'create', 'create-drop', 'create-only', 'drop', 'update', 'none' and 'validate'."
-			);
+			throw new HibernateException( "Unrecognized " + HBM2DDL_AUTO + " value: '" + configurationValue
+					+ "' (supported values include 'create', 'create-drop', 'create-only', 'drop', 'update', 'none', and 'validate')" );
 		}
 	}
 }

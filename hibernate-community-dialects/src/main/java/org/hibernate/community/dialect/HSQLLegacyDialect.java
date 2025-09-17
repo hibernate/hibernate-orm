@@ -50,7 +50,6 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -79,7 +78,6 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
-import java.lang.invoke.MethodHandles;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -100,11 +98,7 @@ import static org.hibernate.type.SqlTypes.NUMERIC;
  */
 public class HSQLLegacyDialect extends Dialect {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			org.hibernate.community.dialect.HSQLLegacyDialect.class.getName()
-	);
+	private static final Logger LOG = Logger.getLogger( HSQLLegacyDialect.class );
 
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate( this );
 	private final HSQLIdentityColumnSupport identityColumnSupport;
@@ -762,7 +756,7 @@ public class HSQLLegacyDialect extends Dialect {
 		public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session)
 				throws StaleObjectStateException, JDBCException {
 			if ( getLockMode().greaterThan( LockMode.READ ) ) {
-				LOG.hsqldbSupportsOnlyReadCommittedIsolation();
+				LOG.warn( "HSQLDB supports only READ_UNCOMMITTED isolation" );
 			}
 			super.lock( id, version, object, timeout, session );
 		}

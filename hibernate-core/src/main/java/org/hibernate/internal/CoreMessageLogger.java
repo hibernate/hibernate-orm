@@ -52,7 +52,6 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	String NAME = SubSystemLogging.BASE + ".core";
 
-	Logger LOGGER = Logger.getLogger( NAME );
 	CoreMessageLogger CORE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, NAME );
 
 	@LogMessage(level = INFO)
@@ -89,10 +88,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "an assertion failure occurred" + " (this may indicate a bug in Hibernate, but is more likely due"
 			+ " to unsafe use of the session): %s", id = 99)
 	void failed(Throwable throwable);
-
-	@LogMessage(level = WARN)
-	@Message(value = "HSQLDB supports only READ_UNCOMMITTED isolation", id = 118)
-	void hsqldbSupportsOnlyReadCommittedIsolation();
 
 	@LogMessage(level = ERROR)
 	@Message(value = "IllegalArgumentException in class: %s, getter method of property: %s", id = 122)

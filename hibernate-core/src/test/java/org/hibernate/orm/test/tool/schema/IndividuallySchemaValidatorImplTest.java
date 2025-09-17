@@ -4,17 +4,9 @@
  */
 package org.hibernate.orm.test.tool.schema;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.lang.invoke.MethodHandles;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -22,37 +14,37 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.PropertiesHelper;
+import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.boot.JdbcConnectionAccessImpl;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
+import org.hibernate.tool.schema.internal.IndividuallySchemaValidatorImpl;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
-import org.hibernate.tool.schema.internal.IndividuallySchemaValidatorImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.boot.JdbcConnectionAccessImpl;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.logger.LoggerInspectionRule;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-
-import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
-import org.jboss.logging.Logger;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
 
@@ -62,10 +54,6 @@ import static org.junit.Assert.assertEquals;
 @JiraKey(value = "HHH-10332")
 @RequiresDialect(H2Dialect.class)
 public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
-
-	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, IndividuallySchemaValidatorImplTest.class.getName() ) );
 
 	private StandardServiceRegistry ssr;
 

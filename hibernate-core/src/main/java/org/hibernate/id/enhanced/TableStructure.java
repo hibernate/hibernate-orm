@@ -37,7 +37,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.LockMode.PESSIMISTIC_WRITE;
 import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHolder;
-import static org.hibernate.id.enhanced.TableGeneratorLogger.TABLE_GENERATOR_MESSAGE_LOGGER;
+import static org.hibernate.id.enhanced.TableGeneratorLogger.TABLE_GENERATOR_LOGGER;
 
 /**
  * Describes a table used to mimic sequence behavior
@@ -185,7 +185,7 @@ public class TableStructure implements DatabaseStructure {
 										selectRS.close();
 									}
 									catch (SQLException sqle) {
-										TABLE_GENERATOR_MESSAGE_LOGGER.unableToReadHiValue( physicalTableName.render(), sqle );
+										TABLE_GENERATOR_LOGGER.unableToReadHiValue( physicalTableName.render(), sqle );
 										throw sqle;
 									}
 
@@ -204,7 +204,7 @@ public class TableStructure implements DatabaseStructure {
 										rows = executeUpdate( updatePS, statsCollector, updateQuery, session );
 									}
 									catch (SQLException e) {
-										TABLE_GENERATOR_MESSAGE_LOGGER.unableToUpdateHiValue( physicalTableName.render(), e );
+										TABLE_GENERATOR_LOGGER.unableToUpdateHiValue( physicalTableName.render(), e );
 										throw e;
 									}
 								} while ( rows == 0 );

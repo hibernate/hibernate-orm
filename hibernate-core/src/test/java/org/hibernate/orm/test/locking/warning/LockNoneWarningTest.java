@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.locking.warning;
 
 import java.io.Serializable;
-import java.lang.invoke.MethodHandles;
 import java.util.HashSet;
 import java.util.Set;
 import jakarta.persistence.Column;
@@ -17,7 +16,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import org.hibernate.Session;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -30,23 +28,20 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.jboss.logging.Logger;
-
 import static jakarta.persistence.LockModeType.NONE;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.junit.Assert.assertFalse;
 
 /**
  * @author Andrea Boriero
  */
 @JiraKey(value = "HHH-10513")
-public class LockNoneWarmingTest extends BaseCoreFunctionalTestCase {
+public class LockNoneWarningTest extends BaseCoreFunctionalTestCase {
 
 	private Triggerable triggerable;
 
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, LockNoneWarmingTest.class.getName() )
-	);
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( CORE_LOGGER );
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

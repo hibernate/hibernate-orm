@@ -6,7 +6,6 @@ package org.hibernate.orm.test.jpa.transaction.batch;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
-import org.hibernate.internal.CoreMessageLogger;
 
 import org.hibernate.testing.jta.JtaAwareConnectionProviderImpl;
 import org.hibernate.testing.logger.Triggerable;
@@ -21,6 +20,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+
 /**
  * @author Andrea Boriero
  */
@@ -30,9 +31,7 @@ public abstract class AbstractJtaBatchTest extends AbstractBatchingTest {
 
 
 	@RegisterExtension
-	public LoggerInspectionExtension logger = LoggerInspectionExtension.builder()
-			.setLogger( CoreMessageLogger.CORE_LOGGER )
-			.build();
+	public LoggerInspectionExtension logger = LoggerInspectionExtension.builder().setLogger( CORE_LOGGER ).build();
 
 	@BeforeEach
 	public void setUp() {

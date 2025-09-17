@@ -4,11 +4,16 @@
  */
 package org.hibernate.orm.test.jpa.persistenceunit;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.internal.util.ConfigHelper.findAsResource;
+import jakarta.persistence.PersistenceUnitTransactionType;
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.lang.invoke.MethodHandles;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
@@ -16,29 +21,11 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
-
-import org.hibernate.testing.logger.LoggerInspectionRule;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Rule;
-import org.junit.jupiter.api.Test;
-
-import org.jboss.logging.Logger;
-
-import jakarta.persistence.PersistenceUnitTransactionType;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.internal.util.ConfigHelper.findAsResource;
 
 @JiraKey("HHH-18231")
 public class PersistenceXmlParserTest {
-
-	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, PersistenceXmlParser.class.getName() )
-	);
 
 	@Test
 	public void create_classLoaders() {

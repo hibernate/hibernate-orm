@@ -11,7 +11,6 @@ import jakarta.persistence.criteria.Root;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.descriptor.JdbcBindingLogging;
 import org.hibernate.type.descriptor.JdbcExtractingLogging;
 
@@ -24,7 +23,6 @@ import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
-import java.lang.invoke.MethodHandles;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
@@ -36,18 +34,12 @@ import static org.junit.Assert.assertTrue;
 public class EnumTypeTest extends BaseCoreFunctionalTestCase {
 
 	@Rule
-	public LoggerInspectionRule binderLogInspection = new LoggerInspectionRule( Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			JdbcBindingLogging.NAME
-	) );
+	public LoggerInspectionRule binderLogInspection =
+			new LoggerInspectionRule( Logger.getLogger( JdbcBindingLogging.NAME ) );
 
 	@Rule
-	public LoggerInspectionRule extractorLogInspection = new LoggerInspectionRule( Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			JdbcExtractingLogging.NAME
-	) );
+	public LoggerInspectionRule extractorLogInspection =
+			new LoggerInspectionRule( Logger.getLogger( JdbcExtractingLogging.NAME ) );
 
 	private Person person;
 
@@ -95,10 +87,10 @@ public class EnumTypeTest extends BaseCoreFunctionalTestCase {
 		doInHibernate(
 				this::sessionFactory,
 				s -> {
-					assertEquals( getNumberOfPersonByGender( s, Gender.MALE ), 2 );
-					assertEquals( getNumberOfPersonByGenderAndHairColor( s, Gender.MALE, HairColor.BROWN ), 1 );
-					assertEquals( getNumberOfPersonByGender( s, Gender.FEMALE ), 2 );
-					assertEquals( getNumberOfPersonByGenderAndHairColor( s, Gender.FEMALE, HairColor.BROWN ), 1 );
+					assertEquals( 2, getNumberOfPersonByGender( s, Gender.MALE ) );
+					assertEquals( 1, getNumberOfPersonByGenderAndHairColor( s, Gender.MALE, HairColor.BROWN ) );
+					assertEquals( 2, getNumberOfPersonByGender( s, Gender.FEMALE ) );
+					assertEquals( 1, getNumberOfPersonByGenderAndHairColor( s, Gender.FEMALE, HairColor.BROWN ) );
 				}
 		);
 	}

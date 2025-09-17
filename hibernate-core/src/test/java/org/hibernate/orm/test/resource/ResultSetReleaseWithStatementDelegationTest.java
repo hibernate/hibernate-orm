@@ -9,8 +9,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.resource.jdbc.internal.ResourceRegistryStandardImpl;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -21,13 +19,13 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SettingProvider;
 import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
-import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import java.lang.invoke.MethodHandles;
+
+import static org.hibernate.resource.jdbc.internal.ResourceRegistryLogger.RESOURCE_REGISTRY_LOGGER;
 
 @DomainModel(
 		annotatedClasses = {
@@ -53,12 +51,8 @@ class ResultSetReleaseWithStatementDelegationTest {
 	private Triggerable triggerable;
 
 	@RegisterExtension
-	public LoggerInspectionExtension logger = LoggerInspectionExtension.builder().setLogger(
-			Logger.getMessageLogger(
-					MethodHandles.lookup(),
-					CoreMessageLogger.class,
-					ResourceRegistryStandardImpl.class.getName() )
-	).build();
+	public LoggerInspectionExtension logger =
+			LoggerInspectionExtension.builder().setLogger( RESOURCE_REGISTRY_LOGGER ).build();
 
 	@BeforeEach
 	public void setUp() {

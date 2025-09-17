@@ -39,9 +39,9 @@ public class ScriptSourceInputAggregate implements ScriptSourceInput {
 		final List<String>[] lists = new List[inputs.length];
 		int size = 0;
 		for ( int i = 0; i < inputs.length; i++ ) {
-			final AbstractScriptSourceInput scriptSourceInput = inputs[i];
+			final var scriptSourceInput = inputs[i];
 			if ( scriptSourceInput.exists() ) {
-				final Reader reader = scriptSourceInput.prepareReader();
+				final var reader = scriptSourceInput.prepareReader();
 				try {
 					CORE_LOGGER.executingScript( scriptSourceInput.getScriptDescription() );
 					lists[i] = extractor.apply( reader );
@@ -62,8 +62,8 @@ public class ScriptSourceInputAggregate implements ScriptSourceInput {
 
 	@Override
 	public boolean containsScript(URL url) {
-		for ( int i = 0; i < inputs.length; i++ ) {
-			if ( inputs[i].containsScript( url ) ) {
+		for ( var input : inputs ) {
+			if ( input.containsScript( url ) ) {
 				return true;
 			}
 		}

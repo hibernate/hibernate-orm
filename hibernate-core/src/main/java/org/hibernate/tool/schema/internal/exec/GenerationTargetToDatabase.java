@@ -74,13 +74,13 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 		getSqlStatementLogger().logStatement( command, FormatStyle.NONE.getFormatter() );
 
 		try {
-			final Statement jdbcStatement = jdbcStatement();
-			jdbcStatement.execute( command );
+			final var statement = jdbcStatement();
+			statement.execute( command );
 
 			try {
-				SQLWarning warnings = jdbcStatement.getWarnings();
+				SQLWarning warnings = statement.getWarnings();
 				if ( warnings != null) {
-					getSqlExceptionHelper().logAndClearWarnings( jdbcStatement );
+					getSqlExceptionHelper().logAndClearWarnings( statement );
 				}
 			}
 			catch( SQLException e ) {

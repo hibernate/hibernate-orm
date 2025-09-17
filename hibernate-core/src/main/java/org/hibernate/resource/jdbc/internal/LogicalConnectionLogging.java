@@ -33,7 +33,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 @Internal
 public interface LogicalConnectionLogging extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".resource.jdbc";
-	LogicalConnectionLogging LOGGER = Logger.getMessageLogger(
+	LogicalConnectionLogging CONNECTION_LOGGER = Logger.getMessageLogger(
 			MethodHandles.lookup(), LogicalConnectionLogging.class, LOGGER_NAME
 	);
 

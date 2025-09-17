@@ -14,7 +14,7 @@ import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalJdbcTransaction;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
-import static org.hibernate.resource.jdbc.internal.LogicalConnectionLogging.LOGGER;
+import static org.hibernate.resource.jdbc.internal.LogicalConnectionLogging.CONNECTION_LOGGER;
 
 /**
  * Base support for {@link LogicalConnection} implementations
@@ -64,9 +64,9 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	public void begin() {
 		try {
 			if ( !doConnectionsFromProviderHaveAutoCommitDisabled() ) {
-				LOGGER.preparingToBeginViaSetAutoCommitFalse();
+				CONNECTION_LOGGER.preparingToBeginViaSetAutoCommitFalse();
 				getConnectionForTransactionManagement().setAutoCommit( false );
-				LOGGER.transactionBegunViaSetAutoCommitFalse();
+				CONNECTION_LOGGER.transactionBegunViaSetAutoCommitFalse();
 			}
 			status = TransactionStatus.ACTIVE;
 		}
@@ -78,7 +78,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	@Override
 	public void commit() {
 		try {
-			LOGGER.preparingToCommitViaConnectionCommit();
+			CONNECTION_LOGGER.preparingToCommitViaConnectionCommit();
 			status = TransactionStatus.COMMITTING;
 			if ( isPhysicallyConnected() ) {
 				getConnectionForTransactionManagement().commit();
@@ -87,7 +87,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 				errorIfClosed();
 			}
 			status = TransactionStatus.COMMITTED;
-			LOGGER.transactionCommittedViaConnectionCommit();
+			CONNECTION_LOGGER.transactionCommittedViaConnectionCommit();
 		}
 		catch( SQLException e ) {
 			status = TransactionStatus.FAILED_COMMIT;
@@ -104,20 +104,20 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	protected void resetConnection(boolean initiallyAutoCommit) {
 		try {
 			if ( initiallyAutoCommit ) {
-				LOGGER.reenablingAutoCommitAfterJdbcTransaction();
+				CONNECTION_LOGGER.reenablingAutoCommitAfterJdbcTransaction();
 				getConnectionForTransactionManagement().setAutoCommit( true );
 				status = TransactionStatus.NOT_ACTIVE;
 			}
 		}
 		catch ( Exception e ) {
-			LOGGER.couldNotReEnableAutoCommit( e );
+			CONNECTION_LOGGER.couldNotReEnableAutoCommit( e );
 		}
 	}
 
 	@Override
 	public void rollback() {
 		try {
-			LOGGER.preparingToRollbackViaConnectionRollback();
+			CONNECTION_LOGGER.preparingToRollbackViaConnectionRollback();
 			status = TransactionStatus.ROLLING_BACK;
 			if ( isPhysicallyConnected() ) {
 				getConnectionForTransactionManagement().rollback();
@@ -126,7 +126,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 				errorIfClosed();
 			}
 			status = TransactionStatus.ROLLED_BACK;
-			LOGGER.transactionRolledBackViaConnectionRollback();
+			CONNECTION_LOGGER.transactionRolledBackViaConnectionRollback();
 		}
 		catch( SQLException e ) {
 			status = TransactionStatus.FAILED_ROLLBACK;
@@ -141,7 +141,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 			return providedConnection.getAutoCommit();
 		}
 		catch (SQLException e) {
-			LOGGER.unableToAscertainInitialAutoCommit();
+			CONNECTION_LOGGER.unableToAscertainInitialAutoCommit();
 			return true;
 		}
 	}

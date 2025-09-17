@@ -9,7 +9,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.sql.Connection;
 
-import static org.hibernate.resource.jdbc.internal.LogicalConnectionLogging.LOGGER;
+import static org.hibernate.resource.jdbc.internal.LogicalConnectionLogging.CONNECTION_LOGGER;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
@@ -51,7 +51,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 
 	@Override
 	public Connection close() {
-		LOGGER.closingLogicalConnection();
+		CONNECTION_LOGGER.closingLogicalConnection();
 		getResourceRegistry().releaseResources();
 		try {
 			return providedConnection;
@@ -59,7 +59,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 		finally {
 			providedConnection = null;
 			closed = true;
-			LOGGER.logicalConnectionClosed();
+			CONNECTION_LOGGER.logicalConnectionClosed();
 		}
 	}
 
@@ -107,7 +107,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 		}
 		else if ( connection == providedConnection ) {
 			// likely an unmatched reconnect call (no matching disconnect call)
-			LOGGER.reconnectingSameConnectionAlreadyConnected();
+			CONNECTION_LOGGER.reconnectingSameConnectionAlreadyConnected();
 		}
 		else if ( providedConnection != null ) {
 			throw new IllegalArgumentException(
@@ -115,7 +115,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 			);
 		}
 		providedConnection = connection;
-		LOGGER.manuallyReconnectedLogicalConnection();
+		CONNECTION_LOGGER.manuallyReconnectedLogicalConnection();
 	}
 
 	@Override

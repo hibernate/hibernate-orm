@@ -11,8 +11,6 @@ import jakarta.persistence.PersistenceException;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 
-import org.jboss.logging.Logger;
-
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 
 /**
@@ -22,7 +20,6 @@ import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
  * @author Steve Ebersole
  */
 public class JdbcConnectionAccessConnectionProviderImpl implements JdbcConnectionAccess {
-	private static final Logger LOG = Logger.getLogger( JdbcConnectionAccessConnectionProviderImpl.class );
 
 	private final ConnectionProvider connectionProvider;
 	private final Connection jdbcConnection;
@@ -32,7 +29,7 @@ public class JdbcConnectionAccessConnectionProviderImpl implements JdbcConnectio
 		this.connectionProvider = connectionProvider;
 
 		try {
-			this.jdbcConnection = connectionProvider.getConnection();
+			jdbcConnection = connectionProvider.getConnection();
 		}
 		catch (SQLException e) {
 			throw new PersistenceException( "Unable to obtain JDBC Connection", e );
@@ -61,7 +58,7 @@ public class JdbcConnectionAccessConnectionProviderImpl implements JdbcConnectio
 			wasInitiallyAutoCommit = false;
 		}
 
-		LOG.tracef( "wasInitiallyAutoCommit=%s", wasInitiallyAutoCommit );
+		JDBC_LOGGER.initialAutoCommit( wasInitiallyAutoCommit );
 		this.wasInitiallyAutoCommit = wasInitiallyAutoCommit;
 	}
 

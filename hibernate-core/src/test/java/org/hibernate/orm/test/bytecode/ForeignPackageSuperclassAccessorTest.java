@@ -8,6 +8,7 @@ package org.hibernate.orm.test.bytecode;
 
 import org.hibernate.orm.test.bytecode.foreignpackage.ConcreteEntity;
 
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.Test;
 		SuperclassEntity.class
 })
 @Jira("https://hibernate.atlassian.net/browse/HHH-19369")
+@BytecodeEnhanced(runNotEnhancedAsWell = true)
 public class ForeignPackageSuperclassAccessorTest {
 
 	@Test

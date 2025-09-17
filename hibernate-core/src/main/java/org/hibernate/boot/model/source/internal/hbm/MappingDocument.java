@@ -8,15 +8,7 @@ import java.util.Set;
 
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.hbm.spi.EntityInfo;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmAuxiliaryDatabaseObjectType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmClassRenameType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFetchProfileType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterDefinitionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmIdentifierGeneratorDefinitionType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTypeDefinitionType;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.internal.TypeDefinitionRegistryStandardImpl;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;

@@ -23,8 +23,6 @@ import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategyLegacy;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;

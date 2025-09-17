@@ -52,12 +52,12 @@ public class ScriptSourceInputFromFile extends AbstractScriptSourceInput {
 			LOG.warnf( "Specified schema generation script file [%s] did not exist for reading", file );
 			return new Reader() {
 				@Override
-				public int read(char[] cbuf, int off, int len) throws IOException {
+				public int read(char[] cbuf, int off, int len) {
 					return -1;
 				}
 
 				@Override
-				public void close() throws IOException {
+				public void close() {
 				}
 			};
 		}

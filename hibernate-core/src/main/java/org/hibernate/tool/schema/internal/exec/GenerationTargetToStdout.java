@@ -31,10 +31,7 @@ public class GenerationTargetToStdout implements GenerationTarget {
 	@Override
 	@AllowSysOut
 	public void accept(String command) {
-		if ( delimiter != null ) {
-			command += delimiter;
-		}
-		System.out.println( command );
+		System.out.println( delimiter == null ? command : command + delimiter );
 	}
 
 	@Override

@@ -5,7 +5,6 @@
 package org.hibernate.tool.schema.internal.exec;
 
 import java.io.Reader;
-import java.net.URL;
 
 /**
  * ScriptSourceInput implementation for explicitly given Readers.
@@ -37,11 +36,6 @@ public class ScriptSourceInputFromReader extends AbstractScriptSourceInput {
 	@Override
 	protected void releaseReader(Reader reader) {
 		// nothing to do
-	}
-
-	@Override
-	public boolean containsScript(URL url) {
-		return false;
 	}
 
 	@Override

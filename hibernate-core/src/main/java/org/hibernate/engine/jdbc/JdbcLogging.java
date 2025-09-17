@@ -189,4 +189,7 @@ public interface JdbcLogging extends BasicLogger {
 	@Message(value = "Could not obtain connection to query JDBC database metadata", id = 100046)
 	void unableToObtainConnectionToQueryMetadata(@Cause Exception e);
 
+	@LogMessage(level = TRACE)
+	@Message(value =  "AutoCommit was initially %s", id = 100047)
+	void initialAutoCommit(boolean wasInitiallyAutoCommit);
 }

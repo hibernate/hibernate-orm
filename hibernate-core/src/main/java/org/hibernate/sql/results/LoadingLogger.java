@@ -41,9 +41,6 @@ public interface LoadingLogger extends BasicLogger {
 		return Logger.getLogger( subLoggerName( subName ) );
 	}
 
-	boolean TRACE_ENABLED = LOADING_LOGGER.isTraceEnabled();
-	boolean DEBUG_ENABLED = LOADING_LOGGER.isDebugEnabled();
-
 	@LogMessage(level = DEBUG)
 	@Message(id = 90005801,
 			value = "Found matching entity in context, but it is scheduled for removal (returning null)")

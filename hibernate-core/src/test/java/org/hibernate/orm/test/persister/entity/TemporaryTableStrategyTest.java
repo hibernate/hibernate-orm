@@ -4,32 +4,27 @@
  */
 package org.hibernate.orm.test.persister.entity;
 
-import java.lang.invoke.MethodHandles;
-import java.util.Set;
-
-import org.hibernate.dialect.OracleDialect;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.logger.LoggerInspectionRule;
-import org.hibernate.testing.logger.Triggerable;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
-import org.junit.Rule;
-import org.junit.jupiter.api.Test;
-
-import org.jboss.logging.Logger;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
+import org.hibernate.testing.logger.LoggerInspectionRule;
+import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.jboss.logging.Logger;
+import org.junit.Rule;
+import org.junit.jupiter.api.Test;
+
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
@@ -47,9 +42,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 public class TemporaryTableStrategyTest {
 
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, GlobalTemporaryTableStrategy.class.getName() )
-	);
+	public LoggerInspectionRule logInspection =
+			new LoggerInspectionRule( Logger.getLogger( GlobalTemporaryTableStrategy.class ) );
 
 	private final Triggerable triggerable = logInspection.watchForLogMessages( Set.of(
 			"Creating global-temp ID table",

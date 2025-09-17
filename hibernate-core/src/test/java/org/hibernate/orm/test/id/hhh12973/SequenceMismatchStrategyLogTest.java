@@ -32,7 +32,7 @@ import org.junit.Rule;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.id.enhanced.SequenceGeneratorLogger.SEQUENCE_GENERATOR_MESSAGE_LOGGER;
+import static org.hibernate.id.enhanced.SequenceGeneratorLogger.SEQUENCE_GENERATOR_LOGGER;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class SequenceMismatchStrategyLogTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule( SEQUENCE_GENERATOR_MESSAGE_LOGGER );
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( SEQUENCE_GENERATOR_LOGGER );
 
 	private final Triggerable triggerable = logInspection.watchForLogMessages( "HHH090202:" );
 

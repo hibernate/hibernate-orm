@@ -6,9 +6,9 @@ package org.hibernate.orm.test.boot.database.metadata;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -38,7 +38,6 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfoSource;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -54,7 +53,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
@@ -65,10 +63,8 @@ public class MetadataAccessTests {
 	private Triggerable triggerable;
 
 	@RegisterExtension
-	public LoggerInspectionExtension logger = LoggerInspectionExtension
-			.builder().setLogger(
-					Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, Dialect.class.getName() )
-			).build();
+	public LoggerInspectionExtension logger =
+			LoggerInspectionExtension.builder().setLogger( CORE_LOGGER ).build();
 
 	@BeforeEach
 	public void setUp() {

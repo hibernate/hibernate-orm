@@ -28,8 +28,8 @@ import org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.spi.RowReader;
+import org.jboss.logging.Logger;
 
-import static org.hibernate.internal.CoreMessageLogger.LOGGER;
 import static org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions.NO_OPTIONS;
 
 
@@ -37,6 +37,8 @@ import static org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptio
  * @author Steve Ebersole
  */
 public class OutputsImpl implements Outputs {
+
+	private static final Logger LOG = Logger.getLogger( OutputsImpl.class );
 
 	private final ResultContext context;
 	private final PreparedStatement jdbcStatement;
@@ -248,8 +250,8 @@ public class OutputsImpl implements Outputs {
 		}
 
 		protected Output buildOutput() {
-			if ( LOGGER.isTraceEnabled() ) {
-				LOGGER.tracef( "Building Return [isResultSet=%s, updateCount=%s, extendedReturn=%s]",
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracef( "Building Return [isResultSet=%s, updateCount=%s, extendedReturn=%s]",
 						isResultSet(), getUpdateCount(), hasExtendedReturns() );
 			}
 

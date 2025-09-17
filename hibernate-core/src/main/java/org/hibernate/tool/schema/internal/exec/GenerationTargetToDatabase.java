@@ -17,7 +17,7 @@ import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 
-import static org.hibernate.internal.CoreMessageLogger.*;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * A {@link GenerationTarget} which exports DDL directly to the database.

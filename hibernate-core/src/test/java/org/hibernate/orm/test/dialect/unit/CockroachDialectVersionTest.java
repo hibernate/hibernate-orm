@@ -7,19 +7,9 @@ package org.hibernate.orm.test.dialect.unit;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.CoreMessageLogger;
-
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-
-import org.jboss.logging.Logger;
-
-import java.lang.invoke.MethodHandles;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -29,20 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 @RequiresDialect(CockroachDialect.class)
 public class CockroachDialectVersionTest {
-
-	private Triggerable triggerable;
-
-	@RegisterExtension
-	public LoggerInspectionExtension logger = LoggerInspectionExtension
-			.builder().setLogger(
-					Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, CockroachDialect.class.getName()  )
-			).build();
-
-	@BeforeEach
-	public void setUp() {
-		triggerable = logger.watchForLogMessages("HHH000512" );
-		triggerable.reset();
-	}
 
 	@Test
 	@JiraKey(value = "HHH-15511")

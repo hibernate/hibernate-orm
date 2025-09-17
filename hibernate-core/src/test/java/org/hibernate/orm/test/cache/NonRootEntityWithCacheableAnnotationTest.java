@@ -4,16 +4,13 @@
  */
 package org.hibernate.orm.test.cache;
 
-import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.internal.EntityBinder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -24,14 +21,13 @@ import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.jboss.logging.Logger;
-
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.SharedCacheMode;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -42,9 +38,7 @@ import static org.junit.Assert.assertTrue;
 public class NonRootEntityWithCacheableAnnotationTest {
 
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, EntityBinder.class.getName() )
-	);
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( CORE_LOGGER );
 
 	@Test
 	public void testCacheableOnNonRootEntity() {

@@ -18,9 +18,10 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.result.internal.OutputsImpl;
+import org.jboss.logging.Logger;
 
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
-import static org.hibernate.internal.CoreMessageLogger.LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedMapOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedSetOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
@@ -36,6 +37,8 @@ import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize
  * @author Guenther Demetz
  */
 public class BatchFetchQueue {
+
+	private static final Logger LOG = Logger.getLogger( OutputsImpl.class );
 
 	private final PersistenceContext context;
 
@@ -106,8 +109,8 @@ public class BatchFetchQueue {
 		}
 
 		final var previous = subselectsByEntityKey.put( key, subquery );
-		if ( previous != null && LOGGER.isDebugEnabled() ) {
-			LOGGER.tracef(
+		if ( previous != null && LOG.isDebugEnabled() ) {
+			LOG.tracef(
 					"SubselectFetch previously registered with BatchFetchQueue for '%s.s'",
 					key.getEntityName(),
 					key.getIdentifier()
@@ -129,6 +132,10 @@ public class BatchFetchQueue {
 
 	// entity batch support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	private LoadQueryInfluencers getLoadQueryInfluencers() {
+		return context.getSession().getLoadQueryInfluencers();
+	}
+
 	/**
 	 * If an EntityKey represents a batch loadable entity, add
 	 * it to the queue.
@@ -140,7 +147,7 @@ public class BatchFetchQueue {
 	 * already associated with the {@link PersistenceContext}.
 	 */
 	public void addBatchLoadableEntityKey(EntityKey key) {
-		if ( key.isBatchLoadable( context.getSession().getLoadQueryInfluencers() ) ) {
+		if ( key.isBatchLoadable( getLoadQueryInfluencers() ) ) {
 			if ( batchLoadableEntityKeys == null ) {
 				batchLoadableEntityKeys = mapOfSize( 12 );
 			}
@@ -156,7 +163,7 @@ public class BatchFetchQueue {
 	 * if necessary
 	 */
 	public void removeBatchLoadableEntityKey(EntityKey key) {
-		if ( key.isBatchLoadable( context.getSession().getLoadQueryInfluencers() )
+		if ( key.isBatchLoadable( getLoadQueryInfluencers() )
 				&& batchLoadableEntityKeys != null ) {
 			final var entityKeys = batchLoadableEntityKeys.get( key.getEntityName() );
 			if ( entityKeys != null ) {
@@ -169,7 +176,7 @@ public class BatchFetchQueue {
 	 * Intended for test usage. Really has no use-case in Hibernate proper.
 	 */
 	public boolean containsEntityKey(EntityKey key) {
-		if ( key.isBatchLoadable( context.getSession().getLoadQueryInfluencers() )
+		if ( key.isBatchLoadable( getLoadQueryInfluencers() )
 				&& batchLoadableEntityKeys != null ) {
 			final var entityKeys = batchLoadableEntityKeys.get( key.getEntityName() );
 			if ( entityKeys != null ) {
@@ -196,6 +203,7 @@ public class BatchFetchQueue {
 		if ( batchLoadableEntityKeys != null ) {
 			final var entityKeys = batchLoadableEntityKeys.get( entityDescriptor.getEntityName() );
 			if ( entityKeys != null ) {
+				final var session = context.getSession();
 				final var identifierMapping = entityDescriptor.getIdentifierMapping();
 				int batchPosition = 1;
 				int end = -1;
@@ -203,15 +211,17 @@ public class BatchFetchQueue {
 				for ( var entityKey : entityKeys ) {
 					if ( checkForEnd && batchPosition == end ) {
 						// the first id found after the given id
-						return;
+						return; // end the loop
 					}
-					else if ( identifierMapping.areEqual( loadingId, entityKey.getIdentifier(),
-							context.getSession() ) ) {
-						end = batchPosition;
-					}
-					else if ( !isCached( entityKey, entityDescriptor.getEntityPersister() ) ) {
-						//noinspection unchecked
-						collector.accept( batchPosition++, (T) entityKey.getIdentifier() );
+					else {
+						final Object identifier = entityKey.getIdentifier();
+						if ( identifierMapping.areEqual( loadingId, identifier, session ) ) {
+							end = batchPosition;
+						}
+						else if ( !isCached( entityKey, entityDescriptor.getEntityPersister() ) ) {
+							//noinspection unchecked
+							collector.accept( batchPosition++, (T) identifier );
+						}
 					}
 
 					if ( batchPosition == domainBatchSize ) {
@@ -296,13 +306,13 @@ public class BatchFetchQueue {
 	 * need to batch fetch it anymore, remove it from the queue
 	 * if necessary
 	 */
-	public void removeBatchLoadableCollection(CollectionEntry ce) {
-		final var persister = ce.getLoadedPersister();
+	public void removeBatchLoadableCollection(CollectionEntry collectionEntry) {
+		final var persister = collectionEntry.getLoadedPersister();
 		assert persister != null : "@AssumeAssertion(nullness)";
 		if ( batchLoadableCollections != null ) {
 			final var map = batchLoadableCollections.get( persister.getRole() );
 			if ( map != null ) {
-				map.remove( ce );
+				map.remove( collectionEntry );
 			}
 		}
 	}
@@ -328,9 +338,9 @@ public class BatchFetchQueue {
 				int end = -1;
 				boolean checkForEnd = false;
 				for ( var me : map.entrySet() ) {
-					final CollectionEntry ce = me.getKey();
+					final var ce = me.getKey();
 					final Object loadedKey = ce.getLoadedKey();
-					final PersistentCollection<?> collection = me.getValue();
+					final var collection = me.getValue();
 
 					// the loadedKey of the collectionEntry might be null as it might have been reset to null
 					// (see for example Collections.processDereferencedCollection()
@@ -397,9 +407,9 @@ public class BatchFetchQueue {
 			final var map = batchLoadableCollections.get( collectionPersister.getRole() );
 			if ( map != null ) {
 				for ( var me : map.entrySet() ) {
-					final CollectionEntry ce = me.getKey();
-					final Object loadedKey = ce.getLoadedKey();
-					final PersistentCollection<?> collection = me.getValue();
+					final var collectionEntry = me.getKey();
+					final Object loadedKey = collectionEntry.getLoadedKey();
+					final var collection = me.getValue();
 
 					// the loadedKey of the collectionEntry might be null as it might have been reset to null
 					// (see for example Collections.processDereferencedCollection()

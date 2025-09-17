@@ -37,7 +37,7 @@ import static java.util.Collections.singleton;
 import static org.hibernate.cfg.MappingSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY;
 import static org.hibernate.id.IdentifierGeneratorHelper.getNamingStrategy;
 import static org.hibernate.id.enhanced.OptimizerFactory.determineImplicitOptimizerName;
-import static org.hibernate.id.enhanced.SequenceGeneratorLogger.SEQUENCE_GENERATOR_MESSAGE_LOGGER;
+import static org.hibernate.id.enhanced.SequenceGeneratorLogger.SEQUENCE_GENERATOR_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
@@ -214,7 +214,7 @@ public class SequenceStyleGenerator
 				&& optimizationStrategy.isPooled()
 				&& !dialect.getSequenceSupport().supportsPooledSequences() ) {
 			forceTableUse = true;
-			SEQUENCE_GENERATOR_MESSAGE_LOGGER.forcingTableUse();
+			SEQUENCE_GENERATOR_LOGGER.forcingTableUse();
 		}
 
 		this.databaseStructure = buildDatabaseStructure(
@@ -292,13 +292,13 @@ public class SequenceStyleGenerator
 				case NONE -> incrementSize;
 				case FIX -> {
 					// log at TRACE level
-					SEQUENCE_GENERATOR_MESSAGE_LOGGER.sequenceIncrementSizeMismatchFixed(
+					SEQUENCE_GENERATOR_LOGGER.sequenceIncrementSizeMismatchFixed(
 							databaseSequenceName, incrementSize, dbIncrementValue );
 					yield dbIncrementValue;
 				}
 				case LOG -> {
 					// log at WARN level
-					SEQUENCE_GENERATOR_MESSAGE_LOGGER.sequenceIncrementSizeMismatch(
+					SEQUENCE_GENERATOR_LOGGER.sequenceIncrementSizeMismatch(
 							databaseSequenceName, incrementSize, dbIncrementValue );
 					yield incrementSize;
 				}
@@ -448,7 +448,7 @@ public class SequenceStyleGenerator
 	protected int determineAdjustedIncrementSize(OptimizerDescriptor optimizationStrategy, int incrementSize) {
 		if ( optimizationStrategy == StandardOptimizerDescriptor.NONE  ) {
 			if ( incrementSize < -1 ) {
-				SEQUENCE_GENERATOR_MESSAGE_LOGGER.honoringOptimizerSetting(
+				SEQUENCE_GENERATOR_LOGGER.honoringOptimizerSetting(
 						StandardOptimizerDescriptor.NONE.getExternalName(),
 						INCREMENT_PARAM,
 						incrementSize,
@@ -458,7 +458,7 @@ public class SequenceStyleGenerator
 				return -1;
 			}
 			else if ( incrementSize > 1 ) {
-				SEQUENCE_GENERATOR_MESSAGE_LOGGER.honoringOptimizerSetting(
+				SEQUENCE_GENERATOR_LOGGER.honoringOptimizerSetting(
 						StandardOptimizerDescriptor.NONE.getExternalName(),
 						INCREMENT_PARAM,
 						incrementSize,

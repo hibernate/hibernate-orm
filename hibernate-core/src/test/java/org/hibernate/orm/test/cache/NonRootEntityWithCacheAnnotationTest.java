@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.cache;
 
-import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,10 +11,8 @@ import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.internal.EntityBinder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -25,13 +22,13 @@ import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.jboss.logging.Logger;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.SharedCacheMode;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.junit.Assert.fail;
 
 /**
@@ -41,9 +38,7 @@ import static org.junit.Assert.fail;
 public class NonRootEntityWithCacheAnnotationTest {
 
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, EntityBinder.class.getName() )
-	);
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( CORE_LOGGER );
 
 	@Test
 	public void testCacheOnNonRootEntity() {

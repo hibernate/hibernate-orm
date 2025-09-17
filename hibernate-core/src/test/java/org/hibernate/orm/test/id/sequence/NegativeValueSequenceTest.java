@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 
 
 
-import static org.hibernate.id.enhanced.SequenceGeneratorLogger.SEQUENCE_GENERATOR_MESSAGE_LOGGER;
+import static org.hibernate.id.enhanced.SequenceGeneratorLogger.SEQUENCE_GENERATOR_LOGGER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class NegativeValueSequenceTest {
 
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule( SEQUENCE_GENERATOR_MESSAGE_LOGGER );
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( SEQUENCE_GENERATOR_LOGGER );
 
 	@Test
 	@JiraKey( value = "HHH-5933")

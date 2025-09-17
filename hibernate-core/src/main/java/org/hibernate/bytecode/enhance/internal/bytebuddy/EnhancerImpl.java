@@ -823,8 +823,23 @@ public class EnhancerImpl implements Enhancer {
 			return fieldDescription.getDescriptor();
 		}
 
-		boolean isVisibleTo(TypeDescription typeDescription) {
-			return fieldDescription.isVisibleTo( typeDescription );
+		boolean isVisibleTo(TypeDescription type) {
+			final var declaringType = fieldDescription.getDeclaringType().asErasure();
+			if ( declaringType.isVisibleTo( type ) ) {
+				if ( fieldDescription.isPublic() || type.equals( declaringType ) ) {
+					return true;
+				}
+				else if ( fieldDescription.isProtected() ) {
+					return declaringType.isAssignableFrom( type );
+				}
+				else if ( fieldDescription.isPrivate() ) {
+					return type.isNestMateOf( declaringType );
+				}
+				// We explicitly consider package-private fields as not visible, as the classes
+				// might have the same package name but be loaded by different class loaders.
+				// (see https://hibernate.atlassian.net/browse/HHH-19784)
+			}
+			return false;
 		}
 
 		FieldDescription getFieldDescription() {

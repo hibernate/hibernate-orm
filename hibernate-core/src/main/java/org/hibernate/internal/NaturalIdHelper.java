@@ -11,6 +11,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.engine.internal.NaturalIdLogging.NATURAL_ID_LOGGER;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * @author Gavin King
@@ -63,11 +64,8 @@ public class NaturalIdHelper {
 				else {
 					// no entry
 					if ( loggerDebugEnabled ) {
-						NATURAL_ID_LOGGER.debugf(
-								"Cached natural-id/pk resolution linked to missing EntityEntry in persistence context: %s#%s",
-								entityMappingType.getEntityName(),
-								id
-						);
+						NATURAL_ID_LOGGER.cachedResolutionMissingInContext(
+								infoString( entityMappingType.getEntityName(), id ) );
 					}
 				}
 			}

@@ -41,13 +41,13 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 	public HbmMetadataSourceProcessorImpl(
 			Collection<Binding<? extends JaxbBindableMappingDescriptor>> xmlBindings,
 			MetadataBuildingContext rootBuildingContext) {
-		final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
+		final var hierarchyBuilder = new EntityHierarchyBuilder();
 
 		mappingDocuments = new ArrayList<>();
 
 		for ( var xmlBinding : xmlBindings ) {
 			if ( xmlBinding.getRoot() instanceof JaxbHbmHibernateMapping hibernateMapping ) {
-				final MappingDocument mappingDocument = new MappingDocument(
+				final var mappingDocument = new MappingDocument(
 						"orm",
 						hibernateMapping,
 						xmlBinding.getOrigin(),
@@ -64,56 +64,56 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 
 	@Override
 	public void prepare() {
-		for ( MappingDocument mappingDocument : mappingDocuments ) {
+		for ( var mappingDocument : mappingDocuments ) {
 			mappingDocument.prepare();
 		}
 	}
 
 	@Override
 	public void processTypeDefinitions() {
-		for ( MappingDocument mappingDocument : mappingDocuments ) {
+		for ( var mappingDocument : mappingDocuments ) {
 			mappingDocument.processTypeDefinitions();
 		}
 	}
 
 	@Override
 	public void processQueryRenames() {
-		for ( MappingDocument mappingDocument : mappingDocuments ) {
+		for ( var mappingDocument : mappingDocuments ) {
 			mappingDocument.processQueryRenames();
 		}
 	}
 
 	@Override
 	public void processNamedQueries() {
-		for ( MappingDocument mappingDocument : mappingDocuments ) {
+		for ( var mappingDocument : mappingDocuments ) {
 			mappingDocument.processNamedQueries();
 		}
 	}
 
 	@Override
 	public void processAuxiliaryDatabaseObjectDefinitions() {
-		for ( MappingDocument mappingDocument : mappingDocuments ) {
+		for ( var mappingDocument : mappingDocuments ) {
 			mappingDocument.processAuxiliaryDatabaseObjectDefinitions();
 		}
 	}
 
 	@Override
 	public void processFilterDefinitions() {
-		for ( MappingDocument mappingDocument : mappingDocuments ) {
+		for ( var mappingDocument : mappingDocuments ) {
 			mappingDocument.processFilterDefinitions();
 		}
 	}
 
 	@Override
 	public void processFetchProfiles() {
-		for ( MappingDocument mappingDocument : mappingDocuments ) {
+		for ( var mappingDocument : mappingDocuments ) {
 			mappingDocument.processFetchProfiles();
 		}
 	}
 
 	@Override
 	public void processIdentifierGenerators() {
-		for ( MappingDocument mappingDocument : mappingDocuments ) {
+		for ( var mappingDocument : mappingDocuments ) {
 			mappingDocument.processIdentifierGenerators();
 		}
 	}
@@ -124,7 +124,7 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 
 	@Override
 	public void processEntityHierarchies(Set<String> processedEntityNames) {
-		hierarchy_loop : for ( EntityHierarchySourceImpl entityHierarchy : entityHierarchies ) {
+		hierarchy_loop : for ( var entityHierarchy : entityHierarchies ) {
 			for ( String entityName : entityHierarchy.getContainedEntityNames() ) {
 				if ( processedEntityNames.contains( entityName ) ) {
 					if ( LOG.isDebugEnabled() ) {
@@ -148,14 +148,14 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 
 	@Override
 	public void processResultSetMappings() {
-		for ( MappingDocument mappingDocument : mappingDocuments ) {
+		for ( var mappingDocument : mappingDocuments ) {
 			mappingDocument.processResultSetMappings();
 		}
 	}
 
 	@Override
 	public void finishUp() {
-		for ( MappingDocument mappingDocument : mappingDocuments ) {
+		for ( var mappingDocument : mappingDocuments ) {
 			mappingDocument.finishUp();
 		}
 	}

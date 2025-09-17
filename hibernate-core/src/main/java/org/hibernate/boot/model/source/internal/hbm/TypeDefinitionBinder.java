@@ -35,7 +35,7 @@ public class TypeDefinitionBinder {
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(
-					"Processed type-definition : %s -> %s",
+					"Processed type definition : %s -> %s",
 					definition.getName(),
 					definition.getTypeImplementorClass().getName()
 			);

@@ -64,7 +64,7 @@ public enum JdbcMetadataAccessStrategy {
 			if ( name.isEmpty() ) {
 				return GROUPED;
 			}
-			for ( JdbcMetadataAccessStrategy strategy: values() ) {
+			for ( var strategy: values() ) {
 				if ( strategy.toString().equalsIgnoreCase(name) ) {
 					return strategy;
 				}

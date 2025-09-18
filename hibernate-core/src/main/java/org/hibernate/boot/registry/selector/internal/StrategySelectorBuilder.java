@@ -52,7 +52,8 @@ import org.hibernate.type.format.jackson.JacksonXmlFormatMapper;
 import org.hibernate.type.format.jaxb.JaxbXmlFormatMapper;
 import org.hibernate.type.format.jakartajson.JsonBJsonFormatMapper;
 
-import org.jboss.logging.Logger;
+
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 
 /**
  * Builder for {@link StrategySelector} instances.
@@ -60,7 +61,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class StrategySelectorBuilder {
-	private static final Logger LOG = Logger.getLogger( StrategySelectorBuilder.class );
 
 	private final List<StrategyRegistration<?>> explicitStrategyRegistrations = new ArrayList<>();
 
@@ -85,14 +85,14 @@ public class StrategySelectorBuilder {
 	 * compatible.
 	 */
 	public <T> void addExplicitStrategyRegistration(StrategyRegistration<T> strategyRegistration) {
-		if ( !strategyRegistration.getStrategyRole().isInterface() ) {
-			// not good form...
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracef( "Registering non-interface strategy : %s", strategyRegistration.getStrategyRole().getName() );
-			}
+		if ( BOOT_LOGGER.isTraceEnabled() && !strategyRegistration.getStrategyRole().isInterface() ) {
+			BOOT_LOGGER.registeringNonInterfaceStrategy(
+					strategyRegistration.getStrategyRole().getName()
+			);
 		}
 
-		if ( ! strategyRegistration.getStrategyRole().isAssignableFrom( strategyRegistration.getStrategyImplementation() ) ) {
+		if ( !strategyRegistration.getStrategyRole()
+				.isAssignableFrom( strategyRegistration.getStrategyImplementation() ) ) {
 			throw new StrategySelectionException(
 					"Implementation class [" + strategyRegistration.getStrategyImplementation().getName()
 							+ "] does not implement strategy interface ["

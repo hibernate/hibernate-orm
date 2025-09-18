@@ -19,7 +19,8 @@ import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgEntityCacheType;
 import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgHibernateConfiguration;
 import org.hibernate.event.spi.EventType;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+
 
 /**
  * Models the information gleaned from parsing a {@code cfg.xml} file.
@@ -28,7 +29,6 @@ import org.jboss.logging.Logger;
  * representation can be maintained through calls to {@link #merge}.
  */
 public class LoadedConfig {
-	private static final Logger LOG = Logger.getLogger( LoadedConfig.class );
 
 	private String sessionFactoryName;
 
@@ -100,10 +100,11 @@ public class LoadedConfig {
 					final String eventTypeName = listenerGroup.getType().value();
 					final var eventType = EventType.resolveEventTypeByName( eventTypeName );
 					for ( var listener : listenerGroup.getListener() ) {
-						if ( listener.getType() != null ) {
-							LOG.debugf( "Listener [%s] defined as part of a group also defined event type",
-									listener.getClazz() );
-						}
+					if ( listener.getType() != null ) {
+						BOOT_LOGGER.listenerDefinedAlsoDefinedEventType(
+								listener.getClazz()
+						);
+					}
 						cfg.addEventListener( eventType, listener.getClazz() );
 					}
 				}
@@ -185,18 +186,18 @@ public class LoadedConfig {
 	 * @param incoming The incoming config information to merge in.
 	 */
 	public void merge(LoadedConfig incoming) {
-		if ( sessionFactoryName != null ) {
-			if ( incoming.getSessionFactoryName() != null ) {
-				LOG.debugf(
-						"More than one cfg.xml file attempted to supply SessionFactory name: [%s], [%s].  Keeping initially discovered one [%s]",
-						getSessionFactoryName(),
-						incoming.getSessionFactoryName(),
-						getSessionFactoryName()
+		final String sessionFactoryName = incoming.getSessionFactoryName();
+		if ( this.sessionFactoryName != null ) {
+			if ( sessionFactoryName != null ) {
+				BOOT_LOGGER.moreThanOneCfgXmlSuppliedSessionFactoryName(
+						this.sessionFactoryName,
+						sessionFactoryName,
+						this.sessionFactoryName
 				);
 			}
 		}
 		else {
-			sessionFactoryName = incoming.getSessionFactoryName();
+			this.sessionFactoryName = sessionFactoryName;
 		}
 
 		addConfigurationValues( incoming.getConfigurationValues() );

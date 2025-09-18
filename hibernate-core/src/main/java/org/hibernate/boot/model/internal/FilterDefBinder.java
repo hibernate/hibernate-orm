@@ -60,8 +60,8 @@ public class FilterDefBinder {
 			parameterResolvers = new HashMap<>();
 			for ( var explicitParameter : explicitParameters ) {
 				final String parameterName = explicitParameter.name();
-				final Class<?> typeClassDetails = explicitParameter.type();
-				final JdbcMapping jdbcMapping = resolveFilterParamType( typeClassDetails, context );
+				final var typeClassDetails = explicitParameter.type();
+				final var jdbcMapping = resolveFilterParamType( typeClassDetails, context );
 				if ( jdbcMapping == null ) {
 					throw new MappingException(
 							String.format(
@@ -91,9 +91,7 @@ public class FilterDefBinder {
 				parameterResolvers
 		);
 
-		if ( BOOT_LOGGER.isTraceEnabled() ) {
-BOOT_LOGGER.bindingFilterDefinition( filterDefinition.getFilterName() );
-		}
+		BOOT_LOGGER.bindingFilterDefinition( filterDefinition.getFilterName() );
 		context.getMetadataCollector().addFilterDefinition( filterDefinition );
 	}
 

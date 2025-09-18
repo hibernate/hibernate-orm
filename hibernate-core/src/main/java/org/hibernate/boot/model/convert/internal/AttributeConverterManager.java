@@ -46,9 +46,9 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 	}
 
 	public void addConverter(ConverterDescriptor<?,?> descriptor) {
+		final var converterClass = descriptor.getAttributeConverterClass();
 		if ( BOOT_LOGGER.isTraceEnabled() ) {
-			BOOT_LOGGER.registeringAttributeConverter(
-					descriptor.getAttributeConverterClass().getName() );
+			BOOT_LOGGER.registeringAttributeConverter( converterClass.getName() );
 		}
 
 		if ( registeredConversionsByDomainType != null ) {
@@ -57,8 +57,7 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 			if ( registeredConversion != null ) {
 				// we can skip registering the converter, the RegisteredConversion will always take precedence
 				if ( BOOT_LOGGER.isDebugEnabled() ) {
-					BOOT_LOGGER.skippingRegistrationOfDiscoveredAttributeConverterForAutoApply(
-							descriptor.getAttributeConverterClass().getName() );
+					BOOT_LOGGER.skippingRegistrationAttributeConverterForAutoApply( converterClass.getName() );
 				}
 				return;
 			}
@@ -68,17 +67,13 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 			attributeConverterDescriptorsByClass = new ConcurrentHashMap<>();
 		}
 
-		final Object old = attributeConverterDescriptorsByClass.put(
-				descriptor.getAttributeConverterClass(),
-				descriptor
-		);
-
+		final Object old = attributeConverterDescriptorsByClass.put( converterClass, descriptor );
 		if ( old != null ) {
 			throw new HibernateException(
 					String.format(
 							Locale.ENGLISH,
 							"AttributeConverter class [%s] registered multiple times",
-							descriptor.getAttributeConverterClass()
+							converterClass
 					)
 			);
 		}
@@ -90,25 +85,9 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 		}
 
 		final Class<?> domainType = getDomainType( conversion, context );
-
-		// make sure we are not overriding a previous conversion registration
-		final var existingRegistration = registeredConversionsByDomainType.get( domainType );
-		if ( existingRegistration != null ) {
-			if ( !conversion.equals( existingRegistration ) ) {
-				throw new AnnotationException( "Conflicting '@ConverterRegistration' descriptors for attribute converter '"
-						+ conversion.getConverterType().getName() + "'" );
-			}
-			else {
-				if ( BOOT_LOGGER.isDebugEnabled() ) {
-					BOOT_LOGGER.skippingDuplicateConverterRegistration(
-							conversion.getConverterType().getName()
-					);
-				}
-			}
-		}
-
-		// see if we have a matching entry in `attributeConverterDescriptorsByClass`.
-		// if so, remove it.  The conversion being registered will always take precedence
+		checkNotOverriding( conversion, domainType );
+		// See if we have a matching entry in attributeConverterDescriptorsByClass.
+		// If so, remove it. The conversion being registered will always take precedence.
 		if ( attributeConverterDescriptorsByClass != null ) {
 			final var removed = attributeConverterDescriptorsByClass.remove( conversion.getConverterType() );
 			if ( removed != null && BOOT_LOGGER.isDebugEnabled() ) {
@@ -116,20 +95,30 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 						removed.getAttributeConverterClass().getName() );
 			}
 		}
-
 		registeredConversionsByDomainType.put( domainType, conversion );
 	}
 
+	private void checkNotOverriding(RegisteredConversion conversion, Class<?> domainType) {
+		// make sure we are not overriding a previous conversion registration
+		final var existingRegistration = registeredConversionsByDomainType.get( domainType );
+		if ( existingRegistration != null ) {
+			final String converterTypeName = conversion.getConverterType().getName();
+			if ( !conversion.equals( existingRegistration ) ) {
+				throw new AnnotationException( "Conflicting '@ConverterRegistration' descriptors for attribute converter '"
+												+ converterTypeName + "'" );
+			}
+			else {
+				BOOT_LOGGER.skippingDuplicateConverterRegistration( converterTypeName );
+			}
+		}
+	}
+
 	private static Class<?> getDomainType(RegisteredConversion conversion, BootstrapContext context) {
-		if ( conversion.getExplicitDomainType().equals( void.class ) ) {
-			// the registration did not define an explicit domain-type, so inspect the converter
-			final var converterParamTypes =
-					resolveConverterClassParamTypes( conversion.getConverterType(), context.getClassmateContext() );
-			return converterParamTypes.get( 0 ).getErasedType();
-		}
-		else {
-			return conversion.getExplicitDomainType();
-		}
+		// the registration did not define an explicit domain-type, so inspect the converter
+		return conversion.getExplicitDomainType().equals( void.class )
+				? resolveConverterClassParamTypes( conversion.getConverterType(), context.getClassmateContext() )
+						.get( 0 ).getErasedType()
+				: conversion.getExplicitDomainType();
 	}
 
 	private Collection<ConverterDescriptor<?,?>> converterDescriptors() {

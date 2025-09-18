@@ -4,13 +4,13 @@
  */
 package org.hibernate.cache.jcache.internal;
 
-import java.util.Collections;
-
 import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.cache.jcache.ConfigSettings;
 import org.hibernate.cache.spi.RegionFactory;
+
+import static java.util.Collections.singleton;
 
 /**
  * Makes the JCache RegionFactory available to the Hibernate
@@ -22,9 +22,9 @@ import org.hibernate.cache.spi.RegionFactory;
 public final class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public Iterable<StrategyRegistration> getStrategyRegistrations() {
-		final SimpleStrategyRegistrationImpl simpleStrategyRegistration = new SimpleStrategyRegistrationImpl(
+	public Iterable<StrategyRegistration<?>> getStrategyRegistrations() {
+
+		return singleton( new SimpleStrategyRegistrationImpl<>(
 				RegionFactory.class,
 				JCacheRegionFactory.class,
 				ConfigSettings.SIMPLE_FACTORY_NAME,
@@ -32,8 +32,6 @@ public final class StrategyRegistrationProviderImpl implements StrategyRegistrat
 				JCacheRegionFactory.class.getSimpleName(),
 				// legacy impl class name
 				"org.hibernate.cache.jcache.JCacheRegionFactory"
-		);
-
-		return Collections.singleton( simpleStrategyRegistration );
+		) );
 	}
 }

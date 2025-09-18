@@ -5,16 +5,12 @@
 package org.hibernate.boot.xsd;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
-import javax.xml.XMLConstants;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 import org.hibernate.internal.util.xml.XsdException;
-
-import org.jboss.logging.Logger;
 
 import org.xml.sax.SAXException;
 

@@ -282,6 +282,7 @@ public interface BootLogging extends BasicLogger {
 	void duplicatedFetchProfile(String name);
 
 	// EntityBinder discriminator handling
+
 	@LogMessage(level = TRACE)
 	@Message(id = 160190, value = "Ignoring explicit @DiscriminatorColumn annotation on: %s")
 	void ignoringExplicitDiscriminatorForJoined(String className);
@@ -290,7 +291,8 @@ public interface BootLogging extends BasicLogger {
 	@Message(id = 160191, value = "Inferring implicit @DiscriminatorColumn using defaults for: %s")
 	void inferringImplicitDiscriminatorForJoined(String className);
 
-	// GeneratorBinder additions
+	// GeneratorBinder
+
 	@LogMessage(level = TRACE)
 	@Message(id = 160192, value = "Added generator with name: %s, strategy: %s")
 	void addedGenerator(String name, String strategy);
@@ -340,7 +342,7 @@ public interface BootLogging extends BasicLogger {
 
 	@LogMessage(level = DEBUG)
 	@Message(id = 160218, value = "Skipping registration of discovered AttributeConverter '%s' for auto-apply")
-	void skippingRegistrationOfDiscoveredAttributeConverterForAutoApply(String converter);
+	void skippingRegistrationAttributeConverterForAutoApply(String converter);
 
 	@LogMessage(level = DEBUG)
 	@Message(id = 160219, value = "Skipping duplicate '@ConverterRegistration' for '%s'")
@@ -374,7 +376,8 @@ public interface BootLogging extends BasicLogger {
 	@Message(id = 160226, value = "Injecting ArchiveDescriptorFactory [%s] into BootstrapContext; was [%s]")
 	void injectingArchiveDescriptorFactory(Object newFactory, Object oldFactory);
 
-	// Strategy selector tracing
+	// Strategy selector
+
 	@LogMessage(level = TRACE)
 	@Message(id = 160227, value = "Strategy selector for %s: '%s' -> %s")
 	void strategySelectorMapping(String strategySimpleName, String name, String implementationName);
@@ -387,7 +390,8 @@ public interface BootLogging extends BasicLogger {
 	@Message(id = 160229, value = "Named strategy map did not exist on call to unregister")
 	void namedStrategyMapDidNotExistOnUnregister();
 
-	// LoadedConfig messages
+	// LoadedConfig
+
 	@LogMessage(level = DEBUG)
 	@Message(id = 160230, value = "Listener [%s] defined as part of a group also defined event type")
 	void listenerDefinedAlsoDefinedEventType(String listenerClass);
@@ -396,7 +400,8 @@ public interface BootLogging extends BasicLogger {
 	@Message(id = 160231, value = "More than one cfg.xml file attempted to supply SessionFactory name: [%s], [%s].  Keeping initially discovered one [%s]")
 	void moreThanOneCfgXmlSuppliedSessionFactoryName(String first, String second, String keeping);
 
-	// Additional HBM binding traces
+	// HBM binding
+
 	@LogMessage(level = TRACE)
 	@Message(id = 160233, value = "Creating FetchProfile: %s")
 	void creatingFetchProfile(String name);

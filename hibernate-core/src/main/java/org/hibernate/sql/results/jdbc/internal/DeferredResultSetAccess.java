@@ -23,6 +23,7 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.exec.internal.lock.FollowOnLockingAction;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcLockStrategy;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
@@ -32,6 +33,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import static java.util.Collections.emptyMap;
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
@@ -92,16 +94,63 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 					queryOptions
 			);
 
+			final var lockOptions = queryOptions.getLockOptions();
+			final var jdbcLockStrategy = jdbcSelect.getLockStrategy();
+			final String sqlWithLocking;
+			if ( hasLocking( jdbcLockStrategy, lockOptions ) ) {
+				final boolean usesFollowOnLocking = useFollowOnLocking( jdbcLockStrategy, sqlWithLimit, queryOptions, lockOptions, dialect );
+				if ( usesFollowOnLocking ) {
+					sqlWithLocking = sqlWithLimit;
+				}
+				else {
+					sqlWithLocking = dialect.applyLocksToSql( sqlWithLimit, lockOptions, emptyMap() );
+				}
+			}
+			else {
+				sqlWithLocking = sqlWithLimit;
+			}
+
 			final boolean commentsEnabled = executionContext.getSession()
 					.getFactory()
 					.getSessionFactoryOptions()
 					.isCommentsEnabled();
-			finalSql = dialect.addSqlHintOrComment( sqlWithLimit, queryOptions, commentsEnabled );
+			finalSql = dialect.addSqlHintOrComment( sqlWithLocking, queryOptions, commentsEnabled );
 		}
 	}
 
 	private boolean needsLimitHandler(JdbcSelect jdbcSelect) {
 		return limit != null && !limit.isEmpty() && !jdbcSelect.usesLimitParameters();
+	}
+
+	private static boolean hasLocking(JdbcLockStrategy jdbcLockStrategy, LockOptions lockOptions) {
+		return jdbcLockStrategy != JdbcLockStrategy.NONE && lockOptions != null && !lockOptions.isEmpty();
+	}
+
+	private static boolean useFollowOnLocking(
+			JdbcLockStrategy jdbcLockStrategy,
+			String sql,
+			QueryOptions queryOptions,
+			@SuppressWarnings("removal") LockOptions lockOptions,
+			Dialect dialect) {
+		assert lockOptions != null;
+		return switch ( jdbcLockStrategy ) {
+			case FOLLOW_ON -> true;
+			case AUTO -> interpretAutoLockStrategy( sql, queryOptions, lockOptions, dialect);
+			case NONE -> false;
+		};
+	}
+
+	private static boolean interpretAutoLockStrategy(
+			String sql,
+			QueryOptions queryOptions,
+			@SuppressWarnings("removal") LockOptions lockOptions,
+			Dialect dialect) {
+		//noinspection removal
+		return switch ( lockOptions.getFollowOnStrategy() ) {
+			case ALLOW -> dialect.useFollowOnLocking( sql, queryOptions );
+			case FORCE -> true;
+			case DISALLOW, IGNORE -> false;
+		};
 	}
 
 

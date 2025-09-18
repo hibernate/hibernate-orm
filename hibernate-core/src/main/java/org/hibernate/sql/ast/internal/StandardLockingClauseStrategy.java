@@ -81,7 +81,7 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 
 	@Override
 	public void registerRoot(TableGroup root) {
-		if ( !queryHasOuterJoins && !dialect.supportsOuterJoinForUpdate() ) {
+		if ( !queryHasOuterJoins ) {
 			if ( CollectionHelper.isNotEmpty( root.getTableReferenceJoins() ) ) {
 				// joined inheritance and/or secondary tables - inherently has outer joins
 				queryHasOuterJoins = true;
@@ -96,6 +96,8 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 
 	@Override
 	public void registerJoin(TableGroupJoin join) {
+		checkForOuterJoins( join );
+
 		if ( lockingScope == Locking.Scope.INCLUDE_COLLECTIONS ) {
 			// if the TableGroup is an owned (aka, non-inverse) collection,
 			// and we are to lock collections, track it
@@ -116,22 +118,32 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 		}
 	}
 
-	private void trackJoin(TableGroupJoin join) {
-		if ( !queryHasOuterJoins && !dialect.supportsOuterJoinForUpdate() ) {
-			final TableGroup joinedGroup = join.getJoinedGroup();
-			if ( join.isInitialized()
-				&& join.getJoinType() != SqlAstJoinType.INNER
-				&& !joinedGroup.isVirtual() ) {
-				queryHasOuterJoins = true;
-			}
-			else if ( joinedGroup.getModelPart() instanceof EntityPersister entityMapping ) {
-				if ( entityMapping.hasMultipleTables() ) {
-					// joined inheritance and/or secondary tables - inherently has outer joins
-					queryHasOuterJoins = true;
+	private void checkForOuterJoins(TableGroupJoin join) {
+		if ( queryHasOuterJoins ) {
+			// perf out
+			return;
+		}
+		queryHasOuterJoins = hasOuterJoin( join );
+	}
+
+	private boolean hasOuterJoin(TableGroupJoin join) {
+		final TableGroup joinedGroup = join.getJoinedGroup();
+		if ( join.isInitialized()
+			&& join.getJoinType() != SqlAstJoinType.INNER
+			&& !joinedGroup.isVirtual() ) {
+			return true;
+		}
+		if ( !CollectionHelper.isEmpty( joinedGroup.getTableReferenceJoins() ) ) {
+			for ( TableReferenceJoin tableReferenceJoin : joinedGroup.getTableReferenceJoins() ) {
+				if ( tableReferenceJoin.getJoinType() != SqlAstJoinType.INNER ) {
+					return true;
 				}
 			}
 		}
+		return false;
+	}
 
+	private void trackJoin(TableGroupJoin join) {
 		if ( joinsToLock == null ) {
 			joinsToLock = new LinkedHashSet<>();
 		}

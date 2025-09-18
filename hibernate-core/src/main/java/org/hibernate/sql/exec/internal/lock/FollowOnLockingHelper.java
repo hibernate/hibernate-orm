@@ -12,14 +12,19 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -32,8 +37,11 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
+import org.hibernate.sql.exec.spi.LoadedValuesCollector;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
@@ -43,7 +51,15 @@ import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
  *
  * @author Steve Ebersole
  */
-public class CollectionTableHelper {
+public class FollowOnLockingHelper {
+	/**
+	 * Lock a collection-table.
+	 *
+	 * @param attributeMapping The plural attribute whose table needs locked.
+	 * @param lockMode The lock mode to apply
+	 * @param lockTimeout A lock timeout to apply, if one.
+	 * @param ownerDetailsMap Details for each owner, whose collection-table rows should be locked.
+	 */
 	public static void lockCollectionTable(
 			PluralAttributeMapping attributeMapping,
 			LockMode lockMode,
@@ -178,5 +194,61 @@ public class CollectionTableHelper {
 				StandardStatementCreator.getStatementCreator( ScrollMode.FORWARD_ONLY ),
 				ListResultsConsumer.instance( ListResultsConsumer.UniqueSemantic.ALLOW )
 		);
+	}
+
+	/**
+	 * Log information about the entries in LoadedValuesCollector.
+	 */
+	public static void logLoadedValues(LoadedValuesCollector collector) {
+		if ( SQL_EXEC_LOGGER.isDebugEnabled() ) {
+			SQL_EXEC_LOGGER.debug( "Follow-on locking collected loaded values..." );
+
+			SQL_EXEC_LOGGER.debug( "  Loaded root entities:" );
+			collector.getCollectedRootEntities().forEach( (reg) -> {
+				SQL_EXEC_LOGGER.debugf( "    - %s#%s", reg.entityDescriptor().getEntityName(), reg.entityKey().getIdentifier() );
+			} );
+
+			SQL_EXEC_LOGGER.debug( "  Loaded non-root entities:" );
+			collector.getCollectedNonRootEntities().forEach( (reg) -> {
+				SQL_EXEC_LOGGER.debugf( "    - %s#%s", reg.entityDescriptor().getEntityName(), reg.entityKey().getIdentifier() );
+			} );
+
+			SQL_EXEC_LOGGER.debug( "  Loaded collections:" );
+			collector.getCollectedCollections().forEach( (reg) -> {
+				SQL_EXEC_LOGGER.debugf( "    - %s#%s", reg.collectionDescriptor().getRootPathName(), reg.collectionKey().getKey() );
+			} );
+		}
+	}
+
+	/**
+	 * Extracts all NavigablePaths to lock based on the {@linkplain LockingClauseStrategy locking strategy}
+	 * from the {@linkplain SqlAstTranslator SQL AST translator}.
+	 */
+	public static Collection<NavigablePath> extractPathsToLock(LockingClauseStrategy lockingClauseStrategy) {
+		final LinkedHashSet<NavigablePath> paths = new LinkedHashSet<>();
+
+		final Collection<TableGroup> rootsToLock = lockingClauseStrategy.getRootsToLock();
+		if ( rootsToLock != null ) {
+			rootsToLock.forEach( (tableGroup) -> paths.add( tableGroup.getNavigablePath() ) );
+		}
+
+		final Collection<TableGroupJoin> joinsToLock = lockingClauseStrategy.getJoinsToLock();
+		if ( joinsToLock != null ) {
+			joinsToLock.forEach( (tableGroupJoin) -> {
+				paths.add( tableGroupJoin.getNavigablePath() );
+
+				final ModelPartContainer modelPart = tableGroupJoin.getJoinedGroup().getModelPart();
+				if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping ) {
+					final NavigablePath elementPath = tableGroupJoin.getNavigablePath().append( pluralAttributeMapping.getElementDescriptor().getPartName() );
+					paths.add( elementPath );
+
+					if ( pluralAttributeMapping.getIndexDescriptor() != null ) {
+						final NavigablePath indexPath = tableGroupJoin.getNavigablePath().append( pluralAttributeMapping.getIndexDescriptor().getPartName() );
+						paths.add( indexPath );
+					}
+				}
+			} );
+		}
+		return paths;
 	}
 }

@@ -21,27 +21,62 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public interface LoadedValuesCollector {
+	/**
+	 * Register a loading entity.
+	 *
+	 * @param navigablePath The NavigablePath relative to the SQL AST used to load the entity
+	 * @param entityDescriptor The descriptor for the entity being loaded.
+	 * @param entityKey The EntityKey for the entity being loaded
+	 */
 	void registerEntity(
 			NavigablePath navigablePath,
 			EntityMappingType entityDescriptor,
 			EntityKey entityKey);
 
+	/**
+	 * Register a loading collection.
+	 *
+	 * @param navigablePath The NavigablePath relative to the SQL AST used to load the entity
+	 * @param collectionDescriptor The descriptor for the collection being loaded.
+	 * @param collectionKey The CollectionKey for the collection being loaded
+	 */
 	void registerCollection(
 			NavigablePath navigablePath,
 			PluralAttributeMapping collectionDescriptor,
 			CollectionKey collectionKey);
+
+	/**
+	 * Clears the state of the collector.
+	 *
+	 * @implSpec In some cases, the collector may be cached as part of a
+	 * JdbcSelect being cached (see {@linkplain JdbcSelect#getLoadedValuesCollector()}.
+	 * This method allows clearing of the internal state after execution of the JdbcSelect.
+	 */
+	void clear();
+
+	/**
+	 * Access to all root entities loaded.
+	 */
+	List<LoadedEntityRegistration> getCollectedRootEntities();
+
+	/**
+	 * Access to all non-root entities (join fetches e.g.) loaded.
+	 */
+	List<LoadedEntityRegistration> getCollectedNonRootEntities();
+
+	/**
+	 * Access to all collection loaded.
+	 */
+	List<LoadedCollectionRegistration> getCollectedCollections();
 
 	interface LoadedPartRegistration {
 		NavigablePath navigablePath();
 		ModelPart modelPart();
 	}
 
-	List<LoadedEntityRegistration> getCollectedRootEntities();
-
-	List<LoadedEntityRegistration> getCollectedNonRootEntities();
-
-	List<LoadedCollectionRegistration> getCollectedCollections();
-
+	/**
+	 * Details about a loaded entity.
+	 */
 	record LoadedEntityRegistration(
 			NavigablePath navigablePath,
 			EntityMappingType entityDescriptor,
@@ -52,6 +87,9 @@ public interface LoadedValuesCollector {
 		}
 	}
 
+	/**
+	 * Details about a loaded collection.
+	 */
 	record LoadedCollectionRegistration(
 			NavigablePath navigablePath,
 			PluralAttributeMapping collectionDescriptor,

@@ -200,7 +200,7 @@ import org.hibernate.sql.model.internal.TableInsertStandard;
 import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.exec.internal.lock.FollowOnLockingAction;
-import org.hibernate.sql.exec.internal.LoadedValuesCollectorImpl;
+import org.hibernate.sql.exec.internal.lock.LoadedValuesCollectorImpl;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.LoadedValuesCollector;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -320,6 +320,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * be applied.  Generally this will be the root QuerySpec, but, well, Oracle...
 	 */
 	private QuerySpec lockingTarget;
+	private LockingClauseStrategy lockingClauseStrategy;
+	private LockOptions lockOptions;
 
 	private final Dialect dialect;
 	private final Set<String> affectedTableNames = new HashSet<>();
@@ -347,7 +349,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private transient BasicType<String> stringType;
 	private transient BasicType<Boolean> booleanType;
 
-	private LockOptions lockOptions;
 	private Limit limit;
 	private JdbcParameter offsetParameter;
 	private JdbcParameter limitParameter;
@@ -1819,8 +1820,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			clauseStack.pop();
 		}
 	}
-
-	private LockingClauseStrategy lockingClauseStrategy;
 
 	protected LockingClauseStrategy getLockingClauseStrategy() {
 		return lockingClauseStrategy;

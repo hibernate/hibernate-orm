@@ -2,26 +2,22 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.sql.exec.internal;
+package org.hibernate.sql.exec.internal.lock;
 
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.LockingClauseStrategy;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.exec.spi.LoadedValuesCollector;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
- * Standard implementation of LoadedValuesCollector, used mainly for follow-on locking support.
+ * Standard implementation of LoadedValuesCollector, intended for use with follow-on locking support.
  *
  * @author Steve Ebersole
  */
@@ -35,35 +31,7 @@ public class LoadedValuesCollectorImpl implements LoadedValuesCollector {
 
 	public LoadedValuesCollectorImpl(List<NavigablePath> rootPaths, LockingClauseStrategy lockingClauseStrategy) {
 		this.rootPaths = rootPaths;
-		pathsToLock = extractPathsToLock( lockingClauseStrategy );
-	}
-
-	static Collection<NavigablePath> extractPathsToLock(LockingClauseStrategy lockingClauseStrategy) {
-		final LinkedHashSet<NavigablePath> paths = new LinkedHashSet<>();
-
-		final Collection<TableGroup> rootsToLock = lockingClauseStrategy.getRootsToLock();
-		if ( rootsToLock != null ) {
-			rootsToLock.forEach( (tableGroup) -> paths.add( tableGroup.getNavigablePath() ) );
-		}
-
-		final Collection<TableGroupJoin> joinsToLock = lockingClauseStrategy.getJoinsToLock();
-		if ( joinsToLock != null ) {
-			joinsToLock.forEach( (tableGroupJoin) -> {
-				paths.add( tableGroupJoin.getNavigablePath() );
-
-				final ModelPartContainer modelPart = tableGroupJoin.getJoinedGroup().getModelPart();
-				if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping ) {
-					final NavigablePath elementPath = tableGroupJoin.getNavigablePath().append( pluralAttributeMapping.getElementDescriptor().getPartName() );
-					paths.add( elementPath );
-
-					if ( pluralAttributeMapping.getIndexDescriptor() != null ) {
-						final NavigablePath indexPath = tableGroupJoin.getNavigablePath().append( pluralAttributeMapping.getIndexDescriptor().getPartName() );
-						paths.add( indexPath );
-					}
-				}
-			} );
-		}
-		return paths;
+		pathsToLock = FollowOnLockingHelper.extractPathsToLock( lockingClauseStrategy );
 	}
 
 	@Override
@@ -96,6 +64,19 @@ public class LoadedValuesCollectorImpl implements LoadedValuesCollector {
 			collectionsToLock = new ArrayList<>();
 		}
 		collectionsToLock.add( new LoadedCollectionRegistration( navigablePath, collectionDescriptor, collectionKey ) );
+	}
+
+	@Override
+	public void clear() {
+		if ( rootEntitiesToLock != null ) {
+			rootEntitiesToLock.clear();
+		}
+		if ( nonRootEntitiesToLock != null ) {
+			nonRootEntitiesToLock.clear();
+		}
+		if ( collectionsToLock != null ) {
+			collectionsToLock.clear();
+		}
 	}
 
 	@Override

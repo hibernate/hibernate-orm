@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.EmptyScrollableResults;
@@ -31,7 +30,6 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.ResultsConsumer;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
 
 /**
  * Standard implementation of {@link SelectQueryPlan} for
@@ -89,7 +87,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 		}
 
 		final JdbcOperationQuerySelect jdbcSelect = new JdbcOperationQuerySelect(
-				sqlToUse( sql, executionContext ),
+				sql,
 				jdbcParameterBinders,
 				resultSetMapping,
 				affectedTableNames
@@ -104,13 +102,6 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 				-1,
 				resultsConsumer
 		);
-	}
-
-	private static String sqlToUse(String sql, DomainQueryExecutionContext executionContext) {
-		final LockOptions lockOptions = executionContext.getQueryOptions().getLockOptions();
-		return lockOptions.getLockMode().isPessimistic()
-				? executionContext.getSession().getDialect().applyLocksToSql( sql, lockOptions, emptyMap() )
-				: sql;
 	}
 
 	@Override
@@ -137,7 +128,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 			}
 
 			final JdbcOperationQuerySelect jdbcSelect = new JdbcOperationQuerySelect(
-					sqlToUse( sql, executionContext ),
+					sql,
 					jdbcParameterBinders,
 					resultSetMapping,
 					affectedTableNames
@@ -179,7 +170,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 			}
 
 			final JdbcOperationQuerySelect jdbcSelect = new JdbcOperationQuerySelect(
-					sqlToUse( sql, executionContext ),
+					sql,
 					jdbcParameterBinders,
 					resultSetMapping,
 					affectedTableNames

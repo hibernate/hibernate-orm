@@ -96,7 +96,11 @@ public class Helper {
 		String getKeyColumnName();
 
 		default String getKeyColumnReference() {
-			return getTableAlias() + "." + getKeyColumnName();
+			return getKeyColumnReference( getTableAlias() );
+		}
+
+		default String getKeyColumnReference(String tableAlias) {
+			return tableAlias + "." + getKeyColumnName();
 		}
 	}
 
@@ -144,6 +148,10 @@ public class Helper {
 	}
 
 	public static void checkSql(String sql, Dialect dialect, TableInformation... tablesFetched) {
+		checkSql( sql, false, dialect, tablesFetched );
+	}
+
+	public static void checkSql(String sql, boolean expectingFollowOn, Dialect dialect, TableInformation... tablesFetched) {
 		// note: assume `tables` is in order
 		final LockingSupport.Metadata lockingMetadata = dialect.getLockingSupport().getMetadata();
 		final PessimisticLockStyle pessimisticLockStyle = lockingMetadata.getPessimisticLockStyle();
@@ -164,7 +172,7 @@ public class Helper {
 					else {
 						buffer.append( "," );
 					}
-					buffer.append( table.getTableAlias() );
+					buffer.append( expectingFollowOn ? "tbl" : table.getTableAlias() );
 				}
 				aliases = buffer.toString();
 			}
@@ -179,7 +187,7 @@ public class Helper {
 					else {
 						buffer.append( "," );
 					}
-					buffer.append( table.getKeyColumnReference() );
+					buffer.append( expectingFollowOn ? table.getKeyColumnReference( "tbl") : table.getKeyColumnReference() );
 				}
 				aliases = buffer.toString();
 			}
@@ -191,7 +199,8 @@ public class Helper {
 			// Transact SQL (mssql, sybase) "table hint"-style locking
 			final LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
 			for ( TableInformation table : tablesFetched ) {
-				final String booksTableReference = dialect.appendLockHint( lockOptions, table.getTableAlias() );
+				final String tableAlias = expectingFollowOn ? "tbl" : table.getTableAlias();
+				final String booksTableReference = dialect.appendLockHint( lockOptions, tableAlias );
 				assertThat( sql ).contains( booksTableReference );
 			}
 		}

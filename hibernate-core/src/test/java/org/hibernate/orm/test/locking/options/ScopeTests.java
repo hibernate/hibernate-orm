@@ -70,7 +70,7 @@ public class ScopeTests {
 			final Book theTalisman = session.find( Book.class, 3, PESSIMISTIC_WRITE );
 			assertThat( Hibernate.isInitialized( theTalisman ) ).isTrue();
 			assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-			Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), session.getDialect(), BOOKS );
+			Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), false, session.getDialect(), BOOKS );
 			TransactionUtil.assertRowLock( factoryScope, BOOKS.getTableName(), "title", "id", theTalisman.getId(), true );
 			TransactionUtil.assertRowLock( factoryScope, BOOK_GENRES.getTableName(), "genre", "book_fk", theTalisman.getId(), false );
 		} );
@@ -87,7 +87,7 @@ public class ScopeTests {
 			final Book theTalisman = session.find( Book.class, 3, PESSIMISTIC_WRITE, EXTENDED );
 			assertThat( Hibernate.isInitialized( theTalisman ) ).isTrue();
 			assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-			Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), session.getDialect(), BOOKS );
+			Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), false, session.getDialect(), BOOKS );
 			TransactionUtil.assertRowLock( factoryScope, BOOKS.getTableName(), "title", "id", theTalisman.getId(), true );
 			// For strict compliance, EXTENDED here should lock `book_genres` but we do not
 			TransactionUtil.assertRowLock( factoryScope, BOOK_GENRES.getTableName(), "genre", "book_fk", theTalisman.getId(), false );
@@ -142,7 +142,7 @@ public class ScopeTests {
 				// should be 3, but follow-on locking is not locking collection tables...
 				// todo : track this down - HHH-19513
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
-				Helper.checkSql( sqlCollector.getSqlQueries().get( 1 ), session.getDialect(), BOOKS );
+				Helper.checkSql( sqlCollector.getSqlQueries().get( 1 ), true, session.getDialect(), BOOKS );
 
 				// todo : track this down - HHH-19513
 				//Helper.checkSql( sqlCollector.getSqlQueries().get( 2 ), session.getDialect(), BOOK_GENRES );
@@ -236,11 +236,15 @@ public class ScopeTests {
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
 			final Report report = session.find( Report.class, 2, PESSIMISTIC_WRITE );
-			assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-			Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), session.getDialect(), REPORTS );
+			if ( session.getDialect().supportsOuterJoinForUpdate() ) {
+				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
+				Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), false, session.getDialect(), REPORTS );
+			}
+			else {
+				assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
+				Helper.checkSql( sqlCollector.getSqlQueries().get( 1 ), true, session.getDialect(), REPORTS );
+			}
 			TransactionUtil.assertRowLock( factoryScope, REPORTS.getTableName(), "title", "id", report.getId(), true );
-			TransactionUtil.assertRowLock( factoryScope, REPORT_LABELS.getTableName(), "txt", "report_fk", report.getId(), willAggressivelyLockJoinedTables( session.getDialect() ) );
-			TransactionUtil.assertRowLock( factoryScope, PERSONS.getTableName(), "name", "id", report.getReporter().getId(), willAggressivelyLockJoinedTables( session.getDialect() ) );
 		} );
 	}
 

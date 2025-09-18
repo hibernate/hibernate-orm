@@ -16,6 +16,8 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.persister.entity.UnionSubclassEntityPersister;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -24,9 +26,12 @@ import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.UnionTableGroup;
+import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
@@ -34,6 +39,7 @@ import org.hibernate.sql.exec.internal.StandardStatementCreator;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
@@ -48,29 +54,32 @@ import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
 
 
 /**
- * Consolidates processing for follow-on locking related to a single table.
+ * Models a single table for which to apply locking.
  *
  * @author Steve Ebersole
  */
-public class TableSegment {
+public class TableLock {
 	private final TableDetails tableDetails;
 	private final EntityMappingType entityMappingType;
 
 	private final QuerySpec querySpec = new QuerySpec( true );
 
 	private final NavigablePath rootPath;
-	private final TableReference tableReference;
-	private final TableGroup tableGroup;
+
+	private final TableReference physicalTableReference;
+	private final TableGroup physicalTableGroup;
+
+	private final TableReference logicalTableReference;
+	private final TableGroup logicalTableGroup;
 
 	private final FollowOnLockingCreationStates creationStates;
 
-	private final List<Integer> statePositions = new ArrayList<>();
 	private final List<ResultHandler> resultHandlers = new ArrayList<>();
 	private final List<DomainResult<?>> domainResults = new ArrayList<>();
 
 	private final JdbcParameterBindings jdbcParameterBindings;
 
-	public TableSegment(
+	public TableLock(
 			TableDetails tableDetails,
 			EntityMappingType entityMappingType,
 			List<EntityKey> entityKeys,
@@ -80,24 +89,45 @@ public class TableSegment {
 		}
 
 		this.tableDetails = tableDetails;
-
-		this.rootPath = new NavigablePath( tableDetails.getTableName() );
-		this.tableReference = new NamedTableReference( tableDetails.getTableName(), "tbl" );
 		this.entityMappingType = entityMappingType;
-		this.tableGroup = new SimpleTableGroup( tableReference, tableDetails.getTableName(), entityMappingType );
+		this.rootPath = new NavigablePath( tableDetails.getTableName() );
 
-		querySpec.getFromClause().addRoot( tableGroup );
+		this.physicalTableReference = new NamedTableReference( tableDetails.getTableName(), "tbl" );
+		this.physicalTableGroup = new SimpleTableGroup( physicalTableReference, tableDetails.getTableName(), entityMappingType );
+
+		if ( entityMappingType.getEntityPersister() instanceof UnionSubclassEntityPersister usp ) {
+			final UnionTableReference unionTableReference = new UnionTableReference(
+					tableDetails.getTableName(),
+					usp.getSynchronizedQuerySpaces(),
+					"tbl",
+					false
+			);
+			this.logicalTableReference = unionTableReference;
+			this.logicalTableGroup = new UnionTableGroup(
+					true,
+					rootPath,
+					unionTableReference,
+					usp,
+					null
+			);
+		}
+		else {
+			logicalTableReference = physicalTableReference;
+			logicalTableGroup = physicalTableGroup;
+		}
+
+		querySpec.getFromClause().addRoot( physicalTableGroup );
 
 		creationStates = new FollowOnLockingCreationStates(
 				querySpec,
-				tableGroup,
+				logicalTableGroup,
 				entityMappingType.getEntityPersister().getFactory()
 		);
 
 		// add the key as the first result
 		domainResults.add( tableDetails.getKeyDetails().createDomainResult(
 				rootPath.append( "{key}" ),
-				tableReference,
+				logicalTableReference,
 				null,
 				creationStates
 		) );
@@ -115,7 +145,7 @@ public class TableSegment {
 		if ( attributeMapping instanceof ToOneAttributeMapping toOne ) {
 			domainResult = toOne.getForeignKeyDescriptor().getKeyPart().createDomainResult(
 					attributePath,
-					tableGroup,
+					logicalTableGroup,
 					ForeignKeyDescriptor.PART_NAME,
 					creationStates
 			);
@@ -124,18 +154,18 @@ public class TableSegment {
 		else {
 			domainResult = attributeMapping.createDomainResult(
 					attributePath,
-					tableGroup,
+					logicalTableGroup,
 					null,
 					creationStates
 			);
 			resultHandler = new NonToOneResultHandler( index );
 		}
 		domainResults.add( domainResult );
-		statePositions.add( index );
 		resultHandlers.add( resultHandler );
 	}
 
 	public void applyKeyRestrictions(List<EntityKey> entityKeys, SharedSessionContractImplementor session) {
+		// todo (JdbcOperation) : Consider leveraging approach based on Dialect#useArrayForMultiValuedParameters
 		if ( entityMappingType.getIdentifierMapping().getJdbcTypeCount() == 1 ) {
 			applySimpleKeyRestriction( entityKeys, session );
 		}
@@ -148,7 +178,7 @@ public class TableSegment {
 		final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
 
 		final TableDetails.KeyColumn keyColumn = tableDetails.getKeyDetails().getKeyColumn( 0 );
-		final ColumnReference columnReference = new ColumnReference( tableReference, keyColumn );
+		final ColumnReference columnReference = new ColumnReference( physicalTableReference, keyColumn );
 
 		final InListPredicate restriction = new InListPredicate( columnReference );
 		querySpec.applyPredicate( restriction );
@@ -174,7 +204,7 @@ public class TableSegment {
 
 		final ArrayList<ColumnReference> columnRefs = arrayList( tableDetails.getKeyDetails().getColumnCount() );
 		tableDetails.getKeyDetails().forEachKeyColumn( (position, keyColumn) -> {
-			columnRefs.add( new ColumnReference( tableReference, keyColumn ) );
+			columnRefs.add( new ColumnReference( physicalTableReference, keyColumn ) );
 		} );
 		final SqlTuple keyRef = new SqlTuple( columnRefs, identifierMapping );
 
@@ -200,21 +230,22 @@ public class TableSegment {
 		} );
 	}
 
-	public void performActions(Map<Object, EntityDetails> entityDetailsMap, ExecutionContext lockingExecutionContext) {
-		final SharedSessionContractImplementor session = lockingExecutionContext.getSession();
+	public void performActions(Map<Object, EntityDetails> entityDetailsMap, QueryOptions lockingQueryOptions, SharedSessionContractImplementor session) {
 		final SessionFactoryImplementor sessionFactory = session.getSessionFactory();
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 
 		final SelectStatement selectStatement = new SelectStatement( querySpec, domainResults );
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcServices.getDialect().getSqlAstTranslatorFactory();
 		final SqlAstTranslator<JdbcOperationQuerySelect> translator = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, selectStatement );
-		final JdbcOperationQuerySelect jdbcOperation = translator.translate( jdbcParameterBindings, lockingExecutionContext.getQueryOptions() );
+		final JdbcSelect jdbcOperation = translator.translate( jdbcParameterBindings, lockingQueryOptions );
 
+		// IMPORTANT: we need a "clean" ExecutionContext to not further apply locking
+		final ExecutionContext executionContext = new BaseExecutionContext( session );
 		final JdbcSelectExecutor jdbcSelectExecutor = jdbcServices.getJdbcSelectExecutor();
 		final List<Object[]> results = jdbcSelectExecutor.executeQuery(
 				jdbcOperation,
 				jdbcParameterBindings,
-				lockingExecutionContext,
+				executionContext,
 				row -> row,
 				Object[].class,
 				StandardStatementCreator.getStatementCreator( ScrollMode.FORWARD_ONLY ),
@@ -255,8 +286,8 @@ public class TableSegment {
 
 		@Override
 		public void applyResult(Object stateValue, EntityDetails entityDetails, SharedSessionContractImplementor session) {
-			entityDetails.entry().getLoadedState()[statePosition] = stateValue;
-			entityDetails.key().getPersister().getAttributeMapping( statePosition ).setValue( entityDetails.instance(), stateValue );
+			applyLoadedState( entityDetails, statePosition, stateValue );
+			applyModelState( entityDetails, statePosition, stateValue );
 		}
 	}
 
@@ -287,8 +318,23 @@ public class TableSegment {
 						toOne.isNullable()
 				);
 			}
-			entityDetails.entry().getLoadedState()[statePosition] = reference;
-			entityDetails.key().getPersister().getAttributeMapping( statePosition ).setValue( entityDetails.instance(), reference );
+			applyLoadedState( entityDetails, statePosition, reference );
+			applyModelState( entityDetails, statePosition, reference );
 		}
+	}
+
+	private static void applyLoadedState(EntityDetails entityDetails, Integer statePosition, Object stateValue) {
+		if ( entityDetails.entry().getLoadedState() != null ) {
+			entityDetails.entry().getLoadedState()[statePosition] = stateValue;
+		}
+		else {
+			if ( !entityDetails.entry().isReadOnly() ) {
+				throw new AssertionFailure( "Expecting entity entry to be read-only - " + entityDetails.instance() );
+			}
+		}
+	}
+
+	private static void applyModelState(EntityDetails entityDetails, Integer statePosition, Object reference) {
+		entityDetails.key().getPersister().getAttributeMapping( statePosition ).setValue( entityDetails.instance(), reference );
 	}
 }

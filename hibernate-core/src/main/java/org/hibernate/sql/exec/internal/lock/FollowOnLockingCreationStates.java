@@ -37,7 +37,8 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * For use with {@linkplain TableSegment} for follow-on locking support.
+ * Used by {@linkplain TableLock} in creating the SQL AST and DomainResults
+ * as part of its follow-on lock handling.
  *
  * @author Steve Ebersole
  */

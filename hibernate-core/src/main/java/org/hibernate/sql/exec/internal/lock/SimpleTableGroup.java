@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * TableGroup used to describe a {@linkplain TableSegment}.
+ * TableGroup wrapping a {@linkplain TableLock table to be locked}.
  *
  * @author Steve Ebersole
  */

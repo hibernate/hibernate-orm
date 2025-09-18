@@ -8,6 +8,7 @@ import jakarta.persistence.Timeout;
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
+import org.hibernate.Timeouts;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
@@ -15,12 +16,14 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
-import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.StatementAccess;
 import org.hibernate.sql.exec.spi.LoadedValuesCollector;
@@ -32,6 +35,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
@@ -67,11 +71,11 @@ public class FollowOnLockingAction implements PostAction {
 			StatementAccess jdbcStatementAccess,
 			Connection jdbcConnection,
 			ExecutionContext executionContext) {
-		logLoadedValues( loadedValuesCollector );
+		FollowOnLockingHelper.logLoadedValues( loadedValuesCollector );
 
 		final SharedSessionContractImplementor session = executionContext.getSession();
 
-		// NOTE: we deal with effective graphs here to make sure associations are treated as lazy
+		// NOTE: we deal with effective graphs here to make sure embedded associations are treated as lazy
 		final EffectiveEntityGraph effectiveEntityGraph = session.getLoadQueryInfluencers().getEffectiveEntityGraph();
 		final RootGraphImplementor<?> initialGraph = effectiveEntityGraph.getGraph();
 		final GraphSemantic initialSemantic = effectiveEntityGraph.getSemantic();
@@ -89,14 +93,14 @@ public class FollowOnLockingAction implements PostAction {
 					SQL_EXEC_LOGGER.debugf( "Starting follow-on locking process - %s", entityMappingType.getEntityName() );
 				}
 
-				// apply an empty "fetch graph" to make sure any associations reachable from
+				// apply an empty "fetch graph" to make sure any embedded associations reachable from
 				// any of the DomainResults we will create are treated as lazy
 				final RootGraphImplementor<?> graph = entityMappingType.createRootGraph( session );
 				effectiveEntityGraph.clear();
 				effectiveEntityGraph.applyGraph( graph, GraphSemantic.FETCH );
 
-				// create a segment for each table for the entity (keyed by name)
-				final Map<String, TableSegment> tableSegments = prepareTableSegments( entityMappingType, entityKeys, session );
+				// create a table-lock reference for each table for the entity (keyed by name)
+				final Map<String, TableLock> tableLocks = prepareTableLocks( entityMappingType, entityKeys, session );
 
 				// create a cross-reference of information related to an entity based on its identifier,
 				// we'll use this later when we adjust the state array and inject state into the entity instance.
@@ -108,20 +112,26 @@ public class FollowOnLockingAction implements PostAction {
 						return;
 					}
 
-					final String tableExpression = attributeMapping.getContainingTableExpression();
-					final TableSegment entityTableSegment = tableSegments.get( tableExpression );
+					final TableLock tableLock = resolveTableLock( attributeMapping, tableLocks, entityMappingType );
 
-					// here we apply the selection for the attribute to the corresponding
-					// table-segment keeping track of the state array index for later.
-					entityTableSegment.applyAttribute( index, attributeMapping );
+					if ( tableLock == null ) {
+						throw new AssertionFailure( String.format(
+								Locale.ROOT,
+								"Unable to locate table for attribute `%s`",
+								attributeMapping.getNavigableRole().getFullPath()
+						) );
+					}
+
+					// here we apply the selection for the attribute to the corresponding table-lock ref
+					tableLock.applyAttribute( index, attributeMapping );
 				} );
 
 				// now we do process any collections, if asked
 				if ( lockScope == Locking.Scope.INCLUDE_COLLECTIONS ) {
 					SqmMutationStrategyHelper.visitCollectionTables( entityMappingType, (attribute) -> {
 						// we may need to lock the "collection table".
-						// the conditions are a bit unclear, so for now always lock them.
-						CollectionTableHelper.lockCollectionTable(
+						// the conditions are a bit unclear as to directionality, etc., so for now lock each.
+						FollowOnLockingHelper.lockCollectionTable(
 								attribute,
 								lockMode,
 								lockTimeout,
@@ -132,15 +142,10 @@ public class FollowOnLockingAction implements PostAction {
 				}
 
 
-				// at this point, we have all the individual locking selects ready to go.
-				// 		execute them and process the results against `entityDetailsMap` -
-				// 		for each row updating "loaded state" and ultimately refreshing the
-				// 		entity instance state
-
-				// NOTE: share the context between table-segments (perf)
-				final ExecutionContext lockingExecutionContext = buildLockingExecutionContext( session );
-				tableSegments.forEach( (s, entityTableSegment) -> {
-					entityTableSegment.performActions( entityDetailsMap, lockingExecutionContext );
+				// at this point, we have all the individual locking selects ready to go - execute them
+				final QueryOptions lockingOptions = buildLockingOptions( executionContext );
+				tableLocks.forEach( (s, tableLock) -> {
+					tableLock.performActions( entityDetailsMap, lockingOptions, session );
 				} );
 			} );
 		}
@@ -151,17 +156,31 @@ public class FollowOnLockingAction implements PostAction {
 		}
 	}
 
-	@SuppressWarnings("removal")
-	private ExecutionContext buildLockingExecutionContext(SharedSessionContractImplementor session) {
+	private TableLock resolveTableLock(
+			AttributeMapping attributeMapping,
+			Map<String, TableLock> tableSegments,
+			EntityMappingType entityMappingType) {
+		if ( entityMappingType.getEntityPersister() instanceof UnionSubclassEntityPersister usp ) {
+			// in the union-subclass strategy, attributes defined on the super are reported as
+			// contained by the logical super table.  See also the hacks in TableSegment
+			// to deal with this
+			// todo (JdbcOperation) : need to allow for secondary-tables
+			return tableSegments.get( usp.getMappedTableDetails().getTableName() );
+		}
+		else {
+			return tableSegments.get( attributeMapping.getContainingTableExpression() );
+		}
+	}
+
+	private QueryOptions buildLockingOptions(ExecutionContext executionContext) {
 		final QueryOptionsImpl lockingQueryOptions = new QueryOptionsImpl();
 		lockingQueryOptions.getLockOptions().setLockMode( lockMode );
-		lockingQueryOptions.getLockOptions().setTimeout( lockTimeout );
-		return new BaseExecutionContext( session ) {
-			@Override
-			public QueryOptions getQueryOptions() {
-				return lockingQueryOptions;
-			}
-		};
+		lockingQueryOptions.getLockOptions().setTimeout( Timeouts.WAIT_FOREVER );
+		lockingQueryOptions.getLockOptions().setFollowOnStrategy( Locking.FollowOn.DISALLOW );
+		if ( executionContext.getQueryOptions().isReadOnly() == Boolean.TRUE ) {
+			lockingQueryOptions.setReadOnly( true );
+		}
+		return lockingQueryOptions;
 	}
 
 	/**
@@ -191,16 +210,20 @@ public class FollowOnLockingAction implements PostAction {
 		} );
 	}
 
-	private Map<String, TableSegment> prepareTableSegments(
+	private Map<String, TableLock> prepareTableLocks(
 			EntityMappingType entityMappingType,
 			List<EntityKey> entityKeys,
 			SharedSessionContractImplementor session) {
-		final Map<String, TableSegment> segments = new HashMap<>();
+		final Map<String, TableLock> segments = new HashMap<>();
 		entityMappingType.forEachTableDetails( (tableDetails) -> segments.put(
 				tableDetails.getTableName(),
-				new TableSegment( tableDetails, entityMappingType, entityKeys, session )
+				createTableLock( tableDetails, entityMappingType, entityKeys, session )
 		) );
 		return segments;
+	}
+
+	private TableLock createTableLock(TableDetails tableDetails, EntityMappingType entityMappingType, List<EntityKey> entityKeys, SharedSessionContractImplementor session) {
+		return new TableLock( tableDetails, entityMappingType, entityKeys, session );
 	}
 
 	private Map<Object, EntityDetails> resolveEntityKeys(List<EntityKey> entityKeys, ExecutionContext executionContext) {
@@ -212,27 +235,6 @@ public class FollowOnLockingAction implements PostAction {
 			map.put( entityKey.getIdentifierValue(), new EntityDetails( entityKey, entry, instance ) );
 		} );
 		return map;
-	}
-
-	public static void logLoadedValues(LoadedValuesCollector collector) {
-		if ( SQL_EXEC_LOGGER.isDebugEnabled() ) {
-			SQL_EXEC_LOGGER.debug( "Follow-on locking collected loaded values..." );
-
-			SQL_EXEC_LOGGER.debug( "  Loaded root entities:" );
-			collector.getCollectedRootEntities().forEach( (reg) -> {
-				SQL_EXEC_LOGGER.debugf( "    - %s#%s", reg.entityDescriptor().getEntityName(), reg.entityKey().getIdentifier() );
-			} );
-
-			SQL_EXEC_LOGGER.debug( "  Loaded non-root entities:" );
-			collector.getCollectedNonRootEntities().forEach( (reg) -> {
-				SQL_EXEC_LOGGER.debugf( "    - %s#%s", reg.entityDescriptor().getEntityName(), reg.entityKey().getIdentifier() );
-			} );
-
-			SQL_EXEC_LOGGER.debug( "  Loaded collections:" );
-			collector.getCollectedCollections().forEach( (reg) -> {
-				SQL_EXEC_LOGGER.debugf( "    - %s#%s", reg.collectionDescriptor().getRootPathName(), reg.collectionKey().getKey() );
-			} );
-		}
 	}
 
 }

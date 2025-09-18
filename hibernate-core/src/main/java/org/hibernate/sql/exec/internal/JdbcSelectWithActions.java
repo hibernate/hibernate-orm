@@ -14,12 +14,12 @@ import org.hibernate.sql.exec.spi.JdbcOperationQuery;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.StatementAccess;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.LoadedValuesCollector;
 import org.hibernate.sql.exec.spi.PostAction;
 import org.hibernate.sql.exec.spi.PreAction;
 import org.hibernate.sql.exec.spi.SecondaryAction;
+import org.hibernate.sql.exec.spi.StatementAccess;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 
 import java.sql.Connection;
@@ -104,15 +104,14 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 
 	@Override
 	public void performPostAction(boolean succeeded, StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext) {
-		if ( postActions == null ) {
-			return;
-		}
-
-		for ( int i = 0; i < postActions.length; i++ ) {
-			if ( succeeded || postActions[i].shouldRunAfterFail() ) {
-				postActions[i].performPostAction( jdbcStatementAccess, jdbcConnection, executionContext );
+		if ( postActions != null ) {
+			for ( int i = 0; i < postActions.length; i++ ) {
+				if ( succeeded || postActions[i].shouldRunAfterFail() ) {
+					postActions[i].performPostAction( jdbcStatementAccess, jdbcConnection, executionContext );
+				}
 			}
 		}
+		loadedValuesCollector.clear();
 	}
 
 	@Override
@@ -159,6 +158,7 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 			this.primaryAction = primaryAction;
 		}
 
+		@SuppressWarnings("UnusedReturnValue")
 		public Builder setLoadedValuesCollector(LoadedValuesCollector loadedValuesCollector) {
 			this.loadedValuesCollector = loadedValuesCollector;
 			return this;

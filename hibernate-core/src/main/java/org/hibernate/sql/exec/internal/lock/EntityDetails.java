@@ -8,7 +8,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 
 /**
- * Record of details about an entity used while performing follow-on locking
+ * Models details about an entity instance used while performing follow-on locking
  *
  * @author Steve Ebersole
  */

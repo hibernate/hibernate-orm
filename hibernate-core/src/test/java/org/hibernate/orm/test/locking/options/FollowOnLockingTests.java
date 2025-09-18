@@ -49,7 +49,7 @@ public class FollowOnLockingTests {
 			session.find( Book.class, 1, LockModeType.PESSIMISTIC_WRITE );
 
 			assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-			Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), session.getDialect(), Helper.Table.BOOKS );
+			Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), false, session.getDialect(), Helper.Table.BOOKS );
 		} );
 	}
 
@@ -64,11 +64,11 @@ public class FollowOnLockingTests {
 			if ( usesTableHints( session.getDialect() ) ) {
 				// t-sql
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-				Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), session.getDialect(), Helper.Table.BOOKS );
+				Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), true, session.getDialect(), Helper.Table.BOOKS );
 			}
 			else {
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
-				Helper.checkSql( sqlCollector.getSqlQueries().get( 1 ), session.getDialect(), Helper.Table.BOOKS );
+				Helper.checkSql( sqlCollector.getSqlQueries().get( 1 ), true, session.getDialect(), Helper.Table.BOOKS );
 			}
 		} );
 	}
@@ -89,11 +89,11 @@ public class FollowOnLockingTests {
 			if ( usesTableHints( session.getDialect() ) ) {
 				// t-sql
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-				Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), session.getDialect(), Helper.Table.BOOKS );
+				Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), true, session.getDialect(), Helper.Table.BOOKS );
 			}
 			else {
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
-				Helper.checkSql( sqlCollector.getSqlQueries().get( 1 ), session.getDialect(), Helper.Table.BOOKS );
+				Helper.checkSql( sqlCollector.getSqlQueries().get( 1 ), true, session.getDialect(), Helper.Table.BOOKS );
 			}
 		} );
 	}
@@ -110,11 +110,11 @@ public class FollowOnLockingTests {
 			if ( usesTableHints( session.getDialect() ) ) {
 				// t-sql
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-				Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), session.getDialect(), Helper.Table.BOOKS );
+				Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), true, session.getDialect(), Helper.Table.BOOKS );
 			}
 			else {
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
-				Helper.checkSql( sqlCollector.getSqlQueries().get( 1 ), session.getDialect(), Helper.Table.BOOKS );
+				Helper.checkSql( sqlCollector.getSqlQueries().get( 1 ), true, session.getDialect(), Helper.Table.BOOKS );
 			}
 		} );
 	}
@@ -131,11 +131,11 @@ public class FollowOnLockingTests {
 			if ( usesTableHints( session.getDialect() ) ) {
 				// t-sql
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-				Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), session.getDialect(), Helper.Table.BOOKS );
+				Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), true, session.getDialect(), Helper.Table.BOOKS );
 			}
 			else {
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
-				Helper.checkSql( sqlCollector.getSqlQueries().get( 1 ), session.getDialect(), Helper.Table.BOOKS );
+				Helper.checkSql( sqlCollector.getSqlQueries().get( 1 ), true, session.getDialect(), Helper.Table.BOOKS );
 			}
 		} );
 	}

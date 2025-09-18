@@ -11,8 +11,8 @@
 
 ext {
     isCiEnvironment = isJenkins() || isGitHubActions() || isGenericCi()
-    populateRemoteBuildCache = isEnabled( "POPULATE_REMOTE_GRADLE_CACHE" )
-    useRemoteCache = !isEnabled( "DISABLE_REMOTE_GRADLE_CACHE" )
+    populateRemoteBuildCache = getSetting('POPULATE_REMOTE_GRADLE_CACHE').orElse('false').toBoolean()
+    useRemoteCache = !getSetting('DISABLE_REMOTE_GRADLE_CACHE').orElse('false').toBoolean()
 }
 
 private static boolean isJenkins() {
@@ -35,14 +35,6 @@ static java.util.Optional<String> getSetting(String name) {
 
     def sysProp = System.getProperty(name)
     return java.util.Optional.ofNullable(sysProp);
-}
-
-static boolean isEnabled(String setting) {
-	if ( System.getenv().hasProperty( setting ) ) {
-		return true
-	}
-
-	return System.hasProperty( setting )
 }
 
 develocity {

@@ -19,11 +19,11 @@ import org.hibernate.envers.boot.spi.ModifiedColumnNamingStrategy;
  */
 public class ModifiedColumnNamingStrategyRegistrationProvider implements StrategyRegistrationProvider {
 	@Override
-	public Iterable<StrategyRegistration> getStrategyRegistrations() {
-		final List<StrategyRegistration> registrations = new ArrayList<>();
+	public Iterable<StrategyRegistration<?>> getStrategyRegistrations() {
+		final List<StrategyRegistration<?>> registrations = new ArrayList<>();
 
 		registrations.add(
-				new SimpleStrategyRegistrationImpl(
+				new SimpleStrategyRegistrationImpl<>(
 						ModifiedColumnNamingStrategy.class,
 						LegacyModifiedColumnNamingStrategy.class,
 						"default", "legacy"
@@ -31,7 +31,7 @@ public class ModifiedColumnNamingStrategyRegistrationProvider implements Strateg
 		);
 
 		registrations.add(
-				new SimpleStrategyRegistrationImpl(
+				new SimpleStrategyRegistrationImpl<>(
 						ModifiedColumnNamingStrategy.class,
 						ImprovedModifiedColumnNamingStrategy.class,
 						"improved"

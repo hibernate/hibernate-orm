@@ -5,9 +5,9 @@
 package org.hibernate.boot.registry.selector.internal;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,6 +21,7 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.registry.selector.spi.NamedStrategyContributions;
 import org.hibernate.boot.registry.selector.spi.NamedStrategyContributor;
 
+import static java.util.Collections.emptySet;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 
 /**
@@ -48,8 +49,7 @@ public class StrategySelectorImpl implements StrategySelector {
 	 */
 	public StrategySelectorImpl(ClassLoaderService classLoaderService) {
 		this.classLoaderService = classLoaderService;
-
-		this.contributors = classLoaderService.loadJavaServices( NamedStrategyContributor.class );
+		contributors = classLoaderService.loadJavaServices( NamedStrategyContributor.class );
 		for ( var contributor : contributors ) {
 			contributor.contributeStrategyImplementations( new StartupContributions() );
 		}
@@ -105,7 +105,8 @@ public class StrategySelectorImpl implements StrategySelector {
 			Class<T> strategy,
 			Object strategyReference,
 			Callable<T> defaultResolver) {
-		return resolveStrategy( strategy, strategyReference, defaultResolver, (StrategyCreator<T>) STANDARD_STRATEGY_CREATOR );
+		return resolveStrategy( strategy, strategyReference, defaultResolver,
+				(StrategyCreator<T>) STANDARD_STRATEGY_CREATOR );
 	}
 
 	@Override
@@ -130,10 +131,24 @@ public class StrategySelectorImpl implements StrategySelector {
 		}
 		final var registrations = namedStrategyImplementorByStrategyMap.get( strategy );
 		if ( registrations == null ) {
-			return Collections.emptySet();
+			return emptySet();
 		}
-		//noinspection unchecked,rawtypes
-		return (Collection) new HashSet<>( registrations.values() );
+		else {
+			final Set<Class<? extends T>> implementors = new HashSet<>();
+			for ( var registration : registrations.values() ) {
+				if ( !strategy.isAssignableFrom( registration ) ) {
+					throw new StrategySelectionException(
+							String.format(
+									"Registered strategy [%s] is not a subtype of [%s]",
+									registration.getName(),
+									strategy.getName()
+							)
+					);
+				}
+				implementors.add( registration.asSubclass( strategy ) );
+			}
+			return implementors;
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -198,7 +213,7 @@ public class StrategySelectorImpl implements StrategySelector {
 		final var namedStrategyImplementorMap =
 				namedStrategyImplementorByStrategyMap.computeIfAbsent( strategy, clazz -> new ConcurrentHashMap<>() );
 		for ( String name : names ) {
-			final Class<?> old = namedStrategyImplementorMap.put( name, implementation );
+			final var old = namedStrategyImplementorMap.put( name, implementation );
 			if ( BOOT_LOGGER.isTraceEnabled() ) {
 				if ( old == null ) {
 					BOOT_LOGGER.strategySelectorMapping(
@@ -227,8 +242,7 @@ public class StrategySelectorImpl implements StrategySelector {
 		else {
 			final var itr = namedStrategyImplementorMap.values().iterator();
 			while ( itr.hasNext() ) {
-				final Class<?> registered = itr.next();
-				if ( registered.equals( implementation ) ) {
+				if ( itr.next().equals( implementation ) ) {
 					itr.remove();
 				}
 			}
@@ -242,7 +256,7 @@ public class StrategySelectorImpl implements StrategySelector {
 
 	@Override
 	public void stop() {
-		for ( NamedStrategyContributor contributor : contributors ) {
+		for ( var contributor : contributors ) {
 			contributor.clearStrategyImplementations( new ShutdownContributions() );
 		}
 	}

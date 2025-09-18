@@ -19,7 +19,6 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 import org.xml.sax.SAXException;
 
-import javax.xml.XMLConstants;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.ValidationEvent;

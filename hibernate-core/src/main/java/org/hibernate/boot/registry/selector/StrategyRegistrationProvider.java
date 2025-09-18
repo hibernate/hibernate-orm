@@ -27,5 +27,5 @@ public interface StrategyRegistrationProvider {
 	 *
 	 * @return All {@link StrategyRegistration}s
 	 */
-	Iterable<StrategyRegistration> getStrategyRegistrations();
+	Iterable<StrategyRegistration<?>> getStrategyRegistrations();
 }

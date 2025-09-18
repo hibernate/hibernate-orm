@@ -23,11 +23,11 @@ import org.hibernate.envers.strategy.ValidityAuditStrategy;
  */
 public class AuditStrategyRegistrationProvider implements StrategyRegistrationProvider {
 
-	private static final List<StrategyRegistration> STRATEGIES = new ArrayList<>();
+	private static final List<StrategyRegistration<?>> STRATEGIES = new ArrayList<>();
 
 	static {
 		STRATEGIES.add(
-				new SimpleStrategyRegistrationImpl(
+				new SimpleStrategyRegistrationImpl<>(
 						AuditStrategy.class,
 						DefaultAuditStrategy.class,
 						"default",
@@ -37,7 +37,7 @@ public class AuditStrategyRegistrationProvider implements StrategyRegistrationPr
 				)
 		);
 		STRATEGIES.add(
-				new SimpleStrategyRegistrationImpl(
+				new SimpleStrategyRegistrationImpl<>(
 						AuditStrategy.class,
 						ValidityAuditStrategy.class,
 						"validity",
@@ -49,7 +49,7 @@ public class AuditStrategyRegistrationProvider implements StrategyRegistrationPr
 	}
 
 	@Override
-	public Iterable<StrategyRegistration> getStrategyRegistrations() {
+	public Iterable<StrategyRegistration<?>> getStrategyRegistrations() {
 		return STRATEGIES;
 	}
 }

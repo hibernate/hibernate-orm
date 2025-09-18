@@ -7,7 +7,6 @@ package org.hibernate.boot.registry.selector.internal;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,7 +20,8 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 
 import org.hibernate.boot.registry.selector.spi.NamedStrategyContributions;
 import org.hibernate.boot.registry.selector.spi.NamedStrategyContributor;
-import org.jboss.logging.Logger;
+
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 
 /**
  * Standard implementation of the {@link StrategySelector} contract.
@@ -32,7 +32,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class StrategySelectorImpl implements StrategySelector {
-	private static final Logger LOG = Logger.getLogger( StrategySelectorImpl.class );
 
 	private static final StrategyCreator<?> STANDARD_STRATEGY_CREATOR = StrategySelectorImpl::create;
 
@@ -51,7 +50,7 @@ public class StrategySelectorImpl implements StrategySelector {
 		this.classLoaderService = classLoaderService;
 
 		this.contributors = classLoaderService.loadJavaServices( NamedStrategyContributor.class );
-		for ( NamedStrategyContributor contributor : contributors ) {
+		for ( var contributor : contributors ) {
 			contributor.contributeStrategyImplementations( new StartupContributions() );
 		}
 	}
@@ -59,17 +58,17 @@ public class StrategySelectorImpl implements StrategySelector {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> Class<? extends T> selectStrategyImplementor(Class<T> strategy, String name) {
-		final Map<String,Class<?>> namedStrategyImplementorMap = namedStrategyImplementorByStrategyMap.get( strategy );
+		final var namedStrategyImplementorMap = namedStrategyImplementorByStrategyMap.get( strategy );
 		if ( namedStrategyImplementorMap != null ) {
-			final Class<?> registered = namedStrategyImplementorMap.get( name );
+			final var registered = namedStrategyImplementorMap.get( name );
 			if ( registered != null ) {
 				return (Class<T>) registered;
 			}
 		}
 
-		final LazyServiceResolver<?> lazyServiceResolver = lazyStrategyImplementorByStrategyMap.get( strategy );
+		final var lazyServiceResolver = lazyStrategyImplementorByStrategyMap.get( strategy );
 		if ( lazyServiceResolver != null ) {
-			final Class<?> resolve = lazyServiceResolver.resolve( name );
+			final var resolve = lazyServiceResolver.resolve( name );
 			if ( resolve != null ) {
 				return (Class<? extends T>) resolve;
 			}
@@ -125,11 +124,11 @@ public class StrategySelectorImpl implements StrategySelector {
 
 	@Override
 	public <T> Collection<Class<? extends T>> getRegisteredStrategyImplementors(Class<T> strategy) {
-		final LazyServiceResolver<?> lazyServiceResolver = lazyStrategyImplementorByStrategyMap.get( strategy );
+		final var lazyServiceResolver = lazyStrategyImplementorByStrategyMap.get( strategy );
 		if ( lazyServiceResolver != null ) {
 			throw new StrategySelectionException( "Can't use this method on for strategy types which are embedded in the core library" );
 		}
-		final Map<String, Class<?>> registrations = namedStrategyImplementorByStrategyMap.get( strategy );
+		final var registrations = namedStrategyImplementorByStrategyMap.get( strategy );
 		if ( registrations == null ) {
 			return Collections.emptySet();
 		}
@@ -149,27 +148,27 @@ public class StrategySelectorImpl implements StrategySelector {
 				return defaultResolver.call();
 			}
 			catch (Exception e) {
-				throw new StrategySelectionException( "Default-resolver threw exception", e );
+				throw new StrategySelectionException( "Default resolver threw exception", e );
 			}
 		}
-
-		if ( strategy.isInstance( strategyReference ) ) {
+		else if ( strategy.isInstance( strategyReference ) ) {
 			return strategy.cast( strategyReference );
 		}
-
-		final Class<? extends T> implementationClass =
-				strategyReference instanceof Class
-						? (Class<? extends T>) strategyReference
-						: selectStrategyImplementor( strategy, strategyReference.toString() );
-
-		try {
-			return creator.create( implementationClass );
-		}
-		catch (Exception e) {
-			throw new StrategySelectionException(
-					String.format( "Could not instantiate named strategy class [%s]", implementationClass.getName() ),
-					e
-			);
+		else {
+			final var implementationClass =
+					strategyReference instanceof Class
+							? (Class<? extends T>) strategyReference
+							: selectStrategyImplementor( strategy, strategyReference.toString() );
+			try {
+				return creator.create( implementationClass );
+			}
+			catch (Exception e) {
+				throw new StrategySelectionException(
+						String.format( "Could not instantiate named strategy class [%s]",
+								implementationClass.getName() ),
+						e
+				);
+			}
 		}
 	}
 
@@ -189,7 +188,7 @@ public class StrategySelectorImpl implements StrategySelector {
 	// Lifecycle
 
 	public <T> void registerStrategyLazily(Class<T> strategy, LazyServiceResolver<T> resolver) {
-		LazyServiceResolver<?> previous = lazyStrategyImplementorByStrategyMap.put( strategy, resolver );
+		final var previous = lazyStrategyImplementorByStrategyMap.put( strategy, resolver );
 		if ( previous != null ) {
 			throw new HibernateException( "Detected a second LazyServiceResolver replacing an existing LazyServiceResolver implementation for strategy " + strategy.getName() );
 		}
@@ -198,21 +197,18 @@ public class StrategySelectorImpl implements StrategySelector {
 	private <T> void contributeImplementation(Class<T> strategy, Class<? extends T> implementation, String... names) {
 		final var namedStrategyImplementorMap =
 				namedStrategyImplementorByStrategyMap.computeIfAbsent( strategy, clazz -> new ConcurrentHashMap<>() );
-
 		for ( String name : names ) {
 			final Class<?> old = namedStrategyImplementorMap.put( name, implementation );
-			if ( LOG.isTraceEnabled() ) {
+			if ( BOOT_LOGGER.isTraceEnabled() ) {
 				if ( old == null ) {
-					LOG.tracef(
-							"Strategy selector for %s: '%s' -> %s",
+					BOOT_LOGGER.strategySelectorMapping(
 							strategy.getSimpleName(),
 							name,
 							implementation.getName()
 					);
 				}
 				else {
-					LOG.tracef(
-							"Strategy selector for %s: '%s' -> %s (replacing %s)",
+					BOOT_LOGGER.strategySelectorMappingReplacing(
 							strategy.getSimpleName(),
 							name,
 							implementation.getName(),
@@ -224,23 +220,23 @@ public class StrategySelectorImpl implements StrategySelector {
 	}
 
 	private <T> void removeImplementation(Class<T> strategy, Class<? extends T> implementation) {
-		final Map<String,Class<?>> namedStrategyImplementorMap = namedStrategyImplementorByStrategyMap.get( strategy );
+		final var namedStrategyImplementorMap = namedStrategyImplementorByStrategyMap.get( strategy );
 		if ( namedStrategyImplementorMap == null ) {
-			LOG.debug( "Named strategy map did not exist on call to unregister" );
-			return;
+			BOOT_LOGGER.namedStrategyMapDidNotExistOnUnregister();
 		}
-
-		final Iterator<Class<?>> itr = namedStrategyImplementorMap.values().iterator();
-		while ( itr.hasNext() ) {
-			final Class<?> registered = itr.next();
-			if ( registered.equals( implementation ) ) {
-				itr.remove();
+		else {
+			final var itr = namedStrategyImplementorMap.values().iterator();
+			while ( itr.hasNext() ) {
+				final Class<?> registered = itr.next();
+				if ( registered.equals( implementation ) ) {
+					itr.remove();
+				}
 			}
-		}
 
-		// try to clean up after ourselves...
-		if ( namedStrategyImplementorMap.isEmpty() ) {
-			namedStrategyImplementorByStrategyMap.remove( strategy );
+			// try to clean up after ourselves...
+			if ( namedStrategyImplementorMap.isEmpty() ) {
+				namedStrategyImplementorByStrategyMap.remove( strategy );
+			}
 		}
 	}
 
@@ -270,12 +266,12 @@ public class StrategySelectorImpl implements StrategySelector {
 		}
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public <T> void registerStrategyImplementor(Class<T> strategy, String name, Class<? extends T> implementation) {
 		contributeImplementation( strategy, implementation, name );
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public <T> void unRegisterStrategyImplementor(Class<T> strategy, Class<? extends T> implementation) {
 		removeImplementation( strategy, implementation );
 	}

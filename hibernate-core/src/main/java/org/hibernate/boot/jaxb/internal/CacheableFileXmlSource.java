@@ -17,7 +17,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 
-import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
 
 /**
  * Support for creating a mapping {@linkplain Binding binding} from "cached" XML files.
@@ -73,17 +73,17 @@ public class CacheableFileXmlSource {
 					return new Binding<>( readSerFile( serFile ), origin );
 				}
 				catch ( SerializationException e ) {
-					BOOT_LOGGER.unableToDeserializeCache( serFile.getName(), e );
+					JAXB_LOGGER.unableToDeserializeCache( serFile.getName(), e );
 				}
 				catch ( FileNotFoundException e ) {
-					BOOT_LOGGER.cachedFileNotFound( serFile.getName(), e );
+					JAXB_LOGGER.cachedFileNotFound( serFile.getName(), e );
 				}
 			}
 			else {
-				BOOT_LOGGER.cachedFileObsolete( serFile );
+				JAXB_LOGGER.cachedFileObsolete( serFile );
 			}
 
-			BOOT_LOGGER.readingMappingsFromFile( xmlFile.getPath() );
+			JAXB_LOGGER.readingMappingsFromFile( xmlFile.getPath() );
 			final Binding<? extends JaxbBindableMappingDescriptor> binding = FileXmlSource.fromFile( xmlFile, binder );
 
 			writeSerFile( binding.getRoot(), xmlFile, serFile );
@@ -124,7 +124,7 @@ public class CacheableFileXmlSource {
 	}
 
 	private static <T extends JaxbBindableMappingDescriptor> T readSerFile(File serFile) throws SerializationException, FileNotFoundException {
-		BOOT_LOGGER.readingCachedMappings( serFile );
+		JAXB_LOGGER.readingCachedMappings( serFile );
 		return SerializationHelper.deserialize( new FileInputStream( serFile ) );
 	}
 
@@ -133,17 +133,17 @@ public class CacheableFileXmlSource {
 			File xmlFile,
 			File serFile) {
 		try ( var fileOutputStream = new FileOutputStream( serFile ) ) {
-			if ( BOOT_LOGGER.isTraceEnabled() ) {
-				BOOT_LOGGER.writingCacheFile( xmlFile.getAbsolutePath(), serFile.getAbsolutePath() );
+			if ( JAXB_LOGGER.isTraceEnabled() ) {
+				JAXB_LOGGER.writingCacheFile( xmlFile.getAbsolutePath(), serFile.getAbsolutePath() );
 			}
 			SerializationHelper.serialize( jaxbModel, fileOutputStream );
 			final boolean success = serFile.setLastModified( System.currentTimeMillis() );
 			if ( !success ) {
-				BOOT_LOGGER.unableToUpdateCachedFileTimestamp( serFile.getAbsolutePath() );
+				JAXB_LOGGER.unableToUpdateCachedFileTimestamp( serFile.getAbsolutePath() );
 			}
 		}
 		catch ( Exception e ) {
-			BOOT_LOGGER.unableToWriteCachedFile( serFile.getAbsolutePath(), e.getMessage() );
+			JAXB_LOGGER.unableToWriteCachedFile( serFile.getAbsolutePath(), e.getMessage() );
 		}
 	}
 

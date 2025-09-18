@@ -16,7 +16,8 @@ import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 
-import org.jboss.logging.Logger;
+
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 
 /**
  * MetadataSourceProcessor implementation for processing {@code hbm.xml} mapping documents.
@@ -24,7 +25,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
-	private static final Logger LOG = Logger.getLogger( HbmMetadataSourceProcessorImpl.class );
 
 	private final Collection<MappingDocument> mappingDocuments;
 
@@ -127,9 +127,8 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 		hierarchy_loop : for ( var entityHierarchy : entityHierarchies ) {
 			for ( String entityName : entityHierarchy.getContainedEntityNames() ) {
 				if ( processedEntityNames.contains( entityName ) ) {
-					if ( LOG.isDebugEnabled() ) {
-						LOG.debugf(
-								"Skipping HBM processing of entity hierarchy [%s], as at least one entity [%s] has been processed",
+					if ( BOOT_LOGGER.isDebugEnabled() ) {
+						BOOT_LOGGER.skippingHbmProcessingOfEntityHierarchy(
 								entityHierarchy.getRoot().getEntityNamingSource().getEntityName(),
 								entityName
 						);
@@ -137,7 +136,6 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 					continue hierarchy_loop;
 				}
 			}
-
 			modelBinder.bindEntityHierarchy( entityHierarchy );
 			processedEntityNames.addAll( entityHierarchy.getContainedEntityNames() );
 		}

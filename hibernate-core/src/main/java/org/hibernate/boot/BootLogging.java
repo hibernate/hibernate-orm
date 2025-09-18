@@ -5,14 +5,12 @@
 package org.hibernate.boot;
 
 import org.hibernate.Internal;
+import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.internal.log.SubSystemLogging;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.lang.invoke.MethodHandles;
 
-import org.hibernate.type.SerializationException;
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.Cause;
@@ -20,11 +18,11 @@ import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
+import org.jboss.logging.annotations.ValidIdRanges;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
-import static org.jboss.logging.Logger.Level.INFO;
 
 /**
  * Logging related to Hibernate bootstrapping
@@ -34,7 +32,10 @@ import static org.jboss.logging.Logger.Level.INFO;
 		description = "Logging related to bootstrapping of a SessionFactory / EntityManagerFactory"
 )
 @MessageLogger(projectCode = "HHH")
-@ValidIdRange(min = 160101, max = 160200)
+@ValidIdRanges({
+	@ValidIdRange(min = 160101, max = 160200),
+	@ValidIdRange(min = 160201, max = 160260)
+})
 @Internal
 public interface BootLogging extends BasicLogger {
 	String NAME = SubSystemLogging.BASE + ".boot";
@@ -44,34 +45,6 @@ public interface BootLogging extends BasicLogger {
 	@Message(id = 160101, value = "Duplicate generator name %s")
 	void duplicateGeneratorName(String name);
 
-	@LogMessage(level = INFO)
-	@Message(id = 160102, value = "Reading mappings from file: %s")
-	void readingMappingsFromFile(String path);
-
-	@LogMessage(level = INFO)
-	@Message(id = 160103, value = "Reading mappings from cache file: %s")
-	void readingCachedMappings(File cachedFile);
-
-	@LogMessage(level = WARN)
-	@Message(id = 160104, value = "Could not deserialize cache file [%s]: %s")
-	void unableToDeserializeCache(String path, SerializationException error);
-
-	@LogMessage(level = WARN)
-	@Message(id = 160105, value = "I/O reported error writing cached file: [%s]: %s")
-	void unableToWriteCachedFile(String path, String message);
-
-	@LogMessage(level = WARN)
-	@Message(id = 160106, value = "Could not update cached file timestamp: [%s]")
-	@SuppressWarnings("unused")
-	void unableToUpdateCachedFileTimestamp(String path);
-
-	@LogMessage(level = WARN)
-	@Message(id = 160107, value = "I/O reported cached file could not be found: [%s]: %s")
-	void cachedFileNotFound(String path, FileNotFoundException error);
-
-	@LogMessage(level = INFO)
-	@Message(id = 160108, value = "Omitting cached file [%s] as the mapping file is newer")
-	void cachedFileObsolete(File cachedFile);
 
 	@LogMessage(level = DEBUG)
 	@Message(id = 160111, value = "Package not found or no package-info.java: %s")
@@ -268,10 +241,6 @@ public interface BootLogging extends BasicLogger {
 	@Message(id = 160178, value = "Mapping entity secondary table: %s -> %s")
 	void mappingEntitySecondaryTableToTable(String entityName, String tableName);
 
-	@LogMessage(level = TRACE)
-	@Message(id = 160179, value = "Writing cache file for: %s to: %s")
-	void writingCacheFile(String xmlPath, String serPath);
-
 	@LogMessage(level = DEBUG)
 	@Message(id = 160180, value = "Unexpected ServiceRegistry type [%s] encountered during building of MetadataSources; may cause problems later attempting to construct MetadataBuilder")
 	void unexpectedServiceRegistryType(String registryType);
@@ -340,4 +309,139 @@ public interface BootLogging extends BasicLogger {
 					ServiceRegistry passed to MetadataBuilder was a BootstrapServiceRegistry; \
 					this likely won't end well if attempt is made to build SessionFactory""")
 	void badServiceRegistry();
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 160201, value = "Unable to close cfg.xml resource stream")
+	void unableToCloseCfgXmlResourceStream(@Cause Throwable e);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 160202, value = "Unable to close cfg.xml URL stream")
+	void unableToCloseCfgXmlUrlStream(@Cause Throwable e);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 160203, value = "Unable to close properties file stream [%s]")
+	void unableToClosePropertiesFileStream(String path, @Cause Throwable e);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 160204, value = "cfg.xml document did not define namespaces; wrapping in custom event reader to introduce namespace information")
+	void cfgXmlDocumentDidNotDefineNamespaces();
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 160212, value = "Unable to adjust relative <jar-file/> URL [%s] relative to root URL [%s]")
+	void unableToAdjustRelativeJarFileUrl(String filePart, String rootPath, @Cause Throwable e);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 160213, value = "JAR URL from URL Entry: %s >> %s")
+	void jarUrlFromUrlEntry(String url, String jarUrl);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 160217, value = "Registering AttributeConverter '%s'")
+	void registeringAttributeConverter(String converter);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 160218, value = "Skipping registration of discovered AttributeConverter '%s' for auto-apply")
+	void skippingRegistrationOfDiscoveredAttributeConverterForAutoApply(String converter);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 160219, value = "Skipping duplicate '@ConverterRegistration' for '%s'")
+	void skippingDuplicateConverterRegistration(String converter);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 160220, value = "Removed potentially auto-applicable converter '%s' due to @ConverterRegistration")
+	void removedPotentiallyAutoApplicableConverterDueToRegistration(String converter);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 160221, value = "Overwrote existing registration [%s] for type definition.")
+	void overwroteExistingRegistrationForTypeDefinition(String name);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 160222, value = "Injecting JPA temp ClassLoader [%s] into BootstrapContext; was [%s]")
+	void injectingJpaTempClassLoader(Object newLoader, Object oldLoader);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 160223, value = "Injecting ScanOptions [%s] into BootstrapContext; was [%s]")
+	void injectingScanOptions(Object newOptions, Object oldOptions);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 160224, value = "Injecting ScanEnvironment [%s] into BootstrapContext; was [%s]")
+	void injectingScanEnvironment(Object newEnv, Object oldEnv);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 160225, value = "Injecting Scanner [%s] into BootstrapContext; was [%s]")
+	void injectingScanner(Object newScanner, Object oldScanner);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 160226, value = "Injecting ArchiveDescriptorFactory [%s] into BootstrapContext; was [%s]")
+	void injectingArchiveDescriptorFactory(Object newFactory, Object oldFactory);
+
+	// Strategy selector tracing
+	@LogMessage(level = TRACE)
+	@Message(id = 160227, value = "Strategy selector for %s: '%s' -> %s")
+	void strategySelectorMapping(String strategySimpleName, String name, String implementationName);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 160228, value = "Strategy selector for %s: '%s' -> %s (replacing %s)")
+	void strategySelectorMappingReplacing(String strategySimpleName, String name, String implementationName, String oldImplementationName);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 160229, value = "Named strategy map did not exist on call to unregister")
+	void namedStrategyMapDidNotExistOnUnregister();
+
+	// LoadedConfig messages
+	@LogMessage(level = DEBUG)
+	@Message(id = 160230, value = "Listener [%s] defined as part of a group also defined event type")
+	void listenerDefinedAlsoDefinedEventType(String listenerClass);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 160231, value = "More than one cfg.xml file attempted to supply SessionFactory name: [%s], [%s].  Keeping initially discovered one [%s]")
+	void moreThanOneCfgXmlSuppliedSessionFactoryName(String first, String second, String keeping);
+
+	// Additional HBM binding traces
+	@LogMessage(level = TRACE)
+	@Message(id = 160233, value = "Creating FetchProfile: %s")
+	void creatingFetchProfile(String name);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 160234, value = "Processing <identifier-generator/> : %s")
+	void processingIdentifierGenerator(String name);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 160235, value = "Processed type definition : %s -> %s")
+	void processedTypeDefinition(String name, String impl);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 160236, value = "No temp ClassLoader provided; using live ClassLoader to load potentially unsafe class: %s")
+	void noTempClassLoaderProvidedUsingLiveClassLoader(String className);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 160237, value = "Registering non-interface strategy : %s")
+	void registeringNonInterfaceStrategy(String roleName);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 160238, value = "Indexing mapping document [%s] for purpose of building entity hierarchy ordering")
+	void indexingMappingDocumentForHierarchyOrdering(String mappingDocumentName);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 160239, value = "Applying filter definition with condition: %s")
+	void applyingFilterDefinitionCondition(String condition);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 160240, value = "Processed filter definition: %s")
+	void processedFilterDefinition(String name);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 160241, value = "Entity supertype named as extends [%s] for subclass [%s:%s] not found")
+	void entitySupertypeExtendsNotFound(String extendsName, Origin origin, String subclassName);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 160242, value = "filter-def [name=%s, origin=%s] defined multiple conditions, accepting arbitrary one")
+	void filterDefDefinedMultipleConditions(String name, String origin);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 160243, value = "Checking auto-apply AttributeConverter [%s] (domain-type=%s) for match against %s : %s.%s (type=%s)")
+	void checkingAutoApplyAttributeConverter(String converterClass, String domainTypeSignature, String siteDescriptor, String declaringType, String memberName, String memberTypeName);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 160244, value = "Skipping HBM processing of entity hierarchy [%s], as at least one entity [%s] has been processed")
+	void skippingHbmProcessingOfEntityHierarchy(String rootEntityName, String processedEntity);
 }

@@ -7,6 +7,7 @@
 package org.hibernate.internal.util;
 
 import java.util.Objects;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
 /**
@@ -18,8 +19,9 @@ import java.util.function.Supplier;
 public class LazyValue<T> {
 	public static final Object NULL = new Object();
 
+	private final ReentrantLock lock = new ReentrantLock();
 	private final Supplier<T> supplier;
-	private Object value;
+	private volatile Object value;
 
 	public LazyValue(Supplier<T> supplier) {
 		this.supplier = supplier;
@@ -27,8 +29,16 @@ public class LazyValue<T> {
 
 	public T getValue() {
 		if ( value == null ) {
-			final T obtainedValue = supplier.get();
-			value = Objects.requireNonNullElse( obtainedValue, NULL );
+			lock.lock();
+			try {
+				if (value == null) {
+					T obtainedValue = supplier.get();
+					value = Objects.requireNonNullElse(obtainedValue, NULL);
+				}
+			}
+			finally {
+				lock.unlock();
+			}
 		}
 
 		//noinspection unchecked

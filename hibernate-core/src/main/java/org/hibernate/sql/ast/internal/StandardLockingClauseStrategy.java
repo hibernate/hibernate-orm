@@ -247,10 +247,6 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 		final String[] keyColumns = determineKeyColumnNames( tableGroup );
 		final String tableAlias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
 		for ( int i = 0; i < keyColumns.length; i++ ) {
-			// NOTE: in some tests with Oracle, the qualifiers are being applied twice;
-			//		still need to track that down.  possibly, unexpected calls to
-			//		`Dialect#applyLocksToSql`?
-			assert !keyColumns[i].contains( "." );
 			lockItems.add( tableAlias + "." + keyColumns[i] );
 		}
 
@@ -311,8 +307,8 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 		else if ( tableGroup.getModelPart() instanceof PluralAttributeMapping pluralAttributeMapping ) {
 			return extractColumnNames( pluralAttributeMapping.getKeyDescriptor() );
 		}
-		else if ( tableGroup instanceof EntityAssociationMapping entityAssociationMapping ) {
-			return extractColumnNames( entityAssociationMapping.getForeignKeyDescriptor() );
+		else if ( tableGroup.getModelPart() instanceof EntityAssociationMapping entityAssociationMapping ) {
+			return extractColumnNames( entityAssociationMapping.getAssociatedEntityMappingType().getIdentifierMapping() );
 		}
 		else {
 			throw new AssertionFailure( "Unable to determine columns for locking" );

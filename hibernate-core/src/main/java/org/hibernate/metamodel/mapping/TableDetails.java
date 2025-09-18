@@ -40,7 +40,7 @@ public interface TableDetails {
 	/**
 	 * Details about the primary key of a table
 	 */
-	interface KeyDetails {
+	interface KeyDetails extends SelectableMappings {
 		/**
 		 * Number of columns
 		 */

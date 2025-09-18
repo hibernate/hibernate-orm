@@ -51,7 +51,7 @@ import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
  *
  * @author Steve Ebersole
  */
-public class FollowOnLockingHelper {
+public class LockingHelper {
 	/**
 	 * Lock a collection-table.
 	 *
@@ -76,10 +76,11 @@ public class FollowOnLockingHelper {
 		final QuerySpec querySpec = new QuerySpec( true );
 
 		final NamedTableReference tableReference = new NamedTableReference( keyTableName, "tbl" );
-		final SimpleTableGroup tableGroup = new SimpleTableGroup(
+		final LockingTableGroup tableGroup = new LockingTableGroup(
 				tableReference,
 				keyTableName,
-				attributeMapping
+				attributeMapping,
+				keyDescriptor.getKeySide().getModelPart()
 		);
 
 		querySpec.getFromClause().addRoot( tableGroup );

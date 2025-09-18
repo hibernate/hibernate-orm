@@ -49,13 +49,13 @@ import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
  *
  * @author Steve Ebersole
  */
-public class FollowOnLockingAction implements PostAction {
+public class LockingAction implements PostAction {
 	private final LoadedValuesCollector loadedValuesCollector;
 	private final LockMode lockMode;
 	private final Timeout lockTimeout;
 	private final Locking.Scope lockScope;
 
-	public FollowOnLockingAction(
+	public LockingAction(
 			LoadedValuesCollector loadedValuesCollector,
 			LockMode lockMode,
 			Timeout lockTimeout,
@@ -71,7 +71,7 @@ public class FollowOnLockingAction implements PostAction {
 			StatementAccess jdbcStatementAccess,
 			Connection jdbcConnection,
 			ExecutionContext executionContext) {
-		FollowOnLockingHelper.logLoadedValues( loadedValuesCollector );
+		LockingHelper.logLoadedValues( loadedValuesCollector );
 
 		final SharedSessionContractImplementor session = executionContext.getSession();
 
@@ -131,7 +131,7 @@ public class FollowOnLockingAction implements PostAction {
 					SqmMutationStrategyHelper.visitCollectionTables( entityMappingType, (attribute) -> {
 						// we may need to lock the "collection table".
 						// the conditions are a bit unclear as to directionality, etc., so for now lock each.
-						FollowOnLockingHelper.lockCollectionTable(
+						LockingHelper.lockCollectionTable(
 								attribute,
 								lockMode,
 								lockTimeout,

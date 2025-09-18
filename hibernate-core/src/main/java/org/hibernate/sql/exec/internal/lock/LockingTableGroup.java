@@ -6,6 +6,7 @@ package org.hibernate.sql.exec.internal.lock;
 
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
@@ -22,22 +23,29 @@ import java.util.function.Consumer;
  *
  * @author Steve Ebersole
  */
-public class SimpleTableGroup implements TableGroup {
+public class LockingTableGroup implements TableGroup {
 	private final TableReference tableReference;
 	private final String tableName;
 	private final ModelPartContainer modelPart;
 	private final NavigablePath navigablePath;
+	private final SelectableMappings keyColumnMappings;
 
 	private List<TableGroupJoin> tableGroupJoins;
 
-	public SimpleTableGroup(
+	public LockingTableGroup(
 			TableReference tableReference,
 			String tableName,
-			ModelPartContainer modelPart) {
+			ModelPartContainer modelPart,
+			SelectableMappings keyColumnMappings) {
 		this.tableReference = tableReference;
 		this.tableName = tableName;
 		this.modelPart = modelPart;
 		this.navigablePath = new NavigablePath( tableName );
+		this.keyColumnMappings = keyColumnMappings;
+	}
+
+	public SelectableMappings getKeyColumnMappings() {
+		return keyColumnMappings;
 	}
 
 	@Override

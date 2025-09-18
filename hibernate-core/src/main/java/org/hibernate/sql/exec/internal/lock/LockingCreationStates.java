@@ -42,7 +42,7 @@ import java.util.function.Function;
  *
  * @author Steve Ebersole
  */
-public class FollowOnLockingCreationStates
+public class LockingCreationStates
 		implements DomainResultCreationState, SqlAstCreationState, SqlAstProcessingState, SqlExpressionResolver {
 
 	private final QuerySpec querySpec;
@@ -54,7 +54,7 @@ public class FollowOnLockingCreationStates
 	private final Map<ColumnReferenceKey, Expression> sqlExpressionMap = new HashMap<>();
 	private final Map<Expression, SqlSelection> sqlSelectionMap = new HashMap<>();
 
-	public FollowOnLockingCreationStates(
+	public LockingCreationStates(
 			QuerySpec querySpec,
 			TableGroup root,
 			SessionFactoryImplementor sessionFactory) {
@@ -81,7 +81,7 @@ public class FollowOnLockingCreationStates
 	}
 
 	@Override
-	public FollowOnLockingCreationStates getSqlAstCreationState() {
+	public LockingCreationStates getSqlAstCreationState() {
 		return this;
 	}
 
@@ -94,12 +94,12 @@ public class FollowOnLockingCreationStates
 	}
 
 	@Override
-	public FollowOnLockingCreationStates getCurrentProcessingState() {
+	public LockingCreationStates getCurrentProcessingState() {
 		return this;
 	}
 
 	@Override
-	public FollowOnLockingCreationStates getSqlExpressionResolver() {
+	public LockingCreationStates getSqlExpressionResolver() {
 		return getCurrentProcessingState();
 	}
 

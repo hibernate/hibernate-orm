@@ -199,7 +199,7 @@ import org.hibernate.sql.model.internal.TableInsertCustomSql;
 import org.hibernate.sql.model.internal.TableInsertStandard;
 import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
-import org.hibernate.sql.exec.internal.lock.FollowOnLockingAction;
+import org.hibernate.sql.exec.internal.lock.LockingAction;
 import org.hibernate.sql.exec.internal.lock.LoadedValuesCollectorImpl;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.LoadedValuesCollector;
@@ -958,7 +958,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		jdbcSelectBuilder.setLoadedValuesCollector( loadedValuesCollector );
 
 		// additionally, add a post-action which uses the collected values.
-		jdbcSelectBuilder.appendPostAction( new FollowOnLockingAction(
+		jdbcSelectBuilder.appendPostAction( new LockingAction(
 				loadedValuesCollector,
 				lockOptions.getLockMode(),
 				lockOptions.getTimeout(),

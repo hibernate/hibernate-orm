@@ -31,7 +31,7 @@ public class LoadedValuesCollectorImpl implements LoadedValuesCollector {
 
 	public LoadedValuesCollectorImpl(List<NavigablePath> rootPaths, LockingClauseStrategy lockingClauseStrategy) {
 		this.rootPaths = rootPaths;
-		pathsToLock = FollowOnLockingHelper.extractPathsToLock( lockingClauseStrategy );
+		pathsToLock = LockingHelper.extractPathsToLock( lockingClauseStrategy );
 	}
 
 	@Override

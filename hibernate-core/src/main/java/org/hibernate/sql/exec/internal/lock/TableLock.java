@@ -72,7 +72,7 @@ public class TableLock {
 	private final TableReference logicalTableReference;
 	private final TableGroup logicalTableGroup;
 
-	private final FollowOnLockingCreationStates creationStates;
+	private final LockingCreationStates creationStates;
 
 	private final List<ResultHandler> resultHandlers = new ArrayList<>();
 	private final List<DomainResult<?>> domainResults = new ArrayList<>();
@@ -93,7 +93,7 @@ public class TableLock {
 		this.rootPath = new NavigablePath( tableDetails.getTableName() );
 
 		this.physicalTableReference = new NamedTableReference( tableDetails.getTableName(), "tbl" );
-		this.physicalTableGroup = new SimpleTableGroup( physicalTableReference, tableDetails.getTableName(), entityMappingType );
+		this.physicalTableGroup = new LockingTableGroup( physicalTableReference, tableDetails.getTableName(), entityMappingType, tableDetails.getKeyDetails() );
 
 		if ( entityMappingType.getEntityPersister() instanceof UnionSubclassEntityPersister usp ) {
 			final UnionTableReference unionTableReference = new UnionTableReference(
@@ -118,7 +118,7 @@ public class TableLock {
 
 		querySpec.getFromClause().addRoot( physicalTableGroup );
 
-		creationStates = new FollowOnLockingCreationStates(
+		creationStates = new LockingCreationStates(
 				querySpec,
 				logicalTableGroup,
 				entityMappingType.getEntityPersister().getFactory()

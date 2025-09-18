@@ -324,6 +324,12 @@ public class EntityTableMapping implements TableMapping {
 					creationState.getCreationContext().getTypeConfiguration()
 			);
 		}
+
+		@Override
+		public int forEachSelectable(SelectableConsumer consumer) {
+			forEachKeyColumn( consumer::accept );
+			return getJdbcTypeCount();
+		}
 	}
 
 	public static class SimpleKeyMapping extends AbstractKeyMapping {

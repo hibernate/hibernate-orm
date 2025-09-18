@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.ast.internal;
 
+import jakarta.persistence.Timeout;
+import org.hibernate.AssertionFailure;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
 import org.hibernate.dialect.Dialect;
@@ -11,12 +13,10 @@ import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.TableDetails;
-import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
@@ -27,6 +27,7 @@ import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.exec.internal.lock.LockingTableGroup;
 import org.hibernate.sql.model.TableMapping;
 
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 	private final RowLockStrategy rowLockStrategy;
 	private final PessimisticLockKind lockKind;
 	private final Locking.Scope lockingScope;
-	private final int timeout;
+	private final Timeout timeout;
 
 	/**
 	 * @implNote Tracked separately from {@linkplain #rootsToLock} and
@@ -76,7 +77,7 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 		this.rowLockStrategy = rowLockStrategy;
 		this.lockKind = lockKind;
 		this.lockingScope = lockOptions.getScope();
-		this.timeout = lockOptions.getTimeout().milliseconds();
+		this.timeout = lockOptions.getTimeout();
 	}
 
 	@Override
@@ -243,7 +244,7 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 	}
 
 	private void addColumnRefs(TableGroup tableGroup, List<String> lockItems) {
-		final String[] keyColumns = determineKeyColumnNames( tableGroup.getModelPart() );
+		final String[] keyColumns = determineKeyColumnNames( tableGroup );
 		final String tableAlias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
 		for ( int i = 0; i < keyColumns.length; i++ ) {
 			// NOTE: in some tests with Oracle, the qualifiers are being applied twice;
@@ -300,30 +301,33 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 		}
 	}
 
-	private String[] determineKeyColumnNames(ModelPart modelPart) {
-		if ( modelPart instanceof EntityPersister entityPersister ) {
+	private String[] determineKeyColumnNames(TableGroup tableGroup) {
+		if ( tableGroup instanceof LockingTableGroup lockingTableGroup ) {
+			return extractColumnNames( lockingTableGroup.getKeyColumnMappings() );
+		}
+		else if ( tableGroup.getModelPart() instanceof EntityPersister entityPersister ) {
 			return entityPersister.getIdentifierColumnNames();
 		}
-		else if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping ) {
-			final ForeignKeyDescriptor keyDescriptor = pluralAttributeMapping.getKeyDescriptor();
-			final ValuedModelPart keyPart = keyDescriptor.getKeyPart();
-			if ( keyPart.getJdbcTypeCount() == 1 ) {
-				return new String[] { keyPart.getSelectable( 0 ).getSelectableName() };
-			}
-
-			final ArrayList<String> results = CollectionHelper.arrayList( keyPart.getJdbcTypeCount() );
-			keyPart.forEachSelectable( (index, selectable) -> {
-				if ( !selectable.isFormula() ) {
-					results.add( selectable.getSelectableName() );
-				}
-			} );
-			return results.toArray( new String[0] );
+		else if ( tableGroup.getModelPart() instanceof PluralAttributeMapping pluralAttributeMapping ) {
+			return extractColumnNames( pluralAttributeMapping.getKeyDescriptor() );
 		}
-		else if ( modelPart instanceof EntityAssociationMapping entityAssociationMapping ) {
-			return determineKeyColumnNames( entityAssociationMapping.getAssociatedEntityMappingType() );
+		else if ( tableGroup instanceof EntityAssociationMapping entityAssociationMapping ) {
+			return extractColumnNames( entityAssociationMapping.getForeignKeyDescriptor() );
 		}
 		else {
-			return null;
+			throw new AssertionFailure( "Unable to determine columns for locking" );
 		}
+	}
+
+	private static String[] extractColumnNames(SelectableMappings keyColumnMappings) {
+		if ( keyColumnMappings.getJdbcTypeCount() == 1 ) {
+			return new String[] { keyColumnMappings.getSelectable( 0 ).getSelectableName() };
+		}
+
+		final String[] results = new String[ keyColumnMappings.getJdbcTypeCount() ];
+		keyColumnMappings.forEachSelectable( (selectionIndex, selectableMapping) -> {
+			results[selectionIndex] = selectableMapping.getSelectableName();
+		} );
+		return results;
 	}
 }

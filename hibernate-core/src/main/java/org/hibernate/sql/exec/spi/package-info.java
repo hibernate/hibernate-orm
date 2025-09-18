@@ -18,7 +18,7 @@
  * {@linkplain org.hibernate.sql.exec.spi.JdbcSelect JDBC select} handling.  For details,
  * see {@linkplain org.hibernate.sql.exec.internal.JdbcSelectWithActions},
  * {@linkplain org.hibernate.sql.exec.spi.JdbcSelect#getLoadedValuesCollector()},
- * {@linkplain org.hibernate.sql.exec.internal.lock.FollowOnLockingAction}
+ * {@linkplain org.hibernate.sql.exec.internal.lock.LockingAction}
  * and friends.
  */
 @Incubating

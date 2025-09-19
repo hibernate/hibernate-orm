@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
+import static org.hibernate.query.sqm.tree.SqmCopyContext.simpleContext;
 
 /**
  * Standard implementation of MutationSpecification
@@ -124,7 +125,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, T
 	public MutationQuery createQuery(SharedSessionContract session) {
 		final var sessionImpl = session.unwrap(SharedSessionContractImplementor.class);
 		final SqmDeleteOrUpdateStatement<T> sqmStatement = build( sessionImpl.getFactory().getQueryEngine() );
-		return new SqmQueryImpl<>( sqmStatement, true, null, sessionImpl );
+		return new SqmQueryImpl<>( sqmStatement, false, null, sessionImpl );
 	}
 
 	private SqmDeleteOrUpdateStatement<T> build(QueryEngine queryEngine) {
@@ -135,7 +136,8 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, T
 			mutationTargetRoot = resolveSqmRoot( sqmStatement, mutationTarget );
 		}
 		else if ( deleteOrUpdateStatement != null ) {
-			sqmStatement = deleteOrUpdateStatement;
+			sqmStatement = (SqmDeleteOrUpdateStatement<T>) deleteOrUpdateStatement
+					.copy( simpleContext() );
 			mutationTargetRoot = resolveSqmRoot( sqmStatement,
 					sqmStatement.getTarget().getManagedType().getJavaType() );
 		}

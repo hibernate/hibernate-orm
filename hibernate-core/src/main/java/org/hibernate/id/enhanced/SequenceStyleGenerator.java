@@ -24,6 +24,7 @@ import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.SequenceMismatchStrategy;
+import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
@@ -151,6 +152,7 @@ public class SequenceStyleGenerator
 	private DatabaseStructure databaseStructure;
 	private Optimizer optimizer;
 	private Type identifierType;
+	private Table table;
 
 	/**
 	 * Getter for property 'databaseStructure'.
@@ -190,6 +192,7 @@ public class SequenceStyleGenerator
 		final var dialect = jdbcEnvironment.getDialect();
 
 		identifierType = creationContext.getType();
+		table = creationContext.getValue().getTable();
 
 		final var sequenceName = determineSequenceName( parameters, jdbcEnvironment, serviceRegistry );
 		final int initialValue = determineInitialValue( parameters );
@@ -329,6 +332,7 @@ public class SequenceStyleGenerator
 	@Override
 	public void registerExportables(Database database) {
 		databaseStructure.registerExportables( database );
+		databaseStructure.registerExtraExportables( table, optimizer );
 	}
 
 	@Override
@@ -380,7 +384,7 @@ public class SequenceStyleGenerator
 
 	/**
 	 * Determine the name of the column used to store the generator value in
-	 * the db.
+	 * the database.
 	 * <p>
 	 * Called during {@linkplain #configure configuration} <b>when resolving to a
 	 * physical table</b>.
@@ -409,8 +413,8 @@ public class SequenceStyleGenerator
 	}
 
 	/**
-	 * Determine the increment size to be applied.  The exact implications of
-	 * this value depends on the {@linkplain #getOptimizer() optimizer} being used.
+	 * Determine the increment size to be applied. The exact implications of
+	 * this value depend on the {@linkplain #getOptimizer() optimizer} in use.
 	 * <p>
 	 * Called during {@linkplain #configure configuration}.
 	 *
@@ -438,7 +442,7 @@ public class SequenceStyleGenerator
 
 	/**
 	 * In certain cases we need to adjust the increment size based on the
-	 * selected optimizer.  This is the hook to achieve that.
+	 * selected optimizer. This is the hook to achieve that.
 	 *
 	 * @param optimizationStrategy The optimizer strategy (name)
 	 * @param incrementSize The {@link #determineIncrementSize determined increment size}

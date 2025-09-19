@@ -603,6 +603,11 @@ public class Property implements Serializable, MetaAttributable {
 		}
 
 		@Override
+		public Value getValue() {
+			return value;
+		}
+
+		@Override
 		public SqlStringGenerationContext getSqlStringGenerationContext() {
 			return context.getSqlStringGenerationContext();
 		}

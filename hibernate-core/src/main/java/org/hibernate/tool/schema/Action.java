@@ -116,7 +116,17 @@ public enum Action {
 	 *
 	 * @since 7.0
 	 */
-	POPULATE;
+	POPULATE,
+	/**
+	 * Synchronize sequences with the data held in tables.
+	 *
+	 * @apiNote This action is not defined by JPA.
+	 *
+	 * @see org.hibernate.tool.schema.spi.SchemaPopulator
+	 *
+	 * @since 7.2
+	 */
+	SYNCHRONIZE;
 
 	/**
 	 * @see #NONE
@@ -150,6 +160,10 @@ public enum Action {
 	 * @see #POPULATE
 	 */
 	public static final String ACTION_POPULATE = "populate";
+	/**
+	 * @see #SYNCHRONIZE
+	 */
+	public static final String ACTION_SYNCHRONIZE = "synchronize";
 
 	/**
 	 * @see #NONE
@@ -197,6 +211,7 @@ public enum Action {
 			case VALIDATE -> ACTION_VALIDATE;
 			case UPDATE -> ACTION_UPDATE;
 			case POPULATE -> ACTION_POPULATE;
+			case SYNCHRONIZE -> ACTION_SYNCHRONIZE;
 			default -> null;
 		};
 	}

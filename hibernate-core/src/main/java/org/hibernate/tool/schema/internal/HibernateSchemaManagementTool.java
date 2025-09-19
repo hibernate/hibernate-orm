@@ -42,6 +42,7 @@ import org.hibernate.tool.schema.spi.SchemaMigrator;
 import org.hibernate.tool.schema.spi.SchemaPopulator;
 import org.hibernate.tool.schema.spi.SchemaTruncator;
 import org.hibernate.tool.schema.spi.SchemaValidator;
+import org.hibernate.tool.schema.spi.SequenceSynchronizer;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 import org.jboss.logging.Logger;
 
@@ -104,6 +105,11 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 	@Override
 	public SchemaPopulator getSchemaPopulator(Map<String, Object> options) {
 		return new SchemaPopulatorImpl( this );
+	}
+
+	@Override
+	public SequenceSynchronizer getSequenceSynchronizer(Map<String, Object> options) {
+		return new SequenceSynchronizerImpl( this, getSchemaFilterProvider( options ).getMigrateFilter() );
 	}
 
 	@Override

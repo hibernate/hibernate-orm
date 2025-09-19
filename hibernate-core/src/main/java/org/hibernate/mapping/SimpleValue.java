@@ -422,7 +422,7 @@ public abstract class SimpleValue implements KeyValue {
 			Property property,
 			GeneratorSettings defaults) {
 		if ( customIdGeneratorCreator != null ) {
-			final var context = new IdGeneratorCreationContext( rootClass, property, defaults );
+			final var context = new IdGeneratorCreationContext( this, rootClass, property, defaults );
 			final var generator = customIdGeneratorCreator.createGenerator( context );
 			if ( generator.allowAssignedIdentifiers() && nullValue == null ) {
 				setNullValueUndefined();
@@ -1074,11 +1074,13 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	private class IdGeneratorCreationContext implements GeneratorCreationContext {
+		private final SimpleValue identifier;
 		private final RootClass rootClass;
 		private final Property property;
 		private final GeneratorSettings defaults;
 
-		public IdGeneratorCreationContext(RootClass rootClass, Property property, GeneratorSettings defaults) {
+		public IdGeneratorCreationContext(SimpleValue identifier, RootClass rootClass, Property property, GeneratorSettings defaults) {
+			this.identifier = identifier;
 			this.rootClass = rootClass;
 			this.property = property;
 			this.defaults = defaults;
@@ -1122,6 +1124,11 @@ public abstract class SimpleValue implements KeyValue {
 		@Override
 		public Property getProperty() {
 			return property;
+		}
+
+		@Override
+		public Value getValue() {
+			return identifier;
 		}
 
 		@Override

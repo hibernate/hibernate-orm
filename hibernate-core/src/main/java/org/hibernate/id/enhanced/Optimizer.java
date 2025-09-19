@@ -58,7 +58,7 @@ public interface Optimizer {
 	 *
 	 * @return True if the values in the source are to be incremented
 	 * according to the defined increment size; false otherwise, in which
-	 * case the increment is totally an in memory construct.
+	 * case the increment size is a completely in-memory construct.
 	 */
 	boolean applyIncrementSizeToSourceValues();
 
@@ -75,4 +75,11 @@ public interface Optimizer {
 	 * @since 7.1
 	 */
 	Expression createLowValueExpression(Expression databaseValue, SessionFactoryImplementor sessionFactory);
+
+	/**
+	 * @since 7.2
+	 */
+	default int getAdjustment() {
+		return 1;
+	}
 }

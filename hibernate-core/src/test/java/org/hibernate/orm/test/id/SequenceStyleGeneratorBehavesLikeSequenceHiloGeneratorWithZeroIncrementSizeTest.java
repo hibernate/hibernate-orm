@@ -19,9 +19,12 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.Table;
+import org.hibernate.mapping.Value;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
@@ -43,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @RequiresDialectFeature(feature = SupportsSequences.class)
 @BaseUnitTest
-public class SequenceStyleGeneratorBehavesLikeSequeceHiloGeneratorWitZeroIncrementSizeTest {
+public class SequenceStyleGeneratorBehavesLikeSequenceHiloGeneratorWithZeroIncrementSizeTest {
 	private static final String TEST_SEQUENCE = "test_sequence";
 
 	private StandardServiceRegistry serviceRegistry;
@@ -102,6 +105,11 @@ public class SequenceStyleGeneratorBehavesLikeSequeceHiloGeneratorWitZeroIncreme
 					@Override
 					public Property getProperty() {
 						return null;
+					}
+
+					@Override
+					public Value getValue() {
+						return new BasicValue( buildingContext, new Table() );
 					}
 
 					@Override

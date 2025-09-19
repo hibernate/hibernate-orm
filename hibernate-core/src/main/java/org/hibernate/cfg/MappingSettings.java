@@ -118,7 +118,7 @@ public interface MappingSettings {
 	String KEYWORD_AUTO_QUOTING_ENABLED = "hibernate.auto_quote_keyword";
 
 	/**
-	 * When a generator specifies an increment-size and an optimizer was not explicitly
+	 * When a generator specifies an increment size and an optimizer was not explicitly
 	 * specified, which of the "pooled" optimizers should be preferred? Can specify an
 	 * optimizer short name or the name of a class which implements
 	 * {@link org.hibernate.id.enhanced.Optimizer}.

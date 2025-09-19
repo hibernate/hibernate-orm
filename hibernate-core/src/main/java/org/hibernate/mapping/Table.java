@@ -5,6 +5,7 @@
 package org.hibernate.mapping;
 
 import java.io.Serializable;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -12,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.hibernate.Incubating;
@@ -72,6 +74,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	private String options;
 
 	private List<Function<SqlStringGenerationContext, InitCommand>> initCommandProducers;
+	private List<BiFunction<SqlStringGenerationContext, Connection, InitCommand>> resyncCommandProducers;
 
 	@Deprecated(since="6.2", forRemoval = true)
 	public Table() {
@@ -808,16 +811,28 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public List<InitCommand> getInitCommands(SqlStringGenerationContext context) {
-		if ( initCommandProducers == null ) {
-			return emptyList();
+		return initCommandProducers == null
+				? emptyList()
+				: initCommandProducers.stream()
+						.map( producer -> producer.apply( context ) )
+						.toList();
+	}
+
+	public void addResyncCommand(BiFunction<SqlStringGenerationContext, Connection, InitCommand> commandProducer) {
+		if ( resyncCommandProducers == null ) {
+			resyncCommandProducers = new ArrayList<>();
 		}
-		else {
-			final List<InitCommand> initCommands = new ArrayList<>();
-			for ( Function<SqlStringGenerationContext, InitCommand> producer : initCommandProducers ) {
-				initCommands.add( producer.apply( context ) );
-			}
-			return unmodifiableList( initCommands );
-		}
+		resyncCommandProducers.add( commandProducer );
+	}
+
+	public List<InitCommand> getResyncCommands(SqlStringGenerationContext context, Connection connection) {
+		return resyncCommandProducers == null
+				? emptyList()
+				: resyncCommandProducers.stream()
+						.map( producer -> producer.apply( context, connection ) )
+						.distinct()
+						.toList();
+
 	}
 
 	public String getOptions() {

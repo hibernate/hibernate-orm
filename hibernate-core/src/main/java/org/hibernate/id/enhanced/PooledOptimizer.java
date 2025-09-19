@@ -61,8 +61,7 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 	public Serializable generate(AccessCallback callback) {
 		lock.lock();
 		try {
-			final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
-
+			final var generationState = locateGenerationState( callback.getTenantIdentifier() );
 			if ( generationState.hiValue == null ) {
 				generationState.hiValue = callback.getNextValue();
 				// unfortunately not really safe to normalize this
@@ -86,7 +85,6 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 				generationState.hiValue = callback.getNextValue();
 				generationState.value = generationState.hiValue.copy().subtract( incrementSize - 1 );
 			}
-
 			return generationState.value.makeValueThenIncrement();
 		}
 		finally {
@@ -174,5 +172,10 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 				new QueryLiteral<>( incrementSize - 1, integerType ),
 				integerType
 		);
+	}
+
+	@Override
+	public int getAdjustment() {
+		return incrementSize;
 	}
 }

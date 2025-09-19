@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
@@ -332,5 +333,54 @@ public class TableStructure implements DatabaseStructure {
 		updateQuery = "update " + formattedPhysicalTableName +
 				" set " + valueColumnNameText + "= ?" +
 				" where " + valueColumnNameText + "=?";
+	}
+
+	@Override
+	public void registerExtraExportables(Table table, Optimizer optimizer) {
+		table.addResyncCommand( (context, connection) -> {
+			final String sequenceTableName = context.format( physicalTableName );
+			final String tableName = context.format( table.getQualifiedTableName() );
+			final String primaryKeyColumnName = table.getPrimaryKey().getColumn( 0 ).getName();
+			final int adjustment = optimizer.getAdjustment();
+			final long max = getMax( connection, primaryKeyColumnName, tableName );
+			final long current = getCurrent( connection, sequenceTableName );
+			if ( max + adjustment > current ) {
+				final String update =
+						"update " + sequenceTableName
+						+ " set " + valueColumnNameText + " = " + (max + adjustment);
+				return new InitCommand( update );
+			}
+			else {
+				return new InitCommand();
+			}
+		} );
+	}
+
+	private long getCurrent(Connection connection, String sequenceTableName) {
+		final String selectCurrent =
+				"select " + valueColumnNameText + " from " + sequenceTableName;
+		try ( var select = connection.prepareStatement( selectCurrent ) ) {
+			try ( var resultSet = select.executeQuery() ) {
+				resultSet.next();
+				return resultSet.getLong(1);
+			}
+		}
+		catch (SQLException e) {
+			throw new HibernateException( "Could not fetch the current sequence value from the database", e );
+		}
+	}
+
+	private static long getMax(Connection connection, String primaryKeyColumnName, String tableName) {
+		final String selectMax =
+				"select max(" + primaryKeyColumnName + ") from " + tableName;
+		try ( var select = connection.prepareStatement( selectMax ) ) {
+			try ( var resultSet = select.executeQuery() ) {
+				resultSet.next();
+				return resultSet.getLong(1);
+			}
+		}
+		catch (SQLException e) {
+			throw new HibernateException( "Could not fetch the max primary key from the database", e );
+		}
 	}
 }

@@ -63,26 +63,25 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 		);
 		final JdbcContext jdbcContext = tool.resolveJdbcContext( options.getConfigurationValues() );
 
-		final DdlTransactionIsolator isolator = tool.getDdlTransactionIsolator( jdbcContext );
-		final DatabaseInformation databaseInformation = Helper.buildDatabaseInformation(
-				tool.getServiceRegistry(),
-				isolator,
-				context,
-				tool
-		);
+		try ( DdlTransactionIsolator isolator = tool.getDdlTransactionIsolator( jdbcContext ) ) {
+			final DatabaseInformation databaseInformation = Helper.buildDatabaseInformation(
+					tool.getServiceRegistry(),
+					isolator,
+					context,
+					tool
+			);
 
-		try {
-			performValidation( metadata, databaseInformation, options, contributableInclusionFilter, jdbcContext.getDialect() );
-		}
-		finally {
 			try {
-				databaseInformation.cleanup();
+				performValidation( metadata, databaseInformation, options, contributableInclusionFilter, jdbcContext.getDialect() );
 			}
-			catch (Exception e) {
-				LOG.debug( "Problem releasing DatabaseInformation: " + e.getMessage() );
+			finally {
+				try {
+					databaseInformation.cleanup();
+				}
+				catch (Exception e) {
+					LOG.debug( "Problem releasing DatabaseInformation: " + e.getMessage() );
+				}
 			}
-
-			isolator.release();
 		}
 	}
 

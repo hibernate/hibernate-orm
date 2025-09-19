@@ -14,6 +14,7 @@ import org.hibernate.Timeouts;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.engine.jdbc.Size;
@@ -72,7 +73,6 @@ import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlTreeCreationException;
-import org.hibernate.sql.exec.internal.LockTimeoutHandler;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
 import org.hibernate.sql.ast.internal.TableGroupHelper;
 import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
@@ -173,20 +173,24 @@ import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.ExecutionException;
 import org.hibernate.sql.exec.internal.AbstractJdbcParameter;
+import org.hibernate.sql.exec.internal.JdbcOperationQueryDelete;
 import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
+import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
+import org.hibernate.sql.exec.internal.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcSelectWithActions;
+import org.hibernate.sql.exec.internal.LockTimeoutHandler;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
+import org.hibernate.sql.exec.internal.lock.CollectionLockingAction;
+import org.hibernate.sql.exec.internal.lock.FollowOnLockingAction;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcLockStrategy;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.sql.exec.internal.JdbcOperationQueryDelete;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
-import org.hibernate.sql.exec.internal.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
@@ -199,10 +203,6 @@ import org.hibernate.sql.model.internal.TableInsertCustomSql;
 import org.hibernate.sql.model.internal.TableInsertStandard;
 import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
-import org.hibernate.sql.exec.internal.lock.LockingAction;
-import org.hibernate.sql.exec.internal.lock.LoadedValuesCollectorImpl;
-import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.exec.spi.LoadedValuesCollector;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.type.BasicType;
@@ -907,49 +907,21 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		final LockStrategy lockStrategy = determineLockingStrategy( lockingTarget, lockOptions.getFollowOnStrategy() );
 		if ( lockStrategy == LockStrategy.FOLLOW_ON ) {
-			applyFollowOnLockingActions( lockOptions, lockingTarget, lockingClauseStrategy, builder );
+			FollowOnLockingAction.apply( lockOptions, lockingTarget, lockingClauseStrategy, builder );
+		}
+		else {
+			if ( lockOptions.getScope() == Locking.Scope.INCLUDE_COLLECTIONS ) {
+				if ( dialect.getLockingSupport().getMetadata().getPessimisticLockStyle() == PessimisticLockStyle.TABLE_HINT ) {
+					// we have a case where include-collection scope was requested.
+					// generally this would be handled by follow-on locking process, but because
+					// the Dialect supports "table hint locking" we will always skip follow-on
+					// locking.  therefore, we need to handle the collection-table locking explicitly.
+					CollectionLockingAction.apply( lockOptions, lockingTarget, builder );
+				}
+			}
 		}
 
 		return builder.build();
-	}
-
-	private void applyFollowOnLockingActions(
-			LockOptions lockOptions,
-			QuerySpec lockingTarget,
-			LockingClauseStrategy lockingClauseStrategy,
-			JdbcSelectWithActions.Builder jdbcSelectBuilder) {
-		final FromClause fromClause = lockingTarget.getFromClause();
-		final var loadedValuesCollector = resolveLoadedValuesCollector( fromClause, lockingClauseStrategy );
-
-		// NOTE: we need to set this separately so that it can get incorporated into
-		// the JdbcValuesSourceProcessingState for proper callbacks
-		jdbcSelectBuilder.setLoadedValuesCollector( loadedValuesCollector );
-
-		// additionally, add a post-action which uses the collected values.
-		jdbcSelectBuilder.appendPostAction( new LockingAction(
-				loadedValuesCollector,
-				lockOptions.getLockMode(),
-				lockOptions.getTimeout(),
-				lockOptions.getScope()
-		) );
-	}
-
-	protected static LoadedValuesCollector resolveLoadedValuesCollector(
-			FromClause fromClause,
-			LockingClauseStrategy lockingClauseStrategy) {
-		final List<TableGroup> roots = fromClause.getRoots();
-		if ( roots.size() == 1 ) {
-			return new LoadedValuesCollectorImpl(
-					List.of( roots.get( 0 ).getNavigablePath() ),
-					lockingClauseStrategy
-			);
-		}
-		else {
-			return new LoadedValuesCollectorImpl(
-					roots.stream().map( TableGroup::getNavigablePath ).toList(),
-					lockingClauseStrategy
-			);
-		}
 	}
 
 	private JdbcValuesMappingProducer buildJdbcValuesMappingProducer(SelectStatement selectStatement) {

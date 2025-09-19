@@ -21,7 +21,7 @@ import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
-import org.hibernate.sql.exec.internal.lock.LockingAction;
+import org.hibernate.sql.exec.internal.lock.FollowOnLockingAction;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcLockStrategy;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
@@ -158,7 +158,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 	 * For Hibernate Reactive
 	 *
 	 * @deprecated Was only used for follow-on locking, which is now handled differently;
-	 * see {@linkplain LockingAction}
+	 * see {@linkplain FollowOnLockingAction}
 	 */
 	@Deprecated(since = "7.2", forRemoval = true)
 	protected void registerAfterLoadAction(ExecutionContext executionContext, LockOptions lockOptionsToUse) {

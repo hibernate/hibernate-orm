@@ -193,11 +193,12 @@ public class FollowOnLockingTests {
 		factoryScope.inTransaction( (session) -> {
 			session.find( Team.class, 1, PESSIMISTIC_WRITE, Locking.Scope.INCLUDE_COLLECTIONS, FORCE );
 			if ( usesTableHints( session.getDialect() ) ) {
-				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
+				// the initial query (w/ lock teams), lock persons
+				assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
 			}
 			else {
 				// the initial query, lock teams, lock persons
-				assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
+				assertThat( sqlCollector.getSqlQueries() ).hasSize( 3 );
 			}
 		} );
 
@@ -244,7 +245,8 @@ public class FollowOnLockingTests {
 					.setFollowOnStrategy( FORCE )
 					.list();
 			if ( usesTableHints( session.getDialect() ) ) {
-				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
+				// the initial query (w/ lock teams), lock persons
+				assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
 			}
 			else {
 				// the initial query, lock teams, lock persons
@@ -317,7 +319,8 @@ public class FollowOnLockingTests {
 		factoryScope.inTransaction( (session) -> {
 			session.find( Post.class, 1, PESSIMISTIC_WRITE, Locking.Scope.INCLUDE_COLLECTIONS, FORCE );
 			if ( usesTableHints( session.getDialect() ) ) {
-				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
+				// the initial query (w/ lock posts), lock tags
+				assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
 			}
 			else {
 				// the initial query, lock posts, lock tags
@@ -367,7 +370,8 @@ public class FollowOnLockingTests {
 					.setFollowOnStrategy( FORCE )
 					.list();
 			if ( usesTableHints( session.getDialect() ) ) {
-				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
+				// the initial query (w/ lock posts), lock tags
+				assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
 			}
 			else {
 				// the initial query, lock posts, lock tags

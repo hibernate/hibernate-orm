@@ -5,12 +5,17 @@
 package org.hibernate.sql.exec.internal.lock;
 
 import jakarta.persistence.Timeout;
+import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -40,8 +45,12 @@ import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.exec.spi.LoadedValuesCollector;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 
 import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
@@ -251,5 +260,43 @@ public class LockingHelper {
 			} );
 		}
 		return paths;
+	}
+
+	/**
+	 * Collect loaded entities by type.
+	 */
+	public static Map<EntityMappingType, List<EntityKey>> segmentLoadedValues(LoadedValuesCollector loadedValuesCollector) {
+		final Map<EntityMappingType, List<EntityKey>> map = new IdentityHashMap<>();
+		segmentLoadedValues( loadedValuesCollector.getCollectedRootEntities(), map );
+		segmentLoadedValues( loadedValuesCollector.getCollectedNonRootEntities(), map );
+		if ( map.isEmpty() ) {
+			throw new AssertionFailure( "Expecting some values" );
+		}
+		return map;
+	}
+
+	private static void segmentLoadedValues(List<LoadedValuesCollector.LoadedEntityRegistration> registrations, Map<EntityMappingType, List<EntityKey>> map) {
+		if ( registrations == null ) {
+			return;
+		}
+
+		registrations.forEach( (registration) -> {
+			final List<EntityKey> entityKeys = map.computeIfAbsent(
+					registration.entityDescriptor(),
+					entityMappingType -> new ArrayList<>()
+			);
+			entityKeys.add( registration.entityKey() );
+		} );
+	}
+
+	public static Map<Object, EntityDetails> resolveEntityKeys(List<EntityKey> entityKeys, ExecutionContext executionContext) {
+		final Map<Object, EntityDetails> map = new HashMap<>();
+		final PersistenceContext persistenceContext = executionContext.getSession().getPersistenceContext();
+		entityKeys.forEach( (entityKey) -> {
+			final Object instance = persistenceContext.getEntity( entityKey );
+			final EntityEntry entry = persistenceContext.getEntry( instance );
+			map.put( entityKey.getIdentifierValue(), new EntityDetails( entityKey, entry, instance ) );
+		} );
+		return map;
 	}
 }

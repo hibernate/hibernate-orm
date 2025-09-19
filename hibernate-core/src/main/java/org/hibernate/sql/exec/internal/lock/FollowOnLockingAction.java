@@ -7,12 +7,12 @@ package org.hibernate.sql.exec.internal.lock;
 import jakarta.persistence.Timeout;
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.Locking;
 import org.hibernate.Timeouts;
+import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -24,16 +24,21 @@ import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
+import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
+import org.hibernate.sql.ast.tree.from.FromClause;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.exec.internal.JdbcSelectWithActions;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.StatementAccess;
 import org.hibernate.sql.exec.spi.LoadedValuesCollector;
-import org.hibernate.sql.exec.spi.LoadedValuesCollector.LoadedEntityRegistration;
 import org.hibernate.sql.exec.spi.PostAction;
 
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -49,14 +54,14 @@ import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
  *
  * @author Steve Ebersole
  */
-public class LockingAction implements PostAction {
-	private final LoadedValuesCollector loadedValuesCollector;
+public class FollowOnLockingAction implements PostAction {
+	private final LoadedValuesCollectorImpl loadedValuesCollector;
 	private final LockMode lockMode;
 	private final Timeout lockTimeout;
 	private final Locking.Scope lockScope;
 
-	public LockingAction(
-			LoadedValuesCollector loadedValuesCollector,
+	private FollowOnLockingAction(
+			LoadedValuesCollectorImpl loadedValuesCollector,
 			LockMode lockMode,
 			Timeout lockTimeout,
 			Locking.Scope lockScope) {
@@ -64,6 +69,27 @@ public class LockingAction implements PostAction {
 		this.lockMode = lockMode;
 		this.lockTimeout = lockTimeout;
 		this.lockScope = lockScope;
+	}
+
+	public static void apply(
+			LockOptions lockOptions,
+			QuerySpec lockingTarget,
+			LockingClauseStrategy lockingClauseStrategy,
+			JdbcSelectWithActions.Builder jdbcSelectBuilder) {
+		final FromClause fromClause = lockingTarget.getFromClause();
+		final var loadedValuesCollector = resolveLoadedValuesCollector( fromClause, lockingClauseStrategy );
+
+		// NOTE: we need to set this separately so that it can get incorporated into
+		// the JdbcValuesSourceProcessingState for proper callbacks
+		jdbcSelectBuilder.setLoadedValuesCollector( loadedValuesCollector );
+
+		// additionally, add a post-action which uses the collected values.
+		jdbcSelectBuilder.appendPostAction( new FollowOnLockingAction(
+				loadedValuesCollector,
+				lockOptions.getLockMode(),
+				lockOptions.getTimeout(),
+				lockOptions.getScope()
+		) );
 	}
 
 	@Override
@@ -104,7 +130,7 @@ public class LockingAction implements PostAction {
 
 				// create a cross-reference of information related to an entity based on its identifier,
 				// we'll use this later when we adjust the state array and inject state into the entity instance.
-				final Map<Object, EntityDetails> entityDetailsMap = resolveEntityKeys( entityKeys, executionContext );
+				final Map<Object, EntityDetails> entityDetailsMap = LockingHelper.resolveEntityKeys( entityKeys, executionContext );
 
 				entityMappingType.forEachAttributeMapping( (index, attributeMapping) -> {
 					if ( attributeMapping instanceof PluralAttributeMapping pluralAttributeMapping ) {
@@ -187,27 +213,7 @@ public class LockingAction implements PostAction {
 	 * Collect loaded entities by type
 	 */
 	private Map<EntityMappingType, List<EntityKey>> segmentLoadedValues() {
-		final Map<EntityMappingType, List<EntityKey>> map = new IdentityHashMap<>();
-		segmentLoadedValues( loadedValuesCollector.getCollectedRootEntities(), map );
-		segmentLoadedValues( loadedValuesCollector.getCollectedNonRootEntities(), map );
-		if ( map.isEmpty() ) {
-			throw new AssertionFailure( "Expecting some values" );
-		}
-		return map;
-	}
-
-	private void segmentLoadedValues(List<LoadedEntityRegistration> registrations, Map<EntityMappingType, List<EntityKey>> map) {
-		if ( registrations == null ) {
-			return;
-		}
-
-		registrations.forEach( (registration) -> {
-			final List<EntityKey> entityKeys = map.computeIfAbsent(
-					registration.entityDescriptor(),
-					entityMappingType -> new ArrayList<>()
-			);
-			entityKeys.add( registration.entityKey() );
-		} );
+		return LockingHelper.segmentLoadedValues( loadedValuesCollector );
 	}
 
 	private Map<String, TableLock> prepareTableLocks(
@@ -226,15 +232,95 @@ public class LockingAction implements PostAction {
 		return new TableLock( tableDetails, entityMappingType, entityKeys, session );
 	}
 
-	private Map<Object, EntityDetails> resolveEntityKeys(List<EntityKey> entityKeys, ExecutionContext executionContext) {
-		final Map<Object, EntityDetails> map = new HashMap<>();
-		final PersistenceContext persistenceContext = executionContext.getSession().getPersistenceContext();
-		entityKeys.forEach( (entityKey) -> {
-			final Object instance = persistenceContext.getEntity( entityKey );
-			final EntityEntry entry = persistenceContext.getEntry( instance );
-			map.put( entityKey.getIdentifierValue(), new EntityDetails( entityKey, entry, instance ) );
-		} );
-		return map;
+	private static LoadedValuesCollectorImpl resolveLoadedValuesCollector(
+			FromClause fromClause,
+			LockingClauseStrategy lockingClauseStrategy) {
+		final List<TableGroup> roots = fromClause.getRoots();
+		if ( roots.size() == 1 ) {
+			return new LoadedValuesCollectorImpl(
+					List.of( roots.get( 0 ).getNavigablePath() ),
+					lockingClauseStrategy
+			);
+		}
+		else {
+			return new LoadedValuesCollectorImpl(
+					roots.stream().map( TableGroup::getNavigablePath ).toList(),
+					lockingClauseStrategy
+			);
+		}
 	}
 
+	public static class LoadedValuesCollectorImpl implements LoadedValuesCollector {
+		private final List<NavigablePath> rootPaths;
+		private final Collection<NavigablePath> pathsToLock;
+
+		private List<LoadedEntityRegistration> rootEntitiesToLock;
+		private List<LoadedEntityRegistration> nonRootEntitiesToLock;
+		private List<LoadedCollectionRegistration> collectionsToLock;
+
+		public LoadedValuesCollectorImpl(List<NavigablePath> rootPaths, LockingClauseStrategy lockingClauseStrategy) {
+			this.rootPaths = rootPaths;
+			pathsToLock = LockingHelper.extractPathsToLock( lockingClauseStrategy );
+		}
+
+		@Override
+		public void registerEntity(NavigablePath navigablePath, EntityMappingType entityDescriptor, EntityKey entityKey) {
+			if ( !pathsToLock.contains( navigablePath ) ) {
+				return;
+			}
+
+			if ( rootPaths.contains( navigablePath ) ) {
+				if ( rootEntitiesToLock == null ) {
+					rootEntitiesToLock = new ArrayList<>();
+				}
+				rootEntitiesToLock.add( new LoadedEntityRegistration( navigablePath, entityDescriptor, entityKey ) );
+			}
+			else {
+				if ( nonRootEntitiesToLock == null ) {
+					nonRootEntitiesToLock = new ArrayList<>();
+				}
+				nonRootEntitiesToLock.add( new LoadedEntityRegistration( navigablePath, entityDescriptor, entityKey ) );
+			}
+		}
+
+		@Override
+		public void registerCollection(NavigablePath navigablePath, PluralAttributeMapping collectionDescriptor, CollectionKey collectionKey) {
+			if ( !pathsToLock.contains( navigablePath ) ) {
+				return;
+			}
+
+			if ( collectionsToLock == null ) {
+				collectionsToLock = new ArrayList<>();
+			}
+			collectionsToLock.add( new LoadedCollectionRegistration( navigablePath, collectionDescriptor, collectionKey ) );
+		}
+
+		@Override
+		public void clear() {
+			if ( rootEntitiesToLock != null ) {
+				rootEntitiesToLock.clear();
+			}
+			if ( nonRootEntitiesToLock != null ) {
+				nonRootEntitiesToLock.clear();
+			}
+			if ( collectionsToLock != null ) {
+				collectionsToLock.clear();
+			}
+		}
+
+		@Override
+		public List<LoadedEntityRegistration> getCollectedRootEntities() {
+			return rootEntitiesToLock;
+		}
+
+		@Override
+		public List<LoadedEntityRegistration> getCollectedNonRootEntities() {
+			return nonRootEntitiesToLock;
+		}
+
+		@Override
+		public List<LoadedCollectionRegistration> getCollectedCollections() {
+			return collectionsToLock;
+		}
+	}
 }

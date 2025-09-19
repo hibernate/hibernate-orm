@@ -98,7 +98,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
  *   <tr>
  *     <td>{@value #VALUE_COLUMN_PARAM}</td>
  *     <td>{@value #DEF_VALUE_COLUMN}</td>
- *     <td>The name of column which holds the sequence value for the given segment</td>
+ *     <td>The name of the column which holds the sequence value for the given segment</td>
  *   </tr>
  * </table>
  *

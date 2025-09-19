@@ -12,6 +12,7 @@ import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.transaction.TransactionUtil;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -144,6 +145,32 @@ public class Helper {
 				case BOOK_GENRES, BOOK_AUTHORS -> "book_fk";
 				case REPORT_LABELS -> "report_fk";
 			};
+		}
+
+		public String getCheckColumnName() {
+			return switch ( this ) {
+				case BOOKS, REPORTS -> "title";
+				case PERSONS, JOINED_REPORTER, PUBLISHER -> "name";
+				case REPORT_LABELS -> "txt";
+				case BOOK_GENRES -> "genre";
+				case BOOK_AUTHORS -> "idx";
+			};
+		}
+
+		public void checkLocked(Number keyValue, boolean expectedToBeLocked, SessionFactoryScope factoryScope) {
+			if ( this == BOOK_AUTHORS ) {
+				TransactionUtil.deleteRow( factoryScope, getTableName(), expectedToBeLocked );
+			}
+			else {
+				TransactionUtil.assertRowLock(
+						factoryScope,
+						getTableName(),
+						getCheckColumnName(),
+						getKeyColumnName(),
+						keyValue,
+						expectedToBeLocked
+				);
+			}
 		}
 	}
 

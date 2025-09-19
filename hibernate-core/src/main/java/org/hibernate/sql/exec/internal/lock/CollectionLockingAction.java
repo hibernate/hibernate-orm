@@ -29,6 +29,7 @@ import org.hibernate.sql.exec.spi.StatementAccess;
 
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -146,6 +147,17 @@ public class CollectionLockingAction implements PostAction {
 					roots.stream().map( TableGroup::getNavigablePath ).toList()
 			);
 		}
+	}
+
+	private static Map<EntityMappingType, List<EntityKey>> segmentLoadedValues(LoadedValuesCollector loadedValuesCollector) {
+		final Map<EntityMappingType, List<EntityKey>> map = new IdentityHashMap<>();
+		LockingHelper.segmentLoadedValues( loadedValuesCollector.getCollectedRootEntities(), map );
+		LockingHelper.segmentLoadedValues( loadedValuesCollector.getCollectedNonRootEntities(), map );
+		if ( map.isEmpty() ) {
+			// NOTE: this may happen with Session#lock routed through SqlAstBasedLockingStrategy.
+			// however, we cannot tell that is the code path from here.
+		}
+		return map;
 	}
 
 	private static class LoadedValuesCollectorImpl implements LoadedValuesCollector {

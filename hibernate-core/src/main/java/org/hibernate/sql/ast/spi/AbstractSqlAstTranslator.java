@@ -14,7 +14,6 @@ import org.hibernate.Timeouts;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
-import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.engine.jdbc.Size;
@@ -909,16 +908,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( lockStrategy == LockStrategy.FOLLOW_ON ) {
 			FollowOnLockingAction.apply( lockOptions, lockingTarget, lockingClauseStrategy, builder );
 		}
-		else {
-			if ( lockOptions.getScope() == Locking.Scope.INCLUDE_COLLECTIONS ) {
-				if ( dialect.getLockingSupport().getMetadata().getPessimisticLockStyle() == PessimisticLockStyle.TABLE_HINT ) {
-					// we have a case where include-collection scope was requested.
-					// generally this would be handled by follow-on locking process, but because
-					// the Dialect supports "table hint locking" we will always skip follow-on
-					// locking.  therefore, we need to handle the collection-table locking explicitly.
-					CollectionLockingAction.apply( lockOptions, lockingTarget, builder );
-				}
-			}
+		else if ( lockOptions.getScope() == Locking.Scope.INCLUDE_COLLECTIONS ) {
+			CollectionLockingAction.apply( lockOptions, lockingTarget, builder );
 		}
 
 		return builder.build();

@@ -39,6 +39,7 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -209,11 +210,14 @@ public class FollowOnLockingAction implements PostAction {
 		return lockingQueryOptions;
 	}
 
-	/**
-	 * Collect loaded entities by type
-	 */
 	private Map<EntityMappingType, List<EntityKey>> segmentLoadedValues() {
-		return LockingHelper.segmentLoadedValues( loadedValuesCollector );
+		final Map<EntityMappingType, List<EntityKey>> map = new IdentityHashMap<>();
+		LockingHelper.segmentLoadedValues( loadedValuesCollector.getCollectedRootEntities(), map );
+		LockingHelper.segmentLoadedValues( loadedValuesCollector.getCollectedNonRootEntities(), map );
+		if ( map.isEmpty() ) {
+			throw new AssertionFailure( "Expecting some values" );
+		}
+		return map;
 	}
 
 	private Map<String, TableLock> prepareTableLocks(

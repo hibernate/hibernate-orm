@@ -8,6 +8,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
 import org.hibernate.StaleObjectStateException;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.LockingStrategyException;
 import org.hibernate.dialect.lock.PessimisticEntityLockException;
@@ -23,6 +24,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
@@ -34,6 +36,7 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.internal.lock.LockingHelper;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
@@ -176,6 +179,19 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 					1,
 					SingleResultConsumer.instance()
 			);
+
+			if ( lockOptions.getScope() == Locking.Scope.INCLUDE_COLLECTIONS ) {
+				SqmMutationStrategyHelper.visitCollectionTables( entityToLock, (attribute) -> {
+					final PersistentCollection<?> collectionToLock = (PersistentCollection<?>) attribute.getValue( object );
+					LockingHelper.lockCollectionTable(
+							attribute,
+							lockMode,
+							lockOptions.getTimeout(),
+							collectionToLock,
+							lockingExecutionContext
+					);
+				} );
+			}
 		}
 		catch (LockTimeoutException e) {
 			throw new PessimisticEntityLockException(

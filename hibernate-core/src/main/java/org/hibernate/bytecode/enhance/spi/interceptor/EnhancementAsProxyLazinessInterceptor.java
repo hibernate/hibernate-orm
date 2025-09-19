@@ -300,6 +300,13 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractInterceptor i
 		return writtenFieldNames != null && !writtenFieldNames.isEmpty();
 	}
 
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected boolean isIdentifier(String attributeName) {
+		return meta.identifierAttributeNames.contains( attributeName );
+	}
+
 	private enum Status {
 		UNINITIALIZED,
 		INITIALIZING,

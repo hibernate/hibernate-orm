@@ -205,13 +205,12 @@ public class EntityMetamodel implements Serializable {
 				idAttributeNames = singleton( identifierAttribute.getName() );
 			}
 
-			bytecodeEnhancementMetadata = BytecodeEnhancementMetadataPojoImpl.from(
+			bytecodeEnhancementMetadata = getBytecodeEnhancementMetadataPojo(
 					persistentClass,
+					creationContext,
 					idAttributeNames,
 					nonAggregatedCidMapper,
-					collectionsInDefaultFetchGroupEnabled,
-					creationContext.getMetadata()
-			);
+					collectionsInDefaultFetchGroupEnabled );
 		}
 		else {
 			bytecodeEnhancementMetadata = new BytecodeEnhancementMetadataNonPojoImpl( persistentClass.getEntityName() );
@@ -510,6 +509,19 @@ public class EntityMetamodel implements Serializable {
 //			}
 //		}
 //		entityNameByInheritanceClassMap = toSmallMap( entityNameByInheritanceClassMapLocal );
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected BytecodeEnhancementMetadata getBytecodeEnhancementMetadataPojo(PersistentClass persistentClass, RuntimeModelCreationContext creationContext, Set<String> idAttributeNames, CompositeType nonAggregatedCidMapper, boolean collectionsInDefaultFetchGroupEnabled) {
+		return BytecodeEnhancementMetadataPojoImpl.from(
+				persistentClass,
+				idAttributeNames,
+				nonAggregatedCidMapper,
+				collectionsInDefaultFetchGroupEnabled,
+				creationContext.getMetadata()
+		);
 	}
 
 	private static boolean writePropertyValue(OnExecutionGenerator generator) {

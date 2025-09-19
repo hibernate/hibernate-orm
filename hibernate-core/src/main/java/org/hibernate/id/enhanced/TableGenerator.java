@@ -58,12 +58,10 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 /**
  * An enhanced version of table-based id generation.
  * <p>
- * Unlike the simplistic legacy one (which  was only ever intended for subclassing
- * support) we "segment" the table into multiple values.  Thus, a single table can
- * actually serve as the persistent storage for multiple independent generators.  One
- * approach would be to segment the values by the name of the entity for which we are
- * performing generation, which would mean that we would have a row in the generator
- * table for each entity name.  Or any configuration really; the setup is very flexible.
+ * A single table may serve as the persistent storage for multiple independent generators.
+ * For example, we might segment the generated values by the name of the entity for which
+ * we are generation ids. This, we would have a row in the generator table for each entity
+ * name. Other approaches are also possible.
  * <p>
  * By default, we use a single row for all generators (the {@value #DEF_SEGMENT_VALUE}
  * segment). The configuration parameter {@value #CONFIG_PREFER_SEGMENT_PER_ENTITY} can
@@ -84,7 +82,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
  *   <tr>
  *     <td>{@value #VALUE_COLUMN_PARAM}</td>
  *     <td>{@value #DEF_VALUE_COLUMN}</td>
- *     <td>The name of column which holds the sequence value for the given segment</td>
+ *     <td>The name of the column which holds the sequence value for the given segment</td>
  *   </tr>
  *   <tr>
  *     <td>{@value #SEGMENT_COLUMN_PARAM}</td>

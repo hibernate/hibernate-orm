@@ -322,38 +322,24 @@ public class HANALegacyDialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-				return useLegacyBooleanType ? "tinyint" : super.columnType( sqlTypeCode );
-			case NUMERIC:
-				//there is no 'numeric' type in HANA
-				return columnType( DECIMAL );
+		return switch ( sqlTypeCode ) {
+			case BOOLEAN -> useLegacyBooleanType ? "tinyint" : super.columnType( sqlTypeCode );
+			//there is no 'numeric' type in HANA
+			case NUMERIC -> columnType( DECIMAL );
 			//'double precision' syntax not supported
-			case DOUBLE:
-				return "double";
+			case DOUBLE -> "double";
 			//no explicit precision
-			case TIME:
-			case TIME_WITH_TIMEZONE:
-				return "time";
-			case TIMESTAMP:
-			case TIMESTAMP_WITH_TIMEZONE:
-				return "timestamp";
+			case TIME, TIME_WITH_TIMEZONE -> "time";
+			case TIMESTAMP, TIMESTAMP_WITH_TIMEZONE -> "timestamp";
 			//there is no 'char' or 'nchar' type in HANA
-			case CHAR:
-			case VARCHAR:
-				return isUseUnicodeStringTypes() ? columnType( NVARCHAR ) : super.columnType( VARCHAR );
-			case NCHAR:
-				return columnType( NVARCHAR );
-			case LONG32VARCHAR:
-				return isUseUnicodeStringTypes() ? columnType( LONG32NVARCHAR ) : super.columnType( LONG32VARCHAR );
-			case CLOB:
-				return isUseUnicodeStringTypes() ? columnType( NCLOB ) : super.columnType( CLOB );
+			case CHAR, VARCHAR -> isUseUnicodeStringTypes() ? columnType( NVARCHAR ) : super.columnType( VARCHAR );
+			case NCHAR -> columnType( NVARCHAR );
+			case LONG32VARCHAR -> isUseUnicodeStringTypes() ? columnType( LONG32NVARCHAR ) : super.columnType( LONG32VARCHAR );
+			case CLOB -> isUseUnicodeStringTypes() ? columnType( NCLOB ) : super.columnType( CLOB );
 			// map tinyint to smallint since tinyint is unsigned on HANA
-			case TINYINT:
-				return "smallint";
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+			case TINYINT -> "smallint";
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -576,22 +562,15 @@ public class HANALegacyDialect extends Dialect {
 	 */
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		switch (unit) {
-			case DAY_OF_WEEK:
-				return "(mod(weekday(?2)+1,7)+1)";
-			case DAY:
-			case DAY_OF_MONTH:
-				return "dayofmonth(?2)";
-			case DAY_OF_YEAR:
-				return "dayofyear(?2)";
-			case QUARTER:
-				return "((month(?2)+2)/3)";
-			case EPOCH:
-				return "seconds_between('1970-01-01', ?2)";
-			default:
-				//I think week() returns the ISO week number
-				return "?1(?2)";
-		}
+		return switch (unit) {
+			case DAY_OF_WEEK -> "(mod(weekday(?2)+1,7)+1)";
+			case DAY, DAY_OF_MONTH -> "dayofmonth(?2)";
+			case DAY_OF_YEAR -> "dayofyear(?2)";
+			case QUARTER -> "((month(?2)+2)/3)";
+			case EPOCH -> "seconds_between('1970-01-01', ?2)";
+			//I think week() returns the ISO week number
+			default -> "?1(?2)";
+		};
 	}
 
 	@Override

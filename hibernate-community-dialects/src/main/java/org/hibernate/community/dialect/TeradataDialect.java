@@ -118,20 +118,14 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-			case TINYINT:
-				return "byteint";
+		return switch ( sqlTypeCode ) {
+			case BOOLEAN,TINYINT -> "byteint";
 			//'bigint' has been there since at least version 13
-			case BIGINT:
-				return getVersion().isBefore( 13 ) ? "numeric(19,0)" : "bigint";
-			case BINARY:
-				return "byte($l)";
-			case VARBINARY:
-				return "varbyte($l)";
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+			case BIGINT -> getVersion().isBefore( 13 ) ? "numeric(19,0)" : "bigint";
+			case BINARY -> "byte($l)";
+			case VARBINARY -> "varbyte($l)";
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override

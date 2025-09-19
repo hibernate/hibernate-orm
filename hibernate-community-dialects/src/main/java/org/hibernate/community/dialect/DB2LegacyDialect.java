@@ -243,36 +243,25 @@ public class DB2LegacyDialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-				// prior to DB2 11, the 'boolean' type existed,
-				// but was not allowed as a column type
-				return getDB2Version().isBefore( 11 ) ? "smallint" : super.columnType( sqlTypeCode );
-			case TINYINT:
-				// no tinyint
-				return "smallint";
-			case NUMERIC:
-				// HHH-12827: map them both to the same type to avoid problems with schema update
-				// Note that 31 is the maximum precision DB2 supports
-				return columnType( DECIMAL );
-			case BLOB:
-				return "blob";
-			case CLOB:
-				return "clob";
-			case TIMESTAMP_WITH_TIMEZONE:
-				return "timestamp($p)";
-			case TIME:
-			case TIME_WITH_TIMEZONE:
-				return "time";
-			case BINARY:
-				// should use 'binary' since version 11
-				return getDB2Version().isBefore( 11 ) ? "char($l) for bit data" : super.columnType( sqlTypeCode );
-			case VARBINARY:
-				// should use 'varbinary' since version 11
-				return getDB2Version().isBefore( 11 ) ? "varchar($l) for bit data" : super.columnType( sqlTypeCode );
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+		return switch ( sqlTypeCode ) {
+			// prior to DB2 11, the 'boolean' type existed,
+			// but was not allowed as a column type
+			case BOOLEAN -> getDB2Version().isBefore( 11 ) ? "smallint" : super.columnType( sqlTypeCode );
+			// no tinyint
+			case TINYINT -> "smallint";
+			// HHH-12827: map them both to the same type to avoid problems with schema update
+			// Note that 31 is the maximum precision DB2 supports
+			case NUMERIC -> columnType( DECIMAL );
+			case BLOB -> "blob";
+			case CLOB -> "clob";
+			case TIMESTAMP_WITH_TIMEZONE -> "timestamp($p)";
+			case TIME, TIME_WITH_TIMEZONE -> "time";
+			// should use 'binary' since version 11
+			case BINARY -> getDB2Version().isBefore( 11 ) ? "char($l) for bit data" : super.columnType( sqlTypeCode );
+			// should use 'varbinary' since version 11
+			case VARBINARY -> getDB2Version().isBefore( 11 ) ? "varchar($l) for bit data" : super.columnType( sqlTypeCode );
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -561,28 +550,16 @@ public class DB2LegacyDialect extends Dialect {
 			toExpression = "?3";
 		}
 		else {
-			switch ( fromTemporalType ) {
-				case DATE:
-					fromExpression = "cast(?2 as timestamp)";
-					break;
-				case TIME:
-					fromExpression = "timestamp('1970-01-01',?2)";
-					break;
-				default:
-					fromExpression = "?2";
-					break;
-			}
-			switch ( toTemporalType ) {
-				case DATE:
-					toExpression = "cast(?3 as timestamp)";
-					break;
-				case TIME:
-					toExpression = "timestamp('1970-01-01',?3)";
-					break;
-				default:
-					toExpression = "?3";
-					break;
-			}
+			fromExpression = switch ( fromTemporalType ) {
+				case DATE -> "cast(?2 as timestamp)";
+				case TIME -> "timestamp('1970-01-01',?2)";
+				default -> "?2";
+			};
+			toExpression = switch ( toTemporalType ) {
+				case DATE -> "cast(?3 as timestamp)";
+				case TIME -> "timestamp('1970-01-01',?3)";
+				default -> "?3";
+			};
 		}
 		switch ( unit ) {
 			case NATIVE:
@@ -1358,13 +1335,13 @@ public class DB2LegacyDialect extends Dialect {
 
 	@Override
 	public String translateExtractField(TemporalUnit unit) {
-		switch ( unit ) {
+		return switch ( unit ) {
 			//WEEK means the ISO week number on DB2
-			case DAY_OF_MONTH: return "day";
-			case DAY_OF_YEAR: return "doy";
-			case DAY_OF_WEEK: return "dow";
-			default: return super.translateExtractField( unit );
-		}
+			case DAY_OF_MONTH -> "day";
+			case DAY_OF_YEAR -> "doy";
+			case DAY_OF_WEEK -> "dow";
+			default -> super.translateExtractField( unit );
+		};
 	}
 
 	@Override

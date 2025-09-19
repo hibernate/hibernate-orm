@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
 
 import org.apache.maven.cli.MavenCli;
 
@@ -24,6 +26,9 @@ public class ExamplesTestIT {
 
     private File projectFolder;
     private MavenCli mavenCli;
+
+    @TempDir
+    private File tempFolder;
 
     private String[] databaseCreationScript = new String[] {
             // This is the default database which can be overridden per test
@@ -51,6 +56,14 @@ public class ExamplesTestIT {
         assertNotGeneratedYet();
         runGenerateSources();
         assertGeneratedContains("public class Person");
+    }
+
+    @Test
+    public void testJpaDefault() throws Exception {
+        prepareProject("hbm2java/jpa-default");
+        assertNotGeneratedYet();
+        runGenerateSources();
+        assertGeneratedContains("import jakarta.persistence.Entity;");
     }
 
     private void prepareProject(String projectName) throws Exception {
@@ -108,7 +121,7 @@ public class ExamplesTestIT {
     }
 
     private void createDatabase() throws Exception {
-        File databaseFile = new File(baseFolder, "database/test.mv.db");
+        File databaseFile = new File(tempFolder, "database/test.mv.db");
         assertFalse(databaseFile.exists());
         assertFalse(databaseFile.isFile());
         Connection connection = DriverManager.getConnection(constructJdbcConnectionString());
@@ -122,8 +135,8 @@ public class ExamplesTestIT {
         assertTrue(databaseFile.isFile());
     }
 
-    private static String constructJdbcConnectionString() {
-        return "jdbc:h2:" + baseFolder.getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
+    private String constructJdbcConnectionString() {
+        return "jdbc:h2:" + tempFolder.getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
     }
 
 }

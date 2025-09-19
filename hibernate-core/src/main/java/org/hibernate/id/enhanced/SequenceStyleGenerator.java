@@ -217,7 +217,7 @@ public class SequenceStyleGenerator
 			SEQUENCE_GENERATOR_LOGGER.forcingTableUse();
 		}
 
-		this.databaseStructure = buildDatabaseStructure(
+		databaseStructure = buildDatabaseStructure(
 				identifierType,
 				parameters,
 				jdbcEnvironment,

@@ -78,23 +78,23 @@ public non-sealed class Set extends Collection {
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
-			final Table collectionTable = getCollectionTable();
-			PrimaryKey pk = collectionTable.getPrimaryKey();
-			if ( pk == null ) {
-				pk = new PrimaryKey( getCollectionTable() );
-				pk.addColumns( getKey() );
-				for ( Selectable selectable : getElement().getSelectables() ) {
+			final var collectionTable = getCollectionTable();
+			var primaryKey = collectionTable.getPrimaryKey();
+			if ( primaryKey == null ) {
+				primaryKey = new PrimaryKey( getCollectionTable() );
+				primaryKey.addColumns( getKey() );
+				for ( var selectable : getElement().getSelectables() ) {
 					if ( selectable instanceof Column col ) {
 						if ( !col.isNullable() ) {
-							pk.addColumn( col );
+							primaryKey.addColumn( col );
 						}
 						else {
 							return;
 						}
 					}
 				}
-				if ( pk.getColumnSpan() != getKey().getColumnSpan() ) {
-					collectionTable.setPrimaryKey( pk );
+				if ( primaryKey.getColumnSpan() != getKey().getColumnSpan() ) {
+					collectionTable.setPrimaryKey( primaryKey );
 				}
 //				else {
 					//for backward compatibility, allow a set with no not-null

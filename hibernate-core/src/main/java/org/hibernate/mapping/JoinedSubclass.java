@@ -44,7 +44,7 @@ public final class JoinedSubclass extends Subclass implements TableOwner {
 	}
 
 	public void validate(Metadata mapping) throws MappingException {
-		super.validate(mapping);
+		super.validate( mapping );
 		if ( key != null && !key.isValid( mapping ) ) {
 			throw new MappingException(
 					"subclass key mapping has wrong number of columns: " +

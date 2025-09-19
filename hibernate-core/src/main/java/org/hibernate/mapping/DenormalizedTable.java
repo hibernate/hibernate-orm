@@ -60,15 +60,15 @@ public class DenormalizedTable extends Table {
 	@Override
 	public void createForeignKeys(MetadataBuildingContext context) {
 		includedTable.createForeignKeys( context );
-		for ( ForeignKey foreignKey : includedTable.getForeignKeyCollection() ) {
-			final PersistentClass referencedClass =
+		for ( var foreignKey : includedTable.getForeignKeyCollection() ) {
+			final var referencedClass =
 					foreignKey.resolveReferencedClass( context.getMetadataCollector() );
 			// the ForeignKeys created in the first pass did not have their referenced table initialized
 			if ( foreignKey.getReferencedTable() == null ) {
 				foreignKey.setReferencedTable( referencedClass.getTable() );
 			}
 
-			final ForeignKey denormalizedForeignKey = createDenormalizedForeignKey( foreignKey );
+			final var denormalizedForeignKey = createDenormalizedForeignKey( foreignKey );
 			createForeignKey(
 					context.getBuildingOptions()
 							.getImplicitNamingStrategy()
@@ -84,13 +84,13 @@ public class DenormalizedTable extends Table {
 	}
 
 	private ForeignKey createDenormalizedForeignKey(ForeignKey includedTableFk) {
-		final ForeignKey denormalizedForeignKey = new ForeignKey(this);
+		final var denormalizedForeignKey = new ForeignKey(this);
 		denormalizedForeignKey.setReferencedEntityName( includedTableFk.getReferencedEntityName() );
 		denormalizedForeignKey.setKeyDefinition( includedTableFk.getKeyDefinition() );
 		denormalizedForeignKey.setOptions( includedTableFk.getOptions() );
 		denormalizedForeignKey.setReferencedTable( includedTableFk.getReferencedTable() );
 		denormalizedForeignKey.addReferencedColumns( includedTableFk.getReferencedColumns() );
-		for ( Column keyColumn : includedTableFk.getColumns() ) {
+		for ( var keyColumn : includedTableFk.getColumns() ) {
 			denormalizedForeignKey.addColumn( keyColumn );
 		}
 		return denormalizedForeignKey;
@@ -98,12 +98,12 @@ public class DenormalizedTable extends Table {
 
 	@Override
 	public Column getColumn(Column column) {
-		Column superColumn = super.getColumn( column );
+		final var superColumn = super.getColumn( column );
 		return superColumn != null ? superColumn : includedTable.getColumn(column);
 	}
 
 	public Column getColumn(Identifier name) {
-		Column superColumn = super.getColumn( name );
+		final var superColumn = super.getColumn( name );
 		return superColumn != null ? superColumn : includedTable.getColumn(name);
 	}
 

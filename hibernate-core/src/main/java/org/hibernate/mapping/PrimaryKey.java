@@ -33,7 +33,7 @@ public class PrimaryKey extends Constraint {
 	@Override
 	public void addColumn(Column column) {
 		// force primary key columns to not-null
-		for ( Column next : getTable().getColumns() ) {
+		for ( var next : getTable().getColumns() ) {
 			if ( next.getCanonicalName().equals( column.getCanonicalName() ) ) {
 				next.setNullable( false );
 			}
@@ -47,11 +47,11 @@ public class PrimaryKey extends Constraint {
 	}
 
 	public List<Column> getColumnsInOriginalOrder() {
-		final List<Column> columns = getColumns();
+		final var columns = getColumns();
 		if ( originalOrder == null ) {
 			return columns;
 		}
-		final Column[] columnsInOriginalOrder = new Column[columns.size()];
+		final var columnsInOriginalOrder = new Column[columns.size()];
 		for ( int i = 0; i < columnsInOriginalOrder.length; i++ ) {
 			columnsInOriginalOrder[originalOrder[i]] = columns.get( i );
 		}
@@ -68,20 +68,21 @@ public class PrimaryKey extends Constraint {
 
 	@Internal
 	public void reorderColumns(List<Column> reorderedColumns) {
-		final List<Column> columns = getColumns();
+		final var columns = getColumns();
 		if ( originalOrder != null ) {
 			assert columns.equals( reorderedColumns );
 			return;
 		}
-		assert columns.size() == reorderedColumns.size() && columns.containsAll( reorderedColumns );
+		assert columns.size() == reorderedColumns.size()
+			&& columns.containsAll( reorderedColumns );
 		originalOrder = new int[columns.size()];
-		final UniqueKey orderingUniqueKey = getOrderingUniqueKey();
-		final List<Column> newColumns =
+		final var orderingUniqueKey = getOrderingUniqueKey();
+		final var newColumns =
 				orderingUniqueKey != null
 						? orderingUniqueKey.getColumns()
 						: reorderedColumns;
 		for ( int i = 0; i < newColumns.size(); i++ ) {
-			final Column reorderedColumn = newColumns.get( i );
+			final var reorderedColumn = newColumns.get( i );
 			originalOrder[i] = columns.indexOf( reorderedColumn );
 		}
 		columns.clear();

@@ -100,19 +100,13 @@ public final class OneToOne extends ToOne {
 
 	@Override
 	public List<Selectable> getVirtualSelectables() {
-		final List<Selectable> selectables = super.getVirtualSelectables();
-		if ( selectables.isEmpty() ) {
-			return identifier.getSelectables();
-		}
-		return selectables;
+		final var selectables = super.getVirtualSelectables();
+		return selectables.isEmpty() ? identifier.getSelectables() : selectables;
 	}
 
 	public List<Column> getConstraintColumns() {
-		final List<Column> columns = super.getColumns();
-		if ( columns.isEmpty() ) {
-			return identifier.getColumns();
-		}
-		return columns;
+		final var columns = super.getColumns();
+		return columns.isEmpty() ? identifier.getColumns() : columns;
 	}
 
 	/**

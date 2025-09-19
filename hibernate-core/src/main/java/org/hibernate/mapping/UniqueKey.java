@@ -63,8 +63,8 @@ public class UniqueKey extends Constraint {
 	}
 
 	public boolean hasNullableColumn() {
-		for ( Column column : getColumns() ) {
-			final Column tableColumn = getTable().getColumn( column );
+		for ( var column : getColumns() ) {
+			final var tableColumn = getTable().getColumn( column );
 			if ( tableColumn != null && tableColumn.isNullable() ) {
 				return true;
 			}

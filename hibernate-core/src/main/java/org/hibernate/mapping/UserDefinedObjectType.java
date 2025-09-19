@@ -5,7 +5,6 @@
 package org.hibernate.mapping;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +41,7 @@ public class UserDefinedObjectType extends AbstractUserDefinedType {
 			return null;
 		}
 		else {
-			final Column existing = columns.get( column.getCanonicalName() );
+			final var existing = columns.get( column.getCanonicalName() );
 			return column.equals( existing ) ? existing : null;
 		}
 	}
@@ -55,7 +54,7 @@ public class UserDefinedObjectType extends AbstractUserDefinedType {
 	}
 
 	public Column getColumn(int n) {
-		final Iterator<Column> iter = columns.values().iterator();
+		final var iter = columns.values().iterator();
 		for ( int i = 0; i < n - 1; i++ ) {
 			iter.next();
 		}
@@ -100,11 +99,11 @@ public class UserDefinedObjectType extends AbstractUserDefinedType {
 		}
 		orderMapping = new int[columns.size()];
 		int i = 0;
-		for ( Column column : this.columns.values() ) {
+		for ( var column : this.columns.values() ) {
 			orderMapping[columns.indexOf( column )] = i++;
 		}
 		this.columns.clear();
-		for ( Column column : columns ) {
+		for ( var column : columns ) {
 			this.columns.put( column.getCanonicalName(), column );
 		}
 	}

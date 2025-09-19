@@ -114,7 +114,7 @@ public class Join implements AttributeContainer, Serializable {
 	}
 
 	public void createForeignKey() {
-		final ForeignKey foreignKey = getKey().createForeignKeyOfEntity( persistentClass.getEntityName() );
+		final var foreignKey = getKey().createForeignKeyOfEntity( persistentClass.getEntityName() );
 		if ( disableForeignKeyCreation ) {
 			foreignKey.disableCreation();
 		}
@@ -122,10 +122,9 @@ public class Join implements AttributeContainer, Serializable {
 
 	public void createPrimaryKey() {
 		//Primary key constraint
-		PrimaryKey primaryKey = new PrimaryKey( table );
+		final var primaryKey = new PrimaryKey( table );
 		primaryKey.setName( PK_ALIAS.toAliasString( table.getName() ) );
 		table.setPrimaryKey(primaryKey);
-
 		primaryKey.addColumns( getKey() );
 	}
 

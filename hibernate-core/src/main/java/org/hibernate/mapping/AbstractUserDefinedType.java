@@ -68,10 +68,9 @@ public class AbstractUserDefinedType implements UserDefinedType {
 	}
 
 	public void setQuoted(boolean quoted) {
-		if ( quoted == name.isQuoted() ) {
-			return;
+		if ( quoted != name.isQuoted() ) {
+			name = new Identifier( name.getText(), quoted );
 		}
-		this.name = new Identifier( name.getText(), quoted );
 	}
 
 	public void setSchema(String schema) {
@@ -126,7 +125,9 @@ public class AbstractUserDefinedType implements UserDefinedType {
 
 	@Override
 	public boolean equals(Object object) {
-		return object != null && object.getClass() == getClass() && equals( (AbstractUserDefinedType) object);
+		return object != null
+			&& object.getClass() == getClass()
+			&& equals( (AbstractUserDefinedType) object );
 	}
 
 	public boolean equals(AbstractUserDefinedType table) {
@@ -144,22 +145,22 @@ public class AbstractUserDefinedType implements UserDefinedType {
 	}
 
 	public String toString() {
-		final StringBuilder buf = new StringBuilder()
+		final var string = new StringBuilder()
 				.append( getClass().getSimpleName() )
 				.append( '(' );
 		if ( getCatalog() != null ) {
-			buf.append( getCatalog() ).append( "." );
+			string.append( getCatalog() ).append( "." );
 		}
 		if ( getSchema() != null ) {
-			buf.append( getSchema() ).append( "." );
+			string.append( getSchema() ).append( "." );
 		}
-		buf.append( getName() ).append( ')' );
-		return buf.toString();
+		string.append( getName() ).append( ')' );
+		return string.toString();
 	}
 
 	@Override
 	public String getExportIdentifier() {
-		final StringBuilder qualifiedName = new StringBuilder();
+		final var qualifiedName = new StringBuilder();
 		if ( catalog != null ) {
 			qualifiedName.append( catalog.render() ).append( '.' );
 		}

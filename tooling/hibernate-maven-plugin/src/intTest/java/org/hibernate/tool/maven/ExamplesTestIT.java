@@ -66,6 +66,13 @@ public class ExamplesTestIT {
         assertGeneratedContains("import jakarta.persistence.Entity;");
     }
 
+    @Test
+    public void testNoAnnotations() throws Exception {
+        prepareProject("hbm2java/no-annotations");
+        assertNotGeneratedYet();
+        runGenerateSources();
+        assertGeneratedDoesNotContain("import jakarta.persistence.Entity;");
+    }
     private void prepareProject(String projectName) throws Exception {
         projectFolder = new File(baseFolder, projectName);
         assertTrue(projectFolder.exists());

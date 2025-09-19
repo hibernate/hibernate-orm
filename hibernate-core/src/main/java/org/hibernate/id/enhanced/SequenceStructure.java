@@ -4,17 +4,13 @@
  */
 package org.hibernate.id.enhanced;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
 
@@ -107,14 +103,15 @@ public class SequenceStructure implements DatabaseStructure {
 			public IntegralDataTypeHolder getNextValue() {
 				accessCounter++;
 				try {
-					final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-					final PreparedStatement st = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
+					final var jdbcCoordinator = session.getJdbcCoordinator();
+					final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
+					final var resourceRegistry = jdbcCoordinator.getLogicalConnection().getResourceRegistry();
 					try {
-						final ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st, sql );
+						final var resultSet = jdbcCoordinator.getResultSetReturn().extract( statement, sql );
 						try {
-							rs.next();
-							final IntegralDataTypeHolder value = getIntegralDataTypeHolder( numberType );
-							value.initialize( rs, 1 );
+							resultSet.next();
+							final var value = getIntegralDataTypeHolder( numberType );
+							value.initialize( resultSet, 1 );
 							if ( JDBC_LOGGER.isTraceEnabled() ) {
 								JDBC_LOGGER.sequenceValueRetrievedFromDatabase( value.makeValue() );
 							}
@@ -122,7 +119,7 @@ public class SequenceStructure implements DatabaseStructure {
 						}
 						finally {
 							try {
-								jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( rs, st );
+								resourceRegistry.release( resultSet, statement );
 							}
 							catch( Throwable ignore ) {
 								// intentionally empty
@@ -130,7 +127,7 @@ public class SequenceStructure implements DatabaseStructure {
 						}
 					}
 					finally {
-						jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( st );
+						resourceRegistry.release( statement );
 						jdbcCoordinator.afterStatementExecution();
 					}
 
@@ -163,7 +160,7 @@ public class SequenceStructure implements DatabaseStructure {
 
 	@Override
 	public void initialize(SqlStringGenerationContext context) {
-		this.sql = context.getDialect().getSequenceSupport()
+		sql = context.getDialect().getSequenceSupport()
 				.getSequenceNextValString( context.format( physicalSequenceName ) );
 	}
 
@@ -181,20 +178,20 @@ public class SequenceStructure implements DatabaseStructure {
 	}
 
 	protected void buildSequence(Database database) {
-		final int sourceIncrementSize = getSourceIncrementSize();
-
-		final Namespace namespace = database.locateNamespace(
+		final var namespace = database.locateNamespace(
 				logicalQualifiedSequenceName.getCatalogName(),
 				logicalQualifiedSequenceName.getSchemaName()
 		);
-		Sequence sequence = namespace.locateSequence( logicalQualifiedSequenceName.getObjectName() );
+		final int sourceIncrementSize = getSourceIncrementSize();
+		final var objectName = logicalQualifiedSequenceName.getObjectName();
+		Sequence sequence = namespace.locateSequence( objectName );
 		if ( sequence != null ) {
 			sequence.validate( initialValue, sourceIncrementSize );
 		}
 		else {
 			sequence = namespace.createSequence(
-					logicalQualifiedSequenceName.getObjectName(),
-					(physicalName) -> new Sequence(
+					objectName,
+					physicalName -> new Sequence(
 							contributor,
 							namespace.getPhysicalName().catalog(),
 							namespace.getPhysicalName().schema(),
@@ -205,7 +202,6 @@ public class SequenceStructure implements DatabaseStructure {
 					)
 			);
 		}
-
 		physicalSequenceName = sequence.getName();
 	}
 }

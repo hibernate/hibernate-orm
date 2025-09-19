@@ -346,7 +346,6 @@ public class SequenceStyleGenerator
 	 * @param jdbcEnv The JdbcEnvironment
 	 * @return The sequence name
 	 */
-	@SuppressWarnings("UnusedParameters")
 	protected QualifiedName determineSequenceName(
 			Properties params,
 			JdbcEnvironment jdbcEnv,

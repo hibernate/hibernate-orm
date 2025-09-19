@@ -9,7 +9,6 @@ import java.util.List;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.collections.JoinedList;
 
 import static org.hibernate.persister.entity.DiscriminatorHelper.getDiscriminatorSQLValue;
@@ -48,12 +47,12 @@ public final class SingleTableSubclass extends Subclass {
 	@Override
 	public void createConstraints(MetadataBuildingContext context) {
 		if ( !isAbstract() ) {
-			final Dialect dialect = context.getMetadataCollector().getDatabase().getDialect();
+			final var dialect = context.getMetadataCollector().getDatabase().getDialect();
 			if ( dialect.supportsTableCheck() ) {
-				final Value discriminator = getDiscriminator();
-				final List<Selectable> selectables = discriminator.getSelectables();
+				final var discriminator = getDiscriminator();
+				final var selectables = discriminator.getSelectables();
 				if ( selectables.size() == 1 ) {
-					final StringBuilder check = new StringBuilder();
+					final var check = new StringBuilder();
 					check.append( selectables.get( 0 ).getText( dialect ) );
 					if ( isDiscriminatorValueNull() ) {
 						check.append( " is " );
@@ -71,9 +70,9 @@ public final class SingleTableSubclass extends Subclass {
 					check.append( getDiscriminatorSQLValue( this, dialect ) )
 							.append( " or (" );
 					boolean first = true;
-					for ( Property property : getNonDuplicatedProperties() ) {
+					for ( var property : getNonDuplicatedProperties() ) {
 						if ( !property.isComposite() && !property.isOptional() ) {
-							for ( Selectable selectable : property.getSelectables() ) {
+							for ( var selectable : property.getSelectables() ) {
 								if ( selectable instanceof Column column && column.isNullable() ) {
 									if ( first ) {
 										first = false;

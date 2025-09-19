@@ -47,14 +47,15 @@ public final class MappingHelper {
 			Class<? extends UserCollectionType> userCollectionTypeClass,
 			Map<String, ?> parameters,
 			BootstrapContext bootstrapContext) {
-		final ManagedBean<? extends UserCollectionType> managedBean =
-				bootstrapContext.getManagedBeanRegistry().getBean( userCollectionTypeClass );
+		final var managedBean =
+				bootstrapContext.getManagedBeanRegistry()
+						.getBean( userCollectionTypeClass );
 		if ( isNotEmpty( parameters ) ) {
 			if ( ParameterizedType.class.isAssignableFrom( managedBean.getBeanClass() ) ) {
 				// create a copy of the parameters and create a bean wrapper to delay injecting
 				// the parameters, thereby delaying the need to resolve the instance from the
 				// wrapped bean
-				final Properties copy = new Properties();
+				final var copy = new Properties();
 				copy.putAll( parameters );
 				return new DelayedParameterizedTypeBean<>( managedBean, copy );
 			}
@@ -84,12 +85,12 @@ public final class MappingHelper {
 			String role,
 			Class<? extends UserCollectionType> implementation,
 			Map<String, ?> parameters) {
-		final UserCollectionType userCollectionType =
+		final var userCollectionType =
 				FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( implementation );
 		if ( isNotEmpty( parameters ) ) {
 			// CollectionType declared parameters - inject them
 			if ( userCollectionType instanceof ParameterizedType parameterizedType ) {
-				final Properties properties = new Properties();
+				final var properties = new Properties();
 				properties.putAll( parameters );
 				parameterizedType.setParameterValues( properties );
 			}
@@ -104,7 +105,7 @@ public final class MappingHelper {
 			Set<String> distinctColumns,
 			List<Property> properties,
 			String owner) throws MappingException {
-		for ( Property prop : properties ) {
+		for ( var prop : properties ) {
 			if ( prop.isUpdatable() || prop.isInsertable() ) {
 				prop.getValue().checkColumnDuplication( distinctColumns, owner );
 			}

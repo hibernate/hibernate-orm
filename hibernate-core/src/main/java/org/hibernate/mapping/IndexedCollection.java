@@ -65,24 +65,24 @@ public sealed abstract class IndexedCollection extends Collection permits Map, L
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
-			final PrimaryKey pk = new PrimaryKey( getCollectionTable() );
-			pk.addColumns( getKey() );
+			final var primaryKey = new PrimaryKey( getCollectionTable() );
+			primaryKey.addColumns( getKey() );
 
 			// index should be last column listed
 			boolean indexIsPartOfElement = false;
-			for ( Selectable selectable: getIndex().getSelectables() ) {
+			for ( var selectable: getIndex().getSelectables() ) {
 				if ( selectable.isFormula() || !getCollectionTable().containsColumn( (Column) selectable ) ) {
 					indexIsPartOfElement = true;
 				}
 			}
 			if ( indexIsPartOfElement ) {
 				//if it is part of the element, use the element columns in the PK
-				pk.addColumns( getElement() );
+				primaryKey.addColumns( getElement() );
 			}
 			else {
-				pk.addColumns( getIndex() );
+				primaryKey.addColumns( getIndex() );
 			}
-			getCollectionTable().setPrimaryKey(pk);
+			getCollectionTable().setPrimaryKey( primaryKey );
 		}
 //		else {
 			// don't create a unique key, 'cos some

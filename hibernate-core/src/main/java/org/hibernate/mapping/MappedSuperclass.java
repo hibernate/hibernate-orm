@@ -71,7 +71,7 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 		//Do not add duplicate properties
 		//TODO is it efficient enough?
 		String name = p.getName();
-		for (Property declaredProperty : declaredProperties) {
+		for ( var declaredProperty : declaredProperties ) {
 			if ( name.equals( declaredProperty.getName() ) ) {
 				return;
 			}
@@ -164,7 +164,7 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 	 * @return {@code true} if a property with that name exists; {@code false} if not
 	 */
 	public boolean hasProperty(String name) {
-		for ( Property property : getDeclaredProperties() ) {
+		for ( var property : getDeclaredProperties() ) {
 			if ( property.getName().equals( name ) ) {
 				return true;
 			}

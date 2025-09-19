@@ -65,12 +65,12 @@ public class ForeignKey extends Constraint {
 		return referencedTable;
 	}
 
-	private void appendColumns(StringBuilder buf, Iterator<Column> columns) {
+	private void appendColumns(StringBuilder stringBuilder, Iterator<Column> columns) {
 		while ( columns.hasNext() ) {
-			Column column = columns.next();
-			buf.append( column.getName() );
+			final var column = columns.next();
+			stringBuilder.append( column.getName() );
 			if ( columns.hasNext() ) {
-				buf.append( "," );
+				stringBuilder.append( "," );
 			}
 		}
 	}
@@ -87,32 +87,36 @@ public class ForeignKey extends Constraint {
 	public void alignColumns() {
 		if ( isReferenceToPrimaryKey() ) {
 			final int columnSpan = getColumnSpan();
-			final PrimaryKey primaryKey = referencedTable.getPrimaryKey();
+			final var primaryKey = referencedTable.getPrimaryKey();
 			if ( primaryKey.getColumnSpan() != columnSpan ) {
-				StringBuilder sb = new StringBuilder();
-				sb.append( "Foreign key (" ).append( getName() ).append( ":" )
-						.append( getTable().getName() )
-						.append( " [" );
-				appendColumns( sb, getColumns().iterator() );
-				sb.append( "])" )
-						.append( ") must have same number of columns as the referenced primary key (" )
-						.append( referencedTable.getName() )
-						.append( " [" );
-				appendColumns( sb, primaryKey.getColumns().iterator() );
-				sb.append( "])" );
-				throw new MappingException( sb.toString() );
+				throw new MappingException( unalignedColumnsMessage( primaryKey ) );
 			}
 
 			//TODO: shouldn't this happen even for non-PK references?
 			for ( int i = 0; i<columnSpan; i++ ) {
-				Column referencedColumn = primaryKey.getColumn(i);
-				Column referencingColumn = getColumn(i);
+				final var referencedColumn = primaryKey.getColumn(i);
+				final var referencingColumn = getColumn(i);
 				referencingColumn.setLength( referencedColumn.getLength() );
 				referencingColumn.setScale( referencedColumn.getScale() );
 				referencingColumn.setPrecision( referencedColumn.getPrecision() );
 				referencingColumn.setArrayLength( referencedColumn.getArrayLength() );
 			}
 		}
+	}
+
+	private String unalignedColumnsMessage(PrimaryKey primaryKey) {
+		final var message = new StringBuilder();
+		message.append( "Foreign key (" ).append( getName() ).append( ":" )
+				.append( getTable().getName() )
+				.append( " [" );
+		appendColumns( message, getColumns().iterator() );
+		message.append( "])" )
+				.append( ") must have same number of columns as the referenced primary key (" )
+				.append( referencedTable.getName() )
+				.append( " [" );
+		appendColumns( message, primaryKey.getColumns().iterator() );
+		message.append( "])" );
+		return message.toString();
 	}
 
 	public String getReferencedEntityName() {
@@ -160,7 +164,7 @@ public class ForeignKey extends Constraint {
 	}
 
 	public void addReferencedColumns(List<Column> referencedColumns) {
-		for (Column referencedColumn : referencedColumns) {
+		for ( var referencedColumn : referencedColumns ) {
 //			if ( !referencedColumn.isFormula() ) {
 				addReferencedColumn( referencedColumn );
 //			}
@@ -193,12 +197,12 @@ public class ForeignKey extends Constraint {
 					"' does not specify the referenced entity" );
 		}
 
-		final PersistentClass referencedClass = metadata.getEntityBinding( referencedEntityName );
-		if ( referencedClass == null ) {
+		final var referencedEntity = metadata.getEntityBinding( referencedEntityName );
+		if ( referencedEntity == null ) {
 			throw new MappingException( "An association from the table '" + getTable().getName() +
 					"' refers to an unmapped class '" + referencedEntityName + "'" );
 		}
 
-		return referencedClass;
+		return referencedEntity;
 	}
 }

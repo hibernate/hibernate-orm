@@ -22,7 +22,6 @@ import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -189,7 +188,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	@Override
 	public List<Selectable> getSelectables() {
 		final List<Selectable> selectables = new ArrayList<>( properties.size() + 2 );
-		for ( Property property : properties ) {
+		for ( var property : properties ) {
 			selectables.addAll( property.getSelectables() );
 		}
 		if ( discriminator != null ) {
@@ -201,7 +200,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	@Override
 	public List<Column> getColumns() {
 		final List<Column> columns = new ArrayList<>( properties.size() + 2 );
-		for ( Property property : properties ) {
+		for ( var property : properties ) {
 			columns.addAll( property.getValue().getColumns() );
 		}
 		if ( discriminator != null ) {
@@ -235,9 +234,9 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	private void collectAggregatedColumns(List<Column> aggregatedColumns, Component component) {
-		for ( Property property : component.getProperties() ) {
+		for ( var property : component.getProperties() ) {
 			if ( property.getValue() instanceof Component subComponent ) {
-				final AggregateColumn subAggregate = subComponent.getAggregateColumn();
+				final var subAggregate = subComponent.getAggregateColumn();
 				if ( subAggregate != null ) {
 					aggregatedColumns.add( subAggregate );
 				}
@@ -255,10 +254,10 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	private void notifyPropertiesAboutAggregateColumn(AggregateColumn aggregateColumn, Component component) {
-		for ( Property property : component.getProperties() ) {
+		for ( var property : component.getProperties() ) {
 			// Let the BasicValue of every sub-column know about the aggregate,
 			// which is needed in type resolution
-			final Value value = property.getValue();
+			final var value = property.getValue();
 			if ( value instanceof BasicValue basicValue ) {
 				assert basicValue.getResolution() == null;
 				basicValue.setAggregateColumn( aggregateColumn );
@@ -300,7 +299,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 				// We can allow different subtypes reusing the same columns
 				// since only one subtype can exist at one time
 				final Map<String, Set<String>> distinctColumnsByClass = new HashMap<>();
-				for ( Property prop : properties ) {
+				for ( var prop : properties ) {
 					if ( prop.isUpdatable() || prop.isInsertable() ) {
 						final String declaringClass = propertyDeclaringClasses.get( prop );
 						final Set<String> set = distinctColumnsByClass.computeIfAbsent(
@@ -310,7 +309,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 						prop.getValue().checkColumnDuplication( set, owner );
 					}
 				}
-				for ( Set<String> columns : distinctColumnsByClass.values() ) {
+				for ( var columns : distinctColumnsByClass.values() ) {
 					distinctColumns.addAll( columns );
 				}
 			}
@@ -335,7 +334,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 			}
 			else {
 				try {
-					componentClass = classForName( componentClassName, getBuildingContext().getBootstrapContext() );
+					componentClass = classForName( componentClassName, getBootstrapContext() );
 				}
 				catch (ClassLoadingException e) {
 					throw new MappingException( "Embeddable class not found: " + componentClassName, e );
@@ -380,11 +379,9 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	private CompositeUserType<?> createCompositeUserType(Component component) {
-		final MetadataBuildingContext buildingContext = getBuildingContext();
-		final BootstrapContext bootstrapContext = buildingContext.getBootstrapContext();
-		@SuppressWarnings("rawtypes")
-		final Class<? extends CompositeUserType> clazz =
-				classForName( CompositeUserType.class, component.getTypeName(), bootstrapContext );
+		final var buildingContext = getBuildingContext();
+		final var bootstrapContext = buildingContext.getBootstrapContext();
+		final var clazz = classForName( CompositeUserType.class, component.getTypeName(), bootstrapContext );
 		return buildingContext.getBuildingOptions().isAllowExtensionsInCdi()
 				? bootstrapContext.getManagedBeanRegistry().getBean( clazz ).getBeanInstance()
 				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( clazz );
@@ -476,8 +473,8 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	public boolean[] getColumnInsertability() {
 		final boolean[] result = new boolean[getColumnSpan()];
 		int i = 0;
-		for ( Property prop : getProperties() ) {
-			i += copyFlags( prop.getValue().getColumnInsertability(), result, i, prop.isInsertable() );
+		for ( var property : getProperties() ) {
+			i += copyFlags( property.getValue().getColumnInsertability(), result, i, property.isInsertable() );
 		}
 		if ( isPolymorphic() ) {
 			i += copyFlags( getDiscriminator().getColumnInsertability(), result, i, true );
@@ -495,7 +492,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 
 	@Override
 	public boolean hasAnyInsertableColumns() {
-		for ( Property property : properties ) {
+		for ( var property : properties ) {
 			if ( property.getValue().hasAnyInsertableColumns() ) {
 				return true;
 			}
@@ -506,10 +503,10 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 
 	@Override
 	public boolean[] getColumnUpdateability() {
-		boolean[] result = new boolean[getColumnSpan()];
+		final boolean[] result = new boolean[getColumnSpan()];
 		int i = 0;
-		for ( Property prop : getProperties() ) {
-			i += copyFlags( prop.getValue().getColumnUpdateability(), result, i, prop.isUpdatable() );
+		for ( var property : getProperties() ) {
+			i += copyFlags( property.getValue().getColumnUpdateability(), result, i, property.isUpdatable() );
 		}
 		if ( isPolymorphic() ) {
 			i += copyFlags( getDiscriminator().getColumnUpdateability(), result, i, true );
@@ -520,7 +517,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 
 	@Override
 	public boolean hasAnyUpdatableColumns() {
-		for ( Property property : properties ) {
+		for ( var property : properties ) {
 			if ( property.getValue().hasAnyUpdatableColumns() ) {
 				return true;
 			}
@@ -550,9 +547,9 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 
 	@Override
 	public Property getProperty(String propertyName) throws MappingException {
-		for ( Property prop : properties ) {
-			if ( prop.getName().equals(propertyName) ) {
-				return prop;
+		for ( var property : properties ) {
+			if ( property.getName().equals(propertyName) ) {
+				return property;
 			}
 		}
 		throw new MappingException("component: " + componentClassName + " property not found: " + propertyName);
@@ -662,7 +659,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 				);
 		final var properties = getProperties();
 		for ( int i = 0; i < properties.size(); i++ ) {
-			final Property property = properties.get( i );
+			final var property = properties.get( i );
 			if ( property.getValue().isSimpleValue() ) {
 				final SimpleValue value = (SimpleValue) property.getValue();
 				if ( !value.getCustomIdGeneratorCreator().isAssigned() ) {
@@ -882,13 +879,13 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 			originalPropertyOrder = null;
 		}
 		if ( isKey ) {
-			final PrimaryKey primaryKey = getOwner().getTable().getPrimaryKey();
+			final var primaryKey = getOwner().getTable().getPrimaryKey();
 			if ( primaryKey != null ) {
 				// We have to re-order the primary key accordingly
-				final List<Column> columns = primaryKey.getColumns();
+				final var columns = primaryKey.getColumns();
 				columns.clear();
-				for ( Property property : properties ) {
-					for ( Selectable selectable : property.getSelectables() ) {
+				for ( var property : properties ) {
+					for ( var selectable : property.getSelectables() ) {
 						if ( selectable instanceof Column column ) {
 							columns.add( column );
 						}
@@ -907,7 +904,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		Boolean simple = simpleRecord;
 		if ( simple == null ) {
 			// A simple record is given, when the properties match the order of the record component names
-			final Class<?> componentClass = resolveComponentClass();
+			final var componentClass = resolveComponentClass();
 			if ( customInstantiator != null ) {
 				return simpleRecord = false;
 			}

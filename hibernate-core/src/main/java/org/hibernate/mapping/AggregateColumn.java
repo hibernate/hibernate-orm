@@ -58,8 +58,8 @@ public final class AggregateColumn extends Column {
 	}
 
 	private static SelectablePath getSelectablePath(Component component) {
-		final AggregateColumn aggregateColumn = component.getAggregateColumn();
-		final AggregateColumn parent = component.getParentAggregateColumn();
+		final var aggregateColumn = component.getAggregateColumn();
+		final var parent = component.getParentAggregateColumn();
 		final String simpleAggregateName = aggregateColumn.getQuotedName();
 		return parent == null
 				? new SelectablePath( simpleAggregateName )
@@ -71,8 +71,8 @@ public final class AggregateColumn extends Column {
 	}
 
 	private static String getAggregateReadExpressionTemplate(Dialect dialect, Component component) {
-		final AggregateColumn aggregateColumn = component.getAggregateColumn();
-		final AggregateColumn parent = component.getParentAggregateColumn();
+		final var aggregateColumn = component.getAggregateColumn();
+		final var parent = component.getParentAggregateColumn();
 		final String simpleAggregateName = aggregateColumn.getQuotedName( dialect );
 		// If the aggregate column is an array, drop the parent read expression, because this is a NestedColumnReference
 		// and will require special rendering
@@ -105,8 +105,8 @@ public final class AggregateColumn extends Column {
 	}
 
 	private static String getAggregateAssignmentExpressionTemplate(Dialect dialect, Component component) {
-		final AggregateColumn aggregateColumn = component.getAggregateColumn();
-		final AggregateColumn parent = component.getParentAggregateColumn();
+		final var aggregateColumn = component.getAggregateColumn();
+		final var parent = component.getParentAggregateColumn();
 		final String simpleAggregateName = aggregateColumn.getQuotedName( dialect );
 		return parent == null
 				? Template.TEMPLATE + "." + simpleAggregateName

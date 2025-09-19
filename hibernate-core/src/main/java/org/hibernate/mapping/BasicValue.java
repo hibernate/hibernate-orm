@@ -476,7 +476,7 @@ public class BasicValue extends SimpleValue
 				SoftDelete.UnspecifiedConversion.class.equals( attributeConverterDescriptor.getAttributeConverterClass() );
 		if ( conversionWasUnspecified ) {
 			final var jdbcType = BooleanJdbcType.INSTANCE.resolveIndicatedType( this, javaType );
-			final var classmateContext = getBuildingContext().getBootstrapContext().getClassmateContext();
+			final var classmateContext = getBootstrapContext().getClassmateContext();
 			if ( jdbcType.isNumber() ) {
 				return ConverterDescriptors.of( NumericBooleanConverter.INSTANCE, classmateContext );
 			}
@@ -657,7 +657,7 @@ public class BasicValue extends SimpleValue
 
 	@Override
 	public ManagedBeanRegistry getManagedBeanRegistry() {
-		return getBuildingContext().getBootstrapContext().getManagedBeanRegistry();
+		return getBootstrapContext().getManagedBeanRegistry();
 	}
 
 	private Resolution<?> converterResolution(JavaType<?> javaType, ConverterDescriptor<?,?> attributeConverterDescriptor) {
@@ -702,8 +702,7 @@ public class BasicValue extends SimpleValue
 	}
 
 	private JavaType<?> determineJavaType() {
-		final JavaType<?> javaType = getExplicitJavaType();
-//
+		final var javaType = getExplicitJavaType();
 //		if ( javaType == null ) {
 //			if ( implicitJavaTypeAccess != null ) {
 //				final java.lang.reflect.Type implicitJtd = implicitJavaTypeAccess.apply( getTypeConfiguration() );
@@ -752,7 +751,7 @@ public class BasicValue extends SimpleValue
 	}
 
 	private JavaType<?> javaType(TypeConfiguration typeConfiguration, java.lang.reflect.Type impliedJavaType) {
-		final JavaType<?> javaType = typeConfiguration.getJavaTypeRegistry().findDescriptor( impliedJavaType );
+		final var javaType = typeConfiguration.getJavaTypeRegistry().findDescriptor( impliedJavaType );
 		return javaType == null ? specialJavaType( typeConfiguration, impliedJavaType ) : javaType;
 	}
 
@@ -765,14 +764,14 @@ public class BasicValue extends SimpleValue
 			// and implement toString/fromString as well as copying based on FormatMapper operations
 			switch ( jdbcTypeCode ) {
 				case SqlTypes.JSON:
-					final JavaType<?> jsonJavaType =
+					final var jsonJavaType =
 							new JsonJavaType<>( impliedJavaType,
 									mutabilityPlan( typeConfiguration, impliedJavaType ),
 									typeConfiguration );
 					javaTypeRegistry.addDescriptor( jsonJavaType );
 					return jsonJavaType;
 				case SqlTypes.SQLXML:
-					final JavaType<?> xmlJavaType =
+					final var xmlJavaType =
 							new XmlJavaType<>( impliedJavaType,
 									mutabilityPlan( typeConfiguration, impliedJavaType ),
 									typeConfiguration );
@@ -808,7 +807,6 @@ public class BasicValue extends SimpleValue
 			MetadataBuildingContext context) {
 
 		final var bootstrapContext = context.getBootstrapContext();
-
 		final var managedBeanRegistry = bootstrapContext.getManagedBeanRegistry();
 		final var typeConfiguration = bootstrapContext.getTypeConfiguration();
 
@@ -1106,7 +1104,7 @@ public class BasicValue extends SimpleValue
 	}
 
 	private <T> ManagedBean<? extends T> getUserTypeBean(Class<T> explicitCustomType, Properties properties) {
-		final var producer = getBuildingContext().getBootstrapContext().getCustomTypeProducer();
+		final var producer = getBootstrapContext().getCustomTypeProducer();
 		final var managedBeanRegistry = getManagedBeanRegistry();
 		if ( isNotEmpty( properties ) ) {
 			final String name = explicitCustomType.getName() + COUNTER++;

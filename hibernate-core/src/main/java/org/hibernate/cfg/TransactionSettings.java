@@ -29,8 +29,8 @@ public interface TransactionSettings {
 	 * @settingDefault With Jakarta Persistence bootstrapping, based on the persistence unit's {@link PersistenceUnitInfo#getTransactionType()};
 	 * otherwise {@code jdbc}.
 	 *
-	 * @implSpec With non Jakarta Persistence bootstrapping, Hibernate will use {@code jdbc} as the default which
-	 * will cause problems if the application actually uses JTA-based transactions.
+	 * @implSpec With non-Jakarta Persistence bootstrapping, Hibernate will use {@code jdbc} as the
+	 * default which will cause problems if the application actually uses JTA-based transactions.
 	 *
 	 * @see #JTA_PLATFORM
 	 *
@@ -152,7 +152,7 @@ public interface TransactionSettings {
 	 * Allows a detached proxy or lazy collection to be fetched even when not
 	 * associated with an open persistence context, by creating a temporary
 	 * persistence context when the proxy or collection is accessed. This
-	 * behavior is not recommended, since it can easily break transaction
+	 * behavior is not recommended since it can easily break transaction
 	 * isolation or lead to data aliasing; it is therefore disabled by default.
 	 *
 	 * @settingDefault {@code false} (disabled)

@@ -193,9 +193,9 @@ public interface SchemaToolingSettings {
 	String HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
 
 	/**
-	 * For cases where the {@value #JAKARTA_HBM2DDL_SCRIPTS_ACTION} value indicates that schema commands
-	 * should be written to DDL script file, specifies if schema commands should be appended to
-	 * the end of the file rather than written at the beginning of the file.
+	 * For cases where the {@value #JAKARTA_HBM2DDL_SCRIPTS_ACTION} value indicates that schema
+	 * commands should be written to a DDL script file, specifies if schema commands should be
+	 * appended to the end of the file rather than written at the beginning of the file.
 	 * <p>
 	 * Values are: {@code true} for appending schema commands to the end of the file, {@code false}
 	 * for writing schema commands at the beginning.
@@ -233,9 +233,9 @@ public interface SchemaToolingSettings {
 
 	/**
 	 * Used to specify the {@link org.hibernate.tool.schema.spi.SchemaFilterProvider} to be
-	 * used by create, drop, migrate and validate operations on the database schema. A
+	 * used by create, drop, migrate, and validate operations on the database schema. A
 	 * {@code SchemaFilterProvider} provides filters that can be used to limit the scope of
-	 * these operations to specific namespaces, tables and sequences. All objects are
+	 * these operations to specific namespaces, tables, and sequences. All objects are
 	 * included by default.
 	 *
 	 * @since 5.1
@@ -318,7 +318,7 @@ public interface SchemaToolingSettings {
 	/**
 	 * Specifies a comma-separated list of extra table types, in addition to the
 	 * default types {@code "TABLE"} and {@code "VIEW"}, to recognize as physical
-	 * tables when performing schema update, creation and validation.
+	 * tables when performing schema update, creation, and validation.
 	 *
 	 * @since 5.0
 	 */

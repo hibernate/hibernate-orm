@@ -45,8 +45,8 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -92,7 +92,8 @@ public class FunctionTests {
 
 	public static final double ERROR = 0.00001d;
 
-	@BeforeEach @SuppressWarnings("deprecation")
+	@BeforeAll
+	@SuppressWarnings("deprecation")
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				em -> {
@@ -129,7 +130,7 @@ public class FunctionTests {
 		);
 	}
 
-	@AfterEach
+	@AfterAll
 	public void dropTestData(SessionFactoryScope scope) {
 		scope.dropData();
 	}

@@ -39,8 +39,8 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -77,7 +77,7 @@ public class JsonFunctionTests {
 
 	JsonHolder entity;
 
-	@BeforeEach
+	@BeforeAll
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				em -> {
@@ -117,9 +117,9 @@ public class JsonFunctionTests {
 		);
 	}
 
-	@AfterEach
+	@AfterAll
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@Test

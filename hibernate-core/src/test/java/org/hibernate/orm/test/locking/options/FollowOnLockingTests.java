@@ -64,7 +64,7 @@ public class FollowOnLockingTests {
 			if ( usesTableHints( session.getDialect() ) ) {
 				// t-sql
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-				Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), true, session.getDialect(), Helper.Table.BOOKS );
+				Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), false, session.getDialect(), Helper.Table.BOOKS );
 			}
 			else {
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
@@ -89,7 +89,7 @@ public class FollowOnLockingTests {
 			if ( usesTableHints( session.getDialect() ) ) {
 				// t-sql
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-				Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), true, session.getDialect(), Helper.Table.BOOKS );
+				Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), false, session.getDialect(), Helper.Table.BOOKS );
 			}
 			else {
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
@@ -110,7 +110,7 @@ public class FollowOnLockingTests {
 			if ( usesTableHints( session.getDialect() ) ) {
 				// t-sql
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-				Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), true, session.getDialect(), Helper.Table.BOOKS );
+				Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), false, session.getDialect(), Helper.Table.BOOKS );
 			}
 			else {
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
@@ -131,7 +131,7 @@ public class FollowOnLockingTests {
 			if ( usesTableHints( session.getDialect() ) ) {
 				// t-sql
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-				Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), true, session.getDialect(), Helper.Table.BOOKS );
+				Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), false, session.getDialect(), Helper.Table.BOOKS );
 			}
 			else {
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );

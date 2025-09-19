@@ -111,7 +111,9 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 				}
 			}
 		}
-		loadedValuesCollector.clear();
+		if ( loadedValuesCollector != null ) {
+			loadedValuesCollector.clear();
+		}
 	}
 
 	@Override
@@ -164,9 +166,10 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 			return this;
 		}
 
-		public JdbcSelectWithActions build() {
+		public JdbcSelect build() {
 			if ( preActions == null && postActions == null ) {
-				return new JdbcSelectWithActions( primaryAction, loadedValuesCollector );
+				assert loadedValuesCollector == null;
+				return primaryAction;
 			}
 			final PreAction[] preActions = toPreActionArray( this.preActions );
 			final PostAction[] postActions = toPostActionArray( this.postActions );

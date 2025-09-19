@@ -72,7 +72,7 @@ import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlTreeCreationException;
-import org.hibernate.sql.ast.internal.LockTimeoutHandler;
+import org.hibernate.sql.exec.internal.LockTimeoutHandler;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
 import org.hibernate.sql.ast.internal.TableGroupHelper;
 import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
@@ -888,20 +888,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				getLimitParameter()
 		);
 
-		final boolean needsLockingActions = determineIfLockingActionsNeeded(
-				lockOptions,
-				lockingTarget,
-				getDialect()
-		);
-
-		if ( !needsLockingActions ) {
+		if ( lockOptions == null || !lockOptions.getLockMode().isPessimistic() ) {
 			return jdbcSelect;
 		}
 
-		final JdbcSelectWithActions.Builder builder = new JdbcSelectWithActions.Builder( jdbcSelect );
-
 		final LockingSupport lockingSupport = getDialect().getLockingSupport();
 		final LockingSupport.Metadata lockingSupportMetadata = lockingSupport.getMetadata();
+
+		final JdbcSelectWithActions.Builder builder = new JdbcSelectWithActions.Builder( jdbcSelect );
 
 		final LockTimeoutType lockTimeoutType = lockingSupportMetadata.getLockTimeoutType( lockOptions.getTimeout() );
 		if ( lockTimeoutType == LockTimeoutType.CONNECTION ) {
@@ -911,38 +905,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			) );
 		}
 
-		applyFollowOnLockingActions(
-				lockOptions,
-				lockingTarget,
-				lockingClauseStrategy,
-				builder
-		);
-
-		return builder.build();
-	}
-
-	public boolean determineIfLockingActionsNeeded(
-			LockOptions lockOptions,
-			QuerySpec lockingTarget,
-			Dialect dialect) {
-		if ( lockOptions == null || !lockOptions.getLockMode().isPessimistic() ) {
-			return false;
-		}
-
-		final LockingSupport lockingSupport = dialect.getLockingSupport();
-		final LockingSupport.Metadata lockingSupportMetadata = lockingSupport.getMetadata();
-
-		final LockTimeoutType lockTimeoutType = lockingSupportMetadata.getLockTimeoutType( lockOptions.getTimeout() );
-		if ( lockTimeoutType == LockTimeoutType.CONNECTION ) {
-			return true;
-		}
-
 		final LockStrategy lockStrategy = determineLockingStrategy( lockingTarget, lockOptions.getFollowOnStrategy() );
 		if ( lockStrategy == LockStrategy.FOLLOW_ON ) {
-			return true;
+			applyFollowOnLockingActions( lockOptions, lockingTarget, lockingClauseStrategy, builder );
 		}
 
-		return false;
+		return builder.build();
 	}
 
 	private void applyFollowOnLockingActions(

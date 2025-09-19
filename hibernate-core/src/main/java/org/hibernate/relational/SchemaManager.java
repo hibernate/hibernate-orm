@@ -19,7 +19,8 @@ import org.hibernate.Incubating;
  * {@link jakarta.persistence.SchemaManager}, which it now inherits,
  * with a minor change to the naming of its operations. It is retained
  * for backward compatibility and as a place to define additional
- * functionality such as {@link #populate} and {@link #forSchema}.
+ * operations like {@link #populate}, {@link #resynchronizeSequences},
+ * and {@link #forSchema}.
  *
  * @since 6.2
  * @author Gavin King
@@ -94,6 +95,22 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	 */
 	@Incubating
 	void populate();
+
+	/**
+	 * Resynchronize sequences after importing test data.
+	 * <p>
+	 * When data is imported to the database without the use of a Hibernate session,
+	 * a database sequence might become stale with respect to the data in the table for
+	 * which it is used to generate unique keys. This operation restarts every sequence
+	 * so that the next generated unique key will be larger than the largest key
+	 * currently in use.
+	 * <p>
+	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SequenceSynchronizer}.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	void resynchronizeSequences();
 
 	/**
 	 * Obtain an instance which targets the given schema.

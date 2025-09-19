@@ -103,7 +103,7 @@ public class StandardTableMigrator implements TableMigrator {
 		}
 
 		if ( results.isEmpty() ) {
-			LOG.debugf( "No alter strings for table : %s", table.getQuotedName() );
+			LOG.debugf( "No alter strings for table: %s", table.getQuotedName() );
 		}
 
 		return results;

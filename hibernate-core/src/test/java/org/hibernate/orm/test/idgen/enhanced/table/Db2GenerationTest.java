@@ -18,6 +18,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.Value;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -104,6 +105,11 @@ public class Db2GenerationTest {
 
 		@Override
 		public Property getProperty() {
+			return null;
+		}
+
+		@Override
+		public Value getValue() {
 			return null;
 		}
 

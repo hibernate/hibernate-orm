@@ -59,7 +59,7 @@ public class PooledLoOptimizer extends AbstractOptimizer {
 				generationState.lastSourceValue = callback.getNextValue();
 				generationState.upperLimitValue = generationState.lastSourceValue.copy().add( incrementSize );
 				generationState.value = generationState.lastSourceValue.copy();
-				// handle cases where initial-value is less that one (hsqldb for instance).
+				// handle cases where the initial value is less than one (hsqldb, for instance)
 				while ( generationState.value.lt( 1 ) ) {
 					generationState.value.increment();
 				}

@@ -85,8 +85,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		final SqlStringGenerationContext sqlGenerationContext = sqlGenerationContext( metadata, options );
 		if ( !targetDescriptor.getTargetTypes().isEmpty() ) {
 			final JdbcContext jdbcContext = tool.resolveJdbcContext( options.getConfigurationValues() );
-			final DdlTransactionIsolator ddlTransactionIsolator = tool.getDdlTransactionIsolator( jdbcContext );
-			try {
+			try ( DdlTransactionIsolator ddlTransactionIsolator = tool.getDdlTransactionIsolator( jdbcContext ) ) {
 				final DatabaseInformation databaseInformation = Helper.buildDatabaseInformation(
 						tool.getServiceRegistry(),
 						ddlTransactionIsolator,
@@ -136,9 +135,6 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 					}
 				}
 			}
-			finally {
-				ddlTransactionIsolator.release();
-			}
 		}
 	}
 
@@ -179,7 +175,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		final Set<String> exportIdentifiers = CollectionHelper.setOfSize( 50 );
 
 		final Database database = metadata.getDatabase();
-		Exporter<AuxiliaryDatabaseObject> auxiliaryExporter = dialect.getAuxiliaryDatabaseObjectExporter();
+		final Exporter<AuxiliaryDatabaseObject> auxiliaryExporter = dialect.getAuxiliaryDatabaseObjectExporter();
 
 		// Drop all AuxiliaryDatabaseObjects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
@@ -255,7 +251,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			}
 		}
 
-		//NOTE : Foreign keys must be created *after* all tables of all namespaces for cross namespace fks. see HHH-10420
+		//NOTE: Foreign keys must be created *after* all tables of all namespaces for cross-namespace fks. see HHH-10420
 		for ( Namespace namespace : database.getNamespaces() ) {
 			if ( schemaFilter.includeNamespace( namespace ) ) {
 				final NameSpaceTablesInformation nameSpaceTablesInformation = tablesInformation.get( namespace );

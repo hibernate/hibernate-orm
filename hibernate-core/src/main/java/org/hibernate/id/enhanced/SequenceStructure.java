@@ -4,15 +4,20 @@
  */
 package org.hibernate.id.enhanced;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
+import org.hibernate.mapping.Table;
 
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHolder;
@@ -162,6 +167,51 @@ public class SequenceStructure implements DatabaseStructure {
 	public void initialize(SqlStringGenerationContext context) {
 		sql = context.getDialect().getSequenceSupport()
 				.getSequenceNextValString( context.format( physicalSequenceName ) );
+	}
+
+	@Override
+	public void registerExtraExportables(Table table, Optimizer optimizer) {
+		table.addResyncCommand( (context, connection) -> {
+			final String sequenceName = context.format( physicalSequenceName );
+			final String tableName = context.format( table.getQualifiedTableName() );
+			final String primaryKeyColumnName = table.getPrimaryKey().getColumn( 0 ).getName();
+			final int adjustment = optimizer.getAdjustment();
+			final long max = getMax( connection, primaryKeyColumnName, tableName );
+			final long current = getCurrent( connection, sequenceName, context.getDialect() );
+			final long newValue = Math.max( max + adjustment, current );
+			final String restart = "alter sequence " + sequenceName + " restart with " + newValue;
+			return new InitCommand( restart );
+		} );
+	}
+
+
+	private long getCurrent(Connection connection, String sequenceName, Dialect dialect) {
+		final String sequenceCurrentValue =
+				dialect.getSequenceSupport()
+						.getSequenceNextValString( sequenceName );
+		try ( var select = connection.prepareStatement( sequenceCurrentValue ) ) {
+			try ( var resultSet = select.executeQuery() ) {
+				resultSet.next();
+				return resultSet.getLong(1);
+			}
+		}
+		catch (SQLException e) {
+			throw new HibernateException( "Could not fetch the current sequence value from the database", e );
+		}
+	}
+
+	private static long getMax(Connection connection, String primaryKeyColumnName, String tableName) {
+		final String selectMax =
+				"select max(" + primaryKeyColumnName + ") from " + tableName;
+		try ( var select = connection.prepareStatement( selectMax ) ) {
+			try ( var resultSet = select.executeQuery() ) {
+				resultSet.next();
+				return resultSet.getLong(1);
+			}
+		}
+		catch (SQLException e) {
+			throw new HibernateException( "Could not fetch the max primary key from the database", e );
+		}
 	}
 
 	@Override

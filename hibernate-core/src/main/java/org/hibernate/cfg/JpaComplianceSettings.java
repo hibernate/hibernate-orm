@@ -190,5 +190,6 @@ public interface JpaComplianceSettings {
 	 * @deprecated Prefer {@link #JPA_QUERY_COMPLIANCE}
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPAQL_STRICT_COMPLIANCE= "hibernate.query.jpaql_strict_compliance";
 }

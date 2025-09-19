@@ -106,6 +106,7 @@ public interface AvailableSettings
 	 * @since 5.3
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String DELAY_ENTITY_LOADER_CREATIONS = "hibernate.loader.delay_entity_loader_creations";
 
 	/**
@@ -157,6 +158,7 @@ public interface AvailableSettings
 	 * @deprecated This is no longer useful and will be removed.
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String DISCARD_PC_ON_CLOSE = "hibernate.discard_pc_on_close";
 
 	/**

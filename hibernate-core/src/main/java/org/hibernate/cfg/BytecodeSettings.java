@@ -24,6 +24,7 @@ public interface BytecodeSettings {
 	 * See HHH-17643
 	 */
 	@Deprecated( forRemoval = true )
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String BYTECODE_PROVIDER = "hibernate.bytecode.provider";
 
 	/**

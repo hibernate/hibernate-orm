@@ -69,5 +69,6 @@ public interface BatchSettings {
 	 * @deprecated Use {@link #BUILDER} instead
 	 */
 	@Deprecated(since="6.4")
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String BATCH_STRATEGY = "hibernate.jdbc.factory_class";
 }

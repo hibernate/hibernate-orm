@@ -296,9 +296,10 @@ public interface SchemaToolingSettings {
 
 	/**
 	 * Specifies the default storage engine for a relational database that supports
-	 * multiple storage engines. This property must be set either as an {@link Environment}
-	 * variable or JVM System Property, since the {@link org.hibernate.dialect.Dialect} is
-	 * instantiated before Hibernate property resolution.
+	 * multiple storage engines.
+	 *
+	 * This property can be set as an {@link Environment} variable, a JVM System Property
+	 * or a configuration property.
 	 * <p>
 	 * For MySQL, the legal values are {@code innodb} (the default) and {@code myisam}.
 	 *

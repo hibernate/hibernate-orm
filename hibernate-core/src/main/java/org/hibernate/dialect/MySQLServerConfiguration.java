@@ -9,7 +9,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.Internal;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 
 import static org.hibernate.cfg.DialectSpecificSettings.MYSQL_BYTES_PER_CHARACTER;
 import static org.hibernate.cfg.DialectSpecificSettings.MYSQL_NO_BACKSLASH_ESCAPES;
@@ -26,10 +28,18 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 public class MySQLServerConfiguration {
 	private final int bytesPerCharacter;
 	private final boolean noBackslashEscapesEnabled;
+	private final String storageEngine;
 
 	public MySQLServerConfiguration(int bytesPerCharacter, boolean noBackslashEscapesEnabled) {
 		this.bytesPerCharacter = bytesPerCharacter;
 		this.noBackslashEscapesEnabled = noBackslashEscapesEnabled;
+		this.storageEngine = null;
+	}
+
+	public MySQLServerConfiguration(int bytesPerCharacter, boolean noBackslashEscapesEnabled, String storageEngine) {
+		this.bytesPerCharacter = bytesPerCharacter;
+		this.noBackslashEscapesEnabled = noBackslashEscapesEnabled;
+		this.storageEngine = storageEngine;
 	}
 
 	public int getBytesPerCharacter() {
@@ -38,6 +48,10 @@ public class MySQLServerConfiguration {
 
 	public boolean isNoBackslashEscapesEnabled() {
 		return noBackslashEscapesEnabled;
+	}
+
+	public String getConfiguredStorageEngine() {
+		return storageEngine;
 	}
 
 	static Integer getBytesPerCharacter(String characterSet) {
@@ -78,7 +92,11 @@ public class MySQLServerConfiguration {
 		if ( noBackslashEscapes == null ) {
 			noBackslashEscapes = getBoolean( MYSQL_NO_BACKSLASH_ESCAPES, info.getConfigurationValues(), false );
 		}
-		return new MySQLServerConfiguration( bytesPerCharacter, noBackslashEscapes );
+
+		return new MySQLServerConfiguration(
+				bytesPerCharacter,
+				noBackslashEscapes,
+				ConfigurationHelper.getString( AvailableSettings.STORAGE_ENGINE, info.getConfigurationValues() ) );
 	}
 
 	/**

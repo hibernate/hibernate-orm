@@ -6200,12 +6200,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			BiConsumer<Integer,JdbcParameter> jdbcParameterConsumer) {
 		sqmParameterMappingModelTypes.put( expression, valueMapping );
 		final List<List<JdbcParameter>> jdbcParams = jdbcParamsBySqmParam.get( expression );
-		final int parameterId = jdbcParams == null ? jdbcParamsBySqmParam.size()
+		final int parameterId = jdbcParams == null ? jdbcParameters.getJdbcParameters().size()
 				: NullnessUtil.castNonNull( jdbcParams.get( 0 ).get( 0 ).getParameterId() );
 		final Bindable bindable = bindable( valueMapping );
 		if ( bindable instanceof SelectableMappings selectableMappings ) {
 			selectableMappings.forEachSelectable(
-					(index, selectableMapping) -> jdbcParameterConsumer.accept( index, new SqlTypedMappingJdbcParameter( selectableMapping, parameterId ) )
+					(index, selectableMapping) -> jdbcParameterConsumer.accept( index, new SqlTypedMappingJdbcParameter( selectableMapping, parameterId + index ) )
 			);
 		}
 		else if ( bindable instanceof SelectableMapping selectableMapping ) {
@@ -6221,7 +6221,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				bindable.forEachJdbcType(
 						(index, jdbcMapping) -> jdbcParameterConsumer.accept(
 								index,
-								new JdbcParameterImpl( jdbcMapping, parameterId )
+								new JdbcParameterImpl( jdbcMapping, parameterId + index )
 						)
 				);
 			}

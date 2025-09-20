@@ -170,15 +170,15 @@ public class SequenceStructure implements DatabaseStructure {
 
 	@Override
 	public void registerExtraExportables(Table table, Optimizer optimizer) {
-		table.addResyncCommand( (context, connection) -> {
-			final String sequenceName = context.format( physicalSequenceName );
-			final String tableName = context.format( table.getQualifiedTableName() );
+		table.addResyncCommand( (sqlContext, isolator) -> {
+			final String sequenceName = sqlContext.format( physicalSequenceName );
+			final String tableName = sqlContext.format( table.getQualifiedTableName() );
 			final String primaryKeyColumnName = table.getPrimaryKey().getColumn( 0 ).getName();
 			final int adjustment = optimizer.getAdjustment();
-			final long max = getMaxPrimaryKey( connection, primaryKeyColumnName, tableName );
-			final long current = getNextSequenceValue( connection, sequenceName, context.getDialect() );
+			final long max = getMaxPrimaryKey( isolator, primaryKeyColumnName, tableName );
+			final long current = getNextSequenceValue( isolator, sequenceName);
 			final long startWith = Math.max( max + adjustment, current );
-			return new InitCommand( context.getDialect().getSequenceSupport()
+			return new InitCommand( sqlContext.getDialect().getSequenceSupport()
 					.getRestartSequenceString( sequenceName, startWith ) );
 		} );
 	}

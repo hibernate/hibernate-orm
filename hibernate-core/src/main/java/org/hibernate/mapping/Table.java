@@ -5,7 +5,6 @@
 package org.hibernate.mapping;
 
 import java.io.Serializable;
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,6 +29,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyList;
@@ -74,7 +74,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	private String options;
 
 	private List<Function<SqlStringGenerationContext, InitCommand>> initCommandProducers;
-	private List<BiFunction<SqlStringGenerationContext, Connection, InitCommand>> resyncCommandProducers;
+	private List<BiFunction<SqlStringGenerationContext, DdlTransactionIsolator, InitCommand>> resyncCommandProducers;
 
 	@Deprecated(since="6.2", forRemoval = true)
 	public Table() {
@@ -815,21 +815,22 @@ public class Table implements Serializable, ContributableDatabaseObject {
 				? emptyList()
 				: initCommandProducers.stream()
 						.map( producer -> producer.apply( context ) )
+						.distinct()
 						.toList();
 	}
 
-	public void addResyncCommand(BiFunction<SqlStringGenerationContext, Connection, InitCommand> commandProducer) {
+	public void addResyncCommand(BiFunction<SqlStringGenerationContext, DdlTransactionIsolator, InitCommand> commandProducer) {
 		if ( resyncCommandProducers == null ) {
 			resyncCommandProducers = new ArrayList<>();
 		}
 		resyncCommandProducers.add( commandProducer );
 	}
 
-	public List<InitCommand> getResyncCommands(SqlStringGenerationContext context, Connection connection) {
+	public List<InitCommand> getResyncCommands(SqlStringGenerationContext context, DdlTransactionIsolator isolator) {
 		return resyncCommandProducers == null
 				? emptyList()
 				: resyncCommandProducers.stream()
-						.map( producer -> producer.apply( context, connection ) )
+						.map( producer -> producer.apply( context, isolator ) )
 						.distinct()
 						.toList();
 

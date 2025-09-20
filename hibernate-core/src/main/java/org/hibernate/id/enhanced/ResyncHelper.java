@@ -4,11 +4,8 @@
  */
 package org.hibernate.id.enhanced;
 
-import org.hibernate.HibernateException;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /**
@@ -16,60 +13,46 @@ import java.sql.SQLException;
  */
 class ResyncHelper {
 
-	// TODO: Use SqlExceptionHelper, SqlStatementLogger, available in the JdbcContext
-
-	private static long resultValue(PreparedStatement select) throws SQLException {
-		try ( var resultSet = select.executeQuery() ) {
-			resultSet.next();
-			return resultSet.getLong( 1 );
+	private static long execute(DdlTransactionIsolator isolator, String sequenceCurrentValue, String message) {
+		isolator.getJdbcContext().getSqlStatementLogger().logStatement( sequenceCurrentValue );
+		try ( var select = isolator.getIsolatedConnection().prepareStatement( sequenceCurrentValue ) ) {
+			try ( var resultSet = select.executeQuery() ) {
+				resultSet.next();
+				return resultSet.getLong( 1 );
+			}
+		}
+		catch (SQLException e) {
+			throw isolator.getJdbcContext().getSqlExceptionHelper()
+					.convert( e, message, sequenceCurrentValue );
 		}
 	}
 
-	static long getNextSequenceValue(Connection connection, String sequenceName, Dialect dialect) {
-		final String sequenceCurrentValue =
-				dialect.getSequenceSupport()
-						.getSequenceNextValString( sequenceName );
-		try ( var select = connection.prepareStatement( sequenceCurrentValue ) ) {
-			return resultValue( select );
-		}
-		catch (SQLException e) {
-			throw new HibernateException( "Could not fetch the current sequence value from the database", e );
-		}
+	static long getNextSequenceValue(DdlTransactionIsolator isolator, String sequenceName) {
+		return execute( isolator,
+				isolator.getJdbcContext().getDialect().getSequenceSupport()
+						.getSequenceNextValString( sequenceName ),
+				"Could not fetch the current sequence value from the database" );
 	}
 
-	static long getMaxPrimaryKey(Connection connection, String primaryKeyColumnName, String tableName) {
-		final String selectMax =
-				"select max(" + primaryKeyColumnName + ") from " + tableName;
-		try ( var select = connection.prepareStatement( selectMax ) ) {
-			return resultValue( select );
-		}
-		catch (SQLException e) {
-			throw new HibernateException( "Could not fetch the max primary key from the database", e );
-		}
+	static long getMaxPrimaryKey(DdlTransactionIsolator isolator, String primaryKeyColumnName, String tableName) {
+		return execute( isolator,
+				"select max(" + primaryKeyColumnName + ") from " + tableName,
+				"Could not fetch the max primary key from the database" );
 	}
 
-	static long getCurrentTableValue(Connection connection, String tableName, String columnName) {
-		final String selectCurrent =
-				"select " + columnName + " from " + tableName;
-		try ( var select = connection.prepareStatement( selectCurrent ) ) {
-			return resultValue( select );
-		}
-		catch (SQLException e) {
-			throw new HibernateException( "Could not fetch the current table value from the database", e );
-		}
+	static long getCurrentTableValue(DdlTransactionIsolator isolator, String tableName, String columnName) {
+		return execute( isolator,
+				"select " + columnName + " from " + tableName,
+				"Could not fetch the current table value from the database" );
 	}
 
 	static long getCurrentTableValue(
-			Connection connection, String tableName, String columnName,
+			DdlTransactionIsolator isolator,
+			String tableName, String columnName,
 			String segmentColumnName, String segmentValue) {
-		final String selectCurrent =
+		return execute( isolator,
 				"select " + columnName + " from " + tableName
-					+ " where " + segmentColumnName + " = '" + segmentValue + "'";
-		try ( var select = connection.prepareStatement( selectCurrent ) ) {
-			return resultValue( select );
-		}
-		catch (SQLException e) {
-			throw new HibernateException( "Could not fetch the current table value from the database", e );
-		}
+						+ " where " + segmentColumnName + " = '" + segmentValue + "'",
+				"Could not fetch the current table value from the database" );
 	}
 }

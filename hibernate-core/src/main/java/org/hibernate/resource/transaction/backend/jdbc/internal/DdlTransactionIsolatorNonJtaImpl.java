@@ -41,8 +41,7 @@ public class DdlTransactionIsolatorNonJtaImpl implements DdlTransactionIsolator 
 	public Connection getIsolatedConnection(boolean autocommit) {
 		if ( jdbcConnection == null ) {
 			try {
-				this.jdbcConnection = jdbcContext.getJdbcConnectionAccess().obtainConnection();
-
+				jdbcConnection = jdbcContext.getJdbcConnectionAccess().obtainConnection();
 				try {
 					if ( jdbcConnection.getAutoCommit() != autocommit ) {
 						try {

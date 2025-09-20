@@ -39,6 +39,7 @@ import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.type.StandardBasicTypes;
@@ -606,8 +607,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 				final long initializationValue = storeLastUsedValue ? initialValue - 1 : initialValue;
 				value.initialize( initializationValue );
 				TABLE_GENERATOR_LOGGER.insertingInitialValueForSegment( value, segmentValue );
-				try ( PreparedStatement statement = prepareStatement( connection, insertQuery, logger, listener,
-						session ) ) {
+				try ( var statement = prepareStatement( connection, insertQuery, logger, listener, session ) ) {
 					statement.setString( 1, segmentValue );
 					value.bind( statement, 2 );
 					executeUpdate( statement, listener, insertQuery, session );
@@ -705,14 +705,14 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		table.addResyncCommand( this::generateResyncCommand );
 	}
 
-	private InitCommand generateResyncCommand(SqlStringGenerationContext context, Connection connection) {
+	private InitCommand generateResyncCommand(SqlStringGenerationContext context, DdlTransactionIsolator isolator) {
 		final String sequenceTableName = context.format( physicalTableName );
 		final String tableName = context.format( table.getQualifiedTableName() );
 		final String primaryKeyColumnName = table.getPrimaryKey().getColumn( 0 ).getName();
 		final int adjustment = optimizer.getAdjustment() - 1;
-		final long max = getMaxPrimaryKey( connection, primaryKeyColumnName, tableName );
+		final long max = getMaxPrimaryKey( isolator, primaryKeyColumnName, tableName );
 		final long current =
-				getCurrentTableValue( connection, sequenceTableName, valueColumnName,
+				getCurrentTableValue( isolator, sequenceTableName, valueColumnName,
 						segmentColumnName, segmentValue );
 		if ( max + adjustment > current ) {
 			final String update =

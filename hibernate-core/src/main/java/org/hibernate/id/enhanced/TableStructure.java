@@ -338,13 +338,13 @@ public class TableStructure implements DatabaseStructure {
 
 	@Override
 	public void registerExtraExportables(Table table, Optimizer optimizer) {
-		table.addResyncCommand( (context, connection) -> {
+		table.addResyncCommand( (context, isolator) -> {
 			final String sequenceTableName = context.format( physicalTableName );
 			final String tableName = context.format( table.getQualifiedTableName() );
 			final String primaryKeyColumnName = table.getPrimaryKey().getColumn( 0 ).getName();
 			final int adjustment = optimizer.getAdjustment();
-			final long max = getMaxPrimaryKey( connection, primaryKeyColumnName, tableName );
-			final long current = getCurrentTableValue( connection, sequenceTableName, valueColumnNameText );
+			final long max = getMaxPrimaryKey( isolator, primaryKeyColumnName, tableName );
+			final long current = getCurrentTableValue( isolator, sequenceTableName, valueColumnNameText );
 			if ( max + adjustment > current ) {
 				final String update =
 						"update " + sequenceTableName

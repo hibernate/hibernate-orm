@@ -25,7 +25,7 @@ class SchemaManagerResyncSequencesTest {
 			ss.upsert( new EntityWithSequence(100L, "y") );
 			ss.upsert( new EntityWithSequence(200L, "z") );
 		} );
-		schemaManager.resynchronizeSequences();
+		schemaManager.resynchronizeGenerators();
 		scope.inStatelessTransaction( ss -> {
 			var entity = new EntityWithSequence();
 			ss.insert( entity );

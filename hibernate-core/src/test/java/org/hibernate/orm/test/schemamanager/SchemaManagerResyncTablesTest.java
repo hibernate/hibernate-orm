@@ -7,48 +7,44 @@ package org.hibernate.orm.test.schemamanager;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.TableGenerator;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.cfg.AvailableSettings.PREFERRED_POOLED_OPTIMIZER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SessionFactory
-@DomainModel(annotatedClasses = SchemaManagerResyncSequencesPooledLoTest.EntityWithSequence.class)
-@ServiceRegistry(settings = @Setting(name = PREFERRED_POOLED_OPTIMIZER, value = "pooled-lo"))
-class SchemaManagerResyncSequencesPooledLoTest {
+@DomainModel(annotatedClasses = SchemaManagerResyncTablesTest.EntityWithTable.class)
+class SchemaManagerResyncTablesTest {
 	@Test void test(SessionFactoryScope scope) {
 		var schemaManager = scope.getSessionFactory().getSchemaManager();
 		scope.inStatelessTransaction( ss -> {
-			ss.upsert( new EntityWithSequence(50L, "x") );
-			ss.upsert( new EntityWithSequence(100L, "y") );
-			ss.upsert( new EntityWithSequence(200L, "z") );
+			ss.upsert( new EntityWithTable(50L, "x") );
+			ss.upsert( new EntityWithTable(100L, "y") );
+			ss.upsert( new EntityWithTable(200L, "z") );
 		} );
 		schemaManager.resynchronizeGenerators();
 		scope.inStatelessTransaction( ss -> {
-			var entity = new EntityWithSequence();
+			var entity = new EntityWithTable();
 			ss.insert( entity );
 			assertEquals(201L, entity.id);
 		});
 	}
-	@Entity(name = "EntityWithSequence")
-	static class EntityWithSequence {
+	@Entity(name = "EntityWithTable")
+	static class EntityWithTable {
 		@Id
 		@GeneratedValue
-		@SequenceGenerator(name = "TheSequence", allocationSize = 20)
+		@TableGenerator(name = "TheTable", allocationSize = 20)
 		Long id;
 		String name;
 
-		EntityWithSequence(Long id, String name) {
+		EntityWithTable(Long id, String name) {
 			this.id = id;
 			this.name = name;
 		}
-		EntityWithSequence() {
+		EntityWithTable() {
 		}
 	}
 }

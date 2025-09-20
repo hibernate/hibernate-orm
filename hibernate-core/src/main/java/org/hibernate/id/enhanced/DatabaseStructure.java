@@ -97,7 +97,7 @@ public interface DatabaseStructure extends ExportableProducer {
 	 * @param table The table for which this structure is used to generate values
 	 * @param optimizer The {@link Optimizer} for this generator
 	 *
-	 * @see org.hibernate.relational.SchemaManager#resynchronizeSequences()
+	 * @see org.hibernate.relational.SchemaManager#resynchronizeGenerators()
 	 *
 	 * @since 7.2
 	 */

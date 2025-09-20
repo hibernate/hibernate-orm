@@ -36,20 +36,25 @@ import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.jdbc.AbstractReturningWork;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.boot.model.internal.GeneratorBinder.applyIfNotEmpty;
 import static org.hibernate.cfg.MappingSettings.TABLE_GENERATOR_STORE_LAST_USED;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
+import static org.hibernate.id.enhanced.ResyncHelper.getCurrentTableValue;
+import static org.hibernate.id.enhanced.ResyncHelper.getMaxPrimaryKey;
 import static org.hibernate.id.enhanced.TableGeneratorLogger.TABLE_GENERATOR_LOGGER;
 import static org.hibernate.id.IdentifierGeneratorHelper.getNamingStrategy;
 import static org.hibernate.id.enhanced.OptimizerFactory.determineImplicitOptimizerName;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
@@ -186,6 +191,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	private boolean storeLastUsedValue;
 
 	private Type identifierType;
+	private Table table;
 
 	private QualifiedName qualifiedTableName;
 	private QualifiedName physicalTableName;
@@ -325,6 +331,8 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 				serviceRegistry.requireService( ConfigurationService.class )
 						.getSetting( TABLE_GENERATOR_STORE_LAST_USED, BOOLEAN, true );
 		identifierType = creationContext.getType();
+
+		table = creationContext.getValue().getTable();
 
 		final var jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
 
@@ -478,30 +486,30 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		return getInt( INCREMENT_PARAM, params, DEFAULT_INCREMENT_SIZE );
 	}
 
-	protected String buildSelectQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {
+	protected String buildSelectQuery(SqlStringGenerationContext context) {
 		return new SimpleSelect( context.getDialect() )
 				.addColumn( valueColumnName )
-				.setTableName( formattedPhysicalTableName )
+				.setTableName( context.format( physicalTableName ) )
 				.addRestriction( segmentColumnName )
 				.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE ) )
 				.toStatementString();
 	}
 
-	protected String buildUpdateQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {
-		return "update " + formattedPhysicalTableName
+	protected String buildUpdateQuery(SqlStringGenerationContext context) {
+		return "update " + context.format( physicalTableName )
 				+ " set " + valueColumnName + "=? "
 				+ " where " + valueColumnName + "=? and " + segmentColumnName + "=?";
 	}
 
-	protected String buildInsertQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {
-		return "insert into " + formattedPhysicalTableName
+	protected String buildInsertQuery(SqlStringGenerationContext context) {
+		return "insert into " + context.format( physicalTableName )
 				+ " (" + segmentColumnName + ", " + valueColumnName + ") " + " values (?,?)";
 	}
 
 	protected InitCommand generateInsertInitCommand(SqlStringGenerationContext context) {
-		final String renderedTableName = context.format( physicalTableName );
+		final String tableName = context.format( physicalTableName );
 		final int value = storeLastUsedValue ? initialValue - 1 : initialValue;
-		return new InitCommand( "insert into " + renderedTableName
+		return new InitCommand( "insert into " + tableName
 				+ "(" + segmentColumnName + ", " + valueColumnName + ")"
 				+ " values ('" + segmentValue + "'," + ( value ) + ")" );
 	}
@@ -547,61 +555,80 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		final var value = makeValue();
 		int rows;
 		do {
-			TABLE_GENERATOR_LOGGER.retrievingCurrentValueForSegment( segmentValue );
-			try ( var prepareStatement = prepareStatement( connection, selectQuery, logger, listener, session ) ) {
-				prepareStatement.setString( 1, segmentValue );
-				final var resultSet = executeQuery( prepareStatement, listener, selectQuery, session );
-				if ( !resultSet.next() ) {
-					final long initializationValue = storeLastUsedValue ? initialValue - 1 : initialValue;
-					value.initialize( initializationValue );
-
-					TABLE_GENERATOR_LOGGER.insertingInitialValueForSegment( value, segmentValue );
-					try ( PreparedStatement statement = prepareStatement( connection, insertQuery, logger, listener, session ) ) {
-						statement.setString( 1, segmentValue );
-						value.bind( statement, 2 );
-						executeUpdate( statement, listener, insertQuery, session);
-					}
-				}
-				else {
-					final int defaultValue = storeLastUsedValue ? 0 : 1;
-					value.initialize( resultSet, defaultValue );
-					if ( resultSet.wasNull() ) {
-						throw new HibernateException(
-								String.format( "%s for %s '%s' is null",
-										valueColumnName, segmentColumnName,
-										segmentValue ) );
-					}
-				}
-				resultSet.close();
-			}
-			catch (SQLException e) {
-				TABLE_GENERATOR_LOGGER.unableToReadOrInitializeHiValue( physicalTableName.render(), e );
-				throw e;
-			}
-
-			final IntegralDataTypeHolder updateValue = value.copy();
+			retrieveCurrentValue( connection, logger, listener, session, value );
+			final var updateValue = value.copy();
 			if ( optimizer.applyIncrementSizeToSourceValues() ) {
 				updateValue.add( incrementSize );
 			}
 			else {
 				updateValue.increment();
 			}
-			TABLE_GENERATOR_LOGGER.updatingCurrentValueForSegment( updateValue, segmentValue );
-			try ( var statement = prepareStatement( connection, updateQuery, logger, listener, session ) ) {
-				updateValue.bind( statement, 1 );
-				value.bind( statement, 2 );
-				statement.setString( 3, segmentValue );
-				rows = executeUpdate( statement, listener, updateQuery, session );
-			}
-			catch (SQLException e) {
-				TABLE_GENERATOR_LOGGER.unableToUpdateHiValue( physicalTableName.render(), e );
-				throw e;
-			}
+			rows = updateValue( connection, logger, listener, session, updateValue, value );
 		}
 		while ( rows == 0 );
-
 		accessCount++;
 		return storeLastUsedValue ? value.increment() : value;
+	}
+
+	private int updateValue(
+			Connection connection,
+			SqlStatementLogger logger,
+			SessionEventListenerManager listener,
+			SharedSessionContractImplementor session,
+			IntegralDataTypeHolder updateValue,
+			IntegralDataTypeHolder value)
+					throws SQLException {
+		TABLE_GENERATOR_LOGGER.updatingCurrentValueForSegment( updateValue, segmentValue );
+		try ( var statement = prepareStatement( connection, updateQuery, logger, listener, session ) ) {
+			updateValue.bind( statement, 1 );
+			value.bind( statement, 2 );
+			statement.setString( 3, segmentValue );
+			return executeUpdate( statement, listener, updateQuery, session );
+		}
+		catch (SQLException e) {
+			TABLE_GENERATOR_LOGGER.unableToUpdateHiValue( physicalTableName.render(), e );
+			throw e;
+		}
+	}
+
+	private void retrieveCurrentValue(
+			Connection connection,
+			SqlStatementLogger logger,
+			SessionEventListenerManager listener,
+			SharedSessionContractImplementor session,
+			IntegralDataTypeHolder value)
+					throws SQLException {
+		TABLE_GENERATOR_LOGGER.retrievingCurrentValueForSegment( segmentValue );
+		try ( var prepareStatement = prepareStatement( connection, selectQuery, logger, listener, session ) ) {
+			prepareStatement.setString( 1, segmentValue );
+			final var resultSet = executeQuery( prepareStatement, listener, selectQuery, session );
+			if ( !resultSet.next() ) {
+				final long initializationValue = storeLastUsedValue ? initialValue - 1 : initialValue;
+				value.initialize( initializationValue );
+				TABLE_GENERATOR_LOGGER.insertingInitialValueForSegment( value, segmentValue );
+				try ( PreparedStatement statement = prepareStatement( connection, insertQuery, logger, listener,
+						session ) ) {
+					statement.setString( 1, segmentValue );
+					value.bind( statement, 2 );
+					executeUpdate( statement, listener, insertQuery, session );
+				}
+			}
+			else {
+				final int defaultValue = storeLastUsedValue ? 0 : 1;
+				value.initialize( resultSet, defaultValue );
+				if ( resultSet.wasNull() ) {
+					throw new HibernateException(
+							String.format( "%s for %s '%s' is null",
+									valueColumnName, segmentColumnName,
+									segmentValue ) );
+				}
+			}
+			resultSet.close();
+		}
+		catch (SQLException e) {
+			TABLE_GENERATOR_LOGGER.unableToReadOrInitializeHiValue( physicalTableName.render(), e );
+			throw e;
+		}
 	}
 
 	private PreparedStatement prepareStatement(
@@ -666,53 +693,81 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 	@Override
 	public void registerExportables(Database database) {
-		final Namespace namespace = database.locateNamespace(
+		final var namespace = database.locateNamespace(
 				qualifiedTableName.getCatalogName(),
 				qualifiedTableName.getSchemaName()
 		);
-
-		Table table = namespace.locateTable( qualifiedTableName.getObjectName() );
-		if ( table == null ) {
-			table = namespace.createTable(
-					qualifiedTableName.getObjectName(),
-					(identifier) -> new Table( contributor, namespace, identifier, false )
-			);
-			if ( isNotEmpty( options ) ) {
-				table.setOptions( options );
-			}
-
-			final var basicTypeRegistry = database.getTypeConfiguration().getBasicTypeRegistry();
-			// todo : not sure the best solution here.  do we add the columns if missing?  other?
-			final var ddlTypeRegistry = database.getTypeConfiguration().getDdlTypeRegistry();
-			final var segmentColumn =
-					ExportableColumnHelper.column( database, table, segmentColumnName,
-							basicTypeRegistry.resolve( StandardBasicTypes.STRING ),
-							ddlTypeRegistry.getTypeName( Types.VARCHAR, Size.length( segmentValueLength ) ) );
-			segmentColumn.setNullable( false );
-			table.addColumn( segmentColumn );
-
-			// lol
-			table.setPrimaryKey( new PrimaryKey( table ) );
-			table.getPrimaryKey().addColumn( segmentColumn );
-
-			final var type = basicTypeRegistry.resolve( StandardBasicTypes.LONG );
-			final var valueColumn =
-					ExportableColumnHelper.column( database, table, valueColumnName, type,
-							ddlTypeRegistry.getTypeName( type.getJdbcType().getDdlTypeCode(), database.getDialect() ) );
-			table.addColumn( valueColumn );
-		}
-
+		final var existingTable = namespace.locateTable( qualifiedTableName.getObjectName() );
+		final var table = existingTable == null ? createTable( database, namespace ) : existingTable;
 		// allow physical naming strategies a chance to kick in
 		physicalTableName = table.getQualifiedTableName();
 		table.addInitCommand( this::generateInsertInitCommand );
+		table.addResyncCommand( this::generateResyncCommand );
+	}
+
+	private InitCommand generateResyncCommand(SqlStringGenerationContext context, Connection connection) {
+		final String sequenceTableName = context.format( physicalTableName );
+		final String tableName = context.format( table.getQualifiedTableName() );
+		final String primaryKeyColumnName = table.getPrimaryKey().getColumn( 0 ).getName();
+		final int adjustment = optimizer.getAdjustment() - 1;
+		final long max = getMaxPrimaryKey( connection, primaryKeyColumnName, tableName );
+		final long current =
+				getCurrentTableValue( connection, sequenceTableName, valueColumnName,
+						segmentColumnName, segmentValue );
+		if ( max + adjustment > current ) {
+			final String update =
+					"update " + sequenceTableName
+					+ " set " + valueColumnName + " = " + (max + adjustment)
+					+ " where " + segmentColumnName + " = '" + segmentValue + "'";
+			return new InitCommand( update );
+		}
+		else {
+			return new InitCommand();
+		}
+	}
+
+	private Table createTable(Database database, Namespace namespace) {
+		final var table =
+				namespace.createTable( qualifiedTableName.getObjectName(),
+						identifier -> new Table( contributor, namespace, identifier, false ) );
+		if ( isNotBlank( options ) ) {
+			table.setOptions( options );
+		}
+
+		final var typeConfiguration = database.getTypeConfiguration();
+		// todo : not sure the best solution here.  do we add the columns if missing?  other?
+		final var segmentColumn = segmentColumn( database, table, typeConfiguration );
+		table.addColumn( segmentColumn );
+		table.setPrimaryKey( new PrimaryKey( table ) );
+		table.getPrimaryKey().addColumn( segmentColumn );
+
+		final var longType =
+				typeConfiguration.getBasicTypeRegistry()
+						.resolve( StandardBasicTypes.LONG );
+		final var valueColumn =
+				ExportableColumnHelper.column( database, table, valueColumnName, longType,
+						typeConfiguration.getDdlTypeRegistry()
+								.getTypeName( longType.getJdbcType().getDdlTypeCode(), database.getDialect() ) );
+		table.addColumn( valueColumn );
+		return table;
+	}
+
+	private Column segmentColumn(Database database, Table table, TypeConfiguration typeConfiguration) {
+		final var segmentColumn =
+				ExportableColumnHelper.column( database, table, segmentColumnName,
+						typeConfiguration.getBasicTypeRegistry()
+								.resolve( StandardBasicTypes.STRING ),
+						typeConfiguration.getDdlTypeRegistry()
+								.getTypeName( Types.VARCHAR, Size.length( segmentValueLength ) ) );
+		segmentColumn.setNullable( false );
+		return segmentColumn;
 	}
 
 	@Override
 	public void initialize(SqlStringGenerationContext context) {
-		final String formattedPhysicalTableName = context.format( physicalTableName );
-		selectQuery = buildSelectQuery( formattedPhysicalTableName, context );
-		updateQuery = buildUpdateQuery( formattedPhysicalTableName, context );
-		insertQuery = buildInsertQuery( formattedPhysicalTableName, context );
+		selectQuery = buildSelectQuery( context );
+		updateQuery = buildUpdateQuery( context );
+		insertQuery = buildInsertQuery( context );
 	}
 
 	public static void applyConfiguration(

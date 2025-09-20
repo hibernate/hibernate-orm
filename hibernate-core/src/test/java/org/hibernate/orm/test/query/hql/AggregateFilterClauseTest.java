@@ -15,9 +15,9 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @SessionFactory
 public class AggregateFilterClauseTest {
 
-	@BeforeEach
+	@BeforeAll
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				em -> {
@@ -83,9 +83,9 @@ public class AggregateFilterClauseTest {
 		);
 	}
 
-	@AfterEach
+	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@Test

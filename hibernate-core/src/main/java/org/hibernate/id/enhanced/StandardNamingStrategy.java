@@ -13,6 +13,7 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
+import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.ServiceRegistry;
 
@@ -73,27 +74,13 @@ public class StandardNamingStrategy implements ImplicitDatabaseObjectNamingStrat
 			Identifier schemaName,
 			Map<?, ?> configValues,
 			ServiceRegistry serviceRegistry) {
-
 		final String rootTableName = getString( TABLE, configValues );
-		final String implicitName = implicitSequenceName( rootTableName, configValues, serviceRegistry );
+		final String implicitName = implicitSequenceName( rootTableName, configValues );
+		return qualifiedSequenceName( catalogName, schemaName, serviceRegistry, implicitName );
 
-		if ( implicitName.contains( "." ) ) {
-			return QualifiedNameParser.INSTANCE.parse( implicitName );
-		}
-
-		return new QualifiedSequenceName(
-				catalogName,
-				schemaName,
-				serviceRegistry.requireService( JdbcEnvironment.class )
-						.getIdentifierHelper()
-						.toIdentifier( implicitName )
-		);
 	}
 
-	private static String implicitSequenceName(
-			String rootTableName,
-			Map<?, ?> configValues,
-			ServiceRegistry serviceRegistry) {
+	private static String implicitSequenceName(String rootTableName, Map<?, ?> configValues) {
 		final String explicitSuffix = getString( CONFIG_SEQUENCE_PER_ENTITY_SUFFIX, configValues );
 		final String base = getString( IMPLICIT_NAME_BASE, configValues, rootTableName );
 
@@ -126,20 +113,8 @@ public class StandardNamingStrategy implements ImplicitDatabaseObjectNamingStrat
 			Identifier schemaName,
 			Map<?, ?> configValues,
 			ServiceRegistry serviceRegistry) {
-		final String tableName = implicitTableName( configValues );
-
-		if ( tableName.contains( "." ) ) {
-			return QualifiedNameParser.INSTANCE.parse( tableName );
-		}
-		else {
-			return new QualifiedNameParser.NameParts(
-					catalogName,
-					schemaName,
-					serviceRegistry.requireService( JdbcEnvironment.class )
-							.getIdentifierHelper()
-							.toIdentifier( tableName )
-			);
-		}
+		final String implicitName = implicitTableName( configValues );
+		return qualifiedTableName( catalogName, schemaName, serviceRegistry, implicitName );
 	}
 
 	private static String implicitTableName(Map<?, ?> configValues) {
@@ -147,4 +122,27 @@ public class StandardNamingStrategy implements ImplicitDatabaseObjectNamingStrat
 		return isNotEmpty( generatorName ) ? generatorName : DEF_TABLE;
 	}
 
+	private static QualifiedName qualifiedSequenceName(Identifier catalogName, Identifier schemaName, ServiceRegistry serviceRegistry, String implicitName) {
+		return implicitName.contains( "." )
+				? QualifiedNameParser.INSTANCE.parse( implicitName )
+				: new QualifiedSequenceName(
+						catalogName,
+						schemaName,
+						serviceRegistry.requireService( JdbcEnvironment.class )
+								.getIdentifierHelper()
+								.toIdentifier( implicitName )
+				);
+	}
+
+	private static QualifiedName qualifiedTableName(Identifier catalogName, Identifier schemaName, ServiceRegistry serviceRegistry, String implicitName) {
+		return implicitName.contains( "." )
+				? QualifiedNameParser.INSTANCE.parse( implicitName )
+				: new QualifiedTableName(
+						catalogName,
+						schemaName,
+						serviceRegistry.requireService( JdbcEnvironment.class )
+								.getIdentifierHelper()
+								.toIdentifier( implicitName )
+				);
+	}
 }

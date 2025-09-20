@@ -612,7 +612,7 @@ public class GeneratorBinder {
 			Map<String, Object> configuration,
 			Value value) {
 		if ( generator instanceof Configurable configurable ) {
-			final Properties parameters = collectParameters(
+			final var parameters = collectParameters(
 					value,
 					creationContext.getDatabase().getDialect(),
 					creationContext.getRootClass(),
@@ -762,9 +762,9 @@ public class GeneratorBinder {
 			String generatorStrategy,
 			Map<String, Object> configuration,
 			MetadataBuildingContext context) {
-		final BeanContainer beanContainer = beanContainer( context );
+		final var beanContainer = beanContainer( context );
 		identifierValue.setCustomIdGeneratorCreator( creationContext -> {
-			final Generator identifierGenerator =
+			final var identifierGenerator =
 					instantiateGenerator( beanContainer, generatorClass( generatorStrategy, identifierValue ) );
 			// in this code path, there's no generator annotation,
 			// and therefore no need to call initialize()

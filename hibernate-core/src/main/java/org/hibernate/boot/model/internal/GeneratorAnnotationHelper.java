@@ -187,7 +187,7 @@ public class GeneratorAnnotationHelper {
 						else if ( nameFromGeneratedValue != null ) {
 							properties.put( GENERATOR_NAME, nameFromGeneratedValue );
 						}
-						// we need to better handle default allocation-size here...
+						// we need to better handle the default allocation size here
 						properties.put( INCREMENT_PARAM, fallbackAllocationSize( generatorAnnotation, buildingContext ) );
 					},
 					generatorAnnotation == null
@@ -221,7 +221,7 @@ public class GeneratorAnnotationHelper {
 						else if ( nameFromGeneratedValue != null ) {
 							properties.put( GENERATOR_NAME, nameFromGeneratedValue );
 						}
-						// we need to better handle default allocation-size here...
+						// we need to better handle the default allocation size here
 						properties.put(
 								INCREMENT_PARAM,
 								fallbackAllocationSize( generatorAnnotation, buildingContext )
@@ -247,7 +247,7 @@ public class GeneratorAnnotationHelper {
 		final var markerAnnotation =
 				generatorAnnotation.annotationType().getAnnotation( IdGeneratorType.class );
 		idValue.setCustomIdGeneratorCreator( creationContext -> {
-			final Generator identifierGenerator =
+			final var identifierGenerator =
 					instantiateGenerator( beanContainer( buildingContext ), markerAnnotation.value() );
 			prepareForUse(
 					identifierGenerator,

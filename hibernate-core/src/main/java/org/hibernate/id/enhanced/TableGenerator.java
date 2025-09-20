@@ -544,7 +544,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			SessionEventListenerManager listener,
 			SharedSessionContractImplementor session)
 			throws SQLException {
-		final IntegralDataTypeHolder value = makeValue();
+		final var value = makeValue();
 		int rows;
 		do {
 			TABLE_GENERATOR_LOGGER.retrievingCurrentValueForSegment( segmentValue );

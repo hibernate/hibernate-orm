@@ -7,7 +7,6 @@ package org.hibernate.id.enhanced;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -59,8 +58,7 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 	public Serializable generate(AccessCallback callback) {
 		lock.lock();
 		try {
-			final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
-
+			final var generationState = locateGenerationState( callback.getTenantIdentifier() );
 			if ( generationState.lo > generationState.maxLo ) {
 				generationState.lastSourceValue = callback.getNextValue();
 				generationState.lo = generationState.lastSourceValue.eq( 0 ) ? 1 : 0;
@@ -90,25 +88,25 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 			return noTenantState;
 		}
 		else {
-			GenerationState state;
 			if ( tenantSpecificState == null ) {
 				tenantSpecificState = new ConcurrentHashMap<>();
-				state = createGenerationState();
+				final var state = createGenerationState();
 				tenantSpecificState.put( tenantIdentifier, state );
+				return state;
 			}
 			else {
-				state = tenantSpecificState.get( tenantIdentifier );
+				var state = tenantSpecificState.get( tenantIdentifier );
 				if ( state == null ) {
 					state = createGenerationState();
 					tenantSpecificState.put( tenantIdentifier, state );
 				}
+				return state;
 			}
-			return state;
 		}
 	}
 
 	private GenerationState createGenerationState() {
-		final GenerationState state = new GenerationState();
+		final var state = new GenerationState();
 		state.maxLo = initialMaxLo;
 		state.lo = initialMaxLo + 1;
 		return state;
@@ -156,7 +154,7 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 
 	@Override
 	public Expression createLowValueExpression(Expression databaseValue, SessionFactoryImplementor sessionFactory) {
-		BasicValuedMapping integerType = sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
+		final var integerType = sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
 		return new BinaryArithmeticExpression(
 				databaseValue,
 				BinaryArithmeticOperator.MULTIPLY,

@@ -15,7 +15,7 @@ import org.hibernate.boot.Metadata;
  * @since 6.2
  */
 @Incubating
-public interface SequenceSynchronizer {
+public interface GeneratorSynchronizer {
 	/**
 	 * Perform sequence resynchronization from the indicated source(s) to the indicated target(s).
 	 * @param metadata Represents the schema to be dropped.

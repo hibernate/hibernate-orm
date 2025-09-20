@@ -13,8 +13,7 @@ import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.spi.SchemaFilter;
-import org.hibernate.tool.schema.spi.SchemaTruncator;
-import org.hibernate.tool.schema.spi.SequenceSynchronizer;
+import org.hibernate.tool.schema.spi.GeneratorSynchronizer;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 import org.jboss.logging.Logger;
 
@@ -24,17 +23,17 @@ import static org.hibernate.tool.schema.internal.Helper.createSqlStringGeneratio
 import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabled;
 
 /**
- * Basic implementation of {@link SchemaTruncator}.
+ * Basic implementation of {@link GeneratorSynchronizer}.
  *
  * @author Gavin King
  */
-public class SequenceSynchronizerImpl implements SequenceSynchronizer {
-	private static final Logger LOG = Logger.getLogger( SequenceSynchronizerImpl.class );
+public class GeneratorSynchronizerImpl implements GeneratorSynchronizer {
+	private static final Logger LOG = Logger.getLogger( GeneratorSynchronizerImpl.class );
 
 	private final HibernateSchemaManagementTool tool;
 	private final SchemaFilter schemaFilter;
 
-	public SequenceSynchronizerImpl(HibernateSchemaManagementTool tool, SchemaFilter truncatorFilter) {
+	public GeneratorSynchronizerImpl(HibernateSchemaManagementTool tool, SchemaFilter truncatorFilter) {
 		this.tool = tool;
 		schemaFilter = truncatorFilter;
 	}

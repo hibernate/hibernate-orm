@@ -5,6 +5,7 @@
 package org.hibernate.relational;
 
 import org.hibernate.Incubating;
+import org.hibernate.tool.schema.spi.GeneratorSynchronizer;
 
 /**
  * Allows programmatic {@linkplain #exportMappedObjects schema export},
@@ -19,7 +20,7 @@ import org.hibernate.Incubating;
  * {@link jakarta.persistence.SchemaManager}, which it now inherits,
  * with a minor change to the naming of its operations. It is retained
  * for backward compatibility and as a place to define additional
- * operations like {@link #populate}, {@link #resynchronizeSequences},
+ * operations like {@link #populate}, {@link #resynchronizeGenerators},
  * and {@link #forSchema}.
  *
  * @since 6.2
@@ -97,20 +98,23 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	void populate();
 
 	/**
-	 * Resynchronize sequences after importing test data.
+	 * Resynchronize {@linkplain jakarta.persistence.SequenceGenerator sequences} and
+	 * {@linkplain jakarta.persistence.TableGenerator table-based generators} after
+	 * importing entity data.
 	 * <p>
 	 * When data is imported to the database without the use of a Hibernate session,
 	 * a database sequence might become stale with respect to the data in the table for
 	 * which it is used to generate unique keys. This operation restarts every sequence
 	 * so that the next generated unique key will be larger than the largest key
-	 * currently in use.
+	 * currently in use. A similar phenomenon might occur for the database table backing
+	 * a table-based generator, and so this operation also updates such tables.
 	 * <p>
-	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SequenceSynchronizer}.
+	 * Programmatic way to run {@link GeneratorSynchronizer}.
 	 *
 	 * @since 7.2
 	 */
 	@Incubating
-	void resynchronizeSequences();
+	void resynchronizeGenerators();
 
 	/**
 	 * Obtain an instance which targets the given schema.

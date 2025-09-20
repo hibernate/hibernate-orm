@@ -12,8 +12,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Table;
 
 /**
- * Encapsulates definition of the underlying data structure backing a
- * sequence-style generator.
+ * Encapsulates definition of the underlying data structure backing
+ * a {@linkplain SequenceStyleGenerator sequence-style} generator.
  *
  * @author Steve Ebersole
  */

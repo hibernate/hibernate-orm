@@ -145,7 +145,7 @@ public interface SequenceSupport {
 	}
 
 	/**
-	 * Typically dialects which support sequences can create a sequence with
+	 * Typically, dialects which support sequences can create a sequence with
 	 * a single command. This method is a convenience making it easier to
 	 * implement {@link #getCreateSequenceStrings(String,int,int)} for these
 	 * dialects.
@@ -169,7 +169,7 @@ public interface SequenceSupport {
 	}
 
 	/**
-	 * Typically dialects which support sequences can create a sequence with
+	 * Typically, dialects which support sequences can create a sequence with
 	 * a single command. This method is a convenience making it easier to
 	 * implement {@link #getCreateSequenceStrings(String,int,int)} for these
 	 * dialects.
@@ -212,9 +212,9 @@ public interface SequenceSupport {
 	}
 
 	/**
-	 * Typically dialects which support sequences can drop a sequence
-	 * with a single command.  This is convenience form of
-	 * {@link #getDropSequenceStrings} to help facilitate that.
+	 * Typically, dialects which support sequences can drop a sequence
+	 * with a single command. This is a convenience form of
+	 * {@link #getDropSequenceStrings} which facilitates that.
 	 * <p>
 	 * Dialects which support sequences and can drop a sequence in a
 	 * single command need *only* override this method.  Dialects
@@ -227,6 +227,17 @@ public interface SequenceSupport {
 	 */
 	default String getDropSequenceString(String sequenceName) throws MappingException {
 		return "drop sequence " + sequenceName;
+	}
+
+	/**
+	 * A DDL statement to restart a sequence with a given value.
+	 *
+	 * @param sequenceName The name of the sequence
+	 * @param startWith The value to restart at
+	 * @return The {@code alter sequence ... restart} command
+	 */
+	default String getRestartSequenceString(String sequenceName, long startWith) {
+		return "alter sequence " + sequenceName + " restart with " + startWith;
 	}
 
 	/**

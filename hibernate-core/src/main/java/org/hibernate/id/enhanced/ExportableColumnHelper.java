@@ -24,7 +24,7 @@ import java.util.List;
 class ExportableColumnHelper {
 
 	static Column column(Database database, Table table, String segmentColumnName, BasicType<?> type, String typeName) {
-		final Column column = new Column( segmentColumnName );
+		final var column = new Column( segmentColumnName );
 		column.setSqlType( typeName );
 		column.setValue( new Value() {
 			@Override

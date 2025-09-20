@@ -177,9 +177,9 @@ public class SequenceStructure implements DatabaseStructure {
 			final int adjustment = optimizer.getAdjustment();
 			final long max = getMaxPrimaryKey( connection, primaryKeyColumnName, tableName );
 			final long current = getNextSequenceValue( connection, sequenceName, context.getDialect() );
-			final long newValue = Math.max( max + adjustment, current );
-			final String restart = "alter sequence " + sequenceName + " restart with " + newValue;
-			return new InitCommand( restart );
+			final long startWith = Math.max( max + adjustment, current );
+			return new InitCommand( context.getDialect().getSequenceSupport()
+					.getRestartSequenceString( sequenceName, startWith ) );
 		} );
 	}
 

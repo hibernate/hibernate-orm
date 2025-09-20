@@ -116,6 +116,7 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
@@ -146,6 +147,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.models.internal.util.CollectionHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.DeleteCoordinatorSoft;
@@ -2677,6 +2679,11 @@ public abstract class AbstractEntityPersister
 		return tableMappings[i];
 	}
 
+	@Override
+	public void forEachTableDetails(Consumer<TableDetails> consumer) {
+		CollectionHelper.forEach( getTableMappings(), consumer );
+	}
+
 	/**
 	 * Unfortunately we cannot directly use `SelectableMapping#getContainingTableExpression()`
 	 * as that blows up for attributes declared on super-type for union-subclass mappings
@@ -3355,7 +3362,7 @@ public abstract class AbstractEntityPersister
 				tableMappingBuilder = new TableMappingBuilder(
 						tableExpression,
 						relativePosition,
-						new EntityTableMapping.KeyMapping( keyColumns, identifierMapping ),
+						EntityTableMapping.createKeyMapping( keyColumns, identifierMapping ),
 						!isIdentifierTable && isNullableTable( relativePosition ),
 						inverseTable,
 						isIdentifierTable,

@@ -17,6 +17,7 @@ import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.LoadedValuesCollector;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
@@ -25,9 +26,9 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
  * @author Steve Ebersole
  */
 public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSourceProcessingState {
-
-	private final ExecutionContext executionContext;
 	private final JdbcValuesSourceProcessingOptions processingOptions;
+	private final LoadedValuesCollector loadedValuesCollector;
+	private final ExecutionContext executionContext;
 
 	private List<EntityHolder> loadingEntityHolders;
 	private List<EntityHolder> reloadedEntityHolders;
@@ -37,8 +38,10 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	private final PostLoadEvent postLoadEvent;
 
 	public JdbcValuesSourceProcessingStateStandardImpl(
-			ExecutionContext executionContext,
-			JdbcValuesSourceProcessingOptions processingOptions) {
+			LoadedValuesCollector loadedValuesCollector,
+			JdbcValuesSourceProcessingOptions processingOptions,
+			ExecutionContext executionContext) {
+		this.loadedValuesCollector = loadedValuesCollector;
 		this.executionContext = executionContext;
 		this.processingOptions = processingOptions;
 
@@ -51,6 +54,12 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 			preLoadEvent = null;
 			postLoadEvent = null;
 		}
+	}
+
+	public JdbcValuesSourceProcessingStateStandardImpl(
+			ExecutionContext executionContext,
+			JdbcValuesSourceProcessingOptions processingOptions) {
+		this( null, processingOptions, executionContext );
 	}
 
 	@Override
@@ -84,6 +93,14 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 			loadingEntityHolders = new ArrayList<>();
 		}
 		loadingEntityHolders.add( holder );
+
+		if ( loadedValuesCollector != null ) {
+			loadedValuesCollector.registerEntity(
+					holder.getEntityInitializer().getNavigablePath(),
+					holder.getDescriptor(),
+					holder.getEntityKey()
+			);
+		}
 	}
 
 	@Override
@@ -114,8 +131,15 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 		if ( loadingCollectionMap == null ) {
 			loadingCollectionMap = new HashMap<>();
 		}
-
 		loadingCollectionMap.put( key, loadingCollectionEntry );
+
+		if ( loadedValuesCollector != null ) {
+			loadedValuesCollector.registerCollection(
+					loadingCollectionEntry.getInitializer().getNavigablePath(),
+					loadingCollectionEntry.getCollectionDescriptor().getAttributeMapping(),
+					key
+			);
+		}
 	}
 
 	@Override

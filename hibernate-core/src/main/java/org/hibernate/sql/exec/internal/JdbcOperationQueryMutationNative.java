@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.sql.exec.spi;
+package org.hibernate.sql.exec.internal;
 
 import java.util.Collections;
 import java.util.List;
@@ -11,6 +11,10 @@ import java.util.Set;
 
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBinding;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 /**
  * Executable JDBC command

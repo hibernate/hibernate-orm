@@ -19,6 +19,7 @@ import org.hibernate.Session;
 import org.hibernate.Timeouts;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.Query;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -31,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -42,7 +44,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 		annotatedClasses =  {
 				ExplicitLockingTest.Person.class,
 				ExplicitLockingTest.Phone.class,
-		}
+		},
+		useCollectingStatementInspector = true
 )
 public class ExplicitLockingTest {
 
@@ -101,6 +104,8 @@ public class ExplicitLockingTest {
 
 	@Test
 	public void testSessionLock(EntityManagerFactoryScope scope) {
+		final SQLStatementInspector sqlCollector = scope.getCollectingStatementInspector();
+
 		Person p = scope.fromTransaction( entityManager -> {
 			log.info("testSessionLock");
 			Person person = new Person("John Doe");
@@ -121,6 +126,7 @@ public class ExplicitLockingTest {
 			//end::locking-session-lock-example[]
 		});
 
+		sqlCollector.clear();
 		scope.inTransaction( entityManager -> {
 			Long id = p.getId();
 			//tag::locking-session-lock-scope-example[]
@@ -128,6 +134,8 @@ public class ExplicitLockingTest {
 			Session session = entityManager.unwrap(Session.class);
 			session.lock(person, LockMode.PESSIMISTIC_READ, Timeouts.NO_WAIT, PessimisticLockScope.EXTENDED);
 			//end::locking-session-lock-scope-example[]
+			// find, lock persons, lock phones
+			assertThat( sqlCollector.getSqlQueries() ).hasSize( 3 );
 		});
 
 	}

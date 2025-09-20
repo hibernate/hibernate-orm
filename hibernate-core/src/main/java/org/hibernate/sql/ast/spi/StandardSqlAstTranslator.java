@@ -7,7 +7,7 @@ package org.hibernate.sql.ast.spi;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
+import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 
 /**
  * The final phase of query translation. Here we take the SQL AST an

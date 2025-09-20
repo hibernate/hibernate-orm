@@ -17,7 +17,7 @@ import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.internal.StandardJdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
-import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
+import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 
 /**

@@ -4,30 +4,17 @@
  */
 package org.hibernate.sql.exec.spi;
 
-import java.util.Map;
-import java.util.Set;
-
-import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.Query;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 
+import java.util.Map;
+
 /**
- * Unifying contract for any SQL statement we want to execute via JDBC.
+ * A JdbcOperation which (possibly) originated from a {@linkplain Query}.
  *
  * @author Steve Ebersole
  */
-public interface JdbcOperationQuery extends JdbcOperation {
-
-	/**
-	 * The names of tables this operation refers to
-	 */
-	Set<String> getAffectedTableNames();
-
-	/**
-	 * Signals that the SQL depends on the parameter bindings e.g. due to the need for inlining
-	 * of parameter values or multiValued parameters.
-	 */
-	boolean dependsOnParameterBindings();
-
+public interface JdbcOperationQuery extends JdbcOperation, CacheableJdbcOperation {
 	/**
 	 * The parameters which were inlined into the query as literals.
 	 *
@@ -35,6 +22,4 @@ public interface JdbcOperationQuery extends JdbcOperation {
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
 	Map<JdbcParameter, JdbcParameterBinding> getAppliedParameters();
-
-	boolean isCompatibleWith(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions);
 }

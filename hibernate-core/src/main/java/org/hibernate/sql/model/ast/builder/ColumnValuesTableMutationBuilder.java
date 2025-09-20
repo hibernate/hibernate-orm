@@ -59,7 +59,7 @@ public interface ColumnValuesTableMutationBuilder<M extends TableMutation<?>> ex
 	/**
 	 * Add a key column
 	 */
-	default void addKeyColumn(SelectableMapping selectableMapping) {
+	default void addKeyColumn(int index, SelectableMapping selectableMapping) {
 		addKeyColumn(
 				selectableMapping.getSelectionExpression(),
 				selectableMapping.getWriteExpression(),

@@ -9,6 +9,9 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 
+import java.util.Collection;
+import java.util.List;
+
 /**
  * LockingClauseStrategy implementation for cases when a dialect
  * applies locking in the {@code FROM clause} (e.g., SQL Server).
@@ -37,5 +40,15 @@ public class NonLockingClauseStrategy implements LockingClauseStrategy {
 	@Override
 	public void render(SqlAppender sqlAppender) {
 		// nothing to do
+	}
+
+	@Override
+	public Collection<TableGroup> getRootsToLock() {
+		return List.of();
+	}
+
+	@Override
+	public Collection<TableGroupJoin> getJoinsToLock() {
+		return List.of();
 	}
 }

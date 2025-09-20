@@ -24,7 +24,7 @@ import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
+import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.basic.BasicResult;

@@ -12,6 +12,7 @@ import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.transaction.TransactionUtil;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -96,7 +97,11 @@ public class Helper {
 		String getKeyColumnName();
 
 		default String getKeyColumnReference() {
-			return getTableAlias() + "." + getKeyColumnName();
+			return getKeyColumnReference( getTableAlias() );
+		}
+
+		default String getKeyColumnReference(String tableAlias) {
+			return tableAlias + "." + getKeyColumnName();
 		}
 	}
 
@@ -141,9 +146,39 @@ public class Helper {
 				case REPORT_LABELS -> "report_fk";
 			};
 		}
+
+		public String getCheckColumnName() {
+			return switch ( this ) {
+				case BOOKS, REPORTS -> "title";
+				case PERSONS, JOINED_REPORTER, PUBLISHER -> "name";
+				case REPORT_LABELS -> "txt";
+				case BOOK_GENRES -> "genre";
+				case BOOK_AUTHORS -> "idx";
+			};
+		}
+
+		public void checkLocked(Number keyValue, boolean expectedToBeLocked, SessionFactoryScope factoryScope) {
+			if ( this == BOOK_AUTHORS ) {
+				TransactionUtil.deleteRow( factoryScope, getTableName(), expectedToBeLocked );
+			}
+			else {
+				TransactionUtil.assertRowLock(
+						factoryScope,
+						getTableName(),
+						getCheckColumnName(),
+						getKeyColumnName(),
+						keyValue,
+						expectedToBeLocked
+				);
+			}
+		}
 	}
 
 	public static void checkSql(String sql, Dialect dialect, TableInformation... tablesFetched) {
+		checkSql( sql, false, dialect, tablesFetched );
+	}
+
+	public static void checkSql(String sql, boolean expectingFollowOn, Dialect dialect, TableInformation... tablesFetched) {
 		// note: assume `tables` is in order
 		final LockingSupport.Metadata lockingMetadata = dialect.getLockingSupport().getMetadata();
 		final PessimisticLockStyle pessimisticLockStyle = lockingMetadata.getPessimisticLockStyle();
@@ -164,7 +199,7 @@ public class Helper {
 					else {
 						buffer.append( "," );
 					}
-					buffer.append( table.getTableAlias() );
+					buffer.append( expectingFollowOn ? "tbl" : table.getTableAlias() );
 				}
 				aliases = buffer.toString();
 			}
@@ -179,7 +214,7 @@ public class Helper {
 					else {
 						buffer.append( "," );
 					}
-					buffer.append( table.getKeyColumnReference() );
+					buffer.append( expectingFollowOn ? table.getKeyColumnReference( "tbl") : table.getKeyColumnReference() );
 				}
 				aliases = buffer.toString();
 			}
@@ -191,7 +226,8 @@ public class Helper {
 			// Transact SQL (mssql, sybase) "table hint"-style locking
 			final LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
 			for ( TableInformation table : tablesFetched ) {
-				final String booksTableReference = dialect.appendLockHint( lockOptions, table.getTableAlias() );
+				final String tableAlias = expectingFollowOn ? "tbl" : table.getTableAlias();
+				final String booksTableReference = dialect.appendLockHint( lockOptions, tableAlias );
 				assertThat( sql ).contains( booksTableReference );
 			}
 		}

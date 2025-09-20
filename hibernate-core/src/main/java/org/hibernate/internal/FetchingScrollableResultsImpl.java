@@ -9,9 +9,9 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
-import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.spi.LoadContexts;
 import org.hibernate.sql.results.spi.RowReader;
 
@@ -31,7 +31,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 	public FetchingScrollableResultsImpl(
 			JdbcValues jdbcValues,
 			JdbcValuesSourceProcessingOptions processingOptions,
-			JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState,
+			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
 			RowProcessingStateStandardImpl rowProcessingState,
 			RowReader<R> rowReader,
 			SharedSessionContractImplementor persistenceContext) {

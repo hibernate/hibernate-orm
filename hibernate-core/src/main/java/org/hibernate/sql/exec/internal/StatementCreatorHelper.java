@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.sql.exec.spi;
+package org.hibernate.sql.exec.internal;
 
 import java.sql.PreparedStatement;
 

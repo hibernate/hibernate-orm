@@ -6,7 +6,7 @@ package org.hibernate.loader.ast.internal;
 
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 
 /**
  * Common contract for SQL AST based loading
@@ -27,5 +27,5 @@ public interface LoadPlan {
 	/**
 	 * The JdbcSelect for the load
 	 */
-	JdbcOperationQuerySelect getJdbcSelect();
+	JdbcSelect getJdbcSelect();
 }

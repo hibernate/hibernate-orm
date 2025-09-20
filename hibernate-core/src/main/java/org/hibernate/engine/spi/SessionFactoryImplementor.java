@@ -23,7 +23,6 @@ import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventEngine;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -309,7 +308,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	}
 
 	@Override
-	RootGraph<Map<String, ?>> createGraphForDynamicEntity(String entityName);
+	RootGraphImplementor<Map<String, ?>> createGraphForDynamicEntity(String entityName);
 
 	/**
 	 * The best guess entity name for an entity not in an association

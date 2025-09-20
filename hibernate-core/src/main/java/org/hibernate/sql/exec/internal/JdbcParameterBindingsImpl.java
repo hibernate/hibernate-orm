@@ -165,4 +165,11 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 			bindingMap.clear();
 		}
 	}
+
+	/**
+	 * For testing.
+	 */
+	public Map<JdbcParameter, JdbcParameterBinding> getBindingMap() {
+		return bindingMap;
+	}
 }

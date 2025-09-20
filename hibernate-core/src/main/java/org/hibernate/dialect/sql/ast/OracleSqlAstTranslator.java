@@ -190,7 +190,9 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 			}
 		}
 
-		if ( strategy != LockStrategy.FOLLOW_ON && needsLockingWrapper( querySpec ) && !canApplyLockingWrapper( querySpec ) ) {
+		if ( strategy != LockStrategy.FOLLOW_ON
+				&& needsLockingWrapper( querySpec, followOnStrategy )
+				&& !canApplyLockingWrapper( querySpec ) ) {
 			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
 				throw new IllegalQueryOperationException( "Locking with OFFSET/FETCH is not supported" );
 			}
@@ -317,7 +319,11 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 
 	@Override
 	public void visitQuerySpec(QuerySpec querySpec) {
-		final EntityIdentifierMapping identifierMappingForLockingWrapper = identifierMappingForLockingWrapper( querySpec );
+		final LockOptions lockOptions = getLockOptions();
+		final Locking.FollowOn followOnStrategy = lockOptions == null
+				? Locking.FollowOn.ALLOW
+				: lockOptions.getFollowOnStrategy();
+		final EntityIdentifierMapping identifierMappingForLockingWrapper = identifierMappingForLockingWrapper( querySpec, followOnStrategy );
 		final Expression offsetExpression;
 		final Expression fetchExpression;
 		final FetchClauseType fetchClauseType;
@@ -423,13 +429,13 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 		return lockingWrapper;
 	}
 
-	private EntityIdentifierMapping identifierMappingForLockingWrapper(QuerySpec querySpec) {
+	private EntityIdentifierMapping identifierMappingForLockingWrapper(QuerySpec querySpec, Locking.FollowOn followOnStrategy) {
 		// We only need a locking wrapper for very simple queries
 		if ( canApplyLockingWrapper( querySpec )
 				// There must be the need for locking in this query
 				&& needsLocking( querySpec )
 				// The query uses some sort of pagination which makes the wrapper necessary
-				&& needsLockingWrapper( querySpec )
+				&& needsLockingWrapper( querySpec, followOnStrategy )
 				// The query may not have a group by, having and distinct clause, or use aggregate functions,
 				// as these features will force the use of follow-on locking
 				&& querySpec.getGroupByClauseExpressions().isEmpty()
@@ -450,9 +456,8 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 				&& fromClause.getRoots().get( 0 ).getModelPart() instanceof EntityMappingType;
 	}
 
-	private boolean needsLockingWrapper(QuerySpec querySpec) {
-		final LockOptions lockOptions = getLockOptions();
-		if ( lockOptions.getFollowOnStrategy() == Locking.FollowOn.FORCE ) {
+	private boolean needsLockingWrapper(QuerySpec querySpec, Locking.FollowOn followOnStrategy) {
+		if ( followOnStrategy == Locking.FollowOn.FORCE ) {
 			// user explicitly asked for follow-on locking
 			return false;
 		}

@@ -7,7 +7,6 @@ package org.hibernate.sql.exec.internal;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.sql.exec.spi.AbstractJdbcOperationQuery;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 

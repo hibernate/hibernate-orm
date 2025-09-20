@@ -15,7 +15,7 @@ import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.spi.JdbcOperationQueryMutationNative;
+import org.hibernate.sql.exec.internal.JdbcOperationQueryMutationNative;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 

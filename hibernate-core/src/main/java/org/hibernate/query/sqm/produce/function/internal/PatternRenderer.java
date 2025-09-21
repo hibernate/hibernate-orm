@@ -96,7 +96,7 @@ public class PatternRenderer {
 					vararg = paramList.size();
 				}
 				else {
-					final int paramNumber = parseInt( index.toString() );
+					final int paramNumber = parameterIndex( pattern, index.toString() );
 					paramList.add( paramNumber );
 					index.setLength(0);
 					if ( paramNumber > max ) {
@@ -124,6 +124,21 @@ public class PatternRenderer {
 		}
 		this.paramIndexes = paramIndexes;
 		this.argumentRenderingModes = argumentRenderingModes;
+	}
+
+	private static int parameterIndex(String pattern, String index) {
+		if ( index.isEmpty() ) {
+			throw new IllegalArgumentException( "Missing parameter index in pattern: '" + pattern + "'" );
+		}
+		final int paramNumber;
+		try {
+			paramNumber = parseInt( index );
+		}
+		catch (NumberFormatException nfe) {
+			throw new IllegalArgumentException( "Illegal parameter index '" + index
+												+ "' in pattern: '" + pattern + "'", nfe );
+		}
+		return paramNumber;
 	}
 
 	public boolean hasVarargs() {

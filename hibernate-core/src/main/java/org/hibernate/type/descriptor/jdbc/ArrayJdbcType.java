@@ -190,8 +190,11 @@ public class ArrayJdbcType implements JdbcType {
 	}
 
 	protected <X> X getArray(BasicExtractor<X> extractor, java.sql.Array array, WrapperOptions options) throws SQLException {
-		if ( array != null && getElementJdbcType() instanceof AggregateJdbcType ) {
-			final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) getElementJdbcType();
+		final JdbcType jdbcType = getElementJdbcType();
+		if (array != null
+				&& jdbcType instanceof AggregateJdbcType
+				&& ((AggregateJdbcType) jdbcType).getEmbeddableMappingType() != null) {
+			final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) jdbcType;
 			final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 			final Object rawArray = array.getArray();
 			final Object[] domainObjects = new Object[Array.getLength( rawArray )];

@@ -86,6 +86,16 @@ public class ExamplesTestIT {
     }
 
     @Test
+    public void testTemplatePath() throws Exception {
+        System.setProperty("template.dir", "${project.basedir}/templates");
+        prepareProject("hbm2java/template-path");
+        assertNotGeneratedYet("Person.java");
+        runGenerateSources();
+        assertNumberOfGeneratedFiles(1);
+        assertGeneratedContains("Person.java", "// This is just an example of a custom template");
+    }
+
+    @Test
     public void testUseGenerics() throws Exception {
         databaseCreationScript = new String[] {
                 "create table PERSON (ID int not null,  NAME varchar(20), primary key (ID))",

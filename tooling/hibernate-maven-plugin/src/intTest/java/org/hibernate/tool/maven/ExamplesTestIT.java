@@ -86,6 +86,19 @@ public class ExamplesTestIT {
     }
 
     @Test
+    public void testOutputDirectory() throws Exception {
+        System.setProperty("output.dir", "${project.basedir}/generated-classes");
+        prepareProject("hbm2java/output-directory");
+        File outputDirectory = new File(projectFolder, "generated-classes");
+        File personFile = new File(outputDirectory, "Person.java");
+        assertFalse(outputDirectory.exists());
+        assertFalse(personFile.exists());
+        runGenerateSources();
+        assertEquals(1, outputDirectory.list().length); // 1 file is generated in 'generated-classes'
+        assertTrue(personFile.exists()); // The Person.java file should have been generated
+    }
+
+    @Test
     public void testTemplatePath() throws Exception {
         System.setProperty("template.dir", "${project.basedir}/templates");
         prepareProject("hbm2java/template-path");

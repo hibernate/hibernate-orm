@@ -8,6 +8,7 @@ import jakarta.persistence.Timeout;
 import org.hibernate.Timeouts;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -86,6 +87,11 @@ public class ConnectionLockTimeoutTests {
 	@SkipForDialect(
 			dialectClass = MySQLDialect.class,
 			reason = "The docs claim 0 is a valid value as 'no wait'; but in my testing, after setting to 0 we get back 1"
+	)
+	@SkipForDialect(
+			dialectClass = SybaseDialect.class,
+			matchSubTypes = true,
+			reason = "Sybase docs say no-wait is supported, but after setting no-wait -1 is returned.  And it unfortunately does not fail setting as no-wait."
 	)
 	void testNoWait(SessionFactoryScope factoryScope) {
 		// this is dependent on the Dialect's ConnectionLockTimeoutType

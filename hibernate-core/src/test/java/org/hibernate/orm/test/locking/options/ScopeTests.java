@@ -8,8 +8,10 @@ import org.hibernate.EnabledFetchProfile;
 import org.hibernate.Hibernate;
 import org.hibernate.Locking;
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -183,9 +185,22 @@ public class ScopeTests {
 			final Report report = session.find( Report.class, 2, PESSIMISTIC_WRITE, EXTENDED );
 
 			REPORTS.checkLocked( report.getId(), true, factoryScope );
-			PERSONS.checkLocked( report.getReporter().getId(), false, factoryScope );
+			PERSONS.checkLocked( report.getReporter().getId(), willAggressivelyLockJoinedTables( session.getDialect() ), factoryScope );
 			REPORT_LABELS.checkLocked( report.getId(), true, factoryScope );
 		} );
+	}
+
+	private boolean willAggressivelyLockJoinedTables(Dialect dialect) {
+		// Will be true when we have something like:
+		//
+		//		select ...
+		//		from books b
+		//			join persons p on ...
+		//		for update
+		///
+		// and the database extends for-update to `persons`
+
+		return dialect.getLockingSupport().getMetadata().getOuterJoinLockingType() == OuterJoinLockingType.FULL;
 	}
 
 	@Test

@@ -36,7 +36,11 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 
 	public static final LockingSupport SYBASE = new TransactSQLLockingSupport(
 			PessimisticLockStyle.TABLE_HINT,
-			LockTimeoutType.CONNECTION,
+			// There seems to be no way to ask Sybase for the current lock-timeout
+			// for a session/connection.  We need this to be able to reset the
+			// timeout in the post-action to properly use LockTimeoutType.CONNECTION
+			//LockTimeoutType.CONNECTION,
+			LockTimeoutType.NONE,
 			LockTimeoutType.QUERY,
 			LockTimeoutType.NONE,
 			RowLockStrategy.TABLE,
@@ -46,7 +50,11 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 
 	public static final LockingSupport SYBASE_ASE = new TransactSQLLockingSupport(
 			PessimisticLockStyle.NONE,
-			LockTimeoutType.CONNECTION,
+			// There seems to be no way to ask Sybase for the current lock-timeout
+			// for a session/connection.  We need this to be able to reset the
+			// timeout in the post-action to properly use LockTimeoutType.CONNECTION
+			//LockTimeoutType.CONNECTION,
+			LockTimeoutType.NONE,
 			LockTimeoutType.NONE,
 			LockTimeoutType.NONE,
 			RowLockStrategy.TABLE,
@@ -56,7 +64,11 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 
 	public static final LockingSupport SYBASE_LEGACY = new TransactSQLLockingSupport(
 			PessimisticLockStyle.TABLE_HINT,
-			LockTimeoutType.CONNECTION,
+			// There seems to be no way to ask Sybase for the current lock-timeout
+			// for a session/connection.  We need this to be able to reset the
+			// timeout in the post-action to properly use LockTimeoutType.CONNECTION
+			//LockTimeoutType.CONNECTION,
+			LockTimeoutType.NONE,
 			LockTimeoutType.NONE,
 			LockTimeoutType.NONE,
 			RowLockStrategy.TABLE,
@@ -69,7 +81,11 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 				version.isBefore( 10 )
 						? PessimisticLockStyle.TABLE_HINT
 						: PessimisticLockStyle.CLAUSE,
-				LockTimeoutType.CONNECTION,
+				// There seems to be no way to ask Sybase for the current lock-timeout
+				// for a session/connection.  We need this to be able to reset the
+				// timeout in the post-action to properly use LockTimeoutType.CONNECTION
+				//LockTimeoutType.CONNECTION,
+				LockTimeoutType.NONE,
 				LockTimeoutType.NONE,
 				LockTimeoutType.NONE,
 				version.isSameOrAfter( 10 )

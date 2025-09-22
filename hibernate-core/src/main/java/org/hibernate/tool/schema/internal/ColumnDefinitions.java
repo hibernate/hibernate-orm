@@ -4,8 +4,8 @@
  */
 package org.hibernate.tool.schema.internal;
 
-import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.naming.NamingHelper;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
@@ -15,8 +15,6 @@ import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Locale;
 
@@ -129,7 +127,7 @@ class ColumnDefinitions {
 			Dialect dialect,
 			SqlStringGenerationContext context) {
 		if ( column.isUnique() && !table.isPrimaryKey( column ) ) {
-			String uniqueKeyName = column.getUniqueKeyName();
+			final String uniqueKeyName = column.getUniqueKeyName();
 			final String keyName = uniqueKeyName == null
 					// fallback in case the ImplicitNamingStrategy name was not assigned
 					// (we don't have access to the ImplicitNamingStrategy here)
@@ -296,35 +294,8 @@ class ColumnDefinitions {
 			final String columnName = column == null ? "" : column.getName();
 			builder.append( "column`" ).append( columnName ).append( "`" );
 		}
-		return prefix + hashedName( builder.toString() );
+		final byte[] hashed = NamingHelper.hash( builder.toString().getBytes() );
+		return prefix + new BigInteger( 1, hashed ).toString( 35 );
 	}
 
-	/**
-	 * Hash a constraint name using MD5. Convert the MD5 digest to base 35
-	 * (full alphanumeric), guaranteeing
-	 * that the length of the name will always be smaller than the 30
-	 * character identifier restriction enforced by a few dialects.
-	 *
-	 * @param name The name to be hashed.
-	 * @return String The hashed name.
-	 *
-	 * @deprecated Only used from deprecated methods
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	private static String hashedName(String name) {
-		try {
-			final var messageDigest = MessageDigest.getInstance( "MD5" );
-			messageDigest.reset();
-			messageDigest.update( name.getBytes() );
-			final byte[] digest = messageDigest.digest();
-			final var bigInt = new BigInteger( 1, digest );
-			// By converting to base 35 (full alphanumeric), we guarantee
-			// that the length of the name will always be smaller than the 30
-			// character identifier restriction enforced by a few dialects.
-			return bigInt.toString( 35 );
-		}
-		catch ( NoSuchAlgorithmException e ) {
-			throw new HibernateException( "Unable to generate a hashed Constraint name", e );
-		}
-	}
 }

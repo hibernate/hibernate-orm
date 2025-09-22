@@ -12,7 +12,6 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
@@ -78,7 +77,7 @@ public class StandardTableMigrator implements TableMigrator {
 
 		final List<String> results = new ArrayList<>();
 
-		for ( Column column : table.getColumns() ) {
+		for ( var column : table.getColumns() ) {
 			final ColumnInformation columnInformation = tableInformation.getColumn(
 					Identifier.toIdentifier( column.getName(), column.isQuoted() )
 			);

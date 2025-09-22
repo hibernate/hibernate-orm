@@ -14,6 +14,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToFile.toFileWriter;
 
 /**
  * ScriptTargetOutput implementation for writing to supplied URL references
@@ -82,7 +83,7 @@ public class ScriptTargetOutputToUrl extends AbstractScriptTargetOutput implemen
 		// Spec says only "strings corresponding to file URLs" are supported,
 		// which I take to mean URLs whose protocol is "file"
 		try {
-			return ScriptTargetOutputToFile.toFileWriter( new File( url.toURI() ), charsetName, append );
+			return toFileWriter( new File( url.toURI() ), charsetName, append );
 		}
 		catch (URISyntaxException e) {
 			throw new SchemaManagementException(

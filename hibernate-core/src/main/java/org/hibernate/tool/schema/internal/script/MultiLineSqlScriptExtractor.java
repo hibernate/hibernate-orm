@@ -43,20 +43,20 @@ public class MultiLineSqlScriptExtractor implements SqlScriptCommandExtractor {
 	@Override
 	public List<String> extractCommands(Reader reader, Dialect dialect) {
 		try {
-			final SqlScriptParser.ScriptContext scriptParseTree = buildScriptParseTree( reader );
-			final SqlScriptVisitor visitor = new SqlScriptVisitor( dialect );
+			final var scriptParseTree = buildScriptParseTree( reader );
+			final var visitor = new SqlScriptVisitor( dialect );
 			return visitor.visitScript( scriptParseTree );
 		}
 		catch (Exception exception) {
 			if ( exception instanceof SqlScriptException sqlScriptException ) {
 				throw sqlScriptException;
 			}
-			throw new SqlScriptException( "Error during sql-script parsing.", exception );
+			throw new SqlScriptException( "Error during SQL script parsing", exception );
 		}
 	}
 
 	private static SqlScriptParser.ScriptContext buildScriptParseTree(Reader reader) throws IOException {
-		final SqlScriptLexer lexer = new SqlScriptLexer( CharStreams.fromReader( reader ) );
+		final var lexer = new SqlScriptLexer( CharStreams.fromReader( reader ) );
 		return buildScriptParseTree( lexer );
 	}
 
@@ -98,7 +98,7 @@ public class MultiLineSqlScriptExtractor implements SqlScriptCommandExtractor {
 				String msg,
 				RecognitionException e) {
 			if ( msg.contains( "missing ';'" ) ) {
-				throw new SqlScriptException( "Import script Sql statements must terminate with a ';' char" );
+				throw new SqlScriptException( "Import script SQL statements must terminate with a ';' char" );
 			}
 			super.syntaxError( recognizer, offendingSymbol, line, charPositionInLine, msg, e );
 		}

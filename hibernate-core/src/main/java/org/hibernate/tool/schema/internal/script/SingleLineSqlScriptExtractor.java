@@ -32,27 +32,19 @@ public class SingleLineSqlScriptExtractor implements SqlScriptCommandExtractor {
 	@Override
 	public List<String> extractCommands(Reader reader, Dialect dialect) {
 		final List<String> statementList = new LinkedList<>();
-
-		final BufferedReader bufferedReader = new BufferedReader( reader );
+		final var bufferedReader = new BufferedReader( reader );
 		try {
 			for ( String line = bufferedReader.readLine(); line != null; line = bufferedReader.readLine() ) {
 				final String trimmedLine = line.trim();
-
-				if ( trimmedLine.isEmpty() || isComment( trimmedLine ) ) {
-					continue;
+				if ( !trimmedLine.isEmpty() && !isComment( trimmedLine ) ) {
+					final String command =
+							trimmedLine.endsWith( ";" )
+									? trimmedLine.substring( 0, trimmedLine.length() - 1 )
+									: trimmedLine;
+					statementList.add( command );
 				}
 
-				final String command;
-				if ( trimmedLine.endsWith( ";" ) ) {
-					command = trimmedLine.substring( 0, trimmedLine.length() - 1 );
-				}
-				else {
-					command = trimmedLine;
-				}
-
-				statementList.add( command );
 			}
-
 			return statementList;
 		}
 		catch (IOException e) {

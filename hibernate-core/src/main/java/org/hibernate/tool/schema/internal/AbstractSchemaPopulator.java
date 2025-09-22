@@ -18,7 +18,6 @@ import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 
 import java.net.URL;
-import java.util.Map;
 
 import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_CHARSET_NAME;
 import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_IMPORT_FILES;
@@ -45,9 +44,7 @@ public abstract class AbstractSchemaPopulator {
 			boolean format,
 			Dialect dialect,
 			GenerationTarget... targets) {
-
-		final Formatter formatter = getImportScriptFormatter(format);
-
+		final var formatter = getImportScriptFormatter(format);
 		boolean hasDefaultImportFileScriptBeenExecuted = applyImportScript(
 				options,
 				commandExtractor,
@@ -103,7 +100,7 @@ public abstract class AbstractSchemaPopulator {
 			GenerationTarget[] targets) {
 		final Object importScriptSetting = getImportScriptSetting( options );
 		if ( importScriptSetting != null ) {
-			final ScriptSourceInput importScriptInput =
+			final var importScriptInput =
 					interpretScriptSourceSetting( importScriptSetting, getClassLoaderService(), getCharsetName( options ) );
 			applyScript(
 					options,
@@ -124,8 +121,10 @@ public abstract class AbstractSchemaPopulator {
 		if ( skipDefaultFileImport( options ) ) {
 			return false;
 		}
-		final URL defaultImportFileUrl = getClassLoaderService().locateResource( DEFAULT_IMPORT_FILE );
-		return defaultImportFileUrl != null && importScriptInput.containsScript( defaultImportFileUrl );
+		else {
+			final URL defaultImportFileUrl = getClassLoaderService().locateResource( DEFAULT_IMPORT_FILE );
+			return defaultImportFileUrl != null && importScriptInput.containsScript( defaultImportFileUrl );
+		}
 	}
 
 	/**
@@ -143,15 +142,14 @@ public abstract class AbstractSchemaPopulator {
 				StringHelper.split( ",",
 						getString( HBM2DDL_IMPORT_FILES, options.getConfigurationValues(), defaultImportFile ) );
 		final String charsetName = getCharsetName( options );
-		final ClassLoaderService classLoaderService = getClassLoaderService();
+		final var classLoaderService = getClassLoaderService();
 		for ( String currentFile : importFiles ) {
-			final String resourceName = currentFile.trim();
-			if ( !resourceName.isEmpty() ) { //skip empty resource names
+			if ( !currentFile.isBlank() ) { //skip empty resource names
 				applyScript(
 						options,
 						commandExtractor,
 						dialect,
-						interpretLegacyImportScriptSetting( resourceName, classLoaderService, charsetName ),
+						interpretLegacyImportScriptSetting( currentFile.trim(), classLoaderService, charsetName ),
 						formatter,
 						targets
 				);
@@ -187,7 +185,7 @@ public abstract class AbstractSchemaPopulator {
 	 * @return a {@link java.io.Reader} or a string URL
 	 */
 	private static Object getImportScriptSetting(ExecutionOptions options) {
-		final Map<String, Object> configuration = options.getConfigurationValues();
+		final var configuration = options.getConfigurationValues();
 		final Object importScriptSetting = configuration.get( HBM2DDL_LOAD_SCRIPT_SOURCE );
 		return importScriptSetting == null
 				? configuration.get( JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE )

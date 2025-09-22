@@ -97,12 +97,12 @@ public class GeneratorSynchronizerImpl implements GeneratorSynchronizer {
 			JdbcContext jdbcContext,
 			Formatter formatter,
 			GenerationTarget... targets) {
-		try ( var ddlTransactionIsolator = tool.getDdlTransactionIsolator( jdbcContext ) ) {
+		try ( var isolator = tool.getDdlTransactionIsolator( jdbcContext ) ) {
 			final var context = createSqlStringGenerationContext( options, metadata );
 			for ( var namespace : metadata.getDatabase().getNamespaces() ) {
 				if ( schemaFilter.includeNamespace( namespace ) ) {
 					for ( var table : namespace.getTables() ) {
-						for ( var command : table.getResyncCommands( context, ddlTransactionIsolator ) ) {
+						for ( var command : table.getResyncCommands( context, isolator ) ) {
 							applySqlStrings( command.initCommands(), formatter, options, targets );
 						}
 					}

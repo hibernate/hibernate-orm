@@ -35,15 +35,9 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 
 	@Override
 	public String[] getSqlCreateStrings(ForeignKey foreignKey, Metadata metadata, SqlStringGenerationContext context) {
-		if ( !dialect.hasAlterTable() ) {
-			return NO_COMMANDS;
-		}
-
-		if ( !foreignKey.isCreationEnabled() ) {
-			return NO_COMMANDS;
-		}
-
-		if ( !foreignKey.isPhysicalConstraint() ) {
+		if ( !dialect.hasAlterTable()
+				|| !foreignKey.isCreationEnabled()
+				|| !foreignKey.isPhysicalConstraint() ) {
 			return NO_COMMANDS;
 		}
 
@@ -61,9 +55,9 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 		final String sourceTableName = context.format( foreignKey.getTable().getQualifiedTableName() );
 		final String targetTableName = context.format( foreignKey.getReferencedTable().getQualifiedTableName() );
 
-		final StringBuilder buffer = new StringBuilder( dialect.getAlterTableString( sourceTableName ) )
-				.append(
-						foreignKey.getKeyDefinition() != null
+		final var buffer =
+				new StringBuilder( dialect.getAlterTableString( sourceTableName ) )
+						.append( foreignKey.getKeyDefinition() != null
 								? dialect.getAddForeignKeyConstraintString(
 										foreignKey.getName(),
 										foreignKey.getKeyDefinition()
@@ -74,11 +68,10 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 										targetTableName,
 										targetColumnNames,
 										foreignKey.isReferenceToPrimaryKey()
-								)
-				);
+								) );
 
 		if ( dialect.supportsCascadeDelete() ) {
-			final OnDeleteAction onDeleteAction = foreignKey.getOnDeleteAction();
+			final var onDeleteAction = foreignKey.getOnDeleteAction();
 			if ( onDeleteAction != null && onDeleteAction != OnDeleteAction.NO_ACTION ) {
 				buffer.append( " on delete " ).append( onDeleteAction.toSqlString() );
 			}
@@ -93,68 +86,65 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 
 	private static List<Column> getTargetColumns(ForeignKey foreignKey, int numberOfColumns) {
 		if ( foreignKey.isReferenceToPrimaryKey() ) {
-			if ( numberOfColumns != foreignKey.getReferencedTable().getPrimaryKey().getColumnSpan() ) {
+			final var primaryKey = foreignKey.getReferencedTable().getPrimaryKey();
+			if ( numberOfColumns != primaryKey.getColumnSpan() ) {
 				throw new AssertionFailure(
 						String.format(
 								Locale.ENGLISH,
 								COLUMN_MISMATCH_MSG,
 								numberOfColumns,
-								foreignKey.getReferencedTable().getPrimaryKey().getColumnSpan(),
+								primaryKey.getColumnSpan(),
 								foreignKey.getName(),
 								foreignKey.getTable().getName(),
 								foreignKey.getReferencedTable().getName()
 						)
 				);
 			}
-			return foreignKey.getReferencedTable().getPrimaryKey().getColumns();
+			return primaryKey.getColumns();
 		}
 		else {
-			if ( numberOfColumns != foreignKey.getReferencedColumns().size() ) {
+			final var referencedColumns = foreignKey.getReferencedColumns();
+			if ( numberOfColumns != referencedColumns.size() ) {
 				throw new AssertionFailure(
 						String.format(
 								Locale.ENGLISH,
 								COLUMN_MISMATCH_MSG,
 								numberOfColumns,
-								foreignKey.getReferencedColumns().size(),
+								referencedColumns.size(),
 								foreignKey.getName(),
 								foreignKey.getTable().getName(),
 								foreignKey.getReferencedTable().getName()
 						)
 				);
 			}
-			return foreignKey.getReferencedColumns();
+			return referencedColumns;
 		}
 	}
 
 	@Override
 	public String[] getSqlDropStrings(ForeignKey foreignKey, Metadata metadata, SqlStringGenerationContext context) {
-		if ( !dialect.hasAlterTable() ) {
+		if ( !dialect.hasAlterTable()
+				|| !foreignKey.isCreationEnabled()
+				|| !foreignKey.isPhysicalConstraint() ) {
 			return NO_COMMANDS;
 		}
-
-		if ( !foreignKey.isCreationEnabled() ) {
-			return NO_COMMANDS;
+		else {
+			final String sourceTableName = context.format( foreignKey.getTable().getQualifiedTableName() );
+			return new String[] {getSqlDropStrings( sourceTableName, foreignKey, dialect )};
 		}
-
-		if ( !foreignKey.isPhysicalConstraint() ) {
-			return NO_COMMANDS;
-		}
-
-		final String sourceTableName = context.format( foreignKey.getTable().getQualifiedTableName() );
-		return new String[] { getSqlDropStrings( sourceTableName, foreignKey, dialect ) };
 	}
 
 	private String getSqlDropStrings(String tableName, ForeignKey foreignKey, Dialect dialect) {
-		final StringBuilder buf = new StringBuilder( dialect.getAlterTableString( tableName ) );
-		buf.append(" ").append( dialect.getDropForeignKeyString() ).append(" ");
+		final var alterTable = new StringBuilder( dialect.getAlterTableString( tableName ) );
+		alterTable.append(" ").append( dialect.getDropForeignKeyString() ).append(" ");
 		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
-			buf.append( "if exists " );
+			alterTable.append( "if exists " );
 		}
-		buf.append( dialect.quote( foreignKey.getName() ) );
+		alterTable.append( dialect.quote( foreignKey.getName() ) );
 		if ( dialect.supportsIfExistsAfterConstraintName() ) {
-			buf.append( " if exists" );
+			alterTable.append( " if exists" );
 		}
-		return buf.toString();
+		return alterTable.toString();
 	}
 
 }

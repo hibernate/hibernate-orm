@@ -53,7 +53,7 @@ public class ScriptSourceInputAggregate implements ScriptSourceInput {
 			}
 		}
 		final List<String> list = new ArrayList<>( size );
-		for ( List<String> strings : lists ) {
+		for ( var strings : lists ) {
 			list.addAll( strings );
 		}
 

@@ -80,6 +80,19 @@ public class ExamplesTestIT {
         createHibernatePropertiesFile(projectFolder);
     }
 
+    @Test
+    public void testNoGenerics() throws Exception {
+        databaseCreationScript = new String[] {
+                "create table PERSON (ID int not null,  NAME varchar(20), primary key (ID))",
+                "create table ITEM (ID int not null,  NAME varchar(20), OWNER_ID int not null, " +
+                        "   primary key (ID), foreign key (OWNER_ID) references PERSON(ID))"
+        };
+        prepareProject("hbm2java/no-generics");
+        assertNotGeneratedYet();
+        runGenerateSources();
+        assertGeneratedDoesNotContain("Set<Item>");
+    }
+
     private void createHibernatePropertiesFile(File projectFolder) throws Exception {
         File projectResourcesFolder = new File(projectFolder, "src/main/resources");
         projectResourcesFolder.mkdirs();

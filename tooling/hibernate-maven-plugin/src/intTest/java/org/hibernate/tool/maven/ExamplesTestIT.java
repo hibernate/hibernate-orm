@@ -1,11 +1,10 @@
 package org.hibernate.tool.maven;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -45,39 +44,31 @@ public class ExamplesTestIT {
         localRepo = new File(baseFolder.getParentFile(), "local-repo");
     }
 
-    @BeforeEach
-    public void beforeEach() throws Exception {
-        createDatabase();
-    }
-
     @Test
     public void test5MinuteTutorial() throws Exception {
         prepareProject("5-minute-tutorial");
-        assertNotGeneratedYet();
+        assertNotGeneratedYet("Person.java");
         runGenerateSources();
-        assertGeneratedContains("public class Person");
+        assertNumberOfGeneratedFiles(1);
+        assertGeneratedContains("Person.java", "public class Person");
     }
 
     @Test
     public void testJpaDefault() throws Exception {
         prepareProject("hbm2java/jpa-default");
-        assertNotGeneratedYet();
+        assertNotGeneratedYet("Person.java");
         runGenerateSources();
-        assertGeneratedContains("import jakarta.persistence.Entity;");
+        assertNumberOfGeneratedFiles(1);
+        assertGeneratedContains("Person.java","import jakarta.persistence.Entity;");
     }
 
     @Test
     public void testNoAnnotations() throws Exception {
         prepareProject("hbm2java/no-annotations");
-        assertNotGeneratedYet();
+        assertNotGeneratedYet("Person.java");
         runGenerateSources();
-        assertGeneratedDoesNotContain("import jakarta.persistence.Entity;");
-    }
-    private void prepareProject(String projectName) throws Exception {
-        projectFolder = new File(baseFolder, projectName);
-        assertTrue(projectFolder.exists());
-        System.setProperty(MVN_HOME, projectFolder.getAbsolutePath());
-        createHibernatePropertiesFile(projectFolder);
+        assertNumberOfGeneratedFiles(1);
+        assertGeneratedDoesNotContain("Person.java", "import jakarta.persistence.Entity;");
     }
 
     @Test
@@ -88,9 +79,32 @@ public class ExamplesTestIT {
                         "   primary key (ID), foreign key (OWNER_ID) references PERSON(ID))"
         };
         prepareProject("hbm2java/no-generics");
-        assertNotGeneratedYet();
+        assertNotGeneratedYet("Person.java");
         runGenerateSources();
-        assertGeneratedDoesNotContain("Set<Item>");
+        assertNumberOfGeneratedFiles(2);
+        assertGeneratedDoesNotContain("Person.java", "Set<Item>");
+    }
+
+    @Test
+    public void testUseGenerics() throws Exception {
+        databaseCreationScript = new String[] {
+                "create table PERSON (ID int not null,  NAME varchar(20), primary key (ID))",
+                "create table ITEM (ID int not null,  NAME varchar(20), OWNER_ID int not null, " +
+                        "   primary key (ID), foreign key (OWNER_ID) references PERSON(ID))"
+        };
+        prepareProject("hbm2java/use-generics");
+        assertNotGeneratedYet("Person.java");
+        runGenerateSources();
+        assertNumberOfGeneratedFiles(2);
+        assertGeneratedContains("Person.java", "Set<Item>");
+    }
+
+    private void prepareProject(String projectName) throws Exception {
+        projectFolder = new File(baseFolder, projectName);
+        assertTrue(projectFolder.exists());
+        System.setProperty(MVN_HOME, projectFolder.getAbsolutePath());
+        createHibernatePropertiesFile(projectFolder);
+        createDatabase();
     }
 
     private void createHibernatePropertiesFile(File projectFolder) throws Exception {
@@ -117,20 +131,24 @@ public class ExamplesTestIT {
                 null);
     }
 
-    private void assertNotGeneratedYet() {
-        assertFalse(new File(projectFolder, "target/generated-sources/Person.java").exists());
+    private void assertNotGeneratedYet(String fileName) {
+        assertFalse(new File(projectFolder, "target/generated-sources/" + fileName).exists());
     }
 
-    private void assertGeneratedContains(String contents) throws Exception {
-        assertTrue(readGeneratedContents().contains(contents));
+    private void assertGeneratedContains(String fileName, String contents) throws Exception {
+        assertTrue(readGeneratedContents(fileName).contains(contents));
     }
 
-    private void assertGeneratedDoesNotContain(String contents) throws Exception {
-        assertFalse(readGeneratedContents().contains(contents));
+    private void assertGeneratedDoesNotContain(String fileName, String contents) throws Exception {
+        assertFalse(readGeneratedContents(fileName).contains(contents));
     }
 
-    private String readGeneratedContents() throws Exception {
-        File generatedPersonFile = new File(projectFolder, "target/generated-sources/Person.java");
+    private void assertNumberOfGeneratedFiles(int amount) throws Exception {
+        assertEquals(amount, new File(projectFolder, "target/generated-sources").list().length);
+    }
+
+    private String readGeneratedContents(String fileName) throws Exception {
+        File generatedPersonFile = new File(projectFolder, "target/generated-sources/" + fileName);
         assertTrue(generatedPersonFile.exists());
         return new String(Files.readAllBytes(generatedPersonFile.toPath()));
     }

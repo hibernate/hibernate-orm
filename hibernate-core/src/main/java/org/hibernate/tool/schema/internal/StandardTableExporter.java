@@ -10,23 +10,19 @@ import java.util.List;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.aggregate.AggregateSupport;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PrimaryKey;
-import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
 import org.hibernate.sql.Template;
 import org.hibernate.tool.schema.spi.Exporter;
@@ -35,6 +31,7 @@ import org.hibernate.type.SqlTypes;
 import static java.util.Collections.addAll;
 import static java.util.Comparator.comparing;
 import static org.hibernate.internal.util.StringHelper.EMPTY_STRINGS;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.tool.schema.internal.ColumnDefinitions.appendColumn;
 
 /**
@@ -55,7 +52,7 @@ public class StandardTableExporter implements Exporter<Table> {
 			Table table,
 			Metadata metadata,
 			SqlStringGenerationContext context) {
-		final QualifiedName tableName = getTableName( table );
+		final var tableName = getTableName( table );
 
 		try {
 			final String formattedTableName = context.format( tableName );
@@ -132,7 +129,7 @@ public class StandardTableExporter implements Exporter<Table> {
 				applyTableTypeString( createTable );
 			}
 
-			if ( StringHelper.isNotEmpty( table.getOptions() ) ) {
+			if ( isNotEmpty( table.getOptions() ) ) {
 				createTable.append( " " );
 				createTable.append( table.getOptions() );
 			}
@@ -186,7 +183,7 @@ public class StandardTableExporter implements Exporter<Table> {
 	}
 
 	protected void applyInitCommands(Table table, List<String> sqlStrings, SqlStringGenerationContext context) {
-		for ( InitCommand initCommand : table.getInitCommands( context ) ) {
+		for ( var initCommand : table.getInitCommands( context ) ) {
 			addAll( sqlStrings, initCommand.initCommands() );
 		}
 	}
@@ -197,11 +194,11 @@ public class StandardTableExporter implements Exporter<Table> {
 
 	protected void applyTableCheck(Table table, StringBuilder buf) {
 		if ( dialect.supportsTableCheck() ) {
-			for ( Column column : table.getColumns() ) {
-				final List<CheckConstraint> checkConstraints = column.getCheckConstraints();
+			for ( var column : table.getColumns() ) {
+				final var checkConstraints = column.getCheckConstraints();
 				boolean hasAnonymousConstraints = false;
 				if ( !dialect.supportsColumnCheck() ) {
-					for ( CheckConstraint constraint : checkConstraints ) {
+					for ( var constraint : checkConstraints ) {
 						if ( constraint.isAnonymous() ) {
 							if ( !hasAnonymousConstraints ) {
 								buf.append( ", check (" );
@@ -227,7 +224,7 @@ public class StandardTableExporter implements Exporter<Table> {
 				// supports named column check constraints, because ColumnDefinitions will render the first check
 				// constraint already.
 				boolean skipNextNamedConstraint = !hasAnonymousConstraints && dialect.supportsNamedColumnCheck();
-				for ( CheckConstraint constraint : checkConstraints ) {
+				for ( var constraint : checkConstraints ) {
 					if ( constraint.isNamed() ) {
 						if ( skipNextNamedConstraint ) {
 							skipNextNamedConstraint = false;
@@ -238,12 +235,12 @@ public class StandardTableExporter implements Exporter<Table> {
 					}
 				}
 			}
-			for ( CheckConstraint constraint : table.getChecks() ) {
+			for ( var constraint : table.getChecks() ) {
 				buf.append( "," ).append( constraint.constraintString( dialect ) );
 			}
-			final AggregateSupport aggregateSupport = dialect.getAggregateSupport();
+			final var aggregateSupport = dialect.getAggregateSupport();
 			if ( aggregateSupport != null && aggregateSupport.supportsComponentCheckConstraints() ) {
-				for ( Column column : table.getColumns() ) {
+				for ( var column : table.getColumns() ) {
 					if ( column instanceof AggregateColumn aggregateColumn ) {
 						if ( !isArray( aggregateColumn ) ) {
 							applyAggregateColumnCheck( buf, aggregateColumn );
@@ -256,19 +253,15 @@ public class StandardTableExporter implements Exporter<Table> {
 
 	private boolean isArray(AggregateColumn aggregateColumn) {
 		final BasicValue value = (BasicValue) aggregateColumn.getValue();
-		switch ( value.getResolution().getJdbcType().getDefaultSqlTypeCode() ) {
-			case SqlTypes.STRUCT_ARRAY:
-			case SqlTypes.STRUCT_TABLE:
-			case SqlTypes.JSON_ARRAY:
-			case SqlTypes.XML_ARRAY:
-			case SqlTypes.ARRAY:
-				return true;
-		}
-		return false;
+		return switch ( value.getResolution().getJdbcType().getDefaultSqlTypeCode() ) {
+			case SqlTypes.STRUCT_ARRAY, SqlTypes.STRUCT_TABLE, SqlTypes.JSON_ARRAY, SqlTypes.XML_ARRAY, SqlTypes.ARRAY
+					-> true;
+			default -> false;
+		};
 	}
 
 	protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
-		final AggregateSupport aggregateSupport = dialect.getAggregateSupport();
+		final var aggregateSupport = dialect.getAggregateSupport();
 		final int checkStart = buf.length();
 		buf.append( ", check (" );
 		final int start = buf.length();
@@ -299,10 +292,11 @@ public class StandardTableExporter implements Exporter<Table> {
 			AggregateSupport aggregateSupport,
 			Value value) {
 		if ( value instanceof Component component ) {
-			final AggregateColumn subAggregateColumn = component.getAggregateColumn();
+			final var subAggregateColumn = component.getAggregateColumn();
 			if ( subAggregateColumn != null && !isArray( subAggregateColumn )  ) {
-				final String subAggregatePath = subAggregateColumn.getAggregateReadExpressionTemplate( dialect )
-						.replace( Template.TEMPLATE + ".", "" );
+				final String subAggregatePath =
+						subAggregateColumn.getAggregateReadExpressionTemplate( dialect )
+								.replace( Template.TEMPLATE + ".", "" );
 				final int checkStart = buf.length();
 				if ( subAggregateColumn.isNullable() ) {
 					buf.append( subAggregatePath );
@@ -310,7 +304,7 @@ public class StandardTableExporter implements Exporter<Table> {
 				}
 				final int start = buf.length();
 				separator = "";
-				for ( Property property : component.getProperties() ) {
+				for ( var property : component.getProperties() ) {
 					separator = applyAggregateColumnCheck(
 							buf,
 							separator,
@@ -330,7 +324,7 @@ public class StandardTableExporter implements Exporter<Table> {
 			}
 		}
 		else {
-			for ( Column subColumn : value.getColumns() ) {
+			for ( var subColumn : value.getColumns() ) {
 				final String checkConstraint = getCheckConstraint( subColumn );
 				if ( !subColumn.isNullable() || checkConstraint != null ) {
 					final String subColumnName = subColumn.getQuotedName( dialect );
@@ -375,7 +369,7 @@ public class StandardTableExporter implements Exporter<Table> {
 	}
 
 	private static String getCheckConstraint(Column subColumn) {
-		final List<CheckConstraint> checkConstraints = subColumn.getCheckConstraints();
+		final var checkConstraints = subColumn.getCheckConstraints();
 		if ( checkConstraints.isEmpty() ) {
 			return null;
 		}
@@ -393,8 +387,8 @@ public class StandardTableExporter implements Exporter<Table> {
 	}
 
 	protected String primaryKeyString(PrimaryKey key) {
-		final StringBuilder constraint = new StringBuilder();
-		final UniqueKey orderingUniqueKey = key.getOrderingUniqueKey();
+		final var constraint = new StringBuilder();
+		final var orderingUniqueKey = key.getOrderingUniqueKey();
 		if ( orderingUniqueKey != null && orderingUniqueKey.isNameExplicit() ) {
 			constraint.append( "constraint " )
 					.append( orderingUniqueKey.getName() ).append( ' ' );
@@ -415,7 +409,7 @@ public class StandardTableExporter implements Exporter<Table> {
 
 	@Override
 	public String[] getSqlDropStrings(Table table, Metadata metadata, SqlStringGenerationContext context) {
-		final StringBuilder dropTable = new StringBuilder();
+		final var dropTable = new StringBuilder();
 		if ( table.getViewQuery() == null ) {
 			dropTable.append( "drop table " );
 		}

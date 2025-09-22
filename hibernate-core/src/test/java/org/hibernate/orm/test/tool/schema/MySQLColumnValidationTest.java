@@ -180,7 +180,7 @@ public class MySQLColumnValidationTest {
 		}
 		catch (SchemaManagementException e) {
 			assertEquals(
-					"Schema-validation: wrong column type encountered in column [integral1] in table [TEST_DATA2]; found [tinyint unsigned (Types#TINYINT)], but expecting [tinyint (Types#INTEGER)]",
+					"Schema validation: wrong column type encountered in column [integral1] in table [TEST_DATA2]; found [tinyint unsigned (Types#TINYINT)], but expecting [tinyint (Types#INTEGER)]",
 					e.getMessage()
 			);
 		}
@@ -194,7 +194,7 @@ public class MySQLColumnValidationTest {
 		}
 		catch (SchemaManagementException e) {
 			assertEquals(
-					"Schema-validation: wrong column type encountered in column [integral1] in table [TEST_DATA3]; found [tinyint unsigned (Types#TINYINT)], but expecting [tinyint unsigned default '0' (Types#INTEGER)]",
+					"Schema validation: wrong column type encountered in column [integral1] in table [TEST_DATA3]; found [tinyint unsigned (Types#TINYINT)], but expecting [tinyint unsigned default '0' (Types#INTEGER)]",
 					e.getMessage()
 			);
 		}

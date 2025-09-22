@@ -235,9 +235,9 @@ public class PatternRenderer {
 					sqlAppender.appendSql( chunks[i] );
 				}
 				if ( arg != null ) {
-					if ( caseWrapper &&
-							!( arg instanceof Distinct ) &&
-							!( arg instanceof Star ) ) {
+					if ( caseWrapper
+							&& !( arg instanceof Distinct )
+							&& !( arg instanceof Star ) ) {
 						translator.getCurrentClauseStack().push( Clause.WHERE );
 						sqlAppender.appendSql( "case when " );
 						filter.accept( translator );

@@ -101,7 +101,7 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 	 */
 	private static String stripSql(SQLException e) {
 		final String message = e.getMessage();
-		int index = message.indexOf( " SQL statement:" );
+		final int index = message.indexOf( " SQL statement:" );
 		return index > 0 ? message.substring( 0, index ) : message;
 	}
 

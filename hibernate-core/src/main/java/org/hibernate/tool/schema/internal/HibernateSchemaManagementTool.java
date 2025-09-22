@@ -34,7 +34,6 @@ import org.hibernate.tool.schema.spi.ExtractionTool;
 import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.spi.SchemaCreator;
 import org.hibernate.tool.schema.spi.SchemaDropper;
-import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaFilterProvider;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
@@ -114,16 +113,16 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 
 	@Override
 	public SchemaMigrator getSchemaMigrator(Map<String,Object> options) {
-		final SchemaFilter migrateFilter = getSchemaFilterProvider( options ).getMigrateFilter();
-		return determineJdbcMetadaAccessStrategy( options ) == JdbcMetadataAccessStrategy.GROUPED
+		final var migrateFilter = getSchemaFilterProvider( options ).getMigrateFilter();
+		return JdbcMetadataAccessStrategy.interpretSetting( options ) == JdbcMetadataAccessStrategy.GROUPED
 				? new GroupedSchemaMigratorImpl( this, migrateFilter )
 				: new IndividuallySchemaMigratorImpl( this, migrateFilter );
 	}
 
 	@Override
 	public SchemaValidator getSchemaValidator(Map<String,Object> options) {
-		final SchemaFilter validateFilter = getSchemaFilterProvider( options ).getValidateFilter();
-		return determineJdbcMetadaAccessStrategy( options ) == JdbcMetadataAccessStrategy.GROUPED
+		final var validateFilter = getSchemaFilterProvider( options ).getValidateFilter();
+		return JdbcMetadataAccessStrategy.interpretSetting( options ) == JdbcMetadataAccessStrategy.GROUPED
 				? new GroupedSchemaValidatorImpl( this, validateFilter )
 				: new IndividuallySchemaValidatorImpl( this, validateFilter );
 	}
@@ -133,10 +132,6 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 				.resolveDefaultableStrategy( SchemaFilterProvider.class,
 						options == null ? null : options.get( HBM2DDL_FILTER_PROVIDER ),
 						DefaultSchemaFilterProvider.INSTANCE );
-	}
-
-	private JdbcMetadataAccessStrategy determineJdbcMetadaAccessStrategy(Map<String,Object> options) {
-		return JdbcMetadataAccessStrategy.interpretSetting( options );
 	}
 
 	@Override
@@ -161,7 +156,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			boolean needsAutoCommit) {
 		final String scriptDelimiter = getString( HBM2DDL_DELIMITER, options, ";" );
 
-		final GenerationTarget[] targets = new GenerationTarget[ targetDescriptor.getTargetTypes().size() ];
+		final var targets = new GenerationTarget[ targetDescriptor.getTargetTypes().size() ];
 
 		int index = 0;
 
@@ -206,7 +201,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			Map<String,Object> options) {
 		final String scriptDelimiter = getString( HBM2DDL_DELIMITER, options, ";" );
 
-		final GenerationTarget[] targets = new GenerationTarget[ targetDescriptor.getTargetTypes().size() ];
+		final var targets = new GenerationTarget[ targetDescriptor.getTargetTypes().size() ];
 
 		int index = 0;
 
@@ -245,7 +240,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		final var jdbcContextBuilder = new JdbcContextBuilder( serviceRegistry );
 
 		// see if a specific connection has been provided
-		final Connection providedConnection = (Connection) coalesceSuppliedValues(
+		final var providedConnection = (Connection) coalesceSuppliedValues(
 				() -> configurationValues.get( JAKARTA_HBM2DDL_CONNECTION ),
 				() -> {
 					final Object value = configurationValues.get( HBM2DDL_CONNECTION );

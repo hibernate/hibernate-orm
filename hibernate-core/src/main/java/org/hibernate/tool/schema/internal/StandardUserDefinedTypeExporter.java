@@ -10,12 +10,10 @@ import java.util.List;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.UserDefinedArrayType;
 import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.mapping.UserDefinedType;
@@ -51,45 +49,37 @@ public class StandardUserDefinedTypeExporter implements Exporter<UserDefinedType
 			UserDefinedObjectType userDefinedType,
 			Metadata metadata,
 			SqlStringGenerationContext context) {
-		final QualifiedName typeName = new QualifiedNameParser.NameParts(
+		final var typeName = new QualifiedNameParser.NameParts(
 				Identifier.toIdentifier( userDefinedType.getCatalog(), userDefinedType.isCatalogQuoted() ),
 				Identifier.toIdentifier( userDefinedType.getSchema(), userDefinedType.isSchemaQuoted() ),
 				userDefinedType.getNameIdentifier()
 		);
 
 		try {
-			String formattedTypeName = context.format( typeName );
-			StringBuilder buf =
+			final String formattedTypeName = context.format( typeName );
+			final var createType =
 					new StringBuilder( "create type " )
 							.append( formattedTypeName )
 							.append( " as " )
 							.append( dialect.getCreateUserDefinedTypeKindString() )
 							.append( '(' );
-
 			boolean isFirst = true;
-			for ( Column col : userDefinedType.getColumns() ) {
+			for ( var col : userDefinedType.getColumns() ) {
 				if ( isFirst ) {
 					isFirst = false;
 				}
 				else {
-					buf.append( ", " );
+					createType.append( ", " );
 				}
-
-				String colName = col.getQuotedName( dialect );
-				buf.append( colName );
-
-				buf.append( ' ' ).append( col.getSqlType( metadata ) );
+				createType.append( col.getQuotedName( dialect ) );
+				createType.append( ' ' ).append( col.getSqlType( metadata ) );
 			}
-
-			buf.append( ')' );
-
-			applyUserDefinedTypeExtensionsString( buf );
+			createType.append( ')' );
+			applyUserDefinedTypeExtensionsString( createType );
 
 			List<String> sqlStrings = new ArrayList<>();
-			sqlStrings.add( buf.toString() );
-
+			sqlStrings.add( createType.toString() );
 			applyComments( userDefinedType, formattedTypeName, sqlStrings );
-
 			return sqlStrings.toArray(StringHelper.EMPTY_STRINGS);
 		}
 		catch (Exception e) {
@@ -114,8 +104,8 @@ public class StandardUserDefinedTypeExporter implements Exporter<UserDefinedType
 			if ( udt.getComment() != null ) {
 				sqlStrings.add( "comment on type " + formattedTypeName + " is '" + udt.getComment() + "'" );
 			}
-			for ( Column column : udt.getColumns() ) {
-				String columnComment = column.getComment();
+			for ( var column : udt.getColumns() ) {
+				final String columnComment = column.getComment();
 				if ( columnComment != null ) {
 					sqlStrings.add( "comment on column " + formattedTypeName + '.' + column.getQuotedName( dialect ) + " is '" + columnComment + "'" );
 				}
@@ -141,23 +131,20 @@ public class StandardUserDefinedTypeExporter implements Exporter<UserDefinedType
 	}
 
 	public String[] getSqlDropStrings(UserDefinedObjectType userDefinedType, Metadata metadata, SqlStringGenerationContext context) {
-		StringBuilder buf = new StringBuilder( "drop type " );
+		final var dropType = new StringBuilder( "drop type " );
 		if ( dialect.supportsIfExistsBeforeTypeName() ) {
-			buf.append( "if exists " );
+			dropType.append( "if exists " );
 		}
-
-		final QualifiedName typeName = new QualifiedNameParser.NameParts(
+		final var typeName = new QualifiedNameParser.NameParts(
 				Identifier.toIdentifier( userDefinedType.getCatalog(), userDefinedType.isCatalogQuoted() ),
 				Identifier.toIdentifier( userDefinedType.getSchema(), userDefinedType.isSchemaQuoted() ),
 				userDefinedType.getNameIdentifier()
 		);
-		buf.append( context.format( typeName ) );
-
+		dropType.append( context.format( typeName ) );
 		if ( dialect.supportsIfExistsAfterTypeName() ) {
-			buf.append( " if exists" );
+			dropType.append( " if exists" );
 		}
-
-		return new String[] { buf.toString() };
+		return new String[] { dropType.toString() };
 	}
 
 	public String[] getSqlDropStrings(UserDefinedArrayType userDefinedType, Metadata metadata, SqlStringGenerationContext context) {

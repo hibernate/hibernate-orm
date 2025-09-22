@@ -346,8 +346,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			final Identifier currentSchema = getCurrentSchema();
 			final Identifier currentCatalog = getCurrentCatalog();
 			if ( currentCatalog != null || currentSchema != null ) {
-				final TableInformation tableInfo =
-						locateTableInNamespace( currentCatalog, currentSchema, tableName );
+				final var tableInfo = locateTableInNamespace( currentCatalog, currentSchema, tableName );
 				if ( tableInfo != null ) {
 					return tableInfo;
 				}

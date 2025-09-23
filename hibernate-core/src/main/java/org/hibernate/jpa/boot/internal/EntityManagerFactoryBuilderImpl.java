@@ -263,7 +263,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private static void ignoreFlushBeforeCompletion(MergedSettings mergedSettings) {
 		// flush before completion validation
 		final var config = mergedSettings.getConfigurationValues();
-		if ( getBoolean( FLUSH_BEFORE_COMPLETION, config, false ) ) {
+		if ( getBoolean( FLUSH_BEFORE_COMPLETION, config ) ) {
 			JPA_LOGGER.definingFlushBeforeCompletionIgnoredInHem( FLUSH_BEFORE_COMPLETION );
 			config.put( FLUSH_BEFORE_COMPLETION, String.valueOf(false) );
 		}

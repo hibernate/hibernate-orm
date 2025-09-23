@@ -462,7 +462,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		connectionHandlingMode = interpretConnectionHandlingMode( settings, serviceRegistry );
 
 		connectionProviderDisablesAutoCommit =
-				getBoolean( CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, settings, false );
+				getBoolean( CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, settings );
 
 		commentsEnabled = getBoolean( USE_SQL_COMMENTS, settings );
 
@@ -479,10 +479,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		criteriaValueHandlingMode = ValueHandlingMode.interpret( settings.get( CRITERIA_VALUE_HANDLING_MODE ) );
 		criteriaCopyTreeEnabled = getBoolean( CRITERIA_COPY_TREE, settings, jpaBootstrap );
-		criteriaPlanCacheEnabled = getBoolean( CRITERIA_PLAN_CACHE_ENABLED, settings, false );
+		criteriaPlanCacheEnabled = getBoolean( CRITERIA_PLAN_CACHE_ENABLED, settings );
 
-		nativeJdbcParametersIgnored =
-				getBoolean( NATIVE_IGNORE_JDBC_PARAMETERS, settings, false );
+		nativeJdbcParametersIgnored = getBoolean( NATIVE_IGNORE_JDBC_PARAMETERS, settings );
 
 		// added the boolean parameter in case we want to define some form of "all" as discussed
 		jpaCompliance = context.getJpaCompliance();
@@ -509,11 +508,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		unownedAssociationTransientCheck =
 				getBoolean( UNOWNED_ASSOCIATION_TRANSIENT_CHECK, settings, isJpaBootstrap() );
 
-		passProcedureParameterNames =
-				getBoolean( QUERY_PASS_PROCEDURE_PARAMETER_NAMES, settings, false );
+		passProcedureParameterNames = getBoolean( QUERY_PASS_PROCEDURE_PARAMETER_NAMES, settings );
 
-		preferJdbcDatetimeTypes =
-				getBoolean( NATIVE_PREFER_JDBC_DATETIME_TYPES, settings, false );
+		preferJdbcDatetimeTypes = getBoolean( NATIVE_PREFER_JDBC_DATETIME_TYPES, settings );
 
 		defaultSessionProperties = initializeDefaultSessionProperties( configurationService );
 

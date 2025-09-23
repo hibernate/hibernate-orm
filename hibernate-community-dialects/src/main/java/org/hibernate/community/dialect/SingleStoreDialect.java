@@ -235,8 +235,7 @@ public class SingleStoreDialect extends Dialect {
 	private static boolean getUpdateForEnabled(DialectResolutionInfo info) {
 		return ConfigurationHelper.getBoolean(
 				SINGLE_STORE_FOR_UPDATE_LOCK_ENABLED,
-				info.getConfigurationValues(),
-				false
+				info.getConfigurationValues()
 		);
 	}
 

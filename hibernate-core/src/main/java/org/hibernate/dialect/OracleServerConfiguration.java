@@ -85,9 +85,9 @@ public class OracleServerConfiguration {
 
 		// default to the dialect-specific configuration settings
 		final Map<String, Object> configuration = info.getConfigurationValues();
-		final boolean defaultExtended = getBoolean( ORACLE_EXTENDED_STRING_SIZE, configuration, false );
-		final boolean defaultAutonomous =  getBoolean( ORACLE_AUTONOMOUS_DATABASE, configuration, false );
-		final boolean defaultContinuity = getBoolean( ORACLE_APPLICATION_CONTINUITY, configuration, false );
+		final boolean defaultExtended = getBoolean( ORACLE_EXTENDED_STRING_SIZE, configuration );
+		final boolean defaultAutonomous =  getBoolean( ORACLE_AUTONOMOUS_DATABASE, configuration );
+		final boolean defaultContinuity = getBoolean( ORACLE_APPLICATION_CONTINUITY, configuration );
 
 		boolean extended;
 		boolean autonomous;

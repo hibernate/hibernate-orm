@@ -76,7 +76,7 @@ public class MySQLServerConfiguration {
 			bytesPerCharacter = getInt( MYSQL_BYTES_PER_CHARACTER, info.getConfigurationValues(), 4 );
 		}
 		if ( noBackslashEscapes == null ) {
-			noBackslashEscapes = getBoolean( MYSQL_NO_BACKSLASH_ESCAPES, info.getConfigurationValues(), false );
+			noBackslashEscapes = getBoolean( MYSQL_NO_BACKSLASH_ESCAPES, info.getConfigurationValues() );
 		}
 		return new MySQLServerConfiguration( bytesPerCharacter, noBackslashEscapes );
 	}

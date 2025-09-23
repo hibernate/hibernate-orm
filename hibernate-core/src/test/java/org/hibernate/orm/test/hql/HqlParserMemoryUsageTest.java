@@ -12,7 +12,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.hibernate.cfg.QuerySettings;
 import org.hibernate.query.hql.HqlTranslator;
-import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.testing.memory.MemoryUsageUtil;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -80,65 +80,15 @@ public class HqlParserMemoryUsageTest {
 	@Test
 	public void testParserMemoryUsage(SessionFactoryScope scope) {
 		final HqlTranslator hqlTranslator = scope.getSessionFactory().getQueryEngine().getHqlTranslator();
-		final Runtime runtime = Runtime.getRuntime();
 
 		// Ensure classes and basic stuff is initialized in case this is the first test run
 		hqlTranslator.translate( "from AppUser", AppUser.class );
-		runtime.gc();
-		runtime.gc();
-
-		// Track memory usage before execution
-		long totalMemoryBefore = runtime.totalMemory();
-		long usedMemoryBefore = totalMemoryBefore - runtime.freeMemory();
-
-		System.out.println("Memory Usage Before Create Query:");
-		System.out.println("----------------------------");
-		System.out.println("Total Memory: " + (totalMemoryBefore / 1024) + " KB");
-		System.out.println("Used Memory : " + (usedMemoryBefore / 1024) + " KB");
-		System.out.println();
-
-		// Create query
-		SqmStatement<Long> statement = hqlTranslator.translate( HQL, Long.class );
-
-		// Track memory usage after execution
-		long totalMemoryAfter = runtime.totalMemory();
-		long usedMemoryAfter = totalMemoryAfter - runtime.freeMemory();
-
-		System.out.println("Memory Usage After Create Query:");
-		System.out.println("----------------------------");
-		System.out.println("Total Memory: " + (totalMemoryAfter / 1024) + " KB");
-		System.out.println("Used Memory : " + (usedMemoryAfter / 1024) + " KB");
-		System.out.println();
-
-		System.out.println("Memory increase After Parsing:");
-		System.out.println("----------------------------");
-		System.out.println("Total Memory increase: " + ((totalMemoryAfter - totalMemoryBefore) / 1024) + " KB");
-		System.out.println("Used Memory increase : " + ((usedMemoryAfter - usedMemoryBefore) / 1024) + " KB");
-		System.out.println();
-
-		runtime.gc();
-		runtime.gc();
-
-		// Track memory usage after execution
-		long totalMemoryAfterGc = runtime.totalMemory();
-		long usedMemoryAfterGc = totalMemoryAfterGc - runtime.freeMemory();
-
-		System.out.println("Memory Usage After Create Query and GC:");
-		System.out.println("----------------------------");
-		System.out.println("Total Memory: " + (totalMemoryAfterGc / 1024) + " KB");
-		System.out.println("Used Memory : " + (usedMemoryAfterGc / 1024) + " KB");
-		System.out.println();
-
-		System.out.println("Memory overhead of Parsing:");
-		System.out.println("----------------------------");
-		System.out.println("Total Memory increase: " + ((totalMemoryAfter - totalMemoryAfterGc) / 1024) + " KB");
-		System.out.println("Used Memory increase : " + ((usedMemoryAfter - usedMemoryAfterGc) / 1024) + " KB");
-		System.out.println();
 
 		// During testing, before the fix for HHH-19240, the allocation was around 500+ MB,
 		// and after the fix it dropped to 170 - 250 MB
-		final long memoryConsumption = usedMemoryAfter - usedMemoryAfterGc;
-		assertTrue( usedMemoryAfter - usedMemoryAfterGc < 256_000_000, "Parsing of queries consumes too much memory (" + ( memoryConsumption / 1024 ) + " KB), when at most 256 MB are expected" );
+		final long memoryUsage = MemoryUsageUtil.estimateMemoryUsage( () -> hqlTranslator.translate( HQL, Long.class ) );
+		System.out.println( "Memory Consumption: " + (memoryUsage / 1024) + " KB" );
+		assertTrue( memoryUsage < 256_000_000, "Parsing of queries consumes too much memory (" + ( memoryUsage / 1024 ) + " KB), when at most 256 MB are expected" );
 	}
 
 	@Entity(name = "Address")

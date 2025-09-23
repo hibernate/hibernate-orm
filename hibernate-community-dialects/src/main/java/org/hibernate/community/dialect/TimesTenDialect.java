@@ -185,8 +185,6 @@ public class TimesTenDialect extends Dialect {
 		CommonFunctionFactory functionFactory     = new CommonFunctionFactory(functionContributions);
 		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 		final BasicType<Date>   timestampType     = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
-		final BasicType<Date>   dateType          = basicTypeRegistry.resolve( StandardBasicTypes.DATE );
-		final BasicType<Date>   timeType          = basicTypeRegistry.resolve( StandardBasicTypes.TIME );
 		final BasicType<String> stringType        = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
 		final BasicType<Long>   longType          = basicTypeRegistry.resolve( StandardBasicTypes.LONG );
 		final BasicType<Integer>intType           = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );

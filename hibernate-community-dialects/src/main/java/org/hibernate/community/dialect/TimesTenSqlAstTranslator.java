@@ -146,7 +146,6 @@ public class TimesTenSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		return false;
 	}
 
-	@Override
 	protected void renderRowsToClause(Expression offsetClauseExpression, Expression fetchClauseExpression) {
 		// offsetClauseExpression -> firstRow
 		// fetchClauseExpression  -> maxRows

@@ -75,6 +75,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	private List<Function<SqlStringGenerationContext, InitCommand>> initCommandProducers;
 	private List<BiFunction<SqlStringGenerationContext, DdlTransactionIsolator, InitCommand>> resyncCommandProducers;
+	private List<Function<SqlStringGenerationContext, InitCommand>> resetCommandProducers;
 
 	@Deprecated(since="6.2", forRemoval = true)
 	public Table() {
@@ -833,7 +834,22 @@ public class Table implements Serializable, ContributableDatabaseObject {
 						.map( producer -> producer.apply( context, isolator ) )
 						.distinct()
 						.toList();
+	}
 
+	public void addResetCommand(Function<SqlStringGenerationContext, InitCommand> commandProducer) {
+		if ( resetCommandProducers == null ) {
+			resetCommandProducers = new ArrayList<>();
+		}
+		resetCommandProducers.add( commandProducer );
+	}
+
+	public List<InitCommand> getResetCommands(SqlStringGenerationContext context) {
+		return resetCommandProducers == null
+				? emptyList()
+				: resetCommandProducers.stream()
+						.map( producer -> producer.apply( context ) )
+						.distinct()
+						.toList();
 	}
 
 	public String getOptions() {

@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.InitCommand;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -181,6 +182,11 @@ public class SequenceStructure implements DatabaseStructure {
 			return new InitCommand( sqlContext.getDialect().getSequenceSupport()
 					.getRestartSequenceString( sequenceName, startWith ) );
 		} );
+		table.addResetCommand( sqlContext -> {
+			final String sequenceName = sqlContext.format( physicalSequenceName );
+			return new InitCommand( sqlContext.getDialect().getSequenceSupport()
+					.getRestartSequenceString( sequenceName, initialValue ) );
+		} );
 	}
 
 	@Override
@@ -197,18 +203,24 @@ public class SequenceStructure implements DatabaseStructure {
 	}
 
 	protected void buildSequence(Database database) {
-		final var namespace = database.locateNamespace(
-				logicalQualifiedSequenceName.getCatalogName(),
-				logicalQualifiedSequenceName.getSchemaName()
-		);
+		final var sequence =
+				locateOrCreateSequence( database.locateNamespace(
+						logicalQualifiedSequenceName.getCatalogName(),
+						logicalQualifiedSequenceName.getSchemaName()
+				) );
+		physicalSequenceName = sequence.getName();
+	}
+
+	private Sequence locateOrCreateSequence(Namespace namespace) {
 		final int sourceIncrementSize = getSourceIncrementSize();
 		final var objectName = logicalQualifiedSequenceName.getObjectName();
-		Sequence sequence = namespace.locateSequence( objectName );
-		if ( sequence != null ) {
-			sequence.validate( initialValue, sourceIncrementSize );
+		final var existingSequence = namespace.locateSequence( objectName );
+		if ( existingSequence != null ) {
+			existingSequence.validate( initialValue, sourceIncrementSize );
+			return existingSequence;
 		}
 		else {
-			sequence = namespace.createSequence(
+			return namespace.createSequence(
 					objectName,
 					physicalName -> new Sequence(
 							contributor,
@@ -221,6 +233,5 @@ public class SequenceStructure implements DatabaseStructure {
 					)
 			);
 		}
-		physicalSequenceName = sequence.getName();
 	}
 }

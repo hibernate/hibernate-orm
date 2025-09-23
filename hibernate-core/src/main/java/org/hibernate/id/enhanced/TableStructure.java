@@ -338,9 +338,9 @@ public class TableStructure implements DatabaseStructure {
 
 	@Override
 	public void registerExtraExportables(Table table, Optimizer optimizer) {
-		table.addResyncCommand( (context, isolator) -> {
-			final String sequenceTableName = context.format( physicalTableName );
-			final String tableName = context.format( table.getQualifiedTableName() );
+		table.addResyncCommand( (sqlContext, isolator) -> {
+			final String sequenceTableName = sqlContext.format( physicalTableName );
+			final String tableName = sqlContext.format( table.getQualifiedTableName() );
 			final String primaryKeyColumnName = table.getPrimaryKey().getColumn( 0 ).getName();
 			final int adjustment = optimizer.getAdjustment();
 			final long max = getMaxPrimaryKey( isolator, primaryKeyColumnName, tableName );
@@ -354,6 +354,12 @@ public class TableStructure implements DatabaseStructure {
 			else {
 				return new InitCommand();
 			}
+		} );
+		table.addResetCommand( sqlContext -> {
+			final String update =
+					"update " + sqlContext.format( physicalTableName )
+					+ " set " + valueColumnNameText + " = " + initialValue;
+			return new InitCommand( update );
 		} );
 	}
 }

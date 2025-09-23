@@ -78,6 +78,12 @@ public class PooledLoOptimizer extends AbstractOptimizer {
 	private GenerationState noTenantState;
 	private Map<String,GenerationState> tenantSpecificState;
 
+	@Override
+	public void reset() {
+		noTenantState = null;
+		tenantSpecificState = null;
+	}
+
 	private GenerationState locateGenerationState(String tenantIdentifier) {
 		if ( tenantIdentifier == null ) {
 			if ( noTenantState == null ) {

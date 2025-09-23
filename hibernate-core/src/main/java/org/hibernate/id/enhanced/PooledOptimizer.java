@@ -56,7 +56,6 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 		OPTIMIZER_MESSAGE_LOGGER.creatingPooledOptimizer( incrementSize, returnClass.getName() );
 	}
 
-
 	@Override
 	public Serializable generate(AccessCallback callback) {
 		lock.lock();
@@ -98,6 +97,12 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 	private final Lock lock = new ReentrantLock();
 	private GenerationState noTenantState;
 	private Map<String,GenerationState> tenantSpecificState;
+
+	@Override
+	public void reset() {
+		noTenantState = null;
+		tenantSpecificState = null;
+	}
 
 	private GenerationState locateGenerationState(String tenantIdentifier) {
 		if ( tenantIdentifier == null ) {

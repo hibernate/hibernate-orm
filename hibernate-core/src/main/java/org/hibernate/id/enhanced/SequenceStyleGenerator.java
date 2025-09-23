@@ -445,7 +445,7 @@ public class SequenceStyleGenerator
 	 * selected optimizer. This is the hook to achieve that.
 	 *
 	 * @param optimizationStrategy The optimizer strategy (name)
-	 * @param incrementSize The {@link #determineIncrementSize determined increment size}
+	 * @param incrementSize The {@linkplain #determineIncrementSize determined increment size}
 	 * @return The adjusted increment size.
 	 */
 	protected int determineAdjustedIncrementSize(OptimizerDescriptor optimizationStrategy, int incrementSize) {

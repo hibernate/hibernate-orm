@@ -119,6 +119,12 @@ public class HiLoOptimizer extends AbstractOptimizer {
 	private GenerationState noTenantState;
 	private Map<String,GenerationState> tenantSpecificState;
 
+	@Override
+	public void reset() {
+		noTenantState = null;
+		tenantSpecificState = null;
+	}
+
 	private GenerationState locateGenerationState(String tenantId) {
 		if ( tenantId == null ) {
 			if ( noTenantState == null ) {

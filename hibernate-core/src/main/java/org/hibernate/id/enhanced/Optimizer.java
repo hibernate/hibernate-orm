@@ -11,14 +11,15 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import java.io.Serializable;
 
 /**
- * Performs optimization on an optimizable identifier generator.  Typically
+ * Performs optimization on an optimizable identifier generator. Typically.
  * this optimization takes the form of trying to ensure we do not have to
  * hit the database on each and every request to get an identifier value.
  * <p>
- * Optimizers work on constructor injection.  They should provide
- * a constructor with the following arguments <ol>
- * <li>java.lang.Class - The return type for the generated values</li>
- * <li>int - The increment size</li>
+ * Optimizers work on constructor injection. They should provide a
+ * constructor accepting the following arguments:
+ * <ol>
+ * <li>{@code java.lang.Class} - The return type for the generated values</li>
+ * <li>{@code int} - The increment size</li>
  * </ol>
  *
  * @author Steve Ebersole
@@ -34,6 +35,13 @@ public interface Optimizer {
 	 * @return The generated identifier value.
 	 */
 	Serializable generate(AccessCallback callback);
+
+	/**
+	 * Reset the optimizer before restarting the underlying database sequence.
+	 *
+	 * @since 7.2
+	 */
+	void reset();
 
 	/**
 	 * A common means to access the last value obtained from the underlying

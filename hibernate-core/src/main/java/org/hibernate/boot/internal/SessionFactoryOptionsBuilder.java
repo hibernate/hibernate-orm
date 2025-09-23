@@ -52,7 +52,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.BaselineSessionEventsListenerBuilder;
 import org.hibernate.internal.EmptyInterceptor;
 import org.hibernate.internal.util.NullnessHelper;
@@ -77,7 +76,6 @@ import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
-import org.hibernate.stat.Statistics;
 import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.format.jaxb.JaxbXmlFormatMapper;
 
@@ -88,6 +86,7 @@ import static org.hibernate.Timeouts.WAIT_FOREVER_MILLI;
 import static org.hibernate.cfg.AvailableSettings.*;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_OSON_DISABLED;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
+import static org.hibernate.id.uuid.LocalObjectUuidHelper.generateLocalObjectUuid;
 import static org.hibernate.internal.LockOptionsHelper.applyPropertiesToLockOptions;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.PropertiesHelper.map;
@@ -99,6 +98,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 import static org.hibernate.jpa.internal.util.CacheModeHelper.interpretCacheMode;
 import static org.hibernate.jpa.internal.util.ConfigurationHelper.getFlushMode;
+import static org.hibernate.stat.Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE;
 import static org.hibernate.type.format.jackson.JacksonIntegration.getJsonJacksonFormatMapperOrNull;
 import static org.hibernate.type.format.jackson.JacksonIntegration.getOsonJacksonFormatMapperOrNull;
 import static org.hibernate.type.format.jackson.JacksonIntegration.getXMLJacksonFormatMapperOrNull;
@@ -117,7 +117,7 @@ import static org.hibernate.type.format.jakartajson.JakartaJsonIntegration.getJa
  */
 public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
-	private final String uuid = LocalObjectUuidHelper.generateLocalObjectUuid();
+	private final String uuid = generateLocalObjectUuid();
 	private final StandardServiceRegistry serviceRegistry;
 
 	// integration
@@ -416,7 +416,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 					strategySelector.resolveDefaultableStrategy( TimestampsCacheFactory.class,
 							settings.get( QUERY_CACHE_FACTORY ), StandardTimestampsCacheFactory.INSTANCE );
 			minimalPutsEnabled =
-					configurationService.getSetting( USE_MINIMAL_PUTS, BOOLEAN, regionFactory.isMinimalPutsEnabledByDefault() );
+					configurationService.getSetting( USE_MINIMAL_PUTS, BOOLEAN,
+							regionFactory.isMinimalPutsEnabledByDefault() );
 			structuredCacheEntriesEnabled =
 					configurationService.getSetting( USE_STRUCTURED_CACHE, BOOLEAN, false );
 			directReferenceCacheEntriesEnabled =
@@ -503,7 +504,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		xmlFunctionsEnabled = getBoolean( XML_FUNCTIONS_ENABLED, settings );
 
 		queryStatisticsMaxSize =
-				getInt( QUERY_STATISTICS_MAX_SIZE, settings, Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE );
+				getInt( QUERY_STATISTICS_MAX_SIZE, settings, DEFAULT_QUERY_STATISTICS_MAX_SIZE );
 
 		unownedAssociationTransientCheck =
 				getBoolean( UNOWNED_ASSOCIATION_TRANSIENT_CHECK, settings, isJpaBootstrap() );

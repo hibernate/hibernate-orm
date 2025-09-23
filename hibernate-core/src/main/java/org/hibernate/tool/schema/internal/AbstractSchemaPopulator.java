@@ -67,7 +67,7 @@ public abstract class AbstractSchemaPopulator {
 	}
 
 	private static boolean skipDefaultFileImport(ExecutionOptions options) {
-		return getBoolean( HBM2DDL_SKIP_DEFAULT_IMPORT_FILE, options.getConfigurationValues(), false );
+		return getBoolean( HBM2DDL_SKIP_DEFAULT_IMPORT_FILE, options.getConfigurationValues() );
 	}
 
 	/**
@@ -101,7 +101,8 @@ public abstract class AbstractSchemaPopulator {
 		final Object importScriptSetting = getImportScriptSetting( options );
 		if ( importScriptSetting != null ) {
 			final var importScriptInput =
-					interpretScriptSourceSetting( importScriptSetting, getClassLoaderService(), getCharsetName( options ) );
+					interpretScriptSourceSetting( importScriptSetting,
+							getClassLoaderService(), getCharsetName( options ) );
 			applyScript(
 					options,
 					commandExtractor,

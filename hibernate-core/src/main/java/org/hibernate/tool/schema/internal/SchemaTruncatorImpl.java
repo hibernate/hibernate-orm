@@ -13,7 +13,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
@@ -29,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 import static org.hibernate.tool.schema.internal.Helper.applySqlString;
 import static org.hibernate.tool.schema.internal.Helper.applySqlStrings;
 import static org.hibernate.tool.schema.internal.Helper.createSqlStringGenerationContext;
@@ -110,9 +110,9 @@ public class SchemaTruncatorImpl extends AbstractSchemaPopulator implements Sche
 			Formatter formatter,
 			GenerationTarget... targets) {
 		final var database = metadata.getDatabase();
-		SqlStringGenerationContext context = createSqlStringGenerationContext( options, metadata );
+		final var context = createSqlStringGenerationContext( options, metadata );
 
-		final Set<String> exportIdentifiers = CollectionHelper.setOfSize( 50 );
+		final Set<String> exportIdentifiers = setOfSize( 50 );
 
 		for ( var namespace : database.getNamespaces() ) {
 			if ( schemaFilter.includeNamespace( namespace ) ) {
@@ -121,19 +121,14 @@ public class SchemaTruncatorImpl extends AbstractSchemaPopulator implements Sche
 				applySqlString( dialect.getTableCleaner().getSqlBeforeString(), formatter, options, targets );
 
 				// now it's safe to drop the tables
-				List<Table> list = new ArrayList<>( namespace.getTables().size() );
-				for ( Table table : namespace.getTables() ) {
-					if ( !table.isPhysicalTable() ) {
-						continue;
+				final List<Table> list = new ArrayList<>( namespace.getTables().size() );
+				for ( var table : namespace.getTables() ) {
+					if ( table.isPhysicalTable()
+							&& schemaFilter.includeTable( table )
+							&& contributableInclusionFilter.matches( table ) ) {
+						checkExportIdentifier( table, exportIdentifiers );
+						list.add( table );
 					}
-					if ( !schemaFilter.includeTable( table ) ) {
-						continue;
-					}
-					if ( !contributableInclusionFilter.matches( table ) ) {
-						continue;
-					}
-					checkExportIdentifier( table, exportIdentifiers );
-					list.add( table );
 				}
 				applySqlStrings(
 						dialect.getTableCleaner().getSqlTruncateStrings( list, metadata, context ),
@@ -175,7 +170,6 @@ public class SchemaTruncatorImpl extends AbstractSchemaPopulator implements Sche
 			ContributableMatcher contributableInclusionFilter,
 			GenerationTarget... targets) {
 		final var dialect = metadata.getDatabase().getJdbcEnvironment().getDialect();
-
 		for ( var table : namespace.getTables() ) {
 			if ( table.isPhysicalTable()
 					&& schemaFilter.includeTable( table )
@@ -213,8 +207,8 @@ public class SchemaTruncatorImpl extends AbstractSchemaPopulator implements Sche
 			SqlStringGenerationContext context,
 			ContributableMatcher contributableInclusionFilter,
 			GenerationTarget... targets) {
-		final Dialect dialect = metadata.getDatabase().getJdbcEnvironment().getDialect();
-		for ( Table table : namespace.getTables() ) {
+		final var dialect = metadata.getDatabase().getJdbcEnvironment().getDialect();
+		for ( var table : namespace.getTables() ) {
 			if ( table.isPhysicalTable()
 					&& schemaFilter.includeTable( table )
 					&& contributableInclusionFilter.matches( table ) ) {

@@ -346,6 +346,7 @@ public class TableStructure implements DatabaseStructure {
 			final long max = getMaxPrimaryKey( isolator, primaryKeyColumnName, tableName );
 			final long current = getCurrentTableValue( isolator, sequenceTableName, valueColumnNameText );
 			if ( max + adjustment > current ) {
+				optimizer.reset();
 				final String update =
 						"update " + sequenceTableName
 						+ " set " + valueColumnNameText + " = " + (max + adjustment);
@@ -356,6 +357,7 @@ public class TableStructure implements DatabaseStructure {
 			}
 		} );
 		table.addResetCommand( sqlContext -> {
+			optimizer.reset();
 			final String update =
 					"update " + sqlContext.format( physicalTableName )
 					+ " set " + valueColumnNameText + " = " + initialValue;

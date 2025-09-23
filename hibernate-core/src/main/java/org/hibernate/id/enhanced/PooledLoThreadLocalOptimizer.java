@@ -64,6 +64,12 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 		}
 	}
 
+	@Override
+	public void reset() {
+		singleTenantState.remove();
+		multiTenantStates.remove();
+	}
+
 	// for Hibernate testsuite use only
 	private GenerationState noTenantGenerationState() {
 		final var noTenantState = locateGenerationState( null );

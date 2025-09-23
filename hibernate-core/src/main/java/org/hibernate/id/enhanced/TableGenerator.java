@@ -716,6 +716,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 				getCurrentTableValue( isolator, sequenceTableName, valueColumnName,
 						segmentColumnName, segmentValue );
 		if ( max + adjustment > current ) {
+			optimizer.reset();
 			final String update =
 					"update " + sequenceTableName
 					+ " set " + valueColumnName + " = " + (max + adjustment)
@@ -728,6 +729,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	}
 
 	private InitCommand generateResetCommand(SqlStringGenerationContext context) {
+		optimizer.reset();
 		final String update =
 				"update " + context.format( physicalTableName )
 				+ " set " + valueColumnName + " = " + initialValue

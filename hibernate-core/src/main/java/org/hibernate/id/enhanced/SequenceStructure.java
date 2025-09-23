@@ -179,10 +179,12 @@ public class SequenceStructure implements DatabaseStructure {
 			final long max = getMaxPrimaryKey( isolator, primaryKeyColumnName, tableName );
 			final long current = getNextSequenceValue( isolator, sequenceName);
 			final long startWith = Math.max( max + adjustment, current );
+			optimizer.reset();
 			return new InitCommand( sqlContext.getDialect().getSequenceSupport()
 					.getRestartSequenceString( sequenceName, startWith ) );
 		} );
 		table.addResetCommand( sqlContext -> {
+			optimizer.reset();
 			final String sequenceName = sqlContext.format( physicalSequenceName );
 			return new InitCommand( sqlContext.getDialect().getSequenceSupport()
 					.getRestartSequenceString( sequenceName, initialValue ) );

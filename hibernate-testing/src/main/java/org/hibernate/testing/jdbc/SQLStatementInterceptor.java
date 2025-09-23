@@ -9,11 +9,11 @@ import java.util.Map;
 
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
+import static org.hibernate.cfg.JdbcSettings.STATEMENT_INSPECTOR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -26,28 +26,21 @@ public class SQLStatementInterceptor {
 
 	private final LinkedList<String> sqlQueries = new LinkedList<>();
 
+	private final StatementInspector inspector = sql -> {
+		sqlQueries.add( sql );
+		return sql;
+	};
+
 	public SQLStatementInterceptor(SessionFactoryBuilder sessionFactoryBuilder) {
-		sessionFactoryBuilder.applyStatementInspector( (StatementInspector) sql -> {
-			sqlQueries.add( sql );
-			return sql;
-		} );
+		sessionFactoryBuilder.applyStatementInspector( inspector );
 	}
 
 	public SQLStatementInterceptor(Map<String,Object> settings) {
-		settings.put( AvailableSettings.STATEMENT_INSPECTOR, (StatementInspector) sql -> {
-			sqlQueries.add( sql );
-			return sql;
-		} );
+		settings.put( STATEMENT_INSPECTOR, inspector );
 	}
 
-	public SQLStatementInterceptor(StandardServiceRegistryBuilder ssrb) {
-		ssrb.applySetting(
-				AvailableSettings.STATEMENT_INSPECTOR,
-				(StatementInspector) sql -> {
-					sqlQueries.add( sql );
-					return sql;
-				}
-		);
+	public SQLStatementInterceptor(StandardServiceRegistryBuilder registryBuilder) {
+		registryBuilder.applySetting( STATEMENT_INSPECTOR, inspector );
 	}
 
 	public SQLStatementInterceptor(Configuration configuration) {

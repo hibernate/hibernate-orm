@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.QualifiedTableName;
@@ -30,6 +29,7 @@ import org.hibernate.type.SqlTypes;
 
 import static java.util.Collections.addAll;
 import static java.util.Comparator.comparing;
+import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.internal.util.StringHelper.EMPTY_STRINGS;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.tool.schema.internal.ColumnDefinitions.appendColumn;
@@ -57,7 +57,7 @@ public class StandardTableExporter implements Exporter<Table> {
 		try {
 			final String formattedTableName = context.format( tableName );
 
-			final StringBuilder createTable = new StringBuilder();
+			final var createTable = new StringBuilder();
 
 			final String viewQuery = table.getViewQuery();
 			if ( viewQuery != null ) {
@@ -85,7 +85,7 @@ public class StandardTableExporter implements Exporter<Table> {
 						.append( viewQuery );
 			}
 			else {
-				final StringBuilder extra = new StringBuilder();
+				final var extra = new StringBuilder();
 
 				createTable.append( tableCreateString( table.hasPrimaryKey() ) )
 						.append( ' ' )
@@ -105,7 +105,7 @@ public class StandardTableExporter implements Exporter<Table> {
 					extra.append( column.getValue().getExtraCreateTableInfo() );
 				}
 				if ( table.getRowId() != null ) {
-					String rowIdColumn = dialect.getRowIdColumnString( table.getRowId() );
+					final String rowIdColumn = dialect.getRowIdColumnString( table.getRowId() );
 					if ( rowIdColumn != null ) {
 						createTable.append(", ").append( rowIdColumn );
 					}
@@ -165,12 +165,13 @@ public class StandardTableExporter implements Exporter<Table> {
 	 */
 	protected void applyComments(Table table, String formattedTableName, List<String> sqlStrings) {
 		if ( dialect.supportsCommentOn() ) {
-			if ( table.getComment() != null && dialect.getTableComment( "" ).isEmpty() ) {
-				sqlStrings.add( "comment on table " + formattedTableName + " is '" + table.getComment() + "'" );
+			final String comment = table.getComment();
+			if ( comment != null && dialect.getTableComment( "" ).isEmpty() ) {
+				sqlStrings.add( "comment on table " + formattedTableName + " is '" + comment + "'" );
 			}
 			if ( dialect.getColumnComment( "" ).isEmpty() ){
-				for ( Column column : table.getColumns() ) {
-					String columnComment = column.getComment();
+				for ( var column : table.getColumns() ) {
+					final String columnComment = column.getComment();
 					if ( columnComment != null ) {
 						sqlStrings.add(
 								"comment on column " + formattedTableName + '.' + column.getQuotedName( dialect )
@@ -252,7 +253,7 @@ public class StandardTableExporter implements Exporter<Table> {
 	}
 
 	private boolean isArray(AggregateColumn aggregateColumn) {
-		final BasicValue value = (BasicValue) aggregateColumn.getValue();
+		final var value = (BasicValue) aggregateColumn.getValue();
 		return switch ( value.getResolution().getJdbcType().getDefaultSqlTypeCode() ) {
 			case SqlTypes.STRUCT_ARRAY, SqlTypes.STRUCT_TABLE, SqlTypes.JSON_ARRAY, SqlTypes.XML_ARRAY, SqlTypes.ARRAY
 					-> true;
@@ -395,7 +396,7 @@ public class StandardTableExporter implements Exporter<Table> {
 		}
 		constraint.append( "primary key (" );
 		boolean first = true;
-		for ( Column column : key.getColumns() ) {
+		for ( var column : key.getColumns() ) {
 			if ( first ) {
 				first = false;
 			}
@@ -429,8 +430,8 @@ public class StandardTableExporter implements Exporter<Table> {
 
 	private static QualifiedName getTableName(Table table) {
 		return new QualifiedNameParser.NameParts(
-				Identifier.toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
-				Identifier.toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
+				toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
+				toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
 				table.getNameIdentifier()
 		);
 	}

@@ -703,6 +703,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		physicalTableName = table.getQualifiedTableName();
 		table.addInitCommand( this::generateInsertInitCommand );
 		table.addResyncCommand( this::generateResyncCommand );
+		table.addResetCommand( this::generateResetCommand );
 	}
 
 	private InitCommand generateResyncCommand(SqlStringGenerationContext context, DdlTransactionIsolator isolator) {
@@ -724,6 +725,14 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		else {
 			return new InitCommand();
 		}
+	}
+
+	private InitCommand generateResetCommand(SqlStringGenerationContext context) {
+		final String update =
+				"update " + context.format( physicalTableName )
+				+ " set " + valueColumnName + " = " + initialValue
+				+ " where " + segmentColumnName + " = '" + segmentValue + "'";
+		return new InitCommand( update );
 	}
 
 	private Table createTable(Database database, Namespace namespace) {

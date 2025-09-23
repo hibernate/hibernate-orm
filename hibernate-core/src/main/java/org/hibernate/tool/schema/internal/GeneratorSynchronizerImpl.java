@@ -102,8 +102,12 @@ public class GeneratorSynchronizerImpl implements GeneratorSynchronizer {
 			for ( var namespace : metadata.getDatabase().getNamespaces() ) {
 				if ( schemaFilter.includeNamespace( namespace ) ) {
 					for ( var table : namespace.getTables() ) {
-						for ( var command : table.getResyncCommands( context, isolator ) ) {
-							applySqlStrings( command.initCommands(), formatter, options, targets );
+						if ( table.isPhysicalTable()
+								&& schemaFilter.includeTable( table )
+								&& contributableInclusionFilter.matches( table ) ) {
+							for ( var command : table.getResyncCommands( context, isolator ) ) {
+								applySqlStrings( command.initCommands(), formatter, options, targets );
+							}
 						}
 					}
 				}

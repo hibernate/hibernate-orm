@@ -121,33 +121,25 @@ public class SchemaTruncatorImpl extends AbstractSchemaPopulator implements Sche
 				applySqlString( dialect.getTableCleaner().getSqlBeforeString(), formatter, options, targets );
 
 				// now it's safe to drop the tables
-				final List<Table> list = new ArrayList<>( namespace.getTables().size() );
+				final List<Table> tablesToTruncate = new ArrayList<>( namespace.getTables().size() );
 				for ( var table : namespace.getTables() ) {
 					if ( table.isPhysicalTable()
 							&& schemaFilter.includeTable( table )
 							&& contributableInclusionFilter.matches( table ) ) {
 						checkExportIdentifier( table, exportIdentifiers );
-						list.add( table );
+						tablesToTruncate.add( table );
 					}
 				}
 				applySqlStrings(
-						dialect.getTableCleaner().getSqlTruncateStrings( list, metadata, context ),
+						dialect.getTableCleaner().getSqlTruncateStrings( tablesToTruncate, metadata, context ),
 						formatter, options, targets
 				);
-
-				//TODO: reset the sequences?
-//				for ( var sequence : namespace.getSequences() ) {
-//					if ( ! options.getSchemaFilter().includeSequence( sequence ) ) {
-//						continue;
-//					}
-//					if ( ! contributableInclusionFilter.matches( sequence ) ) {
-//						continue;
-//					}
-//					checkExportIdentifier( sequence, exportIdentifiers );
-//
-//					applySqlStrings( dialect.getSequenceExporter().getSqlDropStrings( sequence, metadata, context ),
-//							formatter, options, targets );
-//				}
+				// reset sequences back to their initial values
+				for ( var table : tablesToTruncate ) {
+					for ( var command : table.getResetCommands( context ) ) {
+						applySqlStrings( command.initCommands(), formatter, options, targets );
+					}
+				}
 
 				applySqlString( dialect.getTableCleaner().getSqlAfterString(), formatter, options, targets );
 				enableConstraints( namespace, metadata, formatter, options, schemaFilter, context,

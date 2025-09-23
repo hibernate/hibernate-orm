@@ -41,12 +41,9 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 

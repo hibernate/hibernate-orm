@@ -46,6 +46,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.expression.AsWrapperSqmExpression;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmAny;
 import org.hibernate.query.sqm.tree.expression.SqmAnyDiscriminatorValue;
@@ -413,4 +414,5 @@ public interface SemanticQueryWalker<T> {
 
 	T visitFullyQualifiedClass(Class<?> namedClass);
 
+	T visitAsWrapperExpression(AsWrapperSqmExpression<?> expression);
 }

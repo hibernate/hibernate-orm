@@ -67,7 +67,9 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	void validateMappedObjects();
 
 	/**
-	 * Truncate the database tables mapped by Hibernate entities, and then
+	 * Truncate the database tables mapped by Hibernate entities, reset all associated
+	 * {@linkplain jakarta.persistence.SequenceGenerator sequences} and tables backing
+	 * {@linkplain jakarta.persistence.TableGenerator table generators}, and then
 	 * reimport initial data from {@code /import.sql} and any other configured
 	 * {@linkplain org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
 	 * load script}.
@@ -87,6 +89,10 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	 * Populate the database by executing {@code /import.sql} and any other configured
 	 * {@linkplain org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
 	 * load script}.
+	 * <p>
+	 * This operation does not automatically resynchronize sequences or tables backing
+	 * {@linkplain jakarta.persistence.TableGenerator table generators}, and so it might
+	 * be necessary to call {@link #resynchronizeGenerators} after calling this method.
 	 * <p>
 	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaPopulator}.
 	 *

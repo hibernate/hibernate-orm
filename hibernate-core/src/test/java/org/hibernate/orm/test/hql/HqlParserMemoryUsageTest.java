@@ -12,7 +12,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.hibernate.cfg.QuerySettings;
 import org.hibernate.query.hql.HqlTranslator;
-import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.testing.memory.MemoryUsageUtil;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -41,104 +41,52 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Jira("https://hibernate.atlassian.net/browse/HHH-19240")
 public class HqlParserMemoryUsageTest {
 
-	private static final String HQL = """
-				SELECT DISTINCT u.id
-				FROM AppUser u
-				LEFT JOIN u.addresses a
-				LEFT JOIN u.orders o
-				LEFT JOIN o.orderItems oi
-				LEFT JOIN oi.product p
-				LEFT JOIN p.discounts d
-				WHERE u.id = :userId
-				AND (
-					CASE
-						WHEN u.name = 'SPECIAL_USER' THEN TRUE
-						ELSE (
-							CASE
-								WHEN a.city = 'New York' THEN TRUE
-								ELSE (
-									p.category.name = 'Electronics'
-									OR d.code LIKE '%DISC%'
-									OR u.id IN (
-										SELECT u2.id
-										FROM AppUser u2
-										JOIN u2.orders o2
-										JOIN o2.orderItems oi2
-										JOIN oi2.product p2
-										WHERE p2.price > (
-											SELECT AVG(p3.price) FROM Product p3
-										)
-									)
-								)
-							END
-						)
-					END
-				)
-				""";
+	private static final String HQL = "SELECT DISTINCT u.id\n" +
+									  "FROM AppUser u\n" +
+									  "LEFT JOIN u.addresses a\n" +
+									  "LEFT JOIN u.orders o\n" +
+									  "LEFT JOIN o.orderItems oi\n" +
+									  "LEFT JOIN oi.product p\n" +
+									  "LEFT JOIN p.discounts d\n" +
+									  "WHERE u.id = :userId\n" +
+									  "AND (\n" +
+									  "	CASE\n" +
+									  "		WHEN u.name = 'SPECIAL_USER' THEN TRUE\n" +
+									  "		ELSE (\n" +
+									  "			CASE\n" +
+									  "				WHEN a.city = 'New York' THEN TRUE\n" +
+									  "				ELSE (\n" +
+									  "					p.category.name = 'Electronics'\n" +
+									  "					OR d.code LIKE '%DISC%'\n" +
+									  "					OR u.id IN (\n" +
+									  "						SELECT u2.id\n" +
+									  "						FROM AppUser u2\n" +
+									  "						JOIN u2.orders o2\n" +
+									  "						JOIN o2.orderItems oi2\n" +
+									  "						JOIN oi2.product p2\n" +
+									  "						WHERE p2.price > (\n" +
+									  "							SELECT AVG(p3.price) FROM Product p3\n" +
+									  "						)\n" +
+									  "					)\n" +
+									  "				)\n" +
+									  "			END\n" +
+									  "		)\n" +
+									  "	END\n" +
+									  ")\n";
 
 
 	@Test
 	public void testParserMemoryUsage(SessionFactoryScope scope) {
 		final HqlTranslator hqlTranslator = scope.getSessionFactory().getQueryEngine().getHqlTranslator();
-		final Runtime runtime = Runtime.getRuntime();
 
 		// Ensure classes and basic stuff is initialized in case this is the first test run
 		hqlTranslator.translate( "from AppUser", AppUser.class );
-		runtime.gc();
-		runtime.gc();
-
-		// Track memory usage before execution
-		long totalMemoryBefore = runtime.totalMemory();
-		long usedMemoryBefore = totalMemoryBefore - runtime.freeMemory();
-
-		System.out.println("Memory Usage Before Create Query:");
-		System.out.println("----------------------------");
-		System.out.println("Total Memory: " + (totalMemoryBefore / 1024) + " KB");
-		System.out.println("Used Memory : " + (usedMemoryBefore / 1024) + " KB");
-		System.out.println();
-
-		// Create query
-		SqmStatement<Long> statement = hqlTranslator.translate( HQL, Long.class );
-
-		// Track memory usage after execution
-		long totalMemoryAfter = runtime.totalMemory();
-		long usedMemoryAfter = totalMemoryAfter - runtime.freeMemory();
-
-		System.out.println("Memory Usage After Create Query:");
-		System.out.println("----------------------------");
-		System.out.println("Total Memory: " + (totalMemoryAfter / 1024) + " KB");
-		System.out.println("Used Memory : " + (usedMemoryAfter / 1024) + " KB");
-		System.out.println();
-
-		System.out.println("Memory increase After Parsing:");
-		System.out.println("----------------------------");
-		System.out.println("Total Memory increase: " + ((totalMemoryAfter - totalMemoryBefore) / 1024) + " KB");
-		System.out.println("Used Memory increase : " + ((usedMemoryAfter - usedMemoryBefore) / 1024) + " KB");
-		System.out.println();
-
-		runtime.gc();
-		runtime.gc();
-
-		// Track memory usage after execution
-		long totalMemoryAfterGc = runtime.totalMemory();
-		long usedMemoryAfterGc = totalMemoryAfterGc - runtime.freeMemory();
-
-		System.out.println("Memory Usage After Create Query and GC:");
-		System.out.println("----------------------------");
-		System.out.println("Total Memory: " + (totalMemoryAfterGc / 1024) + " KB");
-		System.out.println("Used Memory : " + (usedMemoryAfterGc / 1024) + " KB");
-		System.out.println();
-
-		System.out.println("Memory overhead of Parsing:");
-		System.out.println("----------------------------");
-		System.out.println("Total Memory increase: " + ((totalMemoryAfter - totalMemoryAfterGc) / 1024) + " KB");
-		System.out.println("Used Memory increase : " + ((usedMemoryAfter - usedMemoryAfterGc) / 1024) + " KB");
-		System.out.println();
 
 		// During testing, before the fix for HHH-19240, the allocation was around 500+ MB,
 		// and after the fix it dropped to 170 - 250 MB
-		final long memoryConsumption = usedMemoryAfter - usedMemoryAfterGc;
-		assertTrue( usedMemoryAfter - usedMemoryAfterGc < 256_000_000, "Parsing of queries consumes too much memory (" + ( memoryConsumption / 1024 ) + " KB), when at most 256 MB are expected" );
+		final long memoryUsage = MemoryUsageUtil.estimateMemoryUsage( () -> hqlTranslator.translate( HQL, Long.class ) );
+		System.out.println( "Memory Consumption: " + (memoryUsage / 1024) + " KB" );
+		assertTrue( memoryUsage < 256_000_000, "Parsing of queries consumes too much memory (" + ( memoryUsage / 1024 ) + " KB), when at most 256 MB are expected" );
 	}
 
 	@Entity(name = "Address")

@@ -9,7 +9,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
-import org.hibernate.Timeouts;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityKey;
@@ -202,7 +201,7 @@ public class FollowOnLockingAction implements PostAction {
 	private QueryOptions buildLockingOptions(ExecutionContext executionContext) {
 		final QueryOptionsImpl lockingQueryOptions = new QueryOptionsImpl();
 		lockingQueryOptions.getLockOptions().setLockMode( lockMode );
-		lockingQueryOptions.getLockOptions().setTimeout( Timeouts.WAIT_FOREVER );
+		lockingQueryOptions.getLockOptions().setTimeout( lockTimeout );
 		lockingQueryOptions.getLockOptions().setFollowOnStrategy( Locking.FollowOn.DISALLOW );
 		if ( executionContext.getQueryOptions().isReadOnly() == Boolean.TRUE ) {
 			lockingQueryOptions.setReadOnly( true );

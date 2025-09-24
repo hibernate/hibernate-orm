@@ -14,9 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
 
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
-import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -125,8 +123,8 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	public StatisticsImpl(SessionFactoryImplementor sessionFactory) {
 		Objects.requireNonNull( sessionFactory );
-		SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
-		this.queryStatsMap = new StatsNamedContainer<>(
+		final var sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
+		queryStatsMap = new StatsNamedContainer<>(
 				sessionFactoryOptions.getQueryStatisticsMaxSize(),
 				20
 		);
@@ -137,12 +135,12 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		queryCacheEnabled = sessionFactoryOptions.isQueryCacheEnabled();
 
 		final List<String> entityNames = new ArrayList<>();
-		metamodel.forEachEntityDescriptor( (entityDescriptor) -> entityNames.add( entityDescriptor.getEntityName() ) );
-		this.allEntityNames = entityNames.toArray( new String[0] );
+		metamodel.forEachEntityDescriptor( entity -> entityNames.add( entity.getEntityName() ) );
+		allEntityNames = entityNames.toArray( new String[0] );
 
 		final List<String> collectionRoles = new ArrayList<>();
-		metamodel.forEachCollectionDescriptor( (collectionDescriptor) -> collectionRoles.add( collectionDescriptor.getRole() ) );
-		this.allCollectionRoles = collectionRoles.toArray( new String[0] );
+		metamodel.forEachCollectionDescriptor( collection -> collectionRoles.add( collection.getRole() ) );
+		allCollectionRoles = collectionRoles.toArray( new String[0] );
 	}
 
 	/**
@@ -593,7 +591,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	public @Nullable CacheRegionStatisticsImpl getQueryRegionStatistics(final String regionName) {
 		return l2CacheStatsMap.getOrCompute(
 				regionName,
-
 				new Function<>() {
 					@Override
 					public @Nullable CacheRegionStatisticsImpl apply(String regionName1) {
@@ -604,13 +601,10 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	}
 
 	private @Nullable CacheRegionStatisticsImpl computeQueryRegionStatistics(final String regionName) {
-		final QueryResultsCache regionAccess = cache.getQueryResultsCacheStrictly( regionName );
-		if ( regionAccess == null ) {
-			return null; //this null value will be cached
-		}
-		else {
-			return new CacheRegionStatisticsImpl( regionAccess.getRegion() );
-		}
+		final var regionAccess = cache.getQueryResultsCacheStrictly( regionName );
+		return regionAccess == null
+				? null
+				: new CacheRegionStatisticsImpl( regionAccess.getRegion() ); //this null value will be cached
 	}
 
 

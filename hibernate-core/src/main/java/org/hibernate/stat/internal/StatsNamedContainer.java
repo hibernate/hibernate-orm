@@ -33,7 +33,7 @@ public final class StatsNamedContainer<V> {
 	 * Creates a bounded container - based on BoundedConcurrentHashMap
 	 */
 	public StatsNamedContainer(int capacity, int concurrencyLevel) {
-		this.map = new BoundedConcurrentHashMap<>( capacity, concurrencyLevel, LRU );
+		map = new BoundedConcurrentHashMap<>( capacity, concurrencyLevel, LRU );
 	}
 
 	/**

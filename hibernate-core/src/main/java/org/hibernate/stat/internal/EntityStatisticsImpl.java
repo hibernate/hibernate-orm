@@ -31,7 +31,7 @@ public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implem
 			final var cache = rootEntityDescriptor.getCacheAccessStrategy();
 			return cache != null ? cache.getRegion() : null;
 		} );
-		this.rootEntityName = rootEntityDescriptor.getRootEntityName();
+		rootEntityName = rootEntityDescriptor.getRootEntityName();
 	}
 
 	public long getDeleteCount() {

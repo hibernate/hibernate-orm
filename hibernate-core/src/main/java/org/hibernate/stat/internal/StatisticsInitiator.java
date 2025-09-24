@@ -57,7 +57,9 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 			// assume it names the factory class
 			final var classLoaderService = registry.requireService( ClassLoaderService.class );
 			try {
-				return (StatisticsFactory) classLoaderService.classForName( configValue.toString() ).newInstance();
+				return (StatisticsFactory)
+						classLoaderService.classForName( configValue.toString() )
+								.newInstance();
 			}
 			catch (HibernateException e) {
 				throw e;

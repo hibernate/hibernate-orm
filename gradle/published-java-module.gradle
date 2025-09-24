@@ -9,9 +9,6 @@ apply from: rootProject.file( 'gradle/releasable.gradle' )
 apply from: rootProject.file( 'gradle/java-module.gradle' )
 apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 
-// Make sure that the publishReleaseArtifacts task of the release module runs the release task of this sub module
-tasks.getByPath( ':release:publishReleaseArtifacts' ).dependsOn tasks.release
-
 configurations {
 	javadocSources {
 		description 'Used to aggregate javadocs for the whole project'

@@ -5,6 +5,7 @@ import org.apache.tools.ant.MagicNames;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.ProjectHelper;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -40,6 +41,18 @@ public class ExamplesTestIT {
         Project project = createProject(buildFile);
         assertNotNull(project);
         File personFile = new File(baseFolder, "5-minute-tutorial/generated/Person.java");
+        assertFalse(personFile.exists());
+        project.executeTarget("reveng");
+        assertTrue(personFile.exists());
+    }
+
+    @Disabled
+    @Test
+    public void testCfgXml() throws Exception {
+        File buildFile = new File(baseFolder, "cfgxml/build.xml");
+        Project project = createProject(buildFile);
+        assertNotNull(project);
+        File personFile = new File(baseFolder, "cfgxml/generated/Person.java");
         assertFalse(personFile.exists());
         project.executeTarget("reveng");
         assertTrue(personFile.exists());

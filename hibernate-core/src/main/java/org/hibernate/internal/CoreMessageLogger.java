@@ -46,7 +46,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 		description = "Miscellaneous logging related to Hibernate ORM Core"
 )
 @MessageLogger(projectCode = "HHH")
-@ValidIdRange(max = 8000)
+@ValidIdRange(min = 1, max = 8000)
 @Internal
 public interface CoreMessageLogger extends BasicLogger {
 

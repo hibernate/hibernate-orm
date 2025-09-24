@@ -23,10 +23,13 @@ else
   fi
 fi
 
+DB_COUNT=1
 if [[ "$(uname -s)" == "Darwin" ]]; then
   IS_OSX=true
+  DB_COUNT=$(($(sysctl -n hw.physicalcpu)/2))
 else
   IS_OSX=false
+  DB_COUNT=$(($(nproc)/2))
 fi
 
 mysql() {
@@ -128,7 +131,7 @@ mysql_setup() {
     fi
 
     databases=()
-    for n in $(seq 1 $(($(nproc)/2)))
+    for n in $(seq 1 $DB_COUNT)
     do
       databases+=("hibernate_orm_test_${n}")
     done
@@ -203,7 +206,7 @@ mariadb_setup() {
     mariadb_wait_until_start
 
     databases=()
-    for n in $(seq 1 $(($(nproc)/2)))
+    for n in $(seq 1 $DB_COUNT)
     do
       databases+=("hibernate_orm_test_${n}")
     done
@@ -261,7 +264,7 @@ postgresql_17() {
 
 postgresql_setup() {
   databases=()
-  for n in $(seq 1 $(($(nproc)/2)))
+  for n in $(seq 1 $DB_COUNT)
   do
     databases+=("hibernate_orm_test_${n}")
   done
@@ -377,7 +380,7 @@ edb_17() {
 
 edb_setup() {
   databases=()
-  for n in $(seq 1 $(($(nproc)/2)))
+  for n in $(seq 1 $DB_COUNT)
   do
     databases+=("hibernate_orm_test_${n}")
   done
@@ -494,7 +497,7 @@ EOF
 
 db2_setup() {
     pids=()
-    for n in $(seq 1 $(($(nproc)/2)))
+    for n in $(seq 1 $DB_COUNT)
     do
       $CONTAINER_CLI exec -t db2 su - orm_test bash -c ". /database/config/orm_test/sqllib/db2profile; /database/config/orm_test/sqllib/bin/db2 'connect to orm_test'; /database/config/orm_test/sqllib/bin/db2 'create tenant ORM_${n}';" &
       pids[${i}]=$!
@@ -588,7 +591,7 @@ mssql_2017() {
       echo "SQL Server successfully started"
     fi
     echo "Creating databases..."
-    for n in $(seq 1 $(($(nproc)/2)))
+    for n in $(seq 1 $DB_COUNT)
     do
       $CONTAINER_CLI exec mssql bash -c "echo \"create database hibernate_orm_test_${n} collate SQL_Latin1_General_CP1_CS_AS; alter database hibernate_orm_test_${n} set READ_COMMITTED_SNAPSHOT ON\" | /opt/mssql-tools/bin/sqlcmd -C -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin"
     done
@@ -616,7 +619,7 @@ mssql_2022() {
       echo "SQL Server successfully started"
     fi
     echo "Creating databases..."
-    for n in $(seq 1 $(($(nproc)/2)))
+    for n in $(seq 1 $DB_COUNT)
     do
       $CONTAINER_CLI exec mssql bash -c "echo \"create database hibernate_orm_test_${n} collate SQL_Latin1_General_CP1_CS_AS; alter database hibernate_orm_test_${n} set READ_COMMITTED_SNAPSHOT ON\" | /opt/mssql-tools/bin/sqlcmd -C -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin"
     done
@@ -644,7 +647,7 @@ mssql_2025() {
       echo "SQL Server successfully started"
     fi
     echo "Creating databases..."
-    for n in $(seq 1 $(($(nproc)/2)))
+    for n in $(seq 1 $DB_COUNT)
     do
       $CONTAINER_CLI exec mssql bash -c "echo \"create database hibernate_orm_test_${n} collate SQL_Latin1_General_CP1_CS_AS; alter database hibernate_orm_test_${n} set READ_COMMITTED_SNAPSHOT ON\" | /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin"
     done
@@ -795,7 +798,7 @@ oracle_setup() {
     echo "Oracle successfully started"
 
     users=()
-    for n in $(seq 1 $(($(nproc)/2)))
+    for n in $(seq 1 $DB_COUNT)
     do
       users+=("hibernate_orm_test_${n}")
     done
@@ -889,7 +892,7 @@ oracle_free_setup() {
     echo "Oracle successfully started"
 
     users=()
-    for n in $(seq 1 $(($(nproc)/2)))
+    for n in $(seq 1 $DB_COUNT)
     do
       users+=("hibernate_orm_test_${n}")
     done

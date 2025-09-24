@@ -37,6 +37,7 @@ import org.hibernate.sql.exec.spi.PostAction;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -109,6 +110,8 @@ public class FollowOnLockingAction implements PostAction {
 		try {
 			// collect registrations by entity type
 			final Map<EntityMappingType, List<EntityKey>> entitySegments = segmentLoadedValues();
+			final Map<EntityMappingType, Map<PluralAttributeMapping, List<CollectionKey>>> collectionSegments =
+					lockScope == Locking.Scope.INCLUDE_FETCHES ? segmentLoadedCollections() : Collections.emptyMap();
 
 			// for each entity-type, prepare a locking select statement per table.
 			// this is based on the attributes for "state array" ordering purposes -
@@ -166,6 +169,23 @@ public class FollowOnLockingAction implements PostAction {
 						);
 					} );
 				}
+				else if ( lockScope == Locking.Scope.INCLUDE_FETCHES
+						&& loadedValuesCollector.getCollectedCollections() != null
+						&& !loadedValuesCollector.getCollectedCollections().isEmpty() ) {
+					final Map<PluralAttributeMapping, List<CollectionKey>> attributeKeys =
+							collectionSegments.get( entityMappingType );
+					if ( attributeKeys != null ) {
+						for ( var entry : attributeKeys.entrySet() ) {
+							LockingHelper.lockCollectionTable(
+									entry.getKey(),
+									lockMode,
+									lockTimeout,
+									entry.getValue(),
+									executionContext
+							);
+						}
+					}
+				}
 
 
 				// at this point, we have all the individual locking selects ready to go - execute them
@@ -216,6 +236,12 @@ public class FollowOnLockingAction implements PostAction {
 		if ( map.isEmpty() ) {
 			throw new AssertionFailure( "Expecting some values" );
 		}
+		return map;
+	}
+
+	private Map<EntityMappingType, Map<PluralAttributeMapping, List<CollectionKey>>> segmentLoadedCollections() {
+		final Map<EntityMappingType, Map<PluralAttributeMapping, List<CollectionKey>>> map = new HashMap<>();
+		LockingHelper.segmentLoadedCollections( loadedValuesCollector.getCollectedCollections(), map );
 		return map;
 	}
 

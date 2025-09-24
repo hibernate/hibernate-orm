@@ -10,6 +10,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.Session;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -320,6 +321,158 @@ public class LockingHelper {
 		return inListPredicate;
 	}
 
+	/**
+	 * Lock a collection-table.
+	 *
+	 * @param attributeMapping The plural attribute whose table needs locked.
+	 * @param lockMode The lock mode to apply
+	 * @param lockTimeout A lock timeout to apply, if one.
+	 * @param collectionKeys Keys of collection-table rows that should be locked.
+	 */
+	public static void lockCollectionTable(
+			PluralAttributeMapping attributeMapping,
+			LockMode lockMode,
+			Timeout lockTimeout,
+			List<CollectionKey> collectionKeys,
+			ExecutionContext executionContext) {
+		final ForeignKeyDescriptor keyDescriptor = attributeMapping.getKeyDescriptor();
+		final String keyTableName = keyDescriptor.getKeyTable();
+
+		if ( SQL_EXEC_LOGGER.isDebugEnabled() ) {
+			SQL_EXEC_LOGGER.debugf( "Follow-on locking for collection table `%s` - %s", keyTableName, attributeMapping.getRootPathName() );
+		}
+
+		final QuerySpec querySpec = new QuerySpec( true );
+
+		final NamedTableReference tableReference = new NamedTableReference( keyTableName, "tbl" );
+		final LockingTableGroup tableGroup = new LockingTableGroup(
+				tableReference,
+				keyTableName,
+				attributeMapping,
+				keyDescriptor.getKeySide().getModelPart()
+		);
+
+		querySpec.getFromClause().addRoot( tableGroup );
+
+		final ValuedModelPart keyPart = keyDescriptor.getKeyPart();
+		final ColumnReference columnReference = new ColumnReference( tableReference, keyPart.getSelectable( 0 ) );
+
+		// NOTE: We add the key column to the selection list, but never create a DomainResult
+		// as we won't read the value back.  Ideally, we would read the "value column(s)" and
+		// update the collection state accordingly much like is done for entity state -
+		// however, the concern is minor, so for simplicity we do not.
+		final SqlSelectionImpl sqlSelection = new SqlSelectionImpl( columnReference, 0 );
+		querySpec.getSelectClause().addSqlSelection( sqlSelection );
+
+		final int expectedParamCount = collectionKeys.size() * keyDescriptor.getJdbcTypeCount();
+		final JdbcParameterBindingsImpl parameterBindings = new JdbcParameterBindingsImpl( expectedParamCount );
+
+		final InListPredicate restriction;
+		if ( keyDescriptor.getJdbcTypeCount() == 1 ) {
+			restriction = new InListPredicate( columnReference );
+			applySimpleCollectionKeyTableLockRestrictions(
+					attributeMapping,
+					keyDescriptor,
+					restriction,
+					parameterBindings,
+					collectionKeys,
+					executionContext.getSession()
+			);
+		}
+		else {
+			restriction = applyCompositeCollectionKeyTableLockRestrictions(
+					attributeMapping,
+					keyDescriptor,
+					tableReference,
+					parameterBindings,
+					collectionKeys,
+					executionContext.getSession()
+			);
+		}
+		querySpec.applyPredicate( restriction );
+
+		final QueryOptionsImpl lockingQueryOptions = new QueryOptionsImpl();
+		lockingQueryOptions.getLockOptions().setLockMode( lockMode );
+		lockingQueryOptions.getLockOptions().setTimeout( lockTimeout );
+		final ExecutionContext lockingExecutionContext = new BaseExecutionContext( executionContext.getSession() ) {
+			@Override
+			public QueryOptions getQueryOptions() {
+				return lockingQueryOptions;
+			}
+		};
+
+		performLocking( querySpec, parameterBindings, lockingExecutionContext );
+	}
+
+	private static void applySimpleCollectionKeyTableLockRestrictions(
+			PluralAttributeMapping attributeMapping,
+			ForeignKeyDescriptor keyDescriptor,
+			InListPredicate restriction,
+			JdbcParameterBindingsImpl parameterBindings,
+			List<CollectionKey> collectionKeys,
+			SharedSessionContractImplementor session) {
+		for ( CollectionKey collectionKey : collectionKeys ) {
+			final Object collectionKeyValue = collectionKey.getKey();
+			keyDescriptor.breakDownJdbcValues(
+					collectionKeyValue,
+					(valueIndex, value, jdbcValueMapping) -> {
+						final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl(
+								jdbcValueMapping.getJdbcMapping() );
+						restriction.addExpression( jdbcParameter );
+
+						parameterBindings.addBinding(
+								jdbcParameter,
+								new JdbcParameterBindingImpl( jdbcValueMapping.getJdbcMapping(), value )
+						);
+					},
+					session
+			);
+		}
+	}
+
+	private static InListPredicate applyCompositeCollectionKeyTableLockRestrictions(
+			PluralAttributeMapping attributeMapping,
+			ForeignKeyDescriptor keyDescriptor,
+			TableReference tableReference,
+			JdbcParameterBindingsImpl parameterBindings,
+			List<CollectionKey> collectionKeys,
+			SharedSessionContractImplementor session) {
+		if ( !session.getDialect().supportsRowValueConstructorSyntaxInInList() ) {
+			// for now...
+			throw new UnsupportedOperationException(
+					"Follow-on collection-table locking with composite keys is not supported for Dialects"
+					+ " which do not support tuples (row constructor syntax) as part of an in-list"
+			);
+		}
+
+		final List<ColumnReference> columnReferences = new ArrayList<>( keyDescriptor.getJdbcTypeCount() );
+		keyDescriptor.forEachSelectable( (selectionIndex, selectableMapping) -> {
+			columnReferences.add( new ColumnReference( tableReference, selectableMapping ) );
+		} );
+		final InListPredicate inListPredicate = new InListPredicate( new SqlTuple( columnReferences, keyDescriptor ) );
+
+		for ( CollectionKey collectionKey : collectionKeys ) {
+			final Object collectionKeyValue = collectionKey.getKey();
+
+			final List<JdbcParameter> jdbcParameters = new ArrayList<>( keyDescriptor.getJdbcTypeCount() );
+			keyDescriptor.breakDownJdbcValues(
+					collectionKeyValue,
+					(valueIndex, value, jdbcValueMapping) -> {
+						final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcValueMapping.getJdbcMapping() );
+						jdbcParameters.add( jdbcParameter );
+						parameterBindings.addBinding(
+								jdbcParameter,
+								new JdbcParameterBindingImpl( jdbcValueMapping.getJdbcMapping(), value )
+						);
+					},
+					session
+			);
+			inListPredicate.addExpression( new SqlTuple( jdbcParameters, keyDescriptor ) );
+		}
+
+		return inListPredicate;
+	}
+
 	private static void performLocking(
 			QuerySpec querySpec,
 			JdbcParameterBindings jdbcParameterBindings,
@@ -411,6 +564,27 @@ public class LockingHelper {
 					entityMappingType -> new ArrayList<>()
 			);
 			entityKeys.add( registration.entityKey() );
+		} );
+	}
+
+	public static void segmentLoadedCollections(List<LoadedValuesCollector.LoadedCollectionRegistration> registrations, Map<EntityMappingType, Map<PluralAttributeMapping, List<CollectionKey>>> map) {
+		if ( registrations == null ) {
+			return;
+		}
+
+		registrations.forEach( (registration) -> {
+			final PluralAttributeMapping pluralAttributeMapping = registration.collectionDescriptor();
+			if ( pluralAttributeMapping.getSeparateCollectionTable() != null ) {
+				final Map<PluralAttributeMapping, List<CollectionKey>> attributeKeys = map.computeIfAbsent(
+						pluralAttributeMapping.findContainingEntityMapping(),
+						entityMappingType -> new HashMap<>()
+				);
+				final List<CollectionKey> collectionKeys = attributeKeys.computeIfAbsent(
+						pluralAttributeMapping,
+						entityMappingType -> new ArrayList<>()
+				);
+				collectionKeys.add( registration.collectionKey() );
+			}
 		} );
 	}
 

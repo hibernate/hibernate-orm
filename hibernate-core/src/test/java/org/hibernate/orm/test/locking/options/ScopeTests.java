@@ -279,8 +279,8 @@ public class ScopeTests {
 			}
 			else {
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 3 );
-				Helper.checkSql( sqlCollector.getSqlQueries().get( 1 ), session.getDialect(), REPORTS );
-				Helper.checkSql( sqlCollector.getSqlQueries().get( 2 ), session.getDialect(), PERSONS );
+				Helper.checkSql( sqlCollector.getSqlQueries().get( 1 ), session.getDialect(), PERSONS );
+				Helper.checkSql( sqlCollector.getSqlQueries().get( 2 ), session.getDialect(), REPORTS );
 				TransactionUtil.assertRowLock( factoryScope, REPORTS.getTableName(), "title", "id", report.getId(), true );
 
 				// these should happen but currently do not - follow-on locking is not locking element-collection tables...
@@ -315,8 +315,8 @@ public class ScopeTests {
 			}
 			else {
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 3 );
-				Helper.checkSql( sqlCollector.getSqlQueries().get( 1 ), session.getDialect(), REPORTS );
-				Helper.checkSql( sqlCollector.getSqlQueries().get( 2 ), session.getDialect(), PERSONS );
+				Helper.checkSql( sqlCollector.getSqlQueries().get( 1 ), session.getDialect(), PERSONS );
+				Helper.checkSql( sqlCollector.getSqlQueries().get( 2 ), session.getDialect(), REPORTS );
 				TransactionUtil.assertRowLock( factoryScope, REPORTS.getTableName(), "title", "id", report.getId(), true );
 
 				// these should happen but currently do not - follow-on locking is not locking element-collection tables...

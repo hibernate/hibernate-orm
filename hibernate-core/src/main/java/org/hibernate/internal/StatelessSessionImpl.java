@@ -121,16 +121,28 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	private final boolean connectionProvided;
 	private final TransactionCompletionCallbacksImplementor transactionCompletionCallbacks;
 
+	private final FlushMode flushMode;
 	private final EventListenerGroups eventListenerGroups;
 
 	public StatelessSessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 		connectionProvided = options.getConnection() != null;
-		transactionCompletionCallbacks =
-				options instanceof SharedSessionCreationOptions sharedOptions
-					&& sharedOptions.isTransactionCoordinatorShared()
-						? sharedOptions.getTransactionCompletionCallbacks()
-						: new TransactionCompletionCallbacksImpl( this );
+		if ( options instanceof SharedSessionCreationOptions sharedOptions
+				&& sharedOptions.isTransactionCoordinatorShared() ) {
+			transactionCompletionCallbacks = sharedOptions.getTransactionCompletionCallbacks();
+//			// register a callback with the child session to propagate auto flushing
+//			transactionCompletionCallbacks.registerCallback( session -> {
+//				// NOTE: `session` here is the parent
+//				if ( !isClosed() ) {
+//					triggerChildAutoFlush();
+//				}
+//			} );
+			flushMode = FlushMode.AUTO;
+		}
+		else {
+			transactionCompletionCallbacks = new TransactionCompletionCallbacksImpl( this );
+			flushMode = FlushMode.MANUAL;
+		}
 		temporaryPersistenceContext = createPersistenceContext( this );
 		influencers = new LoadQueryInfluencers( getFactory() );
 		eventListenerGroups = factory.getEventListenerGroups();
@@ -147,7 +159,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public FlushMode getHibernateFlushMode() {
-		return FlushMode.MANUAL;
+		// NOTE: only ever *not* MANUAL when this is a "child session"
+		return flushMode;
 	}
 
 	private StatisticsImplementor getStatistics() {
@@ -1197,6 +1210,24 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	private void managedFlush() {
 		checkOpen();
 		getJdbcCoordinator().executeBatch();
+	}
+
+	@Override
+	public void propagateFlush() {
+		if ( isClosed() ) {
+			return;
+		}
+		SESSION_LOGGER.automaticallyFlushingChildSession();
+		getJdbcCoordinator().executeBatch();
+	}
+
+	@Override
+	protected void propagateClose() {
+		if ( isClosed() ) {
+			return;
+		}
+		SESSION_LOGGER.automaticallyClosingChildSession();
+		close();
 	}
 
 	@Override

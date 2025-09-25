@@ -26,7 +26,11 @@ public class DB2zSequenceInformationExtractorTest extends AbstractSequenceInform
 
 	@Override
 	public String expectedQuerySequencesString() {
-		return "select * from sysibm.syssequences";
+		return """
+				select '' as sequence_catalog, seqschema, seqname, start, minvalue, maxvalue, increment from sysibm.syssequences where seqtype='A'
+				union
+				select '' as sequence_catalog, schema as seqschema, name as seqname, start, minvalue, maxvalue, increment from sysibm.syssequences where seqtype!='A'
+				""";
 	}
 
 	@Override

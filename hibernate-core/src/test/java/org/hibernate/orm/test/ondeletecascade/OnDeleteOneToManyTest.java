@@ -1,14 +1,12 @@
 /*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test;
+package org.hibernate.orm.test.ondeletecascade;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.RollbackException;
+import org.hibernate.Hibernate;
 import org.hibernate.TransientObjectException;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -19,6 +17,11 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.RollbackException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -27,10 +30,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-@Jpa(annotatedClasses = {OnDeleteTest2.Parent.class, OnDeleteTest2.Child.class})
-public class OnDeleteTest2 {
+@Jpa(annotatedClasses =
+		{OnDeleteOneToManyTest.Parent.class, OnDeleteOneToManyTest.Child.class},
+		useCollectingStatementInspector = true)
+//@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCascadeDeleteCheck.class)
+public class OnDeleteOneToManyTest {
 	@Test
 	public void testOnDeleteParent(EntityManagerFactoryScope scope) {
+		var inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
 		Parent parent = new Parent();
 		Child child = new Child();
 		parent.children.add( child );
@@ -38,10 +46,15 @@ public class OnDeleteTest2 {
 			em.persist( parent );
 			em.persist( child );
 		} );
+		inspector.assertExecutedCount( 3 );
+		inspector.clear();
 		scope.inTransaction( em -> {
 			Parent p = em.find( Parent.class, parent.id );
+			inspector.assertExecutedCount( 1 );
+			assertTrue( Hibernate.isInitialized( p.children ) );
 			em.remove( p );
 		} );
+		inspector.assertExecutedCount( 3 );
 		scope.inTransaction( em -> {
 			// since it's an owned collection, the FK gets set to null
 			assertNotNull( em.find( Child.class, child.id ) );

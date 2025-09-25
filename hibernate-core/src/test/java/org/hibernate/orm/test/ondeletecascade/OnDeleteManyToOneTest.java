@@ -1,21 +1,25 @@
 /*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test;
+package org.hibernate.orm.test.ondeletecascade;
+
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.internal.SessionFactoryImpl;
+
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.internal.SessionFactoryImpl;
-
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,8 +27,9 @@ import static jakarta.persistence.FetchType.EAGER;
 import static org.hibernate.annotations.OnDeleteAction.CASCADE;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-@Jpa(annotatedClasses = {OnDeleteTest.Parent.class, OnDeleteTest.Child.class})
-public class OnDeleteTest {
+@Jpa(annotatedClasses = {OnDeleteManyToOneTest.Parent.class, OnDeleteManyToOneTest.Child.class})
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCascadeDeleteCheck.class)
+public class OnDeleteManyToOneTest {
 	@Test
 	public void testOnDelete(EntityManagerFactoryScope scope) {
 		Parent parent = new Parent();

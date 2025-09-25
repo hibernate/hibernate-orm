@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.spi;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
@@ -20,6 +21,7 @@ import org.hibernate.event.spi.PersistContext;
 import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ForeignKeyDirection;
 import org.jboss.logging.Logger;
 
 import java.util.Iterator;
@@ -71,6 +73,11 @@ public class CascadingActions {
 		public boolean deleteOrphans() {
 			// orphans should be deleted during delete
 			return true;
+		}
+
+		@Override
+		public ForeignKeyDirection directionAffectedByCascadeDelete() {
+			return ForeignKeyDirection.FROM_PARENT;
 		}
 
 		@Override
@@ -378,7 +385,7 @@ public class CascadingActions {
 				Void context,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
-			if ( child != null && isChildTransient( session, child, entityName ) ) {
+			if ( child != null && isChildTransient( session, child, entityName, isCascadeDeleteEnabled ) ) {
 				throw new TransientObjectException( "persistent instance references an unsaved transient instance of '"
 						+ entityName + "' (save the transient instance before flushing)" );
 				//TODO: should be TransientPropertyValueException
@@ -420,12 +427,17 @@ public class CascadingActions {
 		}
 
 		@Override
+		public ForeignKeyDirection directionAffectedByCascadeDelete() {
+			return ForeignKeyDirection.TO_PARENT;
+		}
+
+		@Override
 		public String toString() {
 			return "ACTION_CHECK_ON_FLUSH";
 		}
 	};
 
-	private static boolean isChildTransient(EventSource session, Object child, String entityName) {
+	private static boolean isChildTransient(EventSource session, Object child, String entityName, boolean isCascadeDeleteEnabled) {
 		if ( isHibernateProxy( child ) ) {
 			// a proxy is always non-transient
 			// and ForeignKeys.isTransient()
@@ -440,7 +452,11 @@ public class CascadingActions {
 				// we are good, even if it's not yet
 				// inserted, since ordering problems
 				// are detected and handled elsewhere
-				return entry.getStatus().isDeletedOrGone();
+				return entry.getStatus().isDeletedOrGone()
+					// if the foreign key is 'on delete cascade'
+					// we don't have to throw because the database
+					// will delete the parent for us
+					&& !isCascadeDeleteEnabled;
 			}
 			else {
 				// TODO: check if it is a merged entity which has not yet been flushed
@@ -494,6 +510,11 @@ public class CascadingActions {
 		@Override
 		public boolean performOnLazyProperty() {
 			return true;
+		}
+
+		@Override @Nullable
+		public ForeignKeyDirection directionAffectedByCascadeDelete() {
+			return null;
 		}
 	}
 

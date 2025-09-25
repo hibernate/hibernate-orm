@@ -7,15 +7,21 @@
 package org.hibernate.engine.spi;
 
 import java.util.Iterator;
+import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 
 /**
  * A session action that may be cascaded from parent entity to its children
+ *
+ * @param <T> The type of some context propagated with the cascading action
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -27,10 +33,9 @@ public interface CascadingAction<T> {
 	 *
 	 * @param session The session within which the cascade is occurring.
 	 * @param child The child to which cascading should be performed.
-	 * @param entityName The child's entity name
-	 * @param anything Anything ;)  Typically some form of cascade-local cache
-	 * which is specific to each CascadingAction type
-	 * @param isCascadeDeleteEnabled Are cascading deletes enabled.
+	 * @param anything Some context specific to the kind of {@link CascadingAction}
+	 * @param isCascadeDeleteEnabled Whether the foreign key is declared with
+	 *        {@link org.hibernate.annotations.OnDeleteAction#CASCADE on delete cascade}.
 	 */
 	void cascade(
 			EventSource session,
@@ -92,4 +97,18 @@ public interface CascadingAction<T> {
 	 * Should this action be performed (or noCascade consulted) in the case of lazy properties.
 	 */
 	boolean performOnLazyProperty();
+
+	/**
+	 * The cascade direction in which we care whether the foreign key is declared with
+	 * {@link org.hibernate.annotations.OnDeleteAction#CASCADE on delete cascade}.
+	 *
+	 * @apiNote This allows us to reuse the long-existing boolean parameter of
+	 *          {@link #cascade(EventSource, Object, String, Object, boolean)}
+	 *          for multiple purposes.
+	 *
+	 */
+	@Incubating @Nullable
+	default ForeignKeyDirection directionAffectedByCascadeDelete(){
+		return null;
+	}
 }

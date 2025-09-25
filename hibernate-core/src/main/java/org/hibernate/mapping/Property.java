@@ -14,6 +14,7 @@ import java.util.StringTokenizer;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.cfg.AvailableSettings;
@@ -86,7 +87,7 @@ public class Property implements Serializable, MetaAttributable {
 	public Type getType() throws MappingException {
 		return value.getType();
 	}
-	
+
 	public int getColumnSpan() {
 		return value.getColumnSpan();
 	}
@@ -106,11 +107,11 @@ public class Property implements Serializable, MetaAttributable {
 	public java.util.List<Column> getColumns() {
 		return value.getColumns();
 	}
-	
+
 	public String getName() {
 		return name;
 	}
-	
+
 	public boolean isComposite() {
 		return value instanceof Component;
 	}
@@ -137,6 +138,10 @@ public class Property implements Serializable, MetaAttributable {
 		}
 	}
 
+	public OnDeleteAction getOnDeleteAction() {
+		return value instanceof ToOne ? ( (ToOne) value ).getOnDeleteAction() : null;
+	}
+
 	/**
 	 * @deprecated this method is no longer used
 	 */
@@ -158,7 +163,7 @@ public class Property implements Serializable, MetaAttributable {
 			return getCollectionCascadeStyle( collection.getElement().getType(), cascade );
 		}
 		else {
-			return getCascadeStyle( cascade );			
+			return getCascadeStyle( cascade );
 		}
 	}
 
@@ -192,7 +197,7 @@ public class Property implements Serializable, MetaAttributable {
 			return getCascadeStyle( cascade );
 		}
 	}
-	
+
 	private static CascadeStyle getCascadeStyle(String cascade) {
 		if ( cascade==null || cascade.equals("none") ) {
 			return CascadeStyles.NONE;
@@ -205,9 +210,9 @@ public class Property implements Serializable, MetaAttributable {
 				styles[i++] = CascadeStyles.getCascadeStyle( tokens.nextToken() );
 			}
 			return new CascadeStyles.MultipleCascadeStyle(styles);
-		}		
+		}
 	}
-	
+
 	public String getCascade() {
 		return cascade;
 	}
@@ -231,7 +236,7 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public boolean isInsertable() {
-		// if the property mapping consists of all formulas, 
+		// if the property mapping consists of all formulas,
 		// make it non-insertable
 		return insertable && value.hasAnyInsertableColumns();
 	}
@@ -318,7 +323,7 @@ public class Property implements Serializable, MetaAttributable {
 	public String toString() {
 		return getClass().getSimpleName() + '(' + name + ')';
 	}
-	
+
 	public void setLazy(boolean lazy) {
 		this.lazy=lazy;
 	}
@@ -364,11 +369,11 @@ public class Property implements Serializable, MetaAttributable {
 	public void setOptimisticLocked(boolean optimisticLocked) {
 		this.optimisticLocked = optimisticLocked;
 	}
-	
+
 	public boolean isOptional() {
 		return optional;
 	}
-	
+
 	public void setOptional(boolean optional) {
 		this.optional = optional;
 	}
@@ -384,7 +389,7 @@ public class Property implements Serializable, MetaAttributable {
 	public boolean isSelectable() {
 		return selectable;
 	}
-	
+
 	public void setSelectable(boolean selectable) {
 		this.selectable = selectable;
 	}

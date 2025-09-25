@@ -19,6 +19,7 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
@@ -67,6 +68,7 @@ import static org.hibernate.internal.util.ReflectHelper.isFinalClass;
 import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
 import static org.hibernate.internal.util.collections.CollectionHelper.toSmallMap;
 import static org.hibernate.internal.util.collections.CollectionHelper.toSmallSet;
+import static org.hibernate.tuple.PropertyFactory.buildIdentifierAttribute;
 
 /**
  * Centralizes metamodel information about an entity.
@@ -106,6 +108,7 @@ public class EntityMetamodel implements Serializable {
 	private final boolean[] propertyInsertability;
 	private final boolean[] propertyNullability;
 	private final boolean[] propertyVersionability;
+	private final OnDeleteAction[] propertyOnDeleteActions;
 	private final CascadeStyle[] cascadeStyles;
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -174,21 +177,19 @@ public class EntityMetamodel implements Serializable {
 
 		subclassId = persistentClass.getSubclassId();
 
-		identifierAttribute = PropertyFactory.buildIdentifierAttribute(
-				persistentClass,
-				sessionFactory.getGenerator( rootName )
-		);
+		final Generator idgenerator = sessionFactory.getGenerator( rootName );
+		identifierAttribute = buildIdentifierAttribute( persistentClass, idgenerator );
 
 		versioned = persistentClass.isVersioned();
 
 		final boolean collectionsInDefaultFetchGroupEnabled =
 				creationContext.getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled();
+		final boolean supportsCascadeDelete = creationContext.getDialect().supportsCascadeDelete();
 
 		if ( persistentClass.hasPojoRepresentation() ) {
 			final Component identifierMapperComponent = persistentClass.getIdentifierMapper();
 			final CompositeType nonAggregatedCidMapper;
 			final Set<String> idAttributeNames;
-
 			if ( identifierMapperComponent != null ) {
 				nonAggregatedCidMapper = (CompositeType) identifierMapperComponent.getType();
 				idAttributeNames = new HashSet<>( );
@@ -229,6 +230,7 @@ public class EntityMetamodel implements Serializable {
 		propertyNullability = new boolean[propertySpan];
 		propertyVersionability = new boolean[propertySpan];
 		propertyLaziness = new boolean[propertySpan];
+		propertyOnDeleteActions = new OnDeleteAction[propertySpan];
 		cascadeStyles = new CascadeStyle[propertySpan];
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -321,7 +323,7 @@ public class EntityMetamodel implements Serializable {
 			nonlazyPropertyUpdateability[i] = attribute.isUpdateable() && !lazy;
 			propertyCheckability[i] = propertyUpdateability[i]
 					|| propertyType.isAssociationType() && ( (AssociationType) propertyType ).isAlwaysDirtyChecked();
-
+			propertyOnDeleteActions[i] = supportsCascadeDelete ? attribute.getOnDeleteAction() : null;
 			cascadeStyles[i] = attribute.getCascadeStyle();
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -863,5 +865,9 @@ public class EntityMetamodel implements Serializable {
 
 	public BytecodeEnhancementMetadata getBytecodeEnhancementMetadata() {
 		return bytecodeEnhancementMetadata;
+	}
+
+	public OnDeleteAction[] getPropertyOnDeleteActions() {
+		return propertyOnDeleteActions;
 	}
 }

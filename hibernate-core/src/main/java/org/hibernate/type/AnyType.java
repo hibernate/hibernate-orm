@@ -21,6 +21,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.TransientObjectException;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
@@ -408,6 +409,11 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	@Override
 	public CascadeStyle getCascadeStyle(int i) {
 		return CascadeStyles.NONE;
+	}
+
+	@Override
+	public OnDeleteAction getOnDeleteAction(int index) {
+		return OnDeleteAction.NO_ACTION;
 	}
 
 	@Override

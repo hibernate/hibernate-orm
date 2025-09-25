@@ -7,6 +7,7 @@
 package org.hibernate.tuple;
 
 import org.hibernate.FetchMode;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.engine.spi.CascadeStyle;
 
 /**
@@ -33,6 +34,8 @@ public interface NonIdentifierAttribute extends Attribute {
 	boolean isVersionable();
 
 	CascadeStyle getCascadeStyle();
+
+	OnDeleteAction getOnDeleteAction();
 
 	FetchMode getFetchMode();
 }

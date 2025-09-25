@@ -16,14 +16,11 @@ public class StatsHelper {
 
 	public static NavigableRole getRootEntityRole(EntityPersister entityDescriptor) {
 		final String rootEntityName = entityDescriptor.getRootEntityName();
-		if ( entityDescriptor.getEntityName().equals( rootEntityName ) ) {
-			return entityDescriptor.getNavigableRole();
-		}
-		else {
-			return entityDescriptor.getFactory().getMappingMetamodel()
-					.getEntityDescriptor( rootEntityName )
-					.getNavigableRole();
-		}
+		return entityDescriptor.getEntityName().equals( rootEntityName )
+				? entityDescriptor.getNavigableRole()
+				: entityDescriptor.getFactory().getMappingMetamodel()
+						.getEntityDescriptor( rootEntityName )
+						.getNavigableRole();
 	}
 
 	private StatsHelper() {

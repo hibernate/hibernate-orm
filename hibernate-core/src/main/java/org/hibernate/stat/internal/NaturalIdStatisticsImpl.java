@@ -7,7 +7,6 @@ package org.hibernate.stat.internal;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hibernate.persister.entity.EntityPersister;
@@ -35,7 +34,7 @@ public class NaturalIdStatisticsImpl extends AbstractCacheableDataStatistics imp
 			return cache != null ? cache.getRegion() : null;
 		} );
 		rootEntityName = rootEntityDescriptor.getRootEntityName();
-		final ReadWriteLock lock = new ReentrantReadWriteLock();
+		final var lock = new ReentrantReadWriteLock();
 		readLock = lock.readLock();
 		writeLock = lock.writeLock();
 	}
@@ -58,11 +57,8 @@ public class NaturalIdStatisticsImpl extends AbstractCacheableDataStatistics imp
 		// both used in the calculation
 		writeLock.lock();
 		try {
-			long avgExecutionTime = 0;
-			if ( this.executionCount.get() > 0 ) {
-				avgExecutionTime = totalExecutionTime.get() / executionCount.get();
-			}
-			return avgExecutionTime;
+			final long count = executionCount.get();
+			return count > 0 ? totalExecutionTime.get() / count : 0;
 		}
 		finally {
 			writeLock.unlock();

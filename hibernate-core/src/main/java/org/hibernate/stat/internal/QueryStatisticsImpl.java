@@ -7,7 +7,6 @@ package org.hibernate.stat.internal;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hibernate.query.Query;
@@ -42,9 +41,9 @@ public class QueryStatisticsImpl implements QueryStatistics {
 
 	public QueryStatisticsImpl(String query) {
 		this.query = query;
-		ReadWriteLock lock = new ReentrantReadWriteLock();
-		this.readLock = lock.readLock();
-		this.writeLock = lock.writeLock();
+		final var lock = new ReentrantReadWriteLock();
+		readLock = lock.readLock();
+		writeLock = lock.writeLock();
 	}
 
 	/**

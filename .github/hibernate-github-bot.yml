@@ -75,3 +75,9 @@ licenseAgreement:
           name: license-agreement
           organization: hibernate
       titlePattern: ".*"
+branches:
+  enabled: true
+  label: "%s"
+  ignore:
+    - user: dependabot[bot]
+      titlePattern: ".*"

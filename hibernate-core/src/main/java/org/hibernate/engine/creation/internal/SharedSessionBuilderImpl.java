@@ -100,6 +100,7 @@ public abstract class SharedSessionBuilderImpl
 
 	@Override
 	@Deprecated(forRemoval = true)
+	@SuppressWarnings("removal")
 	public SharedSessionBuilderImplementor tenantIdentifier(String tenantIdentifier) {
 		tenantIdentifier( (Object) tenantIdentifier );
 		return this;
@@ -258,6 +259,11 @@ public abstract class SharedSessionBuilderImpl
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SharedSessionCreationOptions
+
+	@Override
+	public void registerParentSessionObserver(ParentSessionObserver observer) {
+		registerParentSessionObserver( observer, original );
+	}
 
 	@Override
 	public boolean isTransactionCoordinatorShared() {

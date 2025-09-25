@@ -14,12 +14,12 @@ import jakarta.persistence.QueryTimeoutException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 
+import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.testing.orm.AsyncExecutor;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -38,7 +38,7 @@ public abstract class TransactionUtil {
 		wrapInTransaction( (SharedSessionContract) entityManager, entityManager, action );
 	}
 
-	public static void inTransaction(StatelessSession session, Consumer<StatelessSession> action) {
+	public static void inTransaction(StatelessSessionImplementor session, Consumer<StatelessSessionImplementor> action) {
 		wrapInTransaction( session, session, action );
 	}
 

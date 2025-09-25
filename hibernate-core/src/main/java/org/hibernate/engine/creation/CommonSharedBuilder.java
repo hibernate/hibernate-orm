@@ -30,6 +30,7 @@ public interface CommonSharedBuilder extends CommonBuilder {
 
 	/**
 	 * Signifies that the connection from the original session should be used to create the new session.
+	 * Implies that the overall "transaction context" should be shared as well.
 	 *
 	 * @return {@code this}, for method chaining
 	 */

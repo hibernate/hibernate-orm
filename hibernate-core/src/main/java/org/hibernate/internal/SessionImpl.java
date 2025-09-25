@@ -196,7 +196,7 @@ public class SessionImpl
 
 			identifierRollbackEnabled = options.isIdentifierRollbackEnabled();
 
-			setUpTransactionCompletionProcesses( options, actionQueue );
+			setUpTransactionCompletionProcesses( options, actionQueue, this );
 
 			loadQueryInfluencers = new LoadQueryInfluencers( factory, options );
 
@@ -224,12 +224,23 @@ public class SessionImpl
 		}
 	}
 
-	private static void setUpTransactionCompletionProcesses(SessionCreationOptions options, ActionQueue actionQueue) {
+	private static void setUpTransactionCompletionProcesses(
+			SessionCreationOptions options,
+			ActionQueue actionQueue,
+			SessionImpl childSession) {
 		if ( options instanceof SharedSessionCreationOptions sharedOptions
 				&& sharedOptions.isTransactionCoordinatorShared() ) {
 			final var callbacks = sharedOptions.getTransactionCompletionCallbacks();
 			if ( callbacks != null ) {
 				actionQueue.setTransactionCompletionCallbacks( callbacks, true );
+//				// register a callback with the child session to propagate auto flushing
+//				callbacks.registerCallback( session -> {
+//					// NOTE: `session` here is the parent
+//					assert session != childSession;
+//					if ( !childSession.isClosed() && childSession.getHibernateFlushMode() != FlushMode.MANUAL ) {
+//						childSession.triggerChildAutoFlush();
+//					}
+//				} );
 			}
 		}
 	}
@@ -1422,6 +1433,36 @@ public class SessionImpl
 				throw getExceptionConverter().convert( e );
 			}
 		}
+	}
+
+	/**
+	 * Used for auto flushing shared/child session as part of the parent session's auto flush.
+	 */
+	@Override
+	public void propagateFlush() {
+		if ( isClosed() ) {
+			return;
+		}
+		if ( !isReadOnly() ) {
+			try {
+				SESSION_LOGGER.automaticallyFlushingChildSession();
+				eventListenerGroups.eventListenerGroup_FLUSH
+						.fireEventOnEachListener( new FlushEvent( this ),
+								FlushEventListener::onFlush );
+			}
+			catch (RuntimeException e) {
+				throw getExceptionConverter().convert( e );
+			}
+		}
+	}
+
+	@Override
+	public void propagateClose() {
+		if ( isClosed() ) {
+			return;
+		}
+		SESSION_LOGGER.automaticallyClosingChildSession();
+		closeWithoutOpenChecks();
 	}
 
 	@Override

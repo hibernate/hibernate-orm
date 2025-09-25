@@ -510,9 +510,6 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			rowProcessingState.getSession()
 					.getPersistenceContextInternal()
 					.removeEntityHolder( data.entityKey );
-			rowProcessingState.getJdbcValuesSourceProcessingState()
-					.getLoadingEntityHolders()
-					.remove( data.entityHolder );
 			data.entityKey = null;
 			data.entityHolder = null;
 			data.entityInstanceForNotify = null;
@@ -1091,7 +1088,9 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			else {
 				data.setInstance( proxy );
 				if ( Hibernate.isInitialized( proxy ) ) {
-					data.setState( State.INITIALIZED );
+					if ( data.entityHolder.isInitialized() ) {
+						data.setState( State.INITIALIZED );
+					}
 					data.entityInstanceForNotify = Hibernate.unproxy( proxy );
 				}
 				else {
@@ -1242,7 +1241,6 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 				assert data.entityHolder.getEntityInitializer() == this;
 				// If this initializer owns the entity, we have to remove the entity holder,
 				// because the subsequent loading process will claim the entity
-				rowProcessingState.getJdbcValuesSourceProcessingState().getLoadingEntityHolders().remove( data.entityHolder );
 				session.getPersistenceContextInternal().removeEntityHolder( data.entityKey );
 				return session.internalLoad(
 						data.concreteDescriptor.getEntityName(),
@@ -1326,9 +1324,14 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	@Override
 	public void initializeInstance(EntityInitializerData data) {
 		if ( data.getState() == State.RESOLVED ) {
+			// todo: think about what to do when one initializer fetches a lazy basic but not the other
 			if ( !skipInitialization( data ) ) {
 				assert consistentInstance( data );
 				initializeEntityInstance( data );
+			}
+			else if ( data.getRowProcessingState().needsResolveState() ) {
+				// We need to read result set values to correctly populate the query cache
+				resolveEntityState( data );
 			}
 			data.setState( State.INITIALIZED );
 		}
@@ -1352,6 +1355,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		final Object entityIdentifier = entityKey.getIdentifier();
 		final Object[] resolvedEntityState = extractConcreteTypeStateValues( data );
 
+		rowProcessingState.getJdbcValuesSourceProcessingState().registerLoadingEntityHolder( data.entityHolder );
 		preLoad( data, resolvedEntityState );
 
 		final Object entityInstanceForNotify = data.entityInstanceForNotify;

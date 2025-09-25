@@ -5,7 +5,6 @@ import org.apache.tools.ant.MagicNames;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.ProjectHelper;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -46,10 +45,15 @@ public class ExamplesTestIT {
         assertTrue(personFile.exists());
     }
 
-    @Disabled
     @Test
     public void testCfgXml() throws Exception {
         File buildFile = new File(baseFolder, "cfgxml/build.xml");
+        File cfgXmlFile = new File(baseFolder, "cfgxml/hibernate.cfg.xml");
+        String cfgXmlFileContents = Files.readString(cfgXmlFile.toPath())
+            .replace("jdbc:h2:tcp://localhost/./sakila", constructJdbcConnectionString())
+            .replace(">sa<", "><")
+            .replace(">SAKILA<", ">TEST<");
+        Files.writeString(cfgXmlFile.toPath(), cfgXmlFileContents);
         Project project = createProject(buildFile);
         assertNotNull(project);
         File personFile = new File(baseFolder, "cfgxml/generated/Person.java");

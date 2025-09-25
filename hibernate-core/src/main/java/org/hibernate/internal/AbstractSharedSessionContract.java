@@ -10,7 +10,6 @@ import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.EntityNameResolver;
@@ -28,6 +27,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.creation.internal.ParentSessionCallbacks;
 import org.hibernate.engine.creation.internal.SessionCreationOptions;
 import org.hibernate.engine.creation.internal.SessionCreationOptionsAdaptor;
 import org.hibernate.engine.creation.internal.SharedSessionBuilderImpl;
@@ -225,6 +225,17 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			jdbcSessionContext = createJdbcSessionContext( statementInspector );
 			logInconsistentOptions( sharedOptions );
 			addSharedSessionTransactionObserver( transactionCoordinator );
+			sharedOptions.registerParentSessionCallbacks( new ParentSessionCallbacks() {
+				@Override
+				public void onParentFlush() {
+					propagateFlush();
+				}
+
+				@Override
+				public void onParentClose() {
+					propagateClose();
+				}
+			} );
 		}
 		else {
 			isTransactionCoordinatorShared = false;
@@ -249,7 +260,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			@Override
 			protected StatelessSessionImplementor createStatelessSession() {
 				return new StatelessSessionImpl( factory,
-						new SessionCreationOptionsAdaptor( factory, this ) );
+						new SessionCreationOptionsAdaptor( factory, this, AbstractSharedSessionContract.this ) );
 			}
 		};
 	}
@@ -494,6 +505,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public void close() {
+		if ( isTransactionCoordinatorShared ) {
+			// Perform an auto-flush -
+			// This deals with the natural usage pattern of a child Session
+			// used with a try-with-resource block
+			propagateFlush();
+		}
+
 		if ( !closed || waitingForAutoClose ) {
 			try {
 				delayedAfterCompletion();
@@ -537,6 +555,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		waitingForAutoClose = false;
 		cleanupOnClose();
 	}
+
+	protected abstract void propagateFlush();
+
+	protected abstract void propagateClose();
 
 	protected void checkBeforeClosingJdbcCoordinator() {
 	}

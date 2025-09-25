@@ -26,4 +26,10 @@ public interface SharedSessionCreationOptions extends SessionCreationOptions {
 	JdbcCoordinator getJdbcCoordinator();
 	Transaction getTransaction();
 	TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacks();
+
+	/**
+	 * Registers callbacks for the child session to integrate with events of the parent session.
+	 */
+	void registerParentSessionCallbacks(ParentSessionCallbacks callbacks);
+
 }

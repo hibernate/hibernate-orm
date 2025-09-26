@@ -56,11 +56,11 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		else if ( !(o instanceof QueryParameterNamedImpl<?> that) ) {
+		else if ( !(object instanceof QueryParameterNamedImpl<?> that) ) {
 			return false;
 		}
 		else {

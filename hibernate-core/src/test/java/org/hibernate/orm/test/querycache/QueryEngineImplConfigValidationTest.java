@@ -5,7 +5,7 @@
 package org.hibernate.orm.test.querycache;
 
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.QuerySettings;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.query.internal.QueryInterpretationCacheDisabledImpl;
 import org.hibernate.query.internal.QueryInterpretationCacheStandardImpl;
@@ -34,8 +34,8 @@ public class QueryEngineImplConfigValidationTest {
 	@Test
 	public void testCacheEnabledWithValidMaxSize() {
 		Map<String, Object> settings = new HashMap<>();
-		settings.put( AvailableSettings.QUERY_PLAN_CACHE_ENABLED, true );
-		settings.put( AvailableSettings.QUERY_PLAN_CACHE_MAX_SIZE, 100 );
+		settings.put( QuerySettings.QUERY_PLAN_CACHE_ENABLED, true );
+		settings.put( QuerySettings.QUERY_PLAN_CACHE_MAX_SIZE, 100 );
 		try (ServiceRegistry serviceRegistry = newRegistry()) {
 			QueryInterpretationCache interpretationCache = assertDoesNotThrow( () ->
 					QueryEngineImpl.buildInterpretationCache( serviceRegistry, settings )
@@ -47,7 +47,7 @@ public class QueryEngineImplConfigValidationTest {
 	@Test
 	public void testCacheEnabledWithDefaultMaxSize() {
 		Map<String, Object> settings = new HashMap<>();
-		settings.put( AvailableSettings.QUERY_PLAN_CACHE_ENABLED, true );
+		settings.put( QuerySettings.QUERY_PLAN_CACHE_ENABLED, true );
 		// No explicit max size - should use default
 		try (ServiceRegistry serviceRegistry = newRegistry()) {
 			QueryInterpretationCache interpretationCache = assertDoesNotThrow( () ->
@@ -60,7 +60,7 @@ public class QueryEngineImplConfigValidationTest {
 	@Test
 	public void testCacheDisabledWithNoMaxSize() {
 		Map<String, Object> settings = new HashMap<>();
-		settings.put( AvailableSettings.QUERY_PLAN_CACHE_ENABLED, false );
+		settings.put( QuerySettings.QUERY_PLAN_CACHE_ENABLED, false );
 		// No explicit max size - should work fine
 		try (ServiceRegistry serviceRegistry = newRegistry()) {
 			QueryInterpretationCache interpretationCache = assertDoesNotThrow( () ->
@@ -73,23 +73,23 @@ public class QueryEngineImplConfigValidationTest {
 	@Test
 	public void testCacheDisabledWithPositiveMaxSize() {
 		Map<String, Object> settings = new HashMap<>();
-		settings.put( AvailableSettings.QUERY_PLAN_CACHE_ENABLED, false );
-		settings.put( AvailableSettings.QUERY_PLAN_CACHE_MAX_SIZE, 100 );
+		settings.put( QuerySettings.QUERY_PLAN_CACHE_ENABLED, false );
+		settings.put( QuerySettings.QUERY_PLAN_CACHE_MAX_SIZE, 100 );
 		//Explicit max size, with cache explicitly disabled is an inconsistency we want to flag
 		try (ServiceRegistry serviceRegistry = newRegistry()) {
 			ConfigurationException exception = assertThrows( ConfigurationException.class, () ->
 					QueryEngineImpl.buildInterpretationCache( serviceRegistry, settings )
 			);
 			assertTrue( exception.getMessage().matches(
-					"Inconsistent configuration: '" + AvailableSettings.QUERY_PLAN_CACHE_MAX_SIZE + "' can only be set to a greater than zero value when '" + AvailableSettings.QUERY_PLAN_CACHE_ENABLED + "' is enabled" ) );
+					"Inconsistent configuration: '" + QuerySettings.QUERY_PLAN_CACHE_MAX_SIZE + "' can only be set to a value greater than zero when '" + QuerySettings.QUERY_PLAN_CACHE_ENABLED + "' is enabled" ) );
 		}
 	}
 
 	@Test
 	public void testCacheDisabledWithZeroMaxSize() {
 		Map<String, Object> settings = new HashMap<>();
-		settings.put( AvailableSettings.QUERY_PLAN_CACHE_ENABLED, false );
-		settings.put( AvailableSettings.QUERY_PLAN_CACHE_MAX_SIZE, 0 );
+		settings.put( QuerySettings.QUERY_PLAN_CACHE_ENABLED, false );
+		settings.put( QuerySettings.QUERY_PLAN_CACHE_MAX_SIZE, 0 );
 		try (ServiceRegistry serviceRegistry = newRegistry()) {
 			QueryInterpretationCache interpretationCache = assertDoesNotThrow( () ->
 					QueryEngineImpl.buildInterpretationCache( serviceRegistry, settings )
@@ -101,8 +101,8 @@ public class QueryEngineImplConfigValidationTest {
 	@Test
 	public void testNegativeMaxSize() {
 		Map<String, Object> settings = new HashMap<>();
-		settings.put( AvailableSettings.QUERY_PLAN_CACHE_ENABLED, true );
-		settings.put( AvailableSettings.QUERY_PLAN_CACHE_MAX_SIZE, -1 );
+		settings.put( QuerySettings.QUERY_PLAN_CACHE_ENABLED, true );
+		settings.put( QuerySettings.QUERY_PLAN_CACHE_MAX_SIZE, -1 );
 		try (ServiceRegistry serviceRegistry = newRegistry()) {
 			ConfigurationException exception = assertThrows( ConfigurationException.class, () ->
 					QueryEngineImpl.buildInterpretationCache( serviceRegistry, settings )

@@ -84,12 +84,12 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			Function<K, SelectQueryPlan<R>> creator) {
 		LOG.tracef( "Resolving cached query plan for [%s]", key );
 		final var statistics = getStatistics();
-		final boolean stats = statistics.isStatisticsEnabled();
+		final boolean statisticsEnabled = statistics.isStatisticsEnabled();
 
 		@SuppressWarnings("unchecked")
 		final var cached = (SelectQueryPlan<R>) queryPlanCache.get( key );
 		if ( cached != null ) {
-			if ( stats ) {
+			if ( statisticsEnabled ) {
 				statistics.queryPlanCacheHit( key.getQueryString() );
 			}
 			return cached;
@@ -97,7 +97,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 
 		final var plan = creator.apply( key );
 		queryPlanCache.put( key.prepareForStore(), plan );
-		if ( stats ) {
+		if ( statisticsEnabled ) {
 			statistics.queryPlanCacheMiss( key.getQueryString() );
 		}
 		return plan;
@@ -120,9 +120,10 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 		LOG.tracef( "Resolving HQL interpretation for [%s]", queryString );
 		final var statistics = getStatistics();
 
-		final Object cacheKey = expectedResultType != null
-				? new HqlInterpretationCacheKey( queryString, expectedResultType )
-				: queryString;
+		final Object cacheKey =
+				expectedResultType != null
+						? new HqlInterpretationCacheKey( queryString, expectedResultType )
+						: queryString;
 
 		final var existing = hqlInterpretationCache.get( cacheKey );
 		if ( existing != null ) {
@@ -159,8 +160,8 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			Class<R> expectedResultType,
 			HqlTranslator translator,
 			StatisticsImplementor statistics) {
-		final boolean stats = statistics.isStatisticsEnabled();
-		final long startTime = stats ? System.nanoTime() : 0L;
+		final boolean statisticsEnabled = statistics.isStatisticsEnabled();
+		final long startTime = statisticsEnabled ? System.nanoTime() : 0L;
 
 		final var sqmStatement = translator.translate( queryString, expectedResultType );
 
@@ -175,7 +176,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
 		}
 
-		if ( stats ) {
+		if ( statisticsEnabled ) {
 			final long endTime = System.nanoTime();
 			final long microseconds = TimeUnit.MICROSECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
 			statistics.queryCompiled( queryString, microseconds );

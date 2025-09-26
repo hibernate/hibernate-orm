@@ -11,7 +11,6 @@ import java.util.function.Consumer;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
-import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -110,11 +109,13 @@ public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Paren
 									dynamicFetchBuilder.getColumnAliases().toArray( new String[0] )
 							);
 						}
-						else {
+						else if ( fetchBuilder instanceof CompleteFetchBuilderEntityValuedModelPart completeFetchBuilder ) {
 							resultBuilder.addIdColumnAliases(
-									((CompleteFetchBuilderEntityValuedModelPart) fetchBuilder).getColumnAliases()
-											.toArray( new String[0] )
+									completeFetchBuilder.getColumnAliases().toArray( new String[0] )
 							);
+						}
+						else {
+							throw new AssertionFailure( "Unexpected fetch builder type" );
 						}
 						fetchBuilderMap.put(
 								pluralAttributeMapping.getElementDescriptor(),
@@ -122,29 +123,20 @@ public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Paren
 						);
 					}
 					else if ( attrName.equals( "index" ) ) {
-						final CollectionPart indexDescriptor = pluralAttributeMapping.getIndexDescriptor();
+						final var indexDescriptor = pluralAttributeMapping.getIndexDescriptor();
 						resultBuilder.addFetchBuilder( indexDescriptor, fetchBuilder );
-						fetchBuilderMap.put(
-								indexDescriptor,
-								fetchBuilder
-						);
+						fetchBuilderMap.put( indexDescriptor, fetchBuilder );
 					}
 					else if ( attrName.startsWith( ELEMENT_PREFIX ) ) {
-						final Fetchable attributeMapping = (Fetchable) partMappingType.findByPath(
-								attrName.substring( ELEMENT_PREFIX_LENGTH ) );
+						final var attributeMapping =
+								(Fetchable) partMappingType.findByPath( attrName.substring( ELEMENT_PREFIX_LENGTH ) );
 						resultBuilder.addFetchBuilder( attributeMapping, fetchBuilder );
-						fetchBuilderMap.put(
-								attributeMapping,
-								fetchBuilder
-						);
+						fetchBuilderMap.put( attributeMapping, fetchBuilder );
 					}
 					else {
-						final Fetchable attributeMapping = (Fetchable) partMappingType.findByPath( attrName );
+						final var attributeMapping = (Fetchable) partMappingType.findByPath( attrName );
 						resultBuilder.addFetchBuilder( attributeMapping, fetchBuilder );
-						fetchBuilderMap.put(
-								attributeMapping,
-								fetchBuilder
-						);
+						fetchBuilderMap.put( attributeMapping, fetchBuilder );
 					}
 				}
 		);
@@ -170,15 +162,13 @@ public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Paren
 								fetchMemento.resolve( this, querySpaceConsumer, context )
 						)
 		);
-		final DynamicResultBuilderEntityStandard resultBuilder;
-		resultBuilder = new DynamicResultBuilderEntityStandard(
-				toOneAttributeMapping.getEntityMappingType(),
-				tableAlias,
-				navigablePath
-		);
-		fetchBuilderMap.forEach( (fetchable, fetchBuilder) ->
-				resultBuilder.addFetchBuilder( fetchable, fetchBuilder )
-		);
+		final var resultBuilder =
+				new DynamicResultBuilderEntityStandard(
+						toOneAttributeMapping.getEntityMappingType(),
+						tableAlias,
+						navigablePath
+				);
+		fetchBuilderMap.forEach( resultBuilder::addFetchBuilder );
 		return new DynamicFetchBuilderLegacy(
 				tableAlias,
 				ownerTableAlias,

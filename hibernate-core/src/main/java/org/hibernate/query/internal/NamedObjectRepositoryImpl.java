@@ -307,7 +307,7 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 
 	@Override
 	public Map<String, HibernateException> checkNamedQueries(QueryEngine queryEngine) {
-		Map<String,HibernateException> errors = new HashMap<>();
+		final Map<String,HibernateException> errors = new HashMap<>();
 
 		final var interpretationCache = queryEngine.getInterpretationCache();
 		final var hqlTranslator = queryEngine.getHqlTranslator();

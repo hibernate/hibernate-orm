@@ -92,11 +92,21 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 	public void execute() {
 		getLog().debug(STARTING_EXECUTION_OF_ENHANCE_MOJO);
 		processParameters();
-		assembleSourceSet();
-		createEnhancer();
-		discoverTypes();
-		performEnhancement();
+		if (enhancementIsNeeded()) {
+			assembleSourceSet();
+			createEnhancer();
+			discoverTypes();
+			performEnhancement();
+		}
 		getLog().debug(ENDING_EXECUTION_OF_ENHANCE_MOJO);
+	}
+
+	private boolean enhancementIsNeeded() {
+		// enhancement is not needed when all the parameters are false
+		return enableAssociationManagement ||
+			enableDirtyTracking ||
+			enableLazyInitialization ||
+			enableExtendedEnhancement;
 	}
 
 	private void processParameters() {

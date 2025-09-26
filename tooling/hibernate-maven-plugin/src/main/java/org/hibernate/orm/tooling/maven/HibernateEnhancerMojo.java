@@ -46,13 +46,17 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 			required = true)
 	private boolean enableAssociationManagement;
 
+	@Deprecated(
+			forRemoval = true)
 	@Parameter(
-			defaultValue = "false",
+			defaultValue = "true",
 			required = true)
 	private boolean enableDirtyTracking;
 
+	@Deprecated(
+			forRemoval = true)
 	@Parameter(
-			defaultValue = "false",
+			defaultValue = "true",
 			required = true)
 	private boolean enableLazyInitialization;
 

@@ -519,6 +519,9 @@ public class HibernateEnhancerMojoTest {
 
 	@Test
 	void testExecute() throws Exception {
+		Field enableDirtyTrackingField = HibernateEnhancerMojo.class.getDeclaredField( "enableDirtyTracking" );
+		enableDirtyTrackingField.setAccessible( true );
+		enableDirtyTrackingField.set( enhanceMojo, true );
 		Method executeMethod = HibernateEnhancerMojo.class.getDeclaredMethod("execute", new Class[] {});
 		executeMethod.setAccessible(true);
 		final String barSource =

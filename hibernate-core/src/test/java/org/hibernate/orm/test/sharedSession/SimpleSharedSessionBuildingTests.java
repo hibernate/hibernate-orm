@@ -7,9 +7,13 @@ package org.hibernate.orm.test.sharedSession;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
+import org.hibernate.SessionEventListener;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
+import org.hibernate.internal.util.MutableObject;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -18,7 +22,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * @author Steve Ebersole
@@ -105,44 +108,190 @@ public class SimpleSharedSessionBuildingTests {
 	}
 
 	@Test
-	void testUsage(SessionFactoryScope factoryScope) {
+	void testConnectionAndTransactionSharing(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (parentSession) -> {
+			assertThat( parentSession.getHibernateFlushMode() ).isEqualTo( FlushMode.AUTO );
+
+			// child stateful session
+			try (SessionImplementor childSession = (SessionImplementor) parentSession
+					.sessionWithOptions()
+					.connection()
+					.openSession()) {
+				assertThat( childSession.getHibernateFlushMode() )
+						.isEqualTo( FlushMode.AUTO );
+				assertThat( childSession.getTransaction() )
+						.isSameAs( parentSession.getTransaction() );
+				assertThat( childSession.getJdbcCoordinator() )
+						.isSameAs( parentSession.getJdbcCoordinator() );
+				assertThat( childSession.getTransactionCompletionCallbacksImplementor() )
+						.isSameAs( parentSession.getTransactionCompletionCallbacksImplementor() );
+			}
+
+			// child stateless session
+			try (StatelessSessionImplementor childSession = (StatelessSessionImplementor) parentSession
+					.statelessWithOptions()
+					.connection()
+					.open()) {
+				assertThat( childSession.getHibernateFlushMode() )
+						.isEqualTo( FlushMode.AUTO );
+				assertThat( childSession.getTransaction() )
+						.isSameAs( parentSession.getTransaction() );
+				assertThat( childSession.getJdbcCoordinator() )
+						.isSameAs( parentSession.getJdbcCoordinator() );
+				assertThat( childSession.getTransactionCompletionCallbacksImplementor() )
+						.isSameAs( parentSession.getTransactionCompletionCallbacksImplementor() );
+			}
+		} );
+	}
+
+	@Test
+	void testClosePropagation(SessionFactoryScope factoryScope) {
+		final MutableObject<SharedSessionContractImplementor> parentSessionRef = new MutableObject<>();
+		final MutableObject<SharedSessionContractImplementor> childSessionRef = new MutableObject<>();
+
+		factoryScope.inTransaction( (parentSession) -> {
+			parentSessionRef.set( parentSession );
+
+			var childSession = (SessionImplementor) parentSession
+					.sessionWithOptions()
+					.connection()
+					.openSession();
+			childSessionRef.set( childSession );
+		} );
+
+		assertThat( parentSessionRef.get().isClosed() ).isTrue();
+		assertThat( childSessionRef.get().isClosed() ).isTrue();
+
+		parentSessionRef.set( null );
+		childSessionRef.set( null );
+
+		factoryScope.inTransaction( (parentSession) -> {
+			parentSessionRef.set( parentSession );
+
+			var childSession = (StatelessSessionImplementor) parentSession
+					.statelessWithOptions()
+					.connection()
+					.open();
+			childSessionRef.set( childSession );
+		} );
+
+		assertThat( parentSessionRef.get().isClosed() ).isTrue();
+		assertThat( childSessionRef.get().isClosed() ).isTrue();
+	}
+
+	/**
+	 * NOTE: builds on assertions from {@link #testConnectionAndTransactionSharing}
+	 */
+	@Test
+	void testAutoFlushStatefulChild(SessionFactoryScope factoryScope) {
 		final var sqlCollector = factoryScope.getCollectingStatementInspector();
-
-		// try from Session
 		sqlCollector.clear();
-		factoryScope.inTransaction( (statefulSession) -> {
-			try (var session = statefulSession
+
+		factoryScope.inTransaction( (parentSession) -> {
+			try (SessionImplementor childSession = (SessionImplementor) parentSession
 					.sessionWithOptions()
 					.connection()
 					.openSession()) {
-				session.persist( new Something( 1, "first" ) );
-				assertSame( statefulSession.getTransaction(), session.getTransaction() );
-				assertSame( statefulSession.getJdbcCoordinator(),
-						((SessionImplementor) session).getJdbcCoordinator() );
-				assertSame( statefulSession.getTransactionCompletionCallbacksImplementor(),
-						((SessionImplementor) session).getTransactionCompletionCallbacksImplementor() );
-				session.flush(); //TODO: should not be needed!
+				// persist an entity through the child session -
+				// should be auto flushed (technically as part of the try-with-resources close of the child session)
+				childSession.persist( new Something( 1, "first" ) );
 			}
 		} );
-		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 
-		// try from StatelessSession
+		// make sure the flush and insert happened
+		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
+		factoryScope.inTransaction( (session) -> {
+			final Something created = session.find( Something.class, 1 );
+			assertThat( created ).isNotNull();
+		} );
+
+	}
+
+	/**
+	 * NOTE: builds on assertions from {@link #testConnectionAndTransactionSharing}
+	 * and {@linkplain #testClosePropagation}
+	 */
+	@Test
+	void testAutoFlushStatefulChildNoClose(SessionFactoryScope factoryScope) {
+		final var sqlCollector = factoryScope.getCollectingStatementInspector();
 		sqlCollector.clear();
-		factoryScope.inStatelessTransaction( (statelessSession) -> {
-			try (var statefulSession = statelessSession
+
+		factoryScope.inTransaction( (parentSession) -> {
+			SessionImplementor childSession = (SessionImplementor) parentSession
+					.sessionWithOptions()
+					.connection()
+					.openSession();
+
+			// persist an entity through the shared/child session.
+			// then make sure the auto-flush of the parent session
+			// propagates to the shared/child
+			childSession.persist( new Something( 1, "first" ) );
+		} );
+
+		// make sure the flush and insert happened
+		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
+		factoryScope.inTransaction( (session) -> {
+			final Something created = session.find( Something.class, 1 );
+			assertThat( created ).isNotNull();
+		} );
+	}
+
+
+
+	/**
+	 * NOTE: builds on assertions from {@link #testConnectionAndTransactionSharing}
+	 */
+	@Test
+	void testAutoFlushStatelessChild(SessionFactoryScope factoryScope) {
+		final var sqlCollector = factoryScope.getCollectingStatementInspector();
+		sqlCollector.clear();
+
+		factoryScope.inStatelessTransaction( (parentSession) -> {
+			try (SessionImplementor childSession = (SessionImplementor) parentSession
 					.sessionWithOptions()
 					.connection()
 					.openSession()) {
-				statefulSession.persist( new Something( 2, "first" ) );
-				assertSame( statefulSession.getTransaction(), statelessSession.getTransaction() );
-				assertSame( ((SessionImplementor) statefulSession).getJdbcCoordinator(),
-						((StatelessSessionImplementor) statelessSession).getJdbcCoordinator() );
-				assertSame( ((SessionImplementor) statefulSession).getTransactionCompletionCallbacksImplementor(),
-						((StatelessSessionImplementor) statelessSession).getTransactionCompletionCallbacksImplementor() );
-				statefulSession.flush(); //TODO: should not be needed!
+				// persist an entity through the child session -
+				// should be auto flushed (technically as part of the try-with-resources close of the child session)
+				childSession.persist( new Something( 1, "first" ) );
 			}
 		} );
+
+		// make sure the flush and insert happened
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
+		factoryScope.inTransaction( (session) -> {
+			final Something created = session.find( Something.class, 1 );
+			assertThat( created ).isNotNull();
+		} );
+	}
+
+	/**
+	 * NOTE: builds on assertions from {@link #testConnectionAndTransactionSharing}
+	 * and {@linkplain #testClosePropagation}
+	 */
+	@Test
+	void testAutoFlushStatelessChildNoClose(SessionFactoryScope factoryScope) {
+		final var sqlCollector = factoryScope.getCollectingStatementInspector();
+		sqlCollector.clear();
+
+		factoryScope.inStatelessTransaction( (parentSession) -> {
+			SessionImplementor childSession = (SessionImplementor) parentSession
+					.sessionWithOptions()
+					.connection()
+					.openSession();
+
+			// persist an entity through the shared/child session.
+			// then make sure the auto-flush of the parent session
+			// propagates to the shared/child
+			childSession.persist( new Something( 1, "first" ) );
+		} );
+
+		// make sure the flush and insert happened
+		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
+		factoryScope.inTransaction( (session) -> {
+			final Something created = session.find( Something.class, 1 );
+			assertThat( created ).isNotNull();
+		} );
 	}
 
 	@AfterEach
@@ -174,5 +323,18 @@ public class SimpleSharedSessionBuildingTests {
 	}
 
 	public record InterceptorImpl(String name) implements Interceptor {
+	}
+
+	public static class SessionListener implements SessionEventListener {
+		private boolean closed;
+
+		public boolean wasClosed() {
+			return closed;
+		}
+
+		@Override
+		public void end() {
+			closed = true;
+		}
 	}
 }

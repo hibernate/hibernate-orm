@@ -259,6 +259,22 @@ public abstract class SharedSessionBuilderImpl
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SharedSessionCreationOptions
 
+
+	@Override
+	public void registerParentSessionCallbacks(ParentSessionCallbacks callbacks) {
+		original.getEventListenerManager().addListener( new SessionEventListener() {
+			@Override
+			public void flushStart() {
+				callbacks.onParentFlush();
+			}
+
+			@Override
+			public void end() {
+				callbacks.onParentClose();
+			}
+		} );
+	}
+
 	@Override
 	public boolean isTransactionCoordinatorShared() {
 		return shareTransactionContext;

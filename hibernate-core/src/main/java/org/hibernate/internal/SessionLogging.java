@@ -77,8 +77,17 @@ public interface SessionLogging extends BasicLogger {
 	void automaticallyFlushingSession();
 
 	@LogMessage(level = TRACE)
+	@Message("Automatically flushing child session")
+	void automaticallyFlushingChildSession();
+
+	@LogMessage(level = TRACE)
 	@Message("Automatically closing session")
 	void automaticallyClosingSession();
+
+
+	@LogMessage(level = TRACE)
+	@Message("Automatically closing child session")
+	void automaticallyClosingChildSession();
 
 	@LogMessage(level = TRACE)
 	@Message("%s remove orphan before updates: [%s]")

@@ -117,6 +117,10 @@ public final class AnnotationBinder {
 			QueryBinder.bindNamedStoredProcedureQuery( queryRegistration.configuration(), context, true );
 		} );
 
+		globalRegistrations.getDatabaseObjectRegistrations().forEach( databaseObjectRegistration ->
+				AuxiliaryDatabaseObjectBinder.processAuxiliaryDatabaseObject( context, databaseObjectRegistration )
+		);
+
 	}
 
 	private static ModelsContext modelsContext(MetadataBuildingContext context) {

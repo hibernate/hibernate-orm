@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <database-object>
+        <!-- Note this code does not actually get executed.
+		     We just generate the script and check that ${schema} gets replaced correctly.
+		     So the actual language used here does not need to be compatible with the DB dialect under test.
+		 -->
+        <create>
+            CREATE OR REPLACE FUNCTION ${schema}.schemaPrefixedAuxObject()
+            RETURNS varchar AS
+            $BODY$
+            BEGIN
+            SELECT 'test';
+            END;
+            $BODY$
+            LANGUAGE plpgsql
+        </create>
+        <drop>DROP FUNCTION ${schema}.schemaPrefixedAuxObject()</drop>
+
+    </database-object>
+</entity-mappings>

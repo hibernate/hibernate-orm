@@ -85,6 +85,7 @@ public class DomainModelCategorizationCollector {
 
 		getGlobalRegistrations().collectQueryReferences( jaxbRoot, xmlDocumentContext );
 
+		getGlobalRegistrations().collectDataBaseObject( jaxbRoot.getDatabaseObjects() );
 		// todo (7.0) : named graphs?
 	}
 

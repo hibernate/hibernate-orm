@@ -215,8 +215,8 @@ public class DefaultCatalogAndSchemaTest {
 		metadataSources.addInputStream( getClass().getResourceAsStream( "implicit-file-level-catalog-and-schema.hbm.xml" ) );
 		metadataSources.addInputStream( getClass().getResourceAsStream( "no-file-level-catalog-and-schema.orm.xml" ) );
 		metadataSources.addInputStream( getClass().getResourceAsStream( "no-file-level-catalog-and-schema.hbm.xml" ) );
-		metadataSources.addInputStream( getClass().getResourceAsStream( "database-object-using-catalog-placeholder.hbm.xml" ) );
-		metadataSources.addInputStream( getClass().getResourceAsStream( "database-object-using-schema-placeholder.hbm.xml" ) );
+		metadataSources.addInputStream( getClass().getResourceAsStream( "database-object-using-catalog-placeholder.orm.xml" ) );
+		metadataSources.addInputStream( getClass().getResourceAsStream( "database-object-using-schema-placeholder.orm.xml" ) );
 		if ( configuredXmlMappingPath != null ) {
 			metadataSources.addInputStream( getClass().getResourceAsStream( configuredXmlMappingPath ) );
 		}

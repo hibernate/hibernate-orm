@@ -84,6 +84,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
+import org.hibernate.internal.util.ImmutableBitSet;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.StringHelper;
@@ -1734,14 +1735,21 @@ public abstract class AbstractEntityPersister
 			final EntityEntry entry,
 			final int index,
 			final Object propValue) {
-		setPropertyValue( entity, lazyPropertyNumbers[index], propValue );
-		if ( entry.getLoadedState() != null ) {
+		final int propertyNumber = lazyPropertyNumbers[index];
+		setPropertyValue( entity, propertyNumber, propValue );
+		if ( entry.getMaybeLazySet() != null ) {
+			var bitSet = entry.getMaybeLazySet().toBitSet();
+			bitSet.set( propertyNumber );
+			entry.setMaybeLazySet( ImmutableBitSet.valueOf( bitSet ) );
+		}
+		final var loadedState = entry.getLoadedState();
+		if ( loadedState != null ) {
 			// object have been loaded with setReadOnly(true); HHH-2236
-			entry.getLoadedState()[lazyPropertyNumbers[index]] = lazyPropertyTypes[index].deepCopy( propValue, factory );
+			loadedState[propertyNumber] = lazyPropertyTypes[index].deepCopy( propValue, factory );
 		}
 		// If the entity has deleted state, then update that as well
 		if ( entry.getDeletedState() != null ) {
-			entry.getDeletedState()[lazyPropertyNumbers[index]] = lazyPropertyTypes[index].deepCopy( propValue, factory );
+			entry.getDeletedState()[propertyNumber] = lazyPropertyTypes[index].deepCopy( propValue, factory );
 		}
 		return fieldName.equals( lazyPropertyNames[index] );
 	}
@@ -1763,6 +1771,11 @@ public abstract class AbstractEntityPersister
 	// Used by Hibernate Reactive
 	protected void initializeLazyProperty(Object entity, EntityEntry entry, Object propValue, int index, Type type) {
 		setPropertyValue( entity, index, propValue );
+		if ( entry.getMaybeLazySet() != null ) {
+			var bitSet = entry.getMaybeLazySet().toBitSet();
+			bitSet.set( index );
+			entry.setMaybeLazySet( ImmutableBitSet.valueOf( bitSet ) );
+		}
 		final Object[] loadedState = entry.getLoadedState();
 		if ( loadedState != null ) {
 			// object have been loaded with setReadOnly(true); HHH-2236

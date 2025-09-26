@@ -20,7 +20,7 @@ ext {
 idea.module {
 }
 
-final File documentationDir = mkdir( "${project.buildDir}/documentation" );
+final File documentationDir = mkdir( "${rootProject.buildDir}/staging-deploy/documentation" );
 
 task releaseChecks() {
     doFirst {
@@ -102,33 +102,7 @@ task assembleDocumentation(type: Task, dependsOn: [rootProject.project( 'documen
     }
 }
 
-/**
- * Upload the documentation to the JBoss doc server
- */
-task uploadDocumentation(type:Exec, dependsOn: assembleDocumentation) {
-    description = "Uploads documentation to the JBoss doc server"
-
-    final String url = "filemgmt-prod-sync.jboss.org:/docs_htdocs/hibernate/orm/${rootProject.ormVersion.family}";
-
-    executable 'rsync'
-    args '--port=2222', '-avz', '--links', "${documentationDir.absolutePath}/", url
-
-    doFirst {
-        if ( rootProject.ormVersion.isSnapshot ) {
-            logger.error( "Cannot perform upload of SNAPSHOT documentation" );
-            throw new RuntimeException( "Cannot perform upload of SNAPSHOT documentation" );
-        }
-        else {
-            logger.lifecycle( "Uploading documentation [{$url}]..." )
-        }
-    }
-
-    doLast {
-        logger.lifecycle( 'Done uploading documentation' )
-    }
-}
-
-task releasePerform( dependsOn: [releaseChecks, uploadDocumentation] ) {
+task releasePerform( dependsOn: [releaseChecks] ) {
     doLast {
         String tag = null
         if ( !project.hasProperty( 'noTag' ) ) {

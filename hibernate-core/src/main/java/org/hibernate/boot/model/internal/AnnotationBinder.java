@@ -44,11 +44,16 @@ import static org.hibernate.boot.model.internal.AnnotatedClassType.EMBEDDABLE;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.ENTITY;
 import static org.hibernate.boot.model.internal.EntityBinder.bindEntityClass;
 import static org.hibernate.boot.model.internal.FilterDefBinder.bindFilterDefs;
+import static org.hibernate.boot.model.internal.GeneratorBinder.registerGlobalGenerators;
 import static org.hibernate.boot.model.internal.GeneratorParameters.interpretSequenceGenerator;
 import static org.hibernate.boot.model.internal.GeneratorParameters.interpretTableGenerator;
 import static org.hibernate.boot.model.internal.InheritanceState.getInheritanceStateOfSuperEntity;
 import static org.hibernate.boot.model.internal.InheritanceState.getSuperclassInheritanceState;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+import static org.hibernate.boot.model.internal.QueryBinder.bindNamedStoredProcedureQuery;
+import static org.hibernate.boot.model.internal.QueryBinder.bindNativeQuery;
+import static org.hibernate.boot.model.internal.QueryBinder.bindQuery;
+import static org.hibernate.boot.model.internal.QueryBinder.bindSqlResultSetMapping;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.mapping.MetadataSource.ANNOTATIONS;
 
@@ -98,7 +103,7 @@ public final class AnnotationBinder {
 		// result-set-mappings
 
 		globalRegistrations.getSqlResultSetMappingRegistrations().forEach( (name, mappingRegistration) -> {
-			QueryBinder.bindSqlResultSetMapping( mappingRegistration.configuration(), context, true );
+			bindSqlResultSetMapping( mappingRegistration.configuration(), context, true );
 		} );
 
 
@@ -106,15 +111,15 @@ public final class AnnotationBinder {
 		// queries
 
 		globalRegistrations.getNamedQueryRegistrations().forEach( (name, queryRegistration) -> {
-			QueryBinder.bindQuery( queryRegistration.configuration(), context, true, null );
+			bindQuery( queryRegistration.configuration(), context, true, null );
 		} );
 
 		globalRegistrations.getNamedNativeQueryRegistrations().forEach( (name, queryRegistration) -> {
-			QueryBinder.bindNativeQuery( queryRegistration.configuration(), context, null, true );
+			bindNativeQuery( queryRegistration.configuration(), context, null, true );
 		} );
 
 		globalRegistrations.getNamedStoredProcedureQueryRegistrations().forEach( (name, queryRegistration) -> {
-			QueryBinder.bindNamedStoredProcedureQuery( queryRegistration.configuration(), context, true );
+			bindNamedStoredProcedureQuery( queryRegistration.configuration(), context, true );
 		} );
 
 	}
@@ -130,7 +135,7 @@ public final class AnnotationBinder {
 					modelsContext( context ).getClassDetailsRegistry()
 							.resolveClassDetails( pack.getName() + ".package-info" );
 
-			GeneratorBinder.registerGlobalGenerators( packageInfo, context );
+			registerGlobalGenerators( packageInfo, context );
 
 			bindTypeDescriptorRegistrations( packageInfo, context );
 			bindEmbeddableInstantiatorRegistrations( packageInfo, context );
@@ -153,7 +158,7 @@ public final class AnnotationBinder {
 		packageInfoClassDetails.forEachRepeatedAnnotationUsages(
 				HibernateAnnotations.NAMED_ENTITY_GRAPH,
 				modelsContext( context ),
-				(annotation) -> collector.addNamedEntityGraph( new NamedEntityGraphDefinition(
+				annotation -> collector.addNamedEntityGraph( new NamedEntityGraphDefinition(
 						annotation.name(), null,
 						NamedEntityGraphDefinition.Source.PARSED,
 						new NamedGraphCreatorParsed( annotation )
@@ -172,13 +177,13 @@ public final class AnnotationBinder {
 		annotationTarget.forEachRepeatedAnnotationUsages(
 				HibernateAnnotations.NAMED_QUERY,
 				sourceModelContext,
-				(usage) -> QueryBinder.bindQuery( usage, context, annotationTarget )
+				(usage) -> bindQuery( usage, context, annotationTarget )
 		);
 
 		annotationTarget.forEachRepeatedAnnotationUsages(
 				HibernateAnnotations.NAMED_NATIVE_QUERY,
 				sourceModelContext,
-				(usage) -> QueryBinder.bindNativeQuery( usage, context, annotationTarget )
+				(usage) -> bindNativeQuery( usage, context, annotationTarget )
 		);
 	}
 
@@ -188,25 +193,25 @@ public final class AnnotationBinder {
 		annotationTarget.forEachRepeatedAnnotationUsages(
 				JpaAnnotations.SQL_RESULT_SET_MAPPING,
 				sourceModelContext,
-				(usage) -> QueryBinder.bindSqlResultSetMapping( usage, context,false )
+				(usage) -> bindSqlResultSetMapping( usage, context,false )
 		);
 
 		annotationTarget.forEachRepeatedAnnotationUsages(
 				JpaAnnotations.NAMED_QUERY,
 				sourceModelContext,
-				(usage) -> QueryBinder.bindQuery( usage, context, false, annotationTarget )
+				(usage) -> bindQuery( usage, context, false, annotationTarget )
 		);
 
 		annotationTarget.forEachRepeatedAnnotationUsages(
 				JpaAnnotations.NAMED_NATIVE_QUERY,
 				sourceModelContext,
-				(usage) -> QueryBinder.bindNativeQuery( usage, context, annotationTarget, false )
+				(usage) -> bindNativeQuery( usage, context, annotationTarget, false )
 		);
 
 		annotationTarget.forEachRepeatedAnnotationUsages(
 				JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY,
 				sourceModelContext,
-				(usage) -> QueryBinder.bindNamedStoredProcedureQuery( usage, context, false )
+				(usage) -> bindNamedStoredProcedureQuery( usage, context, false )
 		);
 	}
 
@@ -292,7 +297,7 @@ public final class AnnotationBinder {
 			MetadataBuildingContext context,
 			ManagedBeanRegistry managedBeanRegistry,
 			JdbcTypeRegistration annotation) {
-		final JdbcType jdbcType = getBean( context, managedBeanRegistry, annotation.value() );
+		final var jdbcType = getBean( context, managedBeanRegistry, annotation.value() );
 		context.getMetadataCollector()
 				.addJdbcTypeRegistration( jdbcTypeCode( annotation, jdbcType ), jdbcType );
 	}
@@ -417,9 +422,9 @@ public final class AnnotationBinder {
 		final String name = fetchProfile.name();
 		if ( reuseOrCreateFetchProfile( context, name ) ) {
 			for ( var fetchOverride : fetchProfile.fetchOverrides() ) {
-				final FetchType type = fetchOverride.fetch();
-				final FetchMode mode = fetchOverride.mode();
-				if ( type == FetchType.LAZY && mode == FetchMode.JOIN ) {
+				final FetchType fetchType = fetchOverride.fetch();
+				final FetchMode fetchMode = fetchOverride.mode();
+				if ( fetchType == FetchType.LAZY && fetchMode == FetchMode.JOIN ) {
 					throw new AnnotationException(
 							"Fetch profile '" + name
 									+ "' has a '@FetchOverride' with 'fetch=LAZY' and 'mode=JOIN'"
@@ -461,25 +466,25 @@ public final class AnnotationBinder {
 			MetadataBuildingContext buildingContext) {
 		final Map<ClassDetails, InheritanceState> inheritanceStatePerClass = new HashMap<>( orderedClasses.size() );
 		final var collector = buildingContext.getMetadataCollector();
-		for ( ClassDetails clazz : orderedClasses ) {
-			final var superclassState = getSuperclassInheritanceState( clazz, inheritanceStatePerClass );
-			final var state = new InheritanceState( clazz, inheritanceStatePerClass, buildingContext );
-			final var classType = collector.getClassType( clazz );
-			if ( classType == EMBEDDABLE && !clazz.hasDirectAnnotationUsage( Imported.class ) ) {
-				final String className = clazz.getName();
+		for ( var classDetails : orderedClasses ) {
+			final var superclassState = getSuperclassInheritanceState( classDetails, inheritanceStatePerClass );
+			final var state = new InheritanceState( classDetails, inheritanceStatePerClass, buildingContext );
+			final var classType = collector.getClassType( classDetails );
+			if ( classType == EMBEDDABLE && !classDetails.hasDirectAnnotationUsage( Imported.class ) ) {
+				final String className = classDetails.getName();
 				collector.addImport( unqualify( className ), className );
 			}
 			if ( superclassState != null ) {
 				//the classes are ordered thus preventing an NPE
 				superclassState.setHasSiblings( true );
-				final var superEntityState = getInheritanceStateOfSuperEntity( clazz, inheritanceStatePerClass );
+				final var superEntityState = getInheritanceStateOfSuperEntity( classDetails, inheritanceStatePerClass );
 				if ( superEntityState != null ) {
 					state.setHasParents( true );
 					if ( classType == EMBEDDABLE ) {
-						collector.registerEmbeddableSubclass( superEntityState.getClassDetails(), clazz );
+						collector.registerEmbeddableSubclass( superEntityState.getClassDetails(), classDetails );
 					}
 				}
-				logMixedInheritance( clazz, superclassState, state );
+				logMixedInheritance( classDetails, superclassState, state );
 				if ( superclassState.getType() != null ) {
 					state.setType( superclassState.getType() );
 				}
@@ -488,7 +493,7 @@ public final class AnnotationBinder {
 				case ENTITY:
 				case MAPPED_SUPERCLASS:
 				case EMBEDDABLE:
-					inheritanceStatePerClass.put( clazz, state );
+					inheritanceStatePerClass.put( classDetails, state );
 			}
 		}
 		return inheritanceStatePerClass;

@@ -13,7 +13,6 @@ import org.hibernate.query.results.ResultBuilderBasicValued;
 import org.hibernate.query.results.internal.complete.CompleteResultBuilderBasicValuedConverted;
 import org.hibernate.query.results.internal.complete.CompleteResultBuilderBasicValuedStandard;
 import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.java.BasicJavaType;
@@ -69,21 +68,23 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 	public ResultMementoBasicStandard(
 			ColumnResult definition,
 			ResultSetMappingResolutionContext context) {
-		this.explicitColumnName = definition.name();
+		explicitColumnName = definition.name();
 
 		final var definedType = definition.type();
 		if ( void.class == definedType ) {
 			builder = new CompleteResultBuilderBasicValuedStandard( explicitColumnName, null, null );
 		}
 		else {
-			final TypeConfiguration typeConfiguration = context.getTypeConfiguration();
-			final ManagedBeanRegistry managedBeanRegistry = context.getSessionFactory().getManagedBeanRegistry();
+			final var typeConfiguration = context.getTypeConfiguration();
+			final var managedBeanRegistry = context.getSessionFactory().getManagedBeanRegistry();
 
 			if ( AttributeConverter.class.isAssignableFrom( definedType ) ) {
 				@SuppressWarnings("unchecked")
 				final var converterClass = (Class<? extends AttributeConverter<?, ?>>) definedType;
 				final var converterBean = managedBeanRegistry.getBean( converterClass );
-				final var converterJtd = typeConfiguration.getJavaTypeRegistry().resolveDescriptor( converterClass );
+				final var converterJtd =
+						typeConfiguration.getJavaTypeRegistry()
+								.resolveDescriptor( converterClass );
 
 				final var parameterizedType =
 						extractAttributeConverterParameterizedType( converterBean.getBeanClass() );
@@ -101,8 +102,9 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 				final JavaType<?> explicitJavaType;
 
 				// see if this is a registered BasicType...
-				final BasicType<?> registeredBasicType =
-						typeConfiguration.getBasicTypeRegistry().getRegisteredType( definedType.getName() );
+				final var registeredBasicType =
+						typeConfiguration.getBasicTypeRegistry()
+								.getRegisteredType( definedType.getName() );
 				if ( registeredBasicType != null ) {
 					explicitType = registeredBasicType;
 					explicitJavaType = registeredBasicType.getJavaTypeDescriptor();
@@ -111,14 +113,16 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 					final var jtdRegistry = typeConfiguration.getJavaTypeRegistry();
 					final var registeredJtd = jtdRegistry.resolveDescriptor( definedType );
 					if ( BasicType.class.isAssignableFrom( registeredJtd.getJavaTypeClass() ) ) {
-						final ManagedBean<BasicType<?>> typeBean =
-								(ManagedBean) managedBeanRegistry.getBean( registeredJtd.getJavaTypeClass() );
+						final var typeBean =
+								(ManagedBean<BasicType<?>>)
+										managedBeanRegistry.getBean( registeredJtd.getJavaTypeClass() );
 						explicitType = typeBean.getBeanInstance();
 						explicitJavaType = explicitType.getJavaTypeDescriptor();
 					}
 					else if ( UserType.class.isAssignableFrom( registeredJtd.getJavaTypeClass() ) ) {
-						final ManagedBean<UserType<?>> userTypeBean =
-								(ManagedBean) managedBeanRegistry.getBean( registeredJtd.getJavaTypeClass() );
+						final var userTypeBean =
+								(ManagedBean<UserType<?>>)
+										managedBeanRegistry.getBean( registeredJtd.getJavaTypeClass() );
 						// todo (6.0) : is this the best approach?  or should we keep a Class<? extends UserType> -> @Type mapping somewhere?
 						explicitType = new CustomType<>( userTypeBean.getBeanInstance(), typeConfiguration );
 						explicitJavaType = explicitType.getJavaTypeDescriptor();

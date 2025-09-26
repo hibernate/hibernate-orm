@@ -70,11 +70,12 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		}
 		for ( var entry : parameterBindingMap.entrySet() ) {
 			final var queryParameter = entry.getKey();
+			final var parameterBinding = entry.getValue();
 			if ( queryParameter.isNamed() ) {
-				parameterBindingMapByNameOrPosition.put( queryParameter.getName(), entry.getValue() );
+				parameterBindingMapByNameOrPosition.put( queryParameter.getName(), parameterBinding );
 			}
-			else if ( queryParameter.getPosition() != null ) {
-				parameterBindingMapByNameOrPosition.put( queryParameter.getPosition(), entry.getValue() );
+			else if ( queryParameter.isOrdinal() ) {
+				parameterBindingMapByNameOrPosition.put( queryParameter.getPosition(), parameterBinding );
 			}
 		}
 	}
@@ -93,12 +94,13 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			parameterBindingMap.put( entry.getKey(), createBinding( sessionFactory, entry.getValue() ) );
 		}
 		for ( var entry : parameterBindingMap.entrySet() ) {
-			final QueryParameter<?> queryParameter = entry.getKey();
+			final var queryParameter = entry.getKey();
+			final var parameterBinding = entry.getValue();
 			if ( queryParameter.isNamed() ) {
-				parameterBindingMapByNameOrPosition.put( queryParameter.getName(), entry.getValue() );
+				parameterBindingMapByNameOrPosition.put( queryParameter.getName(), parameterBinding );
 			}
 			else if ( queryParameter.getPosition() != null ) {
-				parameterBindingMapByNameOrPosition.put( queryParameter.getPosition(), entry.getValue() );
+				parameterBindingMapByNameOrPosition.put( queryParameter.getPosition(), parameterBinding );
 			}
 		}
 	}
@@ -155,7 +157,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	public void validate() {
 		for ( var entry : parameterBindingMap.entrySet() ) {
 			if ( !entry.getValue().isBound() ) {
-				final QueryParameter<?> queryParameter = entry.getKey();
+				final var queryParameter = entry.getKey();
 				if ( queryParameter.isNamed() ) {
 					throw new QueryParameterException( "No argument for named parameter ':" + queryParameter.getName() + "'" );
 				}

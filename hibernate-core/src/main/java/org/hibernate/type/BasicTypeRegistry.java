@@ -16,11 +16,13 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.DelegatingJdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
@@ -162,12 +164,53 @@ public class BasicTypeRegistry implements Serializable {
 
 	private <E> BasicType<?> resolvedType(ArrayJdbcType arrayType, BasicPluralJavaType<E> castPluralJavaType) {
 		final BasicType<E> elementType = resolve( castPluralJavaType.getElementJavaType(), arrayType.getElementJdbcType() );
+		final var indicators = typeConfiguration.getCurrentBaseSqlTypeIndicators();
 		final BasicType<?> resolvedType = castPluralJavaType.resolveType(
 				typeConfiguration,
-				typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect(),
+				indicators.getDialect(),
 				elementType,
-				null,
-				typeConfiguration.getCurrentBaseSqlTypeIndicators()
+				new ColumnTypeInformation() {
+					@Override
+					public Boolean getNullable() {
+						return null;
+					}
+
+					@Override
+					public int getTypeCode() {
+						return arrayType.getDefaultSqlTypeCode();
+					}
+
+					@Override
+					public String getTypeName() {
+						return null;
+					}
+
+					@Override
+					public int getColumnSize() {
+						return 0;
+					}
+
+					@Override
+					public int getDecimalDigits() {
+						return 0;
+					}
+				},
+				new DelegatingJdbcTypeIndicators( indicators ) {
+					@Override
+					public Integer getExplicitJdbcTypeCode() {
+						return arrayType.getDefaultSqlTypeCode();
+					}
+
+					@Override
+					public int getPreferredSqlTypeCodeForArray() {
+						return arrayType.getDefaultSqlTypeCode();
+					}
+
+					@Override
+					public int getPreferredSqlTypeCodeForArray(int elementSqlTypeCode) {
+						return arrayType.getDefaultSqlTypeCode();
+					}
+				}
 		);
 		if ( resolvedType instanceof BasicPluralType<?,?> ) {
 			register( resolvedType );

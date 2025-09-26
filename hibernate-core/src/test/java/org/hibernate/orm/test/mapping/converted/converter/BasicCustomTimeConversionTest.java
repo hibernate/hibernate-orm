@@ -5,7 +5,7 @@
 package org.hibernate.orm.test.mapping.converted.converter;
 
 import java.net.MalformedURLException;
-import java.util.Date;
+import java.time.LocalDate;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -21,7 +21,6 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
-import org.joda.time.LocalDate;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertTrue;
@@ -30,7 +29,7 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  */
 @JiraKey( value = "HHH-8842" )
-public class BasicJodaTimeConversionTest extends BaseNonConfigCoreFunctionalTestCase {
+public class BasicCustomTimeConversionTest extends BaseNonConfigCoreFunctionalTestCase {
 	static boolean convertToDatabaseColumnCalled = false;
 	static boolean convertToEntityAttributeCalled = false;
 
@@ -39,15 +38,17 @@ public class BasicJodaTimeConversionTest extends BaseNonConfigCoreFunctionalTest
 		convertToEntityAttributeCalled = false;
 	}
 
-	public static class JodaLocalDateConverter implements AttributeConverter<LocalDate, Date> {
-		public Date convertToDatabaseColumn(LocalDate localDate) {
+	public record CustomLocalDate(int year,int month,int day) { }
+
+	public static class CustomLocalDateConverter implements AttributeConverter<CustomLocalDate, LocalDate> {
+		public LocalDate convertToDatabaseColumn(CustomLocalDate customLocalDate) {
 			convertToDatabaseColumnCalled = true;
-			return localDate.toDate();
+			return LocalDate.of(customLocalDate.year(),customLocalDate.month(), customLocalDate.day() );
 		}
 
-		public LocalDate convertToEntityAttribute(Date date) {
+		public CustomLocalDate convertToEntityAttribute(LocalDate date) {
 			convertToEntityAttributeCalled = true;
-			return LocalDate.fromDateFields( date );
+			return new CustomLocalDate( date.getYear(), date.getMonthValue(), date.getDayOfMonth());
 		}
 	}
 
@@ -55,13 +56,13 @@ public class BasicJodaTimeConversionTest extends BaseNonConfigCoreFunctionalTest
 	public static class TheEntity {
 		@Id
 		public Integer id;
-		@Convert( converter = JodaLocalDateConverter.class )
-		public LocalDate theDate;
+		@Convert( converter = CustomLocalDateConverter.class )
+		public CustomLocalDate theDate;
 
 		public TheEntity() {
 		}
 
-		public TheEntity(Integer id, LocalDate theDate) {
+		public TheEntity(Integer id, CustomLocalDate theDate) {
 			this.id = id;
 			this.theDate = theDate;
 		}
@@ -78,13 +79,13 @@ public class BasicJodaTimeConversionTest extends BaseNonConfigCoreFunctionalTest
 		final Type theDatePropertyType = ep.getPropertyType( "theDate" );
 		final ConvertedBasicTypeImpl type = assertTyping( ConvertedBasicTypeImpl.class, theDatePropertyType );
 		final JpaAttributeConverter converter = (JpaAttributeConverter) type.getValueConverter();
-		assertTrue( JodaLocalDateConverter.class.isAssignableFrom( converter.getConverterJavaType().getJavaTypeClass() ) );
+		assertTrue( CustomLocalDateConverter.class.isAssignableFrom( converter.getConverterJavaType().getJavaTypeClass() ) );
 
 		resetFlags();
 
 		Session session = openSession();
 		session.getTransaction().begin();
-		session.persist( new TheEntity( 1, new LocalDate() ) );
+		session.persist( new TheEntity( 1, new CustomLocalDate( 2025, 9, 26 ) ) );
 		session.getTransaction().commit();
 		session.close();
 

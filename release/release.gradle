@@ -11,7 +11,6 @@ import groovy.json.JsonSlurper
  */
 apply from: rootProject.file( 'gradle/module.gradle' )
 
-apply plugin: 'org.hibernate.orm.build.doc-pub'
 apply plugin: 'org.hibernate.orm.build.jdks'
 apply plugin: 'idea'
 
@@ -28,7 +27,7 @@ def stageIntegrationGuideTask = tasks.register( "stageIntegrationGuide", Copy ) 
     dependsOn ":documentation:renderIntegrationGuides"
 
     from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/integrationguide" ) }
-    into layout.buildDirectory.dir( "documentation/integrationguide" )
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/integrationguide")
 }
 
 def stageQuickstartTask = tasks.register( "stageQuickstart", Copy ) {
@@ -37,7 +36,7 @@ def stageQuickstartTask = tasks.register( "stageQuickstart", Copy ) {
     dependsOn ':documentation:renderGettingStartedGuides'
 
     from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/quickstart" ) }
-    into layout.buildDirectory.dir( "documentation/quickstart" )
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/quickstart")
 }
 
 def stageTopicalGuideTask = tasks.register( "stageTopicalGuide", Copy ) {
@@ -46,8 +45,7 @@ def stageTopicalGuideTask = tasks.register( "stageTopicalGuide", Copy ) {
     dependsOn ':documentation:renderTopicalGuides'
 
     from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/topical" ) }
-    into layout.buildDirectory.dir( "documentation/topical" )
-
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/topical")
 }
 
 def stageIntroductionGuideTask = tasks.register( "stageIntroductionGuide", Copy ) {
@@ -56,7 +54,7 @@ def stageIntroductionGuideTask = tasks.register( "stageIntroductionGuide", Copy 
     dependsOn ':documentation:renderIntroductionGuides'
 
     from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/introduction" ) }
-    into layout.buildDirectory.dir( "documentation/introduction" )
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/introduction")
 }
 
 def stageQueryGuideTask = tasks.register( "stageQueryGuide", Copy ) {
@@ -65,7 +63,7 @@ def stageQueryGuideTask = tasks.register( "stageQueryGuide", Copy ) {
     dependsOn ':documentation:renderQueryLanguageGuides'
 
     from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/querylanguage" ) }
-    into layout.buildDirectory.dir( "documentation/querylanguage" )
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/querylanguage")
 }
 
 def stageRepositoriesGuideTask = tasks.register( "stageRepositoriesGuide", Copy ) {
@@ -74,7 +72,7 @@ def stageRepositoriesGuideTask = tasks.register( "stageRepositoriesGuide", Copy 
     dependsOn ':documentation:renderRepositories'
 
     from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/repositories" ) }
-    into layout.buildDirectory.dir( "documentation/repositories" )
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/repositories")
 }
 
 def stageUserGuideTask = tasks.register( "stageUserGuide", Copy ) {
@@ -85,7 +83,7 @@ def stageUserGuideTask = tasks.register( "stageUserGuide", Copy ) {
     dependsOn ':documentation:renderUserGuides'
 
     from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/userguide" ) }
-    into layout.buildDirectory.dir( "documentation/userguide" )
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/userguide")
 }
 
 
@@ -95,11 +93,7 @@ def stageMigrationGuideTask = tasks.register( "stageMigrationGuide", Copy ) {
     dependsOn ':documentation:renderMigrationGuide'
 
     from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/migration-guide" ) }
-    into layout.buildDirectory.dir( "documentation/migration-guide" )
-}
-
-tasks.named( "publishMigrationGuide" ).configure {
-    dependsOn stageMigrationGuide
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/migration-guide")
 }
 
 def stageIncubationReportTask = tasks.register( "stageIncubationReport", Copy ) { task ->
@@ -110,7 +104,7 @@ def stageIncubationReportTask = tasks.register( "stageIncubationReport", Copy ) 
     tasks.stageOrmReports.dependsOn task
 
     from project( ":documentation" ).tasks.generateIncubationReport
-    into layout.buildDirectory.dir( "documentation/incubating" )
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/incubating")
 }
 
 def stageInternalsReportTask = tasks.register( "stageInternalsReport", Copy ) { task ->
@@ -119,7 +113,7 @@ def stageInternalsReportTask = tasks.register( "stageInternalsReport", Copy ) { 
     dependsOn ':documentation:generateInternalsReport'
 
     from project( ":documentation" ).tasks.generateInternalsReport
-    into layout.buildDirectory.dir( "documentation/internals" )
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/internals")
 }
 
 def stageDeprecationReportTask = tasks.register( "stageDeprecationReport", Copy ) {
@@ -129,7 +123,7 @@ def stageDeprecationReportTask = tasks.register( "stageDeprecationReport", Copy 
     dependsOn ':documentation:generateDeprecationReport'
 
     from project( ":documentation" ).tasks.generateDeprecationReport
-    into layout.buildDirectory.dir( "documentation/deprecated" )
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/deprecated")
 }
 
 def stageLoggingReportTask = tasks.register( "stageLoggingReport", Copy ) { task ->
@@ -139,7 +133,7 @@ def stageLoggingReportTask = tasks.register( "stageLoggingReport", Copy ) { task
     dependsOn ':documentation:renderLoggingReport'
 
     from project( ":documentation" ).tasks.renderLoggingReport
-    into layout.buildDirectory.dir( "documentation/logging" )
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/logging")
 }
 
 def stageDialectReportTask = tasks.register( "stageDialectReport", Copy ) { task ->
@@ -148,7 +142,7 @@ def stageDialectReportTask = tasks.register( "stageDialectReport", Copy ) { task
     dependsOn ':documentation:renderDialectReport'
 
     from project( ":documentation" ).tasks.renderDialectReport
-    into "${buildDir}/documentation/dialect"
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/dialect")
 }
 
 def stageOrmReportsTask = tasks.register( "stageOrmReports" ) {
@@ -169,7 +163,7 @@ def stageJavadocsTask = tasks.register( "stageJavadocs", Copy ) {
     dependsOn ':documentation:javadoc'
 
     from project( ":documentation" ).tasks.javadoc
-    into "${buildDir}/documentation/javadocs"
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/javadocs")
 }
 
 /**
@@ -179,7 +173,7 @@ def stageJavadocsTask = tasks.register( "stageJavadocs", Copy ) {
  */
 def assembleDocumentationTask = tasks.register( "assembleDocumentation" ) {
     group 'documentation'
-    description 'Assembles all documentation into the {buildDir}/documentation directory'
+    description 'Assembles all documentation into the {buildDir}/staging-deploy/documentation directory'
 
     dependsOn ':documentation:buildDocsForPublishing'
     dependsOn stageJavadocsTask
@@ -194,25 +188,6 @@ def assembleDocumentationTask = tasks.register( "assembleDocumentation" ) {
     dependsOn stageOrmReportsTask
 }
 
-tasks.named( "uploadDocumentation" ) {
-    group = "documentation"
-    description = "Uploads assembled documentation to the doc server"
-    dependsOn assembleDocumentationTask
-
-    doFirst {
-        if ( rootProject.ormVersion.isSnapshot ) {
-            logger.error( "Cannot perform upload of SNAPSHOT documentation" );
-            throw new RuntimeException( "Cannot perform upload of SNAPSHOT documentation" );
-        }
-        else {
-            logger.lifecycle( "Uploading documentation ..." )
-        }
-    }
-
-    doLast {
-        logger.lifecycle( 'Done uploading documentation' )
-    }
-}
 
 def releaseChecksTask = tasks.register( "releaseChecks" ) {
     group 'Release'
@@ -346,13 +321,6 @@ void updateVersionFile(String version) {
     project.ormVersionFile.text = "hibernateVersion=${version}"
 }
 
-def publishReleaseArtifactsTask = tasks.register( 'publishReleaseArtifacts' ) {
-    mustRunAfter gitPreparationForReleaseTask
-
-    dependsOn uploadDocumentation
-    dependsOn uploadDocumentationDescriptor
-}
-
 def releasePerformPostGitTask = tasks.register( 'gitTasksAfterReleasePerform' ) {
 
     doLast {
@@ -381,8 +349,6 @@ def releasePrepareTask = tasks.register( 'releasePrepare' ) {
 def releasePerformTask = tasks.register( 'releasePerform' ) {
     group 'Release'
     description 'Performs a release on local check-out, including updating changelog and '
-
-    dependsOn publishReleaseArtifactsTask
 
     finalizedBy releasePerformPostGitTask
 }

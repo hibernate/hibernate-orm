@@ -85,9 +85,6 @@ tasks.release.dependsOn tasks.publishPlugins
 // local publishing (SNAPSHOT testing)
 tasks.publish.dependsOn tasks.publishPlugins
 
-// Make sure that the publishReleaseArtifacts task of the release module runs the release task of this sub module
-tasks.getByPath( ':release:publishReleaseArtifacts' ).dependsOn tasks.release
-
 // local publishing (SNAPSHOT testing)
 publishing {
 	repositories {

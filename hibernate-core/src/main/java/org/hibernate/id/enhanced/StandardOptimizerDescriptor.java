@@ -4,8 +4,6 @@
  */
 package org.hibernate.id.enhanced;
 
-import org.hibernate.AssertionFailure;
-
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
@@ -46,55 +44,34 @@ public enum StandardOptimizerDescriptor implements OptimizerDescriptor {
 
 	@Override
 	public String getExternalName() {
-		switch ( this ) {
-			case NONE:
-				return "none";
-			case HILO:
-				return "hilo";
-			case LEGACY_HILO:
-				return "legacy-hilo";
-			case POOLED:
-				return "pooled";
-			case POOLED_LO:
-				return "pooled-lo";
-			case POOLED_LOTL:
-				return "pooled-lotl";
-		}
-		throw new AssertionFailure( "unknown StandardOptimizerDescriptor" );
+		return switch ( this ) {
+			case NONE -> "none";
+			case HILO -> "hilo";
+			case LEGACY_HILO -> "legacy-hilo";
+			case POOLED -> "pooled";
+			case POOLED_LO -> "pooled-lo";
+			case POOLED_LOTL -> "pooled-lotl";
+		};
 	}
 
 	@Override
 	public Class<? extends Optimizer> getOptimizerClass() {
-		switch ( this ) {
-			case NONE:
-				return NoopOptimizer.class;
-			case HILO:
-				return HiLoOptimizer.class;
-			case LEGACY_HILO:
-				return LegacyHiLoAlgorithmOptimizer.class;
-			case POOLED:
-				return PooledOptimizer.class;
-			case POOLED_LO:
-				return PooledLoOptimizer.class;
-			case POOLED_LOTL:
-				return PooledLoThreadLocalOptimizer.class;
-		}
-		throw new AssertionFailure( "unknown StandardOptimizerDescriptor" );
+		return switch ( this ) {
+			case NONE -> NoopOptimizer.class;
+			case HILO -> HiLoOptimizer.class;
+			case LEGACY_HILO -> LegacyHiLoAlgorithmOptimizer.class;
+			case POOLED -> PooledOptimizer.class;
+			case POOLED_LO -> PooledLoOptimizer.class;
+			case POOLED_LOTL -> PooledLoThreadLocalOptimizer.class;
+		};
 	}
 
 	@Override
 	public boolean isPooled() {
-		switch ( this ) {
-			case NONE:
-			case HILO:
-			case LEGACY_HILO:
-				return false;
-			case POOLED:
-			case POOLED_LO:
-			case POOLED_LOTL:
-				return true;
-		}
-		throw new AssertionFailure( "unknown StandardOptimizerDescriptor" );
+		return switch ( this ) {
+			case NONE, HILO, LEGACY_HILO -> false;
+			case POOLED, POOLED_LO, POOLED_LOTL -> true;
+		};
 	}
 
 	/**
@@ -111,8 +88,8 @@ public enum StandardOptimizerDescriptor implements OptimizerDescriptor {
 			return NONE;
 		}
 		else {
-			for ( StandardOptimizerDescriptor value: values() ) {
-				if ( value.getExternalName().equals( externalName ) ) {
+			for ( var value: values() ) {
+				if ( value.getExternalName().equalsIgnoreCase( externalName ) ) {
 					return value;
 				}
 			}

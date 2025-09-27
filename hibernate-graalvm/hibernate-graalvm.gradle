@@ -13,7 +13,7 @@ description = "Experimental extension to make it easier to compile applications 
 dependencies {
     //No need for transitive dependencies: this is all just metadata to be used as companion jar.
     compileOnly project( ':hibernate-core' )
-    compileOnly "org.graalvm.sdk:graal-sdk:22.2.0"
+    compileOnly "org.graalvm.sdk:graal-sdk:25.0.0"
 
     testImplementation project( ':hibernate-core' )
     testImplementation libs.jandex

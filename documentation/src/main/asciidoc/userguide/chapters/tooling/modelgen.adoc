@@ -40,8 +40,8 @@ a static metamodel class based on the following rules:
 * The name of the metamodel class is derived from the name of the managed class by appending "_" to the managed class name.
 * The metamodel class `X_` must be annotated with the `jakarta.persistence.StaticMetamodel` annotation.  The generation
 can also be configured to add the `javax.annotation.processing.Generated` annotation.
-* If class `X` extends another class `S`, where `S` is the most derived managed class extended by `X`, then
-class `X_` must extend class `S_`, where `S_` is the metamodel class created for `S`.
+* If class `X` extends another class `T`, where `T` is the most derived managed class extended by `X`, then
+class `X_` must extend class `S_`, where `S_` is the metamodel class created for `T`.
 * For every persistent singular attribute `y` declared by class `X`, where the type of `y` is `Y`,
 the metamodel class must contain a declaration as follows:
 
@@ -69,7 +69,7 @@ class must contain a declaration as follows:
 where `K` is the type of the key of the map in class `X`
 
 * Import statements must be included for `jakarta.persistence.metamodel` types as
-needed, as well as all domain model classes (i.e., `X`, `S`, `Y`, `Z`, and `K`).
+needed, as well as all domain model classes (i.e., `X`, `T`, `Y`, `Z`, and `K`).
 
 As an example, consider the following domain model -
 

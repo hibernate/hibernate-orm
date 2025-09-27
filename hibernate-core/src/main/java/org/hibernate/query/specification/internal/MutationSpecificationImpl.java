@@ -16,6 +16,7 @@ import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.StatelessSession;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.assignment.Assignment;
 import org.hibernate.query.specification.MutationSpecification;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.MutationQuery;
@@ -48,27 +49,44 @@ import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
  */
 public class MutationSpecificationImpl<T> implements MutationSpecification<T>, TypedQueryReference<Void> {
 
+	public enum MutationType {
+//		INSERT,
+		UPDATE,
+		DELETE
+	}
+
 	private final List<BiConsumer<SqmDeleteOrUpdateStatement<T>, SqmRoot<T>>> specifications = new ArrayList<>();
 	private final String hql;
 	private final Class<T> mutationTarget;
 	private final SqmDeleteOrUpdateStatement<T> deleteOrUpdateStatement;
+	private final MutationType type;
 
 	public MutationSpecificationImpl(String hql, Class<T> mutationTarget) {
 		this.hql = hql;
 		this.mutationTarget = mutationTarget;
 		this.deleteOrUpdateStatement = null;
+		this.type = null;
 	}
 
 	public MutationSpecificationImpl(CriteriaUpdate<T> criteriaQuery) {
 		this.deleteOrUpdateStatement = (SqmUpdateStatement<T>) criteriaQuery;
 		this.mutationTarget = deleteOrUpdateStatement.getTarget().getManagedType().getJavaType();
 		this.hql = null;
+		this.type = MutationType.UPDATE;
 	}
 
 	public MutationSpecificationImpl(CriteriaDelete<T> criteriaQuery) {
 		this.deleteOrUpdateStatement = (SqmDeleteStatement<T>) criteriaQuery;
 		this.mutationTarget = deleteOrUpdateStatement.getTarget().getManagedType().getJavaType();
 		this.hql = null;
+		this.type = MutationType.DELETE;
+	}
+
+	public MutationSpecificationImpl(MutationType type, Class<T> mutationTarget) {
+		this.deleteOrUpdateStatement = null;
+		this.mutationTarget = mutationTarget;
+		this.hql = null;
+		this.type = type;
 	}
 
 	@Override
@@ -98,6 +116,19 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, T
 					restriction.toPredicate( mutationTargetRoot,
 							sqmStatement.nodeBuilder() );
 			sqmStatement.applyPredicate( sqmPredicate );
+		} );
+		return this;
+	}
+
+	@Override
+	public MutationSpecification<T> assign(Assignment<? super T> assignment) {
+		specifications.add( (sqmStatement, mutationTargetRoot) -> {
+			if ( sqmStatement instanceof SqmUpdateStatement<T> sqmUpdateStatement ) {
+				assignment.apply( sqmUpdateStatement );
+			}
+			else {
+				throw new IllegalStateException( "Delete query cannot perform assignment" );
+			}
 		} );
 		return this;
 	}
@@ -136,6 +167,14 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, T
 			sqmStatement = deleteOrUpdateStatement;
 			mutationTargetRoot = resolveSqmRoot( sqmStatement,
 					sqmStatement.getTarget().getManagedType().getJavaType() );
+		}
+		else if ( type != null ) {
+			final var criteriaBuilder = queryEngine.getCriteriaBuilder();
+			sqmStatement = switch ( type ) {
+				case UPDATE -> criteriaBuilder.createCriteriaUpdate( mutationTarget );
+				case DELETE -> criteriaBuilder.createCriteriaDelete( mutationTarget );
+			};
+			mutationTargetRoot = sqmStatement.getTarget();
 		}
 		else {
 			throw new AssertionFailure( "No HQL or criteria" );

@@ -90,6 +90,10 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		return this;
 	}
 
+	public List<BiConsumer<SqmSelectStatement<T>, SqmRoot<T>>> getSpecifications() {
+		return specifications;
+	}
+
 	@Override
 	public SelectionSpecification<T> restrict(Restriction<? super T> restriction) {
 		specifications.add( (sqmStatement, root) -> {

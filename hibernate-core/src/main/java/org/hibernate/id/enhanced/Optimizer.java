@@ -15,12 +15,17 @@ import java.io.Serializable;
  * this optimization takes the form of trying to ensure we do not have to
  * hit the database on each and every request to get an identifier value.
  * <p>
+ * An optimizer may be selected by setting the configuration property
+ * {@value org.hibernate.cfg.MappingSettings#PREFERRED_POOLED_OPTIMIZER}.
+ * <p>
  * Optimizers work on constructor injection. They should provide a
  * constructor accepting the following arguments:
  * <ol>
  * <li>{@code java.lang.Class} - The return type for the generated values</li>
  * <li>{@code int} - The increment size</li>
  * </ol>
+ *
+ * @see org.hibernate.cfg.MappingSettings#PREFERRED_POOLED_OPTIMIZER
  *
  * @author Steve Ebersole
  */

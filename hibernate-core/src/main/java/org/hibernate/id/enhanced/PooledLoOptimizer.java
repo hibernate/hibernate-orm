@@ -17,12 +17,27 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Variation of {@link PooledOptimizer} which interprets the incoming database
- * value as the lo value, rather than the hi value.
+ * Optimizer which uses a pool of values, backed by a <em>logical sequence</em>.
+ * A logical sequence is usually just an unpooled sequence or table generator.
+ * <p>
+ * The pool size is controlled by the {@code allocationSize} of a
+ * {@linkplain jakarta.persistence.SequenceGenerator sequence generator} or
+ * {@linkplain jakarta.persistence.TableGenerator sequence generator}.
+ * <p>
+ * From time to time, the optimizer allocates a range of values to itself,
+ * interpreting the next value retrieved from the logical sequence as the
+ * lower bound on the range of newly allocated ids. Thus, the generated ids
+ * begin with the value retrieved from the logical sequence.
+ * <p>
+ * The {@link PooledOptimizer} is similar, but interprets the current value
+ * of the logical sequence as an upper bound on the range of already-allocated
+ * ids.
  *
  * @author Steve Ebersole
  *
  * @see PooledOptimizer
+ * @see jakarta.persistence.SequenceGenerator#allocationSize
+ * @see jakarta.persistence.TableGenerator#allocationSize
  */
 public class PooledLoOptimizer extends AbstractOptimizer {
 

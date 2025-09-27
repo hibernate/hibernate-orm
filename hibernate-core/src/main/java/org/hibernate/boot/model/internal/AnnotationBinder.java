@@ -82,9 +82,7 @@ public final class AnnotationBinder {
 			final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 			interpretSequenceGenerator( generatorRegistration.configuration(), definitionBuilder );
 			final var idGenDef = definitionBuilder.build();
-			if ( BOOT_LOGGER.isTraceEnabled() ) {
-				BOOT_LOGGER.addingGlobalSequenceGenerator( name );
-			}
+			BOOT_LOGGER.addingGlobalSequenceGenerator( name );
 			metadataCollector.addDefaultIdentifierGenerator( idGenDef );
 		} );
 
@@ -92,9 +90,7 @@ public final class AnnotationBinder {
 			final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 			interpretTableGenerator( generatorRegistration.configuration(), definitionBuilder );
 			final var idGenDef = definitionBuilder.build();
-			if ( BOOT_LOGGER.isTraceEnabled() ) {
-				BOOT_LOGGER.addingGlobalTableGenerator( name );
-			}
+			BOOT_LOGGER.addingGlobalTableGenerator( name );
 			metadataCollector.addDefaultIdentifierGenerator( idGenDef );
 		} );
 
@@ -277,7 +273,6 @@ public final class AnnotationBinder {
 			AnnotationTarget annotatedElement,
 			MetadataBuildingContext context) {
 		final var managedBeanRegistry = context.getBootstrapContext().getManagedBeanRegistry();
-
 		final var sourceModelContext = modelsContext( context );
 
 		annotatedElement.forEachAnnotationUsage( JavaTypeRegistration.class, sourceModelContext, (usage) -> {
@@ -422,9 +417,8 @@ public final class AnnotationBinder {
 		final String name = fetchProfile.name();
 		if ( reuseOrCreateFetchProfile( context, name ) ) {
 			for ( var fetchOverride : fetchProfile.fetchOverrides() ) {
-				final FetchType fetchType = fetchOverride.fetch();
-				final FetchMode fetchMode = fetchOverride.mode();
-				if ( fetchType == FetchType.LAZY && fetchMode == FetchMode.JOIN ) {
+				if ( fetchOverride.fetch() == FetchType.LAZY
+					&& fetchOverride.mode() == FetchMode.JOIN ) {
 					throw new AnnotationException(
 							"Fetch profile '" + name
 									+ "' has a '@FetchOverride' with 'fetch=LAZY' and 'mode=JOIN'"
@@ -484,28 +478,29 @@ public final class AnnotationBinder {
 						collector.registerEmbeddableSubclass( superEntityState.getClassDetails(), classDetails );
 					}
 				}
-				logMixedInheritance( classDetails, superclassState, state );
-				if ( superclassState.getType() != null ) {
-					state.setType( superclassState.getType() );
+				checkMixedInheritance( classDetails, superclassState, state );
+				final var inheritanceType = superclassState.getType();
+				if ( inheritanceType != null ) {
+					state.setType( inheritanceType );
 				}
 			}
 			switch ( classType ) {
-				case ENTITY:
-				case MAPPED_SUPERCLASS:
-				case EMBEDDABLE:
+				case ENTITY, MAPPED_SUPERCLASS, EMBEDDABLE:
 					inheritanceStatePerClass.put( classDetails, state );
 			}
 		}
 		return inheritanceStatePerClass;
 	}
 
-	private static void logMixedInheritance(ClassDetails classDetails, InheritanceState superclassState, InheritanceState state) {
-		if ( state.getType() != null && superclassState.getType() != null ) {
-			final boolean nonDefault = InheritanceType.SINGLE_TABLE != state.getType();
-			final boolean mixingStrategy = state.getType() != superclassState.getType();
+	private static void checkMixedInheritance(ClassDetails classDetails, InheritanceState superclassState, InheritanceState state) {
+		final var inheritanceType = state.getType();
+		final var superclassInheritanceType = superclassState.getType();
+		if ( inheritanceType != null && superclassInheritanceType != null ) {
+			final boolean nonDefault = InheritanceType.SINGLE_TABLE != inheritanceType;
+			final boolean mixingStrategy = inheritanceType != superclassInheritanceType;
 			if ( nonDefault && mixingStrategy ) {
 				throw new AnnotationException( "Entity '" + classDetails.getName()
-						+ "' may not override the inheritance mapping strategy '" + superclassState.getType()
+						+ "' may not override the inheritance mapping strategy '" + superclassInheritanceType
 						+ "' of its hierarchy"
 						+ "' (each entity hierarchy has a single inheritance mapping strategy)" );
 			}

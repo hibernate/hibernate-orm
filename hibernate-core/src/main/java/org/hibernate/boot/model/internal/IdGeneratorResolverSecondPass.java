@@ -16,6 +16,7 @@ import org.hibernate.boot.models.annotations.internal.GenericGeneratorAnnotation
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.GeneratedValue;
@@ -217,6 +218,22 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// AUTO
 
+	private boolean handleAsUuid(ClassDetailsRegistry classDetailsRegistry) {
+		final var idMemberType = idMember.getType();
+		if ( idMemberType.isImplementor( UUID.class ) || idMemberType.isImplementor( String.class ) ) {
+			GeneratorAnnotationHelper.handleUuidStrategy(
+					idValue,
+					idMember,
+					classDetailsRegistry.getClassDetails( entityMapping.getClassName() ),
+					buildingContext
+			);
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
 	@Override
 	protected void handleUnnamedAutoGenerator() {
 		// todo (7.0) : null or entityMapping.getJpaEntityName() for "name from GeneratedValue"?
@@ -272,14 +289,7 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 			return;
 		}
 
-		if ( idMember.getType().isImplementor( UUID.class )
-				|| idMember.getType().isImplementor( String.class ) ) {
-			GeneratorAnnotationHelper.handleUuidStrategy(
-					idValue,
-					idMember,
-					classDetailsRegistry.getClassDetails( entityMapping.getClassName() ),
-					buildingContext
-			);
+		if ( handleAsUuid( classDetailsRegistry ) ) {
 			return;
 		}
 
@@ -316,15 +326,7 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 			return;
 		}
 
-		if ( idMember.getType().isImplementor( UUID.class )
-				|| idMember.getType().isImplementor( String.class ) ) {
-			GeneratorAnnotationHelper.handleUuidStrategy(
-					idValue,
-					idMember,
-					buildingContext.getMetadataCollector().getClassDetailsRegistry()
-							.getClassDetails( entityMapping.getClassName() ),
-					buildingContext
-			);
+		if ( handleAsUuid( buildingContext.getMetadataCollector().getClassDetailsRegistry() ) ) {
 			return;
 		}
 

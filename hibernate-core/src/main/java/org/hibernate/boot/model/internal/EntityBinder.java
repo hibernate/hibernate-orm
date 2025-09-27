@@ -109,6 +109,7 @@ import static org.hibernate.boot.model.internal.QueryBinder.bindNativeQuery;
 import static org.hibernate.boot.model.internal.QueryBinder.bindQuery;
 import static org.hibernate.boot.model.internal.TableBinder.bindForeignKey;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
+import static org.hibernate.boot.spi.AccessType.getAccessStrategy;
 import static org.hibernate.engine.OptimisticLockStyle.fromLockType;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
@@ -462,12 +463,12 @@ public class EntityBinder {
 			MetadataBuildingContext context,
 			ClassDetails compositeClass,
 			ClassDetails classWithIdClass) {
-		final TypeDetails compositeType = new ClassTypeDetailsImpl( compositeClass, TypeDetails.Kind.CLASS );
-		final TypeDetails classWithIdType = new ClassTypeDetailsImpl( classWithIdClass, TypeDetails.Kind.CLASS );
+		final var compositeType = new ClassTypeDetailsImpl( compositeClass, TypeDetails.Kind.CLASS );
+		final var classWithIdType = new ClassTypeDetailsImpl( classWithIdClass, TypeDetails.Kind.CLASS );
 
-		final AccessType accessType = getPropertyAccessType();
-		final PropertyData inferredData = new PropertyPreloadedData( accessType, "id", compositeType );
-		final PropertyData baseInferredData = new PropertyPreloadedData( accessType, "id", classWithIdType );
+		final var accessType = getPropertyAccessType();
+		final var inferredData = new PropertyPreloadedData( accessType, "id", compositeType );
+		final var baseInferredData = new PropertyPreloadedData( accessType, "id", classWithIdType );
 		final AccessType propertyAccessor = getPropertyAccessor( compositeClass );
 
 		// In JPA 2, there is a shortcut if the IdClass is the PK of the associated class pointed to by the id
@@ -648,7 +649,7 @@ public class EntityBinder {
 		if ( elementsToProcess.getIdPropertyCount() == 1 ) {
 			// There's only one @Id field, so it might be the @EmbeddedId of an associated
 			// entity referenced via a @ManyToOne or @OneToOne association
-			final PropertyData idPropertyOnBaseClass =
+			final var idPropertyOnBaseClass =
 					getUniqueIdPropertyFromBaseClass( inferredData, baseInferredData, propertyAccessor, context );
 			final var idTypeDetails = idPropertyOnBaseClass.getClassOrElementType();
 			final var state = inheritanceStates.get( idTypeDetails.determineRawClass() );
@@ -690,7 +691,7 @@ public class EntityBinder {
 		final int idPropertyCount = addElementsOfClass( idProperties, propertyContainer, context, 0 );
 		if ( idPropertyCount == 1 ) {
 			// Exactly one @Id or @EmbeddedId attribute
-			final PropertyData idPropertyOfAssociatedEntity = idProperties.get( 0 );
+			final var idPropertyOfAssociatedEntity = idProperties.get( 0 );
 			return compositeClass.getName()
 					.equals( idPropertyOfAssociatedEntity.getPropertyType().getName() );
 		}
@@ -1427,8 +1428,8 @@ public class EntityBinder {
 		//		- we first look for all uses of DialectOverride.SQLInsert, if any, and see if they "match"
 		//			- if so, we return the matched override
 		//			- if not, we return the normal SQLInsert (if one)
-		final Class<Annotation> overrideAnnotation = getOverrideAnnotation( annotationType );
-		final Annotation[] dialectOverrides =
+		final var overrideAnnotation = getOverrideAnnotation( annotationType );
+		final var dialectOverrides =
 				annotatedClass.getRepeatedAnnotationUsages( overrideAnnotation, modelsContext() );
 		if ( isNotEmpty( dialectOverrides ) ) {
 			final var dialect = getDatabase().getDialect();
@@ -1784,7 +1785,7 @@ public class EntityBinder {
 
 		final var collector = getMetadataCollector();
 		final var superTableXref = collector.getEntityTableXref( entityName );
-		final Table primaryTable = superTableXref.getPrimaryTable();
+		final var primaryTable = superTableXref.getPrimaryTable();
 		collector.addEntityTableXref(
 				persistentClass.getEntityName(),
 				collector.getDatabase().toIdentifier( collector.getLogicalTableName( primaryTable ) ),
@@ -1803,7 +1804,7 @@ public class EntityBinder {
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
 		final String entityName = persistentClass.getEntityName();
 		final Identifier logicalTableName = logicalTableName( tableName, entityName );
-		final Table table = TableBinder.buildAndFillTable(
+		final var table = TableBinder.buildAndFillTable(
 				schema,
 				catalog,
 				logicalTableName,
@@ -1868,14 +1869,20 @@ public class EntityBinder {
 			Join join) {
 		// `incoming` will be an array of some sort of annotation
 		final var joinColumnSource = (Annotation[]) incoming;
-		final AnnotatedJoinColumns annotatedJoinColumns;
+		final var annotatedJoinColumns = secondaryTableJoinColumns( propertyHolder, joinColumnSource );
+		for ( var joinColumn : annotatedJoinColumns.getJoinColumns() ) {
+			joinColumn.forceNotNull();
+		}
+		bindJoinToPersistentClass( join, annotatedJoinColumns, context );
+	}
+
+	private AnnotatedJoinColumns secondaryTableJoinColumns(PropertyHolder propertyHolder, Annotation[] joinColumnSource) {
 		if ( isEmpty( joinColumnSource ) ) {
-			annotatedJoinColumns = createDefaultJoinColumn( propertyHolder );
+			return createDefaultJoinColumn( propertyHolder );
 		}
 		else {
 			final PrimaryKeyJoinColumn[] pkJoinColumns;
 			final JoinColumn[] joinColumns;
-
 			final Annotation first = joinColumnSource[0];
 			if ( first instanceof PrimaryKeyJoinColumn ) {
 				pkJoinColumns = (PrimaryKeyJoinColumn[]) joinColumnSource;
@@ -1893,14 +1900,8 @@ public class EntityBinder {
 
 				);
 			}
-
-			annotatedJoinColumns = createJoinColumns( propertyHolder, pkJoinColumns, joinColumns );
+			return createJoinColumns( propertyHolder, pkJoinColumns, joinColumns );
 		}
-
-		for ( var joinColumn : annotatedJoinColumns.getJoinColumns() ) {
-			joinColumn.forceNotNull();
-		}
-		bindJoinToPersistentClass( join, annotatedJoinColumns, context );
 	}
 
 	private AnnotatedJoinColumns createDefaultJoinColumn(PropertyHolder propertyHolder) {
@@ -1971,14 +1972,16 @@ public class EntityBinder {
 		final var jpaSecondaryTable = findMatchingSecondaryTable( join );
 		if ( jpaSecondaryTable != null ) {
 			final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
-			if ( jpaSecondaryTable.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
-					|| jpaSecondaryTable.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) {
+			final var foreignKey = jpaSecondaryTable.foreignKey();
+			final var constraintMode = foreignKey.value();
+			if ( constraintMode == ConstraintMode.NO_CONSTRAINT
+				|| constraintMode == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) {
 				key.disableForeignKey();
 			}
 			else {
-				key.setForeignKeyName( nullIfEmpty( jpaSecondaryTable.foreignKey().name() ) );
-				key.setForeignKeyDefinition( nullIfEmpty( jpaSecondaryTable.foreignKey().foreignKeyDefinition() ) );
-				key.setForeignKeyOptions( jpaSecondaryTable.foreignKey().options() );
+				key.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
+				key.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+				key.setForeignKeyOptions( foreignKey.options() );
 			}
 		}
 	}
@@ -2234,7 +2237,7 @@ public class EntityBinder {
 		if ( element != null ) {
 			final var access = element.getAnnotationUsage( Access.class, modelsContext() );
 			if ( access != null ) {
-				return AccessType.getAccessStrategy( access.value() );
+				return getAccessStrategy( access.value() );
 			}
 		}
 		return null;

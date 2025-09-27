@@ -23,7 +23,6 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.Version;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AnnotationException;
-import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.*;
@@ -34,7 +33,6 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
-import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
@@ -232,13 +230,14 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	public int resolveJdbcTypeCode(int jdbcTypeCode) {
 		return aggregateComponent == null
 				? jdbcTypeCode
-				: getAggregateSupport()
-						.aggregateComponentSqlTypeCode( aggregateComponent.getAggregateColumn().getSqlTypeCode(),
-								jdbcTypeCode );
+				: getAggregateComponentTypeCode( jdbcTypeCode );
 	}
 
-	private AggregateSupport getAggregateSupport() {
-		return getMetadataCollector().getDatabase().getDialect().getAggregateSupport();
+	private int getAggregateComponentTypeCode(int jdbcTypeCode) {
+		final Integer aggregateColumnSqlTypeCode =
+				aggregateComponent.getAggregateColumn().getSqlTypeCode();
+		return getDialect().getAggregateSupport()
+				.aggregateComponentSqlTypeCode( aggregateColumnSqlTypeCode, jdbcTypeCode );
 	}
 
 	@Override
@@ -293,66 +292,71 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		return typeConfiguration.getJdbcTypeRegistry().getDescriptor( code );
 	}
 
-	public void setType(MemberDetails value, TypeDetails typeDetails) {
-		setType( value, typeDetails, null, null );
+	public void setType(MemberDetails memberDetails, TypeDetails typeDetails) {
+		setType( memberDetails, typeDetails, null, null );
 	}
+
 	public void setType(
-			MemberDetails value,
+			MemberDetails memberDetails,
 			TypeDetails typeDetails,
 			@Nullable String declaringClassName,
 			@Nullable ConverterDescriptor<?,?> converterDescriptor) {
-		this.memberDetails = value;
-		final boolean isArray = value.isArray();
-		if ( typeDetails == null && !isArray ) {
-			// we cannot guess anything
-			return;
+		this.memberDetails = memberDetails;
+		if ( typeDetails != null || memberDetails.isArray() ) {
+			assert columns != null
+				: "BasicValueBinder.setColumns must be called before BasicValueBinder.setType";
+
+			if ( kind != Kind.LIST_INDEX && kind != Kind.MAP_KEY ) {
+				isLob = memberDetails.hasDirectAnnotationUsage( Lob.class );
+			}
+
+			if ( getDialect().getNationalizationSupport() == NationalizationSupport.EXPLICIT ) {
+				isNationalized = isNationalized( memberDetails );
+			}
+
+			final boolean customType;
+			if ( converterDescriptor != null ) {
+				applyJpaConverter( memberDetails, converterDescriptor );
+				customType = false;
+			}
+			else {
+				customType = applyCustomType( memberDetails, typeDetails );
+			}
+			if ( !customType ) {
+				prepareValue( memberDetails, typeDetails, declaringClassName );
+			}
 		}
+		// else we cannot guess anything
+	}
 
-		if ( columns == null ) {
-			throw new AssertionFailure( "`BasicValueBinder#setColumns` should be called before `BasicValueBinder#setType`" );
-		}
+	private boolean isNationalized(MemberDetails memberDetails) {
+		return buildingContext.getBuildingOptions().useNationalizedCharacterData()
+			|| memberDetails.locateAnnotationUsage( Nationalized.class, getSourceModelContext() ) != null;
+	}
 
-//		if ( columns.length != 1 ) {
-//			throw new AssertionFailure( "Expecting just one column, but found `" + Arrays.toString( columns ) + "`" );
-//		}
-
-		final var modelClassDetails = isArray ? value.getElementType() : typeDetails;
-
-		if ( kind != Kind.LIST_INDEX && kind != Kind.MAP_KEY  ) {
-			isLob = value.hasDirectAnnotationUsage( Lob.class );
-		}
-
+	private boolean applyCustomType(MemberDetails memberDetails, TypeDetails typeDetails) {
 		final var modelContext = getSourceModelContext();
-
-		if ( getDialect().getNationalizationSupport() == NationalizationSupport.EXPLICIT ) {
-			isNationalized = buildingContext.getBuildingOptions().useNationalizedCharacterData()
-					|| value.locateAnnotationUsage( Nationalized.class, modelContext ) != null;
+		final var userTypeImpl = kind.mappingAccess.customType( memberDetails, modelContext );
+		if ( userTypeImpl != null ) {
+			applyExplicitType( userTypeImpl,
+					kind.mappingAccess.customTypeParameters( memberDetails, modelContext ) );
+			// An explicit custom UserType has top precedence when we get to BasicValue resolution.
+			return true;
 		}
-
-		if ( converterDescriptor != null ) {
-			applyJpaConverter( value, converterDescriptor );
-		}
-		else {
-			final var userTypeImpl =
-					kind.mappingAccess.customType( value, modelContext );
-			if ( userTypeImpl != null ) {
-				applyExplicitType( userTypeImpl,
-						kind.mappingAccess.customTypeParameters( value, modelContext ) );
-				// An explicit custom UserType has top precedence when we get to BasicValue resolution.
-				return;
-			}
-			else if ( modelClassDetails != null ) {
-				final var rawClassDetails = modelClassDetails.determineRawClass();
-				final var basicClass = rawClassDetails.toJavaClass();
-				final var registeredUserTypeImpl =
-						getMetadataCollector().findRegisteredUserType( basicClass );
-				if ( registeredUserTypeImpl != null ) {
-					applyExplicitType( registeredUserTypeImpl, emptyMap() );
-					return;
-				}
+		final var modelClassDetails = memberDetails.isArray() ? memberDetails.getElementType() : typeDetails;
+		if ( modelClassDetails != null ) {
+			final var basicClass = modelClassDetails.determineRawClass().toJavaClass();
+			final var registeredUserTypeImpl =
+					getMetadataCollector().findRegisteredUserType( basicClass );
+			if ( registeredUserTypeImpl != null ) {
+				applyExplicitType( registeredUserTypeImpl, emptyMap() );
+				return true;
 			}
 		}
+		return false;
+	}
 
+	private void prepareValue(MemberDetails value, TypeDetails typeDetails, @Nullable String declaringClassName) {
 		switch ( kind ) {
 			case ATTRIBUTE:
 				prepareBasicAttribute( declaringClassName, value, typeDetails );
@@ -378,17 +382,16 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			default:
 				throw new IllegalArgumentException( "Unexpected binder type : " + kind );
 		}
-
 	}
 
-	private void applyExplicitType(Class<? extends UserType<?>> impl, Map<String,String> params) {
-		this.explicitCustomType = impl;
-		this.explicitLocalTypeParams = params;
+	private void applyExplicitType(Class<? extends UserType<?>> userTypeImpl, Map<String,String> parameters) {
+		explicitCustomType = userTypeImpl;
+		explicitLocalTypeParams = parameters;
 	}
 
 	private void prepareCollectionId(MemberDetails attribute) {
-		final var collectionIdAnn = attribute.getDirectAnnotationUsage( CollectionId.class );
-		if ( collectionIdAnn == null ) {
+		final var collectionId = attribute.getDirectAnnotationUsage( CollectionId.class );
+		if ( collectionId == null ) {
 			throw new MappingException( "idbag mapping missing @CollectionId" );
 		}
 

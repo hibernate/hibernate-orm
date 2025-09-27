@@ -15,6 +15,9 @@ import java.io.Serializable;
  * this optimization takes the form of trying to ensure we do not have to
  * hit the database on each and every request to get an identifier value.
  * <p>
+ * Optimizers are used with
+ * {@linkplain jakarta.persistence.SequenceGenerator sequence generators}
+ * and {@linkplain jakarta.persistence.TableGenerator table generators}.
  * An optimizer may be selected by setting the configuration property
  * {@value org.hibernate.cfg.MappingSettings#PREFERRED_POOLED_OPTIMIZER}.
  * <p>

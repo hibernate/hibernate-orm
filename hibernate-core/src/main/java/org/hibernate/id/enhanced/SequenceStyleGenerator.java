@@ -7,7 +7,6 @@ package org.hibernate.id.enhanced;
 import java.util.Properties;
 import java.util.function.BiConsumer;
 
-import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
@@ -555,7 +554,7 @@ public class SequenceStyleGenerator
 	// IdentifierGenerator implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
+	public Object generate(SharedSessionContractImplementor session, Object object) {
 		return optimizer.generate( databaseStructure.buildCallback( session ) );
 	}
 

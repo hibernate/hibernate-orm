@@ -38,21 +38,22 @@ public class GUIDGenerator implements IdentifierGenerator {
 		final String sql = session.getJdbcServices().getJdbcEnvironment().getDialect().getSelectGUIDString();
 		try {
 			final var jdbcCoordinator = session.getJdbcCoordinator();
-			final var st = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
+			final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
+			final var resourceRegistry = jdbcCoordinator.getLogicalConnection().getResourceRegistry();
 			try {
-				final var rs = jdbcCoordinator.getResultSetReturn().extract( st, sql );
+				final var resultSet = jdbcCoordinator.getResultSetReturn().extract( statement, sql );
 				try {
-					if ( !rs.next() ) {
+					if ( !resultSet.next() ) {
 						throw new HibernateException( "The database returned no GUID identity value" );
 					}
-					return rs.getString( 1 );
+					return resultSet.getString( 1 );
 				}
 				finally {
-					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( rs, st );
+					resourceRegistry.release( resultSet, statement );
 				}
 			}
 			finally {
-				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( st );
+				resourceRegistry.release( statement );
 				jdbcCoordinator.afterStatementExecution();
 			}
 		}

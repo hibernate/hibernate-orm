@@ -4,13 +4,7 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import org.hibernate.EntityFilterException;
-import org.hibernate.FetchNotFoundException;
-import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.spi.EntityUniqueKey;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
@@ -18,10 +12,13 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.InitializerParent;
 
+import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
+
 /**
  * @author Andrea Boriero
  */
-public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchInitializer<EntitySelectFetchInitializer.EntitySelectFetchInitializerData> {
+public class EntitySelectFetchByUniqueKeyInitializer
+		extends EntitySelectFetchInitializer<EntitySelectFetchInitializer.EntitySelectFetchInitializerData> {
 	private final ToOneAttributeMapping fetchedAttribute;
 
 	public EntitySelectFetchByUniqueKeyInitializer(
@@ -37,20 +34,18 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 	}
 
 	@Override
-	protected void initialize(EntitySelectFetchInitializerData data) {
-		final String entityName = concreteDescriptor.getEntityName();
+	protected void initializeIfNecessary(EntitySelectFetchInitializerData data) {
+		final var session = data.getRowProcessingState().getSession();
+		final var persistenceContext = session.getPersistenceContextInternal();
+
 		final String uniqueKeyPropertyName = fetchedAttribute.getReferencedPropertyName();
-
-		final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
-
 		final EntityUniqueKey euk = new EntityUniqueKey(
-				entityName,
+				concreteDescriptor.getEntityName(),
 				uniqueKeyPropertyName,
 				data.entityIdentifier,
 				concreteDescriptor.getPropertyType( uniqueKeyPropertyName ),
 				session.getFactory()
 		);
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		data.setInstance( persistenceContext.getEntity( euk ) );
 		if ( data.getInstance() == null ) {
 			final Object instance = concreteDescriptor.loadByUniqueKey(
@@ -61,21 +56,10 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 			data.setInstance( instance );
 
 			if ( instance == null ) {
-				if ( toOneMapping.getNotFoundAction() != NotFoundAction.IGNORE ) {
-					if ( affectedByFilter ) {
-						throw new EntityFilterException(
-								entityName,
-								data.entityIdentifier,
-								toOneMapping.getNavigableRole().getFullPath()
-						);
-					}
-					if ( toOneMapping.getNotFoundAction() == NotFoundAction.EXCEPTION ) {
-						throw new FetchNotFoundException( entityName, data.entityIdentifier );
-					}
-				}
+				handleNotFound( data );
 			}
-			// If the entity was not in the Persistence Context, but was found now,
-			// add it to the Persistence Context
+			// If the entity was not in the persistence context but
+			// was found now, then add it to the persistence context
 			persistenceContext.addEntity( euk, instance );
 		}
 		if ( data.getInstance() != null ) {
@@ -85,6 +69,6 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 
 	@Override
 	public String toString() {
-		return "EntitySelectFetchByUniqueKeyInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
+		return "EntitySelectFetchByUniqueKeyInitializer(" + toLoggableString( getNavigablePath() ) + ")";
 	}
 }

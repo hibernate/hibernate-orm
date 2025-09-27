@@ -7,7 +7,6 @@ package org.hibernate.sql.results.graph.entity.internal;
 import java.util.HashSet;
 
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -24,7 +23,8 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
  */
 public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer<BatchInitializeEntitySelectFetchInitializer.BatchInitializeEntitySelectFetchInitializerData> {
 
-	public static class BatchInitializeEntitySelectFetchInitializerData extends AbstractBatchEntitySelectFetchInitializerData {
+	public static class BatchInitializeEntitySelectFetchInitializerData
+			extends AbstractBatchEntitySelectFetchInitializerData {
 		private HashSet<EntityKey> toBatchLoad;
 
 		public BatchInitializeEntitySelectFetchInitializerData(
@@ -65,7 +65,7 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 				false,
 				false
 		) );
-		HashSet<EntityKey> toBatchLoad = data.toBatchLoad;
+		var toBatchLoad = data.toBatchLoad;
 		if ( toBatchLoad == null ) {
 			toBatchLoad = data.toBatchLoad = new HashSet<>();
 		}
@@ -75,9 +75,9 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 	@Override
 	public void endLoading(BatchInitializeEntitySelectFetchInitializerData data) {
 		super.endLoading( data );
-		final HashSet<EntityKey> toBatchLoad = data.toBatchLoad;
+		final var toBatchLoad = data.toBatchLoad;
 		if ( toBatchLoad != null ) {
-			final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
+			final var session = data.getRowProcessingState().getSession();
 			for ( EntityKey key : toBatchLoad ) {
 				loadInstance( key, toOneMapping, affectedByFilter, session );
 			}

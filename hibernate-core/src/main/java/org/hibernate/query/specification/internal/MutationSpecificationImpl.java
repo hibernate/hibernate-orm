@@ -16,7 +16,6 @@ import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.StatelessSession;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.assignment.Assignment;
 import org.hibernate.query.specification.MutationSpecification;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.MutationQuery;
@@ -55,7 +54,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, T
 		DELETE
 	}
 
-	private final List<BiConsumer<SqmDeleteOrUpdateStatement<T>, SqmRoot<T>>> specifications = new ArrayList<>();
+	final List<BiConsumer<SqmDeleteOrUpdateStatement<T>, SqmRoot<T>>> specifications = new ArrayList<>();
 	private final String hql;
 	private final Class<T> mutationTarget;
 	private final SqmDeleteOrUpdateStatement<T> deleteOrUpdateStatement;
@@ -116,19 +115,6 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, T
 					restriction.toPredicate( mutationTargetRoot,
 							sqmStatement.nodeBuilder() );
 			sqmStatement.applyPredicate( sqmPredicate );
-		} );
-		return this;
-	}
-
-	@Override
-	public MutationSpecification<T> assign(Assignment<? super T> assignment) {
-		specifications.add( (sqmStatement, mutationTargetRoot) -> {
-			if ( sqmStatement instanceof SqmUpdateStatement<T> sqmUpdateStatement ) {
-				assignment.apply( sqmUpdateStatement );
-			}
-			else {
-				throw new IllegalStateException( "Delete query cannot perform assignment" );
-			}
 		} );
 		return this;
 	}

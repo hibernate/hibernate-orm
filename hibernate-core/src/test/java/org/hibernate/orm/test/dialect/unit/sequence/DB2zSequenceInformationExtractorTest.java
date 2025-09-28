@@ -26,11 +26,7 @@ public class DB2zSequenceInformationExtractorTest extends AbstractSequenceInform
 
 	@Override
 	public String expectedQuerySequencesString() {
-		return """
-				select seqschema, seqname, start, minvalue, maxvalue, increment from sysibm.syssequences where seqtype='A'
-				union
-				select schema as seqschema, name as seqname, start, minvalue, maxvalue, increment from sysibm.syssequences where seqtype!='A'
-				""";
+		return "select case when seqtype='A' then seqschema else schema end as seqschema, case when seqtype='A' then seqname else name end as seqname, start, minvalue, maxvalue, increment from sysibm.syssequences";
 	}
 
 	@Override

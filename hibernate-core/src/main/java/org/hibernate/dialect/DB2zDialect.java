@@ -113,11 +113,7 @@ public class DB2zDialect extends DB2Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return """
-				select seqschema, seqname, start, minvalue, maxvalue, increment from sysibm.syssequences where seqtype='A'
-				union
-				select schema as seqschema, name as seqname, start, minvalue, maxvalue, increment from sysibm.syssequences where seqtype!='A'
-				""";
+		return "select case when seqtype='A' then seqschema else schema end as seqschema, case when seqtype='A' then seqname else name end as seqname, start, minvalue, maxvalue, increment from sysibm.syssequences";
 	}
 
 	@Override

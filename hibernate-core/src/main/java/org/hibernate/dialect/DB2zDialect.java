@@ -114,9 +114,9 @@ public class DB2zDialect extends DB2Dialect {
 	@Override
 	public String getQuerySequencesString() {
 		return """
-				select '' as sequence_catalog, seqschema, seqname, start, minvalue, maxvalue, increment from sysibm.syssequences where seqtype='A'
+				select seqschema, seqname, start, minvalue, maxvalue, increment from sysibm.syssequences where seqtype='A'
 				union
-				select '' as sequence_catalog, schema as seqschema, name as seqname, start, minvalue, maxvalue, increment from sysibm.syssequences where seqtype!='A'
+				select schema as seqschema, name as seqname, start, minvalue, maxvalue, increment from sysibm.syssequences where seqtype!='A'
 				""";
 	}
 

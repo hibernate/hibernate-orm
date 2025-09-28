@@ -55,6 +55,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, T
 	}
 
 	final List<BiConsumer<SqmDeleteOrUpdateStatement<T>, SqmRoot<T>>> specifications = new ArrayList<>();
+
 	private final String hql;
 	private final Class<T> mutationTarget;
 	private final SqmDeleteOrUpdateStatement<T> deleteOrUpdateStatement;

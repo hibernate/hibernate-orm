@@ -11,6 +11,8 @@ import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.specification.UpdateSpecification;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
+import java.util.List;
+
 /**
  * @author Gavin King
  */
@@ -31,6 +33,23 @@ public class UpdateSpecificationImpl<T>
 		specifications.add( (sqmStatement, mutationTargetRoot) -> {
 			if ( sqmStatement instanceof SqmUpdateStatement<T> sqmUpdateStatement ) {
 				assignment.apply( sqmUpdateStatement );
+			}
+			else {
+				throw new IllegalStateException( "Delete query cannot perform assignment" );
+			}
+		} );
+		return this;
+	}
+
+	@Override
+	public UpdateSpecification<T> reassign(List<? extends Assignment<? super T>> assignments) {
+		specifications.add( (sqmStatement, mutationTargetRoot) -> {
+			if ( sqmStatement instanceof SqmUpdateStatement<T> sqmUpdateStatement ) {
+				final var setClause = sqmUpdateStatement.getSetClause();
+				if ( setClause != null ) {
+					setClause.clearAssignments();
+				}
+				assignments.forEach( assignment -> assignment.apply( sqmUpdateStatement ) );
 			}
 			else {
 				throw new IllegalStateException( "Delete query cannot perform assignment" );

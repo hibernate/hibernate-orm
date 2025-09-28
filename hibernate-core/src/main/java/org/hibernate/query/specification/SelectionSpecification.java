@@ -4,11 +4,12 @@
  */
 package org.hibernate.query.specification;
 
-import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.Incubating;
 import org.hibernate.Session;
@@ -17,9 +18,9 @@ import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.SelectionQuery;
-import org.hibernate.query.specification.internal.SelectionSpecificationImpl;
 import org.hibernate.query.restriction.Path;
 import org.hibernate.query.restriction.Restriction;
+import org.hibernate.query.specification.internal.SelectionSpecificationImpl;
 
 import java.util.List;
 
@@ -241,5 +242,51 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 */
 	static <T> SelectionSpecification<T> create(CriteriaQuery<T> criteria) {
 		return new SelectionSpecificationImpl<>( criteria );
+	}
+
+	/**
+	 * Create a {@link ProjectionSpecification} allowing selection of specific
+	 * {@linkplain ProjectionSpecification#select(SingularAttribute) fields}
+	 * and {@linkplain ProjectionSpecification#select(Path) compound paths}.
+	 * The returned projection holds a reference to this specification,
+	 * and so mutation of this object also affects the projection.
+	 *
+	 * @return a new {@link ProjectionSpecification}
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	default ProjectionSpecification<T> createProjection() {
+		return ProjectionSpecification.create( this );
+	}
+
+	/**
+	 * Create a {@link SimpleProjectionSpecification} for the given
+	 * {@linkplain ProjectionSpecification#select(SingularAttribute) field}.
+	 * The returned projection holds a reference to this specification,
+	 * and so mutation of this object also affects the projection.
+	 *
+	 * @return a new {@link SimpleProjectionSpecification}
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	default <X> SimpleProjectionSpecification<T,X> createProjection(SingularAttribute<? super T, X> attribute) {
+		return SimpleProjectionSpecification.create( this, attribute );
+	}
+
+	/**
+	 * Create a {@link SimpleProjectionSpecification} for the given
+	 * {@linkplain ProjectionSpecification#select(Path) compound path}.
+	 * The returned projection holds a reference to this specification,
+	 * and so mutation of this object also affects the projection.
+	 *
+	 * @return a new {@link SimpleProjectionSpecification}
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	default <X> SimpleProjectionSpecification<T,X> createProjection(Path<T, X> path) {
+		return SimpleProjectionSpecification.create( this, path );
 	}
 }

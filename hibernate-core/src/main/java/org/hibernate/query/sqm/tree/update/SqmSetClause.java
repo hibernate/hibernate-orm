@@ -5,7 +5,6 @@
 package org.hibernate.query.sqm.tree.update;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 

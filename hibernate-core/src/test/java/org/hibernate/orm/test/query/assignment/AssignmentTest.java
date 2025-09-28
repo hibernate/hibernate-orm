@@ -173,6 +173,36 @@ public class AssignmentTest {
 
 	}
 
+	@Test void testCriteriaDelete(SessionFactoryScope scope) {
+		var bookType = scope.getSessionFactory().getJpaMetamodel().findEntityType(Book.class);
+		assertNotNull(  bookType );
+		@SuppressWarnings("unchecked")
+		var title =
+				(SingularAttribute<? super Book, String>)
+						bookType.findSingularAttribute("title");
+		@SuppressWarnings("unchecked")
+		var isbn =
+				(SingularAttribute<? super Book, String>)
+						bookType.findSingularAttribute("isbn");
+
+		scope.inTransaction( session -> {
+			var builder = session.getCriteriaBuilder();
+			var query = builder.createCriteriaDelete( Book.class );
+			var root = query.from( Book.class );
+			DeleteSpecification.create( query )
+					.restrict( Restriction.startsWith( title, "Hibernate" ) )
+					.createQuery( session )
+					.executeUpdate();
+			var list =
+					SimpleProjectionSpecification.create( SelectionSpecification.create( Book.class ), isbn )
+							.createQuery( session )
+							.getResultList();
+			assertEquals( 1, list.size() );
+			assertEquals( "9781617290459", list.get( 0 ) );
+		} );
+
+	}
+
 	@Entity(name="Book")
 	static class Book {
 		@Id String isbn;

@@ -46,6 +46,9 @@ import java.util.function.Function;
  *
  * @since 7.2
  *
+ * @apiNote This interface marked {@link Incubating} is considered experimental.
+ *          Changes to the API defined here are fully expected in future releases.
+ *
  * @author Gavin King
  */
 @Incubating

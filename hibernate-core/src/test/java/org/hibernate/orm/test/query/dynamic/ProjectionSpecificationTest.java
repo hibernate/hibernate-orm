@@ -5,9 +5,7 @@
 package org.hibernate.orm.test.query.dynamic;
 
 import org.hibernate.query.restriction.Path;
-import org.hibernate.query.specification.ProjectionSpecification;
 import org.hibernate.query.specification.SelectionSpecification;
-import org.hibernate.query.specification.SimpleProjectionSpecification;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.BeforeAll;
@@ -36,7 +34,7 @@ public class ProjectionSpecificationTest {
 	void testProjection(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			var spec = SelectionSpecification.create( BasicEntity.class );
-			var projection = ProjectionSpecification.create( spec );
+			var projection = spec.createProjection();
 			var position = projection.select( BasicEntity_.position );
 			var name = projection.select( BasicEntity_.name );
 			var id = projection.select( Path.from( BasicEntity.class ).to( BasicEntity_.id ) );
@@ -53,7 +51,7 @@ public class ProjectionSpecificationTest {
 	void testSimpleProjection(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			var spec = SelectionSpecification.create( BasicEntity.class );
-			var projection = SimpleProjectionSpecification.create( spec, BasicEntity_.name );
+			var projection = spec.createProjection( BasicEntity_.name );
 			var name = projection.createQuery( session ).getSingleResult();
 			assertEquals( "Gavin", name );
 		});
@@ -63,10 +61,11 @@ public class ProjectionSpecificationTest {
 	void testSimpleProjectionPath(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			var spec = SelectionSpecification.create( BasicEntity.class );
-			var projection = SimpleProjectionSpecification.create( spec,
-					Path.from( BasicEntity.class)
-							.to( BasicEntity_.other )
-							.to( OtherEntity_.id ) );
+			var projection =
+					spec.createProjection(
+							Path.from( BasicEntity.class)
+									.to( BasicEntity_.other )
+									.to( OtherEntity_.id ) );
 			var id = projection.createQuery( session ).getSingleResult();
 			assertNull( id );
 		});

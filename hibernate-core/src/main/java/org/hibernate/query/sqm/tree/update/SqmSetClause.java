@@ -15,6 +15,8 @@ import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
+import static java.util.Collections.unmodifiableList;
+
 /**
  * @author Steve Ebersole
  */
@@ -38,7 +40,11 @@ public class SqmSetClause implements SqmCacheable {
 	}
 
 	public List<SqmAssignment<?>> getAssignments() {
-		return Collections.unmodifiableList( assignments );
+		return unmodifiableList( assignments );
+	}
+
+	public void clearAssignments() {
+		assignments.clear();
 	}
 
 	public void addAssignment(SqmAssignment<?> assignment) {

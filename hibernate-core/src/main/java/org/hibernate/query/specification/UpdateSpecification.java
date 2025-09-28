@@ -11,6 +11,8 @@ import org.hibernate.query.assignment.Assignment;
 import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.specification.internal.UpdateSpecificationImpl;
 
+import java.util.List;
+
 /**
  * Specialization of {@link MutationSpecification} for programmatic customization
  * of update queries.
@@ -36,17 +38,24 @@ import org.hibernate.query.specification.internal.UpdateSpecificationImpl;
 @Incubating
 public interface UpdateSpecification<T> extends MutationSpecification<T> {
 	/**
-	 * If this {@code MutationSpecification} represents an {@code update}
-	 * statement, add an assigment to a field or property of the target
-	 * entity.
+	 * Add an assigment to a field or property of the target entity.
 	 *
 	 * @param assignment The assignment to add
 	 *
 	 * @return {@code this} for method chaining.
-	 *
-	 * @since 7.2
 	 */
 	UpdateSpecification<T> assign(Assignment<? super T> assignment);
+
+	/**
+	 * Sets the assignments to fields or properties of the target entity.
+	 * If assignments were already specified, this method drops the previous
+	 * assignments in favor of the passed {@code assignments}.
+	 *
+	 * @param assignments The new assignments
+	 *
+	 * @return {@code this} for method chaining.
+	 */
+	UpdateSpecification<T> reassign(List<? extends Assignment<? super T>> assignments);
 
 	@Override
 	UpdateSpecification<T> restrict(Restriction<? super T> restriction);

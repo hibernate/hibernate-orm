@@ -12,7 +12,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Steve Ebersole
@@ -25,7 +25,9 @@ public class ProjectionSpecificationTest {
 	@BeforeAll
 	public static void setup(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			session.createMutationQuery( "insert BasicEntity (id, name, position) values (1, 'Gavin', 2)" )
+			session.createMutationQuery( "insert OtherEntity (id) values (69)" )
+					.executeUpdate();
+			session.createMutationQuery( "insert BasicEntity (id, name, position, other) values (1, 'Gavin', 2, (select o from OtherEntity o where o.id = 69))" )
 					.executeUpdate();
 		} );
 	}
@@ -43,7 +45,7 @@ public class ProjectionSpecificationTest {
 			assertEquals( 2, position.in(tuple) );
 			assertEquals( "Gavin", name.in(tuple) );
 			assertEquals( 1, id.in(tuple) );
-			assertNull( otherId.in( tuple ) );
+			assertEquals( 69, otherId.in( tuple ) );
 		});
 	}
 
@@ -67,7 +69,29 @@ public class ProjectionSpecificationTest {
 									.to( BasicEntity_.other )
 									.to( OtherEntity_.id ) );
 			var id = projection.createQuery( session ).getSingleResult();
-			assertNull( id );
+			assertEquals( 69, id );
+		});
+	}
+
+	@Test
+	void testSimpleEntityProjection(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var spec = SelectionSpecification.create( BasicEntity.class );
+			var projection = spec.createProjection( BasicEntity_.other );
+			var otherEntity = projection.createQuery( session ).getSingleResult();
+			assertNotNull( otherEntity );
+			assertEquals( 69, otherEntity.id );
+		});
+	}
+
+	@Test
+	void testSimpleEntityProjectionPath(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var spec = SelectionSpecification.create( BasicEntity.class );
+			var projection = spec.createProjection( Path.from(BasicEntity.class).to(BasicEntity_.other) );
+			var otherEntity = projection.createQuery( session ).getSingleResult();
+			assertNotNull( otherEntity );
+			assertEquals( 69, otherEntity.id );
 		});
 	}
 }

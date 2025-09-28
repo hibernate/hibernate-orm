@@ -16,9 +16,7 @@ import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.MutationQuery;
-import org.hibernate.query.assignment.Assignment;
 import org.hibernate.query.specification.internal.MutationSpecificationImpl;
-import org.hibernate.query.specification.internal.MutationSpecificationImpl.MutationType;
 import org.hibernate.query.restriction.Restriction;
 
 /**
@@ -52,20 +50,6 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 
 	@Override
 	MutationSpecification<T> restrict(Restriction<? super T> restriction);
-
-	/**
-	 * If this {@code MutationSpecification} represents an {@code update}
-	 * statement, add an assigment to a field or property of the target
-	 * entity.
-	 *
-	 * @param assignment The assignment to add
-	 *
-	 * @return {@code this} for method chaining.
-	 *
-	 * @since 7.2
-	 */
-	@Incubating
-	MutationSpecification<T> assign(Assignment<? super T> assignment);
 
 	/**
 	 * A function capable of modifying or augmenting a criteria query.
@@ -130,6 +114,8 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	 * @param criteriaUpdate The criteria update query
 	 *
 	 * @param <T> The root entity type for the mutation (the "target").
+	 *
+	 * @see UpdateSpecification#create(CriteriaUpdate)
 	 */
 	static <T> MutationSpecification<T> create(CriteriaUpdate<T> criteriaUpdate) {
 		return new MutationSpecificationImpl<>( criteriaUpdate );
@@ -143,34 +129,10 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	 * @param criteriaDelete The criteria delete query
 	 *
 	 * @param <T> The root entity type for the mutation (the "target").
+	 *
+	 * @see DeleteSpecification#create(CriteriaDelete)
 	 */
 	static <T> MutationSpecification<T> create(CriteriaDelete<T> criteriaDelete) {
 		return new MutationSpecificationImpl<>( criteriaDelete );
-	}
-
-	/**
-	 * Returns a specification reference which can be used to programmatically,
-	 * iteratively build a {@linkplain MutationQuery} which updates the given
-	 * entity type..
-	 *
-	 * @param targetEntityClass The target entity type
-	 *
-	 * @param <T> The root entity type for the mutation (the "target").
-	 */
-	static <T> MutationSpecification<T> createUpdate(Class<T> targetEntityClass) {
-		return new MutationSpecificationImpl<>( MutationType.UPDATE, targetEntityClass );
-	}
-
-	/**
-	 * Returns a specification reference which can be used to programmatically,
-	 * iteratively build a {@linkplain MutationQuery} which deletes the given
-	 * entity type.
-	 *
-	 * @param targetEntityClass The target entity type
-	 *
-	 * @param <T> The root entity type for the mutation (the "target").
-	 */
-	static <T> MutationSpecification<T> createDelete(Class<T> targetEntityClass) {
-		return new MutationSpecificationImpl<>( MutationType.DELETE, targetEntityClass );
 	}
 }

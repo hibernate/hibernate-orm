@@ -10,7 +10,10 @@ import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.query.assignment.Assignment;
 import org.hibernate.query.restriction.Path;
 import org.hibernate.query.restriction.Restriction;
-import org.hibernate.query.specification.MutationSpecification;
+import org.hibernate.query.specification.DeleteSpecification;
+import org.hibernate.query.specification.SelectionSpecification;
+import org.hibernate.query.specification.SimpleProjectionSpecification;
+import org.hibernate.query.specification.UpdateSpecification;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -52,7 +55,7 @@ public class AssignmentTest {
 						bookType.findSingularAttribute("isbn");
 		scope.inTransaction(session -> {
 			int rows =
-					MutationSpecification.createUpdate( Book.class )
+					UpdateSpecification.create( Book.class )
 							.assign( Assignment.set( title, "Hibernate In Action!" ) )
 							.restrict( Restriction.equal( isbn, "9781932394153" ) )
 							.createQuery( session )
@@ -76,7 +79,7 @@ public class AssignmentTest {
 						bookType.findSingularAttribute("isbn");
 		scope.inTransaction(session -> {
 			int rows =
-					MutationSpecification.createUpdate( Book.class )
+					UpdateSpecification.create( Book.class )
 							.assign( Assignment.set( Path.from(Book.class).to(title),
 									"Hibernate In Action!!!" ) )
 							.restrict( Restriction.equal( isbn, "9781932394153" ) )
@@ -105,7 +108,7 @@ public class AssignmentTest {
 			var root = query.from( Book.class );
 			query.where( root.get( isbn ).equalTo( "9781932394153" ) );
 			int rows =
-					MutationSpecification.create( query )
+					UpdateSpecification.create( query )
 							.assign( Assignment.set( title, "Hibernate in Action!" ) )
 							.createQuery( session )
 							.executeUpdate();
@@ -132,7 +135,7 @@ public class AssignmentTest {
 			var root = query.from( Book.class );
 			query.where( root.get( isbn ).equalTo( "9781932394153" ) );
 			int rows =
-					MutationSpecification.create( query )
+					UpdateSpecification.create( query )
 							.assign( Assignment.set( Path.from(Book.class).to(title),
 									"Hibernate in Action!!!" ) )
 							.createQuery( session )
@@ -141,6 +144,33 @@ public class AssignmentTest {
 			assertEquals( "Hibernate in Action!!!",
 					session.find( Book.class, "9781932394153" ).title );
 		});
+	}
+
+	@Test void testDelete(SessionFactoryScope scope) {
+		var bookType = scope.getSessionFactory().getJpaMetamodel().findEntityType(Book.class);
+		assertNotNull(  bookType );
+		@SuppressWarnings("unchecked")
+		var title =
+				(SingularAttribute<? super Book, String>)
+						bookType.findSingularAttribute("title");
+		@SuppressWarnings("unchecked")
+		var isbn =
+				(SingularAttribute<? super Book, String>)
+						bookType.findSingularAttribute("isbn");
+
+		scope.inTransaction( session -> {
+			DeleteSpecification.create( Book.class )
+					.restrict( Restriction.startsWith( title, "Hibernate" ) )
+					.createQuery( session )
+					.executeUpdate();
+			var list =
+					SimpleProjectionSpecification.create( SelectionSpecification.create( Book.class ), isbn )
+							.createQuery( session )
+							.getResultList();
+			assertEquals( 1, list.size() );
+			assertEquals( "9781617290459", list.get( 0 ) );
+		} );
+
 	}
 
 	@Entity(name="Book")

@@ -30,7 +30,7 @@ public class SimpleProjectionSpecificationImpl<T,X> implements SimpleProjectionS
 
 	private final SelectionSpecification<T> selectionSpecification;
 	private final Path<T, X> path;
-	private final SingularAttribute<T, X> attribute;
+	private final SingularAttribute<? super T, X> attribute;
 
 	public SimpleProjectionSpecificationImpl(SelectionSpecification<T> specification, Path<T, X> path) {
 		this.selectionSpecification = specification;
@@ -38,7 +38,7 @@ public class SimpleProjectionSpecificationImpl<T,X> implements SimpleProjectionS
 		this.attribute = null;
 	}
 
-	public SimpleProjectionSpecificationImpl(SelectionSpecification<T> specification, SingularAttribute<T, X> attribute) {
+	public SimpleProjectionSpecificationImpl(SelectionSpecification<T> specification, SingularAttribute<? super T, X> attribute) {
 		this.selectionSpecification = specification;
 		this.attribute = attribute;
 		this.path = null;

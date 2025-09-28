@@ -68,7 +68,7 @@ public interface SimpleProjectionSpecification<T,X> extends QuerySpecification<T
 	 */
 	static <T,X> SimpleProjectionSpecification<T,X> create(
 			SelectionSpecification<T> selectionSpecification,
-			SingularAttribute<T,X> projectedAttribute) {
+			SingularAttribute<? super T,X> projectedAttribute) {
 		return new SimpleProjectionSpecificationImpl<>( selectionSpecification, projectedAttribute );
 	}
 

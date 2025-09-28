@@ -42,7 +42,7 @@ public interface BootLogging extends BasicLogger {
 	BootLogging BOOT_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), BootLogging.class, NAME );
 
 	@LogMessage(level = WARN)
-	@Message(id = 160101, value = "Duplicate generator name %s")
+	@Message(id = 160101, value = "Duplicate generator name: '%s'")
 	void duplicateGeneratorName(String name);
 
 

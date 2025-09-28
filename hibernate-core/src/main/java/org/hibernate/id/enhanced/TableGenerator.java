@@ -520,39 +520,41 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	}
 
 	@Override
-	public Object generate(final SharedSessionContractImplementor session, final Object obj) {
-		final var statementLogger =
-				session.getFactory().getJdbcServices()
-						.getSqlStatementLogger();
-		final var statsCollector = session.getEventListenerManager();
-		return optimizer.generate(
-				new AccessCallback() {
-					@Override
-					public IntegralDataTypeHolder getNextValue() {
-						return session.getTransactionCoordinator().createIsolationDelegate().delegateWork(
-								new AbstractReturningWork<>() {
-									@Override
-									public IntegralDataTypeHolder execute(Connection connection) throws SQLException {
-										return nextValue( connection, statementLogger, statsCollector, session );
-									}
-								},
-								true
-						);
-					}
-					@Override
-					public String getTenantIdentifier() {
-						return session.getTenantIdentifier();
-					}
-				}
-		);
+	public Object generate(final SharedSessionContractImplementor session, final Object object) {
+		return optimizer.generate( new NextValueCallback( session ) );
+	}
+
+	private class NextValueCallback
+			extends AbstractReturningWork<IntegralDataTypeHolder>
+			implements AccessCallback {
+		private final SharedSessionContractImplementor session;
+		private NextValueCallback(SharedSessionContractImplementor session) {
+			this.session = session;
+		}
+		@Override
+		public IntegralDataTypeHolder getNextValue() {
+			return session.getTransactionCoordinator().createIsolationDelegate()
+					.delegateWork( this, true );
+		}
+		@Override
+		public IntegralDataTypeHolder execute(Connection connection)
+				throws SQLException {
+			return nextValue( connection, session );
+		}
+		@Override
+		public String getTenantIdentifier() {
+			return session.getTenantIdentifier();
+		}
 	}
 
 	private IntegralDataTypeHolder nextValue(
 			Connection connection,
-			SqlStatementLogger logger,
-			SessionEventListenerManager listener,
 			SharedSessionContractImplementor session)
-			throws SQLException {
+					throws SQLException {
+		final var logger =
+				session.getFactory().getJdbcServices()
+						.getSqlStatementLogger();
+		final var listener = session.getEventListenerManager();
 		final var value = makeValue();
 		int rows;
 		do {
@@ -636,7 +638,8 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			String sql,
 			SqlStatementLogger logger,
 			SessionEventListenerManager listener,
-			SharedSessionContractImplementor session) throws SQLException {
+			SharedSessionContractImplementor session)
+					throws SQLException {
 		logger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
 		final var eventMonitor = session.getEventMonitor();
 		final var creationEvent = eventMonitor.beginJdbcPreparedStatementCreationEvent();
@@ -661,7 +664,8 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			PreparedStatement ps,
 			SessionEventListenerManager listener,
 			String sql,
-			SharedSessionContractImplementor session) throws SQLException {
+			SharedSessionContractImplementor session)
+					throws SQLException {
 		final var eventMonitor = session.getEventMonitor();
 		final var executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
@@ -678,7 +682,8 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			PreparedStatement ps,
 			SessionEventListenerManager listener,
 			String sql,
-			SharedSessionContractImplementor session) throws SQLException {
+			SharedSessionContractImplementor session)
+					throws SQLException {
 		final var eventMonitor = session.getEventMonitor();
 		final var executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
@@ -784,7 +789,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	public static void applyConfiguration(
 			jakarta.persistence.TableGenerator generatorConfig,
 			BiConsumer<String, String> configurationCollector) {
-		configurationCollector.accept( CONFIG_PREFER_SEGMENT_PER_ENTITY, "true" );
+		configurationCollector.accept( CONFIG_PREFER_SEGMENT_PER_ENTITY, String.valueOf(true) );
 
 		applyIfNotEmpty( TABLE_PARAM, generatorConfig.table(), configurationCollector );
 		applyIfNotEmpty( CATALOG, generatorConfig.catalog(), configurationCollector );

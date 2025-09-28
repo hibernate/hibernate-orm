@@ -665,7 +665,7 @@ public class InFlightMetadataCollectorImpl
 	@Override
 	public void addIdentifierGenerator(IdentifierGeneratorDefinition generator) {
 		if ( generator == null || generator.getName() == null ) {
-			throw new IllegalArgumentException( "ID generator object or name is null." );
+			throw new IllegalArgumentException( "Id generator object or name is null" );
 		}
 		else if ( !generator.getName().isEmpty()
 					&& !defaultIdentifierGeneratorNames.contains( generator.getName() ) ) {
@@ -678,7 +678,7 @@ public class InFlightMetadataCollectorImpl
 							+ "' to false " );
 				}
 				else {
-				BOOT_LOGGER.duplicateGeneratorName( old.getName() );
+					BOOT_LOGGER.duplicateGeneratorName( old.getName() );
 				}
 			}
 		}

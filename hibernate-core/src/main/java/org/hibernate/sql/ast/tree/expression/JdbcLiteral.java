@@ -78,7 +78,7 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, Doma
 	// MappingModelExpressible
 
 	@Override
-	public MappingModelExpressible<?> getExpressionType() {
+	public MappingModelExpressible<T> getExpressionType() {
 		return this;
 	}
 
@@ -184,6 +184,7 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, Doma
 
 	@Override
 	public JavaType<T> getExpressibleJavaType() {
-		return jdbcMapping.getJavaTypeDescriptor();
+		return (JavaType<T>)
+				jdbcMapping.getJavaTypeDescriptor();
 	}
 }

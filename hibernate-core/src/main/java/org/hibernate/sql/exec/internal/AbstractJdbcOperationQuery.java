@@ -14,6 +14,7 @@ import org.hibernate.sql.exec.spi.JdbcOperationQuery;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static java.util.Collections.emptyMap;
 
@@ -78,16 +79,20 @@ public class AbstractJdbcOperationQuery implements JdbcOperationQuery {
 				return false;
 			}
 			for ( var entry : appliedParameters.entrySet() ) {
-				final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( entry.getKey() );
-				final JdbcParameterBinding appliedBinding = entry.getValue();
-				//noinspection unchecked
-				if ( binding == null || !appliedBinding.getBindType()
-						.getJavaTypeDescriptor()
-						.areEqual( binding.getBindValue(), appliedBinding.getBindValue() ) ) {
+				final var binding = jdbcParameterBindings.getBinding( entry.getKey() );
+				final var appliedBinding = entry.getValue();
+				if ( binding == null
+						|| !equal( appliedBinding, binding, appliedBinding.getBindType().getJavaTypeDescriptor() ) ) {
 					return false;
 				}
 			}
 		}
 		return true;
+	}
+
+	@SuppressWarnings("unchecked")
+	static <T> boolean equal(JdbcParameterBinding appliedBinding, JdbcParameterBinding binding, JavaType<T> type) {
+		return type.isInstance( appliedBinding.getBindValue() )
+			&& type.areEqual( (T) binding.getBindValue(), (T) appliedBinding.getBindValue() );
 	}
 }

@@ -118,12 +118,20 @@ public interface MappingSettings {
 	String KEYWORD_AUTO_QUOTING_ENABLED = "hibernate.auto_quote_keyword";
 
 	/**
-	 * When a generator specifies an increment size and an optimizer was not explicitly
-	 * specified, which of the "pooled" optimizers should be preferred? Can specify an
-	 * optimizer short name or the name of a class which implements
-	 * {@link org.hibernate.id.enhanced.Optimizer}.
+	 * Specifies an {@linkplain org.hibernate.id.enhanced.Optimizer optimizer}
+	 * which should be used when a generator specifies an {@code allocationSize}
+	 * and no optimizer is not explicitly specified, either:
+	 * <ul>
+	 * <li>a class implementing {@link org.hibernate.id.enhanced.Optimizer},
+	 * <li>the name of a class implementing {@code Optimizer}, or</li>
+	 * <li>an {@linkplain StandardOptimizerDescriptor optimizer short name}.
+	 * </ul>
 	 *
 	 * @settingDefault {@link StandardOptimizerDescriptor#POOLED}
+	 *
+	 * @see org.hibernate.id.enhanced.PooledOptimizer
+	 * @see org.hibernate.id.enhanced.PooledLoOptimizer
+	 * @see org.hibernate.id.enhanced.HiLoOptimizer
 	 */
 	String PREFERRED_POOLED_OPTIMIZER = "hibernate.id.optimizer.pooled.preferred";
 

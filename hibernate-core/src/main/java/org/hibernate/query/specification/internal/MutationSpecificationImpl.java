@@ -20,7 +20,6 @@ import org.hibernate.query.specification.MutationSpecification;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.restriction.Restriction;
-import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
@@ -43,7 +42,7 @@ import java.util.function.BiConsumer;
 import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
 
 /**
- * Standard implementation of MutationSpecification
+ * Standard implementation of {@link MutationSpecification}.
  *
  * @author Steve Ebersole
  */
@@ -95,10 +94,9 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, T
 	@Override
 	public MutationSpecification<T> restrict(Restriction<? super T> restriction) {
 		specifications.add( (sqmStatement, mutationTargetRoot) -> {
-			final SqmPredicate sqmPredicate = (SqmPredicate) restriction.toPredicate(
-					mutationTargetRoot,
-					sqmStatement.nodeBuilder()
-			);
+			final var sqmPredicate = (SqmPredicate)
+					restriction.toPredicate( mutationTargetRoot,
+							sqmStatement.nodeBuilder() );
 			sqmStatement.applyPredicate( sqmPredicate );
 		} );
 		return this;
@@ -123,7 +121,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, T
 
 	public MutationQuery createQuery(SharedSessionContract session) {
 		final var sessionImpl = session.unwrap(SharedSessionContractImplementor.class);
-		final SqmDeleteOrUpdateStatement<T> sqmStatement = build( sessionImpl.getFactory().getQueryEngine() );
+		final var sqmStatement = build( sessionImpl.getFactory().getQueryEngine() );
 		return new SqmQueryImpl<>( sqmStatement, true, null, sessionImpl );
 	}
 
@@ -153,13 +151,13 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, T
 
 	@Override
 	public CommonAbstractCriteria buildCriteria(CriteriaBuilder builder) {
-		final NodeBuilder nodeBuilder = (NodeBuilder) builder;
+		final var nodeBuilder = (NodeBuilder) builder;
 		return build( nodeBuilder.getQueryEngine() );
 	}
 
 	@Override
 	public MutationSpecification<T> validate(CriteriaBuilder builder) {
-		final NodeBuilder nodeBuilder = (NodeBuilder) builder;
+		final var nodeBuilder = (NodeBuilder) builder;
 		final var statement = build( nodeBuilder.getQueryEngine() );
 		( (AbstractSqmDmlStatement<?>) statement ).validate( hql );
 		return this;
@@ -170,9 +168,9 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, T
 	 * and produce the corresponding SQM tree.
 	 */
 	private static <T> SqmDeleteOrUpdateStatement<T> resolveSqmTree(String hql, QueryEngine queryEngine) {
-		final HqlInterpretation<T> hqlInterpretation =
+		final var hqlInterpretation =
 				queryEngine.getInterpretationCache()
-						.resolveHqlInterpretation( hql, null, queryEngine.getHqlTranslator() );
+						.<T>resolveHqlInterpretation( hql, null, queryEngine.getHqlTranslator() );
 
 		if ( !SqmUtil.isRestrictedMutation( hqlInterpretation.getSqmStatement() ) ) {
 			throw new IllegalMutationQueryException( "Expecting a delete or update query, but found '" + hql + "'", hql);
@@ -180,26 +178,26 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, T
 
 		// NOTE: this copy is to isolate the actual AST tree from the
 		// one stored in the interpretation cache
-		return (SqmDeleteOrUpdateStatement<T>) hqlInterpretation
-				.getSqmStatement()
-				.copy( noParamCopyContext( SqmQuerySource.CRITERIA ) );
+		return (SqmDeleteOrUpdateStatement<T>)
+				hqlInterpretation.getSqmStatement()
+						.copy( noParamCopyContext( SqmQuerySource.CRITERIA ) );
 	}
 
 	/**
-	 * Used during construction.  Mainly used to group extracting and
+	 * Used during construction. Mainly used to group extracting and
 	 * validating the root.
 	 */
 	private static <T> SqmRoot<T> resolveSqmRoot(
 			SqmDeleteOrUpdateStatement<T> sqmStatement,
 			Class<T> mutationTarget) {
-		final SqmRoot<T> mutationTargetRoot = sqmStatement.getTarget();
-		if ( mutationTargetRoot.getJavaType() != null
-			&& !mutationTarget.isAssignableFrom( mutationTargetRoot.getJavaType() ) ) {
+		final var mutationTargetRoot = sqmStatement.getTarget();
+		final var javaType = mutationTargetRoot.getJavaType();
+		if ( javaType != null && !mutationTarget.isAssignableFrom( javaType ) ) {
 			throw new IllegalArgumentException(
 					String.format(
 							Locale.ROOT,
 							"Mutation target types do not match : %s / %s",
-							mutationTargetRoot.getJavaType().getName(),
+							javaType.getName(),
 							mutationTarget.getName()
 					)
 			);

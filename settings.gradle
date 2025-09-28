@@ -218,7 +218,7 @@ dependencyResolutionManagement {
             library( "jfrUnit", "org.moditect.jfrunit", "jfrunit-core" ).versionRef( jfrUnitVersion )
         }
         jdbcLibs {
-            def h2Version = version "h2", overrideableVersion( "gradle.libs.versions.h2", "2.3.232" )
+            def h2Version = version "h2", overrideableVersion( "gradle.libs.versions.h2", "2.4.240" )
 
             def db2Version = version "db2", "12.1.2.0"
             // Latest Derby version 10.16.1.1 only supports JDK 17+, but 10.15.2 should be compatible

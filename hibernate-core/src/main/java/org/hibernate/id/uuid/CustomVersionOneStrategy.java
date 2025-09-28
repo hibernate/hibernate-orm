@@ -11,6 +11,12 @@ import org.hibernate.id.UUIDGenerationStrategy;
 import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.internal.util.BytesHelper;
 
+import static java.lang.System.arraycopy;
+import static java.lang.System.currentTimeMillis;
+import static org.hibernate.id.uuid.Helper.getAddressBytes;
+import static org.hibernate.id.uuid.Helper.getCountBytes;
+import static org.hibernate.id.uuid.Helper.getJvmIdentifierBytes;
+
 /**
  * Applies a version 1 (time-based) generation strategy (using ip address rather than mac address) but applies them in a
  * different layout.  The strategy is very similar to the legacy {@link org.hibernate.id.UUIDHexGenerator} id generator
@@ -31,22 +37,21 @@ public class CustomVersionOneStrategy implements UUIDGenerationStrategy, UuidVal
 
 	public CustomVersionOneStrategy() {
 		// generate the "most significant bits" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		byte[] hiBits = new byte[8];
-		// use address as first 32 bits (8 * 4 bytes)
-		System.arraycopy( Helper.getAddressBytes(), 0, hiBits, 0, 4 );
+		final byte[] hiBits = new byte[8];
+		// use address as the first 32 bits (8 * 4 bytes)
+		arraycopy( getAddressBytes(), 0, hiBits, 0, 4 );
 		// use the "jvm identifier" as the next 32 bits
-		System.arraycopy( Helper.getJvmIdentifierBytes(), 0, hiBits, 4, 4 );
+		arraycopy( getJvmIdentifierBytes(), 0, hiBits, 4, 4 );
 		// set the version (rfc term) appropriately
 		hiBits[6] &= 0x0f;
 		hiBits[6] |= 0x10;
-
 		mostSignificantBits = BytesHelper.asLong( hiBits );
 	}
 
 	@Override
 	public UUID generateUuid(SharedSessionContractImplementor session) {
-		long leastSignificantBits = generateLeastSignificantBits( System.currentTimeMillis() );
-		return new UUID( mostSignificantBits, leastSignificantBits );
+		return new UUID( mostSignificantBits,
+				generateLeastSignificantBits( currentTimeMillis() ) );
 	}
 
 	@Override
@@ -59,33 +64,31 @@ public class CustomVersionOneStrategy implements UUIDGenerationStrategy, UuidVal
 	}
 
 	public static long generateLeastSignificantBits(long seed) {
-		byte[] loBits = new byte[8];
-
-		short hiTime = (short) ( seed >>> 32 );
-		int loTime = (int) seed;
-		System.arraycopy( BytesHelper.fromShort( hiTime ), 0, loBits, 0, 2 );
-		System.arraycopy( BytesHelper.fromInt( loTime ), 0, loBits, 2, 4 );
-		System.arraycopy( Helper.getCountBytes(), 0, loBits, 6, 2 );
+		final byte[] loBits = new byte[8];
+		final short hiTime = (short) ( seed >>> 32 );
+		final int loTime = (int) seed;
+		arraycopy( BytesHelper.fromShort( hiTime ), 0, loBits, 0, 2 );
+		arraycopy( BytesHelper.fromInt( loTime ), 0, loBits, 2, 4 );
+		arraycopy( getCountBytes(), 0, loBits, 6, 2 );
 		loBits[0] &= 0x3f;
-		loBits[0] |= ((byte)2 << (byte)6 );
-
+		loBits[0] |= ((byte)2 << (byte)6);
 		return BytesHelper.asLong( loBits );
 	}
 
 	@AllowSysOut
 	public static void main(String[] args) {
-		CustomVersionOneStrategy strategy = new CustomVersionOneStrategy();
+		final var strategy = new CustomVersionOneStrategy();
 
 		for ( int i = 0; i < 1000; i++ ) {
 			System.out.println( "Generation # " + i + " ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
 			byte[] loBits = new byte[8];
 
-			long sysTime = System.currentTimeMillis();
-			short hiTime = (short) ( System.currentTimeMillis() >>> 32 );
+			long sysTime = currentTimeMillis();
+			short hiTime = (short) ( currentTimeMillis() >>> 32 );
 			int loTime = (int) sysTime;
-			System.arraycopy( BytesHelper.fromShort( hiTime ), 0, loBits, 0, 2 );
-			System.arraycopy( BytesHelper.fromInt( loTime ), 0, loBits, 2, 4 );
-			System.arraycopy( Helper.getCountBytes(), 0, loBits, 6, 2 );
+			arraycopy( BytesHelper.fromShort( hiTime ), 0, loBits, 0, 2 );
+			arraycopy( BytesHelper.fromInt( loTime ), 0, loBits, 2, 4 );
+			arraycopy( getCountBytes(), 0, loBits, 6, 2 );
 
 			System.out.println( "    before bit setting ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
 			System.out.println( "       loBits[0] : " + BytesHelper.toBinaryString( loBits[0] ) );

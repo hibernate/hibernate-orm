@@ -26,7 +26,6 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import java.lang.reflect.Member;
 import java.util.EnumSet;
-import java.util.Map;
 import java.util.Properties;
 
 import static org.hibernate.boot.model.internal.GeneratorParameters.collectParameters;
@@ -68,10 +67,9 @@ public class NativeGenerator
 			Member member,
 			GeneratorCreationContext context) {
 		this.annotation = annotation;
-
-		generationType = context.getDatabase()
-				.getDialect()
-				.getNativeValueGenerationStrategy();
+		generationType =
+				context.getDatabase().getDialect()
+						.getNativeValueGenerationStrategy();
 		switch ( generationType ) {
 			case TABLE: {
 				dialectNativeGenerator = new TableGenerator();
@@ -148,34 +146,31 @@ public class NativeGenerator
 			Properties properties,
 			SequenceGenerator sequenceAnnotation,
 			GeneratorCreationContext creationContext) {
-		//noinspection unchecked,rawtypes
-		final Map<String,Object> mapRef = (Map) properties;
-		mapRef.put( GENERATOR_NAME, sequenceAnnotation.name() );
-		applyCommonConfiguration( mapRef, creationContext );
-		SequenceStyleGenerator.applyConfiguration( sequenceAnnotation, mapRef::put );
+		properties.put( GENERATOR_NAME, sequenceAnnotation.name() );
+		applyCommonConfiguration( properties, creationContext );
+		SequenceStyleGenerator.applyConfiguration( sequenceAnnotation, properties::put );
 	}
 
 	private void applyProperties(
 			Properties properties,
 			jakarta.persistence.TableGenerator tableGenerator,
 			GeneratorCreationContext creationContext) {
-		//noinspection unchecked,rawtypes
-		final Map<String,Object> mapRef = (Map) properties;
-		mapRef.put( GENERATOR_NAME, tableGenerator.name() );
-		applyCommonConfiguration( mapRef, creationContext );
-		TableGenerator.applyConfiguration( tableGenerator, mapRef::put );
+		properties.put( GENERATOR_NAME, tableGenerator.name() );
+		applyCommonConfiguration( properties, creationContext );
+		TableGenerator.applyConfiguration( tableGenerator, properties::put );
 	}
 
 	private static void applyCommonConfiguration(
-			Map<String, Object> mapRef,
+			Properties properties,
 			GeneratorCreationContext context) {
 		collectParameters(
 				context.getProperty().getValue(),
 				context.getDatabase().getDialect(),
 				context.getRootClass(),
-				mapRef::put,
-				context.getServiceRegistry().requireService( ConfigurationService.class )
+				properties::put,
+				context.getServiceRegistry()
+						.requireService( ConfigurationService.class )
 		);
-		mapRef.put( INCREMENT_PARAM, 1 );
+		properties.put( INCREMENT_PARAM, 1 );
 	}
 }

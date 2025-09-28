@@ -83,18 +83,10 @@ public class AnnotatedColumns {
 	}
 
 	public Join getJoin() {
-		final AnnotatedColumn firstColumn = columns.get( 0 );
+		final var firstColumn = columns.get( 0 );
 		final String explicitTableName = firstColumn.getExplicitTableName();
 		//note: checkPropertyConsistency() is responsible for ensuring they all have the same table name
-		Join join = joins.get( explicitTableName );
-		if ( join == null ) {
-			// annotation binding seems to use logical and physical naming somewhat inconsistently...
-			final String physicalTableName = getBuildingContext().getMetadataCollector()
-					.getPhysicalTableName( explicitTableName );
-			if ( physicalTableName != null ) {
-				join = joins.get( physicalTableName );
-			}
-		}
+		final var join = getJoin( explicitTableName );
 		if ( join == null ) {
 			throw new AnnotationException(
 					"Secondary table '" + explicitTableName + "' for property '" + propertyName + "' of entity'" + getPropertyHolder().getClassName()
@@ -106,8 +98,22 @@ public class AnnotatedColumns {
 		}
 	}
 
+	private Join getJoin(String explicitTableName) {
+		final var join = joins.get( explicitTableName );
+		if ( join != null ) {
+			return join;
+		}
+		else {
+			// annotation binding seems to use logical and physical naming somewhat inconsistently...
+			final String physicalTableName =
+					getBuildingContext().getMetadataCollector()
+							.getPhysicalTableName( explicitTableName );
+			return physicalTableName != null ? joins.get( physicalTableName ) : null;
+		}
+	}
+
 	public boolean isSecondary() {
-		final AnnotatedColumn firstColumn = columns.get( 0 );
+		final var firstColumn = columns.get( 0 );
 		final String explicitTableName = firstColumn.getExplicitTableName();
 		//note: checkPropertyConsistency() is responsible for ensuring they all have the same table name
 		return isNotEmpty( explicitTableName )

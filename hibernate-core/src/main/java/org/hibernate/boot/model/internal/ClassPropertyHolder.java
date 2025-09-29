@@ -95,16 +95,16 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		// collect superclass info first
 		collectAttributeConversionInfo( infoMap, entityClassDetails.getSuperClass() );
 
-		final var sourceModelContext = getSourceModelContext();
+		final var modelContext = getSourceModelContext();
 		final boolean canContainConvert =
-				entityClassDetails.hasAnnotationUsage( jakarta.persistence.Entity.class, sourceModelContext )
-				|| entityClassDetails.hasAnnotationUsage( jakarta.persistence.MappedSuperclass.class, sourceModelContext )
-				|| entityClassDetails.hasAnnotationUsage( jakarta.persistence.Embeddable.class, sourceModelContext );
+				entityClassDetails.hasAnnotationUsage( jakarta.persistence.Entity.class, modelContext )
+				|| entityClassDetails.hasAnnotationUsage( jakarta.persistence.MappedSuperclass.class, modelContext )
+				|| entityClassDetails.hasAnnotationUsage( jakarta.persistence.Embeddable.class, modelContext );
 		if ( ! canContainConvert ) {
 			return;
 		}
 
-		entityClassDetails.forEachAnnotationUsage( Convert.class, sourceModelContext, (usage) -> {
+		entityClassDetails.forEachAnnotationUsage( Convert.class, modelContext, (usage) -> {
 			final var info = new AttributeConversionInfo( usage, entityClassDetails );
 			if ( isEmpty( info.getAttributeName() ) ) {
 				throw new IllegalStateException( "@Convert placed on @Entity/@MappedSuperclass must define attributeName" );
@@ -120,9 +120,11 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			if ( !attributeConversionInfoMap.containsKey( propertyName ) ) {
 				property.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
 					final var info = new AttributeConversionInfo( usage, property );
-					final String path = isEmpty( info.getAttributeName() )
-							? propertyName
-							: propertyName + '.' + info.getAttributeName();
+					final String infoAttributeName = info.getAttributeName();
+					final String path =
+							isEmpty( infoAttributeName )
+									? propertyName
+									: propertyName + '.' + infoAttributeName;
 					attributeConversionInfoMap.put( path, info );
 				} );
 			}
@@ -166,7 +168,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			//TODO handle quote and non quote table comparison
 			final String tableName = prop.getValue().getTable().getName();
 			if ( getJoinsPerRealTableName().containsKey( tableName ) ) {
-				final Join join = getJoinsPerRealTableName().get( tableName );
+				final var join = getJoinsPerRealTableName().get( tableName );
 				addPropertyToJoin( prop, memberDetails, declaringClass, join );
 			}
 			else {
@@ -180,14 +182,14 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	public Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation) {
-		final Join join = entityBinder.addJoinTable( joinTableAnn, this, noDelayInPkColumnCreation );
+		final var join = entityBinder.addJoinTable( joinTableAnn, this, noDelayInPkColumnCreation );
 		joins = entityBinder.getSecondaryTables();
 		return join;
 	}
 
 	@Override
 	public Join addJoin(JoinTable joinTable, Table table, boolean noDelayInPkColumnCreation) {
-		final Join join = entityBinder.createJoin(
+		final var join = entityBinder.createJoin(
 				this,
 				noDelayInPkColumnCreation,
 				false,
@@ -289,10 +291,10 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		}
 
 		// If the property depends on a type variable, we have to copy it and the Value
-		final Property actualProperty = property.copy();
+		final var actualProperty = property.copy();
 		actualProperty.setGeneric( true );
 		actualProperty.setReturnedClassName( memberDetails.getType().getName() );
-		final Value value = actualProperty.getValue().copy();
+		final var value = actualProperty.getValue().copy();
 		if ( value instanceof Collection collection ) {
 			if ( !allowCollections ) {
 				throw new AssertionFailure( "Collections are not allowed as identifier properties" );
@@ -301,13 +303,13 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 //						collection.setOwner( null );
 			collection.setRole( memberDetails.getDeclaringType().getName() + "." + property.getName() );
 			// To copy the element and key values, we need to defer setting the type name until the CollectionBinder ran
-			final Value originalValue = property.getValue();
+			final var originalValue = property.getValue();
 			context.getMetadataCollector().addSecondPass(
 					new SecondPass() {
 						@Override
 						public void doSecondPass(Map<String, PersistentClass> persistentClasses) {
 							final var initializedCollection = (Collection) originalValue;
-							final Value element = initializedCollection.getElement().copy();
+							final var element = initializedCollection.getElement().copy();
 							setTypeName( element, memberDetails.getElementType().getName() );
 							if ( initializedCollection instanceof IndexedCollection indexedCollection ) {
 								final Value index = indexedCollection.getIndex().copy();

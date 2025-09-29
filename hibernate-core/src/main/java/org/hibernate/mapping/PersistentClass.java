@@ -1145,7 +1145,7 @@ public abstract sealed class PersistentClass
 		throw new UnsupportedOperationException( "Not implemented yet" );
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public void applyProperty(Property property) {
 		final var table = property.getValue().getTable();
 		if ( table.equals( getImplicitTable() ) ) {

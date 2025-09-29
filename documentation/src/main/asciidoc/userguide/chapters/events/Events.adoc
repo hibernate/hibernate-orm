@@ -1,6 +1,5 @@
 [[events]]
 == Interceptors and Events
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-event: {core-project-dir}/src/test/java/org/hibernate/orm/test/events
 :example-dir-event-resources: {core-project-dir}/src/test/resources/org/hibernate/orm/test/events

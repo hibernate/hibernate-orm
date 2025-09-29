@@ -1,6 +1,5 @@
 [[spatial]]
 == Spatial
-:root-project-dir: ../../../../../../../..
 :spatial-project-dir: {root-project-dir}/hibernate-spatial
 :example-dir-spatial: {spatial-project-dir}/src/test/java/org/hibernate/spatial/testing
 :extrasdir: extras

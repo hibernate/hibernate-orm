@@ -1,6 +1,5 @@
 [[flushing]]
 == Flushing
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-flushing: {core-project-dir}/src/test/java/org/hibernate/orm/test/flush
 :extrasdir: extras

@@ -210,7 +210,7 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
 
       - id: create_database
-        uses: loiclefevre/test@03ce1d1ee2313b45249e7bf6b84dc0f4333cdd77 # v1.0.18
+        uses: loiclefevre/test@ce2f5049188a384c17ffcfcb8c8d04cf118e2cd7 # v1.0.20
         with:
           oci-service: ${{ matrix.rdbms }}
           action: create
@@ -231,7 +231,7 @@ jobs:
         run: ./ci/build-github.sh
         shell: bash
 
-      - uses: loiclefevre/test@03ce1d1ee2313b45249e7bf6b84dc0f4333cdd77 # v1.0.18
+      - uses: loiclefevre/test@ce2f5049188a384c17ffcfcb8c8d04cf118e2cd7 # v1.0.20
         if: always()
         with:
           oci-service: ${{ matrix.rdbms }}

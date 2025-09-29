@@ -20,8 +20,6 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
@@ -68,15 +66,21 @@ public class NonAggregatedIdentifierMappingInitializer
 				NonAggregatedIdentifierMappingInitializer initializer,
 				RowProcessingState rowProcessingState) {
 			super( rowProcessingState );
-			isFindByIdLookup =
-					!initializer.hasIdClass && rowProcessingState.getEntityId() != null
-						&& initializer.navigablePath.getParent().getParent() == null
-						&& initializer.navigablePath instanceof EntityIdentifierNavigablePath;
+			isFindByIdLookup = isIsFindByIdLookup( initializer, rowProcessingState );
 			parentData = initializer.parent == null ? null : initializer.parent.getData( rowProcessingState );
 			final var virtualIdEmbeddable = initializer.embedded.getEmbeddableTypeDescriptor();
 			final int size = virtualIdEmbeddable.getNumberOfFetchables();
-			virtualIdState = new Object[ size ];
-			idClassState = new Object[ size ];
+			virtualIdState = new Object[size];
+			idClassState = new Object[size];
+		}
+
+		private boolean isIsFindByIdLookup(
+				NonAggregatedIdentifierMappingInitializer initializer,
+				RowProcessingState rowProcessingState) {
+			return !initializer.hasIdClass
+				&& rowProcessingState.getEntityId() != null
+				&& initializer.navigablePath.getParent().getParent() == null
+				&& initializer.navigablePath instanceof EntityIdentifierNavigablePath;
 		}
 
 		@Override
@@ -112,23 +116,24 @@ public class NonAggregatedIdentifierMappingInitializer
 			boolean isResultInitializer,
 			Function<Fetch, Fetch> fetchConverter) {
 		super( creationState );
-		this.navigablePath = resultDescriptor.getNavigablePath();
-		this.embedded =
-				(NonAggregatedIdentifierMapping)
-						resultDescriptor.getReferencedMappingContainer();
 		this.parent = parent;
 		this.isResultInitializer = isResultInitializer;
 
-		this.virtualIdEmbeddable = embedded.getEmbeddableTypeDescriptor();
-		this.representationEmbeddable = embedded.getMappedIdEmbeddableTypeDescriptor();
-		this.embeddableInstantiator = representationEmbeddable.getRepresentationStrategy().getInstantiator();
-		this.hasIdClass = embedded.hasContainingClass() && virtualIdEmbeddable != representationEmbeddable;
+		navigablePath = resultDescriptor.getNavigablePath();
+		embedded =
+				(NonAggregatedIdentifierMapping)
+						resultDescriptor.getReferencedMappingContainer();
+
+		virtualIdEmbeddable = embedded.getEmbeddableTypeDescriptor();
+		representationEmbeddable = embedded.getMappedIdEmbeddableTypeDescriptor();
+		embeddableInstantiator = representationEmbeddable.getRepresentationStrategy().getInstantiator();
+		hasIdClass = embedded.hasContainingClass() && virtualIdEmbeddable != representationEmbeddable;
 
 		final int size = virtualIdEmbeddable.getNumberOfFetchables();
 		final var assemblers = new DomainResultAssembler[size];
 		this.assemblers = assemblers;
 		final Initializer<?>[] initializers = new Initializer[assemblers.length];
-		final Initializer<?>[] eagerSubInitializers = new Initializer[assemblers.length];
+//		final Initializer<?>[] eagerSubInitializers = new Initializer[assemblers.length];
 		final Initializer<?>[] collectionContainingSubInitializers = new Initializer[assemblers.length];
 		boolean empty = true;
 		boolean emptyEager = true;
@@ -136,24 +141,25 @@ public class NonAggregatedIdentifierMappingInitializer
 		boolean lazyCapable = false;
 		boolean hasLazySubInitializers = false;
 		for ( int i = 0; i < size; i++ ) {
-			final Fetchable stateArrayContributor = virtualIdEmbeddable.getFetchable( i );
-			final Fetch fetch = fetchConverter.apply( resultDescriptor.findFetch( stateArrayContributor ) );
+			final var stateArrayContributor = virtualIdEmbeddable.getFetchable( i );
+			final var fetch = fetchConverter.apply( resultDescriptor.findFetch( stateArrayContributor ) );
 
-			final var stateAssembler = fetch == null
-					? new NullValueAssembler<>( stateArrayContributor.getJavaType() )
-					: fetch.createAssembler( this, creationState );
+			final var stateAssembler =
+					fetch == null
+							? new NullValueAssembler<>( stateArrayContributor.getJavaType() )
+							: fetch.createAssembler( this, creationState );
 
 			assemblers[i] = stateAssembler;
 
 			final var initializer = stateAssembler.getInitializer();
 			if ( initializer != null ) {
 				if ( initializer.isEager() ) {
-					eagerSubInitializers[i] = initializer;
+//					eagerSubInitializers[i] = initializer;
 					hasLazySubInitializers = hasLazySubInitializers || initializer.hasLazySubInitializers();
 					emptyEager = false;
 					assert fetch != null;
-					final FetchParent fetchParent;
-					if ( ( fetchParent = fetch.asFetchParent() ) != null && fetchParent.containsCollectionFetches()
+					final var fetchParent = fetch.asFetchParent();
+					if ( fetchParent != null && fetchParent.containsCollectionFetches()
 							|| initializer.isCollectionInitializer() ) {
 						collectionContainingSubInitializers[i] = initializer;
 						emptyCollectionInitializers = false;
@@ -303,7 +309,7 @@ public class NonAggregatedIdentifierMappingInitializer
 			final var rowProcessingState = data.getRowProcessingState();
 			resolveInstanceSubInitializers( instance, rowProcessingState );
 			if ( rowProcessingState.needsResolveState() ) {
-				for ( DomainResultAssembler<?> assembler : assemblers ) {
+				for ( var assembler : assemblers ) {
 					assembler.resolveState( rowProcessingState );
 				}
 			}
@@ -351,7 +357,7 @@ public class NonAggregatedIdentifierMappingInitializer
 	@Override
 	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
 		final var rowProcessingState = data.getRowProcessingState();
-		for ( Initializer<?> initializer : initializers ) {
+		for ( var initializer : initializers ) {
 			if ( initializer != null ) {
 				consumer.accept( initializer, rowProcessingState );
 			}
@@ -378,7 +384,7 @@ public class NonAggregatedIdentifierMappingInitializer
 					final var virtualIdAttribute = virtualIdEmbeddable.getAttributeMapping( i );
 					final var mappedIdAttribute = representationEmbeddable.getAttributeMapping( i );
 					if ( virtualIdAttribute instanceof ToOneAttributeMapping toOneAttributeMapping
-						&& !( mappedIdAttribute instanceof ToOneAttributeMapping ) ) {
+							&& !( mappedIdAttribute instanceof ToOneAttributeMapping ) ) {
 						final Object associationKey =
 								toOneAttributeMapping.getForeignKeyDescriptor()
 										.getAssociationKeyFromSide(
@@ -433,6 +439,7 @@ public class NonAggregatedIdentifierMappingInitializer
 
 	@Override
 	public String toString() {
-		return "NonAggregatedIdentifierMappingInitializer(" + navigablePath + ") : `" + getInitializedPart().getJavaType().getJavaTypeClass() + "`";
+		return "NonAggregatedIdentifierMappingInitializer(" + navigablePath + ") : `"
+				+ getInitializedPart().getJavaType().getJavaTypeClass() + "`";
 	}
 }

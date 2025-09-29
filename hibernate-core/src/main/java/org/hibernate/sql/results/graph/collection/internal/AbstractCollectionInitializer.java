@@ -9,7 +9,6 @@ import java.util.function.BiConsumer;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -150,8 +149,8 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 	}
 
 	protected void resolveCollectionKey(Data data, boolean checkPreviousRow) {
-		final CollectionKey oldKey = data.collectionKey;
-		final PersistentCollection<?> oldCollectionInstance = data.getCollectionInstance();
+		final var oldKey = data.collectionKey;
+		final var oldCollectionInstance = data.getCollectionInstance();
 		data.collectionKey = null;
 		data.setCollectionInstance( null );
 
@@ -170,7 +169,7 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 				return;
 			}
 		}
-		final CollectionPersister persister = collectionAttributeMapping.getCollectionDescriptor();
+		final var persister = collectionAttributeMapping.getCollectionDescriptor();
 		// Try to reuse the previous collection key and collection if possible
 		if ( checkPreviousRow && oldKey != null && areKeysEqual( oldKey.getKey(), data.collectionKeyValue ) ) {
 			data.collectionKey = oldKey;
@@ -187,10 +186,17 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 		return keyTypeForEqualsHashCode == null ? key1.equals( key2 ) : keyTypeForEqualsHashCode.isEqual( key1, key2 );
 	}
 
+	PersistentCollection<?> getCollection(CollectionInitializerData data, Object instance) {
+		return collectionAttributeMapping.getCollectionDescriptor().isArray()
+				? data.getRowProcessingState().getSession().getPersistenceContextInternal()
+						.getCollectionHolder( instance )
+				: (PersistentCollection<?>) instance;
+	}
+
 	@Override
 	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
 		if ( collectionKeyResultAssembler != null ) {
-			final Initializer<?> initializer = collectionKeyResultAssembler.getInitializer();
+			final var initializer = collectionKeyResultAssembler.getInitializer();
 			if ( initializer != null ) {
 				consumer.accept( initializer, data.getRowProcessingState() );
 			}
@@ -199,8 +205,9 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 
 	@Override
 	public @Nullable PersistentCollection<?> getCollectionInstance(Data data) {
-		return data.getState() == State.UNINITIALIZED || data.getState() == State.MISSING ? null :
-				data.getCollectionInstance();
+		return data.getState() == State.UNINITIALIZED || data.getState() == State.MISSING
+				? null
+				: data.getCollectionInstance();
 	}
 
 	@Override

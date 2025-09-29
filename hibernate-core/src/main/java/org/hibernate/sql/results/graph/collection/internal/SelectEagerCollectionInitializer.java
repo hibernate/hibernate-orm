@@ -4,9 +4,6 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
-import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.internal.log.LoggingHelper;
-import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -15,10 +12,13 @@ import org.hibernate.sql.results.graph.InitializerParent;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
+
 /**
  * @author Andrea Boriero
  */
-public class SelectEagerCollectionInitializer extends AbstractNonJoinCollectionInitializer<AbstractCollectionInitializer.CollectionInitializerData> {
+public class SelectEagerCollectionInitializer
+		extends AbstractNonJoinCollectionInitializer<AbstractCollectionInitializer.CollectionInitializerData> {
 
 	public SelectEagerCollectionInitializer(
 			NavigablePath fetchedPath,
@@ -46,16 +46,7 @@ public class SelectEagerCollectionInitializer extends AbstractNonJoinCollectionI
 			setMissing( data );
 		}
 		else {
-			final PersistentCollection<?> collection;
-			if ( collectionAttributeMapping.getCollectionDescriptor()
-					.getCollectionSemantics()
-					.getCollectionClassification() == CollectionClassification.ARRAY ) {
-				collection = data.getRowProcessingState().getSession().getPersistenceContextInternal()
-						.getCollectionHolder( instance );
-			}
-			else {
-				collection = (PersistentCollection<?>) instance;
-			}
+			final var collection = getCollection( data, instance );
 			data.setState( State.INITIALIZED );
 			data.setCollectionInstance( collection );
 			collection.forceInitialization();
@@ -64,6 +55,6 @@ public class SelectEagerCollectionInitializer extends AbstractNonJoinCollectionI
 
 	@Override
 	public String toString() {
-		return "SelectEagerCollectionInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
+		return "SelectEagerCollectionInitializer(" + toLoggableString( getNavigablePath() ) + ")";
 	}
 }

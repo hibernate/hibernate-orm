@@ -5,12 +5,10 @@
 package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.List;
-import java.util.Map;
 import java.util.function.BiConsumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentMap;
-import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -23,6 +21,8 @@ import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
 /**
  * Represents an immediate initialization of some sort (join, select, batch, sub-select)
@@ -58,18 +58,18 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer<Abstr
 				isResultInitializer,
 				creationState
 		);
-		this.mapKeyAssembler = mapKeyFetch.createAssembler( this, creationState );
-		this.mapValueAssembler = mapValueFetch.createAssembler( this, creationState );
+		mapKeyAssembler = mapKeyFetch.createAssembler( this, creationState );
+		mapValueAssembler = mapValueFetch.createAssembler( this, creationState );
 	}
 
 	@Override
 	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
 		super.forEachSubInitializer( consumer, data );
-		final Initializer<?> keyInitializer = mapKeyAssembler.getInitializer();
+		final var keyInitializer = mapKeyAssembler.getInitializer();
 		if ( keyInitializer != null ) {
 			consumer.accept( keyInitializer, data.getRowProcessingState() );
 		}
-		final Initializer<?> valueInitializer = mapValueAssembler.getInitializer();
+		final var valueInitializer = mapValueAssembler.getInitializer();
 		if ( valueInitializer != null ) {
 			consumer.accept( valueInitializer, data.getRowProcessingState() );
 		}
@@ -82,29 +82,27 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer<Abstr
 
 	@Override
 	protected void readCollectionRow(ImmediateCollectionInitializerData data, List<Object> loadingState) {
-		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		final var rowProcessingState = data.getRowProcessingState();
 		final Object key = mapKeyAssembler.assemble( rowProcessingState );
-		if ( key == null ) {
-			// If element is null, then NotFoundAction must be IGNORE
-			return;
+		if ( key != null ) {
+			final Object value = mapValueAssembler.assemble( rowProcessingState );
+			if ( value != null ) {
+				loadingState.add( new Object[] {key, value} );
+			}
+			// else if the element is null, then NotFoundAction must be IGNORE
 		}
-		final Object value = mapValueAssembler.assemble( rowProcessingState );
-		if ( value == null ) {
-			// If element is null, then NotFoundAction must be IGNORE
-			return;
-		}
-		loadingState.add( new Object[] { key, value } );
+		// else if the key is null, then NotFoundAction must be IGNORE
 	}
 
 	@Override
 	protected void initializeSubInstancesFromParent(ImmediateCollectionInitializerData data) {
-		final Initializer<?> keyInitializer = mapKeyAssembler.getInitializer();
-		final Initializer<?> valueInitializer = mapValueAssembler.getInitializer();
+		final var keyInitializer = mapKeyAssembler.getInitializer();
+		final var valueInitializer = mapValueAssembler.getInitializer();
 		if ( keyInitializer != null || valueInitializer != null ) {
-			final RowProcessingState rowProcessingState = data.getRowProcessingState();
-			final PersistentMap<?, ?> map = getCollectionInstance( data );
+			final var rowProcessingState = data.getRowProcessingState();
+			final var map = getCollectionInstance( data );
 			assert map != null;
-			for ( Map.Entry<?, ?> entry : map.entrySet() ) {
+			for ( var entry : map.entrySet() ) {
 				if ( keyInitializer != null ) {
 					keyInitializer.initializeInstanceFromParent( entry.getKey(), rowProcessingState );
 				}
@@ -117,9 +115,9 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer<Abstr
 
 	@Override
 	protected void resolveInstanceSubInitializers(ImmediateCollectionInitializerData data) {
-		final Initializer<?> keyInitializer = mapKeyAssembler.getInitializer();
-		final Initializer<?> valueInitializer = mapValueAssembler.getInitializer();
-		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		final var keyInitializer = mapKeyAssembler.getInitializer();
+		final var valueInitializer = mapValueAssembler.getInitializer();
+		final var rowProcessingState = data.getRowProcessingState();
 		if ( keyInitializer == null && valueInitializer != null ) {
 			// For now, we only support resolving the value initializer instance when keys have no initializer,
 			// though we could also support map keys with an initializer given that the initialized java type:
@@ -156,6 +154,6 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer<Abstr
 
 	@Override
 	public String toString() {
-		return "MapInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
+		return "MapInitializer(" + toLoggableString( getNavigablePath() ) + ")";
 	}
 }

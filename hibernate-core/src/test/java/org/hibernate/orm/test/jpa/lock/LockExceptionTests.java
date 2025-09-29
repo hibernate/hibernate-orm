@@ -53,7 +53,6 @@ public class LockExceptionTests extends AbstractJPATest {
 
 	@Test
 	@JiraKey( value = "HHH-8786" )
-	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "no failure")
 	public void testLockTimeoutFind() {
 		final Item item = new Item( "find" );

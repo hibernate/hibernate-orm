@@ -4,12 +4,13 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
-import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.InitializerParent;
+
+import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
 /**
  * @author Steve Ebersole
@@ -48,7 +49,7 @@ public class DelayedCollectionInitializer extends AbstractNonJoinCollectionIniti
 
 	@Override
 	public String toString() {
-		return "DelayedCollectionInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
+		return "DelayedCollectionInitializer(" + toLoggableString( getNavigablePath() ) + ")";
 	}
 
 }

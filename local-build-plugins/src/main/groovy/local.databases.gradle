@@ -371,7 +371,8 @@ ext {
                     'jdbc.url'   : 'jdbc:postgresql://' + dbHost + ':26257/defaultdb?sslmode=disable&preparedStatementCacheQueries=0&escapeSyntaxCallMode=callIfNoReturn',
                     'jdbc.datasource' : 'org.postgresql.Driver',
 //                        'jdbc.datasource' : 'org.postgresql.ds.PGSimpleDataSource',
-                    'connection.init_sql' : ''
+                    // Configure the for-update clause to use proper locks: https://github.com/cockroachdb/cockroach/issues/88995
+                    'connection.init_sql' : 'set enable_durable_locking_for_serializable = on; set optimizer_use_lock_op_for_serializable = on;'
             ],
             firebird : [
                     'db.dialect' : 'org.hibernate.community.dialect.FirebirdDialect',

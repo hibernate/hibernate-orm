@@ -878,7 +878,7 @@ public class MetadataContext {
 			final var embeddableDomainTypes = embeddablesToProcess.get( embeddableClass );
 			if ( embeddableDomainTypes != null ) {
 				for ( var embeddableDomainType : embeddableDomainTypes ) {
-					final Component cachedComponent = componentByEmbeddable.get( embeddableDomainType );
+					final var cachedComponent = componentByEmbeddable.get( embeddableDomainType );
 					if ( cachedComponent.isSame( component ) ) {
 						return embeddableDomainType;
 					}

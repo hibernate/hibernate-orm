@@ -485,7 +485,14 @@ public abstract class SimpleValue implements KeyValue {
 	 * @see org.hibernate.engine.spi.VersionValue
 	 */
 	public void setNullValue(String nullValue) {
-		nullValueSemantic = switch (nullValue) {
+		nullValueSemantic = decodeNullValueSemantic( nullValue );
+		if ( nullValueSemantic == NullValueSemantic.VALUE ) {
+			this.nullValue = nullValue;
+		}
+	}
+
+	private static NullValueSemantic decodeNullValueSemantic(String nullValue) {
+		return switch ( nullValue ) {
 			// magical values (legacy of hbm.xml)
 			case "null" -> NullValueSemantic.NULL;
 			case "none" -> NullValueSemantic.NONE;
@@ -493,9 +500,6 @@ public abstract class SimpleValue implements KeyValue {
 			case "undefined" -> NullValueSemantic.UNDEFINED;
 			default -> NullValueSemantic.VALUE;
 		};
-		if ( nullValueSemantic == NullValueSemantic.VALUE ) {
-			this.nullValue = nullValue;
-		}
 	}
 
 	/**
@@ -615,45 +619,6 @@ public abstract class SimpleValue implements KeyValue {
 		return attributeConverterDescriptor;
 	}
 
-	//	public Type getType() throws MappingException {
-//		if ( type != null ) {
-//			return type;
-//		}
-//
-//		if ( typeName == null ) {
-//			throw new MappingException( "No type name" );
-//		}
-//
-//		if ( typeParameters != null
-//				&& Boolean.valueOf( typeParameters.getProperty( DynamicParameterizedType.IS_DYNAMIC ) )
-//				&& typeParameters.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
-//			createParameterImpl();
-//		}
-//
-//		Type result = getMetadata().getTypeConfiguration().getTypeResolver().heuristicType( typeName, typeParameters );
-//
-//		if ( isVersion && result instanceof BinaryType ) {
-//			// if this is a byte[] version/timestamp, then we need to use RowVersionType
-//			// instead of BinaryType (HHH-10413)
-//			// todo (6.0) - although for T/SQL databases we should use its
-//			LOG.debug( "version is BinaryType; changing to RowVersionType" );
-//			result = RowVersionType.INSTANCE;
-//		}
-//
-//		if ( result == null ) {
-//			String msg = "Could not determine type for: " + typeName;
-//			if ( table != null ) {
-//				msg += ", at table: " + table.getName();
-//			}
-//			if ( columns != null && columns.size() > 0 ) {
-//				msg += ", for columns: " + columns;
-//			}
-//			throw new MappingException( msg );
-//		}
-//
-//		return result;
-//	}
-
 	@Override
 	public void setTypeUsingReflection(String className, String propertyName) throws MappingException {
 		// NOTE: this is called as the last piece in setting SimpleValue type information,
@@ -669,10 +634,10 @@ public abstract class SimpleValue implements KeyValue {
 							"Attribute types for a dynamic entity must be explicitly specified: " + propertyName );
 				}
 				typeName = getClass( className, propertyName ).getName();
-				// todo : to fully support isNationalized here we need to do the process hinted at above
-				// 		essentially, much of the logic from #buildAttributeConverterTypeAdapter wrt resolving
-				//		a (1) JdbcType, a (2) JavaType and dynamically building a BasicType
-				// 		combining them.
+				// TODO: To fully support isNationalized here we need to do the process hinted at above
+				// 		 essentially, much of the logic from #buildAttributeConverterTypeAdapter wrt
+				// 		 resolving a (1) JdbcType, a (2) JavaType and dynamically building a BasicType
+				// 		 combining them.
 			}
 			else {
 				// we had an AttributeConverter
@@ -896,7 +861,6 @@ public abstract class SimpleValue implements KeyValue {
 				return true;
 			}
 		}
-
 		return false;
 	}
 
@@ -944,9 +908,11 @@ public abstract class SimpleValue implements KeyValue {
 	private static final Annotation[] NO_ANNOTATIONS = new Annotation[0];
 	private static Annotation[] getAnnotations(MemberDetails memberDetails) {
 		final var directAnnotationUsages =
-				memberDetails == null ? null
+				memberDetails == null
+						? null
 						: memberDetails.getDirectAnnotationUsages();
-		return directAnnotationUsages == null ? NO_ANNOTATIONS
+		return directAnnotationUsages == null
+				? NO_ANNOTATIONS
 				: directAnnotationUsages.toArray( Annotation[]::new );
 	}
 

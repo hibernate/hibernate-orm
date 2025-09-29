@@ -1,6 +1,5 @@
 [[vector-module]]
 == Hibernate Vector module
-:root-project-dir: ../../../../../../../..
 :vector-project-dir: {root-project-dir}/hibernate-vector
 :example-dir-vector: {vector-project-dir}/src/test/java/org/hibernate/vector
 :extrasdir: extras

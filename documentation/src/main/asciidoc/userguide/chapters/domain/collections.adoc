@@ -1,6 +1,5 @@
 [[collections]]
 === Collections
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :core-test-base: {core-project-dir}/src/test/java
 :example-dir-collection: {core-test-base}/org/hibernate/orm/test/mapping/collections
@@ -241,7 +240,7 @@ include::{example-dir-collection}/classification/map/EntityWithSortedMap.java[ta
 
 
 
-[[collections-bag]]
+[[collections-mapping]]
 ==== Mapping Collections
 
 Without any other mapping influencers, `java.util.Collection` is interpreted using BAG
@@ -786,7 +785,7 @@ include::{extrasdir}/collections-customizing-ordered-by-sql-clause-fetching-exam
 ----
 ====
 
-[[collections-set]]
+[[collections-set-types]]
 ==== Sets
 
 Sets are collections that don't allow duplicate entries and Hibernate supports both the unordered `Set` and the natural-ordering `SortedSet`.
@@ -885,7 +884,7 @@ Before v6, `@SortNatural` must be used if collection element's natural ordering 
 Starting from v6, we can omit `@SortNatural` as it will take effect by default.
 ====
 
-[[collections-map]]
+[[collections-map-types]]
 ==== Maps
 
 A `java.util.Map` is a ternary association because it requires a parent entity, a map key, and a value.
@@ -1080,7 +1079,7 @@ include::{extrasdir}/collections-map-bidirectional-example.sql[]
 ----
 ====
 
-[[collections-array]]
+[[collections-array-types]]
 ==== Arrays
 
 When discussing arrays, it is important to understand the distinction between SQL array types and Java arrays that are mapped as part of the application's domain model.

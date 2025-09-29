@@ -1,6 +1,5 @@
 [[soft-delete]]
 === Soft Delete
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :testing-dir: {core-project-dir}/src/test/java/org/hibernate/orm/test/softdelete
 
@@ -103,8 +102,8 @@ For entity hierarchies, the soft delete applies to all inheritance types.
 ====
 [source,java]
 ----
-include::{testing-dir}/secondary/JoinedRoot.java[tag=example-soft-delete-secondary, indent=0]
-include::{testing-dir}/secondary/JoinedSub.java[tag=example-soft-delete-secondary, indent=0]
+include::{testing-dir}/discovery/secondary/JoinedRoot.java[tag=example-soft-delete-secondary, indent=0]
+include::{testing-dir}/discovery/secondary/JoinedSub.java[tag=example-soft-delete-secondary, indent=0]
 ----
 ====
 

@@ -1,6 +1,5 @@
 [[envers]]
 == Envers
-:root-project-dir: ../../../../../../..
 :envers-project-dir: {root-project-dir}/hibernate-envers
 :example-dir-envers: {envers-project-dir}/src/test/java/org/hibernate/orm/test/envers
 :extrasdir: extras

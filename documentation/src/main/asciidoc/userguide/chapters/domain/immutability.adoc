@@ -1,6 +1,5 @@
 [[mutability]]
 === Mutability
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :mutability-example-dir: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/mutability
 :extrasdir: extras/immutability

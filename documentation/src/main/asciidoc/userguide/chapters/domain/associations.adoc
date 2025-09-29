@@ -1,6 +1,5 @@
 [[associations]]
 === Associations
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-association: {core-project-dir}/src/test/java/org/hibernate/orm/test/associations
 :example-dir-any: {core-project-dir}/src/test/java/org/hibernate/orm/test/any

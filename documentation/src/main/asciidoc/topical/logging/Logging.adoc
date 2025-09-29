@@ -1,11 +1,11 @@
-:shared-attributes-dir: ../../shared
+:shared-attributes-dir: {doc-main-dir}/asciidoc/shared
 
 include::{shared-attributes-dir}/common-attributes.adoc[]
 include::{shared-attributes-dir}/url-attributes.adoc[]
 include::{shared-attributes-dir}/filesystem-attributes.adoc[]
 include::{shared-attributes-dir}/renderer-attributes.adoc[]
 
-:jboss-logging-url:
+:jboss-logging-url: https://github.com/jboss-logging
 
 [[root]]
 = Logging

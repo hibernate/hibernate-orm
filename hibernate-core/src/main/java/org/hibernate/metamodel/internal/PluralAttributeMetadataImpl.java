@@ -45,7 +45,7 @@ class PluralAttributeMetadataImpl<X, Y, E>
 		this.elementClassification = elementClassification;
 		this.listIndexOrMapKeyClassification = listIndexOrMapKeyClassification;
 
-		final ParameterizedType signatureType = AttributeFactory.getSignatureType( member );
+		final var signatureType = AttributeFactory.getSignatureType( member );
 		switch ( collectionClassification ) {
 			case MAP:
 			case SORTED_MAP:
@@ -53,21 +53,17 @@ class PluralAttributeMetadataImpl<X, Y, E>
 				keyJavaType = signatureType != null
 						? getClassFromGenericArgument( signatureType.getActualTypeArguments()[0] )
 						: Object.class;
-
 				elementJavaType = signatureType != null
 						? getClassFromGenericArgument( signatureType.getActualTypeArguments()[1] )
 						: Object.class;
-
 				break;
 			}
 			case ARRAY:
 			case LIST: {
 				keyJavaType = Integer.class;
-
 				elementJavaType = signatureType != null
 						? getClassFromGenericArgument( signatureType.getActualTypeArguments()[0] )
 						: Object.class;
-
 				break;
 			}
 			default: {
@@ -130,14 +126,11 @@ class PluralAttributeMetadataImpl<X, Y, E>
 	}
 
 	private static ValueClassification toValueClassification(AttributeClassification classification) {
-		switch ( classification ) {
-			case EMBEDDED:
-				return ValueClassification.EMBEDDABLE;
-			case BASIC:
-				return ValueClassification.BASIC;
-			default:
-				return ValueClassification.ENTITY;
-		}
+		return switch ( classification ) {
+			case EMBEDDED -> ValueClassification.EMBEDDABLE;
+			case BASIC -> ValueClassification.BASIC;
+			default -> ValueClassification.ENTITY;
+		};
 	}
 
 	private Class<?> getClassFromGenericArgument(java.lang.reflect.Type type) {
@@ -165,7 +158,7 @@ class PluralAttributeMetadataImpl<X, Y, E>
 	}
 
 	public static CollectionClassification determineCollectionType(Class<?> javaType, Property property) {
-		final Collection collection = (Collection) property.getValue();
+		final var collection = (Collection) property.getValue();
 
 		if ( java.util.List.class.isAssignableFrom( javaType ) ) {
 			return CollectionClassification.LIST;

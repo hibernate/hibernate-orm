@@ -3,6 +3,17 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.46.Final (September 29, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/35321
+
+** Bug
+    * [HHH-19784] - Bytecode enhancement generates wrong field access method for classes in different JARs but with same package name deployed in the same EAR
+    * [HHH-19372] - AccessOptimizer.setPropertyValues() and getPropertyValues() error with entity hierarchy.
+    * [HHH-19369] - Entity hierarchy ordering error within metamodel building with enhancement
+
+
 Changes in 6.2.45.Final (September 14, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

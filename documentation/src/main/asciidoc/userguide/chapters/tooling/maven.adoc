@@ -9,8 +9,14 @@ The following sections illustrate how both <<tooling-maven-enhancement,bytecode 
 Hibernate provides a https://maven.apache.org/[Maven] plugin capable of providing
 build-time enhancement of the domain model as they are compiled as part of a Maven
 build.  See the section on <<BytecodeEnhancement>> for details
-on the configuration settings.  By default, all enhancements are disabled.
+on the configuration settings.
 
+[[maven-enhance-goal]]
+===== *Enhance Goal* =====
+
+An example of using the `enhance` goal of the plugin is shown below. By default the plugin will
+perform bytecode enhancement for lazy initialization and dirty tracking. See <<maven-enhance-configuration, below>>
+for more details on the available parameters.
 
 .Apply the Bytecode Enhancement plugin
 ====
@@ -19,6 +25,138 @@ on the configuration settings.  By default, all enhancements are disabled.
 include::extras/maven-example.pom[]
 ----
 ====
+
+[[maven-enhance-configuration]]
+===== *Enhance Configuration* =====
+
+[[maven-enhance-classesDirectory-parameter]]
+====== `*classesDirectory*` ======
+This parameter points to the folder in which to look for classes to enhance.
+It defaults to the value of `{project.build.directory}/classes` and thus in most cases to `target/classes`.
+If both `classesDirectory` and <<maven-enhance-filesets-parameter,fileSets>> are set,
+`fileSets` takes precedence.
+
+====
+[source,xml]
+----
+[...]
+<execution>
+  <configuration>
+    <classesDirectory>path-to-some-folder</classesDirectory>
+  </configuration>
+  [...]
+</execution>
+[...]
+----
+====
+
+[[maven-enhance-filesets-parameter]]
+====== `*fileSets*` ======
+This optional parameter comes in handy when you need to filter the classes that you want to enhance.
+More information on how to use filesets is to be found on the
+https://maven.apache.org/shared/file-management/fileset.html[fileset documentation page].
+If both <<maven-enhance-classesDirectory-parameter, classesDirectory>> and `fileSets` are set,
+`fileSets` takes precedence.
+
+====
+[source,xml]
+----
+[...]
+<execution>
+  <configuration>
+    <fileSets>
+      <fileset dir="path-to-some-folder">
+        <exclude name='Baz.class' />
+      </fileset>
+    </fileSets>
+  </configuration>
+  [...]
+</execution>
+[...]
+----
+====
+
+[[maven-enhance-enableLazyInitialization-parameter]]
+===== `*enableLazyInitialization*` =====
+This parameter has a default value of `true`. It indicates whether the enhance goal should perform the changes
+to enable <<BytecodeEnhancement-lazy-loading,lazy loading>>.
+The parameter has been deprecated for removal. After this removal, <<BytecodeEnhancement-lazy-loading,lazy loading>>
+will always be enabled.
+
+====
+[source,xml]
+----
+[...]
+<execution>
+  <configuration>
+    <enableLazyInitialization>false</enableLazyInitialization>
+  </configuration>
+  [...]
+</execution>
+[...]
+----
+====
+
+[[maven-enhance-enableDirtyTracking-parameter]]
+===== `*enableDirtyTracking*` =====
+This parameter has a default value of `true`. It indicates whether the enhance task should perform the changes
+to enable <<BytecodeEnhancement-dirty-tracking,dirty tracking>>.
+The parameter has been deprecated for removal. After this removal, <<BytecodeEnhancement-dirty-tracking,dirty tracking>>
+will always be enabled.
+
+====
+[source,xml]
+----
+[...]
+<execution>
+  <configuration>
+    <enableDirtyTracking>false</enableDirtyTracking>
+  </configuration>
+  [...]
+</execution>
+[...]
+----
+====
+
+[[maven-enhance-enableAssociationManagement-parameter]]
+===== `*enableAssociationManagement*` =====
+This parameter has a default value of `false`. It indicates whether the enhance task should perform the changes
+to enable <<BytecodeEnhancement-dirty-tracking-bidirectional,association management>>.
+
+====
+[source,xml]
+----
+[...]
+<execution>
+  <configuration>
+    <enableAssociationManagement>true</enableAssociationManagement>
+  </configuration>
+  [...]
+</execution>
+[...]
+----
+====
+
+[[maven-enhance-enableExtendedEnhancement-paremeter]]
+===== `*enableExtendedEnhancement*` =====
+This parameter has a default value of `false`. It indicates whether the enhance task should perform the changes
+to enable the extended enhancement: enhancement of non-entities to trigger lazy-loading and inline dirty tracking
+even when accessing entity fields directly..
+
+====
+[source,xml]
+----
+[...]
+<execution>
+  <configuration>
+    <enableExtendedEnhancement>true</enableExtendedEnhancement>
+  </configuration>
+  [...]
+</execution>
+[...]
+----
+====
+
 
 [[tooling-maven-modelgen]]
 ==== Static Metamodel Generation

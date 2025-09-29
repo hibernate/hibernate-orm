@@ -23,15 +23,13 @@ plugins {
 
 	id "org.hibernate.orm.build.reports"
 
-	id 'org.asciidoctor.jvm.convert' version '4.0.2'
-	id 'org.asciidoctor.jvm.pdf' version '4.0.2'
-	id "org.asciidoctor.jvm.gems" version "4.0.2"
+	id 'org.asciidoctor.jvm.convert' version '4.0.5'
+	id 'org.asciidoctor.jvm.pdf' version '4.0.5'
 	id "org.hibernate.orm.build.settings-doc"
 }
 
 repositories {
 	mavenCentral()
-	ruby.gems()
 }
 
 def hibernateVersion = ormBuildDetails.hibernateVersion
@@ -135,8 +133,6 @@ dependencies {
 	reportAggregation project(':hibernate-maven-plugin')
 	reportAggregation project(':hibernate-processor')
 
-	asciidoctorGems 'rubygems:rouge:4.1.1'
-
 	core project( ':hibernate-core' )
 	javadocSources project( path: ':hibernate-core', configuration: 'javadocSources' )
 
@@ -227,9 +223,11 @@ def aggregateJavadocsTask = tasks.register( "javadoc", Javadoc ) {
 
 asciidoctorj {
 	requires 'rouge'
+    // Set version of AsciidoctorJ (plugin is currently uses 2.5.7 ? by default)
+    version '3.0.0'
 	modules {
 		pdf {
-			version '2.3.7'
+			version '2.3.18'
 		}
 	}
 	attributes  icons: 'font',

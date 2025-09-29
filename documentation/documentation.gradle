@@ -230,14 +230,16 @@ asciidoctorj {
 			version '2.3.18'
 		}
 	}
-	attributes  icons: 'font',
+	attributes icons: 'font',
 			experimental: true,
 			'source-highlighter': 'rouge',
 			majorMinorVersion: hibernateVersion.family,
 			fullVersion: hibernateVersion.fullName,
 			javaCompatibleVersions: jdks.versions.compatible.get(),
 			jakartaJpaVersion: jpaVersion.name,
-			jdbcVersion: jdks.versions.jdbc.get()
+			jdbcVersion: jdks.versions.jdbc.get(),
+            'root-project-dir': rootProject.layout.projectDirectory.asFile.absolutePath,
+            'doc-main-dir': project( ':documentation').layout.projectDirectory.dir('src').dir("main").asFile.absolutePath
 
 	options logDocuments: true
 }

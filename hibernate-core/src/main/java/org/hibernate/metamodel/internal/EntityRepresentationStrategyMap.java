@@ -49,7 +49,7 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 
 	private static ProxyFactory createProxyFactory(PersistentClass bootType) {
 		try {
-			ProxyFactory proxyFactory = new MapProxyFactory();
+			final var proxyFactory = new MapProxyFactory();
 			proxyFactory.postInstantiate(
 					bootType.getEntityName(),
 					null,

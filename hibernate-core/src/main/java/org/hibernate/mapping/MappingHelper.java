@@ -105,9 +105,9 @@ public final class MappingHelper {
 			Set<String> distinctColumns,
 			List<Property> properties,
 			String owner) throws MappingException {
-		for ( var prop : properties ) {
-			if ( prop.isUpdatable() || prop.isInsertable() ) {
-				prop.getValue().checkColumnDuplication( distinctColumns, owner );
+		for ( var property : properties ) {
+			if ( property.isUpdatable() || property.isInsertable() ) {
+				property.getValue().checkColumnDuplication( distinctColumns, owner );
 			}
 		}
 	}
@@ -117,7 +117,7 @@ public final class MappingHelper {
 	}
 
 	static <T> Class<? extends T> classForName(Class<T> supertype, String typeName, BootstrapContext bootstrapContext) {
-		final Class<?> clazz = classForName( typeName, bootstrapContext );
+		final var clazz = classForName( typeName, bootstrapContext );
 		if ( supertype.isAssignableFrom( clazz ) ) {
 			//noinspection unchecked
 			return (Class<? extends T>) clazz;

@@ -213,10 +213,9 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 
 	@Override
 	public IdentifiableTypeClass getSuperType() {
-		if ( superPersistentClass != null ) {
-			return superPersistentClass;
-		}
-		return superMappedSuperclass;
+		return superPersistentClass != null
+				? superPersistentClass
+				: superMappedSuperclass;
 	}
 
 	@Override
@@ -231,8 +230,8 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 
 	@Override
 	public void applyProperty(Property property) {
-		assert property.getValue().getTable() != null;
-		assert property.getValue().getTable().equals( getImplicitTable() );
+		assert property.getValue().getTable() != null
+			&& property.getValue().getTable().equals( getImplicitTable() );
 		addDeclaredProperty( property );
 	}
 }

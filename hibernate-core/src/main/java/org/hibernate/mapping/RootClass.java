@@ -295,7 +295,7 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 		if ( hasSubclasses() ) {
 			final Set<Table> tables = new HashSet<>();
 			tables.add( getTable() );
-			for ( Subclass subclass : getSubclasses() ) {
+			for ( var subclass : getSubclasses() ) {
 				if ( !(subclass instanceof SingleTableSubclass) ) {
 					final var table = subclass.getTable();
 					if ( !tables.add( table ) ) {

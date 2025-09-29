@@ -31,7 +31,6 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.emptyList;
@@ -370,7 +369,7 @@ public abstract sealed class PersistentClass
 		final ArrayList<List<Property>> lists = new ArrayList<>();
 		lists.add( getPropertyClosure() );
 		lists.add( subclassProperties );
-		for ( Join join : subclassJoins ) {
+		for ( var join : subclassJoins ) {
 			lists.add( join.getProperties() );
 		}
 		return new JoinedList<>( lists );
@@ -641,7 +640,7 @@ public abstract sealed class PersistentClass
 	public void validate(Metadata mapping) throws MappingException {
 		for ( var prop : getProperties() ) {
 			if ( !prop.isValid( mapping ) ) {
-				final Type type = prop.getType();
+				final var type = prop.getType();
 				final int actualColumns = prop.getColumnSpan();
 				final int requiredColumns = type.getColumnSpan( mapping );
 				throw new MappingException(
@@ -699,7 +698,7 @@ public abstract sealed class PersistentClass
 	}
 
 	public void addJoin(Join join) {
-		if ( !joins.contains(join) ) {
+		if ( !joins.contains( join ) ) {
 			joins.add( join );
 		}
 		join.setPersistentClass( this );
@@ -868,8 +867,9 @@ public abstract sealed class PersistentClass
 		if ( isDiscriminatorInsertable() && getDiscriminator() != null ) {
 			getDiscriminator().checkColumnDuplication( cols, owner );
 		}
-		if ( getRootClass().getSoftDeleteColumn() != null ) {
-			getRootClass().getSoftDeleteColumn().getValue().checkColumnDuplication( cols, owner );
+		final var softDeleteColumn = getRootClass().getSoftDeleteColumn();
+		if ( softDeleteColumn != null ) {
+			softDeleteColumn.getValue().checkColumnDuplication( cols, owner );
 		}
 		checkPropertyColumnDuplication( cols, getNonDuplicatedProperties(), owner );
 		for ( var join : getJoins() ) {
@@ -923,12 +923,14 @@ public abstract sealed class PersistentClass
 	}
 
 	public boolean hasPartitionedSelectionMapping() {
-		if ( getSuperclass() != null && getSuperclass().hasPartitionedSelectionMapping() ) {
+		final var superclass = getSuperclass();
+		if ( superclass != null
+			&& superclass.hasPartitionedSelectionMapping() ) {
 			return true;
 		}
 		for ( var property : getProperties() ) {
-			final var value = property.getValue();
-			if ( value instanceof BasicValue basicValue && basicValue.isPartitionKey() ) {
+			if ( property.getValue() instanceof BasicValue basicValue
+					&& basicValue.isPartitionKey() ) {
 				return true;
 			}
 		}
@@ -952,13 +954,12 @@ public abstract sealed class PersistentClass
 	}
 
 	public void addCallbackDefinitions(java.util.List<CallbackDefinition> callbackDefinitions) {
-		if ( callbackDefinitions == null || callbackDefinitions.isEmpty() ) {
-			return;
+		if ( callbackDefinitions != null && !callbackDefinitions.isEmpty() ) {
+			if ( this.callbackDefinitions == null ) {
+				this.callbackDefinitions = new ArrayList<>();
+			}
+			this.callbackDefinitions.addAll( callbackDefinitions );
 		}
-		if ( this.callbackDefinitions == null ) {
-			this.callbackDefinitions = new ArrayList<>();
-		}
-		this.callbackDefinitions.addAll( callbackDefinitions );
 	}
 
 	public java.util.List<CallbackDefinition> getCallbackDefinitions() {

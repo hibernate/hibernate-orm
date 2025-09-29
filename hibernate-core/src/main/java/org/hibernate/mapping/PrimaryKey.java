@@ -4,11 +4,11 @@
  */
 package org.hibernate.mapping;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.Internal;
 
+import static java.util.Arrays.asList;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
@@ -55,7 +55,7 @@ public class PrimaryKey extends Constraint {
 		for ( int i = 0; i < columnsInOriginalOrder.length; i++ ) {
 			columnsInOriginalOrder[originalOrder[i]] = columns.get( i );
 		}
-		return Arrays.asList( columnsInOriginalOrder );
+		return asList( columnsInOriginalOrder );
 	}
 
 	public void setOrderingUniqueKey(UniqueKey uniqueKey) {
@@ -71,22 +71,23 @@ public class PrimaryKey extends Constraint {
 		final var columns = getColumns();
 		if ( originalOrder != null ) {
 			assert columns.equals( reorderedColumns );
-			return;
 		}
-		assert columns.size() == reorderedColumns.size()
-			&& columns.containsAll( reorderedColumns );
-		originalOrder = new int[columns.size()];
-		final var orderingUniqueKey = getOrderingUniqueKey();
-		final var newColumns =
-				orderingUniqueKey != null
-						? orderingUniqueKey.getColumns()
-						: reorderedColumns;
-		for ( int i = 0; i < newColumns.size(); i++ ) {
-			final var reorderedColumn = newColumns.get( i );
-			originalOrder[i] = columns.indexOf( reorderedColumn );
+		else {
+			assert columns.size() == reorderedColumns.size()
+				&& columns.containsAll( reorderedColumns );
+			originalOrder = new int[columns.size()];
+			final var orderingUniqueKey = getOrderingUniqueKey();
+			final var newColumns =
+					orderingUniqueKey != null
+							? orderingUniqueKey.getColumns()
+							: reorderedColumns;
+			for ( int i = 0; i < newColumns.size(); i++ ) {
+				final var reorderedColumn = newColumns.get( i );
+				originalOrder[i] = columns.indexOf( reorderedColumn );
+			}
+			columns.clear();
+			columns.addAll( newColumns );
 		}
-		columns.clear();
-		columns.addAll( newColumns );
 	}
 
 	@Internal

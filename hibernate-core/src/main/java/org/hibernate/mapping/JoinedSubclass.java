@@ -21,8 +21,8 @@ public final class JoinedSubclass extends Subclass implements TableOwner {
 	private Table table;
 	private KeyValue key;
 
-	public JoinedSubclass(PersistentClass superclass, MetadataBuildingContext metadataBuildingContext) {
-		super( superclass, metadataBuildingContext );
+	public JoinedSubclass(PersistentClass superclass, MetadataBuildingContext buildingContext) {
+		super( superclass, buildingContext );
 	}
 
 	@Override

@@ -7,7 +7,6 @@ package org.hibernate.metamodel.internal;
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.query.NamedQueryDefinition;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 
 import java.lang.reflect.Field;
@@ -16,6 +15,7 @@ import static java.lang.Character.charCount;
 import static java.lang.Character.isJavaIdentifierPart;
 import static java.lang.reflect.Modifier.isPublic;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.internal.util.ReflectHelper.ensureAccessibility;
 
 public class InjectionHelper {
 
@@ -50,7 +50,7 @@ public class InjectionHelper {
 	}
 
 	public static String javaIdentifier(String name) {
-		final StringBuilder result = new StringBuilder();
+		final var result = new StringBuilder();
 		int position = 0;
 		while ( position < name.length() ) {
 			final int codePoint = name.codePointAt( position );
@@ -70,7 +70,7 @@ public class InjectionHelper {
 						: metamodelClass.getDeclaredField( name );
 		try {
 			if ( !isPublic( metamodelClass.getModifiers() ) ) {
-				ReflectHelper.ensureAccessibility( field );
+				ensureAccessibility( field );
 			}
 			field.set( null, model);
 		}

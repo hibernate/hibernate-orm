@@ -7,8 +7,8 @@ package org.hibernate.metamodel.internal;
 import java.util.Locale;
 import java.util.Map;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.util.config.ConfigurationHelper;
+import static org.hibernate.cfg.MappingSettings.JPA_METAMODEL_POPULATION;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 
 /**
  * @author Steve Ebersole
@@ -27,11 +27,6 @@ public enum JpaMetamodelPopulationSetting {
 	}
 
 	public static JpaMetamodelPopulationSetting determineJpaMetaModelPopulationSetting(Map<String, Object> settings) {
-		String setting = ConfigurationHelper.getString(
-				AvailableSettings.JPA_METAMODEL_POPULATION,
-				settings,
-				"ignoreUnsupported"
-		);
-		return JpaMetamodelPopulationSetting.parse( setting );
+		return parse( getString( JPA_METAMODEL_POPULATION, settings, "ignoreUnsupported" ) );
 	}
 }

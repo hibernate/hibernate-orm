@@ -87,7 +87,6 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
-	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Can't commit transaction because Altibase closes socket after lock timeout")
 	public void testLoading() {
 		// open a session, begin a transaction and lock row
@@ -104,7 +103,6 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
-	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Can't commit transaction because Altibase closes socket after lock timeout")
 	public void testCriteria() {
 		// open a session, begin a transaction and lock row
@@ -128,7 +126,6 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
-	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Can't commit transaction because Altibase closes socket after lock timeout")
 	public void testCriteriaAliasSpecific() {
 			// open a session, begin a transaction and lock row
@@ -154,7 +151,6 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
-	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Can't commit transaction because Altibase closes socket after lock timeout")
 	public void testQuery() {
 		// open a session, begin a transaction and lock row

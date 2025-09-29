@@ -866,18 +866,12 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public boolean isColumnInsertable(int index) {
-		if ( !insertability.isEmpty() ) {
-			return insertability.get( index );
-		}
-		return false;
+		return !insertability.isEmpty() && insertability.get( index );
 	}
 
 	@Override
 	public boolean isColumnUpdateable(int index) {
-		if ( !updatability.isEmpty() ) {
-			return updatability.get( index );
-		}
-		return false;
+		return !updatability.isEmpty() && updatability.get( index );
 	}
 
 	public boolean isPartitionKey() {

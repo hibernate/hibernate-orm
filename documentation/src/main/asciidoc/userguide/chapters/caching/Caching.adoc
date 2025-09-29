@@ -1,6 +1,5 @@
 [[caching]]
 == Caching
-:root-project-dir: ../../../../../../..
 :jcache-project-dir: {root-project-dir}/hibernate-jcache
 :example-dir-caching: {jcache-project-dir}/src/test/java/org/hibernate/orm/test/caching
 

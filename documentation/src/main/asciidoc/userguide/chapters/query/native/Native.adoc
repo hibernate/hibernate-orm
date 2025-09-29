@@ -1,6 +1,5 @@
 [[sql]]
 == Native SQL Queries
-:root-project-dir: ../../../../../../../..
 :testing-project-dir: {root-project-dir}/hibernate-testing
 :example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
 :core-project-dir: {root-project-dir}/hibernate-core

@@ -1,6 +1,5 @@
 [[BytecodeEnhancement]]
 === Bytecode Enhancement
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-enhancement: {core-project-dir}/src/test/java/org/hibernate/orm/test/pc
 

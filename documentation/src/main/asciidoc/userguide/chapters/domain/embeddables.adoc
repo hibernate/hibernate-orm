@@ -1,6 +1,5 @@
 [[embeddables]]
 === Embeddable values
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :core-test-base: {root-project-dir}/hibernate-core/src/test/java
 :example-dir-emeddable: {core-test-base}/org/hibernate/orm/test/mapping/embeddable

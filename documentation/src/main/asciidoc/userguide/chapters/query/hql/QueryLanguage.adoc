@@ -1,6 +1,5 @@
 [[query-language]]
 == Hibernate Query Language
-:root-project-dir: ../../../../../../../..
 :testing-project-dir: {root-project-dir}/hibernate-testing
 :example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
 :core-project-dir: {root-project-dir}/hibernate-core
@@ -2023,7 +2022,7 @@ include::{json-example-dir-hql}/JsonArrayAggregateTest.java[tags=hql-json-arraya
 
 Creates a JSON object by aggregating values.
 
-[[hql-json-arrayagg-bnf]]
+[[hql-json-objectagg-bnf]]
 [source, antlrv4, indent=0]
 ----
 include::{extrasdir}/json_objectagg_bnf.txt[]
@@ -2443,7 +2442,7 @@ WARNING: SAP HANA, MySQL, MariaDB and HSQLDB do not support this function.
 
 Aggregates XML elements by concatenation.
 
-[[hql-xmlexists-bnf]]
+[[hql-xmlagg-bnf]]
 [source, antlrv4, indent=0]
 ----
 include::{extrasdir}/xmlagg_bnf.txt[]

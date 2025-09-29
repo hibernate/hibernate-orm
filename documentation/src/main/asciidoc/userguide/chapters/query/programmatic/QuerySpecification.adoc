@@ -1,6 +1,5 @@
 [[QuerySpecification]]
 == Programmatic Query Specification
-:root-project-dir: ../../../../../../../..
 
 Hibernate offers an API for creating a representation of a query, adjusting that representation programmatically, and then creating an executable form of the query.  The idea is similar in concept to <<chapters/query/criteria/Criteria.adoc#criteria,criteria queries>>, but focused on ease-of-use and less verbosity.
 

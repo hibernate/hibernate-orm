@@ -1,6 +1,5 @@
 [[mapping-types]]
 === Mapping types
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-mapping: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping
 :extrasdir: extras/types

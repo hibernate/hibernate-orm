@@ -1,6 +1,5 @@
 [[multitenacy]]
 == Multitenancy
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-multitenancy: {core-project-dir}/src/test/java/org/hibernate/orm/test/multitenancy
 :extrasdir: extras

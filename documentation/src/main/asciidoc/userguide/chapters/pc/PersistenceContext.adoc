@@ -1,6 +1,5 @@
 [[pc]]
 == Persistence Context
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-pc: {core-project-dir}/src/test/java/org/hibernate/orm/test/pc
 :jcache-project-dir: {root-project-dir}/hibernate-jcache

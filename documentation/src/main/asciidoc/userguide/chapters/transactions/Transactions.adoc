@@ -1,6 +1,5 @@
 [[transactions]]
 == Transactions
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-transaction: {core-project-dir}/src/test/java/org/hibernate/orm/test/transactions
 

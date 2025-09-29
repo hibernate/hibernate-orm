@@ -1,6 +1,5 @@
 [[batch]]
 == Batching
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-doc-batch: {core-project-dir}/src/test/java/org/hibernate/orm/test/batch
 :example-dir-bulkid: {core-project-dir}/src/test/java/org/hibernate/orm/test/bulkid

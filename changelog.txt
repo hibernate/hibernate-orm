@@ -3,6 +3,20 @@ Hibernate 7 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.1.2.Final (September 29, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/35322
+
+** Bug
+    * [HHH-19792] - Wrong query generated when an EmbeddedId is used in a WHERE clause using the IN operator and NativeParameterMarkerStrategy
+    * [HHH-19784] - Bytecode enhancement generates wrong field access method for classes in different JARs but with same package name deployed in the same EAR
+    * [HHH-19768] - Wrong supportsRowValueConstructorSyntaxInInSubQuery leads to bad performing queries
+    * [HHH-19713] - Hibernate creates invalid SQLServer query when using pagination with Jakarta Data
+    * [HHH-19681] - AssertionError on extract results from  array containing jsonb values
+    * [HHH-19276] - Native query with enum list param leads to OutOfMemory
+
+
 Changes in 7.1.1.Final (September 14, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

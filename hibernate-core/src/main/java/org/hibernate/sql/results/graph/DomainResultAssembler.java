@@ -50,7 +50,17 @@ public interface DomainResultAssembler<J> {
 	 * {@link Initializer#isResultInitializer()}.
 	 */
 	default <X> void forEachResultAssembler(BiConsumer<Initializer<?>, X> consumer, X arg) {
+	}
 
+	default boolean isEager() {
+		final var initializer = getInitializer();
+		return initializer != null && initializer.isEager();
+	}
+
+	default boolean hasLazySubInitializers() {
+		final var initializer = getInitializer();
+		return initializer != null
+			&& ( !initializer.isEager() || initializer.hasLazySubInitializers() );
 	}
 
 }

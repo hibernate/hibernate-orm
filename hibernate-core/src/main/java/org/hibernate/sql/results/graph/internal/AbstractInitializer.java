@@ -21,7 +21,7 @@ public abstract class AbstractInitializer<Data extends InitializerData> implemen
 
 	@Override
 	public void startLoading(RowProcessingState rowProcessingState) {
-		final InitializerData data = createInitializerData( rowProcessingState );
+		final var data = createInitializerData( rowProcessingState );
 		rowProcessingState.setInitializerData( initializerId, data );
 		forEachSubInitializer( Initializer::startLoading, data );
 	}
@@ -52,5 +52,4 @@ public abstract class AbstractInitializer<Data extends InitializerData> implemen
 	protected abstract void forEachSubInitializer(
 			BiConsumer<Initializer<?>, RowProcessingState> consumer,
 			InitializerData data);
-
 }

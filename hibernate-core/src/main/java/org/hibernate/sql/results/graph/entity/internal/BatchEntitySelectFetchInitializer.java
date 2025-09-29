@@ -7,13 +7,8 @@ package org.hibernate.sql.results.graph.entity.internal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -25,6 +20,8 @@ import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.Type;
+
+import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
 public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer<BatchEntitySelectFetchInitializer.BatchEntitySelectFetchInitializerData> {
 	protected final AttributeMapping[] parentAttributes;
@@ -50,10 +47,11 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 			boolean affectedByFilter,
 			AssemblerCreationState creationState) {
 		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter, creationState );
-		this.parentAttributes = getParentEntityAttributes( referencedModelPart.getAttributeName() );
-		this.referencedModelPartSetter = referencedModelPart.getPropertyAccess().getSetter();
-		this.referencedModelPartType = referencedModelPart.findContainingEntityMapping().getEntityPersister()
-				.getPropertyType( referencedModelPart.getAttributeName() );
+		parentAttributes = getParentEntityAttributes( referencedModelPart.getAttributeName() );
+		referencedModelPartSetter = referencedModelPart.getPropertyAccess().getSetter();
+		referencedModelPartType =
+				referencedModelPart.findContainingEntityMapping().getEntityPersister()
+						.getPropertyType( referencedModelPart.getAttributeName() );
 	}
 
 	@Override
@@ -63,23 +61,25 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 
 	@Override
 	protected void registerResolutionListener(BatchEntitySelectFetchInitializerData data) {
-		final RowProcessingState rowProcessingState = data.getRowProcessingState();
-		final InitializerData owningData = owningEntityInitializer.getData( rowProcessingState );HashMap<EntityKey, List<ParentInfo>> toBatchLoad = data.toBatchLoad;
+		final var rowProcessingState = data.getRowProcessingState();
+		final var owningData = owningEntityInitializer.getData( rowProcessingState );
+		var toBatchLoad = data.toBatchLoad;
 		if ( toBatchLoad == null ) {
 			toBatchLoad = data.toBatchLoad = new HashMap<>();
 		}
 		// Always register the entity key for resolution
-		final List<ParentInfo> parentInfos = toBatchLoad.computeIfAbsent( data.entityKey, key -> new ArrayList<>() );
-		final AttributeMapping parentAttribute;
+		final var parentInfos = toBatchLoad.computeIfAbsent( data.entityKey, key -> new ArrayList<>() );
 		// But only add the parent info if the parent entity is not already initialized
-		if ( owningData.getState() != State.INITIALIZED
-				&& ( parentAttribute = parentAttributes[owningEntityInitializer.getConcreteDescriptor( owningData ).getSubclassId()] ) != null ) {
-			parentInfos.add(
-					new ParentInfo(
-							owningEntityInitializer.getTargetInstance( owningData ),
-							parentAttribute.getStateArrayPosition()
-					)
-			);
+		if ( owningData.getState() != State.INITIALIZED ) {
+			final var parentAttribute =
+					parentAttributes[owningEntityInitializer.getConcreteDescriptor( owningData )
+							.getSubclassId()];
+			if ( parentAttribute != null ) {
+				parentInfos.add( new ParentInfo(
+						owningEntityInitializer.getTargetInstance( owningData ),
+						parentAttribute.getStateArrayPosition()
+				) );
+			}
 		}
 	}
 
@@ -96,24 +96,23 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 	@Override
 	public void endLoading(BatchEntitySelectFetchInitializerData data) {
 		super.endLoading( data );
-		final HashMap<EntityKey, List<ParentInfo>> toBatchLoad = data.toBatchLoad;
+		final var toBatchLoad = data.toBatchLoad;
 		if ( toBatchLoad != null ) {
-			final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
-			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-			for ( Map.Entry<EntityKey, List<ParentInfo>> entry : toBatchLoad.entrySet() ) {
-				final EntityKey entityKey = entry.getKey();
-				final List<ParentInfo> parentInfos = entry.getValue();
+			final var session = data.getRowProcessingState().getSession();
+			final var factory = session.getFactory();
+			final var persistenceContext = session.getPersistenceContextInternal();
+			for ( var entry : toBatchLoad.entrySet() ) {
+				final var entityKey = entry.getKey();
+				final var parentInfos = entry.getValue();
 				final Object instance = loadInstance( entityKey, toOneMapping, affectedByFilter, session );
-				for ( ParentInfo parentInfo : parentInfos ) {
+				for ( var parentInfo : parentInfos ) {
 					final Object parentInstance = parentInfo.parentInstance;
-					final EntityEntry entityEntry = persistenceContext.getEntry( parentInstance );
+					final var entityEntry = persistenceContext.getEntry( parentInstance );
 					referencedModelPartSetter.set( parentInstance, instance );
-					final Object[] loadedState = entityEntry.getLoadedState();
+					final var loadedState = entityEntry.getLoadedState();
 					if ( loadedState != null ) {
-						loadedState[parentInfo.propertyIndex] = referencedModelPartType.deepCopy(
-								instance,
-								session.getFactory()
-						);
+						loadedState[parentInfo.propertyIndex] =
+								referencedModelPartType.deepCopy( instance, factory );
 					}
 				}
 			}
@@ -123,7 +122,8 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 
 	@Override
 	public String toString() {
-		return "BatchEntitySelectFetchInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
+		return "BatchEntitySelectFetchInitializer("
+				+ toLoggableString( getNavigablePath() ) + ")";
 	}
 
 }

@@ -4,20 +4,14 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.Getter;
@@ -30,6 +24,8 @@ import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.Type;
+
+import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
 public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer<BatchEntityInsideEmbeddableSelectFetchInitializer.BatchEntityInsideEmbeddableSelectFetchInitializerData> {
 	protected final Setter referencedModelPartSetter;
@@ -46,7 +42,7 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 		public String toString() {
 			return "<batch>";
 		}
-
+		@Serial
 		public Object readResolve() {
 			return BATCH_PROPERTY;
 		}
@@ -72,21 +68,18 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 			AssemblerCreationState creationState) {
 		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter, creationState );
 
-		this.referencedModelPartSetter = referencedModelPart.getAttributeMetadata().getPropertyAccess().getSetter();
-		final String rootEmbeddablePropertyName = getRootEmbeddablePropertyName(
-				owningEntityInitializer,
-				parentAccess,
-				referencedModelPart
-		);
-		this.rootEmbeddableAttributes = getParentEntityAttributes( rootEmbeddablePropertyName );
-		final Getter[] getters = new Getter[rootEmbeddableAttributes.length];
+		referencedModelPartSetter = referencedModelPart.getAttributeMetadata().getPropertyAccess().getSetter();
+		final String rootEmbeddablePropertyName =
+				getRootEmbeddablePropertyName( owningEntityInitializer, parentAccess, referencedModelPart );
+		rootEmbeddableAttributes = getParentEntityAttributes( rootEmbeddablePropertyName );
+		final var getters = new Getter[rootEmbeddableAttributes.length];
 		for ( int i = 0; i < rootEmbeddableAttributes.length; i++ ) {
 			if ( rootEmbeddableAttributes[i] != null ) {
 				getters[i] = rootEmbeddableAttributes[i].getAttributeMetadata().getPropertyAccess().getGetter();
 			}
 		}
-		this.rootEmbeddableGetters = getters;
-		this.rootEmbeddablePropertyTypes = getParentEntityAttributeTypes( rootEmbeddablePropertyName );
+		rootEmbeddableGetters = getters;
+		rootEmbeddablePropertyTypes = getParentEntityAttributeTypes( rootEmbeddablePropertyName );
 	}
 
 	@Override
@@ -95,22 +88,22 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 	}
 
 	protected Type[] getParentEntityAttributeTypes(String attributeName) {
-		final EntityPersister entityDescriptor = owningEntityInitializer.getEntityDescriptor();
-		final Type[] attributeTypes = new Type[
+		final var entityDescriptor = owningEntityInitializer.getEntityDescriptor();
+		final int size =
 				entityDescriptor.getRootEntityDescriptor()
-						.getSubclassEntityNames()
-						.size()
-				];
+						.getSubclassEntityNames().size();
+		final var attributeTypes = new Type[size];
 		initializeAttributeType( attributeTypes, entityDescriptor, attributeName );
-		for ( EntityMappingType subMappingType : entityDescriptor.getSubMappingTypes() ) {
+		for ( var subMappingType : entityDescriptor.getSubMappingTypes() ) {
 			initializeAttributeType( attributeTypes, subMappingType.getEntityPersister(), attributeName );
 		}
 		return attributeTypes;
 	}
 
 	protected void initializeAttributeType(Type[] attributeTypes, EntityPersister entityDescriptor, String attributeName) {
-		if ( rootEmbeddableAttributes[entityDescriptor.getSubclassId()] != null ) {
-			attributeTypes[entityDescriptor.getSubclassId()] = entityDescriptor.getPropertyType( attributeName );
+		final int subclassId = entityDescriptor.getSubclassId();
+		if ( rootEmbeddableAttributes[subclassId] != null ) {
+			attributeTypes[subclassId] = entityDescriptor.getPropertyType( attributeName );
 		}
 	}
 
@@ -125,23 +118,24 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 		super.initializeInstance( data );
 		// todo: check why this can't be moved to #registerToBatchFetchQueue
 		if ( data.getInstance() == BATCH_PROPERTY ) {
-			final RowProcessingState rowProcessingState = data.getRowProcessingState();
-			final InitializerData owningData = owningEntityInitializer.getData( rowProcessingState );
-			final int owningEntitySubclassId = owningEntityInitializer.getConcreteDescriptor( owningData ).getSubclassId();
-			final AttributeMapping rootEmbeddableAttribute = rootEmbeddableAttributes[owningEntitySubclassId];
+			final var rowProcessingState = data.getRowProcessingState();
+			final var owningData = owningEntityInitializer.getData( rowProcessingState );
+			final int owningEntitySubclassId =
+					owningEntityInitializer.getConcreteDescriptor( owningData )
+							.getSubclassId();
+			final var rootEmbeddableAttribute = rootEmbeddableAttributes[owningEntitySubclassId];
 			if ( rootEmbeddableAttribute != null ) {
-				HashMap<EntityKey, List<ParentInfo>> toBatchLoad = data.toBatchLoad;
+				var toBatchLoad = data.toBatchLoad;
 				if ( toBatchLoad == null ) {
 					toBatchLoad = data.toBatchLoad = new HashMap<>();
 				}
-				toBatchLoad.computeIfAbsent( data.entityKey, key -> new ArrayList<>() ).add(
-						new ParentInfo(
+				toBatchLoad.computeIfAbsent( data.entityKey, key -> new ArrayList<>() )
+						.add( new ParentInfo(
 								owningEntityInitializer.getTargetInstance( owningData ),
 								parent.getResolvedInstance( rowProcessingState ),
 								rootEmbeddableAttribute.getStateArrayPosition(),
 								owningEntitySubclassId
-						)
-				);
+						) );
 			}
 		}
 	}
@@ -171,20 +165,20 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 	@Override
 	public void endLoading(BatchEntityInsideEmbeddableSelectFetchInitializerData data) {
 		super.endLoading( data );
-		final HashMap<EntityKey, List<ParentInfo>> toBatchLoad = data.toBatchLoad;
+		final var toBatchLoad = data.toBatchLoad;
 		if ( toBatchLoad != null ) {
-			for ( Map.Entry<EntityKey, List<ParentInfo>> entry : toBatchLoad.entrySet() ) {
-				final EntityKey entityKey = entry.getKey();
-				final List<ParentInfo> parentInfos = entry.getValue();
-				final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
-				final SessionFactoryImplementor factory = session.getFactory();
-				final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			for ( var entry : toBatchLoad.entrySet() ) {
+				final var entityKey = entry.getKey();
+				final var parentInfos = entry.getValue();
+				final var session = data.getRowProcessingState().getSession();
+				final var factory = session.getFactory();
+				final var persistenceContext = session.getPersistenceContextInternal();
 				final Object loadedInstance = loadInstance( entityKey, toOneMapping, affectedByFilter, session );
 				for ( ParentInfo parentInfo : parentInfos ) {
 					final Object parentEntityInstance = parentInfo.parentEntityInstance;
-					final EntityEntry parentEntityEntry = persistenceContext.getEntry( parentEntityInstance );
+					final var parentEntityEntry = persistenceContext.getEntry( parentEntityInstance );
 					referencedModelPartSetter.set( parentInfo.parentInstance, loadedInstance );
-					final Object[] loadedState = parentEntityEntry.getLoadedState();
+					final var loadedState = parentEntityEntry.getLoadedState();
 					if ( loadedState != null ) {
 						/*
 						E.g.
@@ -194,11 +188,12 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 						The value of RootEmbeddable is needed to update the ParentEntity loaded state
 						 */
 						final int parentEntitySubclassId = parentInfo.parentEntitySubclassId;
-						final Object rootEmbeddable = rootEmbeddableGetters[parentEntitySubclassId].get( parentEntityInstance );
-						loadedState[parentInfo.propertyIndex] = rootEmbeddablePropertyTypes[parentEntitySubclassId].deepCopy(
-								rootEmbeddable,
-								factory
-						);
+						final Object rootEmbeddable =
+								rootEmbeddableGetters[parentEntitySubclassId]
+										.get( parentEntityInstance );
+						loadedState[parentInfo.propertyIndex] =
+								rootEmbeddablePropertyTypes[parentEntitySubclassId]
+										.deepCopy( rootEmbeddable, factory );
 					}
 				}
 			}
@@ -223,7 +218,8 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 
 	@Override
 	public String toString() {
-		return "BatchEntityInsideEmbeddableSelectFetchInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
+		return "BatchEntityInsideEmbeddableSelectFetchInitializer("
+				+ toLoggableString( getNavigablePath() ) + ")";
 	}
 
 }

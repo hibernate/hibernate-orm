@@ -4,15 +4,12 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
-import java.lang.reflect.Array;
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.BiConsumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentArrayHolder;
-import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -25,6 +22,9 @@ import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static java.lang.reflect.Array.get;
+import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
 /**
  * @author Chris Cranford
@@ -57,15 +57,15 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer<Abs
 				creationState
 		);
 		//noinspection unchecked
-		this.listIndexAssembler = (DomainResultAssembler<Integer>) listIndexFetch.createAssembler( this, creationState );
-		this.elementAssembler = elementFetch.createAssembler( this, creationState );
-		this.indexBase = getCollectionAttributeMapping().getIndexMetadata().getListIndexBase();
+		listIndexAssembler = (DomainResultAssembler<Integer>) listIndexFetch.createAssembler( this, creationState );
+		elementAssembler = elementFetch.createAssembler( this, creationState );
+		indexBase = getCollectionAttributeMapping().getIndexMetadata().getListIndexBase();
 	}
 
 	@Override
 	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
 		super.forEachSubInitializer( consumer, data );
-		final Initializer<?> initializer = elementAssembler.getInitializer();
+		final var initializer = elementAssembler.getInitializer();
 		if ( initializer != null ) {
 			consumer.accept( initializer, data.getRowProcessingState() );
 		}
@@ -78,7 +78,7 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer<Abs
 
 	@Override
 	protected void readCollectionRow(ImmediateCollectionInitializerData data, List<Object> loadingState) {
-		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		final var rowProcessingState = data.getRowProcessingState();
 		final Integer indexValue = listIndexAssembler.assemble( rowProcessingState );
 		if ( indexValue == null ) {
 			throw new HibernateException( "Illegal null value for array index encountered while reading: "
@@ -104,21 +104,23 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer<Abs
 
 	@Override
 	public void initializeInstanceFromParent(Object parentInstance, ImmediateCollectionInitializerData data) {
-		final Object[] array = (Object[]) getInitializedPart().getValue( parentInstance );
+		final var array = (Object[]) getInitializedPart().getValue( parentInstance );
 		assert array != null;
-		data.setCollectionInstance( data.getRowProcessingState().getSession()
-				.getPersistenceContextInternal()
-				.getCollectionHolder( array ) );
+		final var holder =
+				data.getRowProcessingState().getSession()
+						.getPersistenceContextInternal()
+						.getCollectionHolder( array );
+		data.setCollectionInstance( holder );
 		data.setState( State.INITIALIZED );
 		initializeSubInstancesFromParent( data );
 	}
 
 	@Override
 	protected void initializeSubInstancesFromParent(ImmediateCollectionInitializerData data) {
-		final Initializer<?> initializer = elementAssembler.getInitializer();
+		final var initializer = elementAssembler.getInitializer();
 		if ( initializer != null ) {
-			final RowProcessingState rowProcessingState = data.getRowProcessingState();
-			final Iterator iter = getCollectionInstance( data ).elements();
+			final var rowProcessingState = data.getRowProcessingState();
+			final var iter = getCollectionInstance( data ).elements();
 			while ( iter.hasNext() ) {
 				initializer.initializeInstanceFromParent( iter.next(), rowProcessingState );
 			}
@@ -127,17 +129,17 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer<Abs
 
 	@Override
 	protected void resolveInstanceSubInitializers(ImmediateCollectionInitializerData data) {
-		final Initializer<?> initializer = elementAssembler.getInitializer();
+		final var initializer = elementAssembler.getInitializer();
 		if ( initializer != null ) {
-			final RowProcessingState rowProcessingState = data.getRowProcessingState();
+			final var rowProcessingState = data.getRowProcessingState();
 			Integer index = listIndexAssembler.assemble( rowProcessingState );
 			if ( index != null ) {
-				final PersistentArrayHolder<?> arrayHolder = getCollectionInstance( data );
+				final var arrayHolder = getCollectionInstance( data );
 				assert arrayHolder != null;
 				if ( indexBase != 0 ) {
 					index -= indexBase;
 				}
-				initializer.resolveInstance( Array.get( arrayHolder.getArray(), index ), rowProcessingState );
+				initializer.resolveInstance( get( arrayHolder.getArray(), index ), rowProcessingState );
 			}
 		}
 	}
@@ -154,6 +156,6 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer<Abs
 
 	@Override
 	public String toString() {
-		return "ArrayInitializer{" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
+		return "ArrayInitializer{" + toLoggableString( getNavigablePath() ) + ")";
 	}
 }

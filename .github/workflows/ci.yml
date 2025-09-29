@@ -1,12 +1,6 @@
 name: GH Actions CI
 
 on:
-  push:
-    branches:
-      # Pattern order matters: the last matching inclusion/exclusion wins
-      - '7.1'
-      # We don't want to run CI on branches for dependabot, just on the PR.
-      - '!dependabot/**'
   pull_request:
     branches:
       - '7.1'

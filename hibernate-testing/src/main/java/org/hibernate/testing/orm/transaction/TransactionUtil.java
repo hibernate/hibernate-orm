@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import jakarta.persistence.EntityManager;
 
+import jakarta.persistence.QueryTimeoutException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.SharedSessionContract;
@@ -172,7 +173,8 @@ public abstract class TransactionUtil {
 		}
 		catch (RuntimeException re) {
 			if ( re.getCause() instanceof jakarta.persistence.LockTimeoutException
-				|| re.getCause() instanceof org.hibernate.exception.LockTimeoutException ) {
+				|| re.getCause() instanceof org.hibernate.exception.LockTimeoutException
+				|| re.getCause() instanceof QueryTimeoutException ) {
 				if ( !expectingToBlock ) {
 					fail( "Expecting update to " + tableName + " to succeed, but failed due to async timeout (presumably due to locks)", re.getCause() );
 				}
@@ -227,7 +229,8 @@ public abstract class TransactionUtil {
 			}
 			catch (RuntimeException re) {
 				if ( re.getCause() instanceof jakarta.persistence.LockTimeoutException
-					|| re.getCause() instanceof org.hibernate.exception.LockTimeoutException ) {
+					|| re.getCause() instanceof org.hibernate.exception.LockTimeoutException
+					|| re.getCause() instanceof QueryTimeoutException ) {
 					if ( !expectingToBlock ) {
 						fail( "Expecting update to " + tableName + " to succeed, but failed due to async timeout (presumably due to locks)", re.getCause() );
 					}

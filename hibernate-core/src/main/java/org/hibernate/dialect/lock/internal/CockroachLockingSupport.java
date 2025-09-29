@@ -55,6 +55,8 @@ public class CockroachLockingSupport implements LockingSupport, LockingSupport.M
 		return switch (timeout.milliseconds()) {
 			case WAIT_FOREVER_MILLI -> QUERY;
 			case NO_WAIT_MILLI -> supportsNoWait ? QUERY : LockTimeoutType.NONE;
+			// Due to https://github.com/cockroachdb/cockroach/issues/88995, locking doesn't work properly
+			// without certain configuration options and hence skipping locked rows also doesn't work correctly.
 			case SKIP_LOCKED_MILLI -> LockTimeoutType.NONE;
 			// it does not, however, support WAIT as part of for-update, but does support a connection-level lock_timeout setting
 			default -> CONNECTION;

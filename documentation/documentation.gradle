@@ -231,18 +231,31 @@ asciidoctorj {
 			version '2.3.18'
 		}
 	}
-	attributes icons: 'font',
-			experimental: true,
-			'source-highlighter': 'rouge',
-			majorMinorVersion: hibernateVersion.family,
-			fullVersion: hibernateVersion.fullName,
-			javaCompatibleVersions: jdks.versions.compatible.get(),
-			jakartaJpaVersion: jpaVersion.name,
-			jdbcVersion: jdks.versions.jdbc.get(),
-            'root-project-dir': rootProject.layout.projectDirectory.asFile.absolutePath,
-            'doc-main-dir': project( ':documentation').layout.projectDirectory.dir('src').dir("main").asFile.absolutePath
 
-	options logDocuments: true
+    attributes icons: 'font',
+            experimental: true,
+            'source-highlighter': 'rouge',
+            majorMinorVersion: hibernateVersion.family,
+            fullVersion: hibernateVersion.fullName,
+            javaCompatibleVersions: jdks.versions.compatible.get(),
+            jakartaJpaVersion: jpaVersion.name,
+            jdbcVersion: jdks.versions.jdbc.get(),
+            'root-project-dir': rootProject.layout.projectDirectory.asFile.absolutePath,
+            'doc-main-dir': project(':documentation').layout.projectDirectory.dir('src').dir("main").asFile.absolutePath,
+            'theme-main-dir': rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+                    .dir("hibernate-asciidoctor-theme").dir("asciidoc").asFile.absolutePath,
+            stylesdir: "css",
+            'iconfont-remote': false,
+            'iconfont-name': 'font-awesome/css/solid',
+            docinfo: 'shared,private',
+            docinfodir: rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+                    .dir("hibernate-asciidoctor-theme").dir("asciidoc").dir("docinfo").dir('hibernate').asFile.absolutePath,
+            'html.meta.project-key': 'orm',
+            'html.outdated-content.project-key': 'orm',
+            'html-meta-description': 'Hibernate ORM, relational persistence for idiomatic Java',
+            'html-meta-keywords': 'hibernate, orm, hibernate orm, database, db, jpa, sql'
+
+    options logDocuments: true
 }
 
 
@@ -260,6 +273,12 @@ def renderTopicalGuideHtmlTask = tasks.register( 'renderTopicalGuideHtml', Ascii
 		from( 'src/main/asciidoc/topical/' ) {
 			include '**/images/**'
 		}
+        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+                .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
+            include 'css/**'
+            include 'images/**'
+            include 'script/**'
+        }
 	}
 }
 
@@ -297,21 +316,15 @@ def renderGettingStartedGuideHtmlTask = tasks.register( 'renderGettingStartedGui
 
 	outputDir = gettingStartedGuideHtmlDir
 
-	attributes linkcss: true,
-			   stylesheet: "css/hibernate.css",
-			   docinfo: 'private',
-			   jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
 
 	resources {
-		from( 'src/main/style/asciidoctor' ) {
-			include 'images/**'
-		}
-		from( 'src/main/style/asciidoctor' ) {
-			include 'css/**'
-		}
-		from( 'src/main/style/asciidoctor' ) {
-			include 'js/**'
-		}
+        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+                .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
+            include 'css/**'
+            include 'images/**'
+            include 'script/**'
+        }
 	}
 }
 
@@ -332,7 +345,7 @@ def renderGettingStartedGuidePdfTask = tasks.register( 'renderGettingStartedGuid
 
 def renderGettingStartedGuidesTask = tasks.register( 'renderGettingStartedGuides' ) { task ->
 	task.group = "Documentation"
-	task.description = 'Renders the Getting Started Guide in all formats, as well as the acccompanying tutorial zip.'
+	task.description = 'Renders the Getting Started Guide in all formats, as well as the accompanying tutorial zip.'
 	task.dependsOn renderGettingStartedGuideHtmlTask, renderGettingStartedGuidePdfTask, buildTutorialZipTask
 }
 
@@ -349,24 +362,18 @@ def renderIntroductionHtmlTask = tasks.register( 'renderIntroductionHtml', Ascii
 
 	outputDir = "$buildDir/asciidoc/introduction/html_single"
 
-	attributes linkcss: true,
-			   stylesheet: "css/hibernate.css",
-			   docinfo: 'private',
-			   jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
 
 	resources {
 		from( 'src/main/asciidoc/introduction/' ) {
 			include 'images/**'
 		}
-		from( 'src/main/style/asciidoctor' ) {
-			include 'images/**'
-		}
-		from( 'src/main/style/asciidoctor' ) {
-			include 'css/**'
-		}
-		from( 'src/main/style/asciidoctor' ) {
-			include 'js/**'
-		}
+        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+                .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
+            include 'css/**'
+            include 'images/**'
+            include 'script/**'
+        }
 	}
 }
 
@@ -408,24 +415,18 @@ def renderQueryLanguageGuideHtmlTask = tasks.register( 'renderQueryLanguageGuide
 
 	task.outputDir = layout.buildDirectory.dir( "asciidoc/querylanguage/html_single" )
 
-	task.attributes linkcss: true,
-			   stylesheet: "css/hibernate.css",
-			   docinfo: 'private',
-			   jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+	task.attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
 
 	task.resources {
 		from( 'src/main/asciidoc/querylanguage/' ) {
 			include 'images/**'
 		}
-		from( 'src/main/style/asciidoctor' ) {
-			include 'images/**'
-		}
-		from( 'src/main/style/asciidoctor' ) {
-			include 'css/**'
-		}
-		from( 'src/main/style/asciidoctor' ) {
-			include 'js/**'
-		}
+        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+                .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
+            include 'css/**'
+            include 'images/**'
+            include 'script/**'
+        }
 	}
 }
 
@@ -456,24 +457,18 @@ def renderRepositoriesHtmlTask = tasks.register( 'renderRepositoriesHtml', Ascii
 
 	task.outputDir = layout.buildDirectory.dir( "asciidoc/repositories/html_single" )
 
-	task.attributes linkcss: true,
-			stylesheet: "css/hibernate.css",
-			docinfo: 'private',
-			jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+	task.attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
 
 	task.resources {
 		from( 'src/main/asciidoc/repositories/' ) {
 			include 'images/**'
 		}
-		from( 'src/main/style/asciidoctor' ) {
-			include 'images/**'
-		}
-		from( 'src/main/style/asciidoctor' ) {
-			include 'css/**'
-		}
-		from( 'src/main/style/asciidoctor' ) {
-			include 'js/**'
-		}
+        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+                .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
+            include 'css/**'
+            include 'images/**'
+            include 'script/**'
+        }
 	}
 }
 
@@ -672,26 +667,20 @@ def renderUserGuideHtmlTask = tasks.register( 'renderUserGuideHtml', Asciidoctor
 	}
 	outputDir = "$buildDir/asciidoc/userguide/html_single"
 
-	attributes linkcss: true,
-			   stylesheet: "css/hibernate.css",
-			   docinfo: 'private',
-			   jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/",
+	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/",
 			   'generated-report-dir': layout.buildDirectory.dir( 'orm/generated' ).get()
 
 	resources {
 		from( 'src/main/asciidoc/userguide/' ) {
 			include 'images/**'
 		}
-		from( 'src/main/style/asciidoctor' ) {
-			include 'images/**'
-		}
-		from( 'src/main/style/asciidoctor' ) {
-			include 'css/**'
-		}
-		from( 'src/main/style/asciidoctor' ) {
-			include 'js/**'
-		}
-	}
+        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+                .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
+            include 'css/**'
+            include 'images/**'
+            include 'script/**'
+        }
+    }
 }
 
 def renderUserGuidesTask = tasks.register( 'renderUserGuides' ) { task ->
@@ -715,19 +704,16 @@ def renderIntegrationGuideHtmlTask = tasks.register( "renderIntegrationGuideHtml
 
 	outputDir = project.layout.buildDirectory.dir( 'asciidoc/integrationguide/html_single' )
 
-	attributes linkcss: true,
-			   stylesheet: "css/hibernate.css"
-
 	resources {
 		from( 'src/main/asciidoc/integrationguide/' ) {
 			include 'images/**'
 		}
-		from( 'src/main/style/asciidoctor' ) {
-			include 'images/**'
-		}
-		from( 'src/main/style/asciidoctor' ) {
-			include 'css/**'
-		}
+        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+                .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
+            include 'css/**'
+            include 'images/**'
+            include 'script/**'
+        }
 	}
 }
 
@@ -766,16 +752,13 @@ def renderWhatsNewTask = tasks.register( "renderWhatsNew", AsciidoctorTask ) {
 
 	outputDir = project.layout.buildDirectory.dir( 'asciidoc/whats-new' )
 
-	attributes linkcss: true,
-			stylesheet: "css/hibernate.css"
-
 	resources {
-		from( 'src/main/style/asciidoctor' ) {
-			include 'images/**'
-		}
-		from( 'src/main/style/asciidoctor' ) {
-			include 'css/**'
-		}
+        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+                .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
+            include 'css/**'
+            include 'images/**'
+            include 'script/**'
+        }
 	}
 }
 
@@ -805,16 +788,13 @@ def renderMigrationGuideTask = tasks.register( "renderMigrationGuide", Asciidoct
 
 	outputDir = project.layout.buildDirectory.dir( 'asciidoc/migration-guide' )
 
-	attributes linkcss: true,
-			   stylesheet: "css/hibernate.css"
-
 	resources {
-		from( 'src/main/style/asciidoctor' ) {
-			include 'images/**'
-		}
-		from( 'src/main/style/asciidoctor' ) {
-			include 'css/**'
-		}
+        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+                .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
+            include 'css/**'
+            include 'images/**'
+            include 'script/**'
+        }
 	}
 }
 
@@ -834,16 +814,13 @@ def renderLoggingReportTask = tasks.register( 'renderLoggingReport', Asciidoctor
 
 	task.outputDir = project.layout.buildDirectory.dir( 'asciidoc/logging' )
 
-	task.attributes linkcss: true,
-					stylesheet: "css/hibernate.css"
-
 	task.resources {
-		from( 'src/main/style/asciidoctor' ) {
-			include 'images/**'
-		}
-		from( 'src/main/style/asciidoctor' ) {
-			include 'css/**'
-		}
+        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+                .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
+            include 'css/**'
+            include 'images/**'
+            include 'script/**'
+        }
 	}
 }
 
@@ -860,16 +837,13 @@ def renderDialectReportTask = tasks.register( 'renderDialectReport', Asciidoctor
 
 	task.outputDir = project.layout.buildDirectory.dir( 'asciidoc/dialect' )
 
-	task.attributes linkcss: true,
-					stylesheet: "css/hibernate.css"
-
 	task.resources {
-		from( 'src/main/style/asciidoctor' ) {
-			include 'images/**'
-		}
-		from( 'src/main/style/asciidoctor' ) {
-			include 'css/**'
-		}
+        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+                .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
+            include 'css/**'
+            include 'images/**'
+            include 'script/**'
+        }
 	}
 }
 

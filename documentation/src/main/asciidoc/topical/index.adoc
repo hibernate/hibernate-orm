@@ -6,7 +6,9 @@ include::{shared-attributes-dir}/filesystem-attributes.adoc[]
 include::{shared-attributes-dir}/renderer-attributes.adoc[]
 
 = Topical Guides
-:toc:
+:toc2:
+:toclevels: 3
+:sectanchors:
 
 Hibernate documentation is organized into several guides that cover specific topics.  This guide provides links to
 all the documentation to give some direction on where to look for information.

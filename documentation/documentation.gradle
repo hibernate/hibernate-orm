@@ -253,7 +253,8 @@ asciidoctorj {
             'html.meta.project-key': 'orm',
             'html.outdated-content.project-key': 'orm',
             'html-meta-description': 'Hibernate ORM, relational persistence for idiomatic Java',
-            'html-meta-keywords': 'hibernate, orm, hibernate orm, database, db, jpa, sql'
+            'html-meta-keywords': 'hibernate, orm, hibernate orm, database, db, jpa, sql',
+            'html-meta-version-family': ormBuildDetails.hibernateVersion.family
 
     options logDocuments: true
 }
@@ -889,9 +890,20 @@ tasks.withType(AsciidoctorTask).configureEach {
     }
     // See https://docs.asciidoctor.org/gradle-plugin/latest/common-task-configuration/#choosing-an-execution-mode-for-asciidoctorj
     executionMode = ExecutionMode.JAVA_EXEC
+
+    dependsOn 'unpackTheme'
 }
 
 tasks.withType(AsciidoctorPdfTask).configureEach {
     // See https://docs.asciidoctor.org/gradle-plugin/latest/common-task-configuration/#choosing-an-execution-mode-for-asciidoctorj
     executionMode = ExecutionMode.JAVA_EXEC
+
+    asciidoctorj {
+        requires rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+                .dir("hibernate-asciidoctor-theme").dir("asciidoc").dir("theme").file("hibernate.rb").asFile.absolutePath
+    }
+
+    attributes 'rouge-style': 'hibernate'
+
+    dependsOn 'unpackTheme'
 }

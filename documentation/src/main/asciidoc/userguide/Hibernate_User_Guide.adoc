@@ -10,6 +10,7 @@ include::{shared-attributes-dir}/renderer-attributes.adoc[]
 :toc2:
 :toclevels: 3
 :sectanchors:
+:version-selector-enabled: true
 
 include::Preface.adoc[]
 

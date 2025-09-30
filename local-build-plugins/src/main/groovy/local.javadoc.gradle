@@ -11,7 +11,7 @@ configurations {
 }
 
 dependencies {
-    themezip 'org.hibernate.infra:hibernate-asciidoctor-theme:6.0.0.Final@zip'
+    themezip 'org.hibernate.infra:hibernate-asciidoctor-theme:6.0.2.Final@zip'
 }
 
 tasks.register('unpackTheme', Copy) {

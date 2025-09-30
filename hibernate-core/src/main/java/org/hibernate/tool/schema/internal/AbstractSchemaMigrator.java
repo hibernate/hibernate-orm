@@ -25,6 +25,7 @@ import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.UniqueConstraintSchemaUpdateStrategy;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.IndexInformation;
@@ -80,8 +81,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		if ( !targetDescriptor.getTargetTypes().isEmpty() ) {
 			final var jdbcContext = tool.resolveJdbcContext( options.getConfigurationValues() );
 			try ( var isolator = tool.getDdlTransactionIsolator( jdbcContext ) ) {
-				final var databaseInformation =
-						buildDatabaseInformation( isolator, sqlGenerationContext, tool );
+				final var databaseInformation = buildDatabaseInformation( isolator, sqlGenerationContext );
 				final var targets = tool.buildGenerationTargets(
 						targetDescriptor,
 						isolator,
@@ -125,6 +125,12 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				}
 			}
 		}
+	}
+
+	protected DatabaseInformation buildDatabaseInformation(
+			DdlTransactionIsolator ddlTransactionIsolator,
+			SqlStringGenerationContext sqlStringGenerationContext) {
+		return Helper.buildDatabaseInformation( ddlTransactionIsolator, sqlStringGenerationContext, tool );
 	}
 
 	private SqlStringGenerationContext sqlGenerationContext(Metadata metadata, ExecutionOptions options) {

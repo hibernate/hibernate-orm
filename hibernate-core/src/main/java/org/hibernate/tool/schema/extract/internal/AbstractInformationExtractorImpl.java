@@ -16,8 +16,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.StringTokenizer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.JDBCException;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
@@ -32,6 +34,9 @@ import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.ForeignKeyInformation;
 import org.hibernate.tool.schema.extract.spi.IndexInformation;
 import org.hibernate.tool.schema.extract.spi.InformationExtractor;
+import org.hibernate.tool.schema.extract.spi.NameSpaceForeignKeysInformation;
+import org.hibernate.tool.schema.extract.spi.NameSpaceIndexesInformation;
+import org.hibernate.tool.schema.extract.spi.NameSpacePrimaryKeysInformation;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.extract.spi.PrimaryKeyInformation;
 import org.hibernate.tool.schema.extract.spi.SchemaExtractionException;
@@ -162,6 +167,15 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	}
 	protected String getResultSetPrimaryKeyTableLabel() {
 		return "PKTABLE_NAME";
+	}
+	protected String getResultSetForeignKeyCatalogLabel() {
+		return "FKTABLE_CAT";
+	}
+	protected String getResultSetForeignKeySchemaLabel() {
+		return "FKTABLE_SCHEM";
+	}
+	protected String getResultSetForeignKeyTableLabel() {
+		return "FKTABLE_NAME";
 	}
 	protected String getResultSetColumnNameLabel() {
 		return "COLUMN_NAME";
@@ -882,8 +896,20 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			ExtractionContext.ResultSetProcessor<T> processor)
 					throws SQLException;
 
+	protected abstract <T> T processPrimaryKeysResultSet(
+			String catalogFilter,
+			String schemaFilter,
+			@Nullable String tableName,
+			ExtractionContext.ResultSetProcessor<T> processor)
+			throws SQLException;
+
 	@Override
-	public PrimaryKeyInformation getPrimaryKey(TableInformationImpl tableInformation) {
+	public @Nullable PrimaryKeyInformation getPrimaryKey(TableInformation tableInformation) {
+		final var databaseObjectAccess = extractionContext.getDatabaseObjectAccess();
+		if ( databaseObjectAccess.isCaching() && supportsBulkPrimaryKeyRetrieval() ) {
+			return databaseObjectAccess.locatePrimaryKeyInformation( tableInformation.getName() );
+		}
+
 		final var tableName = tableInformation.getName();
 		final Identifier catalog = tableName.getCatalogName();
 		final Identifier schema = tableName.getSchemaName();
@@ -948,6 +974,89 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			// build the return
 			return new PrimaryKeyInformationImpl( primaryKeyIdentifier, columns );
 		}
+	}
+
+	@Override
+	public NameSpacePrimaryKeysInformation getPrimaryKeys(Identifier catalog, Identifier schema) {
+		if ( !supportsBulkPrimaryKeyRetrieval() ) {
+			throw new UnsupportedOperationException( "Database doesn't support extracting all primary keys at once" );
+		}
+		else {
+			try {
+				return processPrimaryKeysResultSet(
+						catalog == null ? "" : catalog.getText(),
+						schema == null ? "" : schema.getText(),
+						(String) null,
+						this::extractNameSpacePrimaryKeysInformation
+				);
+			}
+			catch (SQLException e) {
+				throw convertSQLException( e,
+						"Error while reading primary key meta data for namespace "
+						+ new Namespace.Name( catalog, schema ) );
+			}
+		}
+	}
+
+	private TableInformation getTableInformation(
+			@Nullable String catalogName,
+			@Nullable String schemaName,
+			@Nullable String tableName) {
+		final var qualifiedTableName = new QualifiedTableName(
+				toIdentifier( catalogName ),
+				toIdentifier( schemaName ),
+				toIdentifier( tableName )
+		);
+		final var tableInformation =
+				extractionContext.getDatabaseObjectAccess().locateTableInformation( qualifiedTableName );
+		if ( tableInformation == null ) {
+			throw new SchemaExtractionException( "Could not locate table information for " + qualifiedTableName );
+		}
+		return tableInformation;
+	}
+
+	protected NameSpacePrimaryKeysInformation extractNameSpacePrimaryKeysInformation(ResultSet resultSet)
+			throws SQLException {
+		final var primaryKeysInformation = new NameSpacePrimaryKeysInformation( getIdentifierHelper() );
+
+		while ( resultSet.next() ) {
+			final String currentTableName = resultSet.getString( getResultSetPrimaryKeyTableLabel() );
+			final String currentPkName = resultSet.getString( getResultSetPrimaryKeyNameLabel() );
+			final Identifier currentPrimaryKeyIdentifier =
+					currentPkName == null ? null : toIdentifier( currentPkName );
+			final TableInformation tableInformation = getTableInformation(
+					resultSet.getString( getResultSetPrimaryKeyCatalogLabel() ),
+					resultSet.getString( getResultSetPrimaryKeySchemaLabel() ),
+					currentTableName
+			);
+			PrimaryKeyInformation primaryKeyInformation =
+					primaryKeysInformation.getPrimaryKeyInformation( currentTableName );
+			final List<ColumnInformation> columns;
+			if ( primaryKeyInformation != null ) {
+				if ( !Objects.equals( primaryKeyInformation.getPrimaryKeyIdentifier(), currentPrimaryKeyIdentifier ) ) {
+					throw new SchemaExtractionException( "Encountered primary keys differing name on table "
+														+ currentTableName );
+				}
+				columns = (List<ColumnInformation>) primaryKeyInformation.getColumns();
+			}
+			else {
+				columns = new ArrayList<>();
+				primaryKeyInformation = new PrimaryKeyInformationImpl( currentPrimaryKeyIdentifier, columns );
+				primaryKeysInformation.addPrimaryKeyInformation( tableInformation, primaryKeyInformation );
+			}
+
+			final int columnPosition = resultSet.getInt( getResultSetColumnPositionColumn() );
+			final int index = columnPosition - 1;
+			// Fill up the array list with nulls up to the desired index, because some JDBC drivers don't return results ordered by column position
+			while ( columns.size() <= index ) {
+				columns.add( null );
+			}
+			final Identifier columnIdentifier =
+					toIdentifier( resultSet.getString( getResultSetColumnNameLabel() ) );
+			columns.set( index, tableInformation.getColumn( columnIdentifier ) );
+		}
+		primaryKeysInformation.validate();
+		return primaryKeysInformation;
 	}
 
 	/**
@@ -1022,7 +1131,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	protected abstract <T> T processIndexInfoResultSet(
 			String catalog,
 			String schema,
-			String table,
+			@Nullable String table,
 			boolean unique,
 			boolean approximate,
 			ExtractionContext.ResultSetProcessor<T> processor)
@@ -1030,6 +1139,11 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 
 	@Override
 	public Iterable<IndexInformation> getIndexes(TableInformation tableInformation) {
+		final var databaseObjectAccess = extractionContext.getDatabaseObjectAccess();
+		if ( databaseObjectAccess.isCaching() && supportsBulkIndexRetrieval() ) {
+			return databaseObjectAccess.locateIndexesInformation( tableInformation.getName() );
+		}
+
 		final var tableName = tableInformation.getName();
 		final Identifier catalog = tableName.getCatalogName();
 		final Identifier schema = tableName.getSchemaName();
@@ -1091,6 +1205,79 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			builders.put( indexIdentifier, builder );
 		}
 		return builder;
+	}
+
+	@Override
+	public NameSpaceIndexesInformation getIndexes(Identifier catalog, Identifier schema) {
+		if ( !supportsBulkIndexRetrieval() ) {
+			throw new UnsupportedOperationException( "Database doesn't support extracting all indexes at once" );
+		}
+		else {
+			try {
+				return processIndexInfoResultSet(
+						catalog == null ? "" : catalog.getText(),
+						schema == null ? "" : schema.getText(),
+						null,
+						false,
+						true,
+						this::extractNameSpaceIndexesInformation
+				);
+			}
+			catch (SQLException e) {
+				throw convertSQLException( e,
+						"Error while reading index information for namespace "
+						+ new Namespace.Name( catalog, schema ) );
+			}
+		}
+	}
+
+	protected NameSpaceIndexesInformation extractNameSpaceIndexesInformation(ResultSet resultSet)
+			throws SQLException {
+		final var indexesInformation = new NameSpaceIndexesInformation( getIdentifierHelper() );
+
+		while ( resultSet.next() ) {
+			if ( resultSet.getShort( getResultSetIndexTypeLabel() )
+				!= DatabaseMetaData.tableIndexStatistic ) {
+				final TableInformation tableInformation = getTableInformation(
+						resultSet.getString( getResultSetCatalogLabel() ),
+						resultSet.getString( getResultSetSchemaLabel() ),
+						resultSet.getString( getResultSetTableNameLabel() )
+				);
+				final Identifier indexIdentifier =
+						toIdentifier( resultSet.getString( getResultSetIndexNameLabel() ) );
+				final var index = getOrCreateIndexInformation( indexesInformation, indexIdentifier, tableInformation );
+				final Identifier columnIdentifier =
+						toIdentifier( resultSet.getString( getResultSetColumnNameLabel() ) );
+				final var columnInformation = tableInformation.getColumn( columnIdentifier );
+				if ( columnInformation == null ) {
+					// See HHH-10191: this may happen when dealing with Oracle/PostgreSQL function indexes
+					CORE_LOGGER.logCannotLocateIndexColumnInformation(
+							columnIdentifier.getText(),
+							indexIdentifier.getText()
+					);
+				}
+				index.getIndexedColumns().add( columnInformation );
+			}
+		}
+		return indexesInformation;
+	}
+
+	private IndexInformation getOrCreateIndexInformation(
+			NameSpaceIndexesInformation indexesInformation,
+			Identifier indexIdentifier,
+			TableInformation tableInformation) {
+		final List<IndexInformation> indexes =
+				indexesInformation.getIndexesInformation( tableInformation.getName().getTableName().getText() );
+		if ( indexes != null ) {
+			for ( IndexInformation index : indexes ) {
+				if ( indexIdentifier.equals( index.getIndexIdentifier() ) ) {
+					return index;
+				}
+			}
+		}
+		final var indexInformation = new IndexInformationImpl( indexIdentifier, new ArrayList<>() );
+		indexesInformation.addIndexInformation( tableInformation, indexInformation );
+		return indexInformation;
 	}
 
 	/**
@@ -1162,7 +1349,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	protected abstract <T> T processImportedKeysResultSet(
 			String catalog,
 			String schema,
-			String table,
+			@Nullable String table,
 			ExtractionContext.ResultSetProcessor<T> processor)
 					throws SQLException;
 
@@ -1254,6 +1441,11 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 
 	@Override
 	public Iterable<ForeignKeyInformation> getForeignKeys(TableInformation tableInformation) {
+		final var databaseObjectAccess = extractionContext.getDatabaseObjectAccess();
+		if ( databaseObjectAccess.isCaching() && supportsBulkForeignKeyRetrieval() ) {
+			return databaseObjectAccess.locateForeignKeyInformation( tableInformation.getName() );
+		}
+
 		final var tableName = tableInformation.getName();
 		final Identifier catalog = tableName.getCatalogName();
 		final Identifier schema = tableName.getSchemaName();
@@ -1294,6 +1486,82 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			foreignKeys.add( foreignKeyBuilder.build() );
 		}
 		return foreignKeys;
+	}
+
+	@Override
+	public NameSpaceForeignKeysInformation getForeignKeys(Identifier catalog, Identifier schema) {
+		if ( !supportsBulkForeignKeyRetrieval() ) {
+			throw new UnsupportedOperationException( "Database doesn't support extracting all foreign keys at once" );
+		}
+		else {
+			try {
+				return processImportedKeysResultSet(
+						catalog == null ? "" : catalog.getText(),
+						schema == null ? "" : schema.getText(),
+						null,
+						this::extractNameSpaceForeignKeysInformation
+				);
+			}
+			catch (SQLException e) {
+				throw convertSQLException( e,
+						"Error while reading foreign key information for namespace "
+						+ new Namespace.Name( catalog, schema ) );
+			}
+		}
+	}
+
+	protected NameSpaceForeignKeysInformation extractNameSpaceForeignKeysInformation(ResultSet resultSet)
+			throws SQLException {
+		final var foreignKeysInformation = new NameSpaceForeignKeysInformation( getIdentifierHelper() );
+
+		while ( resultSet.next() ) {
+			final TableInformation tableInformation = getTableInformation(
+					resultSet.getString( getResultSetForeignKeyCatalogLabel() ),
+					resultSet.getString( getResultSetForeignKeySchemaLabel() ),
+					resultSet.getString( getResultSetForeignKeyTableLabel() )
+			);
+			final Identifier foreignKeyIdentifier =
+					toIdentifier( resultSet.getString( getResultSetForeignKeyLabel() ) );
+			final var foreignKey = getOrCreateForeignKeyInformation( foreignKeysInformation, foreignKeyIdentifier, tableInformation );
+			final var primaryKeyTableInformation =
+					extractionContext.getDatabaseObjectAccess()
+							.locateTableInformation( extractPrimaryKeyTableName( resultSet ) );
+			if ( primaryKeyTableInformation != null ) {
+				// the assumption here is that we have not seen this table already based on fully-qualified name
+				// during previous step of building all table metadata so most likely this is
+				// not a match based solely on schema/catalog and that another row in this result set
+				// should match.
+				final Identifier foreignKeyColumnIdentifier =
+						toIdentifier( resultSet.getString( getResultSetForeignKeyColumnNameLabel() ) );
+				final Identifier pkColumnIdentifier =
+						toIdentifier( resultSet.getString( getResultSetPrimaryKeyColumnNameLabel() ) );
+				((List<ForeignKeyInformation.ColumnReferenceMapping>) foreignKey.getColumnReferenceMappings()).add(
+						new ColumnReferenceMappingImpl(
+							tableInformation.getColumn( foreignKeyColumnIdentifier ),
+							primaryKeyTableInformation.getColumn( pkColumnIdentifier )
+						)
+				);
+			}
+		}
+		return foreignKeysInformation;
+	}
+
+	private ForeignKeyInformation getOrCreateForeignKeyInformation(
+			NameSpaceForeignKeysInformation foreignKeysInformation,
+			Identifier foreignKeyIdentifier,
+			TableInformation tableInformation) {
+		final List<ForeignKeyInformation> foreignKeys =
+				foreignKeysInformation.getForeignKeysInformation( tableInformation.getName().getTableName().getText() );
+		if ( foreignKeys != null ) {
+			for ( ForeignKeyInformation foreignKey : foreignKeys ) {
+				if ( foreignKeyIdentifier.equals( foreignKey.getForeignKeyIdentifier() ) ) {
+					return foreignKey;
+				}
+			}
+		}
+		final var foreignKeyInformation = new ForeignKeyInformationImpl( foreignKeyIdentifier, new ArrayList<>() );
+		foreignKeysInformation.addForeignKeyInformation( tableInformation, foreignKeyInformation );
+		return foreignKeyInformation;
 	}
 
 	private void process(
@@ -1385,6 +1653,21 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 				toIdentifier( resultSet.getString( getResultSetSchemaLabel() ) ),
 				toIdentifier( resultSet.getString( getResultSetTableNameLabel() ) )
 		);
+	}
+
+	@Override
+	public boolean supportsBulkPrimaryKeyRetrieval() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsBulkForeignKeyRetrieval() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsBulkIndexRetrieval() {
+		return false;
 	}
 
 }

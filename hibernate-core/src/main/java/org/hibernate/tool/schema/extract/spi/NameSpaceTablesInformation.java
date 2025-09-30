@@ -7,6 +7,7 @@ package org.hibernate.tool.schema.extract.spi;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.mapping.Table;
 
@@ -25,11 +26,11 @@ public class NameSpaceTablesInformation {
 		tables.put( tableInformation.getName().getTableName().getText(), tableInformation );
 	}
 
-	public TableInformation getTableInformation(Table table) {
+	public @Nullable TableInformation getTableInformation(Table table) {
 		return tables.get( identifierHelper.toMetaDataObjectName( table.getQualifiedTableName().getTableName() ) );
 	}
 
-	public TableInformation getTableInformation(String tableName) {
+	public @Nullable TableInformation getTableInformation(String tableName) {
 		return tables.get( tableName );
 	}
 }

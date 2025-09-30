@@ -129,9 +129,12 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
+import org.hibernate.tool.schema.extract.internal.InformationExtractorJdbcDatabaseMetaDataImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+import org.hibernate.tool.schema.extract.spi.InformationExtractor;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.StandardAuxiliaryDatabaseObjectExporter;
@@ -2171,6 +2174,16 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return getQuerySequencesString() == null
 				? SequenceInformationExtractorNoOpImpl.INSTANCE
 				: SequenceInformationExtractorLegacyImpl.INSTANCE;
+	}
+
+	/**
+	 * A {@link InformationExtractor} which is able to extract
+	 * table, primary key, foreign key, index information etc. via JDBC.
+	 *
+	 * @since 7.2
+	 */
+	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
+		return new InformationExtractorJdbcDatabaseMetaDataImpl( extractionContext );
 	}
 
 	// GUID support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

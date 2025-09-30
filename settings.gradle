@@ -334,6 +334,8 @@ include 'hibernate-micrometer'
 include 'hibernate-graalvm'
 include 'hibernate-integrationtest-java-modules'
 
+include 'local-build-asciidoctor-extensions'
+
 include 'documentation'
 include 'release'
 

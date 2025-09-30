@@ -6,6 +6,7 @@ import java.util.function.Function
 
 import org.asciidoctor.gradle.jvm.AsciidoctorTask
 import org.asciidoctor.gradle.jvm.pdf.AsciidoctorPdfTask
+import org.ysb33r.grolifant.api.core.jvm.ExecutionMode
 
 buildscript {
 	configurations.configureEach {
@@ -907,9 +908,16 @@ def buildDocsForPublishingTask = tasks.register( 'buildDocsForPublishing' ) { ta
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 tasks.withType(AsciidoctorTask).configureEach {
-	baseDirFollowsSourceDir()
-	outputOptions {
-		separateOutputDirs = false
-		backends 'html5'
-	}
+    baseDirFollowsSourceDir()
+    outputOptions {
+        separateOutputDirs = false
+        backends 'html5'
+    }
+    // See https://docs.asciidoctor.org/gradle-plugin/latest/common-task-configuration/#choosing-an-execution-mode-for-asciidoctorj
+    executionMode = ExecutionMode.JAVA_EXEC
+}
+
+tasks.withType(AsciidoctorPdfTask).configureEach {
+    // See https://docs.asciidoctor.org/gradle-plugin/latest/common-task-configuration/#choosing-an-execution-mode-for-asciidoctorj
+    executionMode = ExecutionMode.JAVA_EXEC
 }

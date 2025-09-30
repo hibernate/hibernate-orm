@@ -252,7 +252,7 @@ asciidoctorj {
             docinfodir: rootProject.layout.buildDirectory.dir("unpacked-theme").get()
                     .dir("hibernate-asciidoctor-theme").dir("asciidoc").dir("docinfo").dir('hibernate').asFile.absolutePath,
             'html.meta.project-key': 'orm',
-            'html.outdated-content.project-key': 'orm',
+            'html-outdated-content-project-key': 'orm',
             'html-meta-description': 'Hibernate ORM, relational persistence for idiomatic Java',
             'html-meta-keywords': 'hibernate, orm, hibernate orm, database, db, jpa, sql',
             'html-meta-version-family': ormBuildDetails.hibernateVersion.family

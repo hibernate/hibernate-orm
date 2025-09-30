@@ -4,6 +4,7 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import java.sql.SQLException;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
@@ -11,7 +12,10 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.Formatter;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
+import org.hibernate.tool.schema.extract.internal.CachingDatabaseInformationImpl;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.spi.GenerationTarget;
@@ -98,5 +102,24 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 			}
 		}
 		return tablesInformation;
+	}
+
+	@Override
+	protected DatabaseInformation buildDatabaseInformation(DdlTransactionIsolator ddlTransactionIsolator, SqlStringGenerationContext sqlStringGenerationContext) {
+		final var serviceRegistry = ddlTransactionIsolator.getJdbcContext().getServiceRegistry();
+		final var jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
+		try {
+			return new CachingDatabaseInformationImpl(
+					serviceRegistry,
+					jdbcEnvironment,
+					sqlStringGenerationContext,
+					ddlTransactionIsolator,
+					tool
+			);
+		}
+		catch (SQLException e) {
+			throw jdbcEnvironment.getSqlExceptionHelper()
+					.convert( e, "Unable to build DatabaseInformation" );
+		}
 	}
 }

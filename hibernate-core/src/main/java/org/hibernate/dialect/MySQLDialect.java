@@ -68,6 +68,9 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.tool.schema.extract.internal.InformationExtractorMySQLImpl;
+import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+import org.hibernate.tool.schema.extract.spi.InformationExtractor;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
@@ -1666,4 +1669,8 @@ public class MySQLDialect extends Dialect {
 		return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
 	}
 
+	@Override
+	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
+		return new InformationExtractorMySQLImpl( extractionContext );
+	}
 }

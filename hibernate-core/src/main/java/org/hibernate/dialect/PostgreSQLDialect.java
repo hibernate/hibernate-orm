@@ -85,7 +85,10 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.tool.schema.extract.internal.InformationExtractorPostgreSQLImpl;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+import org.hibernate.tool.schema.extract.spi.InformationExtractor;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
@@ -1656,4 +1659,8 @@ public class PostgreSQLDialect extends Dialect {
 		return getVersion().isSameOrAfter( 14 );
 	}
 
+	@Override
+	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
+		return new InformationExtractorPostgreSQLImpl( extractionContext );
+	}
 }

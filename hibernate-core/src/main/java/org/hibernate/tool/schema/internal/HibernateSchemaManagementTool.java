@@ -21,7 +21,6 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
-import org.hibernate.tool.schema.extract.internal.InformationExtractorJdbcDatabaseMetaDataImpl;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.InformationExtractor;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
@@ -469,7 +468,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 
 		@Override
 		public InformationExtractor createInformationExtractor(ExtractionContext extractionContext) {
-			return new InformationExtractorJdbcDatabaseMetaDataImpl( extractionContext );
+			return extractionContext.getJdbcEnvironment().getDialect().getInformationExtractor( extractionContext );
 		}
 	}
 }

@@ -67,9 +67,6 @@ tasks.register('integrationTest', Test) {
 
     useJUnitPlatform()
 
-    testLogging {
-        events "passed"
-    }
 }
 
 tasks.forbiddenApisIntTest {

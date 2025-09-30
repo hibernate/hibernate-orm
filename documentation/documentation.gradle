@@ -231,6 +231,7 @@ asciidoctorj {
 			version '2.3.18'
 		}
 	}
+    docExtensions project(':local-build-asciidoctor-extensions')
 
     attributes icons: 'font',
             experimental: true,

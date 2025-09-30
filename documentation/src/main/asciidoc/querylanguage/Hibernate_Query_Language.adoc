@@ -11,8 +11,9 @@ include::{shared-attributes-dir}/renderer-attributes.adoc[]
 
 = A Guide to Hibernate Query Language
 :title-logo-image: image:../../style/asciidoctor/images/org/hibernate/logo.png[]
-:toc:
+:toc2:
 :toclevels: 3
+:sectanchors:
 
 include::Preface.adoc[]
 

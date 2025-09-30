@@ -7,8 +7,9 @@ include::{shared-attributes-dir}/renderer-attributes.adoc[]
 
 = Getting Started with Hibernate
 :description: Quick start guide for Hibernate ORM
-:toc:
+:toc2:
 :toclevels: 3
+:sectanchors:
 :docinfo:
 
 include::preface.adoc[]

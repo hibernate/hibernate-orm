@@ -1,6 +1,7 @@
 = Hibernate ORM Integration Guide
-:toc:
+:toc2:
 :toclevels: 3
+:sectanchors:
 
 include::preface.adoc[]
 

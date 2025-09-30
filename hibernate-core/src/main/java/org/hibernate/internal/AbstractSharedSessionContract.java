@@ -27,7 +27,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.creation.internal.ParentSessionCallbacks;
+import org.hibernate.engine.creation.internal.ParentSessionObserver;
 import org.hibernate.engine.creation.internal.SessionCreationOptions;
 import org.hibernate.engine.creation.internal.SessionCreationOptionsAdaptor;
 import org.hibernate.engine.creation.internal.SharedSessionBuilderImpl;
@@ -225,7 +225,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			jdbcSessionContext = createJdbcSessionContext( statementInspector );
 			logInconsistentOptions( sharedOptions );
 			addSharedSessionTransactionObserver( transactionCoordinator );
-			sharedOptions.registerParentSessionCallbacks( new ParentSessionCallbacks() {
+			sharedOptions.registerParentSessionObserver( new ParentSessionObserver() {
 				@Override
 				public void onParentFlush() {
 					propagateFlush();
@@ -233,7 +233,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 				@Override
 				public void onParentClose() {
-					propagateClose();
+					// unless explicitly disabled, propagate the closure
+					if ( sharedOptions.shouldAutoClose() ) {
+						propagateClose();
+					}
 				}
 			} );
 		}
@@ -505,13 +508,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public void close() {
-		if ( isTransactionCoordinatorShared ) {
-			// Perform an auto-flush -
-			// This deals with the natural usage pattern of a child Session
-			// used with a try-with-resource block
-			propagateFlush();
-		}
-
 		if ( !closed || waitingForAutoClose ) {
 			try {
 				delayedAfterCompletion();
@@ -915,7 +911,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// dynamic HQL handling
 
-	@Override @SuppressWarnings("rawtypes")
+	@Override @Deprecated @SuppressWarnings({"rawtypes", "deprecation"})
 	public QueryImplementor createQuery(String queryString) {
 		return createQuery( queryString, null );
 	}
@@ -1017,10 +1013,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		checksBeforeQueryCreation();
 		if ( typedQueryReference instanceof SelectionSpecificationImpl<R> specification ) {
 			final var query = specification.buildCriteria( getCriteriaBuilder() );
+			//noinspection unchecked
 			return new SqmQueryImpl<>( (SqmStatement<R>) query, specification.getResultType(), this );
 		}
 		else if ( typedQueryReference instanceof MutationSpecificationImpl<?> specification ) {
 			final var query = specification.buildCriteria( getCriteriaBuilder() );
+			//noinspection unchecked
 			return new SqmQueryImpl<>( (SqmStatement<R>) query, (Class<R>) specification.getResultType(), this );
 		}
 		else {
@@ -1039,12 +1037,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// dynamic native (SQL) query handling
 
-	@Override
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public NativeQueryImplementor<?> createNativeQuery(String sqlString) {
 		return createNativeQuery( sqlString, (Class<?>) null );
 	}
 
-	@Override
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public NativeQueryImplementor<?> createNativeQuery(String sqlString, String resultSetMappingName) {
 		checksBeforeQueryCreation();
 		return buildNativeQuery( sqlString, resultSetMappingName, null );
@@ -1146,7 +1144,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return createNamedQuery( queryName );
 	}
 
-	@Override
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public QueryImplementor<?> createNamedQuery(String name) {
 		checksBeforeQueryCreation();
 		try {
@@ -1253,12 +1251,14 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		// first see if it is a named HQL query
 		final var namedSqmQueryMemento = getSqmQueryMemento( queryName );
 		if ( namedSqmQueryMemento != null ) {
+			//noinspection unchecked
 			return sqmCreator.apply( (NamedSqmQueryMemento<T>) namedSqmQueryMemento );
 		}
 
 		// otherwise, see if it is a named native query
 		final var namedNativeDescriptor = getNativeQueryMemento( queryName );
 		if ( namedNativeDescriptor != null ) {
+			//noinspection unchecked
 			return nativeCreator.apply( (NamedNativeQueryMemento<T>) namedNativeDescriptor );
 		}
 
@@ -1322,7 +1322,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return query;
 	}
 
-	@Override
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public NativeQueryImplementor<?> getNamedNativeQuery(String queryName) {
 		final var namedNativeDescriptor = getNativeQueryMemento( queryName );
 		if ( namedNativeDescriptor != null ) {
@@ -1333,7 +1333,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	@Override
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public NativeQueryImplementor<?> getNamedNativeQuery(String queryName, String resultSetMapping) {
 		final var namedNativeDescriptor = getNativeQueryMemento( queryName );
 		if ( namedNativeDescriptor != null ) {
@@ -1590,7 +1590,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	@Override
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public QueryImplementor<?> createQuery(@SuppressWarnings("rawtypes") CriteriaUpdate criteriaUpdate) {
 		checkOpen();
 		try {
@@ -1602,7 +1602,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	@Override
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public QueryImplementor<?> createQuery(@SuppressWarnings("rawtypes") CriteriaDelete criteriaDelete) {
 		checkOpen();
 		try {

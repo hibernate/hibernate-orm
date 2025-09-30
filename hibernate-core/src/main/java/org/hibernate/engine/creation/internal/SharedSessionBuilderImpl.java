@@ -100,6 +100,7 @@ public abstract class SharedSessionBuilderImpl
 
 	@Override
 	@Deprecated(forRemoval = true)
+	@SuppressWarnings("removal")
 	public SharedSessionBuilderImplementor tenantIdentifier(String tenantIdentifier) {
 		tenantIdentifier( (Object) tenantIdentifier );
 		return this;
@@ -261,10 +262,10 @@ public abstract class SharedSessionBuilderImpl
 
 
 	@Override
-	public void registerParentSessionCallbacks(ParentSessionCallbacks callbacks) {
+	public void registerParentSessionObserver(ParentSessionObserver callbacks) {
 		original.getEventListenerManager().addListener( new SessionEventListener() {
 			@Override
-			public void flushStart() {
+			public void flushEnd(int numberOfEntities, int numberOfCollections) {
 				callbacks.onParentFlush();
 			}
 

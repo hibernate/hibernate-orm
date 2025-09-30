@@ -30,6 +30,6 @@ public interface SharedSessionCreationOptions extends SessionCreationOptions {
 	/**
 	 * Registers callbacks for the child session to integrate with events of the parent session.
 	 */
-	void registerParentSessionCallbacks(ParentSessionCallbacks callbacks);
+	void registerParentSessionObserver(ParentSessionObserver callbacks);
 
 }

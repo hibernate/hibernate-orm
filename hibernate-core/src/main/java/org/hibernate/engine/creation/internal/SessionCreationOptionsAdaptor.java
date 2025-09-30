@@ -147,7 +147,7 @@ public record SessionCreationOptionsAdaptor(
 	}
 
 	@Override
-	public void registerParentSessionCallbacks(ParentSessionCallbacks callbacks) {
+	public void registerParentSessionObserver(ParentSessionObserver callbacks) {
 		originalSession.getEventListenerManager().addListener( new SessionEventListener() {
 			@Override
 			public void flushStart() {

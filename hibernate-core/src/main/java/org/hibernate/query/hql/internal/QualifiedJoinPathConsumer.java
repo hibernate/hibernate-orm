@@ -207,6 +207,10 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 				}
 			}
 		}
+		if ( !(subPathSource instanceof SqmJoinable) ) {
+			throw new SemanticException( "Joining on basic value elements is not supported",
+					((SemanticQueryBuilder<?>) creationState).getQuery() );
+		}
 		@SuppressWarnings("unchecked")
 		final SqmJoinable<U, ?> joinSource = (SqmJoinable<U, ?>) subPathSource;
 		return createJoin( lhs, joinType, alias, fetch, isTerminal, allowReuse, creationState, joinSource );

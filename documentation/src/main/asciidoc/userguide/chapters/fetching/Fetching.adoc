@@ -78,7 +78,7 @@ When issuing a direct entity fetch, Hibernate executed the following SQL query:
 include::{example-dir-fetching}/DirectVsQueryFetchingTest.java[tags=fetching-direct-vs-query-direct-fetching-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/fetching-direct-vs-query-direct-fetching-example.sql[]
 ----
@@ -96,7 +96,7 @@ On the other hand, if you are using an entity query that does not contain a `JOI
 include::{example-dir-fetching}/DirectVsQueryFetchingTest.java[tags=fetching-direct-vs-query-entity-query-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/fetching-direct-vs-query-entity-query-example.sql[]
 ----
@@ -257,7 +257,7 @@ When fetching this entity graph, Hibernate generates the following SQL query:
 include::{example-dir-fetching}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fetching-entity-subgraph-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/fetching-strategies-dynamic-fetching-entity-subgraph-example.sql[]
 ----
@@ -446,7 +446,7 @@ the `@BatchSize` annotations allows us to load multiple `Employee` entities in a
 include::{example-dir-fetching}/BatchFetchingTest.java[tags=fetching-batch-fetching-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/fetching-batch-fetching-example.sql[]
 ----
@@ -514,7 +514,7 @@ collection using a secondary `SELECT` statement upon accessing the child collect
 include::{example-dir-fetching}/FetchModeSelectTest.java[tags=fetching-strategies-fetch-mode-select-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/fetching-strategies-fetch-mode-select-example.sql[]
 ----
@@ -553,7 +553,7 @@ Instead of passing all entity identifiers, Hibernate simply reruns the previous 
 include::{example-dir-fetching}/FetchModeSubselectTest.java[tags=fetching-strategies-fetch-mode-subselect-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/fetching-strategies-fetch-mode-subselect-example.sql[]
 ----
@@ -599,7 +599,7 @@ Hibernate is going to avoid the secondary query by issuing an OUTER JOIN for the
 include::{example-dir-fetching}/FetchModeJoinTest.java[tags=fetching-strategies-fetch-mode-join-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/fetching-strategies-fetch-mode-join-example.sql[]
 ----

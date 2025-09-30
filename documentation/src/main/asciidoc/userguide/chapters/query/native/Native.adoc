@@ -173,7 +173,7 @@ It is possible to eagerly join the `Phone` and the `Person` entities to avoid th
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-entity-associations-query-many-to-one-join-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/sql-hibernate-entity-associations-query-many-to-one-join-example.sql[]
 ----
@@ -207,7 +207,7 @@ It is possible to do the same eager joining for collections (e.g. the `Phone#cal
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-jpa-entity-associations-query-one-to-many-join-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/sql-jpa-entity-associations-query-one-to-many-join-example.sql[]
 ----
@@ -221,7 +221,7 @@ include::{extrasdir}/sql-jpa-entity-associations-query-one-to-many-join-example.
 include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-entity-associations-query-one-to-many-join-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/sql-hibernate-entity-associations-query-one-to-many-join-example.sql[]
 ----
@@ -660,7 +660,7 @@ setting a global catalog or schema so that you don't have to declare it explicit
 [[sql-global-catalog-schema-configuration]]
 .Setting global catalog and schema
 ====
-[source, XML, indent=0]
+[source, xml, indent=0]
 ----
 <property name="hibernate.default_catalog" value="crm"/>
 <property name="hibernate.default_schema" value="analytics"/>
@@ -694,7 +694,7 @@ So, when running the following native query:
 
 Hibernate is going to resolve the `{h-domain}` placeholder according to the values of the default catalog and schema:
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 SELECT *
 FROM   crm.analytics.person

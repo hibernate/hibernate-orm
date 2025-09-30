@@ -464,7 +464,7 @@ Read-only entities are skipped by the dirty checking mechanism as illustrated by
 include::{example-dir-query}/HQLTest.java[tags=hql-read-only-entities-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/hql-read-only-entities-example.sql[]
 ----

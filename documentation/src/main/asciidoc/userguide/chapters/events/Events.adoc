@@ -172,7 +172,7 @@ Default entity listeners can only be defined in XML mapping files.
 include::{example-dir-event}/DefaultEntityListener.java[tags=events-default-listener-mapping-example]
 ----
 
-[source, XML, indent=0]
+[source, xml, indent=0]
 ----
 include::{example-dir-event-resources}/DefaultEntityListener-orm.xml[tags=events-default-listener-mapping-example]
 ----
@@ -200,7 +200,7 @@ When persisting a `Person` or `Book` entity, the `createdOn` is going to be set 
 include::{example-dir-event}/DefaultEntityListenerTest.java[tags=events-default-listener-persist-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/events-default-listener-persist-example.sql[]
 ----
@@ -216,7 +216,7 @@ When updating a `Person` or `Book` entity, the `updatedOn` is going to be set by
 include::{example-dir-event}/DefaultEntityListenerTest.java[tags=events-default-listener-update-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/events-default-listener-update-example.sql[]
 ----
@@ -254,7 +254,7 @@ because the `Publisher` entity was marked with the `@ExcludeDefaultListeners` an
 include::{example-dir-event}/DefaultEntityListenerTest.java[tags=events-exclude-default-listener-persist-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/events-exclude-default-listener-persist-example.sql[]
 ----

@@ -248,7 +248,7 @@ as illustrated by the following example:
 include::{example-dir-pc}/MultiLoadIdTest.java[tags=pc-by-multiple-ids-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-by-multiple-ids-example.sql[]
 ----
@@ -375,7 +375,7 @@ If the database contains the following entities:
 include::{example-dir-pc}/WhereTest.java[tags=pc-where-persistence-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-where-persistence-example.sql[]
 ----
@@ -391,7 +391,7 @@ When executing an `Account` entity query, Hibernate is going to filter out all r
 include::{example-dir-pc}/WhereTest.java[tags=pc-where-entity-query-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-where-entity-query-example.sql[]
 ----
@@ -407,7 +407,7 @@ When fetching the `debitAccounts` or the `creditAccounts` collections, Hibernate
 include::{example-dir-pc}/WhereTest.java[tags=pc-where-collection-query-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-where-collection-query-example.sql[]
 ----
@@ -426,7 +426,7 @@ Just like `@SQLRestriction` annotation, `@SQLJoinTableRestriction` is used to fi
 include::{example-dir-pc}/WhereJoinTableTest.java[tags=pc-where-join-table-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-where-join-table-example.sql[]
 ----
@@ -503,7 +503,7 @@ Hibernate will execute the following SQL statements:
 include::{example-dir-pc}/FilterTest.java[tags=pc-filter-persistence-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-filter-persistence-example.sql[]
 ----
@@ -519,7 +519,7 @@ By default, without enabling the filter, Hibernate is going to fetch all `Accoun
 include::{example-dir-pc}/FilterTest.java[tags=pc-no-filter-entity-query-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-no-filter-entity-query-example.sql[]
 ----
@@ -542,7 +542,7 @@ include::{example-dir-pc}/FilterTest.java[tags=pc-filter-entity-query-example]
 include::{example-dir-pc}/FilterTest.java[tags=pc-filter-auto-enabled-Account-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-filter-entity-query-example.sql[]
 ----
@@ -573,12 +573,12 @@ On the other hand, the `minimumAmount` filter is taken into consideration, becau
 include::{example-dir-pc}/FilterTest.java[tags=pc-filter-entity-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-filter-entity-example.sql[]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-filter-entity-find-example.sql[]
 ----
@@ -604,7 +604,7 @@ either if the filter is enabled explicitly or by setting `autoEnabled` to `true`
 include::{example-dir-pc}/FilterTest.java[tags=pc-no-filter-collection-query-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-no-filter-collection-query-example.sql[]
 ----
@@ -620,7 +620,7 @@ When activating the `@Filter` and fetching the `accounts` collections, Hibernate
 include::{example-dir-pc}/FilterTest.java[tags=pc-filter-collection-query-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-filter-collection-query-example.sql[]
 ----
@@ -670,7 +670,7 @@ Hibernate is going to apply the right table aliases to the filter predicates:
 include::{example-dir-pc}/FilterSqlFragementAliasTest.java[tags=pc-filter-sql-fragment-alias-query-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-filter-sql-fragment-alias-query-example.sql[]
 ----
@@ -707,7 +707,7 @@ Let's assume our database contains the following entities:
 include::{example-dir-pc}/FilterJoinTableTest.java[tags=pc-filter-join-table-persistence-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-filter-join-table-persistence-example.sql[]
 ----
@@ -723,7 +723,7 @@ The collections can be filtered only if the associated filter is enabled on the 
 include::{example-dir-pc}/FilterJoinTableTest.java[tags=pc-no-filter-join-table-collection-query-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-no-filter-join-table-collection-query-example.sql[]
 ----
@@ -740,7 +740,7 @@ If we enable the filter and set the `maxOrderId` to `1` when fetching the `accou
 include::{example-dir-pc}/FilterJoinTableTest.java[tags=pc-filter-join-table-collection-query-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-filter-join-table-collection-query-example.sql[]
 ----
@@ -804,7 +804,7 @@ When you modify the `Product` entity, Hibernate generates the following SQL UPDA
 include::{example-dir-pc}/NoDynamicUpdateTest.java[tags=pc-managed-state-update-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-managed-state-update-example.sql[]
 ----
@@ -839,7 +839,7 @@ This time, when rerunning the previous test case, Hibernate generates the follow
 [[pc-managed-state-dynamic-update-example]]
 .Modifying the `Product` entity with a dynamic update
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-managed-state-dynamic-update-example.sql[]
 ----
@@ -1155,7 +1155,7 @@ The `CascadeType.PERSIST` allows us to persist a child entity along with the par
 include::{example-dir-pc}/CascadePersistTest.java[tags=pc-cascade-persist-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-cascade-persist-example.sql[]
 ----
@@ -1176,7 +1176,7 @@ The `CascadeType.MERGE` allows us to merge a child entity along with the parent 
 include::{example-dir-pc}/CascadeMergeTest.java[tags=pc-cascade-merge-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-cascade-merge-example.sql[]
 ----
@@ -1200,7 +1200,7 @@ However, `CascadeType.REMOVE` and `org.hibernate.annotations.CascadeType.DELETE`
 include::{example-dir-pc}/CascadeRemoveTest.java[tags=pc-cascade-remove-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-cascade-remove-example.sql[]
 ----
@@ -1240,7 +1240,7 @@ The refresh operation will discard the current entity state, and it will overrid
 include::{example-dir-pc}/CascadeRefreshTest.java[tags=pc-cascade-refresh-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-cascade-refresh-example.sql[]
 ----
@@ -1262,7 +1262,7 @@ The replicate operation allows you to synchronize entities coming from different
 include::{example-dir-pc}/CascadeReplicateTest.java[tags=pc-cascade-replicate-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-cascade-replicate-example.sql[]
 ----
@@ -1293,7 +1293,7 @@ include::{example-dir-pc}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-map
 include::{example-dir-pc}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-mapping-Phone-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-cascade-on-delete-mapping-example.sql[]
 ----
@@ -1309,7 +1309,7 @@ Now, you can just remove the `Person` entity, and the associated `Phone` entitie
 include::{example-dir-pc}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-cascade-on-delete-example.sql[]
 ----
@@ -1342,7 +1342,7 @@ Now, when removing the `Person` entity, all the associated `Phone` child entitie
 include::{example-dir-pc}/CascadeOnDeleteCollectionTest.java[tags=pc-cascade-on-delete-collection-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/pc-cascade-on-delete-example.sql[]
 ----

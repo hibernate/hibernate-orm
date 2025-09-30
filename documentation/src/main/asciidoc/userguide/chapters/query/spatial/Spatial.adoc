@@ -176,7 +176,7 @@ SQL statements which will allow DB2 to accept Extended WellKnown Text (EWKT) dat
 One way to do this is to copy these statements into a file such as ewkt.sql and execute it in a DB2 command window
 with a command such as `db2 -tvf ewkt.sql`.
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 create or replace function db2gse.asewkt(geometry db2gse.st_geometry)
 returns clob(2G)
@@ -241,7 +241,7 @@ could use the `within` function to find all objects within a given spatial exten
 [[spatial-types-query-example]]
 .Querying the geometry
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{example-dir-spatial}/SpatialTest.java[tags=spatial-types-query-example]
 ----

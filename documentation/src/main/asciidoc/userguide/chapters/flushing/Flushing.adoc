@@ -47,7 +47,7 @@ In the following example, an entity is persisted, and then the transaction is co
 include::{example-dir-flushing}/AutoFlushTest.java[tags=flushing-auto-flush-commit-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/flushing-auto-flush-commit-example.sql[]
 ----
@@ -74,7 +74,7 @@ A flush may also be triggered when executing an entity query.
 include::{example-dir-flushing}/AutoFlushTest.java[tags=flushing-auto-flush-jpql-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/flushing-auto-flush-jpql-example.sql[]
 ----
@@ -101,7 +101,7 @@ When querying for a `Person` entity, the flush is triggered prior to executing t
 include::{example-dir-flushing}/AutoFlushTest.java[tags=flushing-auto-flush-jpql-overlap-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/flushing-auto-flush-jpql-overlap-example.sql[]
 ----
@@ -165,7 +165,7 @@ When executing a JPQL query, the persistence context is only flushed when the cu
 include::{example-dir-flushing}/CommitFlushTest.java[tags=flushing-commit-flush-jpql-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/flushing-commit-flush-jpql-example.sql[]
 ----
@@ -181,7 +181,7 @@ Because the Jakarta Persistence doesn't impose a strict rule on delaying flushin
 include::{example-dir-flushing}/CommitFlushTest.java[tags=flushing-commit-flush-sql-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/flushing-commit-flush-sql-example.sql[]
 ----
@@ -205,7 +205,7 @@ The `ALWAYS` flush mode triggers a persistence context flush even when executing
 include::{example-dir-flushing}/AlwaysFlushTest.java[tags=flushing-always-flush-sql-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/flushing-always-flush-sql-example.sql[]
 ----
@@ -225,7 +225,7 @@ Hibernate also provides a `MANUAL` flush mode so the persistence context can onl
 include::{example-dir-flushing}/ManualFlushTest.java[tags=flushing-manual-flush-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/flushing-manual-flush-example.sql[]
 ----
@@ -260,7 +260,7 @@ To visualize how this works, consider the following example:
 include::{example-dir-flushing}/FlushOrderTest.java[tags=flushing-order-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/flushing-order-example.sql[]
 ----

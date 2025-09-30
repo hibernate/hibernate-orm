@@ -56,7 +56,7 @@ Consider the following `META-INF/persistence.xml` file:
 [[example-bootstrap-standardized-persistence-xml]]
 .META-INF/persistence.xml file
 ====
-[source, XML, indent=0]
+[source, xml, indent=0]
 ----
 include::{extrasdir}/persistence.xml[]
 ----

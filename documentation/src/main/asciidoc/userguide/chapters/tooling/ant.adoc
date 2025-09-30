@@ -25,7 +25,7 @@ of the enhancement task.
 [[enhance-task-example]]
 .Enhance Task Example
 ====
-[source, XML]]
+[source, xml]]
 ----
 include::extras/ant-enhance-example.xml[]
 ----
@@ -49,7 +49,7 @@ the entire `base` folder) or else with a `<fileset>` child element that has a si
 If neither `dir` nor `<fileset>` are used, no classes will be enhanced.
 
 ====
-[source, XML]]
+[source, xml]]
 ----
 <enhance base='${basedir}/dest' .../>
 ----
@@ -63,7 +63,7 @@ If the `dir` attribute is specified, the use of a `<fileset>` child element will
 If neither `dir` nor `<fileset>` are used, no classes will be enhanced.
 
 ====
-[source, XML]]
+[source, xml]]
 ----
 <enhance
    base='...'
@@ -80,7 +80,7 @@ described above is specified, the `<fileset>` element will be ignored.
 If neither `dir` nor `<fileset>` are used, no classes will be enhanced.
 
 ====
-[source, XML]]
+[source, xml]]
 ----
 <enhance base='${basedir}/dest'>
    <fileset dir="some subfolder of base">
@@ -96,7 +96,7 @@ This attribute has a default value of `true`. It indicates that the enhance task
 to enable lazy loading. To disable, set the value of this attribute to `false`.
 
 ====
-[source, XML]]
+[source, xml]]
 ----
 <enhance
    ...
@@ -111,7 +111,7 @@ This attribute has a default value of `true`. It indicates that the enhance task
 to enable dirty tracking. To disable, set the value of this attribute to `false`.
 
 ====
-[source, XML]]
+[source, xml]]
 ----
 <enhance
    ...
@@ -125,7 +125,7 @@ This attribute has a default value of `false`. It indicates that the enhance tas
 to enable association management. To enable, set the value of this attribute to `true`.
 
 ====
-[source, XML]]
+[source, xml]]
 ----
 <enhance
    ...
@@ -140,7 +140,7 @@ to enable the extended enhancement (i.e. even on non-entities).
 To enable this, set the value of this attribute to `true`.
 
 ====
-[source, XML]]
+[source, xml]]
 ----
 <enhance
    ...
@@ -154,7 +154,7 @@ This attribute has a default value of `true`. It indicates that the enhance task
 when it encounters a problem. If you prefer the build to continue, you can set the value to `false`.
 
 ====
-[source, XML]]
+[source, xml]]
 ----
 <enhance
    ...
@@ -176,7 +176,7 @@ Ant's https://ant.apache.org/manual/Tasks/javac.html[javac] task.
 [[javac-task-example]]
 .Javac task configuration
 ====
-[source, XML]
+[source, xml]
 ----
 <javac srcdir="${src.dir}"
         destdir="${target.dir}"

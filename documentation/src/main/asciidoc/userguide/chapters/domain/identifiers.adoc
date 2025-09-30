@@ -731,7 +731,7 @@ Now, when saving 5 `Person` entities and flushing the Persistence Context after 
 include::{example-dir-identifier}/PooledOptimizerTest.java[tag=identifiers-generators-pooled-lo-optimizer-persist-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/id/identifiers-generators-pooled-lo-optimizer-persist-example.sql[]
 ----
@@ -809,7 +809,7 @@ Now, when fetching an entity and modifying it, Hibernate uses the `ROWID` pseudo
 include::{example-dir-identifier}/RowIdTest.java[tag=identifiers-rowid-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/id/identifiers-rowid-example.sql[]
 ----

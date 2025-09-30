@@ -144,7 +144,7 @@ An alternative "simplest" query has _only_ a `select` list:
 
 [[hql-select-simplest-example-alt]]
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-select-simplest-example-alt]
 ----
@@ -326,12 +326,12 @@ For example:
 
 [[hql-insert-example]]
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-insert-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{example-dir-hql}/../batch/BatchTests.java[tags=batch-bulk-hql-insert-example]
 ----
@@ -378,7 +378,7 @@ Possible conflict actions are to ignore the conflict or update conflicting objec
 
 [[hql-insert-conflict-example]]
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{example-dir-hql}/../query/hql/InsertConflictTests.java[tags=hql-insert-conflict-example]
 ----
@@ -2540,7 +2540,7 @@ The pattern literal is unquoted and embedded in the generated SQL.
 Occurrences of `?` in the pattern are replaced with the remaining arguments of the function.
 
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 -- Cast to some native type
 select c from Computer c where c.ipAddress = sql('?::inet', '127.0.0.1')
@@ -2937,7 +2937,7 @@ Of course, there may be multiple root entities.
 [[hql-multiple-root-reference-jpql-example]]
 //.Simple query using multiple root entity references
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-multiple-root-reference-jpql-example]
 ----
@@ -2953,7 +2953,7 @@ The previous queries may even be written using the syntax `cross join` in place 
 [[hql-cross-join-jpql-example]]
 //.Simple query using cross join
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-cross-join-jpql-example]
 ----
@@ -3124,7 +3124,7 @@ An explicit root join works just like an ANSI-style join in SQL.
 [[hql-explicit-root-join-example]]
 //.Explicit root join examples
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-explicit-root-join-example]
 ----
@@ -3154,7 +3154,7 @@ An explicit join may assign an identification variable to the joined entity.
 [[hql-explicit-inner-join-example]]
 //.Explicit inner join examples
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-explicit-inner-join-example]
 ----
@@ -3999,7 +3999,7 @@ include::{example-dir-hql}/HQLTest.java[tags=hql-bad-limit-example]
 
 However, if you log the SQL executed by Hibernate, you'll notice something wrong:
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
     select
         p1_0.id,

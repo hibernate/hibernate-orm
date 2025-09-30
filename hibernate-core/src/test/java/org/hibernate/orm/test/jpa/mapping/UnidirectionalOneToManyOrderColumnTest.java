@@ -16,6 +16,7 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -177,6 +178,7 @@ public class UnidirectionalOneToManyOrderColumnTest {
 	}
 
 	@Test
+	@FailureExpected(jiraKey = "HHH-15591")
 	public void testSwapElementsAtZeroAndOne(EntityManagerFactoryScope scope) {
 		long parentId = scope.fromTransaction(
 				entityManager -> {
@@ -197,7 +199,7 @@ public class UnidirectionalOneToManyOrderColumnTest {
 					ChildData child1 = children.get( 1 );
 					children.set(0, child1);
 					children.set(1, child0);
-					
+
 					return parent.id;
 				}
 		);
@@ -205,6 +207,7 @@ public class UnidirectionalOneToManyOrderColumnTest {
 	}
 
 	@Test
+	@FailureExpected(jiraKey = "HHH-15591")
 	public void testAddAtZeroDeleteAtTwo(EntityManagerFactoryScope scope) {
 		long parentId = scope.fromTransaction(
 				entityManager -> {

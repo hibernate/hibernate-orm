@@ -8,6 +8,7 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
+import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.KeyedPage;
@@ -158,14 +159,11 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 
 	protected <T> void bindCriteriaParameter(SqmJpaCriteriaParameterWrapper<T> sqmParameter) {
 		final JpaCriteriaParameter<T> criteriaParameter = sqmParameter.getJpaCriteriaParameter();
-		final T value = criteriaParameter.getValue();
-		// We don't set a null value, unless the type is also null which
-		// is the case when using HibernateCriteriaBuilder.value
-		if ( value != null || criteriaParameter.getNodeType() == null ) {
+		if ( criteriaParameter instanceof ValueBindJpaCriteriaParameter<?> ) {
 			// Use the anticipated type for binding the value if possible
 			getQueryParameterBindings()
 					.getBinding( criteriaParameter )
-					.setBindValue( value, criteriaParameter.getAnticipatedType() );
+					.setBindValue( criteriaParameter.getValue(), criteriaParameter.getAnticipatedType() );
 		}
 	}
 

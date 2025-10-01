@@ -824,6 +824,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
+	public boolean useLanguageTagForLocale() {
+		return factoryOptions.isPreferLocaleLanguageTagEnabled();
+	}
+
+	@Override
 	public LobCreator getLobCreator() {
 		return jdbcServices.getLobCreator( this );
 	}

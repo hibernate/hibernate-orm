@@ -59,6 +59,11 @@ public class StringValueMappingTest {
 			return 0;
 		}
 
+		@Override
+		public boolean useLanguageTagForLocale() {
+			return true;
+		}
+
 		public LobCreator getLobCreator() {
 			return NonContextualLobCreator.INSTANCE;
 		}

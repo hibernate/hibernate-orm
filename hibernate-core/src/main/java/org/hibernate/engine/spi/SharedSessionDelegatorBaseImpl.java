@@ -634,6 +634,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
+	public boolean useLanguageTagForLocale() {
+		return delegate.useLanguageTagForLocale();
+	}
+
+	@Override
 	public LobCreator getLobCreator() {
 		return delegate.getLobCreator();
 	}

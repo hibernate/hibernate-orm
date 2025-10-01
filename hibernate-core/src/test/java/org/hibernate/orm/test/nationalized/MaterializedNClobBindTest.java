@@ -108,6 +108,11 @@ public class MaterializedNClobBindTest {
 		}
 
 		@Override
+		public boolean useLanguageTagForLocale() {
+			return true;
+		}
+
+		@Override
 		public LobCreator getLobCreator() {
 			return NonContextualLobCreator.INSTANCE;
 		}

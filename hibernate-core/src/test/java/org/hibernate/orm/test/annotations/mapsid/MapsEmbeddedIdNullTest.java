@@ -12,6 +12,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -22,13 +24,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SessionFactory
 @DomainModel(
 		annotatedClasses = {
 				MapsEmbeddedIdNullTest.Level0.class,
 				MapsEmbeddedIdNullTest.Level1.class,
-				MapsEmbeddedIdNullTest.Level2.class
+				MapsEmbeddedIdNullTest.Level2.class,
+				MapsEmbeddedIdNullTest.Level1NoMapsId.class,
+				MapsEmbeddedIdNullTest.Level1OneToOne.class,
+				MapsEmbeddedIdNullTest.Level1NoMapsIdOneToOne.class,
 		})
 @Jira("https://hibernate.atlassian.net/browse/HHH-19056")
 public class MapsEmbeddedIdNullTest {
@@ -42,6 +48,35 @@ public class MapsEmbeddedIdNullTest {
 			level0.level1s.add( level1 );
 			s.persist( level0 );
 		} );
+
+		scope.inTransaction( s -> {
+			Level0 level0 = new Level0();
+			Level2 level2 = new Level2();
+			Level1OneToOne level1 = new Level1OneToOne( level0, level2 );
+			s.persist( level1 );
+		} );
+
+		assertThrows( IdentifierGenerationException.class, () ->
+			scope.inTransaction( s -> {
+				Level0 level0 = new Level0();
+				Level2 level2 = new Level2();
+				Level1NoMapsId level1NoMapsId = new Level1NoMapsId();
+				level1NoMapsId.level0 = level0;
+				level1NoMapsId.level2 = level2;
+				s.persist( level1NoMapsId );
+			} )
+		);
+
+		assertThrows( IdentifierGenerationException.class, () ->
+			scope.inTransaction( s -> {
+				Level0 level0 = new Level0();
+				Level2 level2 = new Level2();
+				Level1NoMapsIdOneToOne level1 = new Level1NoMapsIdOneToOne();
+				level1.level0 = level0;
+				level1.level2 = level2;
+				s.persist( level1 );
+			} )
+		);
 	}
 
 	@Entity(name = "Level0")
@@ -72,6 +107,48 @@ public class MapsEmbeddedIdNullTest {
 			this.level0 = level0;
 			this.level2 = level2;
 		}
+	}
+
+	@Entity(name = "Level1OneToOne")
+	public static class Level1OneToOne {
+		@EmbeddedId
+		Level1PK id;
+		@OneToOne
+		@MapsId("level0Id")
+		private Level0 level0;
+		@OneToOne
+		@MapsId("level2Id")
+		private Level2 level2;
+
+		public Level1OneToOne() {
+		}
+
+		public Level1OneToOne(Level0 level0, Level2 level2) {
+			super();
+			this.level0 = level0;
+			this.level2 = level2;
+		}
+	}
+
+
+	@Entity(name = "Level1NoMapsId")
+	public static class Level1NoMapsId {
+		@EmbeddedId
+		Level1PK id;
+		@ManyToOne
+		private Level0 level0;
+		@ManyToOne(cascade = CascadeType.ALL)
+		private Level2 level2;
+	}
+
+	@Entity(name = "Level1NoMapsIdOneToOne")
+	public static class Level1NoMapsIdOneToOne {
+		@EmbeddedId
+		Level1PK id;
+		@ManyToOne
+		private Level0 level0;
+		@ManyToOne(cascade = CascadeType.ALL)
+		private Level2 level2;
 	}
 
 	@Entity(name = "Level2")

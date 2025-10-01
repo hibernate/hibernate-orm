@@ -18,7 +18,6 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.type.CompositeType;
 
 import static org.hibernate.generator.EventType.INSERT;
-import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 
 /**
  * For composite identifiers, defines a number of "nested" generations that
@@ -132,10 +131,7 @@ public class CompositeNestedGeneratedValueGenerator
 
 	@Override
 	public Object generate(SharedSessionContractImplementor session, Object object) {
-		Object context = generationContextLocator.locateGenerationContext( session, object );
-		if ( context == null ) {
-			context = getDefaultSupplier( compositeType.getReturnedClass() ).get();
-		}
+		final Object context = generationContextLocator.locateGenerationContext( session, object );
 		final List<Object> generatedValues = generatedValues( session, object, context );
 		if ( generatedValues != null ) {
 			final Object[] values = compositeType.getPropertyValues( context );

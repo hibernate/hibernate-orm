@@ -362,9 +362,9 @@ def renderIntroductionHtmlTask = tasks.register( 'renderIntroductionHtml', Ascii
 	inputs.property "hibernate-version", hibernateVersion
 
 	sourceDir = file( 'src/main/asciidoc/introduction' )
-	sources 'Hibernate_Introduction.adoc'
+	sources 'index.adoc'
 
-	outputDir = "$buildDir/asciidoc/introduction/html_single"
+	outputDir = layout.buildDirectory.dir("asciidoc/introduction/html_single")
 
 	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
 
@@ -389,11 +389,17 @@ def renderIntroductionPdfTask = tasks.register( 'renderIntroductionPdf', Asciido
 	baseDir = file( 'src/main/asciidoc/introduction' )
 
 	sourceDir = file( 'src/main/asciidoc/introduction' )
-	sources 'Hibernate_Introduction.adoc'
+	sources 'index.adoc'
 
-	outputDir = "$buildDir/asciidoc/introduction/pdf"
+
+    def output = layout.buildDirectory.dir("asciidoc/introduction/pdf")
+    outputDir = output
 
 	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+
+    doLast {
+        output.get().file('index.pdf').asFile.renameTo(output.get().file('Hibernate_Introduction.pdf').asFile)
+    }
 }
 
 //noinspection GroovyUnusedAssignment
@@ -415,7 +421,7 @@ def renderQueryLanguageGuideHtmlTask = tasks.register( 'renderQueryLanguageGuide
 	task.inputs.property "hibernate-version", hibernateVersion
 
 	task.sourceDir = file( 'src/main/asciidoc/querylanguage' )
-	task.sources 'Hibernate_Query_Language.adoc'
+	task.sources 'index.adoc'
 
 	task.outputDir = layout.buildDirectory.dir( "asciidoc/querylanguage/html_single" )
 
@@ -443,11 +449,16 @@ def renderQueryLanguageGuidePdfTask = tasks.register( 'renderQueryLanguageGuideP
 	sourceDir = file( 'src/main/asciidoc/querylanguage' )
 	baseDir = file( 'src/main/asciidoc/querylanguage' )
 	sources {
-		include 'Hibernate_Query_Language.adoc'
+		include 'index.adoc'
 	}
-	outputDir = layout.buildDirectory.dir( "asciidoc/querylanguage/pdf" )
+    def output = layout.buildDirectory.dir("asciidoc/querylanguage/pdf")
+    outputDir = output
 
 	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+
+    doLast {
+        output.get().file('index.pdf').asFile.renameTo(output.get().file('Hibernate_Query_Language.pdf').asFile)
+    }
 }
 
 def renderRepositoriesHtmlTask = tasks.register( 'renderRepositoriesHtml', AsciidoctorTask ) { task ->
@@ -457,7 +468,7 @@ def renderRepositoriesHtmlTask = tasks.register( 'renderRepositoriesHtml', Ascii
 	task.inputs.property "hibernate-version", hibernateVersion
 
 	task.sourceDir = file( 'src/main/asciidoc/repositories' )
-	task.sources 'Hibernate_Data_Repositories.adoc'
+	task.sources 'index.adoc'
 
 	task.outputDir = layout.buildDirectory.dir( "asciidoc/repositories/html_single" )
 
@@ -485,11 +496,16 @@ def renderRepositoriesPdfTask = tasks.register( 'renderRepositoriesPdf', Asciido
 	sourceDir = file( 'src/main/asciidoc/repositories' )
 	baseDir = file( 'src/main/asciidoc/repositories' )
 	sources {
-		include 'Hibernate_Data_Repositories.adoc'
+		include 'index.adoc'
 	}
-	outputDir = layout.buildDirectory.dir( "asciidoc/repositories/pdf" )
+    def output = layout.buildDirectory.dir("asciidoc/repositories/pdf")
+    outputDir = output
 
 	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+
+    doLast {
+        output.get().file('index.pdf').asFile.renameTo(output.get().file('Hibernate_Data_Repositories.pdf').asFile)
+    }
 }
 
 //noinspection GroovyUnusedAssignment
@@ -667,9 +683,9 @@ def renderUserGuideHtmlTask = tasks.register( 'renderUserGuideHtml', Asciidoctor
 
 	sourceDir = file( 'src/main/asciidoc/userguide' )
 	sources {
-		include 'Hibernate_User_Guide.adoc'
+		include 'index.adoc'
 	}
-	outputDir = "$buildDir/asciidoc/userguide/html_single"
+	outputDir = layout.buildDirectory.dir("asciidoc/userguide/html_single")
 
 	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/",
 			   'generated-report-dir': layout.buildDirectory.dir( 'orm/generated' ).get()
@@ -703,7 +719,7 @@ def renderIntegrationGuideHtmlTask = tasks.register( "renderIntegrationGuideHtml
 
 	sourceDir = file( 'src/main/asciidoc/integrationguide' )
 	sources {
-		include 'Hibernate_Integration_Guide.adoc'
+		include 'index.adoc'
 	}
 
 	outputDir = project.layout.buildDirectory.dir( 'asciidoc/integrationguide/html_single' )
@@ -743,6 +759,13 @@ def copyWhatsNewTask = tasks.register( "copyWhatsNew", Copy ) {task ->
 
 	from rootProject.layout.projectDirectory.file( "whats-new.adoc" )
 	into whatsNewGuideSourceStagingDir
+
+    rename { fileName ->
+        if (fileName == 'whats-new.adoc') {
+            return 'index.adoc'
+        }
+        return fileName
+    }
 }
 
 def renderWhatsNewTask = tasks.register( "renderWhatsNew", AsciidoctorTask ) {
@@ -779,6 +802,13 @@ def copyMigrationGuideTask = tasks.register( "copyMigrationGuide", Copy ) {task 
 
 	from rootProject.layout.projectDirectory.file( "migration-guide.adoc" )
 	into migrationGuideSourceStagingDir
+
+    rename { fileName ->
+        if (fileName == 'migration-guide.adoc') {
+            return 'index.adoc'
+        }
+        return fileName
+    }
 }
 
 def renderMigrationGuideTask = tasks.register( "renderMigrationGuide", AsciidoctorTask ) { task ->
@@ -814,7 +844,7 @@ def renderLoggingReportTask = tasks.register( 'renderLoggingReport', Asciidoctor
 	task.inputs.property "version", hibernateVersion
 
 	task.sourceDir = layout.buildDirectory.dir( 'orm/generated/logging' )
-	task.sources 'logging.adoc'
+	task.sources 'index.adoc'
 
 	task.outputDir = project.layout.buildDirectory.dir( 'asciidoc/logging' )
 
@@ -837,7 +867,7 @@ def renderDialectReportTask = tasks.register( 'renderDialectReport', Asciidoctor
 	task.inputs.property "version", hibernateVersion
 
 	task.sourceDir = layout.buildDirectory.dir( 'orm/generated/dialect' )
-	task.sources 'dialect.adoc'
+	task.sources 'index.adoc'
 
 	task.outputDir = project.layout.buildDirectory.dir( 'asciidoc/dialect' )
 

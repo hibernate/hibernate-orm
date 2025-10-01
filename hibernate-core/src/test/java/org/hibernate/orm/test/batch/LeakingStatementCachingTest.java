@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
@@ -22,6 +23,7 @@ import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
@@ -77,7 +79,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RequiresDialect(H2Dialect.class)
 @SessionFactory
 @DomainModel(annotatedClasses = LeakingStatementCachingTest.BaseEntity.class)
-@ServiceRegistry(serviceContributors = LeakingStatementCachingTest.ConnectionProviderServiceContributor.class)
+@ServiceRegistry(
+		settings = {
+				@Setting(name = SchemaToolingSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create")
+		},
+		serviceContributors = LeakingStatementCachingTest.ConnectionProviderServiceContributor.class)
 @Jira("https://hibernate.atlassian.net/browse/HHH-18325")
 class LeakingStatementCachingTest {
 
@@ -85,6 +91,7 @@ class LeakingStatementCachingTest {
 
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 		SINGLE_CONNECTION_DATASOURCE.close();
 	}
 

@@ -24,38 +24,40 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 	 */
 	public void onFlush(FlushEvent event) throws HibernateException {
 		final var source = event.getSession();
-		final var persistenceContext = source.getPersistenceContextInternal();
+
 		final var eventMonitor = source.getEventMonitor();
-		if ( persistenceContext.getNumberOfManagedEntities() > 0
-				|| persistenceContext.getCollectionEntriesSize() > 0 ) {
-			EVENT_LISTENER_LOGGER.executingFlush();
-			final var flushEvent = eventMonitor.beginFlushEvent();
-			final var eventListenerManager = source.getEventListenerManager();
-			try {
-				eventListenerManager.flushStart();
+		final var flushEvent = eventMonitor.beginFlushEvent();
+
+		final var eventListenerManager = source.getEventListenerManager();
+		eventListenerManager.flushStart();
+
+		try {
+			final var persistenceContext = source.getPersistenceContextInternal();
+			if ( persistenceContext.getNumberOfManagedEntities() > 0
+					|| persistenceContext.getCollectionEntriesSize() > 0 ) {
+				EVENT_LISTENER_LOGGER.executingFlush();
 				flushEverythingToExecutions( event );
 				performExecutions( source );
 				postFlush( source );
-			}
-			finally {
-				eventMonitor.completeFlushEvent( flushEvent, event );
-				eventListenerManager.flushEnd(
-						event.getNumberOfEntitiesProcessed(),
-						event.getNumberOfCollectionsProcessed()
-				);
-			}
+				postPostFlush( source );
 
-			postPostFlush( source );
-
-			final var statistics = source.getFactory().getStatistics();
-			if ( statistics.isStatisticsEnabled() ) {
-				statistics.flush();
+				final var statistics = source.getFactory().getStatistics();
+				if ( statistics.isStatisticsEnabled() ) {
+					statistics.flush();
+				}
+			}
+			else if ( source.getActionQueue().hasAnyQueuedActions() ) {
+				EVENT_LISTENER_LOGGER.executingFlush();
+				// execute any queued unloaded-entity deletions
+				performExecutions( source );
 			}
 		}
-		else if ( source.getActionQueue().hasAnyQueuedActions() ) {
-			EVENT_LISTENER_LOGGER.executingFlush();
-			// execute any queued unloaded-entity deletions
-			performExecutions( source );
+		finally {
+			eventMonitor.completeFlushEvent( flushEvent, event );
+			eventListenerManager.flushEnd(
+					event.getNumberOfEntitiesProcessed(),
+					event.getNumberOfCollectionsProcessed()
+			);
 		}
 	}
 }

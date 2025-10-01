@@ -233,10 +233,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 				@Override
 				public void onParentClose() {
-					// unless explicitly disabled, propagate the closure
-					if ( sharedOptions.shouldAutoClose() ) {
-						propagateClose();
-					}
+					propagateClose();
 				}
 			} );
 		}

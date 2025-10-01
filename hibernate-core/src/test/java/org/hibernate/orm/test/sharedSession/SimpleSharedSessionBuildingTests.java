@@ -184,49 +184,29 @@ public class SimpleSharedSessionBuildingTests {
 	 */
 	@Test
 	void testAutoFlushStatefulChild(SessionFactoryScope factoryScope) {
+		final MutableObject<SharedSessionContractImplementor> parentSessionRef = new MutableObject<>();
+		final MutableObject<SharedSessionContractImplementor> childSessionRef = new MutableObject<>();
+
 		final var sqlCollector = factoryScope.getCollectingStatementInspector();
 		sqlCollector.clear();
 
 		factoryScope.inTransaction( (parentSession) -> {
-			try (SessionImplementor childSession = (SessionImplementor) parentSession
-					.sessionWithOptions()
-					.connection()
-					.openSession()) {
-				// persist an entity through the child session -
-				// should be auto flushed (technically as part of the try-with-resources close of the child session)
-				childSession.persist( new Something( 1, "first" ) );
-			}
-		} );
+			parentSessionRef.set(  parentSession );
 
-		// make sure the flush and insert happened
-		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-		factoryScope.inTransaction( (session) -> {
-			final Something created = session.find( Something.class, 1 );
-			assertThat( created ).isNotNull();
-		} );
-
-	}
-
-	/**
-	 * NOTE: builds on assertions from {@link #testConnectionAndTransactionSharing}
-	 * and {@linkplain #testClosePropagation}
-	 */
-	@Test
-	void testAutoFlushStatefulChildNoClose(SessionFactoryScope factoryScope) {
-		final var sqlCollector = factoryScope.getCollectingStatementInspector();
-		sqlCollector.clear();
-
-		factoryScope.inTransaction( (parentSession) -> {
-			SessionImplementor childSession = (SessionImplementor) parentSession
+			// IMPORTANT: it is important that the child session not be closed here (e.g. try-with-resources).
+			final SessionImplementor childSession = (SessionImplementor) parentSession
 					.sessionWithOptions()
 					.connection()
 					.openSession();
+			childSessionRef.set( childSession );
 
-			// persist an entity through the shared/child session.
-			// then make sure the auto-flush of the parent session
-			// propagates to the shared/child
+			// persist an entity through the child session - should be auto flushed as part of the
+			// parent session's flush cycle
 			childSession.persist( new Something( 1, "first" ) );
 		} );
+
+		assertThat( parentSessionRef.get().isClosed() ).isTrue();
+		assertThat( childSessionRef.get().isClosed() ).isTrue();
 
 		// make sure the flush and insert happened
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
@@ -234,8 +214,8 @@ public class SimpleSharedSessionBuildingTests {
 			final Something created = session.find( Something.class, 1 );
 			assertThat( created ).isNotNull();
 		} );
-	}
 
+	}
 
 
 	/**
@@ -243,19 +223,29 @@ public class SimpleSharedSessionBuildingTests {
 	 */
 	@Test
 	void testAutoFlushStatelessChild(SessionFactoryScope factoryScope) {
+		final MutableObject<SharedSessionContractImplementor> parentSessionRef = new MutableObject<>();
+		final MutableObject<SharedSessionContractImplementor> childSessionRef = new MutableObject<>();
+
 		final var sqlCollector = factoryScope.getCollectingStatementInspector();
 		sqlCollector.clear();
 
 		factoryScope.inStatelessTransaction( (parentSession) -> {
-			try (SessionImplementor childSession = (SessionImplementor) parentSession
+			parentSessionRef.set( parentSession );
+
+			// IMPORTANT: it is important that the child session not be closed here (e.g. try-with-resources).
+			final var childSession = (SessionImplementor) parentSession
 					.sessionWithOptions()
 					.connection()
-					.openSession()) {
-				// persist an entity through the child session -
-				// should be auto flushed (technically as part of the try-with-resources close of the child session)
-				childSession.persist( new Something( 1, "first" ) );
-			}
+					.openSession();
+			childSessionRef.set( childSession );
+
+			// persist an entity through the child session - should be auto flushed as part of the
+			// parent session's flush cycle
+			childSession.persist( new Something( 1, "first" ) );
 		} );
+
+		assertThat( parentSessionRef.get().isClosed() ).isTrue();
+		assertThat( childSessionRef.get().isClosed() ).isTrue();
 
 		// make sure the flush and insert happened
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );

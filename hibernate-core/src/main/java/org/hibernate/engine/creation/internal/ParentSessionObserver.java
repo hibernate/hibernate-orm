@@ -22,9 +22,6 @@ public interface ParentSessionObserver {
 
 	/**
 	 * Callback when the parent is closed.  Used to close the child session.
-	 *
-	 * @apiNote Observation of closure of the parent is different from {@link org.hibernate.SessionBuilder#autoClose}
-	 * which indicates whether the session ought to be closed in response to transaction completion.
 	 */
 	void onParentClose();
 }

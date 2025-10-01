@@ -243,6 +243,8 @@ asciidoctorj {
             jdbcVersion: jdks.versions.jdbc.get(),
             'root-project-dir': rootProject.layout.projectDirectory.asFile.absolutePath,
             'doc-main-dir': project(':documentation').layout.projectDirectory.dir('src').dir("main").asFile.absolutePath,
+            'doc-generated-content-dir': project(':documentation').layout.buildDirectory.dir('asciidoc').get()
+                    .dir("fragments").asFile.absolutePath,
             'theme-main-dir': rootProject.layout.buildDirectory.dir("unpacked-theme").get()
                     .dir("hibernate-asciidoctor-theme").dir("asciidoc").asFile.absolutePath,
             stylesdir: "css",

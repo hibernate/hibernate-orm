@@ -1,4 +1,4 @@
-:shared-attributes-dir: ../shared
+:shared-attributes-dir: {doc-main-dir}/asciidoc/shared
 :html-meta-canonical-link: https://docs.jboss.org/hibernate/orm/current/userguide/html_single/Hibernate_User_Guide.html
 
 include::{shared-attributes-dir}/common-attributes.adoc[]

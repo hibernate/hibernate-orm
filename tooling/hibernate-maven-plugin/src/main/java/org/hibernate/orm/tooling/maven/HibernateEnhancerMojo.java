@@ -33,29 +33,57 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 	final private List<File> sourceSet = new ArrayList<File>();
 	private Enhancer enhancer;
 
+	/**
+	 * A list of FileSets in which to look for classes to enhance.
+	 * This parameter is optional but if it is specified, the 'classesDirectory' parameter is ignored.
+	 */
 	@Parameter
 	private FileSet[] fileSets;
 
+	/**
+	 * The folder in which to look for classes to enhance.
+	 * This parameter is required but if the 'fileSets' parameter is specified, it will be ignored.
+	 */
 	@Parameter(
 			defaultValue = "${project.build.directory}/classes",
 			required = true)
 	private File classesDirectory;
 
+	/**
+	 * A boolean that indicates whether or not to add association management to automatically
+	 * synchronize a bidirectional association when only one side is changed
+	 */
 	@Parameter(
 			defaultValue = "false",
 			required = true)
 	private boolean enableAssociationManagement;
 
+	/**
+	 * A boolean that indicates whether or not to add dirty tracking
+	 * @deprecated <a href="https://hibernate.atlassian.net/browse/HHH-15641">See HHH-15641</a>
+	 */
+	@Deprecated(
+			forRemoval = true)
 	@Parameter(
-			defaultValue = "false",
+			defaultValue = "true",
 			required = true)
 	private boolean enableDirtyTracking;
 
+	/**
+	 * A boolean that indicates whether or not to add lazy initialization
+	 * @deprecated <a href="https://hibernate.atlassian.net/browse/HHH-15641">See HHH-15641</a>
+	 */
+	@Deprecated(
+			forRemoval = true)
 	@Parameter(
-			defaultValue = "false",
+			defaultValue = "true",
 			required = true)
 	private boolean enableLazyInitialization;
 
+	/**
+	 * A boolean that indicates whether or not to add extended enhancement.
+	 * This setting will provide bytecode enhancement, even for non-entity classes
+	 */
 	@Parameter(
 			defaultValue = "false",
 			required = true)
@@ -64,11 +92,21 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 	public void execute() {
 		getLog().debug(STARTING_EXECUTION_OF_ENHANCE_MOJO);
 		processParameters();
-		assembleSourceSet();
-		createEnhancer();
-		discoverTypes();
-		performEnhancement();
+		if (enhancementIsNeeded()) {
+			assembleSourceSet();
+			createEnhancer();
+			discoverTypes();
+			performEnhancement();
+		}
 		getLog().debug(ENDING_EXECUTION_OF_ENHANCE_MOJO);
+	}
+
+	private boolean enhancementIsNeeded() {
+		// enhancement is not needed when all the parameters are false
+		return enableAssociationManagement ||
+			enableDirtyTracking ||
+			enableLazyInitialization ||
+			enableExtendedEnhancement;
 	}
 
 	private void processParameters() {

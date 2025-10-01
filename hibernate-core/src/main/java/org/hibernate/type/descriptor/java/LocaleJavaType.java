@@ -187,7 +187,7 @@ public class LocaleJavaType extends AbstractClassJavaType<Locale> {
 			return (X) value;
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) value.toString();
+			return (X) (options.useLanguageTagForLocale() ? value.toLanguageTag() : value.toString());
 		}
 		throw unknownUnwrap( type );
 	}

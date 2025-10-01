@@ -542,6 +542,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isPreferLocaleLanguageTagEnabled() {
+		return delegate.isPreferLocaleLanguageTagEnabled();
+	}
+
+	@Override
 	public FormatMapper getJsonFormatMapper() {
 		return delegate.getJsonFormatMapper();
 	}

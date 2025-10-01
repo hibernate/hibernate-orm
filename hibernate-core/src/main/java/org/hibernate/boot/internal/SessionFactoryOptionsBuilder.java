@@ -189,6 +189,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean namedQueryStartupCheckingEnabled;
 	private final boolean preferJavaTimeJdbcTypes;
 	private final boolean preferNativeEnumTypes;
+	private final boolean preferLocaleLanguageTagEnabled;
 	private final int preferredSqlTypeCodeForBoolean;
 	private final int preferredSqlTypeCodeForDuration;
 	private final int preferredSqlTypeCodeForUuid;
@@ -404,6 +405,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		preferJavaTimeJdbcTypes = MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( configurationService );
 		preferNativeEnumTypes = MetadataBuildingContext.isPreferNativeEnumTypesEnabled( configurationService );
+		preferLocaleLanguageTagEnabled = MetadataBuildingContext.isPreferNativeEnumTypesEnabled( configurationService );
 		preferredSqlTypeCodeForBoolean = ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry );
 		preferredSqlTypeCodeForDuration = ConfigurationHelper.getPreferredSqlTypeCodeForDuration( serviceRegistry );
 		preferredSqlTypeCodeForUuid = ConfigurationHelper.getPreferredSqlTypeCodeForUuid( serviceRegistry );
@@ -1391,6 +1393,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isPreferNativeEnumTypesEnabled() {
 		return preferNativeEnumTypes;
+	}
+
+	@Override
+	public boolean isPreferLocaleLanguageTagEnabled() {
+		return preferLocaleLanguageTagEnabled;
 	}
 
 	@Override

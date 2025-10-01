@@ -683,6 +683,11 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	boolean isPreferNativeEnumTypesEnabled();
 
 	/**
+	 * @see org.hibernate.cfg.MappingSettings#PREFER_LOCALE_LANGUAGE_TAG
+	 */
+	boolean isPreferLocaleLanguageTagEnabled();
+
+	/**
 	 * The format mapper to use for serializing/deserializing JSON data.
 	 *
 	 * @see org.hibernate.cfg.MappingSettings#JSON_FORMAT_MAPPER

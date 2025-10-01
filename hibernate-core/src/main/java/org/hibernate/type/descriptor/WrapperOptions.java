@@ -66,6 +66,15 @@ public interface WrapperOptions {
 	}
 
 	/**
+	 * Determines whether streams should be used for binding LOB values.
+	 *
+	 * @return {@code true}/{@code false}
+	 */
+	default boolean useLanguageTagForLocale() {
+		return getSessionFactory().getSessionFactoryOptions().isPreferLocaleLanguageTagEnabled();
+	}
+
+	/**
 	 * Obtain access to the {@link LobCreator}.
 	 *
 	 * @return The LOB creator

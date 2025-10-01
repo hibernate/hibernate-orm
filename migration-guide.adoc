@@ -40,13 +40,6 @@ See the link:{releaseSeriesBase}#whats-new[website] for the list of new features
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#api[API].
 
-* Code underlying the session builder APIs was reengineered, and the behavior of `noInterceptor()` for `SharedSessionBuilder` and `SharedStatelessSessionBuilder` was aligned with the preexisting semantics of this method on `SessionBuilder` and `StatelessSessionBuilder`.
-  The previous behavior may be recovered by calling `noSessionInterceptorCreation()`.
-
-* `org.hibernate.dialect.AzureSQLServerDialect` was deprecated. Use `org.hibernate.dialect.SQLServerDialect` instead.
-  If you set `hibernate.boot.allow_jdbc_metadata_access=false` for offline startup,
-  remember to also set the targeted database version through `jakarta.persistence.database-product-version`;
-  this would be 16.0 for SQL Server 2022 or 17.0 for SQL Server 2025.
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // SPI changes
@@ -57,7 +50,58 @@ This section describes changes to contracts (classes, interfaces, methods, etc.)
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#spi[SPI].
 
-* Some operations of `TypeConfiguration`, `JavaTypeRegistry`, and `BasicTypeRegistry` used unbound type parameters in the return type. The generic signatures of these methods have been changed for improved type safety.
+[[registry-generic-signatures]]
+=== Registry Generic Signatures
+
+Some operations of `TypeConfiguration`, `JavaTypeRegistry`, and `BasicTypeRegistry` had previously used unbound type parameters in the return type. The generic signatures of these methods have been changed for improved type safety.
+
+
+[[AzureSQLServerDialect]]
+=== AzureSQLServerDialect Deprecation
+
+`org.hibernate.dialect.AzureSQLServerDialect` was deprecated; use `org.hibernate.dialect.SQLServerDialect` instead.
+
+[IMPORTANT]
+====
+If you set `hibernate.boot.allow_jdbc_metadata_access=false` for offline startup,
+remember to also set the targeted database version through `jakarta.persistence.database-product-version` - this would be 16.0 for SQL Server 2022 or 17.0 for SQL Server 2025.
+====
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Changes in Behavior
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[behavior-changes]]
+== Changes in Behavior
+
+[[child-session-flush-close]]
+=== Child Session Flush/Close Behavior
+
+`Session` and `StatelessSession` which share transactional context with a parent now have slightly different semantics in regard to flushing and closing -
+
+* when the parent is flushed, the child is flushed
+* when the parent is closed, the child is closed
+
+[NOTE]
+====
+This led to a change in triggering of flush events for both -
+
+* `SessionEventListener` registrations
+* JFR events
+
+In both cases, the events are now triggered regardless of whether any entities or collections were actually flushed.
+Each already carried the number of entities and the number of collections which were actually flushed.
+Previously, when no entities and no collections were flushed to the database no event was generated; the event is now generated and both values will be zero.
+
+Interestingly, this now also aligns with handling for auto-flush events which already always triggered these events.
+====
+
+
+[[child-session-no-interceptor]]
+=== Child Session No-Interceptor Behavior
+
+The behavior of `noInterceptor()` for `SharedSessionBuilder` and (the new) `SharedStatelessSessionBuilder` was aligned with the preexisting semantics of this method on `SessionBuilder` and `StatelessSessionBuilder`.
+The previous behavior may be recovered by calling `noSessionInterceptorCreation()`.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

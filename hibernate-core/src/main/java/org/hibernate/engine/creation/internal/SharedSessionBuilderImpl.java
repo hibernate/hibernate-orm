@@ -260,20 +260,9 @@ public abstract class SharedSessionBuilderImpl
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SharedSessionCreationOptions
 
-
 	@Override
-	public void registerParentSessionObserver(ParentSessionObserver callbacks) {
-		original.getEventListenerManager().addListener( new SessionEventListener() {
-			@Override
-			public void flushEnd(int numberOfEntities, int numberOfCollections) {
-				callbacks.onParentFlush();
-			}
-
-			@Override
-			public void end() {
-				callbacks.onParentClose();
-			}
-		} );
+	public void registerParentSessionObserver(ParentSessionObserver observer) {
+		registerParentSessionObserver( observer, original );
 	}
 
 	@Override

@@ -11,6 +11,25 @@ Describes the new features and capabilities added to Hibernate ORM in {version}.
 
 IMPORTANT: If migrating from earlier versions, be sure to also check out the link:{migrationGuide}[Migration Guide] for discussion of impactful changes.
 
+[[child-stateless-sessions]]
+== Child StatelessSession
+
+Creation of child `StatelessSession` is now supported, just as with child `Session`.
+This is a `StatelessSession` which shares "transactional context" with a parent `Session` or `StatelessSession`.
+Use `Session#statelessWithOptions` or `StatelessSession#statelessWithOptions` instead of `#sessionWithOptions`.
+
+====
+[source,java]
+----
+Session parent = ...;
+StatelessSession child = parent
+    .statelessWithOptions()
+    .connection()
+    ...
+    .open();
+----
+====
+
 [[vector-module-enhancements]]
 == Hibernate-Vector module enhancements
 

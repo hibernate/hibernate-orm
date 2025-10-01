@@ -23,6 +23,7 @@ import org.moditect.jfrunit.JfrEvents;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JfrEventTest
 @DomainModel(annotatedClasses = {
 		FlushTests.TestEntity.class,
@@ -67,22 +68,21 @@ public class FlushTests {
 
 	@Test
 	@EnableEvent(JdbcBatchExecutionEvent.NAME)
-	public void testFlushNoFired(SessionFactoryScope scope) {
+	public void testFlushNotFired(SessionFactoryScope scope) {
 		jfrEvents.reset();
-		scope.inTransaction(
-				session -> {
+		scope.inTransaction( (session) -> {
+			// do nothing
+		} );
+		List<RecordedEvent> events = jfrEvents.events().filter( (recordedEvent) -> {
+			String eventName = recordedEvent.getEventType().getName();
+			return eventName.equals( FlushEvent.NAME );
+		} ).toList();
 
-				}
-		);
-		List<RecordedEvent> events = jfrEvents.events()
-				.filter(
-						recordedEvent ->
-						{
-							String eventName = recordedEvent.getEventType().getName();
-							return eventName.equals( FlushEvent.NAME );
-						}
-				).toList();
-		assertThat( events ).hasSize( 0 );
+		// the flush event should be triggered by the commit
+		assertThat( events ).hasSize( 1 );
+		// however, it should not affect anything
+		assertThat( events.get( 0 ).getInt( "numberOfEntitiesProcessed" ) ).isEqualTo( 0 );
+		assertThat( events.get( 0 ).getInt( "numberOfCollectionsProcessed" ) ).isEqualTo( 0 );
 	}
 
 	@Entity(name = "TestEntity")

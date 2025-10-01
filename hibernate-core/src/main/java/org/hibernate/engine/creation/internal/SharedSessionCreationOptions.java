@@ -4,8 +4,10 @@
  */
 package org.hibernate.engine.creation.internal;
 
+import org.hibernate.SessionEventListener;
 import org.hibernate.Transaction;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
@@ -30,6 +32,28 @@ public interface SharedSessionCreationOptions extends SessionCreationOptions {
 	/**
 	 * Registers callbacks for the child session to integrate with events of the parent session.
 	 */
-	void registerParentSessionObserver(ParentSessionObserver callbacks);
+	void registerParentSessionObserver(ParentSessionObserver observer);
+
+	/**
+	 * Consolidated implementation of adding the parent session observer.
+	 */
+	default void registerParentSessionObserver(ParentSessionObserver observer, SharedSessionContractImplementor original) {
+		original.getEventListenerManager().addListener( new SessionEventListener() {
+			@Override
+			public void flushEnd(int numberOfEntities, int numberOfCollections) {
+				observer.onParentFlush();
+			}
+
+			@Override
+			public void partialFlushEnd(int numberOfEntities, int numberOfCollections) {
+				observer.onParentFlush();
+			}
+
+			@Override
+			public void end() {
+				observer.onParentClose();
+			}
+		} );
+	}
 
 }

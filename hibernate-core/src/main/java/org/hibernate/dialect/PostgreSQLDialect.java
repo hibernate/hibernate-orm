@@ -574,6 +574,7 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.substr();
 		functionFactory.substring_substr();
 		//also natively supports ANSI-style substring()
+		functionFactory.reverse();
 		functionFactory.translate();
 		functionFactory.toCharNumberDateTimestamp();
 		functionFactory.concat_pipeOperator( "convert_from(lo_get(?1),pg_client_encoding())" );
@@ -895,6 +896,13 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public boolean supportsCaseInsensitiveLike() {
 		return true;
+	}
+
+	@Override
+	public String generatedAs(String generatedAs) {
+		return getVersion().isSameOrAfter( 18 )
+				? " generated always as (" + generatedAs + ")"
+				: super.generatedAs( generatedAs );
 	}
 
 	@Override

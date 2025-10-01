@@ -613,6 +613,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		functionFactory.initcap();
 		functionFactory.substr();
 		functionFactory.substring_substr();
+		functionFactory.reverse();
 		//also natively supports ANSI-style substring()
 		functionFactory.translate();
 		functionFactory.toCharNumberDateTimestamp();
@@ -915,6 +916,13 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	@Override
 	public boolean supportsCaseInsensitiveLike() {
 		return true;
+	}
+
+	@Override
+	public String generatedAs(String generatedAs) {
+		return getVersion().isSameOrAfter( 18 )
+				? " generated always as (" + generatedAs + ")"
+				: super.generatedAs( generatedAs );
 	}
 
 	@Override

@@ -88,12 +88,21 @@ public interface MetadataBuildingContext {
 		return isPreferNativeEnumTypesEnabled( getBootstrapContext().getServiceRegistry() );
 	}
 
+	@Incubating
+	default boolean isPreferLocaleLanguageTagEnabled() {
+		return isPreferLocaleLanguageTagEnabled( getBootstrapContext().getServiceRegistry() );
+	}
+
 	static boolean isPreferJavaTimeJdbcTypesEnabled(ServiceRegistry serviceRegistry) {
 		return isPreferJavaTimeJdbcTypesEnabled( serviceRegistry.requireService( ConfigurationService.class ) );
 	}
 
 	static boolean isPreferNativeEnumTypesEnabled(ServiceRegistry serviceRegistry) {
 		return isPreferNativeEnumTypesEnabled( serviceRegistry.requireService( ConfigurationService.class ) );
+	}
+
+	static boolean isPreferLocaleLanguageTagEnabled(ServiceRegistry serviceRegistry) {
+		return isPreferLocaleLanguageTagEnabled( serviceRegistry.requireService( ConfigurationService.class ) );
 	}
 
 	static boolean isPreferJavaTimeJdbcTypesEnabled(ConfigurationService configurationService) {
@@ -110,6 +119,14 @@ public interface MetadataBuildingContext {
 				MappingSettings.PREFER_NATIVE_ENUM_TYPES,
 				configurationService.getSettings(),
 				// todo: switch to true with HHH-17905
+				false
+		);
+	}
+
+	static boolean isPreferLocaleLanguageTagEnabled(ConfigurationService configurationService) {
+		return ConfigurationHelper.getBoolean(
+				MappingSettings.PREFER_LOCALE_LANGUAGE_TAG,
+				configurationService.getSettings(),
 				false
 		);
 	}

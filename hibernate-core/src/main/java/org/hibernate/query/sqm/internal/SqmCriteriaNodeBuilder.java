@@ -2147,7 +2147,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	private <T> boolean isInstance(BindableType<? extends T> bindableType, T value) {
-		if ( bindableType instanceof SqmExpressible<?> expressible ) {
+		if ( value == null ) {
+			return true;
+		}
+		else if ( bindableType instanceof SqmExpressible<?> expressible ) {
 			return expressible.getExpressibleJavaType().isInstance( value );
 		}
 		else {

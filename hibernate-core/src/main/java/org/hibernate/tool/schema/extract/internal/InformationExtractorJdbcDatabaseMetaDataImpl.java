@@ -9,6 +9,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.StringTokenizer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.boot.model.naming.DatabaseIdentifier;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
@@ -33,7 +34,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 		super( extractionContext );
 	}
 
-	private DatabaseMetaData getJdbcDatabaseMetaData() {
+	protected DatabaseMetaData getJdbcDatabaseMetaData() {
 		return getExtractionContext().getJdbcDatabaseMetaData();
 	}
 
@@ -108,10 +109,24 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 	}
 
 	@Override
+	protected <T> T processPrimaryKeysResultSet(
+			String catalogFilter,
+			String schemaFilter,
+			@Nullable String tableName,
+			ExtractionContext.ResultSetProcessor<T> processor)
+			throws SQLException {
+		try ( var resultSet =
+					getJdbcDatabaseMetaData()
+							.getPrimaryKeys( catalogFilter, schemaFilter, tableName ) ) {
+			return processor.process( resultSet );
+		}
+	}
+
+	@Override
 	protected <T> T processIndexInfoResultSet(
 			String catalog,
 			String schema,
-			String table,
+			@Nullable String table,
 			boolean unique,
 			boolean approximate,
 			ExtractionContext.ResultSetProcessor<T> processor)
@@ -127,7 +142,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 	protected <T> T processImportedKeysResultSet(
 			String catalog,
 			String schema,
-			String table,
+			@Nullable String table,
 			ExtractionContext.ResultSetProcessor<T> processor)
 					throws SQLException {
 		try ( var resultSet =

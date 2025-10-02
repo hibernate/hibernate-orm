@@ -52,7 +52,7 @@ dependencies {
     }
 
     // JUnit dependencies made up of:
-    // 		* JUnit 6
+    // 		* JUnit (version 5 or later)
     // 		* the Jupiter engine which runs JUnit 6 based tests
     //		* the "vintage" engine - which runs JUnit 3 and 4 based tests
     testImplementation testLibs.junitJupiterApi
@@ -212,6 +212,8 @@ tasks.withType( Test.class ).each { test ->
 
     test.maxHeapSize = '3G'
 
+    // Enable bytecode enhanced engine:
+    test.systemProperties['hibernate.testing.bytecode.enhancement.extension.engine.enabled'] = true
     test.systemProperties['hibernate.test.validatefailureexpected'] = true
     test.systemProperties['hibernate.highlight_sql'] = false
     test.systemProperties += System.properties.findAll { it.key.startsWith( "hibernate." ) }

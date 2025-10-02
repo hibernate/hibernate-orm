@@ -16,7 +16,7 @@ There are a number of tenants that make up a good test case as opposed to a poor
 [[junit-jupiter]]
 == [[junit5]] JUnit Jupiter (6) extensions
 
-JUnit 6 offers better support for integration, compared to JUnit 4, via https://junit.org/junit5/docs/current/user-guide/#extensions[extensions].  Hibernate builds on those concepts in its `hibernate-testing` module allowing set up of test fixtures using annotations.  The following sections describe the Hibernate extensions.
+JUnit Jupiter offers better support for integration, compared to JUnit 4, via https://docs.junit.org/current/user-guide[extensions].  Hibernate builds on those concepts in its `hibernate-testing` module allowing set up of test fixtures using annotations.  The following sections describe the Hibernate extensions.
 
 NOTE: The extensions exist in the `org.hibernate.testing.orm.junit` package, as opposed to the older `org.hibernate.testing.junit4` package used with JUnit 4.
 
@@ -29,7 +29,7 @@ Manages a `ServiceRegistry` as part of the test lifecycle.  2 in fact, depending
 `@BootstrapServiceRegistry`:: configures Hibernate's bootstrap `BootstrapServiceRegistry` which manages class-loading, etc.  `@BootstrapServiceRegistry` is used to provide Java services and Hibernate `Integrator` implementations for the test.
 `@ServiceRegistry`:: configures Hibernate's standard `StandardServiceRegistry`.  `@ServiceRegistry` is used to provide settings, contributors, services, etc.
 
-Also exposes `ServiceRegistryScope` via JUnit 6 `ParameterResolver`.  `ServiceRegistryScope` allows
+Also exposes `ServiceRegistryScope` via JUnit's `ParameterResolver`.  `ServiceRegistryScope` allows
 access to the managed `ServiceRegistry` from tests and callbacks.
 
 ```

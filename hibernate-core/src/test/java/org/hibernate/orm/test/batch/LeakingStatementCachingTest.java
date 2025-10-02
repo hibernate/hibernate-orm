@@ -85,7 +85,12 @@ class LeakingStatementCachingTest {
 
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
-		SINGLE_CONNECTION_DATASOURCE.close();
+		try {
+			scope.getSessionFactory().getSchemaManager().dropMappedObjects( false );
+		}
+		finally {
+			SINGLE_CONNECTION_DATASOURCE.close();
+		}
 	}
 
 	@Test
@@ -127,7 +132,8 @@ class LeakingStatementCachingTest {
 
 			serviceRegistryBuilder.applySetting( AvailableSettings.CONNECTION_PROVIDER,
 					new DataSourceConnectionProvider() );
-			serviceRegistryBuilder.applySetting( AvailableSettings.SHOW_SQL, false );
+			serviceRegistryBuilder.applySetting( AvailableSettings.SHOW_SQL, true );
+			serviceRegistryBuilder.applySetting( AvailableSettings.HBM2DDL_AUTO, "create" );
 			serviceRegistryBuilder.applySetting( AvailableSettings.LOG_JDBC_WARNINGS, false );
 			serviceRegistryBuilder.getSettings().remove( AvailableSettings.URL );
 		}
@@ -135,28 +141,37 @@ class LeakingStatementCachingTest {
 
 	private static class SingleConnectionDataSource implements javax.sql.DataSource {
 
-		private final BlockingQueue<Connection> connectionQueue = new ArrayBlockingQueue<>( 1 );
+		private BlockingQueue<Connection> connectionQueue;
 
 		public SingleConnectionDataSource() {
-			DriverManagerConnectionProviderImpl connectionProvider = new DriverManagerConnectionProviderImpl();
-			connectionProvider.configure(
-					PropertiesHelper.map( ConnectionProviderBuilder.getConnectionProviderProperties() ) );
-			try {
-				connectionQueue.add( new ConnectionWrapper( connectionProvider.getConnection(), this ) );
-			}
-			catch (SQLException e) {
-				throw new RuntimeException( e );
-			}
 		}
 
 		@Override
 		public Connection getConnection() {
 			try {
-				return connectionQueue.take();
+				if ( connectionQueue == null ) {
+					connectionQueue = new ArrayBlockingQueue<>( 1 );
+					connectionQueue.add( buildConnectionWrapper() );
+				}
+				if ( connectionQueue.isEmpty() ) {
+					throw new IllegalStateException( "A problem occurred retrieving the connection" );
+				}
+				Connection connection = connectionQueue.take();
+				if ( connection == null || connection.isClosed() ) {
+					throw new IllegalStateException( "A problem occurred retrieving the connection" );
+				}
+				return connection;
 			}
-			catch (InterruptedException e) {
+			catch (Exception e) {
 				throw new RuntimeException( e );
 			}
+		}
+
+		private ConnectionWrapper buildConnectionWrapper() throws SQLException {
+			DriverManagerConnectionProviderImpl connectionProvider = new DriverManagerConnectionProviderImpl();
+			connectionProvider.configure(
+					PropertiesHelper.map( ConnectionProviderBuilder.getConnectionProviderProperties() ) );
+			return new ConnectionWrapper( connectionProvider.getConnection(), this );
 		}
 
 		@Override

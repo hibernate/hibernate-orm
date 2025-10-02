@@ -32,10 +32,10 @@ dependencies {
 
 	testImplementation gradleTestKit()
 	testImplementation testLibs.assertjCore
-	testImplementation testLibs.junit5Api
+	testImplementation testLibs.junitJupiterApi
 
-	testRuntimeOnly testLibs.junit5Engine
-	testRuntimeOnly testLibs.junit5Launcher
+	testRuntimeOnly testLibs.junitJupiterEngine
+	testRuntimeOnly testLibs.junitJupiterLauncher
 }
 
 gradlePlugin {

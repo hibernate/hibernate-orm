@@ -57,7 +57,7 @@ configurations {
 
 	javadocClasspath {
 		description = 'Class files for the javadoc to be built'
-		resolutionStrategy.capabilitiesResolution.withCapability('org.junit.jupiter:junit-jupiter-params:'+testLibs.versions.junit5.get()) { details ->
+		resolutionStrategy.capabilitiesResolution.withCapability('org.junit.jupiter:junit-jupiter-params:'+testLibs.versions.junitJupiter.get()) { details ->
 			details.select( details.candidates.first() ).because( 'first' )
 		}
 

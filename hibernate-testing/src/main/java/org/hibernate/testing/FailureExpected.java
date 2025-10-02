@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  *
  * @author Hardy Ferentschik
  * @author Steve Ebersole
- * @deprecated Use JUnit 5 and {@link org.hibernate.testing.orm.junit.FailureExpected} instead.
+ * @deprecated Use JUnit Jupiter and {@link org.hibernate.testing.orm.junit.FailureExpected} instead.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.TYPE })

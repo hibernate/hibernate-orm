@@ -41,8 +41,7 @@ which means that accessing `accountsPayableXrefId` will not force the loading of
 
 [NOTE]
 ====
-As a hopefully temporary legacy hold-over, it is currently required that all lazy singular associations (many-to-one and one-to-one) also include `@LazyToOne(LazyToOneOption.NO_PROXY)`.
-The plan is to relax that requirement later.
+For existing codebases, it is recommended to remove usages of @LazyToOne, such as `@LazyToOne(LazyToOneOption.NO_PROXY)`, and instead rely on default lazy loading behavior or explicitly configure fetch strategies using @OneToOne or @ManyToOne annotations with fetch = FetchType.LAZY where necessary, such as `@OneToOne(fetch = FetchType.LAZY)`.
 ====
 
 [[BytecodeEnhancement-dirty-tracking]]

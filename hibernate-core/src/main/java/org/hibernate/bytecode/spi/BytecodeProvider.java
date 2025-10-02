@@ -6,7 +6,9 @@
  */
 package org.hibernate.bytecode.spi;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
@@ -57,8 +59,77 @@ public interface BytecodeProvider extends Service {
 	 * @param clazz The class to be reflected upon.
 	 * @param propertyAccessMap The ordered property access map
 	 * @return The reflection optimization delegate.
+	 * @deprecated Use {@link #getReflectionOptimizer(Class, PropertyInfo[])} instead
 	 */
+	@Deprecated(forRemoval = true)
 	@Nullable ReflectionOptimizer getReflectionOptimizer(Class<?> clazz, Map<String, PropertyAccess> propertyAccessMap);
+
+	/**
+	 * Retrieve the ReflectionOptimizer delegate for this provider
+	 * capable of generating reflection optimization components.
+	 *
+	 * @param clazz The class to be reflected upon.
+	 * @param propertyInfos The ordered property infos
+	 * @return The reflection optimization delegate.
+	 */
+	default @Nullable ReflectionOptimizer getReflectionOptimizer(Class<?> clazz, PropertyInfo[] propertyInfos) {
+		final Map<String, PropertyAccess> map = new HashMap<>();
+		for ( int i = 0; i < propertyInfos.length; i++ ) {
+			map.put( propertyInfos[i].propertyName(), propertyInfos[i].propertyAccess() );
+		}
+		return getReflectionOptimizer( clazz, map );
+	}
+
+	/**
+	 * Information about a property of a class, needed for generating reflection optimizers.
+	 *
+	 */
+	public static final class PropertyInfo {
+		private final String propertyName;
+		private final PropertyAccess propertyAccess;
+
+		/**
+		 * @param propertyName The name of the property
+		 * @param propertyAccess The property access
+		 */
+		public PropertyInfo(String propertyName, PropertyAccess propertyAccess) {
+			this.propertyName = propertyName;
+			this.propertyAccess = propertyAccess;
+		}
+
+		public String propertyName() {
+			return propertyName;
+		}
+
+		public PropertyAccess propertyAccess() {
+			return propertyAccess;
+		}
+
+		@Override
+		public boolean equals(@Nullable Object obj) {
+			if ( obj == this ) {
+				return true;
+			}
+			if ( obj == null || obj.getClass() != this.getClass() ) {
+				return false;
+			}
+			var that = (PropertyInfo) obj;
+			return Objects.equals( this.propertyName, that.propertyName ) &&
+					Objects.equals( this.propertyAccess, that.propertyAccess );
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash( propertyName, propertyAccess );
+		}
+
+		@Override
+		public String toString() {
+			return "PropertyInfo[" +
+					"propertyName=" + propertyName + ", " +
+					"propertyAccess=" + propertyAccess + ']';
+		}
+	}
 
 	/**
 	 * Returns a byte code enhancer that implements the enhancements described in the supplied enhancement context.

@@ -269,6 +269,13 @@ public class PropertyBinder {
 		basicValueBinder.setReferencedEntityName( referencedEntityName );
 		basicValueBinder.setAccessType( accessType );
 
+		if ( holder instanceof ComponentPropertyHolder embeddableTypedContainer ) {
+			final Component component = embeddableTypedContainer.getComponent();
+			if ( component.wasTableExplicitlyDefined() ) {
+				basicValueBinder.setTable( component.getTable() );
+			}
+		}
+
 		value = basicValueBinder.make();
 
 		return makeProperty();

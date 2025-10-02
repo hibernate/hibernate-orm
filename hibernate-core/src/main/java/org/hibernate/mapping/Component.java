@@ -100,6 +100,8 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	private transient Boolean simpleRecord;
 	private String columnNamingPattern;
 
+	private boolean tableWasExplicit;
+
 	public Component(MetadataBuildingContext metadata, PersistentClass owner) throws MappingException {
 		this( metadata, owner.getTable(), owner );
 	}
@@ -156,6 +158,23 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 
 	public List<Property> getProperties() {
 		return properties;
+	}
+
+	public void setTable(Table table) {
+		if ( !tableWasExplicit ) {
+			super.setTable( table );
+		}
+
+		// otherwise, ignore it...
+	}
+
+	public void setTable(Table table, boolean wasExplicit) {
+		super.setTable( table );
+		tableWasExplicit = wasExplicit;
+	}
+
+	public boolean wasTableExplicitlyDefined() {
+		return tableWasExplicit;
 	}
 
 	public void addProperty(Property p, ClassDetails declaringClass) {

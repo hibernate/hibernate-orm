@@ -9,6 +9,10 @@ import java.util.Map;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AnnotationException;
+import org.hibernate.annotations.EmbeddedTable;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.models.AnnotationPlacementException;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.AggregateColumn;
@@ -83,6 +87,8 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		this.component = component;
 		this.inheritanceStatePerClass = inheritanceStatePerClass;
 
+		applyExplicitTableName( component, inferredData, parent, context );
+
 		isOrWithinEmbeddedId = parent.isOrWithinEmbeddedId()
 				|| embeddedMemberDetails != null && hasIdAnnotation( embeddedMemberDetails );
 		isWithinElementCollection = parent.isWithinElementCollection()
@@ -96,6 +102,61 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			embeddedAttributeName = "";
 			attributeConversionInfoMap = processAttributeConversions( inferredData.getClassOrElementType() );
 		}
+	}
+
+	/**
+	 * Apply the explicit {@link EmbeddedTable} if there is one and if its
+	 * appropriate for the context (the type of {@code container}).
+	 *
+	 * @param component The (in-flight) component mapping details.
+	 * @param propertyData Details about the property defining this component.
+	 * @param container The container for this component.
+	 */
+	public static void applyExplicitTableName(
+			Component component,
+			PropertyData propertyData,
+			PropertyHolder container,
+			MetadataBuildingContext buildingContext) {
+		Table tableToUse = container.getTable();
+		boolean wasExplicit = false;
+		if ( container instanceof ComponentPropertyHolder componentPropertyHolder ) {
+			wasExplicit = componentPropertyHolder.getComponent().wasTableExplicitlyDefined();
+		}
+
+		if ( propertyData.getAttributeMember() != null ) {
+			final EmbeddedTable embeddedTableAnn = propertyData.getAttributeMember()
+					.getDirectAnnotationUsage( EmbeddedTable.class );
+			// we only allow this when done for an embedded on an entity or mapped-superclass
+			if ( container instanceof ClassPropertyHolder ) {
+				if ( embeddedTableAnn != null ) {
+					final Identifier tableNameIdentifier = buildingContext.getObjectNameNormalizer().normalizeIdentifierQuoting( embeddedTableAnn.value() );
+					final InFlightMetadataCollector.EntityTableXref entityTableXref = buildingContext
+							.getMetadataCollector()
+							.getEntityTableXref( container.getEntityName() );
+					tableToUse =  entityTableXref.resolveTable( tableNameIdentifier );
+					wasExplicit = true;
+				}
+			}
+			else {
+				if ( embeddedTableAnn != null ) {
+					// not allowed
+					throw new AnnotationPlacementException( "@EmbeddedTable only supported for use on entity or mapped-superclass" );
+				}
+			}
+		}
+		if ( propertyData.getAttributeMember() != null && container instanceof ClassPropertyHolder ) {
+			final EmbeddedTable embeddedTableAnn = propertyData.getAttributeMember().getDirectAnnotationUsage( EmbeddedTable.class );
+			if ( embeddedTableAnn != null ) {
+				final Identifier tableNameIdentifier = buildingContext.getObjectNameNormalizer().normalizeIdentifierQuoting( embeddedTableAnn.value() );
+				final InFlightMetadataCollector.EntityTableXref entityTableXref = buildingContext
+						.getMetadataCollector()
+						.getEntityTableXref( container.getEntityName() );
+				tableToUse =  entityTableXref.resolveTable( tableNameIdentifier );
+				wasExplicit = true;
+			}
+		}
+
+		component.setTable( tableToUse, wasExplicit );
 	}
 
 	/**

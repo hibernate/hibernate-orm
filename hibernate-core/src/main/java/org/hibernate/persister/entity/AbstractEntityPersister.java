@@ -71,6 +71,7 @@ import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.internal.FilterHelper;
+import org.hibernate.internal.util.ImmutableBitSet;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.StringHelper;
@@ -1733,6 +1734,11 @@ public abstract class AbstractEntityPersister
 			final Object propValue) {
 		final int propertyNumber = lazyPropertyNumbers[index];
 		setPropertyValue( entity, propertyNumber, propValue );
+		if ( entry.getMaybeLazySet() != null ) {
+			var bitSet = entry.getMaybeLazySet().toBitSet();
+			bitSet.set( propertyNumber );
+			entry.setMaybeLazySet( ImmutableBitSet.valueOf( bitSet ) );
+		}
 		final var loadedState = entry.getLoadedState();
 		if ( loadedState != null ) {
 			// object have been loaded with setReadOnly(true); HHH-2236
@@ -1767,6 +1773,11 @@ public abstract class AbstractEntityPersister
 	// Used by Hibernate Reactive
 	protected void initializeLazyProperty(Object entity, EntityEntry entry, Object propValue, int index, Type type) {
 		setPropertyValue( entity, index, propValue );
+		if ( entry.getMaybeLazySet() != null ) {
+			var bitSet = entry.getMaybeLazySet().toBitSet();
+			bitSet.set( index );
+			entry.setMaybeLazySet( ImmutableBitSet.valueOf( bitSet ) );
+		}
 		final var loadedState = entry.getLoadedState();
 		if ( loadedState != null ) {
 			// object has been loaded with setReadOnly(true); HHH-2236

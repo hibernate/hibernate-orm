@@ -15,8 +15,8 @@ dependencies {
     api project( ':hibernate-community-dialects' )
 
     api testLibs.junit4
-    api testLibs.junit5Api
-    api testLibs.junit5Params
+    api testLibs.junitJupiterApi
+    api testLibs.junitJupiterParams
 
     api testLibs.hamcrest
     api testLibs.assertjCore
@@ -55,8 +55,8 @@ dependencies {
         // Since we don't need WildFly Elytron in our tests, we'll just exclude it.
         exclude group: 'org.wildfly.security', module: 'wildfly-elytron'
     }
-    implementation testLibs.junit5Engine
-    implementation testLibs.junit5Launcher
+    implementation testLibs.junitJupiterEngine
+    implementation testLibs.junitJupiterLauncher
 
     annotationProcessor project( ':hibernate-processor' )
 }

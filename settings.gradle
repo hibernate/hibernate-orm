@@ -63,7 +63,7 @@ dependencyResolutionManagement {
             var String maxJdk = jdkVersions.max
 
             version "baseline", baseJdk
-            version "compatible", "17 or 21"
+            version "compatible", "17, 21 or 25"
             version "jdbc", "4.2" // Bundled with JDK 11
 
             // We may require a minimum JDK version, for consistency across builds

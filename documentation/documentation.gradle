@@ -216,8 +216,8 @@ def aggregateJavadocsTask = tasks.register( "javadoc", Javadoc ) {
 				? javadocTool.get().metadata.languageVersion
 				: JavaLanguageVersion.of( JavaVersion.current().name )
 
-		if ( javaLanguageVersion.asInt() != 21 ) {
-			println "Aggregated Javadocs are bing built` using a JDK different than version 21: \n" +
+		if ( javaLanguageVersion.asInt() != jdkVersions.min.asInt() ) {
+			println "Aggregated Javadocs are bing built` using a JDK different than version ${jdkVersions.min.asInt()}: \n" +
 					"\t* `stylesheet.css` might not be compatible\n" +
 					"\t* generating the User Guide settings fragment might not succeed"
 		}

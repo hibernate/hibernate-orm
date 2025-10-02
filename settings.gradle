@@ -167,9 +167,9 @@ dependencyResolutionManagement {
             library( "jaxb", "org.glassfish.jaxb", "jaxb-runtime" ).versionRef( jaxbRuntimeVersion )
         }
         testLibs {
-            def junit5Version = version "junit5", "5.13.4"
+            def junitJupiterVersion = version "junitJupiter", "6.0.0"
             def junit4Version = version "junit4", "4.13.2"
-            def junit5LauncherVersion = version "junit5Launcher", "1.13.4"
+            def junitJupiterLauncherVersion = version "junitJupiterLauncher", "6.0.0"
 
             def assertjVersion = version "assertj", "3.26.3"
             def hamcrestVersion = version "hamcrest", "3.0"
@@ -189,11 +189,11 @@ dependencyResolutionManagement {
 
             library( "validator", "org.hibernate.validator", "hibernate-validator" ).versionRef( hibernateValidatorVersion )
 
-            library( "junit5Api", "org.junit.jupiter", "junit-jupiter-api" ).versionRef( junit5Version )
-            library( "junit5Engine", "org.junit.jupiter", "junit-jupiter-engine" ).versionRef( junit5Version )
-            library( "junit5Params", "org.junit.jupiter", "junit-jupiter-params" ).versionRef( junit5Version )
-            library( "junit4Engine", "org.junit.vintage", "junit-vintage-engine" ).versionRef( junit5Version )
-            library( "junit5Launcher", "org.junit.platform", "junit-platform-launcher" ).versionRef( junit5LauncherVersion )
+            library( "junitJupiterApi", "org.junit.jupiter", "junit-jupiter-api" ).versionRef( junitJupiterVersion )
+            library( "junitJupiterEngine", "org.junit.jupiter", "junit-jupiter-engine" ).versionRef( junitJupiterVersion )
+            library( "junitJupiterParams", "org.junit.jupiter", "junit-jupiter-params" ).versionRef( junitJupiterVersion )
+            library( "junit4Engine", "org.junit.vintage", "junit-vintage-engine" ).versionRef( junitJupiterVersion )
+            library( "junitJupiterLauncher", "org.junit.platform", "junit-platform-launcher" ).versionRef( junitJupiterLauncherVersion )
             library( "junit4", "junit", "junit" ).versionRef( junit4Version )
 
             library( "assertjCore", "org.assertj", "assertj-core" ).versionRef( assertjVersion )

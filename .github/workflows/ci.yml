@@ -54,7 +54,7 @@ jobs:
     # Running with HANA requires at least 8GB memory just for the database, which we don't have on GH Actions runners
     #          - rdbms: hana
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
       - name: Reclaim Disk Space
@@ -64,7 +64,7 @@ jobs:
           RDBMS: ${{ matrix.rdbms }}
         run: ci/database-start.sh
       - name: Set up Java 21
-        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -81,7 +81,7 @@ jobs:
           echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
       - name: Cache Maven/Gradle Dependency/Dist Caches
         id: cache-maven
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         # if it's not a pull request, we restore and save the cache
         if: github.event_name != 'pull_request'
         with:
@@ -98,7 +98,7 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
       - name: Restore Maven/Gradle Dependency/Dist Caches
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         # if it a pull request, we restore the cache but we don't save it
         if: github.event_name == 'pull_request'
         with:
@@ -158,7 +158,7 @@ jobs:
           - rdbms: base-database-service-21c
           - rdbms: base-database-service-23ai
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
       - name: Set up Java 21
@@ -178,7 +178,7 @@ jobs:
           echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
       - name: Cache Maven/Gradle Dependency/Dist Caches
         id: cache-maven
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         # if it's not a pull request, we restore and save the cache
         if: github.event_name != 'pull_request'
         with:
@@ -195,7 +195,7 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
       - name: Restore Maven/Gradle Dependency/Dist Caches
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         # if it is a pull request, we restore the cache but we don't save it
         if: github.event_name == 'pull_request'
         with:
@@ -265,13 +265,13 @@ jobs:
     name: Static code analysis
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
       - name: Reclaim disk space and sanitize user home
         run: .github/ci-prerequisites-atlas.sh
       - name: Set up Java 21
-        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -288,7 +288,7 @@ jobs:
           echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
       - name: Cache Maven/Gradle Dependency/Dist Caches
         id: cache-maven
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         # if it's not a pull request, we restore and save the cache
         if: github.event_name != 'pull_request'
         with:
@@ -305,7 +305,7 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
       - name: Restore Maven/Gradle Dependency/Dist Caches
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         # if it a pull request, we restore the cache but we don't save it
         if: github.event_name == 'pull_request'
         with:

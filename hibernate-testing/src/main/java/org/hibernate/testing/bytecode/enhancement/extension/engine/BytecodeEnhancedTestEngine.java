@@ -51,11 +51,18 @@ import org.junit.platform.engine.ExecutionRequest;
 import org.junit.platform.engine.OutputDirectoryCreator;
 import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.UniqueId;
+import org.junit.platform.engine.support.descriptor.EngineDescriptor;
 import org.junit.platform.engine.support.hierarchical.EngineExecutionContext;
 import org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine;
 import org.junit.platform.engine.support.hierarchical.ThrowableCollector;
 
 public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEngineExecutionContext> {
+
+	public static final String ENHANCEMENT_EXTENSION_ENGINE_ENABLED = "hibernate.testing.bytecode.enhancement.extension.engine.enabled";
+
+	public static boolean isEnabled() {
+		return "true".equalsIgnoreCase( System.getProperty( ENHANCEMENT_EXTENSION_ENGINE_ENABLED, "false" ) );
+	}
 
 	@Override
 	public String getId() {
@@ -64,6 +71,14 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 
 	@Override
 	public TestDescriptor discover(EngineDiscoveryRequest discoveryRequest, UniqueId uniqueId) {
+		if ( isEnabled() ) {
+			return doDiscover( discoveryRequest, uniqueId );
+		}
+
+		return new EngineDescriptor( uniqueId, getId() );
+	}
+
+	public TestDescriptor doDiscover(EngineDiscoveryRequest discoveryRequest, UniqueId uniqueId) {
 		final BytecodeEnhancedEngineDescriptor engineDescriptor = new BytecodeEnhancedEngineDescriptor(
 				(JupiterEngineDescriptor) new JupiterTestEngine().discover( discoveryRequest, uniqueId )
 		);
@@ -235,8 +250,12 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 	}
 
 	private JupiterConfiguration getJupiterConfiguration(ExecutionRequest request) {
-		JupiterEngineDescriptor engineDescriptor = (JupiterEngineDescriptor) request.getRootTestDescriptor();
-		return engineDescriptor.getConfiguration();
+		if ( request.getRootTestDescriptor() instanceof JupiterEngineDescriptor descriptor ) {
+			return descriptor.getConfiguration();
+		}
+		else {
+			return null;
+		}
 	}
 
 	public Optional<String> getGroupId() {

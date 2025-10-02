@@ -41,6 +41,11 @@ public abstract class StatelessSessionBuilderImpl
 	// StatelessSessionBuilder
 
 	@Override
+	public StatelessSession open() {
+		return openStatelessSession();
+	}
+
+	@Override
 	public StatelessSession openStatelessSession() {
 		CORE_LOGGER.openingStatelessSession( tenantIdentifier );
 		return createStatelessSession();

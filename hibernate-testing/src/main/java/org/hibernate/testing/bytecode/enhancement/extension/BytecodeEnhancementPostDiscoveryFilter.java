@@ -8,6 +8,7 @@ package org.hibernate.testing.bytecode.enhancement.extension;
 import static org.junit.platform.commons.util.AnnotationUtils.isAnnotated;
 
 import org.hibernate.testing.bytecode.enhancement.extension.engine.BytecodeEnhancedEngineDescriptor;
+import org.hibernate.testing.bytecode.enhancement.extension.engine.BytecodeEnhancedTestEngine;
 import org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor;
 import org.junit.platform.engine.FilterResult;
 import org.junit.platform.engine.TestDescriptor;
@@ -24,6 +25,10 @@ public class BytecodeEnhancementPostDiscoveryFilter implements org.junit.platfor
 			}
 
 			boolean isEnhanced = isAnnotated( descriptor.getTestClass(), BytecodeEnhanced.class );
+			if ( isEnhanced && !BytecodeEnhancedTestEngine.isEnabled() ) {
+				throw new IllegalStateException(
+						"BytecodeEnhancedTestEngine is disabled. But the tests rely on the @BytecodeEnhanced extensions. %s".formatted( descriptor ) );
+			}
 			if ( root instanceof BytecodeEnhancedEngineDescriptor ) {
 				if ( !isEnhanced ) {
 					return FilterResult.excluded( "Not bytecode enhanced." );

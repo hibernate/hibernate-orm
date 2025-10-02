@@ -20,6 +20,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.*;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.MapKeyColumnJpaAnnotation;
 import org.hibernate.boot.spi.AccessType;
@@ -1052,10 +1053,17 @@ public abstract class CollectionBinder {
 	}
 
 	private void bind() {
+		if ( property != null ) {
+			final EmbeddedTable misplaced = property.getDirectAnnotationUsage( EmbeddedTable.class );
+			if ( misplaced != null ) {
+				// not allowed
+				throw new AnnotationPlacementException( "@EmbeddedTable only supported for use on entity or mapped-superclass" );
+			}
+		}
 		collection = createCollection( propertyHolder.getPersistentClass() );
 		final String role = qualify( propertyHolder.getPath(), propertyName );
 		if ( BOOT_LOGGER.isTraceEnabled() ) {
-BOOT_LOGGER.bindingCollectionRole( role );
+			BOOT_LOGGER.bindingCollectionRole( role );
 		}
 		collection.setRole( role );
 		collection.setMappedByProperty( mappedBy );

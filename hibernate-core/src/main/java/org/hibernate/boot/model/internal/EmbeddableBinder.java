@@ -951,16 +951,16 @@ BOOT_LOGGER.bindingEmbeddable( subpath );
 	static Component createEmbeddable(
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
-			boolean isComponentEmbedded,
+			boolean isNonAggregated,
 			boolean isIdentifierMapper,
 			Class<? extends EmbeddableInstantiator> customInstantiatorImpl,
 			MetadataBuildingContext context) {
 		final var embeddable = new Component( context, propertyHolder.getPersistentClass() );
-		embeddable.setEmbedded( isComponentEmbedded );
-		//yuk
-		embeddable.setTable( propertyHolder.getTable() );
+		embeddable.setEmbedded( isNonAggregated );
+		ComponentPropertyHolder.applyExplicitTableName( embeddable, inferredData, propertyHolder, context );
+
 		if ( isIdentifierMapper
-				|| isComponentEmbedded && inferredData.getPropertyName() == null ) {
+			|| isNonAggregated && inferredData.getPropertyName() == null ) {
 			embeddable.setComponentClassName( embeddable.getOwner().getClassName() );
 		}
 		else {

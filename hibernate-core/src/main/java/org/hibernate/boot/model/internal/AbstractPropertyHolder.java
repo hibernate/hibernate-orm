@@ -53,7 +53,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 
 	private final String path;
 	protected final AbstractPropertyHolder parent;
-	private final MetadataBuildingContext context;
+	protected final MetadataBuildingContext context;
 
 	private Boolean isInIdClass;
 

@@ -2506,16 +2506,9 @@ There are several ways to call native or user-defined SQL functions.
 - A native or user-defined function may be called using JPQL's `function` syntax, for example, ``function('sinh', phi)``.
   (This is the easiest way, but not the best way.)
 - A user-written `FunctionContributor` may register user-defined functions.
-- A custom `Dialect` may register additional native functions by overriding `initializeFunctionRegistry()`.
+- A custom `Dialect` may register additional native functions by overriding `initializeFunctionRegistry()`. <<hql-user-defined-functions-implementation, Example of implementation.>>
 
-[TIP]
-====
-Registering a function isn't hard, but is beyond the scope of this chapter.
-
-(It's even possible to use the APIs Hibernate provides to make your own _portable_ functions!)
-====
-
-Fortunately, every built-in `Dialect` already registers many native functions for the database it supports.
+Fortunately, every built-in `Dialect` already registers many native functions for the database it supports. So there is no need to define this functions explicitly.
 
 [TIP]
 ====
@@ -4159,4 +4152,131 @@ Therefore, this feature will only work if the database supports recursive CTEs.
 Hibernate does emulate the `search` and `cycle` clauses though if necessary, so you can safely use that.
 
 Note that most modern database versions support recursive CTEs already.
+====
+
+[[hql-user-defined-functions-implementation]]
+=== User-defined functions implementation
+
+Hibernate Dialects can register additional functions known to be available for that particular database product.
+These functions are also available in HQL (and JPQL, though only when using Hibernate as the JPA provider, obviously).
+However, they would only be available when using that database Dialect.
+Applications that aim for database portability should avoid using functions in this category.
+
+Application developers can also supply their own set of functions.
+This would usually represent either user-defined SQL functions or aliases for snippets of SQL.
+
+Such function can be declared by using the `register()` method of `org.hibernate.query.sqm.function.SqmFunctionRegistry`.
+
+For example, we have the following SQL function:
+
+[[hql-user-defined-function-example]]
+.Custom aggregate function
+====
+[source, SQL, indent=0]
+----
+include::{extrasdir}/hql-user-defined-function-example.sql[]
+----
+====
+
+Also, we have the `Employee` entity.
+
+[[hql-user-defined-function-domain-model]]
+.Domain model
+====
+[source, JAVA, indent=0]
+----
+include::{example-dir-hql}/customFunctions/Employee.java[tags=hql-examples-domain-model-example]
+----
+====
+
+Let’s persist the following entities in our database:
+
+[[hql-user-defined-function-inital-data]]
+.Initial data
+====
+[source, JAVA, indent=0]
+----
+include::{example-dir-hql}/customFunctions/CustomDialectFunctionTest.java[tags=hql-user-defined-dialect-function-inital-data]
+----
+====
+
+The first step for implementing a custom function is to create a custom dialect `ExtendedPGDialect`, which inherits from `PostgreSQLDialect`.
+
+[[hql-user-defined-dialect-function-cutom-dialect]]
+.Custom dialect
+====
+[source, JAVA, indent=0]
+----
+include::{example-dir-hql}/customFunctions/ExtendedPGDialect.java[tags=hql-user-defined-dialect-function-custom-dialect]
+----
+====
+
+Secondly, we will set the `ExtendedPGDialect` to Hibernate config.
+
+[[hql-user-defined-dialect-function-cutom-dialect-property]]
+.Custom dialect property
+====
+[source, xml, indent=0]
+----
+<session-factory>
+    <!-- Other properties -->
+    <property name="hibernate.dialect">path.to.the.ExtendedPGDialect</property>
+</session-factory>
+----
+====
+
+For implementing custom function we should inherit the new class `CountItemsGreaterValSqmFunction` from `AbstractSqmSelfRenderingFunctionDescriptor` class.
+
+[NOTE]
+====
+Constructor of `org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor` contains the following fields:
+
+* `String name` - name of the function _in the database_
+* `FunctionKind` - type of the function: `NORMAL`, `AGGREGATE`, `ORDERED_SET_AGGREGATE` or `WINDOW`
+* `ArgumentsValidator` - validator of the arguments provided to an JPQL/HQL function
+* `FunctionReturnTypeResolver` - resolver of the function return type
+* `FunctionArgumentTypeResolver` - resolver of the function argument types
+====
+
+[[hql-user-defined-dialect-function-sqm-renderer]]
+.Custom function renderer
+====
+[source, JAVA, indent=0]
+----
+include::{example-dir-hql}/customFunctions/CountItemsGreaterValSqmFunction.java[tags=hql-user-defined-dialect-function-sqm-renderer]
+----
+====
+
+Next step we should define the renderer:
+
+[[hql-user-defined-dialect-function-sqm-renderer-definition]]
+.Custom function renderer definition
+====
+[source, JAVA, indent=0]
+----
+include::{example-dir-hql}/customFunctions/CountItemsGreaterValSqmFunction.java[tags=hql-user-defined-dialect-function-sqm-renderer-definition]
+----
+====
+
+Then we'll extend the `initializeFunctionRegistry()` method of the `ExtendedPGDialect` with new the logic:
+adding `CountItemsGreaterValSqmFunction` to the default function registry of `FunctionContributions`.
+
+[[hql-user-defined-dialect-function-registry-extending]]
+.Custom dialect
+====
+[source, JAVA, indent=0]
+----
+include::{example-dir-hql}/customFunctions/ExtendedPGDialect.java[tags=hql-user-defined-dialect-function-registry-extending]
+----
+====
+
+Once the `countItemsGreaterVal` function has been registered, we are able to use it in our JPQL/HQL queries.
+
+[[hql-user-defined-dialect-function-test]]
+.Test of the custom function
+====
+[source, JAVA, indent=0]
+----
+include::{example-dir-hql}/customFunctions/CustomDialectFunctionTest.java[tags=hql-user-defined-dialect-function-test]
+----
 ====

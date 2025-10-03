@@ -75,7 +75,7 @@ public class SessionFactoryExtension
 
 		if ( sfAnnRef.isPresent()
 				|| SessionFactoryProducer.class.isAssignableFrom( context.getRequiredTestClass() ) ) {
-			final DomainModelScope domainModelScope = DomainModelExtension.findDomainModelScope( testInstance, context );
+			final DomainModelScope domainModelScope = DomainModelExtension.getOrCreateDomainModelScope( testInstance, context );
 			final SessionFactoryScope created = createSessionFactoryScope( testInstance, sfAnnRef, domainModelScope, context );
 			locateExtensionStore( testInstance, context ).put( SESSION_FACTORY_KEY, created );
 		}

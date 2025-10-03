@@ -23,10 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  *
  * @author Vlad Mihalcea
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialect(value = SQLServerDialect.class)
-@DomainModel(
-		annotatedClasses = { IrrelevantEntity.class }
-)
+@DomainModel(annotatedClasses = IrrelevantEntity.class)
 @SessionFactory
 public class JdbcCompatibilityTest {
 

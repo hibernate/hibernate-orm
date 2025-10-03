@@ -80,4 +80,11 @@ public class CachingRegionFactory extends RegionFactoryTemplate {
 	@Override
 	protected void releaseFromUse() {
 	}
+
+	public static class SettingProvider implements org.hibernate.testing.orm.junit.SettingProvider.Provider<CachingRegionFactory> {
+		@Override
+		public CachingRegionFactory getSetting() {
+			return new CachingRegionFactory();
+		}
+	}
 }

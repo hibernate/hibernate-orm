@@ -13,67 +13,82 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.hikaricp.internal.HikariCPConnectionProvider;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
+import static org.junit.jupiter.api.Assertions.fail;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * @author Brett Meyer
  */
-@SkipForDialect(value = SybaseDialect.class, comment = "The jTDS driver doesn't implement Connection#isValid so this fails")
-public class HikariCPConnectionProviderTest extends BaseCoreFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "The jTDS driver doesn't implement Connection#isValid so this fails")
+@ServiceRegistry
+@SessionFactory
+public class HikariCPConnectionProviderTest {
 
 	@Test
-	public void testHikariCPConnectionProvider() throws Exception {
-		JdbcServices jdbcServices = serviceRegistry().getService( JdbcServices.class );
-		ConnectionProviderJdbcConnectionAccess connectionAccess = assertTyping(
+	public void testHikariCPConnectionProvider(SessionFactoryScope factoryScope) throws Exception {
+		var serviceRegistry = factoryScope.getSessionFactory().getServiceRegistry();
+		var jdbcServices = serviceRegistry.requireService( JdbcServices.class );
+		var connectionAccess = assertTyping(
 				ConnectionProviderJdbcConnectionAccess.class,
 				jdbcServices.getBootstrapJdbcConnectionAccess()
 		);
-		assertTyping( HikariCPConnectionProvider.class, connectionAccess.getConnectionProvider() );
+		var hikariProvider = assertTyping(
+				HikariCPConnectionProvider.class,
+				connectionAccess.getConnectionProvider()
+		);
 
-		HikariCPConnectionProvider hikariCP = (HikariCPConnectionProvider) connectionAccess.getConnectionProvider();
 		// For simplicity's sake, using the following in hibernate.properties:
 		// hibernate.hikari.minimumPoolSize 2
 		// hibernate.hikari.maximumPoolSize 2
-		final List<Connection> conns = new ArrayList<Connection>();
+		final List<Connection> conns = new ArrayList<>();
 		for ( int i = 0; i < 2; i++ ) {
-			Connection conn = hikariCP.getConnection();
-			assertNotNull( conn );
-			assertFalse( conn.isClosed() );
+			Connection conn = hikariProvider.getConnection();
+			assertThat( conn ).isNotNull();
+			assertThat( conn.isClosed() ).isFalse();
 			conns.add( conn );
 		}
 
 		try {
-			hikariCP.getConnection();
+			hikariProvider.getConnection();
 			fail( "SQLException expected -- no more connections should have been available in the pool." );
 		}
 		catch (SQLException e) {
 			// expected
-			assertTrue( e.getMessage().contains( "Connection is not available, request timed out after" ) );
+			assertThat( e.getMessage() ).contains( "Connection is not available, request timed out after" );
 		}
 
 		for ( Connection conn : conns ) {
-			hikariCP.closeConnection( conn );
-			assertTrue( conn.isClosed() );
+			hikariProvider.closeConnection( conn );
+			assertThat( conn.isClosed() ).isTrue();
 		}
 
-		releaseSessionFactory();
+		// NOTE : The JUnit 5 infrastructure versus the JUnit 4 infrastructure causes the
+		//		StandardServiceRegistry (the SF registry's parent) to be created with auto-closure disabled.
+		//		That is not the normal process.
+		//		So here we explicitly close the parent.
+		factoryScope.getSessionFactory().close();
+		serviceRegistry.destroy();
+		assert serviceRegistry.getParentServiceRegistry() != null : "Expecting parent service registry";
+		( (ServiceRegistryImplementor) serviceRegistry.getParentServiceRegistry() ).destroy();
+
 
 		try {
-			hikariCP.getConnection();
+			hikariProvider.getConnection();
 			fail( "Exception expected -- the pool should have been shutdown." );
 		}
 		catch (Exception e) {
 			// expected
-			assertTrue( e.getMessage().contains( "has been closed" ) );
+			assertThat( e.getMessage() ).contains( "has been closed" );
 		}
 	}
 }

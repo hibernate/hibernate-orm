@@ -26,6 +26,10 @@ dependencies {
 
     testImplementation project( ':hibernate-testing' )
 
+    // todo : to get rid of these
+    testImplementation testLibs.junit4
+    testImplementation testLibs.junit4Engine
+
     testAnnotationProcessor project( ':hibernate-processor' )
 }
 

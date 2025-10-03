@@ -49,6 +49,10 @@ dependencies {
     testImplementation project(':hibernate-ant')
     testImplementation project(':hibernate-scan-jandex')
 
+    // todo : to get rid of these
+    testImplementation testLibs.junit4
+    testImplementation testLibs.junit4Engine
+
     testImplementation testLibs.shrinkwrap
     testImplementation testLibs.shrinkwrapDescriptors
     testImplementation jakartaLibs.cdi

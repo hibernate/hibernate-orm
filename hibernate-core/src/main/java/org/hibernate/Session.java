@@ -1165,7 +1165,12 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @throws HibernateException If the given class does not resolve as a mapped entity
 	 *
 	 * @see #findMultiple(Class, List, FindOption...)
+	 *
+	 * @deprecated This method will be removed.
+	 *             Use {@link #findMultiple(Class, List, FindOption...)} instead.
+	 *             See {@link MultiFindOption}.
 	 */
+	@Deprecated(since = "7.2", forRemoval = true)
 	<T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass);
 
 	/**
@@ -1177,7 +1182,12 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return an instance of {@link MultiIdentifierLoadAccess} for executing the lookup
 	 *
 	 * @throws HibernateException If the given name does not resolve to a mapped entity
+	 *
+	 * @deprecated This method will be removed.
+	 *             Use {@link #findMultiple(Class, List, FindOption...)} instead.
+	 *             See {@link MultiFindOption}.
 	 */
+	@Deprecated(since = "7.2", forRemoval = true)
 	<T> MultiIdentifierLoadAccess<T> byMultipleIds(String entityName);
 
 	/**

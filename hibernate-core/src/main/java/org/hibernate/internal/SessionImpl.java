@@ -960,6 +960,15 @@ public class SessionImpl
 			else if ( option instanceof BatchSize batchSizeOption ) {
 				batchSize = batchSizeOption.batchSize();
 			}
+			else if ( option instanceof SessionChecking sessionChecking ) {
+				loadAccess.enableSessionCheck( sessionChecking.enabled() );
+			}
+			else if ( option instanceof OrderedReturn orderedReturn ) {
+				loadAccess.enableOrderedReturn( orderedReturn.ordered() );
+			}
+			else if ( option instanceof IncludeRemovals includeRemovals ) {
+				loadAccess.enableReturnOfDeletedEntities( includeRemovals.include() );
+			}
 		}
 		loadAccess.with( lockOptions )
 				.with( interpretCacheMode( storeMode, retrieveMode ) )

@@ -17,6 +17,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cache.jcache.ConfigSettings;
 import org.hibernate.cache.jcache.JCacheHelper;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.support.RegionNameQualifier;
@@ -97,6 +98,19 @@ public class TestHelper {
 
 	public static SessionFactoryImplementor buildStandardSessionFactory() {
 		return buildStandardSessionFactory( ignored -> { } );
+	}
+
+	public static SessionFactoryImplementor buildSessionFactoryWithMissingCacheStrategy(String missingCacheStrategy) {
+		final StandardServiceRegistry ssr = getStandardServiceRegistryBuilder()
+				.applySetting( ConfigSettings.MISSING_CACHE_STRATEGY, missingCacheStrategy )
+				.build();
+		try {
+			return (SessionFactoryImplementor) new MetadataSources( ssr ).buildMetadata().buildSessionFactory();
+		}
+		catch (Throwable t) {
+			ssr.close();
+			throw t;
+		}
 	}
 
 	public static SessionFactoryImplementor buildStandardSessionFactory(Consumer<StandardServiceRegistryBuilder> additionalSettings) {

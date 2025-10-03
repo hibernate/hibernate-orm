@@ -59,8 +59,6 @@ dependencies {
     testImplementation testLibs.junitJupiterEngine
     testImplementation testLibs.junitJupiterParams
     testImplementation testLibs.junitJupiterLauncher
-    testImplementation testLibs.junit4
-    testImplementation testLibs.junit4Engine
     testImplementation testLibs.assertjCore
 
     testRuntimeOnly testLibs.log4j2

@@ -4,31 +4,20 @@
  */
 package org.hibernate.orm.test.jcache;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Consumer;
-
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.jcache.ConfigSettings;
 import org.hibernate.cache.spi.SecondLevelCacheLogger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.spi.ServiceException;
+import org.hibernate.testing.orm.junit.Logger;
+import org.hibernate.testing.orm.junit.LoggingInspections;
+import org.hibernate.testing.orm.junit.LoggingInspectionsScope;
+import org.hibernate.testing.orm.junit.MessageKeyWatcher;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.logger.LoggerInspectionRule;
-import org.hibernate.testing.logger.Triggerable;
-import org.junit.Rule;
-import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.CoreMatchers.startsWith;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 /**
  * Tests around {@link org.hibernate.cache.jcache.MissingCacheStrategy}
@@ -36,158 +25,97 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  * @author Yoann Rodiere
  */
-public class MissingCacheStrategyTest extends BaseUnitTestCase {
-
-	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule( SecondLevelCacheLogger.L2CACHE_LOGGER );
+@SuppressWarnings("JUnitMalformedDeclaration")
+@LoggingInspections(messages = {
+		@LoggingInspections.Message( messageKey = "HHH90001006",
+				loggers = @Logger( loggerName = SecondLevelCacheLogger.LOGGER_NAME )
+		),
+		@LoggingInspections.Message( messageKey = "HHH90001007",
+				loggers = @Logger( loggerName = SecondLevelCacheLogger.LOGGER_NAME )
+		)
+})
+public class MissingCacheStrategyTest {
+	@BeforeEach
+	public void preCheckCaches() {
+		// make sure that the region names we think are non-existent really do not exist
+		for ( String regionName : TestHelper.allDomainRegionNames ) {
+			assertThat( TestHelper.getCache( regionName ) ).isNull();
+		}
+	}
 
 	@Test
-	public void testMissingCacheStrategyDefault() {
-		doTestMissingCacheStrategyCreateWarn(
-				ignored -> { } // default settings
+	void testMissingCacheStrategyDefault(LoggingInspectionsScope loggingInspectionsScope) {
+		checkCreateWarnStrategy( loggingInspectionsScope, "" );
+	}
+
+	@Test
+	void testMissingCacheStrategyCreateWarn(LoggingInspectionsScope loggingInspectionsScope) {
+		checkCreateWarnStrategy( loggingInspectionsScope, "create-warn" );
+	}
+
+	/**
+	 * Centralized checks for the create-warn and default (which is create-warn) strategies.
+	 * Makes sure we get WARN logging.
+	 */
+	private void checkCreateWarnStrategy(
+			LoggingInspectionsScope loggingInspectionsScope,
+			String strategyName) {
+		assertThat( loggingInspectionsScope ).isNotNull();
+		final MessageKeyWatcher messageKeyWatcher = loggingInspectionsScope.getWatcher(
+				"HHH90001006",
+				SecondLevelCacheLogger.LOGGER_NAME
 		);
+		messageKeyWatcher.reset();
+
+		try ( SessionFactoryImplementor ignored = TestHelper.buildSessionFactoryWithMissingCacheStrategy( strategyName ) ) {
+			assertThat( messageKeyWatcher.wasTriggered() ).isTrue();
+
+			for ( String regionName : TestHelper.allDomainRegionNames ) {
+				// The cache should have been created automatically
+				assertThat( TestHelper.getCache( regionName ) )
+						.as( () -> String.format( "Cache %s not found", regionName ) )
+						.isNotNull();
+
+				// and the message should have been logged
+				checkForRegionCreationWarning( messageKeyWatcher, regionName );
+			}
+		}
+	}
+
+	private void checkForRegionCreationWarning(MessageKeyWatcher messageKeyWatcher, String regionName) {
+		for ( int i = 0; i < messageKeyWatcher.getTriggeredMessages().size(); i++ ) {
+			final String message = messageKeyWatcher.getTriggeredMessages().get( i );
+			if ( message.contains( "[hibernate.test." + regionName + "]" ) ) {
+				return;
+			}
+		}
+
+		fail( "No warning for auto creation of region " + regionName );
 	}
 
 	@Test
 	public void testMissingCacheStrategyFail() {
-		// first, lets make sure that the region names we think are non-existent really do not exist
-		for ( String regionName : TestHelper.allDomainRegionNames ) {
-			assertThat( TestHelper.getCache( regionName ), nullValue() );
-		}
-
-		// and now let's try to build the standard testing SessionFactory, without pre-defining caches
-		try ( SessionFactoryImplementor ignored = TestHelper.buildStandardSessionFactory(
-				builder -> builder.applySetting( ConfigSettings.MISSING_CACHE_STRATEGY, "fail" )
-		) ) {
-			fail();
+		try ( SessionFactoryImplementor ignored = TestHelper.buildSessionFactoryWithMissingCacheStrategy( "fail" ) ) {
+			fail( "Excepting failure due to missing cache strategy = fail" );
 		}
 		catch (ServiceException expected) {
-			assertTyping( CacheException.class, expected.getCause() );
-			assertThat( expected.getMessage(), startsWith( "Unable to create requested service [" + org.hibernate.cache.spi.CacheImplementor.class.getName() + "]" ) );
-			assertThat( expected.getCause().getMessage(), startsWith( "On-the-fly creation of JCache Cache objects is not supported" ) );
+			assertThat( expected.getCause() ).isInstanceOf( CacheException.class );
+			assertThat( expected.getMessage() ).startsWith( "Unable to create requested service [" + org.hibernate.cache.spi.CacheImplementor.class.getName() + "]" );
+			assertThat( expected.getCause().getMessage() ).startsWith( "On-the-fly creation of JCache Cache objects is not supported [" );
 		}
 		catch (CacheException expected) {
-			assertThat( expected.getMessage(), equalTo( "On-the-fly creation of JCache Cache objects is not supported" ) );
+			assertThat( expected.getMessage() ).startsWith( "On-the-fly creation of JCache Cache objects is not supported [" );
 		}
 	}
 
 	@Test
 	public void testMissingCacheStrategyCreate() {
-		// first, lets make sure that the region names we think are non-existent really do not exist
-		for ( String regionName : TestHelper.allDomainRegionNames ) {
-			assertThat( TestHelper.getCache( regionName ), nullValue() );
-		}
-
-		// and now let's try to build the standard testing SessionFactory, without pre-defining caches
-		try ( SessionFactoryImplementor ignored = TestHelper.buildStandardSessionFactory(
-				builder -> builder.applySetting( ConfigSettings.MISSING_CACHE_STRATEGY, "create" )
-		) ) {
+		try ( SessionFactoryImplementor ignored = TestHelper.buildSessionFactoryWithMissingCacheStrategy( "create" ) ) {
 			// The caches should have been created automatically
 			for ( String regionName : TestHelper.allDomainRegionNames ) {
-				assertThat( "Cache '" + regionName + "' should have been created",
-						TestHelper.getCache( regionName ), notNullValue() );
-			}
-		}
-	}
-
-	@Test
-	public void testMissingCacheStrategyCreateWarn() {
-		doTestMissingCacheStrategyCreateWarn(
-				builder -> builder.applySetting( ConfigSettings.MISSING_CACHE_STRATEGY, "create-warn" )
-		);
-	}
-
-	private void doTestMissingCacheStrategyCreateWarn(Consumer<StandardServiceRegistryBuilder> additionalSettings) {
-		Map<String, Triggerable> triggerables = new HashMap<>();
-
-		// first, lets make sure that the region names we think are non-existent really do not exist
-		for ( String regionName : TestHelper.allDomainRegionNames ) {
-			assertThat( TestHelper.getCache( regionName ), nullValue() );
-			triggerables.put(
-					regionName,
-					logInspection.watchForLogMessages(
-							"HHH90001006: Missing cache region [" + TestHelper.prefix( regionName ) + "] was created"
-					)
-			);
-		}
-
-		try ( SessionFactoryImplementor ignored = TestHelper.buildStandardSessionFactory( additionalSettings ) ) {
-			for ( String regionName : TestHelper.allDomainRegionNames ) {
-				// The caches should have been created automatically
-				assertThat(
-						"Cache '" + regionName + "' should have been created",
-						TestHelper.getCache( regionName ), notNullValue()
-				);
-				// Logs should have been triggered
-				assertTrue(
-						"Cache '" + regionName + "' should have triggered a warning",
-						triggerables.get( regionName ).wasTriggered()
-				);
-			}
-		}
-	}
-
-	@Test
-	public void testMissingCacheStrategyFailLegacyNames1() {
-		doTestMissingCacheStrategyFailLegacyNames( TestHelper.queryRegionLegacyNames1, TestHelper.queryRegionLegacyNames2 );
-	}
-
-	@Test
-	public void testMissingCacheStrategyFailLegacyNames2() {
-		doTestMissingCacheStrategyFailLegacyNames( TestHelper.queryRegionLegacyNames2, TestHelper.queryRegionLegacyNames1 );
-	}
-
-	private void doTestMissingCacheStrategyFailLegacyNames(String[] existingLegacyCaches, String[] nonExistingLegacyCaches) {
-		Map<String, Triggerable> triggerables = new HashMap<>();
-
-		// first, lets make sure that the regions used for model caches exist
-		TestHelper.preBuildDomainCaches();
-
-		// and that caches exist with legacy configurations
-		for ( int i = 0; i < TestHelper.queryRegionNames.length; ++i ) {
-			String currentName = TestHelper.queryRegionNames[i];
-			String legacyName = existingLegacyCaches[i];
-
-			TestHelper.createCache( legacyName );
-
-			// This is used later for log-related assertions
-			triggerables.put(
-					legacyName,
-					logInspection.watchForLogMessages(
-							"HHH90001007: Using legacy cache name [" + legacyName +
-							"] because configuration could not be found for cache [" + currentName + "]."
-					)
-			);
-		}
-
-		// and then lets make sure that the region names we think are non-existent really do not exist
-		for ( String regionName : nonExistingLegacyCaches ) {
-			assertThat( TestHelper.getCache( regionName ), nullValue() );
-		}
-		for ( String regionName : TestHelper.queryRegionNames ) {
-			assertThat( TestHelper.getCache( regionName ), nullValue() );
-		}
-
-		// and now let's try to build the standard testing SessionFactory
-		try ( SessionFactoryImplementor ignored = TestHelper.buildStandardSessionFactory(
-				builder -> builder.applySetting( ConfigSettings.MISSING_CACHE_STRATEGY, "fail" )
-		) ) {
-			// The session should start successfully (if we reach this line, we're good)
-
-			// Logs should have been to notify that legacy cache names are being used
-			for ( String regionName : existingLegacyCaches ) {
-				assertTrue(
-						"Use of cache '" + regionName + "' should have triggered a warning",
-						triggerables.get( regionName ).wasTriggered()
-				);
-			}
-
-			// and these caches still shouldn't exist
-			for ( String regionName : nonExistingLegacyCaches ) {
-				assertThat( TestHelper.getCache( regionName ), nullValue() );
-			}
-			for ( String regionName : TestHelper.queryRegionNames ) {
-				assertThat( TestHelper.getCache( regionName ), nullValue() );
+				assertThat( TestHelper.getCache( regionName ) )
+						.as( () -> String.format( "Cache %s should have been created", regionName ) )
+						.isNotNull();
 			}
 		}
 	}

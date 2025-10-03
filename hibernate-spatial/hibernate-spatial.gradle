@@ -19,6 +19,11 @@ dependencies {
 	testImplementation project( ':hibernate-testing' )
 	testImplementation project( ':hibernate-ant' )
 	testImplementation project( path: ':hibernate-core', configuration: 'tests' )
+
+    // todo : to get rid of these
+    testImplementation testLibs.junit4
+    testImplementation testLibs.junit4Engine
+
 	testImplementation jakartaLibs.validation
 	testImplementation libs.jandex
 	testImplementation libs.classmate

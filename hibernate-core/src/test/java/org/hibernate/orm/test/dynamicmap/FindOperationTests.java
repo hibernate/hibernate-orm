@@ -4,7 +4,10 @@
  */
 package org.hibernate.orm.test.dynamicmap;
 
+import org.hibernate.IncludeRemovals;
+import org.hibernate.OrderedReturn;
 import org.hibernate.ReadOnlyMode;
+import org.hibernate.SessionChecking;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -17,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Steve Ebersole
@@ -55,6 +59,15 @@ public class FindOperationTests {
 			final Object artist = session.find( "artist", 1, ReadOnlyMode.READ_ONLY );
 			checkResult( artist );
 			assertThat( session.isReadOnly( artist ) ).isTrue();
+		} );
+	}
+
+	@Test
+	void testFindWithIllegalOptions(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			assertThrows( IllegalArgumentException.class, () ->session.find( "artist", 1, SessionChecking.ENABLED ) );
+			assertThrows( IllegalArgumentException.class, () ->session.find( "artist", 1, OrderedReturn.ORDERED ) );
+			assertThrows( IllegalArgumentException.class, () ->session.find( "artist", 1, IncludeRemovals.INCLUDE ) );
 		} );
 	}
 

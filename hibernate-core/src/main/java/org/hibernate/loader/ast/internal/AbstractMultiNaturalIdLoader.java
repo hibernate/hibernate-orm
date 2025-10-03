@@ -6,6 +6,8 @@ package org.hibernate.loader.ast.internal;
 
 
 import org.hibernate.LockOptions;
+import org.hibernate.OrderingMode;
+import org.hibernate.RemovalsMode;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -39,7 +41,7 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 			return emptyList();
 		}
 		else {
-			return options.isOrderReturnEnabled()
+			return options.getOrderingMode() == OrderingMode.ORDERED
 					? performOrderedMultiLoad( naturalIds, options, session )
 					: performUnorderedMultiLoad( naturalIds, options, session );
 		}
@@ -114,13 +116,14 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 			final Object result;
 			if ( entity == null
 				// the entity is locally deleted, and the options ask that we not return such entities
-				|| !loadOptions.isReturnOfDeletedEntitiesEnabled()
-					&& context.getEntry( entity ).getStatus().isDeletedOrGone() ) {
+				|| loadOptions.getRemovalsMode() == RemovalsMode.REPLACE
+				&& context.getEntry( entity ).getStatus().isDeletedOrGone() ) {
 				result = null;
 			}
 			else {
 				result = context.proxyFor( entity );
 			}
+			//noinspection unchecked
 			results.add( (E) result );
 		}
 		return results;
@@ -147,7 +150,7 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 			if ( entity != null ) {
 				// Entity is already in the persistence context
 				final var entry = context.getEntry( entity );
-				if ( loadOptions.isReturnOfDeletedEntitiesEnabled()
+				if ( loadOptions.getRemovalsMode() == RemovalsMode.INCLUDE
 						|| !entry.getStatus().isDeletedOrGone() ) {
 					// either a managed entry, or a deleted one with returnDeleted enabled
 					upgradeLock( entity, entry, lockOptions, session );

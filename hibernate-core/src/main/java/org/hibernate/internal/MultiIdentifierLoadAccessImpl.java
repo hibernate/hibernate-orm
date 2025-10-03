@@ -11,6 +11,9 @@ import org.hibernate.CacheMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MultiIdentifierLoadAccess;
+import org.hibernate.OrderingMode;
+import org.hibernate.RemovalsMode;
+import org.hibernate.SessionCheckMode;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -43,9 +46,9 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	private GraphSemantic graphSemantic;
 
 	private Integer batchSize;
-	private boolean sessionCheckingEnabled;
-	private boolean returnOfDeletedEntitiesEnabled;
-	private boolean orderedReturnEnabled = true;
+	private SessionCheckMode sessionCheckMode = SessionCheckMode.DISABLED;
+	private RemovalsMode removalsMode = RemovalsMode.REPLACE;
+	protected OrderingMode orderingMode = OrderingMode.ORDERED;
 
 	private Set<String> enabledFetchProfiles;
 	private Set<String> disabledFetchProfiles;
@@ -116,8 +119,8 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	}
 
 	@Override
-	public boolean isSessionCheckingEnabled() {
-		return sessionCheckingEnabled;
+	public SessionCheckMode getSessionCheckMode() {
+		return sessionCheckMode;
 	}
 
 	@Override
@@ -127,29 +130,29 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 
 	@Override
 	public MultiIdentifierLoadAccess<T> enableSessionCheck(boolean enabled) {
-		this.sessionCheckingEnabled = enabled;
+		this.sessionCheckMode = enabled ? SessionCheckMode.ENABLED : SessionCheckMode.DISABLED;
 		return this;
 	}
 
 	@Override
-	public boolean isReturnOfDeletedEntitiesEnabled() {
-		return returnOfDeletedEntitiesEnabled;
+	public RemovalsMode getRemovalsMode() {
+		return removalsMode;
 	}
 
 	@Override
 	public MultiIdentifierLoadAccess<T> enableReturnOfDeletedEntities(boolean enabled) {
-		this.returnOfDeletedEntitiesEnabled = enabled;
+		this.removalsMode = enabled ? RemovalsMode.INCLUDE : RemovalsMode.REPLACE;
 		return this;
 	}
 
 	@Override
-	public boolean isOrderReturnEnabled() {
-		return orderedReturnEnabled;
+	public OrderingMode getOrderingMode() {
+		return orderingMode;
 	}
 
 	@Override
 	public MultiIdentifierLoadAccess<T> enableOrderedReturn(boolean enabled) {
-		this.orderedReturnEnabled = enabled;
+		this.orderingMode = enabled ? OrderingMode.ORDERED : OrderingMode.UNORDERED;
 		return this;
 	}
 

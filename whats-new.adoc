@@ -60,6 +60,18 @@ class Person {
 
 The annotation is only legal on top-level embedded.  Placement on nested embedded values will be ignored.
 
+[[MultiFindOption]]
+== Introduction of FindMultipleOption
+
+Previous versions of Hibernate supported loading multiple entities of a type via the `Session#byMultipleIds` method.
+7.0 added `Session#findMultiple` methods which accepted `FindOption` configuration; but, for options specific to multiple-id loading, users still had to revert to `Session#byMultipleIds`.
+7.2 covers this gap and introduces new `FindMultipleOption` configuration -
+
+* `SessionCheckMode`
+* `OrderingMode`
+* `RemovalsMode`
+
+`Session#byMultipleIds` and `MultiIdentifierLoadAccess` have been deprecated.
 
 [[child-stateless-sessions]]
 == Child StatelessSession

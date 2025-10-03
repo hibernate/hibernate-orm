@@ -964,6 +964,15 @@ public class SessionImpl
 			else if ( option instanceof BatchSize batchSizeOption ) {
 				batchSize = batchSizeOption.batchSize();
 			}
+			else if ( option instanceof SessionCheckMode sessionCheckMode ) {
+				loadAccess.enableSessionCheck( option == sessionCheckMode.ENABLED );
+			}
+			else if ( option instanceof OrderingMode orderingMode ) {
+				loadAccess.enableOrderedReturn( option == orderingMode.ORDERED );
+			}
+			else if ( option instanceof RemovalsMode removalsMode ) {
+				loadAccess.enableReturnOfDeletedEntities( option == removalsMode.INCLUDE );
+			}
 		}
 		loadAccess.with( lockOptions )
 				.with( interpretCacheMode( storeMode, retrieveMode ) )
@@ -2290,6 +2299,9 @@ public class SessionImpl
 			}
 			else if ( option instanceof ReadOnlyMode ) {
 				loadAccess.withReadOnly( option == ReadOnlyMode.READ_ONLY );
+			}
+			else if ( option instanceof FindMultipleOption findMultipleOption ) {
+				throw new IllegalArgumentException( "Option '" + findMultipleOption + "' can only be used in 'findMultiple()'" );
 			}
 		}
 		if ( lockOptions.getLockMode().isPessimistic() ) {

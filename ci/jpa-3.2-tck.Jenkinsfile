@@ -22,7 +22,7 @@ else {
 pipeline {
     agent none
     tools {
-        jdk 'OpenJDK 21 Latest'
+        jdk 'OpenJDK 23 Latest'
     }
     options {
   		rateLimitBuilds(throttle: [count: throttleCount, durationName: 'day', userBoost: true])

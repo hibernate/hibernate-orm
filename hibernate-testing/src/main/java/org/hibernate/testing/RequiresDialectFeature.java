@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  * specified feature.
  *
  * @author Hardy Ferentschik
- * @deprecated Use JUnit 5 and {@link org.hibernate.testing.orm.junit.RequiresDialectFeature} instead.
+ * @deprecated Use JUnit Jupiter and {@link org.hibernate.testing.orm.junit.RequiresDialectFeature} instead.
  */
 @Target({ ElementType.METHOD, ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)

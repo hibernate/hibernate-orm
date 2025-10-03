@@ -20,7 +20,7 @@ import org.hibernate.dialect.Dialect;
  *
  * @author Hardy Ferentschik
  * @author Steve Ebersole
- * @deprecated Use JUnit 5 and {@link org.hibernate.testing.orm.junit.SkipForDialect} instead.
+ * @deprecated Use JUnit Jupiter and {@link org.hibernate.testing.orm.junit.SkipForDialect} instead.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.TYPE })

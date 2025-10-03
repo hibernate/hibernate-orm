@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
  * except this annotation need not be attached to a static method
  *
  * @author Steve Ebersole
- * @deprecated Use JUnit 5 along with one of the Hibernate ORM's class-level test annotations
+ * @deprecated Use JUnit Jupiter along with one of the Hibernate ORM's class-level test annotations
  * ({@link org.hibernate.testing.orm.junit.BaseUnitTest},
  * {@link org.hibernate.testing.orm.junit.SessionFactory},
  * {@link org.hibernate.testing.orm.junit.Jpa},

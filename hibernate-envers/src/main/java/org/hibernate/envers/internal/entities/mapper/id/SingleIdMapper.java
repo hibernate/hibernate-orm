@@ -62,6 +62,20 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 		return true;
 	}
 
+	boolean mapToMapFromMap(Map<String, Object> map, Map data) {
+		if ( data == null || map == null ) {
+			return false;
+		}
+
+		final Object value = data.get( propertyData.getName() );
+		if ( value == null ) {
+			return false;
+		}
+
+		map.put( propertyData.getName(), value );
+		return true;
+	}
+
 	@Override
 	public Object mapToIdFromMap(Map data) {
 		if ( data == null ) {

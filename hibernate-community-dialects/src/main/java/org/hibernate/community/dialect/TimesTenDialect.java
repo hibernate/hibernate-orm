@@ -18,6 +18,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.BooleanDecoder;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.OracleTruncFunction;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
@@ -205,7 +206,7 @@ public class TimesTenDialect extends Dialect {
 				"sysdate", new CurrentFunction("sysdate", "sysdate", timestampType)
 		);
 		functionContributions.getFunctionRegistry().register( 
-				"getdate", new StandardSQLFunction("getdate", StandardBasicTypes.TIMESTAMP)
+				"getdate", new CurrentFunction("getdate", "getdate()", timestampType )
 		);
 
 		// Multi-param date dialect functions
@@ -219,12 +220,11 @@ public class TimesTenDialect extends Dialect {
 		functionFactory.sinh();
 		functionFactory.tanh();
 		functionContributions.getFunctionRegistry().register( 
-				"trunc", new StandardSQLFunction("trunc")
+				"trunc",
+				new OracleTruncFunction( functionContributions.getTypeConfiguration() )
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
-		functionContributions.getFunctionRegistry().register( 
-				"round", new StandardSQLFunction("round")
-		);
+		functionFactory.round();
 
 		// Bitwise functions
 		functionContributions.getFunctionRegistry()

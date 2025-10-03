@@ -3,6 +3,18 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.31.Final (October 03, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/35420
+
+** Bug
+    * [HHH-18885] - ClassCastException with queued persist in an extra lazy Map
+
+** Task
+    * [HHH-19800] - Migrate to release scripts for documentation publishing
+
+
 Changes in 6.6.30.Final (September 29, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

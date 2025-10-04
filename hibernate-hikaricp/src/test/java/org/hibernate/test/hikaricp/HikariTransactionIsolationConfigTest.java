@@ -12,7 +12,8 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.test.hikaricp.util.GradleParallelTestingHikariCPConnectionProvider;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.common.connections.BaseTransactionIsolationConfigTest;
+import org.hibernate.testing.orm.common.BaseTransactionIsolationConfigTest;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 
 /**
  * @author Steve Ebersole
@@ -23,7 +24,7 @@ import org.hibernate.testing.common.connections.BaseTransactionIsolationConfigTe
 @SkipForDialect(value = GaussDBDialect.class, comment = "GaussDB does not support SERIALIZABLE isolation")
 public class HikariTransactionIsolationConfigTest extends BaseTransactionIsolationConfigTest {
 	@Override
-	protected ConnectionProvider getConnectionProviderUnderTest() {
+	protected ConnectionProvider getConnectionProviderUnderTest(ServiceRegistryScope registryScope) {
 		return new GradleParallelTestingHikariCPConnectionProvider();
 	}
 }

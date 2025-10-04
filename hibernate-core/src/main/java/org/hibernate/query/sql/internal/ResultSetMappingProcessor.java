@@ -270,7 +270,11 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		else {
 			throw new AssertionFailure( "Unexpected fetch builder" );
 		}
-		return path.append( fetchBuilder.getFetchable().getFetchableName() );
+		final String fetchableName = fetchBuilder.getFetchable().getFetchableName();
+		if ( path.getLocalName().equals( fetchableName ) ) {
+			return path;
+		}
+		return path.append( fetchableName );
 	}
 
 	private DynamicResultBuilderEntityStandard createSuffixedResultBuilder(

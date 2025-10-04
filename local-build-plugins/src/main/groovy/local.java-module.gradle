@@ -59,8 +59,7 @@ dependencies {
     testImplementation testLibs.junit5Engine
     testImplementation testLibs.junit5Params
     testImplementation testLibs.junit5Launcher
-    testImplementation testLibs.junit4
-    testImplementation testLibs.junit4Engine
+
     testImplementation testLibs.assertjCore
 
     testRuntimeOnly testLibs.log4j2

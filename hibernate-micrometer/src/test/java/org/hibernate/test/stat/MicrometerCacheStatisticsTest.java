@@ -4,180 +4,170 @@
  */
 package org.hibernate.test.stat;
 
-import java.util.List;
-import java.util.Map;
+import io.micrometer.core.instrument.Tags;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
-import org.hibernate.Session;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.HibernateMetrics;
-
 import org.hibernate.testing.cache.CachingRegionFactory;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import io.micrometer.core.instrument.Tags;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.util.List;
+
+import static org.hibernate.cfg.CacheSettings.CACHE_REGION_FACTORY;
+import static org.hibernate.cfg.CacheSettings.USE_QUERY_CACHE;
+import static org.hibernate.cfg.CacheSettings.USE_SECOND_LEVEL_CACHE;
+import static org.hibernate.cfg.PersistenceSettings.SESSION_FACTORY_NAME_IS_JNDI;
+import static org.hibernate.cfg.StatisticsSettings.GENERATE_STATISTICS;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Erin Schnabel
  * @author Steve Ebersole
  */
-public class MicrometerCacheStatisticsTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( Person.class );
-		metadataSources.addAnnotatedClass( Account.class );
-		metadataSources.addAnnotatedClass( AccountId.class );
-	}
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ServiceRegistry(
+		settings = {
+				@Setting( name = USE_SECOND_LEVEL_CACHE, value = "true" ),
+				@Setting( name = USE_QUERY_CACHE, value = "true" ),
+				@Setting( name = GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = SESSION_FACTORY_NAME_IS_JNDI, value = "false" ),
+		},
+		settingProviders = @SettingProvider( settingName = CACHE_REGION_FACTORY,
+				provider = CachingRegionFactory.SettingProvider.class )
+)
+@DomainModel(annotatedClasses = {
+		MicrometerCacheStatisticsTest.Person.class,
+		Account.class,
+		AccountId.class
+})
+@SessionFactory( sessionFactoryName = "something" )
+public class MicrometerCacheStatisticsTest {
 
 	private static final String REGION = "TheRegion";
-	private static final String PREFIX = "test";
 
-	private SimpleMeterRegistry registry = new SimpleMeterRegistry();
-	private HibernateMetrics hibernateMetrics;
+	private final SimpleMeterRegistry registry = new SimpleMeterRegistry();
 
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, true );
-		ssrb.applySetting( AvailableSettings.USE_QUERY_CACHE, true );
-		ssrb.applySetting( AvailableSettings.CACHE_REGION_FACTORY, new CachingRegionFactory() );
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
-
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		super.addSettings( settings );
-		settings.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
-		settings.put( AvailableSettings.USE_QUERY_CACHE, "true" );
-		settings.put( AvailableSettings.CACHE_REGION_FACTORY, new CachingRegionFactory() );
-
-		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
-		settings.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
-		settings.put( AvailableSettings.SESSION_FACTORY_NAME, "something" );
-		settings.put( AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI, "false" );
-	}
-
-	@Before
-	public void setUpMetrics() {
-		hibernateMetrics = new HibernateMetrics(sessionFactory(),
-												sessionFactory().getName(),
-												Tags.empty() );
+	@BeforeEach
+	public void setUpMetrics(SessionFactoryScope factoryScope) {
+		var sessionFactory = factoryScope.getSessionFactory();
+		var hibernateMetrics = new HibernateMetrics(
+				sessionFactory,
+				sessionFactory.getName(),
+				Tags.empty()
+		);
 		hibernateMetrics.bindTo( registry );
 	}
 
-	@After
-	public void cleanUpMetrics() {
+	@AfterEach
+	public void cleanUpMetrics(SessionFactoryScope factoryScope) {
 		registry.clear();
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testMicrometerMetrics() {
-		Assert.assertNotNull(registry.get("hibernate.sessions.open").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.sessions.closed").functionCounter());
+	public void testMicrometerMetrics(SessionFactoryScope factoryScope) {
+		assertNotNull(registry.get("hibernate.sessions.open").functionCounter());
+		assertNotNull(registry.get("hibernate.sessions.closed").functionCounter());
 
-		Assert.assertNotNull(registry.get("hibernate.transactions").tags("result", "success").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.transactions").tags("result", "failure").functionCounter());
+		assertNotNull(registry.get("hibernate.transactions").tags("result", "success").functionCounter());
+		assertNotNull(registry.get("hibernate.transactions").tags("result", "failure").functionCounter());
 
-		Assert.assertNotNull(registry.get("hibernate.optimistic.failures").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.flushes").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.connections.obtained").functionCounter());
+		assertNotNull(registry.get("hibernate.optimistic.failures").functionCounter());
+		assertNotNull(registry.get("hibernate.flushes").functionCounter());
+		assertNotNull(registry.get("hibernate.connections.obtained").functionCounter());
 
-		Assert.assertNotNull(registry.get("hibernate.statements").tags("status", "prepared").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.statements").tags("status", "closed").functionCounter());
+		assertNotNull(registry.get("hibernate.statements").tags("status", "prepared").functionCounter());
+		assertNotNull(registry.get("hibernate.statements").tags("status", "closed").functionCounter());
 
-		Assert.assertNotNull(registry.get("hibernate.second.level.cache.requests").tags("result", "hit", "region", REGION));
-		Assert.assertNotNull(registry.get("hibernate.second.level.cache.requests").tags("result", "miss", "region", REGION));
-		Assert.assertNotNull(registry.get("hibernate.second.level.cache.puts").tags("region", REGION).functionCounter());
+		assertNotNull(registry.get("hibernate.second.level.cache.requests").tags("result", "hit", "region", REGION));
+		assertNotNull(registry.get("hibernate.second.level.cache.requests").tags("result", "miss", "region", REGION));
+		assertNotNull(registry.get("hibernate.second.level.cache.puts").tags("region", REGION).functionCounter());
 
-		Assert.assertNotNull(registry.get("hibernate.entities.deletes").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.entities.fetches").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.entities.inserts").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.entities.loads").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.entities.updates").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.entities.upserts").functionCounter());
+		assertNotNull(registry.get("hibernate.entities.deletes").functionCounter());
+		assertNotNull(registry.get("hibernate.entities.fetches").functionCounter());
+		assertNotNull(registry.get("hibernate.entities.inserts").functionCounter());
+		assertNotNull(registry.get("hibernate.entities.loads").functionCounter());
+		assertNotNull(registry.get("hibernate.entities.updates").functionCounter());
+		assertNotNull(registry.get("hibernate.entities.upserts").functionCounter());
 
-		Assert.assertNotNull(registry.get("hibernate.collections.deletes").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.collections.fetches").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.collections.loads").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.collections.recreates").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.collections.updates").functionCounter());
+		assertNotNull(registry.get("hibernate.collections.deletes").functionCounter());
+		assertNotNull(registry.get("hibernate.collections.fetches").functionCounter());
+		assertNotNull(registry.get("hibernate.collections.loads").functionCounter());
+		assertNotNull(registry.get("hibernate.collections.recreates").functionCounter());
+		assertNotNull(registry.get("hibernate.collections.updates").functionCounter());
 
-		Assert.assertNotNull(registry.get("hibernate.cache.natural.id.requests").tags("result", "hit").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.cache.natural.id.requests").tags("result", "miss").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.cache.natural.id.puts").functionCounter());
+		assertNotNull(registry.get("hibernate.cache.natural.id.requests").tags("result", "hit").functionCounter());
+		assertNotNull(registry.get("hibernate.cache.natural.id.requests").tags("result", "miss").functionCounter());
+		assertNotNull(registry.get("hibernate.cache.natural.id.puts").functionCounter());
 
-		Assert.assertNotNull(registry.get("hibernate.query.natural.id.executions").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.query.natural.id.executions.max").timeGauge());
+		assertNotNull(registry.get("hibernate.query.natural.id.executions").functionCounter());
+		assertNotNull(registry.get("hibernate.query.natural.id.executions.max").timeGauge());
 
-		Assert.assertNotNull(registry.get("hibernate.query.executions").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.query.executions.max").timeGauge());
+		assertNotNull(registry.get("hibernate.query.executions").functionCounter());
+		assertNotNull(registry.get("hibernate.query.executions.max").timeGauge());
 
-		Assert.assertNotNull(registry.get("hibernate.cache.update.timestamps.requests").tags("result", "hit").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.cache.update.timestamps.requests").tags("result", "miss").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.cache.update.timestamps.puts").functionCounter());
+		assertNotNull(registry.get("hibernate.cache.update.timestamps.requests").tags("result", "hit").functionCounter());
+		assertNotNull(registry.get("hibernate.cache.update.timestamps.requests").tags("result", "miss").functionCounter());
+		assertNotNull(registry.get("hibernate.cache.update.timestamps.puts").functionCounter());
 
-		Assert.assertNotNull(registry.get("hibernate.cache.query.requests").tags("result", "hit").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.cache.query.requests").tags("result", "miss").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.cache.query.puts").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.cache.query.plan").tags("result", "hit").functionCounter());
-		Assert.assertNotNull(registry.get("hibernate.cache.query.plan").tags("result", "miss").functionCounter());
+		assertNotNull(registry.get("hibernate.cache.query.requests").tags("result", "hit").functionCounter());
+		assertNotNull(registry.get("hibernate.cache.query.requests").tags("result", "miss").functionCounter());
+		assertNotNull(registry.get("hibernate.cache.query.puts").functionCounter());
+		assertNotNull(registry.get("hibernate.cache.query.plan").tags("result", "hit").functionCounter());
+		assertNotNull(registry.get("hibernate.cache.query.plan").tags("result", "miss").functionCounter());
 
 		// prepare some test data...
-		Session session = openSession();
-		session.beginTransaction();
-		Person person = new Person( 1, "testAcct");
-		session.persist( person );
-		session.getTransaction().commit();
-		session.close();
+		factoryScope.inTransaction( (session) -> {
+			Person person = new Person( 1, "testAcct");
+			session.persist( person );
+		} );
 
-		Assert.assertEquals( 1, registry.get("hibernate.sessions.open").functionCounter().count(), 0 );
-		Assert.assertEquals( 1, registry.get("hibernate.sessions.closed").functionCounter().count(), 0 );
-		Assert.assertEquals( 1, registry.get("hibernate.entities.inserts").functionCounter().count(), 0 );
-		Assert.assertEquals( 1, registry.get("hibernate.transactions").tags("result", "success").functionCounter().count(), 0 );
-		Assert.assertEquals( 1, registry.get("hibernate.cache.natural.id.puts").functionCounter().count(), 0);
-		Assert.assertEquals(2, registry.get("hibernate.second.level.cache.puts").tags("region", REGION).functionCounter().count(), 0);
+		assertEquals( 1, registry.get("hibernate.sessions.open").functionCounter().count(), 0 );
+		assertEquals( 1, registry.get("hibernate.sessions.closed").functionCounter().count(), 0 );
+		assertEquals( 1, registry.get("hibernate.entities.inserts").functionCounter().count(), 0 );
+		assertEquals( 1, registry.get("hibernate.transactions").tags("result", "success").functionCounter().count(), 0 );
+		assertEquals( 1, registry.get("hibernate.cache.natural.id.puts").functionCounter().count(), 0);
+		assertEquals(2, registry.get("hibernate.second.level.cache.puts").tags("region", REGION).functionCounter().count(), 0);
 
-		final String queryString = "select p from Person p";
-		inTransaction(
-				// Only way to generate query region (to be accessible via stats) is to execute the query
-				s -> s.createQuery( queryString ).setCacheable( true ).setCacheRegion( REGION ).list()
-		);
+		factoryScope.inTransaction( (session) -> {
+			final String queryString = "select p from Person p";
+			// Only way to generate query region (to be accessible via stats) is to execute the query
+			session.createQuery( queryString ).setCacheable( true ).setCacheRegion( REGION ).list();
+		} );
 
-		Assert.assertEquals( 2, registry.get("hibernate.sessions.open").functionCounter().count(), 0 );
-		Assert.assertEquals( 2, registry.get("hibernate.sessions.closed").functionCounter().count(), 0 );
-		Assert.assertEquals( 0, registry.get("hibernate.entities.deletes").functionCounter().count(), 0 );
-		Assert.assertEquals( 2, registry.get("hibernate.transactions").tags("result", "success").functionCounter().count(), 0 );
-		Assert.assertEquals( 1, registry.get("hibernate.cache.natural.id.puts").functionCounter().count(), 0);
-		Assert.assertEquals(3, registry.get("hibernate.second.level.cache.puts").tags("region", REGION).functionCounter().count(), 0);
+		assertEquals( 2, registry.get("hibernate.sessions.open").functionCounter().count(), 0 );
+		assertEquals( 2, registry.get("hibernate.sessions.closed").functionCounter().count(), 0 );
+		assertEquals( 0, registry.get("hibernate.entities.deletes").functionCounter().count(), 0 );
+		assertEquals( 2, registry.get("hibernate.transactions").tags("result", "success").functionCounter().count(), 0 );
+		assertEquals( 1, registry.get("hibernate.cache.natural.id.puts").functionCounter().count(), 0);
+		assertEquals(3, registry.get("hibernate.second.level.cache.puts").tags("region", REGION).functionCounter().count(), 0);
 
 		// clean up
-		session = openSession();
-		session.beginTransaction();
-		session.remove( person );
-		session.getTransaction().commit();
-		session.close();
+		factoryScope.inTransaction( (session) -> {
+			session.remove( session.find( Person.class, 1 ) );
+		});
 
-		Assert.assertEquals( 3, registry.get("hibernate.sessions.open").functionCounter().count(), 0 );
-		Assert.assertEquals( 3, registry.get("hibernate.sessions.closed").functionCounter().count(), 0 );
-		Assert.assertEquals( 1, registry.get("hibernate.entities.deletes").functionCounter().count(), 0 );
-		Assert.assertEquals( 3, registry.get("hibernate.transactions").tags("result", "success").functionCounter().count(), 0 );
+		assertEquals( 3, registry.get("hibernate.sessions.open").functionCounter().count(), 0 );
+		assertEquals( 3, registry.get("hibernate.sessions.closed").functionCounter().count(), 0 );
+		assertEquals( 1, registry.get("hibernate.entities.deletes").functionCounter().count(), 0 );
+		assertEquals( 3, registry.get("hibernate.transactions").tags("result", "success").functionCounter().count(), 0 );
 	}
 
 	@Entity( name = "Person" )

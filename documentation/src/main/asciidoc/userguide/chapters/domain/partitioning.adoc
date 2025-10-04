@@ -1,6 +1,5 @@
 [[partitioning]]
 === Partitioning
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-partition-key: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/identifier
 :extrasdir: extras

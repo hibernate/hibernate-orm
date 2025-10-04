@@ -4,7 +4,6 @@
 :asciidoc-dir: ../../..
 include::{asciidoc-dir}/shared/common-attributes.adoc[]
 
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :core-test-base: {core-project-dir}/src/test/java/org/hibernate/orm/test
 :example-dir-boot: {core-test-base}/bootstrap
@@ -57,7 +56,7 @@ Consider the following `META-INF/persistence.xml` file:
 [[example-bootstrap-standardized-persistence-xml]]
 .META-INF/persistence.xml file
 ====
-[source, XML, indent=0]
+[source, xml, indent=0]
 ----
 include::{extrasdir}/persistence.xml[]
 ----

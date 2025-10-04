@@ -44,7 +44,7 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 	public DialectReportTask() {
 		setDescription( "Generates a report of the supported Dialects" );
 		reportFile = getProject().getObjects().fileProperty();
-		reportFile.convention( getProject().getLayout().getBuildDirectory().file( "orm/generated/dialect/dialect.adoc" ) );
+		reportFile.convention( getProject().getLayout().getBuildDirectory().file( "orm/generated/dialect/index.adoc" ) );
 		generateHeading = getProject().getObjects().property( Boolean.class ).convention( true );
 	}
 

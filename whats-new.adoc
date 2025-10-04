@@ -1,5 +1,6 @@
 = What's New in 7.2
-:toc:
+:toc2:
+:sectanchors:
 :toclevels: 4
 :version: 7.2
 :docsBase: https://docs.jboss.org/hibernate/orm

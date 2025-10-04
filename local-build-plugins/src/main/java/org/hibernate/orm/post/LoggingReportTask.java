@@ -49,7 +49,7 @@ public abstract class LoggingReportTask extends AbstractJandexAwareTask {
 	public LoggingReportTask() {
 		setDescription( "Generates a report of \"system\" logging" );
 		reportFile = getProject().getObjects().fileProperty();
-		reportFile.convention( getProject().getLayout().getBuildDirectory().file( "orm/generated/logging/logging.adoc" ) );
+		reportFile.convention( getProject().getLayout().getBuildDirectory().file( "orm/generated/logging/index.adoc" ) );
 	}
 
 	@Override

@@ -2,14 +2,12 @@
 // Centralized definition of Asciidoc attributes for local filesystem paths
 // ****************************************************************************
 
-:doc-main-dir: ../..
 :doc-main-asciidoc-dir: {doc-main-dir}/asciidoc
 :doc-main-style-dir: {doc-main-dir}/style
-:pdf-theme: {doc-main-style-dir}/pdf/theme.yml
-:pdf-fontsdir: {doc-main-style-dir}/pdf/fonts
-//:title-logo-image: {doc-main-style-dir}/asciidoctor/images/org/hibernate/logo.png[]
+:pdf-theme: {theme-main-dir}/theme/hibernate-theme.yml
+:pdf-fontsdir: {theme-main-dir}/theme/fonts
+:title-logo-image: image:{doc-main-style-dir}/asciidoctor/images/org/hibernate/logo.png[align=left,pdfwidth=33%]
 
-:root-project-dir: ../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :documentation-project-dir: {root-project-dir}/documentation
 :testing-project-dir: {root-project-dir}/hibernate-testing

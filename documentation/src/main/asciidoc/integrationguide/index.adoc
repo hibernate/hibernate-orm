@@ -1,0 +1,13 @@
+= Hibernate ORM Integration Guide
+:toc2:
+:toclevels: 3
+:sectanchors:
+
+include::preface.adoc[]
+
+:numbered:
+
+include::chapters/services/Services.adoc[]
+
+include::credits.adoc[]
+

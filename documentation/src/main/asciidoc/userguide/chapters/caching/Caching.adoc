@@ -1,6 +1,5 @@
 [[caching]]
 == Caching
-:root-project-dir: ../../../../../../..
 :jcache-project-dir: {root-project-dir}/hibernate-jcache
 :example-dir-caching: {jcache-project-dir}/src/test/java/org/hibernate/orm/test/caching
 
@@ -276,7 +275,7 @@ To use query caching, you will first need to enable it with the following config
 [[caching-query-configuration]]
 .Enabling query cache
 ====
-[source, XML, indent=0]
+[source, xml, indent=0]
 ----
 <property
     name="hibernate.cache.use_query_cache"
@@ -552,7 +551,7 @@ To use the `JCacheRegionFactory`, you need to specify the following configuratio
 [[caching-provider-jcache-region-factory-example]]
 .`JCacheRegionFactory` configuration
 ====
-[source, XML, indent=0]
+[source, xml, indent=0]
 ----
 <property
     name="hibernate.cache.region.factory_class"
@@ -575,7 +574,7 @@ In order to control which provider to use and specify configuration for the `Cac
 [[caching-provider-jcache-region-factory-config-example]]
 .JCache configuration
 ====
-[source, XML, indent=0]
+[source, xml, indent=0]
 ----
 <property
     name="hibernate.javax.cache.provider"

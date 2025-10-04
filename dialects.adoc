@@ -1,4 +1,7 @@
 = Dialects
+:toc2:
+:toclevels: 1
+:sectanchors:
 
 A dialect is a class that provides information about the specifics of a database and translators for the SQL dialect of the database.
 

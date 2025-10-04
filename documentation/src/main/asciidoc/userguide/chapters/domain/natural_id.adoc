@@ -1,6 +1,5 @@
 [[naturalid]]
 === Natural Ids
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-naturalid: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/identifier
 :jcache-project-dir: {root-project-dir}/hibernate-jcache

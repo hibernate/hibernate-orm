@@ -1,6 +1,5 @@
 ﻿[[entity]]
 === Entity types
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :core-test-base: {core-project-dir}/src/test/java/org/hibernate/orm/test
 :example-dir-mapping: {core-test-base}/mapping

@@ -284,7 +284,7 @@ Hibernate always registers the first statement parameter as a numeric output par
 
 .Stored procedures and their return value
 ====
-[source]
+[source, sql]
 ----
 CREATE OR REPLACE FUNCTION updatePerson (uid IN NUMBER, uname IN VARCHAR2)
     RETURN NUMBER IS

@@ -1,6 +1,5 @@
 [[multitenacy]]
 == Multitenancy
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-multitenancy: {core-project-dir}/src/test/java/org/hibernate/orm/test/multitenancy
 :extrasdir: extras
@@ -258,7 +257,7 @@ test output.
 include::{example-dir-multitenancy}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-not-applying-timezone-configuration-example]
 ----
 
-[source, SQL,indent=0]
+[source, sql,indent=0]
 ----
 include::{extrasdir}/multitenacy-hibernate-not-applying-timezone-configuration-example.sql[]
 ----

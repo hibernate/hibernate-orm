@@ -28,7 +28,7 @@ import jakarta.persistence.SharedCacheMode;
  *
  * Can be used by itself, along with {@link DomainModelScopeAware}, to test the MetadataImplementor.  E.g.
  *
- * [source, JAVA, indent=0]
+ * [source, java, indent=0]
  * ----
  * @TestDomain ( ... )
  * class MyTest implements TestDomainAware {
@@ -52,7 +52,7 @@ import jakarta.persistence.SharedCacheMode;
  * build the MetadataImplementor (passed to
  * {@link org.hibernate.boot.MetadataSources#MetadataSources(org.hibernate.service.ServiceRegistry)}).
  *
- * [source, JAVA, indent=0]
+ * [source, java, indent=0]
  * ----
  * @ServiceRegistry ( ... )
  * @TestDomain ( ... )

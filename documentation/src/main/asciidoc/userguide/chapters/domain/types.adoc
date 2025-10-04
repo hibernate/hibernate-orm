@@ -1,6 +1,5 @@
 [[mapping-types]]
 === Mapping types
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-mapping: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping
 :extrasdir: extras/types
@@ -24,7 +23,7 @@ To help understand the type categorizations, let's look at a simple table and do
 [[mapping-types-basic-example]]
 .A simple table and domain model
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/mapping-types-basic-example.sql[]
 ----

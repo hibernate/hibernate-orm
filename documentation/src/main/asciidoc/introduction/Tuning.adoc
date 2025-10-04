@@ -911,7 +911,7 @@ An arguably-underappreciated feature of Hibernate is the link:{doc-javadoc-url}o
 
 You may obtain a stateless session from the `SessionFactory`:
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 StatelessSession ss = getSessionFactory().openStatelessSession();
 ----

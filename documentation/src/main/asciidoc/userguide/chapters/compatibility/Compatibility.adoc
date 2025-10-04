@@ -41,7 +41,7 @@ dependencies {
 }
 ----
 Maven::
-[source, XML, subs="+attributes"]
+[source, xml, subs="+attributes"]
 ----
 <dependencyManagement>
     <dependencies>

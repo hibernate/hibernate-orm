@@ -807,7 +807,6 @@ public class PluralAttributeMappingImpl
 			SqlAstCreationState creationState) {
 		final CollectionPersister collectionDescriptor = getCollectionDescriptor();
 		final SqlAstJoinType joinType = determineSqlJoinType( lhs, requestedJoinType, fetched );
-		final SqlAliasBase sqlAliasBase = creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
 
 		final TableGroup tableGroup;
 		if ( collectionDescriptor.isOneToMany() ) {
@@ -818,7 +817,7 @@ public class PluralAttributeMappingImpl
 					fetched,
 					addsPredicate,
 					explicitSourceAlias,
-					sqlAliasBase,
+					explicitSqlAliasBase,
 					creationState
 			);
 		}
@@ -830,7 +829,7 @@ public class PluralAttributeMappingImpl
 					fetched,
 					addsPredicate,
 					explicitSourceAlias,
-					sqlAliasBase,
+					explicitSqlAliasBase,
 					creationState
 			);
 		}

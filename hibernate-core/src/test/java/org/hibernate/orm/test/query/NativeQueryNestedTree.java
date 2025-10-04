@@ -49,6 +49,43 @@ public class NativeQueryNestedTree {
 					.list()
 			)
 		);
+
+		assertDoesNotThrow(() ->
+			scope.inTransaction(session ->
+				session.createNativeQuery("""
+						SELECT {t.*}, {t2.*}, {t3.*}, {t4.*}
+						FROM tree t
+						INNER JOIN tree t2 ON t2.parentident = t.ident
+						INNER JOIN tree t3 ON t3.parentident = t2.ident
+						INNER JOIN tree t4 ON t4.parentident = t3.ident
+					""")
+					.addEntity("t", TreeNode.class)
+					.addJoin("t2", "t.children")
+					.addJoin("t3", "t2.children")
+					.addJoin("t4", "t3.children")
+					.list()
+			)
+		);
+
+		// Let's get crazy
+		assertDoesNotThrow(() ->
+			scope.inTransaction(session ->
+				session.createNativeQuery("""
+						SELECT {t.*}, {t2.*}, {t3.*}, {t4.*}, {t5.*}
+						FROM tree t
+						INNER JOIN tree t2 ON t2.parentident = t.ident
+						INNER JOIN tree t3 ON t3.parentident = t2.ident
+						INNER JOIN tree t4 ON t4.parentident = t3.ident
+						INNER JOIN tree t5 ON t5.parentident = t4.ident
+					""")
+					.addEntity("t", TreeNode.class)
+					.addJoin("t2", "t.children")
+					.addJoin("t3", "t2.children")
+					.addJoin("t4", "t3.children")
+					.addJoin("t5", "t4.children")
+					.list()
+			)
+		);
 	}
 
 	@Entity(name = "TreeNode")

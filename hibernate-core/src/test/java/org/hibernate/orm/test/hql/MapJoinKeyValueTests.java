@@ -15,9 +15,9 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Jpa(annotatedClasses = {MapJoinKayValueTests.Book.class,
-		MapJoinKayValueTests.Language.class})
-class MapJoinKayValueTests {
+@Jpa(annotatedClasses = {MapJoinKeyValueTests.Book.class,
+		MapJoinKeyValueTests.Language.class})
+class MapJoinKeyValueTests {
 	@Test void test(EntityManagerFactoryScope scope) {
 		scope.getEntityManagerFactory().getSchemaManager().truncate();
 		scope.inTransaction( s -> {

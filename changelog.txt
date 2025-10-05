@@ -3,6 +3,15 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.47.Final (October 05, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/35419
+
+** Task
+    * [HHH-19800] - Migrate to release scripts for documentation publishing
+
+
 Changes in 6.2.46.Final (September 29, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -14,6 +14,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.event.spi.PreDeleteEvent;
@@ -59,8 +60,9 @@ public class BeanValidationEventListener
 	private Validator validator;
 	private GroupsPerOperation groupsPerOperation;
 
-	public BeanValidationEventListener(
-			ValidatorFactory factory, Map<String, Object> settings, ClassLoaderService classLoaderService) {
+	private SessionFactoryImplementor sessionFactory;
+
+	public BeanValidationEventListener(ValidatorFactory factory, Map<String, Object> settings, ClassLoaderService classLoaderService) {
 		traversableResolver = new HibernateTraversableResolver();
 		validator = factory.usingContext()
 				.traversableResolver( traversableResolver )
@@ -70,17 +72,15 @@ public class BeanValidationEventListener
 
 	@Override
 	public void sessionFactoryCreated(SessionFactory factory) {
-		SessionFactoryImplementor implementor = factory.unwrap( SessionFactoryImplementor.class );
-		implementor
-				.getMappingMetamodel()
-				.forEachEntityDescriptor( entityPersister -> traversableResolver.addPersister( entityPersister, implementor ) );
+		sessionFactory = factory.unwrap( SessionFactoryImplementor.class );
+		sessionFactory.getMappingMetamodel()
+				.forEachEntityDescriptor( entityPersister -> traversableResolver.addPersister( entityPersister, sessionFactory ) );
 	}
 
 	public boolean onPreInsert(PreInsertEvent event) {
 		validate(
 				event.getEntity(),
 				event.getPersister(),
-				event.getFactory(),
 				GroupsPerOperation.Operation.INSERT
 		);
 		return false;
@@ -90,7 +90,6 @@ public class BeanValidationEventListener
 		validate(
 				event.getEntity(),
 				event.getPersister(),
-				event.getFactory(),
 				GroupsPerOperation.Operation.UPDATE
 		);
 		return false;
@@ -100,7 +99,6 @@ public class BeanValidationEventListener
 		validate(
 				event.getEntity(),
 				event.getPersister(),
-				event.getFactory(),
 				GroupsPerOperation.Operation.DELETE
 		);
 		return false;
@@ -111,7 +109,6 @@ public class BeanValidationEventListener
 		validate(
 				event.getEntity(),
 				event.getPersister(),
-				event.getFactory(),
 				GroupsPerOperation.Operation.UPSERT
 		);
 		return false;
@@ -122,16 +119,24 @@ public class BeanValidationEventListener
 		final Object entity = castNonNull( event.getCollection().getOwner() );
 		validate(
 				entity,
-				event.getSession().getEntityPersister( event.getAffectedOwnerEntityName(), entity ),
-				event.getFactory(),
+				getEntityPersister( event.getSession(), event.getAffectedOwnerEntityName(), entity ),
 				GroupsPerOperation.Operation.UPDATE
 		);
+	}
+
+	private EntityPersister getEntityPersister(SharedSessionContractImplementor session, String entityName, Object entity) {
+		if ( session != null ) {
+			return session.getEntityPersister( entityName, entity );
+		}
+		return entityName == null
+				? sessionFactory.getMappingMetamodel().getEntityDescriptor( entity.getClass().getName() )
+				: sessionFactory.getMappingMetamodel().getEntityDescriptor( entityName )
+						.getSubclassEntityPersister( entity, sessionFactory );
 	}
 
 	private <T> void validate(
 			T object,
 			EntityPersister persister,
-			SessionFactoryImplementor sessionFactory,
 			GroupsPerOperation.Operation operation) {
 		if ( object == null || persister.getRepresentationStrategy().getMode() != RepresentationMode.POJO ) {
 			return;

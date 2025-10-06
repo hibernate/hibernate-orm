@@ -287,13 +287,13 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		final QueryKey queryResultsCacheKey;
 		final List<?> cachedResults;
 		if ( cacheable && cacheMode.isGetEnabled() ) {
-			SQL_EXEC_LOGGER.tracef( "Reading query result cache data [%s]", cacheMode.name() );
+			SQL_EXEC_LOGGER.readingQueryResultCacheData( cacheMode.name() );
 			final Set<String> querySpaces = jdbcSelect.getAffectedTableNames();
 			if ( querySpaces == null || querySpaces.isEmpty() ) {
-				SQL_EXEC_LOGGER.tracef( "Affected query spaces unexpectedly empty" );
+				SQL_EXEC_LOGGER.affectedQuerySpacesUnexpectedlyEmpty();
 			}
 			else {
-				SQL_EXEC_LOGGER.tracef( "Affected query spaces %s", querySpaces );
+				SQL_EXEC_LOGGER.affectedQuerySpaces( querySpaces );
 			}
 
 			final var queryCache = factory.getCache()
@@ -333,7 +333,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			}
 		}
 		else {
-			SQL_EXEC_LOGGER.tracef( "Skipping reading query result cache data (query cache %s, cache mode %s)",
+			SQL_EXEC_LOGGER.skippingReadingQueryResultCacheData(
 					queryCacheEnabled ? "enabled" : "disabled",
 					cacheMode.name()
 			);

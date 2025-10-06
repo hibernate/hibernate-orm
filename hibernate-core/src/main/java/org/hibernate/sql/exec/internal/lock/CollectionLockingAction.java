@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
-import static org.hibernate.sql.exec.internal.lock.LockingHelper.segmentLoadedValues;
 
 /**
  * PostAction intended to perform collection locking with
@@ -98,8 +97,7 @@ public class CollectionLockingAction implements PostAction {
 			// the select-list for that table-segment.
 			entitySegments.forEach( (entityMappingType, entityKeys) -> {
 				if ( SQL_EXEC_LOGGER.isDebugEnabled() ) {
-					SQL_EXEC_LOGGER.debugf( "Starting include-collections locking process - %s",
-							entityMappingType.getEntityName() );
+					SQL_EXEC_LOGGER.startingIncludeCollectionsLockingProcess( entityMappingType.getEntityName() );
 				}
 
 				// apply an empty "fetch graph" to make sure any embedded associations reachable from

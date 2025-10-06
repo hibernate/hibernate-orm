@@ -10,7 +10,6 @@ import org.hibernate.ScrollMode;
 import org.hibernate.Session;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -78,7 +77,7 @@ public class LockingHelper {
 		final String keyTableName = keyDescriptor.getKeyTable();
 
 		if ( SQL_EXEC_LOGGER.isDebugEnabled() ) {
-			SQL_EXEC_LOGGER.debugf( "Collection locking for collection table `%s` - %s", keyTableName, attributeMapping.getRootPathName() );
+			SQL_EXEC_LOGGER.collectionLockingForCollectionTable( keyTableName, attributeMapping.getRootPathName() );
 		}
 
 		final var querySpec = new QuerySpec( true );
@@ -153,7 +152,7 @@ public class LockingHelper {
 	 * @param lockTimeout A lock timeout to apply, if one.
 	 * @param ownerDetailsMap Details for each owner, whose collection-table rows should be locked.
 	 */
-	public static void lockCollectionTable(
+public static void lockCollectionTable(
 			PluralAttributeMapping attributeMapping,
 			LockMode lockMode,
 			Timeout lockTimeout,
@@ -163,7 +162,7 @@ public class LockingHelper {
 		final String keyTableName = keyDescriptor.getKeyTable();
 
 		if ( SQL_EXEC_LOGGER.isDebugEnabled() ) {
-			SQL_EXEC_LOGGER.debugf( "Follow-on locking for collection table `%s` - %s", keyTableName, attributeMapping.getRootPathName() );
+			SQL_EXEC_LOGGER.followOnLockingForCollectionTable( keyTableName, attributeMapping.getRootPathName() );
 		}
 
 		final var querySpec = new QuerySpec( true );
@@ -323,7 +322,7 @@ public class LockingHelper {
 		final String keyTableName = keyDescriptor.getKeyTable();
 
 		if ( SQL_EXEC_LOGGER.isDebugEnabled() ) {
-			SQL_EXEC_LOGGER.debugf( "Follow-on locking for collection table `%s` - %s", keyTableName, attributeMapping.getRootPathName() );
+			SQL_EXEC_LOGGER.followOnLockingForCollectionTable( keyTableName, attributeMapping.getRootPathName() );
 		}
 
 		final var querySpec = new QuerySpec( true );
@@ -465,22 +464,28 @@ public class LockingHelper {
 	 */
 	public static void logLoadedValues(LoadedValuesCollector collector) {
 		if ( SQL_EXEC_LOGGER.isDebugEnabled() ) {
-			SQL_EXEC_LOGGER.debug( "Follow-on locking collected loaded values..." );
-
-			SQL_EXEC_LOGGER.debug( "  Loaded root entities:" );
+			var summary = new StringBuilder();
+			summary.append( "  Loaded root entities:\n" );
 			collector.getCollectedRootEntities().forEach( (reg) -> {
-				SQL_EXEC_LOGGER.debugf( "    - %s#%s", reg.entityDescriptor().getEntityName(), reg.entityKey().getIdentifier() );
+				summary.append( String.format( "    - %s#%s\n",
+						reg.entityDescriptor().getEntityName(),
+						reg.entityKey().getIdentifier() ) );
 			} );
 
-			SQL_EXEC_LOGGER.debug( "  Loaded non-root entities:" );
+			summary.append( "  Loaded non-root entities:\n" );
 			collector.getCollectedNonRootEntities().forEach( (reg) -> {
-				SQL_EXEC_LOGGER.debugf( "    - %s#%s", reg.entityDescriptor().getEntityName(), reg.entityKey().getIdentifier() );
+				summary.append( String.format( "    - %s#%s\n",
+						reg.entityDescriptor().getEntityName()
+						, reg.entityKey().getIdentifier() ) );
 			} );
 
-			SQL_EXEC_LOGGER.debug( "  Loaded collections:" );
+			summary.append( "  Loaded collections:\n" );
 			collector.getCollectedCollections().forEach( (reg) -> {
-				SQL_EXEC_LOGGER.debugf( "    - %s#%s", reg.collectionDescriptor().getRootPathName(), reg.collectionKey().getKey() );
+				summary.append( String.format( "    - %s#%s\n",
+						reg.collectionDescriptor().getRootPathName(),
+						reg.collectionKey().getKey() ) );
 			} );
+			SQL_EXEC_LOGGER.followOnLockingCollectedLoadedValues( summary.toString() );
 		}
 	}
 
@@ -547,8 +552,8 @@ public class LockingHelper {
 		final var persistenceContext = executionContext.getSession().getPersistenceContext();
 		entityKeys.forEach( (entityKey) -> {
 			final Object instance = persistenceContext.getEntity( entityKey );
-			final EntityEntry entry = persistenceContext.getEntry( instance );
-			map.put( entityKey.getIdentifierValue(), new EntityDetails( entityKey, entry, instance ) );
+			final var entityEntry = persistenceContext.getEntry( instance );
+			map.put( entityKey.getIdentifierValue(), new EntityDetails( entityKey, entityEntry, instance ) );
 		} );
 		return map;
 	}

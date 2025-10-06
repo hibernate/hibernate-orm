@@ -76,7 +76,7 @@ public class TableLock {
 			List<EntityKey> entityKeys,
 			SharedSessionContractImplementor session) {
 		if ( SQL_EXEC_LOGGER.isDebugEnabled() ) {
-			SQL_EXEC_LOGGER.debugf( "Adding table `%s` for follow-on locking - %s", tableDetails.getTableName(), entityMappingType.getEntityName() );
+			SQL_EXEC_LOGGER.addingTableForFollowOnLocking( tableDetails.getTableName(), entityMappingType.getEntityName() );
 		}
 
 		this.tableDetails = tableDetails;

@@ -53,66 +53,54 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 			final boolean paddingEnabled = factory.getSessionFactoryOptions().inClauseParameterPaddingEnabled();
 			final int inExprLimit = factory.getJdbcServices().getDialect().getParameterCountLimit();
 
-			for ( ParameterOccurrence occurrence : parameterOccurrences ) {
-				final QueryParameterImplementor<?> param = occurrence.parameter();
-				final QueryParameterBinding<?> binding = queryParameterBindings.getBinding( param );
+			for ( var occurrence : parameterOccurrences ) {
+				final var parameter = occurrence.parameter();
+				final var binding = queryParameterBindings.getBinding( parameter );
 
-				final JdbcMapping jdbcMapping = jdbcMapping( factory, param, binding );
+				final var jdbcMapping = jdbcMapping( factory, parameter, binding );
 
 				final BasicValueConverter valueConverter = jdbcMapping == null ? null : jdbcMapping.getValueConverter();
 
 				if ( binding.isMultiValued() ) {
-					final Collection<?> bindValues = binding.getBindValues();
+					final var bindValues = binding.getBindValues();
 					final int bindValueCount = bindValues.size();
 					final int bindValueMaxCount =
 							determineBindValueMaxCount( paddingEnabled, inExprLimit, bindValueCount );
 					Object lastBindValue = null;
-					if ( valueConverter != null ) {
-						for ( Object bindValue : bindValues ) {
-							final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+					for ( Object bindValue : bindValues ) {
+						final var jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+						jdbcParameterBinders.add( jdbcParameter );
+						lastBindValue =
+								valueConverter == null
+										? bindValue
+										: valueConverter.toRelationalValue( bindValue );
+						addBinding( jdbcParameter, new JdbcParameterBindingImpl( jdbcMapping, lastBindValue ) );
+					}
+					if ( bindValueMaxCount != bindValueCount ) {
+						for ( int i = bindValueCount; i < bindValueMaxCount; i++ ) {
+							final var jdbcParameter = new JdbcParameterImpl( jdbcMapping );
 							jdbcParameterBinders.add( jdbcParameter );
-							lastBindValue = valueConverter.toRelationalValue( bindValue );
 							addBinding( jdbcParameter, new JdbcParameterBindingImpl( jdbcMapping, lastBindValue ) );
 						}
-						if ( bindValueMaxCount != bindValueCount ) {
-							for ( int i = bindValueCount; i < bindValueMaxCount; i++ ) {
-								final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
-								jdbcParameterBinders.add( jdbcParameter );
-								addBinding( jdbcParameter, new JdbcParameterBindingImpl( jdbcMapping, lastBindValue ) );
-							}
-						}
 					}
-					else {
-						for ( Object bindValue : bindValues ) {
-							final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
-							jdbcParameterBinders.add( jdbcParameter );
-							addBinding( jdbcParameter, new JdbcParameterBindingImpl( jdbcMapping, bindValue ) );
-							lastBindValue = bindValue;
-						}
-						if ( bindValueMaxCount != bindValueCount ) {
-							for ( int i = bindValueCount; i < bindValueMaxCount; i++ ) {
-								final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
-								jdbcParameterBinders.add( jdbcParameter );
-								addBinding( jdbcParameter, new JdbcParameterBindingImpl( jdbcMapping, lastBindValue ) );
-							}
-						}
-					}
+
 				}
 				else {
-					final Object bindValue =
-							valueConverter != null && binding.getBindValue() != null
-									? valueConverter.toRelationalValue( binding.getBindValue() )
-									: binding.getBindValue();
-					final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+					final Object bindValue = binding.getBindValue();
+					final Object convertedBindValue =
+							valueConverter != null && bindValue != null
+									? valueConverter.toRelationalValue( bindValue )
+									: bindValue;
+					final var jdbcParameter = new JdbcParameterImpl( jdbcMapping );
 					jdbcParameterBinders.add( jdbcParameter );
-					addBinding( jdbcParameter, new JdbcParameterBindingImpl( jdbcMapping, bindValue ) );
+					addBinding( jdbcParameter, new JdbcParameterBindingImpl( jdbcMapping, convertedBindValue ) );
 				}
 			}
 		}
 	}
 
 	private JdbcMapping jdbcMapping(SessionFactoryImplementor factory, QueryParameterImplementor<?> param, QueryParameterBinding<?> binding) {
-		final BindableType<?> type = determineParamType( param, binding );
+		final var type = determineParamType( param, binding );
 		if ( type == null ) {
 			return factory.getTypeConfiguration().getBasicTypeForJavaType( Object.class );
 		}
@@ -129,7 +117,7 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 	}
 
 	private BindableType<?> determineParamType(QueryParameterImplementor<?> param, QueryParameterBinding<?> binding) {
-		final BindableType<?> type = binding.getBindType();
+		final var type = binding.getBindType();
 		return type == null ? param.getHibernateType() : type;
 	}
 
@@ -164,12 +152,5 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 		if ( bindingMap != null ) {
 			bindingMap.clear();
 		}
-	}
-
-	/**
-	 * For testing.
-	 */
-	public Map<JdbcParameter, JdbcParameterBinding> getBindingMap() {
-		return bindingMap;
 	}
 }

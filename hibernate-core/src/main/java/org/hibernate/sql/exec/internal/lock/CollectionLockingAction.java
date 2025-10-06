@@ -9,11 +9,8 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
 import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
@@ -84,15 +81,15 @@ public class CollectionLockingAction implements PostAction {
 			ExecutionContext executionContext) {
 		LockingHelper.logLoadedValues( loadedValuesCollector );
 
-		final SharedSessionContractImplementor session = executionContext.getSession();
+		final var session = executionContext.getSession();
 
 		// NOTE: we deal with effective graphs here to make sure embedded associations are treated as lazy
-		final EffectiveEntityGraph effectiveEntityGraph = session.getLoadQueryInfluencers().getEffectiveEntityGraph();
-		final RootGraphImplementor<?> initialGraph = effectiveEntityGraph.getGraph();
-		final GraphSemantic initialSemantic = effectiveEntityGraph.getSemantic();
+		final var effectiveEntityGraph = session.getLoadQueryInfluencers().getEffectiveEntityGraph();
+		final var initialGraph = effectiveEntityGraph.getGraph();
+		final var initialSemantic = effectiveEntityGraph.getSemantic();
 
 		// collect registrations by entity type
-		final Map<EntityMappingType, List<EntityKey>> entitySegments = segmentLoadedValues( loadedValuesCollector );
+		final var entitySegments = segmentLoadedValues( loadedValuesCollector );
 
 		try {
 			// for each entity-type, prepare a locking select statement per table.
@@ -107,13 +104,13 @@ public class CollectionLockingAction implements PostAction {
 
 				// apply an empty "fetch graph" to make sure any embedded associations reachable from
 				// any of the DomainResults we will create are treated as lazy
-				final RootGraphImplementor<?> graph = entityMappingType.createRootGraph( session );
+				final var graph = entityMappingType.createRootGraph( session );
 				effectiveEntityGraph.clear();
 				effectiveEntityGraph.applyGraph( graph, GraphSemantic.FETCH );
 
 				// create a cross-reference of information related to an entity based on its identifier.
 				// we use this as the collection owners whose collections need to be locked
-				final Map<Object, EntityDetails> entityDetailsMap = LockingHelper.resolveEntityKeys( entityKeys, executionContext );
+				final var entityDetailsMap = LockingHelper.resolveEntityKeys( entityKeys, executionContext );
 
 				SqmMutationStrategyHelper.visitCollectionTables( entityMappingType, (attribute) -> {
 					// we may need to lock the "collection table".
@@ -136,15 +133,15 @@ public class CollectionLockingAction implements PostAction {
 	}
 
 	private static LoadedValuesCollectorImpl resolveLoadedValuesCollector(FromClause fromClause) {
-		final List<TableGroup> roots = fromClause.getRoots();
-		if ( roots.size() == 1 ) {
+		final var fromClauseRoots = fromClause.getRoots();
+		if ( fromClauseRoots.size() == 1 ) {
 			return new LoadedValuesCollectorImpl(
-					List.of( roots.get( 0 ).getNavigablePath() )
+					List.of( fromClauseRoots.get( 0 ).getNavigablePath() )
 			);
 		}
 		else {
 			return new LoadedValuesCollectorImpl(
-					roots.stream().map( TableGroup::getNavigablePath ).toList()
+					fromClauseRoots.stream().map( TableGroup::getNavigablePath ).toList()
 			);
 		}
 	}

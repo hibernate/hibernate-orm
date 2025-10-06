@@ -24,10 +24,8 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -160,10 +158,11 @@ public class LockingCreationStates
 		}
 
 		if ( expression instanceof ColumnReference columnReference ) {
-			final SqlSelectionImpl created = new SqlSelectionImpl( columnReference, querySpec.getSelectClause().getSqlSelections().size() );
-			sqlSelectionMap.put( expression, created );
-			querySpec.getSelectClause().addSqlSelection( created );
-			return created;
+			final var selection =
+					new SqlSelectionImpl( columnReference, querySpec.getSelectClause().getSqlSelections().size() );
+			sqlSelectionMap.put( expression, selection );
+			querySpec.getSelectClause().addSqlSelection( selection );
+			return selection;
 		}
 
 		throw new UnsupportedOperationException( "Unsupported Expression type (expected ColumnReference) : " + expression );
@@ -176,37 +175,27 @@ public class LockingCreationStates
 
 	@Override
 	public ImmutableFetchList visitFetches(FetchParent fetchParent) {
-		final ImmutableFetchList.Builder fetches =
-			new ImmutableFetchList.Builder( fetchParent.getReferencedMappingContainer() );
-
-		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
-
+		final var fetches = new ImmutableFetchList.Builder( fetchParent.getReferencedMappingContainer() );
+		final var referencedMappingContainer = fetchParent.getReferencedMappingContainer();
 		final int size = referencedMappingContainer.getNumberOfFetchables();
 		for ( int i = 0; i < size; i++ ) {
 			final Fetchable fetchable = referencedMappingContainer.getFetchable( i );
 			processFetchable( fetchParent, fetchable, fetches );
 		}
 		return fetches.build();
-
 	}
 
 	private void processFetchable(FetchParent fetchParent, Fetchable fetchable, ImmutableFetchList.Builder fetches) {
-		if ( !fetchable.isSelectable() ) {
-			return;
+		if ( fetchable.isSelectable() ) {
+			fetches.add( fetchParent.generateFetchableFetch(
+					fetchable,
+					fetchParent.resolveNavigablePath( fetchable ),
+					FetchTiming.DELAYED,
+					false,
+					null,
+					this
+			) );
 		}
-
-		final NavigablePath fetchablePath = fetchParent.resolveNavigablePath( fetchable );
-
-		final Fetch fetch = fetchParent.generateFetchableFetch(
-				fetchable,
-				fetchablePath,
-				FetchTiming.DELAYED,
-				false,
-				null,
-				this
-		);
-
-		fetches.add( fetch );
 	}
 
 	@Override
@@ -221,7 +210,6 @@ public class LockingCreationStates
 
 	@Override
 	public void setResolvingCircularFetch(boolean resolvingCircularFetch) {
-
 	}
 
 	@Override
@@ -231,6 +219,5 @@ public class LockingCreationStates
 
 	@Override
 	public void setCurrentlyResolvingForeignKeyPart(ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide) {
-
 	}
 }

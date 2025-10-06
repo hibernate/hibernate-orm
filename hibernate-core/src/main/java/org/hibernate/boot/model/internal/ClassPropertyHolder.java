@@ -208,7 +208,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	 * with correctly typed sub-properties for the metamodel.
 	 */
 	public static void handleGenericComponentProperty(Property property, MemberDetails memberDetails, MetadataBuildingContext context) {
-		if ( property.getValue() instanceof final Component component ) {
+		if ( property.getValue() instanceof Component component ) {
 			final var collector = context.getMetadataCollector();
 			if ( component.isGeneric() && component.getPropertySpan() > 0
 					&& collector.getGenericComponent( component.getComponentClass() ) == null ) {
@@ -312,7 +312,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 							final var element = initializedCollection.getElement().copy();
 							setTypeName( element, memberDetails.getElementType().getName() );
 							if ( initializedCollection instanceof IndexedCollection indexedCollection ) {
-								final Value index = indexedCollection.getIndex().copy();
+								final var index = indexedCollection.getIndex().copy();
 								if ( memberDetails.getMapKeyType() != null ) {
 									setTypeName( index, memberDetails.getMapKeyType().getName() );
 								}

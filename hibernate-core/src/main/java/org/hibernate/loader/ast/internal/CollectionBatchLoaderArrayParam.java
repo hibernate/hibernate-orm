@@ -20,8 +20,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
@@ -60,16 +58,15 @@ public class CollectionBatchLoaderArrayParam
 		super( domainBatchSize, loadQueryInfluencers, attributeMapping, sessionFactory );
 
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.tracef(
-					"Batch fetching enabled for collection '%s' using ARRAY strategy with batch size %s",
+			MULTI_KEY_LOAD_LOGGER.enabledCollectionArray(
 					attributeMapping.getNavigableRole().getFullPath(),
 					domainBatchSize
 			);
 		}
 
-		final ForeignKeyDescriptor keyDescriptor = getLoadable().getKeyDescriptor();
-		final JdbcMapping jdbcMapping = keyDescriptor.getSingleJdbcMapping();
-		final Class<?> jdbcJavaTypeClass = jdbcMapping.getJdbcJavaType().getJavaTypeClass();
+		final var keyDescriptor = getLoadable().getKeyDescriptor();
+		final var jdbcMapping = keyDescriptor.getSingleJdbcMapping();
+		final var jdbcJavaTypeClass = jdbcMapping.getJdbcJavaType().getJavaTypeClass();
 		keyDomainType = getKeyType( keyDescriptor.getKeyPart() );
 
 		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
@@ -88,8 +85,8 @@ public class CollectionBatchLoaderArrayParam
 				getSessionFactory()
 		);
 
-		final QuerySpec querySpec = sqlSelect.getQueryPart().getFirstQuerySpec();
-		final TableGroup tableGroup = querySpec.getFromClause().getRoots().get( 0 );
+		final var querySpec = sqlSelect.getQueryPart().getFirstQuerySpec();
+		final var tableGroup = querySpec.getFromClause().getRoots().get( 0 );
 		attributeMapping.applySoftDeleteRestrictions( tableGroup, querySpec::applyPredicate );
 
 		jdbcSelectOperation = getSessionFactory().getJdbcServices()
@@ -100,7 +97,7 @@ public class CollectionBatchLoaderArrayParam
 	}
 	@Override
 	public PersistentCollection<?> load(Object keyBeingLoaded, SharedSessionContractImplementor session) {
-		final ForeignKeyDescriptor keyDescriptor = getLoadable().getKeyDescriptor();
+		final var keyDescriptor = getLoadable().getKeyDescriptor();
 		if ( keyDescriptor.isEmbedded() ) {
 			assert keyDescriptor.getJdbcTypeCount() == 1;
 			return loadEmbeddable( keyBeingLoaded, session, keyDescriptor );
@@ -108,7 +105,6 @@ public class CollectionBatchLoaderArrayParam
 		else {
 			return super.load( keyBeingLoaded, session );
 		}
-
 	}
 
 	@AllowReflection
@@ -117,8 +113,8 @@ public class CollectionBatchLoaderArrayParam
 			SharedSessionContractImplementor session,
 			ForeignKeyDescriptor keyDescriptor) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.trace( "Batch fetching collection: "
-					+ collectionInfoString( getLoadable(), keyBeingLoaded ) );
+			MULTI_KEY_LOAD_LOGGER.batchFetchingCollection(
+					collectionInfoString( getLoadable(), keyBeingLoaded ) );
 		}
 
 		final int length = getDomainBatchSize();
@@ -130,21 +126,25 @@ public class CollectionBatchLoaderArrayParam
 						.getComponentType(),
 				length
 		);
-		final Object[] embeddedKeys = (Object[]) newInstance( keyDomainType, length );
+		final Object[] embeddedKeys = new Object[length];
 		session.getPersistenceContextInternal().getBatchFetchQueue()
 				.collectBatchLoadableCollectionKeys(
 						length,
 						(index, key) ->
-								keyDescriptor.forEachJdbcValue( key, (i, value, jdbcMapping) -> {
-									keysToInitialize[index] = value;
-									embeddedKeys[index] = key;
-								}, session )
+								keyDescriptor.forEachJdbcValue(
+										key,
+										(i, value, jdbcMapping) -> {
+											keysToInitialize[index] = value;
+											embeddedKeys[index] = key;
+										},
+										session
+								)
 						,
 						keyBeingLoaded,
 						getLoadable()
 				);
 		// now trim down the array to the number of keys we found
-		final Object[] keys = trimIdBatch( length, keysToInitialize );
+		final var keys = trimIdBatch( length, keysToInitialize );
 
 		if ( hasSingleId( keys ) ) {
 			return singleKeyLoader.load( keyBeingLoaded, session );
@@ -157,7 +157,7 @@ public class CollectionBatchLoaderArrayParam
 				finishInitializingKey( initializedKey, session );
 			}
 		}
-		final CollectionKey collectionKey = new CollectionKey(
+		final var collectionKey = new CollectionKey(
 				getLoadable().getCollectionDescriptor(),
 				keyBeingLoaded
 		);
@@ -167,25 +167,17 @@ public class CollectionBatchLoaderArrayParam
 	@Override
 	void initializeKeys(Object key, Object[] keysToInitialize, SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.tracef( "Collection keys to initialize via batch fetching (%s) %s",
-					collectionInfoString( getLoadable(), key ),
-					keysToInitialize );
+			MULTI_KEY_LOAD_LOGGER.collectionKeysToInitialize(
+					collectionInfoString( getLoadable(), key ), keysToInitialize );
 		}
 
 		assert jdbcSelectOperation != null;
 		assert jdbcParameter != null;
 
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(1);
+		final var jdbcParameterBindings = new JdbcParameterBindingsImpl(1);
 		jdbcParameterBindings.addBinding(
 				jdbcParameter,
 				new JdbcParameterBindingImpl( arrayJdbcMapping, keysToInitialize )
-		);
-
-		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
-				session.getPersistenceContext().getBatchFetchQueue(),
-				sqlSelect,
-				JdbcParametersList.singleton( jdbcParameter ),
-				jdbcParameterBindings
 		);
 
 		session.getJdbcServices().getJdbcSelectExecutor().list(
@@ -193,7 +185,12 @@ public class CollectionBatchLoaderArrayParam
 				jdbcParameterBindings,
 				new ExecutionContextWithSubselectFetchHandler(
 						session,
-						subSelectFetchableKeysHandler
+						SubselectFetch.createRegistrationHandler(
+								session.getPersistenceContext().getBatchFetchQueue(),
+								sqlSelect,
+								JdbcParametersList.singleton( jdbcParameter ),
+								jdbcParameterBindings
+						)
 				),
 				RowTransformerStandardImpl.instance(),
 				ListResultsConsumer.UniqueSemantic.FILTER
@@ -210,18 +207,22 @@ public class CollectionBatchLoaderArrayParam
 	@Override
 	@AllowReflection
 	Object[] resolveKeysToInitialize(Object keyBeingLoaded, SharedSessionContractImplementor session) {
-		final ForeignKeyDescriptor keyDescriptor = getLoadable().getKeyDescriptor();
+		final var keyDescriptor = getLoadable().getKeyDescriptor();
 		if( keyDescriptor.isEmbedded()){
 			assert keyDescriptor.getJdbcTypeCount() == 1;
 			final int length = getDomainBatchSize();
-			final Object[] keysToInitialize = (Object[]) newInstance( keyDescriptor.getSingleJdbcMapping().getJdbcJavaType().getJavaTypeClass(), length );
+			final var keysToInitialize = new Object[length];
 			session.getPersistenceContextInternal().getBatchFetchQueue()
 					.collectBatchLoadableCollectionKeys(
 							length,
 							(index, key) ->
-								keyDescriptor.forEachJdbcValue( key, (i, value, jdbcMapping) -> {
-									keysToInitialize[index] = value;
-								}, session )
+									keyDescriptor.forEachJdbcValue(
+											key,
+											(i, value, jdbcMapping) -> {
+												keysToInitialize[index] = value;
+											},
+											session
+									)
 							,
 							keyBeingLoaded,
 							getLoadable()

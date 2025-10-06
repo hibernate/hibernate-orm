@@ -187,102 +187,31 @@ If you want to load multiple entities by providing their identifiers, calling th
 but also inefficient.
 
 While the Jakarta Persistence standard does not support retrieving multiple entities at once, other than running a JPQL or Criteria API query,
-Hibernate offers this functionality via the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#byMultipleIds-java.lang.Class-[`byMultipleIds` method] of the Hibernate `Session`.
+Hibernate offers this functionality via the `Session#findMultiple` methods which accepts a list of identifiers to load and a group of options which control certain behaviors of the loading -
 
-The `byMultipleIds` method returns a
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/MultiIdentifierLoadAccess.html[`MultiIdentifierLoadAccess`]
-which you can use to customize the multi-load request.
-
-The `MultiIdentifierLoadAccess` interface provides several methods which you can use to
-change the behavior of the multi-load call:
-
-`enableOrderedReturn(boolean enabled)`::
-This setting controls whether the returned `List` is ordered and positional in relation to the
-incoming ids.  If enabled (the default), the return `List` is ordered and
-positional relative to the incoming ids.  In other words, a request to
-`multiLoad([2,1,3])` will return `[Entity#2, Entity#1, Entity#3]`.
-+
-An important distinction is made here in regards to the handling of
-unknown entities depending on this "ordered return" setting.
-If enabled, a null is inserted into the `List` at the proper position(s).
-If disabled, the nulls are not put into the return List.
-+
-In other words, consumers of the returned ordered List would need to be able to handle null elements.
-`enableSessionCheck(boolean enabled)`::
-This setting, which is disabled by default, tells Hibernate to check the first-level cache (a.k.a `Session` or Persistence Context) first and, if the entity is found and already managed by the Hibernate `Session`, the cached entity will be added to the returned `List`, therefore skipping it from being fetched via the multi-load query.
-`enableReturnOfDeletedEntities(boolean enabled)`::
-This setting instructs Hibernate if the multi-load operation is allowed to return entities that were deleted by the current Persistence Context. A deleted entity is one which has been passed to this
-`Session.delete` or `Session.remove` method, but the `Session` was not flushed yet, meaning that the
-associated row was not deleted in the database table.
-+
-The default behavior is to handle them as null in the return (see `enableOrderedReturn`).
-When enabled, the result set will contain deleted entities.
-When disabled (which is the default behavior), deleted entities are not included in the returning `List`.
-`with(LockOptions lockOptions)`::
-This setting allows you to pass a given
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/LockOptions.html[`LockOptions`] mode to the multi-load query.
-`with(CacheMode cacheMode)`::
-This setting allows you to pass a given
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/CacheMode.html[`CacheMode`]
-strategy so that we can load entities from the second-level cache, therefore skipping the cached entities from being fetched via the multi-load query.
-`withBatchSize(int batchSize)`::
-This setting allows you to specify a batch size for loading the entities (e.g. how many at a time).
-+
-The default is to use a batch sizing strategy defined by the `Dialect.getDefaultBatchLoadSizingStrategy()` method.
-+
-Any greater-than-one value here will override that default behavior.
-`with(RootGraph<T> graph)`::
-The `RootGraph` is a Hibernate extension to the Jakarta Persistence `EntityGraph` contract,
-and this method allows you to pass a specific `RootGraph` to the multi-load query
-so that it can fetch additional relationships of the current loading entity.
+* `ReadOnlyMode` - whether the entities loaded should be marked as read-only.
+* `LockMode` (`LockModeType`) - a lock mode to be applied
+* `Timeout` - if a pessimistic lock mode is used, a timeout to allow
+* `Locking.Scope` (PessimisticLockScope`) - if a pessimistic lock mode is used, what scope should it be applied
+* `Locking.FollowOn` - allow (or not) Hibernate to acquire locks through additional queries if needed
+* `CacheMode` (`CacheStoreMode` / `CacheRetrieveMode`) - how second level caching should be used, if at all
+* `BatchSize` - how many identifiers should be loaded from the database at once
+* `SessionChecking` - whether to look into the persistence context to check entity state
+* `IncludeRemovals` - if `SessionChecking` is enabled, how removed entities should be handled
+* `OrderedReturn` - whether the results should be ordered according to the order of the passed identifiers
 
 Now, assuming we have 3 `Person` entities in the database, we can load all of them with a single call
 as illustrated by the following example:
 
 [[tag::pc-by-multiple-ids-example]]
-.Loading multiple entities using the `byMultipleIds()` Hibernate API
+.Loading multiple entities using the `findMultiple()` Hibernate API
 ====
 
 [source, java, indent=0]
 ----
-include::{example-dir-pc}/MultiLoadIdTest.java[tags=pc-by-multiple-ids-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/pc-by-multiple-ids-example.sql[]
+include::{example-dir-pc}/FindMultipleDocTests.java[tags=pc-find-multiple-example]
 ----
 ====
-
-Notice that only one SQL SELECT statement was executed since the second call uses the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/MultiIdentifierLoadAccess.html#enableSessionCheck-boolean-[`enableSessionCheck`] method of the `MultiIdentifierLoadAccess`
-to instruct Hibernate to skip entities that are already loaded in the current Persistence Context.
-
-If the entities are not available in the current Persistence Context but they could be loaded from the second-level cache, you can use the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/MultiIdentifierLoadAccess.html#with-org.hibernate.CacheMode-[`with(CacheMode)`] method of the `MultiIdentifierLoadAccess` object.
-
-[[tag::pc-by-multiple-ids-second-level-cache-example]]
-.Loading multiple entities from the second-level cache
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/MultiLoadIdTest.java[tags=pc-by-multiple-ids-second-level-cache-example]
-----
-====
-
-In the example above, we first make sure that we clear the second-level cache to demonstrate that
-the multi-load query will put the returning entities into the second-level cache.
-
-After executing the first `byMultipleIds` call, Hibernate is going to fetch the requested entities,
-and as illustrated by the `getSecondLevelCachePutCount` method call, 3 entities were indeed added to the
-shared cache.
-
-Afterward, when executing the second `byMultipleIds` call for the same entities in a new Hibernate `Session`,
-we set the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/CacheMode.html#NORMAL[`CacheMode.NORMAL`] second-level cache mode so that entities are going to be returned from the second-level cache.
-
-The `getSecondLevelCacheHitCount` statistics method returns 3 this time, since the 3 entities were loaded from the second-level cache, and, as illustrated by `sqlStatementInterceptor.getSqlQueries()`, no multi-load SELECT statement was executed this time.
 
 [[pc-find-natural-id]]
 === Obtain an entity by natural-id

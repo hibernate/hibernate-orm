@@ -103,6 +103,51 @@ Interestingly, this now also aligns with handling for auto-flush events which al
 The behavior of `noInterceptor()` for `SharedSessionBuilder` and (the new) `SharedStatelessSessionBuilder` was aligned with the preexisting semantics of this method on `SessionBuilder` and `StatelessSessionBuilder`.
 The previous behavior may be recovered by calling `noSessionInterceptorCreation()`.
 
+[[test-util-bytecodeenhanced-engine]]
+=== JUnit `BytecodeEnhancedTestEngine`
+
+With this version, `BytecodeEnhancedTestEngine` will be disabled by default.
+To be able to run the tests annotated with `@BytecodeEnhanced`, this engine has to be explicitly enabled via a system property:
+
+[source, properties]
+----
+hibernate.testing.bytecode.enhancement.extension.engine.enabled=true
+----
+
+For a Maven-based project this can be done as part of the failsafe/surefire plugin configuration:
+
+[source, xml]
+----
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-surefire-plugin</artifactId>
+    <configuration>
+        <systemPropertyVariables>
+            <hibernate.testing.bytecode.enhancement.extension.engine.enabled>true</hibernate.testing.bytecode.enhancement.extension.engine.enabled>
+            <!-- Any other system properties required by your tests -->
+        </systemPropertyVariables>
+        <!-- The rest of the testing plugin configuration -->
+        <!-- ... -->
+    </configuration>
+</plugin>
+----
+
+While for a Gradle-based project this can be done in multiple ways, it essentially comes down to configuring the
+link:https://docs.gradle.org/current/dsl/org.gradle.api.tasks.testing.Test.html#org.gradle.api.tasks.testing.Test:systemProperties[`systemProperties`]
+of a `Test` task:
+
+[source, groovy]
+----
+tasks.withType(Test.class) {
+    // Enable bytecode enhanced engine:
+    systemProperties.systemProperties['hibernate.testing.bytecode.enhancement.extension.engine.enabled'] = true
+    // Any other test task configurations
+    // ...
+}
+----
+
+Also, this engine is expected to only work with the exact version of JUnit that `org.hibernate.orm:hibernate-testing` depends on.
+While it may work with other versions as well, there is no guarantee of that.
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // DDL changes
@@ -120,3 +165,9 @@ Such changes typically do not impact programs using a relational schema managed 
 
 This section describes changes to dependencies used by Hibernate ORM.
 
+[[junit6]]
+=== JUnit 6 update
+
+Hibernate ORM test utils distributed as `org.hibernate.orm:hibernate-testing` are now based on JUnit 6.0.
+In general, this update is compatible with previous JUnit 5 versions unless the tests depended on the
+<<test-util-bytecodeenhanced-engine,@BytecodeEnhanced extension>>.

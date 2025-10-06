@@ -4,11 +4,9 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.Arrays;
 import java.util.Locale;
 
 import org.hibernate.LockOptions;
-import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
@@ -16,15 +14,14 @@ import org.hibernate.loader.ast.spi.EntityBatchLoader;
 import org.hibernate.loader.ast.spi.SqlInPredicateMultiKeyLoader;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
-import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
+import static org.hibernate.sql.exec.spi.JdbcParameterBindings.NO_BINDINGS;
 
 /**
  * An {@link EntityBatchLoader} using one or more SQL queries, which each initialize up
@@ -63,17 +60,16 @@ public class EntityBatchLoaderInPredicate<T>
 						.determineOptimalBatchLoadSize( idColumnCount, domainBatchSize, false );
 
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.tracef(
-					"Batch fetching enabled for entity '%s' using IN-predicate with batch size %s (%s)",
+			MULTI_KEY_LOAD_LOGGER.enabledEntityInPredicate(
 					entityDescriptor.getEntityName(),
 					sqlBatchSize,
 					domainBatchSize
 			);
 		}
 
-		final EntityIdentifierMapping identifierMapping = getLoadable().getIdentifierMapping();
+		final var identifierMapping = getLoadable().getIdentifierMapping();
 		final int expectedNumberOfParameters = identifierMapping.getJdbcTypeCount() * sqlBatchSize;
-		final JdbcParametersList.Builder builder = JdbcParametersList.newBuilder( expectedNumberOfParameters );
+		final var builder = JdbcParametersList.newBuilder( expectedNumberOfParameters );
 		sqlAst = LoaderSelectBuilder.createSelect(
 				getLoadable(),
 				// null here means to select everything
@@ -92,7 +88,7 @@ public class EntityBatchLoaderInPredicate<T>
 		jdbcSelectOperation =
 				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
 						.buildSelectTranslator( sessionFactory, sqlAst )
-						.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
+						.translate( NO_BINDINGS, QueryOptions.NONE );
 	}
 
 	@Override
@@ -123,13 +119,12 @@ public class EntityBatchLoaderInPredicate<T>
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.tracef( "Entity ids to initialize via batch fetching (%s) %s",
-					infoString( getLoadable(), pkValue ),
-					Arrays.toString(idsToInitialize) );
+			MULTI_KEY_LOAD_LOGGER.entityIdsToInitialize(
+					infoString( getLoadable(), pkValue ), idsToInitialize );
 		}
 
-		final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
-		final EntityPersister persister = getLoadable().getEntityPersister();
+		final var batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
+		final var persister = getLoadable().getEntityPersister();
 		getChunker( getLoadable().getIdentifierMapping() )
 				.processChunks(
 						idsToInitialize,
@@ -159,8 +154,7 @@ public class EntityBatchLoaderInPredicate<T>
 						},
 						(startIndex) -> {
 							if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-								MULTI_KEY_LOAD_LOGGER.tracef(
-										"Processing entity batch-fetch chunk (%s) %s - %s",
+								MULTI_KEY_LOAD_LOGGER.processingEntityBatchFetchChunk(
 										infoString( getLoadable(), pkValue ),
 										startIndex,
 										startIndex + ( sqlBatchSize - 1 )

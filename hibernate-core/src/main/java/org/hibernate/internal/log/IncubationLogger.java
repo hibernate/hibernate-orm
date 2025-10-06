@@ -19,7 +19,7 @@ import static org.jboss.logging.Logger.Level.INFO;
  * @author Steve Ebersole
  */
 @MessageLogger(projectCode = "HHH")
-@ValidIdRange(min = 90006001, max = 90007000)
+@ValidIdRange(min = 90006001, max = 90006100)
 @Internal
 public interface IncubationLogger {
 	String CATEGORY = SubSystemLogging.BASE + ".incubating";

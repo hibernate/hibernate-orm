@@ -31,6 +31,7 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.Extension;
+import org.junit.jupiter.api.extension.ExtensionConfigurationException;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestInstantiationAwareExtension;
 import org.junit.jupiter.api.io.CleanupMode;
@@ -72,7 +73,17 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 	@Override
 	public TestDescriptor discover(EngineDiscoveryRequest discoveryRequest, UniqueId uniqueId) {
 		if ( isEnabled() ) {
-			return doDiscover( discoveryRequest, uniqueId );
+			try {
+				return doDiscover( discoveryRequest, uniqueId );
+			}
+			catch (OutOfMemoryError e) {
+				throw e;
+			}
+			catch (Error e) {
+				throw new ExtensionConfigurationException(
+						"Encountered a problem when enhancing the test classes. It is highly likely that @BytecodeEnhanced extension is incompatible with the provided version of JUnit.",
+						e );
+			}
 		}
 
 		return new EngineDescriptor( uniqueId, getId() );

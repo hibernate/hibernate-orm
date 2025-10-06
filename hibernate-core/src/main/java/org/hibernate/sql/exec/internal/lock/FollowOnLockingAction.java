@@ -119,7 +119,7 @@ public class FollowOnLockingAction implements PostAction {
 			// the select-list for that table-segment.
 			entitySegments.forEach( (entityMappingType, entityKeys) -> {
 				if ( SQL_EXEC_LOGGER.isDebugEnabled() ) {
-					SQL_EXEC_LOGGER.debugf( "Starting follow-on locking process - %s", entityMappingType.getEntityName() );
+					SQL_EXEC_LOGGER.startingFollowOnLockingProcess( entityMappingType.getEntityName() );
 				}
 
 				// apply an empty "fetch graph" to make sure any embedded associations reachable from

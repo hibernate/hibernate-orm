@@ -2300,6 +2300,9 @@ public class SessionImpl
 			else if ( option instanceof ReadOnlyMode ) {
 				loadAccess.withReadOnly( option == ReadOnlyMode.READ_ONLY );
 			}
+			else if ( option instanceof MultiFindOption multiFindOption ) {
+				throw new IllegalArgumentException( "Option '" + multiFindOption + "' can only be used in 'findMultiple()'" );
+			}
 		}
 		if ( lockOptions.getLockMode().isPessimistic() ) {
 			if ( lockOptions.getTimeOut() == WAIT_FOREVER_MILLI ) {

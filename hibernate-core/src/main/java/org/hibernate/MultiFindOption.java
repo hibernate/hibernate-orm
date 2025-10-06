@@ -10,5 +10,5 @@ import jakarta.persistence.FindOption;
 /**
  * Simple marker interface for FindOptions which can be applied to multiple id loading.
  */
-interface MultiFindOption extends FindOption {
+public interface MultiFindOption extends FindOption {
 }

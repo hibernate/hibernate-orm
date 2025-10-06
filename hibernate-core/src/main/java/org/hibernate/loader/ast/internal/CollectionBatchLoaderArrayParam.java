@@ -30,7 +30,6 @@ import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
-import static java.lang.reflect.Array.newInstance;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.hasSingleId;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.trimIdBatch;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
@@ -44,7 +43,7 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 public class CollectionBatchLoaderArrayParam
 		extends AbstractCollectionBatchLoader
 		implements SqlArrayMultiKeyLoader {
-	private final Class<?> keyDomainType;
+
 	private final JdbcMapping arrayJdbcMapping;
 	private final JdbcParameter jdbcParameter;
 	private final SelectStatement sqlSelect;
@@ -67,7 +66,6 @@ public class CollectionBatchLoaderArrayParam
 		final var keyDescriptor = getLoadable().getKeyDescriptor();
 		final var jdbcMapping = keyDescriptor.getSingleJdbcMapping();
 		final var jdbcJavaTypeClass = jdbcMapping.getJdbcJavaType().getJavaTypeClass();
-		keyDomainType = getKeyType( keyDescriptor.getKeyPart() );
 
 		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
 				jdbcMapping,
@@ -118,14 +116,7 @@ public class CollectionBatchLoaderArrayParam
 		}
 
 		final int length = getDomainBatchSize();
-		final Object[] keysToInitialize = (Object[]) newInstance(
-				jdbcParameter.getExpressionType()
-						.getSingleJdbcMapping()
-						.getJdbcJavaType()
-						.getJavaTypeClass()
-						.getComponentType(),
-				length
-		);
+		final Object[] keysToInitialize = new Object[length];
 		final Object[] embeddedKeys = new Object[length];
 		session.getPersistenceContextInternal().getBatchFetchQueue()
 				.collectBatchLoadableCollectionKeys(
@@ -157,11 +148,12 @@ public class CollectionBatchLoaderArrayParam
 				finishInitializingKey( initializedKey, session );
 			}
 		}
-		final var collectionKey = new CollectionKey(
-				getLoadable().getCollectionDescriptor(),
-				keyBeingLoaded
-		);
-		return session.getPersistenceContext().getCollection( collectionKey );
+		return session.getPersistenceContext()
+				.getCollection( collectionKey( keyBeingLoaded ) );
+	}
+
+	private CollectionKey collectionKey(Object keyBeingLoaded) {
+		return new CollectionKey( getLoadable().getCollectionDescriptor(), keyBeingLoaded );
 	}
 
 	@Override

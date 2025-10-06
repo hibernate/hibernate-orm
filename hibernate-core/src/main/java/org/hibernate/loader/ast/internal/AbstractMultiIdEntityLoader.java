@@ -123,18 +123,15 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		for ( int i = 0; i < ids.length; i++ ) {
 			final Object id = idCoercionEnabled ? idType.coerce( ids[i], session ) : ids[i];
 			final var entityKey = new EntityKey( id, getLoadable().getEntityPersister() );
-
 			if ( !loadFromEnabledCaches( loadOptions, session, id, lockOptions, entityKey, results, i ) ) {
 				// if we did not hit any of the continues above,
 				// then we need to batch load the entity state.
 				idsInBatch.add( id );
-
 				if ( idsInBatch.size() >= maxBatchSize ) {
 					// we've hit the allotted max-batch-size, perform an "intermediate load"
 					loadEntitiesById( idsInBatch, lockOptions, loadOptions, session );
 					idsInBatch.clear();
 				}
-
 				// Save the EntityKey instance for use later
 				results.add( i, entityKey );
 				elementPositionsLoadedByBatch.add( i );
@@ -284,7 +281,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 				// the user requested that we exclude ids corresponding to already managed
 				// entities from the generated load SQL. So here we will iterate all
 				// incoming id values and see whether it corresponds to an existing
-				// entity associated with the PC. If it does, we add it to the results
+				// entity associated with the PC. If it does, we add it to the result
 				// list immediately and remove its id from the group of ids to load.
 				// we'll load all of them from the database
 				? resolveInCaches( ids, loadOptions, lockOptions, session, resolutionConsumer )

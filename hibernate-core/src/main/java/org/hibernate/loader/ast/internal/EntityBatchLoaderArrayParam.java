@@ -39,7 +39,6 @@ public class EntityBatchLoaderArrayParam<T>
 		implements SqlArrayMultiKeyLoader {
 	private final int domainBatchSize;
 
-	private final BasicEntityIdentifierMapping identifierMapping;
 	private final JdbcMapping arrayJdbcMapping;
 	private final JdbcParameter jdbcParameter;
 	private final SelectStatement sqlAst;
@@ -71,7 +70,7 @@ public class EntityBatchLoaderArrayParam<T>
 			);
 		}
 
-		identifierMapping = (BasicEntityIdentifierMapping) getLoadable().getIdentifierMapping();
+		final var identifierMapping = (BasicEntityIdentifierMapping) getLoadable().getIdentifierMapping();
 		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
 				identifierMapping.getJdbcMapping(),
 				identifierMapping.getJavaType().getJavaTypeClass(),

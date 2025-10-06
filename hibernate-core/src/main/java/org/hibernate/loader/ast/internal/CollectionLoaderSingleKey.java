@@ -6,7 +6,6 @@ package org.hibernate.loader.ast.internal;
 
 import org.hibernate.LockOptions;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -16,17 +15,15 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.tree.from.FromClause;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
-import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
+
+import static org.hibernate.sql.exec.spi.JdbcParameterBindings.NO_BINDINGS;
 
 /**
  * Main implementation of CollectionLoader for handling a load of a single collection-key
@@ -48,10 +45,10 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 			SessionFactoryImplementor sessionFactory) {
 		this.attributeMapping = attributeMapping;
 
-		this.keyJdbcCount = attributeMapping.getKeyDescriptor().getJdbcTypeCount();
-		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
+		keyJdbcCount = attributeMapping.getKeyDescriptor().getJdbcTypeCount();
+		final var jdbcParametersBuilder = JdbcParametersList.newBuilder();
 
-		this.sqlAst = LoaderSelectBuilder.createSelect(
+		sqlAst = LoaderSelectBuilder.createSelect(
 				attributeMapping,
 				null,
 				attributeMapping.getKeyDescriptor(),
@@ -63,17 +60,15 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 				sessionFactory
 		);
 
-		final QuerySpec querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
-		final FromClause fromClause = querySpec.getFromClause();
-		final TableGroup tableGroup = fromClause.getRoots().get( 0 );
+		final var querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
+		final var tableGroup = querySpec.getFromClause().getRoots().get( 0 );
 		attributeMapping.applySoftDeleteRestrictions( tableGroup, querySpec::applyPredicate );
 
-		this.jdbcParameters = jdbcParametersBuilder.build();
-		this.jdbcSelect = sessionFactory.getJdbcServices()
-				.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
-				.buildSelectTranslator( sessionFactory, sqlAst )
-				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
+		jdbcParameters = jdbcParametersBuilder.build();
+		jdbcSelect =
+				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+						.buildSelectTranslator( sessionFactory, sqlAst )
+						.translate( NO_BINDINGS, QueryOptions.NONE );
 	}
 
 	@Override
@@ -95,11 +90,9 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 
 	@Override
 	public PersistentCollection<?> load(Object key, SharedSessionContractImplementor session) {
-		final CollectionKey collectionKey = new CollectionKey( attributeMapping.getCollectionDescriptor(), key );
+		final var collectionKey = new CollectionKey( attributeMapping.getCollectionDescriptor(), key );
 
-		final JdbcServices jdbcServices = session.getFactory().getJdbcServices();
-
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( keyJdbcCount );
+		final var jdbcParameterBindings = new JdbcParameterBindingsImpl( keyJdbcCount );
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 				key,
 				attributeMapping.getKeyDescriptor(),
@@ -108,14 +101,14 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 		);
 		assert offset == jdbcParameters.size();
 
-		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
+		final var subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
 				session.getPersistenceContext().getBatchFetchQueue(),
 				sqlAst,
 				jdbcParameters,
 				jdbcParameterBindings
 		);
 
-		jdbcServices.getJdbcSelectExecutor().list(
+		session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,
 				new CollectionLoaderSingleKeyExecutionContext( session, collectionKey, subSelectFetchableKeysHandler ),
@@ -148,6 +141,5 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 		public void registerLoadingEntityHolder(EntityHolder holder) {
 			subSelectFetchableKeysHandler.addKey( holder );
 		}
-
 	}
 }

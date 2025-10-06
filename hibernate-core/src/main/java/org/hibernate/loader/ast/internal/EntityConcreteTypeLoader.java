@@ -4,7 +4,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.List;
 
 import org.hibernate.LockOptions;
 import org.hibernate.ObjectNotFoundException;
@@ -14,14 +13,11 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
-import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
@@ -43,7 +39,7 @@ public class EntityConcreteTypeLoader {
 
 	public EntityConcreteTypeLoader(EntityMappingType entityDescriptor, SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
-		final JdbcParametersList.Builder builder = JdbcParametersList.newBuilder();
+		final var builder = JdbcParametersList.newBuilder();
 		sqlSelect = LoaderSelectBuilder.createSelect(
 				entityDescriptor,
 				singletonList( entityDescriptor.getDiscriminatorMapping() ),
@@ -59,9 +55,9 @@ public class EntityConcreteTypeLoader {
 	}
 
 	public EntityMappingType getConcreteType(Object id, SharedSessionContractImplementor session) {
-		final SessionFactoryImplementor factory = session.getSessionFactory();
+		final var factory = session.getSessionFactory();
 
-		final JdbcParameterBindings bindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
+		final var bindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		final int offset = bindings.registerParametersForEachJdbcValue(
 				id,
 				entityDescriptor.getIdentifierMapping(),
@@ -70,11 +66,11 @@ public class EntityConcreteTypeLoader {
 		);
 		assert offset == jdbcParameters.size();
 
-		final JdbcOperationQuerySelect jdbcSelect =
+		final var jdbcSelect =
 				factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
 						.buildSelectTranslator( factory, sqlSelect )
 						.translate( bindings, QueryOptions.NONE );
-		final List<Object> results =
+		final var results =
 				session.getFactory().getJdbcServices().getJdbcSelectExecutor()
 						.list(
 								jdbcSelect,
@@ -92,8 +88,8 @@ public class EntityConcreteTypeLoader {
 		else {
 			assert results.size() == 1;
 			final Object result = results.get( 0 );
-			final MappingMetamodelImplementor mappingMetamodel = factory.getMappingMetamodel();
-			final EntityPersister concreteType =
+			final var mappingMetamodel = factory.getMappingMetamodel();
+			final var concreteType =
 					result instanceof Class<?> concreteClass
 							? mappingMetamodel.getEntityDescriptor( concreteClass )
 							: mappingMetamodel.getEntityDescriptor( (String) result );

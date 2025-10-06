@@ -20,14 +20,10 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryOptionsAdapter;
-import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
-import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ManagedResultConsumer;
@@ -56,7 +52,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 			EntityMappingType entityDescriptor,
 			SessionFactoryImplementor sessionFactory) {
 		super( entityDescriptor, sessionFactory );
-		final Class<?> idClass = identifierMapping.getJavaType().getJavaTypeClass();
+		final var idClass = identifierMapping.getJavaType().getJavaTypeClass();
 		idArray = (Object[]) Array.newInstance( idClass, 0 );
 		arrayJdbcMapping =
 				resolveArrayJdbcMapping( getIdentifierMapping().getJdbcMapping(), idClass, getSessionFactory() );
@@ -83,26 +79,33 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 			LockOptions lockOptions,
 			MultiIdLoadOptions loadOptions,
 			SharedSessionContractImplementor session) {
-		final SelectStatement sqlAst = createSelectBySingleArrayParameter(
-				getLoadable(),
-				getIdentifierMapping(),
-				session.getLoadQueryInfluencers(),
-				lockOptions,
-				jdbcParameter,
-				getSessionFactory()
-		);
+		final var sqlAst =
+				createSelectBySingleArrayParameter(
+						getLoadable(),
+						getIdentifierMapping(),
+						session.getLoadQueryInfluencers(),
+						lockOptions,
+						jdbcParameter,
+						getSessionFactory()
+				);
 
-		final JdbcParameterBindings bindings = new JdbcParameterBindingsImpl(1);
-		bindings.addBinding( jdbcParameter, new JdbcParameterBindingImpl( arrayJdbcMapping, toIdArray( idsInBatch ) ) );
+		final var bindings = new JdbcParameterBindingsImpl(1);
+		bindings.addBinding( jdbcParameter,
+				new JdbcParameterBindingImpl( arrayJdbcMapping, toIdArray( idsInBatch ) ) );
 
-		final SqlAstTranslator<JdbcOperationQuerySelect> sqlAstTranslator = getSqlAstTranslatorFactory()
-				.buildSelectTranslator( getSessionFactory(), sqlAst );
-		final JdbcOperationQuerySelect jdbcOperation = sqlAstTranslator.translate( NO_BINDINGS, new QueryOptionsAdapter() {
-			@Override
-			public LockOptions getLockOptions() {
-				return lockOptions;
-			}
-		} );
+		final var sqlAstTranslator =
+				getSqlAstTranslatorFactory()
+						.buildSelectTranslator( getSessionFactory(), sqlAst );
+		final var jdbcOperation =
+				sqlAstTranslator.translate(
+						NO_BINDINGS,
+						new QueryOptionsAdapter() {
+							@Override
+							public LockOptions getLockOptions() {
+								return lockOptions;
+							}
+						}
+				);
 
 		getJdbcSelectExecutor().executeQuery(
 				jdbcOperation,
@@ -134,16 +137,17 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 			LockOptions lockOptions,
 			List<E> results,
 			SharedSessionContractImplementor session) {
-		final SelectStatement sqlAst = createSelectBySingleArrayParameter(
-				getLoadable(),
-				getIdentifierMapping(),
-				session.getLoadQueryInfluencers(),
-				lockOptions,
-				jdbcParameter,
-				getSessionFactory()
-		);
+		final var sqlAst =
+				createSelectBySingleArrayParameter(
+						getLoadable(),
+						getIdentifierMapping(),
+						session.getLoadQueryInfluencers(),
+						lockOptions,
+						jdbcParameter,
+						getSessionFactory()
+				);
 
-		final JdbcOperationQuerySelect jdbcSelectOperation =
+		final var jdbcSelectOperation =
 				getSqlAstTranslatorFactory().buildSelectTranslator( getSessionFactory(), sqlAst )
 						.translate( NO_BINDINGS, QueryOptions.NONE );
 

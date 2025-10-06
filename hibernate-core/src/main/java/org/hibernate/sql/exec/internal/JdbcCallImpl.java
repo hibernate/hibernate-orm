@@ -37,7 +37,7 @@ public class JdbcCallImpl implements JdbcOperationQueryCall {
 	private final JdbcCallFunctionReturn functionReturn;
 	private final List<JdbcCallParameterRegistration> parameterRegistrations;
 	private final List<JdbcParameterBinder> parameterBinders;
-	private final List<JdbcCallParameterExtractor> parameterExtractors;
+	private final List<JdbcCallParameterExtractor<?>> parameterExtractors;
 	private final List<JdbcCallRefCursorExtractor> refCursorExtractors;
 
 	public JdbcCallImpl(Builder builder) {
@@ -64,7 +64,7 @@ public class JdbcCallImpl implements JdbcOperationQueryCall {
 			JdbcCallFunctionReturn functionReturn,
 			List<JdbcCallParameterRegistration> parameterRegistrations,
 			List<JdbcParameterBinder> parameterBinders,
-			List<JdbcCallParameterExtractor> parameterExtractors,
+			List<JdbcCallParameterExtractor<?>> parameterExtractors,
 			List<JdbcCallRefCursorExtractor> refCursorExtractors) {
 		this.callableName = callableName;
 		this.functionReturn = functionReturn;
@@ -72,22 +72,6 @@ public class JdbcCallImpl implements JdbcOperationQueryCall {
 		this.parameterBinders = parameterBinders;
 		this.parameterExtractors = parameterExtractors;
 		this.refCursorExtractors = refCursorExtractors;
-	}
-
-	protected JdbcCallImpl(
-			String callableName,
-			JdbcCallFunctionReturn functionReturn,
-			List<JdbcCallParameterRegistration> parameterRegistrations,
-			List<JdbcParameterBinder> parameterBinders,
-			List<JdbcCallParameterExtractor> parameterExtractors) {
-		this(
-				callableName,
-				functionReturn,
-				parameterRegistrations,
-				parameterBinders,
-				parameterExtractors,
-				null
-		);
 	}
 
 	@Override
@@ -132,7 +116,7 @@ public class JdbcCallImpl implements JdbcOperationQueryCall {
 	}
 
 	@Override
-	public List<JdbcCallParameterExtractor> getParameterExtractors() {
+	public List<JdbcCallParameterExtractor<?>> getParameterExtractors() {
 		return parameterExtractors == null ? emptyList() : parameterExtractors;
 	}
 

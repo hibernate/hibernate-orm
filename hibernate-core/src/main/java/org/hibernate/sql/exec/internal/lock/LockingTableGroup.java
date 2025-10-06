@@ -14,9 +14,10 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
+
+import static java.util.Collections.emptyList;
 
 /**
  * TableGroup wrapping a {@linkplain TableLock table to be locked}.
@@ -71,7 +72,7 @@ public class LockingTableGroup implements TableGroup {
 	@Override
 	public List<TableGroupJoin> getTableGroupJoins() {
 		return tableGroupJoins == null
-				? Collections.emptyList()
+				? emptyList()
 				: tableGroupJoins;
 	}
 
@@ -140,9 +141,6 @@ public class LockingTableGroup implements TableGroup {
 
 	@Override
 	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression, boolean resolve) {
-		if ( tableName.equals( tableExpression ) ) {
-			return tableReference;
-		}
-		return null;
+		return tableName.equals( tableExpression ) ? tableReference : null;
 	}
 }

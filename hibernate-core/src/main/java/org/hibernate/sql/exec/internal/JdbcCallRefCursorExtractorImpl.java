@@ -34,8 +34,7 @@ public class JdbcCallRefCursorExtractorImpl implements JdbcCallRefCursorExtracto
 //				.getJdbcEnvironment()
 //				.getExtractedDatabaseMetaData()
 //				.supportsNamedParameters();
-		return session.getFactory()
-				.getServiceRegistry()
+		return session.getFactory().getServiceRegistry()
 				.requireService( RefCursorSupport.class )
 				.getResultSet( callableStatement, jdbcParameterPosition );
 	}

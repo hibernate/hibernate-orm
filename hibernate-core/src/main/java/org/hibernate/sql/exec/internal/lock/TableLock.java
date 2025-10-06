@@ -6,12 +6,9 @@ package org.hibernate.sql.exec.internal.lock;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.ScrollMode;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.TableDetails;
@@ -19,8 +16,6 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -36,11 +31,7 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.StandardStatementCreator;
-import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -90,13 +81,20 @@ public class TableLock {
 
 		this.tableDetails = tableDetails;
 		this.entityMappingType = entityMappingType;
-		this.rootPath = new NavigablePath( tableDetails.getTableName() );
 
-		this.physicalTableReference = new NamedTableReference( tableDetails.getTableName(), "tbl" );
-		this.physicalTableGroup = new LockingTableGroup( physicalTableReference, tableDetails.getTableName(), entityMappingType, tableDetails.getKeyDetails() );
+		rootPath = new NavigablePath( tableDetails.getTableName() );
+		physicalTableReference =
+				new NamedTableReference( tableDetails.getTableName(), "tbl" );
+		physicalTableGroup =
+				new LockingTableGroup(
+						physicalTableReference,
+						tableDetails.getTableName(),
+						entityMappingType,
+						tableDetails.getKeyDetails()
+				);
 
 		if ( entityMappingType.getEntityPersister() instanceof UnionSubclassEntityPersister usp ) {
-			final UnionTableReference unionTableReference = new UnionTableReference(
+			final var unionTableReference = new UnionTableReference(
 					tableDetails.getTableName(),
 					usp.getSynchronizedQuerySpaces(),
 					"tbl",
@@ -132,32 +130,36 @@ public class TableLock {
 				creationStates
 		) );
 
-		final int expectedParamCount = entityKeys.size() * entityMappingType.getIdentifierMapping().getJdbcTypeCount();
+		final int expectedParamCount =
+				entityKeys.size() * entityMappingType.getIdentifierMapping().getJdbcTypeCount();
 		jdbcParameterBindings = new JdbcParameterBindingsImpl( expectedParamCount );
 
 		applyKeyRestrictions( entityKeys, session );
 	}
 
 	public void applyAttribute(int index, AttributeMapping attributeMapping) {
-		final NavigablePath attributePath = rootPath.append( attributeMapping.getPartName() );
+		final var attributePath = rootPath.append( attributeMapping.getPartName() );
 		final DomainResult<Object> domainResult;
 		final ResultHandler resultHandler;
 		if ( attributeMapping instanceof ToOneAttributeMapping toOne ) {
-			domainResult = toOne.getForeignKeyDescriptor().getKeyPart().createDomainResult(
-					attributePath,
-					logicalTableGroup,
-					ForeignKeyDescriptor.PART_NAME,
-					creationStates
-			);
+			domainResult =
+					toOne.getForeignKeyDescriptor().getKeyPart()
+							.createDomainResult(
+									attributePath,
+									logicalTableGroup,
+									ForeignKeyDescriptor.PART_NAME,
+									creationStates
+							);
 			resultHandler = new ToOneResultHandler( index, toOne );
 		}
 		else {
-			domainResult = attributeMapping.createDomainResult(
-					attributePath,
-					logicalTableGroup,
-					null,
-					creationStates
-			);
+			domainResult =
+					attributeMapping.createDomainResult(
+							attributePath,
+							logicalTableGroup,
+							null,
+							creationStates
+					);
 			resultHandler = new NonToOneResultHandler( index );
 		}
 		domainResults.add( domainResult );
@@ -175,40 +177,37 @@ public class TableLock {
 	}
 
 	private void applySimpleKeyRestriction(List<EntityKey> entityKeys, SharedSessionContractImplementor session) {
-		final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
+		final var identifierMapping = entityMappingType.getIdentifierMapping();
 
-		final TableDetails.KeyColumn keyColumn = tableDetails.getKeyDetails().getKeyColumn( 0 );
-		final ColumnReference columnReference = new ColumnReference( physicalTableReference, keyColumn );
+		final var keyColumn = tableDetails.getKeyDetails().getKeyColumn( 0 );
+		final var columnReference = new ColumnReference( physicalTableReference, keyColumn );
 
-		final InListPredicate restriction = new InListPredicate( columnReference );
+		final var restriction = new InListPredicate( columnReference );
 		querySpec.applyPredicate( restriction );
 
 		entityKeys.forEach( (entityKey) -> identifierMapping.breakDownJdbcValues(
 				entityKey.getIdentifierValue(),
 				(valueIndex, value, jdbcValueMapping) -> {
-					final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl(
-							jdbcValueMapping.getJdbcMapping() );
+					final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
+					final var jdbcParameter = new JdbcParameterImpl( jdbcMapping );
 					restriction.addExpression( jdbcParameter );
-
-					jdbcParameterBindings.addBinding(
-							jdbcParameter,
-							new JdbcParameterBindingImpl( jdbcValueMapping.getJdbcMapping(), value )
-					);
+					jdbcParameterBindings.addBinding( jdbcParameter,
+							new JdbcParameterBindingImpl( jdbcMapping, value ) );
 				},
 				session
 		) );
 	}
 
 	private void applyCompositeKeyRestriction(List<EntityKey> entityKeys, SharedSessionContractImplementor session) {
-		final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
+		final var identifierMapping = entityMappingType.getIdentifierMapping();
 
 		final ArrayList<ColumnReference> columnRefs = arrayList( tableDetails.getKeyDetails().getColumnCount() );
 		tableDetails.getKeyDetails().forEachKeyColumn( (position, keyColumn) -> {
 			columnRefs.add( new ColumnReference( physicalTableReference, keyColumn ) );
 		} );
-		final SqlTuple keyRef = new SqlTuple( columnRefs, identifierMapping );
+		final var keyRef = new SqlTuple( columnRefs, identifierMapping );
 
-		final InListPredicate restriction = new InListPredicate( keyRef );
+		final var restriction = new InListPredicate( keyRef );
 		querySpec.applyPredicate( restriction );
 
 		entityKeys.forEach( (entityKey) -> {
@@ -216,41 +215,37 @@ public class TableLock {
 			identifierMapping.breakDownJdbcValues(
 					entityKey.getIdentifierValue(),
 					(valueIndex, value, jdbcValueMapping) -> {
-						final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcValueMapping.getJdbcMapping() );
+						final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
+						final var jdbcParameter = new JdbcParameterImpl( jdbcMapping );
 						valueParams.add( jdbcParameter );
-						jdbcParameterBindings.addBinding(
-								jdbcParameter,
-								new JdbcParameterBindingImpl( jdbcValueMapping.getJdbcMapping(), value )
-						);
+						jdbcParameterBindings.addBinding( jdbcParameter,
+								new JdbcParameterBindingImpl( jdbcMapping, value ) );
 					},
 					session
 			);
-			final SqlTuple valueTuple = new SqlTuple( valueParams, identifierMapping );
+			final var valueTuple = new SqlTuple( valueParams, identifierMapping );
 			restriction.addExpression( valueTuple );
 		} );
 	}
 
 	public void performActions(Map<Object, EntityDetails> entityDetailsMap, QueryOptions lockingQueryOptions, SharedSessionContractImplementor session) {
-		final SessionFactoryImplementor sessionFactory = session.getSessionFactory();
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-
-		final SelectStatement selectStatement = new SelectStatement( querySpec, domainResults );
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcServices.getDialect().getSqlAstTranslatorFactory();
-		final SqlAstTranslator<JdbcOperationQuerySelect> translator = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, selectStatement );
-		final JdbcSelect jdbcOperation = translator.translate( jdbcParameterBindings, lockingQueryOptions );
-
-		// IMPORTANT: we need a "clean" ExecutionContext to not further apply locking
-		final ExecutionContext executionContext = new BaseExecutionContext( session );
-		final JdbcSelectExecutor jdbcSelectExecutor = jdbcServices.getJdbcSelectExecutor();
-		final List<Object[]> results = jdbcSelectExecutor.executeQuery(
-				jdbcOperation,
-				jdbcParameterBindings,
-				executionContext,
-				row -> row,
-				Object[].class,
-				StandardStatementCreator.getStatementCreator( ScrollMode.FORWARD_ONLY ),
-				ListResultsConsumer.instance( ListResultsConsumer.UniqueSemantic.ALLOW )
-		);
+		final var sessionFactory = session.getSessionFactory();
+		final var jdbcServices = sessionFactory.getJdbcServices();
+		final var selectStatement = new SelectStatement( querySpec, domainResults );
+		final List<Object[]> results =
+				jdbcServices.getJdbcSelectExecutor()
+						.executeQuery(
+								jdbcServices.getDialect().getSqlAstTranslatorFactory()
+										.buildSelectTranslator( sessionFactory, selectStatement )
+										.translate( jdbcParameterBindings, lockingQueryOptions ),
+								jdbcParameterBindings,
+								// IMPORTANT: we need a "clean" ExecutionContext to not further apply locking
+								new BaseExecutionContext( session ),
+								row -> row,
+								Object[].class,
+								StandardStatementCreator.getStatementCreator( ScrollMode.FORWARD_ONLY ),
+								ListResultsConsumer.instance( ListResultsConsumer.UniqueSemantic.ALLOW )
+						);
 
 		if ( isEmpty( results ) ) {
 			throw new AssertionFailure( "Expecting results" );
@@ -258,7 +253,7 @@ public class TableLock {
 
 		results.forEach( (row) -> {
 			final Object id = row[0];
-			final EntityDetails entityDetails = entityDetailsMap.get( id );
+			final var entityDetails = entityDetailsMap.get( id );
 			for ( int i = 0; i < resultHandlers.size(); i++ ) {
 				// offset 1 because of the id at position 0
 				resultHandlers.get( i ).applyResult( row[i+1], entityDetails, session );
@@ -324,11 +319,13 @@ public class TableLock {
 	}
 
 	private static void applyLoadedState(EntityDetails entityDetails, Integer statePosition, Object stateValue) {
-		if ( entityDetails.entry().getLoadedState() != null ) {
-			entityDetails.entry().getLoadedState()[statePosition] = stateValue;
+		final var entry = entityDetails.entry();
+		final var loadedState = entry.getLoadedState();
+		if ( loadedState != null ) {
+			loadedState[statePosition] = stateValue;
 		}
 		else {
-			if ( !entityDetails.entry().isReadOnly() ) {
+			if ( !entry.isReadOnly() ) {
 				throw new AssertionFailure( "Expecting entity entry to be read-only - " + entityDetails.instance() );
 			}
 		}

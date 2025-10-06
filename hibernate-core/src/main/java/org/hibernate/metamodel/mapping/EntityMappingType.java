@@ -475,13 +475,11 @@ public interface EntityMappingType
 		return getEntityPersister().getImportedName();
 	}
 
-	default RootGraphImplementor createRootGraph(SharedSessionContractImplementor session) {
-		if ( getRepresentationStrategy() instanceof EntityRepresentationStrategyMap mapRep ) {
-			return session.getSessionFactory().createGraphForDynamicEntity( getEntityName() );
-		}
-		else {
-			return session.getSessionFactory().createEntityGraph( getMappedJavaType().getJavaTypeClass() );
-		}
+	default RootGraphImplementor<?> createRootGraph(SharedSessionContractImplementor session) {
+		final var factory = session.getSessionFactory();
+		return getRepresentationStrategy() instanceof EntityRepresentationStrategyMap strategyMap
+				? factory.createGraphForDynamicEntity( getEntityName() )
+				: factory.createEntityGraph( getMappedJavaType().getJavaTypeClass() );
 	}
 
 	interface ConstraintOrderedTableConsumer {

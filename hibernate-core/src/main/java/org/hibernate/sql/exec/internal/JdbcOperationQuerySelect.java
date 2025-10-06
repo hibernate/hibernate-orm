@@ -5,7 +5,6 @@
 package org.hibernate.sql.exec.internal;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -127,13 +126,14 @@ public class JdbcOperationQuerySelect
 
 	@Override
 	public boolean isCompatibleWith(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions) {
+		final var limit = queryOptions.getLimit();
 		if ( !appliedParameters.isEmpty() ) {
 			if ( jdbcParameterBindings == null ) {
 				return false;
 			}
 			for ( var entry : appliedParameters.entrySet() ) {
-				final JdbcParameter parameter = entry.getKey();
-				final JdbcParameterBinding appliedBinding = entry.getValue();
+				final var parameter = entry.getKey();
+				final var appliedBinding = entry.getValue();
 				// This is a special case where the rendered SQL depends on the presence of the parameter,
 				// but not specifically on the value. In this case we have to re-generate the SQL if we can't find a binding
 				// The need for this can be tested with the OracleFollowOnLockingTest#testPessimisticLockWithMaxResultsThenNoFollowOnLocking
@@ -141,12 +141,12 @@ public class JdbcOperationQuerySelect
 				// we must treat the absence of Limit parameters, when they were considered for locking, as incompatible
 				if ( appliedBinding == null ) {
 					if ( parameter == offsetParameter ) {
-						if ( queryOptions.getLimit() == null || queryOptions.getLimit().getFirstRowJpa() == 0 ) {
+						if ( limit == null || limit.getFirstRowJpa() == 0 ) {
 							return false;
 						}
 					}
 					else if ( parameter == limitParameter ) {
-						if ( queryOptions.getLimit() == null || queryOptions.getLimit().getMaxRowsJpa() == Integer.MAX_VALUE ) {
+						if ( limit == null || limit.getMaxRowsJpa() == Integer.MAX_VALUE ) {
 							return false;
 						}
 					}
@@ -156,7 +156,7 @@ public class JdbcOperationQuerySelect
 				}
 				// We handle limit and offset parameters below
 				if ( parameter != offsetParameter && parameter != limitParameter ) {
-					final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( parameter );
+					final var binding = jdbcParameterBindings.getBinding( parameter );
 					// TODO: appliedBinding can be null here, resulting in NPE
 					if ( binding == null
 							|| !equal( appliedBinding, binding, appliedBinding.getBindType().getJavaTypeDescriptor() ) ) {
@@ -165,7 +165,6 @@ public class JdbcOperationQuerySelect
 				}
 			}
 		}
-		final Limit limit = queryOptions.getLimit();
 		return ( offsetParameter != null || limitParameter != null || limit == null || limit.isEmpty() )
 			&& isCompatible( offsetParameter, limit == null ? null : limit.getFirstRow(), 0 )
 			&& isCompatible( limitParameter, limit == null ? null : limit.getMaxRows(), Integer.MAX_VALUE );
@@ -176,7 +175,7 @@ public class JdbcOperationQuerySelect
 			return requestedValue == null;
 		}
 		else {
-			final JdbcParameterBinding jdbcParameterBinding = appliedParameters.get( parameter );
+			final var jdbcParameterBinding = appliedParameters.get( parameter );
 			if ( jdbcParameterBinding == null ) {
 				// If this query includes the parameter this is only compatible when a requested value is given through the query options
 				// If not, this query string contains limit/offset but the query options don't request that

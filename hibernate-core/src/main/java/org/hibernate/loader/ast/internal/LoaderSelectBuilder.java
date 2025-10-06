@@ -6,26 +6,18 @@ package org.hibernate.loader.ast.internal;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.hibernate.LockOptions;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.profile.FetchProfile;
-import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.engine.spi.CascadingAction;
-import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
-import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
@@ -35,7 +27,6 @@ import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.Restrictable;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
@@ -52,16 +43,13 @@ import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
@@ -77,7 +65,6 @@ import org.hibernate.sql.results.graph.EntityGraphTraversalState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResult;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
@@ -117,7 +104,7 @@ public class LoaderSelectBuilder {
 			LockOptions lockOptions,
 			Consumer<JdbcParameter> jdbcParameterConsumer,
 			SessionFactoryImplementor sessionFactory) {
-		final LoaderSelectBuilder process = new LoaderSelectBuilder(
+		final var process = new LoaderSelectBuilder(
 				sessionFactory.getSqlTranslationEngine(),
 				loadable,
 				partsToSelect,
@@ -130,7 +117,6 @@ public class LoaderSelectBuilder {
 				true,
 				jdbcParameterConsumer
 		);
-
 		return process.generateSelect();
 	}
 
@@ -144,7 +130,7 @@ public class LoaderSelectBuilder {
 			LockOptions lockOptions,
 			JdbcParameter jdbcArrayParameter,
 			SessionFactoryImplementor sessionFactory) {
-		final LoaderSelectBuilder builder = new LoaderSelectBuilder(
+		final var builder = new LoaderSelectBuilder(
 				sessionFactory.getSqlTranslationEngine(),
 				loadable,
 				null,
@@ -158,14 +144,14 @@ public class LoaderSelectBuilder {
 				null
 		);
 
-		final QuerySpec rootQuerySpec = new QuerySpec( true );
-		final LoaderSqlAstCreationState sqlAstCreationState = builder.createSqlAstCreationState( rootQuerySpec );
+		final var rootQuerySpec = new QuerySpec( true );
+		final var sqlAstCreationState = builder.createSqlAstCreationState( rootQuerySpec );
 
-		final NavigablePath rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
-		final TableGroup rootTableGroup =
+		final var rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
+		final var rootTableGroup =
 				builder.buildRootTableGroup( rootNavigablePath, rootQuerySpec, sqlAstCreationState );
 
-		final DomainResult<?> domainResult = loadable.createDomainResult(
+		final var domainResult = loadable.createDomainResult(
 				rootNavigablePath,
 				rootTableGroup,
 				null,
@@ -182,7 +168,6 @@ public class LoaderSelectBuilder {
 				jdbcArrayParameter,
 				sqlAstCreationState
 		);
-
 
 		if ( loadable instanceof PluralAttributeMapping pluralAttributeMapping ) {
 			builder.applyFiltering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState );
@@ -203,15 +188,16 @@ public class LoaderSelectBuilder {
 			JdbcParameter jdbcArrayParameter,
 			LoaderSqlAstCreationState sqlAstCreationState) {
 		assert restrictedPart.getJdbcTypeCount() == 1;
-		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final SelectableMapping restrictedPartMapping = restrictedPart.getSelectable( 0 );
-		final NavigablePath restrictionPath =
+		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final var restrictedPartMapping = restrictedPart.getSelectable( 0 );
+		final var restrictionPath =
 				rootNavigablePath.append( restrictedPart.getNavigableRole().getNavigableName() );
-		final TableReference tableReference =
+		final var tableReference =
 				rootTableGroup.resolveTableReference( restrictionPath,
 						restrictedPartMapping.getContainingTableExpression() );
-		final ColumnReference columnRef = (ColumnReference)
-				sqlExpressionResolver.resolveSqlExpression( tableReference, restrictedPartMapping );
+		final var columnRef =
+				(ColumnReference)
+						sqlExpressionResolver.resolveSqlExpression( tableReference, restrictedPartMapping );
 
 		rootQuerySpec.applyPredicate( new InArrayPredicate( columnRef, jdbcArrayParameter ) );
 	}
@@ -239,7 +225,7 @@ public class LoaderSelectBuilder {
 			LockOptions lockOptions,
 			Consumer<JdbcParameter> jdbcParameterConsumer,
 			SessionFactoryImplementor sessionFactory) {
-		final LoaderSelectBuilder process = new LoaderSelectBuilder(
+		final var process = new LoaderSelectBuilder(
 				sessionFactory.getSqlTranslationEngine(),
 				loadable,
 				partsToSelect,
@@ -263,7 +249,7 @@ public class LoaderSelectBuilder {
 			LockOptions lockOptions,
 			Consumer<JdbcParameter> jdbcParameterConsumer,
 			SessionFactoryImplementor sessionFactory) {
-		final LoaderSelectBuilder process = new LoaderSelectBuilder(
+		final var process = new LoaderSelectBuilder(
 				sessionFactory.getSqlTranslationEngine(),
 				loadable,
 				partsToSelect,
@@ -290,7 +276,7 @@ public class LoaderSelectBuilder {
 			LockOptions lockOptions,
 			Consumer<JdbcParameter> jdbcParameterConsumer,
 			SessionFactoryImplementor sessionFactory) {
-		final LoaderSelectBuilder process = new LoaderSelectBuilder(
+		final var process = new LoaderSelectBuilder(
 				sessionFactory.getSqlTranslationEngine(),
 				loadable,
 				partsToSelect,
@@ -328,7 +314,7 @@ public class LoaderSelectBuilder {
 			LockOptions lockOptions,
 			Consumer<JdbcParameter> jdbcParameterConsumer,
 			SessionFactoryImplementor sessionFactory) {
-		final LoaderSelectBuilder process = new LoaderSelectBuilder(
+		final var process = new LoaderSelectBuilder(
 				sessionFactory.getSqlTranslationEngine(),
 				attributeMapping,
 				null,
@@ -339,7 +325,6 @@ public class LoaderSelectBuilder {
 				lockOptions,
 				jdbcParameterConsumer
 		);
-
 		return process.generateSelect( subselect );
 	}
 
@@ -443,13 +428,13 @@ public class LoaderSelectBuilder {
 		}
 
 		if ( restrictedParts.size() == 1 ) {
-			final ModelPart restrictedPart = restrictedParts.get( 0 );
+			final var restrictedPart = restrictedParts.get( 0 );
 			if ( Objects.equals( restrictedPart.getPartName(), NaturalIdMapping.PART_NAME ) ) {
 				return true;
 			}
 		}
 
-		for ( ModelPart restrictedPart : restrictedParts ) {
+		for ( var restrictedPart : restrictedParts ) {
 			if ( restrictedPart instanceof ForeignKeyDescriptor
 					|| restrictedPart instanceof NonAggregatedIdentifierMapping ) {
 				return true;
@@ -463,10 +448,10 @@ public class LoaderSelectBuilder {
 			LoadQueryInfluencers loadQueryInfluencers,
 			JpaMetamodel jpaMetamodel) {
 		if ( loadQueryInfluencers != null ) {
-			final EffectiveEntityGraph effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
+			final var effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
 			if ( effectiveEntityGraph != null ) {
-				final GraphSemantic graphSemantic = effectiveEntityGraph.getSemantic();
-				final RootGraphImplementor<?> rootGraph = effectiveEntityGraph.getGraph();
+				final var graphSemantic = effectiveEntityGraph.getSemantic();
+				final var rootGraph = effectiveEntityGraph.getGraph();
 				if ( graphSemantic != null && rootGraph != null ) {
 					return new StandardEntityGraphTraversalStateImpl( graphSemantic, rootGraph, jpaMetamodel );
 				}
@@ -476,22 +461,22 @@ public class LoaderSelectBuilder {
 	}
 
 	private SelectStatement generateSelect() {
-		final NavigablePath rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
+		final var rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
 
-		final QuerySpec rootQuerySpec = new QuerySpec( true );
-		final LoaderSqlAstCreationState sqlAstCreationState = createSqlAstCreationState( rootQuerySpec );
+		final var rootQuerySpec = new QuerySpec( true );
+		final var sqlAstCreationState = createSqlAstCreationState( rootQuerySpec );
 
-		final TableGroup rootTableGroup = buildRootTableGroup( rootNavigablePath, rootQuerySpec, sqlAstCreationState );
+		final var rootTableGroup = buildRootTableGroup( rootNavigablePath, rootQuerySpec, sqlAstCreationState );
 
 		final List<DomainResult<?>> domainResults;
 		if ( partsToSelect != null && !partsToSelect.isEmpty() ) {
 			domainResults = buildRequestedDomainResults( rootNavigablePath, sqlAstCreationState, rootTableGroup );
 		}
-		else if ( this.cachedDomainResult != null ) {
-			domainResults = singletonList( this.cachedDomainResult );
+		else if ( cachedDomainResult != null ) {
+			domainResults = singletonList( cachedDomainResult );
 		}
 		else {
-			final DomainResult<?> domainResult = loadable.createDomainResult(
+			final var domainResult = loadable.createDomainResult(
 					rootNavigablePath,
 					rootTableGroup,
 					null,
@@ -500,7 +485,7 @@ public class LoaderSelectBuilder {
 			domainResults = singletonList( domainResult );
 		}
 
-		for ( ModelPart restrictedPart : restrictedParts ) {
+		for ( var restrictedPart : restrictedParts ) {
 			applyRestriction(
 					rootQuerySpec,
 					rootNavigablePath,
@@ -527,11 +512,11 @@ public class LoaderSelectBuilder {
 			NavigablePath rootNavigablePath, LoaderSqlAstCreationState sqlAstCreationState, TableGroup rootTableGroup) {
 		final List<DomainResult<?>> domainResults;
 		domainResults = new ArrayList<>( partsToSelect.size() );
-		for ( ModelPart part : partsToSelect ) {
-			final NavigablePath navigablePath = rootNavigablePath.append( part.getPartName() );
+		for ( var part : partsToSelect ) {
+			final var navigablePath = rootNavigablePath.append( part.getPartName() );
 			final TableGroup tableGroup;
 			if ( part instanceof TableGroupJoinProducer tableGroupJoinProducer ) {
-				final TableGroupJoin tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
+				final var tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
 						navigablePath,
 						rootTableGroup,
 						null,
@@ -563,7 +548,7 @@ public class LoaderSelectBuilder {
 
 	private TableGroup buildRootTableGroup(
 			NavigablePath rootNavigablePath, QuerySpec rootQuerySpec, LoaderSqlAstCreationState sqlAstCreationState) {
-		final TableGroup rootTableGroup = loadable.createRootTableGroup(
+		final var rootTableGroup = loadable.createRootTableGroup(
 				true,
 				rootNavigablePath,
 				null,
@@ -599,33 +584,31 @@ public class LoaderSelectBuilder {
 			int numberColumns,
 			Consumer<JdbcParameter> jdbcParameterConsumer,
 			LoaderSqlAstCreationState sqlAstCreationState) {
-		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final NavigablePath navigablePath =
+		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final var navigablePath =
 				rootNavigablePath.append( restrictedPart.getNavigableRole().getNavigableName() );
 
 		if ( numberColumns == 1 ) {
 			restrictedPart.forEachSelectable(
 					(columnIndex, selection) -> {
-						final TableReference tableReference =
+						final var tableReference =
 								rootTableGroup.resolveTableReference( navigablePath,
 										selection.getContainingTableExpression() );
-						final ColumnReference columnRef =
+						final var columnRef =
 								(ColumnReference)
 										sqlExpressionResolver.resolveSqlExpression( tableReference, selection );
 						if ( numberOfKeysToLoad == 1 ) {
-							final JdbcParameter jdbcParameter = new JdbcParameterImpl( selection.getJdbcMapping() );
+							final var jdbcParameter = new JdbcParameterImpl( selection.getJdbcMapping() );
 							jdbcParameterConsumer.accept( jdbcParameter );
-
 							rootQuerySpec.applyPredicate(
 									new ComparisonPredicate( columnRef, ComparisonOperator.EQUAL, jdbcParameter )
 							);
 						}
 						else {
-							final InListPredicate predicate = new InListPredicate( columnRef );
+							final var predicate = new InListPredicate( columnRef );
 							for ( int i = 0; i < numberOfKeysToLoad; i++ ) {
 								for ( int j = 0; j < numberColumns; j++ ) {
-									final JdbcParameter jdbcParameter =
-											new JdbcParameterImpl( columnRef.getJdbcMapping() );
+									final var jdbcParameter = new JdbcParameterImpl( columnRef.getJdbcMapping() );
 									jdbcParameterConsumer.accept( jdbcParameter );
 									predicate.addExpression( jdbcParameter );
 								}
@@ -638,10 +621,9 @@ public class LoaderSelectBuilder {
 		}
 		else {
 			final List<ColumnReference> columnReferences = new ArrayList<>( numberColumns );
-
 			restrictedPart.forEachSelectable(
 					(columnIndex, selection) -> {
-						final TableReference tableReference =
+						final var tableReference =
 								rootTableGroup.resolveTableReference( navigablePath,
 										selection.getContainingTableExpression() );
 						columnReferences.add(
@@ -719,15 +701,17 @@ public class LoaderSelectBuilder {
 			TableGroup tableGroup,
 			PluralAttributeMapping pluralAttributeMapping,
 			SqlAstCreationState astCreationState) {
-		if ( pluralAttributeMapping.getOrderByFragment() != null ) {
-			applyOrdering( querySpec, tableGroup, pluralAttributeMapping.getOrderByFragment(), astCreationState );
+		final var orderByFragment = pluralAttributeMapping.getOrderByFragment();
+		if ( orderByFragment != null ) {
+			applyOrdering( querySpec, tableGroup, orderByFragment, astCreationState );
 		}
 
-		if ( pluralAttributeMapping.getManyToManyOrderByFragment() != null ) {
+		final var manyToManyOrderByFragment = pluralAttributeMapping.getManyToManyOrderByFragment();
+		if ( manyToManyOrderByFragment != null ) {
 			applyOrdering(
 					querySpec,
 					tableGroup,
-					pluralAttributeMapping.getManyToManyOrderByFragment(),
+					manyToManyOrderByFragment,
 					astCreationState
 			);
 		}
@@ -742,11 +726,10 @@ public class LoaderSelectBuilder {
 	}
 
 	private ImmutableFetchList visitFetches(FetchParent fetchParent, LoaderSqlAstCreationState creationState) {
-		final ImmutableFetchList.Builder fetches =
-				new ImmutableFetchList.Builder( fetchParent.getReferencedMappingContainer() );
-		final FetchableConsumer processor = createFetchableConsumer( fetchParent, creationState, fetches );
+		final var fetches = new ImmutableFetchList.Builder( fetchParent.getReferencedMappingContainer() );
+		final var processor = createFetchableConsumer( fetchParent, creationState, fetches );
 
-		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
+		final var referencedMappingContainer = fetchParent.getReferencedMappingContainer();
 		if ( fetchParent.getNavigablePath().getParent() != null ) {
 			final int size = referencedMappingContainer.getNumberOfKeyFetchables();
 			for ( int i = 0; i < size; i++ ) {
@@ -784,7 +767,7 @@ public class LoaderSelectBuilder {
 	}
 
 	private boolean isPluralAttributeMapping(Fetchable fetchable) {
-		final AttributeMapping attributeMapping = fetchable.asAttributeMapping();
+		final var attributeMapping = fetchable.asAttributeMapping();
 		return attributeMapping != null && attributeMapping.isPluralAttributeMapping();
 	}
 
@@ -802,26 +785,11 @@ public class LoaderSelectBuilder {
 				return;
 			}
 
-			final NavigablePath fetchablePath;
+			final var fetchablePath = getFetchablePath( fetchParent, fetchable, isKeyFetchable );
 
-			if ( isKeyFetchable ) {
-				final EntityIdentifierMapping identifierMapping = getEntityIdentifierMapping( fetchParent );
-				if ( identifierMapping != null ) {
-					fetchablePath = new EntityIdentifierNavigablePath(
-							fetchParent.getNavigablePath(),
-							attributeName( identifierMapping )
-					);
-				}
-				else {
-					fetchablePath = fetchParent.resolveNavigablePath( fetchable );
-				}
-			}
-			else {
-				fetchablePath = fetchParent.resolveNavigablePath( fetchable );
-			}
-
-			FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
-			boolean joined = fetchable.getMappedFetchOptions().getStyle() == FetchStyle.JOIN;
+			final var mappedFetchOptions = fetchable.getMappedFetchOptions();
+			var fetchTiming = mappedFetchOptions.getTiming();
+			boolean joined = mappedFetchOptions.getStyle() == FetchStyle.JOIN;
 			boolean explicitFetch = false;
 			EntityGraphTraversalState.TraversalResult traversalResult = null;
 
@@ -832,7 +800,7 @@ public class LoaderSelectBuilder {
 				// 'entity graph' takes precedence over 'fetch profile'
 				if ( entityGraphTraversalState != null ) {
 					traversalResult = entityGraphTraversalState.traverse( fetchParent, fetchable, isKeyFetchable );
-					final EntityGraphTraversalState.FetchStrategy fetchStrategy = traversalResult.getFetchStrategy();
+					final var fetchStrategy = traversalResult.getFetchStrategy();
 					if ( fetchStrategy != null ) {
 						fetchTiming = fetchStrategy.getFetchTiming();
 						joined = fetchStrategy.isJoined();
@@ -844,10 +812,8 @@ public class LoaderSelectBuilder {
 					if ( fetchTiming != FetchTiming.IMMEDIATE || fetchable.incrementFetchDepth() ) {
 						final String fetchableRole = fetchable.getNavigableRole().getFullPath();
 						for ( String enabledFetchProfileName : loadQueryInfluencers.getEnabledFetchProfileNames() ) {
-							final FetchProfile enabledFetchProfile =
-									creationContext.getFetchProfile( enabledFetchProfileName );
-							final org.hibernate.engine.profile.Fetch profileFetch =
-									enabledFetchProfile.getFetchByRole( fetchableRole );
+							final var enabledFetchProfile = creationContext.getFetchProfile( enabledFetchProfileName );
+							final var profileFetch = enabledFetchProfile.getFetchByRole( fetchableRole );
 							if ( profileFetch != null ) {
 								fetchTiming = profileFetch.getTiming();
 								joined = joined || profileFetch.getMethod() == FetchStyle.JOIN;
@@ -857,11 +823,12 @@ public class LoaderSelectBuilder {
 					}
 				}
 				else if ( loadQueryInfluencers.getEnabledCascadingFetchProfile() != null ) {
-					final CascadeStyle cascadeStyle =
-							fetchable.asAttributeMapping() != null
-									? fetchable.asAttributeMapping().getAttributeMetadata().getCascadeStyle()
+					final var attributeMapping = fetchable.asAttributeMapping();
+					final var cascadeStyle =
+							attributeMapping != null
+									? attributeMapping.getAttributeMetadata().getCascadeStyle()
 									: null;
-					final CascadingAction<?> cascadingAction =
+					final var cascadingAction =
 							loadQueryInfluencers.getEnabledCascadingFetchProfile().getCascadingAction();
 					if ( cascadeStyle == null || cascadeStyle.doCascade( cascadingAction ) ) {
 						fetchTiming = FetchTiming.IMMEDIATE;
@@ -938,6 +905,24 @@ public class LoaderSelectBuilder {
 		};
 	}
 
+	private static NavigablePath getFetchablePath(FetchParent fetchParent, Fetchable fetchable, boolean isKeyFetchable) {
+		if ( isKeyFetchable ) {
+			final var identifierMapping = getEntityIdentifierMapping( fetchParent );
+			if ( identifierMapping != null ) {
+				return new EntityIdentifierNavigablePath(
+						fetchParent.getNavigablePath(),
+						attributeName( identifierMapping )
+				);
+			}
+			else {
+				return fetchParent.resolveNavigablePath( fetchable );
+			}
+		}
+		else {
+			return fetchParent.resolveNavigablePath( fetchable );
+		}
+	}
+
 	private static EntityIdentifierMapping getEntityIdentifierMapping(FetchParent fetchParent) {
 		if ( fetchParent instanceof BiDirectionalFetch parentAsBiDirectionalFetch ) {
 			return parentAsBiDirectionalFetch.getFetchedMapping() instanceof EntityValuedFetchable entityFetchable
@@ -996,15 +981,15 @@ public class LoaderSelectBuilder {
 
 		assert loadable instanceof PluralAttributeMapping;
 
-		final PluralAttributeMapping attributeMapping = (PluralAttributeMapping) loadable;
+		final var attributeMapping = (PluralAttributeMapping) loadable;
 
-		final QuerySpec rootQuerySpec = new QuerySpec( true );
+		final var rootQuerySpec = new QuerySpec( true );
 
-		final NavigablePath rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
+		final var rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
 
 		// We need to initialize the acronymMap based on subselect.getLoadingSqlAst() to avoid alias collisions
-		final Map<String, TableReference> tableReferences = AliasCollector.getTableReferences( subselect.getLoadingSqlAst() );
-		final LoaderSqlAstCreationState sqlAstCreationState = new LoaderSqlAstCreationState(
+		final var tableReferences = AliasCollector.getTableReferences( subselect.getLoadingSqlAst() );
+		final var sqlAstCreationState = new LoaderSqlAstCreationState(
 				rootQuerySpec,
 				new SqlAliasBaseManager( tableReferences.keySet() ),
 				new SimpleFromClauseAccessImpl(),
@@ -1015,12 +1000,12 @@ public class LoaderSelectBuilder {
 				creationContext
 		);
 
-		final TableGroup rootTableGroup = buildRootTableGroup( rootNavigablePath, rootQuerySpec, sqlAstCreationState );
+		final var rootTableGroup = buildRootTableGroup( rootNavigablePath, rootQuerySpec, sqlAstCreationState );
 
 		// generate and apply the restriction
 		applySubSelectRestriction( rootQuerySpec, rootTableGroup, subselect, sqlAstCreationState );
 
-		// NOTE : no need to check - we are explicitly processing a plural-attribute
+		// NOTE: no need to check - we are explicitly processing a plural-attribute
 		applyFiltering( rootQuerySpec, rootTableGroup, attributeMapping, sqlAstCreationState );
 		applyOrdering( rootQuerySpec, rootTableGroup, attributeMapping, sqlAstCreationState );
 
@@ -1050,15 +1035,14 @@ public class LoaderSelectBuilder {
 			LoaderSqlAstCreationState sqlAstCreationState) {
 		assert loadable instanceof PluralAttributeMapping;
 
-		final PluralAttributeMapping attributeMapping = (PluralAttributeMapping) loadable;
-		final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();
+		final var attributeMapping = (PluralAttributeMapping) loadable;
+		final var fkDescriptor = attributeMapping.getKeyDescriptor();
 
 		final Expression fkExpression;
-
 		if ( !fkDescriptor.isEmbedded() ) {
 			assert fkDescriptor instanceof SimpleForeignKeyDescriptor;
-			final SimpleForeignKeyDescriptor simpleFkDescriptor = (SimpleForeignKeyDescriptor) fkDescriptor;
-			final TableReference tableReference =
+			final var simpleFkDescriptor = (SimpleForeignKeyDescriptor) fkDescriptor;
+			final var tableReference =
 					rootTableGroup.resolveTableReference( null, fkDescriptor,
 							simpleFkDescriptor.getContainingTableExpression() );
 			fkExpression =
@@ -1069,7 +1053,7 @@ public class LoaderSelectBuilder {
 			final List<ColumnReference> columnReferences = new ArrayList<>( fkDescriptor.getJdbcTypeCount() );
 			fkDescriptor.forEachSelectable(
 					(columnIndex, selection) -> {
-						final TableReference tableReference =
+						final var tableReference =
 								rootTableGroup.resolveTableReference( null, fkDescriptor,
 										selection.getContainingTableExpression() );
 						columnReferences.add(
@@ -1079,7 +1063,6 @@ public class LoaderSelectBuilder {
 						);
 					}
 			);
-
 			fkExpression = new SqlTuple( columnReferences, fkDescriptor );
 		}
 
@@ -1096,20 +1079,20 @@ public class LoaderSelectBuilder {
 			PluralAttributeMapping attributeMapping,
 			SubselectFetch subselect,
 			LoaderSqlAstCreationState creationState) {
-		final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();
-		final QuerySpec subQuery = new QuerySpec( false );
-		final QuerySpec loadingSqlAst = subselect.getLoadingSqlAst();
-		final TableGroup ownerTableGroup = subselect.getOwnerTableGroup();
+		final var fkDescriptor = attributeMapping.getKeyDescriptor();
+		final var subQuery = new QuerySpec( false );
+		final var loadingSqlAst = subselect.getLoadingSqlAst();
+		final var ownerTableGroup = subselect.getOwnerTableGroup();
 
 		// transfer the from-clause
 		loadingSqlAst.getFromClause().visitRoots( subQuery.getFromClause()::addRoot );
 
-		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
+		final var sqlExpressionResolver = creationState.getSqlExpressionResolver();
 
 		fkDescriptor.visitTargetSelectables(
 				(valuesPosition, selection) -> {
 					// for each column, resolve a SqlSelection and add it to the sub-query select-clause
-					final TableReference tableReference =
+					final var tableReference =
 							ownerTableGroup.resolveTableReference( null, fkDescriptor,
 									selection.getContainingTableExpression() );
 					subQuery.getSelectClause()
@@ -1127,11 +1110,11 @@ public class LoaderSelectBuilder {
 	private void registerPluralTableGroupParts(FromClauseAccess fromClauseAccess, TableGroup tableGroup) {
 		if ( tableGroup instanceof PluralTableGroup pluralTableGroup ) {
 			if ( pluralTableGroup.getElementTableGroup() != null ) {
-				final TableGroup elementTableGroup = pluralTableGroup.getElementTableGroup();
+				final var elementTableGroup = pluralTableGroup.getElementTableGroup();
 				fromClauseAccess.registerTableGroup( elementTableGroup.getNavigablePath(), elementTableGroup );
 			}
 			if ( pluralTableGroup.getIndexTableGroup() != null ) {
-				final TableGroup indexTableGroup = pluralTableGroup.getIndexTableGroup();
+				final var indexTableGroup = pluralTableGroup.getIndexTableGroup();
 				fromClauseAccess.registerTableGroup( indexTableGroup.getNavigablePath(), indexTableGroup );
 			}
 		}

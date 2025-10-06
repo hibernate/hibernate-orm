@@ -179,7 +179,7 @@ public class LoaderSqlAstCreationState
 
 	@Override
 	public <R> R withNestedFetchParent(FetchParent fetchParent, Function<FetchParent, R> action) {
-		final FetchParent nestingFetchParent = processingState.getNestingFetchParent();
+		final var nestingFetchParent = processingState.getNestingFetchParent();
 		processingState.setNestingFetchParent( fetchParent );
 		final R result = action.apply( fetchParent );
 		processingState.setNestingFetchParent( nestingFetchParent );

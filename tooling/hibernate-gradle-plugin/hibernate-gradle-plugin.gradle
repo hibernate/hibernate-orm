@@ -153,8 +153,8 @@ else {
 	}
 }
 
-tasks.publish.enabled !ormBuildDetails.hibernateVersion.isSnapshot
-tasks.publishPlugins.enabled !ormBuildDetails.hibernateVersion.isSnapshot
+tasks.publish.enabled = !ormBuildDetails.hibernateVersion.isSnapshot
+tasks.publishPlugins.enabled = !ormBuildDetails.hibernateVersion.isSnapshot
 
 gradle.taskGraph.whenReady { tg ->
 	// local publishing (SNAPSHOT testing), cont.

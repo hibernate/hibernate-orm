@@ -106,7 +106,7 @@ gradlePlugin {
 
 spotless {
 	//Don't fail during the check: rather than enforcing guidelines, we use this plugin to fix mistakes automatically.
-	enforceCheck false
+	enforceCheck = false
 	java {
 		targetExclude( "**/target/**/*.java" )
 		licenseHeaderFile project.file("../shared/config/spotless/license.java")

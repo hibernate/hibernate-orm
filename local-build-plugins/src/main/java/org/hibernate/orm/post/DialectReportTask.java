@@ -4,6 +4,17 @@
  */
 package org.hibernate.orm.post;
 
+import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.TaskAction;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.Index;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -16,39 +27,21 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
-import org.gradle.api.Project;
-import org.gradle.api.file.RegularFile;
-import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.SourceSetContainer;
-import org.gradle.api.tasks.TaskAction;
-
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.Index;
-
 /**
  * Generates a report on Dialect information
  *
  * @author Steve Ebersole
  */
 public abstract class DialectReportTask extends AbstractJandexAwareTask {
-	private final Property<String> sourceProject;
+	private final ConfigurableFileCollection dialectReportSources;
 	private final Property<String> sourcePackage;
 	private final Property<RegularFile> reportFile;
 
 	public DialectReportTask() {
-		setDescription( "Generates a report of Dialects" );
-		sourceProject = getProject().getObjects().property(String.class);
+		setDescription( "Generates a report of the supported Dialects" );
+		dialectReportSources = getProject().getObjects().fileCollection();
 		sourcePackage = getProject().getObjects().property(String.class);
 		reportFile = getProject().getObjects().fileProperty();
-	}
-
-	@Input
-	public Property<String> getSourceProject() {
-		return sourceProject;
 	}
 
 	@Input
@@ -61,6 +54,11 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 		return reportFile;
 	}
 
+	@InputFiles
+	public ConfigurableFileCollection getDialectReportSources() {
+		return dialectReportSources;
+	}
+
 	@Override
 	protected Provider<RegularFile> getTaskReportFileReference() {
 		return reportFile;
@@ -68,13 +66,7 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 
 	@TaskAction
 	public void generateDialectReport() {
-		// TODO this probably messes up the cache since we don't declare an explicit dependency to a source set
-		//   but the problem is pre-existing and I don't have time to investigate.
-		Project sourceProject = getProject().getRootProject().project( this.sourceProject.get() );
-		final SourceSetContainer sourceSets = sourceProject.getExtensions().getByType( SourceSetContainer.class );
-		final SourceSet sourceSet = sourceSets.getByName( SourceSet.MAIN_SOURCE_SET_NAME );
-		final ClassLoader classLoader = Helper.asClassLoader( sourceSet, sourceProject.getConfigurations().getByName( "testRuntimeClasspath" ) );
-
+		final ClassLoader classLoader = Helper.asClassLoader( dialectReportSources );
 		final DialectClassDelegate dialectClassDelegate = new DialectClassDelegate( classLoader );
 
 		final Index index = getIndexManager().getIndex();

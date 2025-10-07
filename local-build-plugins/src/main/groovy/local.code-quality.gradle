@@ -11,8 +11,8 @@ plugins {
 
 tasks.register( "ciCheck" ) {
     // Task used by CI builds
-    group "verification"
-    description "Checks for CI environments"
+    group = "verification"
+    description = "Checks for CI environments"
     dependsOn tasks.check
 }
 
@@ -27,8 +27,8 @@ gradle.taskGraph.whenReady {
 
 tasks.register( "formatChecks" ) {
     // Only runs static code analysis, doesn't require compilation
-    group "verification"
-    description "Code style and formatting checks"
+    group = "verification"
+    description = "Code style and formatting checks"
 
     dependsOn tasks.spotlessCheck
     dependsOn tasks.enforceRules
@@ -92,10 +92,10 @@ tasks.check.dependsOn enforceRulesTask
 
 spotless {
     //Don't fail during the check: rather than enforcing guidelines, we use this plugin to fix mistakes automatically.
-    enforceCheck false
+    enforceCheck = false
     java {
         targetExclude( "target/**/*.java" )
-        licenseHeaderFile rootProject.file("shared/config/spotless/license.java")
+        licenseHeaderFile( rootProject.file("shared/config/spotless/license.java") )
         removeUnusedImports()
         leadingSpacesToTabs( 4 )
         trimTrailingWhitespace()

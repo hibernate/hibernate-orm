@@ -46,8 +46,8 @@ publishingExtension.publications.named("publishedArtifacts", MavenPublication) {
 // Releasing
 
 def releasePrepareTask = tasks.register("releasePrepare") {
-    group "release"
-    description "See :release:releasePrepare for details.  Here we hook in testing and checks ensure publish-ability"
+    group = "release"
+    description = "See :release:releasePrepare for details.  Here we hook in testing and checks ensure publish-ability"
 
     dependsOn tasks.check
     dependsOn tasks.generateMetadataFileForPublishedArtifactsPublication
@@ -56,8 +56,8 @@ def releasePrepareTask = tasks.register("releasePrepare") {
 
 // used from the h2 CI job
 tasks.register("preVerifyRelease") {
-    group "release-prepare"
-    description "Delegates to `releasePrepare` task"
+    group = "release-prepare"
+    description = "Delegates to `releasePrepare` task"
 
     dependsOn releasePrepareTask
 }

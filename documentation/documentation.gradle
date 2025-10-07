@@ -135,6 +135,9 @@ dependencies {
 	reportAggregation project(':hibernate-processor')
     reportAggregation project(':hibernate-community-dialects')
 
+    dialectReportSources project( ':hibernate-core' )
+    communityDialectReportSources project( ':hibernate-community-dialects' )
+
 	core project( ':hibernate-core' )
 	javadocSources project( path: ':hibernate-core', configuration: 'javadocSources' )
 
@@ -226,7 +229,7 @@ def aggregateJavadocsTask = tasks.register( "javadoc", Javadoc ) {
 asciidoctorj {
 	requires 'rouge'
     // Set version of AsciidoctorJ (plugin is currently uses 2.5.7 ? by default)
-    version '3.0.0'
+    version = '3.0.0'
 	modules {
 		pdf {
 			version '2.3.18'

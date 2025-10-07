@@ -18,6 +18,7 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.process.ExecOperations;
 
 import static org.hibernate.orm.antlr.AntlrHelper.stripSillyGeneratedFromLines;
 
@@ -27,6 +28,7 @@ import static org.hibernate.orm.antlr.AntlrHelper.stripSillyGeneratedFromLines;
 @CacheableTask
 public abstract class SplitGrammarGenerationTask extends DefaultTask {
 	private final SplitGrammarDescriptor grammarDescriptor;
+	private final ExecOperations execOperations;
 
 	private final Provider<RegularFile> lexerGrammarFile;
 	private final Provider<RegularFile> parserGrammarFile;
@@ -35,8 +37,12 @@ public abstract class SplitGrammarGenerationTask extends DefaultTask {
 	private final Provider<Directory> outputDirectory;
 
 	@Inject
-	public SplitGrammarGenerationTask(SplitGrammarDescriptor grammarDescriptor, AntlrSpec antlrSpec) {
+	public SplitGrammarGenerationTask(
+			SplitGrammarDescriptor grammarDescriptor,
+			AntlrSpec antlrSpec,
+			ExecOperations execOperations) {
 		this.grammarDescriptor = grammarDescriptor;
+		this.execOperations = execOperations;
 
 		lexerGrammarFile = getProject().provider( () -> {
 			final Directory grammarBaseDirectory = antlrSpec.getGrammarBaseDirectory().get();
@@ -109,7 +115,7 @@ public abstract class SplitGrammarGenerationTask extends DefaultTask {
 		);
 
 
-		getProject().javaexec(
+		execOperations.javaexec(
 				(javaExecSpec) -> {
 					javaExecSpec.setMain( "org.antlr.v4.Tool" );
 					javaExecSpec.classpath( getProject().getConfigurations().getByName( "antlr" ) );
@@ -133,7 +139,7 @@ public abstract class SplitGrammarGenerationTask extends DefaultTask {
 		);
 
 
-		getProject().javaexec(
+		execOperations.javaexec(
 				(javaExecSpec) -> {
 					javaExecSpec.setMain( "org.antlr.v4.Tool" );
 					javaExecSpec.classpath( getProject().getConfigurations().named( "antlr" ) );

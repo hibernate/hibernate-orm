@@ -586,7 +586,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *         entities, whose positions in the list match the positions of their ids in the
 	 *         given list of identifiers
 	 *
-	 * @see MultiFindOption
+	 * @see FindMultipleOption
 	 *
 	 * @since 7.0
 	 */
@@ -625,7 +625,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *         entities, whose positions in the list match the positions of their ids in the
 	 *         given list of identifiers
 	 *
-	 * @see MultiFindOption
+	 * @see FindMultipleOption
 	 *
 	 * @since 7.0
 	 */

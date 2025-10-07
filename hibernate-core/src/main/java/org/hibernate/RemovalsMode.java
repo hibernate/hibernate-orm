@@ -11,32 +11,24 @@ import jakarta.persistence.FindOption;
 import java.util.List;
 
 /**
- * When {@linkplain SessionChecking} is enabled, this option controls how
+ * When {@linkplain SessionCheckMode} is enabled, this option controls how
  * to handle entities which are already contained by the persistence context
  * but which are in a removed state (marked for removal, but not yet flushed).
  * <p>
- * The default is {@link #EXCLUDE}.
+ * The default is {@link #REPLACE}.
  *
  * @see org.hibernate.Session#findMultiple(Class, List, FindOption...)
  * @see org.hibernate.Session#findMultiple(EntityGraph, List , FindOption...)
  *
  * @since 7.2
  */
-public enum IncludeRemovals implements MultiFindOption {
+public enum RemovalsMode implements FindMultipleOption {
 	/**
 	 * Removed entities are included in the load result.
 	 */
 	INCLUDE,
 	/**
-	 * The default.  Removed entities are excluded from the load result.
-	 * <p/>
-	 * When combined with {@linkplain OrderedReturn#UNORDERED}, the entity is
-	 * simply excluded from the result.
-	 * <p/>
-	 * When combined with {@linkplain OrderedReturn#ORDERED}, the entity is replaced
-	 * by {@code null} in the result.
-	 *
-	 * @see OrderedReturn
+	 * The default.  Removed entities are replaced with {@code null} in the load result.
 	 */
-	EXCLUDE
+	REPLACE
 }

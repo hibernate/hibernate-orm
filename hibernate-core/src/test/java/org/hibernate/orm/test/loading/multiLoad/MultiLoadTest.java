@@ -10,9 +10,9 @@ import java.util.Objects;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
-import org.hibernate.IncludeRemovals;
-import org.hibernate.OrderedReturn;
-import org.hibernate.SessionChecking;
+import org.hibernate.RemovalsMode;
+import org.hibernate.OrderingMode;
+import org.hibernate.SessionCheckMode;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
@@ -226,7 +226,7 @@ public class MultiLoadTest {
 					}
 
 					{
-						final List<SimpleEntity> list = session.findMultiple( SimpleEntity.class, List.of( 1, 2, 3, 2, 2 ), OrderedReturn.UNORDERED );
+						final List<SimpleEntity> list = session.findMultiple( SimpleEntity.class, List.of( 1, 2, 3, 2, 2 ), OrderingMode.UNORDERED );
 						assertEquals( 3, list.size() );
 
 					}
@@ -251,7 +251,7 @@ public class MultiLoadTest {
 					}
 
 					{
-						final List<SimpleEntity> list = session.findMultiple( SimpleEntity.class, List.of(1, 699, 2), OrderedReturn.UNORDERED );
+						final List<SimpleEntity> list = session.findMultiple( SimpleEntity.class, List.of(1, 699, 2), OrderingMode.UNORDERED );
 						assertEquals( 2, list.size() );
 					}
 				}
@@ -290,7 +290,7 @@ public class MultiLoadTest {
 					}
 
 					{
-						final List<SimpleEntity> list = session.findMultiple( SimpleEntity.class, idList(56), SessionChecking.ENABLED );
+						final List<SimpleEntity> list = session.findMultiple( SimpleEntity.class, idList(56), SessionCheckMode.ENABLED );
 						assertEquals( 56, list.size() );
 						// this check is HIGHLY specific to implementation in the batch loader
 						// which puts existing managed entities first...
@@ -333,7 +333,7 @@ public class MultiLoadTest {
 					first = session.byId( SimpleEntity.class ).getReference( 1 );
 
 					{
-						final List<SimpleEntity> list = session.findMultiple( SimpleEntity.class, idList(56), SessionChecking.ENABLED );
+						final List<SimpleEntity> list = session.findMultiple( SimpleEntity.class, idList(56), SessionCheckMode.ENABLED );
 						assertEquals( 56, list.size() );
 						// this check is HIGHLY specific to implementation in the batch loader
 						// which puts existing managed entities first...
@@ -406,7 +406,7 @@ public class MultiLoadTest {
 						// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
 						final List<SimpleEntity> entities = session.findMultiple( SimpleEntity.class, idList( 3 ),
 								CacheMode.NORMAL,
-								SessionChecking.ENABLED
+								SessionCheckMode.ENABLED
 						);
 						assertEquals( 3, entities.size() );
 						assertEquals( 1, statistics.getSecondLevelCacheHitCount() );
@@ -497,8 +497,8 @@ public class MultiLoadTest {
 						// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
 						final List<SimpleEntity> entities = session.findMultiple( SimpleEntity.class, idList( 3 ),
 								CacheMode.NORMAL,
-								SessionChecking.ENABLED,
-								OrderedReturn.UNORDERED
+								SessionCheckMode.ENABLED,
+								OrderingMode.UNORDERED
 						);
 						assertEquals( 3, entities.size() );
 						assertEquals( 1, statistics.getSecondLevelCacheHitCount() );
@@ -564,8 +564,8 @@ public class MultiLoadTest {
 						// Multi-load 3 items and ensure that it pulls 2 from the database & 1 from the cache.
 						final List<SimpleEntity> entities = session.findMultiple( SimpleEntity.class, idList( 3 ),
 								CacheMode.NORMAL,
-								SessionChecking.ENABLED,
-								OrderedReturn.ORDERED
+								SessionCheckMode.ENABLED,
+								OrderingMode.ORDERED
 						);
 						assertEquals( 3, entities.size() );
 
@@ -635,9 +635,9 @@ public class MultiLoadTest {
 						// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
 						final List<SimpleEntity> entities = session.findMultiple( SimpleEntity.class, idList( 3 ),
 								CacheMode.NORMAL,
-								SessionChecking.ENABLED,
-								OrderedReturn.ORDERED,
-								IncludeRemovals.INCLUDE
+								SessionCheckMode.ENABLED,
+								OrderingMode.ORDERED,
+								RemovalsMode.INCLUDE
 						);
 						assertEquals( 3, entities.size() );
 
@@ -705,8 +705,8 @@ public class MultiLoadTest {
 						// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
 						final List<SimpleEntity> entities = session.findMultiple( SimpleEntity.class, idList( 3 ),
 								CacheMode.NORMAL,
-								SessionChecking.ENABLED,
-								OrderedReturn.UNORDERED
+								SessionCheckMode.ENABLED,
+								OrderingMode.UNORDERED
 						);
 						assertEquals( 3, entities.size() );
 
@@ -775,9 +775,9 @@ public class MultiLoadTest {
 						// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
 						final List<SimpleEntity> entities =session.findMultiple( SimpleEntity.class, idList( 3 ),
 							CacheMode.NORMAL,
-							SessionChecking.ENABLED,
-							OrderedReturn.UNORDERED,
-							IncludeRemovals.INCLUDE
+							SessionCheckMode.ENABLED,
+							OrderingMode.UNORDERED,
+							RemovalsMode.INCLUDE
 					);
 						assertEquals( 3, entities.size() );
 
@@ -848,7 +848,7 @@ public class MultiLoadTest {
 
 					{
 						final List<SimpleEntity> list = session.findMultiple( SimpleEntity.class, idList( 56 ),
-								SessionChecking.ENABLED );
+								SessionCheckMode.ENABLED );
 						assertEquals( 56, list.size() );
 						assertFalse( session.getPersistenceContext()
 								.getBatchFetchQueue()

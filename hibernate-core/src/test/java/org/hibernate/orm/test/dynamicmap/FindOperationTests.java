@@ -4,10 +4,10 @@
  */
 package org.hibernate.orm.test.dynamicmap;
 
-import org.hibernate.IncludeRemovals;
-import org.hibernate.OrderedReturn;
+import org.hibernate.RemovalsMode;
+import org.hibernate.OrderingMode;
 import org.hibernate.ReadOnlyMode;
-import org.hibernate.SessionChecking;
+import org.hibernate.SessionCheckMode;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -65,9 +65,9 @@ public class FindOperationTests {
 	@Test
 	void testFindWithIllegalOptions(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			assertThrows( IllegalArgumentException.class, () ->session.find( "artist", 1, SessionChecking.ENABLED ) );
-			assertThrows( IllegalArgumentException.class, () ->session.find( "artist", 1, OrderedReturn.ORDERED ) );
-			assertThrows( IllegalArgumentException.class, () ->session.find( "artist", 1, IncludeRemovals.INCLUDE ) );
+			assertThrows( IllegalArgumentException.class, () ->session.find( "artist", 1, SessionCheckMode.ENABLED ) );
+			assertThrows( IllegalArgumentException.class, () ->session.find( "artist", 1, OrderingMode.ORDERED ) );
+			assertThrows( IllegalArgumentException.class, () ->session.find( "artist", 1, RemovalsMode.INCLUDE ) );
 		} );
 	}
 

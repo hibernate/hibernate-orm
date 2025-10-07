@@ -7,6 +7,9 @@ package org.hibernate.loader.ast.internal;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.OrderingMode;
+import org.hibernate.RemovalsMode;
+import org.hibernate.SessionCheckMode;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -75,7 +78,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 	@Override
 	public final <K> List<T> load(K[] ids, MultiIdLoadOptions loadOptions, SharedSessionContractImplementor session) {
 		assert ids != null;
-		return loadOptions.isOrderReturnEnabled()
+		return loadOptions.getOrderingMode() == OrderingMode.ORDERED
 				? performOrderedMultiLoad( ids, loadOptions, session )
 				: performUnorderedMultiLoad( ids, loadOptions, session );
 	}
@@ -84,7 +87,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			Object[] ids,
 			MultiIdLoadOptions loadOptions,
 			SharedSessionContractImplementor session) {
-		assert !loadOptions.isOrderReturnEnabled();
+		assert loadOptions.getOrderingMode() == OrderingMode.UNORDERED;
 		assert ids != null;
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.unorderedBatchLoadStarting( getLoadable().getEntityName() );
@@ -96,7 +99,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			Object[] ids,
 			MultiIdLoadOptions loadOptions,
 			SharedSessionContractImplementor session) {
-		assert loadOptions.isOrderReturnEnabled();
+		assert loadOptions.getOrderingMode() == OrderingMode.ORDERED;
 		assert ids != null;
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.orderedMultiLoadStarting( getLoadable().getEntityName() );
@@ -174,7 +177,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			final Object result;
 			if ( entity == null
 				// the entity is locally deleted, and the options ask that we not return such entities
-				|| !loadOptions.isReturnOfDeletedEntitiesEnabled()
+				|| loadOptions.getRemovalsMode() == RemovalsMode.REPLACE
 					&& persistenceContext.getEntry( entity ).getStatus().isDeletedOrGone() ) {
 				result = null;
 			}
@@ -200,7 +203,8 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			EntityKey entityKey,
 			List<Object> result,
 			int i) {
-		return ( loadOptions.isSessionCheckingEnabled() || loadOptions.isSecondLevelCacheCheckingEnabled() )
+		return (loadOptions.getSessionCheckMode() == SessionCheckMode.ENABLED
+				|| loadOptions.isSecondLevelCacheCheckingEnabled() )
 			&& isLoadFromCaches( loadOptions, entityKey, lockOptions, result, i, session );
 	}
 
@@ -211,16 +215,20 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			List<Object> results, int i,
 			SharedSessionContractImplementor session) {
 
-		if ( loadOptions.isSessionCheckingEnabled() ) {
+		if ( loadOptions.getSessionCheckMode() == SessionCheckMode.ENABLED ) {
 			// look for it in the Session first
 			final var entry = loadFromSessionCache( entityKey, lockOptions, GET, session );
 			final Object entity = entry.entity();
 			if ( entity != null ) {
 				// put a null in the results
-				final Object result =
-						loadOptions.isReturnOfDeletedEntitiesEnabled()
-							|| entry.isManaged()
-								? entity : null;
+				final Object result;
+				if ( loadOptions.getRemovalsMode() == RemovalsMode.INCLUDE
+					|| entry.isManaged() ) {
+					result = entity;
+				}
+				else {
+					result = null;
+				}
 				results.add( i, result );
 				return true;
 			}
@@ -245,9 +253,16 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			SharedSessionContractImplementor session) {
 		final var lockOptions = lockOptions( loadOptions );
 		final List<T> results = arrayList( ids.length );
-		final var unresolvableIds =
-				resolveInCachesIfEnabled( ids, loadOptions, lockOptions, session,
-						(position, entityKey, resolvedRef) -> results.add( (T) resolvedRef ) );
+		final var unresolvableIds = resolveInCachesIfEnabled(
+				ids,
+				loadOptions,
+				lockOptions,
+				session,
+				(position, entityKey, resolvedRef) -> {
+					//noinspection unchecked
+					results.add( (T) resolvedRef );
+				}
+		);
 		if ( !isEmpty( unresolvableIds ) ) {
 			loadEntitiesWithUnresolvedIds( unresolvableIds, loadOptions, lockOptions, results, session );
 			final var batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
@@ -277,7 +292,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			@NonNull LockOptions lockOptions,
 			SharedSessionContractImplementor session,
 			ResolutionConsumer<R> resolutionConsumer) {
-		return loadOptions.isSessionCheckingEnabled() || loadOptions.isSecondLevelCacheCheckingEnabled()
+		return loadOptions.getSessionCheckMode() == SessionCheckMode.ENABLED || loadOptions.isSecondLevelCacheCheckingEnabled()
 				// the user requested that we exclude ids corresponding to already managed
 				// entities from the generated load SQL. So here we will iterate all
 				// incoming id values and see whether it corresponds to an existing
@@ -358,10 +373,10 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		// look for it in the Session first
 		final var entry = loadFromSessionCache( entityKey, lockOptions, GET, session );
 		final Object sessionEntity;
-		if ( loadOptions.isSessionCheckingEnabled() ) {
+		if ( loadOptions.getSessionCheckMode() ==  SessionCheckMode.ENABLED ) {
 			sessionEntity = entry.entity();
 			if ( sessionEntity != null
-					&& !loadOptions.isReturnOfDeletedEntitiesEnabled()
+					&& loadOptions.getRemovalsMode() == RemovalsMode.REPLACE
 					&& !entry.isManaged() ) {
 				resolutionConsumer.consume( i, entityKey, null );
 				return unresolvedIds;

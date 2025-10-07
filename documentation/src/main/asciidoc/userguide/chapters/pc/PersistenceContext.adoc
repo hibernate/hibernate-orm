@@ -192,13 +192,13 @@ Hibernate offers this functionality via the `Session#findMultiple` methods which
 * `ReadOnlyMode` - whether the entities loaded should be marked as read-only.
 * `LockMode` (`LockModeType`) - a lock mode to be applied
 * `Timeout` - if a pessimistic lock mode is used, a timeout to allow
-* `Locking.Scope` (PessimisticLockScope`) - if a pessimistic lock mode is used, what scope should it be applied
+* `Locking.Scope` (PessimisticLockScope`) - if a pessimistic lock mode is used, what scope should it be applied to
 * `Locking.FollowOn` - allow (or not) Hibernate to acquire locks through additional queries if needed
 * `CacheMode` (`CacheStoreMode` / `CacheRetrieveMode`) - how second level caching should be used, if at all
 * `BatchSize` - how many identifiers should be loaded from the database at once
-* `SessionChecking` - whether to look into the persistence context to check entity state
-* `IncludeRemovals` - if `SessionChecking` is enabled, how removed entities should be handled
-* `OrderedReturn` - whether the results should be ordered according to the order of the passed identifiers
+* `SessionCheckMode` - whether to look into the persistence context to check entity state
+* `RemovalsMode` - if `SessionCheckMode` is enabled, how removed entities should be handled
+* `OrderingMode` - whether the results should be ordered according to the order of the passed identifiers
 
 Now, assuming we have 3 `Person` entities in the database, we can load all of them with a single call
 as illustrated by the following example:

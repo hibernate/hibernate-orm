@@ -12,6 +12,9 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.OrderingMode;
+import org.hibernate.RemovalsMode;
+import org.hibernate.SessionCheckMode;
 import org.hibernate.SessionException;
 import org.hibernate.StatelessSession;
 import org.hibernate.TransientObjectException;
@@ -1494,8 +1497,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 
 		@Override
-		public boolean isSessionCheckingEnabled() {
-			return false;
+		public SessionCheckMode getSessionCheckMode() {
+			return SessionCheckMode.DISABLED;
 		}
 
 		@Override
@@ -1509,13 +1512,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 
 		@Override
-		public boolean isReturnOfDeletedEntitiesEnabled() {
-			return false;
+		public RemovalsMode getRemovalsMode() {
+			return RemovalsMode.REPLACE;
 		}
 
 		@Override
-		public boolean isOrderReturnEnabled() {
-			return true;
+		public OrderingMode getOrderingMode() {
+			return OrderingMode.ORDERED;
 		}
 
 		@Override

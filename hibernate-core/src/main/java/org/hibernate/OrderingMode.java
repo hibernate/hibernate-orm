@@ -32,18 +32,12 @@ import java.util.List;
  *
  * @since 7.2
  */
-public enum OrderedReturn implements MultiFindOption {
+public enum OrderingMode implements FindMultipleOption {
 	/**
 	 * The default.  The result list is ordered relative to the
-	 * position of the identifiers list.  This may result in {@code null}
-	 * elements in the list - <ul>
-	 *     <li>non-existent identifiers
-	 *     <li>removed entities (when combined with {@linkplain IncludeRemovals#EXCLUDE})
-	 * </ul>
-	 * <p/>
-	 * The result list will also always have the same length as the identifier list.
+	 * position of the identifiers list.
 	 *
-	 * @see IncludeRemovals
+	 * @see RemovalsMode
 	 */
 	ORDERED,
 	/**

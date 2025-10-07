@@ -964,14 +964,14 @@ public class SessionImpl
 			else if ( option instanceof BatchSize batchSizeOption ) {
 				batchSize = batchSizeOption.batchSize();
 			}
-			else if ( option instanceof SessionChecking sessionChecking ) {
-				loadAccess.enableSessionCheck( option == sessionChecking.ENABLED );
+			else if ( option instanceof SessionCheckMode sessionCheckMode ) {
+				loadAccess.enableSessionCheck( option == sessionCheckMode.ENABLED );
 			}
-			else if ( option instanceof OrderedReturn orderedReturn ) {
-				loadAccess.enableOrderedReturn( option == orderedReturn.ORDERED );
+			else if ( option instanceof OrderingMode orderingMode ) {
+				loadAccess.enableOrderedReturn( option == orderingMode.ORDERED );
 			}
-			else if ( option instanceof IncludeRemovals includeRemovals ) {
-				loadAccess.enableReturnOfDeletedEntities( option == includeRemovals.INCLUDE );
+			else if ( option instanceof RemovalsMode removalsMode ) {
+				loadAccess.enableReturnOfDeletedEntities( option == removalsMode.INCLUDE );
 			}
 		}
 		loadAccess.with( lockOptions )
@@ -2300,8 +2300,8 @@ public class SessionImpl
 			else if ( option instanceof ReadOnlyMode ) {
 				loadAccess.withReadOnly( option == ReadOnlyMode.READ_ONLY );
 			}
-			else if ( option instanceof MultiFindOption multiFindOption ) {
-				throw new IllegalArgumentException( "Option '" + multiFindOption + "' can only be used in 'findMultiple()'" );
+			else if ( option instanceof FindMultipleOption findMultipleOption ) {
+				throw new IllegalArgumentException( "Option '" + findMultipleOption + "' can only be used in 'findMultiple()'" );
 			}
 		}
 		if ( lockOptions.getLockMode().isPessimistic() ) {

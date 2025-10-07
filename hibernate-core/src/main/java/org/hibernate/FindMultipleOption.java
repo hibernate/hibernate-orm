@@ -18,5 +18,5 @@ import java.util.List;
  *
  * @since 7.2
  */
-public interface MultiFindOption extends FindOption {
+public interface FindMultipleOption extends FindOption {
 }

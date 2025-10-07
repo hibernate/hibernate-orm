@@ -14,8 +14,9 @@ import java.util.List;
  * Indicates whether the persistence context should be checked for entities
  * matching the identifiers to be loaded - <ul>
  *     <li>Entities which are in a managed state are not re-loaded from the database.
- *     <li>Entities which are in a removed state are {@linkplain IncludeRemovals#EXCLUDE excluded}
- *     		from the result by default, but can be {@linkplain IncludeRemovals#INCLUDE included} if desired.
+ *     		those identifiers are removed from the SQL restriction sent to the database.
+ *     <li>Entities which are in a removed state are {@linkplain RemovalsMode#REPLACE excluded}
+ *     		from the result by default, but can be {@linkplain RemovalsMode#INCLUDE included} if desired.
  * </ul>
  * <p/>
  * The default is {@link #DISABLED}
@@ -25,14 +26,14 @@ import java.util.List;
  *
  * @since 7.2
  */
-public enum SessionChecking implements MultiFindOption {
+public enum SessionCheckMode implements FindMultipleOption {
 	/**
 	 * The persistence context will be checked.  Identifiers for entities already contained
 	 * in the persistence context will not be sent to the database for loading.  If the
 	 * entity is marked for removal in the persistence context, whether it is returned
-	 * is controlled by {@linkplain IncludeRemovals}.
+	 * is controlled by {@linkplain RemovalsMode}.
 	 *
-	 * @see IncludeRemovals
+	 * @see RemovalsMode
 	 */
 	ENABLED,
 	/**

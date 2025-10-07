@@ -117,7 +117,7 @@ public abstract class SplitGrammarGenerationTask extends DefaultTask {
 
 		execOperations.javaexec(
 				(javaExecSpec) -> {
-					javaExecSpec.setMain( "org.antlr.v4.Tool" );
+					javaExecSpec.getMainClass().set( "org.antlr.v4.Tool" );
 					javaExecSpec.classpath( getProject().getConfigurations().getByName( "antlr" ) );
 					javaExecSpec.args(
 							"-o", getProject().relativePath( outputDir.getAbsolutePath() ),
@@ -141,7 +141,7 @@ public abstract class SplitGrammarGenerationTask extends DefaultTask {
 
 		execOperations.javaexec(
 				(javaExecSpec) -> {
-					javaExecSpec.setMain( "org.antlr.v4.Tool" );
+					javaExecSpec.getMainClass().set( "org.antlr.v4.Tool" );
 					javaExecSpec.classpath( getProject().getConfigurations().named( "antlr" ) );
 					javaExecSpec.args(
 							"-o", getProject().relativePath( outputDir.getAbsolutePath() ),

@@ -23,7 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @Jpa(annotatedClasses =
 		{ManyToOneImplicitJoinTableRestrictionTest.X.class,
 		ManyToOneImplicitJoinTableRestrictionTest.Y.class})
-@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase doesn't have support for upserts")
+@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true,
+		reason = "Sybase doesn't have support for upserts")
 class ManyToOneImplicitJoinTableRestrictionTest {
 	@JiraKey("HHH-19555") @Test
 	void test(EntityManagerFactoryScope scope) {
@@ -48,6 +49,16 @@ class ManyToOneImplicitJoinTableRestrictionTest {
 			assertEquals( -1L, id );
 		} );
 		scope.inTransaction( s -> {
+			Y y =
+					s.createQuery( "from Y where id = ?1", Y.class )
+							.setParameter( 1, 0L )
+							.getSingleResult();
+			assertEquals("Gavin", y.name);
+			assertNull(y.x);
+			var id = s.createNativeQuery( "select x_id from Y_X", long.class ).getSingleResult();
+			assertEquals( -1L, id );
+		} );
+		scope.inTransaction( s -> {
 			Y y = s.find( Y.class, 0L );
 			X x = new X();
 			x.id = 1;
@@ -64,6 +75,16 @@ class ManyToOneImplicitJoinTableRestrictionTest {
 			assertEquals( 1L, id );
 		} );
 		scope.inTransaction( s -> {
+			Y y =
+					s.createQuery( "from Y where id = ?1", Y.class )
+							.setParameter( 1, 0L )
+							.getSingleResult();
+			assertEquals("Gavin", y.name);
+			assertNotNull(y.x);
+			var id = s.createNativeQuery( "select x_id from Y_X", long.class ).getSingleResult();
+			assertEquals( 1L, id );
+		} );
+		scope.inTransaction( s -> {
 			Y y = s.find( Y.class, 0L );
 			y.x = null;
 			// uses a SQL merge to update the join table
@@ -74,6 +95,14 @@ class ManyToOneImplicitJoinTableRestrictionTest {
 			assertNull(y.x);
 			var id = s.createNativeQuery( "select x_id from Y_X", long.class ).getSingleResultOrNull();
 			assertNull( id );
+		} );
+		scope.inTransaction( s -> {
+			Y y =
+					s.createQuery( "from Y where id = ?1", Y.class )
+							.setParameter( 1, 0L )
+							.getSingleResult();
+			assertEquals("Gavin", y.name);
+			assertNull(y.x);
 		} );
 	}
 

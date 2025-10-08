@@ -63,6 +63,7 @@ test {
 	if ( project.hasProperty( 'excludeTests' ) ) {
 		exclude project.property( 'excludeTests' ) as String
 	}
+    systemProperty("orm.gradle.min", project.property("orm.gradle.min"))
 	jvmArgs("--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED",
 			"--add-opens", "java.base/java.util=ALL-UNNAMED",
 			"--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED")

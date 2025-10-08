@@ -133,7 +133,7 @@ public class CompositeNestedGeneratedValueGenerator
 	public Object generate(SharedSessionContractImplementor session, Object object) {
 		final Object context = generationContextLocator.locateGenerationContext( session, object );
 		final List<Object> generatedValues = generatedValues( session, object, context );
-		if ( generatedValues != null) {
+		if ( generatedValues != null ) {
 			final Object[] values = compositeType.getPropertyValues( context );
 			for ( int i = 0; i < generatedValues.size(); i++ ) {
 				values[generationPlans.get( i ).getPropertyIndex()] = generatedValues.get( i );

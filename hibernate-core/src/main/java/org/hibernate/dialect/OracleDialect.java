@@ -507,6 +507,11 @@ public class OracleDialect extends Dialect {
 		return true;
 	}
 
+	@Override
+	public int getDoublePrecision() {
+		return 38;
+	}
+
 	/**
 	 * type or {@link Types#TIME} type, and its default behavior
 	 * for casting dates and timestamps to and from strings is just awful.

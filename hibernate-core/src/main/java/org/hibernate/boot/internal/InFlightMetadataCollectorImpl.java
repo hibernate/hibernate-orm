@@ -15,7 +15,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.Imported;
-import org.hibernate.annotations.Parameter;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
@@ -113,13 +112,12 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
+import static org.hibernate.boot.model.internal.AnnotationBinder.extractParameters;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl.fromExplicit;
 import static org.hibernate.cfg.MappingSettings.DEFAULT_CATALOG;
 import static org.hibernate.cfg.MappingSettings.DEFAULT_SCHEMA;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
-import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
-import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
  * The implementation of the {@linkplain InFlightMetadataCollector in-flight
@@ -509,10 +507,11 @@ public class InFlightMetadataCollectorImpl
 
 	private Map<CollectionClassification, CollectionTypeRegistrationDescriptor> collectionTypeRegistrations;
 
-	@Override
-	public void addCollectionTypeRegistration(CollectionTypeRegistration registrationAnnotation) {
-		addCollectionTypeRegistration( registrationAnnotation.classification(),
-				toDescriptor( registrationAnnotation ) );
+	@Override @Deprecated(forRemoval = true)
+	public void addCollectionTypeRegistration(CollectionTypeRegistration registration) {
+		addCollectionTypeRegistration( registration.classification(),
+				new CollectionTypeRegistrationDescriptor( registration.type(),
+						extractParameters( registration.parameters() ) ) );
 	}
 
 	@Override
@@ -529,25 +528,6 @@ public class InFlightMetadataCollectorImpl
 		return collectionTypeRegistrations == null ? null : collectionTypeRegistrations.get( classification );
 
 	}
-
-	private CollectionTypeRegistrationDescriptor toDescriptor(CollectionTypeRegistration registrationAnnotation) {
-		return new CollectionTypeRegistrationDescriptor( registrationAnnotation.type(),
-				extractParameters( registrationAnnotation.parameters() ) );
-	}
-
-	private Map<String,String> extractParameters(Parameter[] annotationUsages) {
-		if ( isEmpty( annotationUsages ) ) {
-			return null;
-		}
-		else {
-			final Map<String, String> result = mapOfSize( annotationUsages.length );
-			for ( Parameter parameter : annotationUsages ) {
-				result.put( parameter.name(), parameter.value() );
-			}
-			return result;
-		}
-	}
-
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

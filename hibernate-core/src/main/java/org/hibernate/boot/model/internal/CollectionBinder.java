@@ -798,8 +798,8 @@ public abstract class CollectionBinder {
 				property,
 				() -> createUserTypeBean(
 						property.getDeclaringType().getName() + "#" + property.getName(),
-						typeRegistration.getImplementation(),
-						typeRegistration.getParameters(),
+						typeRegistration.implementation(),
+						typeRegistration.parameters(),
 						context.getBootstrapContext(),
 						context.getMetadataCollector().getMetadataBuildingOptions().isAllowExtensionsInCdi()
 				),

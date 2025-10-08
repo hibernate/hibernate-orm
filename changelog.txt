@@ -10,6 +10,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/35420
 
 ** Bug
     * [HHH-18885] - ClassCastException with queued persist in an extra lazy Map
+    * [HHH-18936] - remove parent with @OnDelete(CASCADE) leads to TransientObjectException
 
 ** Task
     * [HHH-19800] - Migrate to release scripts for documentation publishing

@@ -10,9 +10,14 @@ https://hibernate.atlassian.net/projects/HHH/versions/35421
 
 ** Improvement
     * [HHH-19825] - Add methods and change method access for Hibernate Reactive
+    * [HHH-19717] - CockroachDB supports insert and update returning clause
 
 ** Task
     * [HHH-19800] - Migrate to release scripts for documentation publishing
+
+** Bug
+    * [HHH-18885] - ClassCastException with queued persist in an extra lazy Map
+    * [HHH-19781] - Subsequent uses of Criteria SelectionSpecification lead to duplicated specifications
 
 
 Changes in 7.1.2.Final (September 29, 2025)
@@ -26,7 +31,6 @@ https://hibernate.atlassian.net/projects/HHH/versions/35322
     * [HHH-19768] - Wrong supportsRowValueConstructorSyntaxInInSubQuery leads to bad performing queries
     * [HHH-19713] - Hibernate creates invalid SQLServer query when using pagination with Jakarta Data
     * [HHH-19681] - AssertionError on extract results from  array containing jsonb values
-    * [HHH-19276] - Native query with enum list param leads to OutOfMemory
 
 
 Changes in 7.1.1.Final (September 14, 2025)

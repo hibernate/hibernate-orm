@@ -3,6 +3,104 @@ Hibernate 7 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.2.0.CR1 (October 08, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/34530
+
+** Bug
+    * [HHH-19831] - LeakingStatementCachingTest hangs
+    * [HHH-19813] - Incorrect default values for 'enableDirtyTracking' and 'enableLazyInitialization' in hibernate-maven-plugin
+    * [HHH-19795] - SqmFunctionRegistry does not provide a way to escape ? in registerPattern
+    * [HHH-19790] - Fix Gradle Worker ID gaps for parallel testing
+    * [HHH-19781] - Subsequent uses of Criteria SelectionSpecification lead to duplicated specifications
+    * [HHH-19780] - OracleDatabaseCleaner must not fail when not finding an object to drop
+    * [HHH-19775] - type(:entity) in JPQL
+    * [HHH-19771] - transaction context sharing between stateful and stateless sessions 
+    * [HHH-19759] - joining a map key of basic type
+    * [HHH-19740] - Collection table deletion for table per class subclass entity fails with UnknownTableReferenceException
+    * [HHH-19738] - JDBC password logged when specified via jakarta.persistence.jdbc.password
+    * [HHH-19723] - Hibernate-testing depends on outdated Jakarta libraries, leading to compilation issues for Jakarta Data repositories
+    * [HHH-19721] - Jakarta Data is missing from hibernate-platform (BOM)
+    * [HHH-19718] - SQL @Formula with function call nested inside cast()
+    * [HHH-19716] - Collection event listeners may be missing collection owners  in the persistent collection (PersistentCollection#getOwner==null)
+    * [HHH-19706] - Composite @Id with a generic part in @MappedSuperclass
+    * [HHH-19671] - Wrong warning aboute illegal use of @Embeddable with callback on entities with @IdClass
+    * [HHH-19659] - (Kotlin / Panache) Entity with @IdClass and @PrePersist/@PreUpdate misinterpreted as @Embeddable
+    * [HHH-19630] - Hibernate Processor may fail if the return type is a single entity and annotated with multiple annotations
+    * [HHH-19629] - Hibernate Processor may fail when repository method parameter has more than one annotation (e.g. multiple constraints)
+    * [HHH-19627] - MetaModel fields not generated for java.sql.Clob fields
+    * [HHH-19276] - Native query with enum list param leads to OutOfMemory
+    * [HHH-18993] - [Docs] Possible outdated documentation and update suggestions in the user guide
+    * [HHH-14082] - Hibernate cannot determine it's core version in modular configuration
+
+** Deprecation
+    * [HHH-19751] - Deprecate AzureSQLServerDialect for removal
+
+** Improvement
+    * [HHH-19832] - Upgrade to JUnit 6.0
+    * [HHH-19829] - Deprecate MultiIdentifierLoadAccess and byMultipleIds
+    * [HHH-19810] - Remove Joda-Time and use LocalDate of jdk in testing
+    * [HHH-19808] - Automatic closing for child session with shared connection/tx
+    * [HHH-19801] - SchemaTruncator should reset sequences
+    * [HHH-19791] - Avoid dropping/creating database objects when data is only read (SELECT)
+    * [HHH-19782] - Oracle support for locking across joins
+    * [HHH-19776] - Migrate all logging to the newer style "subsystem" logging
+    * [HHH-19774] - Automatic flushing for child session with shared connection/tx
+    * [HHH-19772] - change to semantics of interceptor reuse with shared session builders
+    * [HHH-19762] - Enable Parallel Testing for OTP
+    * [HHH-19757] - many registry operations have unbound type parameter in return type
+    * [HHH-19755] - Improve AntlrPlugin
+    * [HHH-19754] - Migrate XjcPlugin to using direct Java calls
+    * [HHH-19752] - Allow setting MariaDB/MySQL storage engine not only using System properties but also configuration properties
+    * [HHH-19744] - Clarify and document the wildfly-transaction-client integration
+    * [HHH-19743] - Deprecate JBossStandAloneJtaPlatform in favor of a new, clearly Narayana-specific implementation
+    * [HHH-19737] - Support Envers with StatelessSession
+    * [HHH-19733] - Extract constants often reused in ByteBubby processing
+    * [HHH-19730] - Avoid bulk-delete collection cleanup when delete cascaded
+    * [HHH-19717] - CockroachDB supports insert and update returning clause
+    * [HHH-19711] - Improve mapped-by + join-column exception message with the full property path
+    * [HHH-19702] - ConnectionProviders don't need "Impl" in name
+    * [HHH-19694] - Enhanced support for older Informix
+    * [HHH-19690] - Migrate Atlas to OTP
+    * [HHH-19679] - Support binary, float16 and sparse vector types
+    * [HHH-19602] - Adjust JdbcOperation to allow more-than-one statement
+    * [HHH-19556] - improvements to SQM equality
+    * [HHH-19554] - Support for lock timeout as Connection setting
+    * [HHH-19514] - Follow-on locking locks more than it should
+    * [HHH-19513] - Follow-on locking does not lock element-collection tables
+    * [HHH-19388] - Process <database-object> in mapping.xml
+    * [HHH-18546] - Clean up any hanging BulkOperationCleanupAction after-txn callbacks on Session close
+    * [HHH-14892] - Parallel test with GRADLE
+    * [HHH-13843] - Performance schema migration
+    * [HHH-9636] - Have JPA PessimisticLockScope.EXTENDED propagate the same LockModeType
+
+** New Feature
+    * [HHH-19794] - SchemaManager.resynchronizeGenerators()
+    * [HHH-19735] - Add vector support for SQL Server
+    * [HHH-19710] - Add vector support for SAP HANA Cloud
+    * [HHH-19708] - support for read/write replicas
+    * [HHH-19705] - Add vector support for DB2
+    * [HHH-19257] - Introduce @EmbeddedTable
+    * [HHH-18973] - Add Vector support type for MySQL
+    * [HHH-3404] - Regular expression matching in HQL
+
+** Sub-task
+    * [HHH-19820] - Make sure that the enhancer is not doing anything if all the enablement parameters are false
+    * [HHH-19817] - Add the JavaDoc Style documentation appropriate for Maven Plugins
+    * [HHH-19816] - Add Integration Tests for the Maven Enhance Plugin without using Maven Invoker
+    * [HHH-19815] - Review and Complete the documentation of the Enhance Plugin in the User's Guide
+    * [HHH-19814] - Document the Enhance Plugin changes in the Migration Guide
+    * [HHH-19336] - Proper implementation for JPA PessimisticLockScope
+
+** Task
+    * [HHH-19812] - Improvements on the Maven Enhance Plugin
+    * [HHH-19811] - Upgrade H2 to 2.4.240
+    * [HHH-19728] - Update SQL Server CI testing to 2025
+    * [HHH-19726] - Update MariaDB CI testing to 12.0
+    * [HHH-19009] - Correction of the inheritance syntax used with GraphParser in EntityGraphsTest tests
+
+
 Changes in 7.1.0.Final (August 08, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

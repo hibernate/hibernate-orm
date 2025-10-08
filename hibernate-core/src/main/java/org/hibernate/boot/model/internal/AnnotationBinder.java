@@ -7,7 +7,6 @@ package org.hibernate.boot.model.internal;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Table;
 import org.hibernate.AnnotationException;
@@ -21,6 +20,7 @@ import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.JavaTypeRegistration;
 import org.hibernate.annotations.JdbcTypeRegistration;
+import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.TypeRegistration;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -28,6 +28,7 @@ import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.InFlightMetadataCollector.CollectionTypeRegistrationDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
@@ -40,6 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.EMBEDDABLE;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.ENTITY;
 import static org.hibernate.boot.model.internal.EntityBinder.bindEntityClass;
@@ -55,6 +57,8 @@ import static org.hibernate.boot.model.internal.QueryBinder.bindNativeQuery;
 import static org.hibernate.boot.model.internal.QueryBinder.bindQuery;
 import static org.hibernate.boot.model.internal.QueryBinder.bindSqlResultSetMapping;
 import static org.hibernate.internal.util.StringHelper.unqualify;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 import static org.hibernate.mapping.MetadataSource.ANNOTATIONS;
 
 /**
@@ -74,26 +78,24 @@ public final class AnnotationBinder {
 		final var metadataCollector = context.getMetadataCollector();
 		final var globalRegistrations = metadataCollector.getGlobalRegistrations();
 
-
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// id generators
 
 		globalRegistrations.getSequenceGeneratorRegistrations().forEach( (name, generatorRegistration) -> {
 			final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 			interpretSequenceGenerator( generatorRegistration.configuration(), definitionBuilder );
-			final var idGenDef = definitionBuilder.build();
+			final var generatorDefinition = definitionBuilder.build();
 			BOOT_LOGGER.addingGlobalSequenceGenerator( name );
-			metadataCollector.addDefaultIdentifierGenerator( idGenDef );
+			metadataCollector.addDefaultIdentifierGenerator( generatorDefinition );
 		} );
 
 		globalRegistrations.getTableGeneratorRegistrations().forEach( (name, generatorRegistration) -> {
 			final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 			interpretTableGenerator( generatorRegistration.configuration(), definitionBuilder );
-			final var idGenDef = definitionBuilder.build();
+			final var generatorDefinition = definitionBuilder.build();
 			BOOT_LOGGER.addingGlobalTableGenerator( name );
-			metadataCollector.addDefaultIdentifierGenerator( idGenDef );
+			metadataCollector.addDefaultIdentifierGenerator( generatorDefinition );
 		} );
-
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// result-set-mappings
@@ -101,7 +103,6 @@ public final class AnnotationBinder {
 		globalRegistrations.getSqlResultSetMappingRegistrations().forEach( (name, mappingRegistration) -> {
 			bindSqlResultSetMapping( mappingRegistration.configuration(), context, true );
 		} );
-
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// queries
@@ -177,13 +178,13 @@ public final class AnnotationBinder {
 		annotationTarget.forEachRepeatedAnnotationUsages(
 				HibernateAnnotations.NAMED_QUERY,
 				sourceModelContext,
-				(usage) -> bindQuery( usage, context, annotationTarget )
+				usage -> bindQuery( usage, context, annotationTarget )
 		);
 
 		annotationTarget.forEachRepeatedAnnotationUsages(
 				HibernateAnnotations.NAMED_NATIVE_QUERY,
 				sourceModelContext,
-				(usage) -> bindNativeQuery( usage, context, annotationTarget )
+				usage -> bindNativeQuery( usage, context, annotationTarget )
 		);
 	}
 
@@ -193,25 +194,25 @@ public final class AnnotationBinder {
 		annotationTarget.forEachRepeatedAnnotationUsages(
 				JpaAnnotations.SQL_RESULT_SET_MAPPING,
 				sourceModelContext,
-				(usage) -> bindSqlResultSetMapping( usage, context,false )
+				usage -> bindSqlResultSetMapping( usage, context,false )
 		);
 
 		annotationTarget.forEachRepeatedAnnotationUsages(
 				JpaAnnotations.NAMED_QUERY,
 				sourceModelContext,
-				(usage) -> bindQuery( usage, context, false, annotationTarget )
+				usage -> bindQuery( usage, context, false, annotationTarget )
 		);
 
 		annotationTarget.forEachRepeatedAnnotationUsages(
 				JpaAnnotations.NAMED_NATIVE_QUERY,
 				sourceModelContext,
-				(usage) -> bindNativeQuery( usage, context, annotationTarget, false )
+				usage -> bindNativeQuery( usage, context, annotationTarget, false )
 		);
 
 		annotationTarget.forEachRepeatedAnnotationUsages(
 				JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY,
 				sourceModelContext,
-				(usage) -> bindNamedStoredProcedureQuery( usage, context, false )
+				usage -> bindNamedStoredProcedureQuery( usage, context, false )
 		);
 	}
 
@@ -226,7 +227,8 @@ public final class AnnotationBinder {
 	public static void bindClass(
 			ClassDetails classDetails,
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
-			MetadataBuildingContext context) throws MappingException {
+			MetadataBuildingContext context)
+				throws MappingException {
 
 		detectMappedSuperclassProblems( classDetails );
 
@@ -257,7 +259,7 @@ public final class AnnotationBinder {
 
 	private static void detectMappedSuperclassProblems(ClassDetails annotatedClass) {
 		if ( annotatedClass.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
-			//@Entity and @MappedSuperclass on the same class leads to a NPE down the road
+			// @Entity and @MappedSuperclass on the same class leads to NPE down the road
 			if ( annotatedClass.hasDirectAnnotationUsage( Entity.class ) ) {
 				throw new AnnotationException( "Type '" + annotatedClass.getName()
 						+ "' is annotated both '@Entity' and '@MappedSuperclass'" );
@@ -279,17 +281,45 @@ public final class AnnotationBinder {
 		final var managedBeanRegistry = context.getBootstrapContext().getManagedBeanRegistry();
 		final var sourceModelContext = modelsContext( context );
 
-		annotatedElement.forEachAnnotationUsage( JavaTypeRegistration.class, sourceModelContext, (usage) -> {
-			handleJavaTypeRegistration( context, managedBeanRegistry, usage );
-		} );
+		annotatedElement.forEachAnnotationUsage(
+				JavaTypeRegistration.class,
+				sourceModelContext,
+				usage -> handleJavaTypeRegistration( context, managedBeanRegistry, usage )
+		);
 
-		annotatedElement.forEachAnnotationUsage( JdbcTypeRegistration.class, sourceModelContext, (usage) -> {
-			handleJdbcTypeRegistration( context, managedBeanRegistry, usage );
-		} );
+		annotatedElement.forEachAnnotationUsage(
+				JdbcTypeRegistration.class,
+				sourceModelContext,
+				usage -> handleJdbcTypeRegistration( context, managedBeanRegistry, usage )
+		);
 
-		annotatedElement.forEachAnnotationUsage( CollectionTypeRegistration.class, sourceModelContext, (usage) -> {
-			context.getMetadataCollector().addCollectionTypeRegistration( usage );
-		} );
+		annotatedElement.forEachAnnotationUsage(
+				CollectionTypeRegistration.class,
+				sourceModelContext,
+				usage -> handleCollectionTypeRegistration( context, usage )
+		);
+	}
+
+	private static void handleCollectionTypeRegistration(
+			MetadataBuildingContext context,
+			CollectionTypeRegistration annotation) {
+		context.getMetadataCollector()
+				.addCollectionTypeRegistration( annotation.classification(),
+						new CollectionTypeRegistrationDescriptor( annotation.type(),
+								extractParameters( annotation.parameters() ) ) );
+	}
+
+	public static Map<String,String> extractParameters(Parameter[] parameters) {
+		if ( isEmpty( parameters ) ) {
+			return null;
+		}
+		else {
+			final Map<String, String> result = mapOfSize( parameters.length );
+			for ( var parameter : parameters ) {
+				result.put( parameter.name(), parameter.value() );
+			}
+			return result;
+		}
 	}
 
 	private static void handleJdbcTypeRegistration(
@@ -329,9 +359,11 @@ public final class AnnotationBinder {
 	private static void bindEmbeddableInstantiatorRegistrations(
 			AnnotationTarget annotatedElement,
 			MetadataBuildingContext context) {
-		annotatedElement.forEachAnnotationUsage( EmbeddableInstantiatorRegistration.class, modelsContext( context ), (usage) -> {
-			handleEmbeddableInstantiatorRegistration( context, usage );
-		} );
+		annotatedElement.forEachAnnotationUsage(
+				EmbeddableInstantiatorRegistration.class,
+				modelsContext( context ),
+				usage -> handleEmbeddableInstantiatorRegistration( context, usage )
+		);
 	}
 
 	private static void handleEmbeddableInstantiatorRegistration(
@@ -346,17 +378,21 @@ public final class AnnotationBinder {
 	private static void bindCompositeUserTypeRegistrations(
 			AnnotationTarget annotatedElement,
 			MetadataBuildingContext context) {
-		annotatedElement.forEachAnnotationUsage( CompositeTypeRegistration.class, modelsContext( context ), (usage) -> {
-			handleCompositeUserTypeRegistration( context, usage );
-		} );
+		annotatedElement.forEachAnnotationUsage(
+				CompositeTypeRegistration.class,
+				modelsContext( context ),
+				usage -> handleCompositeUserTypeRegistration( context, usage )
+		);
 	}
 
 	private static void bindUserTypeRegistrations(
 			AnnotationTarget annotatedElement,
 			MetadataBuildingContext context) {
-		annotatedElement.forEachAnnotationUsage( TypeRegistration.class, modelsContext( context ), (usage) -> {
-			handleUserTypeRegistration( context, usage );
-		} );
+		annotatedElement.forEachAnnotationUsage(
+				TypeRegistration.class,
+				modelsContext( context ),
+				usage -> handleUserTypeRegistration( context, usage )
+		);
 	}
 
 	private static void handleUserTypeRegistration(
@@ -382,10 +418,11 @@ public final class AnnotationBinder {
 	}
 
 	private static void bindConverterRegistrations(AnnotationTarget container, MetadataBuildingContext context) {
-		final ModelsContext sourceModelContext = modelsContext( context );
-		container.forEachAnnotationUsage( ConverterRegistration.class, sourceModelContext, (usage) -> {
-			handleConverterRegistration( usage, context );
-		} );
+		container.forEachAnnotationUsage(
+				ConverterRegistration.class,
+				modelsContext( context ),
+				usage -> handleConverterRegistration( usage, context )
+		);
 	}
 
 	private static void handleConverterRegistration(ConverterRegistration registration, MetadataBuildingContext context) {
@@ -500,7 +537,7 @@ public final class AnnotationBinder {
 		final var inheritanceType = state.getType();
 		final var superclassInheritanceType = superclassState.getType();
 		if ( inheritanceType != null && superclassInheritanceType != null ) {
-			final boolean nonDefault = InheritanceType.SINGLE_TABLE != inheritanceType;
+			final boolean nonDefault = SINGLE_TABLE != inheritanceType;
 			final boolean mixingStrategy = inheritanceType != superclassInheritanceType;
 			if ( nonDefault && mixingStrategy ) {
 				throw new AnnotationException( "Entity '" + classDetails.getName()

@@ -1,4 +1,5 @@
 :shared-attributes-dir: {doc-main-dir}/asciidoc/shared
+:html-meta-canonical-link: https://docs.hibernate.org/stable/orm/topical/html_single/logging/
 
 include::{shared-attributes-dir}/common-attributes.adoc[]
 include::{shared-attributes-dir}/url-attributes.adoc[]

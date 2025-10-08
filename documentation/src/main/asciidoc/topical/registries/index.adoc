@@ -1,7 +1,9 @@
+:html-meta-canonical-link: https://docs.hibernate.org/stable/orm/topical/html_single/registries/
+
 [[registries-guide]]
 = Services and Registries
 :imagesdir: images
-:toc:
+:toc2:
 
 Services and Registries are new *as a formalized concept* starting in 4.0.  But the functionality provided by
 the different Services have actually been around in Hibernate much, much longer.  What is new is managing them,

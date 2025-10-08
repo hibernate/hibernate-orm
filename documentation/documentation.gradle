@@ -265,13 +265,59 @@ asciidoctorj {
 
 // Topical Guides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+def renderTopicalLoggingGuideHtmlTask = tasks.register( 'renderTopicalLoggingGuideHtml', AsciidoctorTask ) { task ->
+    group = "Documentation"
+    description = 'Renders the Topical Logging Guide in HTML format using Asciidoctor.'
+    inputs.property "hibernate-version", hibernateVersion
+
+    sourceDir = file( 'src/main/asciidoc/topical/logging' )
+    sources 'index.adoc'
+    outputDir = project.layout.buildDirectory.file( "asciidoc/topical/html_single/logging" ).get().asFile
+
+    resources {
+        from( 'src/main/asciidoc/topical/' ) {
+            include '**/images/**'
+        }
+        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+                .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
+            include 'css/**'
+            include 'images/**'
+            include 'script/**'
+        }
+    }
+}
+
+def renderTopicalRegistriesGuideHtmlTask = tasks.register( 'renderTopicalRegistriesGuideHtml', AsciidoctorTask ) { task ->
+    group = "Documentation"
+    description = 'Renders the Topical Registries Guide in HTML format using Asciidoctor.'
+    inputs.property "hibernate-version", hibernateVersion
+
+    sourceDir = file( 'src/main/asciidoc/topical/registries' )
+    sources 'index.adoc'
+    outputDir = project.layout.buildDirectory.file( "asciidoc/topical/html_single/registries" ).get().asFile
+
+    resources {
+        from( 'src/main/asciidoc/topical/' ) {
+            include '**/images/**'
+        }
+        from(rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+                .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
+            include 'css/**'
+            include 'images/**'
+            include 'script/**'
+        }
+    }
+}
+
+
 def renderTopicalGuideHtmlTask = tasks.register( 'renderTopicalGuideHtml', AsciidoctorTask ) { task ->
 	group = "Documentation"
 	description = 'Renders the  Topical Guides in HTML format using Asciidoctor.'
 	inputs.property "hibernate-version", hibernateVersion
 
 	sourceDir = file( 'src/main/asciidoc/topical' )
-	outputDir = new File( "$buildDir/asciidoc/topical/html_single" )
+    sources 'index.adoc'
+	outputDir = project.layout.buildDirectory.file( "asciidoc/topical/html_single" ).get().asFile
 
 	resources {
 		from( 'src/main/asciidoc/topical/' ) {
@@ -284,6 +330,9 @@ def renderTopicalGuideHtmlTask = tasks.register( 'renderTopicalGuideHtml', Ascii
             include 'script/**'
         }
 	}
+
+    dependsOn renderTopicalLoggingGuideHtmlTask
+    dependsOn renderTopicalRegistriesGuideHtmlTask
 }
 
 def renderTopicalGuidesTask = tasks.register( 'renderTopicalGuides', AsciidoctorTask ) { task ->

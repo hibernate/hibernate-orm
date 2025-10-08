@@ -134,6 +134,8 @@ dependencies {
 	reportAggregation project(':hibernate-maven-plugin')
 	reportAggregation project(':hibernate-processor')
 
+    dialectReportSources project( ':hibernate-core' )
+
 	core project( ':hibernate-core' )
 	javadocSources project( path: ':hibernate-core', configuration: 'javadocSources' )
 

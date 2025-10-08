@@ -14,14 +14,18 @@ import org.gradle.api.tasks.TaskProvider;
  * @author Steve Ebersole
  */
 public class ReportGenerationPlugin implements Plugin<Project> {
-	public static final String CONFIG_NAME = "reportAggregation";
 	public static final String TASK_GROUP_NAME = "hibernate-reports";
+	public static final String AGGREGATE_CONFIG_NAME = "reportAggregation";
+	public static final String DIALECT_CONFIG_NAME = "dialectReportSources";
 
 	@Override
 	public void apply(Project project) {
 		final Configuration artifactsToProcess = project.getConfigurations()
-				.maybeCreate( CONFIG_NAME )
+				.maybeCreate( AGGREGATE_CONFIG_NAME )
 				.setDescription( "Used to collect the jars with classes files to be used in the aggregation reports for `@Internal`, `@Incubating`, etc" );
+		final Configuration dialectConfig = project.getConfigurations()
+				.maybeCreate( DIALECT_CONFIG_NAME )
+				.setDescription( "Used to define classpath for performing reflection on Dialects for the Dialect report" );
 
 		final IndexManager indexManager = new IndexManager( artifactsToProcess, project );
 		project.getExtensions().add( "indexManager", indexManager );

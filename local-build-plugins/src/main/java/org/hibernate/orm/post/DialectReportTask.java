@@ -17,10 +17,12 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
@@ -32,6 +34,8 @@ import org.hibernate.build.OrmBuildDetails;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Index;
 
+import static org.hibernate.orm.post.ReportGenerationPlugin.DIALECT_CONFIG_NAME;
+
 /**
  * Generates a report on Dialect information
  *
@@ -41,8 +45,13 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 	private final Property<RegularFile> reportFile;
 	private final Property<Boolean> generateHeading;
 
+	private final Configuration dialectReportSources;
+
 	public DialectReportTask() {
 		setDescription( "Generates a report of the supported Dialects" );
+
+		dialectReportSources = getProject().getConfigurations().getByName( DIALECT_CONFIG_NAME );
+
 		reportFile = getProject().getObjects().fileProperty();
 		reportFile.convention( getProject().getLayout().getBuildDirectory().file( "orm/generated/dialect/index.adoc" ) );
 		generateHeading = getProject().getObjects().property( Boolean.class ).convention( true );
@@ -58,6 +67,11 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 		return generateHeading;
 	}
 
+	@InputFiles
+	public Configuration getDialectReportSources() {
+		return dialectReportSources;
+	}
+
 	@Override
 	protected Provider<RegularFile> getTaskReportFileReference() {
 		return reportFile;
@@ -65,12 +79,7 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 
 	@TaskAction
 	public void generateDialectReport() {
-		// the ones we want are all in the hibernate-core project
-		final Project coreProject = getProject().getRootProject().project( "hibernate-core" );
-		final SourceSetContainer sourceSets = coreProject.getExtensions().getByType( SourceSetContainer.class );
-		final SourceSet sourceSet = sourceSets.getByName( SourceSet.MAIN_SOURCE_SET_NAME );
-		final ClassLoader classLoader = Helper.asClassLoader( sourceSet, coreProject.getConfigurations().getByName( "testRuntimeClasspath" ) );
-
+		final ClassLoader classLoader = Helper.asClassLoader( dialectReportSources );
 		final DialectClassDelegate dialectClassDelegate = new DialectClassDelegate( classLoader );
 
 		final Index index = getIndexManager().getIndex();

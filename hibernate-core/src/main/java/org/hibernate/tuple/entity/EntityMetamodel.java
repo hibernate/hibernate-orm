@@ -354,8 +354,9 @@ public class EntityMetamodel implements Serializable {
 							propertyInsertability[i] = writePropertyValue( (OnExecutionGenerator) generator );
 						}
 						foundPostInsertGeneratedValues = foundPostInsertGeneratedValues
-								|| generator instanceof OnExecutionGenerator;
+								|| generatedOnExecution;
 						foundPreInsertGeneratedValues = foundPreInsertGeneratedValues
+								|| !generatedOnExecution
 								|| generator instanceof BeforeExecutionGenerator;
 					}
 					else if ( !allowMutation ) {
@@ -365,9 +366,10 @@ public class EntityMetamodel implements Serializable {
 						if ( generatedOnExecution ) {
 							propertyUpdateability[i] = writePropertyValue( (OnExecutionGenerator) generator );
 						}
-						foundPostUpdateGeneratedValues = foundPostUpdateGeneratedValues
-								|| generator instanceof OnExecutionGenerator;
-						foundPreUpdateGeneratedValues = foundPreUpdateGeneratedValues
+						foundPostUpdateGeneratedValues = foundPostInsertGeneratedValues
+								|| generatedOnExecution;
+						foundPreUpdateGeneratedValues = foundPreInsertGeneratedValues
+								|| !generatedOnExecution
 								|| generator instanceof BeforeExecutionGenerator;
 					}
 					else if ( !allowMutation ) {

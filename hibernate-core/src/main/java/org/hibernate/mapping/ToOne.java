@@ -34,6 +34,7 @@ public abstract sealed class ToOne
 	private boolean unwrapProxy;
 	private boolean unwrapProxyImplicit;
 	private boolean referenceToPrimaryKey = true;
+	private boolean hasMapsId = false;
 
 	protected ToOne(MetadataBuildingContext buildingContext, Table table) {
 		super( buildingContext, table );
@@ -77,6 +78,14 @@ public abstract sealed class ToOne
 	public void setReferencedEntityName(String referencedEntityName) {
 		this.referencedEntityName = referencedEntityName==null ?
 				null : referencedEntityName.intern();
+	}
+
+	public boolean hasMapsId() {
+		return hasMapsId;
+	}
+
+	public void setHasMapsId(boolean hasMapsId) {
+		this.hasMapsId = hasMapsId;
 	}
 
 	public String getPropertyName() {

@@ -15,8 +15,11 @@ import org.hibernate.community.dialect.pagination.TimesTenLimitHandler;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorTimesTenDatabaseImpl;
 import org.hibernate.community.dialect.sequence.TimesTenSequenceSupport;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.BooleanDecoder;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.OracleTruncFunction;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.OptimisticLockingStrategy;
@@ -34,6 +37,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
@@ -42,6 +46,7 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -52,6 +57,15 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.function.CurrentFunction;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
+import jakarta.persistence.GenerationType;
+import java.util.Date;
+
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
@@ -59,14 +73,13 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INT
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 
 /**
- * A SQL dialect for TimesTen 5.1.
+ * A SQL dialect for Oracle TimesTen
  * <p>
  * Known limitations:
  * joined-subclass support because of no CASE support in TimesTen
  * No support for subqueries that includes aggregation
  * - size() in HQL not supported
  * - user queries that does subqueries with aggregation
- * No CLOB/BLOB support
  * No cascade delete support.
  * No Calendar support
  * No support for updating primary keys.
@@ -90,6 +103,7 @@ public class TimesTenDialect extends Dialect {
 			//      for the default Oracle type mode
 			//      TypeMode=0
 			case SqlTypes.BOOLEAN:
+			case SqlTypes.BIT:
 			case SqlTypes.TINYINT:
 				return "tt_tinyint";
 			case SqlTypes.SMALLINT:
@@ -101,15 +115,26 @@ public class TimesTenDialect extends Dialect {
 			//note that 'binary_float'/'binary_double' might
 			//be better mappings for Java Float/Double
 
+			case SqlTypes.VARCHAR:
+			case SqlTypes.LONGVARCHAR:
+				return "varchar2($l)";
+
+			case SqlTypes.LONGVARBINARY:
+				return "varbinary($l)";
+
 			//'numeric'/'decimal' are synonyms for 'number'
 			case SqlTypes.NUMERIC:
 			case SqlTypes.DECIMAL:
 				return "number($p,$s)";
+			case SqlTypes.FLOAT:
+				return "binary_float";
+			case SqlTypes.DOUBLE:
+				return "binary_double";
+
 			case SqlTypes.DATE:
 				return "tt_date";
 			case SqlTypes.TIME:
 				return "tt_time";
-			//`timestamp` has more precision than `tt_timestamp`
 			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
 				return "timestamp($p)";
 
@@ -157,21 +182,96 @@ public class TimesTenDialect extends Dialect {
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
+		CommonFunctionFactory functionFactory     = new CommonFunctionFactory(functionContributions);
+		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+		final BasicType<Date>   timestampType     = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
+		final BasicType<String> stringType        = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
+		final BasicType<Long>   longType          = basicTypeRegistry.resolve( StandardBasicTypes.LONG );
+		final BasicType<Integer>intType           = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );
+
+		// String Functions
 		functionFactory.trim2();
-		functionFactory.soundex();
-		functionFactory.trunc();
+		functionFactory.characterLength_length( SqlAstNodeRenderingMode.DEFAULT );
+		functionFactory.concat_pipeOperator();
 		functionFactory.toCharNumberDateTimestamp();
-		functionFactory.ceiling_ceil();
+		functionFactory.char_chr();
 		functionFactory.instr();
 		functionFactory.substr();
 		functionFactory.substring_substr();
-		functionFactory.leftRight_substr();
-		functionFactory.char_chr();
-		functionFactory.rownumRowid();
-		functionFactory.sysdate();
+		functionFactory.soundex();
+
+		// Date/Time Functions
+		functionContributions.getFunctionRegistry().register( 
+				"sysdate", new CurrentFunction("sysdate", "sysdate", timestampType)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"getdate", new CurrentFunction("getdate", "getdate()", timestampType )
+		);
+
+		// Multi-param date dialect functions
 		functionFactory.addMonths();
 		functionFactory.monthsBetween();
+
+		// Math functions
+		functionFactory.ceiling_ceil();
+		functionFactory.radians_acos();
+		functionFactory.degrees_acos();
+		functionFactory.sinh();
+		functionFactory.tanh();
+		functionContributions.getFunctionRegistry().register( 
+				"trunc",
+				new OracleTruncFunction( functionContributions.getTypeConfiguration() )
+		);
+		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+		functionFactory.round();
+
+		// Bitwise functions
+		functionContributions.getFunctionRegistry()
+				.patternDescriptorBuilder( "bitor", "(?1+?2-bitand(?1,?2))")
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers
+				.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
+
+		functionContributions.getFunctionRegistry()
+				.patternDescriptorBuilder( "bitxor", "(?1+?2-2*bitand(?1,?2))")
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers
+				.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
+
+		// Misc. functions
+		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "nvl" )
+				.setMinArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.useFirstNonNull() )
+				.register();
+
+		functionContributions.getFunctionRegistry().register( 
+				"user",  new CurrentFunction("user", "user", stringType)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"rowid", new CurrentFunction("rowid", "rowid", stringType)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"uid", new CurrentFunction("uid", "uid", intType)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"rownum", new CurrentFunction("rownum", "rownum", longType)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"vsize", new StandardSQLFunction("vsize", StandardBasicTypes.DOUBLE)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"SESSION_USER", new CurrentFunction("SESSION_USER","SESSION_USER", stringType)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"SYSTEM_USER",  new CurrentFunction("SYSTEM_USER", "SYSTEM_USER",  stringType)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"CURRENT_USER", new CurrentFunction("CURRENT_USER","CURRENT_USER", stringType)
+		);
 
 		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
@@ -251,9 +351,10 @@ public class TimesTenDialect extends Dialect {
 		return RowLockStrategy.COLUMN;
 	}
 
+  
 	@Override
-	public String getForUpdateString(String aliases) {
-		return " for update of " + aliases;
+	public String getForUpdateString() {
+		return " for update";
 	}
 
 	@Override
@@ -425,5 +526,105 @@ public class TimesTenDialect extends Dialect {
 				return "to_number(null)";
 		}
 	}
+
+	@Override 
+	public String getNativeIdentifierGeneratorStrategy() {
+		return "sequence";
+	}
+
+	@Override
+	public String currentDate() {
+		return "sysdate";
+	}
+
+	@Override
+	public String currentTime() {
+		return "sysdate";
+	}
+
+	@Override
+	public String currentTimestamp() {
+		return "sysdate";
+	}
+
+	@Override
+	public int getMaxVarcharLength() {
+		// 1 to 4,194,304 bytes according to TimesTen Doc
+		return 4194304;
+	}
+
+	@Override
+	public int getMaxVarbinaryLength() {
+		// 1 to 4,194,304 bytes according to TimesTen Doc
+		return 4194304;
+	}
+
+	@Override
+	public boolean isEmptyStringTreatedAsNull() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsTupleDistinctCounts() {
+		return false;
+	}
+
+	@Override
+	public String getDual() {
+		return "dual"; 
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from dual";
+	}
+
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		String result;
+		switch ( to ) {
+			case INTEGER:
+			case LONG:
+				result = BooleanDecoder.toInteger( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
+			case STRING:
+				switch ( from ) {
+					case BOOLEAN:
+					case INTEGER_BOOLEAN:
+					case TF_BOOLEAN:
+					case YN_BOOLEAN:
+						return BooleanDecoder.toString( from );
+					case DATE:
+						return "to_char(?1,'YYYY-MM-DD')";
+					case TIME:
+						return "to_char(?1,'HH24:MI:SS')";
+					case TIMESTAMP:
+						return "to_char(?1,'YYYY-MM-DD HH24:MI:SS.FF9')";
+				}
+				break;
+			case CLOB:
+				return "to_clob(?1)";
+			case DATE:
+				if ( from == CastType.STRING ) {
+					return "to_date(?1,'YYYY-MM-DD')";
+				}
+				break;
+			case TIME:
+				if ( from == CastType.STRING ) {
+					return "to_date(?1,'HH24:MI:SS')";
+				}
+				break;
+			case TIMESTAMP:
+				if ( from == CastType.STRING ) {
+					return "to_timestamp(?1,'YYYY-MM-DD HH24:MI:SS.FF9')";
+				}
+				break;
+		}
+		return super.castPattern(from, to);
+	}
+
 
 }

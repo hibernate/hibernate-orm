@@ -4,27 +4,33 @@
  */
 package org.hibernate.orm.test.deletetransient;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 /**
- *
  * @author Gail Badner
  */
+@Entity
+@Table(name="notes")
 public class Note {
-	private Long id;
+	@Id
+	private Integer id;
 	private String description;
 
 	public Note() {
 	}
 
-	public Note(String description) {
+	public Note(Integer id, String description) {
+		this.id = id;
 		this.description = description;
 	}
 
-	public Long getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 

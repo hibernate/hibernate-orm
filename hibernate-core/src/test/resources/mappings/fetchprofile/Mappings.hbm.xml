@@ -10,24 +10,18 @@
 <hibernate-mapping package="org.hibernate.orm.test.fetchprofiles.join">
 
     <class name="Department">
-    	<id name="id" type="long">
-    		<generator class="increment"/>
-    	</id>
+        <id name="id"/>
         <property name="code" column="CODE" type="string"/>
         <property name="name" column="NAME" type="string"/>
 	</class>
 
     <class name="Student">
-        <id name="id" type="long">
-            <generator class="increment"/>
-        </id>
+        <id name="id"/>
         <property name="name" column="NAME" type="string"/>
     </class>
 
     <class name="Course">
-        <id name="id" type="long">
-            <generator class="increment"/>
-        </id>
+        <id name="id"/>
         <property name="name" column="NAME" type="string"/>
         <component name="code" class="Course$Code">
             <many-to-one name="department" class="Department" column="DEPT_ID" cascade="merge,persist"/>
@@ -39,9 +33,7 @@
     </class>
 
     <class name="CourseOffering" table="`SECTION`">
-        <id name="id" type="long">
-            <generator class="increment"/>
-        </id>
+        <id name="id"/>
         <many-to-one name="course" column="COURSE_ID" class="Course"/>
         <property name="semester" type="int" column="SEMESTER"/>
         <property name="year" type="int" column="`YEAR`"/>
@@ -59,9 +51,7 @@
     </class>
 
     <class name="Enrollment">
-        <id name="id" type="long">
-            <generator class="increment"/>
-        </id>
+        <id name="id"/>
         <many-to-one name="offering" column="SECTION_ID" class="CourseOffering" cascade="none"/>
         <many-to-one name="student" column="STUDENT_ID" class="Student" cascade="none"/>
         <property name="finalGrade" column="FINAL_GRADE" type="int"/>

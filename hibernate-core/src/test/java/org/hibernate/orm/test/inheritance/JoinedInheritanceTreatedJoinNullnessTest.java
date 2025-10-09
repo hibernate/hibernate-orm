@@ -4,16 +4,6 @@
  */
 package org.hibernate.orm.test.inheritance;
 
-import java.util.List;
-
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.Jira;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -27,12 +17,22 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Marco Belladelli
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = {
 		JoinedInheritanceTreatedJoinNullnessTest.AbstractCompany.class,
 		JoinedInheritanceTreatedJoinNullnessTest.AbstractDcCompany.class,
@@ -87,6 +87,7 @@ public class JoinedInheritanceTreatedJoinNullnessTest {
 			final CriteriaQuery<Long> cq = cb.createQuery( Long.class );
 			final Root<AbstractDcCompany> root = cq.from( AbstractDcCompany.class );
 			consumer.apply( cb, cq, root );
+			//noinspection removal
 			final List<Long> resultList = session.createQuery( cq.select( root.get( "id" ) ) ).getResultList();
 			assertThat( resultList ).hasSize( expectedResults );
 		} );
@@ -96,6 +97,7 @@ public class JoinedInheritanceTreatedJoinNullnessTest {
 			final CriteriaQuery<AbstractDcCompany> cq = cb.createQuery( AbstractDcCompany.class );
 			final Root<AbstractDcCompany> root = cq.from( AbstractDcCompany.class );
 			consumer.apply( cb, cq, root );
+			//noinspection removal
 			final List<AbstractDcCompany> resultList = session.createQuery( cq.select( root ) ).getResultList();
 			assertThat( resultList ).hasSize( expectedResults );
 		} );
@@ -105,7 +107,7 @@ public class JoinedInheritanceTreatedJoinNullnessTest {
 		void apply(CriteriaBuilder cb, CriteriaQuery<?> cq, Root<AbstractDcCompany> root);
 	}
 
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final RcCompany rc = new RcCompany( "rc" );
@@ -119,16 +121,12 @@ public class JoinedInheritanceTreatedJoinNullnessTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from DcCompanySeed" ).executeUpdate();
-			session.createMutationQuery( "delete from RcCompanyUser" ).executeUpdate();
-			session.createMutationQuery( "delete from DcCompany" ).executeUpdate();
-			session.createMutationQuery( "delete from AbstractCompany" ).executeUpdate();
-		} );
+		scope.dropData();
 	}
 
+	@SuppressWarnings({"unused", "FieldCanBeLocal"})
 	@Entity( name = "AbstractCompany" )
 	@Inheritance( strategy = InheritanceType.JOINED )
 	public static abstract class AbstractCompany {
@@ -158,6 +156,7 @@ public class JoinedInheritanceTreatedJoinNullnessTest {
 		}
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity( name = "DcCompany" )
 	public static class DcCompany extends AbstractDcCompany {
 		@ManyToOne( fetch = FetchType.LAZY )
@@ -172,6 +171,7 @@ public class JoinedInheritanceTreatedJoinNullnessTest {
 		}
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity( name = "DcCompanySeed" )
 	public static class DcCompanySeed extends AbstractDcCompany {
 		@ManyToOne
@@ -186,6 +186,7 @@ public class JoinedInheritanceTreatedJoinNullnessTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "RcCompany" )
 	public static class RcCompany extends AbstractCompany {
 		public RcCompany() {
@@ -196,6 +197,7 @@ public class JoinedInheritanceTreatedJoinNullnessTest {
 		}
 	}
 
+	@SuppressWarnings({"unused", "FieldCanBeLocal"})
 	@Entity( name = "RcCompanyUser" )
 	public static class RcCompanyUser {
 		@Id

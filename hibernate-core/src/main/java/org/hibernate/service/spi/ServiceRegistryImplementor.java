@@ -30,6 +30,8 @@ public interface ServiceRegistryImplementor extends ServiceRegistry {
 		destroy();
 	}
 
+	boolean isActive();
+
 	/**
 	 * Release resources
 	 */

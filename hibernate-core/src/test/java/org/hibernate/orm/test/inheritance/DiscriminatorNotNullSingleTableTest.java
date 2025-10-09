@@ -4,45 +4,47 @@
  */
 package org.hibernate.orm.test.inheritance;
 
-import java.math.BigDecimal;
-import java.sql.Statement;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
-
 import org.hibernate.Session;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import java.math.BigDecimal;
+import java.sql.Statement;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author Vlad Mihalcea
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialect(H2Dialect.class)
-public class DiscriminatorNotNullSingleTableTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				DebitAccount.class,
-				CreditAccount.class,
-				OtherAccount.class
-		};
+@DomainModel(annotatedClasses = {
+		DiscriminatorNotNullSingleTableTest.DebitAccount.class,
+		DiscriminatorNotNullSingleTableTest.CreditAccount.class,
+		DiscriminatorNotNullSingleTableTest.OtherAccount.class
+})
+@SessionFactory
+public class DiscriminatorNotNullSingleTableTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::entity-inheritance-single-table-discriminator-value-persist-example[]
 			DebitAccount debitAccount = new DebitAccount();
 			debitAccount.setId(1L);
@@ -79,7 +81,7 @@ public class DiscriminatorNotNullSingleTableTest extends BaseEntityManagerFuncti
 			//end::entity-inheritance-single-table-discriminator-value-persist-example[]
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::entity-inheritance-single-table-discriminator-value-persist-example[]
 
 			Map<Long, Account> accounts = entityManager.createQuery(
@@ -88,11 +90,11 @@ public class DiscriminatorNotNullSingleTableTest extends BaseEntityManagerFuncti
 			.stream()
 			.collect(Collectors.toMap(Account::getId, Function.identity()));
 
-			assertEquals(4, accounts.size());
-			assertEquals(DebitAccount.class, accounts.get(1L).getClass());
-			assertEquals(CreditAccount.class, accounts.get(2L).getClass());
-			assertEquals(Account.class, accounts.get(3L).getClass());
-			assertEquals(OtherAccount.class, accounts.get(4L).getClass());
+			Assertions.assertEquals( 4, accounts.size() );
+			Assertions.assertEquals( DebitAccount.class, accounts.get(1L).getClass() );
+			Assertions.assertEquals( CreditAccount.class, accounts.get(2L).getClass() );
+			Assertions.assertEquals( Account.class, accounts.get(3L).getClass() );
+			Assertions.assertEquals( OtherAccount.class, accounts.get(4L).getClass() );
 			//end::entity-inheritance-single-table-discriminator-value-persist-example[]
 		});
 	}

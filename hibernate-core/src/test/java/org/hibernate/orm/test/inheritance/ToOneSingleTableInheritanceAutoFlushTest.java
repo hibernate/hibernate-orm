@@ -4,17 +4,6 @@
  */
 package org.hibernate.orm.test.inheritance;
 
-import java.util.List;
-
-import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.Jira;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
@@ -24,12 +13,23 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Marco Belladelli
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = {
 		ToOneSingleTableInheritanceAutoFlushTest.SiteUser.class,
 		ToOneSingleTableInheritanceAutoFlushTest.Profile.class,
@@ -38,7 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SessionFactory( useCollectingStatementInspector = true )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17686" )
 public class ToOneSingleTableInheritanceAutoFlushTest {
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Profile profile = new Profile( 1L, "profile_1" );
@@ -52,12 +52,9 @@ public class ToOneSingleTableInheritanceAutoFlushTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from SiteUser" ).executeUpdate();
-			session.createMutationQuery( "delete from Profile" ).executeUpdate();
-		} );
+		scope.dropData();
 	}
 
 	@Test
@@ -68,6 +65,7 @@ public class ToOneSingleTableInheritanceAutoFlushTest {
 			inspector.clear();
 
 			profile.setName( "new_profile_1" );
+			//noinspection removal
 			final List<SiteUser> resultList = session.createQuery(
 					"from SiteUser u join u.profile p where p.name = 'new_profile_1'",
 					SiteUser.class
@@ -87,6 +85,7 @@ public class ToOneSingleTableInheritanceAutoFlushTest {
 			inspector.clear();
 
 			communityProfile.setCommunity( "new_community_2" );
+			//noinspection removal
 			final List<SiteUser> resultList = session.createQuery(
 					"from SiteUser u join u.communityProfile p where p.community = 'new_community_2'",
 					SiteUser.class

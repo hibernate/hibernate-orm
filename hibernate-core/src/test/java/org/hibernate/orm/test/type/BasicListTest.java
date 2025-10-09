@@ -41,12 +41,12 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.persistence.TypedQuery;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Christian Beikov
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @BootstrapServiceRegistry(
 		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
@@ -65,22 +65,23 @@ public class BasicListTest {
 			em.persist( new TableWithIntegerList( 2L, Arrays.asList( 512, 112, null, 0 ) ) );
 			em.persist( new TableWithIntegerList( 3L, null ) );
 
-			Query q;
-			q = em.createNamedQuery( "TableWithIntegerList.Native.insert" );
-			q.setParameter( "id", 4L );
-			q.setParameter( "data", Arrays.asList( null, null, 0 ), integerListType );
-			q.executeUpdate();
+			//noinspection deprecation,unchecked
+			em.createNamedQuery( "TableWithIntegerList.Native.insert" )
+					.setParameter( "id", 4L )
+					.setParameter( "data", Arrays.asList( null, null, 0 ), integerListType )
+					.executeUpdate();
 
-			q = em.createNativeQuery( "INSERT INTO table_with_integer_list(id, the_list) VALUES ( :id , :data )" );
-			q.setParameter( "id", 5L );
-			q.setParameter( "data", Arrays.asList( null, null, 0 ), integerListType );
-			q.executeUpdate();
+			//noinspection deprecation,unchecked
+			em.createNativeQuery( "INSERT INTO table_with_integer_list(id, the_list) VALUES ( :id , :data )" )
+					.setParameter( "id", 5L )
+					.setParameter( "data", Arrays.asList( null, null, 0 ), integerListType )
+					.executeUpdate();
 		} );
 	}
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@Test
@@ -88,23 +89,24 @@ public class BasicListTest {
 		scope.inSession( em -> {
 			TableWithIntegerList tableRecord;
 			tableRecord = em.find( TableWithIntegerList.class, 1L );
-			assertThat( tableRecord.getTheList(), is( Collections.emptyList() ) );
+			assertThat( tableRecord.getTheList() ).isEmpty();
 
 			tableRecord = em.find( TableWithIntegerList.class, 2L );
-			assertThat( tableRecord.getTheList(), is( Arrays.asList( 512, 112, null, 0 ) ) );
+			assertThat( tableRecord.getTheList() ).contains( 512, 112, null, 0 );
 
 			tableRecord = em.find( TableWithIntegerList.class, 3L );
-			assertThat( tableRecord.getTheList(), is( (Object) null ) );
+			assertThat( tableRecord.getTheList() ).isNull();
 		} );
 	}
 
 	@Test
 	public void testQueryById(SessionFactoryScope scope) {
 		scope.inSession( em -> {
+			//noinspection removal
 			TypedQuery<TableWithIntegerList> tq = em.createNamedQuery( "TableWithIntegerList.JPQL.getById", TableWithIntegerList.class );
 			tq.setParameter( "id", 2L );
 			TableWithIntegerList tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getTheList(), is( Arrays.asList( 512, 112, null, 0 ) ) );
+			assertThat( tableRecord.getTheList() ).contains( 512, 112, null, 0 );
 		} );
 	}
 
@@ -115,20 +117,22 @@ public class BasicListTest {
 			reason = "Bug in MariaDB https://jira.mariadb.org/browse/MDEV-21530")
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
+			//noinspection removal
 			TypedQuery<TableWithIntegerList> tq = em.createNamedQuery( "TableWithIntegerList.JPQL.getByData", TableWithIntegerList.class );
 			tq.setParameter( "data", Collections.emptyList() );
 			TableWithIntegerList tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getId(), is( 1L ) );
+			assertThat( tableRecord.getId() ).isEqualTo( 1L );
 		} );
 	}
 
 	@Test
 	public void testNativeQueryById(SessionFactoryScope scope) {
 		scope.inSession( em -> {
+			//noinspection removal
 			TypedQuery<TableWithIntegerList> tq = em.createNamedQuery( "TableWithIntegerList.Native.getById", TableWithIntegerList.class );
 			tq.setParameter( "id", 2L );
 			TableWithIntegerList tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getTheList(), is( Arrays.asList( 512, 112, null, 0 ) ) );
+			assertThat( tableRecord.getTheList() ).contains( 512, 112, null, 0 );
 		} );
 	}
 
@@ -146,13 +150,14 @@ public class BasicListTest {
 			final Dialect dialect = em.getDialect();
 			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
 			final String param = integerListType.getJdbcType().wrapWriteExpression( ":data", null, dialect );
+			//noinspection removal
 			Query<TableWithIntegerList> tq = em.createNativeQuery(
 						"SELECT * FROM table_with_integer_list t WHERE the_list " + op + " " + param,
 					TableWithIntegerList.class
 			);
 			tq.setParameter( "data", Arrays.asList( 512, 112, null, 0 ), integerListType );
 			TableWithIntegerList tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getId(), is( 2L ) );
+			assertThat( tableRecord.getId() ).isEqualTo( 2L );
 		} );
 	}
 

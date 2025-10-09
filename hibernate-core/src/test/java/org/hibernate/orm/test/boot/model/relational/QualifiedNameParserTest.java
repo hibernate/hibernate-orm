@@ -4,16 +4,14 @@
  */
 package org.hibernate.orm.test.boot.model.relational;
 
+import org.hamcrest.MatcherAssert;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
-
-import org.junit.Test;
-
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Andrea Boriero
@@ -30,9 +28,9 @@ public class QualifiedNameParserTest {
 	public void testStringSplittingWithSchema() {
 		QualifiedNameParser.NameParts nameParts = PARSER.parse( "schema.MyEntity", null, DEFAULT_SCHEMA );
 
-		assertThat( nameParts.getCatalogName(), is( nullValue() ) );
-		assertThat( nameParts.getSchemaName().getText(), is( DEFAULT_SCHEMA.getText() ) );
-		assertThat( nameParts.getObjectName().getText(), is( "MyEntity" ) );
+		MatcherAssert.assertThat( nameParts.getCatalogName(), is( nullValue() ) );
+		MatcherAssert.assertThat( nameParts.getSchemaName().getText(), is( DEFAULT_SCHEMA.getText() ) );
+		MatcherAssert.assertThat( nameParts.getObjectName().getText(), is( "MyEntity" ) );
 	}
 
 	@Test
@@ -43,9 +41,9 @@ public class QualifiedNameParserTest {
 				DEFAULT_SCHEMA
 		);
 
-		assertThat( nameParts.getCatalogName().getText(), is( DEFAULT_CATALOG.getText() ) );
-		assertThat( nameParts.getSchemaName().getText(), is( DEFAULT_SCHEMA.getText() ) );
-		assertThat( nameParts.getObjectName().getText(), is( "MyEntity" ) );
+		MatcherAssert.assertThat( nameParts.getCatalogName().getText(), is( DEFAULT_CATALOG.getText() ) );
+		MatcherAssert.assertThat( nameParts.getSchemaName().getText(), is( DEFAULT_SCHEMA.getText() ) );
+		MatcherAssert.assertThat( nameParts.getObjectName().getText(), is( "MyEntity" ) );
 	}
 
 	@Test
@@ -56,8 +54,8 @@ public class QualifiedNameParserTest {
 				null
 		);
 
-		assertThat( nameParts.getCatalogName(), is( nullValue() ) );
-		assertThat( nameParts.getSchemaName(), is( nullValue() ) );
-		assertThat( nameParts.getObjectName().getText(), is( "MyEntity" ) );
+		MatcherAssert.assertThat( nameParts.getCatalogName(), is( nullValue() ) );
+		MatcherAssert.assertThat( nameParts.getSchemaName(), is( nullValue() ) );
+		MatcherAssert.assertThat( nameParts.getObjectName().getText(), is( "MyEntity" ) );
 	}
 }

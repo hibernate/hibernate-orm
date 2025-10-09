@@ -4,23 +4,17 @@
  */
 package org.hibernate.orm.test.schemaupdate;
 
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Map;
-
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.id.enhanced.TableStructure;
 import org.hibernate.mapping.Table;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
@@ -30,41 +24,28 @@ import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.hibernate.cfg.JdbcSettings.FORMAT_SQL;
 
 /**
  * @author Steve Ebersole
  */
-public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
-	private StandardServiceRegistry ssr;
-
-	@Before
-	public void before() {
-		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( AvailableSettings.FORMAT_SQL, false )
-				.build();
-	}
-
-	@After
-	public void after() {
-		StandardServiceRegistryBuilder.destroy( ssr );
-	}
-
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ServiceRegistry(settings = @Setting(name = FORMAT_SQL, value = "false"))
+public class SchemaUpdateTableBackedSequenceTest {
 	@Test
-	public void testCreateTableOnUpdate() {
-		Metadata metadata = new MetadataSources( ssr ).buildMetadata();
+	public void testCreateTableOnUpdate(ServiceRegistryScope registryScope) {
+		final var registry = registryScope.getRegistry();
 
-		Database database = metadata.getDatabase();
-
-		TableStructure tableStructure = new TableStructure(
+		final var metadata = new MetadataSources( registry ).buildMetadata();
+		final var database = metadata.getDatabase();
+		final var tableStructure = new TableStructure(
 				"orm",
 				new QualifiedTableName( null, null, Identifier.toIdentifier( "test_seq" ) ),
 				Identifier.toIdentifier( "nextval" ),
@@ -75,14 +56,15 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 		tableStructure.registerExportables( database );
 
 		// let's make sure the InitCommand is there
-		assertEquals( 1, database.getDefaultNamespace().getTables().size() );
+		Assertions.assertEquals( 1, database.getDefaultNamespace().getTables().size() );
 		Table table = database.getDefaultNamespace().getTables().iterator().next();
 		SqlStringGenerationContext context = SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment(), null, null );
-		assertEquals( 1, table.getInitCommands( context ).size() );
+		Assertions.assertEquals( 1, table.getInitCommands( context ).size() );
 
 		final TargetImpl target = new TargetImpl();
 
-		ssr.getService( SchemaManagementTool.class ).getSchemaMigrator( Collections.emptyMap() ).doMigration(
+		final var migrator = registry.requireService( SchemaManagementTool.class ).getSchemaMigrator( Collections.emptyMap() );
+		migrator.doMigration(
 				metadata,
 				new ExecutionOptions() {
 					@Override
@@ -92,7 +74,7 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 
 					@Override
 					public Map<String,Object> getConfigurationValues() {
-						return ssr.requireService( ConfigurationService.class ).getSettings();
+						return registry.requireService( ConfigurationService.class ).getSettings();
 					}
 
 					@Override
@@ -114,17 +96,16 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 				}
 		);
 
-		assertTrue( target.found );
+		Assertions.assertTrue( target.found );
 
 		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
 	}
 
-	class TargetImpl implements ScriptTargetOutput {
+	static class TargetImpl implements ScriptTargetOutput {
 		boolean found = false;
 
 		@Override
 		public void prepare() {
-
 		}
 
 		@Override
@@ -136,7 +117,6 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 
 		@Override
 		public void release() {
-
 		}
 	}
 }

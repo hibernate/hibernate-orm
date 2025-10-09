@@ -11,6 +11,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -18,10 +19,15 @@ import jakarta.persistence.Id;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-15784")
 @DomainModel(annotatedClasses = PrimitiveArrayNaturalIdTest.HashedContent.class)
 @SessionFactory
 public class PrimitiveArrayNaturalIdTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
 	public void testPersistByteArrayNaturalId(SessionFactoryScope scope) {

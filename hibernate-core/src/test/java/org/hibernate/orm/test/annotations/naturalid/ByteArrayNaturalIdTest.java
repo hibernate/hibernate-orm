@@ -21,6 +21,7 @@ import jakarta.persistence.Id;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				ByteArrayNaturalIdTest.TestEntity.class,
@@ -31,12 +32,11 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @SkipForDialect(dialectClass = InformixDialect.class,
 		reason = "Blobs are not allowed in this expression (equality test with column of type BYTE)")
 public class ByteArrayNaturalIdTest {
-
 	private static final String NATURAL_ID_1 = "N1";
 
 	@AfterEach
-	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
 	@Test

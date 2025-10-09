@@ -6,18 +6,17 @@ package org.hibernate.orm.test.cdi.general.hibernatesearch.delayed;
 
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.se.SeContainer;
-import jakarta.enterprise.inject.se.SeContainerInitializer;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.orm.test.cdi.testsupport.CdiContainer;
+import org.hibernate.orm.test.cdi.testsupport.CdiContainerScope;
 import org.hibernate.tool.schema.Action;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.hibernate.orm.test.cdi.general.hibernatesearch.Monitor;
@@ -36,9 +35,10 @@ import org.hibernate.orm.test.cdi.general.hibernatesearch.TheNestedDependentBean
 import org.hibernate.orm.test.cdi.general.hibernatesearch.TheNonHibernateBeanConsumer;
 import org.hibernate.orm.test.cdi.general.hibernatesearch.TheSharedApplicationScopedBean;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests support for requesting CDI beans in Hibernate Search
@@ -57,29 +57,31 @@ import static org.junit.Assert.assertEquals;
  *
  * @see HibernateSearchSimulatedIntegrator
  */
-public class HibernateSearchDelayedCdiSupportTest extends BaseUnitTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ExtendWith( Monitor.Resetter.class )
+public class HibernateSearchDelayedCdiSupportTest {
 	@Test
-	public void testIt() {
-		Monitor.reset();
+	@CdiContainer(beanClasses = {
+			TheApplicationScopedBean.class,
+			TheNamedApplicationScopedBean.class,
+			TheMainNamedApplicationScopedBeanImpl.class,
+			TheAlternativeNamedApplicationScopedBeanImpl.class,
+			TheSharedApplicationScopedBean.class,
+			TheDependentBean.class,
+			TheNamedDependentBean.class,
+			TheMainNamedDependentBeanImpl.class,
+			TheAlternativeNamedDependentBeanImpl.class,
+			TheNestedDependentBean.class,
+			TheNonHibernateBeanConsumer.class
+	})
+	public void testIt(CdiContainerScope cdiContainerScope) {
 
 		final TheFallbackBeanInstanceProducer fallbackBeanInstanceProducer =
 				new TheFallbackBeanInstanceProducer();
 		final HibernateSearchSimulatedIntegrator beanConsumingIntegrator =
 				new HibernateSearchSimulatedIntegrator( fallbackBeanInstanceProducer );
 
-		final SeContainerInitializer cdiInitializer = SeContainerInitializer.newInstance()
-				.disableDiscovery()
-				.addBeanClasses( TheApplicationScopedBean.class )
-				.addBeanClasses( TheNamedApplicationScopedBean.class, TheMainNamedApplicationScopedBeanImpl.class,
-						TheAlternativeNamedApplicationScopedBeanImpl.class )
-				.addBeanClasses( TheSharedApplicationScopedBean.class )
-				.addBeanClasses( TheDependentBean.class )
-				.addBeanClasses( TheNamedDependentBean.class, TheMainNamedDependentBeanImpl.class,
-						TheAlternativeNamedDependentBeanImpl.class )
-				.addBeanClasses( TheNestedDependentBean.class )
-				.addBeanClasses( TheNonHibernateBeanConsumer.class );
-
-		try (final SeContainer cdiContainer = cdiInitializer.initialize()) {
+		try (SeContainer cdiContainer = cdiContainerScope.getContainer()) {
 			// Simulate CDI bean consumers outside of Hibernate ORM
 			Instance<TheNonHibernateBeanConsumer> nonHibernateBeanConsumerInstance =
 					cdiContainer.getBeanManager().createInstance().select( TheNonHibernateBeanConsumer.class );
@@ -98,49 +100,67 @@ public class HibernateSearchDelayedCdiSupportTest extends BaseUnitTestCase {
 			// Nested dependent bean: 1 instance per bean that depends on it
 			assertEquals( 1, Monitor.theNestedDependentBean().currentInstantiationCount() );
 
-			try (SessionFactoryImplementor sessionFactory = buildSessionFactory( cdiContainer, beanConsumingIntegrator )) {
-				// Here, the HibernateSearchSimulatedIntegrator has just been integrated and has requested beans
-				// See HibernateSearchSimulatedIntegrator for a detailed list of requested beans
+			try (BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder()
+					.applyIntegrator( beanConsumingIntegrator )
+					.build()) {
 
-				beanConsumingIntegrator.ensureInstancesInitialized();
+				try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
+						.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
+						.applySetting( AvailableSettings.CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
+						.applySetting( AvailableSettings.DELAY_CDI_ACCESS, "true" )
+						.build()) {
 
-				// Application scope: maximum 1 instance as soon as at least one was requested
-				assertEquals( 1, Monitor.theApplicationScopedBean().currentInstantiationCount() );
-				assertEquals( 1, Monitor.theMainNamedApplicationScopedBean().currentInstantiationCount() );
-				assertEquals( 0, Monitor.theAlternativeNamedApplicationScopedBean().currentInstantiationCount() );
-				assertEquals( 1, Monitor.theSharedApplicationScopedBean().currentInstantiationCount() );
+					try (SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) new MetadataSources( ssr )
+							.addAnnotatedClass( TheEntity.class )
+							.buildMetadata()
+							.getSessionFactoryBuilder()
+							.build()) {
+						// Here, the HibernateSearchSimulatedIntegrator has just been integrated and has requested beans
+						// See HibernateSearchSimulatedIntegrator for a detailed list of requested beans
 
-				// Dependent scope: 1 instance per bean we requested explicitly
-				assertEquals( 2, Monitor.theDependentBean().currentInstantiationCount() );
-				assertEquals( 2, Monitor.theMainNamedDependentBean().currentInstantiationCount() );
-				assertEquals( 0, Monitor.theAlternativeNamedDependentBean().currentInstantiationCount() );
+						beanConsumingIntegrator.ensureInstancesInitialized();
 
-				// Reflection-instantiated: 1 instance per bean we requested explicitly
-				assertEquals( 2, fallbackBeanInstanceProducer.currentInstantiationCount() );
-				assertEquals( 2, fallbackBeanInstanceProducer.currentNamedInstantiationCount() );
+						// Application scope: maximum 1 instance as soon as at least one was requested
+						assertEquals( 1, Monitor.theApplicationScopedBean().currentInstantiationCount() );
+						assertEquals( 1, Monitor.theMainNamedApplicationScopedBean().currentInstantiationCount() );
+						assertEquals( 0, Monitor.theAlternativeNamedApplicationScopedBean().currentInstantiationCount() );
+						assertEquals( 1, Monitor.theSharedApplicationScopedBean().currentInstantiationCount() );
 
-				// Nested dependent bean: 1 instance per bean that depends on it
-				assertEquals( 7, Monitor.theNestedDependentBean().currentInstantiationCount() );
+						// Dependent scope: 1 instance per bean we requested explicitly
+						assertEquals( 2, Monitor.theDependentBean().currentInstantiationCount() );
+						assertEquals( 2, Monitor.theMainNamedDependentBean().currentInstantiationCount() );
+						assertEquals( 0, Monitor.theAlternativeNamedDependentBean().currentInstantiationCount() );
 
-				// Expect one PostConstruct call per CDI bean instance
-				assertEquals( 1, Monitor.theApplicationScopedBean().currentPostConstructCount() );
-				assertEquals( 1, Monitor.theMainNamedApplicationScopedBean().currentPostConstructCount() );
-				assertEquals( 0, Monitor.theAlternativeNamedApplicationScopedBean().currentPostConstructCount() );
-				assertEquals( 1, Monitor.theSharedApplicationScopedBean().currentPostConstructCount() );
-				assertEquals( 2, Monitor.theDependentBean().currentPostConstructCount() );
-				assertEquals( 2, Monitor.theMainNamedDependentBean().currentPostConstructCount() );
-				assertEquals( 0, Monitor.theAlternativeNamedDependentBean().currentPostConstructCount() );
-				assertEquals( 7, Monitor.theNestedDependentBean().currentPostConstructCount() );
+						// Reflection-instantiated: 1 instance per bean we requested explicitly
+						assertEquals( 2, fallbackBeanInstanceProducer.currentInstantiationCount() );
+						assertEquals( 2, fallbackBeanInstanceProducer.currentNamedInstantiationCount() );
 
-				// Expect no PreDestroy call yet
-				assertEquals( 0, Monitor.theApplicationScopedBean().currentPreDestroyCount() );
-				assertEquals( 0, Monitor.theMainNamedApplicationScopedBean().currentPreDestroyCount() );
-				assertEquals( 0, Monitor.theAlternativeNamedApplicationScopedBean().currentPreDestroyCount() );
-				assertEquals( 0, Monitor.theSharedApplicationScopedBean().currentPreDestroyCount() );
-				assertEquals( 0, Monitor.theDependentBean().currentPreDestroyCount() );
-				assertEquals( 0, Monitor.theMainNamedDependentBean().currentPreDestroyCount() );
-				assertEquals( 0, Monitor.theAlternativeNamedDependentBean().currentPreDestroyCount() );
-				assertEquals( 0, Monitor.theNestedDependentBean().currentPreDestroyCount() );
+						// Nested dependent bean: 1 instance per bean that depends on it
+						assertEquals( 7, Monitor.theNestedDependentBean().currentInstantiationCount() );
+
+						// Expect one PostConstruct call per CDI bean instance
+						assertEquals( 1, Monitor.theApplicationScopedBean().currentPostConstructCount() );
+						assertEquals( 1, Monitor.theMainNamedApplicationScopedBean().currentPostConstructCount() );
+						assertEquals( 0, Monitor.theAlternativeNamedApplicationScopedBean().currentPostConstructCount() );
+						assertEquals( 1, Monitor.theSharedApplicationScopedBean().currentPostConstructCount() );
+						assertEquals( 2, Monitor.theDependentBean().currentPostConstructCount() );
+						assertEquals( 2, Monitor.theMainNamedDependentBean().currentPostConstructCount() );
+						assertEquals( 0, Monitor.theAlternativeNamedDependentBean().currentPostConstructCount() );
+						assertEquals( 7, Monitor.theNestedDependentBean().currentPostConstructCount() );
+
+						// Expect no PreDestroy call yet
+						assertEquals( 0, Monitor.theApplicationScopedBean().currentPreDestroyCount() );
+						assertEquals( 0, Monitor.theMainNamedApplicationScopedBean().currentPreDestroyCount() );
+						assertEquals( 0, Monitor.theAlternativeNamedApplicationScopedBean().currentPreDestroyCount() );
+						assertEquals( 0, Monitor.theSharedApplicationScopedBean().currentPreDestroyCount() );
+						assertEquals( 0, Monitor.theDependentBean().currentPreDestroyCount() );
+						assertEquals( 0, Monitor.theMainNamedDependentBean().currentPreDestroyCount() );
+						assertEquals( 0, Monitor.theAlternativeNamedDependentBean().currentPreDestroyCount() );
+						assertEquals( 0, Monitor.theNestedDependentBean().currentPreDestroyCount() );
+					}
+
+				}
+
 			}
 
 			// Here, the NonRegistryManagedBeanConsumingIntegrator has just been disintegrated and has released beans
@@ -174,28 +194,4 @@ public class HibernateSearchDelayedCdiSupportTest extends BaseUnitTestCase {
 		assertEquals( 7, Monitor.theNestedDependentBean().currentPreDestroyCount() );
 	}
 
-	private SessionFactoryImplementor buildSessionFactory(SeContainer cdiContainer,
-			HibernateSearchSimulatedIntegrator beanConsumingIntegrator) {
-		BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder()
-				.applyIntegrator( beanConsumingIntegrator )
-				.build();
-
-		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
-				.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
-				.applySetting( AvailableSettings.CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
-				.applySetting( AvailableSettings.DELAY_CDI_ACCESS, "true" )
-				.build();
-
-		try {
-			return (SessionFactoryImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( TheEntity.class )
-					.buildMetadata()
-					.getSessionFactoryBuilder()
-					.build();
-		}
-		catch (Exception e) {
-			StandardServiceRegistryBuilder.destroy( ssr );
-			throw e;
-		}
-	}
 }

@@ -4,28 +4,28 @@
  */
 package org.hibernate.orm.test.inheritance.discriminator;
 
-import java.util.List;
-
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.Jira;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Tuple;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Marco Belladelli
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = {
 		CaseStatementWithTypeTest.SingleParent.class,
 		CaseStatementWithTypeTest.SingleChildA.class,
@@ -43,7 +43,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SessionFactory
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17413" )
 public class CaseStatementWithTypeTest {
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.persist( new SingleChildA( 1L ) );
@@ -57,14 +57,9 @@ public class CaseStatementWithTypeTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from SingleParent" ).executeUpdate();
-			session.createMutationQuery( "delete from JoinedParent" ).executeUpdate();
-			session.createMutationQuery( "delete from JoinedDiscParent" ).executeUpdate();
-			session.createMutationQuery( "delete from UnionParent" ).executeUpdate();
-		} );
+		scope.dropData();
 	}
 
 	@Test
@@ -110,6 +105,7 @@ public class CaseStatementWithTypeTest {
 			else {
 				sb.append( String.format( ", %s from %s p", caseExpression, parent.getSimpleName() ) );
 			}
+			//noinspection removal
 			final List<Tuple> resultList = session.createQuery( sb.toString(), Tuple.class ).getResultList();
 			assertThat( resultList ).hasSize( 2 );
 			if ( orderBy ) {
@@ -121,6 +117,7 @@ public class CaseStatementWithTypeTest {
 		} );
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity( name = "SingleParent" )
 	@Inheritance( strategy = InheritanceType.SINGLE_TABLE )
 	public static class SingleParent {
@@ -135,6 +132,7 @@ public class CaseStatementWithTypeTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "SingleChildA" )
 	public static class SingleChildA extends SingleParent {
 		public SingleChildA() {
@@ -145,6 +143,7 @@ public class CaseStatementWithTypeTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "SingleChildB" )
 	public static class SingleChildB extends SingleParent {
 		public SingleChildB() {
@@ -155,6 +154,7 @@ public class CaseStatementWithTypeTest {
 		}
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity( name = "JoinedParent" )
 	@Inheritance( strategy = InheritanceType.JOINED )
 	public static class JoinedParent {
@@ -169,6 +169,7 @@ public class CaseStatementWithTypeTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "JoinedChildA" )
 	public static class JoinedChildA extends JoinedParent {
 		public JoinedChildA() {
@@ -179,6 +180,7 @@ public class CaseStatementWithTypeTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "JoinedChildB" )
 	public static class JoinedChildB extends JoinedParent {
 		public JoinedChildB() {
@@ -189,6 +191,7 @@ public class CaseStatementWithTypeTest {
 		}
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity( name = "JoinedDiscParent" )
 	@Inheritance( strategy = InheritanceType.JOINED )
 	@DiscriminatorColumn
@@ -204,6 +207,7 @@ public class CaseStatementWithTypeTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "JoinedDiscChildA" )
 	public static class JoinedDiscChildA extends JoinedDiscParent {
 		public JoinedDiscChildA() {
@@ -214,6 +218,7 @@ public class CaseStatementWithTypeTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "JoinedDiscChildB" )
 	public static class JoinedDiscChildB extends JoinedDiscParent {
 		public JoinedDiscChildB() {
@@ -224,6 +229,7 @@ public class CaseStatementWithTypeTest {
 		}
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity( name = "UnionParent" )
 	@Inheritance( strategy = InheritanceType.TABLE_PER_CLASS )
 	public static class UnionParent {
@@ -238,6 +244,7 @@ public class CaseStatementWithTypeTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "UnionChildA" )
 	public static class UnionChildA extends UnionParent {
 		public UnionChildA() {
@@ -248,6 +255,7 @@ public class CaseStatementWithTypeTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "UnionChildB" )
 	public static class UnionChildB extends UnionParent {
 		public UnionChildB() {

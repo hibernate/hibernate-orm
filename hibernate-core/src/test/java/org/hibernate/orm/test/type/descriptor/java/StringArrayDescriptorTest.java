@@ -26,7 +26,7 @@ public class StringArrayDescriptorTest extends AbstractDescriptorTest<String[]> 
 
 	@Override
 	protected Data<String[]> getTestData() {
-		return new Data<String[]>( original, copy, different );
+		return new Data<>( original, copy, different );
 	}
 
 	@Override

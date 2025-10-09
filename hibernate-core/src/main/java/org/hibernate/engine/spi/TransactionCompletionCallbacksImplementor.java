@@ -10,9 +10,8 @@ import org.hibernate.Incubating;
  * @since 7.2
  *
  * @author Gavin King
- *
  */
-@Incubating // is this separate interface really needed?
+@Incubating
 public interface TransactionCompletionCallbacksImplementor extends TransactionCompletionCallbacks {
 	/**
 	 * Are there any registered before-completion callbacks?

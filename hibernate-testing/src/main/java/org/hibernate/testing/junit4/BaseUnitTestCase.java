@@ -28,7 +28,10 @@ import org.jboss.logging.Logger;
  * The base unit test adapter.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use JUnit 5/6
  */
+@Deprecated
 @RunWith( CustomRunner.class )
 public abstract class BaseUnitTestCase {
 

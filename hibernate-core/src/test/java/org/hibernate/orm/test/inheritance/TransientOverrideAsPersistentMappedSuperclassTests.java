@@ -45,19 +45,20 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-14103")
 @DomainModel(
 		annotatedClasses = {
-				TransientOverrideAsPersistentMappedSuperclass.Employee.class,
-				TransientOverrideAsPersistentMappedSuperclass.Editor.class,
-				TransientOverrideAsPersistentMappedSuperclass.Writer.class,
-				TransientOverrideAsPersistentMappedSuperclass.Group.class,
-				TransientOverrideAsPersistentMappedSuperclass.Job.class
+				TransientOverrideAsPersistentMappedSuperclassTests.Employee.class,
+				TransientOverrideAsPersistentMappedSuperclassTests.Editor.class,
+				TransientOverrideAsPersistentMappedSuperclassTests.Writer.class,
+				TransientOverrideAsPersistentMappedSuperclassTests.Group.class,
+				TransientOverrideAsPersistentMappedSuperclassTests.Job.class
 		}
 )
 @SessionFactory
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.CRITERIA_COPY_TREE, value = "true"))
-public class TransientOverrideAsPersistentMappedSuperclass {
+public class TransientOverrideAsPersistentMappedSuperclassTests {
 
 	@Test
 	public void testFindByRootClass(SessionFactoryScope scope) {
@@ -99,6 +100,7 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 	@Test
 	public void testQueryByRootClass(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final List<Employee> employees = session.createQuery( "from Employee", Employee.class )
 					.getResultList();
 			assertEquals( 2, employees.size() );
@@ -117,11 +119,13 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 	@Test
 	public void testQueryByRootClassAndOverridenProperty(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final Employee editor = session.createQuery( "from Employee where title=:title", Employee.class )
 					.setParameter( "title", "Senior Editor" )
 					.getSingleResult();
 			assertThat( editor, instanceOf( Editor.class ) );
 
+			//noinspection removal
 			final Employee writer = session.createQuery( "from Employee where title=:title", Employee.class )
 					.setParameter( "title", "Writing" )
 					.getSingleResult();
@@ -132,8 +136,9 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 	}
 
 	@Test
-	public void testQueryByRootClassAndOverridenPropertyTreat(SessionFactoryScope scope) {
+	public void testQueryByRootClassAndOverriddenPropertyTreat(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final Employee editor = session.createQuery(
 					"from Employee e where treat( e as Editor ).title=:title",
 					Employee.class
@@ -142,6 +147,7 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 					.getSingleResult();
 			assertThat( editor, instanceOf( Editor.class ) );
 
+			//noinspection removal
 			final Employee writer = session.createQuery(
 					"from Employee e where treat( e as Writer).title=:title",
 					Employee.class
@@ -157,11 +163,13 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 	@Test
 	public void testQueryBySublassAndOverridenProperty(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final Editor editor = session.createQuery( "from Editor where title=:title", Editor.class )
 					.setParameter( "title", "Senior Editor" )
 					.getSingleResult();
 			assertThat( editor, instanceOf( Editor.class ) );
 
+			//noinspection removal
 			final Writer writer = session.createQuery( "from Writer where title=:title", Writer.class )
 					.setParameter( "title", "Writing" )
 					.getSingleResult();
@@ -171,7 +179,7 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 	}
 
 	@Test
-	public void testCriteriaQueryByRootClassAndOverridenProperty(SessionFactoryScope scope) {
+	public void testCriteriaQueryByRootClassAndOverriddenProperty(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 
 			final CriteriaBuilder builder = session.getCriteriaBuilder();
@@ -185,6 +193,7 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 					parameter
 			);
 			query.where( predicateEditor );
+			//noinspection removal
 			final Employee editor = session.createQuery( query )
 					.setParameter( "title", "Senior Editor" )
 					.getSingleResult();
@@ -195,6 +204,7 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 					parameter
 			);
 			query.where( predicateWriter );
+			//noinspection removal
 			final Employee writer = session.createQuery( query )
 					.setParameter( "title", "Writing" )
 					.getSingleResult();
@@ -207,14 +217,14 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 	@BeforeEach
 	public void setupData(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			Job jobEditor = new Job( "Edit" );
+			var jobEditor = new Job( "Edit" );
 			jobEditor.setEmployee( new Editor( "Jane Smith", "Senior Editor" ) );
-			Job jobWriter = new Job( "Write" );
+			var jobWriter = new Job( "Write" );
 			jobWriter.setEmployee( new Writer( "John Smith", new Group( "Writing" ) ) );
 
-			Employee editor = jobEditor.getEmployee();
-			Employee writer = jobWriter.getEmployee();
-			Group group = Writer.class.cast( writer ).getGroup();
+			var editor = jobEditor.getEmployee();
+			var writer = jobWriter.getEmployee();
+			var group = ((Writer) writer).getGroup();
 
 			session.persist( editor );
 			session.persist( group );
@@ -226,7 +236,7 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@MappedSuperclass
@@ -268,6 +278,7 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity(name = "Editor")
 	public static class Editor extends Employee {
 		public Editor(String name, String title) {
@@ -290,6 +301,7 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity(name = "Writer")
 	public static class Writer extends Employee {
 		private Group group;
@@ -328,6 +340,7 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 		}
 	}
 
+	@SuppressWarnings({"unused", "SpellCheckingInspection"})
 	@Entity(name = "Group")
 	@Table(name = "WorkGroup")
 	public static class Group {
@@ -354,6 +367,7 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity(name = "Job")
 	public static class Job {
 		private String name;

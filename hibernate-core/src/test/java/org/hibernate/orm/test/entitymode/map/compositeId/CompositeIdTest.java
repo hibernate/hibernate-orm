@@ -10,18 +10,24 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/entitymode/map/compositeId/CompId.hbm.xml"
 )
 @SessionFactory
 @JiraKey(value = "HHH-15201")
 public class CompositeIdTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
 	public void testImplicitCompositeIdInDynamicMapMode(SessionFactoryScope scope) {

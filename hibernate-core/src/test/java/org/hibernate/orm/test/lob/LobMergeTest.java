@@ -4,106 +4,100 @@
  */
 package org.hibernate.orm.test.lob;
 
-import java.util.Arrays;
-
-import org.hibernate.Session;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+import java.sql.SQLException;
 
 import static org.hibernate.Hibernate.getLobHelper;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( value = "HHH-2680" )
-@RequiresDialectFeature( {DialectChecks.SupportsExpectedLobUsagePattern.class, DialectChecks.SupportsLobValueChangePropagation.class} ) // Skip for Sybase. HHH-6807
-public class LobMergeTest extends BaseCoreFunctionalTestCase {
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class )
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLobValueChangePropagation.class )
+@DomainModel(xmlMappings = "org/hibernate/orm/test/lob/LobMappings.hbm.xml")
+@SessionFactory
+public class LobMergeTest {
 	private static final int LOB_SIZE = 10000;
 
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
-	}
-
-	public String[] getMappings() {
-		return new String[] { "lob/LobMappings.hbm.xml" };
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testMergingBlobData() throws Exception {
+	public void testMergingBlobData(SessionFactoryScope factoryScope) throws Exception {
 		final byte[] original = BlobLocatorTest.buildByteArray( LOB_SIZE, true );
 		final byte[] updated = BlobLocatorTest.buildByteArray( LOB_SIZE, false );
 
-		Session s = openSession();
-		s.beginTransaction();
+		var detached = factoryScope.fromTransaction( (s) -> {
+			LobHolder entity = new LobHolder();
+			entity.setBlobLocator( getLobHelper().createBlob( original ) );
+			s.persist( entity );
+			return entity;
+		} );
 
-		LobHolder entity = new LobHolder();
-		entity.setBlobLocator( getLobHelper().createBlob( original ) );
-		s.persist( entity );
-		s.getTransaction().commit();
-		s.close();
+		factoryScope.inTransaction( (s) -> {
+			// entity still detached...
+			detached.setBlobLocator( getLobHelper().createBlob( updated ) );
+			s.merge( detached );
+		} );
 
-		s = openSession();
-		s.beginTransaction();
-		// entity still detached...
-		entity.setBlobLocator( getLobHelper().createBlob( updated ) );
-		entity = (LobHolder) s.merge( entity );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		entity = (LobHolder) s.get( LobHolder.class, entity.getId() );
-		assertEquals( "blob sizes did not match after merge", LOB_SIZE, entity.getBlobLocator().length() );
-		assertTrue(
-				"blob contents did not match after merge",
-				Arrays.equals( updated, BlobLocatorTest.extractData( entity.getBlobLocator() ) )
-		);
-		s.remove( entity );
-		s.getTransaction().commit();
-		s.close();
+		factoryScope.inTransaction( (s) -> {
+			try {
+				var entity = s.find( LobHolder.class, detached.getId() );
+				Assertions.assertEquals( LOB_SIZE, entity.getBlobLocator().length(),
+						"blob sizes did not match after merge" );
+				Assertions.assertArrayEquals( updated, BlobLocatorTest.extractData( entity.getBlobLocator() ),
+						"blob contents did not match after merge" );
+				s.remove( entity );
+			}
+			catch (SQLException e) {
+				throw new RuntimeException( e );
+			}
+		} );
 	}
 
 	@Test
-	public void testMergingClobData() throws Exception {
+	public void testMergingClobData(SessionFactoryScope factoryScope) throws Exception {
 		final String original = ClobLocatorTest.buildString( LOB_SIZE, 'a' );
 		final String updated = ClobLocatorTest.buildString( LOB_SIZE, 'z' );
 
-		Session s = openSession();
-		s.beginTransaction();
+		var detached = factoryScope.fromTransaction( (s) -> {
+			LobHolder entity = new LobHolder();
+			entity.setClobLocator( getLobHelper().createClob( original ) );
+			s.persist( entity );
+			return entity;
+		} );
 
-		LobHolder entity = new LobHolder();
-		entity.setClobLocator( getLobHelper().createClob( original ) );
-		s.persist( entity );
-		s.getTransaction().commit();
-		s.close();
+		var detached2 = factoryScope.fromTransaction( (s) -> {
+			// entity still detached...
+			detached.setClobLocator( getLobHelper().createClob( updated ) );
+			return s.merge( detached );
+		} );
 
-		s = openSession();
-		s.beginTransaction();
-		// entity still detached...
-		entity.setClobLocator( getLobHelper().createClob( updated ) );
-		entity = (LobHolder) s.merge( entity );
-		s.flush();
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		entity = (LobHolder) s.get( LobHolder.class, entity.getId() );
-		assertEquals( "clob sizes did not match after merge", LOB_SIZE, entity.getClobLocator().length() );
-		assertEquals(
-				"clob contents did not match after merge",
-				updated,
-				ClobLocatorTest.extractData( entity.getClobLocator() )
-		);
-		s.remove( entity );
-		s.getTransaction().commit();
-		s.close();
+		factoryScope.inTransaction( (s) -> {
+			try {
+				var entity = s.find( LobHolder.class, detached.getId() );
+				Assertions.assertEquals( LOB_SIZE, entity.getClobLocator().length(),
+						"clob sizes did not match after merge" );
+				Assertions.assertEquals( updated, ClobLocatorTest.extractData( entity.getClobLocator() ),
+						"clob contents did not match after merge" );
+				s.remove( entity );
+			}
+			catch (Exception e) {
+				throw new RuntimeException( e );
+			}
+		} );
 	}
 }

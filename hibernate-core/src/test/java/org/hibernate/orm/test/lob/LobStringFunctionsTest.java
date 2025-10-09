@@ -32,10 +32,9 @@ import static org.hamcrest.Matchers.isOneOf;
 import static org.hamcrest.core.Is.is;
 import static org.hibernate.Hibernate.getLobHelper;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-15162")
-@DomainModel(
-		annotatedClasses = LobStringFunctionsTest.TestEntity.class
-)
+@DomainModel(annotatedClasses = LobStringFunctionsTest.TestEntity.class)
 @SessionFactory
 @SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not allow these functions for LOBs")
 public class LobStringFunctionsTest {
@@ -64,7 +63,7 @@ public class LobStringFunctionsTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@Test

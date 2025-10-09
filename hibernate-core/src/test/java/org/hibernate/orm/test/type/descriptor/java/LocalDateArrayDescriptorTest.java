@@ -37,7 +37,7 @@ public class LocalDateArrayDescriptorTest extends AbstractDescriptorTest<LocalDa
 
 	@Override
 	protected Data<LocalDate[]> getTestData() {
-		return new Data<LocalDate[]>( original, copy, different );
+		return new Data<>( original, copy, different );
 	}
 
 	@Override

@@ -15,34 +15,37 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 /**
  * @author Vlad Mihalcea
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-10465")
-@SkipForDialect(MariaDBDialect.class)
-@SkipForDialect(MySQLDialect.class)
-@SkipForDialect(value = OracleDialect.class, comment = "Oracle date does not support milliseconds  ")
-@SkipForDialect(value = HANADialect.class, comment = "HANA date does not support milliseconds  ")
-public class TimeAndTimestampTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-			Event.class
-		};
+@SkipForDialect(dialectClass = MariaDBDialect.class)
+@SkipForDialect(dialectClass = MySQLDialect.class)
+@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle date does not support milliseconds  ")
+@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA date does not support milliseconds  ")
+@DomainModel(annotatedClasses = TimeAndTimestampTest.Event.class)
+@SessionFactory
+public class TimeAndTimestampTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void test() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void test(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
 			Event event = new Event();
 			event.id = 1L;
 			event.timeValue = new Time( 1000 );
@@ -50,7 +53,8 @@ public class TimeAndTimestampTest extends BaseNonConfigCoreFunctionalTestCase {
 
 			session.persist( event );
 		} );
-		doInHibernate( this::sessionFactory, session -> {
+
+		factoryScope.inTransaction( (session) -> {
 			Event event = session.find( Event.class, 1L );
 			assertEquals(1000, event.timeValue.getTime() % TimeUnit.DAYS.toMillis( 1 ));
 			assertEquals(45677, event.timestampValue.getTime() % TimeUnit.DAYS.toMillis( 1 ));
@@ -59,17 +63,9 @@ public class TimeAndTimestampTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Entity(name = "Event")
 	public static class Event {
-
 		@Id
 		private Long id;
-
 		private Time timeValue;
-
 		private Timestamp timestampValue;
-	}
-
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
 	}
 }

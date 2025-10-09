@@ -3,148 +3,115 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jdbc;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
-import org.junit.Test;
 
 import org.hibernate.JDBCException;
-import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.jdbc.ReturningWork;
-import org.hibernate.jdbc.Work;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import java.sql.ResultSet;
+import java.sql.Statement;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * GeneralWorkTest implementation
  *
  * @author Steve Ebersole
  */
-public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public String getBaseForMappings() {
-		return "";
-	}
-
-	@Override
-	public String[] getMappings() {
-		return new String[] { "org/hibernate/orm/test/jdbc/Mappings.hbm.xml" };
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/jdbc/Mappings.hbm.xml")
+@SessionFactory
+public class GeneralWorkTest {
+	@AfterEach
+	void cleanup(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testGeneralUsage() throws Throwable {
-		final Session session = openSession();
-		session.beginTransaction();
-		session.doWork(
-				new Work() {
-					public void execute(Connection connection) throws SQLException {
-						// in this current form, users must handle try/catches themselves for proper resource release
-						Statement statement = null;
-						try {
-							statement = ((SessionImplementor)session).getJdbcCoordinator().getStatementPreparer().createStatement();
-							ResultSet resultSet = null;
-							try {
+	public void testGeneralUsage(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> session.doWork( (connection) -> {
+			// in this current form, users must handle try/catches themselves for proper resource release
+			Statement statement = null;
+			try {
+				statement = session.getJdbcCoordinator().getStatementPreparer().createStatement();
+				ResultSet resultSet = null;
+				try {
+					resultSet = session.getJdbcCoordinator().getResultSetReturn().extract( statement, "select * from T_JDBC_PERSON" );
+				}
+				finally {
+					releaseQuietly( session, resultSet, statement );
+				}
+				try {
+					session.getJdbcCoordinator().getResultSetReturn().extract( statement, "select * from T_JDBC_BOAT" );
+				}
+				finally {
+					releaseQuietly( session, resultSet, statement );
+				}
+			}
+			finally {
+				releaseQuietly( session, statement );
+			}
+		} ) );
+	}
 
-								resultSet = ((SessionImplementor)session).getJdbcCoordinator().getResultSetReturn().extract( statement, "select * from T_JDBC_PERSON" );
-							}
-							finally {
-								releaseQuietly( ((SessionImplementor)session), resultSet, statement );
-							}
-							try {
-								((SessionImplementor)session).getJdbcCoordinator().getResultSetReturn().extract( statement, "select * from T_JDBC_BOAT" );
-							}
-							finally {
-								releaseQuietly( ((SessionImplementor)session), resultSet, statement );
-							}
-						}
-						finally {
-							releaseQuietly( ((SessionImplementor)session), statement );
-						}
+	@Test
+	public void testSQLExceptionThrowing(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			try {
+				session.doWork( (connection) -> {
+					Statement statement = null;
+					try {
+						statement = session.getJdbcCoordinator().getStatementPreparer().createStatement();
+						session.getJdbcCoordinator().getResultSetReturn().extract( statement, "select * from non_existent" );
+					}
+					finally {
+						releaseQuietly( session, statement );
+					}
+					fail( "expecting exception" );
+				} );
+			}
+			catch ( JDBCException expected ) {
+				// expected outcome
+			}
+		} );
+	}
+
+	@Test
+	public void testGeneralReturningUsage(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var p = new Person( "Abe", "Lincoln" );
+			session.persist( p );
+		} );
+
+		factoryScope.inTransaction( (session) -> {
+			long count = session.doReturningWork( (connection) -> {
+				// in this current form, users must handle try/catches themselves for proper resource release
+				Statement statement = null;
+				long personCount = 0;
+				try {
+					statement = session.getJdbcCoordinator().getStatementPreparer().createStatement();
+					ResultSet resultSet = null;
+					try {
+						resultSet = session.getJdbcCoordinator().getResultSetReturn().extract( statement, "select count(*) from T_JDBC_PERSON" );
+						resultSet.next();
+						personCount = resultSet.getLong( 1 );
+						assertEquals( 1L, personCount );
+					}
+					finally {
+						releaseQuietly( session, resultSet, statement );
 					}
 				}
-		);
-		session.getTransaction().commit();
-		session.close();
-	}
-
-	@Test
-	public void testSQLExceptionThrowing() {
-		final Session session = openSession();
-		session.beginTransaction();
-		try {
-			session.doWork(
-					new Work() {
-						public void execute(Connection connection) throws SQLException {
-							Statement statement = null;
-							try {
-								statement = ((SessionImplementor)session).getJdbcCoordinator().getStatementPreparer().createStatement();
-								((SessionImplementor)session).getJdbcCoordinator().getResultSetReturn().extract( statement, "select * from non_existent" );
-							}
-							finally {
-								releaseQuietly( ((SessionImplementor)session), statement );
-							}
-						}
-					}
-			);
-			fail( "expecting exception" );
-		}
-		catch ( JDBCException expected ) {
-			// expected outcome
-		}
-		session.getTransaction().commit();
-		session.close();
-	}
-
-	@Test
-	public void testGeneralReturningUsage() throws Throwable {
-		Session session = openSession();
-		session.beginTransaction();
-		Person p = new Person( "Abe", "Lincoln" );
-		session.persist( p );
-		session.getTransaction().commit();
-
-		final Session session2 = openSession();
-		session2.beginTransaction();
-		long count = session2.doReturningWork(
-				new ReturningWork<Long>() {
-					public Long execute(Connection connection) throws SQLException {
-						// in this current form, users must handle try/catches themselves for proper resource release
-						Statement statement = null;
-						long personCount = 0;
-						try {
-							statement = ((SessionImplementor)session2).getJdbcCoordinator().getStatementPreparer().createStatement();
-							ResultSet resultSet = null;
-							try {
-								resultSet = ((SessionImplementor)session2).getJdbcCoordinator().getResultSetReturn().extract( statement, "select count(*) from T_JDBC_PERSON" );
-								resultSet.next();
-								personCount = resultSet.getLong( 1 );
-								assertEquals( 1L, personCount );
-							}
-							finally {
-								releaseQuietly( ((SessionImplementor)session2), resultSet, statement );
-							}
-						}
-						finally {
-							releaseQuietly( ((SessionImplementor)session2), statement );
-						}
-						return personCount;
-					}
+				finally {
+					releaseQuietly( session, statement );
 				}
-		);
-		session2.getTransaction().commit();
-		session2.close();
-		assertEquals( 1L, count );
-
-		session = openSession();
-		session.beginTransaction();
-		session.remove( p );
-		session.getTransaction().commit();
-		session.close();
+				return personCount;
+			} );
+		} );
 	}
 
 	private void releaseQuietly(SessionImplementor s, Statement statement) {

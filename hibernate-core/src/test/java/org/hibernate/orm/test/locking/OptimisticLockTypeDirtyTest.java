@@ -12,28 +12,26 @@ import jakarta.persistence.Id;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class OptimisticLockTypeDirtyTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class,
-		};
+@SuppressWarnings("JUnitMalformedDeclaration")
+@Jpa(annotatedClasses = OptimisticLockTypeDirtyTest.Person.class)
+public class OptimisticLockTypeDirtyTest {
+	@AfterEach
+	void tearDown(EntityManagerFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Person person = new Person();
+	public void test(EntityManagerFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
+			var person = new Person();
 			person.setId(1L);
 			person.setName("John Doe");
 			person.setCountry("US");
@@ -41,9 +39,10 @@ public class OptimisticLockTypeDirtyTest extends BaseEntityManagerFunctionalTest
 			person.setCreatedOn(new Timestamp(System.currentTimeMillis()));
 			entityManager.persist(person);
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+
+		factoryScope.inTransaction( entityManager -> {
 			//tag::locking-optimistic-lock-type-dirty-update-example[]
-			Person person = entityManager.find(Person.class, 1L);
+			var person = entityManager.find(Person.class, 1L);
 			person.setCity("Washington D.C.");
 			//end::locking-optimistic-lock-type-dirty-update-example[]
 		});

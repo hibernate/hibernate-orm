@@ -4,46 +4,43 @@
  */
 package org.hibernate.orm.test.hql;
 
-import java.lang.reflect.Field;
-import java.util.Map;
-
-import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl;
-import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import java.lang.reflect.Field;
+import java.util.Map;
 
-public class MetamodelBoundedCacheTest extends BaseNonConfigCoreFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = MetamodelBoundedCacheTest.Employee.class)
+@SessionFactory
+public class MetamodelBoundedCacheTest {
 
 	@Test
 	@JiraKey(value = "HHH-14948")
-	public void testMemoryConsumptionOfFailedImportsCache() throws NoSuchFieldException, IllegalAccessException {
-		MappingMetamodel mappingMetamodel = sessionFactory().getMappingMetamodel();
-
-		MappingMetamodelImpl mImpl = (MappingMetamodelImpl) mappingMetamodel;
-		final JpaMetamodel jpaMetamodel = mImpl.getJpaMetamodel();
+	public void testMemoryConsumptionOfFailedImportsCache(SessionFactoryScope factoryScope) throws NoSuchFieldException, IllegalAccessException {
+		var jpaModel = factoryScope.getSessionFactory().getJpaMetamodel();
 
 		for ( int i = 0; i < 1001; i++ ) {
-			jpaMetamodel.qualifyImportableName( "nonexistend" + i );
+			jpaModel.qualifyImportableName( "nonexistend" + i );
 		}
 
-		Map<?, ?> validImports = extractMapFromMetamodel( jpaMetamodel, "nameToImportMap" );
-		Map<?, ?> invalidImports  = extractMapFromMetamodel( jpaMetamodel, "knownInvalidnameToImportMap" );
+		Map<?, ?> validImports = extractMapFromMetamodel( jpaModel, "nameToImportMap" );
+		Map<?, ?> invalidImports  = extractMapFromMetamodel( jpaModel, "knownInvalidnameToImportMap" );
 
-		assertEquals( 2, validImports.size() );
+		Assertions.assertEquals( 2, validImports.size() );
 
 		// VERY hard-coded, but considering the possibility of a regression of a memory-related issue,
 		// it should be worth it
-		assertEquals( 1000, invalidImports.size() );
+		Assertions.assertEquals( 1000, invalidImports.size() );
 	}
 
 
@@ -52,11 +49,6 @@ public class MetamodelBoundedCacheTest extends BaseNonConfigCoreFunctionalTestCa
 		field.setAccessible( true );
 		//noinspection unchecked
 		return (Map<?,?>) field.get( jpaMetamodel );
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Employee.class };
 	}
 
 	@Entity( name = "Employee" )

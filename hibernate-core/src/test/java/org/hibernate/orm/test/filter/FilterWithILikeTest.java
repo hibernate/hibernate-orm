@@ -4,23 +4,23 @@
  */
 package org.hibernate.orm.test.filter;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
-
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				FilterWithILikeTest.TestEntity.class
@@ -30,8 +30,12 @@ import jakarta.persistence.Id;
 @JiraKey("HHH-16464")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCaseInsensitiveLike.class)
 public class FilterWithILikeTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -46,10 +50,10 @@ public class FilterWithILikeTest {
 
 	@Test
 	public void testQuery(SessionFactoryScope scope) {
-
 		scope.inTransaction(
 				session -> {
 					session.enableFilter( "nameFilter" ).setParameter( "name", "not_filtered" );
+					//noinspection deprecation
 					session.createQuery( "from TestEntity " ).list();
 				}
 		);

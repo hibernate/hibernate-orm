@@ -4,12 +4,6 @@
  */
 package org.hibernate.orm.test.tool.schema.internal;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
@@ -33,12 +27,20 @@ import org.hibernate.tool.schema.extract.spi.InformationExtractor;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.internal.AbstractSchemaMigrator;
-import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.tool.schema.spi.GenerationTarget;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Milo van der Zee
@@ -158,7 +160,7 @@ public class CheckForExistingForeignKeyTest {
 		ForeignKey foreignKey = new ForeignKey();
 		TableInformation tableInformation = new TableInformationImpl( null, null, null, false, null );
 		boolean found = (boolean) method.invoke( new SchemaMigrator(), foreignKey, tableInformation );
-		Assert.assertFalse( "Key should not be found", found );
+		assertFalse( found, "Key should not be found" );
 	}
 
 	/**
@@ -181,7 +183,7 @@ public class CheckForExistingForeignKeyTest {
 		ForeignKey foreignKey = new ForeignKey();
 		foreignKey.setName( "objectId2id" );
 		boolean found = (boolean) method.invoke( new SchemaMigrator(), foreignKey, null );
-		Assert.assertFalse( "Key should not be found", found );
+		assertFalse( found, "Key should not be found" );
 	}
 
 	/**
@@ -218,7 +220,7 @@ public class CheckForExistingForeignKeyTest {
 
 		// foreignKey name with same name should match
 		boolean found = (boolean) method.invoke( new SchemaMigrator(), foreignKey, tableInformation );
-		Assert.assertTrue( "Key should be found", found );
+		assertTrue( found, "Key should be found" );
 	}
 
 	/**
@@ -255,7 +257,7 @@ public class CheckForExistingForeignKeyTest {
 
 		// foreignKey name with same name should match
 		boolean found = (boolean) method.invoke( new SchemaMigrator(), foreignKey, tableInformation );
-		Assert.assertFalse( "Key should not be found", found );
+		assertFalse( found, "Key should not be found" );
 	}
 
 	/**
@@ -293,7 +295,7 @@ public class CheckForExistingForeignKeyTest {
 
 		// Check single-column-key to single-column-key, existing (table1.objectId => table2.id)
 		boolean found = (boolean) method.invoke( schemaMigrator, foreignKey, tableInformation );
-		Assert.assertTrue( "Key should be found", found );
+		assertTrue( found, "Key should be found" );
 	}
 
 	/**
@@ -333,7 +335,7 @@ public class CheckForExistingForeignKeyTest {
 
 		// Check single-column-key to single-column-key, existing (table1.objectId => table2.id)
 		boolean found = (boolean) method.invoke( schemaMigrator, foreignKey, tableInformation );
-		Assert.assertFalse( "Key should not be found", found );
+		assertFalse( found, "Key should not be found" );
 	}
 
 	/**

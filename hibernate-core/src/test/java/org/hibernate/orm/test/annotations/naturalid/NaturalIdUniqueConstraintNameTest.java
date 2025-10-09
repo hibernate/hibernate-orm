@@ -4,39 +4,34 @@
  */
 package org.hibernate.orm.test.annotations.naturalid;
 
-import java.util.Map;
-
-import org.hibernate.annotations.NaturalId;
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.mapping.UniqueKey;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import org.hibernate.annotations.NaturalId;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey("HHH-17132")
-public class NaturalIdUniqueConstraintNameTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
+@ServiceRegistry
+public class NaturalIdUniqueConstraintNameTest {
+	private Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { City1.class, City2.class };
 	}
 
 	@Test
-	public void testNaturalIdUsesUniqueConstraintName() {
-		Metadata metadata = new MetadataSources( serviceRegistry() )
+	public void testNaturalIdUsesUniqueConstraintName(ServiceRegistryScope registryScope) {
+		var metadata = new MetadataSources( registryScope.getRegistry() )
 				.addAnnotatedClasses( getAnnotatedClasses() )
 				.buildMetadata();
 
-		Map<String, UniqueKey> uniqueKeys = metadata.getEntityBinding( City1.class.getName() )
+		var uniqueKeys = metadata.getEntityBinding( City1.class.getName() )
 				.getTable()
 				.getUniqueKeys();
 
@@ -44,17 +39,17 @@ public class NaturalIdUniqueConstraintNameTest extends BaseCoreFunctionalTestCas
 		assertEquals( 1, uniqueKeys.size() );
 
 		// The unique key should use the name specified in UniqueConstraint.
-		UniqueKey uniqueKey = uniqueKeys.values().iterator().next();
+		var uniqueKey = uniqueKeys.values().iterator().next();
 		assertEquals( "UK_zipCode_city", uniqueKey.getName() );
 	}
 
 	@Test
-	public void testNaturalIdUsesExplicitColumns() {
-		Metadata metadata = new MetadataSources( serviceRegistry() )
+	public void testNaturalIdUsesExplicitColumns(ServiceRegistryScope registryScope) {
+		var metadata = new MetadataSources( registryScope.getRegistry() )
 				.addAnnotatedClasses( getAnnotatedClasses() )
 				.buildMetadata();
 
-		Map<String, UniqueKey> uniqueKeys = metadata.getEntityBinding( City2.class.getName() )
+		var uniqueKeys = metadata.getEntityBinding( City2.class.getName() )
 				.getTable()
 				.getUniqueKeys();
 
@@ -62,7 +57,7 @@ public class NaturalIdUniqueConstraintNameTest extends BaseCoreFunctionalTestCas
 		assertEquals( 1, uniqueKeys.size() );
 
 		// The unique key should use the name specified in UniqueConstraint.
-		UniqueKey uniqueKey = uniqueKeys.values().iterator().next();
+		var uniqueKey = uniqueKeys.values().iterator().next();
 		assertEquals( "zipCode", uniqueKey.getColumns().get( 0 ).getName() );
 		assertEquals( "city", uniqueKey.getColumns().get( 1 ).getName() );
 	}

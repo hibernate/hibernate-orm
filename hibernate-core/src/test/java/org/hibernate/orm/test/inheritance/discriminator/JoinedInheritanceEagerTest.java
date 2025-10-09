@@ -36,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author Christian Beikov
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				JoinedInheritanceEagerTest.BaseEntity.class,
@@ -69,7 +70,7 @@ public class JoinedInheritanceEagerTest {
 
 	@AfterEach
 	public void cleanUp(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@Test

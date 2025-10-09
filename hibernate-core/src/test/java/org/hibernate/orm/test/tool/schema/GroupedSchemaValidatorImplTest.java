@@ -6,11 +6,11 @@ package org.hibernate.orm.test.tool.schema;
 
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.GroupedSchemaValidatorImpl;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 
 /**

@@ -47,10 +47,14 @@ public class JoinedInheritanceFilterTest implements SessionFactoryScopeAware {
 	void test(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction,
 			TriFunction<SharedSessionContract, Class<?>, Object, Object> find) {
 		inTransaction.accept( scope, s -> {
+			//noinspection deprecation
 			s.createQuery( "SELECT o FROM Owner o INNER JOIN FETCH o.dog d WHERE o.id = 1" ).getResultList();
 			s.enableFilter( "companyFilter" ).setParameter( "companyIdParam", 2l ).validate();
+			//noinspection deprecation
 			s.createQuery( "SELECT o FROM Owner o INNER JOIN FETCH o.dog d WHERE o.id = 1" ).getResultList();
+			//noinspection deprecation
 			s.createQuery( "FROM Animal" ).getResultList();
+			//noinspection deprecation
 			s.createQuery( "FROM Dog" ).getResultList();
 			assertNull( find.apply( s, Owner.class, 1 ) );
 			assertNull( find.apply( s, Animal.class, 1 ) );
@@ -61,7 +65,7 @@ public class JoinedInheritanceFilterTest implements SessionFactoryScopeAware {
 	List<? extends Arguments> transactionKind() {
 		// We want to test both regular and stateless session:
 		BiConsumer<SessionFactoryScope, Consumer<SessionImplementor>> kind1 = SessionFactoryScope::inTransaction;
-		TriFunction<Session, Class<?>, Object, Object> find1 = Session::get;
+		TriFunction<Session, Class<?>, Object, Object> find1 = Session::find;
 		BiConsumer<SessionFactoryScope, Consumer<StatelessSessionImplementor>> kind2 = SessionFactoryScope::inStatelessTransaction;
 		TriFunction<StatelessSession, Class<?>, Object, Object> find2 = StatelessSession::get;
 		return List.of(

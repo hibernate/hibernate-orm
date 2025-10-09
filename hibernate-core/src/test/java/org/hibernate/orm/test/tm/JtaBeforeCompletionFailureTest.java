@@ -10,66 +10,59 @@ import jakarta.persistence.Id;
 import jakarta.transaction.RollbackException;
 import jakarta.transaction.Status;
 import jakarta.transaction.TransactionManager;
-
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.resource.transaction.jta.JtaPlatformStandardTestingImpl;
-
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
-import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.cfg.TransactionSettings.TRANSACTION_COORDINATOR_STRATEGY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
  */
-public class JtaBeforeCompletionFailureTest extends BaseSessionFactoryFunctionalTest {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { SimpleEntity.class };
-	}
-
-	@Override
-	protected void applySettings(StandardServiceRegistryBuilder builder) {
-		TestingJtaBootstrap.prepare( builder.getSettings() );
-		builder.applySetting( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta" );
-	}
-
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ServiceRegistry(
+		settings = @Setting( name = TRANSACTION_COORDINATOR_STRATEGY, value = "jta" ),
+		settingConfigurations = @SettingConfiguration( configurer = TestingJtaBootstrap.class )
+)
+@DomainModel(annotatedClasses = JtaBeforeCompletionFailureTest.SimpleEntity.class)
+@SessionFactory
+public class JtaBeforeCompletionFailureTest {
 	@BeforeEach
-	public void setUp() {
-		inTransaction(
-				session ->
-						session.persist( newEntity( 1 ) )
+	public void setUp(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction(session ->
+			session.persist( newEntity( 1 ) )
 		);
-
 	}
 
 	@AfterEach
-	public void tearDown() {
-		sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
+	public void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
 	@JiraKey(value = "HHH-9888")
-	public void testUniqueConstraintViolationDuringManagedFlush() throws Exception {
+	public void testUniqueConstraintViolationDuringManagedFlush(SessionFactoryScope factoryScope) throws Exception {
 		final TransactionManager tm = JtaPlatformStandardTestingImpl.INSTANCE.transactionManager();
 		assertEquals( Status.STATUS_NO_TRANSACTION, tm.getStatus() );
 
 		// begin the transaction ("CMT" style)
 		tm.begin();
 
-		try (Session session = sessionFactory().openSession()) {
-
+		try (Session session = factoryScope.getSessionFactory().openSession()) {
 			session.persist( newEntity( 2 ) );
-
 			// complete the transaction ("CMT" style) - this leads to the managed flush
 			// which should lead to the UK violation
 			try {

@@ -4,9 +4,6 @@
  */
 package org.hibernate.orm.test.where.annotations;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -16,19 +13,24 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-
 import org.hibernate.annotations.SQLJoinTableRestriction;
 import org.hibernate.annotations.SQLRestriction;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 /**
  * Tests association collections with default AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS,
@@ -36,19 +38,20 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Gail Badner
  */
-public class LazyToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Product.class, Category.class };
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = { LazyToManyWhereTest.Product.class, LazyToManyWhereTest.Category.class })
+@SessionFactory
+public class LazyToManyWhereTest {
+	@AfterEach
+	public void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
 	@JiraKey( value = "HHH-13011" )
-	public void testAssociatedWhereClause() {
-
-		Product product = new Product();
-		Category flowers = new Category();
+	public void testAssociatedWhereClause(SessionFactoryScope factoryScope) {
+		var product = new Product();
+		var flowers = new Category();
 		flowers.id = 1;
 		flowers.name = "flowers";
 		flowers.description = "FLOWERS";
@@ -57,7 +60,7 @@ public class LazyToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 		product.categoriesManyToMany.add( flowers );
 		product.categoriesWithDescManyToMany.add( flowers );
 		product.categoriesWithDescIdLt4ManyToMany.add( flowers );
-		Category vegetables = new Category();
+		var vegetables = new Category();
 		vegetables.id = 2;
 		vegetables.name = "vegetables";
 		vegetables.description = "VEGETABLES";
@@ -66,7 +69,7 @@ public class LazyToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 		product.categoriesManyToMany.add( vegetables );
 		product.categoriesWithDescManyToMany.add( vegetables );
 		product.categoriesWithDescIdLt4ManyToMany.add( vegetables );
-		Category dogs = new Category();
+		var dogs = new Category();
 		dogs.id = 3;
 		dogs.name = "dogs";
 		dogs.description = null;
@@ -75,7 +78,7 @@ public class LazyToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 		product.categoriesManyToMany.add( dogs );
 		product.categoriesWithDescManyToMany.add( dogs );
 		product.categoriesWithDescIdLt4ManyToMany.add( dogs );
-		Category building = new Category();
+		var building = new Category();
 		building.id = 4;
 		building.name = "building";
 		building.description = "BUILDING";
@@ -85,69 +88,54 @@ public class LazyToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 		product.categoriesWithDescManyToMany.add( building );
 		product.categoriesWithDescIdLt4ManyToMany.add( building );
 
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
-					session.persist( flowers );
-					session.persist( vegetables );
-					session.persist( dogs );
-					session.persist( building );
-					session.persist( product );
-				}
-		);
+		factoryScope.inTransaction( (session) -> {
+			session.persist( flowers );
+			session.persist( vegetables );
+			session.persist( dogs );
+			session.persist( building );
+			session.persist( product );
+		} );
 
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
-					Product p = session.get( Product.class, product.id );
-					assertNotNull( p );
-					assertEquals( 4, p.categoriesOneToMany.size() );
-					checkIds( p.categoriesOneToMany, new Integer[] { 1, 2, 3, 4 } );
-					assertEquals( 3, p.categoriesWithDescOneToMany.size() );
-					checkIds( p.categoriesWithDescOneToMany, new Integer[] { 1, 2, 4 } );
-					assertEquals( 4, p.categoriesManyToMany.size() );
-					checkIds( p.categoriesManyToMany, new Integer[] { 1, 2, 3, 4 } );
-					assertEquals( 3, p.categoriesWithDescManyToMany.size() );
-					checkIds( p.categoriesWithDescManyToMany, new Integer[] { 1, 2, 4 } );
-					assertEquals( 2, p.categoriesWithDescIdLt4ManyToMany.size() );
-					checkIds( p.categoriesWithDescIdLt4ManyToMany, new Integer[] { 1, 2 } );
-				}
-		);
+		factoryScope.inTransaction( (session) -> {
+			var p = session.find( Product.class, product.id );
+			assertNotNull( p );
+			assertEquals( 4, p.categoriesOneToMany.size() );
+			checkIds( p.categoriesOneToMany, new Integer[] { 1, 2, 3, 4 } );
+			assertEquals( 3, p.categoriesWithDescOneToMany.size() );
+			checkIds( p.categoriesWithDescOneToMany, new Integer[] { 1, 2, 4 } );
+			assertEquals( 4, p.categoriesManyToMany.size() );
+			checkIds( p.categoriesManyToMany, new Integer[] { 1, 2, 3, 4 } );
+			assertEquals( 3, p.categoriesWithDescManyToMany.size() );
+			checkIds( p.categoriesWithDescManyToMany, new Integer[] { 1, 2, 4 } );
+			assertEquals( 2, p.categoriesWithDescIdLt4ManyToMany.size() );
+			checkIds( p.categoriesWithDescIdLt4ManyToMany, new Integer[] { 1, 2 } );
+		} );
 
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
-					Category c = session.get( Category.class, flowers.id );
-					assertNotNull( c );
-					c.inactive = 1;
-				}
-		);
+		factoryScope.inTransaction( (session) -> {
+			var c = session.find( Category.class, flowers.id );
+			assertNotNull( c );
+			c.inactive = 1;
+		} );
 
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
-					Category c = session.get( Category.class, flowers.id );
-					assertNull( c );
-				}
-		);
+		factoryScope.inTransaction( (session) -> {
+			var c = session.find( Category.class, flowers.id );
+			assertNull( c );
+		} );
 
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
-					Product p = session.get( Product.class, product.id );
-					assertNotNull( p );
-					assertEquals( 3, p.categoriesOneToMany.size() );
-					checkIds( p.categoriesOneToMany, new Integer[] { 2, 3, 4 } );
-					assertEquals( 2, p.categoriesWithDescOneToMany.size() );
-					checkIds( p.categoriesWithDescOneToMany, new Integer[] { 2, 4 } );
-					assertEquals( 3, p.categoriesManyToMany.size() );
-					checkIds( p.categoriesManyToMany, new Integer[] { 2, 3, 4 } );
-					assertEquals( 2, p.categoriesWithDescManyToMany.size() );
-					checkIds( p.categoriesWithDescManyToMany, new Integer[] { 2, 4 } );
-					assertEquals( 1, p.categoriesWithDescIdLt4ManyToMany.size() );
-					checkIds( p.categoriesWithDescIdLt4ManyToMany, new Integer[] { 2 } );
-				}
-		);
+		factoryScope.inTransaction( (session) -> {
+			Product p = session.find( Product.class, product.id );
+			assertNotNull( p );
+			assertEquals( 3, p.categoriesOneToMany.size() );
+			checkIds( p.categoriesOneToMany, new Integer[] { 2, 3, 4 } );
+			assertEquals( 2, p.categoriesWithDescOneToMany.size() );
+			checkIds( p.categoriesWithDescOneToMany, new Integer[] { 2, 4 } );
+			assertEquals( 3, p.categoriesManyToMany.size() );
+			checkIds( p.categoriesManyToMany, new Integer[] { 2, 3, 4 } );
+			assertEquals( 2, p.categoriesWithDescManyToMany.size() );
+			checkIds( p.categoriesWithDescManyToMany, new Integer[] { 2, 4 } );
+			assertEquals( 1, p.categoriesWithDescIdLt4ManyToMany.size() );
+			checkIds( p.categoriesWithDescIdLt4ManyToMany, new Integer[] { 2 } );
+		} );
 	}
 
 	private void checkIds(Set<Category> categories, Integer[] expectedIds) {
@@ -201,5 +189,9 @@ public class LazyToManyWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 		private String description;
 
 		private int inactive;
+
+		public int getId() {
+			return id;
+		}
 	}
 }

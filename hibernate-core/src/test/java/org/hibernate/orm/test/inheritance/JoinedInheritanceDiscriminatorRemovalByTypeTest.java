@@ -27,6 +27,7 @@ import static org.hibernate.orm.test.inheritance.JoinedInheritanceDiscriminatorR
 import static org.hibernate.orm.test.inheritance.JoinedInheritanceDiscriminatorRemovalByTypeTest.Car;
 import static org.hibernate.orm.test.inheritance.JoinedInheritanceDiscriminatorRemovalByTypeTest.Truck;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = { Car.class, Truck.class, BaseVehicle.class, BaseEntity.class, } )
 @SessionFactory
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17667" )
@@ -44,7 +45,7 @@ public class JoinedInheritanceDiscriminatorRemovalByTypeTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@Test

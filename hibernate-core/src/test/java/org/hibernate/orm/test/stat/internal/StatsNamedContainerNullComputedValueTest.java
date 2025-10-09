@@ -5,14 +5,11 @@
 package org.hibernate.orm.test.stat.internal;
 
 import org.hibernate.stat.internal.StatsNamedContainer;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.atomic.AtomicInteger;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Assert;
-import org.junit.Test;
-
-import static org.junit.Assert.assertNull;
 
 @JiraKey(value = "HHH-13645")
 public class StatsNamedContainerNullComputedValueTest {
@@ -22,45 +19,41 @@ public class StatsNamedContainerNullComputedValueTest {
 
 	@Test
 	public void testNullComputedValue() {
-		final StatsNamedContainer statsNamedContainer = new StatsNamedContainer<Integer>();
-		assertNull(
-				statsNamedContainer.getOrCompute(
-						"key",
-						v -> {
-							return null;
-						}
-				)
-		);
+		final var statsNamedContainer = new StatsNamedContainer<Integer>();
+		Assertions.assertNull( statsNamedContainer.getOrCompute(
+				"key",
+				v -> null
+		) );
 	}
 
 	@Test
-	public void abletoStoreNullValues() {
-		final StatsNamedContainer statsNamedContainer = new StatsNamedContainer<Integer>();
-		Assert.assertEquals( 0, invocationCounterNullProducer.get() );
-		assertNull(	getCacheWithNullValue( statsNamedContainer ) );
-		Assert.assertEquals( 1, invocationCounterNullProducer.get() );
-		assertNull(	getCacheWithNullValue( statsNamedContainer ) );
-		Assert.assertEquals( 1, invocationCounterNullProducer.get() );
+	public void ableToStoreNullValues() {
+		final var statsNamedContainer = new StatsNamedContainer<Integer>();
+		Assertions.assertEquals( 0, invocationCounterNullProducer.get() );
+		Assertions.assertNull( getCacheWithNullValue( statsNamedContainer ) );
+		Assertions.assertEquals( 1, invocationCounterNullProducer.get() );
+		Assertions.assertNull( getCacheWithNullValue( statsNamedContainer ) );
+		Assertions.assertEquals( 1, invocationCounterNullProducer.get() );
 	}
 
 	@Test
-	public void abletoStoreActualValues() {
-		final StatsNamedContainer statsNamedContainer = new StatsNamedContainer<Integer>();
-		Assert.assertEquals( 0, invocationCounterValueProducer.get() );
-		Assert.assertEquals( 5,	getCacheWithActualValue( statsNamedContainer ) );
-		Assert.assertEquals( 1, invocationCounterValueProducer.get() );
-		Assert.assertEquals( 5,	getCacheWithActualValue( statsNamedContainer ) );
-		Assert.assertEquals( 1, invocationCounterValueProducer.get() );
+	public void ableToStoreActualValues() {
+		final var statsNamedContainer = new StatsNamedContainer<Integer>();
+		Assertions.assertEquals( 0, invocationCounterValueProducer.get() );
+		Assertions.assertEquals( 5, getCacheWithActualValue( statsNamedContainer ) );
+		Assertions.assertEquals( 1, invocationCounterValueProducer.get() );
+		Assertions.assertEquals( 5, getCacheWithActualValue( statsNamedContainer ) );
+		Assertions.assertEquals( 1, invocationCounterValueProducer.get() );
 	}
 
-	private Object getCacheWithActualValue(StatsNamedContainer statsNamedContainer) {
+	private Integer getCacheWithActualValue(StatsNamedContainer<Integer> statsNamedContainer) {
 		return statsNamedContainer.getOrCompute(
 				"key",
 				StatsNamedContainerNullComputedValueTest::produceValue
 		);
 	}
 
-	private Object getCacheWithNullValue(StatsNamedContainer statsNamedContainer) {
+	private Integer getCacheWithNullValue(StatsNamedContainer<Integer> statsNamedContainer) {
 		return statsNamedContainer.getOrCompute(
 				"key",
 				StatsNamedContainerNullComputedValueTest::produceNull
@@ -69,7 +62,7 @@ public class StatsNamedContainerNullComputedValueTest {
 
 	private static Integer produceValue(Object o) {
 		invocationCounterValueProducer.getAndIncrement();
-		return Integer.valueOf( 5 );
+		return 5;
 	}
 
 	private static Integer produceNull(Object v) {

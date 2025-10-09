@@ -4,15 +4,6 @@
  */
 package org.hibernate.orm.test.inheritance;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.Jira;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -21,6 +12,14 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
@@ -29,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Marco Belladelli
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory( useCollectingStatementInspector = true )
 @DomainModel( annotatedClasses = {
 		JoinedInheritanceTreatQueryTest.Product.class,
@@ -40,7 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16574" )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-18745" )
 public class JoinedInheritanceTreatQueryTest {
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Description description = new Description( "description" );
@@ -54,13 +54,9 @@ public class JoinedInheritanceTreatQueryTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from Product" ).executeUpdate();
-			session.createMutationQuery( "delete from ProductOwner" ).executeUpdate();
-			session.createMutationQuery( "delete from Description" ).executeUpdate();
-		} );
+		scope.dropData();
 	}
 
 	@Test
@@ -68,6 +64,7 @@ public class JoinedInheritanceTreatQueryTest {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
 		inspector.clear();
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final Product result = session.createQuery(
 					"from Product p " +
 							"join treat(p.owner AS ProductOwner1) as own1 " +
@@ -174,6 +171,7 @@ public class JoinedInheritanceTreatQueryTest {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
 		inspector.clear();
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final Product result = session.createQuery(
 					"from Product p " +
 							"join treat(p.owner as ProductOwner1).description",
@@ -190,6 +188,7 @@ public class JoinedInheritanceTreatQueryTest {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
 		inspector.clear();
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final ProductOwner result = session.createQuery(
 					"from ProductOwner owner " +
 							"join treat(owner as ProductOwner1).description",
@@ -206,6 +205,7 @@ public class JoinedInheritanceTreatQueryTest {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
 		inspector.clear();
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final Product result = session.createQuery(
 					"from Product p " +
 							"join ProductOwner owner on p.ownerId = owner.id " +
@@ -223,6 +223,7 @@ public class JoinedInheritanceTreatQueryTest {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
 		inspector.clear();
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final Product result = session.createQuery(
 					"from Product p " +
 							"join treat(p.owner AS ProductOwner2) as own2 " +
@@ -235,6 +236,7 @@ public class JoinedInheritanceTreatQueryTest {
 		} );
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "Product" )
 	public static class Product {
 		@Id
@@ -260,6 +262,7 @@ public class JoinedInheritanceTreatQueryTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "ProductOwner" )
 	@Inheritance( strategy = InheritanceType.JOINED )
 	public static class ProductOwner {
@@ -268,6 +271,7 @@ public class JoinedInheritanceTreatQueryTest {
 		private Integer id;
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "ProductOwner1" )
 	public static class ProductOwner1 extends ProductOwner {
 		@ManyToOne
@@ -285,6 +289,7 @@ public class JoinedInheritanceTreatQueryTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "ProductOwner2" )
 	public static class ProductOwner2 extends ProductOwner {
 		@ManyToOne
@@ -304,6 +309,7 @@ public class JoinedInheritanceTreatQueryTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "Description" )
 	public static class Description {
 		@Id

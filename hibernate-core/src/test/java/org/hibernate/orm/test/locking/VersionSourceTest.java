@@ -8,25 +8,28 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 import org.hibernate.annotations.CurrentTimestamp;
-
-
-import java.time.LocalDateTime;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import java.time.LocalDateTime;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Vlad Mihalcea
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = VersionSourceTest.Person.class )
 @SessionFactory
 public class VersionSourceTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
 	public void test(SessionFactoryScope scope) {
@@ -36,10 +39,10 @@ public class VersionSourceTest {
 			person.setId(1L);
 			person.setFirstName("John");
 			person.setLastName("Doe");
-			assertNull(person.getVersion());
+			assertNull( person.getVersion() );
 
 			entityManager.persist(person);
-			assertNotNull(person.getVersion());
+			assertNotNull( person.getVersion() );
 			//end::locking-optimistic-version-timestamp-source-persist-example[]
 		});
 		sleep();

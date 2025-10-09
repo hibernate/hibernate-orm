@@ -4,17 +4,6 @@
  */
 package org.hibernate.orm.test.inheritance;
 
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.mapping.PersistentClass;
-
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.Jira;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.DiscriminatorValue;
@@ -23,12 +12,22 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Table;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Marco Belladelli
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = {
 		MultiLevelInheritanceQueryTest.AbstractRootEntity.class,
 		MultiLevelInheritanceQueryTest.AbstractSuperclass.class,
@@ -38,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SessionFactory
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17292" )
 public class MultiLevelInheritanceQueryTest {
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.persist( new ChildTwoEntity( 1, "superclass_1", "child_one_1", "child_two_1" ) );
@@ -46,9 +45,9 @@ public class MultiLevelInheritanceQueryTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createMutationQuery( "delete from AbstractRootEntity" ).executeUpdate() );
+		scope.dropData();
 	}
 
 	@Test

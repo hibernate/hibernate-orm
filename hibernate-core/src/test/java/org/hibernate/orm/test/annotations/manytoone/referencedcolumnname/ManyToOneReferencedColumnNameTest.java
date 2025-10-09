@@ -4,60 +4,57 @@
  */
 package org.hibernate.orm.test.annotations.manytoone.referencedcolumnname;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
 import java.math.BigDecimal;
-
-import org.hibernate.Session;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
-import org.hibernate.cfg.Configuration;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
  */
-public class ManyToOneReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@RequiresDialectFeature(feature= DialectFeatureChecks.SupportsIdentityColumns.class)
+@ServiceRegistry(settings = @Setting(name= MappingSettings.IMPLICIT_NAMING_STRATEGY, value = "legacy-jpa"))
+@DomainModel(annotatedClasses = {
+		Item.class,
+		Vendor.class,
+		WarehouseItem.class,
+		ZItemCost.class
+})
+@SessionFactory
+public class ManyToOneReferencedColumnNameTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
+
 	@Test
-	@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-	public void testRecoverableExceptionInFkOrdering() throws Exception {
-		//SF should not blow up
-		Vendor v = new Vendor();
-		Item i = new Item();
-		ZItemCost ic = new ZItemCost();
-		ic.setCost( new BigDecimal( 2 ) );
-		ic.setItem( i );
-		ic.setVendor( v );
-		WarehouseItem wi = new WarehouseItem();
-		wi.setDefaultCost( ic );
-		wi.setItem( i );
-		wi.setVendor( v );
-		wi.setQtyInStock( new BigDecimal( 2 ) );
-		Session s = openSession();
-		s.getTransaction().begin();
-		s.persist( i );
-		s.persist( v );
-		s.persist( ic );
-		s.persist( wi );
-		s.flush();
-		s.getTransaction().rollback();
-		s.close();
-	}
+	public void testRecoverableExceptionInFkOrdering(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var v = new Vendor();
+			var i = new Item();
+			var ic = new ZItemCost();
+			ic.setCost( new BigDecimal( 2 ) );
+			ic.setItem( i );
+			ic.setVendor( v );
+			var wi = new WarehouseItem();
+			wi.setDefaultCost( ic );
+			wi.setItem( i );
+			wi.setVendor( v );
+			wi.setQtyInStock( new BigDecimal( 2 ) );
 
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.setImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Item.class,
-				Vendor.class,
-				WarehouseItem.class,
-				ZItemCost.class
-		};
+			session.persist( i );
+			session.persist( v );
+			session.persist( ic );
+			session.persist( wi );
+		} );
 	}
 }

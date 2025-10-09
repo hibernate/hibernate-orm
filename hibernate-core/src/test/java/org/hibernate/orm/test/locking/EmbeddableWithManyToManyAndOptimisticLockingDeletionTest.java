@@ -14,7 +14,8 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Cacheable;
@@ -35,37 +36,39 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hibernate.annotations.CacheConcurrencyStrategy.READ_WRITE;
 
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
-				EmbeddableWithManyToManyAndOptimistickLockingDeletionTest.TagOperator.class,
-				EmbeddableWithManyToManyAndOptimistickLockingDeletionTest.Tag.class
+				EmbeddableWithManyToManyAndOptimisticLockingDeletionTest.TagOperator.class,
+				EmbeddableWithManyToManyAndOptimisticLockingDeletionTest.Tag.class
 		}
 )
 @SessionFactory
 @JiraKey("HHH-16821")
-public class EmbeddableWithManyToManyAndOptimistickLockingDeletionTest {
-
+public class EmbeddableWithManyToManyAndOptimisticLockingDeletionTest {
 	private static final String TAG_OPERATOR_ID = "tagOperatorID";
-	@BeforeAll
+
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					TagOperator operator = new TagOperator( TAG_OPERATOR_ID );
-					session.persist( operator );
-				}
-		);
+		scope.inTransaction( session -> {
+			TagOperator operator = new TagOperator( TAG_OPERATOR_ID );
+			session.persist( operator );
+		} );
+	}
+
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
 	public void testDelete(SessionFactoryScope scope){
-		scope.inTransaction(
-			session -> {
-				TagOperator tagOperator = session.find( TagOperator.class, TAG_OPERATOR_ID );
-				assertThat(tagOperator).isNotNull();
+		scope.inTransaction( session -> {
+			TagOperator tagOperator = session.find( TagOperator.class, TAG_OPERATOR_ID );
+			assertThat(tagOperator).isNotNull();
 
-				session.remove( tagOperator );
-			}
-		);
+			session.remove( tagOperator );
+		} );
 	}
 
 	@Entity(name = "TagOperator")

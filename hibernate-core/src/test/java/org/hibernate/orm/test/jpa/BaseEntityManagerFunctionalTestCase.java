@@ -46,7 +46,10 @@ import static java.util.Collections.emptyMap;
  *
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
+ *
+ * @deprecated This is all JUnit 4 based; Use JUnit 5 or 6 instead.
  */
+@Deprecated
 public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCase {
 
 	// IMPL NOTE : Here we use @Before and @After (instead of @BeforeClassOnce and @AfterClassOnce like we do in

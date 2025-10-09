@@ -4,23 +4,24 @@
  */
 package org.hibernate.orm.test.mapping.type.java;
 
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.IOException;
-import java.sql.Blob;
-import java.sql.SQLException;
-
 import org.hibernate.engine.jdbc.BlobImplementer;
 import org.hibernate.engine.jdbc.proxy.BlobProxy;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.type.descriptor.java.BlobJavaType;
 import org.hibernate.type.descriptor.java.DataHelper;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.sql.Blob;
+import java.sql.SQLException;
+
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 
 /**
@@ -37,7 +38,7 @@ public class BlobDescriptorTest extends AbstractDescriptorTest<Blob> {
 
 	@Override
 	protected Data<Blob> getTestData() {
-		return new Data<Blob>( original, copy, different );
+		return new Data<>( original, copy, different );
 	}
 
 	@Override
@@ -49,12 +50,13 @@ public class BlobDescriptorTest extends AbstractDescriptorTest<Blob> {
 	@Override
 	public void testEquality() {
 		// blobs of the same internal value are not really comparable
-		assertFalse( original == copy );
+		assertNotSame( original, copy );
 		assertTrue( BlobJavaType.INSTANCE.areEqual( original, original ) );
 		assertFalse( BlobJavaType.INSTANCE.areEqual( original, copy ) );
 		assertFalse( BlobJavaType.INSTANCE.areEqual( original, different ) );
 	}
 
+	@Test
 	@Override
 	public void testPassThrough() {
 		// blobs of the same internal value are not really comparable

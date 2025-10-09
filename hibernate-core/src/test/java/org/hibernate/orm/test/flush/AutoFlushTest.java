@@ -10,57 +10,53 @@ import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-
 import org.hibernate.Session;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.jboss.logging.Logger;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class AutoFlushTest extends BaseEntityManagerFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@Jpa(annotatedClasses = {
+		AutoFlushTest.Person.class,
+		AutoFlushTest.Advertisement.class
+})
+public class AutoFlushTest {
+	private final Logger log = Logger.getLogger( AutoFlushTest.class );
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class,
-			Advertisement.class
-		};
+	@AfterEach
+	void tearDown(EntityManagerFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testFlushAutoCommit() {
+	public void testFlushAutoCommit(EntityManagerFactoryScope factoryScope) {
 		EntityManager entityManager = null;
 		EntityTransaction txn = null;
-		try {
-			//tag::flushing-auto-flush-commit-example[]
-			entityManager = entityManagerFactory().createEntityManager();
-			txn = entityManager.getTransaction();
-			txn.begin();
 
-			Person person = new Person("John Doe");
-			entityManager.persist(person);
-			log.info("Entity is in persisted state");
+		final var entityManagerFactory = factoryScope.getEntityManagerFactory();
+		//tag::flushing-auto-flush-commit-example[]
+		entityManager = entityManagerFactory.createEntityManager();
+		txn = entityManager.getTransaction();
+		txn.begin();
 
-			txn.commit();
-			//end::flushing-auto-flush-commit-example[]
-		} catch (RuntimeException e) {
-			if (txn != null && txn.isActive()) txn.rollback();
-			throw e;
-		} finally {
-			if (entityManager != null) {
-				entityManager.close();
-			}
-		}
+		var person = new Person("John Doe");
+		entityManager.persist(person);
+		log.info("Entity is in persisted state");
+
+		txn.commit();
+		//end::flushing-auto-flush-commit-example[]
 	}
 
 	@Test
-	public void testFlushAutoJPQL() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testFlushAutoJPQL(EntityManagerFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			log.info("testFlushAutoJPQL");
 			//tag::flushing-auto-flush-jpql-example[]
 			Person person = new Person("John Doe");
@@ -72,8 +68,8 @@ public class AutoFlushTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testFlushAutoJPQLOverlap() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testFlushAutoJPQLOverlap(EntityManagerFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			log.info("testFlushAutoJPQLOverlap");
 			//tag::flushing-auto-flush-jpql-overlap-example[]
 			Person person = new Person("John Doe");
@@ -84,38 +80,32 @@ public class AutoFlushTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testFlushAutoSQL() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			entityManager.createNativeQuery("delete from Person").executeUpdate();
-		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testFlushAutoSQL(EntityManagerFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			log.info("testFlushAutoSQL");
 			//tag::flushing-auto-flush-sql-example[]
-			assertTrue(((Number) entityManager
-					.createNativeQuery("select count(*) from Person")
-					.getSingleResult()).intValue() == 0);
+			assertEquals( 0, ((Number) entityManager
+					.createNativeQuery( "select count(*) from Person" )
+					.getSingleResult()).intValue() );
 
 			Person person = new Person("John Doe");
 			entityManager.persist(person);
 
-			assertTrue(((Number) entityManager
-					.createNativeQuery("select count(*) from Person")
-					.getSingleResult()).intValue() == 1);
+			assertEquals( 1, ((Number) entityManager
+					.createNativeQuery( "select count(*) from Person" )
+					.getSingleResult()).intValue() );
 			//end::flushing-auto-flush-sql-example[]
 		});
 	}
 
 	@Test
-	public void testFlushAutoSQLNativeSession() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			entityManager.createNativeQuery("delete from Person").executeUpdate();
-		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testFlushAutoSQLNativeSession(EntityManagerFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			log.info("testFlushAutoSQLNativeSession");
 			//tag::flushing-auto-flush-sql-native-example[]
-			assertTrue(((Number) entityManager
-					.createNativeQuery("select count(*) from Person")
-					.getSingleResult()).intValue() == 0);
+			assertEquals( 0, ((Number) entityManager
+					.createNativeQuery( "select count(*) from Person" )
+					.getSingleResult()).intValue() );
 
 			Person person = new Person("John Doe");
 			entityManager.persist(person);
@@ -129,31 +119,28 @@ public class AutoFlushTest extends BaseEntityManagerFunctionalTestCase {
 			//		or using Hibernate's FlushMode enum
 			//session.setHibernateFlushMode(FlushMode.COMMIT);
 
-			assertTrue( session.createNativeQuery( "select count(*) from Person", Integer.class )
-					.uniqueResult() == 0);
+			assertEquals( 0, (int) session.createNativeQuery( "select count(*) from Person", Integer.class )
+					.uniqueResult() );
 			//end::flushing-auto-flush-sql-native-example[]
 		});
 	}
 
 	@Test
-	public void testFlushAutoSQLSynchronization() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			entityManager.createNativeQuery("delete from Person").executeUpdate();
-		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testFlushAutoSQLSynchronization(EntityManagerFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			log.info("testFlushAutoSQLSynchronization");
 			//tag::flushing-auto-flush-sql-synchronization-example[]
-			assertTrue(((Number) entityManager
-					.createNativeQuery("select count(*) from Person")
-					.getSingleResult()).intValue() == 0);
+			assertEquals( 0, ((Number) entityManager
+					.createNativeQuery( "select count(*) from Person" )
+					.getSingleResult()).intValue() );
 
 			Person person = new Person("John Doe");
 			entityManager.persist(person);
 			Session session = entityManager.unwrap(Session.class);
 
-			assertTrue( session.createNativeQuery( "select count(*) from Person", Integer.class )
+			assertEquals( 1, (int) session.createNativeQuery( "select count(*) from Person", Integer.class )
 					.addSynchronizedEntityClass( Person.class )
-					.uniqueResult() == 1);
+					.uniqueResult() );
 			//end::flushing-auto-flush-sql-synchronization-example[]
 		});
 	}

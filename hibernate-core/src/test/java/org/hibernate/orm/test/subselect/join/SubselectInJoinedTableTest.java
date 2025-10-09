@@ -4,62 +4,57 @@
  */
 package org.hibernate.orm.test.subselect.join;
 
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-
-public class SubselectInJoinedTableTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
-	}
-
-	@Override
-	protected String[] getMappings() {
-		return new String[] {
-				"subselect/join/Order.hbm.xml"
-		};
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/subselect/join/Order.hbm.xml")
+@SessionFactory
+public class SubselectInJoinedTableTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	@JiraKey( value = "HHH-10998")
-	public void testSubselectInJoinedTable() {
-		OrderEntry orderEntry1 = new OrderEntry();
-		orderEntry1.setOrderEntryId( 1L );
-		OrderEntry orderEntry2 = new OrderEntry();
-		orderEntry2.setOrderEntryId( 2L );
-		Order order = new Order();
-		order.setOrderId( 3L );
-		order.getOrderEntries().add( orderEntry1 );
-		order.getOrderEntries().add( orderEntry2 );
-		order.setFirstOrderEntry( orderEntry1 );
+	@JiraKey("HHH-10998")
+	public void testSubselectInJoinedTable(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (s) -> {
+			OrderEntry orderEntry1 = new OrderEntry();
+			orderEntry1.setOrderEntryId( 1L );
+			OrderEntry orderEntry2 = new OrderEntry();
+			orderEntry2.setOrderEntryId( 2L );
+			Order order = new Order();
+			order.setOrderId( 3L );
+			order.getOrderEntries().add( orderEntry1 );
+			order.getOrderEntries().add( orderEntry2 );
+			order.setFirstOrderEntry( orderEntry1 );
 
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		s.persist( orderEntry1 );
-		s.persist( orderEntry2 );
-		s.persist( order );
-		tx.commit();
-		s.close();
+			s.persist( orderEntry1 );
+			s.persist( orderEntry2 );
+			s.persist( order );
+		} );
 
-		s = openSession();
-		s.getTransaction().begin();
-		order = (Order) s.get( Order.class, order.getOrderId() );
-		assertEquals( orderEntry1.getOrderEntryId(), order.getFirstOrderEntry().getOrderEntryId() );
-		assertEquals( 2, order.getOrderEntries().size() );
-		assertEquals( orderEntry1.getOrderEntryId(), order.getOrderEntries().get( 0 ).getOrderEntryId() );
-		assertEquals( orderEntry2.getOrderEntryId(), order.getOrderEntries().get( 1 ).getOrderEntryId() );
-		s.getTransaction().commit();
-		s.close();
-
+		factoryScope.inTransaction( (s) -> {
+			var order = s.find( Order.class, 3L );
+			var orderEntry1 = s.find( OrderEntry.class, 1L );
+			var orderEntry2 = s.find( OrderEntry.class, 2L );
+			assertEquals( orderEntry1.getOrderEntryId(), order.getFirstOrderEntry().getOrderEntryId() );
+			assertEquals( 2, order.getOrderEntries().size() );
+			assertEquals( orderEntry1.getOrderEntryId(),
+					order.getOrderEntries().get( 0 ).getOrderEntryId() );
+			assertEquals( orderEntry2.getOrderEntryId(),
+					order.getOrderEntries().get( 1 ).getOrderEntryId() );
+		} );
 	}
 
 	public static class Order {

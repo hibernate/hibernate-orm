@@ -4,39 +4,42 @@
  */
 package org.hibernate.orm.test.type.contributor;
 
-import java.util.List;
-
-import org.hibernate.annotations.JavaType;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.Query;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import org.hibernate.annotations.JavaType;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 /**
  * @author Vlad Mihalcea
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( value = "HHH-11409" )
-public class ArrayTypeCompositionTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { CorporateUser.class };
+@DomainModel(annotatedClasses = ArrayTypeCompositionTest.CorporateUser.class)
+@SessionFactory
+public class ArrayTypeCompositionTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
-	@Override
-	protected void afterEntityManagerFactoryBuilt() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	@BeforeEach
+	protected void createTestData(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
 			CorporateUser user = new CorporateUser();
 			user.setUserName( "Vlad" );
-			entityManager.persist( user );
+			session.persist( user );
 
 			user.getEmailAddresses().add( "vlad@hibernate.info" );
 			user.getEmailAddresses().add( "vlad@hibernate.net" );
@@ -44,25 +47,25 @@ public class ArrayTypeCompositionTest extends BaseEntityManagerFunctionalTestCas
 	}
 
 	@Test
-	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			List<CorporateUser> users = entityManager.createQuery(
-				"select u from CorporateUser u where u.emailAddresses = :address", CorporateUser.class )
-			.unwrap( Query.class )
-			.setParameter( "address", new Array() )
-			.getResultList();
+	public void test(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			List<CorporateUser> users = session.createQuery(
+							"select u from CorporateUser u where u.emailAddresses = :address", CorporateUser.class )
+					.setParameter( "address", new Array() )
+					.getResultList();
 
 			assertTrue( users.isEmpty() );
 		} );
 	}
 
 	@Test
-	public void testNativeSQL() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			List<Array> emails = entityManager.createNativeQuery(
-				"select u.emailAddresses from CorporateUser u where u.userName = :name" )
-			.setParameter( "name", "Vlad" )
-			.getResultList();
+	public void testNativeSQL(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			//noinspection unchecked
+			List<Array> emails = session.createNativeQuery(
+							"select u.emailAddresses from CorporateUser u where u.userName = :name" )
+					.setParameter( "name", "Vlad" )
+					.getResultList();
 
 			assertEquals( 1, emails.size() );
 		} );

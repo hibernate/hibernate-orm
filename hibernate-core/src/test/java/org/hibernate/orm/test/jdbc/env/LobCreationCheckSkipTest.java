@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 /**
  * @author Vlad Mihalcea
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @Jpa
 @MessageKeyInspection( messageKey = "HHH000424", logger = @Logger( loggerNameClass = LobCreatorBuilderImpl.class) )
 public class LobCreationCheckSkipTest {

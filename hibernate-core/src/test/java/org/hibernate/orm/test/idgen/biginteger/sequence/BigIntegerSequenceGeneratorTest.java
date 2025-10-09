@@ -16,9 +16,8 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Steve Ebersole
  */
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/idgen/biginteger/sequence/Mapping.hbm.xml"
-)
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/idgen/biginteger/sequence/Mapping.hbm.xml")
 @SessionFactory
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSequences.class )
 public class BigIntegerSequenceGeneratorTest {
@@ -46,6 +45,6 @@ public class BigIntegerSequenceGeneratorTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 }

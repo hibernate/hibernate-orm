@@ -4,32 +4,207 @@
  */
 package org.hibernate.orm.test.hql;
 
-import java.util.ArrayList;
-import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-
-import org.hibernate.Session;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.orm.junit.JiraKeyGroup;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * NOTE : some subquery related tests still exist in other test classes in the suite.  This is a later
- * attempt to create a more targeted set of subquery related tests.
+ * NOTE : some subquery related tests still exist in other test classes in the suite.
+ * This is a later attempt to create a more targeted set of subquery related tests.
  *
  * @author Steve Ebersole
  */
-public class SubQueryTest extends BaseCoreFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = { SubQueryTest.Root.class, SubQueryTest.Branch.class, SubQueryTest.Leaf.class })
+@SessionFactory
+public class SubQueryTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope sessions) {
+		sessions.dropData();
+	}
+
+	@Test
+	@JiraKey( value = "HHH-9090" )
+	public void testCorrelatedJoin(SessionFactoryScope sessions) {
+		sessions.inTransaction( (session) -> {
+			Root root = new Root();
+			root.rootName = "root name";
+			root.branch = new Branch();
+			root.branch.branchName = "branch";
+			root.branch.leaves = new ArrayList<Leaf>();
+			Leaf leaf1 = new Leaf();
+			leaf1.leafName = "leaf1";
+			Leaf leaf2 = new Leaf();
+			leaf2.leafName = "leaf2";
+			root.branch.leaves.add( leaf1 );
+			root.branch.leaves.add( leaf2 );
+			session.persist( leaf1 );
+			session.persist( leaf2 );
+			session.persist( root.branch );
+			session.persist( root );
+			Root otherRoot = new Root();
+			otherRoot.rootName = "other root name";
+			otherRoot.branch = new Branch();
+			otherRoot.branch.branchName = "other branch";
+			otherRoot.branch.leaves = new ArrayList<Leaf>();
+			Leaf otherLeaf1 = new Leaf();
+			otherLeaf1.leafName = "leaf1";
+			Leaf otherLeaf3 = new Leaf();
+			otherLeaf3.leafName = "leaf3";
+			otherRoot.branch.leaves.add( otherLeaf1 );
+			otherRoot.branch.leaves.add( otherLeaf3 );
+			session.persist( otherLeaf1 );
+			session.persist( otherLeaf3 );
+			session.persist( otherRoot.branch );
+			session.persist( otherRoot );
+		} );
+
+		sessions.inTransaction( (session) -> {
+			var qry = """
+					from Root as r
+					where r.branch.branchName = 'branch'
+					and exists( from r.branch.leaves as s where s.leafName = 'leaf1')
+					""";
+			Root rootQueried = session.createQuery( qry, Root.class ).uniqueResult();
+			Assertions.assertEquals( "root name", rootQueried.rootName );
+			Assertions.assertEquals( "branch", rootQueried.branch.branchName );
+			Assertions.assertEquals( "leaf1", rootQueried.branch.leaves.get( 0 ).leafName );
+			Assertions.assertEquals( "leaf2", rootQueried.branch.leaves.get( 1 ).leafName );
+		} );
+
+		sessions.inTransaction( (session) -> {
+			var qry = """
+					from Root as r
+					where r.branch.branchName = 'branch'
+					and exists( from r.branch.leaves as s where s.leafName = 'leaf3')
+					""";
+			Assertions.assertNull( session.createQuery( qry ).uniqueResult() );
+		} );
+
+		sessions.inTransaction( (session) -> {
+			var qry = """
+					from Root as r
+					where exists( from r.branch.leaves as s where r.branch.branchName = 'branch'
+						and s.leafName = 'leaf1')
+					""";
+			var rootQueried = session.createQuery( qry, Root.class ).uniqueResult();
+			Assertions.assertEquals( "root name", rootQueried.rootName );
+			Assertions.assertEquals( "branch", rootQueried.branch.branchName );
+			Assertions.assertEquals( "leaf1", rootQueried.branch.leaves.get( 0 ).leafName );
+			Assertions.assertEquals( "leaf2", rootQueried.branch.leaves.get( 1 ).leafName );
+		} );
+
+		sessions.inTransaction( (session) -> {
+			var qry = """
+					from Root as r
+					where exists( from Root r1 where r1.branch.branchName = r.branch.branchName and r1.branch.branchName != 'other branch')
+					""";
+			var rootQueried = session.createQuery( qry, Root.class ).uniqueResult();
+			Assertions.assertEquals( "root name", rootQueried.rootName );
+			Assertions.assertEquals( "branch", rootQueried.branch.branchName );
+			Assertions.assertEquals( "leaf1", rootQueried.branch.leaves.get( 0 ).leafName );
+			Assertions.assertEquals( "leaf2", rootQueried.branch.leaves.get( 1 ).leafName );
+		} );
+
+	}
+
+	@Test
+	@JiraKey( value = "HHH-1689" )
+	@JiraKey( value = "SQM-30" )
+	public void testSubQueryAsSearchedCaseResultExpression(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			final String query = """
+				SELECT CASE
+					WHEN l.id IS NOT NULL
+						THEN (SELECT COUNT(r.id) FROM Root r)
+					ELSE 0
+				END
+				FROM Leaf l
+				""";
+			// simple syntax check
+			session.createQuery( query ).list();
+		} );
+	}
+
+	@Test
+	@JiraKey( value = "HHH-1689" )
+	@JiraKey( value = "SQM-30" )
+	public void testSubQueryAsSearchedCaseExpression(SessionFactoryScope sessions) {
+		sessions.inTransaction( (session) -> {
+			final String query = """
+				SELECT CASE
+					WHEN (SELECT COUNT(r.id) FROM Root r) > 1 THEN 1
+					ELSE 0
+				END
+				FROM Leaf l
+				""";
+			// simple syntax check
+			session.createQuery( query ).list();
+		} );
+	}
+
+	@Test
+	@JiraKey( value = "HHH-1689" )
+	@JiraKey( value = "SQM-30" )
+	public void testSubQueryAsCaseElseResultExpression(SessionFactoryScope sessions) {
+		sessions.inTransaction( (session) -> {
+			final String query = """
+					SELECT CASE WHEN l.id > 1 THEN 1
+						ELSE (SELECT COUNT(r.id) FROM Root r)
+					END FROM Leaf l
+					""";
+			// simple syntax check
+			session.createQuery( query ).list();
+		} );
+	}
+
+	@Test
+	@JiraKey( value = "HHH-1689" )
+	@JiraKey( value = "SQM-30" )
+	public void testSubQueryAsSimpleCaseTestExpression(SessionFactoryScope sessions) {
+		sessions.inTransaction( (session) -> {
+			final String query = """
+					SELECT CASE (SELECT COUNT(r.id) FROM Root r)
+						WHEN 1 THEN 1
+						ELSE 0
+					END
+					FROM Leaf l
+					""";
+			// simple syntax check
+			session.createQuery( query ).list();
+		} );
+	}
+
+	@Test
+	@JiraKey( value = "HHH-1689" )
+	@JiraKey( value = "SQM-30" )
+	public void testSubQueryAsSimpleCaseWhenExpression(SessionFactoryScope sessions) {
+		sessions.inTransaction( (session) -> {
+			final String query = """
+					SELECT CASE l.id
+						WHEN (SELECT COUNT(r.id) FROM Root r) THEN 1
+						ELSE 0
+					END
+					FROM Leaf l
+					""";
+			// simple syntax check
+			session.createQuery( query ).list();
+		} );
+	}
+
 
 	@Entity( name = "Root" )
 	@Table( name = "ROOT" )
@@ -64,169 +239,4 @@ public class SubQueryTest extends BaseCoreFunctionalTestCase {
 		public String leafName;
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Root.class, Branch.class, Leaf.class };
-	}
-
-	@Test
-	@JiraKey( value = "HHH-9090" )
-	public void testCorrelatedJoin() {
-		Session s = openSession();
-		s.beginTransaction();
-		Root root = new Root();
-		root.rootName = "root name";
-		root.branch = new Branch();
-		root.branch.branchName = "branch";
-		root.branch.leaves = new ArrayList<Leaf>();
-		Leaf leaf1 = new Leaf();
-		leaf1.leafName = "leaf1";
-		Leaf leaf2 = new Leaf();
-		leaf2.leafName = "leaf2";
-		root.branch.leaves.add( leaf1 );
-		root.branch.leaves.add( leaf2 );
-		s.persist( leaf1 );
-		s.persist( leaf2 );
-		s.persist( root.branch );
-		s.persist( root );
-		Root otherRoot = new Root();
-		otherRoot.rootName = "other root name";
-		otherRoot.branch = new Branch();
-		otherRoot.branch.branchName = "other branch";
-		otherRoot.branch.leaves = new ArrayList<Leaf>();
-		Leaf otherLeaf1 = new Leaf();
-		otherLeaf1.leafName = "leaf1";
-		Leaf otherLeaf3 = new Leaf();
-		otherLeaf3.leafName = "leaf3";
-		otherRoot.branch.leaves.add( otherLeaf1 );
-		otherRoot.branch.leaves.add( otherLeaf3 );
-		s.persist( otherLeaf1 );
-		s.persist( otherLeaf3 );
-		s.persist( otherRoot.branch );
-		s.persist( otherRoot );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		String qry = "from Root as r " +
-				"where r.branch.branchName = 'branch' " +
-				"  and exists( from r.branch.leaves as s where s.leafName = 'leaf1')";
-		Root rootQueried = s.createQuery( qry, Root.class ).uniqueResult();
-		assertEquals( root.rootName, rootQueried.rootName );
-		assertEquals( root.branch.branchName, rootQueried.branch.branchName );
-		assertEquals( leaf1.leafName, rootQueried.branch.leaves.get( 0 ).leafName );
-		assertEquals( leaf2.leafName, rootQueried.branch.leaves.get( 1 ).leafName );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		qry = "from Root as r " +
-				"where r.branch.branchName = 'branch' " +
-				"  and exists( from r.branch.leaves as s where s.leafName = 'leaf3')";
-		assertNull( s.createQuery( qry ).uniqueResult() );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		qry = "from Root as r " +
-				"where exists( from r.branch.leaves as s where r.branch.branchName = 'branch' and s.leafName = 'leaf1')";
-		rootQueried = (Root) s.createQuery( qry ).uniqueResult();
-		assertEquals( root.rootName, rootQueried.rootName );
-		assertEquals( root.branch.branchName, rootQueried.branch.branchName );
-		assertEquals( leaf1.leafName, rootQueried.branch.leaves.get( 0 ).leafName );
-		assertEquals( leaf2.leafName, rootQueried.branch.leaves.get( 1 ).leafName );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		qry = "from Root as r" +
-				" where exists( from Root r1 where r1.branch.branchName = r.branch.branchName and r1.branch.branchName != 'other branch')";
-		rootQueried = (Root) s.createQuery( qry ).uniqueResult();
-		assertEquals( root.rootName, rootQueried.rootName );
-		assertEquals( root.branch.branchName, rootQueried.branch.branchName );
-		assertEquals( leaf1.leafName, rootQueried.branch.leaves.get( 0 ).leafName );
-		assertEquals( leaf2.leafName, rootQueried.branch.leaves.get( 1 ).leafName );
-		s.getTransaction().commit();
-		s.close();
-
-	}
-
-	@Test
-	@JiraKeyGroup( value = {
-			@JiraKey( value = "HHH-1689" ),
-			@JiraKey( value = "SQM-30" )
-	} )
-	public void testSubQueryAsSearchedCaseResultExpression() {
-		final String query = "SELECT CASE WHEN l.id IS NOT NULL THEN (SELECT COUNT(r.id) FROM Root r) ELSE 0 END FROM Leaf l";
-		// simple syntax check
-		Session s = openSession();
-		s.beginTransaction();
-		s.createQuery( query ).list();
-		s.getTransaction().commit();
-		s.close();
-	}
-
-	@Test
-	@JiraKeyGroup( value = {
-			@JiraKey( value = "HHH-1689" ),
-			@JiraKey( value = "SQM-30" )
-	} )
-	public void testSubQueryAsSearchedCaseExpression() {
-		final String query = "SELECT CASE WHEN (SELECT COUNT(r.id) FROM Root r) > 1 THEN 1 ELSE 0 END FROM Leaf l";
-		// simple syntax check
-		Session s = openSession();
-		s.beginTransaction();
-		s.createQuery( query ).list();
-		s.getTransaction().commit();
-		s.close();
-	}
-
-	@Test
-	@JiraKeyGroup( value = {
-			@JiraKey( value = "HHH-1689" ),
-			@JiraKey( value = "SQM-30" )
-	} )
-	public void testSubQueryAsCaseElseResultExpression() {
-		final String query = "SELECT CASE WHEN  l.id > 1 THEN 1 ELSE (SELECT COUNT(r.id) FROM Root r) END FROM Leaf l";
-		// simple syntax check
-		Session s = openSession();
-		s.beginTransaction();
-		s.createQuery( query ).list();
-		s.getTransaction().commit();
-		s.close();
-	}
-
-	@Test
-	@JiraKeyGroup( value = {
-			@JiraKey( value = "HHH-1689" ),
-			@JiraKey( value = "SQM-30" )
-	} )
-	public void testSubQueryAsSimpleCaseTestExpression() {
-		final String query = "SELECT CASE (SELECT COUNT(r.id) FROM Root r) WHEN  1 THEN 1 ELSE 0 END FROM Leaf l";
-		// simple syntax check
-		Session s = openSession();
-		s.beginTransaction();
-		s.createQuery( query ).list();
-		s.getTransaction().commit();
-		s.close();
-	}
-
-	@Test
-	@JiraKeyGroup( value = {
-			@JiraKey( value = "HHH-1689" ),
-			@JiraKey( value = "SQM-30" )
-	} )
-	public void testSubQueryAsSimpleCaseWhenExpression() {
-		final String query = "SELECT CASE l.id WHEN (SELECT COUNT(r.id) FROM Root r) THEN 1 ELSE 0 END FROM Leaf l";
-		// simple syntax check
-		Session s = openSession();
-		s.beginTransaction();
-		s.createQuery( query ).list();
-		s.getTransaction().commit();
-		s.close();
-	}
 }

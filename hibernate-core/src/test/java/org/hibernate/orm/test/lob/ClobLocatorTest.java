@@ -12,6 +12,7 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.descriptor.java.DataHelper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Clob;
@@ -28,24 +29,19 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialectFeature(
 		feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class,
 		comment = "database/driver does not support expected LOB usage pattern"
 )
-@RequiresDialectFeature(
-		feature = DialectFeatureChecks.SupportsUnboundedLobLocatorMaterializationCheck.class,
-		comment = "database/driver does not support expected LOB usage pattern"
-)
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/lob/LobMappings.hbm.xml"
-)
+@DomainModel(xmlMappings = "org/hibernate/orm/test/lob/LobMappings.hbm.xml")
 @SessionFactory
 public class ClobLocatorTest {
 	private static final int CLOB_SIZE = 10000;
 
-
-	public String[] getMappings() {
-		return new String[] { "" };
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
@@ -168,10 +164,14 @@ public class ClobLocatorTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(
+			feature = DialectFeatureChecks.SupportsUnboundedLobLocatorMaterializationCheck.class,
+			comment = "database/driver does not support expected LOB usage pattern"
+	)
 	public void testUnboundedClobLocatorAccess(SessionFactoryScope scope) throws Throwable {
 		// Note: unbounded mutation of the underlying lob data is completely
 		// unsupported; most databases would not allow such a construct anyway.
-		// Thus here we are only testing materialization...
+		// Thus, here we are only testing materialization...
 
 		String original = buildString( CLOB_SIZE, 'x' );
 

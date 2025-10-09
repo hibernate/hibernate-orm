@@ -4,16 +4,6 @@
  */
 package org.hibernate.orm.test.type;
 
-import org.hibernate.Session;
-import org.hibernate.query.Query;
-import org.hibernate.resource.transaction.spi.TransactionStatus;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Test;
-
-import static org.junit.Assert.fail;
-
-import java.math.BigDecimal;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,43 +11,42 @@ import jakarta.persistence.Id;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+import org.hibernate.query.Query;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Ales Justin
  */
-public class BigDecimalTypeTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {Account.class};
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = BigDecimalTypeTest.Account.class)
+@SessionFactory
+public class BigDecimalTypeTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testBigDecimalInSum() {
+	public void testBigDecimalInSum(SessionFactoryScope factoryScope) {
 		final BigDecimal balance = new BigDecimal("1000000000.00000004");
 
-		Session s = openSession();
-		s.getTransaction().begin();
-		try {
+		factoryScope.inTransaction( (session) -> {
 			Account account = new Account();
 			account.id = 1L;
 			account.balance = balance;
 
-			s.persist( account );
-			s.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( s.getTransaction() != null && s.getTransaction().getStatus() == TransactionStatus.ACTIVE ) {
-				s.getTransaction().rollback();
-			}
-			fail( e.getMessage() );
-		}
-		finally {
-			s.close();
-		}
+			session.persist( account );
+		} );
 
-		s = openSession();
-		s.getTransaction().begin();
-		try {
+		factoryScope.inTransaction( (s) -> {
 			CriteriaBuilder b = s.getCriteriaBuilder();
 
 			CriteriaQuery<BigDecimal> cq = b.createQuery(BigDecimal.class);
@@ -68,22 +57,11 @@ public class BigDecimalTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 			Query<BigDecimal> query = s.createQuery(cq);
 
 			BigDecimal result = s.createQuery("SELECT SUM(a.balance) FROM Account a", BigDecimal.class).uniqueResult();
-			Assert.assertEquals(0, balance.compareTo(result));
+			assertEquals(0, balance.compareTo(result));
 
 			result = query.uniqueResult();
-			Assert.assertEquals(0, balance.compareTo(result));
-
-			s.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( s.getTransaction() != null && s.getTransaction().getStatus() == TransactionStatus.ACTIVE ) {
-				s.getTransaction().rollback();
-			}
-			fail( e.getMessage() );
-		}
-		finally {
-			s.close();
-		}
+			assertEquals(0, balance.compareTo(result));
+		} );
 	}
 
 	@Entity(name = "Account")
@@ -95,10 +73,5 @@ public class BigDecimalTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 		@Basic(optional = false)
 		@Column(precision = 20, scale = 8)
 		private BigDecimal balance;
-	}
-
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
 	}
 }

@@ -11,14 +11,14 @@ import jakarta.persistence.ManyToOne;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
 
-@Entity
-@NaturalIdCache
 /**
  * Test case for NaturalId annotation - ANN-750
  *
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
+@Entity
+@NaturalIdCache
 class NaturalIdOnManyToOne {
 
 	@Id

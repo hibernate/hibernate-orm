@@ -9,7 +9,8 @@ import java.util.List;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -23,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Marco Belladelli
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = {
 		JoinedInheritanceToOneSameHierarchyTest.MasterEntity.class,
 		JoinedInheritanceToOneSameHierarchyTest.ConfigEntity.class,
@@ -32,7 +34,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 } )
 @SessionFactory
 public class JoinedInheritanceToOneSameHierarchyTest {
-	@BeforeAll
+	@AfterEach
+	void tearDown(SessionFactoryScope scope) {
+		scope.dropData();
+	}
+
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final TypeEntity type = new TypeEntity();

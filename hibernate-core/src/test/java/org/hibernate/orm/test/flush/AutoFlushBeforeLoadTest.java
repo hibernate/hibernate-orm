@@ -9,15 +9,12 @@ import java.util.List;
 
 import org.hibernate.annotations.NaturalId;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.SessionFactory;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -29,70 +26,59 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Jan Schatteman
  */
-@RunWith(BytecodeEnhancerRunner.class)
-@EnhancementOptions(biDirectionalAssociationManagement = true)
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-17947")
-public class AutoFlushBeforeLoadTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Person.class,
-				Phone.class,
-				DriversLicense.class
-		};
+@BytecodeEnhanced
+@EnhancementOptions(biDirectionalAssociationManagement = true)
+@DomainModel(annotatedClasses = {
+		AutoFlushBeforeLoadTest.Person.class,
+		AutoFlushBeforeLoadTest.Phone.class,
+		AutoFlushBeforeLoadTest.DriversLicense.class
+})
+@SessionFactory
+public class AutoFlushBeforeLoadTest {
+	@BeforeEach
+	public void setupData(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction(session -> {
+			Person p = new Person( 1L, "John Doe" );
+			session.persist( p );
+		} );
 	}
 
-	@Before
-	public void setupData() {
-		inTransaction(
-				session -> {
-					Person p = new Person( 1L, "John Doe" );
-					session.persist( p );
-				}
-		);
-	}
-
-	@After
-	public void tearDown() {
-		inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from DriversLicense" ).executeUpdate();
-					session.createMutationQuery( "delete from Phone" ).executeUpdate();
-					session.createMutationQuery( "delete from Person" ).executeUpdate();
-				}
-		);
+	@AfterEach
+	public void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testCollectionInitialization() {
-		inTransaction(
-				session -> {
-					Phone phone = new Phone( session.getReference( Person.class, 1L ), "1234567890" );
-					session.persist( phone );
-					Person person = session.createQuery( "select p from Person p", Person.class ).getSingleResult();
-					assertEquals( 1, person.getPhones().size() );
-				}
-		);
+	public void testCollectionInitialization(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction(session -> {
+			Phone phone = new Phone( session.getReference( Person.class, 1L ), "1234567890" );
+			session.persist( phone );
+			Person person = session.createQuery( "select p from Person p", Person.class ).getSingleResult();
+			assertEquals( 1, person.getPhones().size() );
+		} );
 	}
 
 	@Test
-	public void testOneToOneInitialization() {
-		inTransaction(
-				session -> {
-					DriversLicense driversLicense = new DriversLicense( 1L, session.getReference( Person.class, 1L ), "999" );
-					session.persist( driversLicense );
-					Person person = session.createQuery( "select p from Person p", Person.class ).getSingleResult();
-					assertEquals( driversLicense, person.getDriversLicense() );
-					session.clear();
-				}
-		);
+	public void testOneToOneInitialization(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction(session -> {
+			DriversLicense driversLicense = new DriversLicense( 1L, session.getReference( Person.class, 1L ), "999" );
+			session.persist( driversLicense );
+			Person person = session.createQuery( "select p from Person p", Person.class ).getSingleResult();
+			assertEquals( driversLicense, person.getDriversLicense() );
+			session.clear();
+		} );
 	}
 
 	@Entity(name = "Person")

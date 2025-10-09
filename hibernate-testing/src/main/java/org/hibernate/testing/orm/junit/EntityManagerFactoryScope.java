@@ -38,4 +38,7 @@ public interface EntityManagerFactoryScope {
 		return ((SessionFactoryImplementor) getEntityManagerFactory()).getJdbcServices().getDialect();
 	}
 
+	default void dropData() {
+		((SessionFactoryImplementor) getEntityManagerFactory()).getSchemaManager().truncateMappedObjects();
+	}
 }

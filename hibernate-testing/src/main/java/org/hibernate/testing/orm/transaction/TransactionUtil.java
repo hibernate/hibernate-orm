@@ -17,6 +17,7 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 
 import org.hibernate.engine.spi.StatelessSessionImplementor;
@@ -30,6 +31,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 public abstract class TransactionUtil {
 	private static final Logger log = Logger.getLogger( TransactionUtil.class );
 
+	public static void inTransaction(SessionFactoryImplementor sessionFactory, Consumer<SessionImplementor> action) {
+		try (var session = sessionFactory.openSession()) {
+			inTransaction( session, action );
+		}
+	}
+
 	public static void inTransaction(SessionImplementor session, Consumer<SessionImplementor> action) {
 		wrapInTransaction( session, session, action );
 	}
@@ -40,6 +47,12 @@ public abstract class TransactionUtil {
 
 	public static void inTransaction(StatelessSessionImplementor session, Consumer<StatelessSessionImplementor> action) {
 		wrapInTransaction( session, session, action );
+	}
+
+	public static <R> R fromTransaction(SessionFactoryImplementor sessionFactory, Function<SessionImplementor, R> action) {
+		try (var session = sessionFactory.openSession()) {
+			return fromTransaction( session, action );
+		}
 	}
 
 	public static <R> R fromTransaction(SessionImplementor session, Function<SessionImplementor, R> action) {
@@ -244,5 +257,4 @@ public abstract class TransactionUtil {
 			}
 		}
 	}
-
 }

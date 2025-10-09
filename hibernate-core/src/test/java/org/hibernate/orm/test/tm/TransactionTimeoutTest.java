@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Lukasz Antoniak
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-6780")
 @ServiceRegistry(
 		settings = {

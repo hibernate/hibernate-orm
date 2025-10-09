@@ -8,7 +8,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PersistenceException;
-
 import jakarta.persistence.SecondaryTable;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Formula;
@@ -16,35 +15,34 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Vlad Mihalcea
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialect(PostgreSQLDialect.class)
 @RequiresDialect(H2Dialect.class)
-public class CheckTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class,
-			Book.class
-		};
+@Jpa(annotatedClasses = {CheckTest.Person.class,CheckTest.Book.class})
+public class CheckTest {
+	@AfterEach
+	void tearDown(EntityManagerFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Book book = new Book();
 			book.setId(0L);
 			book.setTitle("Hibernate in Action");
@@ -52,13 +50,13 @@ public class CheckTest extends BaseEntityManagerFunctionalTestCase {
 
 			entityManager.persist(book);
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		factoryScope.inTransaction( entityManager -> {
 			Book book = entityManager.find(Book.class, 0L);
 			assertEquals( 1, book.edition );
 			assertEquals( 2, book.nextEdition );
 		});
 		try {
-			doInJPA(this::entityManagerFactory, entityManager -> {
+			factoryScope.inTransaction( entityManager -> {
 				//tag::schema-generation-database-checks-persist-example[]
 				Book book = new Book();
 				book.setId(1L);
@@ -69,13 +67,13 @@ public class CheckTest extends BaseEntityManagerFunctionalTestCase {
 				entityManager.persist(book);
 				//end::schema-generation-database-checks-persist-example[]
 			});
-			fail("Should fail because the ISBN is not of the right length!");
+			fail( "Should fail because the ISBN is not of the right length!" );
 		}
 		catch (PersistenceException e) {
-			assertEquals(ConstraintViolationException.class, e.getCause().getClass());
+			assertInstanceOf( ConstraintViolationException.class, e.getCause() );
 		}
 		try {
-			doInJPA(this::entityManagerFactory, entityManager -> {
+			factoryScope.inTransaction( entityManager -> {
 				Person person = new Person();
 				person.setId(1L);
 				person.setName("John Doe");
@@ -83,10 +81,10 @@ public class CheckTest extends BaseEntityManagerFunctionalTestCase {
 
 				entityManager.persist(person);
 			});
-			fail("Should fail because the code is 0!");
+			fail( "Should fail because the code is 0!" );
 		}
 		catch (PersistenceException e) {
-			assertEquals(ConstraintViolationException.class, e.getCause().getClass());
+			assertInstanceOf( ConstraintViolationException.class, e.getCause() );
 		}
 	}
 

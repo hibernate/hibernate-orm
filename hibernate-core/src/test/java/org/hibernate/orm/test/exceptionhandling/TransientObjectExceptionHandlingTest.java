@@ -8,15 +8,13 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.transaction.TransactionUtil;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @JiraKey(value = "HHH-12666")
 @RequiresDialect(H2Dialect.class)
@@ -28,74 +26,60 @@ public class TransientObjectExceptionHandlingTest extends BaseExceptionHandlingT
 	}
 
 	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				A.class,
-				AInfo.class
-		};
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { A.class, AInfo.class };
 	}
 
 	@Test
 	public void testPersist() {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		A a = new A();
-		a.id = 1;
-		a.aInfo = new AInfo();
-		try {
-			s.persist( a );
-			fail( "should have thrown an exception" );
-		}
-		catch (RuntimeException expected) {
-			exceptionExpectations.onTransientObjectOnPersistAndMergeAndFlush( expected );
-		}
-		finally {
-			tx.rollback();
-			s.close();
-		}
+		TransactionUtil.inTransaction( sessionFactory(), (s) -> {
+			A a = new A();
+			a.id = 1;
+			a.aInfo = new AInfo();
+			try {
+				s.persist( a );
+				fail( "should have thrown an exception" );
+			}
+			catch (RuntimeException expected) {
+				exceptionExpectations.onTransientObjectOnPersistAndMergeAndFlush( expected );
+			}
+		} );
 	}
 
 	@Test
 	public void testMerge() {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		A a = new A();
-		a.id = 1;
-		a.aInfo = new AInfo();
-		try {
-			s.merge( a );
-			fail( "should have thrown an exception" );
-		}
-		catch (RuntimeException expected) {
-			exceptionExpectations.onTransientObjectOnPersistAndMergeAndFlush( expected );
-		}
-		finally {
-			tx.rollback();
-			s.close();
-		}
+		TransactionUtil.inTransaction( sessionFactory(), (s) -> {
+			A a = new A();
+			a.id = 1;
+			a.aInfo = new AInfo();
+			try {
+				s.merge( a );
+				fail( "should have thrown an exception" );
+			}
+			catch (RuntimeException expected) {
+				exceptionExpectations.onTransientObjectOnPersistAndMergeAndFlush( expected );
+			}
+		} );
 	}
 
 	@Test
 	public void testMergeFlush() {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		A a = new A();
-		a.id = 1;
-		a.aInfo = new AInfo();
-		try {
-			s.merge( a );
-			s.flush();
-			fail( "should have thrown an exception" );
-		}
-		catch (RuntimeException expected) {
-			exceptionExpectations.onTransientObjectOnPersistAndMergeAndFlush( expected );
-		}
-		finally {
-			tx.rollback();
-			s.close();
-		}
+		TransactionUtil.inTransaction( sessionFactory(), (s) -> {
+			A a = new A();
+			a.id = 1;
+			a.aInfo = new AInfo();
+			try {
+				s.merge( a );
+				s.flush();
+				fail( "should have thrown an exception" );
+			}
+			catch (RuntimeException expected) {
+				exceptionExpectations.onTransientObjectOnPersistAndMergeAndFlush( expected );
+			}
+		} );
 	}
 
+	@SuppressWarnings("unused")
 	@Entity(name = "A")
 	public static class A {
 		@Id
@@ -105,6 +89,7 @@ public class TransientObjectExceptionHandlingTest extends BaseExceptionHandlingT
 		private AInfo aInfo;
 	}
 
+	@SuppressWarnings("unused")
 	@Entity(name = "AInfo")
 	public static class AInfo {
 		@Id

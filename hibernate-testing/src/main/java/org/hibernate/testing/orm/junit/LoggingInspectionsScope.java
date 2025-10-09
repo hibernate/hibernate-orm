@@ -45,7 +45,7 @@ public class LoggingInspectionsScope {
 					watcher = existingWatcher;
 				}
 				else {
-					watcher = new MessageKeyWatcherImpl( messageKey );
+					watcher = new MessageKeyWatcherImpl( messageKey, message.resetBeforeEach() );
 					messageKeyWatcherMap.put( loggerKey, watcher );
 				}
 				watcher.addLogger( logger );
@@ -54,9 +54,13 @@ public class LoggingInspectionsScope {
 	}
 
 	public void resetWatchers() {
-		watcherMap.forEach(
-				(messageKey,loggerMap) -> loggerMap.forEach( (logger,watcher) -> watcher.reset() )
-		);
+		watcherMap.forEach( (messageKey,loggerMap) -> {
+			loggerMap.forEach( (logger,watcher) -> {
+				if ( watcher.isResetBeforeEach() ) {
+					watcher.reset();
+				}
+			} );
+		} );
 	}
 
 	public MessageKeyWatcher getWatcher(String messageKey, String loggerName) {

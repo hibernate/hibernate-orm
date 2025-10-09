@@ -35,6 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Marco Belladelli
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = {
 		SequenceOrAssignedGeneratorTest.MyEntity.class,
 		SequenceOrAssignedGeneratorTest.MyVersionedEntity.class,
@@ -43,10 +44,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class SequenceOrAssignedGeneratorTest {
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from MyEntity" ).executeUpdate();
-			session.createMutationQuery( "delete from MyVersionedEntity" ).executeUpdate();
-		} );
+		scope.dropData();
 	}
 
 	@Test

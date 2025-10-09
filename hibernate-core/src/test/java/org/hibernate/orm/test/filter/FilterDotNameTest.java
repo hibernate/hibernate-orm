@@ -4,21 +4,21 @@
  */
 package org.hibernate.orm.test.filter;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import org.hamcrest.MatcherAssert;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ParamDef;
-
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,15 +26,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Chris Cranford
@@ -80,7 +78,7 @@ public class FilterDotNameTest extends AbstractStatefulStatelessFilterTest {
 			session.enableFilter( "customerIdFilter" ).setParameter( "customerId", 10L );
 
 			final List<PurchaseOrder> orders = session.createQuery( "FROM PurchaseOrder", PurchaseOrder.class ).getResultList();
-			assertThat( orders.size(), is( 1 ) );
+			MatcherAssert.assertThat( orders.size(), is( 1 ) );
 		} );
 	}
 
@@ -92,7 +90,7 @@ public class FilterDotNameTest extends AbstractStatefulStatelessFilterTest {
 			session.enableFilter( "PurchaseOrder.customerIdFilter" ).setParameter( "customerId", 20L );
 
 			final List<PurchaseOrder> orders = session.createQuery( "FROM PurchaseOrder", PurchaseOrder.class ).getResultList();
-			assertThat( orders.size(), is( 1 ) );
+			MatcherAssert.assertThat( orders.size(), is( 1 ) );
 		} );
 	}
 
@@ -101,8 +99,8 @@ public class FilterDotNameTest extends AbstractStatefulStatelessFilterTest {
 		scope.inTransaction( session -> {
 			session.enableFilter( "itemIdFilter" ).setParameter( "itemId", 100L );
 
-			final PurchaseOrder order = session.get( PurchaseOrder.class, 1L );
-			assertThat( order.getPurchaseItems().size(), is( 1 ) );
+			final PurchaseOrder order = session.find( PurchaseOrder.class, 1L );
+			MatcherAssert.assertThat( order.getPurchaseItems().size(), is( 1 ) );
 		} );
 	}
 
@@ -111,11 +109,12 @@ public class FilterDotNameTest extends AbstractStatefulStatelessFilterTest {
 		scope.inTransaction( session -> {
 			session.enableFilter( "PurchaseOrder.itemIdFilter" ).setParameter( "itemId", 100L );
 
-			final PurchaseOrder order = session.get( PurchaseOrder.class, 1L );
-			assertThat( order.getPurchaseItems().size(), is( 1 ) );
+			final PurchaseOrder order = session.find( PurchaseOrder.class, 1L );
+			MatcherAssert.assertThat( order.getPurchaseItems().size(), is( 1 ) );
 		} );
 	}
 
+	@SuppressWarnings("unused")
 	@Entity(name = "PurchaseOrder")
 	@FilterDefs({
 			@FilterDef(name = "customerIdFilter", parameters = @ParamDef(name = "customerId", type = Long.class)),

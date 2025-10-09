@@ -22,6 +22,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialect(PostgreSQLDialect.class)
 @DomainModel(
 		annotatedClasses = {
@@ -54,11 +55,7 @@ public class JoinedInheritanceWithDefaultSchemaDeletionTest {
 
 	@Test
 	public void testDelete(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Person" ).executeUpdate();
-				}
-		);
+		scope.dropData();
 	}
 
 	@Entity(name = "Person")

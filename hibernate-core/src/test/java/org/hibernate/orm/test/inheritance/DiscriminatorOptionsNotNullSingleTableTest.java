@@ -4,54 +4,45 @@
  */
 package org.hibernate.orm.test.inheritance;
 
-import java.math.BigDecimal;
-import java.sql.Statement;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
-
 import org.hibernate.Session;
 import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Test;
+import java.math.BigDecimal;
+import java.sql.Statement;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialect(H2Dialect.class)
-public class DiscriminatorOptionsNotNullSingleTableTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				DebitAccount.class,
-				CreditAccount.class,
-				OtherAccount.class
-		};
-	}
+@DomainModel(annotatedClasses = {
+		DiscriminatorOptionsNotNullSingleTableTest.DebitAccount.class,
+		DiscriminatorOptionsNotNullSingleTableTest.CreditAccount.class,
+		DiscriminatorOptionsNotNullSingleTableTest.OtherAccount.class
+})
+@SessionFactory
+public class DiscriminatorOptionsNotNullSingleTableTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			entityManager.unwrap(Session.class).doWork(connection -> {
-				try(Statement statement = connection.createStatement()) {
-					//statement.executeUpdate("ALTER TABLE Account ALTER COLUMN DTYPE SET NULL");
-				}
-			});
-
-
-			DebitAccount debitAccount = new DebitAccount();
+	public void test(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
+			var debitAccount = new DebitAccount();
 			debitAccount.setId(1L);
 			debitAccount.setOwner("John Doe");
 			debitAccount.setBalance(BigDecimal.valueOf(100));
@@ -85,19 +76,19 @@ public class DiscriminatorOptionsNotNullSingleTableTest extends BaseEntityManage
 			});
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		factoryScope.inTransaction( entityManager -> {
+			//noinspection removal
 			Map<Long, Account> accounts = entityManager.createQuery(
 				"select a from Account a", Account.class)
 			.getResultList()
 			.stream()
 			.collect(Collectors.toMap(Account::getId, Function.identity()));
 
-			assertEquals(4, accounts.size());
-			assertEquals(DebitAccount.class, accounts.get(1L).getClass());
-			assertEquals(CreditAccount.class, accounts.get(2L).getClass());
-			assertEquals(Account.class, accounts.get(3L).getClass());
-			assertEquals(OtherAccount.class, accounts.get(4L).getClass());
-
+			assertEquals( 4, accounts.size() );
+			assertEquals( DebitAccount.class, accounts.get(1L).getClass() );
+			assertEquals( CreditAccount.class, accounts.get(2L).getClass() );
+			assertEquals( Account.class, accounts.get(3L).getClass() );
+			assertEquals( OtherAccount.class, accounts.get(4L).getClass() );
 		});
 	}
 

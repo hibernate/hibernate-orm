@@ -5,31 +5,24 @@
 package org.hibernate.orm.test.mapping.basic;
 
 import org.hibernate.annotations.Type;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-
 /**
  * @author Vlad Mihalcea
  */
-public class EnumerationCustomTypeTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class
-		};
-	}
+@Jpa( annotatedClasses = {EnumerationCustomTypeTest.Person.class} )
+public class EnumerationCustomTypeTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Person person = new Person();
 			person.setId(1L);
 			person.setName("John Doe");

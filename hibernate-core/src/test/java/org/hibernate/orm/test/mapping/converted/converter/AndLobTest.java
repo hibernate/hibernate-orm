@@ -24,8 +24,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertThat;
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * Test mapping a model with an attribute combining {@code @Lob} with an AttributeConverter.

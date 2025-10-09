@@ -15,23 +15,30 @@ import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.boot.MetadataSources;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
-public class MapKeyColumnOneToManyFKTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = {
+		MapKeyColumnOneToManyFKTest.AddressCapable.class,
+		MapKeyColumnOneToManyFKTest.AddressCapable2.class,
+		MapKeyColumnOneToManyFKTest.Address.class,
+		MapKeyColumnOneToManyFKTest.Address2.class
+})
+@SessionFactory
+public class MapKeyColumnOneToManyFKTest {
 
 	@Test
 	@JiraKey( value = "HHH-12150" )
-	public void testReferenceToAlreadyMappedColumn() {
-		inTransaction(
+	public void testReferenceToAlreadyMappedColumn(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					AddressCapable2 holder = new AddressCapable2( 1, "osd");
 					Address2 address = new Address2( 1, "123 Main St" );
@@ -40,19 +47,19 @@ public class MapKeyColumnOneToManyFKTest extends BaseNonConfigCoreFunctionalTest
 					session.persist( address );
 				}
 		);
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					AddressCapable2 holder = session.get( AddressCapable2.class, 1 );
-					Address2 address = session.get( Address2.class, 1 );
+					AddressCapable2 holder = session.find( AddressCapable2.class, 1 );
+					Address2 address = session.find( Address2.class, 1 );
 
 					holder.addresses.put( "work", address );
 
 					session.persist( holder );
 				}
 		);
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					AddressCapable2 holder = session.get( AddressCapable2.class, 1 );
+					AddressCapable2 holder = session.find( AddressCapable2.class, 1 );
 					assertEquals( 1, holder.addresses.size() );
 					final Map.Entry<String,Address2> entry = holder.addresses.entrySet().iterator().next();
 					assertEquals( "work", entry.getKey() );
@@ -64,8 +71,8 @@ public class MapKeyColumnOneToManyFKTest extends BaseNonConfigCoreFunctionalTest
 
 	@Test
 	@JiraKey( value = "HHH-12150" )
-	public void testReferenceToNonMappedColumn() {
-		inTransaction(
+	public void testReferenceToNonMappedColumn(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					AddressCapable holder = new AddressCapable( 1, "osd");
 					Address address = new Address( 1, "123 Main St" );
@@ -74,35 +81,25 @@ public class MapKeyColumnOneToManyFKTest extends BaseNonConfigCoreFunctionalTest
 					session.persist( address );
 				}
 		);
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					AddressCapable holder = session.get( AddressCapable.class, 1 );
-					Address address = session.get( Address.class, 1 );
+					AddressCapable holder = session.find( AddressCapable.class, 1 );
+					Address address = session.find( Address.class, 1 );
 
 					holder.addresses.put( "work", address );
 
 					session.persist( holder );
 				}
 		);
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					AddressCapable holder = session.get( AddressCapable.class, 1 );
+					AddressCapable holder = session.find( AddressCapable.class, 1 );
 					assertEquals( 1, holder.addresses.size() );
 					final Map.Entry<String,Address> entry = holder.addresses.entrySet().iterator().next();
 					assertEquals( "work", entry.getKey() );
 					session.remove( holder );
 				}
 		);
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-
-		sources.addAnnotatedClass( AddressCapable.class );
-		sources.addAnnotatedClass( AddressCapable2.class );
-		sources.addAnnotatedClass( Address.class );
-		sources.addAnnotatedClass( Address2.class );
 	}
 
 	@Entity( name = "AddressCapable" )

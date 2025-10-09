@@ -10,28 +10,20 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class SimpleEmbeddableTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Book.class
-		};
-	}
+@Jpa(annotatedClasses = {SimpleEmbeddableTest.Book.class})
+public class SimpleEmbeddableTest {
 
 	@Test
-	public void testLifecycle() {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 
 			Book book = new Book();
 			book.setTitle("High-Performance Java Persistence");

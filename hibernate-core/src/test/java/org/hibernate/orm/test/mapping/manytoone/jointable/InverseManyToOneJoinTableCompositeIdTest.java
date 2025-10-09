@@ -92,7 +92,7 @@ public class InverseManyToOneJoinTableCompositeIdTest {
 
 		try {
 			scope.inTransaction( (session) -> {
-				final Author stephenKing = session.get( Author.class, 1 );
+				final Author stephenKing = session.find( Author.class, 1 );
 				verifyStephenKingBooks( stephenKing );
 			} );
 

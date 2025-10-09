@@ -52,7 +52,7 @@ public class ToOneSelfReferenceTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
-					final EntityTest entity = session.get( EntityTest.class, 1 );
+					final EntityTest entity = session.find( EntityTest.class, 1 );
 					assertThat( entity.getName(), is( "e1" ) );
 
 					final EntityTest entity2 = entity.getEntity();

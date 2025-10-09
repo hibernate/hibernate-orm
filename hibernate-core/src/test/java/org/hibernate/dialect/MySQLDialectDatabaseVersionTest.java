@@ -6,17 +6,16 @@ package org.hibernate.dialect;
 
 import java.util.Map;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @RequiresDialect(MySQLDialect.class)
 @JiraKey(value = "HHH-18518")
-public class MySQLDialectDatabaseVersionTest extends BaseUnitTestCase {
+public class MySQLDialectDatabaseVersionTest {
 
 	@Test
 	public void versionWithSuffix() {

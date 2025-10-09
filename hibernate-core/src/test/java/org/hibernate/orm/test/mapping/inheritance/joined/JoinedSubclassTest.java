@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.mapping.inheritance.joined;
 
-import java.util.Iterator;
 import java.util.List;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -66,46 +65,46 @@ public class JoinedSubclassTest {
 			s.persist( mark );
 			s.persist( joe );
 
-			assertEquals( s.createQuery( "from Person" ).list().size(), 3 );
-			assertEquals( s.createQuery( "from Person p where p.class = Customer" ).list().size(), 1 );
-			assertEquals( s.createQuery( "from Person p where p.class = Person" ).list().size(), 1 );
-			assertEquals( s.createQuery( "from Person p where type(p) in :who" )
+			assertEquals( 3, s.createQuery( "from Person" ).list().size() );
+			assertEquals( 1, s.createQuery( "from Person p where p.class = Customer" ).list().size() );
+			assertEquals( 1, s.createQuery( "from Person p where p.class = Person" ).list().size() );
+			assertEquals( 1, s.createQuery( "from Person p where type(p) in :who" )
 								.setParameter( "who", Customer.class )
 								.list()
-								.size(), 1 );
-			assertEquals( s.createQuery( "from Person p where type(p) in :who" ).setParameterList(
+								.size() );
+			assertEquals( 2, s.createQuery( "from Person p where type(p) in :who" ).setParameterList(
 					"who",
 					new Class[] {
 							Customer.class,
 							Person.class
 					}
-			).list().size(), 2 );
+			).list().size() );
 			s.clear();
 
 			List customers = s.createQuery( "from Customer c left join fetch c.salesperson" ).list();
-			for ( Iterator iter = customers.iterator(); iter.hasNext(); ) {
-				Customer c = (Customer) iter.next();
+			for ( Object o : customers ) {
+				Customer c = (Customer) o;
 				assertTrue( Hibernate.isInitialized( c.getSalesperson() ) );
-				assertEquals( c.getSalesperson().getName(), "Mark" );
+				assertEquals( "Mark", c.getSalesperson().getName() );
 			}
-			assertEquals( customers.size(), 1 );
+			assertEquals( 1, customers.size() );
 			s.clear();
 
 			customers = s.createQuery( "from Customer" ).list();
-			for ( Iterator iter = customers.iterator(); iter.hasNext(); ) {
-				Customer c = (Customer) iter.next();
+			for ( Object customer : customers ) {
+				Customer c = (Customer) customer;
 				assertFalse( Hibernate.isInitialized( c.getSalesperson() ) );
-				assertEquals( c.getSalesperson().getName(), "Mark" );
+				assertEquals( "Mark", c.getSalesperson().getName() );
 			}
-			assertEquals( customers.size(), 1 );
+			assertEquals( 1, customers.size() );
 			s.clear();
 
 
-			mark = (Employee) s.get( Employee.class, new Long( mark.getId() ) );
-			joe = (Customer) s.get( Customer.class, new Long( joe.getId() ) );
+			mark = s.find( Employee.class, mark.getId() );
+			joe = s.find( Customer.class, joe.getId() );
 
 			mark.setZip( "30306" );
-			assertEquals( s.createQuery( "from Person p where p.address.zip = '30306'" ).list().size(), 1 );
+			assertEquals( 1, s.createQuery( "from Person p where p.address.zip = '30306'" ).list().size() );
 
 			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 			CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );

@@ -16,182 +16,145 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.Session;
-
-import org.junit.Test;
-
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				JoinedEntity.class, JoinedEntitySubclass.class, JoinedEntitySubSubclass.class,
-				JoinedEntitySubclass2.class, JoinedEntitySubSubclass2.class,
-				DiscriminatorEntity.class, DiscriminatorEntitySubclass.class, DiscriminatorEntitySubSubclass.class,
-				Animal.class, Dog.class, Dachshund.class, Greyhound.class
-		};
+@DomainModel(annotatedClasses = {
+		TreatKeywordTest.JoinedEntity.class, TreatKeywordTest.JoinedEntitySubclass.class, TreatKeywordTest.JoinedEntitySubSubclass.class,
+		TreatKeywordTest.JoinedEntitySubclass2.class, TreatKeywordTest.JoinedEntitySubSubclass2.class,
+		TreatKeywordTest.DiscriminatorEntity.class, TreatKeywordTest.DiscriminatorEntitySubclass.class, TreatKeywordTest.DiscriminatorEntitySubSubclass.class,
+		TreatKeywordTest.Animal.class, TreatKeywordTest.Dog.class, TreatKeywordTest.Dachshund.class, TreatKeywordTest.Greyhound.class
+})
+@SessionFactory
+public class TreatKeywordTest {
+
+	@AfterEach
+	public void cleanup(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
 	@Test
-	public void testBasicUsageInJoin() {
+	public void testBasicUsageInJoin(SessionFactoryScope scope) {
 		// todo : assert invalid naming of non-subclasses in TREAT statement
-		Session s = openSession();
+		scope.inSession( s -> {
+			s.createQuery( "from DiscriminatorEntity e join treat(e.other as DiscriminatorEntitySubclass) o", Object[].class ).list();
+			s.createQuery( "from DiscriminatorEntity e join treat(e.other as DiscriminatorEntitySubSubclass) o", Object[].class ).list();
+			s.createQuery( "from DiscriminatorEntitySubclass e join treat(e.other as DiscriminatorEntitySubSubclass) o", Object[].class ).list();
 
-		s.createQuery( "from DiscriminatorEntity e join treat(e.other as DiscriminatorEntitySubclass) o", Object[].class ).list();
-		s.createQuery( "from DiscriminatorEntity e join treat(e.other as DiscriminatorEntitySubSubclass) o", Object[].class ).list();
-		s.createQuery( "from DiscriminatorEntitySubclass e join treat(e.other as DiscriminatorEntitySubSubclass) o", Object[].class ).list();
-
-		s.createQuery( "from JoinedEntity e join treat(e.other as JoinedEntitySubclass) o", Object[].class ).list();
-		s.createQuery( "from JoinedEntity e join treat(e.other as JoinedEntitySubSubclass) o", Object[].class ).list();
-		s.createQuery( "from JoinedEntitySubclass e join treat(e.other as JoinedEntitySubSubclass) o", Object[].class ).list();
-
-		s.close();
+			s.createQuery( "from JoinedEntity e join treat(e.other as JoinedEntitySubclass) o", Object[].class ).list();
+			s.createQuery( "from JoinedEntity e join treat(e.other as JoinedEntitySubSubclass) o", Object[].class ).list();
+			s.createQuery( "from JoinedEntitySubclass e join treat(e.other as JoinedEntitySubSubclass) o", Object[].class ).list();
+		} );
 	}
 
 	@Test
 	@JiraKey( value = "HHH-8637" )
-	public void testFilteringDiscriminatorSubclasses() {
-		Session s = openSession();
-		s.beginTransaction();
-		DiscriminatorEntity root = new DiscriminatorEntity( 1, "root" );
-		s.persist( root );
-		DiscriminatorEntitySubclass child = new DiscriminatorEntitySubclass( 2, "child", root );
-		s.persist( child );
-		s.getTransaction().commit();
-		s.close();
+	public void testFilteringDiscriminatorSubclasses(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			DiscriminatorEntity root = new DiscriminatorEntity( 1, "root" );
+			s.persist( root );
+			DiscriminatorEntitySubclass child = new DiscriminatorEntitySubclass( 2, "child", root );
+			s.persist( child );
+		} );
 
-		s = openSession();
-		s.beginTransaction();
+		scope.inSession( s -> {
+			// in select clause
+			List<Object[]> result = s.createQuery( "select e from DiscriminatorEntity e", Object[].class ).list();
+			assertEquals( 2, result.size() );
+			result = s.createQuery( "select treat (e as DiscriminatorEntitySubclass) from DiscriminatorEntity e", Object[].class ).list();
+			assertEquals( 1, result.size() );
+			result = s.createQuery( "select treat (e as DiscriminatorEntitySubSubclass) from DiscriminatorEntity e", Object[].class ).list();
+			assertEquals( 0, result.size() );
 
-		// in select clause
-		List result = s.createQuery( "select e from DiscriminatorEntity e", Object[].class ).list();
-		assertEquals( 2, result.size() );
-		result = s.createQuery( "select treat (e as DiscriminatorEntitySubclass) from DiscriminatorEntity e", Object[].class ).list();
-		assertEquals( 1, result.size() );
-		result = s.createQuery( "select treat (e as DiscriminatorEntitySubSubclass) from DiscriminatorEntity e", Object[].class ).list();
-		assertEquals( 0, result.size() );
-
-		// in join
-		result = s.createQuery( "from DiscriminatorEntity e inner join e.other", DiscriminatorEntity.class ).list();
-		assertEquals( 1, result.size() );
-		result = s.createQuery( "from DiscriminatorEntity e inner join treat (e.other as DiscriminatorEntitySubclass)", DiscriminatorEntity.class ).list();
-		assertEquals( 0, result.size() );
-		result = s.createQuery( "from DiscriminatorEntity e inner join treat (e.other as DiscriminatorEntitySubSubclass)", DiscriminatorEntity.class ).list();
-		assertEquals( 0, result.size() );
-
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		s.remove( root );
-		s.remove( child );
-		s.getTransaction().commit();
-		s.close();
+			// in join
+			List<DiscriminatorEntity> result2 = s.createQuery( "from DiscriminatorEntity e inner join e.other", DiscriminatorEntity.class ).list();
+			assertEquals( 1, result2.size() );
+			result2 = s.createQuery( "from DiscriminatorEntity e inner join treat (e.other as DiscriminatorEntitySubclass)", DiscriminatorEntity.class ).list();
+			assertEquals( 0, result2.size() );
+			result2 = s.createQuery( "from DiscriminatorEntity e inner join treat (e.other as DiscriminatorEntitySubSubclass)", DiscriminatorEntity.class ).list();
+			assertEquals( 0, result2.size() );
+		} );
 	}
 
 	@Test
 	@JiraKey( value = "HHH-8637" )
-	public void testFilteringJoinedSubclasses() {
-		Session s = openSession();
-		s.beginTransaction();
-		JoinedEntity root = new JoinedEntity( 1, "root" );
-		s.persist( root );
-		JoinedEntitySubclass child = new JoinedEntitySubclass( 2, "child", root );
-		s.persist( child );
-		s.getTransaction().commit();
-		s.close();
+	public void testFilteringJoinedSubclasses(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			JoinedEntity root = new JoinedEntity( 1, "root" );
+			s.persist( root );
+			JoinedEntitySubclass child = new JoinedEntitySubclass( 2, "child", root );
+			s.persist( child );
+		} );
 
-		s = openSession();
-		s.beginTransaction();
+		scope.inSession( s -> {
+			// in the select clause which causes an implicit inclusion of subclass joins, the test here makes sure that
+			// the TREAT-AS effects the join-type used.
+			List result = s.createQuery( "select e from JoinedEntity e" ).list();
+			assertEquals( 2, result.size() );
+			result = s.createQuery( "select treat (e as JoinedEntitySubclass) from JoinedEntity e" ).list();
+			assertEquals( 1, result.size() );
+			result = s.createQuery( "select e from JoinedEntity e where treat (e as JoinedEntitySubclass) is not null" ).list();
+			assertEquals( 1, result.size() );
+			result = s.createQuery( "select treat (e as JoinedEntitySubSubclass) from JoinedEntity e" ).list();
+			assertEquals( 0, result.size() );
 
-		// in the select clause which causes an implicit inclusion of subclass joins, the test here makes sure that
-		// the TREAT-AS effects the join-type used.
-		List result = s.createQuery( "select e from JoinedEntity e" ).list();
-		assertEquals( 2, result.size() );
-		result = s.createQuery( "select treat (e as JoinedEntitySubclass) from JoinedEntity e" ).list();
-		assertEquals( 1, result.size() );
-		result = s.createQuery( "select e from JoinedEntity e where treat (e as JoinedEntitySubclass) is not null" ).list();
-		assertEquals( 1, result.size() );
-		result = s.createQuery( "select treat (e as JoinedEntitySubSubclass) from JoinedEntity e" ).list();
-		assertEquals( 0, result.size() );
-
-		// in join
-		result = s.createQuery( "from JoinedEntity e inner join e.other", JoinedEntity.class ).list();
-		assertEquals( 1, result.size() );
-		result = s.createQuery( "from JoinedEntity e inner join treat (e.other as JoinedEntitySubclass)", JoinedEntity.class ).list();
-		assertEquals( 0, result.size() );
-		result = s.createQuery( "from JoinedEntity e inner join treat (e.other as JoinedEntitySubSubclass)", JoinedEntity.class ).list();
-		assertEquals( 0, result.size() );
-
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		s.remove( child );
-		s.remove( root );
-		s.getTransaction().commit();
-		s.close();
+			// in join
+			result = s.createQuery( "from JoinedEntity e inner join e.other", JoinedEntity.class ).list();
+			assertEquals( 1, result.size() );
+			result = s.createQuery( "from JoinedEntity e inner join treat (e.other as JoinedEntitySubclass)", JoinedEntity.class ).list();
+			assertEquals( 0, result.size() );
+			result = s.createQuery( "from JoinedEntity e inner join treat (e.other as JoinedEntitySubSubclass)", JoinedEntity.class ).list();
+			assertEquals( 0, result.size() );
+		} );
 	}
 
 	@Test
 	@JiraKey( value = "HHH-9862" )
-	public void testRestrictionsOnJoinedSubclasses() {
-		Session s = openSession();
-		s.beginTransaction();
-		JoinedEntity root = new JoinedEntity( 1, "root" );
-		s.persist( root );
-		JoinedEntitySubclass child1 = new JoinedEntitySubclass( 2, "child1", root );
-		s.persist( child1 );
-		JoinedEntitySubclass2 child2 = new JoinedEntitySubclass2( 3, "child2", root );
-		s.persist( child2 );
-		s.getTransaction().commit();
-		s.close();
+	public void testRestrictionsOnJoinedSubclasses(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			JoinedEntity root = new JoinedEntity( 1, "root" );
+			s.persist( root );
+			JoinedEntitySubclass child1 = new JoinedEntitySubclass( 2, "child1", root );
+			s.persist( child1 );
+			JoinedEntitySubclass2 child2 = new JoinedEntitySubclass2( 3, "child2", root );
+			s.persist( child2 );
+		} );
 
-		s = openSession();
-		s.beginTransaction();
+		scope.inSession( s -> {
+			List result = s.createQuery( "select e from JoinedEntity e where treat (e as JoinedEntitySubclass ).name = 'child1'" ).list();
+			assertEquals( 1, result.size() );
+			assertTrue( JoinedEntitySubclass.class.isInstance( result.get( 0 ) ) );
 
-		List result = s.createQuery( "select e from JoinedEntity e where treat (e as JoinedEntitySubclass ).name = 'child1'" ).list();
-		assertEquals( 1, result.size() );
-		assertTrue( JoinedEntitySubclass.class.isInstance( result.get( 0 ) ) );
+			result = s.createQuery( "select e from JoinedEntity e where treat (e as JoinedEntitySubclass2 ).name = 'child1'" ).list();
+			assertEquals( 0, result.size() );
 
-		result = s.createQuery( "select e from JoinedEntity e where treat (e as JoinedEntitySubclass2 ).name = 'child1'" ).list();
-		assertEquals( 0, result.size() );
+			result = s.createQuery( "select e from JoinedEntity e where treat (e as JoinedEntitySubclass2 ).name = 'child2'" ).list();
+			assertEquals( 1, result.size() );
+			assertTrue( JoinedEntitySubclass2.class.isInstance( result.get( 0 ) ) );
 
-		result = s.createQuery( "select e from JoinedEntity e where treat (e as JoinedEntitySubclass2 ).name = 'child2'" ).list();
-		assertEquals( 1, result.size() );
-		assertTrue( JoinedEntitySubclass2.class.isInstance( result.get( 0 ) ) );
-
-		result = s.createQuery( "select e from JoinedEntity e where treat (e as JoinedEntitySubclass ).name = 'child1' or treat (e as JoinedEntitySubclass2 ).name = 'child2'" ).list();
-		assertEquals( 2, result.size() );
-
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		s.remove( child1 );
-		s.remove( child2 );
-		s.remove( root );
-		s.getTransaction().commit();
-		s.close();
+			result = s.createQuery( "select e from JoinedEntity e where treat (e as JoinedEntitySubclass ).name = 'child1' or treat (e as JoinedEntitySubclass2 ).name = 'child2'" ).list();
+			assertEquals( 2, result.size() );
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-9411")
-	public void testTreatWithRestrictionOnAbstractClass() {
-		inTransaction(
+	public void testTreatWithRestrictionOnAbstractClass(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					Greyhound greyhound = new Greyhound();
 					Dachshund dachshund = new Dachshund();
@@ -200,7 +163,7 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 
 					List results = s.createQuery( "select treat (a as Dog) from Animal a where a.fast = TRUE" ).list();
 
-					assertEquals( Arrays.asList( greyhound ), results );
+					assertEquals( List.of( greyhound ), results );
 					s.remove( greyhound );
 					s.remove( dachshund );
 				}
@@ -209,8 +172,8 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-16657")
-	public void testTypeFilterInSubquery() {
-		inTransaction(
+	public void testTypeFilterInSubquery(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					JoinedEntitySubclass2 child1 = new JoinedEntitySubclass2(3, "child1");
 					JoinedEntitySubSubclass2 child2 = new JoinedEntitySubSubclass2(4, "child2");
@@ -222,7 +185,7 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 					s.persist( root2 );
 				}
 		);
-		inSession(
+		scope.inSession(
 				s -> {
 					List<String> results = s.createSelectionQuery(
 							"select (select o.name from j.other o where type(j) = JoinedEntitySubSubclass) from JoinedEntitySubclass j order by j.id",
@@ -234,18 +197,12 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 					assertEquals( "child2", results.get( 1 ) );
 				}
 		);
-		inTransaction(
-				s -> {
-					s.createMutationQuery( "update JoinedEntity j set j.other = null" ).executeUpdate();
-					s.createMutationQuery( "delete from JoinedEntity" ).executeUpdate();
-				}
-		);
 	}
 
 	@Test
 	@JiraKey(value = "HHH-16658")
-	public void testPropagateEntityNameUsesFromDisjunction() {
-		inSession(
+	public void testPropagateEntityNameUsesFromDisjunction(SessionFactoryScope scope) {
+		scope.inSession(
 				s -> {
 					s.createSelectionQuery(
 							"select 1 from Animal a where (type(a) <> Dachshund or treat(a as Dachshund).fast) and (type(a) <> Greyhound or treat(a as Greyhound).fast)",
@@ -257,8 +214,8 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-16658")
-	public void testPropagateEntityNameUsesFromDisjunction2() {
-		inSession(
+	public void testPropagateEntityNameUsesFromDisjunction2(SessionFactoryScope scope) {
+		scope.inSession(
 				s -> {
 					s.createSelectionQuery(
 							"select 1 from JoinedEntity j where type(j) <> JoinedEntitySubclass or length(coalesce(treat(j as JoinedEntitySubclass).name,'')) > 1",
@@ -270,8 +227,8 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-16657")
-	public void testTreatInSelect() {
-		inTransaction(
+	public void testTreatInSelect(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					JoinedEntitySubclass root1 = new JoinedEntitySubclass(1, "root1");
 					JoinedEntitySubSubclass root2 = new JoinedEntitySubSubclass(2, "root2");
@@ -279,7 +236,7 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 					s.persist( root2 );
 				}
 		);
-		inSession(
+		scope.inSession(
 				s -> {
 					List<String> results = s.createSelectionQuery(
 							"select treat(j as JoinedEntitySubSubclass).name from JoinedEntitySubclass j order by j.id",
@@ -291,21 +248,16 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 					assertEquals( "root2", results.get( 1 ) );
 				}
 		);
-		inTransaction(
-				s -> {
-					s.createMutationQuery( "delete from JoinedEntity" ).executeUpdate();
-				}
-		);
 	}
 
 	@Test
 	@JiraKey(value = "HHH-16571") // Sort of related to that issue
-	public void testJoinSubclassOneToMany() {
+	public void testJoinSubclassOneToMany(SessionFactoryScope scope) {
 		// Originally, the FK for "others" used the primary key of the root table JoinedEntity
 		// Since we didn't register an entity use, we wrongly pruned that table before.
 		// This was fixed by letting the FK descriptor point to the primary key of JoinedEntitySubclass2,
 		// i.e. the plural attribute declaring type, which has the nice benefit of saving us a join
-		inSession(
+		scope.inSession(
 				s -> {
 					s.createSelectionQuery(
 							"select 1 from JoinedEntitySubclass2 s left join s.others o",

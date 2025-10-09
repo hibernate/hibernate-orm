@@ -7,7 +7,6 @@ package org.hibernate.orm.test.jpa.graphs;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityGraph;
@@ -22,46 +21,39 @@ import jakarta.persistence.TypedQuery;
 
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
-import org.hibernate.cfg.Environment;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.stat.Statistics;
 
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Andrea Boriero
  * @author Nathan Xu
  */
-public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+			LoadAndFetchGraphTest.AEntity.class,
+			LoadAndFetchGraphTest.BEntity.class,
+			LoadAndFetchGraphTest.CEntity.class,
+			LoadAndFetchGraphTest.DEntity.class,
+			LoadAndFetchGraphTest.EEntity.class
+		},
+		generateStatistics = true
+)
+public class LoadAndFetchGraphTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				AEntity.class,
-				BEntity.class,
-				CEntity.class,
-				DEntity.class,
-				EEntity.class
-		};
-	}
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		options.put( Environment.GENERATE_STATISTICS, "true" );
-		super.addConfigOptions( options );
-	}
-
-	@Before
-	public void setUp() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	@BeforeEach
+	public void setUp(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			// Create the model twice, with different IDs,
 			// because we also need to test what happens when multiple results are loaded by a query.
 			for ( int offset : new int[]{ 0, 10000 } ) {
@@ -176,13 +168,17 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 	}
 
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
+	}
+
 	@Test
 	@JiraKey(value = "HHH-14097")
-	public void testQueryById() {
-		Statistics statistics = entityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
+	public void testQueryById(EntityManagerFactoryScope scope) {
+		Statistics statistics = scope.getEntityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
 		statistics.clear();
-		doInJPA(
-				this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 					TypedQuery<CEntity> query = entityManager.createQuery(
 							"select c from CEntity as c where c.id = :cid ",
 							CEntity.class
@@ -204,11 +200,10 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-14097")
-	public void testQueryByIdWithLoadGraph() {
-		Statistics statistics = entityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
+	public void testQueryByIdWithLoadGraph(EntityManagerFactoryScope scope) {
+		Statistics statistics = scope.getEntityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
 		statistics.clear();
-		doInJPA(
-				this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 					EntityGraph<CEntity> entityGraph = entityManager.createEntityGraph( CEntity.class );
 					entityGraph.addAttributeNodes( "a", "b" );
 					entityGraph.addSubgraph( "dList" ).addAttributeNodes( "e" );
@@ -240,11 +235,10 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-14097")
-	public void testQueryByIdWithFetchGraph() {
-		Statistics statistics = entityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
+	public void testQueryByIdWithFetchGraph(EntityManagerFactoryScope scope) {
+		Statistics statistics = scope.getEntityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
 		statistics.clear();
-		doInJPA(
-				this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 					EntityGraph<CEntity> entityGraph = entityManager.createEntityGraph( CEntity.class );
 					entityGraph.addAttributeNodes( "a", "b" );
 					entityGraph.addSubgraph( "dList" ).addAttributeNodes( "e" );
@@ -275,11 +269,10 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-14097")
-	public void testQueryByIdWithFetchGraph2() {
-		Statistics statistics = entityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
+	public void testQueryByIdWithFetchGraph2(EntityManagerFactoryScope scope) {
+		Statistics statistics = scope.getEntityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
 		statistics.clear();
-		doInJPA(
-				this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 					EntityGraph<CEntity> entityGraph = entityManager.createEntityGraph( CEntity.class );
 					entityGraph.addSubgraph( "c" ).addAttributeNodes( "a" );
 
@@ -305,10 +298,10 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-14124")
-	public void testQueryByIdWithLoadGraphMultipleResults() {
-		Statistics statistics = entityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
+	public void testQueryByIdWithLoadGraphMultipleResults(EntityManagerFactoryScope scope) {
+		Statistics statistics = scope.getEntityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
 		statistics.clear();
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			EntityGraph<CEntity> entityGraph = entityManager.createEntityGraph( CEntity.class );
 			entityGraph.addAttributeNodes( "a", "b" );
 			entityGraph.addSubgraph( "dList" ).addAttributeNodes( "e" );
@@ -343,10 +336,10 @@ public class LoadAndFetchGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-14124")
-	public void testQueryByIdWithFetchGraphMultipleResults() {
-		Statistics statistics = entityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
+	public void testQueryByIdWithFetchGraphMultipleResults(EntityManagerFactoryScope scope) {
+		Statistics statistics = scope.getEntityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
 		statistics.clear();
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			EntityGraph<CEntity> entityGraph = entityManager.createEntityGraph( CEntity.class );
 			entityGraph.addAttributeNodes( "a", "b" );
 			entityGraph.addSubgraph( "dList" ).addAttributeNodes( "e" );

@@ -5,14 +5,13 @@
 package org.hibernate.orm.test.mapping.collections.custom.parameterized;
 
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tes for parameterized user collection types.
@@ -20,26 +19,24 @@ import static org.junit.Assert.assertTrue;
  * @author Holger Brands
  * @author Steve Ebersole
  */
-public abstract class ParameterizedUserCollectionTypeTest extends BaseCoreFunctionalTestCase {
+@SessionFactory
+public abstract class ParameterizedUserCollectionTypeTest {
 	@SuppressWarnings( {"unchecked"})
 	@Test
-	public void testBasicOperation() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		Entity entity = new Entity( "tester" );
-		entity.getValues().add( "value-1" );
-		s.persist( entity );
-		t.commit();
-		s.close();
+	public void testBasicOperation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			Entity entity = new Entity( "tester" );
+			entity.getValues().add( "value-1" );
+			session.persist( entity );
+		} );
 
-		s = openSession();
-		t = s.beginTransaction();
-		entity = s.get( Entity.class, "tester" );
-		assertTrue( Hibernate.isInitialized( entity.getValues() ) );
-		assertEquals( 1, entity.getValues().size() );
-		assertEquals( "Hello", ( ( DefaultableList ) entity.getValues() ).getDefaultValue() );
-		s.remove( entity );
-		t.commit();
-		s.close();
+		scope.inTransaction( session -> {
+			Entity entity = session.find( Entity.class, "tester" );
+			assertTrue( Hibernate.isInitialized( entity.getValues() ) );
+			assertEquals( 1, entity.getValues().size() );
+			assertEquals( "Hello", ( ( DefaultableList ) entity.getValues() ).getDefaultValue() );
+			session.remove( entity );
+		} );
 	}
+
 }

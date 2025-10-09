@@ -14,29 +14,24 @@ import jakarta.persistence.ManyToOne;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class MultipleNaturalIdTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Book.class,
-			Publisher.class
-		};
-	}
+@Jpa(annotatedClasses = {
+		MultipleNaturalIdTest.Book.class, MultipleNaturalIdTest.Publisher.class
+})
+public class MultipleNaturalIdTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Publisher publisher = new Publisher();
 			publisher.setId(1L);
 			publisher.setName("Amazon");
@@ -51,7 +46,7 @@ public class MultipleNaturalIdTest extends BaseEntityManagerFunctionalTestCase {
 
 			entityManager.persist(book);
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Publisher publisher = entityManager.getReference(Publisher.class, 1L);
 			//tag::naturalid-load-access-example[]
 
@@ -65,7 +60,7 @@ public class MultipleNaturalIdTest extends BaseEntityManagerFunctionalTestCase {
 
 			assertEquals("High-Performance Java Persistence", book.getTitle());
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Publisher publisher = entityManager.getReference(Publisher.class, 1L);
 			Book book = entityManager
 					.unwrap(Session.class)

@@ -12,34 +12,30 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
 import org.hibernate.annotations.processing.Exclude;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
 @Exclude
-public class IdManyToOneTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Book.class,
-			Author.class,
-			Publisher.class
-		};
-	}
+@Jpa(annotatedClasses = {
+		IdManyToOneTest.Book.class,
+		IdManyToOneTest.Author.class,
+		IdManyToOneTest.Publisher.class
+})
+public class IdManyToOneTest {
 
 	@Test
-	public void test() {
+	public void test(EntityManagerFactoryScope scope) {
 		Author author = new Author();
 		Publisher publisher = new Publisher();
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			author.setName("Vlad Mihalcea");
 			entityManager.persist(author);
 
@@ -53,7 +49,7 @@ public class IdManyToOneTest extends BaseEntityManagerFunctionalTestCase {
 			entityManager.persist(book);
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::identifiers-composite-id-fetching-example[]
 			Book book = entityManager.find(Book.class, new Book(
 				author,

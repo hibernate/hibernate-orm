@@ -13,9 +13,7 @@ import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -30,7 +28,7 @@ public class PersistenceXmlParserTest {
 	@Test
 	public void create_classLoaders() {
 		var parser = PersistenceXmlParser.create(
-				Map.of( AvailableSettings.CLASSLOADERS, Arrays.asList( new TestClassLoader( "pu1" ) ) ),
+				Map.of( AvailableSettings.CLASSLOADERS, List.of( new TestClassLoader( "pu1" ) ) ),
 				new TestClassLoader( "pu2" ),
 				null
 		);
@@ -45,7 +43,7 @@ public class PersistenceXmlParserTest {
 		var myClassLoaderService = new ClassLoaderServiceImpl( new TestClassLoader( "pu3" ) );
 		var parser = PersistenceXmlParser.create(
 				// Should be ignored
-				Map.of( AvailableSettings.CLASSLOADERS, Arrays.asList( new TestClassLoader( "pu1" ) ) ),
+				Map.of( AvailableSettings.CLASSLOADERS, List.of( new TestClassLoader( "pu1" ) ) ),
 				// Should be ignored
 				new TestClassLoader( "pu2" ),
 				myClassLoaderService
@@ -111,7 +109,7 @@ public class PersistenceXmlParserTest {
 		}
 
 		@Override
-		protected Enumeration<URL> findResources(String name) throws IOException {
+		protected Enumeration<URL> findResources(String name) {
 			return name.equals( "META-INF/persistence.xml" ) ?
 					Collections.enumeration( List.of( url ) ) :
 					Collections.emptyEnumeration();

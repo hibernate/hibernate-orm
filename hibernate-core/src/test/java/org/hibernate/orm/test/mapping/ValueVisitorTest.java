@@ -29,27 +29,26 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ValueVisitor;
 
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author max
  */
-public class ValueVisitorTest extends BaseUnitTestCase {
+public class ValueVisitorTest {
 
 	private StandardServiceRegistry serviceRegistry;
 	private MetadataBuildingContext metadataBuildingContext;
 
-	@Before
+	@BeforeEach
 	public void prepare() {
 		serviceRegistry = ServiceRegistryUtil.serviceRegistry();
 		metadataBuildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 	}
 
-	@After
+	@AfterEach
 	public void release() {
 		StandardServiceRegistryBuilder.destroy( serviceRegistry );
 	}

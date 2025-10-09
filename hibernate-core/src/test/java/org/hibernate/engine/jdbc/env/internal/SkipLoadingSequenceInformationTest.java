@@ -11,16 +11,18 @@ import jakarta.persistence.Id;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.id.SequenceMismatchStrategy;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingProvider;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Verifies that setting {@code AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY} to {@code none}
@@ -28,13 +30,13 @@ import org.junit.Test;
  */
 @RequiresDialect( H2Dialect.class )
 @JiraKey( value = "HHH-14667")
-public class SkipLoadingSequenceInformationTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY, SequenceMismatchStrategy.NONE );
-		configuration.setProperty( Environment.DIALECT, VetoingDialect.class );
-	}
+@DomainModel(annotatedClasses = {SkipLoadingSequenceInformationTest.SequencingEntity.class})
+@SessionFactory
+@ServiceRegistry(
+		settings = { @Setting( name = AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY, value = "NONE") },
+		settingProviders = { @SettingProvider( settingName = Environment.DIALECT, provider = SkipLoadingSequenceInformationTest.VetoingDialectClassProvider.class) }
+)
+public class SkipLoadingSequenceInformationTest {
 
 	@Entity(name="seqentity")
 	static class SequencingEntity {
@@ -51,11 +53,6 @@ public class SkipLoadingSequenceInformationTest extends BaseCoreFunctionalTestCa
 		String name;
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{SequencingEntity.class};
-	}
-
 	@Test
 	public void test() {
 		// If it's able to boot, we're good.
@@ -65,6 +62,13 @@ public class SkipLoadingSequenceInformationTest extends BaseCoreFunctionalTestCa
 		@Override
 		public SequenceInformationExtractor getSequenceInformationExtractor() {
 			throw new IllegalStateException("Should really not invoke this method in this setup");
+		}
+	}
+
+	public static class VetoingDialectClassProvider implements SettingProvider.Provider<Class<?>> {
+		@Override
+		public Class<?> getSetting() {
+			return VetoingDialect.class;
 		}
 	}
 

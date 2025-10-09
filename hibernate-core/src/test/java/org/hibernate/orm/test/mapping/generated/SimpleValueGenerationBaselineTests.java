@@ -36,7 +36,7 @@ public class SimpleValueGenerationBaselineTests {
 
 		// lastly, make sure we can load it..
 		scope.inTransaction( (session) -> {
-			assertThat( session.get( NonAuditedEntity.class, 1 ) ).isNotNull();
+			assertThat( session.find( NonAuditedEntity.class, 1 ) ).isNotNull();
 		} );
 	}
 

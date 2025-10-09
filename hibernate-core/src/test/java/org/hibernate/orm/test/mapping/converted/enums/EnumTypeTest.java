@@ -9,84 +9,68 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.LoggingInspections;
+import org.hibernate.testing.orm.junit.LoggingInspectionsScope;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.type.descriptor.JdbcBindingLogging;
 import org.hibernate.type.descriptor.JdbcExtractingLogging;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.logger.LoggerInspectionRule;
-import org.hibernate.testing.logger.Triggerable;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import org.jboss.logging.Logger;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Brett Meyer
  */
-public class EnumTypeTest extends BaseCoreFunctionalTestCase {
-
-	@Rule
-	public LoggerInspectionRule binderLogInspection =
-			new LoggerInspectionRule( Logger.getLogger( JdbcBindingLogging.NAME ) );
-
-	@Rule
-	public LoggerInspectionRule extractorLogInspection =
-			new LoggerInspectionRule( Logger.getLogger( JdbcExtractingLogging.NAME ) );
+@DomainModel(xmlMappings = {"org/hibernate/orm/test/mapping/converted/enums/Person.hbm.xml" })
+@SessionFactory
+@ServiceRegistry(settings = {@Setting(name = Environment.PREFER_NATIVE_ENUM_TYPES, value = "false")})
+@LoggingInspections(
+		messages = {
+				@LoggingInspections.Message(
+						messageKey = "binding parameter",
+						loggers = @org.hibernate.testing.orm.junit.Logger(loggerName = JdbcBindingLogging.NAME)
+				),
+				@LoggingInspections.Message(
+						messageKey = "extracted value",
+						loggers = @org.hibernate.testing.orm.junit.Logger(loggerName = JdbcExtractingLogging.NAME)
+				)
+		}
+)
+public class EnumTypeTest {
 
 	private Person person;
 
-	private Triggerable binderTriggerable;
-
-	private Triggerable extractorTriggerable;
-
-	@Override
-	protected String getBaseForMappings() {
-		return "";
-	}
-
-	protected String[] getMappings() {
-		return new String[] { "org/hibernate/orm/test/mapping/converted/enums/Person.hbm.xml" };
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.setProperty( Environment.PREFER_NATIVE_ENUM_TYPES, "false" );
-	}
-
-	@Override
-	protected void prepareTest() {
-		doInHibernate( this::sessionFactory, s -> {
+	@BeforeEach
+	protected void prepareTest(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			this.person = Person.person( Gender.MALE, HairColor.BROWN );
 			s.persist( person );
 			s.persist( Person.person( Gender.MALE, HairColor.BLACK ) );
 			s.persist( Person.person( Gender.FEMALE, HairColor.BROWN ) );
 			s.persist( Person.person( Gender.FEMALE, HairColor.BLACK ) );
 		} );
-
-		binderTriggerable = binderLogInspection.watchForLogMessages( "binding parameter" );
-		extractorTriggerable = extractorLogInspection.watchForLogMessages( "extracted value" );
 	}
 
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
+	@AfterEach
+	protected void cleanupTestData(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
 	@Test
 	@JiraKey(value = "HHH-8153")
-	public void hbmEnumTypeTest() {
-		doInHibernate(
-				this::sessionFactory,
-				s -> {
+	public void hbmEnumTypeTest(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 					assertEquals( 2, getNumberOfPersonByGender( s, Gender.MALE ) );
 					assertEquals( 1, getNumberOfPersonByGenderAndHairColor( s, Gender.MALE, HairColor.BROWN ) );
 					assertEquals( 2, getNumberOfPersonByGender( s, Gender.FEMALE ) );
@@ -116,22 +100,20 @@ public class EnumTypeTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-12978")
-	public void testEnumAsBindParameterAndExtract() {
-		doInHibernate( this::sessionFactory, s -> {
-			binderTriggerable.reset();
-			extractorTriggerable.reset();
+	public void testEnumAsBindParameterAndExtract(LoggingInspectionsScope loggingScope, SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			loggingScope.resetWatchers();
 
 			s.createQuery( "select p.id from Person p where p.id = :id", Long.class )
 					.setParameter( "id", person.getId() )
 					.getSingleResult();
 
-			assertTrue( binderTriggerable.wasTriggered() );
-			assertTrue( extractorTriggerable.wasTriggered() );
+			assertTrue( loggingScope.getWatcher( "binding parameter", JdbcBindingLogging.NAME ).wasTriggered() );
+			assertTrue( loggingScope.getWatcher( "extracted value", JdbcExtractingLogging.NAME ).wasTriggered() );
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
-			binderTriggerable.reset();
-			extractorTriggerable.reset();
+		scope.inTransaction( s -> {
+			loggingScope.resetWatchers();
 
 			s.createQuery(
 					"select p.gender from Person p where p.gender = :gender and p.hairColor = :hairColor",
@@ -141,8 +123,8 @@ public class EnumTypeTest extends BaseCoreFunctionalTestCase {
 					.setParameter( "hairColor", HairColor.BROWN )
 					.getSingleResult();
 
-			assertTrue( binderTriggerable.wasTriggered() );
-			assertTrue( extractorTriggerable.wasTriggered() );
+			assertTrue( loggingScope.getWatcher( "binding parameter", JdbcBindingLogging.NAME ).wasTriggered() );
+			assertTrue( loggingScope.getWatcher( "extracted value", JdbcExtractingLogging.NAME ).wasTriggered() );
 		} );
 	}
 }

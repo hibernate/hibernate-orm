@@ -19,6 +19,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -34,12 +35,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SessionFactory(generateStatistics = true)
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "5"),
 		settingProviders = @SettingProvider(settingName = CurrentTimestampGeneration.CLOCK_SETTING_NAME,
-				provider = InMemoryTimestampGenerationBatchTest.MutableClockProvider.class))
+				provider = MutableClockSettingProvider.class))
 @Jira("https://hibernate.atlassian.net/browse/HHH-19840")
 public class InMemoryTimestampGenerationBatchTest {
-	private static final MutableClock clock = new MutableClock();
+	private MutableClock clock;
 
 	private static final int PERSON_COUNT = 8;
+
+	@BeforeEach
+	public void setup(SessionFactoryScope scope) {
+		clock = CurrentTimestampGeneration.getClock( scope.getSessionFactory() );
+		clock.reset();
+	}
 
 	@Test
 	public void test(SessionFactoryScope scope) throws InterruptedException {
@@ -92,13 +99,6 @@ public class InMemoryTimestampGenerationBatchTest {
 			assertEquals( person.getCreatedOn(), createdOn );
 			assertTrue( person.getUpdatedOn().isAfter( updatedOn ) );
 		} );
-	}
-
-	public static class MutableClockProvider implements SettingProvider.Provider<Object> {
-		@Override
-		public Object getSetting() {
-			return clock;
-		}
 	}
 
 	@Entity(name = "Person")

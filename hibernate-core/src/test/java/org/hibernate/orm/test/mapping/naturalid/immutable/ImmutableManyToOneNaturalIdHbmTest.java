@@ -26,10 +26,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Alex Burgel
@@ -102,7 +102,7 @@ public class ImmutableManyToOneNaturalIdHbmTest {
 
 	@Test
 	public void testNaturalIdCheck(SessionFactoryScope scope) {
-		final Child child = scope.fromTransaction( (s) -> s.get( Child.class, 1 ) );
+		final Child child = scope.fromTransaction( (s) -> s.find( Child.class, 1 ) );
 
 		// child is detached...
 		//   - change the name and attempt to reattach it, which should fail

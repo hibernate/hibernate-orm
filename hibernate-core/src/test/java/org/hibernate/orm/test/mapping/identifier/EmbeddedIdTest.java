@@ -10,29 +10,22 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class EmbeddedIdTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(annotatedClasses = {EmbeddedIdTest.SystemUser.class})
+public class EmbeddedIdTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			SystemUser.class
-		};
-	}
-
-	@Before
-	public void init() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	@BeforeEach
+	public void init(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			SystemUser systemUser = new SystemUser();
 			systemUser.setPk(new PK(
 				"Hibernate Forum",
@@ -46,8 +39,8 @@ public class EmbeddedIdTest extends BaseEntityManagerFunctionalTestCase {
 
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			SystemUser systemUser = entityManager.find(
 				SystemUser.class,
 				new PK(

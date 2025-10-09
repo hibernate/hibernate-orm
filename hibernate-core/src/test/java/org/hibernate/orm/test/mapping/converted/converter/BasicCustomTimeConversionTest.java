@@ -4,32 +4,34 @@
  */
 package org.hibernate.orm.test.mapping.converted.converter;
 
-import java.net.MalformedURLException;
 import java.time.LocalDate;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.Session;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertTrue;
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
 @JiraKey( value = "HHH-8842" )
-public class BasicCustomTimeConversionTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = {BasicCustomTimeConversionTest.TheEntity.class})
+@SessionFactory
+public class BasicCustomTimeConversionTest {
 	static boolean convertToDatabaseColumnCalled = false;
 	static boolean convertToEntityAttributeCalled = false;
 
@@ -68,14 +70,9 @@ public class BasicCustomTimeConversionTest extends BaseNonConfigCoreFunctionalTe
 		}
 	}
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { TheEntity.class };
-	}
-
 	@Test
-	public void testSimpleConvertUsage() throws MalformedURLException {
-		final EntityPersister ep = sessionFactory().getMappingMetamodel().getEntityDescriptor(TheEntity.class.getName());
+	public void testSimpleConvertUsage(SessionFactoryScope scope) {
+		final EntityPersister ep = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(TheEntity.class.getName());
 		final Type theDatePropertyType = ep.getPropertyType( "theDate" );
 		final ConvertedBasicTypeImpl type = assertTyping( ConvertedBasicTypeImpl.class, theDatePropertyType );
 		final JpaAttributeConverter converter = (JpaAttributeConverter) type.getValueConverter();
@@ -83,28 +80,16 @@ public class BasicCustomTimeConversionTest extends BaseNonConfigCoreFunctionalTe
 
 		resetFlags();
 
-		Session session = openSession();
-		session.getTransaction().begin();
-		session.persist( new TheEntity( 1, new CustomLocalDate( 2025, 9, 26 ) ) );
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction( session -> session.persist( new TheEntity( 1, new CustomLocalDate( 2025, 9, 26 ) ) ) );
 
 		assertTrue( convertToDatabaseColumnCalled );
 		resetFlags();
 
-		session = openSession();
-		session.getTransaction().begin();
-		session.get( TheEntity.class, 1 );
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction( session -> session.find( TheEntity.class, 1 ) );
 
 		assertTrue( convertToEntityAttributeCalled );
 		resetFlags();
 
-		session = openSession();
-		session.getTransaction().begin();
-		session.createQuery( "delete TheEntity" ).executeUpdate();
-		session.getTransaction().commit();
-		session.close();
+		scope.dropData();
 	}
 }

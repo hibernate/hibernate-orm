@@ -9,19 +9,18 @@ import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.Timeouts.NO_WAIT;
 import static org.hibernate.Timeouts.SKIP_LOCKED;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
 @RequiresDialect(PostgreSQLDialect.class)
-public class PostgreSQLLockTimeoutTest extends BaseUnitTestCase {
+public class PostgreSQLLockTimeoutTest {
 
 	private final Dialect dialect = new PostgreSQLDialect();
 

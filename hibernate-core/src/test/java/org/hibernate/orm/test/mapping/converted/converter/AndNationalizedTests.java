@@ -20,19 +20,17 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.PersistentClass;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Test the combination of @Nationalized and @Convert
  *
  * @author Steve Ebersole
  */
-//@SkipForDialect(value = DB2Dialect.class, comment = "DB2 jdbc driver doesn't support setNString")
-public class AndNationalizedTests extends BaseUnitTestCase {
+public class AndNationalizedTests {
 	@Test
 	@JiraKey( value = "HHH-9599")
 	public void basicTest() {

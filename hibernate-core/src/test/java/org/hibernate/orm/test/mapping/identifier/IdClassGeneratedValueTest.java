@@ -11,28 +11,21 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class IdClassGeneratedValueTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			SystemUser.class
-		};
-	}
+@Jpa(annotatedClasses = {IdClassGeneratedValueTest.SystemUser.class})
+public class IdClassGeneratedValueTest {
 
 	@Test
-	public void test() {
-		SystemUser _systemUser = doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		SystemUser _systemUser = scope.fromTransaction( entityManager -> {
 			SystemUser systemUser = new SystemUser();
 			systemUser.setId(
 					new PK(
@@ -47,12 +40,8 @@ public class IdClassGeneratedValueTest extends BaseEntityManagerFunctionalTestCa
 			return systemUser;
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			SystemUser systemUser = entityManager.find(
-				SystemUser.class,
-				_systemUser.getId()
-			);
-
+		scope.inTransaction( entityManager -> {
+			SystemUser systemUser = entityManager.find( SystemUser.class, _systemUser.getId() );
 			assertEquals("Vlad Mihalcea", systemUser.getName());
 		});
 

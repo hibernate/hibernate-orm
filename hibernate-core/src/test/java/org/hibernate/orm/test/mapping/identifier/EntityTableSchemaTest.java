@@ -9,27 +9,20 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
 @RequiresDialect(PostgreSQLDialect.class)
-public class EntityTableSchemaTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Book.class
-		};
-	}
+@Jpa(annotatedClasses = {EntityTableSchemaTest.Book.class})
+public class EntityTableSchemaTest {
 
 	@Test
 	public void test() {
-
 	}
 
 	//tag::mapping-entity-table-schema-postgresql-example[]

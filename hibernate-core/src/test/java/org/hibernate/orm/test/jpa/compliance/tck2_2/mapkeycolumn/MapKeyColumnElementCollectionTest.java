@@ -14,32 +14,38 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.Table;
 
-import org.hibernate.boot.MetadataSources;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 /**
  * @author Steve Ebersole
  */
-public class MapKeyColumnElementCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = {
+		MapKeyColumnElementCollectionTest.AddressCapable.class,
+		MapKeyColumnElementCollectionTest.AddressCapable2.class
+})
+@SessionFactory
+public class MapKeyColumnElementCollectionTest {
 
 	@Test
 	@JiraKey( value = "HHH-12150" )
-	public void testReferenceToAlreadyMappedColumn() {
-		inTransaction(
+	public void testReferenceToAlreadyMappedColumn(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					AddressCapable2 holder = new AddressCapable2( 1, "osd");
 
 					session.persist( holder );
 				}
 		);
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					AddressCapable2 holder = session.get( AddressCapable2.class, 1 );
+					AddressCapable2 holder = session.find( AddressCapable2.class, 1 );
 					Address2 address = new Address2( 1, "123 Main St" );
 					address.type = "work";
 
@@ -48,9 +54,9 @@ public class MapKeyColumnElementCollectionTest extends BaseNonConfigCoreFunction
 					session.persist( holder );
 				}
 		);
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					AddressCapable2 holder = session.get( AddressCapable2.class, 1 );
+					AddressCapable2 holder = session.find( AddressCapable2.class, 1 );
 					assertEquals( 1, holder.addresses.size() );
 					final Map.Entry<String,Address2> entry = holder.addresses.entrySet().iterator().next();
 					assertEquals( "work", entry.getKey() );
@@ -62,40 +68,32 @@ public class MapKeyColumnElementCollectionTest extends BaseNonConfigCoreFunction
 
 	@Test
 	@JiraKey( value = "HHH-12150" )
-	public void testReferenceToNonMappedColumn() {
-		inTransaction(
+	public void testReferenceToNonMappedColumn(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					AddressCapable holder = new AddressCapable( 1, "osd");
 
 					session.persist( holder );
 				}
 		);
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					AddressCapable holder = session.get( AddressCapable.class, 1 );
+					AddressCapable holder = session.find( AddressCapable.class, 1 );
 
 					holder.addresses.put( "work", new Address( 1, "123 Main St" ) );
 
 					session.persist( holder );
 				}
 		);
-		inTransaction(
+		scope.inTransaction(
 				session -> {
-					AddressCapable holder = session.get( AddressCapable.class, 1 );
+					AddressCapable holder = session.find( AddressCapable.class, 1 );
 					assertEquals( 1, holder.addresses.size() );
 					final Map.Entry<String,Address> entry = holder.addresses.entrySet().iterator().next();
 					assertEquals( "work", entry.getKey() );
 					session.remove( holder );
 				}
 		);
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-
-		sources.addAnnotatedClass( AddressCapable.class );
-		sources.addAnnotatedClass( AddressCapable2.class );
 	}
 
 	@Entity( name = "AddressCapable" )

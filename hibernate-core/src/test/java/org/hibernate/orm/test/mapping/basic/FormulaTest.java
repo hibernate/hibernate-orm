@@ -8,29 +8,23 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Formula;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class FormulaTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Account.class
-		};
-	}
+@Jpa( annotatedClasses = {FormulaTest.Account.class} )
+public class FormulaTest {
 
 	@Test
-	public void testLifecycle() {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
 		//tag::mapping-column-formula-persistence-example[]
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::basic-datetime-temporal-date-persist-example[]
 			Account account = new Account();
 			account.setId(1L);
@@ -39,7 +33,7 @@ public class FormulaTest extends BaseEntityManagerFunctionalTestCase {
 			entityManager.persist(account);
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Account account = entityManager.find(Account.class, 1L);
 			assertEquals(Double.valueOf(62.5d), account.getInterest());
 		});

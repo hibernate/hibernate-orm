@@ -9,28 +9,21 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 
 /**
  * @author Vlad Mihalcea
  */
+@Jpa(annotatedClasses = {EntityTableCatalogTest.Book.class})
 @RequiresDialect(MySQLDialect.class)
-public class EntityTableCatalogTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Book.class
-		};
-	}
+public class EntityTableCatalogTest {
 
 	@Test
 	public void test() {
-
 	}
 
 	//tag::mapping-entity-table-catalog-mysql-example[]

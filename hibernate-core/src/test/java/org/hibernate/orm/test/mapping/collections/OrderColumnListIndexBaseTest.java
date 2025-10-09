@@ -5,7 +5,7 @@
 package org.hibernate.orm.test.mapping.collections;
 
 import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -17,32 +17,25 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 
+import org.hibernate.SessionFactory;
 import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInAutoCommit;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class OrderColumnListIndexBaseTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				Phone.class,
-		};
-	}
+@Jpa( annotatedClasses = {OrderColumnListIndexBaseTest.Person.class, OrderColumnListIndexBaseTest.Phone.class} )
+public class OrderColumnListIndexBaseTest {
 
 	@Test
-	public void testLifecycle() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			//tag::collections-customizing-ordered-list-ordinal-persist-example[]
 			Person person = new Person(1L);
 			entityManager.persist(person);
@@ -50,47 +43,55 @@ public class OrderColumnListIndexBaseTest extends BaseEntityManagerFunctionalTes
 			person.addPhone(new Phone(2L, "mobile", "072-122-9876"));
 			//end::collections-customizing-ordered-list-ordinal-persist-example[]
 		});
-		doInAutoCommit( st -> {
-			try (ResultSet rs = st.executeQuery( "select id, order_id from Phone" )) {
-				while ( rs.next() ) {
-					final long id = rs.getLong( 1 );
-					if ( id == 1 ) {
-						assertEquals( 100, rs.getInt( 2 ) );
+		scope.getEntityManagerFactory().unwrap( SessionFactory.class ).inSession(
+				session -> {
+				session.doWork( conn -> {
+					try (Statement st = conn.createStatement()) {
+						st.execute( "select id, order_id from Phone" );
+						ResultSet rs = st.getResultSet();
+						while ( rs.next() ) {
+							final long id = rs.getLong( 1 );
+							if ( id == 1 ) {
+								assertEquals( 100, rs.getInt( 2 ) );
+							}
+							else if ( id == 2 ) {
+								assertEquals( 101, rs.getInt( 2 ) );
+							}
+						}
 					}
-					else if ( id == 2 ) {
-						assertEquals( 101, rs.getInt( 2 ) );
-					}
-				}
-			}
-			catch (SQLException e) {
-				throw new RuntimeException( e );
-			}
-		} );
-		doInJPA(this::entityManagerFactory, entityManager -> {
+				} );
+			} );
+
+		scope.inTransaction( entityManager -> {
 			Person person = entityManager.find(  Person.class, 1L);
 			person.addPhone(new Phone(3L, "fax", "099-234-9876"));
 			entityManager.persist(person);
 		});
-		doInAutoCommit( st -> {
-			try (ResultSet rs = st.executeQuery( "select id, order_id from Phone" )) {
-				while ( rs.next() ) {
-					final long id = rs.getLong( 1 );
-					if ( id == 1 ) {
-						assertEquals( 100, rs.getInt( 2 ) );
-					}
-					else if ( id == 2 ) {
-						assertEquals( 101, rs.getInt( 2 ) );
-					}
-					else if ( id == 3 ) {
-						assertEquals( 102, rs.getInt( 2 ) );
-					}
-				}
-			}
-			catch (SQLException e) {
-				throw new RuntimeException( e );
-			}
-		} );
-		doInJPA(this::entityManagerFactory, entityManager -> {
+
+		scope.getEntityManagerFactory().unwrap( SessionFactory.class ).inSession(
+				session -> {
+					session.doWork( conn -> {
+						try (Statement st = conn.createStatement()) {
+							st.execute( "select id, order_id from Phone" );
+							try (ResultSet rs = st.getResultSet()) {
+								while ( rs.next() ) {
+									final long id = rs.getLong( 1 );
+									if ( id == 1 ) {
+										assertEquals( 100, rs.getInt( 2 ) );
+									}
+									else if ( id == 2 ) {
+										assertEquals( 101, rs.getInt( 2 ) );
+									}
+									else if ( id == 3 ) {
+										assertEquals( 102, rs.getInt( 2 ) );
+									}
+								}
+							}
+						}
+					} );
+				} );
+
+		scope.inTransaction( entityManager -> {
 			Person person = entityManager.find(  Person.class, 1L);
 			final List<Phone> phones = person.getPhones();
 			assertEquals( Long.valueOf( 1L ), phones.get( 0 ).getId() );

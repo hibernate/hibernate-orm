@@ -5,31 +5,25 @@
 package org.hibernate.orm.test.mapping.identifier;
 
 import org.hibernate.annotations.PartitionKey;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Christian Beikov
  */
-public class SimplePartitionKeyTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			User.class
-		};
-	}
+@Jpa(annotatedClasses = {SimplePartitionKeyTest.User.class})
+public class SimplePartitionKeyTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			User user = new User();
 			user.setId( 1L );
 			user.setFirstname( "John" );
@@ -38,11 +32,11 @@ public class SimplePartitionKeyTest extends BaseEntityManagerFunctionalTestCase 
 
 			entityManager.persist( user );
 		});
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			User user = entityManager.find( User.class, 1L );
 			user.setLastname( "Cash" );
 		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			entityManager.remove( entityManager.find( User.class, 1L ) );
 		} );
 	}

@@ -7,11 +7,13 @@ package org.hibernate.orm.test.mapping.converted.converter;
 import java.time.Year;
 import java.util.List;
 
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Column;
@@ -27,18 +29,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Marco Belladelli
  */
 @JiraKey( value = "HHH-15742")
-public class QueryConvertedAttributeTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = {QueryConvertedAttributeTest.EntityA.class})
+@SessionFactory
+public class QueryConvertedAttributeTest {
 
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				EntityA.class,
-		};
-	}
-
-	@Before
-	public void prepare() {
-		inTransaction( s -> {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			EntityA entityA1 = new EntityA( 1, Year.parse("2022") );
 			EntityA entityA2 = new EntityA( 2, Year.parse("2021") );
 			EntityA entityA3 = new EntityA( 3, null );
@@ -48,22 +45,20 @@ public class QueryConvertedAttributeTest extends BaseNonConfigCoreFunctionalTest
 		} );
 	}
 
-	@After
-	public void tearDown() {
-		inTransaction( s -> {
-			s.createMutationQuery( "delete entitya" ).executeUpdate();
-		} );
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( s -> s.createMutationQuery( "delete entitya" ).executeUpdate() );
 	}
 
 	@Test
-	public void testQueryConvertedAttribute() {
-		inTransaction( s -> {
+	public void testQueryConvertedAttribute(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			TypedQuery<EntityA> query = s.createQuery( "from entitya" , EntityA.class);
 			List<EntityA> resultList = query.getResultList();
 			assertEquals(3, resultList.size());
 		} );
 
-		inTransaction( s -> {
+		scope.inTransaction( s -> {
 			TypedQuery<EntityA> query = s.createQuery(
 					"from entitya a where :year is null or a.year = :year",
 					EntityA.class

@@ -19,26 +19,27 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfoSource;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.orm.test.dialect.TestingDialects;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
  */
-public class DialectFactoryTest extends BaseUnitTestCase {
+public class DialectFactoryTest {
 	private StandardServiceRegistry registry;
 	private DialectFactoryImpl dialectFactory;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		final BootstrapServiceRegistry bootReg = new BootstrapServiceRegistryBuilder().applyClassLoader(
 				DialectFactoryTest.class.getClassLoader()
@@ -49,7 +50,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		dialectFactory.injectServices( (ServiceRegistryImplementor) registry );
 	}
 
-	@After
+	@AfterEach
 	public void destroy() {
 		if ( registry != null ) {
 			registry.close();
@@ -80,7 +81,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 			fail();
 		}
 		catch ( HibernateException e ) {
-			assertEquals( "unexpected exception type", StrategySelectionException.class, e.getClass() );
+			assertEquals( StrategySelectionException.class, e.getClass(), "unexpected exception type" );
 		}
 
 		configValues.put( Environment.DIALECT, "java.lang.Object" );
@@ -89,7 +90,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 			fail();
 		}
 		catch ( HibernateException e ) {
-			assertEquals( "unexpected exception type", ClassCastException.class, e.getCause().getClass() );
+			assertEquals( ClassCastException.class, e.getCause().getClass(), "unexpected exception type" );
 		}
 	}
 
@@ -163,8 +164,6 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		resolvers.addResolver( new TestingDialects.MyDialectResolver1() );
 		resolvers.addResolver( new TestingDialects.MyDialectResolver2() );
 		resolvers.addResolver( new TestingDialects.MyOverridingDialectResolver1() );
-		//DialectFactory.registerDialectResolver( "org.hibernate.dialect.NoSuchDialectResolver" );
-		//DialectFactory.registerDialectResolver( "java.lang.Object" );
 
 		testDetermination( "MyDatabase1", TestingDialects.MyDialect1.class, resolvers );
 		testDetermination( "MyDatabase2", 1, TestingDialects.MyDialect21.class, resolvers );

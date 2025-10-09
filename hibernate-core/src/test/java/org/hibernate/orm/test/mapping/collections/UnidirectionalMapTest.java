@@ -21,29 +21,20 @@ import jakarta.persistence.MapKeyTemporal;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Assert;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assertions;
 
 /**
  * @author Vlad Mihalcea
  */
-public class UnidirectionalMapTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				Phone.class,
-		};
-	}
+@Jpa( annotatedClasses = {UnidirectionalMapTest.Person.class, UnidirectionalMapTest.Phone.class} )
+public class UnidirectionalMapTest {
 
 	@Test
-	public void testLifecycle() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Person person = new Person(1L);
 			LocalDateTime now = LocalDateTime.now();
 			person.addPhone(
@@ -54,10 +45,10 @@ public class UnidirectionalMapTest extends BaseEntityManagerFunctionalTestCase {
 			);
 			entityManager.persist(person);
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Person person = entityManager.find(Person.class, 1L);
 			Map<Date, Phone> phones = person.getPhoneRegister();
-			Assert.assertEquals(2, phones.size());
+			Assertions.assertEquals(2, phones.size());
 		});
 	}
 

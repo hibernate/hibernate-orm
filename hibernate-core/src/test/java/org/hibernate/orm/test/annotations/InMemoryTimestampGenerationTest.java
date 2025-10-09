@@ -7,6 +7,7 @@ package org.hibernate.orm.test.annotations;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import org.hibernate.SessionFactory;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -15,6 +16,7 @@ import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -26,10 +28,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Jpa(annotatedClasses = InMemoryTimestampGenerationTest.Person.class,
 		settingProviders = @SettingProvider(settingName = CurrentTimestampGeneration.CLOCK_SETTING_NAME,
-				provider = InMemoryTimestampGenerationTest.MutableClockProvider.class))
+				provider = MutableClockSettingProvider.class))
 @Jira("https://hibernate.atlassian.net/browse/HHH-19840")
 public class InMemoryTimestampGenerationTest {
-	private static final MutableClock clock = new MutableClock();
+	private MutableClock clock;
+
+	@BeforeEach
+	public void setup(EntityManagerFactoryScope scope) {
+		clock = CurrentTimestampGeneration.getClock( scope.getEntityManagerFactory().unwrap( SessionFactory.class ) );
+		clock.reset();
+	}
 
 	@Test
 	public void test(EntityManagerFactoryScope scope) throws InterruptedException {
@@ -61,13 +69,6 @@ public class InMemoryTimestampGenerationTest {
 			assertEquals( person.getCreatedOn(), createdOn );
 			assertTrue( person.getUpdatedOn().isAfter( updatedOn ) );
 		} );
-	}
-
-	static class MutableClockProvider implements SettingProvider.Provider<Object> {
-		@Override
-		public Object getSetting() {
-			return clock;
-		}
 	}
 
 	@Entity(name = "Person")

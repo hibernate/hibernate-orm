@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.annotations;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.SessionFactory;
@@ -14,7 +14,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.ServiceRegistryBuilder;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Emmanuel Bernard

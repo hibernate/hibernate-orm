@@ -10,63 +10,58 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import org.hibernate.HibernateException;
-import org.hibernate.action.spi.AfterTransactionCompletionProcess;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class CustomAfterCompletionTest extends BaseCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = {CustomAfterCompletionTest.SimpleEntity.class})
+@SessionFactory
+public class CustomAfterCompletionTest {
+
+	@AfterEach
+	public void cleanup(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.getSessionFactory().getSchemaManager().truncate() );
+	}
 
 	@Test
 	@JiraKey(value = "HHH-13666")
-	public void success() {
-		inSession( session -> {
+	public void success(SessionFactoryScope scope) {
+		scope.inSession( session -> {
 			AtomicBoolean called = new AtomicBoolean( false );
-			session.getActionQueue().registerCallback( new AfterTransactionCompletionProcess() {
-				@Override
-				public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-					called.set( true );
-				}
-			} );
-			Assert.assertFalse( called.get() );
-			inTransaction( session, theSession -> {
-				theSession.persist( new SimpleEntity( "jack" ) );
-			} );
-			Assert.assertTrue( called.get() );
+			session.getActionQueue().registerCallback(
+					(success, session1) -> called.set(true) );
+			Assertions.assertFalse( called.get() );
+			scope.inTransaction( session, theSession -> theSession.persist(new SimpleEntity("jack")) );
+			Assertions.assertTrue( called.get() );
 		} );
 
 		// Check that the transaction was committed
-		inTransaction( session -> {
-			long count = session.createQuery( "select count(*) from SimpleEntity", Long.class )
-					.uniqueResult();
+		scope.inTransaction( session -> {
+			long count = session.createQuery( "select count(*) from SimpleEntity", Long.class ).uniqueResult();
 			assertEquals( 1L, count );
 		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-13666")
-	public void failure() {
+	public void failure(SessionFactoryScope scope) {
 		try {
-			inSession( session -> {
-				session.getActionQueue().registerCallback( new AfterTransactionCompletionProcess() {
-					@Override
-					public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-						throw new RuntimeException( "My exception" );
-					}
-				} );
-				inTransaction( session, theSession -> {
-					theSession.persist( new SimpleEntity( "jack" ) );
-				} );
+			scope.inSession( session -> {
+				session.getActionQueue().registerCallback(
+						(success, session1) -> {throw new RuntimeException( "My exception" );} );
+				scope.inTransaction( session, theSession -> theSession.persist(new SimpleEntity("jack")) );
 			} );
-			Assert.fail( "Expected exception to be thrown" );
+			Assertions.fail( "Expected exception to be thrown" );
 		}
 		catch (Exception e) {
 			assertThat( e, instanceOf( HibernateException.class ) );
@@ -80,21 +75,11 @@ public class CustomAfterCompletionTest extends BaseCoreFunctionalTestCase {
 		}
 
 		// Check that the transaction was committed
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			long count = session.createQuery( "select count(*) from SimpleEntity", Long.class )
 					.uniqueResult();
 			assertEquals( 1L, count );
 		} );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { SimpleEntity.class };
-	}
-
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
 	}
 
 	@Entity(name = "SimpleEntity")

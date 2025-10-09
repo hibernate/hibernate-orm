@@ -24,6 +24,7 @@ import org.hibernate.Transaction;
 import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.extension.spi.Extension;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -667,6 +668,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public RootGraphImplementor<?> getEntityGraph(String graphName) {
 		return delegate.getEntityGraph( graphName );
+	}
+
+	@Override
+	public <T extends Extension> T getExtension(Class<T> extension) {
+		return delegate.getExtension( extension);
 	}
 
 	@Override

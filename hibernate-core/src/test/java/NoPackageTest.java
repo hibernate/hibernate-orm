@@ -4,9 +4,11 @@
  */
 import org.hibernate.query.Query;
 
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -15,18 +17,20 @@ import static org.junit.Assert.assertEquals;
  * We had problems with ByteBuddy in the past.
  */
 @JiraKey(value = "HHH-13112")
-public class NoPackageTest extends BaseCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = {AnnotationMappedNoPackageEntity.class})
+@SessionFactory
+public class NoPackageTest {
 
 	@Test
-	public void testNoException() {
-		inTransaction( session -> {
+	public void testNoException(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			AnnotationMappedNoPackageEntity box = new AnnotationMappedNoPackageEntity();
 			box.setId( 42 );
 			box.setName( "This feels dirty" );
 			session.persist( box );
 		} );
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			Query<AnnotationMappedNoPackageEntity> query = session.createQuery(
 					"select e from " + AnnotationMappedNoPackageEntity.class.getSimpleName() + " e",
 					AnnotationMappedNoPackageEntity.class
@@ -34,12 +38,5 @@ public class NoPackageTest extends BaseCoreFunctionalTestCase {
 			AnnotationMappedNoPackageEntity box = query.getSingleResult();
 			assertEquals( (Integer) 42, box.getId() );
 		} );
-	}
-
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				AnnotationMappedNoPackageEntity.class
-		};
 	}
 }

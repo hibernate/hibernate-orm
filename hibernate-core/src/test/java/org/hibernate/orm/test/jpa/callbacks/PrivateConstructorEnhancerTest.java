@@ -58,7 +58,7 @@ public class PrivateConstructorEnhancerTest {
 			try {
 				Country country = session.find( Country.class, this.country.id );
 
-				assertNotNull( "Romania", country.getName() );
+				assertNotNull( country.getName(), "Romania" );
 				fail( "Should have thrown exception" );
 			}
 			catch (Exception expected) {
@@ -73,7 +73,7 @@ public class PrivateConstructorEnhancerTest {
 			try {
 				Country country = session.getReference( Country.class, this.country.id );
 
-				assertNotNull( "Romania", country.getName() );
+				assertNotNull( country.getName(), "Romania" );
 				fail( "Should have thrown exception" );
 			}
 			catch (Exception expected) {
@@ -88,7 +88,7 @@ public class PrivateConstructorEnhancerTest {
 			try {
 				Person person = session.find( Person.class, this.person.id );
 
-				assertNotNull( "Romania", person.getCountry().getName() );
+				assertNotNull( person.getCountry().getName(), "Romania" );
 				fail( "Should have thrown exception" );
 			}
 			catch (Exception expected) {
@@ -101,7 +101,7 @@ public class PrivateConstructorEnhancerTest {
 	public void testListEntity(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			try {
-				List<Person> persons = session.createQuery( "select p from Person p" ).getResultList();
+				List<Person> persons = session.createQuery( "select p from Person p", Person.class ).getResultList();
 				assertTrue( persons.stream().anyMatch( p -> p.getCountry().getName().equals( "Romania" ) ) );
 
 				fail( "Should have thrown exception" );
@@ -116,7 +116,7 @@ public class PrivateConstructorEnhancerTest {
 	public void testListJoinFetchEntity(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			try {
-				List<Person> persons = session.createQuery( "select p from Person p join fetch p.country" )
+				List<Person> persons = session.createQuery( "select p from Person p join fetch p.country", Person.class )
 						.getResultList();
 				assertTrue( persons.stream().anyMatch( p -> p.getCountry().getName().equals( "Romania" ) ) );
 

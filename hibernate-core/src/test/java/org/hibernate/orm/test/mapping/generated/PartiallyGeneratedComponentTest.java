@@ -42,7 +42,7 @@ public class PartiallyGeneratedComponentTest {
 
 		ComponentOwner owner2 = scope.fromTransaction(
 				s -> {
-					ComponentOwner _owner = s.get( ComponentOwner.class, owner.getId() );
+					ComponentOwner _owner = s.find( ComponentOwner.class, owner.getId() );
 					assertEquals( previousValue, _owner.getComponent().getGenerated(), "expecting insert value generation" );
 					_owner.setName( "subsequent" );
 					return _owner;
@@ -54,7 +54,7 @@ public class PartiallyGeneratedComponentTest {
 
 		scope.inTransaction(
 				s -> {
-					ComponentOwner _owner = s.get( ComponentOwner.class, owner.getId() );
+					ComponentOwner _owner = s.find( ComponentOwner.class, owner.getId() );
 					assertEquals( previousValue2, _owner.getComponent().getGenerated(), "expecting update value generation" );
 					s.remove( _owner );
 				}

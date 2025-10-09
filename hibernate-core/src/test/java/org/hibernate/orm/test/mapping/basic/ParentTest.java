@@ -12,29 +12,23 @@ import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Parent;
 import org.hibernate.annotations.TargetEmbeddable;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * @author Vlad Mihalcea
  */
-public class ParentTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			City.class,
-		};
-	}
+@Jpa( annotatedClasses = {ParentTest.City.class} )
+public class ParentTest {
 
 	@Test
-	public void testLifecycle() {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
 		//tag::mapping-Parent-persist-example[]
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 
 			City cluj = new City();
 			cluj.setName("Cluj");
@@ -46,7 +40,7 @@ public class ParentTest extends BaseEntityManagerFunctionalTestCase {
 
 
 		//tag::mapping-Parent-fetching-example[]
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 
 			City cluj = entityManager.find(City.class, 1L);
 

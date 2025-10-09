@@ -16,11 +16,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.annotations.Immutable;
-import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -29,10 +32,9 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -40,7 +42,16 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {ExplicitJavaTypeDescriptorTest.TheEntity.class},
+		typeContributors = {ExplicitJavaTypeDescriptorTest.PseudoMutableStateJavaTypeContributor.class}
+)
+@SessionFactory(generateStatistics = true)
+@org.hibernate.testing.orm.junit.ServiceRegistry(
+		// to make sure we get the deepCopy calls
+		settings = @Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true")
+)
+public class ExplicitJavaTypeDescriptorTest {
 
 	private static int mutableToDatabaseCallCount;
 	private static int mutableToDomainCallCount;
@@ -53,11 +64,9 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 
 	@Test
 	@JiraKey( value = "HHH-11098" )
-	public void testIt() {
+	public void testIt(SessionFactoryScope scope) {
 		// create data and check assertions
-		inTransaction(
-				(session) -> session.persist( new TheEntity( 1 ) )
-		);
+		scope.inTransaction( session -> session.persist(new TheEntity(1)) );
 
 		// assertions based on the persist call
 		assertThat( mutableToDomainCallCount, is(1 ) );  			// 1 instead of 0 because of the deep copy call
@@ -70,10 +79,10 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 		assertThat( pseudoMutableToDatabaseCallCount, is(1 ) );	// was 2 (like mutable) before the JavaTypeDescriptor registration
 	}
 
-	@Before
-	public void clearCounts() {
+	@BeforeEach
+	public void clearCounts(SessionFactoryScope scope) {
 		// in case we add additional tests
-		sessionFactory().getStatistics().clear();
+		scope.getSessionFactory().getStatistics().clear();
 
 		mutableToDatabaseCallCount = 0;
 		mutableToDomainCallCount = 0;
@@ -85,33 +94,17 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 		pseudoMutableToDomainCallCount = 0;
 	}
 
-	@After
-	public void dropTestData() {
-		inTransaction(
-				session -> session.createQuery( "delete TheEntity" ).executeUpdate()
-		);
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
-	@Override
-	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
-		( (TypeContributions) metadataBuilder ).contributeJavaType( PseudoMutableStateJavaType.INSTANCE );
+	public static class PseudoMutableStateJavaTypeContributor implements TypeContributor {
+		@Override
+		public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+			typeContributions.contributeJavaType( PseudoMutableStateJavaType.INSTANCE );
+		}
 	}
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-
-		// to make sure we get the deepCopy calls
-		ssrb.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( TheEntity.class );
-	}
-
 
 	@Entity( name = "TheEntity")
 	@Table( name = "T_ENTITY" )

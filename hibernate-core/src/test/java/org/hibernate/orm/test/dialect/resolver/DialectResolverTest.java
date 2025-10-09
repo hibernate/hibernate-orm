@@ -4,8 +4,8 @@
  */
 package org.hibernate.orm.test.dialect.resolver;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.orm.test.dialect.TestingDialects;
@@ -14,15 +14,15 @@ import org.hibernate.engine.jdbc.dialect.spi.BasicDialectResolver;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Steve Ebersole
  */
-public class DialectResolverTest extends BaseUnitTestCase {
+public class DialectResolverTest {
 	@Test
-	public void testDialects() throws Exception {
+	public void testDialects() {
 		DialectResolverSet resolvers = new DialectResolverSet();
 
 		resolvers.addResolverAtFirst( new TestingDialects.MyDialectResolver1() );
@@ -39,7 +39,7 @@ public class DialectResolverTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testErrorAndOrder() throws Exception {
+	public void testErrorAndOrder() {
 		DialectResolverSet resolvers = new DialectResolverSet();
 
 		resolvers.addResolverAtFirst( new TestingDialects.MyDialectResolver1() );
@@ -52,7 +52,7 @@ public class DialectResolverTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testBasicDialectResolver() throws Exception {
+	public void testBasicDialectResolver() {
 		DialectResolverSet resolvers = new DialectResolverSet();
 		// Simulating MyDialectResolver1 by BasicDialectResolvers
 		resolvers.addResolver( new BasicDialectResolver( "MyDatabase1", TestingDialects.MyDialect1.class ) );

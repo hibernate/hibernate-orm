@@ -11,27 +11,20 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.TableGenerator;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Vlad Mihalcea
  */
-public class TableGeneratorConfiguredTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Product.class
-		};
-	}
+@Jpa(annotatedClasses = {TableGeneratorConfiguredTest.Product.class})
+public class TableGeneratorConfiguredTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			//tag::identifiers-generators-table-persist-example[]
 			for (long i = 1; i <= 3; i++) {
 				Product product = new Product();

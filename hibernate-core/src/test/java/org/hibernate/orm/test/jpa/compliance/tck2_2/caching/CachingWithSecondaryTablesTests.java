@@ -22,23 +22,24 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import org.hamcrest.CoreMatchers;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-public class CachingWithSecondaryTablesTests extends BaseUnitTestCase {
+@BaseUnitTest
+public class CachingWithSecondaryTablesTests {
 	private SessionFactoryImplementor sessionFactory;
 
 	@Test
@@ -53,7 +54,7 @@ public class CachingWithSecondaryTablesTests extends BaseUnitTestCase {
 		);
 
 		// it should not be in the cache because it should be invalidated instead
-		assertEquals( statistics.getSecondLevelCachePutCount(), 0 );
+		assertEquals( 0, statistics.getSecondLevelCachePutCount() );
 		assertFalse( sessionFactory.getCache().contains( Person.class, "1" ) );
 
 		inTransaction(
@@ -61,7 +62,7 @@ public class CachingWithSecondaryTablesTests extends BaseUnitTestCase {
 				s -> {
 					statistics.clear();
 
-					final Person person = s.get( Person.class, "1" );
+					final Person person = s.find( Person.class, "1" );
 					assertTrue( Hibernate.isInitialized( person ) );
 					assertThat( statistics.getSecondLevelCacheHitCount(), CoreMatchers.is( 0L) );
 
@@ -82,7 +83,7 @@ public class CachingWithSecondaryTablesTests extends BaseUnitTestCase {
 		);
 
 		// this time it should be iun the cache because we enabled JPA compliance
-		assertEquals( statistics.getSecondLevelCachePutCount(), 1 );
+		assertEquals( 1, statistics.getSecondLevelCachePutCount() );
 		assertTrue( sessionFactory.getCache().contains( Person.class, "1" ) );
 
 		inTransaction(
@@ -90,7 +91,7 @@ public class CachingWithSecondaryTablesTests extends BaseUnitTestCase {
 				s -> {
 					statistics.clear();
 
-					final Person person = s.get( Person.class, "1" );
+					final Person person = s.find( Person.class, "1" );
 					assertTrue( Hibernate.isInitialized( person ) );
 					assertThat( statistics.getSecondLevelCacheHitCount(), CoreMatchers.is( 1L) );
 
@@ -111,7 +112,7 @@ public class CachingWithSecondaryTablesTests extends BaseUnitTestCase {
 		);
 
 		// versioned data should be cacheable regardless
-		assertEquals( statistics.getSecondLevelCachePutCount(), 1 );
+		assertEquals( 1, statistics.getSecondLevelCachePutCount() );
 		assertTrue( sessionFactory.getCache().contains( VersionedPerson.class, "1" ) );
 
 		inTransaction(
@@ -119,7 +120,7 @@ public class CachingWithSecondaryTablesTests extends BaseUnitTestCase {
 				s -> {
 					statistics.clear();
 
-					final VersionedPerson person = s.get( VersionedPerson.class, "1" );
+					final VersionedPerson person = s.find( VersionedPerson.class, "1" );
 					assertTrue( Hibernate.isInitialized( person ) );
 					assertThat( statistics.getSecondLevelCacheHitCount(), CoreMatchers.is( 1L ) );
 
@@ -155,7 +156,7 @@ public class CachingWithSecondaryTablesTests extends BaseUnitTestCase {
 		}
 	}
 
-	@After
+	@AfterEach
 	public void cleanupData() {
 		if ( sessionFactory == null ) {
 			return;

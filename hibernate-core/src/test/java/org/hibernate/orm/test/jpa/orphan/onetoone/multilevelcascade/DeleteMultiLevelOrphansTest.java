@@ -8,116 +8,112 @@ import java.util.List;
 
 import jakarta.persistence.EntityManager;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Steve Ebersole
  * @author Gail Badner
  */
-public class DeleteMultiLevelOrphansTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				Preisregelung.class,
+				Tranche.class,
+				Tranchenmodell.class,
+				X.class,
+				Y.class
+		}
+)
+public class DeleteMultiLevelOrphansTest {
 
-	private void createData() {
-		Preisregelung preisregelung = new Preisregelung();
+	@BeforeEach
+	public void createData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			Preisregelung preisregelung = new Preisregelung();
+			Tranchenmodell tranchenmodell = new Tranchenmodell();
+			X x = new X();
+			Tranche tranche1 = new Tranche();
+			Y y = new Y();
+			Tranche tranche2 = new Tranche();
 
-		Tranchenmodell tranchenmodell = new Tranchenmodell();
+			preisregelung.setTranchenmodell( tranchenmodell );
+			tranchenmodell.setPreisregelung( preisregelung );
 
-		X x = new X();
+			tranchenmodell.setX( x );
+			x.setTranchenmodell( tranchenmodell );
 
-		Tranche tranche1 = new Tranche();
+			tranchenmodell.getTranchen().add( tranche1 );
+			tranche1.setTranchenmodell( tranchenmodell );
+			tranchenmodell.getTranchen().add( tranche2 );
+			tranche2.setTranchenmodell( tranchenmodell );
 
-		Y y = new Y();
+			tranche1.setY( y );
+			y.setTranche( tranche1 );
 
-		Tranche tranche2 = new Tranche();
-
-		preisregelung.setTranchenmodell( tranchenmodell );
-		tranchenmodell.setPreisregelung( preisregelung );
-
-		tranchenmodell.setX( x );
-		x.setTranchenmodell( tranchenmodell );
-
-		tranchenmodell.getTranchen().add( tranche1 );
-		tranche1.setTranchenmodell( tranchenmodell );
-		tranchenmodell.getTranchen().add( tranche2 );
-		tranche2.setTranchenmodell( tranchenmodell );
-
-		tranche1.setY( y );
-		y.setTranche( tranche1 );
-
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		em.persist( preisregelung );
-		em.getTransaction().commit();
-		em.close();
+			entityManager.persist( preisregelung );
+		} );
 	}
 
-	private void cleanupData() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		em.createQuery( "delete Tranche" ).executeUpdate();
-		em.createQuery( "delete Tranchenmodell" ).executeUpdate();
-		em.createQuery( "delete Preisregelung" ).executeUpdate();
-		em.getTransaction().commit();
-		em.close();
-	}
-
-	@Test
-	@JiraKey( value = "HHH-9091")
-	public void testDirectAssociationOrphanedWhileManaged() {
-		createData();
-
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		List results = em.createQuery( "from Tranchenmodell" ).getResultList();
-		assertEquals( 1, results.size() );
-		results = em.createQuery( "from Preisregelung" ).getResultList();
-		assertEquals( 1, results.size() );
-		Preisregelung preisregelung = (Preisregelung) results.get( 0 );
-		Tranchenmodell tranchenmodell = preisregelung.getTranchenmodell();
-		assertNotNull( tranchenmodell );
-		assertNotNull( tranchenmodell.getX() );
-		assertEquals( 2, tranchenmodell.getTranchen().size() );
-		assertNotNull( tranchenmodell.getTranchen().get( 0 ).getY() );
-		preisregelung.setTranchenmodell( null );
-		em.getTransaction().commit();
-		em.close();
-
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-
-		preisregelung = (Preisregelung) em.find( Preisregelung.class, preisregelung.getId() );
-		assertNull( preisregelung.getTranchenmodell() );
-		results = em.createQuery( "from Tranchenmodell" ).getResultList();
-		assertEquals( 0, results.size() );
-		results = em.createQuery( "from Tranche" ).getResultList();
-		assertEquals( 0, results.size() );
-		results = em.createQuery( "from X" ).getResultList();
-		assertEquals( 0, results.size() );
-		results = em.createQuery( "from Y" ).getResultList();
-		assertEquals( 0, results.size() );
-
-		results = em.createQuery( "from Preisregelung" ).getResultList();
-		assertEquals( 1, results.size() );
-
-		em.getTransaction().commit();
-		em.close();
-
-		cleanupData();
+	@AfterEach
+	public void cleanupData(EntityManagerFactoryScope scope) {
+		scope.inTransaction(  entityManager -> scope.getEntityManagerFactory().getSchemaManager().truncate() );
 	}
 
 	@Test
 	@JiraKey( value = "HHH-9091")
-	public void testReplacedDirectAssociationWhileManaged() {
-		createData();
+	public void testDirectAssociationOrphanedWhileManaged(EntityManagerFactoryScope scope) {
+		Long id = scope.fromTransaction(
+				em -> {
+					List results = em.createQuery( "from Tranchenmodell" ).getResultList();
+					assertEquals( 1, results.size() );
+					results = em.createQuery( "from Preisregelung" ).getResultList();
+					assertEquals( 1, results.size() );
+					Preisregelung preisregelung = (Preisregelung) results.get( 0 );
+					Tranchenmodell tranchenmodell = preisregelung.getTranchenmodell();
+					assertNotNull( tranchenmodell );
+					assertNotNull( tranchenmodell.getX() );
+					assertEquals( 2, tranchenmodell.getTranchen().size() );
+					assertNotNull( tranchenmodell.getTranchen().get( 0 ).getY() );
+					preisregelung.setTranchenmodell( null );
 
-		EntityManager em = getOrCreateEntityManager();
+					return preisregelung.getId();
+				}
+		);
+
+		scope.inTransaction(
+				em -> {
+					Preisregelung preisregelung = em.find( Preisregelung.class, id );
+					assertNull( preisregelung.getTranchenmodell() );
+					List results = em.createQuery( "from Tranchenmodell" ).getResultList();
+					assertEquals( 0, results.size() );
+					results = em.createQuery( "from Tranche" ).getResultList();
+					assertEquals( 0, results.size() );
+					results = em.createQuery( "from X" ).getResultList();
+					assertEquals( 0, results.size() );
+					results = em.createQuery( "from Y" ).getResultList();
+					assertEquals( 0, results.size() );
+
+					results = em.createQuery( "from Preisregelung" ).getResultList();
+					assertEquals( 1, results.size() );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey( value = "HHH-9091")
+	public void testReplacedDirectAssociationWhileManaged(EntityManagerFactoryScope scope) {
+		EntityManager em = scope.getEntityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
+
 		List results = em.createQuery( "from Tranchenmodell" ).getResultList();
 		assertEquals( 1, results.size() );
 		results = em.createQuery( "from Preisregelung" ).getResultList();
@@ -148,7 +144,7 @@ public class DeleteMultiLevelOrphansTest extends BaseEntityManagerFunctionalTest
 		em.getTransaction().commit();
 		em.close();
 
-		em = getOrCreateEntityManager();
+		em = scope.getEntityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
 
 		results = em.createQuery( "from Tranche" ).getResultList();
@@ -175,11 +171,13 @@ public class DeleteMultiLevelOrphansTest extends BaseEntityManagerFunctionalTest
 		tranchenmodellNew = new Tranchenmodell();
 		preisregelung.setTranchenmodell(tranchenmodellNew );
 		tranchenmodellNew.setPreisregelung( preisregelung );
+
 		em.getTransaction().commit();
 		em.close();
 
-		em = getOrCreateEntityManager();
+		em = scope.getEntityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
+
 		results = em.createQuery( "from Tranchenmodell" ).getResultList();
 		assertEquals( 1, results.size() );
 		tranchenmodell = (Tranchenmodell) results.get( 0 );
@@ -194,67 +192,50 @@ public class DeleteMultiLevelOrphansTest extends BaseEntityManagerFunctionalTest
 		assertEquals( 0, results.size() );
 		results = em.createQuery( "from Y" ).getResultList();
 		assertEquals( 0, results.size() );
+
 		em.getTransaction().commit();
 		em.close();
-
-		cleanupData();
 	}
 
 	@Test
 	@JiraKey( value = "HHH-9091")
-	public void testDirectAndNestedAssociationsOrphanedWhileManaged() {
-		createData();
+	public void testDirectAndNestedAssociationsOrphanedWhileManaged(EntityManagerFactoryScope scope) {
+		Long id = scope.fromTransaction(
+				em -> {
+					List results = em.createQuery( "from Tranchenmodell" ).getResultList();
+					assertEquals( 1, results.size() );
+					results = em.createQuery( "from Preisregelung" ).getResultList();
+					assertEquals( 1, results.size() );
+					Preisregelung preisregelung = (Preisregelung) results.get( 0 );
+					Tranchenmodell tranchenmodell = preisregelung.getTranchenmodell();
+					assertNotNull( tranchenmodell );
+					assertNotNull( tranchenmodell.getX() );
+					assertEquals( 2, tranchenmodell.getTranchen().size() );
+					assertNotNull( tranchenmodell.getTranchen().get( 0 ).getY() );
+					preisregelung.setTranchenmodell( null );
+					tranchenmodell.setX( null );
+					tranchenmodell.getTranchen().get( 0 ).setY( null );
 
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		List results = em.createQuery( "from Tranchenmodell" ).getResultList();
-		assertEquals( 1, results.size() );
-		results = em.createQuery( "from Preisregelung" ).getResultList();
-		assertEquals( 1, results.size() );
-		Preisregelung preisregelung = (Preisregelung) results.get( 0 );
-		Tranchenmodell tranchenmodell = preisregelung.getTranchenmodell();
-		assertNotNull( tranchenmodell );
-		assertNotNull( tranchenmodell.getX() );
-		assertEquals( 2, tranchenmodell.getTranchen().size() );
-		assertNotNull( tranchenmodell.getTranchen().get( 0 ).getY() );
-		preisregelung.setTranchenmodell( null );
-		tranchenmodell.setX( null );
-		tranchenmodell.getTranchen().get( 0 ).setY( null );
-		em.getTransaction().commit();
-		em.close();
+					return preisregelung.getId();
+				}
+		);
+		scope.inTransaction(
+				em -> {
+					Preisregelung preisregelung = em.find( Preisregelung.class, id );
+					assertNull( preisregelung.getTranchenmodell() );
+					List results = em.createQuery( "from Tranchenmodell" ).getResultList();
+					assertEquals( 0, results.size() );
+					results = em.createQuery( "from Tranche" ).getResultList();
+					assertEquals( 0, results.size() );
+					results = em.createQuery( "from X" ).getResultList();
+					assertEquals( 0, results.size() );
+					results = em.createQuery( "from Y" ).getResultList();
+					assertEquals( 0, results.size() );
 
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-
-		preisregelung = (Preisregelung) em.find( Preisregelung.class, preisregelung.getId() );
-		assertNull( preisregelung.getTranchenmodell() );
-		results = em.createQuery( "from Tranchenmodell" ).getResultList();
-		assertEquals( 0, results.size() );
-		results = em.createQuery( "from Tranche" ).getResultList();
-		assertEquals( 0, results.size() );
-		results = em.createQuery( "from X" ).getResultList();
-		assertEquals( 0, results.size() );
-		results = em.createQuery( "from Y" ).getResultList();
-		assertEquals( 0, results.size() );
-
-		results = em.createQuery( "from Preisregelung" ).getResultList();
-		assertEquals( 1, results.size() );
-
-		em.getTransaction().commit();
-		em.close();
-
-		cleanupData();
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{
-				Preisregelung.class,
-				Tranche.class,
-				Tranchenmodell.class,
-				X.class,
-				Y.class
-		};
+					results = em.createQuery( "from Preisregelung" ).getResultList();
+					assertEquals( 1, results.size() );
+				}
+		);
 	}
 
 }

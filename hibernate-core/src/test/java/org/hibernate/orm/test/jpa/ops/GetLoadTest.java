@@ -121,7 +121,7 @@ public class GetLoadTest {
 					emp.getId();
 					assertFalse( Hibernate.isInitialized( emp ) );
 					Node node = s.getReference( Node.class, nodeName );
-					assertEquals( node.getName(), nodeName );
+					assertEquals( nodeName, node.getName() );
 					assertFalse( Hibernate.isInitialized( node ) );
 				}
 		);
@@ -133,7 +133,7 @@ public class GetLoadTest {
 					emp.getId();
 					assertFalse( Hibernate.isInitialized( emp ) );
 					Node node = ( Node ) s.getReference( Node.class.getName(), nodeName );
-					assertEquals( node.getName(), nodeName );
+					assertEquals( nodeName, node.getName() );
 					assertFalse( Hibernate.isInitialized( node ) );
 				}
 		);

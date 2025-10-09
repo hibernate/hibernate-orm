@@ -11,7 +11,6 @@ import jakarta.persistence.Cacheable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -23,43 +22,38 @@ import jakarta.persistence.Version;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-public class CacheableEntityGraphTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Product.class, Color.class, Tag.class };
-	}
+@Jpa(annotatedClasses = {CacheableEntityGraphTest.Product.class, CacheableEntityGraphTest.Color.class, CacheableEntityGraphTest.Tag.class})
+public class CacheableEntityGraphTest {
 
 	@Test
 	@JiraKey(value = "HHH-15964")
-	public void test() {
-		EntityManager em = getOrCreateEntityManager();
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
+			entityManager.getTransaction().begin();
+			Tag tag = new Tag( Set.of( TagType.FOO ) );
+			entityManager.persist( tag );
 
-		em.getTransaction().begin();
-		Tag tag = new Tag( Set.of( TagType.FOO ) );
-		em.persist( tag );
+			Color color = new Color();
+			entityManager.persist( color );
 
-		Color color = new Color();
-		em.persist( color );
+			Product product = new Product( tag, color );
+			entityManager.persist( product );
+			entityManager.getTransaction().commit();
 
-		Product product = new Product( tag, color );
-		em.persist( product );
-		em.getTransaction().commit();
+			EntityGraph<Product> entityGraph = entityManager.createEntityGraph( Product.class );
+			entityGraph.addAttributeNodes( "tag" );
 
-		em.clear();
-
-		EntityGraph<Product> entityGraph = em.createEntityGraph( Product.class );
-		entityGraph.addAttributeNodes( "tag" );
-
-		em.createQuery( "select p from Product p", Product.class )
-				.setMaxResults( 2 )
-				.setHint( "jakarta.persistence.loadgraph", entityGraph )
-				.getSingleResult();
+			entityManager.createQuery( "select p from Product p", Product.class )
+					.setMaxResults( 2 )
+					.setHint( "jakarta.persistence.loadgraph", entityGraph )
+					.getSingleResult();
+		} );
 	}
 
 	@Entity(name = "Product")

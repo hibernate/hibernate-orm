@@ -38,9 +38,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.Table;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Test for {@link CollectionPropertyHolder}.

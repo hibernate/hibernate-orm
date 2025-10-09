@@ -14,7 +14,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole

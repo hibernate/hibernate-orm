@@ -19,14 +19,15 @@ import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.type.SqlTypes;
-
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.MutableValue;
-import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.type.SqlTypes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,18 +40,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonAggregate.class)
-public class JsonEmbeddableArrayTest extends BaseSessionFactoryFunctionalTest {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				JsonEmbeddableArrayTest.JsonArrayHolder.class
-		};
-	}
+@DomainModel(annotatedClasses = {JsonEmbeddableArrayTest.JsonArrayHolder.class})
+@SessionFactory
+public class JsonEmbeddableArrayTest {
 
 	@BeforeEach
-	public void setUp() {
-		inTransaction(
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.persist( new JsonArrayHolder( 1L, EmbeddableAggregate.createAggregateArray1() ));
 					session.persist( new JsonArrayHolder( 2L, EmbeddableAggregate.createAggregateArray2() ));
@@ -59,30 +55,30 @@ public class JsonEmbeddableArrayTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@AfterEach
-	protected void cleanupTest() {
-		sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
+	protected void cleanupTest(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
 	@Test
-	public void testUpdate() {
-		sessionFactoryScope().inTransaction(
-				entityManager -> {
-					JsonArrayHolder jsonArrayHolder = entityManager.find( JsonArrayHolder.class, 1L );
+	public void testUpdate(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					JsonArrayHolder jsonArrayHolder = session.find( JsonArrayHolder.class, 1L );
 					jsonArrayHolder.setAggregateArray( EmbeddableAggregate.createAggregateArray2() );
-					entityManager.flush();
-					entityManager.clear();
+					session.flush();
+					session.clear();
 					EmbeddableAggregate.assertArraysEquals(
 							EmbeddableAggregate.createAggregateArray2(),
-							entityManager.find( JsonArrayHolder.class, 1L ).getAggregateArray() );
+							session.find( JsonArrayHolder.class, 1L ).getAggregateArray() );
 				}
 		);
 	}
 
 	@Test
-	public void testFetch() {
-		sessionFactoryScope().inSession(
-				entityManager -> {
-					List<JsonArrayHolder> jsonArrayHolders = entityManager.createQuery( "from JsonArrayHolder b where b.id = 1", JsonArrayHolder.class ).getResultList();
+	public void testFetch(SessionFactoryScope scope) {
+		scope.inSession(
+				session -> {
+					List<JsonArrayHolder> jsonArrayHolders = session.createQuery( "from JsonArrayHolder b where b.id = 1", JsonArrayHolder.class ).getResultList();
 					assertEquals( 1, jsonArrayHolders.size() );
 					assertEquals( 1L, jsonArrayHolders.get( 0 ).getId() );
 					EmbeddableAggregate.assertArraysEquals( EmbeddableAggregate.createAggregateArray1(), jsonArrayHolders.get( 0 ).getAggregateArray() );
@@ -91,10 +87,10 @@ public class JsonEmbeddableArrayTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testFetchNull() {
-		sessionFactoryScope().inSession(
-				entityManager -> {
-					List<JsonArrayHolder> jsonArrayHolders = entityManager.createQuery( "from JsonArrayHolder b where b.id = 2", JsonArrayHolder.class ).getResultList();
+	public void testFetchNull(SessionFactoryScope scope) {
+		scope.inSession(
+				session -> {
+					List<JsonArrayHolder> jsonArrayHolders = session.createQuery( "from JsonArrayHolder b where b.id = 2", JsonArrayHolder.class ).getResultList();
 					assertEquals( 1, jsonArrayHolders.size() );
 					assertEquals( 2L, jsonArrayHolders.get( 0 ).getId() );
 					EmbeddableAggregate.assertEquals( EmbeddableAggregate.createAggregateArray2()[0], jsonArrayHolders.get( 0 ).getAggregateArray()[0] );
@@ -103,10 +99,10 @@ public class JsonEmbeddableArrayTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testDomainResult() {
-		sessionFactoryScope().inSession(
-				entityManager -> {
-					List<EmbeddableAggregate[]> structs = entityManager.createQuery( "select b.aggregateArray from JsonArrayHolder b where b.id = 1", EmbeddableAggregate[].class ).getResultList();
+	public void testDomainResult(SessionFactoryScope scope) {
+		scope.inSession(
+				session -> {
+					List<EmbeddableAggregate[]> structs = session.createQuery( "select b.aggregateArray from JsonArrayHolder b where b.id = 1", EmbeddableAggregate[].class ).getResultList();
 					assertEquals( 1, structs.size() );
 					EmbeddableAggregate.assertArraysEquals( EmbeddableAggregate.createAggregateArray1(), structs.get( 0 ) );
 				}
@@ -115,10 +111,10 @@ public class JsonEmbeddableArrayTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@FailureExpected(jiraKey = "HHH-18717", reason = "Requires array functions to work with JSON_ARRAY")
-	public void testSelectionItems() {
-		sessionFactoryScope().inSession(
-				entityManager -> {
-					List<Tuple> tuples = entityManager.createQuery(
+	public void testSelectionItems(SessionFactoryScope scope) {
+		scope.inSession(
+				session -> {
+					List<Tuple> tuples = session.createQuery(
 							"select " +
 									"b.aggregateArray[0].theInt," +
 									"b.aggregateArray[0].theDouble," +
@@ -182,60 +178,60 @@ public class JsonEmbeddableArrayTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testDeleteWhere() {
-		sessionFactoryScope().inTransaction(
-				entityManager -> {
-					entityManager.createMutationQuery( "delete JsonArrayHolder b where b.aggregateArray is not null" ).executeUpdate();
-					assertNull( entityManager.find( JsonArrayHolder.class, 1L ) );
+	public void testDeleteWhere(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createMutationQuery( "delete JsonArrayHolder b where b.aggregateArray is not null" ).executeUpdate();
+					assertNull( session.find( JsonArrayHolder.class, 1L ) );
 
 				}
 		);
 	}
 
 	@Test
-	public void testUpdateAggregate() {
-		sessionFactoryScope().inTransaction(
-				entityManager -> {
-					entityManager.createMutationQuery( "update JsonArrayHolder b set b.aggregateArray = null" ).executeUpdate();
-					assertNull( entityManager.find( JsonArrayHolder.class, 1L ).getAggregateArray() );
+	public void testUpdateAggregate(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createMutationQuery( "update JsonArrayHolder b set b.aggregateArray = null" ).executeUpdate();
+					assertNull( session.find( JsonArrayHolder.class, 1L ).getAggregateArray() );
 				}
 		);
 	}
 
 	@Test
 	@FailureExpected(jiraKey = "HHH-18717", reason = "Requires array functions to work with JSON_ARRAY")
-	public void testUpdateAggregateMember() {
-		sessionFactoryScope().inTransaction(
-				entityManager -> {
-					entityManager.createMutationQuery( "update JsonArrayHolder b set b.aggregateArray[0].theString = null where b.id = 1" ).executeUpdate();
+	public void testUpdateAggregateMember(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createMutationQuery( "update JsonArrayHolder b set b.aggregateArray[0].theString = null where b.id = 1" ).executeUpdate();
 					EmbeddableAggregate[] struct = EmbeddableAggregate.createAggregateArray1();
 					struct[0].setTheString( null );
-					EmbeddableAggregate.assertArraysEquals( struct, entityManager.find( JsonArrayHolder.class, 1L ).getAggregateArray() );
+					EmbeddableAggregate.assertArraysEquals( struct, session.find( JsonArrayHolder.class, 1L ).getAggregateArray() );
 				}
 		);
 	}
 
 	@Test
 	@FailureExpected(jiraKey = "HHH-18717", reason = "Requires array functions to work with JSON_ARRAY")
-	public void testUpdateMultipleAggregateMembers() {
-		sessionFactoryScope().inTransaction(
-				entityManager -> {
-					entityManager.createMutationQuery( "update JsonArrayHolder b set b.aggregateArray.theString = null, b.aggregateArray[0].theUuid = null" ).executeUpdate();
+	public void testUpdateMultipleAggregateMembers(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createMutationQuery( "update JsonArrayHolder b set b.aggregateArray.theString = null, b.aggregateArray[0].theUuid = null" ).executeUpdate();
 					EmbeddableAggregate[] struct = EmbeddableAggregate.createAggregateArray1();
 					struct[0].setTheString( null );
 					struct[0].setTheUuid( null );
-					EmbeddableAggregate.assertArraysEquals( struct, entityManager.find( JsonArrayHolder.class, 1L ).getAggregateArray() );
+					EmbeddableAggregate.assertArraysEquals( struct, session.find( JsonArrayHolder.class, 1L ).getAggregateArray() );
 				}
 		);
 	}
 
 	@Test
 	@FailureExpected(jiraKey = "HHH-18717", reason = "Requires array functions to work with JSON_ARRAY")
-	public void testUpdateAllAggregateMembers() {
-		sessionFactoryScope().inTransaction(
-				entityManager -> {
+	public void testUpdateAllAggregateMembers(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
 					EmbeddableAggregate[] struct = EmbeddableAggregate.createAggregateArray1();
-					entityManager.createMutationQuery(
+					session.createMutationQuery(
 									"update JsonArrayHolder b set " +
 											"b.aggregateArray[0].theInt = :theInt," +
 											"b.aggregateArray[0].theDouble = :theDouble," +
@@ -290,7 +286,7 @@ public class JsonEmbeddableArrayTest extends BaseSessionFactoryFunctionalTest {
 							.setParameter( "theOffsetDateTime", struct[0].getTheOffsetDateTime() )
 							.setParameter( "mutableValue", struct[0].getMutableValue() )
 							.executeUpdate();
-					EmbeddableAggregate.assertArraysEquals( EmbeddableAggregate.createAggregateArray1(), entityManager.find( JsonArrayHolder.class, 2L ).getAggregateArray() );
+					EmbeddableAggregate.assertArraysEquals( EmbeddableAggregate.createAggregateArray1(), session.find( JsonArrayHolder.class, 2L ).getAggregateArray() );
 				}
 		);
 	}

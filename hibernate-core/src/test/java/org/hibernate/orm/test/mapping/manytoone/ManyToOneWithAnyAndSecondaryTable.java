@@ -58,7 +58,7 @@ class ManyToOneWithAnyAndSecondaryTable {
 
 					List<Actor> actors = entityManager.createQuery( "select a from actor a", Actor.class )
 							.getResultList();
-					Assertions.assertEquals( actors.size(), 2 );
+					Assertions.assertEquals( 2, actors.size() );
 				}
 		);
 	}

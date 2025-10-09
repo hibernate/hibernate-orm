@@ -8,32 +8,28 @@ import java.util.Collections;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
  */
 @JiraKey( value = "12097")
-public class ClosedFactoryTests extends BaseUnitTestCase {
+@ServiceRegistry(settings = {@Setting(name = AvailableSettings.JPA_CLOSED_COMPLIANCE, value = "true")})
+public class ClosedFactoryTests {
 	@Test
-	public void testClosedChecks() {
-		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( AvailableSettings.JPA_CLOSED_COMPLIANCE, "true" )
-				.build();
+	public void testClosedChecks(ServiceRegistryScope scope) {
 
-		try {
-			final SessionFactoryBuilderImplementor factoryBuilder = (SessionFactoryBuilderImplementor) new MetadataSources( ssr )
+			final SessionFactoryBuilderImplementor factoryBuilder = (SessionFactoryBuilderImplementor) new MetadataSources( scope.getRegistry() )
 					.buildMetadata()
 					.getSessionFactoryBuilder();
 			final SessionFactory sf = factoryBuilder.build();
@@ -52,7 +48,7 @@ public class ClosedFactoryTests extends BaseUnitTestCase {
 				// this is the expected outcome
 			}
 			catch (Exception e) {
-				fail( "#getCache failed, but not with the expected IllegalStateException : " + e.toString() );
+				fail( "#getCache failed, but not with the expected IllegalStateException : " + e );
 			}
 
 			try {
@@ -63,7 +59,7 @@ public class ClosedFactoryTests extends BaseUnitTestCase {
 				// this is the expected outcome
 			}
 			catch (Exception e) {
-				fail( "#getMetamodel failed, but not with the expected IllegalStateException : " + e.toString() );
+				fail( "#getMetamodel failed, but not with the expected IllegalStateException : " + e );
 			}
 
 			try {
@@ -74,7 +70,7 @@ public class ClosedFactoryTests extends BaseUnitTestCase {
 				// this is the expected outcome
 			}
 			catch (Exception e) {
-				fail( "#getCriteriaBuilder failed, but not with the expected IllegalStateException : " + e.toString() );
+				fail( "#getCriteriaBuilder failed, but not with the expected IllegalStateException : " + e );
 			}
 
 			try {
@@ -85,7 +81,7 @@ public class ClosedFactoryTests extends BaseUnitTestCase {
 				// this is the expected outcome
 			}
 			catch (Exception e) {
-				fail( "#getProperties failed, but not with the expected IllegalStateException : " + e.toString() );
+				fail( "#getProperties failed, but not with the expected IllegalStateException : " + e );
 			}
 
 			try {
@@ -96,7 +92,7 @@ public class ClosedFactoryTests extends BaseUnitTestCase {
 				// this is the expected outcome
 			}
 			catch (Exception e) {
-				fail( "#getPersistenceUnitUtil failed, but not with the expected IllegalStateException : " + e.toString() );
+				fail( "#getPersistenceUnitUtil failed, but not with the expected IllegalStateException : " + e );
 			}
 
 			try {
@@ -107,7 +103,7 @@ public class ClosedFactoryTests extends BaseUnitTestCase {
 				// this is the expected outcome
 			}
 			catch (Exception e) {
-				fail( "#close failed, but not with the expected IllegalStateException : " + e.toString() );
+				fail( "#close failed, but not with the expected IllegalStateException : " + e );
 			}
 
 			try {
@@ -118,7 +114,7 @@ public class ClosedFactoryTests extends BaseUnitTestCase {
 				// this is the expected outcome
 			}
 			catch (Exception e) {
-				fail( "#createEntityManager failed, but not with the expected IllegalStateException : " + e.toString() );
+				fail( "#createEntityManager failed, but not with the expected IllegalStateException : " + e );
 			}
 
 			try {
@@ -129,12 +125,7 @@ public class ClosedFactoryTests extends BaseUnitTestCase {
 				// this is the expected outcome
 			}
 			catch (Exception e) {
-				fail( "#createEntityManager(Map) failed, but not with the expected IllegalStateException : " + e.toString() );
+				fail( "#createEntityManager(Map) failed, but not with the expected IllegalStateException : " + e );
 			}
-		}
-		catch (Exception e) {
-			// if an exception is
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
 	}
 }

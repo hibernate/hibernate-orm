@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.jpa.compliance.tck2_2;
 
 import java.util.Date;
-import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Parameter;
@@ -14,21 +13,27 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.TransactionRequiredException;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
  */
-public class QueryApiTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = {QueryApiTest.Person.class})
+@SessionFactory
+@ServiceRegistry(settings = {@Setting(name = AvailableSettings.JPA_TRANSACTION_COMPLIANCE, value = "true")})
+public class QueryApiTest {
 	@Entity( name = "Person" )
 	@Table( name = "person" )
 	public static class Person {
@@ -39,22 +44,9 @@ public class QueryApiTest extends BaseNonConfigCoreFunctionalTestCase {
 		Date dob;
 	}
 
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		super.addSettings( settings );
-		settings.put( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "true" );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-
-		sources.addAnnotatedClass( Person.class );
-	}
-
 	@Test
-	public void testGetParameterNotBound() {
-		inTransaction(
+	public void testGetParameterNotBound(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					try {
 						// Query
@@ -80,8 +72,8 @@ public class QueryApiTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testGetParameterFromAnotherQuery() {
-		inTransaction(
+	public void testGetParameterFromAnotherQuery(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					try {
 						// Query
@@ -110,8 +102,8 @@ public class QueryApiTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testGetParameterValueByUnknownName() {
-		inTransaction(
+	public void testGetParameterValueByUnknownName(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					try {
 						// Query
@@ -128,8 +120,8 @@ public class QueryApiTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testGetParameterValueByUnknownPosition() {
-		inTransaction(
+	public void testGetParameterValueByUnknownPosition(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					try {
 						// Query
@@ -146,8 +138,8 @@ public class QueryApiTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testSetParameterValueByUnknownReference() {
-		inTransaction(
+	public void testSetParameterValueByUnknownReference(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					try {
 						// Query
@@ -167,8 +159,8 @@ public class QueryApiTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testSetInvalidFirstResult() {
-		inTransaction(
+	public void testSetInvalidFirstResult(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					try {
 						// Query
@@ -183,8 +175,8 @@ public class QueryApiTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testSetInvalidMaxResults() {
-		inTransaction(
+	public void testSetInvalidMaxResults(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					try {
 						// Query
@@ -199,8 +191,8 @@ public class QueryApiTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testUpdateRequiresTxn() {
-		inSession(
+	public void testUpdateRequiresTxn(SessionFactoryScope scope) {
+		scope.inSession(
 				session -> {
 					try {
 						assertFalse( session.getTransaction().isActive() );
@@ -216,8 +208,8 @@ public class QueryApiTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testInvalidQueryMarksTxnForRollback() {
-		inSession(
+	public void testInvalidQueryMarksTxnForRollback(SessionFactoryScope scope) {
+		scope.inSession(
 				session -> {
 					try {
 						assertFalse( session.getTransaction().isActive() );

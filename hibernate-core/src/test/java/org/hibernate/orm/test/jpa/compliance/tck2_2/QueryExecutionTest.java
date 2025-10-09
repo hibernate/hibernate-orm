@@ -14,13 +14,13 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.boot.MetadataSources;
-
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.transform.ResultTransformer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.hamcrest.CoreMatchers;
 
@@ -31,10 +31,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-public class QueryExecutionTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = {QueryExecutionTest.Customer.class, QueryExecutionTest.Order.class})
+@SessionFactory
+public class QueryExecutionTest {
 	@Test
-	public void testCollectionFetch() {
-		inTransaction(
+	public void testCollectionFetch(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					final List nonDistinctResult = session.createQuery( "select c from Customer c join fetch c.orders" ).list();
 					// note: this was historically `2` because Hibernate would return a root result for each of its fetched rows.
@@ -96,16 +98,9 @@ public class QueryExecutionTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 	}
 
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( Customer.class );
-		sources.addAnnotatedClass( Order.class );
-	}
-
-	@Before
-	public void createData() {
-		inTransaction(
+	@BeforeEach
+	public void createData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					final Customer cust = new Customer( 1, "Acme Corp");
 					final Order order1 = new Order( 1, cust, "123" );
@@ -115,11 +110,11 @@ public class QueryExecutionTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
-	@After
-	public void dropData() {
-		inTransaction(
+	@AfterEach
+	public void dropData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
-					final Customer customer = session.byId( Customer.class ).load( 1 );
+					final Customer customer = session.find( Customer.class, 1 );
 					if ( customer != null ) {
 						session.remove( customer );
 					}

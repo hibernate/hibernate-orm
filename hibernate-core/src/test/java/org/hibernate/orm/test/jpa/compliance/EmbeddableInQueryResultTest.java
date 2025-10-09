@@ -19,7 +19,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 
 @Jpa(
 		annotatedClasses = {

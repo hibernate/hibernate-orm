@@ -15,29 +15,23 @@ import jakarta.persistence.Lob;
 
 import org.hibernate.Session;
 import org.hibernate.engine.jdbc.proxy.ClobProxy;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Vlad Mihalcea
  */
-public class ClobTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Product.class
-		};
-	}
+@Jpa( annotatedClasses = {ClobTest.Product.class} )
+public class ClobTest {
 
 	@Test
-	public void test() {
-		Integer productId = doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		Integer productId = scope.fromTransaction( entityManager -> {
 			Session session = entityManager.unwrap(Session.class);
 
 			//tag::basic-clob-persist-example[]
@@ -54,7 +48,7 @@ public class ClobTest extends BaseEntityManagerFunctionalTestCase {
 
 			return product.getId();
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			try {
 				//tag::basic-clob-find-example[]
 

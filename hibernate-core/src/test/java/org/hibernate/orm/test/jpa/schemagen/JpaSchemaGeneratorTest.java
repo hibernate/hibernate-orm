@@ -18,7 +18,6 @@ import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -158,7 +157,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 			EntityManager em = emf.createEntityManager();
 			try {
 				Assertions.assertNotNull( em.find( Item.class, encodedName() ) );
-				Assert.assertNotNull( em.find( Item.class, "multi-file-test" ) );
+				Assertions.assertNotNull( em.find( Item.class, "multi-file-test" ) );
 			}
 			finally {
 				em.close();

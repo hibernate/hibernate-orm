@@ -9,7 +9,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedStoredProcedureQueries;
@@ -19,20 +18,21 @@ import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.Table;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.orm.junit.JiraKey;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Andrea Boriero
@@ -40,67 +40,60 @@ import static org.junit.Assert.fail;
  */
 @JiraKey(value = "HHH-10756")
 @RequiresDialect(OracleDialect.class)
-public class StoreProcedureOutParameterByNameTest extends BaseEntityManagerFunctionalTestCase {
-	EntityManagerFactory entityManagerFactory;
+@Jpa( annotatedClasses = StoreProcedureOutParameterByNameTest.User.class)
+public class StoreProcedureOutParameterByNameTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {User.class};
+	@BeforeEach
+	public void startUp(EntityManagerFactoryScope scope) {
+		createProcedures( scope.getEntityManagerFactory() );
 	}
 
-	@Before
-	public void startUp() {
-		entityManagerFactory = getOrCreateEntityManager().getEntityManagerFactory();
-
-		createProcedures( entityManagerFactory );
+	@AfterEach
+	public void cleanup(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			em.createQuery( "delete from User" ).executeUpdate();
+			}
+		);
 	}
 
 	@Test
-	public void testOneBasicOutParameter() {
-		EntityManager em = entityManagerFactory.createEntityManager();
-		em.getTransaction().begin();
-		User user = new User();
-		user.id = 1;
-		user.name = "aName";
-		em.persist( user );
-		em.getTransaction().commit();
+	public void testOneBasicOutParameter(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			em.getTransaction().begin();
+			User user = new User();
+			user.id = 1;
+			user.name = "aName";
+			em.persist( user );
+			em.getTransaction().commit();
 
-		em.clear();
+			em.clear();
 
-		try {
 			StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "User.findNameById" );
 			query.setParameter( "ID_PARAM", 1 );
 
 			assertEquals( "aName", query.getOutputParameterValue( "NAME_PARAM" ) );
-		}
-		finally {
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testTwoBasicOutParameters() {
-		EntityManager em = entityManagerFactory.createEntityManager();
-		em.getTransaction().begin();
-		User user = new User();
-		user.id = 1;
-		user.name = "aName";
-		user.age = 29;
-		em.persist( user );
-		em.getTransaction().commit();
+	public void testTwoBasicOutParameters(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			em.getTransaction().begin();
+			User user = new User();
+			user.id = 1;
+			user.name = "aName";
+			user.age = 29;
+			em.persist( user );
+			em.getTransaction().commit();
 
-		em.clear();
+			em.clear();
 
-		try {
 			StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "User.findNameAndAgeById" );
 			query.setParameter( "ID_PARAM", 1 );
 
 			assertEquals( "aName", query.getOutputParameterValue( "NAME_PARAM" ) );
 			assertEquals( 29, query.getOutputParameterValue( "AGE_PARAM" ) );
-		}
-		finally {
-			em.close();
-		}
+		} );
 	}
 
 	private void createProcedures(EntityManagerFactory emf) {
@@ -190,7 +183,7 @@ public class StoreProcedureOutParameterByNameTest extends BaseEntityManagerFunct
 					)
 			}
 	)
-	@Entity(name = "Message")
+	@Entity(name = "User")
 	@Table(name = "USERS")
 	public static class User {
 		@Id

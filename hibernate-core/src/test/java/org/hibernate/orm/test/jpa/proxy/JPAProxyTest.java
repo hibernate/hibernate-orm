@@ -9,14 +9,12 @@ import org.hibernate.Hibernate;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 import org.hibernate.orm.test.jpa.model.Item;
 import org.junit.jupiter.api.Test;
-import junit.framework.AssertionFailedError;
 
 import jakarta.persistence.EntityNotFoundException;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.fail;
-
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Test relation between proxies and get()/load() processing
@@ -30,34 +28,24 @@ public class JPAProxyTest extends AbstractJPATest {
 	public void testEjb3ProxyUsage() {
 		inTransaction(
 				s -> {
-					Item item = s.getReference( Item.class, new Long( -1 ) );
+					Item item = s.getReference( Item.class, -1L );
 					assertFalse( Hibernate.isInitialized( item ) );
-					try {
-						Hibernate.initialize( item );
-						fail( "proxy access did not fail on non-existent proxy" );
-					}
-					catch (EntityNotFoundException e) {
-						// expected behavior
-					}
-					catch (Throwable t) {
-						fail( "unexpected exception type on non-existent proxy access : " + t );
-					}
+					assertThrows(
+							EntityNotFoundException.class,
+							() -> Hibernate.initialize(item),
+						"proxy access did not fail on non-existent proxy"
+					);
 
 					s.clear();
 
-					Item item2 = s.getReference( Item.class, new Long( -1 ) );
+					Item item2 = s.getReference( Item.class, -1L );
 					assertFalse( Hibernate.isInitialized( item2 ) );
 					assertFalse( item == item2 );
-					try {
-						item2.getName();
-						fail( "proxy access did not fail on non-existent proxy" );
-					}
-					catch (EntityNotFoundException e) {
-						// expected behavior
-					}
-					catch (Throwable t) {
-						fail( "unexpected exception type on non-existent proxy access : " + t );
-					}
+					assertThrows(
+							EntityNotFoundException.class,
+							item2::getName,
+							"proxy access did not fail on non-existent proxy"
+					);
 				}
 		);
 	}
@@ -67,7 +55,7 @@ public class JPAProxyTest extends AbstractJPATest {
 	 */
 	@Test
 	public void testGetSemantics() {
-		Long nonExistentId = new Long( -1 );
+		Long nonExistentId = -1L;
 		inTransaction(
 				session -> {
 					Item item = session.get( Item.class, nonExistentId );
@@ -81,19 +69,11 @@ public class JPAProxyTest extends AbstractJPATest {
 					Item item = s.getReference( Item.class, nonExistentId );
 					assertFalse( Hibernate.isInitialized( item ) );
 					// then try to get() it to make sure we get an exception
-					try {
-						s.get( Item.class, nonExistentId );
-						fail( "force load did not fail on non-existent entity" );
-					}
-					catch (EntityNotFoundException e) {
-						// expected behavior
-					}
-					catch (AssertionFailedError e) {
-						throw e;
-					}
-					catch (Throwable t) {
-						fail( "unexpected exception type on non-existent entity force load : " + t );
-					}
+					assertThrows(
+							EntityNotFoundException.class,
+							() -> s.get( Item.class, nonExistentId ),
+							"force load did not fail on non-existent entity"
+					);
 				}
 		);
 	}

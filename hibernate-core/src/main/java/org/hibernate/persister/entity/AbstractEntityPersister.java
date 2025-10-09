@@ -2434,7 +2434,8 @@ public abstract class AbstractEntityPersister
 				attributeNames == null
 						? 0
 						: attributeNames.length + mutablePropertiesIndexes.cardinality();
-		final List<Integer> fields = new ArrayList<>( estimatedSize );
+		final BitSet fields = new BitSet();
+
 		if ( estimatedSize == 0 ) {
 			return EMPTY_INT_ARRAY;
 		}
@@ -2446,7 +2447,7 @@ public abstract class AbstractEntityPersister
 					i = mutablePropertiesIndexes.nextSetBit(i + 1) ) {
 				// This is kindly borrowed from org.hibernate.type.TypeHelper.findDirty
 				if ( isDirty( currentState, previousState, propertyTypes, propertyCheckability, i, session ) ) {
-					fields.add( i );
+					fields.set( i );
 				}
 			}
 		}
@@ -2479,8 +2480,8 @@ public abstract class AbstractEntityPersister
 					final String attributeName = attributeMapping.getAttributeName();
 					if ( isPrefix( attributeMapping, attributeNames[index] ) ) {
 						final int position = attributeMapping.getStateArrayPosition();
-						if ( propertyUpdateability[position] && !fields.contains( position ) ) {
-							fields.add( position );
+						if ( propertyUpdateability[position] && !fields.get( position ) ) {
+							fields.set( position );
 						}
 						index++;
 						if ( index < attributeNames.length ) {
@@ -2503,16 +2504,36 @@ public abstract class AbstractEntityPersister
 			else {
 				for ( String attributeName : attributeNames ) {
 					final Integer index = getPropertyIndexOrNull( attributeName );
-					if ( index != null && propertyUpdateability[index] && !fields.contains( index ) ) {
-						fields.add( index );
+					if ( index != null && propertyUpdateability[index] && !fields.get( index ) ) {
+						fields.set( index );
 					}
 				}
 			}
 		}
 
-		return toIntArray( fields );
+		return bitSetToIntArray( fields );
 	}
 
+	/**
+	 * Converts a BitSet to an int array containing the indices of all set bits.
+	 * The resulting array is naturally sorted since we iterate through set bits in order.
+	 *
+	 * @param bitSet the BitSet to convert
+	 * @return an int array containing the indices of set bits, or EMPTY_INT_ARRAY if none
+	 */
+	private static int[] bitSetToIntArray(final BitSet bitSet) {
+		final int cardinality = bitSet.cardinality();
+		if ( cardinality == 0 ) {
+			return EMPTY_INT_ARRAY;
+		}
+
+		final int[] result = new int[cardinality];
+		int arrayIndex = 0;
+		for ( int i = bitSet.nextSetBit(0); i >= 0; i = bitSet.nextSetBit(i + 1) ) {
+			result[arrayIndex++] = i;
+		}
+		return result;
+	}
 	private boolean isDirty(
 			Object[] currentState,
 			Object[] previousState,

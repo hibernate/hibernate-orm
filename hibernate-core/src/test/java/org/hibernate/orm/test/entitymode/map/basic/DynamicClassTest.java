@@ -8,6 +8,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -25,11 +26,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Gavin King
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/entitymode/map/basic/ProductLine.hbm.xml"
 )
 class DynamicClassTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
 	void testLazyDynamicClass(SessionFactoryScope scope) {

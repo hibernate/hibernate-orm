@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.hibernate.orm.test.internal.SessionFactoryNameSettingTest.SESSION_FACTORY_NAME;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @Jpa(
 		integrationSettings = @Setting(name = AvailableSettings.SESSION_FACTORY_NAME, value = SESSION_FACTORY_NAME)
 )

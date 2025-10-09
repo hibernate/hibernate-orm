@@ -4,12 +4,6 @@
  */
 package org.hibernate.orm.test.inheritance;
 
-import java.util.Comparator;
-import java.util.List;
-
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.util.ExceptionHelper;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.DiscriminatorColumn;
@@ -23,12 +17,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.ParameterExpression;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -39,28 +28,26 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.fail;
 
-
-@JiraKey("HHH-14103")
+@SuppressWarnings("JUnitMalformedDeclaration")
+@JiraKey(value = "HHH-14103")
 @DomainModel(
 		annotatedClasses = {
-				TransientOverrideAsPersistentJoined.Employee.class,
-				TransientOverrideAsPersistentJoined.Editor.class,
-				TransientOverrideAsPersistentJoined.Writer.class,
-				TransientOverrideAsPersistentJoined.Group.class,
-				TransientOverrideAsPersistentJoined.Job.class
+				TransientOverrideAsPersistentSingleTableTests.Employee.class,
+				TransientOverrideAsPersistentSingleTableTests.Editor.class,
+				TransientOverrideAsPersistentSingleTableTests.Writer.class,
+				TransientOverrideAsPersistentSingleTableTests.Group.class,
+				TransientOverrideAsPersistentSingleTableTests.Job.class
 		}
 )
 @SessionFactory
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.CRITERIA_COPY_TREE, value = "true"))
-public class TransientOverrideAsPersistentJoined {
+public class TransientOverrideAsPersistentSingleTableTests {
 
 	@Test
 	public void testFindByRootClass(SessionFactoryScope scope) {
@@ -102,45 +89,46 @@ public class TransientOverrideAsPersistentJoined {
 	@Test
 	public void testQueryByRootClass(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final List<Employee> employees = session.createQuery( "from Employee", Employee.class )
+			//noinspection removal
+			var employees = session.createQuery( "from Employee", Employee.class )
 					.getResultList();
 			assertEquals( 2, employees.size() );
-			employees.sort( Comparator.comparing( Employee::getName ) );
 			assertThat( employees.get( 0 ), instanceOf( Editor.class ) );
 			assertThat( employees.get( 1 ), instanceOf( Writer.class ) );
-
-			final Editor editor = (Editor) employees.get( 0 );
+			var editor = (Editor) employees.get( 0 );
 			assertEquals( "Senior Editor", editor.getTitle() );
-			final Writer writer = (Writer) employees.get( 1 );
+			var writer = (Writer) employees.get( 1 );
 			assertEquals( "Writing", writer.getTitle() );
 			assertNotNull( writer.getGroup() );
-			final Group group = writer.getGroup();
+			var group = writer.getGroup();
 			assertEquals( writer.getTitle(), group.getName() );
 		} );
 	}
 
 	@Test
-	@JiraKey("HHH-12981")
 	public void testQueryByRootClassAndOverridenProperty(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			try {
-				session.createQuery( "from Employee where title=:title", Employee.class );
-				fail( "Expected exception!" );
-			}
-			catch (IllegalArgumentException e) {
-				assertThat(
-						ExceptionHelper.getRootCause( e ).getMessage(),
-						containsString( "due to the attribute being declared in multiple subtypes" )
-				);
-			}
+			//noinspection removal
+			var editor = session.createQuery( "from Employee where title=:title", Employee.class )
+					.setParameter( "title", "Senior Editor" )
+					.getSingleResult();
+			assertThat( editor, instanceOf( Editor.class ) );
+
+			//noinspection removal
+			var writer = session.createQuery( "from Employee where title=:title", Employee.class )
+					.setParameter( "title", "Writing" )
+					.getSingleResult();
+			assertThat( writer, instanceOf( Writer.class ) );
+			assertNotNull( ( (Writer) writer ).getGroup() );
+			assertEquals( writer.getTitle(), ( (Writer) writer ).getGroup().getName() );
 		} );
 	}
 
 	@Test
-	@JiraKey("HHH-12981")
 	public void testQueryByRootClassAndOverridenPropertyTreat(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final Employee editor = session.createQuery(
+			//noinspection removal
+			var editor = session.createQuery(
 					"from Employee e where treat( e as Editor ).title=:title",
 					Employee.class
 			)
@@ -148,7 +136,8 @@ public class TransientOverrideAsPersistentJoined {
 					.getSingleResult();
 			assertThat( editor, instanceOf( Editor.class ) );
 
-			final Employee writer = session.createQuery(
+			//noinspection removal
+			var writer = session.createQuery(
 					"from Employee e where treat( e as Writer).title=:title",
 					Employee.class
 			)
@@ -163,12 +152,14 @@ public class TransientOverrideAsPersistentJoined {
 	@Test
 	public void testQueryBySublassAndOverridenProperty(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final Editor editor = session.createQuery( "from Editor where title=:title", Editor.class )
+			//noinspection removal
+			var editor = session.createQuery( "from Editor where title=:title", Editor.class )
 					.setParameter( "title", "Senior Editor" )
 					.getSingleResult();
 			assertThat( editor, instanceOf( Editor.class ) );
 
-			final Writer writer = session.createQuery( "from Writer where title=:title", Writer.class )
+			//noinspection removal
+			var writer = session.createQuery( "from Writer where title=:title", Writer.class )
 					.setParameter( "title", "Writing" )
 					.getSingleResult();
 			assertNotNull( writer.getGroup() );
@@ -177,32 +168,32 @@ public class TransientOverrideAsPersistentJoined {
 	}
 
 	@Test
-	@JiraKey("HHH-12981")
 	public void testCriteriaQueryByRootClassAndOverridenProperty(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
+			var builder = session.getCriteriaBuilder();
 
-			final CriteriaBuilder builder = session.getCriteriaBuilder();
+			var query = builder.createQuery( Employee.class );
+			var root = query.from( Employee.class );
+			var parameter = builder.parameter( String.class, "title" );
 
-			final CriteriaQuery<Employee> query = builder.createQuery( Employee.class );
-			final Root<Employee> root = query.from( Employee.class );
-			final ParameterExpression<String> parameter = builder.parameter( String.class, "title" );
-
-			final Predicate predicateEditor = builder.equal(
+			var predicateEditor = builder.equal(
 					builder.treat( root, Editor.class ).get( "title" ),
 					parameter
 			);
 			query.where( predicateEditor );
-			final Employee editor = session.createQuery( query )
+			//noinspection removal
+			var editor = session.createQuery( query )
 					.setParameter( "title", "Senior Editor" )
 					.getSingleResult();
 			assertThat( editor, instanceOf( Editor.class ) );
 
-			final Predicate predicateWriter = builder.equal(
+			var predicateWriter = builder.equal(
 					builder.treat( root, Writer.class ).get( "title" ),
 					parameter
 			);
 			query.where( predicateWriter );
-			final Employee writer = session.createQuery( query )
+			//noinspection removal
+			var writer = session.createQuery( query )
 					.setParameter( "title", "Writing" )
 					.getSingleResult();
 			assertThat( writer, instanceOf( Writer.class ) );
@@ -213,16 +204,15 @@ public class TransientOverrideAsPersistentJoined {
 
 	@BeforeEach
 	public void setupData(SessionFactoryScope scope) {
-
 		scope.inTransaction( session -> {
-			Job jobEditor = new Job( "Edit" );
+			var jobEditor = new Job( "Edit" );
 			jobEditor.setEmployee( new Editor( "Jane Smith", "Senior Editor" ) );
-			Job jobWriter = new Job( "Write" );
+			var jobWriter = new Job( "Write" );
 			jobWriter.setEmployee( new Writer( "John Smith", new Group( "Writing" ) ) );
 
-			Employee editor = jobEditor.getEmployee();
-			Employee writer = jobWriter.getEmployee();
-			Group group = Writer.class.cast( writer ).getGroup();
+			var editor = jobEditor.getEmployee();
+			var writer = jobWriter.getEmployee();
+			var group = ((Writer) writer).getGroup();
 
 			session.persist( editor );
 			session.persist( group );
@@ -234,11 +224,11 @@ public class TransientOverrideAsPersistentJoined {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@Entity(name = "Employee")
-	@Inheritance(strategy = InheritanceType.JOINED)
+	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	@DiscriminatorColumn(name = "department")
 	public static abstract class Employee {
 		private String name;
@@ -272,6 +262,7 @@ public class TransientOverrideAsPersistentJoined {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity(name = "Editor")
 	public static class Editor extends Employee {
 		public Editor(String name, String title) {
@@ -294,6 +285,7 @@ public class TransientOverrideAsPersistentJoined {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity(name = "Writer")
 	public static class Writer extends Employee {
 		private Group group;
@@ -332,12 +324,12 @@ public class TransientOverrideAsPersistentJoined {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity(name = "Group")
 	@Table(name = "WorkGroup")
 	public static class Group {
 		private String name;
-
-		private String details;
+		private String description;
 
 		public Group(String name) {
 			this();
@@ -358,6 +350,7 @@ public class TransientOverrideAsPersistentJoined {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity(name = "Job")
 	public static class Job {
 		private String name;

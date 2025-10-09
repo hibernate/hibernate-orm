@@ -19,7 +19,7 @@ import org.hibernate.tool.schema.Action;
 import org.hibernate.orm.test.cdi.testsupport.TestingExtendedBeanManager;
 
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -32,10 +32,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class ExtendedMixedAccessTest implements BeanContainer.LifecycleOptions {
 	@Test
 	public void testExtendedMixedAccess() {
-		doTest( TestingExtendedBeanManager.create() );
-	}
-
-	private void doTest(TestingExtendedBeanManager extendedBeanManager) {
+		TestingExtendedBeanManager extendedBeanManager = TestingExtendedBeanManager.create();
 		try (final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
 				.applySetting( AvailableSettings.CDI_BEAN_MANAGER, extendedBeanManager )

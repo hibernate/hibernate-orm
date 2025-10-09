@@ -6,9 +6,9 @@ package org.hibernate.orm.test.mapping.type.java;
 
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea

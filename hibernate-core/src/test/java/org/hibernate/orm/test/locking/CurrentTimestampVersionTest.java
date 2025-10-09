@@ -11,14 +11,21 @@ import jakarta.persistence.Version;
 import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @Jpa(annotatedClasses = CurrentTimestampVersionTest.Timestamped.class)
 class CurrentTimestampVersionTest {
+	@AfterEach
+	void tearDown(EntityManagerFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
+
 	@Test void test(EntityManagerFactoryScope scope) {
 		Timestamped t = scope.fromTransaction( entityManager -> {
 			Timestamped timestamped = new Timestamped();
@@ -39,6 +46,7 @@ class CurrentTimestampVersionTest {
 		} );
 		// TODO: assert some stuff about the timestamp values
 	}
+
 	@Entity
 	static class Timestamped {
 		@Id

@@ -16,8 +16,10 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = {
 		EmbeddableInheritanceReplaceTest.Emb.class,
 		EmbeddableInheritanceReplaceTest.Base.class,
@@ -27,6 +29,10 @@ import org.junit.jupiter.api.Test;
 @SessionFactory
 @JiraKey("HHH-19079")
 public class EmbeddableInheritanceReplaceTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
 	void merge(SessionFactoryScope scope) {

@@ -4,16 +4,6 @@
  */
 package org.hibernate.orm.test.inheritance;
 
-import java.util.List;
-
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.Jira;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -21,12 +11,22 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.OneToOne;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Marco Belladelli
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
 @DomainModel( annotatedClasses = {
 		LeftJoinFetchSubclassesTest.Entity1.class,
@@ -36,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 } )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16798" )
 public class LeftJoinFetchSubclassesTest {
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Entity1 entity1A = new Entity1( 1L );
@@ -54,17 +54,15 @@ public class LeftJoinFetchSubclassesTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from SuperClass" ).executeUpdate();
-			session.createMutationQuery( "delete from Entity1" ).executeUpdate();
-		} );
+		scope.dropData();
 	}
 
 	@Test
 	public void testJoinFetchSub1(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final Entity1 entity1 = session.createQuery(
 					"select e from Entity1 e left join fetch e.subClass1 where e.id = 1",
 					Entity1.class
@@ -77,6 +75,7 @@ public class LeftJoinFetchSubclassesTest {
 	@Test
 	public void testJoinFetchSub2(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final Entity1 entity1 = session.createQuery(
 					"select e from Entity1 e left join fetch e.subClass2 where e.id = 3",
 					Entity1.class
@@ -89,6 +88,7 @@ public class LeftJoinFetchSubclassesTest {
 	@Test
 	public void testJoinFetchBoth(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final List<Entity1> resultList = session.createQuery(
 					"select e from Entity1 e left join fetch e.subClass1 left join fetch e.subClass2",
 					Entity1.class
@@ -100,6 +100,7 @@ public class LeftJoinFetchSubclassesTest {
 	@Test
 	public void testJoinBoth(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final List<Entity1> resultList = session.createQuery(
 					"select e from Entity1 e left join e.subClass1 left join e.subClass2",
 					Entity1.class
@@ -108,6 +109,7 @@ public class LeftJoinFetchSubclassesTest {
 		} );
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity( name = "Entity1" )
 	public static class Entity1 {
 		@Id

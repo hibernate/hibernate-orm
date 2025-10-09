@@ -4,21 +4,21 @@
  */
 package org.hibernate.orm.test.inheritance;
 
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				EmbeddableInheritanceHierarchyOrderTest.Animal.class,
@@ -33,9 +33,9 @@ import static org.junit.jupiter.api.Assertions.fail;
 @SessionFactory
 public class EmbeddableInheritanceHierarchyOrderTest {
 
-	@AfterAll
-	static void clean(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createMutationQuery( "delete from Owner" ).executeUpdate() );
+	@AfterEach
+	void clean(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
 	@Test
@@ -53,8 +53,7 @@ public class EmbeddableInheritanceHierarchyOrderTest {
 			assertEquals( "Agapius", animalOwner.getPet().getName() );
 
 			final Owner fishOwner = session.find( Owner.class, 4L );
-			if ( fishOwner.getPet() instanceof Fish ) {
-				final Fish fish = (Fish) fishOwner.getPet();
+			if ( fishOwner.getPet() instanceof Fish fish ) {
 				assertEquals( 5, fish.getAge() );
 				assertEquals( "Dionysius", fish.getName() );
 				assertEquals( 3, fish.getFins() );
@@ -64,8 +63,7 @@ public class EmbeddableInheritanceHierarchyOrderTest {
 			}
 
 			final Owner mammalOwner = session.find( Owner.class, 5L );
-			if ( mammalOwner.getPet() instanceof Mammal ) {
-				final Mammal mammal = (Mammal) mammalOwner.getPet();
+			if ( mammalOwner.getPet() instanceof Mammal mammal ) {
 				assertEquals( 6, mammal.getAge() );
 				assertEquals( "Epagraphas", mammal.getName() );
 				assertEquals( "Eanswida", mammal.getMother() );
@@ -75,8 +73,7 @@ public class EmbeddableInheritanceHierarchyOrderTest {
 			}
 
 			final Owner catOwner = session.find( Owner.class, 2L );
-			if ( catOwner.getPet() instanceof Cat ) {
-				final Cat cat = (Cat) catOwner.getPet();
+			if ( catOwner.getPet() instanceof Cat cat ) {
 				assertEquals( 3, cat.getAge() );
 				assertEquals( "Bercharius", cat.getName() );
 				assertEquals( "Blaesilla", cat.getMother() );
@@ -86,8 +83,7 @@ public class EmbeddableInheritanceHierarchyOrderTest {
 			}
 
 			final Owner dogOwner = session.find( Owner.class, 3L );
-			if ( dogOwner.getPet() instanceof Dog ) {
-				final Dog dog = (Dog) dogOwner.getPet();
+			if ( dogOwner.getPet() instanceof Dog dog ) {
 				assertEquals( 4, dog.getAge() );
 				assertEquals( "Censurius", dog.getName() );
 				assertEquals( "Caesarea", dog.getMother() );

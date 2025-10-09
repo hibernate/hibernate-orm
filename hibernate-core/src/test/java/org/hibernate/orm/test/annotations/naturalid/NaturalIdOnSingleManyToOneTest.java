@@ -26,6 +26,7 @@ import jakarta.persistence.ManyToOne;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				NaturalIdOnSingleManyToOneTest.NaturalIdOnManyToOne.class,

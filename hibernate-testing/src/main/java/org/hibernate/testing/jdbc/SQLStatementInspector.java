@@ -38,6 +38,10 @@ public class SQLStatementInspector implements StatementInspector {
 		return sqlQueries;
 	}
 
+	public String getLastQuery() {
+		return sqlQueries.get( sqlQueries.size() - 1 );
+	}
+
 	public void clear() {
 		sqlQueries.clear();
 	}

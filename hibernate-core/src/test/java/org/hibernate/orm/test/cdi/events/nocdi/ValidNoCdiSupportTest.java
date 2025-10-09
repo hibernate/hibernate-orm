@@ -4,30 +4,25 @@
  */
 package org.hibernate.orm.test.cdi.events.nocdi;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.BootstrapServiceRegistry;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.tool.schema.Action;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests valid use of ManagedBeanRegistry when CDI is not available -
@@ -35,63 +30,31 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
-public class ValidNoCdiSupportTest extends BaseUnitTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ExtendWith( ValidNoCdiSupportTest.AnotherListener.Resetter.class )
+@ServiceRegistry
+@DomainModel(annotatedClasses = ValidNoCdiSupportTest.AnotherEntity.class)
+@SessionFactory
+public class ValidNoCdiSupportTest {
+	@AfterEach
+	public void tearDown(SessionFactoryScope factoryScope) throws Exception {
+		factoryScope.dropData();
+	}
+
 	@Test
-	public void testIt() {
-		AnotherListener.reset();
-
-		BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
-
-		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
-				.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
-				.build();
-
-		final SessionFactoryImplementor sessionFactory;
-
-		try {
-			sessionFactory = (SessionFactoryImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( AnotherEntity.class )
-					.buildMetadata()
-					.getSessionFactoryBuilder()
-					.build();
-		}
-		catch ( Exception e ) {
-			StandardServiceRegistryBuilder.destroy( ssr );
-			throw e;
-		}
+	public void testIt(SessionFactoryScope factoryScope) {
+		factoryScope.getSessionFactory();
 
 		// The CDI bean should have been built immediately...
 		assertTrue( AnotherListener.wasInstantiated() );
 		assertEquals( 0, AnotherListener.currentCount() );
 
-		try {
-			inTransaction(
-					sessionFactory,
-					session -> session.persist( new AnotherEntity( 1 ) )
-			);
+		factoryScope.inTransaction( (session) -> {
+			session.persist( new AnotherEntity( 1 ) );
+		} );
 
-			assertEquals( 1, AnotherListener.currentCount() );
-
-			inTransaction(
-					sessionFactory,
-					session -> {
-						AnotherEntity it = session.find( AnotherEntity.class, 1 );
-						assertNotNull( it );
-					}
-			);
-		}
-		finally {
-			inTransaction(
-					sessionFactory,
-					session -> {
-						session.createQuery( "delete AnotherEntity" ).executeUpdate();
-					}
-			);
-
-			sessionFactory.close();
-		}
+		assertEquals( 1, AnotherListener.currentCount() );
 	}
-
 
 	@Entity( name = "AnotherEntity" )
 	@Table( name = "another_entity")
@@ -149,6 +112,13 @@ public class ValidNoCdiSupportTest extends BaseUnitTestCase {
 		@PrePersist
 		public void onCreate(Object entity) {
 			count.getAndIncrement();
+		}
+
+		public static class Resetter implements BeforeEachCallback {
+			@Override
+			public void beforeEach(ExtensionContext context) throws Exception {
+				AnotherListener.reset();
+			}
 		}
 	}
 }

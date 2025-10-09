@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.where.annotations;
 
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -17,178 +18,162 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gail Badner
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialect(H2Dialect.class)
-public class LazyElementCollectionBasicNonUniqueIdWhereTest extends BaseCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = {
+		LazyElementCollectionBasicNonUniqueIdWhereTest.Material.class,
+		LazyElementCollectionBasicNonUniqueIdWhereTest.Building.class
+})
+@SessionFactory(exportSchema = false)
+public class LazyElementCollectionBasicNonUniqueIdWhereTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Material.class, Building.class };
+	@BeforeAll
+	public void createSchema(SessionFactoryScope factoryScope) {
+		applySchema( factoryScope );
 	}
 
-	@Before
-	public void setup() {
-		Session session = openSession();
-		session.beginTransaction();
-		{
-					session.createNativeQuery( getDialect().getDropTableString( "MAIN_TABLE" ) ).executeUpdate();
-					session.createNativeQuery( getDialect().getDropTableString( "COLLECTION_TABLE" ) ).executeUpdate();
-					session.createNativeQuery( getDialect().getDropTableString( "MATERIAL_RATINGS" ) ).executeUpdate();
+	public static void applySchema(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction(  session -> session.doWork( connection -> {
+			final Dialect dialect = session.getDialect();
+			try ( final Statement statement = connection.createStatement() ) {
+				statement.executeUpdate( dialect.getDropTableString( "MAIN_TABLE" ) );
+				statement.executeUpdate( dialect.getDropTableString( "COLLECTION_TABLE" ) );
+				statement.executeUpdate( dialect.getDropTableString( "MATERIAL_RATINGS" ) );
 
-					session.createNativeQuery(
-							"create table MAIN_TABLE( " +
-									"ID integer not null, NAME varchar(255) not null, CODE varchar(10) not null, " +
-									"primary key (ID, CODE) )"
-					).executeUpdate();
+				// MAIN_TABLE
+				statement.executeUpdate("""
+						create table MAIN_TABLE(
+							ID integer not null,
+							NAME varchar(255) not null,
+							CODE varchar(10) not null,
+							primary key (ID, CODE)
+						)
+						""" );
+				statement.executeUpdate( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'plastic', 'MATERIAL' )" );
+				statement.executeUpdate( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'house', 'BUILDING' )" );
+				statement.executeUpdate( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'high', 'RATING' )" );
+				statement.executeUpdate( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 2, 'medium', 'RATING' )" );
+				statement.executeUpdate( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 3, 'low', 'RATING' )" );
+				statement.executeUpdate( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'small', 'SIZE' )" );
+				statement.executeUpdate( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 2, 'medium', 'SIZE' )" );
 
-					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'plastic', 'MATERIAL' )" )
-							.executeUpdate();
-					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'house', 'BUILDING' )" )
-							.executeUpdate();
-					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'high', 'RATING' )" )
-							.executeUpdate();
-					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 2, 'medium', 'RATING' )" )
-							.executeUpdate();
-					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 3, 'low', 'RATING' )" )
-							.executeUpdate();
-					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'small', 'SIZE' )" )
-							.executeUpdate();
-					session.createNativeQuery( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 2, 'medium', 'SIZE' )" )
-							.executeUpdate();
+				// COLLECTION_TABLE
+				statement.executeUpdate( """
+						create table COLLECTION_TABLE(
+							MAIN_ID integer not null,
+							MAIN_CODE varchar(10) not null,
+							VAL varchar(10) not null,
+							VALUE_CODE varchar(10) not null,
+							primary key (MAIN_ID, MAIN_CODE, VAL, VALUE_CODE)
+						)
+						""" );
+				statement.executeUpdate(
+						"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VAL, VALUE_CODE) " +
+						"VALUES( 1, 'MATERIAL', 'high', 'RATING' )"
+				);
+				statement.executeUpdate(
+						"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VAL, VALUE_CODE) " +
+						"VALUES( 1, 'MATERIAL', 'medium', 'RATING' )"
+				);
+				statement.executeUpdate(
+						"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VAL, VALUE_CODE) " +
+						"VALUES( 1, 'MATERIAL', 'low', 'RATING' )"
+				);
+				statement.executeUpdate(
+						"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VAL, VALUE_CODE) " +
+						"VALUES( 1, 'MATERIAL', 'medium', 'SIZE' )"
+				);
+				statement.executeUpdate(
+						"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VAL, VALUE_CODE) " +
+						"VALUES( 1, 'BUILDING', 'high', 'RATING' )"
+				);
+				statement.executeUpdate(
+						"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VAL, VALUE_CODE) " +
+						"VALUES( 1, 'BUILDING', 'small', 'SIZE' )"
+				);
 
-					session.createNativeQuery(
-							"create table COLLECTION_TABLE( " +
-									"MAIN_ID integer not null, MAIN_CODE varchar(10) not null, " +
-									"VAL varchar(10) not null, VALUE_CODE varchar(10) not null, " +
-									"primary key (MAIN_ID, MAIN_CODE, VAL, VALUE_CODE))"
-					).executeUpdate();
-
-					session.createNativeQuery(
-							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VAL, VALUE_CODE) " +
-									"VALUES( 1, 'MATERIAL', 'high', 'RATING' )"
-					).executeUpdate();
-					session.createNativeQuery(
-							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VAL, VALUE_CODE) " +
-									"VALUES( 1, 'MATERIAL', 'medium', 'RATING' )"
-					).executeUpdate();
-					session.createNativeQuery(
-							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VAL, VALUE_CODE) " +
-									"VALUES( 1, 'MATERIAL', 'low', 'RATING' )"
-					).executeUpdate();
-
-					session.createNativeQuery(
-							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VAL, VALUE_CODE) " +
-									"VALUES( 1, 'MATERIAL', 'medium', 'SIZE' )"
-					).executeUpdate();
-
-					session.createNativeQuery(
-							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VAL, VALUE_CODE) " +
-									"VALUES( 1, 'BUILDING', 'high', 'RATING' )"
-					).executeUpdate();
-
-					session.createNativeQuery(
-							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VAL, VALUE_CODE) " +
-									"VALUES( 1, 'BUILDING', 'small', 'SIZE' )"
-					).executeUpdate();
-
-
-					session.createNativeQuery(
-							"create table MATERIAL_RATINGS( " +
-									"MATERIAL_ID integer not null, RATING varchar(10) not null," +
-									" primary key (MATERIAL_ID, RATING))"
-					).executeUpdate();
-
-					session.createNativeQuery(
-							"insert into MATERIAL_RATINGS(MATERIAL_ID, RATING) VALUES( 1, 'high' )"
-					).executeUpdate();
-
-		}
-		session.getTransaction().commit();
-		session.close();
+				// MATERIAL_RATINGS
+				statement.executeUpdate( """
+						create table MATERIAL_RATINGS(
+							MATERIAL_ID integer not null,
+							RATING varchar(10) not null,
+							primary key (MATERIAL_ID, RATING)
+						)
+						""" );
+				statement.executeUpdate( "insert into MATERIAL_RATINGS(MATERIAL_ID, RATING) VALUES( 1, 'high' )" );
+			}
+		} ) );
 	}
 
-	@After
-	public void cleanup() {
-		Session session = openSession();
-		session.beginTransaction();
-		{
-					session.createNativeQuery( "delete from MATERIAL_RATINGS" ).executeUpdate();
-					session.createNativeQuery( "delete from COLLECTION_TABLE" ).executeUpdate();
-					session.createNativeQuery( "delete from MAIN_TABLE" ).executeUpdate();
-		}
-		session.getTransaction().commit();
-		session.close();
+	@AfterAll
+	public void dropSchema(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
 	@JiraKey( value = "HHH-12937")
-	public void testInitializeFromUniqueAssociationTable() {
-		Session session = openSession();
-		session.beginTransaction();
-		{
-					Material material = session.get( Material.class, 1 );
-					assertEquals( "plastic", material.getName() );
+	public void testInitializeFromUniqueAssociationTable(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) ->  {
+			var material = session.find( Material.class, 1 );
+			assertEquals( "plastic", material.getName() );
 
-					// Material#ratings is mapped with lazy="true"
-					assertFalse( Hibernate.isInitialized( material.getRatings() ) );
-					assertEquals( 1, material.getRatings().size() );
-					assertTrue( Hibernate.isInitialized( material.getRatings() ) );
+			// Material#ratings is mapped with lazy="true"
+			assertFalse( Hibernate.isInitialized( material.getRatings() ) );
+			assertEquals( 1, material.getRatings().size() );
+			assertTrue( Hibernate.isInitialized( material.getRatings() ) );
 
-					assertEquals( "high", material.getRatings().iterator().next() );
-		}
-		session.getTransaction().commit();
-		session.close();
+			assertEquals( "high", material.getRatings().iterator().next() );
+		} );
 	}
 
 	@Test
 	@JiraKey( value = "HHH-12937")
-	public void testInitializeFromNonUniqueAssociationTable() {
-		Session session = openSession();
-		session.beginTransaction();
-		{
-					Material material = session.get( Material.class, 1 );
-					assertEquals( "plastic", material.getName() );
+	public void testInitializeFromNonUniqueAssociationTable(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			Material material = session.find( Material.class, 1 );
+			assertEquals( "plastic", material.getName() );
 
-					// Material#sizesFromCombined is mapped with lazy="true"
-					assertFalse( Hibernate.isInitialized( material.getSizesFromCombined() ) );
-					assertEquals( 1, material.getSizesFromCombined().size() );
-					assertTrue( Hibernate.isInitialized( material.getSizesFromCombined() ) );
+			// Material#sizesFromCombined is mapped with lazy="true"
+			assertFalse( Hibernate.isInitialized( material.getSizesFromCombined() ) );
+			assertEquals( 1, material.getSizesFromCombined().size() );
+			assertTrue( Hibernate.isInitialized( material.getSizesFromCombined() ) );
 
-					assertEquals( "medium", material.getSizesFromCombined().iterator().next() );
+			assertEquals( "medium", material.getSizesFromCombined().iterator().next() );
 
-					Building building = session.get( Building.class, 1 );
+			Building building = session.find( Building.class, 1 );
 
-					// building.ratingsFromCombined is mapped with lazy="true"
-					assertFalse( Hibernate.isInitialized( building.getRatingsFromCombined() ) );
-					assertEquals( 1, building.getRatingsFromCombined().size() );
-					assertTrue( Hibernate.isInitialized( building.getRatingsFromCombined() ) );
-					assertEquals( "high", building.getRatingsFromCombined().iterator().next() );
+			// building.ratingsFromCombined is mapped with lazy="true"
+			assertFalse( Hibernate.isInitialized( building.getRatingsFromCombined() ) );
+			assertEquals( 1, building.getRatingsFromCombined().size() );
+			assertTrue( Hibernate.isInitialized( building.getRatingsFromCombined() ) );
+			assertEquals( "high", building.getRatingsFromCombined().iterator().next() );
 
-					// Building#sizesFromCombined is mapped with lazy="true"
-					assertFalse( Hibernate.isInitialized( building.getSizesFromCombined() ) );
-					assertEquals( 1, building.getSizesFromCombined().size() );
-					assertTrue( Hibernate.isInitialized( building.getSizesFromCombined() ) );
-					assertEquals( "small", building.getSizesFromCombined().iterator().next() );
-		}
-		session.getTransaction().commit();
-		session.close();
+			// Building#sizesFromCombined is mapped with lazy="true"
+			assertFalse( Hibernate.isInitialized( building.getSizesFromCombined() ) );
+			assertEquals( 1, building.getSizesFromCombined().size() );
+			assertTrue( Hibernate.isInitialized( building.getSizesFromCombined() ) );
+			assertEquals( "small", building.getSizesFromCombined().iterator().next() );
+		} );
 	}
 
 	@Entity( name = "Material" )
@@ -305,6 +290,5 @@ public class LazyElementCollectionBasicNonUniqueIdWhereTest extends BaseCoreFunc
 		public void setRatingsFromCombined(Set<String> ratingsFromCombined) {
 			this.ratingsFromCombined = ratingsFromCombined;
 		}
-
 	}
 }

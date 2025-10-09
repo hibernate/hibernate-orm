@@ -135,6 +135,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsLobValueChangePropagation implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsLobValueChangePropagation();
+		}
+	}
+
 	/**
 	 * Does the database support nationalized data in any form
 	 */
@@ -162,6 +168,18 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsIdentityColumns implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.getIdentityColumnSupport().supportsIdentityColumns();
+		}
+	}
+
+	public static class SupportsTemporaryTableIdentity implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getLocalTemporaryTableStrategy() != null
+				&& dialect.getLocalTemporaryTableStrategy().supportsTemporaryTablePrimaryKey()
+				|| dialect.getGlobalTemporaryTableStrategy() != null
+					&& dialect.getGlobalTemporaryTableStrategy().supportsTemporaryTablePrimaryKey()
+				// Persistent tables definitely support identity
+				|| dialect.getLocalTemporaryTableStrategy() == null
+					&& dialect.getGlobalTemporaryTableStrategy() == null;
 		}
 	}
 
@@ -210,6 +228,12 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsSubqueryAsLeftHandSideInPredicate implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsSubselectAsInPredicateLHS();
+		}
+	}
+
+	public static class SupportsUnionInSubquery implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsUnionInSubquery();
 		}
 	}
 

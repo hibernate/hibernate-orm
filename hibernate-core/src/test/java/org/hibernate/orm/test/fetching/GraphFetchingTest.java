@@ -4,11 +4,6 @@
  */
 package org.hibernate.orm.test.fetching;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -19,45 +14,43 @@ import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.NamedSubgraph;
 import jakarta.persistence.OneToMany;
-
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Test;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Vlad Mihalcea
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialect(H2Dialect.class)
-public class GraphFetchingTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Department.class,
-				Employee.class,
-				Project.class
-		};
-	}
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		options.put( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
+@DomainModel(annotatedClasses = {
+		GraphFetchingTest.Department.class,
+		GraphFetchingTest.Employee.class,
+		GraphFetchingTest.Project.class
+})
+@SessionFactory
+public class GraphFetchingTest {
+	@AfterEach
+	public void tearDown(SessionFactoryScope factoryScope) throws Exception {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Department department = new Department();
 			department.id = 1L;
 			entityManager.persist(department);
@@ -84,7 +77,7 @@ public class GraphFetchingTest extends BaseEntityManagerFunctionalTestCase {
 			entityManager.persist(project);
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		factoryScope.inTransaction( entityManager -> {
 			Long userId = 1L;
 
 			//tag::fetching-strategies-dynamic-fetching-entity-graph-example[]
@@ -101,7 +94,7 @@ public class GraphFetchingTest extends BaseEntityManagerFunctionalTestCase {
 		});
 
 		//tag::fetching-strategies-dynamic-fetching-entity-subgraph-example[]
-		Project project = doInJPA(this::entityManagerFactory, entityManager -> {
+		Project project = factoryScope.fromTransaction(entityManager -> {
 			return entityManager.find(
 				Project.class,
 				1L,

@@ -19,9 +19,9 @@ import org.hibernate.query.SemanticException;
 import org.hibernate.query.SyntaxException;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
-interface ExceptionExpectations {
+public interface ExceptionExpectations {
 
 	static ExceptionExpectations jpa() {
 		return new ExceptionExpectations() {

@@ -8,28 +8,34 @@ import java.util.List;
 
 import org.hibernate.annotations.NaturalId;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class MultiLoadSingleEventTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { IdEvent.class, NaturalIdEvent.class };
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = { MultiLoadSingleEventTest.IdEvent.class, MultiLoadSingleEventTest.NaturalIdEvent.class })
+@SessionFactory
+public class MultiLoadSingleEventTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void byId() {
-		inTransaction( session -> session.persist( new IdEvent( 1 ) ) );
+	public void byId(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> session.persist( new IdEvent( 1 ) ) );
 
-		inTransaction( session -> {
-			List<IdEvent> events = session.byMultipleIds( IdEvent.class )
-					.multiLoad( 1 );
+		factoryScope.inTransaction( (session) -> {
+			var events = session.findMultiple( IdEvent.class,
+					List.of(1)
+			);
 
 			assertThat( events ).hasSize( 1 );
 			assertThat( events.get( 0 ) ).isNotNull();
@@ -38,11 +44,11 @@ public class MultiLoadSingleEventTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void byNaturalId() {
-		inTransaction( session -> session.persist( new NaturalIdEvent( 1 ) ) );
+	public void byNaturalId(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> session.persist( new NaturalIdEvent( 1 ) ) );
 
-		inTransaction( session -> {
-			List<NaturalIdEvent> events = session.byMultipleNaturalId( NaturalIdEvent.class )
+		factoryScope.inTransaction( session -> {
+			var events = session.byMultipleNaturalId( NaturalIdEvent.class )
 					.multiLoad( "code1" );
 
 			assertThat( events ).hasSize( 1 );

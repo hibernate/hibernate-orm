@@ -4,17 +4,6 @@
  */
 package org.hibernate.orm.test.inheritance;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.Jira;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.DiscriminatorValue;
@@ -24,12 +13,23 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Marco Belladelli
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = {
 		InheritanceJunctionExistsPredicateTest.AbstractEntity.class,
 		InheritanceJunctionExistsPredicateTest.EntityA.class,
@@ -60,7 +60,7 @@ public class InheritanceJunctionExistsPredicateTest {
 		).getResultList() ).hasSize( 1 ) );
 	}
 
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final EntityB entityB = new EntityB();
@@ -76,15 +76,12 @@ public class InheritanceJunctionExistsPredicateTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from AbstractEntity" ).executeUpdate();
-			session.createMutationQuery( "delete from EntityAContainer" ).executeUpdate();
-			session.createMutationQuery( "delete from EntityBContainer" ).executeUpdate();
-		} );
+		scope.dropData();
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "AbstractEntity" )
 	@DiscriminatorColumn( name = "disc_col", discriminatorType = DiscriminatorType.INTEGER )
 	static abstract class AbstractEntity {
@@ -113,6 +110,7 @@ public class InheritanceJunctionExistsPredicateTest {
 	static class EntityB extends AbstractEntity {
 	}
 
+	@SuppressWarnings({"unused", "FieldMayBeFinal"})
 	@Entity( name = "EntityAContainer" )
 	@Table( name = "a_container" )
 	static class EntityAContainer {
@@ -124,6 +122,7 @@ public class InheritanceJunctionExistsPredicateTest {
 		private List<EntityA> entities = new ArrayList<>();
 	}
 
+	@SuppressWarnings({"unused", "FieldMayBeFinal", "MismatchedQueryAndUpdateOfCollection"})
 	@Entity( name = "EntityBContainer" )
 	@Table( name = "b_container" )
 	static class EntityBContainer {

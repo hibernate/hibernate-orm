@@ -4,17 +4,15 @@
  */
 package org.hibernate.orm.test.exceptionhandling;
 
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
+
 import java.util.Arrays;
-import java.util.Map;
 
-import org.hibernate.testing.junit4.CustomParameterized;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
-@RunWith(CustomParameterized.class)
+@ParameterizedClass
+@MethodSource("parameters")
 public abstract class BaseExceptionHandlingTest extends BaseJpaOrNativeBootstrapFunctionalTestCase {
 
-	@Parameterized.Parameters(name = "Bootstrap={0}, ExceptionHandlingSetting={1}")
 	public static Iterable<Object[]> parameters() {
 		return Arrays.asList( new Object[][] {
 				{ BootstrapMethod.JPA, ExceptionExpectations.jpa() },
@@ -30,7 +28,4 @@ public abstract class BaseExceptionHandlingTest extends BaseJpaOrNativeBootstrap
 		super( bootstrapMethod );
 		this.exceptionExpectations = exceptionExpectations;
 	}
-
-	@Override
-	protected void configure(Map<String, Object> properties) {}
 }

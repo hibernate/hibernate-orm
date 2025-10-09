@@ -4,9 +4,11 @@
  */
 package org.hibernate.orm.test.inheritance;
 
+import java.util.Comparator;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.internal.util.ExceptionHelper;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.ConstraintMode;
@@ -27,8 +29,8 @@ import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -37,25 +39,29 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.fail;
 
-@JiraKey(value = "HHH-14103")
+
+@SuppressWarnings("JUnitMalformedDeclaration")
+@JiraKey("HHH-14103")
 @DomainModel(
 		annotatedClasses = {
-				TransientOverrideAsPersistentSingleTable.Employee.class,
-				TransientOverrideAsPersistentSingleTable.Editor.class,
-				TransientOverrideAsPersistentSingleTable.Writer.class,
-				TransientOverrideAsPersistentSingleTable.Group.class,
-				TransientOverrideAsPersistentSingleTable.Job.class
+				TransientOverrideAsPersistentJoinedTests.Employee.class,
+				TransientOverrideAsPersistentJoinedTests.Editor.class,
+				TransientOverrideAsPersistentJoinedTests.Writer.class,
+				TransientOverrideAsPersistentJoinedTests.Group.class,
+				TransientOverrideAsPersistentJoinedTests.Job.class
 		}
 )
 @SessionFactory
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.CRITERIA_COPY_TREE, value = "true"))
-public class TransientOverrideAsPersistentSingleTable {
+public class TransientOverrideAsPersistentJoinedTests {
 
 	@Test
 	public void testFindByRootClass(SessionFactoryScope scope) {
@@ -100,8 +106,10 @@ public class TransientOverrideAsPersistentSingleTable {
 			final List<Employee> employees = session.createQuery( "from Employee", Employee.class )
 					.getResultList();
 			assertEquals( 2, employees.size() );
+			employees.sort( Comparator.comparing( Employee::getName ) );
 			assertThat( employees.get( 0 ), instanceOf( Editor.class ) );
 			assertThat( employees.get( 1 ), instanceOf( Writer.class ) );
+
 			final Editor editor = (Editor) employees.get( 0 );
 			assertEquals( "Senior Editor", editor.getTitle() );
 			final Writer writer = (Writer) employees.get( 1 );
@@ -113,23 +121,24 @@ public class TransientOverrideAsPersistentSingleTable {
 	}
 
 	@Test
+	@JiraKey("HHH-12981")
 	public void testQueryByRootClassAndOverridenProperty(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final Employee editor = session.createQuery( "from Employee where title=:title", Employee.class )
-					.setParameter( "title", "Senior Editor" )
-					.getSingleResult();
-			assertThat( editor, instanceOf( Editor.class ) );
-
-			final Employee writer = session.createQuery( "from Employee where title=:title", Employee.class )
-					.setParameter( "title", "Writing" )
-					.getSingleResult();
-			assertThat( writer, instanceOf( Writer.class ) );
-			assertNotNull( ( (Writer) writer ).getGroup() );
-			assertEquals( writer.getTitle(), ( (Writer) writer ).getGroup().getName() );
+			try {
+				session.createQuery( "from Employee where title=:title", Employee.class );
+				fail( "Expected exception!" );
+			}
+			catch (IllegalArgumentException e) {
+				assertThat(
+						ExceptionHelper.getRootCause( e ).getMessage(),
+						containsString( "due to the attribute being declared in multiple subtypes" )
+				);
+			}
 		} );
 	}
 
 	@Test
+	@JiraKey("HHH-12981")
 	public void testQueryByRootClassAndOverridenPropertyTreat(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Employee editor = session.createQuery(
@@ -169,8 +178,10 @@ public class TransientOverrideAsPersistentSingleTable {
 	}
 
 	@Test
+	@JiraKey("HHH-12981")
 	public void testCriteriaQueryByRootClassAndOverridenProperty(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
+
 			final CriteriaBuilder builder = session.getCriteriaBuilder();
 
 			final CriteriaQuery<Employee> query = builder.createQuery( Employee.class );
@@ -223,11 +234,11 @@ public class TransientOverrideAsPersistentSingleTable {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@Entity(name = "Employee")
-	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+	@Inheritance(strategy = InheritanceType.JOINED)
 	@DiscriminatorColumn(name = "department")
 	public static abstract class Employee {
 		private String name;
@@ -325,7 +336,8 @@ public class TransientOverrideAsPersistentSingleTable {
 	@Table(name = "WorkGroup")
 	public static class Group {
 		private String name;
-		private String description;
+
+		private String details;
 
 		public Group(String name) {
 			this();

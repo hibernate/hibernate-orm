@@ -10,6 +10,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
@@ -36,4 +37,9 @@ public @interface MessageKeyInspection {
 	 * The logger to watch on
 	 */
 	Logger logger();
+
+	/**
+	 * Whether to reset the watcher {@linkplain BeforeEachCallback before each test} method.
+	 */
+	boolean resetBeforeEach() default true;
 }

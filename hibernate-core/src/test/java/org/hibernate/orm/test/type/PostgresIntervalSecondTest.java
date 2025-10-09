@@ -37,6 +37,7 @@ import jakarta.persistence.Table;
  * Test to see if using `@org.hibernate.annotations.JdbcTypeCode` or `@org.hibernate.annotations.JdbcType`
  * will override a default JdbcType set by a {@link AvailableSettings#PREFERRED_DURATION_JDBC_TYPE config property}.
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
 @DomainModel(annotatedClasses = { PostgresIntervalSecondTest.EntityWithIntervalSecondDuration.class })
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.PREFERRED_DURATION_JDBC_TYPE, value = "NUMERIC"))

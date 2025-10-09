@@ -10,47 +10,41 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
-import org.hibernate.Session;
 
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( value = "HHH-10026" )
-public class InstantVersionTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { TheEntity.class };
+@DomainModel(annotatedClasses = InstantVersionTest.TheEntity.class)
+@SessionFactory
+public class InstantVersionTest {
+
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testInstantUsageAsVersion() {
-		Session session = openSession();
-		session.getTransaction().begin();
-		TheEntity e = new TheEntity( 1 );
-		session.persist( e );
-		session.getTransaction().commit();
-		session.close();
+	public void testInstantUsageAsVersion(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var e = new TheEntity( 1 );
+			session.persist( e );
+		} );
 
-		session = openSession();
-		session.getTransaction().begin();
-		e = session.byId( TheEntity.class ).load( 1 );
-		assertThat( e.getTs(), notNullValue() );
-		session.getTransaction().commit();
-		session.close();
-
-		session = openSession();
-		session.getTransaction().begin();
-		e = session.byId( TheEntity.class ).load( 1 );
-		session.remove( e );
-		session.getTransaction().commit();
-		session.close();
+		factoryScope.inTransaction( (session) -> {
+			var e = session.find( TheEntity.class, 1 );
+			assertThat( e.getTs() ).isNotNull();
+		} );
 	}
 
 

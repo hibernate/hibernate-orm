@@ -25,9 +25,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 
-@DomainModel(annotatedClasses = {
-		OptimisticAndPessimisticLockTest.EntityA.class
-})
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = OptimisticAndPessimisticLockTest.EntityA.class)
 @SessionFactory
 @JiraKey("HHH-16461")
 @SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB uses SERIALIZABLE isolation, and does not support this")

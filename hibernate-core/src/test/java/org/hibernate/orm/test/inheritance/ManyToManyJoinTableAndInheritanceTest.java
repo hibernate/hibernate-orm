@@ -4,20 +4,6 @@
  */
 package org.hibernate.orm.test.inheritance;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import org.hibernate.Hibernate;
-
-import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.Jira;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
@@ -28,12 +14,25 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import org.hibernate.Hibernate;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Marco Belladelli
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = {
 		ManyToManyJoinTableAndInheritanceTest.RootEntity.class,
 		ManyToManyJoinTableAndInheritanceTest.ParentEntity.class,
@@ -42,7 +41,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SessionFactory( useCollectingStatementInspector = true )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17679" )
 public class ManyToManyJoinTableAndInheritanceTest {
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Sub1 sub1 = new Sub1( 1L, 1, 1 );
@@ -53,12 +52,9 @@ public class ManyToManyJoinTableAndInheritanceTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from RootEntity" ).executeUpdate();
-			session.createMutationQuery( "delete from ParentEntity" ).executeUpdate();
-		} );
+		scope.dropData();
 	}
 
 	@Test
@@ -67,6 +63,7 @@ public class ManyToManyJoinTableAndInheritanceTest {
 		inspector.clear();
 
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final RootEntity result = session.createQuery(
 					"select root from RootEntity root left join root.nodesPoly _collection",
 					RootEntity.class
@@ -85,6 +82,7 @@ public class ManyToManyJoinTableAndInheritanceTest {
 		inspector.clear();
 
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final Long result = session.createQuery(
 					"select _collection.id from RootEntity root left join root.nodesPoly _collection",
 					Long.class
@@ -101,6 +99,7 @@ public class ManyToManyJoinTableAndInheritanceTest {
 		inspector.clear();
 
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final Sub1 result = session.createQuery(
 					"select _collection from RootEntity root left join root.nodesPoly _collection",
 					Sub1.class
@@ -119,6 +118,7 @@ public class ManyToManyJoinTableAndInheritanceTest {
 		inspector.clear();
 
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final RootEntity result = session.createQuery(
 					"select root from RootEntity root left join fetch root.nodesPoly _collection",
 					RootEntity.class
@@ -131,6 +131,7 @@ public class ManyToManyJoinTableAndInheritanceTest {
 		} );
 	}
 
+	@SuppressWarnings({"unused", "FieldMayBeFinal"})
 	@Entity( name = "RootEntity" )
 	public static class RootEntity {
 		@Id
@@ -177,6 +178,7 @@ public class ManyToManyJoinTableAndInheritanceTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "Sub1" )
 	@DiscriminatorValue( "1" )
 	public static class Sub1 extends ParentEntity {

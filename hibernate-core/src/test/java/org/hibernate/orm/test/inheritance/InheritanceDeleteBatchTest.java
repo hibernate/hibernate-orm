@@ -14,6 +14,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -30,6 +31,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-13214")
 @DomainModel(
 		annotatedClasses = {
@@ -54,6 +56,11 @@ public class InheritanceDeleteBatchTest {
 		public String getSetting() {
 			return InlineMutationStrategy.class.getName();
 		}
+	}
+
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@BeforeEach

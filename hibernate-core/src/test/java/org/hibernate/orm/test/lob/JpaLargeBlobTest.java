@@ -16,6 +16,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.Hibernate.getLobHelper;
@@ -25,16 +26,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Brett Meyer
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-7698")
 @RequiresDialect(value = H2Dialect.class, comment = "HHH-7724")
-@DomainModel(
-		annotatedClasses = LobEntity.class
-)
+@DomainModel(annotatedClasses = LobEntity.class)
 @SessionFactory
 public class JpaLargeBlobTest {
-
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { LobEntity.class };
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test

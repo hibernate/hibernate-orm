@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import java.util.HashSet;
 import java.util.Set;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = {
 		TreatJoinOptimizationTest.JoinedBase.class,
 		TreatJoinOptimizationTest.JoinedSub1.class
@@ -38,6 +39,7 @@ public class TreatJoinOptimizationTest {
 		} );
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "JoinedBase" )
 	@Inheritance( strategy = InheritanceType.JOINED )
 	public static abstract class JoinedBase {
@@ -47,6 +49,7 @@ public class TreatJoinOptimizationTest {
 		private Integer value;
 	}
 
+	@SuppressWarnings({"FieldMayBeFinal", "unused"})
 	@Entity( name = "JoinedSub1" )
 	@Table( name = "joined_sub_1" )
 	public static class JoinedSub1 extends JoinedBase {

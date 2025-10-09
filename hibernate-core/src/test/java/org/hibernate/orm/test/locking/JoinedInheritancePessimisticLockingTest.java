@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @Jpa(
 		annotatedClasses =  {
 				JoinedInheritancePessimisticLockingTest.BaseThing.class,
@@ -35,25 +36,24 @@ public class JoinedInheritancePessimisticLockingTest {
 
 	@BeforeEach
 	public void setup(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					ConcreteThing t1 = new ConcreteThing();
-					t1.id = 1L;
-					t1.name = "t1";
-					t1.aProp = "abc";
-					AnotherConcreteThing t2 = new AnotherConcreteThing();
-					t2.id = 2L;
-					t2.name = "t2";
-					t2.anotherProp = "def";
-					entityManager.persist( t1 );
-					entityManager.persist( t2 );
-				}
-		);
+		scope.inTransaction(entityManager -> {
+			var t1 = new ConcreteThing();
+			t1.id = 1L;
+			t1.name = "t1";
+			t1.aProp = "abc";
+			entityManager.persist( t1 );
+
+			var t2 = new AnotherConcreteThing();
+			t2.id = 2L;
+			t2.name = "t2";
+			t2.anotherProp = "def";
+			entityManager.persist( t2 );
+		} );
 	}
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.getEntityManagerFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@Test

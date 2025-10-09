@@ -37,6 +37,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.core.Is.is;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey("HHH-18610")
 @DomainModel(
 		annotatedClasses = {
@@ -54,100 +55,96 @@ public class SingleTableNativeQueryTest {
 
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					Toy marioToy;
-					Toy fidgetSpinner;
-					Man john;
-					Woman jane;
-					Child susan;
-					Child mark;
-					Family family;
-					List<Child> children;
-					List<Person> familyMembers;
+		scope.inTransaction(session -> {
+			Toy marioToy;
+			Toy fidgetSpinner;
+			Man john;
+			Woman jane;
+			Child susan;
+			Child mark;
+			Family family;
+			List<Child> children;
+			List<Person> familyMembers;
 
-					marioToy = new Toy( 1L, "Super Mario retro Mushroom" );
-					fidgetSpinner = new Toy( 2L, "Fidget Spinner" );
-					john = new Man( "John", "Riding Roller Coasters" );
-					jane = new Woman( "Jane", "Hippotherapist" );
-					susan = new Child( "Susan", marioToy );
-					mark = new Child( "Mark", fidgetSpinner );
-					family = new Family( "McCloud" );
-					children = new ArrayList<>( Arrays.asList( susan, mark ) );
-					familyMembers = Arrays.asList( john, jane, susan, mark );
+			marioToy = new Toy( 1L, "Super Mario retro Mushroom" );
+			fidgetSpinner = new Toy( 2L, "Fidget Spinner" );
+			john = new Man( "John", "Riding Roller Coasters" );
+			jane = new Woman( "Jane", "Hippotherapist" );
+			susan = new Child( "Susan", marioToy );
+			mark = new Child( "Mark", fidgetSpinner );
+			family = new Family( "McCloud" );
+			children = new ArrayList<>( Arrays.asList( susan, mark ) );
+			familyMembers = Arrays.asList( john, jane, susan, mark );
 
 
-					session.persist( marioToy );
-					session.persist( fidgetSpinner );
+			session.persist( marioToy );
+			session.persist( fidgetSpinner );
 
-					jane.setColor( new Color( "pink" ) );
-					jane.setHusband( john );
-					jane.setChildren( children );
+			jane.setColor( new Color( "pink" ) );
+			jane.setHusband( john );
+			jane.setChildren( children );
 
-					john.setColor( new Color( "blue" ) );
-					john.setWife( jane );
-					john.setChildren( children );
+			john.setColor( new Color( "blue" ) );
+			john.setWife( jane );
+			john.setChildren( children );
 
-					for ( Child child : children ) {
-						child.setFather( john );
-						child.setMother( jane );
-					}
+			for ( Child child : children ) {
+				child.setFather( john );
+				child.setMother( jane );
+			}
 
-					for ( Person person : familyMembers ) {
-						family.add( person );
-					}
+			for ( Person person : familyMembers ) {
+				family.add( person );
+			}
 
-					session.persist( family );
-				} );
+			session.persist( family );
+		} );
 	}
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.dropData();
 	}
 
 	@Test
 	public void itShouldGetPersons(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					List<Object> results = session.createNativeQuery( "select {p.*} from person p order by p.name",
-							Object.class ).addEntity( "p", Person.class ).list();
-					assertThat( results.stream().map( p -> ((Person) p).getName() ).collect( Collectors.toList() ),
-							contains( "Jane", "John", "Mark", "Susan" ) );
-				}
-		);
+		scope.inTransaction(session -> {
+			//noinspection removal
+			var results = session.createNativeQuery( "select {p.*} from person p order by p.name",
+					Object.class ).addEntity( "p", Person.class ).list();
+			assertThat( results.stream().map( p -> ((Person) p).getName() ).collect( Collectors.toList() ),
+					contains( "Jane", "John", "Mark", "Susan" ) );
+		} );
 	}
 
 	@Test
 	public void itShouldGetWife(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					List<Object[]> results = session.createNativeQuery(
-									"select {m.*}, {w.*} from person m left join person w on m.wife_name = w.name where m.TYPE = 'MAN'",
-									Object[].class )
-							.addEntity( "m", Person.class )
-							.addEntity( "w", Person.class )
-							.list();
-					assertThat( results.size(), is( 1 ) );
-					assertThat( results.get( 0 )[0], instanceOf( Man.class ) );
-					assertThat( ((Man) results.get( 0 )[0]).getName(), is( "John" ) );
-					assertThat( results.get( 0 )[1], instanceOf( Woman.class ) );
-					assertThat( ((Woman) results.get( 0 )[1]).getName(), is( "Jane" ) );
-				}
-		);
+		scope.inTransaction(session -> {
+			//noinspection removal
+			var results = session.createNativeQuery(
+							"select {m.*}, {w.*} from person m left join person w on m.wife_name = w.name where m.TYPE = 'MAN'",
+							Object[].class )
+					.addEntity( "m", Person.class )
+					.addEntity( "w", Person.class )
+					.list();
+			assertThat( results.size(), is( 1 ) );
+			assertThat( results.get( 0 )[0], instanceOf( Man.class ) );
+			assertThat( ((Man) results.get( 0 )[0]).getName(), is( "John" ) );
+			assertThat( results.get( 0 )[1], instanceOf( Woman.class ) );
+			assertThat( ((Woman) results.get( 0 )[1]).getName(), is( "Jane" ) );
+		} );
 	}
 
 	@Test
 	public void itShouldGetFamilyMembers(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					List<Object> results = session.createNativeQuery( "select {f.*} from family f", Object.class )
-							.addEntity( "f", Family.class ).list();
-					Family family = (Family) results.get( 0 );
-					List<Person> members = family.getMembers();
-					assertThat( members.size(), is( 4 ) );
-				}
-		);
+		scope.inTransaction( session -> {
+			//noinspection removal
+			var results = session.createNativeQuery( "select {f.*} from family f", Object.class )
+					.addEntity( "f", Family.class ).list();
+			Family family = (Family) results.get( 0 );
+			List<Person> members = family.getMembers();
+			assertThat( members.size(), is( 4 ) );
+		} );
 	}
 
 	@Embeddable

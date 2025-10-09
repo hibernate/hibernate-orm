@@ -4,35 +4,36 @@
  */
 package org.hibernate.orm.test.interceptor;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import org.hibernate.Interceptor;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.orm.test.exceptionhandling.BaseJpaOrNativeBootstrapFunctionalTestCase;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Arrays;
 import java.util.Map;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.hibernate.Interceptor;
-import org.hibernate.Session;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.resource.transaction.spi.TransactionStatus;
-import org.hibernate.orm.test.exceptionhandling.BaseJpaOrNativeBootstrapFunctionalTestCase;
-import org.hibernate.testing.junit4.CustomParameterized;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
-@RunWith(CustomParameterized.class)
+/**
+ * NOTE: even though the Jira and commits imply that this test tests interceptors with JTA
+ * it does not - it uses (has always used) JDBC transactions
+ */
+@ParameterizedClass
+@MethodSource("parameters")
 public class InterceptorNonNullTransactionTest extends BaseJpaOrNativeBootstrapFunctionalTestCase {
 
 	public enum JpaComplianceTransactionSetting { DEFAULT, TRUE, FALSE }
 	public enum JtaAllowTransactionAccessSetting { DEFAULT, TRUE, FALSE }
 
-	@Parameterized.Parameters(name = "Bootstrap={0}, JpaComplianceTransactionSetting={1}, JtaAllowTransactionAccessSetting={2}")
 	public static Iterable<Object[]> parameters() {
 		return Arrays.asList( new Object[][] {
 				{ BootstrapMethod.JPA, JpaComplianceTransactionSetting.DEFAULT, JtaAllowTransactionAccessSetting.DEFAULT },
@@ -99,14 +100,13 @@ public class InterceptorNonNullTransactionTest extends BaseJpaOrNativeBootstrapF
 	}
 
 	@Test
-	public void testHibernateTransactionApi() throws Exception {
+	public void testHibernateTransactionApi() {
+		final var interceptor = new TransactionInterceptor();
 
-		final TransactionInterceptor interceptor = new TransactionInterceptor();
-
-		Session session = sessionFactory().withOptions().interceptor( interceptor ).openSession();
+		//noinspection resource
+		var session = sessionFactory().withOptions().interceptor( interceptor ).openSession();
 
 		session.getTransaction().begin();
-
 		assertTrue( interceptor.afterTransactionBeginMethodCalled );
 		assertTrue( interceptor.afterTransactionBeginAssertionPassed );
 		assertFalse( interceptor.beforeTransactionCompletionMethodCalled );
@@ -114,61 +114,58 @@ public class InterceptorNonNullTransactionTest extends BaseJpaOrNativeBootstrapF
 		assertFalse( interceptor.afterTransactionCompletionMethodCalled );
 		assertNull( interceptor.afterTransactionCompletionAssertionPassed );
 
+
 		SimpleEntity entity = new SimpleEntity( "Hello World" );
 		session.persist( entity );
 
 		interceptor.reset();
-
 		session.getTransaction().commit();
-
-
 		assertFalse( interceptor.afterTransactionBeginMethodCalled );
 		assertNull( interceptor.afterTransactionBeginAssertionPassed );
 		assertTrue( interceptor.beforeTransactionCompletionMethodCalled );
 		assertTrue( interceptor.afterTransactionCompletionMethodCalled );
-		assertEquals( true, interceptor.beforeTransactionCompletionAssertionPassed );
-		assertEquals( true, interceptor.afterTransactionCompletionAssertionPassed );
+		assertTrue( interceptor.beforeTransactionCompletionAssertionPassed );
+		assertTrue( interceptor.afterTransactionCompletionAssertionPassed );
 
 		session.close();
 	}
 
 	@Test
-	public void testJtaApiWithSharedTransactionCoordinator() throws Exception {
+	public void testJtaApiWithSharedTransactionCoordinator() {
+		final var interceptor = new TransactionInterceptor();
 
-		final TransactionInterceptor interceptor = new TransactionInterceptor();
+		// NOTE: the test "cheats" in that the interceptor passed during the creation of the
+		// child Session is irrelevant; the relevant bit is the passing of said interceptor
+		// to the creation of the parent session
 
-		Session originalSession = openSession( interceptor );
+		//noinspection resource
+		try (var originalSession = sessionFactory().withOptions().interceptor( interceptor ).openSession()) {
+			try (var session =  originalSession.sessionWithOptions().interceptor( interceptor ).connection().openSession()) {
+				interceptor.reset();
 
-		Session session =  originalSession.sessionWithOptions().interceptor( interceptor ).connection().openSession();
+				session.getTransaction().begin();
 
-		interceptor.reset();
+				assertTrue( interceptor.afterTransactionBeginMethodCalled );
+				assertTrue( interceptor.afterTransactionBeginAssertionPassed );
+				assertFalse( interceptor.beforeTransactionCompletionMethodCalled );
+				assertNull( interceptor.beforeTransactionCompletionAssertionPassed );
+				assertFalse( interceptor.afterTransactionCompletionMethodCalled );
+				assertNull( interceptor.afterTransactionCompletionAssertionPassed );
 
-		session.getTransaction().begin();
+				SimpleEntity entity = new SimpleEntity( "Hello World" );
+				session.persist( entity );
 
-		assertTrue( interceptor.afterTransactionBeginMethodCalled );
-		assertTrue( interceptor.afterTransactionBeginAssertionPassed );
-		assertFalse( interceptor.beforeTransactionCompletionMethodCalled );
-		assertNull( interceptor.beforeTransactionCompletionAssertionPassed );
-		assertFalse( interceptor.afterTransactionCompletionMethodCalled );
-		assertNull( interceptor.afterTransactionCompletionAssertionPassed );
+				interceptor.reset();
+				session.getTransaction().commit();
 
-		SimpleEntity entity = new SimpleEntity( "Hello World" );
-		session.persist( entity );
-
-		interceptor.reset();
-
-		session.getTransaction().commit();
-
-		assertFalse( interceptor.afterTransactionBeginMethodCalled );
-		assertNull( interceptor.afterTransactionBeginAssertionPassed );
-		assertTrue( interceptor.beforeTransactionCompletionMethodCalled );
-		assertTrue( interceptor.afterTransactionCompletionMethodCalled );
-		assertEquals( true, interceptor.beforeTransactionCompletionAssertionPassed );
-		assertEquals( true, interceptor.afterTransactionCompletionAssertionPassed );
-
-		session.close();
-
-		originalSession.close();
+				assertFalse( interceptor.afterTransactionBeginMethodCalled );
+				assertNull( interceptor.afterTransactionBeginAssertionPassed );
+				assertTrue( interceptor.beforeTransactionCompletionMethodCalled );
+				assertTrue( interceptor.afterTransactionCompletionMethodCalled );
+				assertTrue( interceptor.beforeTransactionCompletionAssertionPassed );
+				assertTrue( interceptor.afterTransactionCompletionAssertionPassed );
+			}
+		}
 	}
 
 	@Entity(name = "SimpleEntity")
@@ -203,7 +200,7 @@ public class InterceptorNonNullTransactionTest extends BaseJpaOrNativeBootstrapF
 		}
 	}
 
-	private class TransactionInterceptor implements Interceptor {
+	private static class TransactionInterceptor implements Interceptor {
 		private boolean afterTransactionBeginMethodCalled;
 		private Boolean afterTransactionBeginAssertionPassed;
 

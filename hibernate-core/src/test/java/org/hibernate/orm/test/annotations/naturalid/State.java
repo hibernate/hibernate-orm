@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.annotations.naturalid;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 /**
@@ -13,9 +12,16 @@ import jakarta.persistence.Id;
 @Entity
 public class State {
 	@Id
-	@GeneratedValue
 	private Integer id;
 	private String name;
+
+	public State() {
+	}
+
+	public State(Integer id, String name) {
+		this.id = id;
+		this.name = name;
+	}
 
 	public Integer getId() {
 		return id;

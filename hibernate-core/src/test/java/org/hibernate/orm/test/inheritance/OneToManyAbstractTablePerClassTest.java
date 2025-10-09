@@ -34,6 +34,7 @@ import jakarta.persistence.Table;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-16358")
 @DomainModel(
 		annotatedClasses = {
@@ -100,7 +101,7 @@ public class OneToManyAbstractTablePerClassTest {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@Entity(name = "TablePerClassBase")
@@ -129,6 +130,7 @@ public class OneToManyAbstractTablePerClassTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity(name = "TablePerClassSub1")
 	@Table(name = "table_per_class_sub_1")
 	public static class TablePerClassSub1 extends TablePerClassBase {
@@ -139,6 +141,7 @@ public class OneToManyAbstractTablePerClassTest {
 			super( id );
 		}
 	}
+	@SuppressWarnings("unused")
 	@Entity(name = "TablePerClassSub2")
 	@Table(name = "table_per_class_sub_2")
 	public static class TablePerClassSub2 extends TablePerClassBase {

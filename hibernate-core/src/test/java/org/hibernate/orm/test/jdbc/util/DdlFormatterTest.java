@@ -4,24 +4,25 @@
  */
 package org.hibernate.orm.test.jdbc.util;
 
+import org.hibernate.engine.jdbc.internal.FormatStyle;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.jboss.logging.Logger;
+import org.junit.jupiter.api.Test;
+
 import java.util.StringTokenizer;
 
-import org.hibernate.engine.jdbc.internal.FormatStyle;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * @author Vlad Mihalcea
  */
-public class DdlFormatterTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class DdlFormatterTest {
+	private static final Logger log = Logger.getLogger( DdlFormatterTest.class );
 
 	@Test
 	public void testNoLoss() {
-
 		assertNoLoss( "drop table post if exists" );
 		assertNoLoss( "drop table post_comment if exists" );
 		assertNoLoss( "drop table post_details if exists" );
@@ -49,7 +50,7 @@ public class DdlFormatterTest extends BaseUnitTestCase {
 		while ( formatted.hasMoreTokens() && plain.hasMoreTokens() ) {
 			String plainToken = plain.nextToken();
 			String formattedToken = formatted.nextToken();
-			assertEquals( "formatter did not return the same token", plainToken, formattedToken );
+			assertEquals( plainToken, formattedToken, "formatter did not return the same token" );
 		}
 		assertFalse( formatted.hasMoreTokens() );
 		assertFalse( plain.hasMoreTokens() );

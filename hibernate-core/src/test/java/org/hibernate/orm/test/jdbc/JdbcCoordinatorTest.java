@@ -4,10 +4,6 @@
  */
 package org.hibernate.orm.test.jdbc;
 
-import java.lang.reflect.Field;
-import java.sql.Connection;
-import java.sql.SQLException;
-
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
@@ -21,13 +17,15 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.service.ServiceRegistry;
-
-import org.junit.Test;
-
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import java.lang.reflect.Field;
+import java.sql.Connection;
+import java.sql.SQLException;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.doThrow;

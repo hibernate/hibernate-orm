@@ -16,6 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				JoinedInheritanceDeletionTest.Person.class,
@@ -44,11 +45,7 @@ public class JoinedInheritanceDeletionTest {
 
 	@Test
 	public void testDelete(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Person" ).executeUpdate();
-				}
-		);
+		scope.dropData();
 	}
 
 	@Entity(name = "Person")

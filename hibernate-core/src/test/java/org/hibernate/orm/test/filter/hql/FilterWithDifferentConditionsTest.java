@@ -28,6 +28,7 @@ import jakarta.persistence.MapKeyColumn;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				FilterWithDifferentConditionsTest.Person.class,
@@ -64,6 +65,7 @@ public class FilterWithDifferentConditionsTest {
 		scope.inTransaction(
 				session -> {
 					session.enableFilter( "addressFilter" );
+					//noinspection removal
 					List<Person> people = session.createQuery( "from Person", Person.class ).list();
 					assertThat( people.size() ).isEqualTo( 1 );
 
@@ -82,6 +84,7 @@ public class FilterWithDifferentConditionsTest {
 	}
 
 
+	@SuppressWarnings("FieldMayBeFinal")
 	@Entity(name = "Person")
 	@FilterDef(name = "addressFilter", defaultCondition = "(CAR_TYPE = 'car')")
 	public static class Person {

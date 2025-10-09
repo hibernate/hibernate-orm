@@ -52,6 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @ServiceRegistry(
 		settings = {
 				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ),
@@ -69,278 +70,216 @@ public class MultiLoadTest {
 
 	@BeforeEach
 	public void before(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.setCacheMode( CacheMode.IGNORE );
-					for ( int i = 1; i <= 60; i++ ) {
-						session.persist( new SimpleEntity( i, "Entity #" + i ) );
-					}
-				}
-		);
+		scope.inTransaction(session -> {
+			session.setCacheMode( CacheMode.IGNORE );
+			for ( int i = 1; i <= 60; i++ ) {
+				session.persist( new SimpleEntity( i, "Entity #" + i ) );
+			}
+		} );
 	}
 
 	@AfterEach
 	public void after(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 		scope.getSessionFactory().getCache().evictAllRegions();
 	}
 
 	@Test
 	public void testBasicMultiLoad(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
-		scope.inTransaction(
-				session -> {
-					statementInspector.clear();
+		scope.inTransaction(session -> {
+			statementInspector.clear();
 
-					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids( 5 ) );
-					assertEquals( 5, list.size() );
+			var list = session.findMultiple( SimpleEntity.class, ids( 5 ) );
+			assertEquals( 5, list.size() );
 
-					final int paramCount = StringHelper.countUnquoted(
-							statementInspector.getSqlQueries().get( 0 ),
-							'?'
-					);
+			final int paramCount = StringHelper.countUnquoted(
+					statementInspector.getSqlQueries().get( 0 ),
+					'?'
+			);
 
-					final Dialect dialect = session.getSessionFactory()
-							.getJdbcServices()
-							.getDialect();
-					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
-						assertThat( paramCount, is( 1 ) );
-					}
-					else {
-						assertThat( paramCount, is( 5 ) );
-					}
-				}
-		);
+			final var dialect = session.getSessionFactory()
+					.getJdbcServices()
+					.getDialect();
+			if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
+				assertThat( paramCount, is( 1 ) );
+			}
+			else {
+				assertThat( paramCount, is( 5 ) );
+			}
+		} );
 	}
 
 	@Test
 	@JiraKey( value = "HHH-10984" )
-	public void testUnflushedDeleteAndThenMultiLoadPart0(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					// delete one of them (but do not flush)...
-					SimpleEntity s4 = session.getReference(SimpleEntity.class, 5);
-					session.remove( s4 );
+	public void testUnflushedDeleteAndThenMultiLoadBaseline(SessionFactoryScope scope) {
+		scope.inTransaction(session -> {
+			// delete one of them (but do not flush)...
+			var s4 = session.getReference(SimpleEntity.class, 5);
+			session.remove( s4 );
 
-					assertFalse( Hibernate.isInitialized( s4 ) );
+			assertFalse( Hibernate.isInitialized( s4 ) );
 
-					// as a baseline, assert based on how load() handles it
-					SimpleEntity s5 = session.getReference( SimpleEntity.class, 5 );
-					assertNotNull( s5 );
-					assertFalse( Hibernate.isInitialized( s5 ) );
-				}
-		);
+			// as a baseline, assert based on how getReference() handles it
+			var s5 = session.getReference( SimpleEntity.class, 5 );
+			assertNotNull( s5 );
+			assertFalse( Hibernate.isInitialized( s5 ) );
+		} );
 	}
 
 	@Test
 	@JiraKey( value = "HHH-10984" )
-	public void testUnflushedDeleteAndThenMultiLoadPart1(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					// delete one of them (but do not flush)...
-					SimpleEntity s4 = session.getReference( SimpleEntity.class, 5 );
-					Hibernate.initialize( s4 );
-					session.remove( s4 );
+	public void testUnflushedDeleteAndThenMultiLoadBaseline2(SessionFactoryScope scope) {
+		scope.inTransaction(session -> {
+			// delete one of them (but do not flush)...
+			var s4 = session.getReference( SimpleEntity.class, 5 );
+			Hibernate.initialize( s4 );
+			session.remove( s4 );
 
-					// as a baseline, assert based on how load() handles it
-					SimpleEntity s5 = session.getReference( SimpleEntity.class, 5 );
-					assertNotNull( s5 );
-				}
-		);
+			// as a baseline, assert based on how getReference() handles it
+			var s5 = session.getReference( SimpleEntity.class, 5 );
+			assertNotNull( s5 );
+		} );
 	}
 
 	@Test
 	@JiraKey( value = "HHH-10984" )
-	public void testUnflushedDeleteAndThenMultiLoadPart2(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					// delete one of them (but do not flush)...
-					SimpleEntity s4 = session.getReference( SimpleEntity.class, 5 );
-					Hibernate.initialize( s4 );
-					session.remove( s4 );
+	public void testUnflushedDeleteAndThenMultiLoadBaseline3(SessionFactoryScope scope) {
+		scope.inTransaction(session -> {
+			// delete one of them (but do not flush)...
+			var s4 = session.getReference( SimpleEntity.class, 5 );
+			Hibernate.initialize( s4 );
+			session.remove( s4 );
 
-					// and then, assert how get() handles it
-					SimpleEntity s5 = session.get( SimpleEntity.class, 5 );
-					assertNull( s5 );
-				}
-		);
+			// and then, assert how find() handles it
+			var s5 = session.find( SimpleEntity.class, 5 );
+			assertNull( s5 );
+		} );
 	}
 
 	@Test
 	@JiraKey( value = "HHH-10984" )
-	public void testUnflushedDeleteAndThenMultiLoadPart3(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					// delete one of them (but do not flush)...
-					SimpleEntity s4 = session.getReference( SimpleEntity.class, 5 );
-					Hibernate.initialize( s4 );
-					session.remove( s4 );
+	public void testUnflushedDeleteAndThenMultiLoad(SessionFactoryScope scope) {
+		scope.inTransaction(session -> {
+			// delete one of them (but do not flush)...
+			var s4 = session.getReference( SimpleEntity.class, 5 );
+			Hibernate.initialize( s4 );
+			session.remove( s4 );
 
-					// finally assert how multiLoad handles it
-					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids( 56 ) );
-					assertEquals( 56, list.size() );
-				}
-		);
+			// finally assert how multiLoad handles it
+			var list = session.findMultiple( SimpleEntity.class, ids( 56 ) );
+			assertEquals( 56, list.size() );
+		} );
 	}
 
 	@Test
 	@JiraKey( value = "HHH-10984" )
 	public void testUnflushedDeleteAndThenMultiLoadPart4(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					// delete one of them (but do not flush)...
-					session.remove( session.getReference( SimpleEntity.class, 5 ) );
+		scope.inTransaction(session -> {
+			// delete one of them (but do not flush)...
+			session.remove( session.getReference( SimpleEntity.class, 5 ) );
 
-					// and then, assert how get() handles it
-					SimpleEntity s5 = session.get( SimpleEntity.class, 5 );
-					assertNull( s5 );
-				}
-		);
+			// and then, assert how get() handles it
+			var s5 = session.find( SimpleEntity.class, 5 );
+			assertNull( s5 );
+		} );
 	}
 
 	@Test
 	@JiraKey( value = "HHH-10617" )
 	public void testDuplicatedRequestedIds(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					// ordered multiLoad
-					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( 1, 2, 3, 2, 2 );
-					assertEquals( 5, list.size() );
-					assertSame( list.get( 1 ), list.get( 3 ) );
-					assertSame( list.get( 1 ), list.get( 4 ) );
-				}
-		);
+		scope.inTransaction(session -> {
+			// ordered multiLoad
+			var list = session.findMultiple( SimpleEntity.class, List.of(1,2,3,2,2) );
+			assertEquals( 5, list.size() );
+			assertSame( list.get( 1 ), list.get( 3 ) );
+			assertSame( list.get( 1 ), list.get( 4 ) );
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-10617")
-	public void testDuplicatedRequestedIdswithDisableOrderedReturn(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					// un-ordered multiLoad
-					{
-						final List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class )
-								.enableOrderedReturn( false )
-								.multiLoad( 1, 2, 3, 2, 2 );
-						assertEquals( 3, list.size() );
-					}
-
-					{
-						final List<SimpleEntity> list = session.findMultiple( SimpleEntity.class, List.of( 1, 2, 3, 2, 2 ), OrderingMode.UNORDERED );
-						assertEquals( 3, list.size() );
-
-					}
-				}
-		);
+	public void testDuplicatedRequestedIdsWithDisableOrderedReturn(SessionFactoryScope scope) {
+		scope.inTransaction(session -> {
+			// un-ordered multiLoad
+			{
+				var list = session.findMultiple( SimpleEntity.class,
+						List.of(1,2,3,2,2),
+						OrderingMode.UNORDERED
+				);
+				assertEquals( 3, list.size() );
+			}
+		} );
 	}
 
 	@Test
 	@JiraKey( value = "HHH-10617" )
 	public void testNonExistentIdRequest(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					// ordered multiLoad
-					{
-						List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( 1, 699, 2 );
-						assertEquals( 3, list.size() );
-						assertNull( list.get( 1 ) );
+		scope.inTransaction(session -> {
+			// ordered multiLoad
+			var list = session.findMultiple( SimpleEntity.class, List.of(1,699,2) );
+			assertEquals( 3, list.size() );
+			assertNull( list.get( 1 ) );
 
-						// un-ordered multiLoad
-						list = session.byMultipleIds( SimpleEntity.class ).enableOrderedReturn( false ).multiLoad( 1, 699, 2 );
-						assertEquals( 2, list.size() );
-					}
-
-					{
-						final List<SimpleEntity> list = session.findMultiple( SimpleEntity.class, List.of(1, 699, 2), OrderingMode.UNORDERED );
-						assertEquals( 2, list.size() );
-					}
-				}
-		);
+			// un-ordered multiLoad
+			list = session.findMultiple( SimpleEntity.class, List.of(1,699,2), OrderingMode.UNORDERED );
+			assertEquals( 2, list.size() );
+		} );
 	}
 
 	@Test
 	public void testBasicMultiLoadWithManagedAndNoChecking(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					SimpleEntity first = session.byId( SimpleEntity.class ).load( 1 );
-					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids( 56 ) );
-					assertEquals( 56, list.size() );
-					// this check is HIGHLY specific to implementation in the batch loader
-					// which puts existing managed entities first...
-					assertSame( first, list.get( 0 ) );
-				}
-		);
+		scope.inTransaction(session -> {
+			var first = session.find( SimpleEntity.class, 1 );
+			var list = session.findMultiple( SimpleEntity.class, ids( 56 ) );
+			assertEquals( 56, list.size() );
+			// this check is HIGHLY specific to implementation in the batch loader
+			// which puts existing managed entities first...
+			assertSame( first, list.get( 0 ) );
+		} );
 	}
 
 	@Test
 	public void testBasicMultiLoadWithManagedAndChecking(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					SimpleEntity first;
-					{
-						final List<SimpleEntity> list;
-						first = session.byId( SimpleEntity.class ).load( 1 );
-						list = session.byMultipleIds( SimpleEntity.class )
-								.enableSessionCheck( true )
-								.multiLoad( ids( 56 ) );
-						assertEquals( 56, list.size() );
-						// this check is HIGHLY specific to implementation in the batch loader
-						// which puts existing managed entities first...
-						assertSame( first, list.get( 0 ) );
-					}
+		scope.inTransaction(session -> {
+			var first = session.find( SimpleEntity.class, 1 );
 
-					{
-						final List<SimpleEntity> list = session.findMultiple( SimpleEntity.class, idList(56), SessionCheckMode.ENABLED );
-						assertEquals( 56, list.size() );
-						// this check is HIGHLY specific to implementation in the batch loader
-						// which puts existing managed entities first...
-						assertSame( first, list.get( 0 ) );
-					}
-				}
-		);
+			var list = session.findMultiple( SimpleEntity.class,
+					ids(56),
+					SessionCheckMode.ENABLED
+			);
+			assertEquals( 56, list.size() );
+			// this check is HIGHLY specific to implementation in the batch loader
+			// which puts existing managed entities first...
+			assertSame( first, list.get( 0 ) );
+		} );
 	}
 
 	@Test
 	public void testBasicMultiLoadWithManagedAndNoCheckingProxied(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					SimpleEntity first = session.byId( SimpleEntity.class ).getReference( 1 );
-					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids( 56 ) );
-					assertEquals( 56, list.size() );
-					// this check is HIGHLY specific to implementation in the batch loader
-					// which puts existing managed entities first...
-					assertSame( first, list.get( 0 ) );
-				}
-		);
+		scope.inTransaction(session -> {
+			var first = session.getReference( SimpleEntity.class, 1 );
+			var list = session.findMultiple( SimpleEntity.class, ids( 56 ) );
+			assertEquals( 56, list.size() );
+			// this check is HIGHLY specific to implementation in the batch loader
+			// which puts existing managed entities first...
+			assertSame( first, list.get( 0 ) );
+		} );
 	}
 
 	@Test
 	public void testBasicMultiLoadWithManagedAndCheckingProxied(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					SimpleEntity first = session.byId( SimpleEntity.class ).getReference( 1 );
-					{
-						final List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class )
-								.enableSessionCheck( true )
-								.multiLoad( ids( 56 ) );
-						assertEquals( 56, list.size() );
-						// this check is HIGHLY specific to implementation in the batch loader
-						// which puts existing managed entities first...
-						assertSame( first, list.get( 0 ) );
-					}
-
-					session.evict( first );
-					first = session.byId( SimpleEntity.class ).getReference( 1 );
-
-					{
-						final List<SimpleEntity> list = session.findMultiple( SimpleEntity.class, idList(56), SessionCheckMode.ENABLED );
-						assertEquals( 56, list.size() );
-						// this check is HIGHLY specific to implementation in the batch loader
-						// which puts existing managed entities first...
-						assertSame( first, list.get( 0 ) );
-					}
-				}
-		);
+		scope.inTransaction(session -> {
+			var first = session.getReference( SimpleEntity.class, 1 );
+			var list = session.findMultiple( SimpleEntity.class,
+					ids(56),
+					SessionCheckMode.ENABLED
+			);
+			assertEquals( 56, list.size() );
+			// this check is HIGHLY specific to implementation in the batch loader
+			// which puts existing managed entities first...
+			assertSame( first, list.get( 0 ) );
+		} );
 	}
 
 	@Test
@@ -354,82 +293,52 @@ public class MultiLoadTest {
 		final Statistics statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 
-		scope.inTransaction(
-				session -> {
-					// Load 1 of the items directly
-					SimpleEntity entity = session.get( SimpleEntity.class, 2 );
-					assertNotNull( entity );
+		scope.inTransaction(session -> {
+			// Load 1 of the items directly
+			SimpleEntity entity = session.find( SimpleEntity.class, 2 );
+			assertNotNull( entity );
 
-					assertEquals( 1, statistics.getSecondLevelCacheMissCount() );
-					assertEquals( 0, statistics.getSecondLevelCacheHitCount() );
-					assertEquals( 1, statistics.getSecondLevelCachePutCount() );
-					assertTrue( session.getSessionFactory().getCache().containsEntity( SimpleEntity.class, 2 ) );
-				}
-		);
+			assertEquals( 1, statistics.getSecondLevelCacheMissCount() );
+			assertEquals( 0, statistics.getSecondLevelCacheHitCount() );
+			assertEquals( 1, statistics.getSecondLevelCachePutCount() );
+			assertTrue( session.getSessionFactory().getCache().containsEntity( SimpleEntity.class, 2 ) );
+		} );
 
 		statistics.clear();
 
-		scope.inTransaction(
-				session -> {
-					// Validate that the entity is still in the Level 2 cache
-					assertTrue( session.getSessionFactory().getCache().containsEntity( SimpleEntity.class, 2 ) );
+		scope.inTransaction(session -> {
+			// Validate that the entity is still in the Level 2 cache
+			assertTrue( session.getSessionFactory().getCache().containsEntity( SimpleEntity.class, 2 ) );
 
-					statementInspector.clear();
-					{
-						// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
-						final List<SimpleEntity> entities = session.byMultipleIds( SimpleEntity.class )
-								.with( CacheMode.NORMAL )
-								.enableSessionCheck( true )
-								.multiLoad( ids( 3 ) );
-						assertEquals( 3, entities.size() );
-						assertEquals( 1, statistics.getSecondLevelCacheHitCount() );
+			statementInspector.clear();
+			{
+				// multi-load 3 items and ensure that pulls 2 from the database & 1 from the cache.
+				final List<SimpleEntity> entities = session.findMultiple( SimpleEntity.class,
+						ids(3),
+						SessionCheckMode.ENABLED,
+						CacheMode.NORMAL
+				);
+				assertEquals( 3, entities.size() );
+				assertEquals( 1, statistics.getSecondLevelCacheHitCount() );
 
-						for ( SimpleEntity entity : entities ) {
-							assertTrue( session.contains( entity ) );
-						}
-
-						final int paramCount = StringHelper.countUnquoted(
-								statementInspector.getSqlQueries().get( 0 ),
-								'?'
-						);
-
-						final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
-						if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
-							assertThat( paramCount, is( 1 ) );
-						}
-						else {
-							assertThat( paramCount, is( 2 ) );
-						}
-					}
-
-					{
-						// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
-						final List<SimpleEntity> entities = session.findMultiple( SimpleEntity.class, idList( 3 ),
-								CacheMode.NORMAL,
-								SessionCheckMode.ENABLED
-						);
-						assertEquals( 3, entities.size() );
-						assertEquals( 1, statistics.getSecondLevelCacheHitCount() );
-
-						for ( SimpleEntity entity : entities ) {
-							assertTrue( session.contains( entity ) );
-						}
-
-						final int paramCount = StringHelper.countUnquoted(
-								statementInspector.getSqlQueries().get( 0 ),
-								'?'
-						);
-
-						final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
-						if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
-							assertThat( paramCount, is( 1 ) );
-						}
-						else {
-							assertThat( paramCount, is( 2 ) );
-						}
-					}
+				for ( var entity : entities ) {
+					assertTrue( session.contains( entity ) );
 				}
-		);
+
+				final int paramCount = StringHelper.countUnquoted(
+						statementInspector.getSqlQueries().get( 0 ),
+						'?'
+				);
+
+				final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
+				if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
+					assertThat( paramCount, is( 1 ) );
+				}
+				else {
+					assertThat( paramCount, is( 2 ) );
+				}
+			}
+		} );
 	}
 
 	@Test
@@ -443,84 +352,50 @@ public class MultiLoadTest {
 		final Statistics statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 
-		scope.inTransaction(
-				session -> {
-					// Load 1 of the items directly
-					SimpleEntity entity = session.get( SimpleEntity.class, 2 );
-					assertNotNull( entity );
+		scope.inTransaction(session -> {
+			// Load 1 of the items directly
+			SimpleEntity entity = session.find( SimpleEntity.class, 2 );
+			assertNotNull( entity );
 
-					assertEquals( 1, statistics.getSecondLevelCacheMissCount() );
-					assertEquals( 0, statistics.getSecondLevelCacheHitCount() );
-					assertEquals( 1, statistics.getSecondLevelCachePutCount() );
-					assertTrue( session.getSessionFactory().getCache().containsEntity( SimpleEntity.class, 2 ) );
-				}
-		);
+			assertEquals( 1, statistics.getSecondLevelCacheMissCount() );
+			assertEquals( 0, statistics.getSecondLevelCacheHitCount() );
+			assertEquals( 1, statistics.getSecondLevelCachePutCount() );
+			assertTrue( session.getSessionFactory().getCache().containsEntity( SimpleEntity.class, 2 ) );
+		} );
 
 		statistics.clear();
 
-		scope.inTransaction(
-				session -> {
+		scope.inTransaction(session -> {
+			// Validate that the entity is still in the Level 2 cache
+			assertTrue( session.getSessionFactory().getCache().containsEntity( SimpleEntity.class, 2 ) );
 
-					// Validate that the entity is still in the Level 2 cache
-					assertTrue( session.getSessionFactory().getCache().containsEntity( SimpleEntity.class, 2 ) );
+			statementInspector.clear();
 
-					statementInspector.clear();
+			// multi-load 3 items and ensure that it pulls 2 from the database & 1 from the cache.
+			final List<SimpleEntity> entities = session.findMultiple( SimpleEntity.class, ids( 3 ),
+					CacheMode.NORMAL,
+					SessionCheckMode.ENABLED,
+					OrderingMode.UNORDERED
+			);
+			assertEquals( 3, entities.size() );
+			assertEquals( 1, statistics.getSecondLevelCacheHitCount() );
 
-					{
-						// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
-						final List<SimpleEntity> entities = session.byMultipleIds( SimpleEntity.class )
-								.with( CacheMode.NORMAL )
-								.enableSessionCheck( true )
-								.enableOrderedReturn( false )
-								.multiLoad( ids( 3 ) );
-						assertEquals( 3, entities.size() );
-						assertEquals( 1, statistics.getSecondLevelCacheHitCount() );
+			for ( SimpleEntity entity : entities ) {
+				assertTrue( session.contains( entity ) );
+			}
+			final int paramCount = StringHelper.countUnquoted(
+					statementInspector.getSqlQueries().get( 0 ),
+					'?'
+			);
 
-						for ( SimpleEntity entity : entities ) {
-							assertTrue( session.contains( entity ) );
-						}
-						final int paramCount = StringHelper.countUnquoted(
-								statementInspector.getSqlQueries().get( 0 ),
-								'?'
-						);
-
-						final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
-						if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
-							assertThat( paramCount, is( 1 ) );
-						}
-						else {
-							assertThat( paramCount, is( 2 ) );
-						}
-					}
-
-					{
-						// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
-						final List<SimpleEntity> entities = session.findMultiple( SimpleEntity.class, idList( 3 ),
-								CacheMode.NORMAL,
-								SessionCheckMode.ENABLED,
-								OrderingMode.UNORDERED
-						);
-						assertEquals( 3, entities.size() );
-						assertEquals( 1, statistics.getSecondLevelCacheHitCount() );
-
-						for ( SimpleEntity entity : entities ) {
-							assertTrue( session.contains( entity ) );
-						}
-						final int paramCount = StringHelper.countUnquoted(
-								statementInspector.getSqlQueries().get( 0 ),
-								'?'
-						);
-
-						final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
-						if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
-							assertThat( paramCount, is( 1 ) );
-						}
-						else {
-							assertThat( paramCount, is( 2 ) );
-						}
-					}
-				}
-		);
+			final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
+			if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
+				assertThat( paramCount, is( 1 ) );
+			}
+			else {
+				assertThat( paramCount, is( 2 ) );
+			}
+		} );
 	}
 
 	@Test
@@ -529,63 +404,35 @@ public class MultiLoadTest {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
-		scope.inTransaction(
-				session -> {
-					session.remove( session.find( SimpleEntity.class, 2 ) );
+		scope.inTransaction(session -> {
+			session.remove( session.find( SimpleEntity.class, 2 ) );
 
-					statementInspector.clear();
+			statementInspector.clear();
 
-					{
-						// Multi-load 3 items and ensure that it pulls 2 from the database & 1 from the cache.
-						final List<SimpleEntity> entities = session.byMultipleIds( SimpleEntity.class )
-								.with( CacheMode.NORMAL )
-								.enableSessionCheck( true )
-								.enableOrderedReturn( true )
-								.multiLoad( ids( 3 ) );
-						assertEquals( 3, entities.size() );
+			// Multi-load 3 items and ensure that it pulls 2 from the database & 1 from the cache.
+			var entities = session.findMultiple( SimpleEntity.class,
+					ids( 3 ),
+					CacheMode.NORMAL,
+					SessionCheckMode.ENABLED,
+					OrderingMode.ORDERED
+			);
+			assertEquals( 3, entities.size() );
 
-						assertNull( entities.get( 1 ) );
+			assertNull( entities.get( 1 ) );
 
-						final int paramCount = StringHelper.countUnquoted(
-								statementInspector.getSqlQueries().get( 0 ),
-								'?'
-						);
+			final int paramCount = StringHelper.countUnquoted(
+					statementInspector.getSqlQueries().get( 0 ),
+					'?'
+			);
 
-						final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
-						if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
-							assertThat( paramCount, is( 1 ) );
-						}
-						else {
-							assertThat( paramCount, is( 2 ) );
-						}
-					}
-
-					{
-						// Multi-load 3 items and ensure that it pulls 2 from the database & 1 from the cache.
-						final List<SimpleEntity> entities = session.findMultiple( SimpleEntity.class, idList( 3 ),
-								CacheMode.NORMAL,
-								SessionCheckMode.ENABLED,
-								OrderingMode.ORDERED
-						);
-						assertEquals( 3, entities.size() );
-
-						assertNull( entities.get( 1 ) );
-
-						final int paramCount = StringHelper.countUnquoted(
-								statementInspector.getSqlQueries().get( 0 ),
-								'?'
-						);
-
-						final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
-						if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
-							assertThat( paramCount, is( 1 ) );
-						}
-						else {
-							assertThat( paramCount, is( 2 ) );
-						}
-					}
-				}
-		);
+			final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
+			if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
+				assertThat( paramCount, is( 1 ) );
+			}
+			else {
+				assertThat( paramCount, is( 2 ) );
+			}
+		} );
 	}
 
 	@Test
@@ -594,74 +441,40 @@ public class MultiLoadTest {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
-		scope.inTransaction(
-				session -> {
-					session.remove( session.find( SimpleEntity.class, 2 ) );
+		scope.inTransaction(session -> {
+			session.remove( session.find( SimpleEntity.class, 2 ) );
 
-					statementInspector.clear();
+			statementInspector.clear();
 
-					{
-						// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
-						final List<SimpleEntity> entities = session.byMultipleIds( SimpleEntity.class )
-								.with( CacheMode.NORMAL )
-								.enableSessionCheck( true )
-								.enableOrderedReturn( true )
-								.enableReturnOfDeletedEntities( true )
-								.multiLoad( ids( 3 ) );
-						assertEquals( 3, entities.size() );
+			// Multi-load 3 items and ensure that it pulls 2 from the database & 1 from the cache.
+			final List<SimpleEntity> entities = session.findMultiple( SimpleEntity.class, ids( 3 ),
+					CacheMode.NORMAL,
+					SessionCheckMode.ENABLED,
+					OrderingMode.ORDERED,
+					RemovalsMode.INCLUDE
+			);
+			assertEquals( 3, entities.size() );
 
-						SimpleEntity deletedEntity = entities.get( 1 );
-						assertNotNull( deletedEntity );
+			SimpleEntity deletedEntity = entities.get( 1 );
+			assertNotNull( deletedEntity );
 
-						EntityEntry entry = session.getPersistenceContext()
-								.getEntry( deletedEntity );
-						assertTrue( entry.getStatus().isDeletedOrGone() );
+			EntityEntry entry = session.getPersistenceContext()
+					.getEntry( deletedEntity );
+			assertTrue( entry.getStatus().isDeletedOrGone() );
 
-						final int paramCount = StringHelper.countUnquoted(
-								statementInspector.getSqlQueries().get( 0 ),
-								'?'
-						);
+			final int paramCount = StringHelper.countUnquoted(
+					statementInspector.getSqlQueries().get( 0 ),
+					'?'
+			);
 
-						final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
-						if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
-							assertThat( paramCount, is( 1 ) );
-						}
-						else {
-							assertThat( paramCount, is( 2 ) );
-						}
-					}
-
-					{
-						// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
-						final List<SimpleEntity> entities = session.findMultiple( SimpleEntity.class, idList( 3 ),
-								CacheMode.NORMAL,
-								SessionCheckMode.ENABLED,
-								OrderingMode.ORDERED,
-								RemovalsMode.INCLUDE
-						);
-						assertEquals( 3, entities.size() );
-
-						SimpleEntity deletedEntity = entities.get( 1 );
-						assertNotNull( deletedEntity );
-
-						EntityEntry entry = session.getPersistenceContext()
-								.getEntry( deletedEntity );
-						assertTrue( entry.getStatus().isDeletedOrGone() );
-
-						final int paramCount = StringHelper.countUnquoted(
-								statementInspector.getSqlQueries().get( 0 ),
-								'?'
-						);
-
-						final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
-						if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
-							assertThat( paramCount, is( 1 ) );
-						}
-						else {
-							assertThat( paramCount, is( 2 ) );
-						}
-					}
-				} );
+			final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
+			if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
+				assertThat( paramCount, is( 1 ) );
+			}
+			else {
+				assertThat( paramCount, is( 2 ) );
+			}
+		} );
 	}
 
 	@Test
@@ -670,62 +483,34 @@ public class MultiLoadTest {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
-		scope.inTransaction(
-				session -> {
-					session.remove( session.find( SimpleEntity.class, 2 ) );
+		scope.inTransaction(session -> {
+			session.remove( session.find( SimpleEntity.class, 2 ) );
 
-					statementInspector.clear();
+			statementInspector.clear();
 
-					{
-						// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
-						final List<SimpleEntity> entities = session.byMultipleIds( SimpleEntity.class )
-								.with( CacheMode.NORMAL )
-								.enableSessionCheck( true )
-								.enableOrderedReturn( false )
-								.multiLoad( ids( 3 ) );
-						assertEquals( 3, entities.size() );
+			// Multi-load 3 items and ensure that it pulls 2 from the database & 1 from the cache.
+			final List<SimpleEntity> entities = session.findMultiple( SimpleEntity.class, ids( 3 ),
+					CacheMode.NORMAL,
+					SessionCheckMode.ENABLED,
+					OrderingMode.UNORDERED
+			);
+			assertEquals( 3, entities.size() );
 
-						assertTrue( entities.stream().anyMatch( Objects::isNull ) );
+			assertTrue( entities.stream().anyMatch( Objects::isNull ) );
 
-						final int paramCount = StringHelper.countUnquoted(
-								statementInspector.getSqlQueries().get( 0 ),
-								'?'
-						);
+			final int paramCount = StringHelper.countUnquoted(
+					statementInspector.getSqlQueries().get( 0 ),
+					'?'
+			);
 
-						final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
-						if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
-							assertThat( paramCount, is( 1 ) );
-						}
-						else {
-							assertThat( paramCount, is( 2 ) );
-						}
-					}
-
-					{
-						// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
-						final List<SimpleEntity> entities = session.findMultiple( SimpleEntity.class, idList( 3 ),
-								CacheMode.NORMAL,
-								SessionCheckMode.ENABLED,
-								OrderingMode.UNORDERED
-						);
-						assertEquals( 3, entities.size() );
-
-						assertTrue( entities.stream().anyMatch( Objects::isNull ) );
-
-						final int paramCount = StringHelper.countUnquoted(
-								statementInspector.getSqlQueries().get( 0 ),
-								'?'
-						);
-
-						final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
-						if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
-							assertThat( paramCount, is( 1 ) );
-						}
-						else {
-							assertThat( paramCount, is( 2 ) );
-						}
-					}
-				} );
+			final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
+			if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
+				assertThat( paramCount, is( 1 ) );
+			}
+			else {
+				assertThat( paramCount, is( 2 ) );
+			}
+		} );
 	}
 
 	@Test
@@ -734,86 +519,51 @@ public class MultiLoadTest {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
-		scope.inTransaction(
-				session -> {
-					session.remove( session.find( SimpleEntity.class, 2 ) );
+		scope.inTransaction(session -> {
+			session.remove( session.find( SimpleEntity.class, 2 ) );
 
-					statementInspector.clear();
+			statementInspector.clear();
 
-					{
-						// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
-						final List<SimpleEntity> entities = session.byMultipleIds( SimpleEntity.class )
-								.with( CacheMode.NORMAL )
-								.enableSessionCheck( true )
-								.enableOrderedReturn( false )
-								.enableReturnOfDeletedEntities( true )
-								.multiLoad( ids( 3 ) );
-						assertEquals( 3, entities.size() );
+			// Multi-load 3 items and ensure that it pulls 2 from the database & 1 from the cache.
+			final List<SimpleEntity> entities =session.findMultiple( SimpleEntity.class,
+					ids( 3 ),
+					CacheMode.NORMAL,
+					SessionCheckMode.ENABLED,
+					OrderingMode.UNORDERED,
+					RemovalsMode.INCLUDE
+			);
+			assertEquals( 3, entities.size() );
 
-						SimpleEntity deletedEntity = entities.stream().filter( simpleEntity -> simpleEntity.getId()
-								.equals( 2 ) ).findAny().orElse( null );
-						assertNotNull( deletedEntity );
+			SimpleEntity deletedEntity = entities.stream().filter( simpleEntity -> simpleEntity.getId()
+					.equals( 2 ) ).findAny().orElse( null );
+			assertNotNull( deletedEntity );
 
-						EntityEntry entry = session.getPersistenceContext().getEntry( deletedEntity );
-						assertTrue( entry.getStatus().isDeletedOrGone() );
+			EntityEntry entry = session.getPersistenceContext().getEntry( deletedEntity );
+			assertTrue( entry.getStatus().isDeletedOrGone() );
 
-						final int paramCount = StringHelper.countUnquoted(
-								statementInspector.getSqlQueries().get( 0 ),
-								'?'
-						);
+			final int paramCount = StringHelper.countUnquoted(
+					statementInspector.getSqlQueries().get( 0 ),
+					'?'
+			);
 
-						final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
-						if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
-							assertThat( paramCount, is( 1 ) );
-						}
-						else {
-							assertThat( paramCount, is( 2 ) );
-						}
-					}
-
-					{
-						// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
-						final List<SimpleEntity> entities =session.findMultiple( SimpleEntity.class, idList( 3 ),
-							CacheMode.NORMAL,
-							SessionCheckMode.ENABLED,
-							OrderingMode.UNORDERED,
-							RemovalsMode.INCLUDE
-					);
-						assertEquals( 3, entities.size() );
-
-						SimpleEntity deletedEntity = entities.stream().filter( simpleEntity -> simpleEntity.getId()
-								.equals( 2 ) ).findAny().orElse( null );
-						assertNotNull( deletedEntity );
-
-						EntityEntry entry = session.getPersistenceContext().getEntry( deletedEntity );
-						assertTrue( entry.getStatus().isDeletedOrGone() );
-
-						final int paramCount = StringHelper.countUnquoted(
-								statementInspector.getSqlQueries().get( 0 ),
-								'?'
-						);
-
-						final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
-						if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
-							assertThat( paramCount, is( 1 ) );
-						}
-						else {
-							assertThat( paramCount, is( 2 ) );
-						}
-					}
-				} );
+			final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
+			if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
+				assertThat( paramCount, is( 1 ) );
+			}
+			else {
+				assertThat( paramCount, is( 2 ) );
+			}
+		} );
 	}
 
 	@Test
 	public void testMultiLoadWithCacheModeIgnore(SessionFactoryScope scope) {
 		// do the multi-load, telling Hibernate to IGNORE the L2 cache -
-		//		the end result should be that the cache is (still) empty afterwards
-		List<SimpleEntity> list = scope.fromTransaction(
-				session ->
-						session.byMultipleIds( SimpleEntity.class )
-								.with( CacheMode.IGNORE )
-								.multiLoad( ids( 56 ) )
-		);
+		//		the end result should be that the cache is (still) empty afterward
+		var list = scope.fromTransaction(session -> session.findMultiple( SimpleEntity.class,
+				ids(56),
+				CacheMode.IGNORE
+		) );
 		assertEquals( 56, list.size() );
 		for ( SimpleEntity entity : list ) {
 			assertFalse( scope.getSessionFactory().getCache().containsEntity( SimpleEntity.class, entity.getId() ) );
@@ -827,47 +577,26 @@ public class MultiLoadTest {
 				scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( SimpleEntity.class.getName() )
 		);
 
-		scope.inTransaction(
-				session -> {
-					// create a proxy, which should add an entry to the BatchFetchQueue
-					SimpleEntity first = session.byId( SimpleEntity.class ).getReference( 1 );
-					assertTrue( session.getPersistenceContext()
-										.getBatchFetchQueue()
-										.containsEntityKey( entityKey ) );
-
-					// now bulk load, which should clean up the BatchFetchQueue entry
-					{
-						final List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class )
-								.enableSessionCheck( true )
-								.multiLoad( ids( 56 ) );
-						assertEquals( 56, list.size() );
-						assertFalse( session.getPersistenceContext()
+		scope.inTransaction(session -> {
+			// create a proxy, which should add an entry to the BatchFetchQueue
+			var first = session.getReference( SimpleEntity.class, 1 );
+			assertTrue( session.getPersistenceContext()
 								.getBatchFetchQueue()
 								.containsEntityKey( entityKey ) );
-					}
 
-					{
-						final List<SimpleEntity> list = session.findMultiple( SimpleEntity.class, idList( 56 ),
-								SessionCheckMode.ENABLED );
-						assertEquals( 56, list.size() );
-						assertFalse( session.getPersistenceContext()
-								.getBatchFetchQueue()
-								.containsEntityKey( entityKey ) );
-					}
-				}
-		);
+				final List<SimpleEntity> list = session.findMultiple( SimpleEntity.class,
+						ids( 56 ),
+						SessionCheckMode.ENABLED
+				);
+				assertEquals( 56, list.size() );
+				assertFalse( session.getPersistenceContext()
+						.getBatchFetchQueue()
+						.containsEntityKey( entityKey ) );
+		} );
 	}
 
-	private Integer[] ids(int count) {
-		Integer[] ids = new Integer[count];
-		for ( int i = 1; i <= count; i++ ) {
-			ids[i-1] = i;
-		}
-		return ids;
-	}
-
-	private List<Integer> idList(int count) {
-		List<Integer> ids = new ArrayList<>(count);
+	private List<Integer> ids(int count) {
+		var ids = new ArrayList<Integer>(count);
 		for ( int i = 1; i <= count; i++ ) {
 			ids.add(i);
 		}

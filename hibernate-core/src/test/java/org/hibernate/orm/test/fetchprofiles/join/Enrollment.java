@@ -4,14 +4,11 @@
  */
 package org.hibernate.orm.test.fetchprofiles.join;
 
-
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class Enrollment {
-	private Long id;
+	private Integer id;
 	private CourseOffering offering;
 	private Student student;
 	private int finalGrade;
@@ -19,16 +16,17 @@ public class Enrollment {
 	public Enrollment() {
 	}
 
-	public Enrollment(CourseOffering offering, Student student) {
+	public Enrollment(Integer id, CourseOffering offering, Student student) {
+		this.id = id;
 		this.offering = offering;
 		this.student = student;
 	}
 
-	public Long getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 

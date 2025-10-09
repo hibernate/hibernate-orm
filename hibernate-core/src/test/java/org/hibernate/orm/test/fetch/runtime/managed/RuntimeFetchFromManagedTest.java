@@ -4,157 +4,136 @@
  */
 package org.hibernate.orm.test.fetch.runtime.managed;
 
-import java.util.Collections;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
 import org.hibernate.Hibernate;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.query.Query;
-
-import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.cfg.CacheSettings.USE_SECOND_LEVEL_CACHE;
 
 /**
  * @author Steve Ebersole
  */
-@JiraKey( value = "HHH-13152" )
-public class RuntimeFetchFromManagedTest extends BaseNonConfigCoreFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@JiraKey( "HHH-13152" )
+@ServiceRegistry(settings = @Setting(name = USE_SECOND_LEVEL_CACHE, value = "false"))
+@DomainModel(annotatedClasses = {RuntimeFetchFromManagedTest.RootEntity.class, RuntimeFetchFromManagedTest.ChildEntity.class})
+@SessionFactory
+public class RuntimeFetchFromManagedTest {
 
 	@Test
-	public void testFetchingFromManagedEntityHql() {
-		inTransaction(
-				session -> {
-					{
-						// let's load the root - because the link to child is lazy, this should
-						// not load it
-						final RootEntity rootEntity = session.get( RootEntity.class, 2 );
-						assertThat( Hibernate.isInitialized( rootEntity ), is( true ) );
-						assertThat( Hibernate.isInitialized( rootEntity.getChild() ), is( false ) );
-					}
+	public void testFetchingFromManagedEntityHql(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction(session -> {
+			{
+				// let's load the root - because the link to child is lazy, this should
+				// not load it
+				final RootEntity rootEntity = session.get( RootEntity.class, 2 );
+				assertThat( Hibernate.isInitialized( rootEntity ), is( true ) );
+				assertThat( Hibernate.isInitialized( rootEntity.getChild() ), is( false ) );
+			}
 
-					{
-						// now try to perform an HQL join fetch
-						final RootEntity rootEntity = session.createQuery(
-								"select r from RootEntity r join fetch r.child",
-								RootEntity.class
-						).uniqueResult();
-						assertThat( Hibernate.isInitialized( rootEntity ), is( true ) );
-						assertThat( Hibernate.isInitialized( rootEntity.getChild() ), is( true ) );
-					}
-				}
-		);
+			{
+				// now try to perform an HQL join fetch
+				final RootEntity rootEntity = session.createQuery(
+						"select r from RootEntity r join fetch r.child",
+						RootEntity.class
+				).uniqueResult();
+				assertThat( Hibernate.isInitialized( rootEntity ), is( true ) );
+				assertThat( Hibernate.isInitialized( rootEntity.getChild() ), is( true ) );
+			}
+		} );
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "", message = "The entity is returned directly from the PC" )
-	public void testFetchingFromManagedEntityEntityGraphLoad() {
-		inTransaction(
-				session -> {
-					{
-						// let's load the root - because the link to child is lazy, this should
-						// not load it
-						final RootEntity rootEntity = session.get( RootEntity.class, 2 );
-						assertThat( Hibernate.isInitialized( rootEntity ), is( true ) );
-						assertThat( Hibernate.isInitialized( rootEntity.getChild() ), is( false ) );
-					}
+	@FailureExpected(reason = "The entity is returned directly from the PC" )
+	public void testFetchingFromManagedEntityEntityGraphLoad(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction(session -> {
+			{
+				// let's load the root - because the link to child is lazy, this should
+				// not load it
+				final RootEntity rootEntity = session.get( RootEntity.class, 2 );
+				assertThat( Hibernate.isInitialized( rootEntity ), is( true ) );
+				assertThat( Hibernate.isInitialized( rootEntity.getChild() ), is( false ) );
+			}
 
-					{
-						// now try to load the root entity again using an EntityGraph that specifies to fetch child
-						final RootGraphImplementor<RootEntity> entityGraph = session.createEntityGraph( RootEntity.class );
-						entityGraph.addAttributeNode( "child" );
+			{
+				// now try to load the root entity again using an EntityGraph that specifies to fetch child
+				final RootGraphImplementor<RootEntity> entityGraph = session.createEntityGraph( RootEntity.class );
+				entityGraph.addAttributeNode( "child" );
 
-						final RootEntity rootEntity = session.find(
-								RootEntity.class,
-								2,
-								Collections.singletonMap( "javax.persistence.loadgraph", entityGraph )
-						);
-						assertThat( Hibernate.isInitialized( rootEntity ), is( true ) );
-						assertThat( Hibernate.isInitialized( rootEntity.getChild() ), is( true ) );
-					}
-				}
-		);
+				final RootEntity rootEntity = session.find(
+						RootEntity.class,
+						2,
+						Collections.singletonMap( "javax.persistence.loadgraph", entityGraph )
+				);
+				assertThat( Hibernate.isInitialized( rootEntity ), is( true ) );
+				assertThat( Hibernate.isInitialized( rootEntity.getChild() ), is( true ) );
+			}
+		} );
 	}
 
 	@Test
-	public void testFetchingFromManagedEntityEntityGraphHql() {
-		inTransaction(
-				session -> {
-					{
-						// let's load the root - because the link to child is lazy, this should
-						// not load it
-						final RootEntity rootEntity = session.get( RootEntity.class, 2 );
-						assertThat( Hibernate.isInitialized( rootEntity ), is( true ) );
-						assertThat( Hibernate.isInitialized( rootEntity.getChild() ), is( false ) );
-					}
+	public void testFetchingFromManagedEntityEntityGraphHql(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction(session -> {
+			{
+				// let's load the root - because the link to child is lazy, this should
+				// not load it
+				final RootEntity rootEntity = session.get( RootEntity.class, 2 );
+				assertThat( Hibernate.isInitialized( rootEntity ), is( true ) );
+				assertThat( Hibernate.isInitialized( rootEntity.getChild() ), is( false ) );
+			}
 
-					{
-						// now try to query the root entity again using an EntityGraph that specifies to fetch child
-						final RootGraphImplementor<RootEntity> entityGraph = session.createEntityGraph( RootEntity.class );
-						entityGraph.addAttributeNode( "child" );
+			{
+				// now try to query the root entity again using an EntityGraph that specifies to fetch child
+				final RootGraphImplementor<RootEntity> entityGraph = session.createEntityGraph( RootEntity.class );
+				entityGraph.addAttributeNode( "child" );
 
-						final Query<RootEntity> query = session.createQuery(
-								"select r from RootEntity r",
-								RootEntity.class
-						);
+				final Query<RootEntity> query = session.createQuery(
+						"select r from RootEntity r",
+						RootEntity.class
+				);
 
-						final RootEntity rootEntity = query.setHint( "javax.persistence.loadgraph", entityGraph ).uniqueResult();
-						assertThat( Hibernate.isInitialized( rootEntity ), is( true ) );
-						assertThat( Hibernate.isInitialized( rootEntity.getChild() ), is( true ) );
-					}
-				}
-		);
+				final RootEntity rootEntity = query.setHint( "javax.persistence.loadgraph", entityGraph ).uniqueResult();
+				assertThat( Hibernate.isInitialized( rootEntity ), is( true ) );
+				assertThat( Hibernate.isInitialized( rootEntity.getChild() ), is( true ) );
+			}
+		} );
 	}
 
-	@Before
-	public void createTestData() {
+	@BeforeEach
+	public void createTestData(SessionFactoryScope factoryScope) {
 		// create some test
-		inTransaction(
-				session -> {
-					final ChildEntity child = new ChildEntity( 1, "child" );
-					session.persist( child );
+		factoryScope.inTransaction(session -> {
+			final ChildEntity child = new ChildEntity( 1, "child" );
+			session.persist( child );
 
-					final RootEntity root = new RootEntity( 2, "root", child );
-					session.persist( root );
-				}
-		);
+			final RootEntity root = new RootEntity( 2, "root", child );
+			session.persist( root );
+		} );
 	}
 
-	@After
-	public void cleanUpTestData() {
-		inTransaction(
-				session -> {
-					session.createQuery( "delete from RootEntity" ).executeUpdate();
-					session.createQuery( "delete from ChildEntity" ).executeUpdate();
-				}
-		);
-	}
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( RootEntity.class );
-		sources.addAnnotatedClass( ChildEntity.class );
+	@AfterEach
+	public void cleanUpTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Entity( name = "RootEntity" )

@@ -14,34 +14,33 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-
 import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.util.ExceptionUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Vlad Mihalcea
  */
-
-public class UniqueConstraintTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Book.class,
-			Author.class,
-		};
+@SuppressWarnings("JUnitMalformedDeclaration")
+@Jpa(annotatedClasses = {
+		UniqueConstraintTest.Book.class,
+		UniqueConstraintTest.Author.class,
+})
+public class UniqueConstraintTest {
+	@AfterEach
+	void tearDown(EntityManagerFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void test() {
+	public void test(EntityManagerFactoryScope factories) {
 		//tag::schema-generation-columns-unique-constraint-persist-example[]
-		Author _author = doInJPA(this::entityManagerFactory, entityManager -> {
+		Author _author = factories.fromTransaction( entityManager -> {
 			Author author = new Author();
 			author.setFirstName("Vlad");
 			author.setLastName("Mihalcea");
@@ -56,7 +55,7 @@ public class UniqueConstraintTest extends BaseEntityManagerFunctionalTestCase {
 		});
 
 		try {
-			doInJPA(this::entityManagerFactory, entityManager -> {
+			factories.inTransaction( entityManager -> {
 				Book book = new Book();
 				book.setTitle("High-Performance Java Persistence");
 				book.setAuthor(_author);
@@ -64,7 +63,7 @@ public class UniqueConstraintTest extends BaseEntityManagerFunctionalTestCase {
 			});
 		}
 		catch (Exception expected) {
-			assertNotNull(ExceptionUtil.findCause(expected, ConstraintViolationException.class));
+			assertNotNull( ExceptionUtil.findCause(expected, ConstraintViolationException.class) );
 		}
 		//end::schema-generation-columns-unique-constraint-persist-example[]
 	}

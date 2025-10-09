@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Marco Belladelli
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
 @DomainModel(annotatedClasses = EnumUpdateTest.Person.class)
 public class EnumUpdateTest {
@@ -36,7 +37,7 @@ public class EnumUpdateTest {
 
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createMutationQuery( "delete from Person" ).executeUpdate() );
+		scope.dropData();
 	}
 
 	@Test

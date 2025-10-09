@@ -8,33 +8,31 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(H2Dialect.class)
-public class DirectVsQueryFetchingTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Department.class,
-			Employee.class,
-		};
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = {
+		DirectVsQueryFetchingTest.Department.class,
+		DirectVsQueryFetchingTest.Employee.class,
+})
+@SessionFactory
+public class DirectVsQueryFetchingTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Department department = new Department();
 			department.id = 1L;
 			entityManager.persist(department);
@@ -47,13 +45,13 @@ public class DirectVsQueryFetchingTest extends BaseEntityManagerFunctionalTestCa
 
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::fetching-direct-vs-query-direct-fetching-example[]
 			Employee employee = entityManager.find(Employee.class, 1L);
 			//end::fetching-direct-vs-query-direct-fetching-example[]
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::fetching-direct-vs-query-entity-query-example[]
 			Employee employee = entityManager.createQuery(
 					"select e " +

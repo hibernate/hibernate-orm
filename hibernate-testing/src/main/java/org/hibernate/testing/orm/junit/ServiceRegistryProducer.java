@@ -12,7 +12,11 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
  * @author Steve Ebersole
  */
 public interface ServiceRegistryProducer {
-	StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder);
+	default StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder) {
+		return builder.build();
+	}
 
-	void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder bsrb);
+	default void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder bsrb) {
+		// generally this is not the one we are interested in
+	}
 }

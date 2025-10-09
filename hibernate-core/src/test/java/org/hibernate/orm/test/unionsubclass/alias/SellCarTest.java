@@ -4,63 +4,37 @@
  */
 package org.hibernate.orm.test.unionsubclass.alias;
 
-import org.junit.Test;
-
-import org.hibernate.query.Query;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Strong Liu
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( value = "HHH-4825" )
-public class SellCarTest extends BaseCoreFunctionalTestCase {
+@DomainModel(xmlMappings = "org/hibernate/orm/test/unionsubclass/alias/mapping.hbm.xml")
+@SessionFactory
+public class SellCarTest {
+	@BeforeEach
+	void setUp(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			Seller stliu = new Seller();
+			stliu.setId( createID( "stliu" ) );
+			CarBuyer zd = new CarBuyer();
+			zd.setId( createID( "zd" ) );
+			zd.setSeller( stliu );
+			zd.setSellerName( stliu.getId().getName() );
+			stliu.getBuyers().add( zd );
 
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
-	}
-
-	@Override
-	public String[] getMappings() {
-		return new String[] { "unionsubclass/alias/mapping.hbm.xml" };
-	}
-
-	@Test
-	public void testSellCar() {
-		prepareData();
-		Session session = openSession();
-		Transaction tx = session.beginTransaction();
-		Query query = session.createQuery( "from Seller" );
-		Seller seller = (Seller) query.uniqueResult();
-		assertNotNull( seller );
-		assertEquals( 1, seller.getBuyers().size() );
-		tx.commit();
-		session.close();
-	}
-
-	private void prepareData() {
-		Session session = openSession();
-		Transaction tx = session.beginTransaction();
-		session.persist( createData() );
-		tx.commit();
-		session.close();
-	}
-
-	private Object createData() {
-		Seller stliu = new Seller();
-		stliu.setId( createID( "stliu" ) );
-		CarBuyer zd = new CarBuyer();
-		zd.setId( createID( "zd" ) );
-		zd.setSeller( stliu );
-		zd.setSellerName( stliu.getId().getName() );
-		stliu.getBuyers().add( zd );
-		return stliu;
+			session.persist( stliu );
+		} );
 	}
 
 	private PersonID createID( String name ) {
@@ -68,5 +42,19 @@ public class SellCarTest extends BaseCoreFunctionalTestCase {
 		id.setName( name );
 		id.setNum(100L);
 		return id;
+	}
+
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
+
+	@Test
+	public void testSellCar(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			Seller seller = session.createQuery( "from Seller", Seller.class ).uniqueResult();
+			Assertions.assertNotNull( seller );
+			Assertions.assertEquals( 1, seller.getBuyers().size() );
+		} );
 	}
 }

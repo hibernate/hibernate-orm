@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @Jpa(
 		properties = { @Setting(name = AvailableSettings.QUERY_STATISTICS_MAX_SIZE, value = "100") }
 )

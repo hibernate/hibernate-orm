@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Jan Schatteman
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				MultiNaturalIdLoadTest.SimpleNaturalIdEntity.class,

@@ -340,6 +340,7 @@ public abstract class AbstractServiceRegistryImpl
 		}
 	}
 
+	@Override
 	public boolean isActive() {
 		return active.get();
 	}

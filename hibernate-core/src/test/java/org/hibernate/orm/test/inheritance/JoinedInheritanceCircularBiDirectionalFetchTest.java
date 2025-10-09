@@ -4,19 +4,6 @@
  */
 package org.hibernate.orm.test.inheritance;
 
-import java.util.LinkedList;
-import java.util.List;
-
-import org.hibernate.Hibernate;
-
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.Jira;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -26,12 +13,24 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import org.hibernate.Hibernate;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.LinkedList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Marco Belladelli
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = {
 		JoinedInheritanceCircularBiDirectionalFetchTest.Animal.class,
 		JoinedInheritanceCircularBiDirectionalFetchTest.Cat.class,
@@ -43,6 +42,7 @@ public class JoinedInheritanceCircularBiDirectionalFetchTest {
 	@Test
 	public void testJoinSelectCat(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final Cat result = session.createQuery(
 					"select cat from Cat cat join cat.legs leg",
 					Cat.class
@@ -55,6 +55,7 @@ public class JoinedInheritanceCircularBiDirectionalFetchTest {
 	@Test
 	public void testJoinSelectLeg(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final List<Leg> resultList = session.createQuery(
 					"select leg from Cat cat join cat.legs leg",
 					Leg.class
@@ -66,7 +67,7 @@ public class JoinedInheritanceCircularBiDirectionalFetchTest {
 		} );
 	}
 
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Leg leg1 = new Leg( "leg1" );
@@ -79,12 +80,9 @@ public class JoinedInheritanceCircularBiDirectionalFetchTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from Leg" ).executeUpdate();
-			session.createMutationQuery( "delete from Animal" ).executeUpdate();
-		} );
+		scope.dropData();
 	}
 
 	@Entity( name = "Animal" )

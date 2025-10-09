@@ -15,12 +15,13 @@ import jakarta.persistence.Tuple;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = {
 		InheritanceToOneSubtypeJoinGroupByTest.Base.class,
 		InheritanceToOneSubtypeJoinGroupByTest.EntityA.class,
@@ -32,6 +33,7 @@ public class InheritanceToOneSubtypeJoinGroupByTest {
 	@Test
 	void testGroupByA(SessionFactoryScope scope) {
 		scope.inSession( session -> {
+			//noinspection removal
 			final EntityA result = session.createQuery(
 					"SELECT a FROM WhitelistEntry we JOIN we.primaryKey.a a group by a",
 					EntityA.class
@@ -43,6 +45,7 @@ public class InheritanceToOneSubtypeJoinGroupByTest {
 	@Test
 	void testGroupByB(SessionFactoryScope scope) {
 		scope.inSession( session -> {
+			//noinspection removal
 			final Tuple result = session.createQuery(
 					"SELECT b.id, b.bName FROM WhitelistEntry we JOIN we.primaryKey.b b group by b",
 					Tuple.class
@@ -51,7 +54,7 @@ public class InheritanceToOneSubtypeJoinGroupByTest {
 		} );
 	}
 
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final EntityA a = new EntityA();
@@ -70,11 +73,12 @@ public class InheritanceToOneSubtypeJoinGroupByTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.dropData();
 	}
 
+	@SuppressWarnings("unused")
 	@Entity(name = "Base")
 	@Inheritance
 	public static class Base {
@@ -97,6 +101,7 @@ public class InheritanceToOneSubtypeJoinGroupByTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity(name = "EntityB")
 	public static class EntityB extends Base {
 		private String bName;

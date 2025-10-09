@@ -15,62 +15,62 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 @JiraKey(value = "HHH-14585")
-public class WhereAnnotatedOneToManySizeTest extends BaseCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = { Region.class, City.class })
+@SessionFactory
+public class WhereAnnotatedOneToManySizeTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Region.class, City.class };
-	}
 
-	@Before
-	public void before() {
-		Region lazio = new Region();
-		lazio.setId( 1 );
-		lazio.setName( "Lazio" );
+	@BeforeEach
+	public void createTestData(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			Region lazio = new Region();
+			lazio.setId( 1 );
+			lazio.setName( "Lazio" );
 
-		Region lombardy = new Region();
-		lombardy.setId( 2 );
-		lombardy.setName( "Lombardy" );
+			Region lombardy = new Region();
+			lombardy.setId( 2 );
+			lombardy.setName( "Lombardy" );
 
-		City rome = new City();
-		rome.setId( 1 );
-		rome.setName( "Rome" );
-		rome.setDeleted( false );
-		rome.setRegion( lazio );
+			City rome = new City();
+			rome.setId( 1 );
+			rome.setName( "Rome" );
+			rome.setDeleted( false );
+			rome.setRegion( lazio );
 
-		City gradoli = new City();
-		gradoli.setId( 2 );
-		gradoli.setName( "Gradoli" );
-		gradoli.setDeleted( true );
-		gradoli.setRegion( lazio );
+			City gradoli = new City();
+			gradoli.setId( 2 );
+			gradoli.setName( "Gradoli" );
+			gradoli.setDeleted( true );
+			gradoli.setRegion( lazio );
 
-		City milan = new City();
-		milan.setId( 3 );
-		milan.setName( "Milan" );
-		milan.setDeleted( false );
-		milan.setRegion( lombardy );
+			City milan = new City();
+			milan.setId( 3 );
+			milan.setName( "Milan" );
+			milan.setDeleted( false );
+			milan.setRegion( lombardy );
 
-		City pavia = new City();
-		pavia.setId( 4 );
-		pavia.setName( "Pavia" );
-		pavia.setDeleted( false );
-		pavia.setRegion( lombardy );
+			City pavia = new City();
+			pavia.setId( 4 );
+			pavia.setName( "Pavia" );
+			pavia.setDeleted( false );
+			pavia.setRegion( lombardy );
 
-		lazio.getCities().add( rome );
-		lazio.getCities().add( gradoli );
+			lazio.getCities().add( rome );
+			lazio.getCities().add( gradoli );
 
-		lombardy.getCities().add( milan );
-		lombardy.getCities().add( pavia );
+			lombardy.getCities().add( milan );
+			lombardy.getCities().add( pavia );
 
-		inTransaction( session -> {
 			session.persist( lazio );
 			session.persist( lombardy );
 
@@ -81,22 +81,25 @@ public class WhereAnnotatedOneToManySizeTest extends BaseCoreFunctionalTestCase 
 		} );
 	}
 
-	@After
-	public void after() {
-		inTransaction( session -> {
-			session.createNativeQuery( "DELETE FROM City" ).executeUpdate();
-			session.createQuery( "DELETE FROM Region c" ).executeUpdate();
-		} );
+	@AfterEach
+	public void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	@SkipForDialect(value = DB2Dialect.class, comment = "DB2 does not support correlated subqueries in the ORDER BY clause")
-	@SkipForDialect(value = HANADialect.class, comment = "HANA db does not support correlated subqueries in the ORDER BY clause")
-	@SkipForDialect(value = TiDBDialect.class, comment = "TiDB db does not support correlated subqueries in the ORDER BY clause")
-	@SkipForDialect(value = SybaseDialect.class, comment = "Sybase db does not support subqueries in the ORDER BY clause")
-	@SkipForDialect(value = InformixDialect.class, comment = "Informix does not support correlated subqueries in the ORDER BY clause")
-	public void orderBy_sizeOf() {
-		inSession( session -> {
+	@SkipForDialect(dialectClass = DB2Dialect.class,
+			reason = "DB2 does not support correlated subqueries in the ORDER BY clause")
+	@SkipForDialect(dialectClass = HANADialect.class,
+			reason = "HANA db does not support correlated subqueries in the ORDER BY clause")
+	@SkipForDialect(dialectClass = TiDBDialect.class,
+			reason = "TiDB db does not support correlated subqueries in the ORDER BY clause")
+	@SkipForDialect(dialectClass = SybaseDialect.class,
+			matchSubTypes = true,
+			reason = "Sybase db does not support subqueries in the ORDER BY clause")
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Informix does not support correlated subqueries in the ORDER BY clause")
+	public void orderBy_sizeOf(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
 			Query<Object[]> query = session.createQuery(
 					"select r, size(r.cities) from Region r order by size(r.cities) desc" );
 			List<Object[]> result = query.getResultList();
@@ -106,8 +109,8 @@ public class WhereAnnotatedOneToManySizeTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void project_sizeOf() {
-		inSession( session -> {
+	public void project_sizeOf(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
 			Query<Integer> query = session.createQuery(
 					"SELECT size(r.cities) FROM Region r", Integer.class );
 			List<Integer> cityCounts = query.getResultList();

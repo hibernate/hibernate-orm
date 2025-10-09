@@ -25,63 +25,48 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * @author Jan Schatteman
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( value = "HHH-1661")
 @RequiresDialect( H2Dialect.class )
 public class StaleVersionedObjectMergeTest {
 
-	@DomainModel(
-			annotatedClasses = { A.class }
-	)
+	@DomainModel(annotatedClasses = A.class)
 	@SessionFactory
 	@Test
 	public void testStaleNonVersionEntityMerged(SessionFactoryScope scope) {
 		A a = new A();
 		a.id = 3;
-		scope.inTransaction(
-				session -> session.persist( a )
-		);
+		scope.inTransaction( session -> session.persist( a ) );
 
-		scope.inTransaction(
-				session -> {
-					A aGet = session.get( A.class, a.getId() );
-					session.remove( aGet );
-				}
-		);
+		scope.inTransaction(session -> {
+			A aGet = session.find( A.class, a.getId() );
+			session.remove( aGet );
+		} );
 
-		scope.inTransaction(
-				session -> session.merge( a )
-		);
+		scope.inTransaction(session -> session.merge( a ) );
 	}
 
-	@DomainModel(
-			annotatedClasses = { B.class }
-	)
+	@DomainModel(annotatedClasses = B.class)
 	@SessionFactory
 	@Test
 	public void testStalePrimitiveVersionEntityMerged(SessionFactoryScope scope) {
 		B b = new B();
 		b.id = 3;
-		scope.inTransaction(
-				session -> session.persist( b )
-		);
+		scope.inTransaction( session -> session.persist( b ) );
 
 		scope.inTransaction(
 				session -> {
-					B aGet = session.get( B.class, b.getId() );
+					B aGet = session.find( B.class, b.getId() );
 					session.remove( aGet );
 				}
 		);
 
 		// we have no way to detect that the instance
 		// was removed so it is treated as new
-		scope.inTransaction(
-				session -> session.merge( b )
-		);
+		scope.inTransaction(session -> session.merge( b ) );
 	}
 
-	@DomainModel(
-			annotatedClasses = { C.class }
-	)
+	@DomainModel(annotatedClasses = C.class)
 	@SessionFactory
 	@Test
 	public void testStalePrimitiveAndWrapperVersionEntityMerged(SessionFactoryScope scope) {
@@ -90,66 +75,40 @@ public class StaleVersionedObjectMergeTest {
 		b.version = 1;
 		assertThrows(
 				EntityExistsException.class,
-				() -> {
-					scope.inTransaction(
-							session -> session.persist( b )
-					);
-				}
+				() -> scope.inTransaction(session -> session.persist( b ) )
 		);
 
 		C c = new C();
 		c.id = 6;
-		scope.inTransaction(
-				session -> session.persist( c )
-		);
+		scope.inTransaction(session -> session.persist( c ) );
 
-		scope.inTransaction(
-				session -> {
-					C cGet = session.get( C.class, c.getId() );
-					session.remove( cGet );
-				}
-		);
+		scope.inTransaction(session -> {
+			C cGet = session.find( C.class, c.getId() );
+			session.remove( cGet );
+		} );
 
 		assertThrows(
 				OptimisticLockException.class,
-				() -> {
-					scope.inTransaction(
-							session -> {
-								session.merge( c );
-							}
-					);
-				}
+				() -> scope.inTransaction(session -> session.merge( c ) )
 		);
 	}
 
-	@DomainModel(
-			annotatedClasses = { D.class }
-	)
+	@DomainModel(annotatedClasses = D.class)
 	@SessionFactory
 	@Test
 	public void testStaleTimestampVersionEntityMerged(SessionFactoryScope scope) {
 		D d = new D();
 		d.id = 8;
-		scope.inTransaction(
-				session -> session.persist( d )
-		);
+		scope.inTransaction(session -> session.persist( d ) );
 
-		scope.inTransaction(
-				session -> {
-					D dGet = session.get( D.class, d.getId() );
-					session.remove( dGet );
-				}
-		);
+		scope.inTransaction(session -> {
+			D dGet = session.find( D.class, d.getId() );
+			session.remove( dGet );
+		} );
 
 		assertThrows(
 				OptimisticLockException.class,
-				() -> {
-					scope.inTransaction(
-							session -> {
-								session.merge( d );
-							}
-					);
-				}
+				() -> scope.inTransaction(session -> session.merge( d ) )
 		);
 	}
 

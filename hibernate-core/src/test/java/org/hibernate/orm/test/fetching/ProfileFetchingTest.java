@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.fetching;
 
-import java.util.ArrayList;
-import java.util.List;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -13,39 +11,44 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-
 import org.hibernate.Session;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Test;
+import java.util.ArrayList;
+import java.util.List;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Vlad Mihalcea
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialect(H2Dialect.class)
-public class ProfileFetchingTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Department.class,
-				Employee.class,
-				Project.class
-		};
+@DomainModel(annotatedClasses = {
+		ProfileFetchingTest.Department.class,
+		ProfileFetchingTest.Employee.class,
+		ProfileFetchingTest.Project.class
+})
+@SessionFactory
+public class ProfileFetchingTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Department department = new Department();
 			department.id = 1L;
 			entityManager.persist(department);
@@ -65,10 +68,9 @@ public class ProfileFetchingTest extends BaseEntityManagerFunctionalTestCase {
 			employee2.accessLevel = 1;
 			employee2.department = department;
 			entityManager.persist(employee2);
-
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		factoryScope.inTransaction( entityManager -> {
 			String username = "user1";
 			String password = "3fabb4de8f1ee2e97d7793bab2db1116";
 
@@ -78,7 +80,7 @@ public class ProfileFetchingTest extends BaseEntityManagerFunctionalTestCase {
 			session.enableFetchProfile("employee.projects");
 			Employee employee = session.bySimpleNaturalId(Employee.class).load(username);
 			//end::fetching-strategies-dynamic-fetching-profile-example[]
-			assertNotNull(employee);
+			assertNotNull( employee );
 		});
 
 	}

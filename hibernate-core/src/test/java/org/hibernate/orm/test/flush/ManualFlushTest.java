@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.flush;
 
-import java.util.ArrayList;
-import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,36 +11,40 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.jboss.logging.Logger;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertTrue;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Vlad Mihalcea
  */
-public class ManualFlushTest extends BaseEntityManagerFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = {
+		ManualFlushTest.Person.class,
+		ManualFlushTest.Phone.class,
+		ManualFlushTest.Advertisement.class,
+})
+@SessionFactory
+public class ManualFlushTest {
+	private final Logger log = Logger.getLogger( ManualFlushTest.class );
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{
-				Person.class,
-				Phone.class,
-				Advertisement.class,
-		};
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testFlushSQL() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			entityManager.createNativeQuery("delete from Person").executeUpdate();
-		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testFlushSQL(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			log.info("testFlushSQL");
 			//tag::flushing-manual-flush-example[]
 			Person person = new Person("John Doe");
@@ -51,12 +53,12 @@ public class ManualFlushTest extends BaseEntityManagerFunctionalTestCase {
 			Session session = entityManager.unwrap(Session.class);
 			session.setHibernateFlushMode(FlushMode.MANUAL);
 
-			assertTrue(((Number) entityManager
-				.createQuery("select count(id) from Person")
-				.getSingleResult()).intValue() == 0);
+			Assertions.assertEquals( 0, ((Number) entityManager
+					.createQuery( "select count(id) from Person" )
+					.getSingleResult()).intValue() );
 
-			assertTrue( session.createNativeQuery( "select count(*) from Person", Integer.class )
-					.uniqueResult() == 0);
+			Assertions.assertEquals( 0, (int) session.createNativeQuery( "select count(*) from Person", Integer.class )
+					.uniqueResult() );
 			//end::flushing-manual-flush-example[]
 		});
 	}

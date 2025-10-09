@@ -36,12 +36,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-11477")
 // Note that Cockroach doesn't support LOB functions. See https://github.com/cockroachdb/cockroach/issues/26725
 @RequiresDialect(PostgreSQLDialect.class)
-@DomainModel(
-		annotatedClasses = LobStringTest.TestEntity.class
-)
+@DomainModel(annotatedClasses = LobStringTest.TestEntity.class)
 @SessionFactory
 public class LobStringTest {
 
@@ -69,7 +68,7 @@ public class LobStringTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@Test

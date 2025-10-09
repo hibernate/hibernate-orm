@@ -3,35 +3,38 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.type.java;
-import java.io.Serializable;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.util.TimeZone;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.env.internal.NonContextualLobCreator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-
 import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.orm.junit.JiraKey;
+import java.io.Serializable;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.util.TimeZone;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractDescriptorTest<T> extends BaseUnitTestCase {
+@BaseUnitTest
+public abstract class AbstractDescriptorTest<T> {
 	protected static class Data<T> {
 		private final T originalValue;
 		private final T copyOfOriginalValue;
@@ -108,7 +111,7 @@ public abstract class AbstractDescriptorTest<T> extends BaseUnitTestCase {
 
 	private Data<T> testData;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		testData = getTestData();
 	}
@@ -128,7 +131,7 @@ public abstract class AbstractDescriptorTest<T> extends BaseUnitTestCase {
 	@Test
 	public void testEquality() {
 		if ( isIdentityDifferentFromEquality() ) {
-			assertFalse( testData.originalValue == testData.copyOfOriginalValue );
+			assertNotSame( testData.originalValue, testData.copyOfOriginalValue );
 		}
 		assertTrue( typeDescriptor.areEqual( testData.originalValue, testData.originalValue ) );
 		assertTrue( typeDescriptor.areEqual( testData.originalValue, testData.copyOfOriginalValue ) );
@@ -162,7 +165,7 @@ public abstract class AbstractDescriptorTest<T> extends BaseUnitTestCase {
 
 	@Test
 	public void testMutabilityPlan() {
-		assertTrue( shouldBeMutable() == typeDescriptor.getMutabilityPlan().isMutable() );
+		assertEquals( shouldBeMutable(), typeDescriptor.getMutabilityPlan().isMutable() );
 
 		if ( testData.copyOfOriginalValue instanceof Clob
 				|| testData.copyOfOriginalValue instanceof Blob ) {
@@ -172,7 +175,7 @@ public abstract class AbstractDescriptorTest<T> extends BaseUnitTestCase {
 		T copy = typeDescriptor.getMutabilityPlan().deepCopy( testData.copyOfOriginalValue );
 		assertTrue( typeDescriptor.areEqual( copy, testData.copyOfOriginalValue ) );
 		if ( ! shouldBeMutable() ) {
-			assertTrue( copy == testData.copyOfOriginalValue );
+			assertSame( copy, testData.copyOfOriginalValue );
 		}
 
 		// ensure the symmetry of assemble/disassebly
@@ -180,7 +183,7 @@ public abstract class AbstractDescriptorTest<T> extends BaseUnitTestCase {
 
 		Serializable cached = typeDescriptor.getMutabilityPlan().disassemble( testData.copyOfOriginalValue, null );
 		if ( ! shouldBeMutable() ) {
-			assertTrue( cached == testData.copyOfOriginalValue );
+			assertSame( cached, testData.copyOfOriginalValue );
 		}
 		T reassembled = typeDescriptor.getMutabilityPlan().assemble( cached, null );
 		assertTrue( typeDescriptor.areEqual( testData.originalValue, reassembled ) );

@@ -8,7 +8,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.JoinColumn;
@@ -16,116 +15,103 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.InheritanceType.JOINED;
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.assertNull;
-import static junit.framework.TestCase.assertTrue;
-import static org.hibernate.cfg.AvailableSettings.FORMAT_SQL;
-import static org.hibernate.cfg.AvailableSettings.SHOW_SQL;
 
-public class RepeatedSubclassTableTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{
-				DataType.class,
-				ObjectType.class,
-				SimpleType.class,
-				Prop.class
-		};
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure(configuration);
-		configuration.setProperty(SHOW_SQL, true);
-		configuration.setProperty(FORMAT_SQL, true);
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = {
+		RepeatedSubclassTableTest.DataType.class,
+		RepeatedSubclassTableTest.ObjectType.class,
+		RepeatedSubclassTableTest.SimpleType.class,
+		RepeatedSubclassTableTest.Prop.class
+})
+@SessionFactory
+public class RepeatedSubclassTableTest {
+	@AfterEach
+	public void tearDown(SessionFactoryScope factoryScope) throws Exception {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void test_append_properties()  {
-		Long id;
-		Long sId;
-		try (Session sess = openSession()) {
-			Transaction tx = sess.beginTransaction();
-
-			SimpleType simpleType = new SimpleType();
-			simpleType.setName("simple");
-			simpleType.setCount(69);
+	public void test_append_properties(SessionFactoryScope factoryScope)  {
+		factoryScope.inTransaction( (sess) -> {
+			var simpleType = new SimpleType( 1, "simple", 69 );
 			sess.persist(simpleType);
-			sId = simpleType.getId();
 
-			ObjectType objectType = new ObjectType();
-			objectType.setName("name");
+			var objectType = new ObjectType( 2, "name", "stuff" );
 			sess.persist(objectType);
-			id = objectType.getId();
+		} );
 
-			tx.commit();
-		}
-
-		try (Session sess = openSession()) {
-			Transaction tx = sess.beginTransaction();
-			ObjectType objectType = sess.find(ObjectType.class, id);
-			Prop property = new Prop();
-			property.setName("Prop1");
-			property.setObjectType(objectType);
+		factoryScope.inTransaction( (sess) -> {
+			var objectType = sess.find(ObjectType.class, 2);
+			var property = new Prop( 1, "Prop1", objectType );
 			objectType.getProperties().add(property);
-			tx.commit();
-		}
-		try (Session sess = openSession()) {
-			Transaction tx = sess.beginTransaction();
-			ObjectType objectType = sess.find(ObjectType.class, id);
-			assertEquals(1, objectType.getProperties().size());
-			tx.commit();
-		}
+		} );
 
-		try (Session sess = openSession()) {
-			DataType dataType1 = sess.find(DataType.class, sId);
-			assertTrue( dataType1 instanceof SimpleType );
-			DataType dataType2 = sess.find(DataType.class, id);
-			assertTrue( dataType2 instanceof ObjectType );
-		}
-		try (Session sess = openSession()) {
-			SimpleType simpleType = sess.find(SimpleType.class, sId);
-			assertNotNull( simpleType );
-			SimpleType wrongType = sess.find(SimpleType.class, id);
-			assertNull( wrongType );
-		}
+		factoryScope.inTransaction( (sess) -> {
+			var objectType = sess.find(ObjectType.class, 2);
+			Assertions.assertEquals( 1, objectType.getProperties().size() );
+		} );
 
-		try (Session sess = openSession()) {
-			assertEquals( 2, sess.createQuery("from RepeatedSubclassTableTest$DataType").getResultList().size() );
-			assertEquals( 1, sess.createQuery("from RepeatedSubclassTableTest$ObjectType").getResultList().size() );
-			assertEquals( 1, sess.createQuery("from RepeatedSubclassTableTest$SimpleType").getResultList().size() );
-		}
+		factoryScope.inTransaction( (sess) -> {
+			var dataType1 = sess.find(DataType.class, 1);
+			Assertions.assertInstanceOf( SimpleType.class, dataType1 );
+			var dataType2 = sess.find(DataType.class, 2);
+			Assertions.assertInstanceOf( ObjectType.class, dataType2 );
+		} );
+
+		factoryScope.inTransaction( (sess) -> {
+			var simpleType = sess.find(SimpleType.class, 1);
+			Assertions.assertNotNull( simpleType );
+			SimpleType wrongType = sess.find(SimpleType.class, 2);
+			Assertions.assertNull( wrongType );
+		} );
+
+		factoryScope.inTransaction( (sess) -> {
+			//noinspection deprecation
+			Assertions.assertEquals( 2,
+					sess.createQuery("from DataType").getResultList().size() );
+			//noinspection deprecation
+			Assertions.assertEquals( 1,
+					sess.createQuery("from ObjectType").getResultList().size() );
+			//noinspection deprecation
+			Assertions.assertEquals( 1,
+					sess.createQuery("from SimpleType").getResultList().size() );
+		} );
 	}
 
-	@Entity
+	@Entity(name = "DataType")
 	@Table(name = "DATA_TYPE")
 	@Inheritance(strategy = JOINED)
 	@DiscriminatorColumn(name = "supertype_id")
 	public static abstract class DataType {
-
-		private Long id;
+		private Integer id;
 		private String name;
+
+		protected DataType() {
+		}
+
+		public DataType(Integer id, String name) {
+			this.id = id;
+			this.name = name;
+		}
 
 		@Id
 		@Column(name = "ID")
-		@GeneratedValue
-		public Long getId() {
+		public Integer getId() {
 			return id;
 		}
 
-		public void setId(Long id) {
+		protected void setId(Integer id) {
 			this.id = id;
 		}
 
@@ -140,14 +126,21 @@ public class RepeatedSubclassTableTest extends BaseCoreFunctionalTestCase {
 
 	}
 
-	@Entity
+	@Entity(name = "ObjectType")
 	@DiscriminatorValue("8")
 	@Table(name = "OBJ_TYPE")
 	@PrimaryKeyJoinColumn(name = "TYPE_ID")
 	public static class ObjectType extends DataType {
-
 		private String description;
 		private List<Prop> properties;
+
+		protected ObjectType() {
+		}
+
+		public ObjectType(Integer id, String name, String description) {
+			super( id, name );
+			this.description = description;
+		}
 
 		@Column(name = "descr")
 		public String getDescription() {
@@ -168,22 +161,29 @@ public class RepeatedSubclassTableTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Prop")
 	@Table(name = "PROP")
 	public static class Prop {
-
-		private Long id;
+		private Integer id;
 		private String name;
 		private ObjectType objectType;
 
+		protected Prop() {
+		}
+
+		public Prop(int id, String name, ObjectType objectType) {
+			this.id = id;
+			this.name = name;
+			this.objectType = objectType;
+		}
+
 		@Id
 		@Column(name = "ID")
-		@GeneratedValue
-		public Long getId() {
+		public Integer getId() {
 			return id;
 		}
 
-		public void setId(Long id) {
+		protected void setId(Integer id) {
 			this.id = id;
 		}
 
@@ -207,12 +207,20 @@ public class RepeatedSubclassTableTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "SimpleType")
 	@DiscriminatorValue("2")
 	@Table(name = "OBJ_TYPE")
 	@PrimaryKeyJoinColumn(name = "TYPE_ID")
 	public static class SimpleType extends DataType {
 		Integer count;
+
+		protected SimpleType() {
+		}
+
+		public SimpleType(Integer id, String name, Integer count) {
+			super( id, name );
+			this.count = count;
+		}
 
 		@Column(name = "counter")
 		public Integer getCount() {

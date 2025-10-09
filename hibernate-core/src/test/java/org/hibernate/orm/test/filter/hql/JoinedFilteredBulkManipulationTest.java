@@ -62,6 +62,7 @@ public class JoinedFilteredBulkManipulationTest extends AbstractStatefulStateles
 	void testFilteredJoinedSubclassHqlDeleteRoot(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		inTransaction.accept( scope, session -> {
 			session.enableFilter( "sex" ).setParameter( "sexCode", 'M' );
+			//noinspection deprecation
 			final int count = session.createQuery( "delete Person" ).executeUpdate();
 			assertThat( count ).isEqualTo( 2 );
 		} );
@@ -72,6 +73,7 @@ public class JoinedFilteredBulkManipulationTest extends AbstractStatefulStateles
 	void testFilteredJoinedSubclassHqlDeleteNonLeaf(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		inTransaction.accept( scope, session -> {
 			session.enableFilter( "sex" ).setParameter( "sexCode", 'M' );
+			//noinspection deprecation
 			final int count = session.createQuery( "delete User" ).executeUpdate();
 			assertThat( count ).isEqualTo( 2 );
 		} );
@@ -82,6 +84,7 @@ public class JoinedFilteredBulkManipulationTest extends AbstractStatefulStateles
 	void testFilteredJoinedSubclassHqlDeleteLeaf(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		inTransaction.accept( scope, session -> {
 			session.enableFilter( "sex" ).setParameter( "sexCode", 'M' );
+			//noinspection deprecation
 			final int count = session.createQuery( "delete Employee" ).executeUpdate();
 			assertThat( count ).isEqualTo( 1 );
 		} );
@@ -92,6 +95,7 @@ public class JoinedFilteredBulkManipulationTest extends AbstractStatefulStateles
 	void testFilteredJoinedSubclassHqlUpdateRoot(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		inTransaction.accept( scope, session -> {
 			session.enableFilter( "sex" ).setParameter( "sexCode", 'M' );
+			//noinspection deprecation
 			final int count = session.createQuery( "update Person p set p.name = '<male>'" ).executeUpdate();
 			assertThat( count ).isEqualTo( 2 );
 		} );
@@ -102,6 +106,7 @@ public class JoinedFilteredBulkManipulationTest extends AbstractStatefulStateles
 	void testFilteredJoinedSubclassHqlUpdateNonLeaf(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		inTransaction.accept( scope, session -> {
 			session.enableFilter( "sex" ).setParameter( "sexCode", 'M' );
+			//noinspection deprecation
 			final int count = session.createQuery( "update User u set u.username = :un where u.name = :n" )
 					.setParameter( "un", "charlie" )
 					.setParameter( "n", "Wanda" )
@@ -115,6 +120,7 @@ public class JoinedFilteredBulkManipulationTest extends AbstractStatefulStateles
 	void testFilteredJoinedSubclassHqlUpdateLeaf(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		inTransaction.accept( scope, session -> {
 			session.enableFilter( "sex" ).setParameter( "sexCode", 'M' );
+			//noinspection deprecation
 			final int count = session.createQuery( "update Customer c set c.company = 'XYZ'" ).executeUpdate();
 			assertThat( count ).isEqualTo( 1 );
 		} );
@@ -125,6 +131,7 @@ public class JoinedFilteredBulkManipulationTest extends AbstractStatefulStateles
 		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
+	@SuppressWarnings({"unused", "FieldCanBeLocal"})
 	@Entity( name = "Person" )
 	@Table( name = "FILTER_HQL_JOINED_PERSON" )
 	@Inheritance(strategy = InheritanceType.JOINED)
@@ -155,6 +162,7 @@ public class JoinedFilteredBulkManipulationTest extends AbstractStatefulStateles
 		}
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity( name = "User" )
 	@Table( name = "FILTER_HQL_JOINED_USER" )
 	public static class User extends Person {
@@ -170,6 +178,7 @@ public class JoinedFilteredBulkManipulationTest extends AbstractStatefulStateles
 		}
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity( name = "Employee" )
 	@Table( name = "FILTER_HQL_JOINED_EMP" )
 	public static class Employee extends User {
@@ -185,6 +194,7 @@ public class JoinedFilteredBulkManipulationTest extends AbstractStatefulStateles
 		}
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity( name = "Customer" )
 	@Table( name = "FILTER_HQL_JOINED_CUST" )
 	public static class Customer extends User {

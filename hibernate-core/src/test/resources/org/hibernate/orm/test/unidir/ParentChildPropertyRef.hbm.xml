@@ -10,7 +10,7 @@
 <hibernate-mapping
 	package="org.hibernate.orm.test.unidir">
 
-	<class name="Parent">
+	<class name="Parent" table="parent_with_prop_ref">
 		<id name="name"/>
         <property name="ssn" unique="true"/>
 		<list name="children" cascade="persist,merge">

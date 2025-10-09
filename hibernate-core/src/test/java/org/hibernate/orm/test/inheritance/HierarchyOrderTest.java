@@ -4,25 +4,25 @@
  */
 package org.hibernate.orm.test.inheritance;
 
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.TypedQuery;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@SuppressWarnings({"JUnitMalformedDeclaration", "removal"})
 @DomainModel(
 		annotatedClasses = {
 				HierarchyOrderTest.DerOA.class,
@@ -35,32 +35,31 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 )
 @SessionFactory
 class HierarchyOrderTest {
-
-	private EntityManagerFactory emf;
 	private DerOA deroa;
 	private DerOB derob;
 
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
+
 	@BeforeEach
-	void setUp() {
+	void setUp(SessionFactoryScope factoryScope) {
 		DerDB derba1 = new DerDB( 5 );
 		DerDA derda1 = new DerDA( "1", "abase" );
 		deroa = new DerOA( derda1 );
 		derob = new DerOB( derba1 );
-//		emf = buildEntityManagerFactory();
+		factoryScope.inTransaction( (em) -> {
+			em.persist( deroa );
+			em.persist( derob );
+		} );
 	}
 
 	@Test
-	void testBaseProperty(SessionFactoryScope scope) {
-		scope.inSession( em -> {
-			em.getTransaction().begin();
-			em.persist( deroa );
-			em.persist( derob );
-			em.getTransaction().commit();
-			Integer ida = deroa.getId();
-			Integer idb = derob.getId();
-			em.clear();
+	void testBaseProperty(SessionFactoryScope factoryScope) {
+		factoryScope.inSession( em -> {
 			TypedQuery<DerOA> qa = em.createQuery( "select o from DerOA o where o.id =:id", DerOA.class );
-			qa.setParameter( "id", ida );
+			qa.setParameter( "id", deroa.getId() );
 			DerOA deroain = qa.getSingleResult();
 			assertEquals( "abase", deroain.derda.baseprop );
 		} );
@@ -69,15 +68,8 @@ class HierarchyOrderTest {
 	@Test
 	void testDerivedProperty(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			em.getTransaction().begin();
-			em.persist( deroa );
-			em.persist( derob );
-			em.getTransaction().commit();
-			Integer idb = derob.getId();
-			em.clear();
-
 			TypedQuery<DerOB> qb = em.createQuery( "select o from DerOB o where o.id =:id", DerOB.class );
-			qb.setParameter( "id", idb );
+			qb.setParameter( "id", derob.getId() );
 			DerOB derobin = qb.getSingleResult();
 			assertNotNull( derobin );
 			assertEquals( 5, derobin.derdb().b );

@@ -20,6 +20,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
@@ -31,12 +32,17 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
 @DomainModel(annotatedClasses = {OracleSqlArrayTest.Container.class})
 @RequiresDialect(OracleDialect.class)
 // Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 @BootstrapServiceRegistry(integrators = SharedDriverManagerTypeCacheClearingIntegrator.class)
 public class OracleSqlArrayTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test public void test(SessionFactoryScope scope) {
 		Container container = new Container();
@@ -44,8 +50,8 @@ public class OracleSqlArrayTest {
 		container.bigIntegers = new BigInteger[] { new BigInteger("123"), new BigInteger("345") };
 		scope.inTransaction( s -> s.persist( container ) );
 		Container c = scope.fromTransaction( s-> s.createQuery("from ContainerWithArrays where bigIntegers = ?1", Container.class ).setParameter(1, new BigInteger[] { new BigInteger("123"), new BigInteger("345") }).getSingleResult() );
-		assertArrayEquals( c.activityKinds, new ActivityKind[] { ActivityKind.Work, ActivityKind.Play } );
-		assertArrayEquals( c.bigIntegers, new BigInteger[] { new BigInteger("123"), new BigInteger("345") } );
+		assertArrayEquals( new ActivityKind[] { ActivityKind.Work, ActivityKind.Play }, c.activityKinds );
+		assertArrayEquals( new BigInteger[] { new BigInteger("123"), new BigInteger("345") }, c.bigIntegers );
 		c = scope.fromTransaction( s-> s.createQuery("from ContainerWithArrays where activityKinds = ?1", Container.class ).setParameter(1, new ActivityKind[] { ActivityKind.Work, ActivityKind.Play }).getSingleResult() );
 	}
 

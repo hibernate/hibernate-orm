@@ -11,8 +11,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.spi.ServiceContributor;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
 /**
  * @asciidoc
@@ -78,6 +80,8 @@ public @interface ServiceRegistry {
 
 	SettingConfiguration[] settingConfigurations() default {};
 
+	ResolvableSetting[] resolvableSettings() default {};
+
 	/**
 	 * A Hibernate Service registration
 	 */
@@ -94,5 +98,13 @@ public @interface ServiceRegistry {
 		Class<?>[] impls();
 	}
 
+	@interface ResolvableSetting {
+		String settingName();
+		Class<? extends SettingResolver> resolver();
+	}
+
+	interface SettingResolver {
+		Object resolve(StandardServiceRegistryBuilder registryBuilder, ExtensionContext junitContext);
+	}
 
 }

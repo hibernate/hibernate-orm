@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Bruno P. Kinoshita
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @Jpa
 public class MaskSensitiveInformationTest {
 	private static final String EXPECTED_MASKED_VALUE = "****";

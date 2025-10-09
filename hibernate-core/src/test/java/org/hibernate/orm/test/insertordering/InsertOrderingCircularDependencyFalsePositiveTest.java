@@ -4,14 +4,6 @@
  */
 package org.hibernate.orm.test.insertordering;
 
-import org.hibernate.cfg.Environment;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
-import org.junit.Test;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -20,64 +12,70 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistryFunctionalTesting;
+import org.hibernate.testing.orm.junit.ServiceRegistryProducer;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import java.sql.SQLException;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.hibernate.cfg.BatchSettings.ORDER_INSERTS;
+import static org.hibernate.cfg.BatchSettings.ORDER_UPDATES;
+import static org.hibernate.cfg.BatchSettings.STATEMENT_BATCH_SIZE;
+import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-16485")
-@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
-public class InsertOrderingCircularDependencyFalsePositiveTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJdbcDriverProxying.class)
+@ServiceRegistryFunctionalTesting
+@DomainModel(annotatedClasses = {
+		InsertOrderingCircularDependencyFalsePositiveTest.Wrapper.class,
+		InsertOrderingCircularDependencyFalsePositiveTest.Condition.class,
+		InsertOrderingCircularDependencyFalsePositiveTest.SimpleCondition.class,
+		InsertOrderingCircularDependencyFalsePositiveTest.Expression.class,
+		InsertOrderingCircularDependencyFalsePositiveTest.ConstantExpression.class,
+		InsertOrderingCircularDependencyFalsePositiveTest.Condition.class,
+		InsertOrderingCircularDependencyFalsePositiveTest.CompoundCondition.class,
+})
+@SessionFactory
+public class InsertOrderingCircularDependencyFalsePositiveTest implements ServiceRegistryProducer {
+	private final PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
 
 	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
-			Wrapper.class,
-			Condition.class,
-			SimpleCondition.class,
-			Expression.class,
-			ConstantExpression.class,
-			Condition.class,
-			CompoundCondition.class,
-		};
+	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder) {
+		return builder.applySetting( ORDER_INSERTS, true )
+				.applySetting( ORDER_UPDATES, true )
+				.applySetting( STATEMENT_BATCH_SIZE, 50 )
+				.applySetting( CONNECTION_PROVIDER, connectionProvider )
+				.build();
 	}
 
-	@Override
-	protected void addSettings(Map settings) {
-		settings.put(Environment.ORDER_INSERTS, "true");
-		settings.put(Environment.ORDER_UPDATES, "true");
-		settings.put(Environment.STATEMENT_BATCH_SIZE, "50");
-		settings.put(
-			org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
-			connectionProvider
-		);
-	}
-
-	@Override
-	public void releaseResources() {
-		super.releaseResources();
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 		connectionProvider.stop();
 	}
 
-	@Override
-	protected boolean rebuildSessionFactoryOnError() {
-		return false;
-	}
-
 	@Test
-	public void testBatching() throws SQLException {
-		doInHibernate(this::sessionFactory, session -> {
+	public void testBatching(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
 			connectionProvider.clear();
 			// This should be persistable but currently reports that it might be circular
 			session.persist(Wrapper.create());
 		});
 	}
 
+	@SuppressWarnings({"unused", "MismatchedQueryAndUpdateOfCollection"})
 	@Entity(name = "Wrapper")
 	public static class Wrapper {
 		@Id
@@ -136,6 +134,7 @@ public class InsertOrderingCircularDependencyFalsePositiveTest extends BaseNonCo
 		public Condition() {
 		}
 	}
+	@SuppressWarnings("unused")
 	@Entity(name = "SimpleCondition")
 	public static class SimpleCondition extends Condition {
 		@OneToOne(cascade = CascadeType.ALL)
@@ -155,6 +154,7 @@ public class InsertOrderingCircularDependencyFalsePositiveTest extends BaseNonCo
 		}
 
 	}
+	@SuppressWarnings("unused")
 	@Entity(name = "ConstantExpression")
 	public static class ConstantExpression extends Expression {
 		@Column(name = "val")

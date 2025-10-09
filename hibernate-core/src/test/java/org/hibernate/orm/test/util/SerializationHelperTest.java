@@ -6,17 +6,17 @@ package org.hibernate.orm.test.util;
 import java.io.InputStream;
 import java.io.Serializable;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.spi.ByteCodeHelper;
 import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * This is basically a test to assert the expectations of {@link org.hibernate.type.SerializableType}
@@ -24,27 +24,29 @@ import static org.junit.Assert.assertSame;
  *
  * @author Steve Ebersole
  */
-public class SerializationHelperTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class SerializationHelperTest {
 	private ClassLoader original;
 	private CustomClassLoader custom;
 
-	@Before
-	public void setUp() throws Exception {
+	@BeforeEach
+	public void setUp() {
 		original = Thread.currentThread().getContextClassLoader();
 		custom = new CustomClassLoader( original );
 		Thread.currentThread().setContextClassLoader( custom );
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 		Thread.currentThread().setContextClassLoader( original );
+		custom = null;
 	}
 
 	@Test
 	public void testSerializeDeserialize() throws Exception {
-		Class clazz = Thread.currentThread().getContextClassLoader().loadClass(
+		Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(
 				"org.hibernate.orm.test.util.SerializableThing" );
-		Object instance = clazz.newInstance();
+		Object instance = clazz.getDeclaredConstructor().newInstance();
 
 		// SerializableType.toBytes() logic, as called from SerializableType.disassemble()
 		byte[] bytes = SerializationHelper.serialize( (Serializable) instance );
@@ -59,7 +61,8 @@ public class SerializationHelperTest extends BaseUnitTestCase {
 		assertEquals( custom, instance2.getClass().getClassLoader() );
 	}
 
-	public void testSerDeserClassUnknownToCustomLoader() throws Exception {
+	@Test
+	public void testSerDeserClassUnknownToCustomLoader() {
 		Object instance = LockMode.OPTIMISTIC;
 		assertSame(
 			SerializationHelper.hibernateClassLoader(),
@@ -84,7 +87,7 @@ public class SerializationHelperTest extends BaseUnitTestCase {
 			super( parent );
 		}
 
-		public Class loadClass(String name) throws ClassNotFoundException {
+		public Class<?> loadClass(String name) throws ClassNotFoundException {
 			if ( name.equals( "org.hibernate.LockMode" ) ) {
 				throw new ClassNotFoundException( "Could not find "+ name );
 			}
@@ -92,7 +95,7 @@ public class SerializationHelperTest extends BaseUnitTestCase {
 				return getParent().loadClass( name );
 			}
 
-			Class c = findLoadedClass( name );
+			Class<?> c = findLoadedClass( name );
 			if ( c != null ) {
 				return c;
 			}

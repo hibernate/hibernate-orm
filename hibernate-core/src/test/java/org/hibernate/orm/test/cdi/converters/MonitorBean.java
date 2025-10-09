@@ -4,6 +4,9 @@
  */
 package org.hibernate.orm.test.cdi.converters;
 
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -44,5 +47,12 @@ public class MonitorBean {
 
 	public void fromDbCalled() {
 		fromDbCount.getAndIncrement();
+	}
+
+	public static class Resetter implements BeforeEachCallback {
+		@Override
+		public void beforeEach(ExtensionContext context) throws Exception {
+			MonitorBean.reset();
+		}
 	}
 }

@@ -4,18 +4,6 @@
  */
 package org.hibernate.orm.test.inheritance;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -29,12 +17,24 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.criteria.CriteriaQuery;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hibernate.orm.test.inheritance.SingleTableInheritanceWithShareCacheModeAllAndCacheConcurrencyStrategyTest.Cheese;
-import static org.hibernate.orm.test.inheritance.SingleTableInheritanceWithShareCacheModeAllAndCacheConcurrencyStrategyTest.SpecialCheese;
 import static org.hibernate.orm.test.inheritance.SingleTableInheritanceWithShareCacheModeAllAndCacheConcurrencyStrategyTest.Hole;
+import static org.hibernate.orm.test.inheritance.SingleTableInheritanceWithShareCacheModeAllAndCacheConcurrencyStrategyTest.SpecialCheese;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @Jpa(
 		annotatedClasses = {
 				Cheese.class,
@@ -46,43 +46,43 @@ import static org.hibernate.orm.test.inheritance.SingleTableInheritanceWithShare
 @JiraKey(value = "HHH-15840")
 public class SingleTableInheritanceWithShareCacheModeAllAndCacheConcurrencyStrategyTest {
 
-	@BeforeAll
+	@BeforeEach
 	public void setUp(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					Cheese cheese = new Cheese();
-					entityManager.persist( cheese );
+		scope.inTransaction(entityManager -> {
+			Cheese cheese = new Cheese();
+			entityManager.persist( cheese );
 
-					Hole hole = new Hole();
-					hole.setCheese( cheese );
-					entityManager.persist( hole );
-				}
-		);
+			Hole hole = new Hole();
+			hole.setCheese( cheese );
+			entityManager.persist( hole );
+		} );
+	}
+
+	@AfterEach
+	void tearDown(EntityManagerFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
 	public void testLoadingFromCache(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					CriteriaQuery<Cheese> criteria = entityManager.getCriteriaBuilder().createQuery( Cheese.class );
-					List<Cheese> cheeses = entityManager.createQuery( criteria.select( criteria.from( Cheese.class ) ) )
-							.getResultList();
-					assertThat( cheeses.size() ).isEqualTo( 1 );
-					assertThat( cheeses.get( 0 ).getHoles().size() ).isEqualTo( 1 );
-				}
-		);
+		scope.inTransaction(entityManager -> {
+			CriteriaQuery<Cheese> criteria = entityManager.getCriteriaBuilder().createQuery( Cheese.class );
+			List<Cheese> cheeses = entityManager.createQuery( criteria.select( criteria.from( Cheese.class ) ) )
+					.getResultList();
+			assertThat( cheeses.size() ).isEqualTo( 1 );
+			assertThat( cheeses.get( 0 ).getHoles().size() ).isEqualTo( 1 );
+		} );
 
-		scope.inTransaction(
-				entityManager -> {
-					CriteriaQuery<Cheese> criteria = entityManager.getCriteriaBuilder().createQuery( Cheese.class );
-					List<Cheese> cheeses = entityManager.createQuery( criteria.select( criteria.from( Cheese.class ) ) )
-							.getResultList();
-					assertThat( cheeses.size() ).isEqualTo( 1 );
-					assertThat( cheeses.get( 0 ).getHoles().size() ).isEqualTo( 1 );
-				}
-		);
+		scope.inTransaction(entityManager -> {
+			CriteriaQuery<Cheese> criteria = entityManager.getCriteriaBuilder().createQuery( Cheese.class );
+			List<Cheese> cheeses = entityManager.createQuery( criteria.select( criteria.from( Cheese.class ) ) )
+					.getResultList();
+			assertThat( cheeses.size() ).isEqualTo( 1 );
+			assertThat( cheeses.get( 0 ).getHoles().size() ).isEqualTo( 1 );
+		} );
 	}
 
+	@SuppressWarnings({"unused", "FieldMayBeFinal"})
 	@Entity(name = "Cheese")
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	public static class Cheese {
@@ -109,6 +109,7 @@ public class SingleTableInheritanceWithShareCacheModeAllAndCacheConcurrencyStrat
 	public static class SpecialCheese extends Cheese {
 	}
 
+	@SuppressWarnings("unused")
 	@Entity(name = "Hole")
 	public static class Hole {
 		@Id

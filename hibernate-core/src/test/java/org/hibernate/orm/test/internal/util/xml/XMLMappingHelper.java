@@ -14,7 +14,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 
 import org.hibernate.testing.boot.ClassLoaderServiceTestingImpl;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 
 /**
  * A small helper class for parsing XML mappings, to be used in unit tests.
@@ -34,7 +34,7 @@ public final class XMLMappingHelper {
 
 	public JaxbEntityMappingsImpl readOrmXmlMappings(InputStream is, String name) {
 		try {
-			Assert.assertNotNull( "Resource not found: " + name, is );
+			Assertions.assertNotNull( is, "Resource not found: " + name );
 			Binding<?> binding = binder.bind( is, new Origin( SourceType.JAR, name ) );
 			return (JaxbEntityMappingsImpl) binding.getRoot();
 		}

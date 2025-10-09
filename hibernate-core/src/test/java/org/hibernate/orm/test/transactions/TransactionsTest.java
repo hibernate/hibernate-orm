@@ -7,37 +7,30 @@ package org.hibernate.orm.test.transactions;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import static org.hibernate.cfg.TransactionSettings.TRANSACTION_COORDINATOR_STRATEGY;
 
 /**
  * @author Vlad Mihalcea
  */
-public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Customer.class
-		};
-	}
+@SuppressWarnings("JUnitMalformedDeclaration")
+public class TransactionsTest {
 
 	@Test
-	public void jdbc() {
-		StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
-				// "jdbc" is the default, but for explicitness
-				.applySetting(AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jdbc")
-				.build();
+	@ServiceRegistry(settings = @Setting(name=TRANSACTION_COORDINATOR_STRATEGY, value = "jdbc"))
+	public void jdbc(ServiceRegistryScope registryScope) {
+		final StandardServiceRegistry serviceRegistry = registryScope.getRegistry();
 
 		/*
 		//tag::transactions-api-jdbc-example[]
@@ -88,16 +81,13 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void cmt() {
-		StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
-				// "jdbc" is the default, but for explicitness
-				.applySetting(AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta")
-				.build();
+	@ServiceRegistry(settings = @Setting(name=TRANSACTION_COORDINATOR_STRATEGY, value = "jta"))
+	public void cmt(ServiceRegistryScope registryScope) {
+		StandardServiceRegistry serviceRegistry = registryScope.getRegistry();
 
 		/*
 		//tag::transactions-api-cmt-example[]
 		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
-				// "jdbc" is the default, but for explicitness
 				.applySetting(AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta")
 				.build();
 
@@ -148,11 +138,9 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void bmt() {
-		StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
-				// "jdbc" is the default, but for explicitness
-				.applySetting(AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta")
-				.build();
+	@ServiceRegistry(settings = @Setting(name=TRANSACTION_COORDINATOR_STRATEGY, value = "jta"))
+	public void bmt(ServiceRegistryScope registryScope) {
+		StandardServiceRegistry serviceRegistry = registryScope.getRegistry();
 
 		/*
 		//tag::transactions-api-bmt-example[]

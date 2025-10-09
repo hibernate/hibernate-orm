@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Michael Spahn
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-13974")
 @DomainModel
 @SessionFactory

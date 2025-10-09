@@ -7,24 +7,22 @@ package org.hibernate.orm.test.resource.transaction.jta;
 import jakarta.transaction.Status;
 import jakarta.transaction.SystemException;
 import jakarta.transaction.TransactionManager;
-
 import org.hibernate.TransactionException;
 import org.hibernate.orm.test.resource.common.SynchronizationCollectorImpl;
+import org.hibernate.orm.test.resource.common.SynchronizationErrorImpl;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.SynchronizationCallbackCoordinatorTrackingImpl;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.orm.test.resource.common.SynchronizationErrorImpl;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
@@ -46,8 +44,8 @@ public abstract class AbstractBasicJtaTestScenarios {
 		);
 	}
 
-	@Before
-	@After
+	@BeforeEach
+	@AfterEach
 	public void resetJtaPlatform() throws SystemException {
 		// make sure the JTA platform is reset back to no active transactions before and after each test
 		JtaPlatformStandardTestingImpl.INSTANCE.reset();

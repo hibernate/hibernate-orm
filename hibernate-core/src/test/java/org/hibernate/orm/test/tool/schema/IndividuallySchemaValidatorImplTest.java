@@ -8,8 +8,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -17,10 +15,11 @@ import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionPro
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.boot.JdbcConnectionAccessImpl;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
@@ -34,10 +33,8 @@ import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -46,30 +43,28 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Dominique Toupin
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-10332")
 @RequiresDialect(H2Dialect.class)
-public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
-
-	private StandardServiceRegistry ssr;
-
+@ServiceRegistry
+public class IndividuallySchemaValidatorImplTest  {
 	protected HibernateSchemaManagementTool tool;
 
 	private Map<String,Object> configurationValues;
 
 	protected ExecutionOptions executionOptions;
 
-	@Before
-	public void setUp() throws IOException {
-		ssr = ServiceRegistryUtil.serviceRegistry();
+	@BeforeAll
+	public void setUp(ServiceRegistryScope registryScope) throws IOException {
+		tool = (HibernateSchemaManagementTool) registryScope.getRegistry().requireService( SchemaManagementTool.class );
 
-		tool = (HibernateSchemaManagementTool) ssr.getService( SchemaManagementTool.class );
-
-		configurationValues = ssr.requireService( ConfigurationService.class ).getSettings();
+		configurationValues = registryScope.getRegistry().requireService( ConfigurationService.class ).getSettings();
 
 		executionOptions = new ExecutionOptions() {
 			@Override
@@ -89,14 +84,9 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 		};
 	}
 
-	@After
-	public void tearsDown() {
-		StandardServiceRegistryBuilder.destroy( ssr );
-	}
-
 	@Test
-	public void testMissingEntityContainsQualifiedEntityName() {
-		final MetadataSources metadataSources = new MetadataSources( ssr );
+	public void testMissingEntityContainsQualifiedEntityName(ServiceRegistryScope registryScope) {
+		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() );
 		metadataSources.addAnnotatedClass( MissingEntity.class );
 
 		final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
@@ -105,16 +95,17 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 
 		try {
 			getSchemaValidator( metadata );
-			Assert.fail( "SchemaManagementException expected" );
+			fail( "SchemaManagementException expected" );
 		}
 		catch (SchemaManagementException e) {
-			assertEquals("Schema validation: missing table [SomeCatalog.SomeSchema.MissingEntity]", e.getMessage());
+			assertEquals( "Schema validation: missing table [SomeCatalog.SomeSchema.MissingEntity]",
+					e.getMessage() );
 		}
 	}
 
 	@Test
-	public void testMissingEntityContainsUnqualifiedEntityName() {
-		final MetadataSources metadataSources = new MetadataSources( ssr );
+	public void testMissingEntityContainsUnqualifiedEntityName(ServiceRegistryScope registryScope) {
+		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() );
 		metadataSources.addAnnotatedClass( UnqualifiedMissingEntity.class );
 
 		final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
@@ -123,16 +114,16 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 
 		try {
 			getSchemaValidator( metadata );
-			Assert.fail( "SchemaManagementException expected" );
+			fail( "SchemaManagementException expected" );
 		}
 		catch (SchemaManagementException e) {
-			assertEquals("Schema validation: missing table [UnqualifiedMissingEntity]", e.getMessage());
+			assertEquals( "Schema validation: missing table [UnqualifiedMissingEntity]", e.getMessage() );
 		}
 	}
 
 	@Test
-	public void testMissingColumn() {
-		MetadataSources metadataSources = new MetadataSources( ssr );
+	public void testMissingColumn(ServiceRegistryScope registryScope) {
+		MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() );
 		metadataSources.addAnnotatedClass( NoNameColumn.class );
 
 		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
@@ -157,7 +148,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 		);
 
 		try {
-			new SchemaCreatorImpl( ssr ).doCreation(
+			new SchemaCreatorImpl( registryScope.getRegistry() ).doCreation(
 					metadata,
 					serviceRegistry,
 					settings,
@@ -165,7 +156,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 					schemaGenerator
 			);
 
-			metadataSources = new MetadataSources( ssr );
+			metadataSources = new MetadataSources( registryScope.getRegistry() );
 			metadataSources.addAnnotatedClass( NameColumn.class );
 
 			metadata = (MetadataImplementor) metadataSources.buildMetadata();
@@ -174,10 +165,11 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 
 			try {
 				getSchemaValidator( metadata );
-				Assert.fail( "SchemaManagementException expected" );
+				fail( "SchemaManagementException expected" );
 			}
 			catch (SchemaManagementException e) {
-				assertEquals("Schema validation: missing column [name] in table [SomeSchema.ColumnEntity]", e.getMessage());
+				assertEquals( "Schema validation: missing column [name] in table [SomeSchema.ColumnEntity]",
+						e.getMessage() );
 			}
 		}
 		finally {
@@ -188,8 +180,8 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testMismatchColumnType() {
-		MetadataSources metadataSources = new MetadataSources( ssr );
+	public void testMismatchColumnType(ServiceRegistryScope registryScope) {
+		MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() );
 		metadataSources.addAnnotatedClass( NameColumn.class );
 
 		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
@@ -214,7 +206,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 		);
 
 		try {
-			new SchemaCreatorImpl( ssr ).doCreation(
+			new SchemaCreatorImpl( registryScope.getRegistry() ).doCreation(
 					metadata,
 					serviceRegistry,
 					settings,
@@ -222,7 +214,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 					schemaGenerator
 			);
 
-			metadataSources = new MetadataSources( ssr );
+			metadataSources = new MetadataSources( registryScope.getRegistry() );
 			metadataSources.addAnnotatedClass( IntegerNameColumn.class );
 
 			metadata = (MetadataImplementor) metadataSources.buildMetadata();
@@ -231,21 +223,19 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 
 			try {
 				getSchemaValidator( metadata );
-				Assert.fail( "SchemaManagementException expected" );
+				fail( "SchemaManagementException expected" );
 			}
 			catch (SchemaManagementException e) {
 				if ( metadata.getDatabase().getDialect().getVersion().isSameOrAfter( 2 ) ) {
 					// Reports "character varying" since 2.0
 					assertEquals(
 							"Schema validation: wrong column type encountered in column [name] in table [SomeSchema.ColumnEntity]; found [character varying (Types#VARCHAR)], but expecting [integer (Types#INTEGER)]",
-							e.getMessage()
-					);
+							e.getMessage() );
 				}
 				else {
 					assertEquals(
 							"Schema validation: wrong column type encountered in column [name] in table [SomeSchema.ColumnEntity]; found [varchar (Types#VARCHAR)], but expecting [integer (Types#INTEGER)]",
-							e.getMessage()
-					);
+							e.getMessage() );
 				}
 			}
 		}

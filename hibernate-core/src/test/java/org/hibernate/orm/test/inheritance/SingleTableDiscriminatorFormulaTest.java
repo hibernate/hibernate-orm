@@ -4,27 +4,27 @@
  */
 package org.hibernate.orm.test.inheritance;
 
-import java.math.BigDecimal;
-import java.util.List;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
-
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.dialect.PostgreSQLDialect;
-
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @Jpa(
 		annotatedClasses = {
 				SingleTableDiscriminatorFormulaTest.DebitAccount.class,
@@ -32,6 +32,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		}
 )
 public class SingleTableDiscriminatorFormulaTest {
+	@AfterEach
+	void tearDown(EntityManagerFactoryScope scope) {
+		scope.dropData();
+	}
 
 	@Test
 	@RequiresDialect(value = PostgreSQLDialect.class)
@@ -56,8 +60,7 @@ public class SingleTableDiscriminatorFormulaTest {
 		});
 
 		scope.inTransaction(entityManager -> {
-			List<Account> accounts =
-					entityManager.createQuery("select a from Account a").getResultList();
+			var accounts = entityManager.createQuery("select a from Account a").getResultList();
 			assertEquals(2, accounts.size());
 		});
 	}

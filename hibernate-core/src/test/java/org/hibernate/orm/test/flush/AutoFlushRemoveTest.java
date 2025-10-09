@@ -15,8 +15,8 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
@@ -24,6 +24,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
 @DomainModel( annotatedClasses = {
 		AutoFlushRemoveTest.Item.class,
@@ -31,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 } )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-3354" )
 public class AutoFlushRemoveTest {
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Item first = new Item( 1L, "item" );
@@ -39,12 +40,9 @@ public class AutoFlushRemoveTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from Comment" ).executeUpdate();
-			session.createMutationQuery( "delete from Item" ).executeUpdate();
-		} );
+		scope.dropData();
 	}
 
 	@Test

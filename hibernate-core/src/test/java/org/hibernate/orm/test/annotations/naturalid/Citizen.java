@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.annotations.naturalid;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
@@ -18,7 +17,6 @@ import org.hibernate.annotations.NaturalIdCache;
 @NaturalIdCache
 public class Citizen {
 	@Id
-	@GeneratedValue
 	private Integer id;
 	private String firstname;
 	private String lastname;
@@ -28,6 +26,16 @@ public class Citizen {
 	@NaturalId
 	private String ssn;
 
+	public Citizen() {
+	}
+
+	public Citizen(Integer id, String firstname, String lastname, State state, String ssn) {
+		this.id = id;
+		this.firstname = firstname;
+		this.lastname = lastname;
+		this.state = state;
+		this.ssn = ssn;
+	}
 
 	public Integer getId() {
 		return id;

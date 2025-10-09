@@ -13,8 +13,8 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
@@ -40,6 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Marco Belladelli
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
 @DomainModel( annotatedClasses = {
 		JoinFetchInheritanceTest.Zoo.class,
@@ -55,7 +56,7 @@ public class JoinFetchInheritanceTest {
 	private final static String CAT = "cat";
 	private final static String CAT_EMBEDDED = "cat_embedded";
 
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final List<Animal> animals = new ArrayList<>();
@@ -72,21 +73,9 @@ public class JoinFetchInheritanceTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery( "from Cat", Cat.class )
-					.getResultList()
-					.forEach( JoinFetchInheritanceTest::clearKittens );
-			session.createQuery( "from CatEmbedded", CatEmbedded.class )
-					.getResultList()
-					.forEach( JoinFetchInheritanceTest::clearKittens );
-		} );
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from Animal" ).executeUpdate();
-			session.createMutationQuery( "delete from Kitten" ).executeUpdate();
-			session.createMutationQuery( "delete from Zoo" ).executeUpdate();
-		} );
+		scope.dropData();
 	}
 
 	@Test

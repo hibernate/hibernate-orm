@@ -6,30 +6,27 @@ package org.hibernate.orm.test.flush;
 
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
+
+import static org.hibernate.cfg.AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
 
 /**
- * Test for issue https://hibernate.atlassian.net/browse/HHH-13663
- *
  * @author Luca Domenichini
  */
-@JiraKey(value = "HHH-13663")
-public class TestHibernateFlushModeOnThreadLocalInactiveTransaction extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS, "thread" );
-	}
-
+@Jira("https://hibernate.atlassian.net/browse/HHH-13663")
+@ServiceRegistry(settings = @Setting(name = CURRENT_SESSION_CONTEXT_CLASS, value = "thread"))
+@SessionFactory
+public class TestHibernateFlushModeOnThreadLocalInactiveTransaction {
 	@Test
-	public void testHibernateFlushModeOnInactiveTransaction() {
-		try ( Session s = sessionFactory().getCurrentSession() ) {
-			//s.setFlushMode( FlushMode.AUTO ); // this does not throw (API is deprecated)
-			s.setHibernateFlushMode( FlushMode.AUTO ); // this should not throw even within an inactive transaction
+	public void testHibernateFlushModeOnInactiveTransaction(SessionFactoryScope factoryScope) {
+		try (Session s = factoryScope.getSessionFactory().getCurrentSession()) {
+			// this should not throw even within an inactive transaction
+			s.setHibernateFlushMode( FlushMode.AUTO );
 		}
 	}
 

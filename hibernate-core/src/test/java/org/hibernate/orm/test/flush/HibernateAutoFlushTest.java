@@ -7,42 +7,44 @@ package org.hibernate.orm.test.flush;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertTrue;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.jboss.logging.Logger;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class HibernateAutoFlushTest extends BaseNonConfigCoreFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = {
+		HibernateAutoFlushTest.Person.class,
+		HibernateAutoFlushTest.Advertisement.class
+})
+@SessionFactory
+public class HibernateAutoFlushTest {
+	private final Logger log  = Logger.getLogger( HibernateAutoFlushTest.class );
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class,
-			Advertisement.class
-		};
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testFlushAutoSQLNativeSession() {
-		doInHibernate(this::sessionFactory, session -> {
-			session.createNativeQuery("delete from Person", Object.class).executeUpdate();
-		});
-		doInHibernate(this::sessionFactory, session -> {
+	public void testFlushAutoSQLNativeSession(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
 			log.info("testFlushAutoSQLNativeSession");
 			//tag::flushing-auto-flush-sql-native-example[]
-			assertTrue( session.createNativeQuery( "select count(*) from Person", Integer.class )
-					.getSingleResult() == 0);
+			Assertions.assertEquals( 0, (int) session.createNativeQuery( "select count(*) from Person", Integer.class )
+					.getSingleResult() );
 
 			Person person = new Person("John Doe");
 			session.persist(person);
 
-			assertTrue( session.createNativeQuery( "select count(*) from Person", Integer.class )
-					.uniqueResult() == 0);
+			Assertions.assertEquals( 0, (int) session.createNativeQuery( "select count(*) from Person", Integer.class )
+					.uniqueResult() );
 			//end::flushing-auto-flush-sql-native-example[]
 		});
 	}

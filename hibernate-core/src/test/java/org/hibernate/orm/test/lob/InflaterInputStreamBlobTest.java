@@ -12,6 +12,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -27,12 +28,17 @@ import java.util.zip.GZIPOutputStream;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = InflaterInputStreamBlobTest.TestEntity.class)
 @SessionFactory
 @JiraKey("HHH-19464")
 class InflaterInputStreamBlobTest {
-
 	private static final int RANDOM_SIZE = 32000;
+
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
 	void hibernate_blob_streaming(SessionFactoryScope scope) throws Exception {

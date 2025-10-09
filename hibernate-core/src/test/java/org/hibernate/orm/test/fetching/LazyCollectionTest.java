@@ -4,14 +4,6 @@
  */
 package org.hibernate.orm.test.fetching;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.hibernate.annotations.NaturalId;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -19,26 +11,37 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
+import org.hibernate.annotations.NaturalId;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.jboss.logging.Logger;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Vlad Mihalcea
  */
-public class LazyCollectionTest extends BaseEntityManagerFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = {
+		LazyCollectionTest.Department.class,
+		LazyCollectionTest.Employee.class,
+})
+@SessionFactory
+public class LazyCollectionTest {
+	private final Logger log = Logger.getLogger( LazyCollectionTest.class );
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Department.class,
-			Employee.class,
-		};
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void test() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::fetching-LazyCollection-persist-example[]
 			Department department = new Department();
 			department.setId(1L);
@@ -53,7 +56,7 @@ public class LazyCollectionTest extends BaseEntityManagerFunctionalTestCase {
 			//end::fetching-LazyCollection-persist-example[]
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::fetching-LazyCollection-select-example[]
 			Department department = entityManager.find(Department.class, 1L);
 

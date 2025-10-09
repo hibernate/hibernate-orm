@@ -4,46 +4,38 @@
  */
 package org.hibernate.orm.test.filter.proxy;
 
-import java.util.Map;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.jboss.logging.Logger;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.FailureExpected;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.hibernate.cfg.TransactionSettings.ENABLE_LAZY_LOAD_NO_TRANS;
 
 /**
  * @author Vlad Mihalcea
  */
-public class ProxyPreservingFiltersOutsideInitialSessionTest
-		extends BaseEntityManagerFunctionalTestCase {
-
-
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] {
-			AccountGroup.class,
-			Account.class
-		};
-	}
-
-	@Override
-	protected Map buildSettings() {
-		Map settings = super.buildSettings();
-		settings.put( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
-		return settings;
-	}
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ServiceRegistry(settings = @Setting(name = ENABLE_LAZY_LOAD_NO_TRANS, value = "true"))
+@DomainModel(annotatedClasses = {
+		AccountGroup.class,
+		Account.class
+})
+@SessionFactory
+public class ProxyPreservingFiltersOutsideInitialSessionTest {
+	private final Logger log =  Logger.getLogger( ProxyPreservingFiltersOutsideInitialSessionTest.class );
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-11076", message = "Fix rejected, we need another approach to fix this issue!" )
-	public void testPreserveFilters() {
-
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	@FailureExpected( jiraKey = "HHH-11076",
+			reason = "Fix rejected, we need another approach to fix this issue!" )
+	public void testPreserveFilters(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			AccountGroup accountGroup = new AccountGroup();
 			accountGroup.setId( 1L );
 			entityManager.persist( accountGroup );
@@ -67,86 +59,80 @@ public class ProxyPreservingFiltersOutsideInitialSessionTest
 			accountGroup.getAccounts().add( account );
 		} );
 
-		AccountGroup group = doInJPA( this::entityManagerFactory, entityManager -> {
+		AccountGroup group = factoryScope.fromTransaction( entityManager -> {
 			entityManager.unwrap( Session.class ).enableFilter( "byRegion" ).setParameter( "region", "US" );
 			return entityManager.find( AccountGroup.class, 1L );
 		} );
 
-		assertEquals(1, group.getAccounts().size());
+		Assertions.assertEquals( 1, group.getAccounts().size() );
 	}
 
 	@Test
-	public void testChangeFilterBeforeInitializeInSameSession() {
+	public void testChangeFilterBeforeInitializeInSameSession(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
+			AccountGroup accountGroup = new AccountGroup();
+			accountGroup.setId( 1L );
+			entityManager.persist( accountGroup );
 
-		doInJPA(
-				this::entityManagerFactory, entityManager -> {
-					AccountGroup accountGroup = new AccountGroup();
-					accountGroup.setId( 1L );
-					entityManager.persist( accountGroup );
+			Account account = new Account();
+			account.setName( "A1" );
+			account.setRegionCode( "Europe" );
+			entityManager.persist( account );
+			accountGroup.getAccounts().add( account );
 
-					Account account = new Account();
-					account.setName( "A1" );
-					account.setRegionCode( "Europe" );
-					entityManager.persist( account );
-					accountGroup.getAccounts().add( account );
+			account = new Account();
+			account.setName( "A2" );
+			account.setRegionCode( "Europe" );
+			entityManager.persist( account );
+			accountGroup.getAccounts().add( account );
 
-					account = new Account();
-					account.setName( "A2" );
-					account.setRegionCode( "Europe" );
-					entityManager.persist( account );
-					accountGroup.getAccounts().add( account );
+			account = new Account();
+			account.setName( "A3" );
+			account.setRegionCode( "US" );
+			entityManager.persist( account );
+			accountGroup.getAccounts().add( account );
+		} );
 
-					account = new Account();
-					account.setName( "A3" );
-					account.setRegionCode( "US" );
-					entityManager.persist( account );
-					accountGroup.getAccounts().add( account );
-				}
-		);
-
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		factoryScope.inTransaction( entityManager -> {
 			entityManager.unwrap( Session.class ).enableFilter( "byRegion" ).setParameter( "region", "US" );
 			AccountGroup accountGroup = entityManager.find( AccountGroup.class, 1L );
 			// Change the filter
 			entityManager.unwrap( Session.class ).enableFilter( "byRegion" ).setParameter( "region", "Europe" );
 			Hibernate.initialize( accountGroup.getAccounts() );
 			// will contain accounts with regionCode "Europe"
-			assertEquals( 2, accountGroup.getAccounts().size() );
-			return accountGroup;
+			Assertions.assertEquals( 2, accountGroup.getAccounts().size() );
 		} );
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-11076", message = "Fix rejected, we need another approach to fix this issue!" )
-	public void testChangeFilterBeforeInitializeInTempSession() {
+	@FailureExpected( jiraKey = "HHH-11076",
+			reason = "Fix rejected, we need another approach to fix this issue!" )
+	public void testChangeFilterBeforeInitializeInTempSession(SessionFactoryScope factoryScope) {
+		factoryScope.inSession( entityManager -> {
+			AccountGroup accountGroup = new AccountGroup();
+			accountGroup.setId( 1L );
+			entityManager.persist( accountGroup );
 
-		doInJPA(
-				this::entityManagerFactory, entityManager -> {
-					AccountGroup accountGroup = new AccountGroup();
-					accountGroup.setId( 1L );
-					entityManager.persist( accountGroup );
+			Account account = new Account();
+			account.setName( "A1" );
+			account.setRegionCode( "Europe" );
+			entityManager.persist( account );
+			accountGroup.getAccounts().add( account );
 
-					Account account = new Account();
-					account.setName( "A1" );
-					account.setRegionCode( "Europe" );
-					entityManager.persist( account );
-					accountGroup.getAccounts().add( account );
+			account = new Account();
+			account.setName( "A2" );
+			account.setRegionCode( "Europe" );
+			entityManager.persist( account );
+			accountGroup.getAccounts().add( account );
 
-					account = new Account();
-					account.setName( "A2" );
-					account.setRegionCode( "Europe" );
-					entityManager.persist( account );
-					accountGroup.getAccounts().add( account );
+			account = new Account();
+			account.setName( "A3" );
+			account.setRegionCode( "US" );
+			entityManager.persist( account );
+			accountGroup.getAccounts().add( account );
+		} );
 
-					account = new Account();
-					account.setName( "A3" );
-					account.setRegionCode( "US" );
-					entityManager.persist( account );
-					accountGroup.getAccounts().add( account );
-				}
-		);
-
-		AccountGroup group = doInJPA( this::entityManagerFactory, entityManager -> {
+		AccountGroup group = factoryScope.fromTransaction( entityManager -> {
 			entityManager.unwrap( Session.class ).enableFilter( "byRegion" ).setParameter( "region", "US" );
 			AccountGroup accountGroup = entityManager.find( AccountGroup.class, 1L );
 			// Change the filter.
@@ -159,94 +145,46 @@ public class ProxyPreservingFiltersOutsideInitialSessionTest
 		// because that was the most recent filter used in the session?
 		Hibernate.initialize( group.getAccounts() );
 		// The following will fail because the collection will only contain accounts with regionCode "US"
-		assertEquals(2, group.getAccounts().size());
+		Assertions.assertEquals( 2, group.getAccounts().size() );
 	}
 
 	@Test
-	public void testMergeNoFilterThenInitializeTempSession() {
+	public void testMergeNoFilterThenInitializeTempSession(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
+			AccountGroup accountGroup = new AccountGroup();
+			accountGroup.setId( 1L );
+			entityManager.persist( accountGroup );
 
-		doInJPA(
-				this::entityManagerFactory, entityManager -> {
-					AccountGroup accountGroup = new AccountGroup();
-					accountGroup.setId( 1L );
-					entityManager.persist( accountGroup );
+			Account account = new Account();
+			account.setName( "A1" );
+			account.setRegionCode( "Europe" );
+			entityManager.persist( account );
+			accountGroup.getAccounts().add( account );
 
-					Account account = new Account();
-					account.setName( "A1" );
-					account.setRegionCode( "Europe" );
-					entityManager.persist( account );
-					accountGroup.getAccounts().add( account );
+			account = new Account();
+			account.setName( "A2" );
+			account.setRegionCode( "Europe" );
+			entityManager.persist( account );
+			accountGroup.getAccounts().add( account );
 
-					account = new Account();
-					account.setName( "A2" );
-					account.setRegionCode( "Europe" );
-					entityManager.persist( account );
-					accountGroup.getAccounts().add( account );
+			account = new Account();
+			account.setName( "A3" );
+			account.setRegionCode( "US" );
+			entityManager.persist( account );
+			accountGroup.getAccounts().add( account );
+		} );
 
-					account = new Account();
-					account.setName( "A3" );
-					account.setRegionCode( "US" );
-					entityManager.persist( account );
-					accountGroup.getAccounts().add( account );
-				}
-		);
-
-		final AccountGroup group = doInJPA( this::entityManagerFactory, entityManager -> {
+		final AccountGroup group = factoryScope.fromTransaction( entityManager -> {
 			entityManager.unwrap( Session.class ).enableFilter( "byRegion" ).setParameter( "region", "US" );
 			return entityManager.find( AccountGroup.class, 1L );
 		} );
 
-		final AccountGroup mergedGroup = doInJPA( this::entityManagerFactory, entityManager -> {
+		final AccountGroup mergedGroup = factoryScope.fromTransaction( entityManager -> {
 			return entityManager.merge( group );
 		} );
 
 		// group.getAccounts() will be unfiltered because merge cleared AbstractCollectionPersister#enabledFilters
 		Hibernate.initialize( mergedGroup.getAccounts() );
-		assertEquals(3, mergedGroup.getAccounts().size());
-	}
-
-	@Test
-	public void testSaveOrUpdateNoFilterThenInitializeTempSession() {
-
-		doInJPA(
-				this::entityManagerFactory, entityManager -> {
-					AccountGroup accountGroup = new AccountGroup();
-					accountGroup.setId( 1L );
-					entityManager.persist( accountGroup );
-
-					Account account = new Account();
-					account.setName( "A1" );
-					account.setRegionCode( "Europe" );
-					entityManager.persist( account );
-					accountGroup.getAccounts().add( account );
-
-					account = new Account();
-					account.setName( "A2" );
-					account.setRegionCode( "Europe" );
-					entityManager.persist( account );
-					accountGroup.getAccounts().add( account );
-
-					account = new Account();
-					account.setName( "A3" );
-					account.setRegionCode( "US" );
-					entityManager.persist( account );
-					accountGroup.getAccounts().add( account );
-				}
-		);
-
-		final AccountGroup group = doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.unwrap( Session.class ).enableFilter( "byRegion" ).setParameter( "region", "US" );
-			return entityManager.find( AccountGroup.class, 1L );
-		} );
-
-		final AccountGroup savedGroup = doInJPA( this::entityManagerFactory, entityManager -> {
-			// saveOrUpdate adds the PersistenceCollection to the session "as is"
-			return (AccountGroup) entityManager.unwrap( Session.class ).merge( group );
-		} );
-
-		Hibernate.initialize( savedGroup.getAccounts() );
-		// group.getAccounts() should not be filtered.
-		// the following fails because AbstractCollectionPersister#enabledFilters is still intact.
-		assertEquals(3, savedGroup.getAccounts().size());
+		Assertions.assertEquals( 3, mergedGroup.getAccounts().size() );
 	}
 }

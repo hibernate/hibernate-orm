@@ -4,18 +4,6 @@
  */
 package org.hibernate.orm.test.inheritance;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.Jira;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -24,21 +12,25 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.TypedQuery;
-import jakarta.persistence.criteria.CollectionJoin;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.ListJoin;
-import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.SetJoin;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Marco Belladelli
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
 @DomainModel( annotatedClasses = {
 		TreatedLeftPluralJoinInheritanceTest.ParentEntity.class,
@@ -52,17 +44,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 } )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16472" )
 public class TreatedLeftPluralJoinInheritanceTest {
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final ChildEntity childEntity = new ChildEntity( 1L );
+			var childEntity = new ChildEntity( 1L );
 			session.persist( childEntity );
-			final SingleTableSubEntity singleTableSubEntity = new SingleTableSubEntity( childEntity );
-			final JoinedSubEntity joinedSubEntity = new JoinedSubEntity( childEntity );
-			final TablePerClassSubEntity tablePerClassSubEntity = new TablePerClassSubEntity( childEntity );
-			final ParentEntity parentEntityA = new ParentEntity( 1L, "entity1_a", null, null, null );
+			var singleTableSubEntity = new SingleTableSubEntity( childEntity );
+			var joinedSubEntity = new JoinedSubEntity( childEntity );
+			var tablePerClassSubEntity = new TablePerClassSubEntity( childEntity );
+			var parentEntityA = new ParentEntity( 1L, "entity1_a", null, null, null );
 			session.persist( parentEntityA );
-			final ParentEntity parentEntityB = new ParentEntity(
+			var parentEntityB = new ParentEntity(
 					2L,
 					"entity1_b",
 					List.of( singleTableSubEntity ),
@@ -79,45 +71,40 @@ public class TreatedLeftPluralJoinInheritanceTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from SingleTableEntity" ).executeUpdate();
-			session.createMutationQuery( "delete from JoinedEntity" ).executeUpdate();
-			session.createMutationQuery( "delete from TablePerClassEntity" ).executeUpdate();
-			session.createMutationQuery( "delete from ParentEntity" ).executeUpdate();
-			session.createMutationQuery( "delete from ChildEntity" ).executeUpdate();
-		} );
+		scope.dropData();
 	}
 
 	@Test
 	public void testSingleTable(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final ChildEntity childEntity = session.find( ChildEntity.class, 1L );
-			final CriteriaBuilder cb = session.getCriteriaBuilder();
-			final CriteriaQuery<ParentEntity> cq = cb.createQuery( ParentEntity.class );
-			final Root<ParentEntity> root = cq.from( ParentEntity.class );
-			final ListJoin<ParentEntity, SingleTableEntity> listJoin = root.join(
+			var childEntity = session.find( ChildEntity.class, 1L );
+			var cb = session.getCriteriaBuilder();
+			var cq = cb.createQuery( ParentEntity.class );
+			var root = cq.from( ParentEntity.class );
+			var listJoin = root.join(
 					session.getMetamodel()
 							.entity( ParentEntity.class )
 							.getList( "singleTableEntities", SingleTableEntity.class ),
 					JoinType.LEFT
 			);
-			final ListJoin<ParentEntity, SingleTableSubEntity> treatedJoin = cb.treat(
+			var treatedJoin = cb.treat(
 					listJoin,
 					SingleTableSubEntity.class
 			);
-			final Path<?> childPath = treatedJoin.get( "child" );
+			var childPath = treatedJoin.get( "child" );
 			cq.select( root ).where( cb.or(
 					cb.equal( childPath, childEntity ),
 					childPath.isNull()
 			) ).orderBy( cb.asc( root.get( "id" ) ) );
-			final TypedQuery<ParentEntity> query = session.createQuery( cq );
-			final List<ParentEntity> resultList = query.getResultList();
+			//noinspection removal
+			var query = session.createQuery( cq );
+			var resultList = query.getResultList();
 			assertThat( resultList ).hasSize( 2 );
 			assertThat( resultList.get( 0 ).getSingleTableEntities() ).isEmpty();
 			assertThat( resultList.get( 1 ).getSingleTableEntities() ).hasSize( 1 );
-			final SingleTableEntity subEntity = resultList.get( 1 ).getSingleTableEntities().get( 0 );
+			var subEntity = resultList.get( 1 ).getSingleTableEntities().get( 0 );
 			assertThat( subEntity ).isInstanceOf( SingleTableSubEntity.class );
 			assertThat( ( (SingleTableSubEntity) subEntity ).getChild().getId() ).isEqualTo( 1L );
 		} );
@@ -126,29 +113,30 @@ public class TreatedLeftPluralJoinInheritanceTest {
 	@Test
 	public void testJoined(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final ChildEntity childEntity = session.find( ChildEntity.class, 1L );
-			final CriteriaBuilder cb = session.getCriteriaBuilder();
-			final CriteriaQuery<ParentEntity> cq = cb.createQuery( ParentEntity.class );
-			final Root<ParentEntity> root = cq.from( ParentEntity.class );
-			final SetJoin<ParentEntity, JoinedEntity> join = root.join(
+			var childEntity = session.find( ChildEntity.class, 1L );
+			var cb = session.getCriteriaBuilder();
+			var cq = cb.createQuery( ParentEntity.class );
+			var root = cq.from( ParentEntity.class );
+			var join = root.join(
 					session.getMetamodel().entity( ParentEntity.class ).getSet( "joinedEntities", JoinedEntity.class ),
 					JoinType.LEFT
 			);
-			final SetJoin<ParentEntity, JoinedSubEntity> treatedJoin = cb.treat(
+			var treatedJoin = cb.treat(
 					join,
 					JoinedSubEntity.class
 			);
-			final Path<?> childPath = treatedJoin.get( "child" );
+			var childPath = treatedJoin.get( "child" );
 			cq.select( root ).where( cb.or(
 					cb.equal( childPath, childEntity ),
 					childPath.isNull()
 			) ).orderBy( cb.asc( root.get( "id" ) ) );
-			final TypedQuery<ParentEntity> query = session.createQuery( cq );
-			final List<ParentEntity> resultList = query.getResultList();
+			//noinspection removal
+			var query = session.createQuery( cq );
+			var resultList = query.getResultList();
 			assertThat( resultList ).hasSize( 2 );
 			assertThat( resultList.get( 0 ).getJoinedEntities() ).isEmpty();
 			assertThat( resultList.get( 1 ).getJoinedEntities() ).hasSize( 1 );
-			final JoinedEntity subEntity = resultList.get( 1 ).getJoinedEntities().iterator().next();
+			var subEntity = resultList.get( 1 ).getJoinedEntities().iterator().next();
 			assertThat( subEntity ).isInstanceOf( JoinedSubEntity.class );
 			assertThat( ( (JoinedSubEntity) subEntity ).getChild().getId() ).isEqualTo( 1L );
 		} );
@@ -157,36 +145,38 @@ public class TreatedLeftPluralJoinInheritanceTest {
 	@Test
 	public void testTablePerClass(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final ChildEntity childEntity = session.find( ChildEntity.class, 1L );
-			final CriteriaBuilder cb = session.getCriteriaBuilder();
-			final CriteriaQuery<ParentEntity> cq = cb.createQuery( ParentEntity.class );
-			final Root<ParentEntity> root = cq.from( ParentEntity.class );
-			final CollectionJoin<ParentEntity, TablePerClassEntity> join = root.join(
+			var childEntity = session.find( ChildEntity.class, 1L );
+			var cb = session.getCriteriaBuilder();
+			var cq = cb.createQuery( ParentEntity.class );
+			var root = cq.from( ParentEntity.class );
+			var join = root.join(
 					session.getMetamodel()
 							.entity( ParentEntity.class )
 							.getCollection( "tablePerClassEntities", TablePerClassEntity.class ),
 					JoinType.LEFT
 			);
-			final CollectionJoin<ParentEntity, TablePerClassSubEntity> treatedJoin = cb.treat(
+			var treatedJoin = cb.treat(
 					join,
 					TablePerClassSubEntity.class
 			);
-			final Path<?> childPath = treatedJoin.get( "child" );
+			var childPath = treatedJoin.get( "child" );
 			cq.select( root ).where( cb.or(
 					cb.equal( childPath, childEntity ),
 					childPath.isNull()
 			) ).orderBy( cb.asc( root.get( "id" ) ) );
-			final TypedQuery<ParentEntity> query = session.createQuery( cq );
-			final List<ParentEntity> resultList = query.getResultList();
+			//noinspection removal
+			var query = session.createQuery( cq );
+			var resultList = query.getResultList();
 			assertThat( resultList ).hasSize( 2 );
 			assertThat( resultList.get( 0 ).getTablePerClassEntities() ).isEmpty();
 			assertThat( resultList.get( 1 ).getTablePerClassEntities() ).hasSize( 1 );
-			final TablePerClassEntity subEntity = resultList.get( 1 ).getTablePerClassEntities().iterator().next();
+			var subEntity = resultList.get( 1 ).getTablePerClassEntities().iterator().next();
 			assertThat( subEntity ).isInstanceOf( TablePerClassSubEntity.class );
 			assertThat( ( (TablePerClassSubEntity) subEntity ).getChild().getId() ).isEqualTo( 1L );
 		} );
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity( name = "ParentEntity" )
 	public static class ParentEntity {
 		@Id
@@ -232,6 +222,7 @@ public class TreatedLeftPluralJoinInheritanceTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "SingleTableEntity" )
 	@Inheritance( strategy = InheritanceType.SINGLE_TABLE )
 	@DiscriminatorColumn( name = "disc_col" )
@@ -252,6 +243,7 @@ public class TreatedLeftPluralJoinInheritanceTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "SingleTableSubEntity" )
 	public static class SingleTableSubEntity extends SingleTableEntity {
 		@ManyToOne
@@ -269,6 +261,7 @@ public class TreatedLeftPluralJoinInheritanceTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "JoinedEntity" )
 	@Inheritance( strategy = InheritanceType.JOINED )
 	public static class JoinedEntity {
@@ -288,6 +281,7 @@ public class TreatedLeftPluralJoinInheritanceTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "JoinedSubEntity" )
 	public static class JoinedSubEntity extends JoinedEntity {
 		@ManyToOne
@@ -305,6 +299,7 @@ public class TreatedLeftPluralJoinInheritanceTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "TablePerClassEntity" )
 	@Inheritance( strategy = InheritanceType.TABLE_PER_CLASS )
 	public static class TablePerClassEntity {
@@ -324,6 +319,7 @@ public class TreatedLeftPluralJoinInheritanceTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "TablePerClassSubEntity" )
 	public static class TablePerClassSubEntity extends TablePerClassEntity {
 		@ManyToOne

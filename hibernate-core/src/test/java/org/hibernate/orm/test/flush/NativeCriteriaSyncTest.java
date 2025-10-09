@@ -9,36 +9,43 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-
 import org.hibernate.orm.test.hql.SimpleEntityWithAssociation;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Etienne Miret
  */
-public class NativeCriteriaSyncTest extends BaseCoreFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@JiraKey("HHH-3813")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/hql/SimpleEntityWithAssociation.hbm.xml")
+@SessionFactory
+public class NativeCriteriaSyncTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	/**
 	 * Tests that the join table of a many-to-many relationship is properly flushed before making a related Criteria
 	 * query.
 	 */
 	@Test
-	@JiraKey( value = "HHH-3813" )
-	public void test() {
-
-
-		final SimpleEntityWithAssociation e1 = new SimpleEntityWithAssociation( "e1" );
-		final SimpleEntityWithAssociation e2 = new SimpleEntityWithAssociation( "e2" );
-		e1.getManyToManyAssociatedEntities().add( e2 );
-
-		doInHibernate( this::sessionFactory, session -> {
+	public void test(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			final SimpleEntityWithAssociation e1 = new SimpleEntityWithAssociation( "e1" );
+			final SimpleEntityWithAssociation e2 = new SimpleEntityWithAssociation( "e2" );
+			e1.getManyToManyAssociatedEntities().add( e2 );
 			session.persist( e1 );
+		} );
 
+		factoryScope.inTransaction( (session) -> {
 			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 			CriteriaQuery<SimpleEntityWithAssociation> criteria = criteriaBuilder.createQuery( SimpleEntityWithAssociation.class );
 			Root<SimpleEntityWithAssociation> root = criteria.from( SimpleEntityWithAssociation.class );
@@ -48,22 +55,8 @@ public class NativeCriteriaSyncTest extends BaseCoreFunctionalTestCase {
 			);
 			criteria.where( criteriaBuilder.equal( join.get( "name" ), "e2" ) );
 
-			assertEquals(1, session.createQuery( criteria ).list().size());
-
-//			final Criteria criteria = session.createCriteria( SimpleEntityWithAssociation.class );
-//			criteria.createCriteria( "manyToManyAssociatedEntities" ).add( Restrictions.eq( "name", "e2" ) );
-//			assertEquals( 1, criteria.list().size() );
+			assertEquals( 1, session.createQuery( criteria ).list().size() );
 		} );
-	}
-
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
-	}
-
-	@Override
-	protected String[] getMappings() {
-		return new String[] { "hql/SimpleEntityWithAssociation.hbm.xml" };
 	}
 
 }

@@ -6,6 +6,8 @@ package org.hibernate.engine.spi;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Supplier;
+
 import jakarta.persistence.TransactionRequiredException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -621,4 +623,16 @@ public interface SharedSessionContractImplementor
 
 	@Override
 	RootGraphImplementor<?> getEntityGraph(String graphName);
+
+	/**
+	 * Allows accessing session scoped extension storages of the particular session instance.
+	 *
+	 * @param extension The extension storage attached to the current session.
+	 * @param createIfMissing Creates a storage extension using the supplier,
+	 * if the current session does not yet have the particular storage type attached to this session.
+	 * @param <T> The type of the extension storage.
+	 */
+	@Incubating
+	<T extends ExtensionStorage> T getExtensionStorage(Class<T> extension, Supplier<T> createIfMissing);
+
 }

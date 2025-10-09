@@ -12,26 +12,19 @@ import jakarta.persistence.Id;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Assert;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
 @JiraKey(value = "HHH-11096")
-public class InMemoryCreationTimestampNullableColumnTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class
-		};
-	}
+@Jpa( annotatedClasses = {InMemoryCreationTimestampNullableColumnTest.Person.class} )
+public class InMemoryCreationTimestampNullableColumnTest {
 
 	@Entity(name = "Person")
 	public static class Person {
@@ -65,14 +58,14 @@ public class InMemoryCreationTimestampNullableColumnTest extends BaseEntityManag
 	}
 
 	@Test
-	public void generatesCurrentTimestamp() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void generatesCurrentTimestamp(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Person person = new Person();
 			person.setName( "John Doe" );
 			entityManager.persist( person );
 
 			entityManager.flush();
-			Assert.assertNotNull( person.getCreationDate() );
+			Assertions.assertNotNull( person.getCreationDate() );
 		} );
 	}
 }

@@ -621,4 +621,26 @@ public interface SharedSessionContractImplementor
 
 	@Override
 	RootGraphImplementor<?> getEntityGraph(String graphName);
+
+	/**
+	 * Allows attaching session scoped extensions to the particular session instance they are based on.
+	 *
+	 * @param extensionName The name of the extension serves as a "key" for its retrival from a session instance.
+	 * @param extension The extension to attach to the current session.
+	 */
+	@Incubating
+	void attachExtension(String extensionName, Object extension);
+
+	/**
+	 * Returns the extensions attached to the current session.
+	 *
+	 * @param extensionName The name of the extension to retrieve.
+	 * @param extensionType The type of the extension to retrieve.
+	 * @param <T> The type of the extension to retrieve.
+	 * @return The extension instance attached to the current session,
+	 * or {@code null} if there is no extension with the requested name attached to the session.
+	 * @throws ClassCastException if the requested extension cannot be cast to the requested type.
+	 */
+	@Incubating
+	<T> T retrieveExtension(String extensionName, Class<T> extensionType);
 }

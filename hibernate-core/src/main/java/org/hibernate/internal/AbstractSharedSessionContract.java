@@ -111,8 +111,10 @@ import java.io.ObjectOutputStream;
 import java.io.Serial;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -185,6 +187,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	//Lazily initialized
 	private transient ExceptionConverter exceptionConverter;
 	private transient SessionAssociationMarkers sessionAssociationMarkers;
+
+	private transient Map<String, Object> extensions;
 
 	public AbstractSharedSessionContract(SessionFactoryImpl factory, SessionCreationOptions options) {
 		this.factory = factory;
@@ -1702,6 +1706,23 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			sessionAssociationMarkers = new SessionAssociationMarkers( this );
 		}
 		return sessionAssociationMarkers;
+	}
+
+	@Override
+	public <T> T retrieveExtension(String extensionName, Class<T> extensionType) {
+		if ( extensions != null ) {
+			Object extension = extensions.get( extensionName );
+			return extension == null ? null : extensionType.cast( extension );
+		}
+		return null;
+	}
+
+	@Override
+	public void attachExtension(String extensionName, Object extension) {
+		if ( extensions == null ) {
+			extensions = new HashMap<>();
+		}
+		extensions.put( extensionName, extension );
 	}
 
 	@Serial

@@ -989,7 +989,12 @@ public class SessionImpl
 	@Override
 	public <E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> ids, FindOption... options) {
 		final var rootGraph = (RootGraph<E>) entityGraph;
-		final var loadAccess = byMultipleIds( rootGraph.getGraphedType().getJavaType() );
+		final var type = rootGraph.getGraphedType();
+		final MultiIdentifierLoadAccess<E> loadAccess =
+				switch ( type.getRepresentationMode() ) {
+					case MAP -> byMultipleIds( type.getTypeName() );
+					case POJO -> byMultipleIds( type.getJavaType() );
+				};
 		loadAccess.withLoadGraph( rootGraph );
 		setMultiIdentifierLoadAccessOptions( options, loadAccess );
 		return loadAccess.multiLoad( ids );

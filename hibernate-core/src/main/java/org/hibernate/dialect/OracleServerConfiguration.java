@@ -132,14 +132,13 @@ public class OracleServerConfiguration {
 	}
 
 	private static boolean isExtended(Statement statement) {
-		try ( final ResultSet resultSet =
-					statement.executeQuery( "select cast('string' as varchar2(32000)) from dual" ) ) {
-			resultSet.next();
-			// succeeded, so MAX_STRING_SIZE == EXTENDED
-			return true;
+		try (final ResultSet resultSet =
+					statement.executeQuery("SELECT property_value FROM database_properties " +
+									"WHERE property_name = 'MAX_STRING_SIZE'")) {
+			return resultSet.next()
+					&& "EXTENDED".equalsIgnoreCase(resultSet.getString(1));
 		}
 		catch (SQLException ex) {
-			// failed, so MAX_STRING_SIZE == STANDARD, still need to check autonomous
 			return false;
 		}
 	}

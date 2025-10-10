@@ -4,41 +4,41 @@
  */
 package org.hibernate.orm.test.annotations.enumerated.mapkey;
 
-import org.hibernate.Session;
-
-import org.junit.Test;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Steve Ebersole
  */
-public class MapKeyEnumeratedTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { User.class, SocialNetworkProfile.class };
-	}
+@DomainModel(
+		annotatedClasses = {
+				User.class,
+				SocialNetworkProfile.class
+		}
+)
+@SessionFactory
+public class MapKeyEnumeratedTest {
 
 	@Test
-	public void testMapKeyEnumerated() {
-		Session s = openSession();
-		s.beginTransaction();
-		User user = new User("User1", SocialNetwork.STUB_NETWORK_NAME, "facebookId");
-		s.persist( user );
-		s.getTransaction().commit();
-		s.close();
+	public void testMapKeyEnumerated(SessionFactoryScope scope) {
+		User u = new User( "User1", SocialNetwork.STUB_NETWORK_NAME, "facebookId" );
+		scope.inTransaction(
+				session -> session.persist( u )
 
-		s = openSession();
-		s.beginTransaction();
-		user = s.get( User.class, user.getId() );
-		s.getTransaction().commit();
-		s.close();
+		);
 
-		s = openSession();
-		s.beginTransaction();
-		user = s.get( User.class, user.getId() );
-		s.remove( user );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session ->
+						session.find( User.class, u.getId() )
+		);
+
+		scope.inTransaction(
+				session -> {
+					User user = session.find( User.class, u.getId() );
+					session.remove( user );
+				}
+		);
 	}
 }

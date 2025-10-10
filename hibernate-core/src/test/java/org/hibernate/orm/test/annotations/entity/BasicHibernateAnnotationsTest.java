@@ -4,142 +4,152 @@
  */
 package org.hibernate.orm.test.annotations.entity;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Currency;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-
+import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.RollbackException;
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.query.Query;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Currency;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
-import jakarta.persistence.OptimisticLockException;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Fail.fail;
 
 /**
  * @author Emmanuel Bernard
  */
-public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
+@SessionFactory
+@DomainModel(
+		annotatedClasses = {
+				Forest.class,
+				Tree.class,
+				Ransom.class,
+				ZipCode.class,
+				Flight.class,
+				Name.class,
+				FormalLastName.class,
+				ContactDetails.class,
+				Topic.class,
+				Narrative.class,
+				Drill.class,
+				PowerDrill.class,
+				SoccerTeam.class,
+				Player.class,
+				Doctor.class,
+				PhoneNumberConverter.class
+		},
+		annotatedPackageNames = "org.hibernate.orm.test.annotations.entity"
+)
+public class BasicHibernateAnnotationsTest {
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
+
 	@Test
-	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
-	public void testEntity() throws Exception {
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class)
+	public void testEntity(SessionFactoryScope scope) throws Exception {
 		Forest forest = new Forest();
 		forest.setName( "Fontainebleau" );
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		s.persist( forest );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> session.persist( forest )
+		);
 
-		s = openSession();
-		tx = s.beginTransaction();
-		forest = (Forest) s.get( Forest.class, forest.getId() );
-		assertNotNull( forest );
-		forest.setName( "Fontainebleau" );
-		//should not execute SQL update
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					Forest f = session.find( Forest.class, forest.getId() );
+					assertThat( f ).isNotNull();
+					f.setName( "Fontainebleau" );
+					//should not execute SQL update
+				}
+		);
 
-		s = openSession();
-		tx = s.beginTransaction();
-		forest = (Forest) s.get( Forest.class, forest.getId() );
-		assertNotNull( forest );
-		forest.setLength( 23 );
-		//should execute dynamic SQL update
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					Forest f = session.find( Forest.class, forest.getId() );
+					assertThat( f ).isNotNull();
+					f.setLength( 23 );
+					//should execute dynamic SQL update
+				}
+		);
 
-		s = openSession();
-		tx = s.beginTransaction();
-		s.remove( s.get( Forest.class, forest.getId() ) );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> session.remove( session.find( Forest.class, forest.getId() ) )
+		);
 	}
 
 	@Test
-	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
-	public void testVersioning() throws Exception {
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class)
+	public void testVersioning(SessionFactoryScope scope) {
 		Forest forest = new Forest();
 		forest.setName( "Fontainebleau" );
 		forest.setLength( 33 );
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		s.persist( forest );
-		tx.commit();
-		s.close();
 
-		Session parallelSession = openSession();
-		Transaction parallelTx = parallelSession.beginTransaction();
-		s = openSession();
-		tx = s.beginTransaction();
+		scope.inTransaction(
+				session -> session.persist( forest )
+		);
 
-		forest = (Forest) parallelSession.get( Forest.class, forest.getId() );
-		Forest reloadedForest = (Forest) s.get( Forest.class, forest.getId() );
-		reloadedForest.setLength( 11 );
-		assertNotSame( forest, reloadedForest );
-		tx.commit();
-		s.close();
+		scope.inSession(
+				parallelSession -> {
+					try {
+						parallelSession.getTransaction().begin();
+						Forest forestFromParallelSession = scope.fromTransaction(
+								s -> {
+									Forest f = parallelSession.find( Forest.class, forest.getId() );
+									Forest reloadedForest = s.find( Forest.class, forest.getId() );
+									reloadedForest.setLength( 11 );
+									assertThat( reloadedForest ).isNotSameAs( f );
+									return f;
+								}
+						);
+						forestFromParallelSession.setLength( 22 );
+						parallelSession.getTransaction().commit();
+						fail( "All optimistic locking should have make it fail" );
+					}
+					catch (Exception e) {
+						if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof CockroachDialect ) {
+							// CockroachDB always runs in SERIALIZABLE isolation, and throws a RollbackException
+							assertThat( e ).isInstanceOf( RollbackException.class );
+						}
+						else {
+							assertThat( e ).isInstanceOf( OptimisticLockException.class );
+						}
 
-		forest.setLength( 22 );
-		try {
-			parallelTx.commit();
-			fail( "All optimistic locking should have make it fail" );
-		}
-		catch (Exception e) {
-			if (getDialect() instanceof CockroachDialect) {
-				// CockroachDB always runs in SERIALIZABLE isolation, and throws a RollbackException
-				assertTrue( e instanceof RollbackException );
-			} else {
-				assertTrue( e instanceof OptimisticLockException );
-			}
-			parallelTx.rollback();
-		}
-		finally {
-			parallelSession.close();
-		}
+						if ( parallelSession.getTransaction().isActive() ) {
+							parallelSession.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession();
-		tx = s.beginTransaction();
-		s.remove( s.get( Forest.class, forest.getId() ) );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> session.remove( session.find( Forest.class, forest.getId() ) )
+		);
 	}
 
 	@Test
-	@RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
-	public void testWhereClause() throws Exception {
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class)
+	public void testWhereClause(SessionFactoryScope scope) {
 		List<Doctor> doctors = new ArrayList<>();
 
 		Doctor goodDoctor = new Doctor();
@@ -168,284 +178,275 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		team.setName( "New team" );
 		team.getPhysiologists().addAll( doctors );
 
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
+		scope.inTransaction(
+				session -> {
+					for ( Doctor doctor : doctors ) {
+						session.persist( doctor );
+					}
 
-		for ( Doctor doctor : doctors ) {
-			s.persist( doctor );
-		}
+					session.persist( team );
+				}
+		);
 
-		s.persist( team );
+		scope.inTransaction(
+				session -> {
+					List<Doctor> list = session.createSelectionQuery( "from " + Doctor.class.getName(), Doctor.class )
+							.getResultList();
 
-		tx.commit();
-		s.close();
+					assertThat( list.size() ).isEqualTo( 2 );
 
-		s = openSession();
-		tx = s.beginTransaction();
+					assertThat( list.get( 0 ).getName() ).isEqualTo( goodDoctor.getName() );
+					assertThat( list.get( 1 ).getName() ).isEqualTo( docExperiencedUnlicensed.getName() );
 
-		Query<Doctor> query = s.createQuery( "from " + Doctor.class.getName(), Doctor.class );
-		List<Doctor> list = query.getResultList();
+					SoccerTeam loadedTeam = session.find( SoccerTeam.class, team.getId() );
 
-		assertEquals( 2, list.size() );
-
-		assertEquals( list.get( 0 ).getName(), goodDoctor.getName() );
-		assertEquals( list.get( 1 ).getName(), docExperiencedUnlicensed.getName() );
-
-		SoccerTeam loadedTeam = s.get( SoccerTeam.class, team.getId() );
-
-		assertEquals( 1, loadedTeam.getPhysiologists().size() );
-		assertEquals( goodDoctor.getName(), loadedTeam.getPhysiologists().get( 0 ).getName() );
-
-		tx.commit();
-		s.close();
+					assertThat( loadedTeam.getPhysiologists().size() ).isEqualTo( 1 );
+					assertThat( loadedTeam.getPhysiologists().get( 0 ).getName() ).isEqualTo( goodDoctor.getName() );
+				}
+		);
 	}
 
 	@Test
-	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
-	public void testType() throws Exception {
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class)
+	public void testType(SessionFactoryScope scope) {
 		Forest f = new Forest();
 		f.setName( "Broceliande" );
 		String description = "C'est une enorme foret enchantee ou vivais Merlin et toute la clique";
 		f.setLongDescription( description );
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		s.persist( f );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> session.persist( f )
+		);
 
-		s = openSession();
-		tx = s.beginTransaction();
-		f = s.get( Forest.class, f.getId() );
-		assertNotNull( f );
-		assertEquals( description, f.getLongDescription() );
-		s.remove( f );
-		tx.commit();
-		s.close();
-
+		scope.inTransaction(
+				session -> {
+					Forest forest = session.find( Forest.class, f.getId() );
+					assertThat( forest ).isNotNull();
+					assertThat( forest.getLongDescription() ).isEqualTo( description );
+					session.remove( forest );
+				}
+		);
 	}
 
 	@Test
-	public void testLoading() throws Exception {
-		final Forest created = fromTransaction( (session) -> {
+	public void testLoading(SessionFactoryScope scope) {
+		final Forest created = scope.fromTransaction( (session) -> {
 			Forest f = new Forest();
 			session.persist( f );
 			return f;
 		} );
 
 		// getReference
-		inTransaction( (session) -> {
+		scope.inTransaction( (session) -> {
 			final Forest reference = session.getReference( Forest.class, created.getId() );
-			assertFalse( Hibernate.isInitialized( reference ) );
+			assertThat( Hibernate.isInitialized( reference ) ).isFalse();
 		} );
 
 		// find
-		inTransaction( (session) -> {
+		scope.inTransaction( (session) -> {
 			final Forest reference = session.find( Forest.class, created.getId() );
-			assertTrue( Hibernate.isInitialized( reference ) );
+			assertThat( Hibernate.isInitialized( reference ) ).isTrue();
 		} );
 	}
 
 	@Test
-	public void testCache() throws Exception {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
+	public void testCache(SessionFactoryScope scope) {
 		ZipCode zc = new ZipCode();
-		zc.code = "92400";
-		s.persist( zc );
-		tx.commit();
-		s.close();
-		sessionFactory().getStatistics().clear();
-		sessionFactory().getStatistics().setStatisticsEnabled( true );
-		sessionFactory().getCache().evictEntityData( ZipCode.class );
-		s = openSession();
-		tx = s.beginTransaction();
-		s.get( ZipCode.class, zc.code );
-		assertEquals( 1, sessionFactory().getStatistics().getSecondLevelCachePutCount() );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					zc.code = "92400";
+					session.persist( zc );
+				}
+		);
+		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+		sessionFactory.getStatistics().clear();
+		sessionFactory.getStatistics().setStatisticsEnabled( true );
+		sessionFactory.getCache().evictEntityData( ZipCode.class );
 
-		s = openSession();
-		tx = s.beginTransaction();
-		s.get( ZipCode.class, zc.code );
-		assertEquals( 1, sessionFactory().getStatistics().getSecondLevelCacheHitCount() );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					session.find( ZipCode.class, zc.code );
+					assertThat( sessionFactory.getStatistics().getSecondLevelCachePutCount() ).isEqualTo( 1 );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					session.find( ZipCode.class, zc.code );
+					assertThat( sessionFactory.getStatistics().getSecondLevelCacheHitCount() ).isEqualTo( 1 );
+				}
+		);
 	}
 
 	@Test
-	public void testFilterOnCollection() {
+	public void testFilterOnCollection(SessionFactoryScope scope) {
+		Topic t = new Topic();
+		scope.inTransaction(
+				session -> {
+					Narrative n1 = new Narrative();
+					n1.setState( "published" );
+					t.addNarrative( n1 );
 
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
+					Narrative n2 = new Narrative();
+					n2.setState( "draft" );
+					t.addNarrative( n2 );
 
-		Topic topic = new Topic();
-		Narrative n1 = new Narrative();
-		n1.setState("published");
-		topic.addNarrative(n1);
+					session.persist( t );
+				}
+		);
 
-		Narrative n2 = new Narrative();
-		n2.setState("draft");
-		topic.addNarrative(n2);
+		scope.inTransaction(
+				session -> {
+					Topic topic = session.getReference( Topic.class, t.getId() );
 
-		s.persist(topic);
-		tx.commit();
-		s.close();
+					session.enableFilter( "byState" ).setParameter( "state", "published" );
+					topic = session.getReference( Topic.class, topic.getId() );
+					assertThat( topic ).isNotNull();
+					assertThat( topic.getNarratives().size() ).isEqualTo( 1 );
+					assertThat( topic.getNarratives().iterator().next().getState() ).isEqualTo( "published" );
+				}
+		);
 
-		s = openSession();
-		tx = s.beginTransaction();
-		topic = (Topic) s.getReference( Topic.class, topic.getId() );
-
-		s.enableFilter("byState").setParameter("state", "published");
-		topic = (Topic) s.getReference( Topic.class, topic.getId() );
-		assertNotNull(topic);
-		assertTrue(topic.getNarratives().size() == 1);
-		assertEquals("published", topic.getNarratives().iterator().next().getState());
-		tx.commit();
-		s.close();
-
-		s = openSession();
-		tx = s.beginTransaction();
-		s.createQuery( "delete from " + Narrative.class.getSimpleName() ).executeUpdate();
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> session.createMutationQuery( "delete from " + Narrative.class.getSimpleName() )
+						.executeUpdate()
+		);
 	}
 
 	@Test
-	public void testCascadedDeleteOfChildEntitiesBug2() {
+	public void testCascadedDeleteOfChildEntitiesBug2(SessionFactoryScope scope) {
 		// Relationship is one SoccerTeam to many Players.
 		// Create a SoccerTeam (parent) and three Players (child).
 		// Verify that the count of Players is correct.
 		// Clear the SoccerTeam reference Players.
 		// The orphanRemoval should remove the Players automatically.
 		// @OneToMany(mappedBy="name", orphanRemoval=true)
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
+		SoccerTeam t = new SoccerTeam();
+		scope.inTransaction(
+				session -> {
+					Player player1 = new Player();
+					player1.setName( "Shalrie Joseph" );
+					t.addPlayer( player1 );
 
-		SoccerTeam team = new SoccerTeam();
-		int teamid = team.getId();
-		Player player1 = new Player();
-		player1.setName("Shalrie Joseph");
-		team.addPlayer(player1);
+					Player player2 = new Player();
+					player2.setName( "Taylor Twellman" );
+					t.addPlayer( player2 );
 
-		Player player2 = new Player();
-		player2.setName("Taylor Twellman");
-		team.addPlayer(player2);
+					Player player3 = new Player();
+					player3.setName( "Steve Ralston" );
+					t.addPlayer( player3 );
+					session.persist( t );
+				}
+		);
 
-		Player player3 = new Player();
-		player3.setName("Steve Ralston");
-		team.addPlayer(player3);
-		s.persist(team);
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					SoccerTeam team = session.merge( t );
+					Long count = session.createSelectionQuery( "select count(*) from Player", Long.class ).list()
+							.get( 0 );
+					assertThat( count ).isEqualTo( 3 );
 
-		s = openSession();
-		tx = s.beginTransaction();
-		team = (SoccerTeam)s.merge(team);
-		int count = ( (Long) s.createQuery( "select count(*) from Player" ).list().get( 0 ) ).intValue();
-		assertEquals("expected count of 3 but got = " + count, count, 3);
-
-		// clear references to players, this should orphan the players which should
-		// in turn trigger orphanRemoval logic.
-		team.getPlayers().clear();
+					// clear references to players, this should orphan the players which should
+					// in turn trigger orphanRemoval logic.
+					team.getPlayers().clear();
 //		count = ( (Long) s.createQuery( "select count(*) from Player" ).iterate().next() ).intValue();
 //		assertEquals("expected count of 0 but got = " + count, count, 0);
-		tx.commit();
-		s.close();
+				}
+		);
 
-		s = openSession();
-		tx = s.beginTransaction();
-		count = ( (Long) s.createQuery( "select count(*) from Player" ).list().get( 0 ) ).intValue();
-		assertEquals("expected count of 0 but got = " + count, count, 0);
-		tx.commit();
-		s.close();
+
+		scope.inTransaction(
+				session -> {
+					Long count = session.createSelectionQuery( "select count(*) from Player", Long.class ).list()
+							.get( 0 );
+					assertThat( count ).isEqualTo( 0 );
+				}
+		);
 	}
 
 	@Test
-	public void testCascadedDeleteOfChildOneToOne() {
+	public void testCascadedDeleteOfChildOneToOne(SessionFactoryScope scope) {
 		// create two single player teams (for one versus one match of soccer)
 		// and associate teams with players via the special OneVOne methods.
 		// Clear the Team reference to players, which should orphan the teams.
 		// Orphaning the team should delete the team.
 
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
+		scope.inTransaction(
+				session -> {
+					SoccerTeam team = new SoccerTeam();
+					team.setName( "Shalrie's team" );
+					Player player1 = new Player();
+					player1.setName( "Shalrie Joseph" );
+					team.setOneVonePlayer( player1 );
+					player1.setOneVoneTeam( team );
 
-		SoccerTeam team = new SoccerTeam();
-		team.setName("Shalrie's team");
-		Player player1 = new Player();
-		player1.setName("Shalrie Joseph");
-		team.setOneVonePlayer(player1);
-		player1.setOneVoneTeam(team);
+					session.persist( team );
+					SoccerTeam team2 = new SoccerTeam();
+					team2.setName( "Taylor's team" );
+					Player player2 = new Player();
+					player2.setName( "Taylor Twellman" );
+					team2.setOneVonePlayer( player2 );
+					player2.setOneVoneTeam( team2 );
+					session.persist( team2 );
 
-		s.persist(team);
+					session.getTransaction().commit();
+					session.getTransaction().begin();
+					session.clear();
+					team2 = session.getReference( team2.getClass(), team2.getId() );
+					team = session.getReference( team.getClass(), team.getId() );
+					Long count = session.createSelectionQuery( "select count(*) from Player", Long.class ).list()
+							.get( 0 );
+					assertThat( count ).isEqualTo( 2 );
 
-		SoccerTeam team2 = new SoccerTeam();
-		team2.setName("Taylor's team");
-		Player player2 = new Player();
-		player2.setName("Taylor Twellman");
-		team2.setOneVonePlayer(player2);
-		player2.setOneVoneTeam(team2);
-		s.persist(team2);
-		tx.commit();
+					// clear references to players, this should orphan the players which should
+					// in turn trigger orphanRemoval logic.
+					team.setOneVonePlayer( null );
+					team2.setOneVonePlayer( null );
+				}
+		);
 
-		tx = s.beginTransaction();
-		s.clear();
-		team2 = (SoccerTeam)s.getReference(team2.getClass(), team2.getId());
-		team = (SoccerTeam)s.getReference(team.getClass(), team.getId());
-		int count = ( (Long) s.createQuery( "select count(*) from Player" ).list().get( 0 ) ).intValue();
-		assertEquals("expected count of 2 but got = " + count, count, 2);
-
-		// clear references to players, this should orphan the players which should
-		// in turn trigger orphanRemoval logic.
-		team.setOneVonePlayer(null);
-		team2.setOneVonePlayer(null);
-		tx.commit();
-		s.close();
-
-		s = openSession();
-		tx = s.beginTransaction();
-		count = ( (Long) s.createQuery( "select count(*) from Player" ).list().get( 0 ) ).intValue();
-		assertEquals("expected count of 0 but got = " + count, count, 0);
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					Long count = session.createSelectionQuery( "select count(*) from Player", Long.class ).list()
+							.get( 0 );
+					assertThat( count ).isEqualTo( 0 );
+				}
+		);
 	}
 
 	@Test
-	public void testFilter() throws Exception {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		s.createQuery( "delete Forest" ).executeUpdate();
-		Forest f1 = new Forest();
-		f1.setLength( 2 );
-		s.persist( f1 );
-		Forest f2 = new Forest();
-		f2.setLength( 20 );
-		s.persist( f2 );
-		Forest f3 = new Forest();
-		f3.setLength( 200 );
-		s.persist( f3 );
-		tx.commit();
-		s.close();
-		s = openSession();
-		tx = s.beginTransaction();
-		s.enableFilter( "betweenLength" ).setParameter( "minLength", 5 ).setParameter( "maxLength", 50 );
-		long count = ( (Long) s.createQuery( "select count(*) from Forest" ).list().get( 0 ) ).intValue();
-		assertEquals( 1, count );
-		s.disableFilter( "betweenLength" );
-		s.enableFilter( "minLength" ).setParameter( "minLength", 5 );
-		count = ( (Long) s.createQuery( "select count(*) from Forest" ).list().get( 0 ) ).longValue();
-		assertEquals( 2l, count );
-		s.disableFilter( "minLength" );
-		tx.rollback();
-		s.close();
+	public void testFilter(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createMutationQuery( "delete Forest" ).executeUpdate();
+					Forest f1 = new Forest();
+					f1.setLength( 2 );
+					session.persist( f1 );
+					Forest f2 = new Forest();
+					f2.setLength( 20 );
+					session.persist( f2 );
+					Forest f3 = new Forest();
+					f3.setLength( 200 );
+					session.persist( f3 );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					session.enableFilter( "betweenLength" ).setParameter( "minLength", 5 )
+							.setParameter( "maxLength", 50 );
+					long count = session.createSelectionQuery( "select count(*) from Forest", Long.class ).list()
+							.get( 0 );
+					assertThat( count ).isEqualTo( 1 );
+					session.disableFilter( "betweenLength" );
+					session.enableFilter( "minLength" ).setParameter( "minLength", 5 );
+					count = session.createSelectionQuery( "select count(*) from Forest", Long.class ).list().get( 0 );
+					assertThat( count ).isEqualTo( 2 );
+
+					session.disableFilter( "minLength" );
+				}
+		);
+
+
 	}
 
 	/**
@@ -453,236 +454,196 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	 * defined on a parent MappedSuperclass(s)
 	 */
 	@Test
-	public void testInheritFiltersFromMappedSuperclass() throws Exception {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		s.createQuery( "delete Drill" ).executeUpdate();
-		Drill d1 = new PowerDrill();
-		d1.setName("HomeDrill1");
-		d1.setCategory("HomeImprovment");
-		s.persist( d1 );
-		Drill d2 = new PowerDrill();
-		d2.setName("HomeDrill2");
-		d2.setCategory("HomeImprovement");
-		s.persist(d2);
-		Drill d3 = new PowerDrill();
-		d3.setName("HighPowerDrill");
-		d3.setCategory("Industrial");
-		s.persist( d3 );
-		tx.commit();
-		s.close();
-		s = openSession();
-		tx = s.beginTransaction();
-
-		//We test every filter with 2 queries, the first on the base class of the
-		//inheritance hierarchy (Drill), and the second on a subclass (PowerDrill)
-		s.enableFilter( "byName" ).setParameter( "name", "HomeDrill1");
-		long count = ( (Long) s.createQuery( "select count(*) from Drill" ).list().get( 0 ) ).intValue();
-		assertEquals( 1, count );
-		count = ( (Long) s.createQuery( "select count(*) from PowerDrill" ).list().get( 0 ) ).intValue();
-		assertEquals( 1, count );
-		s.disableFilter( "byName" );
-
-		s.enableFilter( "byCategory" ).setParameter( "category", "Industrial" );
-		count = ( (Long) s.createQuery( "select count(*) from Drill" ).list().get( 0 ) ).longValue();
-		assertEquals( 1, count );
-		count = ( (Long) s.createQuery( "select count(*) from PowerDrill" ).list().get( 0 ) ).longValue();
-		assertEquals( 1, count );
-		s.disableFilter( "byCategory" );
-
-		tx.rollback();
-		s.close();
-	}
-
-	@Test
-	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
-	public void testParameterizedType() {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		Forest f = new Forest();
-		f.setSmallText( "ThisIsASmallText" );
-		f.setBigText( "ThisIsABigText" );
-		s.persist( f );
-		tx.commit();
-		s.close();
-		s = openSession();
-		tx = s.beginTransaction();
-		Forest f2 = s.get( Forest.class, f.getId() );
-		assertEquals( f.getSmallText().toLowerCase(Locale.ROOT), f2.getSmallText() );
-		assertEquals( f.getBigText().toUpperCase(Locale.ROOT), f2.getBigText() );
-		tx.commit();
-		s.close();
-	}
-
-	@Test
-	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
-	@SkipForDialect(
-			value = SybaseDialect.class,
-			comment = "Sybase does not support LOB comparisons, and data cleanup plus OptimisticLockType.ALL on Forest triggers LOB comparison"
-	)
-	@SkipForDialect(
-			value = PostgreSQLDialect.class,
-			comment = "PGSQL does not support LOB comparisons, and data cleanup plus OptimisticLockType.ALL on Forest triggers LOB comparison"
-	)
-	@SkipForDialect(
-			value = DerbyDialect.class,
-			comment = "Derby does not support LOB comparisons, and data cleanup plus OptimisticLockType.ALL on Forest triggers LOB comparison"
-	)
-	@SkipForDialect(
-			value = OracleDialect.class,
-			comment = "Oracle does not support LOB comparisons, and data cleanup plus OptimisticLockType.ALL on Forest triggers LOB comparison"
-	)
-	public void testSerialized() {
-		Forest forest = new Forest();
-		forest.setName( "Shire" );
-		Country country = new Country();
-		country.setName( "Middle Earth" );
-		forest.setCountry( country );
-		Set<Country> near = new HashSet<>();
-		country = new Country();
-		country.setName("Mordor");
-		near.add(country);
-		country = new Country();
-		country.setName("Gondor");
-		near.add(country);
-		country = new Country();
-		country.setName("Eriador");
-		near.add(country);
-		forest.setNear(near);
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		s.persist( forest );
-		tx.commit();
-		s.close();
-
-		s = openSession();
-		tx = s.beginTransaction();
-		forest = s.get( Forest.class, forest.getId() );
-		assertNotNull( forest );
-		country = forest.getCountry();
-		assertNotNull( country );
-		assertEquals( country.getName(), forest.getCountry().getName() );
-		near = forest.getNear();
-		assertTrue("correct number of nearby countries", near.size() == 3);
-		for (Iterator iter = near.iterator(); iter.hasNext();) {
-			country = (Country)iter.next();
-			String name = country.getName();
-			assertTrue("found expected nearby country " + name,
-				(name.equals("Mordor") || name.equals("Gondor") || name.equals("Eriador")));
-		}
-		tx.commit();
-		s.close();
-	}
-
-	@Test
-	public void testCompositeType() throws Exception {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		Ransom r = new Ransom();
-		r.setKidnapperName( "Se7en" );
-		r.setDate( new Date() );
-		MonetaryAmount amount = new MonetaryAmount(
-				new BigDecimal( 100000 ),
-				Currency.getInstance( "EUR" )
+	public void testInheritFiltersFromMappedSuperclass(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createMutationQuery( "delete Drill" ).executeUpdate();
+					Drill d1 = new PowerDrill();
+					d1.setName( "HomeDrill1" );
+					d1.setCategory( "HomeImprovment" );
+					session.persist( d1 );
+					Drill d2 = new PowerDrill();
+					d2.setName( "HomeDrill2" );
+					d2.setCategory( "HomeImprovement" );
+					session.persist( d2 );
+					Drill d3 = new PowerDrill();
+					d3.setName( "HighPowerDrill" );
+					d3.setCategory( "Industrial" );
+					session.persist( d3 );
+				}
 		);
-		r.setAmount( amount );
-		s.persist( r );
-		tx.commit();
-		s.clear();
-		tx = s.beginTransaction();
-		r = (Ransom) s.get( Ransom.class, r.getId() );
-		assertNotNull( r );
-		assertNotNull( r.getAmount() );
-		assertTrue( 0 == new BigDecimal( 100000 ).compareTo( r.getAmount().getAmount() ) );
-		assertEquals( Currency.getInstance( "EUR" ), r.getAmount().getCurrency() );
-		tx.commit();
-		s.close();
+
+		scope.inTransaction(
+				session -> {
+					//We test every filter with 2 queries, the first on the base class of the
+					//inheritance hierarchy (Drill), and the second on a subclass (PowerDrill)
+					session.enableFilter( "byName" ).setParameter( "name", "HomeDrill1" );
+					long count = session.createSelectionQuery( "select count(*) from Drill", Long.class ).list()
+							.get( 0 );
+					assertThat( count ).isEqualTo( 1 );
+					count = session.createSelectionQuery( "select count(*) from PowerDrill", Long.class ).list()
+							.get( 0 );
+					assertThat( count ).isEqualTo( 1 );
+					session.disableFilter( "byName" );
+
+					session.enableFilter( "byCategory" ).setParameter( "category", "Industrial" );
+					count = session.createSelectionQuery( "select count(*) from Drill", Long.class ).list().get( 0 );
+					assertThat( count ).isEqualTo( 1 );
+					count = session.createSelectionQuery( "select count(*) from PowerDrill", Long.class ).list()
+							.get( 0 );
+					assertThat( count ).isEqualTo( 1 );
+					session.disableFilter( "byCategory" );
+				}
+		);
 	}
 
 	@Test
-	public void testFormula() throws Exception {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		Flight airFrance = new Flight();
-		airFrance.setId( new Long( 747 ) );
-		airFrance.setMaxAltitude( 10000 );
-		s.persist( airFrance );
-		tx.commit();
-		s.close();
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class)
+	public void testParameterizedType(SessionFactoryScope scope) {
+		Forest f = new Forest();
+		scope.inTransaction(
+				session -> {
+					f.setSmallText( "ThisIsASmallText" );
+					f.setBigText( "ThisIsABigText" );
+					session.persist( f );
+				}
+		);
 
-		s = openSession();
-		tx = s.beginTransaction();
-		airFrance = s.get( Flight.class, airFrance.getId() );
-		assertNotNull( airFrance );
-		assertEquals( 10000000, airFrance.getMaxAltitudeInMilimeter() );
-		s.remove( airFrance );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					Forest f2 = session.find( Forest.class, f.getId() );
+					assertThat( f2.getSmallText() ).isEqualTo( f.getSmallText().toLowerCase( Locale.ROOT ) );
+					assertThat( f2.getBigText() ).isEqualTo( f.getBigText().toUpperCase( Locale.ROOT ) );
+				}
+		);
 	}
 
 	@Test
-	public void testTypeDefNameAndDefaultForTypeAttributes() {
-		ContactDetails contactDetails = new ContactDetails();
-		contactDetails.setLocalPhoneNumber(new PhoneNumber("999999"));
-		contactDetails.setOverseasPhoneNumber(
-				new OverseasPhoneNumber("041", "111111"));
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class)
+	@SkipForDialect(
+			dialectClass = SybaseDialect.class,
+			reason = "Sybase does not support LOB comparisons, and data cleanup plus OptimisticLockType.ALL on Forest triggers LOB comparison"
+	)
+	@SkipForDialect(
+			dialectClass = PostgreSQLDialect.class,
+			reason = "PGSQL does not support LOB comparisons, and data cleanup plus OptimisticLockType.ALL on Forest triggers LOB comparison"
+	)
+	@SkipForDialect(
+			dialectClass = DerbyDialect.class,
+			reason = "Derby does not support LOB comparisons, and data cleanup plus OptimisticLockType.ALL on Forest triggers LOB comparison"
+	)
+	@SkipForDialect(
+			dialectClass = OracleDialect.class,
+			reason = "Oracle does not support LOB comparisons, and data cleanup plus OptimisticLockType.ALL on Forest triggers LOB comparison"
+	)
+	public void testSerialized(SessionFactoryScope scope) {
+		Forest f = new Forest();
+		f.setName( "Shire" );
+		Country c = new Country();
+		c.setName( "Middle Earth" );
+		f.setCountry( c );
+		Set<Country> nearCountries = new HashSet<>();
+		c = new Country();
+		c.setName( "Mordor" );
+		nearCountries.add( c );
+		c = new Country();
+		c.setName( "Gondor" );
+		nearCountries.add( c );
+		c = new Country();
+		c.setName( "Eriador" );
+		nearCountries.add( c );
+		f.setNear( nearCountries );
+		scope.inTransaction(
+				session -> session.persist( f )
+		);
 
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		s.persist(contactDetails);
-		tx.commit();
-		s.close();
-
-		s = openSession();
-		tx = s.beginTransaction();
-		contactDetails =
-			s.get( ContactDetails.class, contactDetails.getId() );
-		assertNotNull( contactDetails );
-		assertEquals( "999999", contactDetails.getLocalPhoneNumber().getNumber() );
-		assertEquals( "041111111", contactDetails.getOverseasPhoneNumber().getNumber() );
-		s.remove(contactDetails);
-		tx.commit();
-		s.close();
-
+		scope.inTransaction(
+				session -> {
+					Forest forest = session.find( Forest.class, f.getId() );
+					assertThat( forest ).isNotNull();
+					Country country = forest.getCountry();
+					assertThat( country ).isNotNull();
+					assertThat( country.getName() ).isEqualTo( forest.getCountry().getName() );
+					Set<Country> near = forest.getNear();
+					assertThat( near.size() ).isEqualTo( 3 );
+					for ( Country n : near ) {
+						String name = n.getName();
+						assertThat( (name.equals( "Mordor" ) || name.equals( "Gondor" ) || name.equals( "Eriador" )) )
+								.isTrue();
+					}
+				}
+		);
 	}
 
+	@Test
+	public void testCompositeType(SessionFactoryScope scope) {
+		Ransom ransom = new Ransom();
+		scope.inTransaction(
+				session -> {
+					ransom.setKidnapperName( "Se7en" );
+					ransom.setDate( new Date() );
+					MonetaryAmount amount = new MonetaryAmount(
+							new BigDecimal( 100000 ),
+							Currency.getInstance( "EUR" )
+					);
+					ransom.setAmount( amount );
+					session.persist( ransom );
+				}
+		);
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{
-				Forest.class,
-				Tree.class,
-				Ransom.class,
-				ZipCode.class,
-				Flight.class,
-				Name.class,
-				FormalLastName.class,
-				ContactDetails.class,
-				Topic.class,
-				Narrative.class,
-				Drill.class,
-				PowerDrill.class,
-				SoccerTeam.class,
-				Player.class,
-				Doctor.class,
-				PhoneNumberConverter.class
-		};
+		scope.inTransaction(
+				session -> {
+					Ransom r = session.find( Ransom.class, ransom.getId() );
+					assertThat( r ).isNotNull();
+					assertThat( r.getAmount() ).isNotNull();
+					assertThat( r.getAmount().getAmount() ).isEqualByComparingTo( new BigDecimal( 100000 ) );
+					assertThat( r.getAmount().getCurrency() ).isEqualTo( Currency.getInstance( "EUR" ) );
+				}
+		);
 	}
 
-	@Override
-	protected String[] getAnnotatedPackages() {
-		return new String[]{
-				"org.hibernate.orm.test.annotations.entity"
-		};
+	@Test
+	public void testFormula(SessionFactoryScope scope) {
+		Flight flight = new Flight();
+		scope.inTransaction(
+				session -> {
+					flight.setId( 747L );
+					flight.setMaxAltitude( 10000 );
+					session.persist( flight );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					Flight airFrance = session.find( Flight.class, flight.getId() );
+					assertThat( airFrance ).isNotNull();
+					assertThat( airFrance.getMaxAltitudeInMilimeter() ).isEqualTo( 10000000 );
+					session.remove( airFrance );
+				}
+		);
 	}
 
+	@Test
+	public void testTypeDefNameAndDefaultForTypeAttributes(SessionFactoryScope scope) {
+		ContactDetails details = new ContactDetails();
+		details.setLocalPhoneNumber( new PhoneNumber( "999999" ) );
+		details.setOverseasPhoneNumber(
+				new OverseasPhoneNumber( "041", "111111" ) );
+
+		scope.inTransaction(
+				session -> session.persist( details )
+		);
+
+		scope.inTransaction(
+				session -> {
+					ContactDetails contactDetails =
+							session.find( ContactDetails.class, details.getId() );
+					assertThat( contactDetails ).isNotNull();
+					assertThat( contactDetails.getLocalPhoneNumber().getNumber() ).isEqualTo( "999999" );
+					assertThat( contactDetails.getOverseasPhoneNumber().getNumber() ).isEqualTo( "041111111" );
+					session.remove( contactDetails );
+				}
+		);
+	}
 
 }

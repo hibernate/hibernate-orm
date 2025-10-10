@@ -26,12 +26,12 @@ public class SoccerTeam {
 
 	@OneToMany
 	@SQLRestriction("activeLicense = true")
-	private List<Doctor> physiologists = new ArrayList<Doctor>();
+	private List<Doctor> physiologists = new ArrayList<>();
 
 	@OneToMany(mappedBy="team",
 		orphanRemoval=true,
 		cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
-	private Set<Player> players = new HashSet<Player>();
+	private Set<Player> players = new HashSet<>();
 
 	@OneToOne(mappedBy="oneVoneTeam",
 		orphanRemoval=true,

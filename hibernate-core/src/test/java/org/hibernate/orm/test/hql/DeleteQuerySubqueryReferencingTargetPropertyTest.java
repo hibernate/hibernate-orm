@@ -12,26 +12,31 @@ import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-12492")
-public class DeleteQuerySubqueryReferencingTargetPropertyTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Root.class, Detail.class };
+@DomainModel(annotatedClasses = {
+		DeleteQuerySubqueryReferencingTargetPropertyTest.Root.class,
+		DeleteQuerySubqueryReferencingTargetPropertyTest.Detail.class
+})
+@SessionFactory
+public class DeleteQuerySubqueryReferencingTargetPropertyTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testSubQueryReferencingTargetProperty() {
-		// prepare
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testSubQueryReferencingTargetProperty(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (entityManager) -> {
 			Root m1 = new Root();
 			entityManager.persist( m1 );
 			Detail d11 = new Detail( m1 );
@@ -43,7 +48,7 @@ public class DeleteQuerySubqueryReferencingTargetPropertyTest extends BaseEntity
 			entityManager.persist( m2 );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		factoryScope.inTransaction( (entityManager) -> {
 			// depending on the generated ids above this delete removes all Roots or nothing
 			// removal of all Roots results in foreign key constraint violation
 			// removal of nothing is incorrect since 2nd Root does not have any details
@@ -58,7 +63,7 @@ public class DeleteQuerySubqueryReferencingTargetPropertyTest extends BaseEntity
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Root> query = builder.createQuery( Root.class );
 			query.select( query.from( Root.class ) );
-			Assert.assertEquals( 1, entityManager.createQuery( query ).getResultList().size() );
+			assertEquals( 1, entityManager.createQuery( query ).getResultList().size() );
 		} );
 	}
 

@@ -4,39 +4,49 @@
  */
 package org.hibernate.orm.test.hql;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Assert;
-import org.junit.Test;
-
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static jakarta.persistence.InheritanceType.JOINED;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-13169")
-public class UpdateJoinedSubclassCorrelationTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Root.class, SubRoot.class, Detail.class };
+@DomainModel(annotatedClasses = {
+		UpdateJoinedSubclassCorrelationTest.Root.class,
+		UpdateJoinedSubclassCorrelationTest.SubRoot.class,
+		UpdateJoinedSubclassCorrelationTest.Detail.class
+})
+@SessionFactory
+public class UpdateJoinedSubclassCorrelationTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testJoinedSubclassUpdateWithCorrelation() {
-		// prepare
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testJoinedSubclassUpdateWithCorrelation(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Root m1 = new SubRoot( 1, null );
 			entityManager.persist( m1 );
 			Detail d11 = new Detail( 10, m1 );
 			entityManager.persist( d11 );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		factoryScope.inTransaction( entityManager -> {
 			// DO NOT CHANGE this query: it used to trigger a very specific bug caused
 			// by the root table alias being added to the generated subquery instead of the table name
 			String u = "update SubRoot m set name = (select 'test' from Detail d where d.root = m)";
@@ -48,8 +58,8 @@ public class UpdateJoinedSubclassCorrelationTest extends BaseEntityManagerFuncti
 			CriteriaQuery<Root> query = builder.createQuery( Root.class );
 			query.select( query.from( Root.class ) );
 			List<Root> roots = entityManager.createQuery( query ).getResultList();
-			Assert.assertEquals( 1, roots.size() );
-			Assert.assertEquals( "test", ((SubRoot) roots.get(0)).name );
+			assertEquals( 1, roots.size() );
+			assertEquals( "test", ((SubRoot) roots.get(0)).name );
 		} );
 	}
 

@@ -4,21 +4,6 @@
  */
 package org.hibernate.orm.test.hql.size;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.jdbc.Expectation;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -27,65 +12,79 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.TypedQuery;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.jdbc.Expectation;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-14585")
 @RequiresDialect(value = PostgreSQLDialect.class, comment = "Other databases may not support boolean data types")
 @RequiresDialect(value = H2Dialect.class, comment = "Other databases may not support boolean data types")
-public class WhereClauseOrderBySizeTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Person.class, Book.class };
+@DomainModel(annotatedClasses = { WhereClauseOrderBySizeTest.Person.class, WhereClauseOrderBySizeTest.Book.class })
+@SessionFactory
+public class WhereClauseOrderBySizeTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testSizeAsOrderByExpression() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
-					// initial situation: Alice has 1 book, Bob none
-					final Person alice = new Person( "Alice" );
-					entityManager.persist( alice );
+	public void testSizeAsOrderByExpression(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (entityManager) -> {
+			// initial situation: Alice has 1 book, Bob none
+			final Person alice = new Person( "Alice" );
+			entityManager.persist( alice );
 
-					final Book book1 = new Book();
-					book1.setOwner( alice );
-					entityManager.persist( book1 );
+			final Book book1 = new Book();
+			book1.setOwner( alice );
+			entityManager.persist( book1 );
 
-					final Person bob = new Person( "Bob" );
-					entityManager.persist( bob );
+			final Person bob = new Person( "Bob" );
+			entityManager.persist( bob );
 
-					final TypedQuery<Person> orderByBroken = entityManager.createQuery(
-							"SELECT p FROM Person p ORDER BY size(p.books) DESC",
-							Person.class
-					);
+			final TypedQuery<Person> orderByBroken = entityManager.createQuery(
+					"SELECT p FROM Person p ORDER BY size(p.books) DESC",
+					Person.class
+			);
 
-					List<Person> dbPeopleBroken = orderByBroken.getResultList();
-					assertEquals( Arrays.asList( alice, bob ), dbPeopleBroken );
+			List<Person> dbPeopleBroken = orderByBroken.getResultList();
+			assertEquals( Arrays.asList( alice, bob ), dbPeopleBroken );
 
-					// add 2 books to Bob
-					final Book book2 = new Book();
-					book2.setOwner( bob );
-					entityManager.persist( book2 );
+			// add 2 books to Bob
+			final Book book2 = new Book();
+			book2.setOwner( bob );
+			entityManager.persist( book2 );
 
-					final Book book3 = new Book();
-					book3.setOwner( bob );
-					entityManager.persist( book3 );
+			final Book book3 = new Book();
+			book3.setOwner( bob );
+			entityManager.persist( book3 );
 
-					dbPeopleBroken = orderByBroken.getResultList();
-					assertEquals( Arrays.asList( bob, alice ), dbPeopleBroken );
+			dbPeopleBroken = orderByBroken.getResultList();
+			assertEquals( Arrays.asList( bob, alice ), dbPeopleBroken );
 
-					// remove (soft-deleting) both Bob's books
-					entityManager.remove( book2 );
-					entityManager.remove( book3 );
+			// remove (soft-deleting) both Bob's books
+			entityManager.remove( book2 );
+			entityManager.remove( book3 );
 
-					// result lists are not equal anymore
-					dbPeopleBroken = orderByBroken.getResultList();
-					assertEquals( Arrays.asList( alice, bob ), dbPeopleBroken );
-				}
-		);
+			// result lists are not equal anymore
+			dbPeopleBroken = orderByBroken.getResultList();
+			assertEquals( Arrays.asList( alice, bob ), dbPeopleBroken );
+		} );
 	}
 
 	@Entity(name = "Person")

@@ -7,6 +7,10 @@
 	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
+<!--
+    Models a Map with an association for both the key and for the value.
+-->
+
 <hibernate-mapping
 	package="org.hibernate.orm.test.ternary">
 

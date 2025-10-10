@@ -1605,7 +1605,9 @@ public abstract class AbstractEntityPersister
 
 		final var interceptor = asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 		assert interceptor != null : "Expecting bytecode interceptor to be non-null";
-		final Set<String> initializedLazyAttributeNames = interceptor.getInitializedLazyAttributeNames();
+		// Create a copy of init attrs, since lazySelectLoadPlan.load may update the set inside the interceptor,
+		// and we end up with the modified one here:
+		final Set<String> initializedLazyAttributeNames = new HashSet<>( interceptor.getInitializedLazyAttributeNames() );
 
 		final var lazyAttributesMetadata = getBytecodeEnhancementMetadata().getLazyAttributesMetadata();
 		final String fetchGroup = lazyAttributesMetadata.getFetchGroupName( fieldName );

@@ -20,6 +20,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -82,8 +83,25 @@ public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
 
 		PersistentClass pc = metadata.getEntityBinding( TheEntity.class.getName() );
 		BasicType<?> type = (BasicType<?>) pc.getProperty( "it" ).getType();
+		assertTyping( BasicTypeImpl.class, type ); // Should not be ConvertedBasicTypeImpl in particular
 		assertTyping( StringJavaType.class, type.getJavaTypeDescriptor() );
 		assertTyping( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ).getClass(), type.getJdbcType() );
+	}
+
+	/**
+	 * A baseline test, with an explicit @Convert annotation at entity level that should be in effect
+	 */
+	@Test
+	public void baselineAtEntityLevel() {
+		Metadata metadata = new MetadataSources( ssr )
+				.addAnnotatedClass( TheEntity2.class )
+				.buildMetadata();
+
+		PersistentClass pc = metadata.getEntityBinding( TheEntity2.class.getName() );
+		Type type = pc.getProperty( "it" ).getType();
+		ConvertedBasicTypeImpl adapter = assertTyping( ConvertedBasicTypeImpl.class, type );
+		final JpaAttributeConverter converter = (JpaAttributeConverter) adapter.getValueConverter();
+		assertTrue( SillyStringConverter.class.isAssignableFrom( converter.getConverterJavaType().getJavaTypeClass() ) );
 	}
 
 	/**
@@ -101,6 +119,7 @@ public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
 
 		PersistentClass pc = metadata.getEntityBinding( TheEntity2.class.getName() );
 		BasicType<?> type = (BasicType<?>) pc.getProperty( "it" ).getType();
+		assertTyping( BasicTypeImpl.class, type ); // Should not be ConvertedBasicTypeImpl in particular
 		assertTyping( StringJavaType.class, type.getJavaTypeDescriptor() );
 		assertTyping( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ).getClass(), type.getJdbcType() );
 	}

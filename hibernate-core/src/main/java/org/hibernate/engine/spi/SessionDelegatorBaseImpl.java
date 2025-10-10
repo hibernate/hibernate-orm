@@ -518,6 +518,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public void attachExtension(String extensionName, Object extension) {
+		delegate.attachExtension( extensionName, extension );
+	}
+
+	@Override
+	public <T> T retrieveExtension(String extensionName, Class<T> extensionType) {
+		return delegate.retrieveExtension( extensionName, extensionType );
+	}
+
+	@Override
 	public <T> QueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery) {
 		return delegate.createQuery( selectQuery );
 	}

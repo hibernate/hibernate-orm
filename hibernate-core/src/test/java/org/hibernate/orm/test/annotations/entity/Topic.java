@@ -27,10 +27,12 @@ public class Topic {
 
 	@Id @GeneratedValue
 	private int id;
+
 	private String name;
+
 	@OneToMany(mappedBy="topic", cascade=CascadeType.ALL)
 	@Filter(name="byState", condition=":state = state")
-	private Set<Narrative> narratives = new HashSet<Narrative>();
+	private Set<Narrative> narratives = new HashSet<>();
 
 
 	public int getId() {

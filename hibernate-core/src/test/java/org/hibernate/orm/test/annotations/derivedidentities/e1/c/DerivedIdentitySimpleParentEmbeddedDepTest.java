@@ -5,38 +5,49 @@
 package org.hibernate.orm.test.annotations.derivedidentities.e1.c;
 
 import org.hibernate.Session;
-
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.orm.test.util.SchemaUtil;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * @author Emmanuel Bernard
  */
-public class DerivedIdentitySimpleParentEmbeddedDepTest extends BaseNonConfigCoreFunctionalTestCase {
+@SessionFactory
+@DomainModel(
+		annotatedClasses = {
+				Dependent.class,
+				Employee.class
+		}
+)
+public class DerivedIdentitySimpleParentEmbeddedDepTest {
+
 	@Test
-	public void testManyToOne() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_empId", metadata() ) );
-		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "empPK", metadata() ) );
+	public void testManyToOne(SessionFactoryScope scope) {
+		MetadataImplementor metadata = scope.getMetadataImplementor();
+
+		assertThat( SchemaUtil.isColumnPresent( "Dependent", "emp_empId", metadata ) ).isTrue();
+		assertThat( !SchemaUtil.isColumnPresent( "Dependent", "empPK", metadata ) ).isTrue();
 		Employee e = new Employee();
 		e.empId = 1;
 		e.empName = "Emmanuel";
-		Session s = openSession(  );
-		s.getTransaction().begin();
-		s.persist( e );
-		Dependent d = new Dependent();
-		d.emp = e;
-		d.name = "Doggy";
-		s.persist( d );
-		s.flush();
-		s.clear();
-		d = getDerivedClassById( e, d.name, s );
-		assertEquals( e.empId, d.emp.empId );
-		s.getTransaction().rollback();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					session.persist( e );
+					Dependent d = new Dependent();
+					d.emp = e;
+					d.name = "Doggy";
+					session.persist( d );
+					session.flush();
+					session.clear();
+					d = getDerivedClassById( e, d.name, session );
+					assertThat( d.emp.empId ).isEqualTo( e.empId );
+				}
+		);
 	}
 
 	private Dependent getDerivedClassById(Employee e, String name, Session s) {
@@ -46,13 +57,5 @@ public class DerivedIdentitySimpleParentEmbeddedDepTest extends BaseNonConfigCor
 				.setParameter( "empId", e.empId )
 				.setParameter( "name", name )
 				.uniqueResult();
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Dependent.class,
-				Employee.class
-		};
 	}
 }

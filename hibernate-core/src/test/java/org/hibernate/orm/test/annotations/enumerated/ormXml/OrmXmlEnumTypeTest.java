@@ -7,25 +7,26 @@ package org.hibernate.orm.test.annotations.enumerated.ormXml;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.junit4.ExtraAssertions;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-
-import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.junit4.ExtraAssertions;
 import org.hibernate.type.internal.BasicTypeImpl;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static java.sql.Types.VARCHAR;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hibernate.type.SqlTypes.ENUM;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
-@JiraKey( value = "HHH-7645" )
-public class OrmXmlEnumTypeTest extends BaseUnitTestCase {
+@JiraKey(value = "HHH-7645")
+@BaseUnitTest
+public class OrmXmlEnumTypeTest {
+
 	@Test
 	public void testOrmXmlDefinedEnumType() {
 		StandardServiceRegistry ssr = ServiceRegistryBuilder.buildServiceRegistry();
@@ -44,10 +45,10 @@ public class OrmXmlEnumTypeTest extends BaseUnitTestCase {
 					.getTypeConfiguration()
 					.getJdbcTypeRegistry();
 			BasicTypeImpl<?> enumMapping = ExtraAssertions.assertTyping( BasicTypeImpl.class, bindingPropertyType );
-			assertEquals(
-					jdbcTypeRegistry.getDescriptor( jdbcTypeRegistry.hasRegisteredDescriptor( ENUM ) ? ENUM : VARCHAR ),
+			assertThat(
 					jdbcTypeRegistry.getDescriptor( enumMapping.getJdbcType().getDefaultSqlTypeCode() )
-			);
+			).isEqualTo( jdbcTypeRegistry.getDescriptor(
+					jdbcTypeRegistry.hasRegisteredDescriptor( ENUM ) ? ENUM : VARCHAR ) );
 		}
 		finally {
 			ServiceRegistryBuilder.destroy( ssr );

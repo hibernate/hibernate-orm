@@ -789,3 +789,33 @@ We recommend using https://github.com/agroal/agroal[Agroal] or https://github.co
 Alternatively, you may implement the `ConnectionProvider` interface to integrate the connection pool of your choice.
 In fact, some connection pools already include their own implementations of `ConnectionProvider`.
 
+[[maven-plugin-changes]]
+== Changes to the Maven Plugin
+
+The Maven bytecode enhancement plugin has been completely rewritten since version 7.0. The change that has the
+biggest consequence is that the artifactId and groupId of the Maven artifact have changed. As of now, you will
+need to include the plugin in the build section in your Maven pom file as illustrated below.
+
+```
+<plugin>
+    <groupId>org.hibernate.orm</groupId>
+    <artifactId>hibernate-maven-plugin</artifactId>
+    <version>$currentHibernateVersion</version>
+    <executions>
+        <execution>
+            <configuration>
+                <enableLazyInitialization>true</enableLazyInitialization>
+                <enableDirtyTracking>true</enableDirtyTracking>
+            </configuration>
+            <goals>
+                <goal>enhance</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
+
+Also, because of a regression and in contrast with the corresponding Ant task and Gradle plugin, the default values
+of the `enableLazyInitialization` and `enableDirtyTracking` are set to `false` while it used to be `true`. This is fixed in Hibernate ORM 7.1.
+
+The documentation in the userguide has been rewritten accordingly and completed with more examples.

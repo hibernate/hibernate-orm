@@ -67,6 +67,45 @@ class LazyOneToOneWithCastTest {
 		} );
 	}
 
+	@Test
+	void bothNotNull(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			ContainingEntity containingEntity1 = new ContainingEntity();
+			containingEntity1.setId( 1 );
+
+			ContainedEntity contained1 = new ContainedEntity();
+			contained1.setId( 4 );
+			contained1.setContainingAsIndexedEmbeddedWithCast( containingEntity1 );
+			containingEntity1.setContainedIndexedEmbeddedWithCast( contained1 );
+
+			contained1.setContainingAsIndexedEmbedded( containingEntity1 );
+			containingEntity1.setContainedIndexedEmbedded( contained1 );
+
+
+			session.persist( contained1 );
+			session.persist( containingEntity1 );
+
+		} );
+
+		scope.inTransaction( session -> {
+			ContainedEntity contained = session.find( ContainedEntity.class, 4 );
+
+			ContainingEntity containingAsIndexedEmbedded = contained.getContainingAsIndexedEmbedded();
+			assertThat( containingAsIndexedEmbedded ).isNotNull();
+			assertThat( Hibernate.isPropertyInitialized( contained, "containingAsIndexedEmbedded" ) ).isTrue();
+			assertThat( Hibernate.isPropertyInitialized( contained, "containingAsIndexedEmbeddedWithCast" ) ).isFalse();
+
+			Object containingAsIndexedEmbeddedWithCast = contained.getContainingAsIndexedEmbeddedWithCast();
+			assertThat( Hibernate.isPropertyInitialized( contained, "containingAsIndexedEmbeddedWithCast" ) ).isTrue();
+			assertThat( containingAsIndexedEmbeddedWithCast ).isNotNull();
+		} );
+
+		scope.inTransaction( session -> {
+			ContainedEntity contained = session.find( ContainedEntity.class, 4 );
+			assertThat( contained.getContainingAsIndexedEmbeddedWithCast() ).isNotNull();
+		} );
+	}
+
 	@AfterEach
 	void tearDown(SessionFactoryScope scope) {
 		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();

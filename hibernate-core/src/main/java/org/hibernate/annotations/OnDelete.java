@@ -64,7 +64,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <pre>
  * &#064;OneToMany(mappedBy = Child_.parent, cascade = {PERSIST, REMOVE})
  * &#064;OnDelete(action = CASCADE)
- * Set&lt;Child&gt; children = new HashSet<>();
+ * Set&lt;Child&gt; children = new HashSet&lt;&gt;();
  * </pre>
  * This mapping looks redundant, but it's not.
  * <ul>

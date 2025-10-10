@@ -65,13 +65,8 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 			Object id,
 			EntryFilter entryChecker,
 			SharedSessionContractImplementor session) {
-		final boolean loggerTraceEnabled = MODEL_MUTATION_LOGGER.isTraceEnabled();
-		if ( loggerTraceEnabled ) {
-			MODEL_MUTATION_LOGGER.tracef(
-					"Inserting collection rows - %s : %s",
-					mutationTarget.getRolePath(),
-					id
-			);
+		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+			MODEL_MUTATION_LOGGER.insertingNewCollectionRows( mutationTarget.getRolePath(), id );
 		}
 
 		final PluralAttributeMapping pluralAttribute = mutationTarget.getTargetPart();
@@ -80,13 +75,7 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 		final Iterator<?> entries = collection.entries( collectionDescriptor );
 		collection.preInsert( collectionDescriptor );
 		if ( !entries.hasNext() ) {
-			if ( loggerTraceEnabled ) {
-				MODEL_MUTATION_LOGGER.tracef(
-						"No collection rows to insert - %s : %s",
-						mutationTarget.getRolePath(),
-						id
-				);
-			}
+			MODEL_MUTATION_LOGGER.noCollectionRowsToInsert( mutationTarget.getRolePath(), id );
 			return;
 		}
 		final MutationExecutor[] executors = new MutationExecutor[subclassEntries.length];
@@ -125,13 +114,7 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 				entryCount++;
 			}
 
-			if ( loggerTraceEnabled ) {
-				MODEL_MUTATION_LOGGER.tracef(
-						"Done inserting %s collection rows: %s",
-						entryCount,
-						mutationTarget.getRolePath()
-				);
-			}
+			MODEL_MUTATION_LOGGER.doneInsertingCollectionRows( entryCount, mutationTarget.getRolePath() );
 
 		}
 		finally {

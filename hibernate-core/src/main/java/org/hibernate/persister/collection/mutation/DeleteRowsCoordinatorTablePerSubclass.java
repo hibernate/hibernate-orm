@@ -56,11 +56,7 @@ public class DeleteRowsCoordinatorTablePerSubclass implements DeleteRowsCoordina
 	@Override
 	public void deleteRows(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session) {
 		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-			MODEL_MUTATION_LOGGER.tracef(
-					"Deleting removed collection rows - %s : %s",
-					mutationTarget.getRolePath(),
-					key
-			);
+			MODEL_MUTATION_LOGGER.deletingRemovedCollectionRows( mutationTarget.getRolePath(), key );
 		}
 
 		final PluralAttributeMapping pluralAttribute = mutationTarget.getTargetPart();
@@ -68,7 +64,7 @@ public class DeleteRowsCoordinatorTablePerSubclass implements DeleteRowsCoordina
 
 		final Iterator<?> deletes = collection.getDeletes( collectionDescriptor, !deleteByIndex );
 		if ( !deletes.hasNext() ) {
-			MODEL_MUTATION_LOGGER.trace( "No rows to delete" );
+			MODEL_MUTATION_LOGGER.noRowsToDelete();
 			return;
 		}
 		final MutationExecutor[] executors = new MutationExecutor[subclassEntries.length];
@@ -108,8 +104,7 @@ public class DeleteRowsCoordinatorTablePerSubclass implements DeleteRowsCoordina
 				deletionCount++;
 			}
 
-			MODEL_MUTATION_LOGGER.tracef( "Done deleting %s collection rows : %s",
-					deletionCount, mutationTarget.getRolePath() );
+			MODEL_MUTATION_LOGGER.doneDeletingCollectionRows( deletionCount, mutationTarget.getRolePath() );
 		}
 		finally {
 			for ( MutationExecutor executor : executors ) {

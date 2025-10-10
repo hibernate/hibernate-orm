@@ -30,6 +30,7 @@ import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
+
 /**
  * Base support for coordinating mutations against an entity
  *
@@ -100,10 +101,7 @@ public abstract class AbstractMutationCoordinator {
 					}
 					else {
 						skipped++;
-						MODEL_MUTATION_LOGGER.tracef(
-								"Skipping table update - %s",
-								tableMutation.getTableName()
-						);
+						MODEL_MUTATION_LOGGER.skippingUpdate( tableMutation.getTableName() );
 					}
 				}
 				if ( skipped != 0 ) {

@@ -115,14 +115,17 @@ public class BatchImpl implements Batch {
 				if ( inclusionChecker != null
 						&& !inclusionChecker.include( statementDetails.getMutatingTableDetails() ) ) {
 					if ( loggerTraceEnabled ) {
-						MODEL_MUTATION_LOGGER.tracef(
-								"Skipping addBatch for table: %s (batch position %s)",
+						MODEL_MUTATION_LOGGER.skippingAddBatchForTable(
 								statementDetails.getMutatingTableDetails().getTableName(),
 								batchPosition+1
 						);
 					}
 				}
 				else {
+					MODEL_MUTATION_LOGGER.addBatchForTable(
+							statementDetails.getMutatingTableDetails().getTableName(),
+							batchPosition+1
+					);
 					//noinspection resource
 					final var statement = statementDetails.resolveStatement();
 					final String sqlString = statementDetails.getSqlString();

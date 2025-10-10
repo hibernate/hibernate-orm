@@ -232,7 +232,6 @@ import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -2429,7 +2428,7 @@ public abstract class AbstractEntityPersister
 			final Object[] previousState,
 			final String[] attributeNames,
 			final SessionImplementor session) {
-		final BitSet mutablePropertiesIndexes = getMutablePropertiesIndexes();
+		final var mutablePropertiesIndexes = getMutablePropertiesIndexes();
 		final int estimatedSize =
 				attributeNames == null
 						? 0
@@ -2747,13 +2746,12 @@ public abstract class AbstractEntityPersister
 
 	protected void logStaticSQL() {
 		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-			MODEL_MUTATION_LOGGER.tracef( "Static SQL for entity: %s", getEntityName() );
+			MODEL_MUTATION_LOGGER.staticSqlForEntity( getEntityName() );
 			for ( var entry : lazyLoadPlanByFetchGroup.entrySet() ) {
-				MODEL_MUTATION_LOGGER.tracef( " Lazy select (%s) : %s",
-						entry.getKey(), entry.getValue().getJdbcSelect().getSqlString() );
+				MODEL_MUTATION_LOGGER.lazySelect( String.valueOf(entry.getKey()), entry.getValue().getJdbcSelect().getSqlString() );
 			}
 			if ( sqlVersionSelectString != null ) {
-				MODEL_MUTATION_LOGGER.tracef( " Version select: %s", sqlVersionSelectString );
+				MODEL_MUTATION_LOGGER.versionSelect( sqlVersionSelectString );
 			}
 
 			{
@@ -2761,7 +2759,7 @@ public abstract class AbstractEntityPersister
 				if ( staticInsertGroup != null ) {
 					for ( int i = 0; i < staticInsertGroup.getNumberOfOperations(); i++ ) {
 						if ( staticInsertGroup.getOperation( i ) instanceof JdbcOperation jdbcOperation ) {
-							MODEL_MUTATION_LOGGER.tracef( " Insert (%s): %s", i, jdbcOperation.getSqlString() );
+							MODEL_MUTATION_LOGGER.insertOperationSql( i, jdbcOperation.getSqlString() );
 						}
 					}
 				}
@@ -2772,7 +2770,7 @@ public abstract class AbstractEntityPersister
 				if ( staticUpdateGroup != null ) {
 					for ( int i = 0; i < staticUpdateGroup.getNumberOfOperations(); i++ ) {
 						if ( staticUpdateGroup.getOperation( i ) instanceof JdbcOperation jdbcOperation ) {
-							MODEL_MUTATION_LOGGER.tracef( " Update (%s): %s", i, jdbcOperation.getSqlString() );
+							MODEL_MUTATION_LOGGER.updateOperationSql( i, jdbcOperation.getSqlString() );
 						}
 					}
 				}
@@ -2783,7 +2781,7 @@ public abstract class AbstractEntityPersister
 				if ( staticDeleteGroup != null ) {
 					for ( int i = 0; i < staticDeleteGroup.getNumberOfOperations(); i++ ) {
 						if ( staticDeleteGroup.getOperation( i ) instanceof JdbcOperation jdbcOperation ) {
-							MODEL_MUTATION_LOGGER.tracef( " Delete (%s): %s", i, jdbcOperation.getSqlString() );
+							MODEL_MUTATION_LOGGER.deleteOperationSql( i, jdbcOperation.getSqlString() );
 						}
 					}
 				}

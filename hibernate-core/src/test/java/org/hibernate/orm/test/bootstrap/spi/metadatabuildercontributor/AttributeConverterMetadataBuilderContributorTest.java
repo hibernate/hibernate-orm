@@ -4,39 +4,46 @@
  */
 package org.hibernate.orm.test.bootstrap.spi.metadatabuildercontributor;
 
-import java.time.YearMonth;
-import java.util.Map;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Converter;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.boot.spi.MetadataBuilderContributor;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import java.time.YearMonth;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Vlad Mihalcea
  */
 @RequiresDialect(H2Dialect.class)
-@JiraKey( value = "HHH-13040" )
-public class AttributeConverterMetadataBuilderContributorTest extends BaseEntityManagerFunctionalTestCase {
+@JiraKey(value = "HHH-13040")
+public class AttributeConverterMetadataBuilderContributorTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
-			Employee.class,
+				Employee.class,
 		};
+	}
+
+	public static class MetadataBuilderProvider implements SettingProvider.Provider<Object> {
+		@Override
+		public Object getSetting() {
+			return null;
+		}
 	}
 
 	@Override
@@ -50,9 +57,9 @@ public class AttributeConverterMetadataBuilderContributorTest extends BaseEntity
 
 	final Employee employee = new Employee();
 
-	@Override
-	protected void afterEntityManagerFactoryBuilt() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	@BeforeEach
+	protected void setUp() {
+		inTransaction( entityManager -> {
 			employee.id = 1L;
 			employee.username = "user@acme.com";
 			employee.nextVacation = YearMonth.of( 2018, 12 );
@@ -63,10 +70,10 @@ public class AttributeConverterMetadataBuilderContributorTest extends BaseEntity
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Employee employee = entityManager.find(Employee.class, 1L);
+		inTransaction( entityManager -> {
+			Employee employee = entityManager.find( Employee.class, 1L );
 
-			assertEquals( YearMonth.of( 2018, 12 ), employee.nextVacation );
+			assertThat( employee.nextVacation ).isEqualTo( YearMonth.of( 2018, 12 ) );
 		} );
 	}
 
@@ -94,7 +101,7 @@ public class AttributeConverterMetadataBuilderContributorTest extends BaseEntity
 
 		@Override
 		public YearMonth convertToEntityAttribute(Integer dbData) {
-			return YearMonth.of(dbData / 100, dbData % 100);
+			return YearMonth.of( dbData / 100, dbData % 100 );
 		}
 	}
 

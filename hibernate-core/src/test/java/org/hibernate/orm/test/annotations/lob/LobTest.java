@@ -4,13 +4,21 @@
  */
 package org.hibernate.orm.test.annotations.lob;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 
 /**
  * @author Emmanuel Bernard
  */
-@RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class)
+@DomainModel(
+		annotatedClasses = {
+				Book.class,
+				CompiledCode.class
+		}
+)
 public class LobTest extends AbstractLobTest<Book, CompiledCode> {
 	@Override
 	protected Class<Book> getBookClass() {
@@ -32,11 +40,4 @@ public class LobTest extends AbstractLobTest<Book, CompiledCode> {
 		return compiledCode.getId();
 	}
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Book.class,
-				CompiledCode.class
-		};
-	}
 }

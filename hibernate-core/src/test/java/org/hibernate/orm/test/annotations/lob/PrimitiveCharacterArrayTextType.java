@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.lob;
+
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.java.PrimitiveCharacterArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.LongVarcharJdbcType;

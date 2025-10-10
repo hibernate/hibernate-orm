@@ -5,23 +5,21 @@
 package org.hibernate.orm.test.multitenancy.schema;
 
 import org.hibernate.HibernateException;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.spi.AbstractMultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
-
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Steve Ebersole
  */
-@RequiresDialectFeature( value = ConnectionProviderBuilder.class )
+@RequiresDialect(H2Dialect.class)
 public class SchemaBasedMultiTenancyTest extends AbstractSchemaBasedMultiTenancyTest<
 		AbstractMultiTenantConnectionProvider<String>, ConnectionProvider> {
 
@@ -48,12 +46,12 @@ public class SchemaBasedMultiTenancyTest extends AbstractSchemaBasedMultiTenancy
 	}
 
 	@Test
-	@JiraKey( value = "HHH-11651")
+	@JiraKey(value = "HHH-11651")
 	public void testUnwrappingConnectionProvider() {
 		final MultiTenantConnectionProvider<String> multiTenantConnectionProvider = serviceRegistry.getService(
 				MultiTenantConnectionProvider.class );
 		final ConnectionProvider connectionProvider = multiTenantConnectionProvider.unwrap( ConnectionProvider.class );
-		assertThat( connectionProvider, is( notNullValue() ) );
+		assertThat( connectionProvider ).isNotNull();
 	}
 
 	@Test
@@ -63,7 +61,7 @@ public class SchemaBasedMultiTenancyTest extends AbstractSchemaBasedMultiTenancy
 				MultiTenantConnectionProvider.class );
 		final AbstractMultiTenantConnectionProvider<?> connectionProvider = multiTenantConnectionProvider.unwrap(
 				AbstractMultiTenantConnectionProvider.class );
-		assertThat( connectionProvider, is( notNullValue() ) );
+		assertThat( connectionProvider ).isNotNull();
 	}
 
 	@Test
@@ -73,6 +71,6 @@ public class SchemaBasedMultiTenancyTest extends AbstractSchemaBasedMultiTenancy
 				MultiTenantConnectionProvider.class );
 		final MultiTenantConnectionProvider<String> connectionProvider = multiTenantConnectionProvider.unwrap(
 				MultiTenantConnectionProvider.class );
-		assertThat( connectionProvider, is( notNullValue() ) );
+		assertThat( connectionProvider ).isNotNull();
 	}
 }

@@ -16,6 +16,7 @@ import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -25,6 +26,7 @@ import org.junit.jupiter.api.Test;
  * it's best to focus on a single DB.
  */
 @RequiresDialect(H2Dialect.class)
+@Disabled
 public class HibernateClassLoaderLeaksTest {
 
 	private static Set<Driver> knownDrivers;

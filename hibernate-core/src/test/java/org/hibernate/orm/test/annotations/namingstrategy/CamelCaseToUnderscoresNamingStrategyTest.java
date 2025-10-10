@@ -5,40 +5,39 @@
 package org.hibernate.orm.test.annotations.namingstrategy;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategySnakeCaseImpl;
 import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.service.ServiceRegistry;
-
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Test harness for HHH-17310.
  *
  * @author Anilabha Baral
  */
-public class CamelCaseToUnderscoresNamingStrategyTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class CamelCaseToUnderscoresNamingStrategyTest {
 
 	private ServiceRegistry serviceRegistry;
 
-	@Before
+	@BeforeAll
 	public void setUp() {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
-	@After
+	@AfterAll
 	public void tearDown() {
 		if ( serviceRegistry != null ) {
 			ServiceRegistryBuilder.destroy( serviceRegistry );
@@ -46,7 +45,7 @@ public class CamelCaseToUnderscoresNamingStrategyTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testWithWordWithDigitNamingStrategy() throws Exception {
+	public void testWithWordWithDigitNamingStrategy() {
 		Metadata metadata = new MetadataSources( serviceRegistry )
 				.addAnnotatedClass( B.class )
 				.getMetadataBuilder()
@@ -54,30 +53,18 @@ public class CamelCaseToUnderscoresNamingStrategyTest extends BaseUnitTestCase {
 				.build();
 
 		PersistentClass entityBinding = metadata.getEntityBinding( B.class.getName() );
-		assertEquals(
-				"word_with_digit_d1",
-				entityBinding.getProperty( "wordWithDigitD1" ).getSelectables().get( 0 ).getText()
-		);
-		assertEquals(
-				"abcd_efgh_i21",
-				entityBinding.getProperty( "AbcdEfghI21" ).getSelectables().get( 0 ).getText()
-		);
-		assertEquals(
-				"hello1",
-				entityBinding.getProperty( "hello1" ).getSelectables().get( 0 ).getText()
-		);
-		assertEquals(
-				"hello1_d2",
-				entityBinding.getProperty( "hello1D2" ).getSelectables().get( 0 ).getText()
-		);
-		assertEquals(
-				"hello3d4",
-				entityBinding.getProperty( "hello3d4" ).getSelectables().get( 0 ).getText()
-		);
-		assertEquals(
-				"Quoted-ColumnName",
-				entityBinding.getProperty( "quoted" ).getSelectables().get( 0 ).getText()
-		);
+		assertThat( entityBinding.getProperty( "wordWithDigitD1" ).getSelectables().get( 0 ).getText() )
+				.isEqualTo( "word_with_digit_d1" );
+		assertThat( entityBinding.getProperty( "AbcdEfghI21" ).getSelectables().get( 0 ).getText() )
+				.isEqualTo( "abcd_efgh_i21" );
+		assertThat( entityBinding.getProperty( "hello1" ).getSelectables().get( 0 ).getText() )
+				.isEqualTo( "hello1" );
+		assertThat( entityBinding.getProperty( "hello1D2" ).getSelectables().get( 0 ).getText() )
+				.isEqualTo( "hello1_d2" );
+		assertThat( entityBinding.getProperty( "hello3d4" ).getSelectables().get( 0 ).getText() )
+				.isEqualTo( "hello3d4" );
+		assertThat( entityBinding.getProperty( "quoted" ).getSelectables().get( 0 ).getText() )
+				.isEqualTo( "Quoted-ColumnName" );
 	}
 
 	@Entity

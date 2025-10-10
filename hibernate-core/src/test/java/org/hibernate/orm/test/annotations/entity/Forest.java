@@ -51,7 +51,7 @@ public class Forest {
 	private String smallText;
 	private String bigText;
 	private Country country;
-	private Set near;
+	private Set<Country> near;
 
 	@OptimisticLock(excluded=true)
 	@JdbcTypeCode( Types.LONGVARCHAR )
@@ -123,7 +123,7 @@ public class Forest {
 		return near;
 	}
 
-	public void setNear(Set<Country>near) {
+	public void setNear(Set<Country> near) {
 		this.near = near;
 	}
 

@@ -4,12 +4,6 @@
  */
 package org.hibernate.orm.test.bulkid;
 
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-
 public class DefaultMutationStrategyGeneratedIdTest extends AbstractMutationStrategyGeneratedIdTest {
 
-	@Override
-	protected Class<? extends SqmMultiTableInsertStrategy> getMultiTableInsertStrategyClass() {
-		return null;
-	}
 }

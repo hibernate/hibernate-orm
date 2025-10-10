@@ -70,6 +70,6 @@ public class Child {
 		return bioLength;
 	}
 	public void setBioLength(Integer bioLength) {
-		this.bioLength = bioLength==null ? 0 : bioLength.intValue();
+		this.bioLength = bioLength==null ? 0 : bioLength;
 	}
 }

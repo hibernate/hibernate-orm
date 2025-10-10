@@ -4,114 +4,103 @@
  */
 package org.hibernate.orm.test.component.cascading.collection;
 
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
 import java.util.Locale;
 
-import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Steve Ebersole
  */
-public class CascadeToComponentCollectionTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
-	}
-
-	@Override
-	public String[] getMappings() {
-		return new String[] { "component/cascading/collection/Mappings.hbm.xml" };
-	}
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/component/cascading/collection/Mappings.hbm.xml"
+)
+@SessionFactory
+public class CascadeToComponentCollectionTest {
 
 	@Test
-	public void testMerging() {
+	public void testMerging(SessionFactoryScope scope) {
 		// step1, we create a definition with one value
-		Session session = openSession();
-		session.beginTransaction();
-		Definition definition = new Definition();
-		Value value1 = new Value( definition );
-		value1.getLocalizedStrings().addString( new Locale( "en_US" ), "hello" );
-		session.persist( definition );
-		session.getTransaction().commit();
-		session.close();
+		Definition d = new Definition();
+
+		scope.inTransaction( session -> {
+					Value value1 = new Value( d );
+					value1.getLocalizedStrings().addString( new Locale( "en_US" ), "hello" );
+					session.persist( d );
+				}
+		);
 
 		// step2, we verify that the definition has one value; then we detach it
-		session = openSession();
-		session.beginTransaction();
-		definition = ( Definition ) session.get( Definition.class, definition.getId() );
-		assertEquals( 1, definition.getValues().size() );
-		session.getTransaction().commit();
-		session.close();
+		Definition def = scope.fromTransaction( session -> {
+					Definition definition = session.find( Definition.class, d.getId() );
+					assertThat( definition.getValues() ).hasSize( 1 );
+					return definition;
+				}
+		);
 
 		// step3, we add a new value during detachment
-		Value value2 = new Value( definition );
+		Value value2 = new Value( def );
 		value2.getLocalizedStrings().addString( new Locale( "es" ), "hola" );
 
 		// step4 we merge the definition
-		session = openSession();
-		session.beginTransaction();
-		session.merge( definition );
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction( session ->
+				session.merge( def )
+		);
 
 		// step5, final test
-		session = openSession();
-		session.beginTransaction();
-		definition = ( Definition ) session.get( Definition.class, definition.getId() );
-		assertEquals( 2, definition.getValues().size() );
-		for ( Object o : definition.getValues() ) {
-			assertEquals( 1, ((Value) o).getLocalizedStrings().getStringsCopy().size() );
-		}
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction( session -> {
+					Definition definition = session.find( Definition.class, d.getId() );
+					assertThat( definition.getValues() ).hasSize( 2 );
+					for ( Value o : definition.getValues() ) {
+						assertThat( o.getLocalizedStrings().getStringsCopy() ).hasSize( 1 );
+					}
+				}
+		);
 	}
 
 	@SuppressWarnings("unused")
 	@Test
-	public void testMergingOriginallyNullComponent() {
+	public void testMergingOriginallyNullComponent(SessionFactoryScope scope) {
 		// step1, we create a definition with one value, but with a null component
-		Session session = openSession();
-		session.beginTransaction();
-		Definition definition = new Definition();
-		Value value1 = new Value( definition );
-		session.persist( definition );
-		session.getTransaction().commit();
-		session.close();
+		Definition d = new Definition();
+		scope.inTransaction( session -> {
+					Value value1 = new Value( d );
+					session.persist( d );
+				}
+		);
 
 		// step2, we verify that the definition has one value; then we detach it
-		session = openSession();
-		session.beginTransaction();
-		definition = ( Definition ) session.get( Definition.class, definition.getId() );
-		assertEquals( 1, definition.getValues().size() );
-		session.getTransaction().commit();
-		session.close();
+		Definition def = scope.fromTransaction( session -> {
+					Definition definition = session.find( Definition.class, d.getId() );
+					assertThat( definition.getValues() ).hasSize( 1 );
+					return definition;
+				}
+		);
 
 		// step3, we add a new value during detachment
-		( ( Value ) definition.getValues().iterator().next() ).getLocalizedStrings().addString( new Locale( "en_US" ), "hello" );
-		Value value2 = new Value( definition );
+		def.getValues().iterator().next().getLocalizedStrings()
+				.addString( new Locale( "en_US" ), "hello" );
+		Value value2 = new Value( def );
 		value2.getLocalizedStrings().addString( new Locale( "es" ), "hola" );
 
 		// step4 we merge the definition
-		session = openSession();
-		session.beginTransaction();
-		session.merge( definition );
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction( session ->
+				session.merge( def )
+		);
 
 		// step5, final test
-		session = openSession();
-		session.beginTransaction();
-		definition = ( Definition ) session.get( Definition.class, definition.getId() );
-		assertEquals( 2, definition.getValues().size() );
-		for ( Object o : definition.getValues() ) {
-			assertEquals( 1, ((Value) o).getLocalizedStrings().getStringsCopy().size() );
-		}
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction(
+				session -> {
+					Definition definition = session.find( Definition.class, def.getId() );
+					assertThat( definition.getValues().size() ).isEqualTo( 2 );
+					for ( Value o : definition.getValues() ) {
+						assertThat( o.getLocalizedStrings().getStringsCopy() ).hasSize( 1 );
+					}
+				}
+		);
 	}
 }

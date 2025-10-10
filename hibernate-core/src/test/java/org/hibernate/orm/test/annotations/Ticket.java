@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations;
+
 import java.io.Serializable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -43,13 +44,9 @@ public class Ticket implements Serializable {
 
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
-		if ( !( o instanceof Ticket ) ) return false;
+		if ( !(o instanceof Ticket ticket) ) return false;
 
-		final Ticket ticket = (Ticket) o;
-
-		if ( !number.equals( ticket.number ) ) return false;
-
-		return true;
+		return number.equals( ticket.number );
 	}
 
 	public int hashCode() {

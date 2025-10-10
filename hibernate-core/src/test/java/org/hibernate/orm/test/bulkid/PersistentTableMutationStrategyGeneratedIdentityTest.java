@@ -4,16 +4,30 @@
  */
 package org.hibernate.orm.test.bulkid;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SettingProvider;
 
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
-public class PersistentTableMutationStrategyGeneratedIdentityTest extends AbstractMutationStrategyGeneratedIdentityTest {
+@ServiceRegistry(
+		settingProviders = {
+				@SettingProvider(
+						settingName = AvailableSettings.QUERY_MULTI_TABLE_INSERT_STRATEGY,
+						provider = PersistentTableMutationStrategyGeneratedIdentityTest.QueryMultyTableInsertStrategyProvider.class
+				)
+		}
+)
+public class PersistentTableMutationStrategyGeneratedIdentityTest
+		extends AbstractMutationStrategyGeneratedIdentityTest {
 
-	@Override
-	protected Class<? extends SqmMultiTableInsertStrategy> getMultiTableInsertStrategyClass() {
-		return PersistentTableInsertStrategy.class;
+	public static class QueryMultyTableInsertStrategyProvider
+			implements SettingProvider.Provider<String> {
+		@Override
+		public String getSetting() {
+			return PersistentTableInsertStrategy.class.getName();
+		}
 	}
 }

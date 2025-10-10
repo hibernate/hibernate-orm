@@ -6,21 +6,22 @@ package org.hibernate.orm.test.bootstrap.binding.naming;
 
 import org.hibernate.boot.model.naming.ImplicitIndexColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNameSource;
-
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dmytro Bondar
  */
+@BaseUnitTest
 public class ImplicitIndexColumnNameSourceTest {
 
 	@Test
 	@JiraKey(value = "HHH-10810")
 	public void testExtensionImplicitNameSource() {
-		assertTrue( ImplicitNameSource.class.isAssignableFrom( ImplicitIndexColumnNameSource.class ) );
+		assertThat( ImplicitNameSource.class ).isAssignableFrom( ImplicitIndexColumnNameSource.class );
 	}
 
 }

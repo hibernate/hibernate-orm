@@ -40,7 +40,7 @@ public class Vehicule {
 	private Conductor currentConductor;
 	@Column(name = "`year`")
 	private Integer year;
-	@ManyToOne(optional = true)
+	@ManyToOne
 	private Conductor previousConductor;
 
 	public String getId() {

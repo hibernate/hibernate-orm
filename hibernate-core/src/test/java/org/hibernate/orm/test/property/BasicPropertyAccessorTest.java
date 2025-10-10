@@ -6,18 +6,20 @@ package org.hibernate.orm.test.property;
 
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
-public class BasicPropertyAccessorTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class BasicPropertyAccessorTest {
 	public static abstract class Super {
 		public abstract Object getIt();
+
 		public abstract void setIt(Object it);
 	}
 
@@ -34,7 +36,7 @@ public class BasicPropertyAccessorTest extends BaseUnitTestCase {
 
 		@Override
 		public void setIt(Object it) {
-			this.it = ( it == null || String.class.isInstance( it ) )
+			this.it = (it == null || String.class.isInstance( it ))
 					? (String) it
 					: it.toString();
 		}
@@ -72,14 +74,14 @@ public class BasicPropertyAccessorTest extends BaseUnitTestCase {
 
 		{
 			final PropertyAccess access = accessStrategy.buildPropertyAccess( Duper.class, "it", true );
-			assertEquals( String.class, access.getGetter().getReturnTypeClass() );
-			assertEquals( Object.class, access.getSetter().getMethod().getParameterTypes()[0] );
+			assertThat( access.getGetter().getReturnTypeClass() ).isEqualTo( String.class );
+			assertThat( access.getSetter().getMethod().getParameterTypes()[0] ).isEqualTo( Object.class );
 		}
 
 		{
 			final PropertyAccess access = accessStrategy.buildPropertyAccess( Duper2.class, "it", true );
-			assertEquals( String.class, access.getGetter().getReturnTypeClass() );
-			assertEquals( String.class, access.getSetter().getMethod().getParameterTypes()[0] );
+			assertThat( access.getGetter().getReturnTypeClass() ).isEqualTo( String.class );
+			assertThat( access.getSetter().getMethod().getParameterTypes()[0] ).isEqualTo( String.class );
 		}
 	}
 }

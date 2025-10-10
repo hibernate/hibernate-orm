@@ -4,69 +4,69 @@
  */
 package org.hibernate.orm.test.graph;
 
+import jakarta.persistence.AttributeNode;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.Subgraph;
+import org.hibernate.graph.GraphParser;
+import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import jakarta.persistence.AttributeNode;
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Subgraph;
 
-import org.hibernate.graph.GraphParser;
-import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
-import org.junit.Assert;
 
-public abstract class AbstractEntityGraphTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				GraphParsingTestEntity.class,
+				GraphParsingTestSubentity.class
+		}
+)
+public abstract class AbstractEntityGraphTest {
 
-	public AbstractEntityGraphTest() {
-		super();
+	protected <T> RootGraphImplementor<T> parseGraph(Class<T> entityType, String graphString, EntityManagerFactoryScope scope) {
+		return scope.fromEntityManager( entityManager ->
+				(RootGraphImplementor<T>) GraphParser.parse( entityType, graphString, entityManager )
+		);
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{ GraphParsingTestEntity.class, GraphParsingTestSubentity.class };
-	}
-
-	protected <T> RootGraphImplementor<T> parseGraph(Class<T> entityType, String graphString) {
-		EntityManager entityManager = getOrCreateEntityManager();
-		return (RootGraphImplementor<T>) GraphParser.parse( entityType, graphString, entityManager );
-	}
-
-	protected <T> RootGraphImplementor<GraphParsingTestEntity> parseGraph(String graphString) {
-		return parseGraph( GraphParsingTestEntity.class, graphString );
+	protected <T> RootGraphImplementor<GraphParsingTestEntity> parseGraph(String graphString, EntityManagerFactoryScope scope) {
+		return parseGraph( GraphParsingTestEntity.class, graphString, scope );
 	}
 
 	private <C extends Collection<?>> void assertNullOrEmpty(C collection) {
 		if ( collection != null ) {
-			Assert.assertEquals( 0, collection.size() );
+			assertThat( collection).hasSize( 0 );
 		}
 	}
 
 	protected <M extends Map<?, ?>> void assertNullOrEmpty(M map) {
 		if ( map != null ) {
-			Assert.assertEquals( 0, map.size() );
+			assertThat( map.size()).isEqualTo( 0 );
 		}
 	}
 
 	protected void assertBasicAttributes(EntityGraph<?> graph, String... names) {
-		Assert.assertNotNull( graph );
+		assertThat( graph ).isNotNull();
 		assertBasicAttributes( graph.getAttributeNodes(), names );
 	}
 
 	protected void assertBasicAttributes(Subgraph<?> graph, String... names) {
-		Assert.assertNotNull( graph );
+		assertThat( graph ).isNotNull();
 		assertBasicAttributes( graph.getAttributeNodes(), names );
 	}
 
 	private void assertBasicAttributes(List<AttributeNode<?>> attrs, String... names) {
-		if ( ( names == null ) || ( names.length == 0 ) ) {
+		if ( (names == null) || (names.length == 0) ) {
 			assertNullOrEmpty( attrs );
 		}
 		else {
-			Assert.assertNotNull( attrs );
-			Assert.assertTrue( names.length <= attrs.size() );
+			assertThat( attrs ).isNotNull();
+			assertThat( names.length).isLessThanOrEqualTo( attrs.size() );
 
 			for ( String name : names ) {
 				AttributeNode<?> node = null;
@@ -76,7 +76,7 @@ public abstract class AbstractEntityGraphTest extends BaseEntityManagerFunctiona
 						break;
 					}
 				}
-				Assert.assertNotNull( node );
+				assertThat( node ).isNotNull();
 				assertNullOrEmpty( node.getKeySubgraphs() );
 				assertNullOrEmpty( node.getSubgraphs() );
 			}
@@ -93,11 +93,13 @@ public abstract class AbstractEntityGraphTest extends BaseEntityManagerFunctiona
 
 	private AttributeNode<?> getAttributeNodeByName(List<AttributeNode<?>> attrs, String name, boolean required) {
 		for ( AttributeNode<?> attr : attrs ) {
-			if ( name.equals( attr.getAttributeName() ) )
+			if ( name.equals( attr.getAttributeName() ) ) {
 				return attr;
+			}
 		}
-		if ( required )
-			Assert.fail( "Required attribute not found." );
+		if ( required ) {
+			fail( "Required attribute not found." );
+		}
 		return null;
 	}
 

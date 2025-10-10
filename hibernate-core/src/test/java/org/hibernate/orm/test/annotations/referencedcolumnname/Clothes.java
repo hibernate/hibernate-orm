@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.referencedcolumnname;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
@@ -54,14 +55,10 @@ public class Clothes {
 
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
-		if ( !( o instanceof Clothes ) ) return false;
-
-		final Clothes clothes = (Clothes) o;
+		if ( !(o instanceof Clothes clothes) ) return false;
 
 		if ( !flavor.equals( clothes.flavor ) ) return false;
-		if ( !type.equals( clothes.type ) ) return false;
-
-		return true;
+		return type.equals( clothes.type );
 	}
 
 	public int hashCode() {

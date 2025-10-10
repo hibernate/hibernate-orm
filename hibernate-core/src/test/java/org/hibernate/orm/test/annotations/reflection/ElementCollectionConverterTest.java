@@ -4,43 +4,31 @@
  */
 package org.hibernate.orm.test.annotations.reflection;
 
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.orm.junit.JiraKeyGroup;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@JiraKeyGroup( value = {
-		@JiraKey( value = "HHH-11924" ),
-		@JiraKey( value = "HHH-14529" )
-} )
-public class ElementCollectionConverterTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
-		super.prepareBootstrapRegistryBuilder( builder );
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-			Company.class,
-		};
-	}
-
-	@Override
-	protected String[] getOrmXmlFiles() {
-		return new String[] { "org/hibernate/orm/test/annotations/reflection/element-collection-converter-orm.xml" };
-	}
-
+@JiraKeyGroup(value = {
+		@JiraKey(value = "HHH-11924"),
+		@JiraKey(value = "HHH-14529")
+})
+@DomainModel(
+		annotatedClasses = {
+				Company.class
+		},
+		xmlMappings = "org/hibernate/orm/test/annotations/reflection/element-collection-converter-orm.xml"
+)
+@SessionFactory
+public class ElementCollectionConverterTest {
 
 	@Test
-	public void testConverterIsAppliedToElementCollection() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testConverterIsAppliedToElementCollection(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			Company company = new Company();
 			company.setId( 1L );
 
@@ -52,16 +40,16 @@ public class ElementCollectionConverterTest extends BaseCoreFunctionalTestCase {
 			session.persist( company );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			String organizationId = (String) session
-					.createNativeQuery( "select organizations from Company_organizations" )
+		scope.inTransaction( session -> {
+			String organizationId = session
+					.createNativeQuery( "select organizations from Company_organizations", String.class )
 					.getSingleResult();
-			assertEquals( "ORG-ACME", organizationId );
+			assertThat( organizationId ).isEqualTo( "ORG-ACME" );
 
 			Company company = session.find( Company.class, 1L );
 
-			assertEquals( 1, company.getOrganizations().size() );
-			assertEquals( "ACME" , company.getOrganizations().get( 0 ).getOrganizationId());
+			assertThat( company.getOrganizations().size() ).isEqualTo( 1 );
+			assertThat( company.getOrganizations().get( 0 ).getOrganizationId() ).isEqualTo( "ACME" );
 		} );
 	}
 }

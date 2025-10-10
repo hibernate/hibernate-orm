@@ -4,16 +4,29 @@
  */
 package org.hibernate.orm.test.bulkid;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SettingProvider;
 
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsLocalTemporaryTable.class)
+@ServiceRegistry(
+		settingProviders = {
+				@SettingProvider(
+						settingName = AvailableSettings.QUERY_MULTI_TABLE_INSERT_STRATEGY,
+						provider = LocalTemporaryTableMutationStrategyGeneratedIdTest.QueryMultyTableInsertStrategyProvider.class
+				)
+		}
+)
 public class LocalTemporaryTableMutationStrategyGeneratedIdTest extends AbstractMutationStrategyGeneratedIdTest {
 
-	@Override
-	protected Class<? extends SqmMultiTableInsertStrategy> getMultiTableInsertStrategyClass() {
-		return LocalTemporaryTableInsertStrategy.class;
+	public static class QueryMultyTableInsertStrategyProvider
+			implements SettingProvider.Provider<String> {
+		@Override
+		public String getSetting() {
+			return LocalTemporaryTableInsertStrategy.class.getName();
+		}
 	}
 }

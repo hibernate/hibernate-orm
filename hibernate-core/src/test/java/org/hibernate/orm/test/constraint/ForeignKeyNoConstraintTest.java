@@ -13,37 +13,37 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
-
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.mapping.Table;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Chris Cranford
  */
-public class ForeignKeyNoConstraintTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Car.class,
-				VehicleNumber.class,
-				Post.class,
-				PostDetails.class
-		};
-	}
+@DomainModel(
+		annotatedClasses = {
+				ForeignKeyNoConstraintTest.Car.class,
+				ForeignKeyNoConstraintTest.VehicleNumber.class,
+				ForeignKeyNoConstraintTest.Post.class,
+				ForeignKeyNoConstraintTest.PostDetails.class
+		}
+)
+@SessionFactory
+public class ForeignKeyNoConstraintTest {
 
 	@Test
 	@JiraKey(value = "HHH-12975")
-	public void testPrimaryKeyJoinColumnForeignKeyNoConstraint() {
-		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {
+	public void testPrimaryKeyJoinColumnForeignKeyNoConstraint(SessionFactoryScope scope) {
+		for ( Namespace namespace : scope.getMetadataImplementor().getDatabase().getNamespaces() ) {
 			for ( Table table : namespace.getTables() ) {
 				if ( "Car".equals( table.getName() ) ) {
-					assertEquals( 0, table.getForeignKeyCollection().size() );
+					assertThat( table.getForeignKeyCollection() ).hasSize( 0 );
 				}
 			}
 		}
@@ -51,11 +51,11 @@ public class ForeignKeyNoConstraintTest extends BaseNonConfigCoreFunctionalTestC
 
 	@Test
 	@JiraKey(value = "HHH-12975")
-	public void testMapsIdJoinColumnForeignKeyNoConstraint() {
-		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {
+	public void testMapsIdJoinColumnForeignKeyNoConstraint(SessionFactoryScope scope) {
+		for ( Namespace namespace : scope.getMetadataImplementor().getDatabase().getNamespaces() ) {
 			for ( Table table : namespace.getTables() ) {
 				if ( "Post".equals( table.getName() ) ) {
-					assertEquals( 0, table.getForeignKeyCollection().size() );
+					assertThat( table.getForeignKeyCollection() ).hasSize( 0 );
 				}
 			}
 		}
@@ -68,7 +68,7 @@ public class ForeignKeyNoConstraintTest extends BaseNonConfigCoreFunctionalTestC
 
 		@PrimaryKeyJoinColumn
 		@OneToOne(optional = false)
-		@JoinColumn(name = "V_ID", foreignKey = @ForeignKey( ConstraintMode.NO_CONSTRAINT ) )
+		@JoinColumn(name = "V_ID", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		private VehicleNumber vehicleNumber;
 
 		public Integer getId() {

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
+import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -36,11 +37,12 @@ public class ExtendedBeanManagerNotAvailableDuringTypeResolutionTest {
 		try {
 			// this will trigger trying to locate MyEnumType as a managed-bean
 			try (InputStream mappingInputStream =
-					new ByteArrayInputStream( TheEntity.ENTITY_DEFINITION.getBytes( StandardCharsets.UTF_8 ) ) ) {
-				new MetadataSources( ssr )
+						new ByteArrayInputStream( TheEntity.ENTITY_DEFINITION.getBytes( StandardCharsets.UTF_8 ) )) {
+				try (SessionFactory sf = new MetadataSources( ssr )
 						.addInputStream( mappingInputStream )
 						.buildMetadata()
-						.buildSessionFactory();
+						.buildSessionFactory()) {
+				}
 			}
 		}
 		finally {

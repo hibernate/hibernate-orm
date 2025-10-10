@@ -26,11 +26,11 @@ import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.ModelsContext;
 
 import org.hibernate.testing.boot.BootstrapContextImpl;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 
 import jakarta.persistence.Transient;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 import static org.hibernate.models.internal.SimpleClassLoading.SIMPLE_CLASS_LOADING;
 
@@ -39,18 +39,19 @@ import static org.hibernate.models.internal.SimpleClassLoading.SIMPLE_CLASS_LOAD
  * XML to JPA annotations.  The configuration is built within each test, and no
  * database is used.  Thus, no schema generation or cleanup will be performed.
  */
-public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
+@BaseUnitTest
+public abstract class Ejb3XmlTestCase  {
 	private BootstrapContextImpl bootstrapContext;
 
 	protected Ejb3XmlTestCase() {
 	}
 
-	@Before
+	@BeforeEach
 	public void init() {
 		bootstrapContext = new BootstrapContextImpl();
 	}
 
-	@After
+	@AfterEach
 	public void destroy() {
 		bootstrapContext.close();
 	}

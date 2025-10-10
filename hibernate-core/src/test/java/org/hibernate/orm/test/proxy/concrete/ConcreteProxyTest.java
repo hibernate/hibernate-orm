@@ -4,18 +4,6 @@
  */
 package org.hibernate.orm.test.proxy.concrete;
 
-import org.hibernate.Hibernate;
-import org.hibernate.annotations.ConcreteProxy;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.sql.ast.SqlAstJoinType;
-
-import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Entity;
@@ -24,6 +12,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.ConcreteProxy;
+import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -32,13 +31,42 @@ import static org.hamcrest.Matchers.is;
 /**
  * @author Marco Belladelli
  */
-public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				ConcreteProxyTest.SingleParent.class,
+				ConcreteProxyTest.SingleBase.class,
+				ConcreteProxyTest.SingleChild1.class,
+				ConcreteProxyTest.SingleSubChild1.class,
+				ConcreteProxyTest.SingleChild2.class,
+				ConcreteProxyTest.JoinedParent.class,
+				ConcreteProxyTest.JoinedBase.class,
+				ConcreteProxyTest.JoinedChild1.class,
+				ConcreteProxyTest.JoinedSubChild1.class,
+				ConcreteProxyTest.JoinedChild2.class,
+				ConcreteProxyTest.JoinedDiscParent.class,
+				ConcreteProxyTest.JoinedDiscBase.class,
+				ConcreteProxyTest.JoinedDiscChild1.class,
+				ConcreteProxyTest.JoinedDiscSubChild1.class,
+				ConcreteProxyTest.JoinedDiscChild2.class,
+				ConcreteProxyTest.UnionParent.class,
+				ConcreteProxyTest.UnionBase.class,
+				ConcreteProxyTest.UnionChild1.class,
+				ConcreteProxyTest.UnionSubChild1.class,
+				ConcreteProxyTest.UnionChild2.class
+		}
+)
+@SessionFactory(
+		statementInspectorClass = SQLStatementInspector.class
+)
+@BytecodeEnhanced(runNotEnhancedAsWell = true)
+public class ConcreteProxyTest {
+
 	@Test
-	public void testSingleTable() {
-		final SQLStatementInspector inspector = getStatementInspector();
+	public void testSingleTable(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getStatementInspector( SQLStatementInspector.class );
 		inspector.clear();
 		// test find and association
-		inSession( session -> {
+		scope.inSession( session -> {
 			//tag::entity-concrete-proxy-find[]
 			final SingleParent parent1 = session.find( SingleParent.class, 1L );
 			assertThat( parent1.getSingle(), instanceOf( SingleSubChild1.class ) );
@@ -52,7 +80,7 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		} );
 		inspector.clear();
 		// test query and association
-		inSession( session -> {
+		scope.inSession( session -> {
 			final SingleParent parent2 = session.createQuery(
 					"from SingleParent where id = 2",
 					SingleParent.class
@@ -67,7 +95,7 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		} );
 		inspector.clear();
 		// test get reference
-		inSession( session -> {
+		scope.inSession( session -> {
 			//tag::entity-concrete-proxy-reference[]
 			final SingleChild1 proxy1 = session.getReference( SingleChild1.class, 1L );
 			assertThat( proxy1, instanceOf( SingleSubChild1.class ) );
@@ -87,11 +115,11 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 	}
 
 	@Test
-	public void testJoined() {
-		final SQLStatementInspector inspector = getStatementInspector();
+	public void testJoined(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getStatementInspector( SQLStatementInspector.class );
 		inspector.clear();
 		// test find and association
-		inSession( session -> {
+		scope.inSession( session -> {
 			final JoinedParent parent1 = session.find( JoinedParent.class, 1L );
 			assertThat( Hibernate.isInitialized( parent1.getJoined() ), is( false ) );
 			assertThat( parent1.getJoined(), instanceOf( JoinedSubChild1.class ) );
@@ -102,7 +130,7 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		} );
 		inspector.clear();
 		// test query and association
-		inSession( session -> {
+		scope.inSession( session -> {
 			final JoinedParent parent2 = session.createQuery(
 					"from JoinedParent where id = 2",
 					JoinedParent.class
@@ -116,7 +144,7 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		} );
 		inspector.clear();
 		// test get reference
-		inSession( session -> {
+		scope.inSession( session -> {
 			final JoinedChild1 proxy1 = session.getReference( JoinedChild1.class, 1L );
 			assertThat( proxy1, instanceOf( JoinedSubChild1.class ) );
 			assertThat( Hibernate.isInitialized( proxy1 ), is( false ) );
@@ -132,11 +160,11 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 	}
 
 	@Test
-	public void testJoinedDisc() {
-		final SQLStatementInspector inspector = getStatementInspector();
+	public void testJoinedDisc(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getStatementInspector( SQLStatementInspector.class );
 		inspector.clear();
 		// test find and association
-		inSession( session -> {
+		scope.inSession( session -> {
 			final JoinedDiscParent parent1 = session.find( JoinedDiscParent.class, 1L );
 			assertThat( Hibernate.isInitialized( parent1.getJoinedDisc() ), is( false ) );
 			assertThat( parent1.getJoinedDisc(), instanceOf( JoinedDiscSubChild1.class ) );
@@ -148,7 +176,7 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		} );
 		inspector.clear();
 		// test query and association
-		inSession( session -> {
+		scope.inSession( session -> {
 			final JoinedDiscParent parent2 = session.createQuery(
 					"from JoinedDiscParent where id = 2",
 					JoinedDiscParent.class
@@ -163,7 +191,7 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		} );
 		inspector.clear();
 		// test get reference
-		inSession( session -> {
+		scope.inSession( session -> {
 			final JoinedDiscChild1 proxy1 = session.getReference( JoinedDiscChild1.class, 1L );
 			assertThat( proxy1, instanceOf( JoinedDiscSubChild1.class ) );
 			assertThat( Hibernate.isInitialized( proxy1 ), is( false ) );
@@ -181,11 +209,11 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 	}
 
 	@Test
-	public void testUnion() {
-		final SQLStatementInspector inspector = getStatementInspector();
+	public void testUnion(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getStatementInspector( SQLStatementInspector.class );
 		inspector.clear();
 		// test find and association
-		inSession( session -> {
+		scope.inSession( session -> {
 			final UnionParent parent1 = session.find( UnionParent.class, 1L );
 			assertThat( Hibernate.isInitialized( parent1.getUnion() ), is( false ) );
 			assertThat( parent1.getUnion(), instanceOf( UnionSubChild1.class ) );
@@ -197,7 +225,7 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		} );
 		inspector.clear();
 		// test query and association
-		inSession( session -> {
+		scope.inSession( session -> {
 			final UnionParent parent2 = session.createQuery(
 					"from UnionParent where id = 2",
 					UnionParent.class
@@ -212,7 +240,7 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		} );
 		inspector.clear();
 		// test get reference
-		inSession( session -> {
+		scope.inSession( session -> {
 			final UnionChild1 proxy1 = session.getReference( UnionChild1.class, 1L );
 			assertThat( proxy1, instanceOf( UnionSubChild1.class ) );
 			assertThat( Hibernate.isInitialized( proxy1 ), is( false ) );
@@ -227,9 +255,9 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		} );
 	}
 
-	@Before
-	public void setUp() {
-		inTransaction( session -> {
+	@BeforeAll
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			session.persist( new SingleParent( 1L, new SingleSubChild1( 1L, "1", "1" ) ) );
 			session.persist( new JoinedParent( 1L, new JoinedSubChild1( 1L, "1", "1" ) ) );
 			session.persist( new JoinedDiscParent( 1L, new JoinedDiscSubChild1( 1L, "1", "1" ) ) );
@@ -241,64 +269,20 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		} );
 	}
 
-	@After
-	public void tearDown() {
-		inTransaction( session -> {
-			session.createMutationQuery( "delete from SingleParent" ).executeUpdate();
-			session.createMutationQuery( "delete from SingleBase" ).executeUpdate();
-			session.createMutationQuery( "delete from JoinedParent" ).executeUpdate();
-			session.createMutationQuery( "delete from JoinedBase" ).executeUpdate();
-			session.createMutationQuery( "delete from JoinedDiscParent" ).executeUpdate();
-			session.createMutationQuery( "delete from JoinedDiscBase" ).executeUpdate();
-			session.createMutationQuery( "delete from UnionParent" ).executeUpdate();
-			session.createMutationQuery( "delete from UnionBase" ).executeUpdate();
-		} );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		sources.addAnnotatedClasses(
-				SingleParent.class,
-				SingleBase.class,
-				SingleChild1.class,
-				SingleSubChild1.class,
-				SingleChild2.class,
-				JoinedParent.class,
-				JoinedBase.class,
-				JoinedChild1.class,
-				JoinedSubChild1.class,
-				JoinedChild2.class,
-				JoinedDiscParent.class,
-				JoinedDiscBase.class,
-				JoinedDiscChild1.class,
-				JoinedDiscSubChild1.class,
-				JoinedDiscChild2.class,
-				UnionParent.class,
-				UnionBase.class,
-				UnionChild1.class,
-				UnionSubChild1.class,
-				UnionChild2.class
-		);
-	}
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		sfb.applyStatementInspector( new SQLStatementInspector() );
-	}
-
-	protected SQLStatementInspector getStatementInspector() {
-		return (SQLStatementInspector) sessionFactory().getSessionFactoryOptions().getStatementInspector();
+	@AfterAll
+	public void tearDown(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
 	// InheritanceType.SINGLE_TABLE
 
 	//tag::entity-concrete-proxy-mapping[]
-	@Entity( name = "SingleParent" )
+	@Entity(name = "SingleParent")
 	public static class SingleParent {
 		@Id
 		private Long id;
 
-		@ManyToOne( fetch = FetchType.LAZY, cascade = CascadeType.PERSIST )
+		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		private SingleBase single;
 
 		public SingleParent() {
@@ -314,9 +298,9 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		}
 	}
 
-	@Entity( name = "SingleBase" )
-	@Inheritance( strategy = InheritanceType.SINGLE_TABLE )
-	@DiscriminatorColumn( name = "disc_col" )
+	@Entity(name = "SingleBase")
+	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+	@DiscriminatorColumn(name = "disc_col")
 	@ConcreteProxy
 	public static class SingleBase {
 		@Id
@@ -330,7 +314,7 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		}
 	}
 
-	@Entity( name = "SingleChild1" )
+	@Entity(name = "SingleChild1")
 	public static class SingleChild1 extends SingleBase {
 		private String child1Prop;
 
@@ -343,7 +327,7 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		}
 	}
 
-	@Entity( name = "SingleSubChild1" )
+	@Entity(name = "SingleSubChild1")
 	public static class SingleSubChild1 extends SingleChild1 {
 		private String subChild1Prop;
 
@@ -359,7 +343,7 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 	// Other subtypes omitted for brevity
 	//end::entity-concrete-proxy-mapping[]
 
-	@Entity( name = "SingleChild2" )
+	@Entity(name = "SingleChild2")
 	public static class SingleChild2 extends SingleBase {
 		private Integer child2Prop;
 
@@ -374,12 +358,12 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 
 	// InheritanceType.JOINED
 
-	@Entity( name = "JoinedParent" )
+	@Entity(name = "JoinedParent")
 	public static class JoinedParent {
 		@Id
 		private Long id;
 
-		@ManyToOne( fetch = FetchType.LAZY, cascade = CascadeType.PERSIST )
+		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		private JoinedBase joined;
 
 		public JoinedParent() {
@@ -395,8 +379,8 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		}
 	}
 
-	@Entity( name = "JoinedBase" )
-	@Inheritance( strategy = InheritanceType.JOINED )
+	@Entity(name = "JoinedBase")
+	@Inheritance(strategy = InheritanceType.JOINED)
 	@ConcreteProxy
 	public static class JoinedBase {
 		@Id
@@ -410,7 +394,7 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		}
 	}
 
-	@Entity( name = "JoinedChild1" )
+	@Entity(name = "JoinedChild1")
 	public static class JoinedChild1 extends JoinedBase {
 		private String child1Prop;
 
@@ -423,7 +407,7 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		}
 	}
 
-	@Entity( name = "JoinedSubChild1" )
+	@Entity(name = "JoinedSubChild1")
 	public static class JoinedSubChild1 extends JoinedChild1 {
 		private String subChild1Prop;
 
@@ -436,7 +420,7 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		}
 	}
 
-	@Entity( name = "JoinedChild2" )
+	@Entity(name = "JoinedChild2")
 	public static class JoinedChild2 extends JoinedBase {
 		private Integer child2Prop;
 
@@ -451,12 +435,12 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 
 	// InheritanceType.JOINED + @DiscriminatorColumn
 
-	@Entity( name = "JoinedDiscParent" )
+	@Entity(name = "JoinedDiscParent")
 	public static class JoinedDiscParent {
 		@Id
 		private Long id;
 
-		@ManyToOne( fetch = FetchType.LAZY, cascade = CascadeType.PERSIST )
+		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		private JoinedDiscBase joinedDisc;
 
 		public JoinedDiscParent() {
@@ -472,9 +456,9 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		}
 	}
 
-	@Entity( name = "JoinedDiscBase" )
-	@Inheritance( strategy = InheritanceType.JOINED )
-	@DiscriminatorColumn( name = "disc_col" )
+	@Entity(name = "JoinedDiscBase")
+	@Inheritance(strategy = InheritanceType.JOINED)
+	@DiscriminatorColumn(name = "disc_col")
 	@ConcreteProxy
 	public static class JoinedDiscBase {
 		@Id
@@ -488,7 +472,7 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		}
 	}
 
-	@Entity( name = "JoinedDiscChild1" )
+	@Entity(name = "JoinedDiscChild1")
 	public static class JoinedDiscChild1 extends JoinedDiscBase {
 		private String child1Prop;
 
@@ -501,7 +485,7 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		}
 	}
 
-	@Entity( name = "JoinedDiscSubChild1" )
+	@Entity(name = "JoinedDiscSubChild1")
 	public static class JoinedDiscSubChild1 extends JoinedDiscChild1 {
 		private String subChild1Prop;
 
@@ -514,7 +498,7 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		}
 	}
 
-	@Entity( name = "JoinedDiscChild2" )
+	@Entity(name = "JoinedDiscChild2")
 	public static class JoinedDiscChild2 extends JoinedDiscBase {
 		private Integer child2Prop;
 
@@ -529,12 +513,12 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 
 	// InheritanceType.TABLE_PER_CLASS
 
-	@Entity( name = "UnionParent" )
+	@Entity(name = "UnionParent")
 	public static class UnionParent {
 		@Id
 		private Long id;
 
-		@ManyToOne( fetch = FetchType.LAZY, cascade = CascadeType.PERSIST )
+		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		private UnionBase union;
 
 		public UnionParent() {
@@ -550,8 +534,8 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		}
 	}
 
-	@Entity( name = "UnionBase" )
-	@Inheritance( strategy = InheritanceType.TABLE_PER_CLASS )
+	@Entity(name = "UnionBase")
+	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 	@ConcreteProxy
 	public static class UnionBase {
 		@Id
@@ -565,7 +549,7 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		}
 	}
 
-	@Entity( name = "UnionChild1" )
+	@Entity(name = "UnionChild1")
 	public static class UnionChild1 extends UnionBase {
 		private String child1Prop;
 
@@ -578,7 +562,7 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		}
 	}
 
-	@Entity( name = "UnionSubChild1" )
+	@Entity(name = "UnionSubChild1")
 	public static class UnionSubChild1 extends UnionChild1 {
 		private String subChild1Prop;
 
@@ -591,7 +575,7 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 		}
 	}
 
-	@Entity( name = "UnionChild2" )
+	@Entity(name = "UnionChild2")
 	public static class UnionChild2 extends UnionBase {
 		private Integer child2Prop;
 

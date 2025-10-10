@@ -9,29 +9,31 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.annotations.fetchprofile.mappedby.Address;
 import org.hibernate.service.ServiceRegistry;
-
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-@JiraKey( value = "HHH-14071" )
-public class MappedByFetchProfileUnitTest extends BaseUnitTestCase {
+@JiraKey(value = "HHH-14071")
+@BaseUnitTest
+public class MappedByFetchProfileUnitTest {
 
 	private ServiceRegistry serviceRegistry;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
-		if (serviceRegistry != null) ServiceRegistryBuilder.destroy(serviceRegistry);
+		if ( serviceRegistry != null ) {
+			ServiceRegistryBuilder.destroy( serviceRegistry );
+		}
 	}
 
 	@Test
@@ -39,18 +41,15 @@ public class MappedByFetchProfileUnitTest extends BaseUnitTestCase {
 		Configuration config = new Configuration();
 		config.addAnnotatedClass( Customer6.class );
 		config.addAnnotatedClass( Address.class );
-		try (SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
-				serviceRegistry
-		)) {
+		try (SessionFactoryImplementor sessionImpl = (SessionFactoryImplementor) config
+				.buildSessionFactory( serviceRegistry )) {
 
-			assertTrue(
-					"fetch profile not parsed properly",
-					sessionImpl.containsFetchProfileDefinition( "address-with-customer" )
-			);
-			assertTrue(
-					"fetch profile not parsed properly",
-					sessionImpl.containsFetchProfileDefinition( "customer-with-address" )
-			);
+			assertThat( sessionImpl.containsFetchProfileDefinition( "address-with-customer" ) )
+					.describedAs( "fetch profile not parsed properly" )
+					.isTrue();
+			assertThat( sessionImpl.containsFetchProfileDefinition( "customer-with-address" ) )
+					.describedAs( "fetch profile not parsed properly" )
+					.isTrue();
 		}
 	}
 
@@ -60,18 +59,15 @@ public class MappedByFetchProfileUnitTest extends BaseUnitTestCase {
 		config.addAnnotatedClass( Customer6.class );
 		config.addAnnotatedClass( Address.class );
 		config.addPackage( Address.class.getPackage().getName() );
-		try (SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
-				serviceRegistry
-		)) {
+		try (SessionFactoryImplementor sessionImpl = (SessionFactoryImplementor) config
+				.buildSessionFactory( serviceRegistry )) {
 
-			assertTrue(
-					"fetch profile not parsed properly",
-					sessionImpl.containsFetchProfileDefinition( "mappedBy-package-profile-1" )
-			);
-			assertTrue(
-					"fetch profile not parsed properly",
-					sessionImpl.containsFetchProfileDefinition( "mappedBy-package-profile-2" )
-			);
+			assertThat( sessionImpl.containsFetchProfileDefinition( "mappedBy-package-profile-1" ) )
+					.describedAs( "fetch profile not parsed properly" )
+					.isTrue();
+			assertThat( sessionImpl.containsFetchProfileDefinition( "mappedBy-package-profile-2" ) )
+					.describedAs( "fetch profile not parsed properly" )
+					.isTrue();
 		}
 	}
 

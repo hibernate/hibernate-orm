@@ -4,35 +4,35 @@
  */
 package org.hibernate.orm.test.annotations.type;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Emmanuel Bernard
  */
-public class TypeTest extends BaseCoreFunctionalTestCase {
-	@Test
-	public void testIdWithMulticolumns() {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		Dvd lesOiseaux = new Dvd();
-		lesOiseaux.setTitle( "Les oiseaux" );
-		s.persist( lesOiseaux );
-		s.flush();
-		assertNotNull( lesOiseaux.getId() );
-		tx.rollback();
-		s.close();
-	}
+@DomainModel(
+		annotatedClasses = {
+				Dvd.class
+		}
+)
+@SessionFactory
+public class TypeTest {
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{ Dvd.class };
+	@Test
+	public void testIdWithMulticolumns(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Dvd lesOiseaux = new Dvd();
+					lesOiseaux.setTitle( "Les oiseaux" );
+					session.persist( lesOiseaux );
+					session.flush();
+					assertThat( lesOiseaux.getId() ).isNotNull();
+				}
+		);
 	}
 }

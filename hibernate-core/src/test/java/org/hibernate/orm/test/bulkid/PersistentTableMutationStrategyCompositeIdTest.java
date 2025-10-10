@@ -4,20 +4,39 @@
  */
 package org.hibernate.orm.test.bulkid;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SettingProvider;
 
+@ServiceRegistry(
+		settingProviders = {
+				@SettingProvider(
+						settingName = AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY,
+						provider = PersistentTableMutationStrategyCompositeIdTest.QueryMultyTableMutationStrategyProvider.class
+				),
+				@SettingProvider(
+						settingName = AvailableSettings.QUERY_MULTI_TABLE_INSERT_STRATEGY,
+						provider = PersistentTableMutationStrategyCompositeIdTest.QueryMultyTableInsertStrategyProvider.class
+				)
+		}
+)
 public class PersistentTableMutationStrategyCompositeIdTest extends AbstractMutationStrategyCompositeIdTest {
 
-	@Override
-	protected Class<? extends SqmMultiTableMutationStrategy> getMultiTableMutationStrategyClass() {
-		return PersistentTableMutationStrategy.class;
+	public static class QueryMultyTableMutationStrategyProvider
+			implements SettingProvider.Provider<String> {
+		@Override
+		public String getSetting() {
+			return PersistentTableMutationStrategy.class.getName();
+		}
 	}
 
-	@Override
-	protected Class<? extends SqmMultiTableInsertStrategy> getMultiTableInsertStrategyClass() {
-		return PersistentTableInsertStrategy.class;
+	public static class QueryMultyTableInsertStrategyProvider
+			implements SettingProvider.Provider<String> {
+		@Override
+		public String getSetting() {
+			return PersistentTableInsertStrategy.class.getName();
+		}
 	}
 }

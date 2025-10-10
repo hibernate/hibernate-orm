@@ -4,78 +4,72 @@
  */
 package org.hibernate.orm.test.sql.function;
 
-import java.sql.Timestamp;
-import java.util.Date;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
 import org.hibernate.query.SyntaxException;
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import java.sql.Timestamp;
+import java.util.Date;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Vlad Mihalcea
  */
-@JiraKey( value = "HHH-11233")
+@JiraKey(value = "HHH-11233")
 @RequiresDialect(H2Dialect.class)
-public class JpaFunctionTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				JpaFunctionTest.Event.class
+		}
+)
+public class JpaFunctionTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Event.class
-		};
-	}
-
-	@Override
-	protected void afterEntityManagerFactoryBuilt() {
-		super.afterEntityManagerFactoryBuilt();
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Event event = new Event();
-			event.setId( 1L );
-			event.setMessage( "ABC" );
-			event.setCreatedOn( Timestamp.valueOf( "9999-12-31 00:00:00" ) );
-			entityManager.persist( event );
-		} );
-	}
-
-	@Test
-	public void testWithoutComma() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Date now = entityManager.createQuery(
-				"select FUNCTION('now') " +
-				"from Event " +
-				"where id = :id", Date.class)
-			.setParameter( "id", 1L )
-			.getSingleResult();
-			log.infof( "Current time: {}", now );
-		} );
+	@BeforeAll
+	protected void afterEntityManagerFactoryBuilt(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					Event event = new Event();
+					event.setId( 1L );
+					event.setMessage( "ABC" );
+					event.setCreatedOn( Timestamp.valueOf( "9999-12-31 00:00:00" ) );
+					entityManager.persist( event );
+				}
+		);
 	}
 
 	@Test
-	public void testWithoutCommaFail() {
-		try {
-			doInJPA( this::entityManagerFactory, entityManager -> {
-				String result = entityManager.createQuery(
-						"select FUNCTION('substring' 'abc', 1,2) " +
+	public void testWithoutComma(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager ->
+				entityManager.createQuery(
+								"select FUNCTION('now') " +
 								"from Event " +
-								"where id = :id", String.class)
+								"where id = :id", Date.class )
 						.setParameter( "id", 1L )
-						.getSingleResult();
-				fail("Should have thrown exception");
-			} );
-		}
-		catch ( Exception e ) {
-			assertEquals( SyntaxException.class, e.getCause().getClass() );
-		}
+						.getSingleResult()
+		);
+	}
+
+	@Test
+	public void testWithoutCommaFail(EntityManagerFactoryScope scope) {
+		Exception exception = assertThrows( Exception.class, () ->
+				scope.inTransaction( entityManager ->
+						entityManager.createQuery(
+										"select FUNCTION('substring' 'abc', 1,2) " +
+										"from Event " +
+										"where id = :id", String.class )
+								.setParameter( "id", 1L )
+								.getSingleResult()
+				) );
+		assertThat( exception.getCause() ).isInstanceOf( SyntaxException.class );
 	}
 
 	@Entity(name = "Event")

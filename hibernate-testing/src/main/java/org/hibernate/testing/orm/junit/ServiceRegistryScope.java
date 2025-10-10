@@ -72,7 +72,6 @@ public interface ServiceRegistryScope {
 
 		final ConfigurationService configurationService = registry.requireService( ConfigurationService.class );
 		configuration.properties( configurationService.getSettings() );
-
 		return configuration;
 	}
 

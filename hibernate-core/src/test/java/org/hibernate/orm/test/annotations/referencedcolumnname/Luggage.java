@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.referencedcolumnname;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -23,7 +24,7 @@ public class Luggage implements Serializable {
 	private String owner;
 	@Column(name = "`type`")
 	private String type;
-	private Set<Clothes> hasInside = new HashSet<Clothes>();
+	private Set<Clothes> hasInside = new HashSet<>();
 
 	public Luggage() {
 	}
@@ -72,14 +73,10 @@ public class Luggage implements Serializable {
 
 	public boolean equals(Object o) {
 		if ( this == o ) return true;
-		if ( !( o instanceof Luggage ) ) return false;
-
-		final Luggage luggage = (Luggage) o;
+		if ( !(o instanceof Luggage luggage) ) return false;
 
 		if ( !owner.equals( luggage.owner ) ) return false;
-		if ( !type.equals( luggage.type ) ) return false;
-
-		return true;
+		return type.equals( luggage.type );
 	}
 
 	public int hashCode() {

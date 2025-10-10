@@ -4,55 +4,36 @@
  */
 package org.hibernate.orm.test.annotations.xml.ejb3;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-
-import org.hibernate.boot.jaxb.internal.InputStreamXmlSource;
-import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.cfg.Configuration;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.orm.junit.JiraKeyGroup;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@JiraKeyGroup( value = {
-		@JiraKey( value = "HHH-14530" ),
-		@JiraKey( value = "HHH-14529" )
-} )
-@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-public class PreParsedOrmXmlTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
-		super.prepareBootstrapRegistryBuilder( builder );
-	}
-
-	@Override
-	protected void addMappings(Configuration configuration) {
-		super.addMappings( configuration );
-		try (InputStream xmlStream = Thread.currentThread().getContextClassLoader()
-				.getResourceAsStream( "org/hibernate/orm/test/annotations/xml/ejb3/pre-parsed-orm.xml" )) {
-			Binding<?> parsed = InputStreamXmlSource.fromStream( xmlStream, configuration.getXmlMappingBinderAccess().getMappingBinder() );
-			configuration.addXmlMapping( parsed );
-		}
-		catch (IOException e) {
-			throw new UncheckedIOException( e );
-		}
-	}
+@JiraKeyGroup(value = {
+		@JiraKey(value = "HHH-14530"),
+		@JiraKey(value = "HHH-14529")
+})
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/annotations/xml/ejb3/pre-parsed-orm.xml"
+)
+@SessionFactory
+public class PreParsedOrmXmlTest {
 
 	@Test
-	public void testPreParsedOrmXml() {
+	public void testPreParsedOrmXml(SessionFactoryScope scope) {
 		// Just check that the entity can be persisted, which means the mapping file was taken into account
 		NonAnnotatedEntity persistedEntity = new NonAnnotatedEntity( "someName" );
-		inTransaction( s -> s.persist( persistedEntity ) );
-		inTransaction( s -> {
+
+		scope.inTransaction( s -> s.persist( persistedEntity ) );
+
+		scope.inTransaction( s -> {
 			NonAnnotatedEntity retrievedEntity = s.find( NonAnnotatedEntity.class, persistedEntity.getId() );
 			assertThat( retrievedEntity ).extracting( NonAnnotatedEntity::getName )
 					.isEqualTo( persistedEntity.getName() );

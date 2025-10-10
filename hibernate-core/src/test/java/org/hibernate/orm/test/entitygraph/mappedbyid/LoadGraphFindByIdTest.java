@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.entitygraph.mappedbyid;
 
-import java.util.HashMap;
-import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
@@ -18,31 +16,31 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
-
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Assert;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Oliver Breidenbach
  */
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class LoadGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				LoadGraphFindByIdTest.User.class,
+				LoadGraphFindByIdTest.UserStatistic.class
+		}
+)
+public class LoadGraphFindByIdTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {User.class, UserStatistic.class};
-	}
-
-	@Override
-	protected void afterEntityManagerFactoryBuilt() {
-		doInJPA( this::entityManagerFactory, em -> {
+	@BeforeAll
+	protected void setUp(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
 			UserStatistic statistic = new UserStatistic();
 			statistic.id = 1L;
 			statistic.commentCount = 7;
@@ -57,19 +55,19 @@ public class LoadGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-10842")
-	public void findByPrimaryKeyWithId() {
-		doInJPA( this::entityManagerFactory, em -> {
+	public void findByPrimaryKeyWithId(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
 			User result = em.find( User.class, 1L, createProperties( em ) );
-			Assert.assertNotNull( result.userStatistic.commentCount );
+			assertThat( result.userStatistic.commentCount ).isNotNull();
 		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-10842")
-	public void findByPrimaryKeyWithQuery() {
-		doInJPA( this::entityManagerFactory, em -> {
+	public void findByPrimaryKeyWithQuery(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
 			User result = createTypedQuery( em ).getSingleResult();
-			Assert.assertNotNull( result.userStatistic.commentCount );
+			assertThat( result.userStatistic.commentCount ).isNotNull();
 		} );
 	}
 
@@ -85,7 +83,7 @@ public class LoadGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	private Map<String, Object> createProperties(EntityManager em) {
-		Map<String, Object> properties = new HashMap<String, Object>();
+		Map<String, Object> properties = new HashMap<>();
 		properties.put(
 				"javax.persistence.loadgraph",
 				createEntityGraph( em )

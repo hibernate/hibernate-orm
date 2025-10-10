@@ -25,16 +25,16 @@ public class OrderByComplianceTests {
 	@ServiceRegistry( settings = @Setting( name= AvailableSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE, value = "false" ) )
 	@DomainModel( annotatedClasses = { TypesOfThings.class, Contact.class, AddressBook.class } )
 	public void testNonCompliantBaseline(DomainModelScope scope) {
-		final SessionFactory sessionFactory = scope.getDomainModel().buildSessionFactory();
-		assertThat( sessionFactory ).isNotNull();
+		try(final SessionFactory sessionFactory = scope.getDomainModel().buildSessionFactory()) {
+			assertThat( sessionFactory ).isNotNull();
+		}
 	}
 
 	@Test
 	@ServiceRegistry( settings = @Setting( name= AvailableSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE, value = "true" ) )
 	@DomainModel( annotatedClasses = { TypesOfThings.class, Contact.class, AddressBook.class } )
 	public void testNonCompliantStrictly(DomainModelScope scope) {
-		try {
-			final SessionFactory sessionFactory = scope.getDomainModel().buildSessionFactory();
+		try (final SessionFactory sessionFactory = scope.getDomainModel().buildSessionFactory()) {
 			assertThat( sessionFactory ).isNotNull();
 			fail( "Expecting a failure here" );
 		}
@@ -50,16 +50,18 @@ public class OrderByComplianceTests {
 	@ServiceRegistry( settings = @Setting( name= AvailableSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE, value = "false" ) )
 	@DomainModel( annotatedClasses = { TypesOfThings.class, Contact.class, CompliantAddressBook.class } )
 	public void testCompliantBaseline(DomainModelScope scope) {
-		final SessionFactory sessionFactory = scope.getDomainModel().buildSessionFactory();
-		assertThat( sessionFactory ).isNotNull();
+		try (final SessionFactory sessionFactory = scope.getDomainModel().buildSessionFactory()) {
+			assertThat( sessionFactory ).isNotNull();
+		}
 	}
 
 	@Test
 	@ServiceRegistry( settings = @Setting( name= AvailableSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE, value = "true" ) )
 	@DomainModel( annotatedClasses = { TypesOfThings.class, Contact.class, CompliantAddressBook.class } )
 	public void testCompliantStrictly(DomainModelScope scope) {
-		final SessionFactory sessionFactory = scope.getDomainModel().buildSessionFactory();
-		assertThat( sessionFactory ).isNotNull();
+		try (final SessionFactory sessionFactory = scope.getDomainModel().buildSessionFactory()) {
+			assertThat( sessionFactory ).isNotNull();
+		}
 	}
 
 }

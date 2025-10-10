@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.property.access.spi;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.lang.reflect.Method;
@@ -12,10 +13,7 @@ import org.hibernate.PropertyAccessException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.GetterMethodImpl;
-
-import org.junit.Assert;
-import org.junit.Test;
-
+import org.junit.jupiter.api.Test;
 
 public class GetterMethodImplTest {
 
@@ -23,13 +21,13 @@ public class GetterMethodImplTest {
 	public void get() throws Exception {
 		Target target = new Target();
 
-		Assert.assertEquals( true, getter( Target.class, "active" ).get( target ) );
-		Assert.assertEquals( (byte) 2, getter( Target.class, "children" ).get( target ) );
-		Assert.assertEquals( 'M', getter( Target.class, "gender" ).get( target ) );
-		Assert.assertEquals( Integer.MAX_VALUE, getter( Target.class, "code" ).get( target ) );
-		Assert.assertEquals( Long.MAX_VALUE, getter( Target.class, "id" ).get( target ) );
-		Assert.assertEquals( (short) 34, getter( Target.class, "age" ).get( target ) );
-		Assert.assertEquals( "John Doe", getter( Target.class, "name" ).get( target ) );
+		assertThat( getter( Target.class, "active" ).get( target ) ).isEqualTo( true );
+		assertThat(  getter( Target.class, "children" ).get( target ) ).isEqualTo( (byte) 2 );
+		assertThat(  getter( Target.class, "gender" ).get( target ) ).isEqualTo( 'M' );
+		assertThat( getter( Target.class, "code" ).get( target ) ).isEqualTo( Integer.MAX_VALUE );
+		assertThat(  getter( Target.class, "id" ).get( target ) ).isEqualTo( Long.MAX_VALUE );
+		assertThat( getter( Target.class, "age" ).get( target ) ).isEqualTo( (short) 34 );
+		assertThat(  getter( Target.class, "name" ).get( target ) ).isEqualTo( "John Doe" );
 	}
 
 	private static class Target {
@@ -85,14 +83,14 @@ public class GetterMethodImplTest {
 		assertThatThrownBy( () -> runtimeException.get( target ) )
 				.isInstanceOf( PropertyAccessException.class )
 				.hasMessage( "Exception occurred inside: '" + TargetThrowingExceptions.class.getName() +".runtimeException' (getter)" )
-				.getCause() // Not the root cause, the *direct* cause! We don't want extra wrapping.
+				.cause() // Not the root cause, the *direct* cause! We don't want extra wrapping.
 				.isExactlyInstanceOf( RuntimeException.class );
 
 		Getter checkedException = getter( TargetThrowingExceptions.class, "checkedException" );
 		assertThatThrownBy( () -> checkedException.get( target ) )
 				.isInstanceOf( PropertyAccessException.class )
 				.hasMessage( "Exception occurred inside: '" + TargetThrowingExceptions.class.getName() +".checkedException' (getter)" )
-				.getCause() // Not the root cause, the *direct* cause! We don't want extra wrapping.
+				.cause() // Not the root cause, the *direct* cause! We don't want extra wrapping.
 				.isExactlyInstanceOf( Exception.class );
 
 		Getter error = getter( TargetThrowingExceptions.class, "error" );

@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.manytomany;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -14,7 +15,9 @@ import jakarta.persistence.ManyToOne;
  */
 @Entity
 public class Building {
-	@Id @GeneratedValue private Long id;
+	@Id
+	@GeneratedValue
+	private Long id;
 
 	@ManyToOne @JoinColumn(name="company_id", referencedColumnName = "name")
 	private BuildingCompany company;

@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetomany;
+
 import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.Entity;
@@ -67,7 +68,7 @@ class City {
 	}
 
 	public void addMainStreet(Street street) {
-		if ( mainStreets == null ) mainStreets = new ArrayList<Street>();
+		if ( mainStreets == null ) mainStreets = new ArrayList<>();
 		mainStreets.add( street );
 	}
 

@@ -4,36 +4,38 @@
  */
 package org.hibernate.orm.test.array;
 
-import java.util.Date;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OrderColumn;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-public class DateArrayTest extends BaseCoreFunctionalTestCase {
+import java.util.Date;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { DateArrayEntity.class };
-	}
+@DomainModel(
+		annotatedClasses = {
+				DateArrayTest.DateArrayEntity.class
+		}
+)
+@SessionFactory
+public class DateArrayTest {
 
 	@Test
-	public void run() throws InterruptedException {
-		inTransaction( session -> {
+	public void run(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			DateArrayEntity entity = new DateArrayEntity();
-			entity.setDates( new Date[] { new Date() } );
+			entity.setDates( new Date[] {new Date()} );
 			session.persist( entity );
 		} );
 	}
 
 	@Entity(name = "DateArrayEntity")
-	public class DateArrayEntity {
+	public static class DateArrayEntity {
 
 		@Id
 		@GeneratedValue

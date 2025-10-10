@@ -4,49 +4,50 @@
  */
 package org.hibernate.orm.test.multitenancy.discriminator;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
-
 import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.orm.test.multitenancy.schema.Customer;
+import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
+import org.hibernate.testing.cache.CachingRegionFactory;
+import org.hibernate.testing.env.ConnectionProviderBuilder;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.transaction.TransactionUtil;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.cache.CachingRegionFactory;
-import org.hibernate.testing.env.ConnectionProviderBuilder;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.hibernate.testing.util.ServiceRegistryUtil;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
-import org.hibernate.orm.test.multitenancy.schema.Customer;
-import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Mårten Svantesson
  */
 @JiraKey(value = "HHH-11980")
-@RequiresDialectFeature( value = ConnectionProviderBuilder.class )
-public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
+@RequiresDialect(H2Dialect.class)
+@BaseUnitTest
+public class DiscriminatorMultiTenancyTest {
 
 	private SessionFactoryImplementor sessionFactory;
 
@@ -54,15 +55,15 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 
 	private final TestCurrentTenantIdentifierResolver currentTenantResolver = new TestCurrentTenantIdentifierResolver();
 
-	@Before
+	@BeforeEach
 	public void setUp() {
-		Map<String,Object> settings = new HashMap<>();
-		settings.put(Environment.MULTI_TENANT_IDENTIFIER_RESOLVER, currentTenantResolver);
-		settings.put(Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName());
-		settings.put(Environment.GENERATE_STATISTICS, "true");
+		Map<String, Object> settings = new HashMap<>();
+		settings.put( Environment.MULTI_TENANT_IDENTIFIER_RESOLVER, currentTenantResolver );
+		settings.put( Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
+		settings.put( Environment.GENERATE_STATISTICS, "true" );
 
 		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySettings(settings)
+				.applySettings( settings )
 				.build();
 
 		try {
@@ -72,7 +73,7 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 			Metadata metadata = ms.buildMetadata();
 			final PersistentClass customerMapping = metadata.getEntityBinding( Customer.class.getName() );
 			customerMapping.setCached( true );
-			( (RootClass) customerMapping ).setCacheConcurrencyStrategy( "read-write" );
+			((RootClass) customerMapping).setCacheConcurrencyStrategy( "read-write" );
 
 			HibernateSchemaManagementTool tool = new HibernateSchemaManagementTool();
 			tool.injectServices( serviceRegistry );
@@ -82,7 +83,6 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 			final GenerationTargetToDatabase target = new GenerationTargetToDatabase(
 					new DdlTransactionIsolatorTestingImpl( tool.resolveJdbcContext( settings ) )
 			);
-
 
 			new SchemaDropperImpl( serviceRegistry ).doDrop(
 					metadata,
@@ -110,10 +110,10 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 		}
 	}
 
-	@After
+	@AfterEach
 	public void destroy() {
 		sessionFactory.close();
-		( (Stoppable) connectionProvider ).stop();
+		((Stoppable) connectionProvider).stop();
 	}
 
 	public SessionFactoryImplementor sessionFactory() {
@@ -137,9 +137,9 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 		// make sure we get the steve back, from cache if same tenant (jboss)
 		doInHibernate( "jboss", session -> {
 			Customer customer = session.getReference( Customer.class, 1L );
-			Assert.assertEquals( "steve", customer.getName() );
+			assertThat( customer.getName() ).isEqualTo( "steve" );
 			// also, make sure this came from second level
-			Assert.assertEquals( 1, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
+			assertThat( sessionFactory.getStatistics().getSecondLevelCacheHitCount() ).isEqualTo( 1 );
 		} );
 
 		sessionFactory.getStatistics().clear();
@@ -147,9 +147,9 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 		// then make sure we get the steve back, from db if other tenant (acme)
 		doInHibernate( "acme", session -> {
 			Customer customer = session.getReference( Customer.class, 1L );
-			Assert.assertEquals( "steve", customer.getName() );
+			assertThat( customer.getName() ).isEqualTo( "steve" );
 			// also, make sure this doesn't came from second level
-			Assert.assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
+			assertThat( sessionFactory.getStatistics().getSecondLevelCacheHitCount() ).isEqualTo( 0 );
 		} );
 
 		// make sure the same works from data store too
@@ -159,18 +159,18 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 		// first jboss
 		doInHibernate( "jboss", session -> {
 			Customer customer = session.getReference( Customer.class, 1L );
-			Assert.assertEquals( "steve", customer.getName() );
+			assertThat( customer.getName() ).isEqualTo( "steve" );
 			// also, make sure this doesn't came from second level
-			Assert.assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
+			assertThat( sessionFactory.getStatistics().getSecondLevelCacheHitCount() ).isEqualTo( 0 );
 		} );
 
 		sessionFactory.getStatistics().clear();
 		// then, acme
 		doInHibernate( "acme", session -> {
 			Customer customer = session.getReference( Customer.class, 1L );
-			Assert.assertEquals( "steve", customer.getName() );
+			assertThat( customer.getName() ).isEqualTo( "steve" );
 			// also, make sure this doesn't came from second level
-			Assert.assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
+			assertThat( sessionFactory.getStatistics().getSecondLevelCacheHitCount() ).isEqualTo( 0 );
 		} );
 
 		doInHibernate( "jboss", session -> {
@@ -181,7 +181,7 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 
 	private static class TestCurrentTenantIdentifierResolver implements CurrentTenantIdentifierResolver<Object> {
 		private String currentTenantIdentifier;
-		private final AtomicBoolean postBoot = new AtomicBoolean(false);
+		private final AtomicBoolean postBoot = new AtomicBoolean( false );
 
 		public void setHibernateBooted() {
 			postBoot.set( true );
@@ -189,10 +189,11 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 
 		@Override
 		public Object resolveCurrentTenantIdentifier() {
-			if ( postBoot.get() == false ) {
+			if ( !postBoot.get() ) {
 				//Check to prevent any optimisation which might want to cache the tenantId too early during bootstrap:
 				//it's a common use case to want to provide the tenantId, for example, via a ThreadLocal.
-				throw new IllegalStateException( "Not booted yet: illegal to try reading the tenant Id at this point!" );
+				throw new IllegalStateException(
+						"Not booted yet: illegal to try reading the tenant Id at this point!" );
 			}
 			return currentTenantIdentifier;
 		}
@@ -207,6 +208,6 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 		currentTenantResolver.currentTenantIdentifier = tenant;
 		//Careful: do not use the #doInHibernate version of the method which takes a tenant: the goal of these tests is
 		// to verify that the CurrentTenantIdentifierResolver is being applied!
-		TransactionUtil.doInHibernate( this::sessionFactory, function);
+		TransactionUtil.doInHibernate( this::sessionFactory, function );
 	}
 }

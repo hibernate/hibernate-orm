@@ -4,67 +4,69 @@
  */
 package org.hibernate.orm.test.annotations.entity;
 
-import org.junit.Test;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * @author Emmanuel Bernard
  */
-public class PropertyDefaultMappingsTest extends BaseCoreFunctionalTestCase {
-	@Test
-	public void testSerializableObject() throws Exception {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		Country c = new Country();
-		c.setName( "France" );
-		Address a = new Address();
-		a.setCity( "Paris" );
-		a.setCountry( c );
-		s.persist( a );
-		tx.commit();
-		s.close();
-
-		s = openSession();
-		tx = s.beginTransaction();
-		Address reloadedAddress = (Address) s.get( Address.class, a.getId() );
-		assertNotNull( reloadedAddress );
-		assertNotNull( reloadedAddress.getCountry() );
-		assertEquals( a.getCountry().getName(), reloadedAddress.getCountry().getName() );
-		tx.rollback();
-		s.close();
-	}
-
-	@Test
-	public void testTransientField() throws Exception {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		WashingMachine wm = new WashingMachine();
-		wm.setActive( true );
-		s.persist( wm );
-		tx.commit();
-		s.clear();
-		tx = s.beginTransaction();
-		wm = s.get( WashingMachine.class, wm.getId() );
-		assertFalse( "transient should not be persistent", wm.isActive() );
-		s.remove( wm );
-		tx.commit();
-		s.close();
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
-				Address.class,
+@DomainModel(
+		annotatedClasses = {Address.class,
 				WashingMachine.class
-		};
+
+		}
+)
+@SessionFactory
+public class PropertyDefaultMappingsTest {
+	@AfterEach
+	public void afterEach(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+	}
+
+
+	@Test
+	public void testSerializableObject(SessionFactoryScope scope) {
+		Address a = new Address();
+		scope.inTransaction(
+				session -> {
+					Country c = new Country();
+					c.setName( "France" );
+					a.setCity( "Paris" );
+					a.setCountry( c );
+					session.persist( a );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					Address reloadedAddress = session.find( Address.class, a.getId() );
+					assertThat( reloadedAddress ).isNotNull();
+					assertThat( reloadedAddress.getCountry() ).isNotNull();
+					assertThat( reloadedAddress.getCountry().getName() ).isEqualTo( a.getCountry().getName() );
+				}
+		);
+	}
+
+	@Test
+	public void testTransientField(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					WashingMachine wm = new WashingMachine();
+					wm.setActive( true );
+					session.persist( wm );
+					session.getTransaction().commit();
+					session.clear();
+					session.beginTransaction();
+					wm = session.find( WashingMachine.class, wm.getId() );
+					assertThat( wm.isActive() ).isFalse();
+					session.remove( wm );
+				}
+		);
 	}
 }

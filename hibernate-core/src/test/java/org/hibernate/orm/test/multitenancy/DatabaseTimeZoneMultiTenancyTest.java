@@ -4,21 +4,9 @@
  */
 package org.hibernate.orm.test.multitenancy;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.TimeZone;
-import java.util.function.Consumer;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
@@ -32,28 +20,39 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.util.PropertiesHelper;
+import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.AfterClassOnce;
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TimeZone;
+import java.util.function.Consumer;
 
-import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Vlad Mihalcea
  */
 @RequiresDialect(H2Dialect.class)
-public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class DatabaseTimeZoneMultiTenancyTest {
 
 	protected static final String FRONT_END_TENANT = "front_end";
 	protected static final String BACK_END_TENANT = "back_end";
@@ -72,26 +71,32 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
 
 	private void init() {
 		//tag::multitenacy-hibernate-timezone-configuration-registerConnectionProvider-call-example[]
-		registerConnectionProvider(FRONT_END_TENANT, TimeZone.getTimeZone("UTC"));
-		registerConnectionProvider(BACK_END_TENANT, TimeZone.getTimeZone("CST"));
+		registerConnectionProvider( FRONT_END_TENANT, TimeZone.getTimeZone( "UTC" ) );
+		registerConnectionProvider( BACK_END_TENANT, TimeZone.getTimeZone( "CST" ) );
 		//end::multitenacy-hibernate-timezone-configuration-registerConnectionProvider-call-example[]
 
 		Map<String, Object> settings = new HashMap<>();
 
 		settings.put(
 				AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER,
-				new ConfigurableMultiTenantConnectionProvider(connectionProviderMap)
-	);
+				new ConfigurableMultiTenantConnectionProvider( connectionProviderMap )
+		);
 
-		sessionFactory = sessionFactory(settings);
+		sessionFactory = sessionFactory( settings );
 	}
 
-	@AfterClassOnce
+	@AfterAll
 	public void destroy() {
-		sessionFactory.close();
-		for (ConnectionProvider connectionProvider : connectionProviderMap.values()) {
-			if (connectionProvider instanceof Stoppable) {
-				((Stoppable) connectionProvider).stop();
+		try {
+			if ( sessionFactory != null ) {
+				sessionFactory.close();
+			}
+		}
+		finally {
+			for ( ConnectionProvider connectionProvider : connectionProviderMap.values() ) {
+				if ( connectionProvider instanceof Stoppable ) {
+					((Stoppable) connectionProvider).stop();
+				}
 			}
 		}
 	}
@@ -100,17 +105,17 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
 	protected void registerConnectionProvider(String tenantIdentifier, TimeZone timeZone) {
 		Properties properties = properties();
 		properties.put(
-			Environment.URL,
-			tenantUrl( properties.getProperty(Environment.URL), tenantIdentifier )
-	);
+				Environment.URL,
+				tenantUrl( properties.getProperty( Environment.URL ), tenantIdentifier )
+		);
 
 		DriverManagerConnectionProvider connectionProvider =
 				new DriverManagerConnectionProvider();
-		connectionProvider.configure( PropertiesHelper.map(properties) );
+		connectionProvider.configure( PropertiesHelper.map( properties ) );
 
-		connectionProviderMap.put(tenantIdentifier, connectionProvider);
+		connectionProviderMap.put( tenantIdentifier, connectionProvider );
 
-		timeZoneTenantMap.put(tenantIdentifier, timeZone);
+		timeZoneTenantMap.put( tenantIdentifier, timeZone );
 	}
 	//end::multitenacy-hibernate-timezone-configuration-registerConnectionProvider-example[]
 
@@ -118,118 +123,103 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
 	public void testBasicExpectedBehavior() {
 
 		//tag::multitenacy-hibernate-applying-timezone-configuration-example[]
-		doInSession(FRONT_END_TENANT, session -> {
+		doInSession( FRONT_END_TENANT, session -> {
 			Person person = new Person();
-			person.setId(1L);
-			person.setName("John Doe");
-			person.setCreatedOn(LocalDateTime.of(2018, 11, 23, 12, 0, 0));
+			person.setId( 1L );
+			person.setName( "John Doe" );
+			person.setCreatedOn( LocalDateTime.of( 2018, 11, 23, 12, 0, 0 ) );
 
-			session.persist(person);
-		}, true);
+			session.persist( person );
+		}, true );
 
-		doInSession(BACK_END_TENANT, session -> {
+		doInSession( BACK_END_TENANT, session -> {
 			Person person = new Person();
-			person.setId(1L);
-			person.setName("John Doe");
-			person.setCreatedOn(LocalDateTime.of(2018, 11, 23, 12, 0, 0));
+			person.setId( 1L );
+			person.setName( "John Doe" );
+			person.setCreatedOn( LocalDateTime.of( 2018, 11, 23, 12, 0, 0 ) );
 
-			session.persist(person);
-		}, true);
+			session.persist( person );
+		}, true );
 
-		doInSession(FRONT_END_TENANT, session -> {
+		doInSession( FRONT_END_TENANT, session -> {
 			Timestamp personCreationTimestamp = session
-			.createNativeQuery(
-				"select p.created_on " +
-				"from Person p " +
-				"where p.id = :personId", Timestamp.class)
-			.setParameter("personId", 1L)
-			.getSingleResult();
+					.createNativeQuery(
+							"select p.created_on " +
+							"from Person p " +
+							"where p.id = :personId", Timestamp.class )
+					.setParameter( "personId", 1L )
+					.getSingleResult();
 
-			assertEquals(
-				Timestamp.valueOf(LocalDateTime.of(2018, 11, 23, 12, 0, 0)),
-				personCreationTimestamp
-		);
-		}, true);
+			assertThat( personCreationTimestamp )
+					.isEqualTo( Timestamp.valueOf( LocalDateTime.of( 2018, 11, 23, 12, 0, 0 ) ) );
+		}, true );
 
-		doInSession(BACK_END_TENANT, session -> {
+		doInSession( BACK_END_TENANT, session -> {
 			Timestamp personCreationTimestamp = session
-			.createNativeQuery(
-				"select p.created_on " +
-				"from Person p " +
-				"where p.id = :personId", Timestamp.class)
-			.setParameter("personId", 1L)
-			.getSingleResult();
+					.createNativeQuery(
+							"select p.created_on " +
+							"from Person p " +
+							"where p.id = :personId", Timestamp.class )
+					.setParameter( "personId", 1L )
+					.getSingleResult();
 
-			assertEquals(
-				Timestamp.valueOf(LocalDateTime.of(2018, 11, 23, 12, 0, 0)),
-				personCreationTimestamp
-		);
-		}, true);
+			assertThat( personCreationTimestamp )
+					.isEqualTo( Timestamp.valueOf( LocalDateTime.of( 2018, 11, 23, 12, 0, 0 ) ) );
+		}, true );
 		//end::multitenacy-hibernate-applying-timezone-configuration-example[]
 
 		//tag::multitenacy-hibernate-not-applying-timezone-configuration-example[]
-		doInSession(FRONT_END_TENANT, session -> {
+		doInSession( FRONT_END_TENANT, session -> {
 			Timestamp personCreationTimestamp = session
-			.createNativeQuery(
-				"select p.created_on " +
-				"from Person p " +
-				"where p.id = :personId", Timestamp.class)
-			.setParameter("personId", 1L)
-			.getSingleResult();
-
-			log.infof(
-				"The created_on timestamp value is: [%s]",
-				personCreationTimestamp
-		);
+					.createNativeQuery(
+							"select p.created_on " +
+							"from Person p " +
+							"where p.id = :personId", Timestamp.class )
+					.setParameter( "personId", 1L )
+					.getSingleResult();
 
 			long timeZoneOffsetMillis =
-					Timestamp.valueOf(LocalDateTime.of(2018, 11, 23, 12, 0, 0)).getTime() -
+					Timestamp.valueOf( LocalDateTime.of( 2018, 11, 23, 12, 0, 0 ) ).getTime() -
 					personCreationTimestamp.getTime();
 
-			assertEquals(
-				TimeZone.getTimeZone(ZoneId.systemDefault()).getRawOffset(),
-				timeZoneOffsetMillis
-		);
+			assertThat( timeZoneOffsetMillis )
+					.isEqualTo( TimeZone.getTimeZone( ZoneId.systemDefault() ).getRawOffset() );
 
-			log.infof(
-				"For the current time zone: [%s], the UTC time zone offset is: [%d]",
-				TimeZone.getDefault().getDisplayName(), timeZoneOffsetMillis
-		);
-		}, false);
+		}, false );
 		//end::multitenacy-hibernate-not-applying-timezone-configuration-example[]
 	}
 
 	protected Properties properties() {
 		Properties properties = new Properties();
-		URL propertiesURL = Thread.currentThread().getContextClassLoader().getResource("hibernate.properties");
-		try (FileInputStream inputStream = new FileInputStream(propertiesURL.getFile())) {
-			properties.load(inputStream);
+		URL propertiesURL = Thread.currentThread().getContextClassLoader().getResource( "hibernate.properties" );
+		try (FileInputStream inputStream = new FileInputStream( propertiesURL.getFile() )) {
+			properties.load( inputStream );
 		}
 		catch (IOException e) {
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException( e );
 		}
 		return properties;
 	}
 
 	protected String tenantUrl(String originalUrl, String tenantIdentifier) {
-		return originalUrl.replace("db1", tenantIdentifier);
+		return originalUrl.replace( "db1", tenantIdentifier );
 	}
 
 	protected SessionFactory sessionFactory(Map<String, Object> settings) {
 
 		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySettings(settings)
+				.applySettings( settings )
 				.build();
 
-		MetadataSources metadataSources = new MetadataSources(serviceRegistry);
-		for (Class annotatedClasses : getAnnotatedClasses()) {
-			metadataSources.addAnnotatedClass(annotatedClasses);
+		MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+		for ( Class annotatedClasses : getAnnotatedClasses() ) {
+			metadataSources.addAnnotatedClass( annotatedClasses );
 		}
 
 		Metadata metadata = metadataSources.buildMetadata();
 
 		HibernateSchemaManagementTool tool = new HibernateSchemaManagementTool();
-		tool.injectServices(serviceRegistry);
+		tool.injectServices( serviceRegistry );
 
 		new SchemaDropperImpl( serviceRegistry ).doDrop(
 				metadata,
@@ -287,10 +277,10 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
 		try {
 			SessionBuilder sessionBuilder = sessionFactory
 					.withOptions()
-					.tenantIdentifier(tenant);
+					.tenantIdentifier( tenant );
 
-			if (useTenantTimeZone) {
-				sessionBuilder.jdbcTimeZone(timeZoneTenantMap.get(tenant));
+			if ( useTenantTimeZone ) {
+				sessionBuilder.jdbcTimeZone( timeZoneTenantMap.get( tenant ) );
 			}
 
 			session = sessionBuilder.openSession();
@@ -298,18 +288,18 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
 			txn = session.getTransaction();
 			txn.begin();
 
-			function.accept(session);
+			function.accept( session );
 
 			txn.commit();
 		}
 		catch (Throwable e) {
-			if (txn != null) {
+			if ( txn != null ) {
 				txn.rollback();
 			}
 			throw e;
 		}
 		finally {
-			if (session != null) {
+			if ( session != null ) {
 				session.close();
 			}
 		}

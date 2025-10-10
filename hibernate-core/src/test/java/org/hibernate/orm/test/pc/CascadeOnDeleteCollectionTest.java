@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.pc;
 
-import java.util.ArrayList;
-import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,56 +11,53 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Vlad Mihalcea
  */
-public class CascadeOnDeleteCollectionTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				Phone.class
-		};
-	}
+@Jpa(
+		annotatedClasses = {
+				CascadeOnDeleteCollectionTest.Person.class,
+				CascadeOnDeleteCollectionTest.Phone.class
+		}
+)
+public class CascadeOnDeleteCollectionTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Person person = new Person();
-			person.setId(1L);
-			person.setName("John Doe");
-			entityManager.persist(person);
+			person.setId( 1L );
+			person.setName( "John Doe" );
+			entityManager.persist( person );
 
 			Phone phone1 = new Phone();
-			phone1.setId(1L);
-			phone1.setNumber("123-456-7890");
-			phone1.setOwner(person);
-			person.addPhone(phone1);
+			phone1.setId( 1L );
+			phone1.setNumber( "123-456-7890" );
+			phone1.setOwner( person );
+			person.addPhone( phone1 );
 
 			Phone phone2 = new Phone();
-			phone2.setId(2L);
-			phone2.setNumber("101-010-1234");
-			phone2.setOwner(person);
-			person.addPhone(phone2);
-		});
+			phone2.setId( 2L );
+			phone2.setNumber( "101-010-1234" );
+			phone2.setOwner( person );
+			person.addPhone( phone2 );
+		} );
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::pc-cascade-on-delete-collection-example[]
-			Person person = entityManager.find(Person.class, 1L);
-			entityManager.remove(person);
+			Person person = entityManager.find( Person.class, 1L );
+			entityManager.remove( person );
 			//end::pc-cascade-on-delete-collection-example[]
-		});
-
+		} );
 	}
 
 	//tag::pc-cascade-on-delete-collection-mapping-Person-example[]
@@ -99,8 +94,8 @@ public class CascadeOnDeleteCollectionTest extends BaseEntityManagerFunctionalTe
 		}
 
 		public void addPhone(Phone phone) {
-			phone.setOwner(this);
-			phones.add(phone);
+			phone.setOwner( this );
+			phones.add( phone );
 		}
 
 		//tag::pc-cascade-on-delete-collection-mapping-Person-example[]

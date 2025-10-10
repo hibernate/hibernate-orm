@@ -4,127 +4,110 @@
  */
 package org.hibernate.orm.test.annotations.fetch;
 
-import java.util.Date;
-
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-
-import org.junit.Test;
-
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import java.util.Date;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * @author Emmanuel Bernard
  */
-public class FetchingTest extends BaseCoreFunctionalTestCase {
-	@Test
-	public void testLazy() {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		Person p = new Person( "Gavin", "King", "JBoss Inc" );
-		Stay stay = new Stay( p, new Date(), new Date(), "A380", "Blah", "Blah" );
-		p.addStay( stay );
-		s.persist( p );
-		tx.commit();
-		s.clear();
-		tx = s.beginTransaction();
-		p = (Person) s.createQuery( "from Person p where p.firstName = :name" )
-				.setParameter( "name", "Gavin" ).uniqueResult();
-		assertFalse( Hibernate.isInitialized( p.getStays() ) );
-		s.remove( p );
-		tx.commit();
-		s.close();
-	}
-
-	@Test
-	public void testHibernateFetchingLazy() {
-		try(Session s = openSession()) {
-			Transaction tx = s.beginTransaction();
-			try {
-				Person p = new Person( "Gavin", "King", "JBoss Inc" );
-				Stay stay = new Stay( null, new Date(), new Date(), "A380", "Blah", "Blah" );
-				Stay stay2 = new Stay( null, new Date(), new Date(), "A320", "Blah", "Blah" );
-				Stay stay3 = new Stay( null, new Date(), new Date(), "A340", "Blah", "Blah" );
-				stay.setOldPerson( p );
-				stay2.setVeryOldPerson( p );
-				stay3.setVeryOldPerson( p );
-				p.addOldStay( stay );
-				p.addVeryOldStay( stay2 );
-				p.addVeryOldStay( stay3 );
-				s.persist( p );
-				tx.commit();
-				s.clear();
-				tx = s.beginTransaction();
-				p = (Person) s.createQuery( "from Person p where p.firstName = :name" )
-						.setParameter( "name", "Gavin" ).uniqueResult();
-				assertFalse( Hibernate.isInitialized( p.getOldStays() ) );
-				assertEquals( 1, p.getOldStays().size() );
-				assertTrue( Hibernate.isInitialized( p.getOldStays() ) );
-				s.clear();
-				stay = (Stay) s.get( Stay.class, stay.getId() );
-				assertTrue( !Hibernate.isInitialized( stay.getOldPerson() ) );
-				s.clear();
-				stay3 = (Stay) s.get( Stay.class, stay3.getId() );
-				assertTrue(
-						"FetchMode.JOIN should overrides lazy options",
-						Hibernate.isInitialized( stay3.getVeryOldPerson() )
-				);
-				s.remove( stay3.getVeryOldPerson() );
-				tx.commit();
-			}finally {
-				if ( tx.isActive() ) {
-					tx.rollback();
-				}
-			}
-		}
-	}
-
-	@Test
-	public void testOneToManyFetchEager() {
-		Branch b = new Branch();
-		Session s = openSession( );
-		try {
-			s.getTransaction().begin();
-			s.persist( b );
-			s.flush();
-			Leaf l = new Leaf();
-			l.setBranch( b );
-			s.persist( l );
-			s.flush();
-
-			s.clear();
-
-			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
-			CriteriaQuery<Branch> criteria = criteriaBuilder.createQuery( Branch.class );
-			criteria.from( Branch.class );
-			s.createQuery( criteria ).list();
-//			s.createCriteria( Branch.class ).list();
-
-		}
-		finally {
-			if ( s.getTransaction().isActive() ) {
-				s.getTransaction().rollback();
-			}
-			s.close();
-		}
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
+@DomainModel(
+		annotatedClasses = {
 				Person.class,
 				Stay.class,
 				Branch.class,
 				Leaf.class
-		};
+		}
+)
+@SessionFactory
+public class FetchingTest {
+
+	@AfterEach
+	public void cleanup(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+	}
+
+	@Test
+	public void testLazy(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Person p = new Person( "Gavin", "King", "JBoss Inc" );
+					Stay stay = new Stay( p, new Date(), new Date(), "A380", "Blah", "Blah" );
+					p.addStay( stay );
+					session.persist( p );
+					session.getTransaction().commit();
+					session.clear();
+					session.beginTransaction();
+					p = session.createQuery( "from Person p where p.firstName = :name", Person.class )
+							.setParameter( "name", "Gavin" ).uniqueResult();
+					assertThat( Hibernate.isInitialized( p.getStays() ) ).isFalse();
+					session.remove( p );
+				}
+		);
+	}
+
+	@Test
+	public void testHibernateFetchingLazy(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Person p = new Person( "Gavin", "King", "JBoss Inc" );
+					Stay stay = new Stay( null, new Date(), new Date(), "A380", "Blah", "Blah" );
+					Stay stay2 = new Stay( null, new Date(), new Date(), "A320", "Blah", "Blah" );
+					Stay stay3 = new Stay( null, new Date(), new Date(), "A340", "Blah", "Blah" );
+					stay.setOldPerson( p );
+					stay2.setVeryOldPerson( p );
+					stay3.setVeryOldPerson( p );
+					p.addOldStay( stay );
+					p.addVeryOldStay( stay2 );
+					p.addVeryOldStay( stay3 );
+					session.persist( p );
+					session.getTransaction().commit();
+					session.clear();
+					session.beginTransaction();
+					p = session.createQuery( "from Person p where p.firstName = :name", Person.class )
+							.setParameter( "name", "Gavin" ).uniqueResult();
+					assertThat( Hibernate.isInitialized( p.getOldStays() ) ).isFalse();
+					assertThat( p.getOldStays().size() ).isEqualTo( 1 );
+					assertThat( Hibernate.isInitialized( p.getOldStays() ) ).isTrue();
+					session.clear();
+					stay = session.find( Stay.class, stay.getId() );
+					assertThat( !Hibernate.isInitialized( stay.getOldPerson() ) ).isTrue();
+					session.clear();
+					stay3 = session.find( Stay.class, stay3.getId() );
+					assertThat( Hibernate.isInitialized( stay3.getVeryOldPerson() ) ).isTrue();
+					session.remove( stay3.getVeryOldPerson() );
+				}
+		);
+	}
+
+	@Test
+	public void testOneToManyFetchEager(SessionFactoryScope scope) {
+		Branch b = new Branch();
+		scope.inTransaction(
+				session -> {
+					session.persist( b );
+					session.flush();
+					Leaf l = new Leaf();
+					l.setBranch( b );
+					session.persist( l );
+					session.flush();
+
+					session.clear();
+
+					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+					CriteriaQuery<Branch> criteria = criteriaBuilder.createQuery( Branch.class );
+					criteria.from( Branch.class );
+					session.createQuery( criteria ).list();
+				}
+		);
 	}
 }

@@ -4,16 +4,6 @@
  */
 package org.hibernate.orm.test.annotations.manytoone;
 
-import org.hibernate.boot.beanvalidation.ValidationMode;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -21,45 +11,53 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ExpectedException;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_MODE;
 
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-13959")
-@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-public class NotNullManyToOneTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.JAKARTA_VALIDATION_MODE, ValidationMode.AUTO );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Parent.class,
-				Child.class
-		};
+@RequiresDialectFeature(feature= DialectFeatureChecks.SupportsIdentityColumns.class)
+@ServiceRegistry(settings = @Setting(name = JAKARTA_VALIDATION_MODE, value = "auto" ) )
+@DomainModel(annotatedClasses = {
+		NotNullManyToOneTest.Parent.class,
+		NotNullManyToOneTest.Child.class
+})
+@SessionFactory
+public class NotNullManyToOneTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testSave() {
-		inTransaction(
-				session -> {
-					Parent parent = new Parent( new Child() );
-					session.persist( parent );
-				}
-		);
+	public void testSave(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction(session -> {
+			Parent parent = new Parent( new Child() );
+			session.persist( parent );
+		} );
 	}
 
-	@Test(expected = jakarta.validation.ConstraintViolationException.class)
-	public void testSaveChildWithoutParent() {
-		inTransaction(
-				session -> {
-					Child child = new Child();
-					session.persist( child );
-				}
-		);
+	@Test
+	@ExpectedException( jakarta.validation.ConstraintViolationException.class )
+	public void testSaveChildWithoutParent(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction(session -> {
+			Child child = new Child();
+			session.persist( child );
+		} );
 	}
 
 	@Entity(name = "Child")

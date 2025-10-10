@@ -3,6 +3,15 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.33.Final (October 10, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/35651
+
+** Bug
+    * [HHH-19853] - Gradle plugin org.hibernate.orm not published for 6.6.31 / 6.2.47
+
+
 Changes in 6.6.32.Final (October 09, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

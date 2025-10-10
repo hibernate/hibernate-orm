@@ -4,123 +4,124 @@
  */
 package org.hibernate.orm.test.version.db;
 
-import java.sql.Timestamp;
-
-import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.internal.util.MutableObject;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import java.sql.Timestamp;
 
 /**
  * @author Steve Ebersole
  */
-public class DbVersionTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public String[] getMappings() {
-		return new String[] { "version/db/User.hbm.xml" };
-	}
-
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/version/db/User.hbm.xml")
+@SessionFactory
+public class DbVersionTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testCollectionVersion() throws Exception {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		User steve = new User( "steve" );
-		s.persist( steve );
-		Group admin = new Group( "admin" );
-		s.persist( admin );
-		t.commit();
-		s.close();
+	public void testCollectionVersion(SessionFactoryScope factoryScope) throws Exception {
+		final var tsJavaType = JdbcTimestampJavaType.INSTANCE;
+		final MutableObject<User> steveRef = new MutableObject<>();
 
-		Timestamp steveTimestamp = steve.getTimestamp();
+		factoryScope.inTransaction( (session) -> {
+			var steve = new User( 1, "steve" );
+			session.persist( steve );
+			var admin = new Group( 1, "admin" );
+			session.persist( admin );
+
+			steveRef.set( steve );
+		} );
+
+		Timestamp steveTimestamp = steveRef.get().getTimestamp();
 
 		// For dialects (Oracle8 for example) which do not return "true
 		// timestamps" sleep for a bit to allow the db date-time increment...
 		Thread.sleep( 1500 );
 
-		s = openSession();
-		t = s.beginTransaction();
-		steve = ( User ) s.get( User.class, steve.getId() );
-		admin = ( Group ) s.get( Group.class, admin.getId() );
-		steve.getGroups().add( admin );
-		admin.getUsers().add( steve );
-		t.commit();
-		s.close();
+		factoryScope.inTransaction( (session) -> {
+			var steve = session.find( User.class, 1 );
+			var admin = session.find( Group.class, 1 );
+			steve.getGroups().add( admin );
+			admin.getUsers().add( steve );
+			steveRef.set( steve );
+		} );
 
-		assertFalse( "owner version not incremented", JdbcTimestampJavaType.INSTANCE.areEqual( steveTimestamp, steve.getTimestamp() ) );
+		Assertions.assertFalse( tsJavaType.areEqual( steveTimestamp, steveRef.get().getTimestamp() ),
+				"owner version not incremented" );
 
-		steveTimestamp = steve.getTimestamp();
+		steveTimestamp = steveRef.get().getTimestamp();
 		Thread.sleep( 1500 );
 
-		s = openSession();
-		t = s.beginTransaction();
-		steve = ( User ) s.get( User.class, steve.getId() );
-		steve.getGroups().clear();
-		t.commit();
-		s.close();
+		factoryScope.inTransaction( (session) -> {
+			var steve = session.find( User.class, 1 );
+			steve.getGroups().clear();
+			steveRef.set( steve );
+		} );
 
-		assertFalse( "owner version not incremented", JdbcTimestampJavaType.INSTANCE.areEqual( steveTimestamp, steve.getTimestamp() ) );
-
-		s = openSession();
-		t = s.beginTransaction();
-		s.remove( s.getReference( User.class, steve.getId() ) );
-		s.remove( s.getReference( Group.class, admin.getId() ) );
-		t.commit();
-		s.close();
+		Assertions.assertFalse( tsJavaType.areEqual( steveTimestamp, steveRef.get().getTimestamp() ),
+				"owner version not incremented" );
 	}
 
 	@Test
-	public void testCollectionNoVersion() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		User steve = new User( "steve" );
-		s.persist( steve );
-		Permission perm = new Permission( "silly", "user", "rw" );
-		s.persist( perm );
-		t.commit();
-		s.close();
+	public void testCollectionNoVersion(SessionFactoryScope factoryScope) throws Exception {
+		final var dialect = factoryScope.getSessionFactory().getJdbcServices().getDialect();
+		final var tsJavaType = JdbcTimestampJavaType.INSTANCE;
+		final MutableObject<User> steveRef = new MutableObject<>();
 
-		Timestamp steveTimestamp = steve.getTimestamp();
-		if ( getDialect() instanceof SybaseDialect ) {
+		factoryScope.inTransaction( (session) -> {
+			var steve = new User( 1, "steve" );
+			session.persist( steve );
+			var perm = new Permission( 1, "silly", "user", "rw" );
+			session.persist( perm );
+
+			steveRef.set( steve );
+		} );
+
+		var steveTimestamp = determineTimestamp( steveRef, dialect );
+
+		factoryScope.inTransaction( (session) -> {
+			var steve = session.find( User.class, 1 );
+			var perm = session.find( Permission.class, 1 );
+			steve.getPermissions().add( perm );
+
+			steveRef.set( steve );
+		} );
+
+		Assertions.assertTrue( tsJavaType.areEqual( steveTimestamp, steveRef.get().getTimestamp() ),
+				"owner version was incremented" );
+
+		steveTimestamp = determineTimestamp( steveRef, dialect );
+
+		factoryScope.inTransaction( (session) -> {
+			var steve = session.find( User.class, 1 );
+			steve.getPermissions().clear();
+
+			steveRef.set( steve );
+		} );
+
+		Assertions.assertTrue( tsJavaType.areEqual( steveTimestamp, steveRef.get().getTimestamp() ),
+				"owner version was incremented" );
+	}
+
+	private Timestamp determineTimestamp(MutableObject<User> steveRef, Dialect dialect) {
+		var timestamp = steveRef.get().getTimestamp();
+
+		if ( dialect instanceof SybaseDialect ) {
 			// Sybase has 1/300th sec precision, but not for the `getdate()` function which we use for DB generation
-			steveTimestamp = new Timestamp( steveTimestamp.getTime() );
+			timestamp = new Timestamp( timestamp.getTime() );
 		}
 
-		s = openSession();
-		t = s.beginTransaction();
-		steve = ( User ) s.get( User.class, steve.getId() );
-		perm = ( Permission ) s.get( Permission.class, perm.getId() );
-		steve.getPermissions().add( perm );
-		t.commit();
-		s.close();
-
-		assertTrue( "owner version was incremented", JdbcTimestampJavaType.INSTANCE.areEqual( steveTimestamp, steve.getTimestamp() ) );
-
-		s = openSession();
-		t = s.beginTransaction();
-		steve = ( User ) s.get( User.class, steve.getId() );
-		steve.getPermissions().clear();
-		t.commit();
-		s.close();
-
-		assertTrue( "owner version was incremented", JdbcTimestampJavaType.INSTANCE.areEqual( steveTimestamp, steve.getTimestamp() ) );
-
-		s = openSession();
-		t = s.beginTransaction();
-		s.remove( s.getReference( User.class, steve.getId() ) );
-		s.remove( s.getReference( Permission.class, perm.getId() ) );
-		t.commit();
-		s.close();
+		return timestamp;
 	}
 }

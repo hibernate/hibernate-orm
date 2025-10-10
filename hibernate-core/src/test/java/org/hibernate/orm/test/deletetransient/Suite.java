@@ -3,6 +3,13 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.deletetransient;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -10,23 +17,29 @@ import java.util.Set;
  *
  * @author Gail Badner
  */
+@Entity
+@Table( name="suites")
 public class Suite {
-	private Long id;
+	@Id
+	private Integer id;
 	private String location;
-	private Set notes = new HashSet();
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+	@JoinColumn(name="suite_fk")
+	private Set<Note> notes = new HashSet<>();
 
 	public Suite() {
 	}
 
-	public Suite(String location) {
+	public Suite(Integer id, String location) {
+		this.id = id;
 		this.location = location;
 	}
 
-	public Long getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 

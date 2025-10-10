@@ -7,12 +7,10 @@ import java.util.Date;
 import java.util.Set;
 
 /**
- * Implementation of Group.
- *
  * @author Steve Ebersole
  */
 public class Group {
-	private Long id;
+	private Integer id;
 	private Date timestamp;
 	private String name;
 	private Set users;
@@ -20,15 +18,16 @@ public class Group {
 	public Group() {
 	}
 
-	public Group(String name) {
+	public Group(Integer id, String name) {
+		this.id = id;
 		this.name = name;
 	}
 
-	public Long getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 

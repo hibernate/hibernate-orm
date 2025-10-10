@@ -4,19 +4,20 @@
  */
 package org.hibernate.orm.test.hql;
 
-import java.io.Serializable;
-
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
-
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import java.io.Serializable;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Test entities with a non-identifier property named 'id' with an EmbeddedId using
@@ -24,69 +25,63 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Chris Cranford
  */
-public class SelectNewEmbeddedIdTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Simple.class };
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = SelectNewEmbeddedIdTest.Simple.class)
+@SessionFactory
+public class SelectNewEmbeddedIdTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
-	private void assertQueryRowCount(String queryString, int rowCount) {
-		EntityManager entityManager = getOrCreateEntityManager();
-		try {
-			// persist the data
-			entityManager.getTransaction().begin();
-			entityManager.persist( new Simple( new SimpleId( 1, 1 ), 1 ) );
-			entityManager.getTransaction().commit();
+	private void assertQueryRowCount(
+			String queryString,
+			@SuppressWarnings("SameParameterValue") int rowCount,
+			SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			session.persist( new Simple( new SimpleId( 1, 1 ), 1 ) );
+			session.flush();
 
-			Query query = entityManager.createQuery( queryString );
+			//noinspection deprecation
+			Query query = session.createQuery( queryString );
 			assertEquals( rowCount, query.getResultList().size() );
-		}
-		catch ( Exception e ) {
-			if ( entityManager.getTransaction().isActive() ) {
-				entityManager.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			entityManager.close();
-		}
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-4712")
-	public void testSelectNewListEntity() {
-		assertQueryRowCount( "select new list(e) FROM Simple e", 1 );
+	public void testSelectNewListEntity(SessionFactoryScope factoryScope) {
+		assertQueryRowCount( "select new list(e) FROM Simple e", 1, factoryScope );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-4712")
-	public void testSelectNewListEmbeddedIdValue() {
-		assertQueryRowCount( "select new list(e.simpleId) FROM Simple e", 1 );
+	public void testSelectNewListEmbeddedIdValue(SessionFactoryScope factoryScope) {
+		assertQueryRowCount( "select new list(e.simpleId) FROM Simple e", 1, factoryScope );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-4712")
-	public void testSelectNewMapEntity() {
-		assertQueryRowCount( "select new map(e.id, e) FROM Simple e", 1 );
+	public void testSelectNewMapEntity(SessionFactoryScope factoryScope) {
+		assertQueryRowCount( "select new map(e.id, e) FROM Simple e", 1, factoryScope );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-4712")
-	public void testSelectNewMapEmbeddedIdValue() {
-		assertQueryRowCount( "select new map(e.simpleId, e.simpleId) FROM Simple e", 1 );
+	public void testSelectNewMapEmbeddedIdValue(SessionFactoryScope factoryScope) {
+		assertQueryRowCount( "select new map(e.simpleId, e.simpleId) FROM Simple e", 1,  factoryScope );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-4712")
-	public void testSelectNewObjectEntity() {
-		assertQueryRowCount( "select new " + Wrapper.class.getName() + "(e) FROM Simple e", 1 );
+	public void testSelectNewObjectEntity(SessionFactoryScope factoryScope) {
+		assertQueryRowCount( "select new " + Wrapper.class.getName() + "(e) FROM Simple e", 1, factoryScope );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-4712")
-	public void testSelectNewObjectEmbeddedIdValue() {
-		assertQueryRowCount( "select new " + Wrapper.class.getName() + "(e.simpleId) FROM Simple e", 1 );
+	public void testSelectNewObjectEmbeddedIdValue(SessionFactoryScope factoryScope) {
+		assertQueryRowCount( "select new " + Wrapper.class.getName() + "(e.simpleId) FROM Simple e", 1, factoryScope );
 	}
 
 	@Entity(name = "Simple")

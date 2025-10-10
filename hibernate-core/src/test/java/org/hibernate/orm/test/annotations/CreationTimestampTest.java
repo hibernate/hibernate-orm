@@ -7,9 +7,9 @@ package org.hibernate.orm.test.annotations;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,22 +23,16 @@ import java.util.Date;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Borys Piela
  */
-public class CreationTimestampTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{
-				Event.class
-		};
-	}
+@Jpa(annotatedClasses = {CreationTimestampTest.Event.class})
+public class CreationTimestampTest {
 
 	@Entity(name = "Event")
-	private static class Event {
+	static class Event {
 
 		@Id
 		@GeneratedValue
@@ -173,8 +167,8 @@ public class CreationTimestampTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void generatesCurrentTimestamp() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void generatesCurrentTimestamp(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Event event = new Event();
 			entityManager.persist(event);
 			entityManager.flush();
@@ -184,8 +178,8 @@ public class CreationTimestampTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey( value = "HHH-16240")
-	public void generatesCurrentTimestampInStatelessSession() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void generatesCurrentTimestampInStatelessSession(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Session session = entityManager.unwrap( Session.class);
 			try (StatelessSession statelessSession = session.getSessionFactory().openStatelessSession()) {
 				Event event = new Event();
@@ -198,20 +192,20 @@ public class CreationTimestampTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	private void check(Event event) {
-		Assert.assertNotNull(event.getDate());
-		Assert.assertNotNull(event.getCalendar());
-		Assert.assertNotNull(event.getSqlDate());
-		Assert.assertNotNull(event.getTime());
-		Assert.assertNotNull(event.getTimestamp());
-		Assert.assertNotNull(event.getInstant());
-		Assert.assertNotNull(event.getLocalDate());
-		Assert.assertNotNull(event.getLocalDateTime());
-		Assert.assertNotNull(event.getLocalTime());
-		Assert.assertNotNull(event.getMonthDay());
-		Assert.assertNotNull(event.getOffsetDateTime());
-		Assert.assertNotNull(event.getOffsetTime());
-		Assert.assertNotNull(event.getYear());
-		Assert.assertNotNull(event.getYearMonth());
-		Assert.assertNotNull(event.getZonedDateTime());
+		assertNotNull(event.getDate());
+		assertNotNull(event.getCalendar());
+		assertNotNull(event.getSqlDate());
+		assertNotNull(event.getTime());
+		assertNotNull(event.getTimestamp());
+		assertNotNull(event.getInstant());
+		assertNotNull(event.getLocalDate());
+		assertNotNull(event.getLocalDateTime());
+		assertNotNull(event.getLocalTime());
+		assertNotNull(event.getMonthDay());
+		assertNotNull(event.getOffsetDateTime());
+		assertNotNull(event.getOffsetTime());
+		assertNotNull(event.getYear());
+		assertNotNull(event.getYearMonth());
+		assertNotNull(event.getZonedDateTime());
 	}
 }

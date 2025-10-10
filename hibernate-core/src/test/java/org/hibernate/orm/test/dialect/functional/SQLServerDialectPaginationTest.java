@@ -12,16 +12,19 @@ import java.util.stream.Collectors;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Test pagination on newer SQL Server Dialects where the application explicitly specifies
@@ -31,28 +34,30 @@ import static org.junit.Assert.assertEquals;
  */
 @JiraKey(value = "HHH-11642")
 @RequiresDialect(SQLServerDialect.class)
-public class SQLServerDialectPaginationTest extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { SimpleEntity.class };
-	}
+@Jpa(
+		annotatedClasses = { SQLServerDialectPaginationTest.SimpleEntity.class },
+		settingProviders = { @SettingProvider(settingName = AvailableSettings.DIALECT, provider = SQLServerDialectPaginationTest.DialectSettingProvider.class) }
+)
+public class SQLServerDialectPaginationTest {
 
-	@Override
-	protected Dialect getDialect() {
-		// if the environment is any version of SQLServerDialect, force the legacy SQLServerDialect instead
-		// This is so that the legacy's TopLimitHandler will be used here to test the fix necessary when a
-		// user explicitly configures the legacy dialect but uses a more modern version of SQL Server.
-		final Dialect environmentDialect = super.getDialect();
-		if ( environmentDialect instanceof SQLServerDialect ) {
-			return new SQLServerDialect();
+	static final class DialectSettingProvider implements SettingProvider.Provider<Dialect> {
+		@Override
+		public Dialect getSetting() {
+			// if the environment is any version of SQLServerDialect, force the legacy SQLServerDialect instead
+			// This is so that the legacy's TopLimitHandler will be used here to test the fix necessary when a
+			// user explicitly configures the legacy dialect but uses a more modern version of SQL Server.
+			final Dialect environmentDialect = DialectContext.getDialect();
+			if ( environmentDialect instanceof SQLServerDialect ) {
+				return new SQLServerDialect();
+			}
+			return environmentDialect;
 		}
-		return environmentDialect;
 	}
 
 	@Test
-	public void testPaginationQuery() {
+	public void testPaginationQuery(EntityManagerFactoryScope scope) {
 		// prepare some test data
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			for ( int i = 1; i <= 20; ++i ) {
 				final SimpleEntity entity = new SimpleEntity( i, "Entity" + i );
 				entityManager.persist( entity );
@@ -61,7 +66,7 @@ public class SQLServerDialectPaginationTest extends BaseEntityManagerFunctionalT
 
 		// This would fail with "index 2 out of range" within TopLimitHandler
 		// The fix addresses this problem which only occurs when using SQLServerDialect explicitly.
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			List<SimpleEntity> results = entityManager
 					.createQuery( "SELECT o FROM SimpleEntity o WHERE o.id >= :firstId ORDER BY o.id", SimpleEntity.class )
 					.setParameter( "firstId", 10 )

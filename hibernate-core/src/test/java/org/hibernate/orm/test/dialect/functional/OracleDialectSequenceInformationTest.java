@@ -11,33 +11,36 @@ import java.util.Optional;
 
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.transaction.TransactionUtil;
 
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import static java.util.stream.StreamSupport.stream;
 import static org.hibernate.testing.transaction.TransactionUtil.doInAutoCommit;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @RequiresDialect(OracleDialect.class)
 @JiraKey(value = "HHH-13694")
-public class OracleDialectSequenceInformationTest extends BaseNonConfigCoreFunctionalTestCase {
+@SessionFactory
+public class OracleDialectSequenceInformationTest {
 
 	private static final String MIN_SEQUENCE_NAME = "SEQ_MIN_TEST";
 	private static final String MAX_SEQUENCE_NAME = "SEQ_MAX_TEST";
 	private static final String MIN_VALUE = "-99999999999999999999999999";
 	private static final String MAX_VALUE =  "99999999999999999999999999";
 
-	@Before
+	@BeforeAll
 	public void prepareTest() throws Exception {
 		doInAutoCommit(
 				"DROP SEQUENCE " + MIN_SEQUENCE_NAME,
@@ -46,7 +49,7 @@ public class OracleDialectSequenceInformationTest extends BaseNonConfigCoreFunct
 				"CREATE SEQUENCE " + MAX_SEQUENCE_NAME + " MINVALUE 0 MAXVALUE " + MAX_VALUE + " INCREMENT BY 1" );
 	}
 
-	@After
+	@AfterAll
 	public void cleanupTest() throws Exception {
 		doInAutoCommit(
 				"DROP SEQUENCE " + MIN_SEQUENCE_NAME,
@@ -54,33 +57,33 @@ public class OracleDialectSequenceInformationTest extends BaseNonConfigCoreFunct
 	}
 
 	@Test
-	public void testExtractSequenceWithMinValueLowerThanLongMinValue() throws SQLException {
-		SequenceInformation sequence = fetchSequenceInformation( MIN_SEQUENCE_NAME );
+	public void testExtractSequenceWithMinValueLowerThanLongMinValue(SessionFactoryScope scope) throws SQLException {
+		SequenceInformation sequence = fetchSequenceInformation( MIN_SEQUENCE_NAME, scope.getSessionFactory() );
 
 		assertEquals( -1L, sequence.getIncrementValue().longValue() );
 		assertEquals( new BigDecimal( MIN_VALUE ), sequence.getMinValue() );
 	}
 
 	@Test
-	public void testExtractSequenceWithMaxValueGreaterThanLongMaxValue() throws SQLException {
-		SequenceInformation sequence = fetchSequenceInformation( MAX_SEQUENCE_NAME );
+	public void testExtractSequenceWithMaxValueGreaterThanLongMaxValue(SessionFactoryScope scope) throws SQLException {
+		SequenceInformation sequence = fetchSequenceInformation( MAX_SEQUENCE_NAME, scope.getSessionFactory() );
 
 		assertEquals( 1L, sequence.getIncrementValue().longValue() );
 		assertEquals( new BigDecimal( MAX_VALUE ), sequence.getMaxValue() );
 	}
 
-	private SequenceInformation fetchSequenceInformation(String sequenceName) throws SQLException {
+	private SequenceInformation fetchSequenceInformation(String sequenceName, SessionFactoryImplementor sessionFactory) throws SQLException {
 		return TransactionUtil.doWithJDBC(
-				sessionFactory().getServiceRegistry(),
+				sessionFactory.getServiceRegistry(),
 				connection -> {
 					final JdbcEnvironment jdbcEnvironment =
-							sessionFactory().getJdbcServices().getJdbcEnvironment();
+							sessionFactory.getJdbcServices().getJdbcEnvironment();
 					// lets skip system sequences
 					Optional<SequenceInformation> foundSequence =
 							stream( sequenceInformation( connection, jdbcEnvironment ).spliterator(), false )
 							.filter( sequence -> isSameSequence( sequenceName, sequence ) )
 							.findFirst();
-					assertTrue( sequenceName + " not found", foundSequence.isPresent() );
+					assertTrue( foundSequence.isPresent(), sequenceName + " not found" );
 					return foundSequence.get();
 				}
 		);

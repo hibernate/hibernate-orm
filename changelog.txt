@@ -33,6 +33,9 @@ https://hibernate.atlassian.net/projects/HHH/versions/34530
     * [HHH-19276] - Native query with enum list param leads to OutOfMemory
     * [HHH-18993] - [Docs] Possible outdated documentation and update suggestions in the user guide
     * [HHH-14082] - Hibernate cannot determine it's core version in modular configuration
+    * [HHH-19085] - NPE when using null value in CriteriaUpdate
+    * [HHH-19393] - Hibernate Envers can not handle ID class if it is implemented as Java record
+
 
 ** Deprecation
     * [HHH-19751] - Deprecate AzureSQLServerDialect for removal
@@ -74,6 +77,8 @@ https://hibernate.atlassian.net/projects/HHH/versions/34530
     * [HHH-14892] - Parallel test with GRADLE
     * [HHH-13843] - Performance schema migration
     * [HHH-9636] - Have JPA PessimisticLockScope.EXTENDED propagate the same LockModeType
+    * [HHH-19767] - Include license file in the META-INF of published artifacts
+    * [HHH-19827] - Apply the unified Hibernate Documentation theme
 
 ** New Feature
     * [HHH-19794] - SchemaManager.resynchronizeGenerators()
@@ -84,6 +89,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/34530
     * [HHH-19257] - Introduce @EmbeddedTable
     * [HHH-18973] - Add Vector support type for MySQL
     * [HHH-3404] - Regular expression matching in HQL
+    * [HHH-19676] - validate content of JPA @OrderBy in Processor
 
 ** Sub-task
     * [HHH-19820] - Make sure that the enhancer is not doing anything if all the enablement parameters are false
@@ -99,6 +105,8 @@ https://hibernate.atlassian.net/projects/HHH/versions/34530
     * [HHH-19728] - Update SQL Server CI testing to 2025
     * [HHH-19726] - Update MariaDB CI testing to 12.0
     * [HHH-19009] - Correction of the inheritance syntax used with GraphParser in EntityGraphsTest tests
+    * [HHH-19793] - Temporary disconnect ATP-S from OTP
+    * [HHH-19806] - Make LoggingReportTask more resilient to missing annotation values
 
 
 Changes in 7.1.0.Final (August 08, 2025)

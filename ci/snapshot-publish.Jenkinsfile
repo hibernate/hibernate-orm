@@ -23,7 +23,7 @@ pipeline {
         label 'Release'
     }
     tools {
-        jdk 'OpenJDK 21 Latest'
+        jdk 'OpenJDK 25 Latest'
     }
     options {
   		rateLimitBuilds(throttle: [count: 1, durationName: 'hour', userBoost: true])

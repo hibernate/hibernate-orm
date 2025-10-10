@@ -14,7 +14,7 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 @Library('hibernate-jenkins-pipeline-helpers') _
 import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 
-@Field final String DEFAULT_JDK_VERSION = '21'
+@Field final String DEFAULT_JDK_VERSION = '25'
 @Field final String DEFAULT_JDK_TOOL = "OpenJDK ${DEFAULT_JDK_VERSION} Latest"
 @Field final String NODE_PATTERN_BASE = 'Worker&&Containers'
 @Field List<BuildEnvironment> environments
@@ -212,7 +212,7 @@ stage('Build') {
 		executions.put('Strict JAXP configuration', {
 			runBuildOnNode(NODE_PATTERN_BASE) {
 				// we want to test with JDK 23 where the strict settings were introduced
-				def testJavaHome = tool(name: "OpenJDK 23 Latest", type: 'jdk')
+				def testJavaHome = tool(name: "OpenJDK 25 Latest", type: 'jdk')
 				def javaHome = tool(name: DEFAULT_JDK_TOOL, type: 'jdk')
 				// Use withEnv instead of setting env directly, as that is global!
 				// See https://github.com/jenkinsci/pipeline-plugin/blob/master/TUTORIAL.md

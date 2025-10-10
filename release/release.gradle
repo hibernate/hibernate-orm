@@ -20,7 +20,7 @@ idea.module {
 
 // skip building this when `build` task is run from root, as many of our CI jobs do
 tasks.build.dependsOn.clear()
-tasks.build.enabled false
+tasks.build.enabled = false
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -42,8 +42,8 @@ tasks.build.enabled false
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def releaseChecksTask = tasks.register( "releaseChecks" ) {
-    group 'release-prepare'
-    description 'Checks and preparation for release'
+    group = 'release-prepare'
+    description = 'Checks and preparation for release'
 
     doFirst {
         logger.lifecycle("Checking that the working tree is clean...")
@@ -99,8 +99,8 @@ def releaseChecksTask = tasks.register( "releaseChecks" ) {
 }
 
 def changeLogFileTask = tasks.register( "changeLogFile" ) {
-    group 'release-prepare'
-    description 'Updates the changelog.txt file based on the change-log report from Jira'
+    group = 'release-prepare'
+    description = 'Updates the changelog.txt file based on the change-log report from Jira'
     dependsOn releaseChecksTask
 
     doFirst {
@@ -110,8 +110,8 @@ def changeLogFileTask = tasks.register( "changeLogFile" ) {
 }
 
 def changeToReleaseVersionTask = tasks.register( "changeToReleaseVersion" ) {
-    group 'release-prepare'
-    description 'Updates `gradle/version.properties` file to the specified release-version'
+    group = 'release-prepare'
+    description = 'Updates `gradle/version.properties` file to the specified release-version'
 
     dependsOn releaseChecksTask
 
@@ -123,8 +123,8 @@ def changeToReleaseVersionTask = tasks.register( "changeToReleaseVersion" ) {
 }
 
 def gitPreStepsTask = tasks.register( 'gitPreSteps' ) {
-    group "release-prepare"
-    description "update changelog, update version file and commit"
+    group = "release-prepare"
+    description = "update changelog, update version file and commit"
 
     dependsOn releaseChecksTask
     dependsOn changeLogFileTask
@@ -139,8 +139,8 @@ def gitPreStepsTask = tasks.register( 'gitPreSteps' ) {
 }
 
 def gitPostStepsTask = tasks.register( 'gitPostSteps' ) {
-    group "release-prepare"
-    description "possibly create tag. update version-file and commit "
+    group = "release-prepare"
+    description = "possibly create tag. update version-file and commit "
 
     doFirst {
     }
@@ -170,8 +170,8 @@ void updateVersionFile(String version) {
 }
 
 tasks.register("releasePrepare") {
-    group "release-prepare"
-    description "Scripted release 'Release Prepare' stage"
+    group = "release-prepare"
+    description = "Scripted release 'Release Prepare' stage"
 
     dependsOn releaseChecksTask
     dependsOn "assembleDocumentation"
@@ -185,8 +185,8 @@ tasks.register("releasePrepare") {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def stageIntegrationGuideTask = tasks.register( "stageIntegrationGuide", Copy ) {
-    group "documentation"
-    description "Stages the Integration Guide as part of assembling documentation in preparation for release"
+    group = "documentation"
+    description = "Stages the Integration Guide as part of assembling documentation in preparation for release"
 
     dependsOn ":documentation:renderIntegrationGuides"
 
@@ -195,8 +195,8 @@ def stageIntegrationGuideTask = tasks.register( "stageIntegrationGuide", Copy ) 
 }
 
 def stageQuickstartTask = tasks.register( "stageQuickstart", Copy ) {
-    group 'documentation'
-    description "Stages the Getting Started Guide as part of assembling documentation in preparation for release"
+    group = 'documentation'
+    description = "Stages the Getting Started Guide as part of assembling documentation in preparation for release"
 
     dependsOn ':documentation:renderGettingStartedGuides'
 
@@ -205,8 +205,8 @@ def stageQuickstartTask = tasks.register( "stageQuickstart", Copy ) {
 }
 
 def stageTopicalGuideTask = tasks.register( "stageTopicalGuide", Copy ) {
-    group 'documentation'
-    description "Stages the Topical Guide as part of assembling documentation in preparation for release"
+    group = 'documentation'
+    description = "Stages the Topical Guide as part of assembling documentation in preparation for release"
 
     dependsOn ':documentation:renderTopicalGuides'
 
@@ -215,8 +215,8 @@ def stageTopicalGuideTask = tasks.register( "stageTopicalGuide", Copy ) {
 }
 
 def stageIntroductionGuideTask = tasks.register( "stageIntroductionGuide", Copy ) {
-    group 'documentation'
-    description "Stages the Introduction Guide as part of assembling documentation in preparation for release"
+    group = 'documentation'
+    description = "Stages the Introduction Guide as part of assembling documentation in preparation for release"
 
     dependsOn ':documentation:renderIntroductionGuides'
 
@@ -225,8 +225,8 @@ def stageIntroductionGuideTask = tasks.register( "stageIntroductionGuide", Copy 
 }
 
 def stageQueryGuideTask = tasks.register( "stageQueryGuide", Copy ) {
-    group 'documentation'
-    description "Stages the Query Language Guide as part of assembling documentation in preparation for release"
+    group = 'documentation'
+    description = "Stages the Query Language Guide as part of assembling documentation in preparation for release"
 
     dependsOn ':documentation:renderQueryLanguageGuides'
 
@@ -235,8 +235,8 @@ def stageQueryGuideTask = tasks.register( "stageQueryGuide", Copy ) {
 }
 
 def stageRepositoriesGuideTask = tasks.register( "stageRepositoriesGuide", Copy ) {
-    group 'documentation'
-    description "Stages the Repositories Guide as part of assembling documentation in preparation for release"
+    group = 'documentation'
+    description = "Stages the Repositories Guide as part of assembling documentation in preparation for release"
 
     dependsOn ':documentation:renderRepositories'
 
@@ -245,8 +245,8 @@ def stageRepositoriesGuideTask = tasks.register( "stageRepositoriesGuide", Copy 
 }
 
 def stageUserGuideTask = tasks.register( "stageUserGuide", Copy ) {
-    group 'documentation'
-    description "Stages the User Guide as part of assembling documentation in preparation for release"
+    group = 'documentation'
+    description = "Stages the User Guide as part of assembling documentation in preparation for release"
 
     dependsOn ':documentation:renderUserGuides'
 
@@ -256,8 +256,8 @@ def stageUserGuideTask = tasks.register( "stageUserGuide", Copy ) {
 
 
 def stageMigrationGuideTask = tasks.register( "stageMigrationGuide", Copy ) {
-    group 'documentation'
-    description "Stages the Migration Guide as part of assembling documentation in preparation for release"
+    group = 'documentation'
+    description = "Stages the Migration Guide as part of assembling documentation in preparation for release"
 
     dependsOn ':documentation:renderMigrationGuide'
 
@@ -266,8 +266,8 @@ def stageMigrationGuideTask = tasks.register( "stageMigrationGuide", Copy ) {
 }
 
 def stageWhatsNewGuideTask = tasks.register( "stageWhatsNewGuide", Copy ) {
-    group 'documentation'
-    description "Stages the What's New guide as part of assembling documentation in preparation for release"
+    group = 'documentation'
+    description = "Stages the What's New guide as part of assembling documentation in preparation for release"
 
     dependsOn ':documentation:renderWhatsNew'
 
@@ -276,8 +276,8 @@ def stageWhatsNewGuideTask = tasks.register( "stageWhatsNewGuide", Copy ) {
 }
 
 def stageIncubationReportTask = tasks.register( "stageIncubationReport", Copy ) { task ->
-    group 'documentation'
-    description "Stages ORM @Incubating report as part of assembling documentation in preparation for release"
+    group = 'documentation'
+    description = "Stages ORM @Incubating report as part of assembling documentation in preparation for release"
 
     dependsOn ':documentation:generateIncubationReport'
     tasks.stageOrmReports.dependsOn task
@@ -287,8 +287,8 @@ def stageIncubationReportTask = tasks.register( "stageIncubationReport", Copy ) 
 }
 
 def stageInternalsReportTask = tasks.register( "stageInternalsReport", Copy ) { task ->
-    group 'documentation'
-    description "Stages the @Internal report as part of assembling documentation in preparation for release"
+    group = 'documentation'
+    description = "Stages the @Internal report as part of assembling documentation in preparation for release"
 
     dependsOn ':documentation:generateInternalsReport'
 
@@ -297,8 +297,8 @@ def stageInternalsReportTask = tasks.register( "stageInternalsReport", Copy ) { 
 }
 
 def stageDeprecationReportTask = tasks.register( "stageDeprecationReport", Copy ) {
-    group 'documentation'
-    description "Stages the @Deprecated/@Remove report as part of assembling documentation in preparation for release"
+    group = 'documentation'
+    description = "Stages the @Deprecated/@Remove report as part of assembling documentation in preparation for release"
 
     dependsOn ':documentation:generateDeprecationReport'
 
@@ -307,8 +307,8 @@ def stageDeprecationReportTask = tasks.register( "stageDeprecationReport", Copy 
 }
 
 def stageLoggingReportTask = tasks.register( "stageLoggingReport", Copy ) { task ->
-    group 'documentation'
-    description "Stages the logging report as part of assembling documentation in preparation for release"
+    group = 'documentation'
+    description = "Stages the logging report as part of assembling documentation in preparation for release"
 
     dependsOn ':documentation:renderLoggingReport'
 
@@ -317,8 +317,8 @@ def stageLoggingReportTask = tasks.register( "stageLoggingReport", Copy ) { task
 }
 
 def stageDialectReportTask = tasks.register( "stageDialectReport", Copy ) { task ->
-    group 'documentation'
-    description "Stages the supported Dialects report as part of assembling documentation in preparation for release"
+    group = 'documentation'
+    description = "Stages the supported Dialects report as part of assembling documentation in preparation for release"
 
     dependsOn ':documentation:renderDialectReport'
 
@@ -327,8 +327,8 @@ def stageDialectReportTask = tasks.register( "stageDialectReport", Copy ) { task
 }
 
 def stageOrmReportsTask = tasks.register( "stageOrmReports" ) {
-    group 'documentation'
-    description "Stages all ORM reports as part of assembling documentation in preparation for release"
+    group = 'documentation'
+    description = "Stages all ORM reports as part of assembling documentation in preparation for release"
 
     dependsOn ':documentation:generateReports'
     dependsOn stageIncubationReportTask
@@ -339,8 +339,8 @@ def stageOrmReportsTask = tasks.register( "stageOrmReports" ) {
 }
 
 def stageJavadocsTask = tasks.register( "stageJavadocs", Copy ) {
-    group 'documentation'
-    description "Stages the aggregated Javadocs as part of assembling documentation in preparation for release"
+    group = 'documentation'
+    description = "Stages the aggregated Javadocs as part of assembling documentation in preparation for release"
 
     dependsOn ':documentation:javadoc'
 
@@ -354,8 +354,8 @@ def stageJavadocsTask = tasks.register( "stageJavadocs", Copy ) {
  * Depends on building the docs
  */
 def assembleDocumentationTask = tasks.register( "assembleDocumentation" ) {
-    group 'documentation'
-    description 'Assembles all documentation into the {buildDir}/documentation directory'
+    group = 'documentation'
+    description = 'Assembles all documentation into the {buildDir}/documentation directory'
 
     dependsOn ':documentation:buildDocsForPublishing'
     dependsOn stageJavadocsTask
@@ -387,7 +387,7 @@ def assembleDocumentationTask = tasks.register( "assembleDocumentation" ) {
 
 tasks.register( 'releasePerform' ) {
     group = "release-perform"
-    description "Scripted release 'Release Perform' stage"
+    description = "Scripted release 'Release Perform' stage"
 
     doFirst {
         if ( ormBuildDetails.releaseDetails.shouldCreateTag() ) {

@@ -33,7 +33,7 @@ jobs:
   build:
     permissions:
       contents: read
-    name: OpenJDK 21 - ${{matrix.rdbms}}
+    name: OpenJDK 25 - ${{matrix.rdbms}}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -63,11 +63,11 @@ jobs:
         env:
           RDBMS: ${{ matrix.rdbms }}
         run: ci/database-start.sh
-      - name: Set up Java 21
+      - name: Set up Java 25
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '25'
 
       - name: Generate cache key
         id: cache-key
@@ -147,7 +147,7 @@ jobs:
   otp:
     permissions:
       contents: read
-    name: GraalVM 21 - ${{matrix.rdbms}}
+    name: GraalVM 25 - ${{matrix.rdbms}}
     runs-on: [ self-hosted, Linux, X64, OracleTestPilot ]
     strategy:
       fail-fast: false
@@ -161,11 +161,11 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
-      - name: Set up Java 21
+      - name: Set up Java 25
         uses: graalvm/setup-graalvm@aafbedb8d382ed0ca6167d3a051415f20c859274 # v1.2.8
         with:
           distribution: 'graalvm'
-          java-version: '21'
+          java-version: '25'
       - name: Generate cache key
         id: cache-key
         run: |
@@ -270,11 +270,11 @@ jobs:
           persist-credentials: false
       - name: Reclaim disk space and sanitize user home
         run: .github/ci-prerequisites-atlas.sh
-      - name: Set up Java 21
+      - name: Set up Java 25
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '25'
 
       - name: Generate cache key
         id: cache-key

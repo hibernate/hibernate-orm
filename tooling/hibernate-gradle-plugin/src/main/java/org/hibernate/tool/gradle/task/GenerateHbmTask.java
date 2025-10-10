@@ -38,6 +38,11 @@ public class GenerateHbmTask extends AbstractTask {
 		File outputFolder = getOutputFolder();
 		hbmExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, createJdbcDescriptor());
 		hbmExporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputFolder);
+        String templatePath = getExtension().templatePath;
+        if (templatePath != null) {
+            getLogger().lifecycle("Setting template path to: " + templatePath);
+            hbmExporter.getProperties().put(ExporterConstants.TEMPLATE_PATH, new String[] { templatePath });
+        }
 		getLogger().lifecycle("Starting HBM export to directory: " + outputFolder + "...");
 		hbmExporter.start();
 		getLogger().lifecycle("HBM export finished");

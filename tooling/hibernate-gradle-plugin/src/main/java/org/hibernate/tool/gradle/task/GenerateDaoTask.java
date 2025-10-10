@@ -38,6 +38,11 @@ public class GenerateDaoTask extends AbstractTask {
 		File outputFolder = getOutputFolder();
 		hbmExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, createJdbcDescriptor());
 		hbmExporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputFolder);
+        String templatePath = getExtension().templatePath;
+        if (templatePath != null) {
+            getLogger().lifecycle("Setting template path to: " + templatePath);
+            hbmExporter.getProperties().put(ExporterConstants.TEMPLATE_PATH, new String[] { templatePath });
+        }
 		getLogger().lifecycle("Starting DAO export to directory: " + outputFolder + "...");
 		hbmExporter.start();
 		getLogger().lifecycle("DAO export finished");

@@ -40,6 +40,11 @@ public class GenerateJavaTask extends AbstractTask {
 		File outputFolder = getOutputFolder();
 		pojoExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, createJdbcDescriptor());
 		pojoExporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputFolder);
+        String templatePath = getExtension().templatePath;
+        if (templatePath != null) {
+            getLogger().lifecycle("Setting template path to: " + templatePath);
+            pojoExporter.getProperties().put(ExporterConstants.TEMPLATE_PATH, new String[] { templatePath });
+        }
 		getLogger().lifecycle("Starting Java export to directory: " + outputFolder + "...");
 		pojoExporter.start();
 		getLogger().lifecycle("Java export finished");

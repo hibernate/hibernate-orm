@@ -141,7 +141,7 @@ tasks.register('compile') {
 
 tasks.withType( JavaCompile ).configureEach {
     options.encoding = 'UTF-8'
-    options.warnings false
+    options.warnings = false
     options.fork = true
     options.forkOptions.memoryMaximumSize = '896m'
 
@@ -162,7 +162,7 @@ tasks.withType( JavaCompile ).configureEach {
 }
 
 processTestResources {
-    duplicatesStrategy DuplicatesStrategy.INCLUDE
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 
     inputs.property( "db", db )
     inputs.property( "dbHost", dbHost )

@@ -11,7 +11,7 @@ plugins {
 	id "local.javadoc"
 	id "local.code-quality"
 
-	id 'com.gradle.plugin-publish' version '1.2.1'
+	id 'com.gradle.plugin-publish' version '2.0.0'
 	// for local publishing
 	id 'maven-publish'
 }
@@ -63,6 +63,7 @@ test {
 	if ( project.hasProperty( 'excludeTests' ) ) {
 		exclude project.property( 'excludeTests' ) as String
 	}
+    systemProperty("orm.gradle.min", project.property("orm.gradle.min"))
 	jvmArgs("--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED",
 			"--add-opens", "java.base/java.util=ALL-UNNAMED",
 			"--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED")
@@ -153,8 +154,8 @@ else {
 	}
 }
 
-tasks.publish.enabled !ormBuildDetails.hibernateVersion.isSnapshot
-tasks.publishPlugins.enabled !ormBuildDetails.hibernateVersion.isSnapshot
+tasks.publish.enabled = !ormBuildDetails.hibernateVersion.isSnapshot
+tasks.publishPlugins.enabled = !ormBuildDetails.hibernateVersion.isSnapshot
 
 gradle.taskGraph.whenReady { tg ->
 	// local publishing (SNAPSHOT testing), cont.

@@ -12,22 +12,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.file.Directory;
-import org.gradle.api.tasks.SourceSet;
 
 /**
  * @author Steve Ebersole
  */
 public class Helper {
-	public static ClassLoader asClassLoader(SourceSet sourceSet, Configuration gradleClasspath) {
+	public static ClassLoader asClassLoader(Configuration... configurations) {
 		final List<URL> urls = new ArrayList<>();
 
-		final Directory classesDirectory = sourceSet.getJava().getClassesDirectory().get();
-		final File classesDir = classesDirectory.getAsFile();
-		addElement( urls, classesDir );
-
-		for ( File dependencyFile : gradleClasspath.resolve() ) {
-			addElement( urls, dependencyFile );
+		for ( Configuration configuration : configurations ) {
+			for ( File dependencyFile : configuration.resolve() ) {
+				addElement( urls, dependencyFile );
+			}
 		}
 
 		return new URLClassLoader( urls.toArray( new URL[0] ) );

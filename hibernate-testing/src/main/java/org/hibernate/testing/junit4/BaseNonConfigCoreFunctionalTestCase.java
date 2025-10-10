@@ -67,7 +67,10 @@ import static org.junit.Assert.fail;
  * use (the neutered form of) Configuration.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use JUnit 5/6
  */
+@Deprecated
 public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 	public static final String VALIDATE_DATA_CLEANUP = "hibernate.test.validateDataCleanup";
 

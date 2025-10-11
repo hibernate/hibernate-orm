@@ -23,7 +23,7 @@ public class NameSpaceTablesInformation {
 	}
 
 	public void addTableInformation(TableInformation tableInformation) {
-		tables.put( tableInformation.getName().getTableName().getText(), tableInformation );
+		tables.put( identifierHelper.toMetaDataObjectName( tableInformation.getName().getTableName() ), tableInformation );
 	}
 
 	public @Nullable TableInformation getTableInformation(Table table) {

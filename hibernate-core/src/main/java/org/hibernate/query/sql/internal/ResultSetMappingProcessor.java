@@ -16,6 +16,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.internal.AliasConstantsHelper;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -260,16 +261,19 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 
 	private NavigablePath determineNavigablePath(LegacyFetchBuilder fetchBuilder) {
 		final var ownerResult = alias2Return.get( fetchBuilder.getOwnerAlias() );
-		final NavigablePath path;
+		final NavigablePath basePath;
 		if ( ownerResult instanceof NativeQuery.RootReturn rootReturn ) {
-			path = rootReturn.getNavigablePath();
+			basePath = rootReturn.getNavigablePath();
 		}
 		else if ( ownerResult instanceof DynamicFetchBuilderLegacy dynamicFetchBuilderLegacy ) {
-			path = determineNavigablePath( dynamicFetchBuilderLegacy );
+			basePath = determineNavigablePath( dynamicFetchBuilderLegacy );
 		}
 		else {
 			throw new AssertionFailure( "Unexpected fetch builder" );
 		}
+		final NavigablePath path = alias2CollectionPersister.containsKey( fetchBuilder.getOwnerAlias() )
+				? basePath.append( CollectionPart.Nature.ELEMENT.getName() )
+				: basePath;
 		return path.append( fetchBuilder.getFetchable().getFetchableName() );
 	}
 

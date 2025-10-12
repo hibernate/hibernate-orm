@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
@@ -280,15 +281,21 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 	}
 
 	private NavigablePath determineNavigablePath(DynamicFetchBuilderLegacy fetchBuilder) {
-		final NativeQuery.ResultNode ownerResult = alias2Return.get( fetchBuilder.getOwnerAlias() );
+		final var ownerResult = alias2Return.get( fetchBuilder.getOwnerAlias() );
+		final NavigablePath basePath;
 		if ( ownerResult instanceof NativeQuery.RootReturn ) {
-			return ( (NativeQuery.RootReturn) ownerResult ).getNavigablePath()
-					.append( fetchBuilder.getFetchableName() );
+			basePath = ((NativeQuery.RootReturn) ownerResult).getNavigablePath();
+		}
+		else if ( ownerResult instanceof DynamicFetchBuilderLegacy ) {
+			basePath = determineNavigablePath( ((DynamicFetchBuilderLegacy) ownerResult) );
 		}
 		else {
-			return determineNavigablePath( ( DynamicFetchBuilderLegacy) ownerResult )
-					.append( fetchBuilder.getFetchableName() );
+			throw new AssertionFailure( "Unexpected fetch builder" );
 		}
+		final NavigablePath path = alias2CollectionPersister.containsKey( fetchBuilder.getOwnerAlias() )
+				? basePath.append( CollectionPart.Nature.ELEMENT.getName() )
+				: basePath;
+		return path.append( fetchBuilder.getFetchableName() );
 	}
 
 	private DynamicResultBuilderEntityStandard createSuffixedResultBuilder(

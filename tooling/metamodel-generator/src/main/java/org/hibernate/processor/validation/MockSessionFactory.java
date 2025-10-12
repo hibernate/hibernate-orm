@@ -446,6 +446,11 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	public boolean isPreferLocaleLanguageTagEnabled() {
+		return MetadataBuildingContext.super.isPreferLocaleLanguageTagEnabled();
+	}
+
+	@Override
 	public boolean isXmlFormatMapperLegacyFormatEnabled() {
 		return false;
 	}

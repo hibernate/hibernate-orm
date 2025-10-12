@@ -28,14 +28,14 @@ import static org.junit.Assert.assertNotNull;
 
 /**
  * Tests that {@link RelationTargetAuditMode#NOT_AUDITED} works correctly when loading audit history.
- * The Child entity is marked as @Audited but the Parent's reference to Child is marked with
- * targetAuditMode = NOT_AUDITED, so it should load the current Child entity from the main tables
- * instead of trying to load from audit tables.
+ * When a relation is marked with NOT_AUDITED mode, the target entity is loaded from the current
+ * table rather than from audit tables, so changes to the target entity are visible when querying
+ * historical revisions.
  *
  * @author Minjae Seon
  */
 @JiraKey(value = "HHH-19861")
-public class RelationshipNotAuditedEntityTest extends BaseEnversJPAFunctionalTestCase {
+public class RelationTargetNotAuditedTest extends BaseEnversJPAFunctionalTestCase {
 
 	private Long childId;
 	private Long parentId;

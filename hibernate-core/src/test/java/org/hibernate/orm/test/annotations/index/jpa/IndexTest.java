@@ -4,16 +4,17 @@
  */
 package org.hibernate.orm.test.annotations.index.jpa;
 
+import org.hibernate.testing.orm.junit.DomainModel;
+
 /**
  * @author Strong Liu
  */
-public class IndexTest extends AbstractJPAIndexTest {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
+@DomainModel(
+		annotatedClasses = {
 				Car.class,
 				Dealer.class,
 				Importer.class
-		};
-	}
+		}
+)
+public class IndexTest extends AbstractJPAIndexTest {
 }

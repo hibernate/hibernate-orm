@@ -203,6 +203,9 @@ public class DomainModelExtension
 					try {
 						final DomainModelDescriptor modelDescriptor = modelDescriptorClass.newInstance();
 						modelDescriptor.applyDomainModel( metadataSources );
+						for ( Class<?> annotatedClass : modelDescriptor.getAnnotatedClasses() ) {
+							metadataSources.addAnnotatedClass( annotatedClass );
+						}
 					}
 					catch (IllegalAccessException | InstantiationException e) {
 						throw new RuntimeException( "Error instantiating DomainModelDescriptor - " + modelDescriptorClass.getName(), e );

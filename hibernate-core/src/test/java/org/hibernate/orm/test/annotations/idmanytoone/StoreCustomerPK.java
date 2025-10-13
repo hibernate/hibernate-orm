@@ -3,16 +3,20 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.idmanytoone;
-import java.io.Serializable;
+
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+
+import java.io.Serializable;
 
 /**
  * @author Emmanuel Bernard
  */
 public class StoreCustomerPK implements Serializable {
-	StoreCustomerPK() {}
+	StoreCustomerPK() {
+	}
+
 	@Id
 	@ManyToOne(optional = false)
 	@JoinColumn(name = "idA")
@@ -25,8 +29,8 @@ public class StoreCustomerPK implements Serializable {
 
 
 	public StoreCustomerPK(Store store, Customer customer) {
-	this.store = store;
-	this.customer = customer;
+		this.store = store;
+		this.customer = customer;
 	}
 
 

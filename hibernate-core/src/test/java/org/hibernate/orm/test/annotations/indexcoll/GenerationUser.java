@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.indexcoll;
+
 import java.util.HashMap;
 import java.util.Map;
 import jakarta.persistence.Entity;
@@ -23,7 +24,7 @@ public class GenerationUser {
 
 	@OneToMany
 	@MapKey(name="generation")
-	private Map<Generation, GenerationGroup> ref = new HashMap<Generation, GenerationGroup>();
+	private Map<Generation, GenerationGroup> ref = new HashMap<>();
 
 	public int getId() {
 		return id;

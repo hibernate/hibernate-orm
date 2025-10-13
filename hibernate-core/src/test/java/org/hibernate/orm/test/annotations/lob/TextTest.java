@@ -8,6 +8,7 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
@@ -27,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 				LongStringHolder.class
 		}
 )
+@SessionFactory
 public class TextTest {
 
 	private static final int LONG_STRING_SIZE = 10000;
@@ -113,7 +115,7 @@ public class TextTest {
 		int length = bytes.length;
 		Character[] result = new Character[length];
 		for ( int index = 0; index < length; index++ ) {
-			result[index] = Character.valueOf( bytes[index] );
+			result[index] = bytes[index];
 		}
 		return result;
 	}
@@ -122,7 +124,7 @@ public class TextTest {
 		int length = bytes.length;
 		char[] result = new char[length];
 		for ( int i = 0; i < length; i++ ) {
-			result[i] = bytes[i].charValue();
+			result[i] = bytes[i];
 		}
 		return result;
 	}

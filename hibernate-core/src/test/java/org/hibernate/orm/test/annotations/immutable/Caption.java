@@ -6,6 +6,8 @@ package org.hibernate.orm.test.annotations.immutable;
 
 import org.hibernate.annotations.Immutable;
 
+import java.util.Objects;
+
 /**
  * Created by soldier on 12.04.16.
  */
@@ -35,7 +37,7 @@ public class Caption {
 			return false;
 		}
 		Caption caption = (Caption) o;
-		return text != null ? text.equals( caption.text ) : caption.text == null;
+		return Objects.equals( text, caption.text );
 
 	}
 

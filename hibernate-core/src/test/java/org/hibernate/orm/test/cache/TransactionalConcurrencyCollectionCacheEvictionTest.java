@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.cache;
 
-import java.util.HashSet;
-import java.util.Set;
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.Cacheable;
@@ -19,55 +17,52 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cache.internal.CollectionCacheInvalidator;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import java.util.HashSet;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 /**
  * @author Christian Beikov
  */
 @JiraKey(value = "HHH-4910")
-public class TransactionalConcurrencyCollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Person.class, Phone.class };
-	}
-
-	@Before
-	public void before() {
+@DomainModel(
+		annotatedClasses = {
+				TransactionalConcurrencyCollectionCacheEvictionTest.Person.class,
+				TransactionalConcurrencyCollectionCacheEvictionTest.Phone.class
+		}
+)
+@SessionFactory
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.FORMAT_SQL, value = "false" ),
+				@Setting( name = Environment.AUTO_EVICT_COLLECTION_CACHE, value = "true" ),
+				@Setting( name = Environment.USE_SECOND_LEVEL_CACHE, value = "true" ),
+				@Setting( name = Environment.USE_QUERY_CACHE, value = "false" ),
+		}
+)
+public class TransactionalConcurrencyCollectionCacheEvictionTest {
+	@BeforeEach
+	public void before(SessionFactoryScope scope) {
 		CollectionCacheInvalidator.PROPAGATE_EXCEPTION = true;
-	}
 
-	@After
-	public void after() {
-		CollectionCacheInvalidator.PROPAGATE_EXCEPTION = false;
-	}
-
-	@Override
-	protected void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.AUTO_EVICT_COLLECTION_CACHE, true );
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, true );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, false );
-	}
-
-	@Override
-	protected void prepareTest() throws Exception {
-		doInHibernate(
-				this::sessionFactory,
-				s -> {
+		scope.inTransaction( s -> {
 					Person bart = new Person( 1L, "Bart" );
 					Person lisa = new Person( 2L, "Lisa" );
 					Person maggie = new Person( 3L, "Maggie" );
@@ -100,30 +95,22 @@ public class TransactionalConcurrencyCollectionCacheEvictionTest extends BaseCor
 		);
 	}
 
-	@Override
-	protected void cleanupTest() throws Exception {
-		doInHibernate(
-				this::sessionFactory,
-				s -> {
-					s.createQuery( "delete from Phone" ).executeUpdate();
-					s.createQuery( "delete from Person" ).executeUpdate();
-				}
-		);
+	@AfterEach
+	protected void cleanupTest(SessionFactoryScope scope) throws Exception {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getCache().evictAll();
+		CollectionCacheInvalidator.PROPAGATE_EXCEPTION = false;
 	}
 
 	@Test
-	public void testCollectionCacheEvictionInsert() {
-		doInHibernate(
-				this::sessionFactory,
-				s -> {
+	public void testCollectionCacheEvictionInsert(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 					Person bart = s.find( Person.class, 1L );
 					assertEquals( 5, bart.getPhones().size() );
 					s.persist( new Phone( "test", bart ) );
 				}
 		);
-		doInHibernate(
-				this::sessionFactory,
-				s -> {
+		scope.inTransaction( s -> {
 					Person bart = s.find( Person.class, 1L );
 					assertEquals( 6, bart.getPhones().size() );
 				}
@@ -131,25 +118,19 @@ public class TransactionalConcurrencyCollectionCacheEvictionTest extends BaseCor
 	}
 
 	@Test
-	public void testCollectionCacheEvictionRemove() {
-		Long phoneId = doInHibernate(
-				this::sessionFactory,
-				s -> {
+	public void testCollectionCacheEvictionRemove(SessionFactoryScope scope) {
+		Long phoneId = scope.fromTransaction( s -> {
 					Person bart = s.find( Person.class, 1L );
 					// Lazy load phones
 					assertEquals( 5, bart.getPhones().size() );
 					return bart.getPhones().iterator().next().getId();
 				}
 		);
-		doInHibernate(
-				this::sessionFactory,
-				s -> {
+		scope.inTransaction( s -> {
 					s.remove( s.getReference( Phone.class, phoneId ) );
 				}
 		);
-		doInHibernate(
-				this::sessionFactory,
-				s -> {
+		scope.inTransaction( s -> {
 					Person bart = s.find( Person.class, 1L );
 					assertEquals( 4, bart.getPhones().size() );
 				}

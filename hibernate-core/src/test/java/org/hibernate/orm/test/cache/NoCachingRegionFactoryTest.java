@@ -4,28 +4,38 @@
  */
 package org.hibernate.orm.test.cache;
 
-import org.hibernate.cache.internal.NoCachingRegionFactory;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
+import org.hibernate.cfg.Environment;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
 
 /**
  * @author Gail Badner.
  */
-public class NoCachingRegionFactoryTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.CACHE_REGION_FACTORY, NoCachingRegionFactory.class  );
-	}
+@DomainModel(
+		annotatedClasses = {
+				ReferenceCacheTest.MyReferenceData.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting(name = Environment.CACHE_REGION_FACTORY, value = "org.hibernate.cache.internal.NoCachingRegionFactory"),
+		}
+)
+@SessionFactory
+public class NoCachingRegionFactoryTest {
 
 	@Test
 	@JiraKey( value = "HHH-12508" )
-	public void testSessionFactoryOptionsConsistent() {
-		assertFalse( sessionFactory().getSessionFactoryOptions().isSecondLevelCacheEnabled() );
+	public void testSessionFactoryOptionsConsistent(SessionFactoryScope scope) {
+		assertFalse( scope.getSessionFactory().getSessionFactoryOptions().isSecondLevelCacheEnabled() );
 	}
 }

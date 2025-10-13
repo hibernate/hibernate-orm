@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.event.entity;
 
-import java.util.ArrayList;
-import java.util.List;
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -13,10 +11,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-
-import org.junit.Test;
-
-import org.hibernate.Session;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostInsertEvent;
@@ -24,32 +18,38 @@ import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Gail Badner
  */
-@JiraKey( value = "HHH-9979")
-@RequiresDialectFeature( value = DialectChecks.SupportsIdentityColumns.class, jiraKey = "HHH-9918")
-public class MergeListPreAndPostPersistWithIdentityTest extends BaseCoreFunctionalTestCase {
-
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Order.class,
-				Item.class
-		};
-	}
+@JiraKey(value = "HHH-9979")
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class, jiraKey = "HHH-9918")
+@DomainModel(
+		annotatedClasses = {
+				MergeListPreAndPostPersistWithIdentityTest.Order.class,
+				MergeListPreAndPostPersistWithIdentityTest.Item.class
+		}
+)
+@SessionFactory
+public class MergeListPreAndPostPersistWithIdentityTest {
 
 	@Test
-	@JiraKey( value = "HHH-9979")
-	@FailureExpected( jiraKey = "HHH-9979")
-	public void testAllPropertiesCopied() {
+	@JiraKey(value = "HHH-9979")
+	@FailureExpected(jiraKey = "HHH-9979")
+	public void testAllPropertiesCopied(SessionFactoryScope scope) {
 		final Order order = new Order();
 		order.id = 1L;
 		order.name = "order";
@@ -58,23 +58,19 @@ public class MergeListPreAndPostPersistWithIdentityTest extends BaseCoreFunction
 		item.name = "item";
 		order.items.add( item );
 
-		addEntityListeners( order );
+		addEntityListeners( scope, order );
 
-		Session s = openSession();
-		s.getTransaction().begin();
-		s.merge( order );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction( s -> {
+			s.merge( order );
+		} );
 
-		s = openSession();
-		s.getTransaction().begin();
-		s.remove( order );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction( s -> {
+			s.remove( order );
+		} );
 	}
 
 	@Entity
-	private static class Order {
+	static class Order {
 		@Id
 		public Long id;
 
@@ -106,7 +102,7 @@ public class MergeListPreAndPostPersistWithIdentityTest extends BaseCoreFunction
 	}
 
 	@Entity
-	private static class Item {
+	static class Item {
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		public Long id;
@@ -134,17 +130,17 @@ public class MergeListPreAndPostPersistWithIdentityTest extends BaseCoreFunction
 		}
 	}
 
-	private void addEntityListeners(final Order order) {
+	private void addEntityListeners(SessionFactoryScope scope, final Order order) {
 
-		EventListenerRegistry registry = sessionFactory().getEventListenerRegistry();
+		EventListenerRegistry registry = scope.getSessionFactory().getEventListenerRegistry();
 		registry.setListeners(
 				EventType.PRE_INSERT,
 				new PreInsertEventListener() {
 					@Override
 					public boolean onPreInsert(PreInsertEvent event) {
-						if ( Order.class.isInstance( event.getEntity() ) ) {
-							assertEquals( order, event.getEntity());
-							assertEquals( order.items, ( (Order) event.getEntity() ).items );
+						if ( event.getEntity() instanceof Order ) {
+							assertEquals( order, event.getEntity() );
+							assertEquals( order.items, ((Order) event.getEntity()).items );
 						}
 						return false;
 					}
@@ -155,9 +151,9 @@ public class MergeListPreAndPostPersistWithIdentityTest extends BaseCoreFunction
 				EventType.POST_INSERT,
 				new PostInsertEventListener() {
 					public void onPostInsert(PostInsertEvent event) {
-						if ( Order.class.isInstance( event.getEntity() ) ) {
-							assertEquals( order, event.getEntity());
-							assertEquals( order.items, ( (Order) event.getEntity() ).items );
+						if ( event.getEntity() instanceof Order ) {
+							assertEquals( order, event.getEntity() );
+							assertEquals( order.items, ((Order) event.getEntity()).items );
 						}
 					}
 

@@ -4,117 +4,98 @@
  */
 package org.hibernate.orm.test.eviction;
 
-import org.hibernate.Session;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
 
 /**
  * @author Steve Ebersole
  */
-public class EvictionTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { IsolatedEvictableEntity.class };
+@DomainModel(annotatedClasses = IsolatedEvictableEntity.class)
+@SessionFactory
+public class EvictionTest {
+
+	@Test
+	@JiraKey(value = "HHH-7912")
+	public void testNormalUsage(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new IsolatedEvictableEntity( 1 ) ) );
+
+		var e = scope.fromTransaction( session -> {
+			IsolatedEvictableEntity entity = session.get( IsolatedEvictableEntity.class, 1 );
+			assertTrue( session.contains( entity ) );
+			session.evict( entity );
+			assertFalse( session.contains( entity ) );
+			return entity;
+		} );
+
+		scope.inTransaction( session -> {
+			session.remove( e );
+		} );
 	}
 
 	@Test
-	@JiraKey( value = "HHH-7912" )
-	public void testNormalUsage() {
-		Session session = openSession();
-		session.beginTransaction();
-		session.persist( new IsolatedEvictableEntity( 1 ) );
-		session.getTransaction().commit();
-		session.close();
-
-		session = openSession();
-		session.beginTransaction();
-		IsolatedEvictableEntity entity = (IsolatedEvictableEntity) session.get( IsolatedEvictableEntity.class, 1 );
-		assertTrue( session.contains( entity ) );
-		session.evict( entity );
-		assertFalse( session.contains( entity ) );
-		session.getTransaction().commit();
-		session.close();
-
-		session = openSession();
-		session.beginTransaction();
-		session.remove( entity );
-		session.getTransaction().commit();
-		session.close();
+	@JiraKey(value = "HHH-7912")
+	public void testEvictingNull(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			try {
+				session.evict( null );
+				fail( "Expecting evict(null) to throw IAE" );
+			}
+			catch (IllegalArgumentException expected) {
+			}
+		} );
 	}
 
 	@Test
-	@JiraKey( value = "HHH-7912" )
-	public void testEvictingNull() {
-		Session session = openSession();
-		session.beginTransaction();
-		try {
-			session.evict( null );
-			fail( "Expecting evict(null) to throw IAE" );
-		}
-		catch (IllegalArgumentException expected) {
-		}
-		session.getTransaction().commit();
-		session.close();
+	@JiraKey(value = "HHH-7912")
+	public void testEvictingTransientEntity(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			session.evict( new IsolatedEvictableEntity( 1 ) );
+		} );
 	}
 
 	@Test
-	@JiraKey( value = "HHH-7912" )
-	public void testEvictingTransientEntity() {
-		Session session = openSession();
-		session.beginTransaction();
-		session.evict( new IsolatedEvictableEntity( 1 ) );
-		session.getTransaction().commit();
-		session.close();
+	@JiraKey(value = "HHH-7912")
+	public void testEvictingDetachedEntity(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.persist( new IsolatedEvictableEntity( 1 ) );
+		} );
+
+		var e = scope.fromTransaction( session -> {
+			IsolatedEvictableEntity entity = (IsolatedEvictableEntity) session.get( IsolatedEvictableEntity.class, 1 );
+			assertTrue( session.contains( entity ) );
+			// detach the entity
+			session.evict( entity );
+			assertFalse( session.contains( entity ) );
+			// evict it again the entity
+			session.evict( entity );
+			assertFalse( session.contains( entity ) );
+			return entity;
+		} );
+
+		scope.inTransaction( session -> {
+			session.remove( e );
+		});
 	}
 
 	@Test
-	@JiraKey( value = "HHH-7912" )
-	public void testEvictingDetachedEntity() {
-		Session session = openSession();
-		session.beginTransaction();
-		session.persist( new IsolatedEvictableEntity( 1 ) );
-		session.getTransaction().commit();
-		session.close();
-
-		session = openSession();
-		session.beginTransaction();
-		IsolatedEvictableEntity entity = (IsolatedEvictableEntity) session.get( IsolatedEvictableEntity.class, 1 );
-		assertTrue( session.contains( entity ) );
-		// detach the entity
-		session.evict( entity );
-		assertFalse( session.contains( entity ) );
-		// evict it again the entity
-		session.evict( entity );
-		assertFalse( session.contains( entity ) );
-		session.getTransaction().commit();
-		session.close();
-
-		session = openSession();
-		session.beginTransaction();
-		session.remove( entity );
-		session.getTransaction().commit();
-		session.close();
-	}
-
-	@Test
-	@JiraKey( value = "HHH-7912" )
-	public void testEvictingNonEntity() {
-		Session session = openSession();
-		session.beginTransaction();
-		try {
-			session.evict( new EvictionTest() );
-			fail( "Expecting evict(non-entity) to throw IAE" );
-		}
-		catch (IllegalArgumentException expected) {
-		}
-		session.getTransaction().commit();
-		session.close();
+	@JiraKey(value = "HHH-7912")
+	public void testEvictingNonEntity(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			try {
+				session.evict( new EvictionTest() );
+				fail( "Expecting evict(non-entity) to throw IAE" );
+			}
+			catch (IllegalArgumentException expected) {
+			}
+		} );
 	}
 
 }

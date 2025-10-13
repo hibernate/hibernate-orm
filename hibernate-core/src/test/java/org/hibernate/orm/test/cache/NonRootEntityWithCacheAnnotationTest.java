@@ -17,28 +17,22 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.cache.CachingRegionFactory;
-import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Rule;
-import org.junit.Test;
 
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.SharedCacheMode;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Gail Badner
  */
 @JiraKey( value = "HHH-11143")
 public class NonRootEntityWithCacheAnnotationTest {
-
-	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule( CORE_LOGGER );
 
 	@Test
 	public void testCacheOnNonRootEntity() {

@@ -173,7 +173,9 @@ public class SqmUpdateStatement<T>
 
 	@Override
 	public <Y, X extends Y> SqmUpdateStatement<T> set(SingularAttribute<? super T, Y> attribute, X value) {
-		applyAssignment( getTarget().get( attribute ), (SqmExpression<? extends Y>) nodeBuilder().value( value ) );
+		final SqmCriteriaNodeBuilder nodeBuilder = (SqmCriteriaNodeBuilder) nodeBuilder();
+		SqmPath<Y> sqmAttribute = getTarget().get( attribute );
+		applyAssignment( sqmAttribute, nodeBuilder.value( value, sqmAttribute) );
 		return this;
 	}
 

@@ -9,31 +9,71 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
-
-import org.hibernate.Session;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
-import org.hibernate.cfg.Configuration;
-
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Emmanuel Bernard
  */
-public class IdManyToOneTest extends BaseCoreFunctionalTestCase {
-	@Test
-	public void testFkCreationOrdering() {
-		//no real test case, the sessionFactory building is tested
-		Session s = openSession();
-		s.close();
+@DomainModel(
+		annotatedClasses = {
+				Store.class,
+				Customer.class,
+				StoreCustomer.class,
+				CardKey.class,
+				CardField.class,
+				Card.class,
+				Project.class,
+				Course.class,
+				Student.class,
+				CourseStudent.class,
+
+				//tested only through deployment
+				//ANN-590 testIdClassManyToOneWithReferenceColumn
+				Customers.class,
+				ShoppingBaskets.class,
+				ShoppingBasketsPK.class,
+				BasketItems.class,
+				BasketItemsPK.class
+		}
+)
+@ServiceRegistry(
+		settingProviders = @SettingProvider(settingName = AvailableSettings.IMPLICIT_NAMING_STRATEGY,
+				provider = IdManyToOneTest.ImplicitNameSettingProvider.class)
+)
+@SessionFactory
+public class IdManyToOneTest {
+
+	public static class ImplicitNameSettingProvider implements SettingProvider.Provider<ImplicitNamingStrategy> {
+
+		@Override
+		public ImplicitNamingStrategy getSetting() {
+			return ImplicitNamingStrategyJpaCompliantImpl.INSTANCE;
+		}
 	}
 
 	@Test
-	public void testIdClassManyToOne() {
-		inTransaction( s-> {
+	public void testFkCreationOrdering(SessionFactoryScope scope) {
+		//no real test case, the sessionFactory building is tested
+		scope.inTransaction(
+				session -> {
+				}
+		);
+	}
+
+	@Test
+	public void testIdClassManyToOne(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Store store = new Store();
 			Customer customer = new Customer();
 			s.persist( store );
@@ -43,18 +83,19 @@ public class IdManyToOneTest extends BaseCoreFunctionalTestCase {
 			s.flush();
 			s.clear();
 
-			store = s.get(Store.class, store.id );
-			assertEquals( 1, store.customers.size() );
-			assertEquals( customer.id, store.customers.iterator().next().customer.id );
+			store = s.find( Store.class, store.id );
+			assertThat( store.customers.size() ).isEqualTo( 1 );
+			assertThat( store.customers.iterator().next().customer.id ).isEqualTo( customer.id );
 		} );
 		//TODO test Customers / ShoppingBaskets / BasketItems testIdClassManyToOneWithReferenceColumn
 	}
 
 	@Test
-	@JiraKey( value = "HHH-7767" )
-	public void testCriteriaRestrictionOnIdManyToOne() {
-		inTransaction( s -> {
-			s.createQuery( "from Course c join c.students cs join cs.student s where s.name = 'Foo'", Object[].class ).list();
+	@JiraKey(value = "HHH-7767")
+	public void testCriteriaRestrictionOnIdManyToOne(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			s.createQuery( "from Course c join c.students cs join cs.student s where s.name = 'Foo'", Object[].class )
+					.list();
 
 			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 			CriteriaQuery<Course> criteria = criteriaBuilder.createQuery( Course.class );
@@ -76,35 +117,5 @@ public class IdManyToOneTest extends BaseCoreFunctionalTestCase {
 //        criteria2.add( Restrictions.eq( "s.name", "Foo" ) );
 //        criteria2.list();
 		} );
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Store.class,
-				Customer.class,
-				StoreCustomer.class,
-				CardKey.class,
-				CardField.class,
-				Card.class,
-				Project.class,
-				Course.class,
-				Student.class,
-				CourseStudent.class,
-
-				//tested only through deployment
-				//ANN-590 testIdClassManyToOneWithReferenceColumn
-				Customers.class,
-				ShoppingBaskets.class,
-				ShoppingBasketsPK.class,
-				BasketItems.class,
-				BasketItemsPK.class
-		};
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.setImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
 	}
 }

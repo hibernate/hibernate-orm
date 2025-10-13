@@ -5,31 +5,30 @@
 package org.hibernate.orm.test.bytecode;
 
 import static org.hibernate.bytecode.internal.BytecodeProviderInitiator.buildDefaultBytecodeProvider;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Steve Ebersole
  */
-public class ReflectionOptimizerTest extends BaseUnitTestCase {
+public class ReflectionOptimizerTest {
 
 	private static BytecodeProvider provider;
 
-	@BeforeClass
+	@BeforeAll
 	public static void initBytecodeProvider() {
 		provider = buildDefaultBytecodeProvider();
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void clearBytecodeProvider() {
 		if ( provider != null ) {
 			provider.resetCaches();
@@ -50,11 +49,11 @@ public class ReflectionOptimizerTest extends BaseUnitTestCase {
 		assertNotNull( optimizer.getAccessOptimizer() );
 
 		Object instance = optimizer.getInstantiationOptimizer().newInstance();
-		assertEquals( instance.getClass(), Bean.class );
-		Bean bean = ( Bean ) instance;
+		assertEquals( Bean.class, instance.getClass() );
+		Bean bean = (Bean) instance;
 
 		optimizer.getAccessOptimizer().setPropertyValues( bean, BeanReflectionHelper.TEST_VALUES );
-		assertEquals( bean.getSomeString(), BeanReflectionHelper.TEST_VALUES[0] );
+		assertEquals( BeanReflectionHelper.TEST_VALUES[0], bean.getSomeString() );
 		Object[] values = optimizer.getAccessOptimizer().getPropertyValues( bean );
 		assertEquivalent( values, BeanReflectionHelper.TEST_VALUES );
 	}
@@ -62,23 +61,25 @@ public class ReflectionOptimizerTest extends BaseUnitTestCase {
 	@Test
 	@JiraKey(value = "HHH-12584")
 	public void testAbstractClass() {
-		ReflectionOptimizer reflectionOptimizer = provider.getReflectionOptimizer( AbstractClass.class, new String[]{ "getProperty" },
-			new String[]{ "setProperty" }, new Class[]{ String.class } );
+		ReflectionOptimizer reflectionOptimizer = provider.getReflectionOptimizer( AbstractClass.class,
+				new String[] {"getProperty"},
+				new String[] {"setProperty"}, new Class[] {String.class} );
 		assertNotNull( reflectionOptimizer );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-12584")
 	public void testInterface() {
-		ReflectionOptimizer reflectionOptimizer = provider.getReflectionOptimizer( Interface.class, new String[]{ "getProperty" },
-			new String[]{ "setProperty" }, new Class[]{ String.class } );
+		ReflectionOptimizer reflectionOptimizer = provider.getReflectionOptimizer( Interface.class,
+				new String[] {"getProperty"},
+				new String[] {"setProperty"}, new Class[] {String.class} );
 		assertNotNull( reflectionOptimizer );
 	}
 
 	private void assertEquivalent(Object[] checkValues, Object[] values) {
-		assertEquals( "Different lengths", checkValues.length, values.length );
+		assertEquals( checkValues.length, values.length, "Different lengths" );
 		for ( int i = 0; i < checkValues.length; i++ ) {
-			assertEquals( "different values at index [" + i + "]", checkValues[i], values[i] );
+			assertEquals( checkValues[i], values[i], "different values at index [" + i + "]" );
 		}
 	}
 

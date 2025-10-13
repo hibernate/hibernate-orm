@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.cache;
 
-import java.util.Collection;
-
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -15,25 +13,24 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.MatcherAssert.assertThat;
+import java.util.Collection;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 /**
  * @author Steve Ebersole
  */
-public class SingleRegisteredProviderTest extends BaseUnitTestCase {
+public class SingleRegisteredProviderTest {
 	@Test
 	public void testCachingExplicitlyDisabled() {
 		try (final StandardServiceRegistry registry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" )
 				.build()) {
-			assertThat( registry.getService( RegionFactory.class ), instanceOf( NoCachingRegionFactory.class ) );
+			assertThat( registry.getService( RegionFactory.class ) ).isInstanceOf( NoCachingRegionFactory.class );
 		}
 	}
 
@@ -45,13 +42,13 @@ public class SingleRegisteredProviderTest extends BaseUnitTestCase {
 					.getService( StrategySelector.class )
 					.getRegisteredStrategyImplementors( RegionFactory.class );
 
-			assertThat( implementors.size(), equalTo( 1 ) );
+			assertThat( implementors.size() ).isEqualTo( 1 );
 
 			final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
 					.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "" )
 					.build();
 
-			assertThat( ssr.getService( RegionFactory.class ), instanceOf( NoCachingRegionFactory.class ) );
+			assertThat( ssr.getService( RegionFactory.class ) ).isInstanceOf( NoCachingRegionFactory.class );
 		}
 	}
 
@@ -63,7 +60,7 @@ public class SingleRegisteredProviderTest extends BaseUnitTestCase {
 					.getService( StrategySelector.class )
 					.getRegisteredStrategyImplementors( RegionFactory.class );
 
-			assertThat( implementors.size(), equalTo( 1 ) );
+			assertThat( implementors.size() ).isEqualTo( 1 );
 
 			bsr.getService( StrategySelector.class ).unRegisterStrategyImplementor(
 					RegionFactory.class,
@@ -74,7 +71,7 @@ public class SingleRegisteredProviderTest extends BaseUnitTestCase {
 					.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "" )
 					.build();
 
-			assertThat( ssr.getService( RegionFactory.class ), instanceOf( NoCachingRegionFactory.class ) );
+			assertThat( ssr.getService( RegionFactory.class ) ).isInstanceOf( NoCachingRegionFactory.class );
 		}
 	}
 
@@ -86,7 +83,7 @@ public class SingleRegisteredProviderTest extends BaseUnitTestCase {
 					.getService( StrategySelector.class )
 					.getRegisteredStrategyImplementors( ConnectionProvider.class );
 
-			assertThat( implementors.size(), equalTo( 0 ) );
+			assertThat( implementors.size() ).isEqualTo( 0 );
 
 			bsr.getService( StrategySelector.class ).registerStrategyImplementor(
 					ConnectionProvider.class,
@@ -98,7 +95,7 @@ public class SingleRegisteredProviderTest extends BaseUnitTestCase {
 
 			final ConnectionProvider configuredProvider = ssr.getService( ConnectionProvider.class );
 
-			assertThat( configuredProvider, instanceOf( DriverManagerConnectionProvider.class ) );
+			assertThat( configuredProvider ).isInstanceOf( DriverManagerConnectionProvider.class );
 		}
 	}
 }

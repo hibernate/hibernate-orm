@@ -133,6 +133,10 @@ public class AggregatedCollectionEventListener
 	public static class IntegratorImpl implements Integrator {
 		private AggregatedCollectionEventListener listener;
 
+		public IntegratorImpl() {
+			System.err.println( "created" );
+		}
+
 		public AggregatedCollectionEventListener getListener() {
 			if ( listener == null ) {
 				throw new HibernateException( "Integrator not yet processed" );

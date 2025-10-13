@@ -6,64 +6,58 @@ package org.hibernate.orm.test.cache;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
-import org.hibernate.Session;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
-
-import org.hibernate.testing.cache.CachingRegionFactory;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.cfg.Environment;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertNull;
 
 /**
  * @author Steve Ebersole
  */
-public class SharedRegionTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, true );
-		ssrb.applySetting( AvailableSettings.CACHE_REGION_FACTORY, new CachingRegionFactory() );
-	}
 
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( StateCodes.class );
-		sources.addAnnotatedClass( ZipCodes.class );
-	}
+@DomainModel(
+		annotatedClasses = {
+				SharedRegionTest.StateCodes.class,
+				SharedRegionTest.ZipCodes.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting(name = Environment.USE_SECOND_LEVEL_CACHE, value = "true"),
+				@Setting(name = Environment.CACHE_REGION_FACTORY,
+						value = "org.hibernate.testing.cache.CachingRegionFactory"),
+		}
+)
+@SessionFactory
+public class SharedRegionTest {
 
 	@Test
-	public void test() {
+	public void test(SessionFactoryScope scope) {
 		// create a StateCodes
-		Session s = openSession();
-		s.beginTransaction();
-		s.persist( new StateCodes( 1 ) );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction( s -> {
+			s.persist( new StateCodes( 1 ) );
+		} );
 
 		// now try to load a ZipCodes using the same id : should just return null rather than blow up :)
-		s = openSession();
-		s.beginTransaction();
-		ZipCodes zc = s.find( ZipCodes.class, 1 );
-		assertNull( zc );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction( s -> {
+			ZipCodes zc = s.find( ZipCodes.class, 1 );
+			assertNull( zc );
+		} );
 
-		s = openSession();
-		s.beginTransaction();
-		s.find( ZipCodes.class, 1 );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction( s -> {
+			s.find( ZipCodes.class, 1 );
+		} );
 	}
 
-	@Entity( name="StateCodes" )
-	@Cache( region="com.acme.referenceData", usage = CacheConcurrencyStrategy.READ_WRITE )
+	@Entity(name = "StateCodes")
+	@Cache(region = "com.acme.referenceData", usage = CacheConcurrencyStrategy.READ_WRITE)
 	public static class StateCodes {
 		@Id
 		public Integer id;
@@ -76,8 +70,8 @@ public class SharedRegionTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity( name = "ZipCodes" )
-	@Cache( region="com.acme.referenceData", usage = CacheConcurrencyStrategy.READ_WRITE )
+	@Entity(name = "ZipCodes")
+	@Cache(region = "com.acme.referenceData", usage = CacheConcurrencyStrategy.READ_WRITE)
 	public static class ZipCodes {
 		@Id
 		public Integer id;

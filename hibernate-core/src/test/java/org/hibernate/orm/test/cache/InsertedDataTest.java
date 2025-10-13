@@ -5,15 +5,18 @@
 package org.hibernate.orm.test.cache;
 
 import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for handling of data just inserted during a transaction being read from the database
@@ -22,199 +25,137 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
-public class InsertedDataTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { CacheableItem.class };
-	}
+@DomainModel(
+		annotatedClasses = {
+				CacheableItem.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting(name = Environment.CACHE_REGION_PREFIX, value = ""),
+		}
+)
+@SessionFactory(generateStatistics = true)
+public class InsertedDataTest {
 
-	@Override
-	protected void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.CACHE_REGION_PREFIX, "" );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
-	}
-
-	@Test
-	public void testInsert() {
-		sessionFactory().getCache().evictEntityData();
-		sessionFactory().getStatistics().clear();
-
-		Session s = openSession();
-		s.beginTransaction();
-		CacheableItem item = new CacheableItem( "data" );
-		s.persist( item );
-		s.getTransaction().commit();
-		s.close();
-
-		assertTrue( sessionFactory().getCache().containsEntity( CacheableItem.class, item.getId() ) );
-
-		s = openSession();
-		s.beginTransaction();
-		s.createQuery( "delete CacheableItem" ).executeUpdate();
-		s.getTransaction().commit();
-		s.close();
+	@AfterEach
+	void tearDown(SessionFactoryScope scope) {
+		scope.getSessionFactory().getCache().evictEntityData();
+		scope.getSessionFactory().getStatistics().clear();
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
 	@Test
-	public void testInsertWithRollback() {
-		sessionFactory().getCache().evictEntityData();
-		sessionFactory().getStatistics().clear();
+	public void testInsert(SessionFactoryScope scope) {
+		CacheableItem item = scope.fromTransaction( s -> {
+			CacheableItem i = new CacheableItem( "data" );
+			s.persist( i );
+			return i;
+		} );
 
-		Session s = openSession();
-		s.beginTransaction();
-		CacheableItem item = new CacheableItem( "data" );
-		s.persist( item );
-		s.flush();
-		s.getTransaction().rollback();
-		s.close();
-
-		assertFalse( sessionFactory().getCache().containsEntity( CacheableItem.class, item.getId() ) );
+		assertTrue( scope.getSessionFactory().getCache().containsEntity( CacheableItem.class, item.getId() ) );
 	}
 
 	@Test
-	public void testInsertThenUpdate() {
-		sessionFactory().getCache().evictEntityData();
-		sessionFactory().getStatistics().clear();
-
-		Session s = openSession();
-		s.beginTransaction();
+	public void testInsertWithRollback(SessionFactoryScope scope) {
 		CacheableItem item = new CacheableItem( "data" );
-		s.persist( item );
-		s.flush();
-		item.setName( "new data" );
-		s.getTransaction().commit();
-		s.close();
+		try (Session s = scope.getSessionFactory().openSession()) {
+			s.beginTransaction();
+			s.persist( item );
+			s.flush();
+			s.getTransaction().rollback();
+		}
 
-		assertTrue( sessionFactory().getCache().containsEntity( CacheableItem.class, item.getId() ) );
-
-
-		s = openSession();
-		s.beginTransaction();
-		s.createQuery( "delete CacheableItem" ).executeUpdate();
-		s.getTransaction().commit();
-		s.close();
+		assertFalse( scope.getSessionFactory().getCache().containsEntity( CacheableItem.class, item.getId() ) );
 	}
 
 	@Test
-	public void testInsertThenUpdateThenRollback() {
-		sessionFactory().getCache().evictEntityData();
-		sessionFactory().getStatistics().clear();
+	public void testInsertThenUpdate(SessionFactoryScope scope) {
+		CacheableItem item = scope.fromTransaction( s -> {
+			CacheableItem i = new CacheableItem( "data" );
+			s.persist( i );
+			s.flush();
+			i.setName( "new data" );
+			return i;
+		} );
 
-		Session s = openSession();
-		s.beginTransaction();
-		CacheableItem item = new CacheableItem( "data" );
-		s.persist( item );
-		s.flush();
-		item.setName( "new data" );
-		s.getTransaction().rollback();
-		s.close();
-
-		assertFalse( sessionFactory().getCache().containsEntity( CacheableItem.class, item.getId() ) );
-
-		s = openSession();
-		s.beginTransaction();
-		s.createQuery( "delete CacheableItem" ).executeUpdate();
-		s.getTransaction().commit();
-		s.close();
+		assertTrue( scope.getSessionFactory().getCache().containsEntity( CacheableItem.class, item.getId() ) );
 	}
 
 	@Test
-	public void testInsertWithRefresh() {
-		sessionFactory().getCache().evictEntityData();
-		sessionFactory().getStatistics().clear();
-
-		Session s = openSession();
-		s.beginTransaction();
+	public void testInsertThenUpdateThenRollback(SessionFactoryScope scope) {
 		CacheableItem item = new CacheableItem( "data" );
-		s.persist( item );
-		s.flush();
-		s.refresh( item );
-		s.getTransaction().commit();
-		s.close();
+		try (Session s = scope.getSessionFactory().openSession()) {
+			s.beginTransaction();
+			s.persist( item );
+			s.flush();
+			item.setName( "new data" );
+			s.getTransaction().rollback();
+		}
 
-		assertTrue( sessionFactory().getCache().containsEntity( CacheableItem.class, item.getId() ) );
-
-		s = openSession();
-		s.beginTransaction();
-		s.createQuery( "delete CacheableItem" ).executeUpdate();
-		s.getTransaction().commit();
-		s.close();
+		assertFalse( scope.getSessionFactory().getCache().containsEntity( CacheableItem.class, item.getId() ) );
 	}
 
 	@Test
-	public void testInsertWithRefreshThenRollback() {
-		sessionFactory().getCache().evictEntityData();
-		sessionFactory().getStatistics().clear();
+	public void testInsertWithRefresh(SessionFactoryScope scope) {
+		CacheableItem item = scope.fromTransaction( s -> {
+			CacheableItem i = new CacheableItem( "data" );
+			s.persist( i );
+			s.flush();
+			s.refresh( i );
+			return i;
+		} );
 
-		Session s = openSession();
-		s.beginTransaction();
-		CacheableItem item = new CacheableItem( "data" );
-		s.persist( item );
-		s.flush();
-		s.refresh( item );
-		s.getTransaction().rollback();
-		s.close();
-
-		assertTrue( sessionFactory().getCache().containsEntity( CacheableItem.class, item.getId() ) );
-//		Object lock = cacheMap.values().iterator().next();
-//		assertEquals( "org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Lock", lock.getClass().getName() );
-
-		s = openSession();
-		s.beginTransaction();
-		item = s.get( CacheableItem.class, item.getId() );
-		s.getTransaction().commit();
-		s.close();
-
-		assertNull( "it should be null", item );
+		assertTrue( scope.getSessionFactory().getCache().containsEntity( CacheableItem.class, item.getId() ) );
 	}
 
 	@Test
-	public void testInsertWithClear() {
-		sessionFactory().getCache().evictEntityData();
-		sessionFactory().getStatistics().clear();
-
-		Session s = openSession();
-		s.beginTransaction();
+	public void testInsertWithRefreshThenRollback(SessionFactoryScope scope) {
 		CacheableItem item = new CacheableItem( "data" );
-		s.persist( item );
-		s.flush();
-		s.clear();
-		s.getTransaction().commit();
-		s.close();
+		try (Session s = scope.getSessionFactory().openSession()) {
+			s.beginTransaction();
+			s.persist( item );
+			s.flush();
+			s.refresh( item );
+			s.getTransaction().rollback();
+		}
 
-		assertTrue( sessionFactory().getCache().containsEntity( CacheableItem.class, item.getId() ) );
+		assertTrue( scope.getSessionFactory().getCache().containsEntity( CacheableItem.class, item.getId() ) );
 
-		s = openSession();
-		s.beginTransaction();
-		s.createQuery( "delete CacheableItem" ).executeUpdate();
-		s.getTransaction().commit();
-		s.close();
+		CacheableItem item1 = scope.fromTransaction( s -> s.get( CacheableItem.class, item.getId() ) );
+
+		assertNull( item1, "it should be null" );
 	}
 
 	@Test
-	public void testInsertWithClearThenRollback() {
-		sessionFactory().getCache().evictEntityData();
-		sessionFactory().getStatistics().clear();
+	public void testInsertWithClear(SessionFactoryScope scope) {
+		CacheableItem item = scope.fromTransaction( s -> {
+			CacheableItem i = new CacheableItem( "data" );
+			s.persist( i );
+			s.flush();
+			s.clear();
+			return i;
+		} );
 
-		Session s = openSession();
-		s.beginTransaction();
+		assertTrue( scope.getSessionFactory().getCache().containsEntity( CacheableItem.class, item.getId() ) );
+	}
+
+	@Test
+	public void testInsertWithClearThenRollback(SessionFactoryScope scope) {
 		CacheableItem item = new CacheableItem( "data" );
-		s.persist( item );
-		s.flush();
-		s.clear();
-		item = (CacheableItem) s.get( CacheableItem.class, item.getId() );
-		s.getTransaction().rollback();
-		s.close();
+		try (Session s = scope.getSessionFactory().openSession()) {
+			s.beginTransaction();
+			s.persist( item );
+			s.flush();
+			s.clear();
+			item = s.get( CacheableItem.class, item.getId() );
+			s.getTransaction().rollback();
+		}
 
-		assertFalse( sessionFactory().getCache().containsEntity( CacheableItem.class, item.getId() ) );
+		assertFalse( scope.getSessionFactory().getCache().containsEntity( CacheableItem.class, item.getId() ) );
 
-		s = openSession();
-		s.beginTransaction();
-		item = (CacheableItem) s.get( CacheableItem.class, item.getId() );
-		s.getTransaction().commit();
-		s.close();
-
-		assertNull( "it should be null", item );
+		Long id = item.getId();
+		item = scope.fromTransaction( s -> s.get( CacheableItem.class, id ) );
+		assertNull( item, "it should be null" );
 	}
 }

@@ -4,79 +4,96 @@
  */
 package org.hibernate.orm.test.caching.mocked;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
+import org.hibernate.SessionFactoryObserver;
 import org.hibernate.Transaction;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-
-import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
-
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Frank Doherty
  */
-public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				ReadWriteCacheTest.Book.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting(name = AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY, value = "read-write"),
+				@Setting(name = AvailableSettings.JAKARTA_SHARED_CACHE_MODE, value = "ALL"),
+		}
+)
+@SessionFactory(
+		sessionFactoryConfigurer = ReadWriteCacheTest.Configurer.class
+)
+public class ReadWriteCacheTest {
 
 	private static final String ORIGINAL_TITLE = "Original Title";
 	private static final String UPDATED_TITLE = "Updated Title";
 
-	private long bookId;
-	private CountDownLatch endLatch;
-	private AtomicBoolean interceptTransaction;
+	private static long bookId;
+	private static CountDownLatch endLatch = new CountDownLatch( 1 );
+	private static AtomicBoolean interceptTransaction;
 
-	@Override
-	public void buildSessionFactory() {
-		buildSessionFactory( getCacheConfig() );
-	}
-
-	@Before
+	@BeforeEach
 	public void init() {
 		endLatch = new CountDownLatch( 1 );
 		interceptTransaction = new AtomicBoolean();
 	}
 
-	@Override
-	public void rebuildSessionFactory() {
-		rebuildSessionFactory( getCacheConfig() );
+	@AfterEach
+	void tearDown(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getCache().evictAll();
 	}
 
 	@Test
-	@SkipForDialect(value = CockroachDialect.class, comment = "CockroachDB uses SERIALIZABLE isolation, and does not support this")
-	@SkipForDialect(value = HSQLDialect.class, comment = "HSQLDB seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
-	@SkipForDialect(value = DerbyDialect.class, comment = "HSQLDB seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
-	@SkipForDialect(value = SybaseASEDialect.class, comment = "Sybase seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
-	public void testDelete() throws InterruptedException {
+	@SkipForDialect(dialectClass = CockroachDialect.class,
+			reason = "CockroachDB uses SERIALIZABLE isolation, and does not support this")
+	@SkipForDialect(dialectClass = HSQLDialect.class,
+			reason = "HSQLDB seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
+	@SkipForDialect(dialectClass = DerbyDialect.class,
+			reason = "HSQLDB seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class,
+			reason = "Sybase seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
+	public void testDelete(SessionFactoryScope scope) throws InterruptedException {
 		bookId = 1L;
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			createBook( bookId, session );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			log.info( "Delete Book" );
+		scope.inTransaction( session -> {
 			Book book = session.get( Book.class, bookId );
 			session.remove( book );
 			interceptTransaction.set( true );
@@ -85,22 +102,21 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 		endLatch.await();
 		interceptTransaction.set( false );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			assertBookNotFound( bookId, session );
 		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-13792")
-	public void testDeleteHQL() throws InterruptedException {
+	public void testDeleteHQL(SessionFactoryScope scope) throws InterruptedException {
 		bookId = 2L;
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			createBook( bookId, session );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			log.info( "Delete Book using HQL" );
+		scope.inTransaction( session -> {
 			int numRows = session.createQuery( "delete from Book where id = :id" )
 					.setParameter( "id", bookId )
 					.executeUpdate();
@@ -111,22 +127,21 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 		endLatch.await();
 		interceptTransaction.set( false );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			assertBookNotFound( bookId, session );
 		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-13792")
-	public void testDeleteNativeQuery() throws InterruptedException {
+	public void testDeleteNativeQuery(SessionFactoryScope scope) throws InterruptedException {
 		bookId = 3L;
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			createBook( bookId, session );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			log.info( "Delete Book using NativeQuery" );
+		scope.inTransaction( session -> {
 			int numRows = session.createNativeQuery( "delete from Book where id = :id" )
 					.setParameter( "id", bookId )
 					.addSynchronizedEntityClass( Book.class )
@@ -138,25 +153,28 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 		endLatch.await();
 		interceptTransaction.set( false );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			assertBookNotFound( bookId, session );
 		} );
 	}
 
 	@Test
-	@SkipForDialect(value = CockroachDialect.class, comment = "CockroachDB uses SERIALIZABLE isolation, and does not support this")
-	@SkipForDialect(value = HSQLDialect.class, comment = "HSQLDB seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
-	@SkipForDialect(value = DerbyDialect.class, comment = "HSQLDB seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
-	@SkipForDialect(value = SybaseASEDialect.class, comment = "Sybase seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
-	public void testUpdate() throws InterruptedException {
+	@SkipForDialect(dialectClass = CockroachDialect.class,
+			reason = "CockroachDB uses SERIALIZABLE isolation, and does not support this")
+	@SkipForDialect(dialectClass = HSQLDialect.class,
+			reason = "HSQLDB seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
+	@SkipForDialect(dialectClass = DerbyDialect.class,
+			reason = "HSQLDB seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class,
+			reason = "Sybase seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
+	public void testUpdate(SessionFactoryScope scope) throws InterruptedException {
 		bookId = 4L;
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			createBook( bookId, session );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			log.info( "Update Book" );
+		scope.inTransaction( session -> {
 			Book book = session.get( Book.class, bookId );
 			book.setTitle( UPDATED_TITLE );
 			session.persist( book );
@@ -166,22 +184,21 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 		endLatch.await();
 		interceptTransaction.set( false );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			loadBook( bookId, session );
 		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-13792")
-	public void testUpdateHQL() throws InterruptedException {
+	public void testUpdateHQL(SessionFactoryScope scope) throws InterruptedException {
 		bookId = 5L;
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			createBook( bookId, session );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			log.info( "Update Book using HQL" );
+		scope.inTransaction( session -> {
 			int numRows = session.createQuery( "update Book set title = :title where id = :id" )
 					.setParameter( "title", UPDATED_TITLE )
 					.setParameter( "id", bookId )
@@ -193,22 +210,21 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 		endLatch.await();
 		interceptTransaction.set( false );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			loadBook( bookId, session );
 		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-13792")
-	public void testUpdateNativeQuery() throws InterruptedException {
+	public void testUpdateNativeQuery(SessionFactoryScope scope) throws InterruptedException {
 		bookId = 6L;
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			createBook( bookId, session );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			log.info( "Update Book using NativeQuery" );
+		scope.inTransaction( session -> {
 			int numRows = session.createNativeQuery( "update Book set title = :title where id = :id" )
 					.setParameter( "title", UPDATED_TITLE )
 					.setParameter( "id", bookId )
@@ -221,31 +237,17 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 		endLatch.await();
 		interceptTransaction.set( false );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			loadBook( bookId, session );
 		} );
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Book.class,
-		};
-	}
-
-	@Override
-	protected String getCacheConcurrencyStrategy() {
-		return "read-write";
-	}
-
 	private void assertBookNotFound(long bookId, Session session) {
-		log.info( "Load Book" );
 		Book book = session.get( Book.class, bookId );
 		assertNull( book );
 	}
 
 	private void createBook(long bookId, Session session) {
-		log.info( "Create Book" );
 		Book book = new Book();
 		book.setId( bookId );
 		book.setTitle( ORIGINAL_TITLE );
@@ -257,16 +259,15 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private void loadBook(long bookId, Session session) {
-		log.info( "Load Book" );
 		Book book = session.get( Book.class, bookId );
 		assertNotNull( book );
-		assertEquals( "Found old value", UPDATED_TITLE, book.getTitle() );
+		assertEquals( UPDATED_TITLE, book.getTitle(), "Found old value" );
 	}
 
 	@Entity(name = "Book")
 	@Cacheable
 	@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-	private static final class Book {
+	static final class Book {
 
 		@Id
 		private Long id;
@@ -294,24 +295,35 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	private final class TransactionInterceptor implements Interceptor {
+	public static class Configurer implements Consumer<SessionFactoryBuilder> {
+
+		@Override
+		public void accept(SessionFactoryBuilder sessionFactoryBuilder) {
+			TransactionInterceptor transactionInterceptor = new TransactionInterceptor();
+			sessionFactoryBuilder.addSessionFactoryObservers( transactionInterceptor );
+			sessionFactoryBuilder.applyInterceptor( transactionInterceptor );
+		}
+	}
+
+	private static class TransactionInterceptor implements Interceptor, SessionFactoryObserver {
+		private org.hibernate.SessionFactory factory;
+
+		@Override
+		public void sessionFactoryCreated(org.hibernate.SessionFactory factory) {
+			this.factory = factory;
+		}
+
 		@Override
 		public void beforeTransactionCompletion(Transaction tx) {
 			if ( interceptTransaction.get() ) {
 				try {
-					log.info( "Fetch Book" );
+					Session session = factory.openSession();
+					Book book = session.get( Book.class, bookId );
+					assertNotNull( book );
+					session.close();
 
-					executeSync( () -> {
-						Session session = sessionFactory()
-								.openSession();
-						Book book = session.get( Book.class, bookId );
-						assertNotNull( book );
-						log.infof( "Fetched %s", book );
-						session.close();
-					} );
-
-					assertTrue( sessionFactory().getCache()
-										.containsEntity( Book.class, bookId ) );
+					assertTrue( factory.getCache()
+							.containsEntity( Book.class, bookId ) );
 				}
 				finally {
 					endLatch.countDown();

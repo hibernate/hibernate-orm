@@ -7,11 +7,10 @@ package org.hibernate.orm.test.event;
 import org.hibernate.SessionEventListener;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-public class SessionEventListenersManagerTest extends BaseUnitTestCase {
+public class SessionEventListenersManagerTest {
 
 	@Test
 	public void testListenerAppending() {
@@ -23,12 +22,12 @@ public class SessionEventListenersManagerTest extends BaseUnitTestCase {
 		SessionEventListenerManagerImpl l = new SessionEventListenerManagerImpl( a, b );
 		l.addListener( c, d );
 		l.dirtyCalculationEnd( true );
-		Assert.assertEquals( "abcd", sb.toString() );
+		Assertions.assertEquals( "abcd", sb.toString() );
 		l.dirtyCalculationEnd( true );
-		Assert.assertEquals( "abcdabcd", sb.toString() );
+		Assertions.assertEquals( "abcdabcd", sb.toString() );
 		l.addListener( new TestSessionEventListener( sb , 'e' ) );
 		l.dirtyCalculationEnd( true );
-		Assert.assertEquals( "abcdabcdabcde", sb.toString() );
+		Assertions.assertEquals( "abcdabcdabcde", sb.toString() );
 	}
 
 	@Test
@@ -36,10 +35,10 @@ public class SessionEventListenersManagerTest extends BaseUnitTestCase {
 		StringBuilder sb = new StringBuilder();
 		SessionEventListenerManagerImpl l = new SessionEventListenerManagerImpl();
 		l.dirtyCalculationEnd( true );
-		Assert.assertEquals( "", sb.toString() );
+		Assertions.assertEquals( "", sb.toString() );
 		l.addListener( new TestSessionEventListener( sb , 'e' ) );
 		l.dirtyCalculationEnd( true );
-		Assert.assertEquals( "e", sb.toString() );
+		Assertions.assertEquals( "e", sb.toString() );
 	}
 
 	private static class TestSessionEventListener implements SessionEventListener {

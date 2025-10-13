@@ -4,19 +4,15 @@
  */
 package org.hibernate.orm.test.annotations.lob;
 
-import java.util.Arrays;
-
-import org.hibernate.Session;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Test;
-import junit.framework.AssertionFailedError;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import static org.junit.Assert.assertNull;
 
 /**
  * Tests eager materialization and mutation of long strings.
@@ -25,98 +21,90 @@ import static org.junit.Assert.assertNull;
  */
 @RequiresDialect(SQLServerDialect.class)
 @RequiresDialect(SybaseDialect.class)
-public class TextTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { LongStringHolder.class };
-	}
+@DomainModel(
+		annotatedPackageNames = "org.hibernate.orm.test.annotations.lob",
+		annotatedClasses = {
+				LongStringHolder.class
+		}
+)
+public class TextTest {
 
 	private static final int LONG_STRING_SIZE = 10000;
 
 	@Test
-	public void testBoundedLongStringAccess() {
-		String original = buildRecursively(LONG_STRING_SIZE, 'x');
-		String changed = buildRecursively(LONG_STRING_SIZE, 'y');
+	public void testBoundedLongStringAccess(SessionFactoryScope scope) {
+		String original = buildRecursively( LONG_STRING_SIZE, 'x' );
+		String changed = buildRecursively( LONG_STRING_SIZE, 'y' );
 
-		Session s = openSession();
-		s.beginTransaction();
-		LongStringHolder entity = new LongStringHolder();
-		s.persist(entity);
-		s.getTransaction().commit();
-		s.close();
+		LongStringHolder e = new LongStringHolder();
+		scope.inTransaction(
+				session ->
+						session.persist( e )
+		);
 
-		s = openSession();
-		s.beginTransaction();
-		entity = (LongStringHolder) s.get(LongStringHolder.class, entity
-				.getId());
-		assertNull(entity.getLongString());
-		assertNull(entity.getName());
-		assertNull(entity.getWhatEver());
-		entity.setLongString(original);
-		entity.setName(original.toCharArray());
-		entity.setWhatEver(wrapPrimitive(original.toCharArray()));
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					LongStringHolder entity = session.find( LongStringHolder.class, e.getId() );
+					assertThat( entity.getLongString() ).isNull();
+					assertThat( entity.getName() ).isNull();
+					assertThat( entity.getWhatEver() ).isNull();
+					entity.setLongString( original );
+					entity.setName( original.toCharArray() );
+					entity.setWhatEver( wrapPrimitive( original.toCharArray() ) );
+				}
+		);
 
-		s = openSession();
-		s.beginTransaction();
-		entity = (LongStringHolder) s.get(LongStringHolder.class, entity
-				.getId());
-		Assert.assertEquals( LONG_STRING_SIZE, entity.getLongString().length() );
-		Assert.assertEquals( original, entity.getLongString() );
-		Assert.assertNotNull( entity.getName() );
-		Assert.assertEquals( LONG_STRING_SIZE, entity.getName().length );
-		assertEquals( original.toCharArray(), entity.getName() );
-		Assert.assertNotNull( entity.getWhatEver() );
-		Assert.assertEquals( LONG_STRING_SIZE, entity.getWhatEver().length );
-		assertEquals( original.toCharArray(), unwrapNonPrimitive( entity.getWhatEver() ) );
-		entity.setLongString(changed);
-		entity.setName(changed.toCharArray());
-		entity.setWhatEver(wrapPrimitive(changed.toCharArray()));
-		s.getTransaction().commit();
-		s.close();
 
-		s = openSession();
-		s.beginTransaction();
-		entity = (LongStringHolder) s.get(LongStringHolder.class, entity
-				.getId());
-		Assert.assertEquals( LONG_STRING_SIZE, entity.getLongString().length() );
-		Assert.assertEquals( changed, entity.getLongString() );
-		Assert.assertNotNull( entity.getName() );
-		Assert.assertEquals( LONG_STRING_SIZE, entity.getName().length );
-		assertEquals( changed.toCharArray(), entity.getName() );
-		Assert.assertNotNull( entity.getWhatEver() );
-		Assert.assertEquals( LONG_STRING_SIZE, entity.getWhatEver().length );
-		assertEquals( changed.toCharArray(), unwrapNonPrimitive( entity.getWhatEver() ) );
-		entity.setLongString(null);
-		entity.setName(null);
-		entity.setWhatEver(null);
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					LongStringHolder entity = session.find( LongStringHolder.class, e.getId() );
+					assertThat( entity.getLongString().length() ).isEqualTo( LONG_STRING_SIZE );
+					assertThat( entity.getLongString() ).isEqualTo( original );
+					assertThat( entity.getName() ).isNotNull();
+					assertThat( entity.getName().length ).isEqualTo( LONG_STRING_SIZE );
+					assertThat( entity.getName() ).isEqualTo( original.toCharArray() );
+					assertThat( entity.getWhatEver() ).isNotNull();
+					assertThat( entity.getWhatEver().length ).isEqualTo( LONG_STRING_SIZE );
+					assertThat( unwrapNonPrimitive( entity.getWhatEver() ) ).isEqualTo( original.toCharArray() );
+					entity.setLongString( changed );
+					entity.setName( changed.toCharArray() );
+					entity.setWhatEver( wrapPrimitive( changed.toCharArray() ) );
+				}
+		);
 
-		s = openSession();
-		s.beginTransaction();
-		entity = (LongStringHolder) s.get(LongStringHolder.class, entity
-				.getId());
-		assertNull(entity.getLongString());
-		assertNull(entity.getName());
-		assertNull(entity.getWhatEver());
-		s.remove(entity);
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					LongStringHolder entity = session.find( LongStringHolder.class, e.getId() );
+					assertThat( entity.getLongString().length() ).isEqualTo( LONG_STRING_SIZE );
+					assertThat( entity.getLongString() ).isEqualTo( changed );
+					assertThat( entity.getName() ).isNotNull();
+					assertThat( entity.getName().length ).isEqualTo( LONG_STRING_SIZE );
+					assertThat( entity.getName() ).isEqualTo( changed.toCharArray() );
+					assertThat( entity.getWhatEver() ).isNotNull();
+					assertThat( entity.getWhatEver().length ).isEqualTo( LONG_STRING_SIZE );
+					assertThat( unwrapNonPrimitive( entity.getWhatEver() ) ).isEqualTo( changed.toCharArray() );
+					entity.setLongString( null );
+					entity.setName( null );
+					entity.setWhatEver( null );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					LongStringHolder entity = session.find( LongStringHolder.class, e.getId() );
+					assertThat( entity.getLongString() ).isNull();
+					assertThat( entity.getName() ).isNull();
+					assertThat( entity.getWhatEver() ).isNull();
+					session.remove( entity );
+				}
+		);
 	}
 
-	public static void assertEquals(char[] val1, char[] val2) {
-		if ( !Arrays.equals( val1, val2 ) ) {
-			throw new AssertionFailedError("byte arrays did not match");
-		}
-	}
 
 	private String buildRecursively(int size, char baseChar) {
 		StringBuilder buff = new StringBuilder();
-		for (int i = 0; i < size; i++) {
-			buff.append(baseChar);
+		for ( int i = 0; i < size; i++ ) {
+			buff.append( baseChar );
 		}
 		return buff.toString();
 	}
@@ -124,8 +112,8 @@ public class TextTest extends BaseCoreFunctionalTestCase {
 	private Character[] wrapPrimitive(char[] bytes) {
 		int length = bytes.length;
 		Character[] result = new Character[length];
-		for (int index = 0; index < length; index++) {
-			result[index] = Character.valueOf(bytes[index]);
+		for ( int index = 0; index < length; index++ ) {
+			result[index] = Character.valueOf( bytes[index] );
 		}
 		return result;
 	}
@@ -133,15 +121,9 @@ public class TextTest extends BaseCoreFunctionalTestCase {
 	private char[] unwrapNonPrimitive(Character[] bytes) {
 		int length = bytes.length;
 		char[] result = new char[length];
-		for (int i = 0; i < length; i++) {
+		for ( int i = 0; i < length; i++ ) {
 			result[i] = bytes[i].charValue();
 		}
 		return result;
 	}
-
-	@Override
-	protected String[] getAnnotatedPackages() {
-		return new String[] { "org.hibernate.orm.test.annotations.lob" };
-	}
-
 }

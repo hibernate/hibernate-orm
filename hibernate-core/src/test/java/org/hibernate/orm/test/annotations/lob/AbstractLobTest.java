@@ -120,13 +120,13 @@ public abstract class AbstractLobTest<B extends AbstractBook, C extends Abstract
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = SybaseDialect.class)
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
 	public void testBinary(SessionFactoryScope scope) {
 
 		C cc = createCompiledCode();
 		byte[] metadata = new byte[2];
-		metadata[0] = 3;
-		metadata[1] = 0;
+		metadata[0] = ( byte ) 3;
+		metadata[1] = ( byte ) 0;
 		cc.setMetadata( metadata );
 
 		scope.inTransaction( session ->

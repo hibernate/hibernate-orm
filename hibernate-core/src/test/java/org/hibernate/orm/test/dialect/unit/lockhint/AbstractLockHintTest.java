@@ -11,28 +11,27 @@ import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractLockHintTest extends BaseUnitTestCase {
+public abstract class AbstractLockHintTest {
 	private Dialect dialect;
 
 	protected abstract String getLockHintUsed();
 	protected abstract Dialect getDialectUnderTest();
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		this.dialect = getDialectUnderTest();
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 		this.dialect = null;
 	}

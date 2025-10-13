@@ -4,21 +4,30 @@
  */
 package org.hibernate.orm.test.annotations.idmanytoone.alphabetical;
 
-import org.junit.Test;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Emmanuel Bernard
  */
-public class AlphabeticalIdManyToOneTest extends BaseCoreFunctionalTestCase {
-	@Test
-	public void testAlphabeticalTest() throws Exception {
-		//test through deployment
-	}
+@DomainModel(
+		annotatedClasses = {
+				B.class,
+				C.class,
+				A.class
+		}
+)
+@SessionFactory
+public class AlphabeticalIdManyToOneTest {
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { B.class, C.class, A.class };
+	@Test
+	public void testAlphabeticalTest(SessionFactoryScope scope) {
+		//test through deployment
+		scope.inTransaction(
+				session -> {
+				}
+		);
 	}
 }

@@ -197,3 +197,30 @@ This section describes changes to dependencies used by Hibernate ORM.
 === Inclusion of Agroal Pool
 
 `agroal-pool` is now a transitive implementation (runtime) dependency of the `hibernate-agroal` module.  Applications using `hibernate-agroal` no longer need to manually depend on it.
+
+[[maven-plugin-changes]]
+== Changes to the Maven Plugin
+
+Because of a regression the `enableLazyInitialization` and `enableDirtyTracking` parameters of
+the Maven plugin had since version 7.0.0.Final a default value of `false` while it used to be `true`.
+To fix the regression and bring the defaults in line with the corresponding Ant task and Gradle
+plugin, the default versions for both these parameters are set to `true` starting with version
+7.1.5.Final. The configuration of the enhancement plugin is now simplified in comparison to
+previous versions.
+
+```
+<plugin>
+    <groupId>org.hibernate.orm</groupId>
+    <artifactId>hibernate-maven-plugin</artifactId>
+    <version>$currentHibernateVersion</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>enhance</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
+
+The documentation in the userguide has been rewritten accordingly.

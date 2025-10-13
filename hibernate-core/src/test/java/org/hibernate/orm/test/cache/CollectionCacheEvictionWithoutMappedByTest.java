@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.cache;
 
-import java.util.ArrayList;
-import java.util.List;
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -13,150 +11,142 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-
-import org.hibernate.Session;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cache.internal.CollectionCacheInvalidator;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import java.util.ArrayList;
+import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 /**
  * @author Janario Oliveira
  */
-public class CollectionCacheEvictionWithoutMappedByTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				CollectionCacheEvictionWithoutMappedByTest.Person.class,
+				CollectionCacheEvictionWithoutMappedByTest.People.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting(name = Environment.AUTO_EVICT_COLLECTION_CACHE, value = "true"),
+				@Setting(name = Environment.USE_SECOND_LEVEL_CACHE, value = "true"),
+				@Setting(name = Environment.USE_QUERY_CACHE, value = "true"),
+				@Setting(name = Environment.IMPLICIT_NAMING_STRATEGY, value = "legacy-jpa"),
+		}
+)
+@SessionFactory
+public class CollectionCacheEvictionWithoutMappedByTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {Person.class, People.class};
-	}
-
-	@Before
+	@BeforeEach
 	public void before() {
 		CollectionCacheInvalidator.PROPAGATE_EXCEPTION = true;
 	}
 
-	@After
+	@AfterEach
 	public void after() {
 		CollectionCacheInvalidator.PROPAGATE_EXCEPTION = false;
 	}
 
-	@Override
-	protected void configure(Configuration cfg) {
-		cfg.setProperty( Environment.AUTO_EVICT_COLLECTION_CACHE, true );
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, true );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, true );
+	private People createPeople(SessionFactoryScope scope) {
+		return scope.fromTransaction( session -> {
+			People people = new People();
+			people.people.add( new Person() );
+			people.people.add( new Person() );
+			session.persist( people );
+			return people;
+		} );
 	}
 
-	private People createPeople() {
-		Session session = openSession();
-		session.beginTransaction();
-		People people = new People();
-		people.people.add( new Person() );
-		people.people.add( new Person() );
-		session.persist( people );
-
-		session.getTransaction().commit();
-		session.close();
-		return people;
-	}
-
-	private People initCache(int id) {
-		Session session = openSession();
-		People people = session.get( People.class, id );
-		//should add in cache
-		assertEquals( 2, people.people.size() );
-		session.close();
-		return people;
+	private People initCache(int id, SessionFactoryScope scope) {
+		return scope.fromSession( session -> {
+			People people = session.get( People.class, id );
+			//should add in cache
+			assertEquals( 2, people.people.size() );
+			return people;
+		} );
 	}
 
 	@Test
-	public void testCollectionCacheEvictionInsert() {
-		People people = createPeople();
-		people = initCache( people.id );
+	public void testCollectionCacheEvictionInsert(SessionFactoryScope scope) {
+		People people = createPeople( scope );
+		Integer id = people.id;
+		people = initCache( id, scope );
 
-		Session session = openSession();
-		session.beginTransaction();
+		scope.inTransaction( session -> {
+			People p = session.get( People.class, id );
+			Person person = new Person();
+			session.persist( person );
+			p.people.add( person );
 
-		people = session.get( People.class, people.id );
-		Person person = new Person();
-		session.persist( person );
-		people.people.add( person );
+		} );
 
-		session.getTransaction().commit();
-		session.close();
-
-		session = openSession();
-
-		people = session.get( People.class, people.id );
-		assertEquals( 3, people.people.size() );
-
-		session.close();
+		scope.inSession( session -> {
+			People p = session.get( People.class, id );
+			assertEquals( 3, p.people.size() );
+		} );
 	}
 
 	@Test
-	public void testCollectionCacheEvictionRemove() {
-		People people = createPeople();
-		people = initCache( people.id );
+	public void testCollectionCacheEvictionRemove(SessionFactoryScope scope) {
+		People people = createPeople( scope );
+		Integer id = people.id;
+		people = initCache( id, scope );
 
-		Session session = openSession();
-		session.beginTransaction();
+		scope.inTransaction( session -> {
+			People p = session.get( People.class, id );
+			Person person = p.people.remove( 0 );
+			session.remove( person );
+		} );
 
-		people = session.get( People.class, people.id );
-		Person person = people.people.remove( 0 );
-		session.remove( person );
-
-		session.getTransaction().commit();
-		session.close();
-
-		session = openSession();
-
-		people = session.get( People.class, people.id );
-		assertEquals( 1, people.people.size() );
-
-		session.close();
+		scope.inSession( session -> {
+			var p = session.get( People.class, id );
+			assertEquals( 1, p.people.size() );
+		} );
 	}
 
 	@Test
-	public void testCollectionCacheEvictionUpdate() {
-		People people1 = createPeople();
-		people1 = initCache( people1.id );
-		People people2 = createPeople();
-		people2 = initCache( people2.id );
+	public void testCollectionCacheEvictionUpdate(SessionFactoryScope scope) {
+		People people1 = createPeople( scope );
+		Integer p1id = people1.id;
+		people1 = initCache( p1id, scope );
+		People people2 = createPeople( scope );
+		Integer p2id = people2.id;
+		people2 = initCache( p2id, scope );
 
 
-		Session session = openSession();
-		session.beginTransaction();
+		scope.inTransaction( session -> {
+			var p1 = session.get( People.class, p1id );
+			var p2 = session.get( People.class, p2id );
 
-		people1 = session.get( People.class, people1.id );
-		people2 = session.get( People.class, people2.id );
+			Person person1 = p1.people.remove( 0 );
+			Person person2 = p1.people.remove( 0 );
+			Person person3 = p2.people.remove( 0 );
+			session.flush();//avoid: Unique index or primary key violation
+			p1.people.add( person3 );
+			p2.people.add( person2 );
+			p2.people.add( person1 );
 
-		Person person1 = people1.people.remove( 0 );
-		Person person2 = people1.people.remove( 0 );
-		Person person3 = people2.people.remove( 0 );
-		session.flush();//avoid: Unique index or primary key violation
-		people1.people.add( person3 );
-		people2.people.add( person2 );
-		people2.people.add( person1 );
+		} );
 
-		session.getTransaction().commit();
-		session.close();
-
-		session = openSession();
-
-		people1 = session.get( People.class, people1.id );
-		people2 = session.get( People.class, people2.id );
-		assertEquals( 1, people1.people.size() );
-		assertEquals( 3, people2.people.size() );
-
-		session.close();
+		scope.inSession( s -> {
+			var p1 = s.get( People.class, p1id );
+			var p2 = s.get( People.class, p2id );
+			assertEquals( 1, p1.people.size() );
+			assertEquals( 3, p2.people.size() );
+		} );
 	}
 
 	@Entity(name = "People")

@@ -12,122 +12,105 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import org.hibernate.Hibernate;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.Statistics;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gavin King
  */
-public class FetchTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyStatisticsSupport( true );
-		sfb.applySecondLevelCacheSupport( false );
-		sfb.applyQueryCacheSupport( false );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( School.class );
-		sources.addAnnotatedClass( Primary.class );
-		sources.addAnnotatedClass( Secondary.class );
-		sources.addAnnotatedClass( Student.class );
-	}
+@DomainModel(
+		annotatedClasses = {
+				FetchTest.School.class,
+				FetchTest.Primary.class,
+				FetchTest.Secondary.class,
+				FetchTest.Student.class
+		}
+)
+@SessionFactory(generateStatistics = true)
+public class FetchTest {
 
 	@Test
-	public void testFetch() {
-		inStatelessTransaction(
-				session -> {
+	public void testFetch(SessionFactoryScope scope) {
+		scope.inStatelessTransaction( session -> {
 					Secondary secondary = new Secondary( "BHS" );
 					Student student = new Student( "gavin" );
 					student.school = secondary;
-					session.insert(secondary);
-					session.insert(student);
+					session.insert( secondary );
+					session.insert( student );
 				}
 		);
 
-		inStatelessSession(
-				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+		scope.inStatelessTransaction( session -> {
+					final Statistics stats = session.getFactory().getStatistics();
 					stats.clear();
 					final Student student = session.get( Student.class, "gavin" );
-					assertFalse( Hibernate.isInitialized( student.school) );
-					assertTrue( student.school instanceof HibernateProxy );
+					assertFalse( Hibernate.isInitialized( student.school ) );
+					assertInstanceOf( HibernateProxy.class, student.school );
 					long count = stats.getPrepareStatementCount();
-					session.fetch( student.school);
-					assertTrue( Hibernate.isInitialized( student.school) );
+					session.fetch( student.school );
+					assertTrue( Hibernate.isInitialized( student.school ) );
 					assertEquals( "BHS", student.school.getName() );
 
-					assertEquals( count+1, stats.getPrepareStatementCount() );
+					assertEquals( count + 1, stats.getPrepareStatementCount() );
 				}
 		);
 
-		inStatelessSession(
-				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+		scope.inStatelessTransaction( session -> {
+					final Statistics stats = session.getFactory().getStatistics();
 					stats.clear();
 					final School school = session.get( School.class, "BHS" );
-					assertFalse( Hibernate.isInitialized( school.students) );
-					assertTrue( school.students instanceof PersistentSet );
+					assertFalse( Hibernate.isInitialized( school.students ) );
+					assertInstanceOf( PersistentSet.class, school.students );
 					long count = stats.getPrepareStatementCount();
-					session.fetch( school.students);
-					assertTrue( Hibernate.isInitialized( school.students) );
+					session.fetch( school.students );
+					assertTrue( Hibernate.isInitialized( school.students ) );
 					assertEquals( 1, school.students.size() );
 
-					assertEquals( count+1, stats.getPrepareStatementCount() );
+					assertEquals( count + 1, stats.getPrepareStatementCount() );
 				}
 		);
 	}
 
 	@Test
-	public void testFetchEmpty() {
-		inStatelessTransaction(
-				session -> {
+	public void testFetchEmpty(SessionFactoryScope scope) {
+		scope.inStatelessTransaction( session -> {
 					Secondary secondary = new Secondary( "BHS" );
-					session.insert(secondary);
+					session.insert( secondary );
 				}
 		);
 
-		inStatelessSession(
-				session -> {
-					final Statistics stats = sessionFactory().getStatistics();
+		scope.inStatelessTransaction( session -> {
+					final Statistics stats = session.getFactory().getStatistics();
 					stats.clear();
 					final School school = session.get( School.class, "BHS" );
-					assertFalse( Hibernate.isInitialized( school.students) );
-					assertTrue( school.students instanceof PersistentSet );
+					assertFalse( Hibernate.isInitialized( school.students ) );
+					assertInstanceOf( PersistentSet.class, school.students );
 					long count = stats.getPrepareStatementCount();
-					session.fetch( school.students);
-					assertTrue( Hibernate.isInitialized( school.students) );
+					session.fetch( school.students );
+					assertTrue( Hibernate.isInitialized( school.students ) );
 					assertTrue( school.students.isEmpty() );
 
-					assertEquals( count+1, stats.getPrepareStatementCount() );
+					assertEquals( count + 1, stats.getPrepareStatementCount() );
 				}
 		);
 	}
 
-	@After
-	public void cleanUpTestData() {
-		inTransaction(
-				session -> {
-					session.createQuery( "delete from SchoolStudent" ).executeUpdate();
-					session.createQuery( "delete from School" ).executeUpdate();
-				}
-		);
+	@AfterEach
+	public void cleanUpTestData(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
 	@Entity(name = "School")
@@ -182,7 +165,8 @@ public class FetchTest extends BaseNonConfigCoreFunctionalTestCase {
 			setName( name );
 		}
 
-		protected Secondary() {}
+		protected Secondary() {
+		}
 
 		public String getSex() {
 			return sex;
@@ -202,7 +186,8 @@ public class FetchTest extends BaseNonConfigCoreFunctionalTestCase {
 		@ManyToOne(fetch = FetchType.LAZY)
 		private School school = null;
 
-		protected Student() {}
+		protected Student() {
+		}
 
 		public Student(String id) {
 			this.id = id;

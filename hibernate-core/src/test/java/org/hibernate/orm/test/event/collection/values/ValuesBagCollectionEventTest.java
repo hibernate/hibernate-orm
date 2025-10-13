@@ -9,16 +9,14 @@ import java.util.Collection;
 
 import org.hibernate.orm.test.event.collection.AbstractCollectionEventTest;
 import org.hibernate.orm.test.event.collection.ParentWithCollection;
+import org.hibernate.testing.orm.junit.DomainModel;
 
 /**
  *
  * @author Gail Badner
  */
+@DomainModel(xmlMappings = "org/hibernate/orm/test/event/collection/values/ValuesBagMapping.hbm.xml")
 public class ValuesBagCollectionEventTest extends AbstractCollectionEventTest {
-	@Override
-	public String[] getMappings() {
-		return new String[] { "event/collection/values/ValuesBagMapping.hbm.xml" };
-	}
 
 	@Override
 	public ParentWithCollection createParent(String name) {

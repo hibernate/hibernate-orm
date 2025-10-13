@@ -6,39 +6,36 @@ package org.hibernate.orm.test.cache;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
+import org.hibernate.testing.logger.LogInspectionHelper;
+import org.hibernate.testing.logger.TriggerOnPrefixLogListener;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.cache.CachingRegionFactory;
-import org.hibernate.testing.logger.LoggerInspectionRule;
-import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Rule;
-import org.junit.Test;
 
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.SharedCacheMode;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gail Badner
  */
 @JiraKey( value = "HHH-11143")
 public class NonRootEntityWithCacheableAnnotationTest {
-
-	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule( CORE_LOGGER );
 
 	@Test
 	public void testCacheableOnNonRootEntity() {
@@ -51,7 +48,8 @@ public class NonRootEntityWithCacheableAnnotationTest {
 				.applySettings( settings )
 				.build()) {
 
-			Triggerable triggerable = logInspection.watchForLogMessages( "HHH000482" );
+			TriggerOnPrefixLogListener trigger = new TriggerOnPrefixLogListener( Set.of( "HHH000482" ) );
+			LogInspectionHelper.registerListener( trigger, CoreMessageLogger.CORE_LOGGER );
 
 			Metadata metadata = new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( ABase.class )
@@ -61,7 +59,7 @@ public class NonRootEntityWithCacheableAnnotationTest {
 			assertFalse( metadata.getEntityBinding( ABase.class.getName() ).isCached() );
 			assertTrue( metadata.getEntityBinding( AEntity.class.getName() ).isCached() );
 
-			assertFalse( triggerable.wasTriggered() );
+			assertFalse( trigger.wasTriggered() );
 		}
 	}
 

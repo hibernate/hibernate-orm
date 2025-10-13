@@ -9,78 +9,72 @@ import jakarta.persistence.ExcludeDefaultListeners;
 import jakarta.persistence.ExcludeSuperclassListeners;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
-import static junit.framework.TestCase.assertNull;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Vlad Mihalcea
  */
-public class DefaultEntityListenerTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class,
-			Book.class,
-			Publisher.class
-		};
-	}
-
-	@Override
-	protected String[] getMappings() {
-		return new String[] { "org/hibernate/orm/test/events/DefaultEntityListener-orm.xml" };
-	}
+@DomainModel(
+		annotatedClasses = {
+				DefaultEntityListenerTest.Person.class,
+				DefaultEntityListenerTest.Book.class,
+				DefaultEntityListenerTest.Publisher.class
+		},
+		xmlMappings = "org/hibernate/orm/test/events/DefaultEntityListener-orm.xml"
+)
+@SessionFactory
+public class DefaultEntityListenerTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			//tag::events-default-listener-persist-example[]
 			Person author = new Person();
-			author.setId(1L);
-			author.setName("Vlad Mihalcea");
+			author.setId( 1L );
+			author.setName( "Vlad Mihalcea" );
 
-			entityManager.persist(author);
+			entityManager.persist( author );
 
 			Book book = new Book();
-			book.setId(1L);
-			book.setTitle("High-Performance Java Persistence");
-			book.setAuthor(author);
+			book.setId( 1L );
+			book.setTitle( "High-Performance Java Persistence" );
+			book.setAuthor( author );
 
-			entityManager.persist(book);
+			entityManager.persist( book );
 			//end::events-default-listener-persist-example[]
-		});
+		} );
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::events-default-listener-update-example[]
-			Person author = entityManager.find(Person.class, 1L);
-			author.setName("Vlad-Alexandru Mihalcea");
+			Person author = entityManager.find( Person.class, 1L );
+			author.setName( "Vlad-Alexandru Mihalcea" );
 
-			Book book = entityManager.find(Book.class, 1L);
-			book.setTitle("High-Performance Java Persistence 2nd Edition");
+			Book book = entityManager.find( Book.class, 1L );
+			book.setTitle( "High-Performance Java Persistence 2nd Edition" );
 			//end::events-default-listener-update-example[]
-		});
+		} );
 	}
 
 	@Test
-	public void testExclude() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testExclude(SessionFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			//tag::events-exclude-default-listener-persist-example[]
 			Publisher publisher = new Publisher();
-			publisher.setId(1L);
-			publisher.setName("Amazon");
+			publisher.setId( 1L );
+			publisher.setName( "Amazon" );
 
-			entityManager.persist(publisher);
+			entityManager.persist( publisher );
 			//end::events-exclude-default-listener-persist-example[]
-		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Publisher publisher = entityManager.find(Publisher.class, 1L);
-			assertNull(publisher.getCreatedOn());
-		});
+		} );
+		scope.inTransaction( entityManager -> {
+			Publisher publisher = entityManager.find( Publisher.class, 1L );
+			assertNull( publisher.getCreatedOn() );
+		} );
 	}
 
 	//tag::events-default-listener-mapping-example[]
@@ -152,7 +146,7 @@ public class DefaultEntityListenerTest extends BaseEntityManagerFunctionalTestCa
 		}
 		//tag::events-default-listener-mapping-example[]
 	}
-		//end::events-default-listener-mapping-example[]
+	//end::events-default-listener-mapping-example[]
 
 	//tag::events-exclude-default-listener-mapping-example[]
 	@Entity(name = "Publisher")
@@ -184,7 +178,7 @@ public class DefaultEntityListenerTest extends BaseEntityManagerFunctionalTestCa
 			this.name = name;
 		}
 
-	//tag::events-exclude-default-listener-mapping-example[]
+		//tag::events-exclude-default-listener-mapping-example[]
 	}
 	//end::events-exclude-default-listener-mapping-example[]
 }

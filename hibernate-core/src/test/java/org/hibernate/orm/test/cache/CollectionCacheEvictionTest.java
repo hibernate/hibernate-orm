@@ -5,333 +5,287 @@
 package org.hibernate.orm.test.cache;
 
 import org.hibernate.ObjectNotFoundException;
-import org.hibernate.Session;
 import org.hibernate.cache.internal.CollectionCacheInvalidator;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Andreas Berger
  */
 @JiraKey(value = "HHH-4910")
-public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { User.class, Company.class };
-	}
+@DomainModel(
+		annotatedClasses = {
+				User.class, Company.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting(name = Environment.AUTO_EVICT_COLLECTION_CACHE, value = "true"),
+				@Setting(name = Environment.USE_SECOND_LEVEL_CACHE, value = "true"),
+				@Setting(name = Environment.USE_QUERY_CACHE, value = "true"),
+				@Setting(name = Environment.DEFAULT_LIST_SEMANTICS, value = "bag"), // CollectionClassification.BAG
+		}
+)
+@SessionFactory(generateStatistics = true)
+public class CollectionCacheEvictionTest {
 
-	@Before
+	@BeforeEach
 	public void before() {
 		CollectionCacheInvalidator.PROPAGATE_EXCEPTION = true;
 	}
 
-	@After
+	@AfterEach
 	public void after() {
 		CollectionCacheInvalidator.PROPAGATE_EXCEPTION = false;
 	}
 
-	@Override
-	protected void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.AUTO_EVICT_COLLECTION_CACHE, true );
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, true );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, true );
-		cfg.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
+	@BeforeEach
+	void prepareTest(SessionFactoryScope scope) throws Exception {
+		scope.inTransaction( s -> {
+
+			Company company1 = new Company( 1 );
+			s.persist( company1 );
+
+			User user = new User( 1, company1 );
+			s.persist( user );
+
+			Company company2 = new Company( 2 );
+			s.persist( company2 );
+
+		} );
 	}
 
-	@Override
-	protected void prepareTest() throws Exception {
-		Session s = openSession();
-		s.beginTransaction();
-
-		Company company1 = new Company( 1 );
-		s.persist( company1 );
-
-		User user = new User( 1, company1 );
-		s.persist( user );
-
-		Company company2 = new Company( 2 );
-		s.persist( company2 );
-
-		s.getTransaction().commit();
-		s.close();
-	}
-
-	@Override
-	protected void cleanupTest() throws Exception {
-		Session s = openSession();
-		s.beginTransaction();
-
-		s.createQuery( "delete from org.hibernate.orm.test.cache.User" ).executeUpdate();
-		s.createQuery( "delete from org.hibernate.orm.test.cache.Company" ).executeUpdate();
-
-		s.getTransaction().commit();
-		s.close();
+	@AfterEach
+	protected void cleanupTest(SessionFactoryScope scope) throws Exception {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getCache().evictAll();
 	}
 
 	@Test
-	public void testCachedValueAfterEviction() {
-		CollectionPersister persister = sessionFactory().getRuntimeMetamodels()
+	public void testCachedValueAfterEviction(SessionFactoryScope scope) {
+		CollectionPersister persister = scope.getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
-				.getCollectionDescriptor(Company.class.getName() + ".users");
+				.getCollectionDescriptor( Company.class.getName() + ".users" );
 
-		Session session = openSession();
-		SessionImplementor sessionImplementor = (SessionImplementor) session;
+		scope.inSession( session -> {
+			CollectionDataAccess cache = persister.getCacheAccessStrategy();
+			Object key = cache.generateCacheKey( 1, persister, session.getFactory(), session.getTenantIdentifier() );
+			Object cachedValue = cache.get( session, key );
+			assertNull( cachedValue );
 
-		CollectionDataAccess cache = persister.getCacheAccessStrategy();
-		Object key = cache.generateCacheKey( 1, persister, sessionFactory(), session.getTenantIdentifier() );
-		Object cachedValue = cache.get( sessionImplementor, key );
-		assertNull( cachedValue );
+			Company company = session.get( Company.class, 1 );
+			//should add in cache
+			assertEquals( 1, company.getUsers().size() );
+		} );
 
-		Company company = session.get( Company.class, 1 );
-		//should add in cache
-		assertEquals( 1, company.getUsers().size() );
-		session.close();
-
-		session = openSession();
-		sessionImplementor = (SessionImplementor) session;
-		key = cache.generateCacheKey( 1, persister, sessionFactory(), session.getTenantIdentifier() );
-		cachedValue = cache.get( sessionImplementor, key );
-		assertNotNull( "Collection wasn't cached", cachedValue );
-		session.close();
+		scope.inSession( session -> {
+			CollectionDataAccess cache = persister.getCacheAccessStrategy();
+			Object key = cache.generateCacheKey( 1, persister, session.getFactory(), session.getTenantIdentifier() );
+			Object cachedValue = cache.get( session, key );
+			assertNotNull( cachedValue, "Collection wasn't cached" );
+		} );
 	}
 
 	@Test
-	public void testCollectionCacheEvictionInsert() {
-		Session s = openSession();
-		s.beginTransaction();
+	public void testCollectionCacheEvictionInsert(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Company company = (Company) s.get( Company.class, 1 );
+			// init cache of collection
+			assertEquals( 1, company.getUsers().size() );
 
-		Company company = (Company) s.get( Company.class, 1 );
-		// init cache of collection
-		assertEquals( 1, company.getUsers().size() );
+			User user = new User( 2, company );
+			s.persist( user );
 
-		User user = new User( 2, company );
-		s.persist( user );
+		} );
 
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction( s -> {
+			Company company = (Company) s.get( Company.class, 1 );
+			// fails if cache is not evicted
+			assertEquals( 2, company.getUsers().size() );
 
-		s = openSession();
-		s.beginTransaction();
-
-		company = (Company) s.get( Company.class, 1 );
-		// fails if cache is not evicted
-		assertEquals( 2, company.getUsers().size() );
-
-		s.close();
+		} );
 	}
 
 	@Test
-	public void testCollectionCacheEvictionInsertWithEntityOutOfContext() {
-		Session s = openSession();
-		Company company = s.get( Company.class, 1 );
-		assertEquals( 1, company.getUsers().size() );
-		s.close();
+	public void testCollectionCacheEvictionInsertWithEntityOutOfContext(SessionFactoryScope scope) {
+		Company company = scope.fromSession( s -> {
+			Company c = s.get( Company.class, 1 );
+			assertEquals( 1, c.getUsers().size() );
+			return c;
+		} );
 
-		s = openSession();
-		s.beginTransaction();
+		scope.inTransaction( s -> {
+			User user = new User( 2, company );
+			s.persist( user );
+		} );
 
-		User user = new User( 2, company );
-		s.persist( user );
-
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-
-		company = s.get( Company.class, 1 );
-		assertEquals( 2, company.getUsers().size() );
-		s.close();
+		scope.inSession( s -> {
+			Company c = s.get( Company.class, 1 );
+			assertEquals( 2, c.getUsers().size() );
+		} );
 	}
 
 	@Test
-	public void testCollectionCacheEvictionRemove() {
-		Session s = openSession();
-		s.beginTransaction();
+	public void testCollectionCacheEvictionRemove(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Company company = (Company) s.get( Company.class, 1 );
+			// init cache of collection
+			assertEquals( 1, company.getUsers().size() );
 
-		Company company = (Company) s.get( Company.class, 1 );
-		// init cache of collection
-		assertEquals( 1, company.getUsers().size() );
+			s.remove( company.getUsers().get( 0 ) );
 
-		s.remove( company.getUsers().get( 0 ) );
+		} );
 
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-
-		company = (Company) s.get( Company.class, 1 );
-		// fails if cache is not evicted
-		try {
-			assertEquals( 0, company.getUsers().size() );
-		}
-		catch ( ObjectNotFoundException e ) {
-			fail( "Cached element not found" );
-		}
-		s.close();
+		scope.inTransaction( s -> {
+			Company company = (Company) s.get( Company.class, 1 );
+			// fails if cache is not evicted
+			try {
+				assertEquals( 0, company.getUsers().size() );
+			}
+			catch (ObjectNotFoundException e) {
+				fail( "Cached element not found" );
+			}
+		} );
 	}
 
 	@Test
-	public void testCollectionCacheEvictionRemoveWithEntityOutOfContext() {
-		Session s = openSession();
-		Company company = s.get( Company.class, 1 );
-		assertEquals( 1, company.getUsers().size() );
-		s.close();
+	public void testCollectionCacheEvictionRemoveWithEntityOutOfContext(SessionFactoryScope scope) {
+		Company company = scope.fromSession( s -> {
+			Company c = s.get( Company.class, 1 );
+			assertEquals( 1, c.getUsers().size() );
+			return c;
+		} );
 
-		s = openSession();
-		s.beginTransaction();
-		s.remove( company.getUsers().get( 0 ) );
+		scope.inTransaction( s -> {
+			s.remove( company.getUsers().get( 0 ) );
+		} );
 
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession( s -> {
 
-		s = openSession();
-
-		company = s.get( Company.class, 1 );
-		try {
-			assertEquals( 0, company.getUsers().size() );
-		}
-		catch ( ObjectNotFoundException e ) {
-			fail( "Cached element not found" );
-		}
-		s.close();
+			var c = s.get( Company.class, 1 );
+			try {
+				assertEquals( 0, c.getUsers().size() );
+			}
+			catch (ObjectNotFoundException e) {
+				fail( "Cached element not found" );
+			}
+		} );
 	}
 
 	@Test
-	public void testCollectionCacheEvictionUpdate() {
-		Session s = openSession();
-		s.beginTransaction();
+	public void testCollectionCacheEvictionUpdate(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Company company1 = (Company) s.get( Company.class, 1 );
+			Company company2 = (Company) s.get( Company.class, 2 );
 
-		Company company1 = (Company) s.get( Company.class, 1 );
-		Company company2 = (Company) s.get( Company.class, 2 );
+			// init cache of collection
+			assertEquals( 1, company1.getUsers().size() );
+			assertEquals( 0, company2.getUsers().size() );
 
-		// init cache of collection
-		assertEquals( 1, company1.getUsers().size() );
-		assertEquals( 0, company2.getUsers().size() );
+			User user = (User) s.get( User.class, 1 );
+			user.setCompany( company2 );
+		} );
 
-		User user = (User) s.get( User.class, 1 );
-		user.setCompany( company2 );
+		scope.inSession( s -> {
+			var company1 = (Company) s.get( Company.class, 1 );
+			var company2 = (Company) s.get( Company.class, 2 );
 
-		s.getTransaction().commit();
-		s.close();
+			assertEquals( 1, company2.getUsers().size() );
 
-		s = openSession();
-		s.beginTransaction();
+			// fails if cache is not evicted
+			try {
+				assertEquals( 0, company1.getUsers().size() );
+			}
+			catch (ObjectNotFoundException e) {
+				fail( "Cached element not found" );
+			}
 
-		company1 = (Company) s.get( Company.class, 1 );
-		company2 = (Company) s.get( Company.class, 2 );
-
-		assertEquals( 1, company2.getUsers().size() );
-
-		// fails if cache is not evicted
-		try {
-			assertEquals( 0, company1.getUsers().size() );
-		}
-		catch ( ObjectNotFoundException e ) {
-			fail( "Cached element not found" );
-		}
-
-		s.close();
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-10631")
-	public void testCollectionCacheEvictionUpdateWhenChildIsSetToNull() {
-		Session s = openSession();
-		s.beginTransaction();
+	public void testCollectionCacheEvictionUpdateWhenChildIsSetToNull(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 
-		Company company1 = (Company) s.get( Company.class, 1 );
-		Company company2 = (Company) s.get( Company.class, 2 );
+			Company company1 = (Company) s.get( Company.class, 1 );
+			Company company2 = (Company) s.get( Company.class, 2 );
 
-		// init cache of collection
-		assertEquals( 1, company1.getUsers().size() );
-		assertEquals( 0, company2.getUsers().size() );
+			// init cache of collection
+			assertEquals( 1, company1.getUsers().size() );
+			assertEquals( 0, company2.getUsers().size() );
 
-		User user = (User) s.get( User.class, 1 );
-		user.setCompany( null );
+			User user = (User) s.get( User.class, 1 );
+			user.setCompany( null );
+		} );
 
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession( s -> {
+			var company1 = (Company) s.get( Company.class, 1 );
+			var company2 = (Company) s.get( Company.class, 2 );
 
-		s = openSession();
-
-		company1 = (Company) s.get( Company.class, 1 );
-		company2 = (Company) s.get( Company.class, 2 );
-
-		assertEquals( 0, company1.getUsers().size() );
-		assertEquals( 0, company2.getUsers().size() );
-		s.close();
-	}
-
-	@Test
-	public void testCollectionCacheEvictionUpdateWithEntityOutOfContext() {
-		Session s = openSession();
-		Company company1 = s.get( Company.class, 1 );
-		Company company2 = s.get( Company.class, 2 );
-
-		assertEquals( 1, company1.getUsers().size() );
-		assertEquals( 0, company2.getUsers().size() );
-
-		s.close();
-		s = openSession();
-		s.beginTransaction();
-
-		User user = s.get( User.class, 1 );
-		user.setCompany( company2 );
-
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-
-		company1 = s.get( Company.class, 1 );
-		company2 = s.get( Company.class, 2 );
-
-		assertEquals( 1, company2.getUsers().size() );
-
-		try {
 			assertEquals( 0, company1.getUsers().size() );
-		}
-		catch ( ObjectNotFoundException e ) {
-			fail( "Cached element not found" );
-		}
-		s.close();
+			assertEquals( 0, company2.getUsers().size() );
+		} );
 	}
 
 	@Test
-	public void testUpdateWithNullRelation() {
-		Session session = openSession();
-		session.beginTransaction();
-		User user = new User();
-		user.setName( "User1" );
-		session.persist( user );
+	public void testCollectionCacheEvictionUpdateWithEntityOutOfContext(SessionFactoryScope scope) {
+		Company c = scope.fromSession( s -> {
+			Company company1 = s.get( Company.class, 1 );
+			Company company2 = s.get( Company.class, 2 );
 
-		session.getTransaction().commit();
-		session.close();
+			assertEquals( 1, company1.getUsers().size() );
+			assertEquals( 0, company2.getUsers().size() );
+			return company2;
+		} );
+		scope.inTransaction( s -> {
+			User user = s.get( User.class, 1 );
+			user.setCompany( c );
+		} );
 
-		session = openSession();
-		session.beginTransaction();
-		user.setName( "UserUpdate" );
-		session.merge( user );
+		scope.inSession( s -> {
 
-		session.getTransaction().commit();
-		session.close();
+			var company1 = s.get( Company.class, 1 );
+			var company2 = s.get( Company.class, 2 );
+
+			assertEquals( 1, company2.getUsers().size() );
+
+			try {
+				assertEquals( 0, company1.getUsers().size() );
+			}
+			catch (ObjectNotFoundException e) {
+				fail( "Cached element not found" );
+			}
+		} );
+	}
+
+	@Test
+	public void testUpdateWithNullRelation(SessionFactoryScope scope) {
+		User user = scope.fromTransaction( session -> {
+			User u = new User();
+			u.setName( "User1" );
+			session.persist( u );
+			return u;
+		} );
+
+		scope.inTransaction( session -> {
+			user.setName( "UserUpdate" );
+			session.merge( user );
+		} );
 	}
 }

@@ -7,6 +7,7 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 import java.sql.Blob;
 import java.util.HashSet;
 import java.util.Set;
+
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,26 +22,50 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 import org.hibernate.annotations.LazyGroup;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Steve Ebersole
  */
-public class ProxyDeletionTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				ProxyDeletionTest.AEntity.class,
+				ProxyDeletionTest.BEntity.class,
+				ProxyDeletionTest.CEntity.class,
+				ProxyDeletionTest.DEntity.class,
+				ProxyDeletionTest.EEntity.class,
+				ProxyDeletionTest.GEntity.class,
+				Activity.class,
+				Instruction.class,
+				WebApplication.class,
+				SpecializedKey.class,
+				MoreSpecializedKey.class,
+				RoleEntity.class,
+				AbstractKey.class,
+				GenericKey.class,
+				SpecializedEntity.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting(name = AvailableSettings.FORMAT_SQL, value = "false"),
+		}
+)
+@SessionFactory(generateStatistics = true)
+public class ProxyDeletionTest {
 
 
 	@Test
-	public void testGetAndDeleteEEntity() {
-		inTransaction(
-				session -> {
+	public void testGetAndDeleteEEntity(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 					EEntity entity = session.get( EEntity.class, 17L );
 					session.remove( entity );
 					session.remove( entity.getD() );
@@ -48,46 +73,9 @@ public class ProxyDeletionTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
-	}
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyStatisticsSupport( true );
-		sfb.applySecondLevelCacheSupport( false );
-		sfb.applyQueryCacheSupport( false );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( AEntity.class );
-		sources.addAnnotatedClass( BEntity.class );
-		sources.addAnnotatedClass( CEntity.class );
-		sources.addAnnotatedClass( DEntity.class );
-		sources.addAnnotatedClass( EEntity.class );
-		sources.addAnnotatedClass( GEntity.class );
-
-		sources.addAnnotatedClass( Activity.class );
-		sources.addAnnotatedClass( Instruction.class );
-		sources.addAnnotatedClass( WebApplication.class );
-
-		sources.addAnnotatedClass( SpecializedKey.class );
-		sources.addAnnotatedClass( MoreSpecializedKey.class );
-		sources.addAnnotatedClass( RoleEntity.class );
-		sources.addAnnotatedClass( AbstractKey.class );
-		sources.addAnnotatedClass( GenericKey.class );
-		sources.addAnnotatedClass( SpecializedEntity.class );
-	}
-
-	@Before
-	public void prepareTestData() {
-		inTransaction(
-				session -> {
+	@BeforeEach
+	public void prepareTestData(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 					DEntity d = new DEntity();
 					d.setD( "bla" );
 					d.setOid( 1 );
@@ -171,7 +159,7 @@ public class ProxyDeletionTest extends BaseNonConfigCoreFunctionalTestCase {
 					roleEntity.setOid( 1L );
 
 					SpecializedKey specializedKey = new SpecializedKey();
-					specializedKey.setOid(1L);
+					specializedKey.setOid( 1L );
 
 					MoreSpecializedKey moreSpecializedKey = new MoreSpecializedKey();
 					moreSpecializedKey.setOid( 3L );
@@ -179,7 +167,7 @@ public class ProxyDeletionTest extends BaseNonConfigCoreFunctionalTestCase {
 					SpecializedEntity specializedEntity = new SpecializedEntity();
 					specializedEntity.setId( 2L );
 					specializedKey.addSpecializedEntity( specializedEntity );
-					specializedEntity.setSpecializedKey( specializedKey);
+					specializedEntity.setSpecializedKey( specializedKey );
 
 					specializedKey.addRole( roleEntity );
 					roleEntity.setKey( specializedKey );
@@ -193,29 +181,9 @@ public class ProxyDeletionTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
-	@After
-	public void cleanUpTestData() {
-		inTransaction(
-				session -> {
-					session.createQuery( "delete from E" ).executeUpdate();
-					session.createQuery( "delete from D" ).executeUpdate();
-					session.createQuery( "delete from C" ).executeUpdate();
-					session.createQuery( "delete from B" ).executeUpdate();
-					session.createQuery( "delete from A" ).executeUpdate();
-					session.createQuery( "delete from G" ).executeUpdate();
-
-					session.createQuery( "delete from Activity" ).executeUpdate();
-					session.createQuery( "delete from Instruction" ).executeUpdate();
-					session.createQuery( "delete from WebApplication" ).executeUpdate();
-
-					session.createQuery( "delete from SpecializedEntity" ).executeUpdate();
-					session.createQuery( "delete from RoleEntity" ).executeUpdate();
-					session.createQuery( "delete from MoreSpecializedKey" ).executeUpdate();
-					session.createQuery( "delete from SpecializedKey" ).executeUpdate();
-					session.createQuery( "delete from GenericKey" ).executeUpdate();
-					session.createQuery( "delete from AbstractKey" ).executeUpdate();
-				}
-		);
+	@AfterEach
+	public void cleanUpTestData(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
 	@MappedSuperclass

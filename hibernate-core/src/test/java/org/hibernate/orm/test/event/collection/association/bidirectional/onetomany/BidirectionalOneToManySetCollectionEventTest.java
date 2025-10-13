@@ -9,15 +9,13 @@ import java.util.HashSet;
 import org.hibernate.orm.test.event.collection.Child;
 import org.hibernate.orm.test.event.collection.ParentWithCollection;
 import org.hibernate.orm.test.event.collection.association.AbstractAssociationCollectionEventTest;
+import org.hibernate.testing.orm.junit.DomainModel;
 
 /**
  * @author Gail Badner
  */
+@DomainModel(xmlMappings = "org/hibernate/orm/test/event/collection/association/bidirectional/onetomany/BidirectionalOneToManySetMapping.hbm.xml")
 public class BidirectionalOneToManySetCollectionEventTest extends AbstractAssociationCollectionEventTest {
-	@Override
-	public String[] getMappings() {
-		return new String[] { "event/collection/association/bidirectional/onetomany/BidirectionalOneToManySetMapping.hbm.xml" };
-	}
 
 	@Override
 	public ParentWithCollection createParent(String name) {

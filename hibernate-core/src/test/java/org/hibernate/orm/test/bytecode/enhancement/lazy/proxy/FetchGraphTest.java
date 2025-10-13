@@ -48,8 +48,9 @@ import jakarta.persistence.Table;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -670,6 +671,32 @@ public class FetchGraphTest {
 						session.remove( entity );
 						session.remove( entity.getD() );
 					} );
+				}
+		);
+	}
+
+	@Test
+	public void testEntityGraphForExistingLazyBasic(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					// Load an entity with a lazy basic attribute
+					var dEntity = session.find( DEntity.class, 1L );
+					assertFalse( Hibernate.isPropertyInitialized( dEntity, "blob" ) );
+					assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyString" ) );
+					assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyStringBlobGroup" ) );
+					assertTrue( Hibernate.isPropertyInitialized( dEntity, "nonLazyString" ) );
+
+					// Query the same entity but fetch the lazy basic
+					var graph = session.createEntityGraph( DEntity.class );
+					graph.addAttributeNode( "lazyString" );
+					session.createSelectionQuery( "where id = 1", DEntity.class)
+							.setHint( HINT_SPEC_LOAD_GRAPH, graph )
+							.list();
+					assertFalse( Hibernate.isPropertyInitialized( dEntity, "blob" ) );
+					// Ensure that the lazy basic attribute was initialized by this
+					assertTrue( Hibernate.isPropertyInitialized( dEntity, "lazyString" ) );
+					assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyStringBlobGroup" ) );
+					assertTrue( Hibernate.isPropertyInitialized( dEntity, "nonLazyString" ) );
 				}
 		);
 	}

@@ -11,18 +11,17 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Unit test of the {@link StandardDialectResolver} class.
  *
  * @author Bryan Turner
  */
-public class StandardDialectResolverTest extends BaseUnitTestCase {
+public class StandardDialectResolverTest {
 
 	@Test
 	public void testResolveDialectInternalForSQLServer2000() {
@@ -183,12 +182,12 @@ public class StandardDialectResolverTest extends BaseUnitTestCase {
 		}
 		String dbms = builder.toString();
 
-		assertNotNull( "Dialect for " + dbms + " should not be null", dialect );
+		assertNotNull( dialect, "Dialect for " + dbms + " should not be null" );
 		// Make sure to test that the actual dialect class is as expected
 		// (not just an instance of the expected dialect.
-		assertEquals( "Dialect for " + dbms + " should be " + expectedDialect.getSimpleName(),
-					expectedDialect,
-					dialect.getClass()
-		);
+		assertEquals( expectedDialect,
+				dialect.getClass(),
+				"Dialect for " + dbms + " should be " + expectedDialect.getSimpleName()
+				);
 	}
 }

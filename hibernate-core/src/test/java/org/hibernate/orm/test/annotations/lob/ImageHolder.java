@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.lob;
+
 import java.sql.Types;
 
 import org.hibernate.annotations.JdbcTypeCode;

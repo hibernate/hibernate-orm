@@ -4,23 +4,6 @@
  */
 package org.hibernate.orm.test.annotations.formula;
 
-import java.io.Serializable;
-import java.util.List;
-
-import org.hibernate.annotations.JoinColumnOrFormula;
-import org.hibernate.annotations.JoinFormula;
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.annotations.processing.Exclude;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.logger.LoggerInspectionRule;
-import org.hibernate.testing.logger.Triggerable;
-import org.junit.Rule;
-import org.junit.Test;
-
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -29,34 +12,48 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import org.hibernate.annotations.JoinColumnOrFormula;
+import org.hibernate.annotations.JoinFormula;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.annotations.processing.Exclude;
+import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+import java.io.Serializable;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 @JiraKey(value = "HHH-12770")
 @Exclude
-public class JoinFormulaManyToOneNotIgnoreLazyFetchingTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				JoinFormulaManyToOneNotIgnoreLazyFetchingTest.Stock.class,
+				JoinFormulaManyToOneNotIgnoreLazyFetchingTest.StockCode.class,
+		}
+)
+public class JoinFormulaManyToOneNotIgnoreLazyFetchingTest {
 
-	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule( BOOT_LOGGER );
+	private Triggerable triggerable;
 
-	private final Triggerable triggerable = logInspection.watchForLogMessages( "HHH160133" );
+	@RegisterExtension
+	public LoggerInspectionExtension logger =
+			LoggerInspectionExtension.builder().setLogger( BOOT_LOGGER ).build();
 
+	@BeforeAll
+	public void beforeAll(EntityManagerFactoryScope scope) {
+		triggerable = logger.watchForLogMessages( "HHH160133" );
+		triggerable.reset();
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Stock.class,
-				StockCode.class,
-		};
-	}
-
-	@Override
-	protected void afterEntityManagerFactoryBuilt() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			StockCode code = new StockCode();
 			code.setId( 1L );
 			code.setCopeType( CodeType.TYPE_A );
@@ -75,20 +72,18 @@ public class JoinFormulaManyToOneNotIgnoreLazyFetchingTest extends BaseEntityMan
 	}
 
 	@Test
-	public void testLazyLoading() {
+	public void testLazyLoading(EntityManagerFactoryScope scope) {
 		assertThat( triggerable.wasTriggered() )
 				.describedAs( "Expecting WARN message to be logged" )
 				.isTrue();
 
-		List<Stock> stocks = doInJPA( this::entityManagerFactory, entityManager -> {
-			return entityManager.createQuery(
-					"SELECT s FROM Stock s", Stock.class )
-					.getResultList();
-		} );
-		assertEquals( 2, stocks.size() );
+		List<Stock> stocks = scope.fromTransaction( entityManager ->
+				entityManager.createQuery( "SELECT s FROM Stock s", Stock.class ).getResultList()
+		);
+		assertThat( stocks.size() ).isEqualTo( 2 );
 
-		assertEquals( "ABC", stocks.get( 0 ).getCode().getRefNumber() );
-		assertNull( stocks.get( 1 ).getCode() );
+		assertThat( stocks.get( 0 ).getCode().getRefNumber() ).isEqualTo( "ABC" );
+		assertThat( stocks.get( 1 ).getCode() ).isNull();
 	}
 
 	@Entity(name = "Stock")
@@ -161,7 +156,7 @@ public class JoinFormulaManyToOneNotIgnoreLazyFetchingTest extends BaseEntityMan
 	}
 
 	public enum CodeType {
-		TYPE_A, TYPE_B;
+		TYPE_A, TYPE_B
 	}
 
 }

@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.annotations.formula;
 
-import java.io.Serializable;
-import java.util.List;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -14,36 +12,36 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-
 import org.hibernate.LazyInitializationException;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.processing.Exclude;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import java.io.Serializable;
+import java.util.List;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Fail.fail;
 
 @JiraKey(value = "HHH-12770")
 @Exclude
-public class JoinFormulaManyToOneLazyFetchingTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				JoinFormulaManyToOneLazyFetchingTest.Stock.class,
+				JoinFormulaManyToOneLazyFetchingTest.StockCode.class,
+		}
+)
+public class JoinFormulaManyToOneLazyFetchingTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Stock.class,
-				StockCode.class,
-		};
-	}
 
-	@Override
-	protected void afterEntityManagerFactoryBuilt() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	@BeforeAll
+	protected void setUp(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			StockCode code = new StockCode();
 			code.setId( 1L );
 			code.setCopeType( CodeType.TYPE_A );
@@ -62,16 +60,14 @@ public class JoinFormulaManyToOneLazyFetchingTest extends BaseEntityManagerFunct
 	}
 
 	@Test
-	public void testLazyLoading() {
-		List<Stock> stocks = doInJPA( this::entityManagerFactory, entityManager -> {
-			return entityManager.createQuery(
-					"SELECT s FROM Stock s", Stock.class )
-					.getResultList();
-		} );
-		assertEquals( 2, stocks.size() );
+	public void testLazyLoading(EntityManagerFactoryScope scope) {
+		List<Stock> stocks = scope.fromTransaction( entityManager ->
+				entityManager.createQuery( "SELECT s FROM Stock s", Stock.class ).getResultList()
+		);
+		assertThat( stocks.size() ).isEqualTo( 2 );
 
 		try {
-			assertEquals( "ABC", stocks.get( 0 ).getCode().getRefNumber() );
+			assertThat( stocks.get( 0 ).getCode().getRefNumber() ).isEqualTo( "ABC" );
 
 			fail( "Should have thrown LazyInitializationException" );
 		}
@@ -81,18 +77,18 @@ public class JoinFormulaManyToOneLazyFetchingTest extends BaseEntityManagerFunct
 	}
 
 	@Test
-	public void testEagerLoading() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			List<Stock> stocks =  entityManager.createQuery(
-					"SELECT s FROM Stock s", Stock.class )
+	public void testEagerLoading(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			List<Stock> stocks = entityManager.createQuery(
+							"SELECT s FROM Stock s", Stock.class )
 					.getResultList();
 
-			assertEquals( 2, stocks.size() );
-			assertEquals( "ABC", stocks.get( 0 ).getCode().getRefNumber() );
+			assertThat( stocks.size() ).isEqualTo( 2 );
+			assertThat( stocks.get( 0 ).getCode().getRefNumber() ).isEqualTo( "ABC" );
 
 			// In 5.x, for some reason, we didn't understand that a component is a FK,
 			// hence a partial null was wrongly handled, but in 6.0 we handle this in a unified way
-			assertNull( stocks.get( 1 ).getCode() );
+			assertThat( stocks.get( 1 ).getCode() ).isNull();
 		} );
 	}
 
@@ -165,7 +161,7 @@ public class JoinFormulaManyToOneLazyFetchingTest extends BaseEntityManagerFunct
 	}
 
 	public enum CodeType {
-		TYPE_A, TYPE_B;
+		TYPE_A, TYPE_B
 	}
 
 }

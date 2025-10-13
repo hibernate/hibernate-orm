@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.join;
+
 import java.util.Collection;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.manytomany;
+
 import java.io.Serializable;
 import jakarta.persistence.Entity;
 
@@ -12,7 +13,6 @@ import jakarta.persistence.Entity;
  * @author Emmanuel Bernard
  */
 @Entity
-@SuppressWarnings("serial")
 public class Contractor extends Employee implements Serializable {
 
 	private float hourlyRate;

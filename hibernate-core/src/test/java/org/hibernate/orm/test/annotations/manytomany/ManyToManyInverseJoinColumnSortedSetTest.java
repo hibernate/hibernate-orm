@@ -13,21 +13,31 @@ import java.util.TreeSet;
 
 import org.hibernate.annotations.SortNatural;
 
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 @JiraKey(value = "HHH-16031")
-public class ManyToManyInverseJoinColumnSortedSetTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				ManyToManyInverseJoinColumnSortedSetTest.ContainingEntity.class,
+				ManyToManyInverseJoinColumnSortedSetTest.ContainedEntity.class
+		}
+)
+@SessionFactory
+public class ManyToManyInverseJoinColumnSortedSetTest  {
+
 	@Test
-	public void testDefault() {
-		inTransaction( session -> {
+	public void testDefault(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			ContainingEntity containing = new ContainingEntity();
 			containing.setId( 0 );
 
@@ -46,14 +56,14 @@ public class ManyToManyInverseJoinColumnSortedSetTest extends BaseCoreFunctional
 			session.persist( containing );
 		} );
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			ContainingEntity containing = session.get( ContainingEntity.class, 0 );
 			assertThat( containing.getContained() )
 					.extracting( ContainedEntity::getId )
 					.containsExactly( 1, 2 );
 		} );
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			ContainingEntity containing = session.get( ContainingEntity.class, 0 );
 			ContainedEntity contained1 = session.get( ContainedEntity.class, 1 );
 			contained1.getContaining().remove( containing );
@@ -65,20 +75,12 @@ public class ManyToManyInverseJoinColumnSortedSetTest extends BaseCoreFunctional
 
 		// Try again from a new transaction;
 		// with the bug unsolved, getContained() returns an empty collection!
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			ContainingEntity containing = session.get( ContainingEntity.class, 0 );
 			assertThat( containing.getContained() )
 					.extracting( ContainedEntity::getId )
 					.containsExactly( 2 );
 		} );
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
-				ContainingEntity.class,
-				ContainedEntity.class
-		};
 	}
 
 	@Entity(name = "containing")

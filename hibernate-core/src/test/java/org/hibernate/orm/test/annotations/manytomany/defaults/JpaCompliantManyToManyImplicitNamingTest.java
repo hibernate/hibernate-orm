@@ -4,11 +4,14 @@
  */
 package org.hibernate.orm.test.annotations.manytomany.defaults;
 
-import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
-
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests names generated for @JoinTable and @JoinColumn for unidirectional and bidirectional
@@ -16,16 +19,26 @@ import org.junit.Test;
  *
  * @author Gail Badner
  */
+@ServiceRegistry(
+		settingProviders = {
+				@SettingProvider(
+						settingName = AvailableSettings.IMPLICIT_NAMING_STRATEGY,
+						provider = JpaCompliantManyToManyImplicitNamingTest.ImplicitNamingStrategyProvider.class
+				)
+		}
+)
 public class JpaCompliantManyToManyImplicitNamingTest extends ManyToManyImplicitNamingTest {
-	@Override
-	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
-		super.configureMetadataBuilder( metadataBuilder );
-		metadataBuilder.applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
+
+	public static class ImplicitNamingStrategyProvider implements SettingProvider.Provider<ImplicitNamingStrategy> {
+		@Override
+		public ImplicitNamingStrategy getSetting() {
+			return ImplicitNamingStrategyJpaCompliantImpl.INSTANCE;
+		}
 	}
 
 	@Test
-	@JiraKey( value = "HHH-9390")
-	public void testUnidirOwnerPrimaryTableAssocEntityNamePKOverride() {
+	@JiraKey(value = "HHH-9390")
+	public void testUnidirOwnerPrimaryTableAssocEntityNamePKOverride(SessionFactoryScope scope) {
 		// City.stolenItems; associated entity: Item
 		// City has @Entity with no name configured and @Table(name = "tbl_city")
 		// Item has @Entity(name="ITEM") and no @Table
@@ -38,13 +51,14 @@ public class JpaCompliantManyToManyImplicitNamingTest extends ManyToManyImplicit
 				null,
 				"tbl_city_ITEM",
 				"City_id",
-				"stolenItems_iId"
+				"stolenItems_iId",
+				scope
 		);
 	}
 
 	@Test
-	@JiraKey( value = "HHH-9390")
-	public void testUnidirOwnerEntityNamePrimaryTableOverride() {
+	@JiraKey(value = "HHH-9390")
+	public void testUnidirOwnerEntityNamePrimaryTableOverride(SessionFactoryScope scope) {
 		// Category.clients: associated entity: KnownClient
 		// Category has @Entity(name="CATEGORY") @Table(name="CATEGORY_TAB")
 		// KnownClient has @Entity with no name configured and no @Table
@@ -57,8 +71,8 @@ public class JpaCompliantManyToManyImplicitNamingTest extends ManyToManyImplicit
 				null,
 				"CATEGORY_TAB_KnownClient",
 				"CATEGORY_id",
-				"clients_id"
-
+				"clients_id",
+				scope
 		);
 	}
 }

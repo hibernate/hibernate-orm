@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.manytomany.defaults;
+
 import java.io.Serializable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
@@ -19,7 +20,6 @@ import jakarta.persistence.InheritanceType;
  */
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-@SuppressWarnings("serial")
 public class Employee implements Serializable {
 	private Integer id;
 	private String name;

@@ -16,7 +16,6 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.internal.FetchOptionsHelper;
 import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -185,24 +184,23 @@ public class FetchStrategyHelperTest {
 	}
 
 	private org.hibernate.FetchMode determineFetchMode(
-			Class<?> entityClass,
+			@SuppressWarnings("SameParameterValue") Class<?> entityClass,
 			String path,
 			SessionFactoryImplementor sessionFactory) {
-		final EntityPersister entityDescriptor = sessionFactory
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityClass );
 		AbstractEntityPersister entityPersister = (AbstractEntityPersister)
 				sessionFactory.getMappingMetamodel().getEntityDescriptor(entityClass.getName());
+		//noinspection removal
 		int index = entityPersister.getPropertyIndex( path );
 		return  entityPersister.getFetchMode( index );
 	}
 
 	private AssociationType determineAssociationType(
-			Class<?> entityClass,
+			@SuppressWarnings("SameParameterValue") Class<?> entityClass,
 			String path,
 			SessionFactoryImplementor sessionFactory) {
 		AbstractEntityPersister entityPersister = (AbstractEntityPersister)
 				sessionFactory.getMappingMetamodel().getEntityDescriptor(entityClass.getName());
+		//noinspection removal
 		int index = entityPersister.getPropertyIndex( path );
 		return (AssociationType) entityPersister.getSubclassPropertyType( index );
 	}

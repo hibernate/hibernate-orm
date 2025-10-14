@@ -4,10 +4,7 @@
  */
 package org.hibernate.orm.test.annotations.manytoone;
 
-import java.util.ArrayList;
-
 import org.hibernate.Hibernate;
-
 import org.hibernate.orm.test.annotations.Company;
 import org.hibernate.orm.test.annotations.Customer;
 import org.hibernate.orm.test.annotations.Discount;
@@ -20,11 +17,15 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+
 import static org.hibernate.cfg.MappingSettings.IMPLICIT_NAMING_STRATEGY;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Emmanuel Bernard
@@ -73,9 +74,9 @@ public class ManyToOneTest {
 
 		factoryScope.inTransaction( (session) -> {
 			var car = session.find( Car.class, carId );
-			Assertions.assertNotNull( car );
-			Assertions.assertNotNull( car.getBodyColor() );
-			Assertions.assertEquals( "Yellow", car.getBodyColor().getName() );
+			assertNotNull( car );
+			assertNotNull( car.getBodyColor() );
+			assertEquals( "Yellow", car.getBodyColor().getName() );
 		} );
 	}
 
@@ -95,13 +96,13 @@ public class ManyToOneTest {
 			var car = session.find( Car.class, carId );
 			assertNotNull( car );
 			assertNotNull( car.getBodyColor() );
-			Assertions.assertEquals( "Blue", car.getBodyColor().getName() );
+			assertEquals( "Blue", car.getBodyColor().getName() );
 		} );
 	}
 
 	@Test
 	public void testCreate(SessionFactoryScope factoryScope) throws Exception {
-		var companyId = factoryScope.fromTransaction( (session) -> {
+		factoryScope.inTransaction( (session) -> {
 			Flight firstOne = new Flight();
 			firstOne.setId(1L);
 			firstOne.setName( "AF0101" );
@@ -112,14 +113,12 @@ public class ManyToOneTest {
 
 			session.persist( firstOne );
 			session.persist( frenchOne );
-
-			return frenchOne.getId();
 		} );
 
 		factoryScope.inTransaction( (session) -> {
 			var flight = session.find( Flight.class, 1L );
-			Assertions.assertNotNull( flight.getCompany() );
-			Assertions.assertEquals( "Air France", flight.getCompany().getName() );
+			assertNotNull( flight.getCompany() );
+			assertEquals( "Air France", flight.getCompany().getName() );
 		} );
 	}
 
@@ -139,9 +138,9 @@ public class ManyToOneTest {
 
 		factoryScope.inTransaction( (session) -> {
 			var discount = session.find( Discount.class, 1L );
-			Assertions.assertNotNull( discount );
-			Assertions.assertEquals( 20.12, discount.getDiscount(), 0.01 );
-			Assertions.assertNotNull( discount.getOwner() );
+			assertNotNull( discount );
+			assertEquals( 20.12, discount.getDiscount(), 0.01 );
+			assertNotNull( discount.getOwner() );
 			var customer = new Customer();
 			customer.setName( "Clooney" );
 			discount.setOwner( customer );
@@ -152,9 +151,9 @@ public class ManyToOneTest {
 
 		factoryScope.inTransaction( (session) -> {
 			var discount = session.find( Discount.class, 1L );
-			Assertions.assertNotNull( discount );
-			Assertions.assertNotNull( discount.getOwner() );
-			Assertions.assertEquals( "Clooney", discount.getOwner().getName() );
+			assertNotNull( discount );
+			assertNotNull( discount.getOwner() );
+			assertEquals( "Clooney", discount.getOwner().getName() );
 		} );
 	}
 
@@ -174,14 +173,14 @@ public class ManyToOneTest {
 
 		factoryScope.inTransaction( (session) -> {
 			var discount = session.find( Discount.class, 1L );
-			Assertions.assertNotNull( discount );
-			Assertions.assertFalse( Hibernate.isInitialized( discount.getOwner() ) );
+			assertNotNull( discount );
+			assertFalse( Hibernate.isInitialized( discount.getOwner() ) );
 		} );
 
 		factoryScope.inTransaction( (session) -> {
 			var discount = session.getReference( Discount.class, 1L );
-			Assertions.assertNotNull( discount );
-			Assertions.assertFalse( Hibernate.isInitialized( discount.getOwner() ) );
+			assertNotNull( discount );
+			assertFalse( Hibernate.isInitialized( discount.getOwner() ) );
 		} );
 	}
 
@@ -205,9 +204,9 @@ public class ManyToOneTest {
 			var result  = session.createQuery( "from Child c where c.parent.id.lastName = :lastName" )
 					.setParameter( "lastName", "Doe")
 					.list();
-			Assertions.assertEquals( 1, result.size() );
+			assertEquals( 1, result.size() );
 			Child c2 = (Child) result.get( 0 );
-			Assertions.assertEquals( 1, c2.id );
+			assertEquals( 1, c2.id );
 		} );
 	}
 
@@ -235,9 +234,9 @@ public class ManyToOneTest {
 
 		factoryScope.inTransaction( (session) -> {
 			var n2 = session.find( Node.class, node2Pk );
-			Assertions.assertNotNull( n2 );
-			Assertions.assertNotNull( n2.getParent() );
-			Assertions.assertEquals( 1, n2.getParent().getId().getLevel() );
+			assertNotNull( n2 );
+			assertNotNull( n2.getParent() );
+			assertEquals( 1, n2.getParent().getId().getLevel() );
 		} );
 	}
 
@@ -256,9 +255,9 @@ public class ManyToOneTest {
 
 		factoryScope.inTransaction( (session) -> {
 			var ol = session.find( OrderLine.class, 1 );
-			Assertions.assertNotNull( ol.getOrder() );
-			Assertions.assertEquals( "123", ol.getOrder().getOrderNbr() );
-			Assertions.assertTrue( ol.getOrder().getOrderLines().contains( ol ) );
+			assertNotNull( ol.getOrder() );
+			assertEquals( "123", ol.getOrder().getOrderNbr() );
+			assertTrue( ol.getOrder().getOrderLines().contains( ol ) );
 		} );
 	}
 
@@ -277,9 +276,9 @@ public class ManyToOneTest {
 
 		factoryScope.inTransaction( (session) -> {
 			var ol = session.find( OrderLine.class, 1 );
-			Assertions.assertNotNull( ol.getReplacementOrder() );
-			Assertions.assertEquals( "123", ol.getReplacementOrder().getOrderNbr() );
-			Assertions.assertFalse( ol.getReplacementOrder().getOrderLines().contains( ol ) );
+			assertNotNull( ol.getReplacementOrder() );
+			assertEquals( "123", ol.getReplacementOrder().getOrderNbr() );
+			assertFalse( ol.getReplacementOrder().getOrderLines().contains( ol ) );
 		} );
 	}
 
@@ -301,8 +300,8 @@ public class ManyToOneTest {
 
 		factoryScope.inTransaction( (session) -> {
 			var deal = session.find( Deal.class, 1 );
-			Assertions.assertNotNull( deal.from );
-			Assertions.assertNotNull( deal.to );
+			assertNotNull( deal.from );
+			assertNotNull( deal.to );
 		} );
 	}
 
@@ -326,9 +325,9 @@ public class ManyToOneTest {
 
 		factoryScope.inTransaction( (session) -> {
 			var frame = session.find( Frame.class, 1L );
-			Assertions.assertEquals( 2, frame.getLenses().size() );
-			Assertions.assertTrue( frame.getLenses().iterator().next().getLength() <= 1 / 1.2f );
-			Assertions.assertTrue( frame.getLenses().iterator().next().getLength() >= 1 / 2.5f );
+			assertEquals( 2, frame.getLenses().size() );
+			assertTrue( frame.getLenses().iterator().next().getLength() <= 1 / 1.2f );
+			assertTrue( frame.getLenses().iterator().next().getLength() >= 1 / 2.5f );
 		} );
 	}
 }

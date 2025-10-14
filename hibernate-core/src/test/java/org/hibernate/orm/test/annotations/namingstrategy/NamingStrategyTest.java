@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.annotations.namingstrategy;
 
-import java.util.Locale;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.Identifier;
@@ -14,32 +13,33 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.service.ServiceRegistry;
-
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import java.util.Locale;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Test harness for ANN-716.
  *
  * @author Hardy Ferentschik
  */
-public class NamingStrategyTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class NamingStrategyTest {
 
 	private ServiceRegistry serviceRegistry;
 
-	@Before
+	@BeforeAll
 	public void setUp() {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
-	@After
+	@AfterAll
 	public void tearDown() {
 		if ( serviceRegistry != null ) {
 			ServiceRegistryBuilder.destroy( serviceRegistry );
@@ -47,10 +47,10 @@ public class NamingStrategyTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testWithCustomNamingStrategy() throws Exception {
+	public void testWithCustomNamingStrategy() {
 		new MetadataSources( serviceRegistry )
-				.addAnnotatedClass(Address.class)
-				.addAnnotatedClass(Person.class)
+				.addAnnotatedClass( Address.class )
+				.addAnnotatedClass( Person.class )
 				.getMetadataBuilder()
 				.applyPhysicalNamingStrategy( new DummyNamingStrategy() )
 				.build();
@@ -59,7 +59,7 @@ public class NamingStrategyTest extends BaseUnitTestCase {
 	@Test
 	public void testWithUpperCaseNamingStrategy() throws Exception {
 		Metadata metadata = new MetadataSources( serviceRegistry )
-				.addAnnotatedClass(A.class)
+				.addAnnotatedClass( A.class )
 				.getMetadataBuilder()
 				.applyPhysicalNamingStrategy( new PhysicalNamingStrategyStandardImpl() {
 					@Override
@@ -71,14 +71,14 @@ public class NamingStrategyTest extends BaseUnitTestCase {
 				.build();
 
 		PersistentClass entityBinding = metadata.getEntityBinding( A.class.getName() );
-		assertEquals("NAME",
-					((Selectable) entityBinding.getProperty( "name" ).getSelectables().get( 0 ) ).getText());
-		assertEquals("VALUE",
-					((Selectable) entityBinding.getProperty( "value" ).getSelectables().get( 0 ) ).getText());
+		assertThat( entityBinding.getProperty( "name" ).getSelectables().get( 0 ).getText() )
+				.isEqualTo( "NAME" );
+		assertThat( entityBinding.getProperty( "value" ).getSelectables().get( 0 ).getText() )
+				.isEqualTo( "VALUE" );
 	}
 
 	@Test
-	public void testWithJpaCompliantNamingStrategy() throws Exception {
+	public void testWithJpaCompliantNamingStrategy() {
 		Metadata metadata = new MetadataSources( serviceRegistry )
 				.addAnnotatedClass( A.class )
 				.addAnnotatedClass( AddressEntry.class )
@@ -87,15 +87,15 @@ public class NamingStrategyTest extends BaseUnitTestCase {
 				.build();
 
 		Collection collectionBinding = metadata.getCollectionBinding( A.class.getName() + ".address" );
-		assertEquals(
-				"Expecting A#address collection table name (implicit) to be [A_address] per JPA spec (section 11.1.8)",
-				"A_ADDRESS",
-				collectionBinding.getCollectionTable().getQuotedName().toUpperCase(Locale.ROOT)
-		);
+		assertThat( collectionBinding.getCollectionTable().getQuotedName().toUpperCase( Locale.ROOT ) )
+				.describedAs(
+						"Expecting A#address collection table name (implicit) to be [A_address] per JPA spec (section 11.1.8)"
+				)
+				.isEqualTo( "A_ADDRESS" );
 	}
 
 	@Test
-	public void testWithoutCustomNamingStrategy() throws Exception {
+	public void testWithoutCustomNamingStrategy() {
 		new MetadataSources( serviceRegistry )
 				.addAnnotatedClass( Address.class )
 				.addAnnotatedClass( Person.class )

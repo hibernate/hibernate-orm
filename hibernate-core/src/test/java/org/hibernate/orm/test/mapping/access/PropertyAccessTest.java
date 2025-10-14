@@ -7,27 +7,19 @@ package org.hibernate.orm.test.mapping.access;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class PropertyAccessTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Book.class
-		};
-	}
+@Jpa(annotatedClasses = {PropertyAccessTest.Book.class})
+public class PropertyAccessTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction(entityManager -> {
 			Book book = new Book();
 			book.setId(1L);
 			book.setTitle("High-Performance Java Persistence");

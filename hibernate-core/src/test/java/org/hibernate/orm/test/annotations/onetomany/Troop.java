@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetomany;
+
 import java.util.HashSet;
 import java.util.Set;
 import jakarta.persistence.CascadeType;
@@ -58,7 +59,7 @@ public class Troop {
 	}
 
 	public void addSoldier(Soldier s) {
-		if ( soldiers == null ) soldiers = new HashSet<Soldier>();
+		if ( soldiers == null ) soldiers = new HashSet<>();
 		soldiers.add( s );
 		s.setTroop( this );
 	}

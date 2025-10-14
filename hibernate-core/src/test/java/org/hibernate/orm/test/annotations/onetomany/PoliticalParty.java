@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetomany;
+
 import java.util.HashSet;
 import java.util.Set;
 import jakarta.persistence.CascadeType;
@@ -17,7 +18,7 @@ import jakarta.persistence.OneToMany;
 @Entity
 public class PoliticalParty {
 	private String name;
-	private Set<Politician> politicians = new HashSet<Politician>();
+	private Set<Politician> politicians = new HashSet<>();
 
 	@Id
 	@Column(columnDefinition = "VARCHAR(60)")

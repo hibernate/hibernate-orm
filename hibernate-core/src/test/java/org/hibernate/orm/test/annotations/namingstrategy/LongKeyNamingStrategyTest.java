@@ -12,59 +12,62 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
-
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Test harness for HHH-11089.
  *
  * @author Vlad Mihalcea
  */
-@JiraKey( value = "HHH-11089" )
-public class LongKeyNamingStrategyTest extends BaseUnitTestCase {
+@JiraKey(value = "HHH-11089")
+@BaseUnitTest
+public class LongKeyNamingStrategyTest {
 
 	private ServiceRegistry serviceRegistry;
 
-	@Before
+	@BeforeAll
 	public void setUp() {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
-	@After
+	@AfterAll
 	public void tearDown() {
 		if ( serviceRegistry != null ) {
 			ServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
+
 	@Test
-	public void testWithCustomNamingStrategy() throws Exception {
+	public void testWithCustomNamingStrategy() {
 		Metadata metadata = new MetadataSources( serviceRegistry )
-				.addAnnotatedClass(Address.class)
-				.addAnnotatedClass(Person.class)
+				.addAnnotatedClass( Address.class )
+				.addAnnotatedClass( Person.class )
 				.getMetadataBuilder()
 				.applyImplicitNamingStrategy( new LongIdentifierNamingStrategy() )
 				.build();
 
-		var foreignKey = metadata.getEntityBinding(Address.class.getName()).getTable().getForeignKeyCollection().iterator().next();
-		assertEquals( "FK_way_longer_than_the_30_char", foreignKey.getName() );
+		var foreignKey = metadata.getEntityBinding( Address.class.getName() ).getTable().getForeignKeyCollection()
+				.iterator().next();
+		assertThat( foreignKey.getName() ).isEqualTo( "FK_way_longer_than_the_30_char" );
 
-		var uniqueKey = metadata.getEntityBinding(Address.class.getName()).getTable().getUniqueKeys().values().iterator().next();
-		assertEquals( "UK_way_longer_than_the_30_char", uniqueKey.getName() );
+		var uniqueKey = metadata.getEntityBinding( Address.class.getName() ).getTable().getUniqueKeys().values()
+				.iterator().next();
+		assertThat( uniqueKey.getName() ).isEqualTo( "UK_way_longer_than_the_30_char" );
 
-		var index = metadata.getEntityBinding(Address.class.getName()).getTable().getIndexes().values().iterator().next();
-		assertEquals( "IDX_way_longer_than_the_30_cha", index.getName() );
+		var index = metadata.getEntityBinding( Address.class.getName() ).getTable().getIndexes().values().iterator()
+				.next();
+		assertThat( index.getName() ).isEqualTo( "IDX_way_longer_than_the_30_cha" );
 	}
 
 	@Entity(name = "Address")
@@ -73,7 +76,8 @@ public class LongKeyNamingStrategyTest extends BaseUnitTestCase {
 			columnNames = {
 					"city", "streetName", "streetNumber"
 			}),
-			indexes = @Index( name = "IDX_way_longer_than_the_30_characters_limit", columnList = "city, streetName, streetNumber")
+			indexes = @Index(name = "IDX_way_longer_than_the_30_characters_limit",
+					columnList = "city, streetName, streetNumber")
 	)
 	public class Address {
 

@@ -69,7 +69,7 @@ the Service (actually both a pull and a push/injection approach are supported). 
 hierarchical, meaning a ServiceRegistry can have a parent ServiceRegistry.  Services in one registry can depend on
 and utilize services in that same registry as well as any parent registries.
 
-image::registry_hierarchy.jpg[ServiceRegistry UML]
+image::registry_hierarchy.jpg[ServiceRegistry UML,align="center"]
 
 
 == ServiceBinding

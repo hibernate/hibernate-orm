@@ -13,8 +13,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import org.hamcrest.MatcherAssert;
-
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.CollectionIdJdbcTypeCode;
 import org.hibernate.boot.Metadata;
@@ -33,7 +31,6 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.orm.test.idgen.n_ative.GeneratorSettingsImpl;
-
 import org.hibernate.testing.orm.junit.FailureExpectedExtension;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -43,10 +40,8 @@ import java.sql.Types;
 import java.util.Collection;
 import java.util.UUID;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.equalToIgnoringCase;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 /**
  * @author Steve Ebersole
@@ -64,14 +59,12 @@ public class AutoGenerationTypeTests {
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity1.class.getName() );
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
 			Dialect dialect = new H2Dialect();
-			final Generator generator = idMapping.createGenerator( dialect, entityBinding.getRootClass());
-			final SequenceStyleGenerator entityIdGenerator = (SequenceStyleGenerator) (generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null);
-
-			final DatabaseStructure database1Structure = entityIdGenerator.getDatabaseStructure();
+			final SequenceStyleGenerator generator = (SequenceStyleGenerator) idMapping.createGenerator( dialect, entityBinding.getRootClass());
+			final DatabaseStructure database1Structure = generator.getDatabaseStructure();
 
 			// implicit name : `${entity-name}_seq`
-			assertThat( database1Structure.getPhysicalName().render(), equalToIgnoringCase( "tbl_1_SEQ" ) );
-			assertThat( database1Structure.getIncrementSize(), is( 50 ) );
+			assertThat( database1Structure.getPhysicalName().render() ).isEqualToIgnoringCase( "tbl_1_SEQ" );
+			assertThat( database1Structure.getIncrementSize() ).isEqualTo( 50 );
 		}
 	}
 
@@ -87,19 +80,17 @@ public class AutoGenerationTypeTests {
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity2.class.getName() );
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
 			Dialect dialect = new H2Dialect();
-			final Generator generator = idMapping.createGenerator(
+			final SequenceStyleGenerator generator = (SequenceStyleGenerator) idMapping.createGenerator(
 					dialect,
 					entityBinding.getRootClass(),
 					entityBinding.getIdentifierProperty(),
 					new GeneratorSettingsImpl( metadata )
 			);
-			final SequenceStyleGenerator idGenerator = (SequenceStyleGenerator) (generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null);
-
-			final DatabaseStructure database2Structure = idGenerator.getDatabaseStructure();
+			final DatabaseStructure database2Structure = generator.getDatabaseStructure();
 
 			// GeneratedValue#generator value
-			assertThat( database2Structure.getPhysicalName().render(), equalToIgnoringCase( "id_seq" ) );
-			assertThat( database2Structure.getIncrementSize(), is( 50 ) );
+			assertThat( database2Structure.getPhysicalName().render() ).isEqualToIgnoringCase("id_seq" );
+			assertThat( database2Structure.getIncrementSize() ).isEqualTo( 50 );
 		}
 	}
 
@@ -120,13 +111,11 @@ public class AutoGenerationTypeTests {
 			final IdentifierBag idBagMapping = (IdentifierBag) theTwos.getValue();
 			final KeyValue collectionIdMapping = idBagMapping.getIdentifier();
 			Dialect dialect = new H2Dialect();
-			final Generator generator = collectionIdMapping.createGenerator( dialect, null);
-			final SequenceStyleGenerator collectionIdGenerator = (SequenceStyleGenerator) (generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null);
+			final SequenceStyleGenerator generator = (SequenceStyleGenerator) collectionIdMapping.createGenerator( dialect, null);
+			final DatabaseStructure idBagIdGeneratorDbStructure = generator.getDatabaseStructure();
 
-			final DatabaseStructure idBagIdGeneratorDbStructure = collectionIdGenerator.getDatabaseStructure();
-
-			assertThat( idBagIdGeneratorDbStructure.getPhysicalName().render(), equalToIgnoringCase( "tbl_2_seq" ) );
-			assertThat( idBagIdGeneratorDbStructure.getIncrementSize(), is( 50 ) );
+			assertThat( idBagIdGeneratorDbStructure.getPhysicalName().render() ).isEqualToIgnoringCase( "tbl_2_seq" );
+			assertThat( idBagIdGeneratorDbStructure.getIncrementSize() ).isEqualTo( 50 );
 		}
 	}
 
@@ -142,7 +131,7 @@ public class AutoGenerationTypeTests {
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
 			Dialect dialect = new H2Dialect();
 			final Generator generator = idMapping.createGenerator( dialect, entityBinding.getRootClass(), identifierProperty, null );
-			MatcherAssert.assertThat( generator, instanceOf( UuidGenerator.class ) );
+			assertThat( generator ).isInstanceOf( UuidGenerator.class );
 		}
 	}
 
@@ -156,10 +145,8 @@ public class AutoGenerationTypeTests {
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity3.class.getName() );
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
 			Dialect dialect = new H2Dialect();
-			final Generator generator = idMapping.createGenerator( dialect, entityBinding.getRootClass());
-			final IdentifierGenerator idGenerator = generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
-
-			assertThat( idGenerator, instanceOf( IncrementGenerator.class ) );
+			final IdentifierGenerator generator = (IdentifierGenerator) idMapping.createGenerator( dialect, entityBinding.getRootClass());
+			assertThat( generator ).isInstanceOf( IncrementGenerator.class );
 		}
 	}
 

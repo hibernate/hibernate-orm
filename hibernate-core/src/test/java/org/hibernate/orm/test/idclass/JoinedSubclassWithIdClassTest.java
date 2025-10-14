@@ -5,55 +5,55 @@
 package org.hibernate.orm.test.idclass;
 
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
 import java.io.Serializable;
 import java.util.Objects;
-import jakarta.persistence.*;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
 
-import static org.hamcrest.core.Is.is;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Aber Tian
  */
 @JiraKey("HHH-16054")
-public class JoinedSubclassWithIdClassTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				BaseEntity.class,
-				ConcreteEntity.class
-		};
-	}
-
+@DomainModel(annotatedClasses = {
+		JoinedSubclassWithIdClassTest.BaseEntity.class,
+		JoinedSubclassWithIdClassTest.ConcreteEntity.class
+})
+@SessionFactory
+public class JoinedSubclassWithIdClassTest {
 	@Test
-	public void testJoinedSubClassWithIdClassComposeKey() {
+	public void testJoinedSubClassWithIdClassComposeKey(SessionFactoryScope factoryScope) {
+		var created = factoryScope.fromTransaction( (session) -> {
+			var entity = new ConcreteEntity();
+			entity.setId( 1L );
+			entity.setDealer( "dealer" );
+			entity.setName( "aber" );
+			entity.setAge( 18 );
 
-		ConcreteEntity entity = new ConcreteEntity();
-		entity.setId( 1L );
-		entity.setDealer( "dealer" );
-		entity.setName( "aber" );
-		entity.setAge( 18 );
-
-		Pk pk = new Pk();
-		pk.id = 1L;
-		pk.dealer = "dealer";
-
-		doInHibernate( this::sessionFactory, session -> {
-			session.merge( entity );
+			return session.merge( entity );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			entity.setName( "tian" );
-			session.merge( entity );
-			BaseEntity baseEntity = session.find( BaseEntity.class, pk );
-			assertThat( baseEntity.name, is( "tian" ) );
-		} );
+		factoryScope.inTransaction( (session) -> {
+			created.setName( "tian" );
+			session.merge( created );
 
+			var pk = new Pk();
+			pk.id = 1L;
+			pk.dealer = "dealer";
+
+			var baseEntity = session.find( BaseEntity.class, pk );
+			assertThat( baseEntity.name ).isEqualTo( "tian" );
+		} );
 	}
 
 	public static class Pk implements Serializable {

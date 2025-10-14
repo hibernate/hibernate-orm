@@ -21,7 +21,9 @@ import org.hibernate.generator.EventTypeSets;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.annotation.Retention;
@@ -31,12 +33,18 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @Jpa(annotatedClasses = ExportableValueGeneratorTest.WithExportableGenerator.class)
 @SkipForDialect( dialectClass = SybaseASEDialect.class )
 @SkipForDialect( dialectClass = MySQLDialect.class)
 public class ExportableValueGeneratorTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
-	@Test void test(EntityManagerFactoryScope scope) {
+	@Test
+	void test(EntityManagerFactoryScope scope) {
 		final EntityManagerFactory entityManagerFactory = scope.getEntityManagerFactory();
 		final WithExportableGenerator first = new WithExportableGenerator();
 		entityManagerFactory.runInTransaction( entityManager -> entityManager.persist( first ) );

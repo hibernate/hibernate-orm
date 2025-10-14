@@ -32,6 +32,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
 @DomainModel(annotatedClasses = {
 		BeforeExecutionAssignedValuesTest.EntityWithGeneratedId.class,
@@ -114,8 +115,8 @@ class BeforeExecutionAssignedValuesTest {
 	}
 
 	@AfterAll
-	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
 	@Entity(name = "EntityWithGeneratedId")

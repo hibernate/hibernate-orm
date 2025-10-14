@@ -403,7 +403,9 @@ public class SessionImpl
 			}
 		}
 		finally {
-			if ( actionQueue.hasAfterTransactionActions() ) {
+			// E.g. when we are in the JTA context the session can get closed while the transaction is still active
+			// and JTA will call the AfterCompletion itself. Hence, we don't want to clear out the action queue callbacks at this point:
+			if ( !getTransactionCoordinator().isTransactionActive() && actionQueue.hasAfterTransactionActions() ) {
 				SESSION_LOGGER.warn( "Closing session with unprocessed clean up bulk operations, forcing their execution" );
 				actionQueue.executePendingBulkOperationCleanUpActions();
 			}

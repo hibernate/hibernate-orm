@@ -24,6 +24,9 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -34,6 +37,7 @@ import org.jboss.logging.Logger;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.MultiTemplateLoader;
+import freemarker.cache.URLTemplateLoader;
 import freemarker.cache.TemplateLoader;
 import freemarker.ext.beans.BeansWrapperBuilder;
 import freemarker.template.Configuration;
@@ -79,15 +83,27 @@ public class TemplateHelper {
         
         for (int i = 0; i < templatePaths.length; i++) {
         	File file = new File(templatePaths[i]);
-        	if(file.exists() && file.isDirectory()) {
-        		try {
-					loaders.add(new FileTemplateLoader(file));
-				}
-				catch (IOException e) {
-					throw new RuntimeException("Problems with templatepath " + file, e);
-				}
+        	if(file.exists()) {
+                if (file.isDirectory()) {
+                    try {
+                        loaders.add(new FileTemplateLoader(file));
+                    } catch (IOException e) {
+                        throw new RuntimeException("Problems with templatepath " + file, e);
+                    }
+                } else if (file.getName().endsWith(".zip") || file.getName().endsWith(".jar")) {
+                    final URLClassLoader classLoaderForZip;
+                    try {
+                        classLoaderForZip = new URLClassLoader(new URL[]{ file.toURI().toURL() }, null);
+                    } catch (MalformedURLException e) {
+                        throw new RuntimeException("template path " + file + " is not a valid zip file", e);
+                    }
+
+                    loaders.add(new ClassTemplateLoader(classLoaderForZip, "/"));
+                } else {
+                    log.warn("template path " + file + " is not a directory");
+                }
         	} else {
-        		log.warn("template path" + file + " either does not exist or is not a directory");
+        		log.warn("template path " + file + " does not exist");
         	}
 		}
         loaders.add(new ClassTemplateLoader(this.getClass(),"/")); // the template names are like pojo/Somewhere so have to be a rooted classpathloader

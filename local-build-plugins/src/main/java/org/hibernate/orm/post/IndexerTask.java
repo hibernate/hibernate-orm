@@ -13,7 +13,7 @@ import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 
-import static org.hibernate.orm.post.ReportGenerationPlugin.CONFIG_NAME;
+import static org.hibernate.orm.post.ReportGenerationPlugin.AGGREGATE_CONFIG_NAME;
 import static org.hibernate.orm.post.ReportGenerationPlugin.TASK_GROUP_NAME;
 
 /**
@@ -26,7 +26,7 @@ public abstract class IndexerTask extends DefaultTask {
 
 	public IndexerTask() {
 		setGroup( TASK_GROUP_NAME );
-		setDescription( "Builds a Jandex Index from the artifacts attached to the `" + CONFIG_NAME + "` Configuration" );
+		setDescription( String.format( "Builds a Jandex Index from the artifacts attached to the `%s` Configuration", AGGREGATE_CONFIG_NAME ) );
 
 		indexManager = getProject().provider( () -> getProject().getExtensions().getByType( IndexManager.class ) );
 	}

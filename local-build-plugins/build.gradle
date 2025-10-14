@@ -43,8 +43,8 @@ dependencies {
 
 tasks.compileJava {
 	options.encoding = 'UTF-8'
-	sourceCompatibility = 11
-	targetCompatibility = 11
+	sourceCompatibility = 17
+	targetCompatibility = 17
 }
 
 gradlePlugin {
@@ -106,7 +106,7 @@ gradlePlugin {
 
 spotless {
 	//Don't fail during the check: rather than enforcing guidelines, we use this plugin to fix mistakes automatically.
-	enforceCheck false
+	enforceCheck = false
 	java {
 		targetExclude( "**/target/**/*.java" )
 		licenseHeaderFile project.file("../shared/config/spotless/license.java")

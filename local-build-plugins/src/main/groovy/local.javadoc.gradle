@@ -45,7 +45,7 @@ tasks.withType(Javadoc).configureEach {
         docTitle = "Hibernate Javadocs ($project.name : $project.version)"
         // Pick the styles for the JDK that is used to "build" the Javadocs:
         stylesheetFile = rootProject.layout.buildDirectory.dir("unpacked-theme").get()
-                .dir("hibernate-asciidoctor-theme").dir("javadoc").dir("jdk21").file("stylesheet.css").asFile
+                .dir("hibernate-asciidoctor-theme").dir("javadoc").dir("jdk"+jdkVersions.min.asInt()).file("stylesheet.css").asFile
         bottom = "Copyright &copy; 2001-$currentYear <a href=\"https://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
 
         // The javadoc folder contains cached versions of the respective element-list files to avoid release issues when servers are down

@@ -13,29 +13,22 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.SkipForDialect;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class DateWithTemporalTimeTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				DateEvent.class
-		};
-	}
+@Jpa( annotatedClasses = {DateWithTemporalTimeTest.DateEvent.class} )
+public class DateWithTemporalTimeTest {
 
 	@Test
-	@SkipForDialect(value = SybaseDialect.class, comment = "The jTDS driver doesn't allow setting a timestamp through setTime")
-	public void testLifecycle() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "The jTDS driver doesn't allow setting a timestamp through setTime")
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			DateEvent dateEvent = new DateEvent(new Date());
 			entityManager.persist(dateEvent);
 		});

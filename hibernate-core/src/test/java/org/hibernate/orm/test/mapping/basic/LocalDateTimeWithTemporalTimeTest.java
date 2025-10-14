@@ -9,33 +9,26 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Vlad Mihalcea
  */
-public class LocalDateTimeWithTemporalTimeTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				DateEvent.class
-		};
-	}
+@Jpa( annotatedClasses = {LocalDateTimeWithTemporalTimeTest.DateEvent.class} )
+public class LocalDateTimeWithTemporalTimeTest {
 
 	@Test
-	public void testLifecycle() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			DateEvent dateEvent = new DateEvent(LocalDateTime.now());
 			dateEvent.id = 1L;
 			entityManager.persist(dateEvent);
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			DateEvent dateEvent = entityManager.find(DateEvent.class, 1L);
 			assertNotNull(dateEvent.getTimestamp());
 		});

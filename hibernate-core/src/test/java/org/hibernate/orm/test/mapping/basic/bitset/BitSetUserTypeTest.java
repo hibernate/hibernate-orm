@@ -8,8 +8,11 @@ import java.util.BitSet;
 
 import org.hibernate.annotations.Type;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.ColumnResult;
@@ -19,20 +22,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.SqlResultSetMapping;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Product.class
-		};
-	}
+@DomainModel(annotatedClasses = {BitSetUserTypeTest.Product.class})
+@SessionFactory
+public class BitSetUserTypeTest {
 
 	// Note that the following is just for legacy documentation purposes
 	/*
@@ -47,48 +44,48 @@ public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
 	}
 	*/
 
+	@AfterEach
+	public void cleanup(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+	}
+
 	@Test
-	public void test() {
+	public void test(SessionFactoryScope scope) {
 
 		BitSet bitSet = BitSet.valueOf(new long[] {1, 2, 3});
 
-		doInHibernate(this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			Product product = new Product();
 			product.setId(1);
 			product.setBitSet(bitSet);
 			session.persist(product);
 		});
 
-		doInHibernate(this::sessionFactory, session -> {
-			Product product = session.get(Product.class, 1);
+		scope.inTransaction( session -> {
+			Product product = session.find(Product.class, 1);
 			assertEquals(bitSet, product.getBitSet());
 		});
 	}
 
 	@Test
-	public void testNativeQuery() {
+	public void testNativeQuery(SessionFactoryScope scope) {
 		BitSet bitSet = BitSet.valueOf(new long[] {1, 2, 3});
 
-		doInHibernate(this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			Product product = new Product();
 			product.setId(1);
 			product.setBitSet(bitSet);
 			session.persist(product);
 		});
 
-		doInHibernate(this::sessionFactory, session -> {
-			Product product = (Product) session.createNamedQuery(
+		scope.inTransaction( session -> {
+			Product product = session.createNamedQuery(
 					"find_person_by_bitset", Product.class)
 					.setParameter("id", 1L)
 					.getSingleResult();
 
 			assertEquals(bitSet, product.getBitSet());
 		});
-	}
-
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
 	}
 
 	@NamedNativeQuery(

@@ -13,32 +13,24 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 
-import org.hibernate.Session;
 import org.hibernate.engine.jdbc.proxy.BlobProxy;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Vlad Mihalcea
  */
-public class BlobTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Product.class
-		};
-	}
+@Jpa( annotatedClasses = {BlobTest.Product.class} )
+public class BlobTest {
 
 	@Test
-	public void test() {
-		Integer productId = doInJPA(this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap(Session.class);
+	public void test(EntityManagerFactoryScope scope) {
+		Integer productId = scope.fromTransaction( entityManager -> {
 
 			//tag::basic-blob-persist-example[]
 			byte[] image = new byte[] {1, 2, 3};
@@ -54,7 +46,7 @@ public class BlobTest extends BaseEntityManagerFunctionalTestCase {
 
 			return product.getId();
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			try {
 				//tag::basic-blob-find-example[]
 

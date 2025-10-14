@@ -4,25 +4,24 @@
  */
 package org.hibernate.orm.test.util;
 
-import java.util.Arrays;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-public class StringHelperTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class StringHelperTest {
 
 	private static final String BASE_PACKAGE = "org.hibernate";
 	private static final String STRING_HELPER_FQN = "org.hibernate.internal.util.StringHelper";
@@ -63,17 +62,18 @@ public class StringHelperTest extends BaseUnitTestCase {
 
 	@Test
 	public void testFindIdentifierWord() {
-		assertEquals( StringHelper.indexOfIdentifierWord( "", "word" ), -1 );
-		assertEquals( StringHelper.indexOfIdentifierWord( null, "word" ), -1 );
-		assertEquals( StringHelper.indexOfIdentifierWord( "sentence", null ), -1 );
-		assertEquals( StringHelper.indexOfIdentifierWord( "where name=?13 and description=?1", "?1" ), 31 );
-		assertEquals( StringHelper.indexOfIdentifierWord( "where name=?13 and description=?1 and category_id=?4", "?1" ), 31 );
-		assertEquals( StringHelper.indexOfIdentifierWord( "?1", "?1" ), 0 );
-		assertEquals( StringHelper.indexOfIdentifierWord( "no identifier here", "?1" ), -1 );
-		assertEquals( StringHelper.indexOfIdentifierWord( "some text ?", "?" ), 10 );
+		assertEquals( -1, StringHelper.indexOfIdentifierWord( "", "word" ) );
+		assertEquals( -1, StringHelper.indexOfIdentifierWord( null, "word" ) );
+		assertEquals( -1, StringHelper.indexOfIdentifierWord( "sentence", null ) );
+		assertEquals( 31, StringHelper.indexOfIdentifierWord( "where name=?13 and description=?1", "?1" ) );
+		assertEquals( 31, StringHelper.indexOfIdentifierWord( "where name=?13 and description=?1 and category_id=?4", "?1" ) );
+		assertEquals( 0, StringHelper.indexOfIdentifierWord( "?1", "?1" ) );
+		assertEquals( -1, StringHelper.indexOfIdentifierWord( "no identifier here", "?1" ) );
+		assertEquals( 10, StringHelper.indexOfIdentifierWord( "some text ?", "?" ) );
 	}
 
-	private static H2Dialect DIALECT = new H2Dialect();
+	private static final H2Dialect DIALECT = new H2Dialect();
+
 	@Test
 	public void testArrayUnquoting() {
 		assertNull( StringHelper.unquote( (String[]) null, DIALECT ) );
@@ -87,27 +87,27 @@ public class StringHelperTest extends BaseUnitTestCase {
 
 	private static void unchanged(String[] input) {
 		final String[] output = StringHelper.unquote( input, DIALECT );
-		assertTrue( input == output );
+		assertSame( input, output );
 	}
 
 	private static void helperEquals(String[] expectation, String[] input) {
 		final String[] output = StringHelper.unquote( input, DIALECT );
-		assertTrue( Arrays.equals( expectation, output ) );
+		assertArrayEquals( expectation, output );
 	}
 
 	@Test
 	public void testIsQuotedWithDialect() {
-		Assert.assertFalse( StringHelper.isQuoted( "a", DIALECT ) );
-		Assert.assertTrue( StringHelper.isQuoted( "`a`", DIALECT ) );
+		assertFalse( StringHelper.isQuoted( "a", DIALECT ) );
+		assertTrue( StringHelper.isQuoted( "`a`", DIALECT ) );
 
 		//This dialect has a different "open" than "close" quoting symbol:
 		final SQLServerDialect sqlServerDialect = new SQLServerDialect();
-		Assert.assertTrue( StringHelper.isQuoted( "[a]", sqlServerDialect ) );
-		Assert.assertFalse( StringHelper.isQuoted( "`a]", sqlServerDialect ) );
-		Assert.assertFalse( StringHelper.isQuoted( "[a`", sqlServerDialect ) );
-		Assert.assertFalse( StringHelper.isQuoted( "\"a`", sqlServerDialect ) );
-		Assert.assertFalse( StringHelper.isQuoted( "`a\"", sqlServerDialect ) );
-		Assert.assertFalse( StringHelper.isQuoted( "a", sqlServerDialect ) );
+		assertTrue( StringHelper.isQuoted( "[a]", sqlServerDialect ) );
+		assertFalse( StringHelper.isQuoted( "`a]", sqlServerDialect ) );
+		assertFalse( StringHelper.isQuoted( "[a`", sqlServerDialect ) );
+		assertFalse( StringHelper.isQuoted( "\"a`", sqlServerDialect ) );
+		assertFalse( StringHelper.isQuoted( "`a\"", sqlServerDialect ) );
+		assertFalse( StringHelper.isQuoted( "a", sqlServerDialect ) );
 	}
 
 	@Test

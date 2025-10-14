@@ -4,40 +4,41 @@
  */
 package org.hibernate.orm.test.annotations.namingstrategy.charset;
 
-import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.PropertiesHelper;
-import org.hibernate.service.ServiceRegistry;
-
-import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.orm.test.annotations.namingstrategy.LongIdentifierNamingStrategy;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 /**
  * @author Vlad Mihalcea
  */
-@JiraKey( value = "HHH-12357" )
-public abstract class AbstractCharsetNamingStrategyTest extends BaseUnitTestCase {
+@JiraKey(value = "HHH-12357")
+@BaseUnitTest
+public abstract class AbstractCharsetNamingStrategyTest {
 
 	protected ServiceRegistry serviceRegistry;
 
-	@Before
+	@BeforeAll
 	public void setUp() {
 		Map<String, Object> properties = PropertiesHelper.map( Environment.getProperties() );
 		properties.put( AvailableSettings.HBM2DDL_CHARSET_NAME, charsetName() );
@@ -46,29 +47,33 @@ public abstract class AbstractCharsetNamingStrategyTest extends BaseUnitTestCase
 
 	protected abstract String charsetName();
 
-	@After
+	@AfterAll
 	public void tearDown() {
 		if ( serviceRegistry != null ) {
 			ServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
+
 	@Test
 	public void testWithCustomNamingStrategy() throws Exception {
 		Metadata metadata = new MetadataSources( serviceRegistry )
-				.addAnnotatedClass(Address.class)
-				.addAnnotatedClass(Person.class)
+				.addAnnotatedClass( Address.class )
+				.addAnnotatedClass( Person.class )
 				.getMetadataBuilder()
 				.applyImplicitNamingStrategy( new LongIdentifierNamingStrategy() )
 				.build();
 
-		var uniqueKey = metadata.getEntityBinding(Address.class.getName()).getTable().getUniqueKeys().values().iterator().next();
-		assertEquals( expectedUniqueKeyName(), uniqueKey.getName() );
+		var uniqueKey = metadata.getEntityBinding( Address.class.getName() ).getTable().getUniqueKeys().values()
+				.iterator().next();
+		assertThat( uniqueKey.getName() ).isEqualTo( expectedUniqueKeyName() );
 
-		var foreignKey = metadata.getEntityBinding(Address.class.getName()).getTable().getForeignKeyCollection().iterator().next();
-		assertEquals( expectedForeignKeyName(), foreignKey.getName() );
+		var foreignKey = metadata.getEntityBinding( Address.class.getName() ).getTable().getForeignKeyCollection()
+				.iterator().next();
+		assertThat( foreignKey.getName() ).isEqualTo( expectedForeignKeyName() );
 
-		var index = metadata.getEntityBinding(Address.class.getName()).getTable().getIndexes().values().iterator().next();
-		assertEquals( expectedIndexName(), index.getName() );
+		var index = metadata.getEntityBinding( Address.class.getName() ).getTable().getIndexes().values().iterator()
+				.next();
+		assertThat( index.getName() ).isEqualTo( expectedIndexName() );
 	}
 
 	protected abstract String expectedUniqueKeyName();
@@ -82,7 +87,7 @@ public abstract class AbstractCharsetNamingStrategyTest extends BaseUnitTestCase
 			columnNames = {
 					"city", "stradă"
 			}),
-			indexes = @Index( columnList = "city, stradă")
+			indexes = @Index(columnList = "city, stradă")
 	)
 	public class Address {
 

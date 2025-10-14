@@ -328,7 +328,7 @@ Dialect support through `org.hibernate.dialect.Dialect.getFallbackSqmMutationStr
 
 Considering we have the following entities:
 
-image:images/domain/bulkid/temp_table_class_diagram.png[Entity class diagram]
+image::images/domain/bulkid/temp_table_class_diagram.png[Entity class diagram,align="center"]
 
 The `Person` entity is the base class of this entity inheritance model, and is mapped as follows:
 

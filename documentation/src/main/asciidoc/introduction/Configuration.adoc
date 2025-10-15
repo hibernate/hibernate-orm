@@ -68,10 +68,11 @@ driver for your database.
 | SQL Server                | `com.microsoft.sqlserver:mssql-jdbc:${version}`
 | Oracle                    | `com.oracle.database.jdbc:ojdbc11:${version}`
 | H2                        | `com.h2database:h2:{version}`
-| HSQLDB                    | `org.hsqldb:hsqldb:{version}`
+| MongoDB                   | The JDBC driver is bundled with the dialect mentioned in <<optional-dependencies>>
+| Google Spanner            | `com.google.cloud:google-cloud-spanner-jdbc:{version}`
 |===
 
-Where `{version}` is the latest version of the JDBC driver for your databse.
+Where `{version}` is the latest version of the JDBC driver for your database.
 
 [[optional-dependencies]]
 === Optional dependencies
@@ -118,6 +119,15 @@ and `com.github.ben-manes.caffeine:jcache`
 or `org.eclipse:yasson`
 | <<spatial,Hibernate Spatial>> | `org.hibernate.orm:hibernate-spatial`
 | <<envers,Envers>>, for auditing historical data | `org.hibernate.orm:hibernate-envers`
+| Community dialects | `org.hibernate.orm:hibernate-community-dialects`
+| Third-party dialects
+// TODO link to the /dialects/ documentation explaining what third-party dialects are?
+|
+https://github.com/mongodb/mongo-hibernate/[MongoDB]: `org.mongodb:mongodb-hibernate:{version}`
+
+https://github.com/GoogleCloudPlatform/google-cloud-spanner-hibernate[Google Spanner]: `com.google.cloud:google-cloud-spanner-hibernate-dialect:{version}`
+
+Where `{version}` is the version of the third-party dialect compatible with the version of Hibernate ORM you are using. See the dialect's own documentation for more information. The https://hibernate.org/orm/releases/#compatibility-matrix[compatibility matrix on the Hibernate website] may also be of help.
 |===
 
 You might also add the Hibernate {enhancer}[bytecode enhancer] to your
@@ -289,9 +299,10 @@ The properties you really do need to get started are these three:
 [IMPORTANT]
 // .You don't need `hibernate.dialect` anymore!
 ====
-In Hibernate 6, you don't need to specify `hibernate.dialect`.
+Starting with Hibernate 6, you don't need to specify `hibernate.dialect`.
 The correct Hibernate SQL `Dialect` will be determined for you automatically.
-The only reason to specify this property is if you're using a custom user-written `Dialect` class.
+// TODO link to the /dialects/ documentation explaining what community and third-party dialects are?
+The only reason to specify this property is if you're using a custom user-written or third-party `Dialect` class.
 
 Similarly, neither `hibernate.connection.driver_class` nor `jakarta.persistence.jdbc.driver` is needed when working with one of the supported databases.
 ====

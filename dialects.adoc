@@ -4,7 +4,7 @@ A dialect is a class that provides information about the specifics of a database
 
 == Supported dialects
 
-Hibernate supports a wide range of dialects out of the box. The following is list of officially supported databases:
+Hibernate supports a wide range of dialects out of the box:
 
 * Apache Derby
 * Cockroach
@@ -28,6 +28,23 @@ In many cases though, Hibernate supports even older versions of the databases,
 but the support for these versions is not guaranteed.
 
 Apart from the Hibernate team supported dialects, there are also community dialects.
+
+== Third-party dialects
+
+Third-parties publish additional dialects for Hibernate ORM, providing their own support for more databases, or extended support beyond what is built in Hibernate ORM:
+
+* MongoDB: https://github.com/mongodb/mongo-hibernate/[MongoDB extension for Hibernate ORM]
+* Google Spanner: https://github.com/GoogleCloudPlatform/google-cloud-spanner-hibernate[Google Cloud Spanner Dialect for Hibernate ORM]
+
+[NOTE]
+====
+Third-party dialects are tested by their own authors,
+and may not be compatible with all versions of Hibernate ORM.
+
+1. Check the dialect's own documentation to know more about its compatibility constraints.
+The https://hibernate.org/orm/releases/#compatibility-matrix[compatibility matrix on the Hibernate website] may also be of help.
+2. Submit any question or bug reports about these dialects to the dialect's authors: the Hibernate team cannot help.
+====
 
 == Community dialects
 

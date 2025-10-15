@@ -14,8 +14,12 @@ Regardless of the exact scenario, the basic idea is that you want Hibernate to h
 
 The first line of portability for Hibernate is the dialect, which is a specialization of the `org.hibernate.dialect.Dialect` contract.
 A dialect encapsulates all the differences in how Hibernate must communicate with a particular database to accomplish some task like getting a sequence value or structuring a SELECT query.
+// TODO link to the /dialects/ documentation
 Hibernate bundles a wide range of dialects for many of the most popular databases.
-If you find that your particular database is not among them, it is not terribly difficult to write your own.
+If you find that your particular database is not among them,
+// TODO link to the /dialects/ documentation, "third-party" section
+you can check dialects implemented by third parties,
+and as a last resort it is not terribly difficult to write your own.
 
 [[portability-dialectresolver]]
 === Dialect resolution

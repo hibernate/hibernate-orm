@@ -58,6 +58,7 @@ transitive dependencies based on the features being used or not.
 |hibernate-jcache| Integration with https://jcp.org/en/jsr/detail?id=107$$[JCache], allowing any compliant implementation as a second-level cache provider
 |hibernate-graalvm| Experimental extension to make it easier to compile applications as a https://www.graalvm.org/[GraalVM] native image
 |hibernate-micrometer| Integration with https://micrometer.io[Micrometer] metrics
+// TODO link to the /dialects/ documentation explaining what community dialects are?
 |hibernate-community-dialects| Additional community-supported SQL dialects
 |===
 
@@ -65,6 +66,26 @@ transitive dependencies based on the features being used or not.
 .Testing-oriented modules
 |===
 |hibernate-testing| A series of JUnit extensions for testing Hibernate ORM functionality
+|===
+
+[cols="40m,~"]
+.Third-party modules
+|===
+// Yes, this is a full row containing asciidoc containing an admonition. I don't know have a better idea to add an admonition between a table's title and its content.
+2+a|
+[NOTE]
+====
+Third-party modules are tested by their own authors,
+and may not be compatible with all versions of Hibernate ORM.
+
+1. Check the module's own documentation to know more about its compatibility constraints.
+The https://hibernate.org/orm/releases/#compatibility-matrix[compatibility matrix on the Hibernate website] may also be of help.
+2. Submit any question or bug reports about these dialects to the dialect's authors: the Hibernate team cannot help.
+
+// TODO link to the /dialects/ documentation explaining what third-party dialects are?
+====
+|`org.mongodb:mongodb-hibernate:{version}`| https://github.com/mongodb/mongo-hibernate/[MongoDB Extension for Hibernate ORM]
+|`com.google.cloud:google-cloud-spanner-hibernate-dialect:{version}`| https://github.com/GoogleCloudPlatform/google-cloud-spanner-hibernate[Google Cloud Spanner Dialect for Hibernate ORM]
 |===
 
 [[platform]]

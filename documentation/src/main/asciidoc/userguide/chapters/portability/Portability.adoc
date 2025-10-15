@@ -16,7 +16,9 @@ The first line of portability for Hibernate is the dialect, which is a specializ
 A dialect encapsulates all the differences in how Hibernate must communicate with a particular database to accomplish some task like getting a sequence value or structuring a SELECT query.
 
 Hibernate bundles a wide range of dialects for many of the most popular databases: see the link:{doc-dialect-url}[dialect guide] for details.
-If you find that your particular database is not among them, it is not terribly difficult to write your own.
+If you find that your particular database is not among them,
+you can check link:{doc-dialect-url}#third-party-dialects[dialects implemented by third parties],
+and as a last resort it is not terribly difficult to write your own.
 
 [[portability-dialectresolver]]
 === Dialect resolution

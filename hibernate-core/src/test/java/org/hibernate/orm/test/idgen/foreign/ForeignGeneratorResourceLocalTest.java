@@ -29,7 +29,6 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -49,7 +48,7 @@ public class ForeignGeneratorResourceLocalTest {
 	private static final Logger log = Logger.getLogger( ForeignGeneratorResourceLocalTest.class );
 
 	@AfterEach
-	void dropTestData(SessionFactoryScope factoryScope) {
+	void dropTestData(EntityManagerFactoryScope factoryScope) {
 		factoryScope.dropData();
 	}
 

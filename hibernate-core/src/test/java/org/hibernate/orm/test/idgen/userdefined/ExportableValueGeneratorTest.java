@@ -21,7 +21,6 @@ import org.hibernate.generator.EventTypeSets;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -39,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SkipForDialect( dialectClass = MySQLDialect.class)
 public class ExportableValueGeneratorTest {
 	@AfterEach
-	void dropTestData(SessionFactoryScope factoryScope) {
+	void dropTestData(EntityManagerFactoryScope factoryScope) {
 		factoryScope.dropData();
 	}
 
